@@ -1,0 +1,71 @@
+<div class="selection-layout">
+  <app-sidebar></app-sidebar>
+
+  <main class="selection-main">
+    <!-- Schedule sections — always visible when there are workouts -->
+    <div
+      class="schedule-sections"
+      *ngIf="(overdueWorkouts$ | async)?.length || (upcomingWorkouts$ | async)?.length"
+    >
+      <!-- Overdue -->
+      <section class="schedule-section overdue-section" *ngIf="(overdueWorkouts$ | async)?.length">
+        <h2 class="section-title overdue-title">Overdue</h2>
+        <div class="workout-cards">
+          <div
+            class="schedule-card overdue-card glass"
+            *ngFor="let w of overdueWorkouts$ | async"
+            (click)="openDetail(w)"
+          >
+            <div class="card-date">{{ formatScheduleDate(w.scheduledDate) }}</div>
+            <div class="card-title">{{ w.trainingTitle || w.title || 'Workout' }}</div>
+            <div class="card-duration">{{ formatScheduleDuration(w) }}</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- This Week -->
+      <section class="schedule-section" *ngIf="(upcomingWorkouts$ | async)?.length">
+        <h2 class="section-title">This Week</h2>
+        <div class="workout-cards">
+          <div
+            class="schedule-card glass"
+            *ngFor="let w of upcomingWorkouts$ | async"
+            (click)="openDetail(w)"
+          >
+            <div class="card-date">{{ formatScheduleDate(w.scheduledDate) }}</div>
+            <div class="card-title">{{ w.trainingTitle || w.title || 'Workout' }}</div>
+            <div class="card-duration">{{ formatScheduleDuration(w) }}</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Workout visualization -->
+    <app-workout-visualization
+      *ngIf="selectedTraining$ | async"
+      [training]="selectedTraining$ | async"
+    ></app-workout-visualization>
+
+    <!-- Hero fallback — only when nothing selected AND no schedule -->
+    <div
+      class="empty-state"
+      *ngIf="!(selectedTraining$ | async) && !(overdueWorkouts$ | async)?.length && !(upcomingWorkouts$ | async)?.length"
+    >
+      <div class="hero-content glass">
+        <h1>Hyper-Personalized AI Coaching</h1>
+        <p>
+          Select a workout from the history or start a new conversation with our Assistant to
+          generate a training plan tailored to your profile.
+        </p>
+        <button class="cta-btn" routerLink="/chat">Chat with Assistant</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<app-workout-detail-modal
+  [workout]="selectedScheduledWorkout"
+  (closed)="onDetailClosed()"
+  (started)="onDetailStarted()"
+  (statusChanged)="onDetailStatusChanged()"
+></app-workout-detail-modal>

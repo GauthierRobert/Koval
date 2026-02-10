@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: training-planner-backend
+  data:
+    mongodb:
+      database: training-planner
+      host: localhost
+      port: 27017
+      # uri: mongodb://localhost:27017/training-planner
+  ai:
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY}
+      chat:
+        options:
+          model: claude-sonnet-4-5
+          temperature: 0.7
+          max-tokens: 4096
+    retry:
+      max-attempts: 3
+      backoff:
+        initial-interval: 2s
+        multiplier: 2
+        max-interval: 10s
+    chat:
+      memory:
+        repository:
+          mongo:
+            create-indices: true
+            ttl: 0  # indefinite storage
+
+server:
+  port: 8080
+
+# Strava OAuth2 Configuration
+# Create your app at: https://www.strava.com/settings/api
+strava:
+  client-id: ${STRAVA_CLIENT_ID:}
+  client-secret: ${STRAVA_CLIENT_SECRET:}
+  redirect-uri: http://localhost:8080/api/auth/strava/callback
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:training-planner-super-secret-key-must-be-at-least-32-characters}
+  expiration: 86400000
+
+# Logging Configuration
+logging:
+  level:
+    # Suppress "Unhandled event type" warnings from Anthropic streaming
+    org.springframework.ai.anthropic.api.AnthropicApi: ERROR
+    org.springframework.ai.anthropic: WARN
+    # Keep INFO level for application code
+    com.example.trainingplannerbackend: INFO

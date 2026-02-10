@@ -1,0 +1,103 @@
+<div class="chat-page-layout">
+  <!-- Sidebar/History -->
+  <div class="chat-sidebar glass">
+    <div class="sidebar-header">
+      <h3>SESSIONS</h3>
+      <button class="new-chat-btn" (click)="newChat()">+</button>
+    </div>
+    <div class="history-list">
+      @for (h of chatService.chatHistories$ | async; track h.id) {
+        <div
+          class="history-item"
+          [class.active]="h.id === (chatService.activeChatId$ | async)"
+          (click)="loadConversation(h.id)"
+        >
+          <span class="history-title">{{ h.title || 'Untitled' }}</span>
+          <button class="delete-btn" (click)="deleteConversation(h.id, $event)">&times;</button>
+        </div>
+      }
+    </div>
+    <div class="system-context">
+      <div class="context-item">
+        <span class="c-label">MODEL</span>
+        <span class="c-value">CLAUDE SONNET 4.5</span>
+      </div>
+      <div class="context-item">
+        <span class="c-label">READY</span>
+        <span class="c-value status-ok">SYSTEM_NOMINAL</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Chat Area -->
+  <div class="chat-main">
+    <div class="chat-header-main glass">
+      <div class="coach-meta">
+        <div class="avatar-technical">AG</div>
+        <div class="coach-info">
+          <span class="coach-name">KOVAL <span class="dim">TECHNICAL ASSISTANT</span></span>
+        </div>
+      </div>
+    </div>
+
+    @let messages = chatService.chatMessages$ | async;
+    @let streaming = chatService.streaming$ | async;
+    @let activityStatus = chatService.activityStatus$ | async;
+
+    <div class="messages-container" #scrollMe (scroll)="onScroll()">
+      @if (messages?.length === 0 && !streaming) {
+        <div class="welcome-overlay">
+          <h1>Technical Assistance.</h1>
+          <p>Define objectives or request physiological analysis.</p>
+          <div class="suggestion-grid">
+            <button (click)="quickSend('Generate threshold training 3x12 minutes for a total of one hour')">THRESHOLD 3×12 MIN</button>
+            <button (click)="quickSend('Assign 1H endurance training to my athlete tomorrow morning')">ASSIGN ENDURANCE TRAINING</button>
+            <button (click)="quickSend('Analyse the last workout of Wout Van Aert')">ANALYZE WOUT VAN AERT</button>
+          </div>
+        </div>
+      }
+
+      @for (msg of messages; track $index) {
+        <div class="message-wrapper" [class.ai]="msg.role === 'assistant'" [class.user]="msg.role === 'user'">
+          <div class="message-bubble glass" [class.accent]="msg.role === 'user'">
+            <div class="msg-header">{{ msg.role === 'assistant' ? 'COACH AI' : 'YOU' }}</div>
+            <span class="msg-content" [style.white-space]="'pre-wrap'">{{ msg.content }}</span>
+            <span class="timestamp">{{ msg.timestamp | date:'HH:mm:ss' }}</span>
+          </div>
+        </div>
+      }
+
+      @if (streaming) {
+        <div class="message-wrapper ai">
+          <div class="message-bubble glass typing">
+            @if (activityStatus === 'in_progress') {
+              <span class="analyzing">PROCESSING</span>
+            } @else {
+              <span class="analyzing">GENERATING RESPONSE</span>
+            }
+            <div class="dots"><span>.</span><span>.</span><span>.</span></div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="chat-input-container">
+      <div class="input-wrapper-technical">
+        <textarea
+          [(ngModel)]="userInput"
+          (keydown.enter)="$event.preventDefault(); sendMessage()"
+          placeholder="Enter technical command or query..."
+          [disabled]="streaming ?? false"
+          rows="1"
+        ></textarea>
+        <button
+          class="send-button-technical"
+          (click)="sendMessage()"
+          [disabled]="!userInput.trim() || (streaming ?? false)"
+        >
+          <span class="icon">RUN</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

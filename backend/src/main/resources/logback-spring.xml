@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Console output pattern -->
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss} - %msg%n"/>
+
+    <!-- Console appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Suppress Anthropic API "Unhandled event type" warnings -->
+    <logger name="org.springframework.ai.anthropic.api.AnthropicApi" level="ERROR"/>
+    <logger name="org.springframework.ai.anthropic" level="WARN"/>
+
+    <!-- Keep application logs at INFO level -->
+    <logger name="com.example.trainingplannerbackend" level="INFO"/>
+
+    <!-- Root logger -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

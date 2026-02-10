@@ -1,0 +1,145 @@
+.selection-layout {
+  display: flex;
+  height: 100%;
+  background: var(--bg-dark);
+}
+
+.selection-main {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+/* Schedule sections */
+.schedule-sections {
+  padding: 16px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.schedule-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: white;
+  margin: 0;
+}
+
+.overdue-title {
+  color: #e74c3c;
+}
+
+.workout-cards {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.schedule-card {
+  min-width: 160px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.schedule-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 157, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.overdue-card {
+  border-color: rgba(231, 76, 60, 0.25);
+}
+
+.overdue-card:hover {
+  border-color: rgba(231, 76, 60, 0.5);
+}
+
+.card-date {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.overdue-card .card-date {
+  color: #e74c3c;
+}
+
+.card-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: white;
+  line-height: 1.2;
+}
+
+.card-duration {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* Hero */
+.hero-content {
+  padding: 60px;
+  max-width: 600px;
+  text-align: center;
+  border-radius: 32px;
+}
+
+.hero-content h1 {
+  font-size: 3rem;
+  margin-bottom: 1.5rem;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-content p {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.cta-btn {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cta-btn:hover {
+  transform: scale(1.05);
+}

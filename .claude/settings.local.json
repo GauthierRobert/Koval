@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn compile:*)",
+      "Bash(mvn dependency:resolve:*)",
+      "Bash(dir:*)",
+      "Bash(ls:*)",
+      "Bash(jar tf:*)",
+      "Bash(javap:*)",
+      "Bash(npm run build:*)",
+      "Bash(mvn clean compile:*)",
+      "Bash(npx ng build:*)"
+    ]
+  }
+}

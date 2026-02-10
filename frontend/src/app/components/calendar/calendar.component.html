@@ -1,0 +1,92 @@
+<div class="calendar-layout">
+  <div class="header">
+    <h1>Training <span class="highlight">Calendar</span></h1>
+    <div class="nav-controls">
+      <button (click)="navigateWeek(-1)">&lt; Prev</button>
+      <span class="date-range">{{ startDate | date : 'MMM d' }} - {{ endDate | date : 'MMM d, y' }}</span>
+      <button (click)="navigateWeek(1)">Next &gt;</button>
+    </div>
+  </div>
+
+  <ng-container *ngIf="workoutsByDay$ | async as wbd">
+    <div class="calendar-grid">
+      <div
+        *ngFor="let day of weekDays; trackBy: trackByDay"
+        class="day-column glass"
+        [class.today]="day.isToday"
+      >
+        <div class="day-header">
+          <span class="weekday">{{ day.date | date : 'EEE' }}</span>
+          <span class="day-number">{{ day.date | date : 'd' }}</span>
+        </div>
+
+        <div class="workout-slot">
+          <div
+            *ngFor="let workout of wbd.get(day.key) || EMPTY; trackBy: trackByWorkout"
+            class="workout-card accent-border clickable"
+            [class.completed]="workout.status === 'COMPLETED'"
+            [class.skipped]="workout.status === 'SKIPPED'"
+            (click)="selectWorkout(workout)"
+          >
+            <div class="card-top">
+              <span class="workout-time">08:00 AM</span>
+              <div class="card-top-right">
+                <span class="status-badge" *ngIf="workout.status !== 'PENDING'">{{
+                  workout.status
+                }}</span>
+                <button class="delete-btn" (click)="deleteWorkout(workout); $event.stopPropagation()" title="Remove">
+                  &times;
+                </button>
+              </div>
+            </div>
+
+            <div class="workout-info">
+              <span class="workout-title">
+                {{ workout.trainingTitle || workout.title || 'Session #' + workout.trainingId.substring(0, 6) }}
+              </span>
+
+              <div class="technical-metrics">
+                <div class="m-item">
+                  <span class="m-val">{{ formatDuration(workout) }}</span>
+                  <span class="m-unit">DUR</span>
+                </div>
+                <div class="m-item">
+                  <span class="m-val">{{ workout.tss || '-' }}</span>
+                  <span class="m-unit">TSS</span>
+                </div>
+                <div class="m-item">
+                  <span class="m-val">{{ workout.intensityFactor || workout.if || '-' }}</span>
+                  <span class="m-unit">IF</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="workout-actions" *ngIf="workout.status === 'PENDING'">
+              <button class="btn-complete" (click)="markComplete(workout); $event.stopPropagation()">COMPLETE</button>
+              <button class="btn-skip" (click)="markSkipped(workout); $event.stopPropagation()">SKIP</button>
+            </div>
+          </div>
+
+          <button class="add-btn" (click)="openScheduleModal(day)">+ ADD</button>
+
+          <div *ngIf="!(wbd.get(day.key) || EMPTY).length" class="rest-day">REST DAY</div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<app-schedule-modal
+  [isOpen]="isScheduleModalOpen"
+  [preselectedDate]="selectedDate"
+  mode="athlete"
+  (closed)="isScheduleModalOpen = false"
+  (scheduled)="onScheduled()"
+></app-schedule-modal>
+
+<app-workout-detail-modal
+  [workout]="selectedWorkout"
+  (closed)="onDetailClosed()"
+  (started)="onDetailStarted()"
+  (statusChanged)="onDetailStatusChanged()"
+></app-workout-detail-modal>

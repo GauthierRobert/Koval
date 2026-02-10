@@ -1,0 +1,283 @@
+import { Injectable, NgZone, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject } from 'rxjs';
+import { AuthService } from './auth.service';
+import { TrainingService } from './training.service';
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
+export interface ChatHistoryItem {
+  id: string;
+  userId: string;
+  title: string;
+  startedAt: string;
+  lastUpdatedAt: string;
+}
+
+export type ActivityStatus = 'idle' | 'in_progress' | 'complete' | 'error';
+
+interface ChatHistoryDetail {
+  metadata: ChatHistoryItem;
+  messages: { role: string; content: string }[];
+}
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ChatService {
+  private apiUrl = 'http://localhost:8080/api/ai';
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+  private ngZone = inject(NgZone);
+  private trainingService = inject(TrainingService);
+
+  private chatMessagesSubject = new BehaviorSubject<ChatMessage[]>([]);
+  chatMessages$ = this.chatMessagesSubject.asObservable();
+
+  private chatHistoriesSubject = new BehaviorSubject<ChatHistoryItem[]>([]);
+  chatHistories$ = this.chatHistoriesSubject.asObservable();
+
+  private streamingSubject = new BehaviorSubject<boolean>(false);
+  streaming$ = this.streamingSubject.asObservable();
+
+  private activeChatIdSubject = new BehaviorSubject<string | null>(null);
+  activeChatId$ = this.activeChatIdSubject.asObservable();
+
+  private activityStatusSubject = new BehaviorSubject<ActivityStatus>('idle');
+  activityStatus$ = this.activityStatusSubject.asObservable();
+
+  private getUserIdFromSnapshot(): string {
+    let userId = 'mock-user-123';
+    const sub = this.authService.user$.subscribe((user) => {
+      if (user) userId = user.id;
+    });
+    sub.unsubscribe();
+    return userId;
+  }
+
+  private emitScheduled = false;
+  private pendingEmit = false;
+
+  private emit(): void {
+    // Mark that we have pending changes
+    this.pendingEmit = true;
+
+    // Throttle to ~60fps
+    if (this.emitScheduled) return;
+    this.emitScheduled = true;
+
+    requestAnimationFrame(() => {
+      this.emitScheduled = false;
+      if (this.pendingEmit) {
+        this.pendingEmit = false;
+        this.ngZone.run(() => {
+          this.chatMessagesSubject.next([...this.chatMessagesSubject.value]);
+        });
+      }
+    });
+  }
+
+  private emitImmediate(): void {
+    this.emitScheduled = false;
+    this.pendingEmit = false;
+    this.ngZone.run(() => {
+      this.chatMessagesSubject.next([...this.chatMessagesSubject.value]);
+    });
+  }
+
+  async sendMessage(message: string): Promise<void> {
+    const userId = this.getUserIdFromSnapshot();
+
+    this.addMessage({ role: 'user', content: message, timestamp: new Date() });
+
+    const aiMessage: ChatMessage = { role: 'assistant', content: '', timestamp: new Date() };
+    this.addMessage(aiMessage);
+    this.ngZone.run(() => this.streamingSubject.next(true));
+
+    try {
+      const jwt = localStorage.getItem('token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+      };
+      if (jwt) {
+        headers['Authorization'] = `Bearer ${jwt}`;
+      }
+
+      const response = await fetch(`${this.apiUrl}/chat/stream`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          message,
+          chatHistoryId: this.activeChatIdSubject.value,
+          userId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // Normalize line endings (\r\n -> \n, \r -> \n)
+        buffer = buffer.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+        // Split on double newline to separate events
+        const events = buffer.split('\n\n');
+
+        // Keep the last incomplete event in the buffer
+        buffer = events.pop() || '';
+
+        for (const event of events) {
+          if (!event.trim()) continue; // Skip empty events
+
+          const lines = event.split('\n');
+          let eventType = '';
+          const dataLines: string[] = [];
+
+          // Parse the SSE event structure
+          for (const line of lines) {
+            if (line.startsWith('event:')) {
+              // Extract event type (trim whitespace after colon)
+              eventType = line.substring(6).trim();
+            } else if (line.startsWith('data:')) {
+              // Extract data - preserve leading space if present (it's part of content)
+              // slice(5) keeps everything after 'data:' including leading space
+              dataLines.push(line.substring(5));
+            } else if (line.startsWith('id:') || line.startsWith('retry:')) {
+              // Ignore id and retry fields
+              continue;
+            } else if (line.startsWith(':')) {
+              // Comment line - ignore
+              continue;
+            }
+          }
+
+          // Combine multi-line data with newlines
+          const data = dataLines.join('\n');
+
+          // Handle different event types
+          if (eventType === 'status') {
+            const statusValue = data.trim() as ActivityStatus;
+            this.ngZone.run(() => {
+              this.activityStatusSubject.next(statusValue);
+            });
+          } else if (eventType === 'content') {
+            // Don't trim - preserve exact content including leading/trailing spaces
+            aiMessage.content += data;
+            this.emit();
+          } else if (eventType === 'conversation_id') {
+            // Save conversation ID
+            const conversationId = data.trim();
+            if (conversationId) {
+              this.ngZone.run(() => this.activeChatIdSubject.next(conversationId));
+            }
+          }
+        }
+      }
+
+      // Process any remaining buffer content
+      if (buffer.trim()) {
+        const lines = buffer.split('\n');
+        let eventType = '';
+        const dataLines: string[] = [];
+
+        for (const line of lines) {
+          if (line.startsWith('event:')) {
+            eventType = line.substring(6).trim();
+          } else if (line.startsWith('data:')) {
+            dataLines.push(line.substring(5));
+          }
+        }
+
+        const data = dataLines.join('\n');
+
+        if (eventType === 'content' && data) {
+          aiMessage.content += data;
+          this.emit();
+        }
+      }
+
+      // Final flush to ensure last tokens are rendered
+      this.emitImmediate();
+
+      this.loadHistories();
+      this.trainingService.loadTrainings();
+    } catch {
+      if (!aiMessage.content) {
+        aiMessage.content =
+          "Sorry, I'm having trouble connecting to the assistant. Is the system operational?";
+      }
+      this.emit();
+    } finally {
+      this.ngZone.run(() => {
+        this.streamingSubject.next(false);
+      });
+    }
+  }
+
+  loadHistories(): void {
+    const userId = this.getUserIdFromSnapshot();
+    this.http
+      .get<ChatHistoryItem[]>(`${this.apiUrl}/history`, {
+        headers: { 'X-User-Id': userId },
+      })
+      .subscribe({
+        next: (histories) => this.chatHistoriesSubject.next(histories),
+        error: () => this.chatHistoriesSubject.next([]),
+      });
+  }
+
+  loadConversation(chatHistoryId: string): void {
+    this.http.get<ChatHistoryDetail>(`${this.apiUrl}/history/${chatHistoryId}`).subscribe({
+      next: (detail) => {
+        this.activeChatIdSubject.next(chatHistoryId);
+        const messages: ChatMessage[] = detail.messages
+          .filter((m) => m.role === 'user' || m.role === 'assistant')
+          .map((m) => ({
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+            timestamp: new Date(detail.metadata.lastUpdatedAt),
+          }));
+        this.chatMessagesSubject.next(messages);
+      },
+      error: () => this.newChat(),
+    });
+  }
+
+  deleteConversation(chatHistoryId: string): void {
+    this.http.delete(`${this.apiUrl}/history/${chatHistoryId}`).subscribe({
+      next: () => {
+        const current = this.chatHistoriesSubject.value;
+        this.chatHistoriesSubject.next(current.filter((h) => h.id !== chatHistoryId));
+        if (this.activeChatIdSubject.value === chatHistoryId) {
+          this.newChat();
+        }
+      },
+    });
+  }
+
+  newChat(): void {
+    this.activeChatIdSubject.next(null);
+    this.chatMessagesSubject.next([]);
+    this.activityStatusSubject.next('idle');
+  }
+
+  addMessage(msg: ChatMessage): void {
+    const current = this.chatMessagesSubject.value;
+    this.chatMessagesSubject.next([...current, msg]);
+  }
+}
