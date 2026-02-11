@@ -72,7 +72,7 @@ import { ChatService } from '../../services/chat.service';
       align-items: center;
       padding: 0 32px;
       border-bottom: 1px solid var(--glass-border);
-      background: rgba(10, 10, 10, 0.98);
+      background: rgba(15, 15, 17, 0.98);
       position: relative;
       z-index: 1000;
     }
@@ -106,13 +106,12 @@ import { ChatService } from '../../services/chat.service';
       font-weight: 800;
       font-size: 14px;
       letter-spacing: 2px;
-      color: white;
+      color: var(--text-color);
     }
 
     .app-title .accent {
       color: var(--accent-color);
       font-weight: 400;
-      opacity: 0.8;
     }
 
     .nav-links {
@@ -170,13 +169,13 @@ import { ChatService } from '../../services/chat.service';
       letter-spacing: 0.1em;
     }
 
-    .status-item .label { color: rgba(255, 255, 255, 0.2); }
-    .status-item .value { color: rgba(255, 255, 255, 0.6); }
+    .status-item .label { color: var(--text-dim); }
+    .status-item .value { color: var(--text-muted); }
 
     .status-item.active .dot {
       width: 4px;
       height: 4px;
-      background: #2ecc71;
+      background: var(--success-color);
       border-radius: 50%;
     }
 
@@ -185,11 +184,11 @@ import { ChatService } from '../../services/chat.service';
     }
 
     .action-btn {
-      background: transparent;
-      color: white;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 157, 0, 0.08);
+      color: var(--accent-color);
+      border: 1px solid rgba(255, 157, 0, 0.2);
       padding: 8px 24px;
-      border-radius: 4px;
+      border-radius: 8px;
       font-weight: 800;
       font-size: 10px;
       letter-spacing: 0.1em;
@@ -198,9 +197,8 @@ import { ChatService } from '../../services/chat.service';
     }
 
     .action-btn:hover {
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 157, 0, 0.15);
       border-color: var(--accent-color);
-      color: var(--accent-color);
     }
 
     /* Quick Chat Popup Styles */
@@ -210,7 +208,7 @@ import { ChatService } from '../../services/chat.service';
       right: 0;
       margin-top: 12px;
       width: 320px;
-      background: rgba(20, 20, 20, 0.95);
+      background: rgba(22, 22, 28, 0.97);
       border: 1px solid var(--glass-border);
       border-radius: 16px;
       padding: 20px;
@@ -257,10 +255,10 @@ import { ChatService } from '../../services/chat.service';
     textarea {
       width: 100%;
       height: 100px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: var(--surface-elevated);
+      border: 1px solid var(--glass-border);
       border-radius: 8px;
-      color: white;
+      color: var(--text-color);
       padding: 12px;
       font-family: inherit;
       font-size: 13px;

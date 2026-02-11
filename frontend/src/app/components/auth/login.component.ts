@@ -10,22 +10,33 @@ import { AuthService } from '../../services/auth.service';
     </div>
   `,
     styles: [`
-    .login-container { 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      justify-content: center; 
-      height: 100vh; 
-      color: #fff; 
+    .login-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: var(--text-color);
+      gap: 2rem;
+    }
+    h1 {
+      font-weight: 800;
+      letter-spacing: -1px;
     }
     button {
       padding: 1rem 2rem;
-      background: #fc4c02; /* Strava Orange */
+      background: #fc4c02;
       color: white;
       border: none;
-      border-radius: 4px;
-      font-size: 1.2rem;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
       cursor: pointer;
+      transition: all 0.2s;
+    }
+    button:hover {
+      filter: brightness(1.15);
+      transform: translateY(-1px);
     }
   `]
 })

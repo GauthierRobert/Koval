@@ -94,7 +94,7 @@ import { BluetoothService } from '../../services/bluetooth.service';
       padding: 24px;
       z-index: 3000;
       animation: slideUp 0.3s ease-out;
-      background: rgba(20, 20, 20, 0.95);
+      background: rgba(22, 22, 28, 0.97);
     }
     @keyframes slideUp { from { opacity: 0; transform: translate(-50%, -40%); } }
 
@@ -104,7 +104,7 @@ import { BluetoothService } from '../../services/bluetooth.service';
       align-items: center;
       margin-bottom: 24px;
     }
-    h3 { margin: 0; font-size: 18px; font-weight: 700; color: white; letter-spacing: 1px; }
+    h3 { margin: 0; font-size: 18px; font-weight: 700; color: var(--text-color); letter-spacing: 1px; }
     .close-btn { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
 
     .device-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
@@ -113,15 +113,15 @@ import { BluetoothService } from '../../services/bluetooth.service';
       align-items: center;
       gap: 16px;
       padding: 16px;
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--surface-elevated);
       border-radius: 12px;
       border: 1px solid var(--glass-border);
     }
     .icon { font-size: 24px; }
     .info { flex: 1; }
-    .name { font-size: 14px; font-weight: 600; color: white; margin-bottom: 4px; }
+    .name { font-size: 14px; font-weight: 600; color: var(--text-color); margin-bottom: 4px; }
     .status { font-size: 12px; color: var(--text-muted); }
-    .status.connected { color: #2ecc71; font-weight: 700; }
+    .status.connected { color: var(--success-color); font-weight: 700; }
 
     .action-btn {
       padding: 8px 16px;
@@ -130,11 +130,11 @@ import { BluetoothService } from '../../services/bluetooth.service';
       font-size: 12px;
       cursor: pointer;
       transition: all 0.2s;
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-      border: 1px solid var(--glass-border);
+      background: rgba(255, 157, 0, 0.1);
+      color: var(--accent-color);
+      border: 1px solid rgba(255, 157, 0, 0.2);
     }
-    .action-btn:hover:not(:disabled) { background: white; color: black; }
+    .action-btn:hover:not(:disabled) { background: var(--accent-color); color: #000; }
     .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .footer-note { font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.4; }

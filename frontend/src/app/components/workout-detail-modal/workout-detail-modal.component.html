@@ -1,93 +1,97 @@
-<div class="modal-backdrop" *ngIf="workout" (click)="onBackdropClick($event)">
-  <div class="modal-card glass">
-    <button class="close-btn" (click)="close()">&times;</button>
+<ng-container *ngIf="workout$ | async as workout">
+  <div class="modal-backdrop" (click)="onBackdropClick($event)">
+    <div class="modal-card glass">
+      <button class="close-btn" (click)="close()">&times;</button>
 
-    <!-- Loading -->
-    <div class="loading-state" *ngIf="loading">
-      <div class="spinner"></div>
-      <span>Loading workout...</span>
-    </div>
-
-    <!-- Error -->
-    <div class="error-state" *ngIf="error">
-      <span>{{ error }}</span>
-      <button class="retry-btn" (click)="close()">Close</button>
-    </div>
-
-    <!-- Content -->
-    <ng-container *ngIf="training && !loading && !error">
-      <div class="modal-header">
-        <h2>{{ training.title }}</h2>
-        <div class="meta-row">
-          <span class="scheduled-date">{{ getFormattedDate() }}</span>
-          <span
-            class="status-pill"
-            [class.pending]="workout!.status === 'PENDING'"
-            [class.completed]="workout!.status === 'COMPLETED'"
-            [class.skipped]="workout!.status === 'SKIPPED'"
-          >
-            {{ workout!.status }}
-          </span>
+      <ng-container *ngIf="trainingState$ | async as state">
+        <!-- Loading -->
+        <div class="loading-state" *ngIf="state.loading">
+          <div class="spinner"></div>
+          <span>Loading workout...</span>
         </div>
-        <p class="description" *ngIf="training.description">{{ training.description }}</p>
-        <p class="notes" *ngIf="workout!.notes">
-          <span class="notes-label">Notes:</span> {{ workout!.notes }}
-        </p>
-        <p class="assigned-by" *ngIf="workout!.assignedBy">
-          Assigned by <strong>{{ workout!.assignedBy }}</strong>
-        </p>
-      </div>
 
-      <!-- Mini chart -->
-      <div class="chart-wrapper">
-        <div class="chart-area">
-          <div
-            *ngFor="let block of training.blocks"
-            class="block-bar-wrapper"
-            [style.width.%]="getBlockWidth(block)"
-          >
-            <div class="bar-container" [style.height.%]="getBlockHeight(block)">
+        <!-- Error -->
+        <div class="error-state" *ngIf="state.error">
+          <span>{{ state.error }}</span>
+          <button class="retry-btn" (click)="close()">Close</button>
+        </div>
+
+        <!-- Content -->
+        <ng-container *ngIf="state.training as training">
+          <div class="modal-header">
+            <h2>{{ training.title }}</h2>
+            <div class="meta-row">
+              <span class="scheduled-date">{{ getFormattedDate(workout) }}</span>
+              <span
+                class="status-pill"
+                [class.pending]="workout.status === 'PENDING'"
+                [class.completed]="workout.status === 'COMPLETED'"
+                [class.skipped]="workout.status === 'SKIPPED'"
+              >
+                {{ workout.status }}
+              </span>
+            </div>
+            <p class="description" *ngIf="training.description">{{ training.description }}</p>
+            <p class="notes" *ngIf="workout.notes">
+              <span class="notes-label">Notes:</span> {{ workout.notes }}
+            </p>
+            <p class="assigned-by" *ngIf="workout.assignedBy">
+              Assigned by <strong>{{ workout.assignedBy }}</strong>
+            </p>
+          </div>
+
+          <!-- Mini chart -->
+          <div class="chart-wrapper">
+            <div class="chart-area">
               <div
-                class="block-bar"
-                [style.background]="getBlockColor(block)"
-                [style.clip-path]="getBlockClipPath(block)"
-                [attr.data-type]="block.type"
-              ></div>
+                *ngFor="let block of training.blocks"
+                class="block-bar-wrapper"
+                [style.width.%]="getBlockWidth(block, training)"
+              >
+                <div class="bar-container" [style.height.%]="getBlockHeight(block, training)">
+                  <div
+                    class="block-bar"
+                    [style.background]="getBlockColor(block)"
+                    [style.clip-path]="getBlockClipPath(block, training)"
+                    [attr.data-type]="block.type"
+                  ></div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Stats -->
-      <div class="stats-row">
-        <div class="stat">
-          <span class="stat-value">{{ getTotalDuration() }}</span>
-          <span class="stat-label">Duration</span>
-        </div>
-        <div class="stat">
-          <span class="stat-value">{{ training.blocks.length }}</span>
-          <span class="stat-label">Blocks</span>
-        </div>
-        <div class="stat" *ngIf="workout!.tss">
-          <span class="stat-value">{{ workout!.tss }}</span>
-          <span class="stat-label">TSS</span>
-        </div>
-        <div class="stat" *ngIf="workout!.intensityFactor || workout!.if">
-          <span class="stat-value">{{ workout!.intensityFactor || workout!.if }}</span>
-          <span class="stat-label">IF</span>
-        </div>
-      </div>
+          <!-- Stats -->
+          <div class="stats-row">
+            <div class="stat">
+              <span class="stat-value">{{ getTotalDuration(training) }}</span>
+              <span class="stat-label">Duration</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value">{{ training.blocks.length }}</span>
+              <span class="stat-label">Blocks</span>
+            </div>
+            <div class="stat" *ngIf="workout.tss">
+              <span class="stat-value">{{ workout.tss }}</span>
+              <span class="stat-label">TSS</span>
+            </div>
+            <div class="stat" *ngIf="workout.intensityFactor || workout.if">
+              <span class="stat-value">{{ workout.intensityFactor || workout.if }}</span>
+              <span class="stat-label">IF</span>
+            </div>
+          </div>
 
-      <!-- Actions -->
-      <div class="modal-actions">
-        <button class="start-btn" (click)="startTraining()">
-          <span class="play-icon">&#9654;</span> Start Training
-        </button>
-        <ng-container *ngIf="workout!.status === 'PENDING'">
-          <button class="complete-btn" (click)="markComplete()">Mark Complete</button>
-          <button class="skip-btn" (click)="markSkipped()">Skip</button>
+          <!-- Actions -->
+          <div class="modal-actions">
+            <button class="start-btn" (click)="startTraining(training)">
+              <span class="play-icon">&#9654;</span> Start Training
+            </button>
+            <ng-container *ngIf="workout.status === 'PENDING'">
+              <button class="complete-btn" (click)="markComplete()">Mark Complete</button>
+              <button class="skip-btn" (click)="markSkipped()">Skip</button>
+            </ng-container>
+          </div>
         </ng-container>
-      </div>
-    </ng-container>
+      </ng-container>
+    </div>
   </div>
-</div>
+</ng-container>

@@ -1,7 +1,7 @@
 .chat-page-layout {
   display: flex;
   height: calc(100vh - 64px);
-  background: #0a0a0a;
+  background: var(--bg-color);
   overflow: hidden;
   font-size: 13px;
 }
@@ -12,6 +12,7 @@
   display: flex;
   flex-direction: column;
   padding: 1rem;
+  background: var(--sidebar-color);
 }
 
 .sidebar-header {
@@ -24,14 +25,21 @@
 .sidebar-header h3 { font-size: 10px; font-weight: 800; letter-spacing: 2px; color: var(--text-muted); }
 
 .new-chat-btn {
-  background: rgba(255,255,255,0.05);
+  background: var(--surface-hover);
   border: 1px solid var(--glass-border);
-  color: white;
+  color: var(--text-color);
   width: 24px;
   height: 24px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
+  transition: all 0.2s;
+}
+
+.new-chat-btn:hover {
+  background: rgba(255, 157, 0, 0.15);
+  color: var(--accent-color);
+  border-color: rgba(255, 157, 0, 0.3);
 }
 
 .history-list {
@@ -44,15 +52,16 @@
 
 .history-item {
   padding: 8px 12px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 700;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
   cursor: pointer;
   color: var(--text-muted);
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: all 0.2s;
 }
 
 .history-title {
@@ -74,10 +83,10 @@
 }
 
 .history-item:hover .delete-btn { opacity: 0.6; }
-.delete-btn:hover { opacity: 1 !important; color: #e74c3c; }
+.delete-btn:hover { opacity: 1 !important; color: var(--danger-color); }
 
-.history-item.active { background: rgba(255,255,255,0.02); color: var(--accent-color); }
-.history-item:hover { background: rgba(255,255,255,0.03); }
+.history-item.active { background: rgba(255, 157, 0, 0.08); color: var(--accent-color); }
+.history-item:hover { background: var(--surface-hover); }
 
 .system-context {
   margin-top: auto;
@@ -90,8 +99,8 @@
 
 .context-item { display: flex; justify-content: space-between; font-size: 9px; font-weight: 800; }
 .c-label { color: var(--text-muted); }
-.c-value { color: #888; }
-.status-ok { color: #2ecc71; }
+.c-value { color: var(--text-color); }
+.status-ok { color: var(--success-color); }
 
 .chat-main {
   flex: 1;
@@ -109,8 +118,8 @@
 .avatar-technical {
   width: 32px;
   height: 32px;
-  background: #333;
-  border-radius: 4px;
+  background: rgba(255, 157, 0, 0.12);
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -119,8 +128,8 @@
   color: var(--accent-color);
 }
 
-.coach-name { font-weight: 800; color: white; letter-spacing: 1px; font-size: 12px; }
-.dim { opacity: 0.3; font-weight: 400; }
+.coach-name { font-weight: 800; color: var(--text-color); letter-spacing: 1px; font-size: 12px; }
+.dim { opacity: 0.4; font-weight: 400; }
 
 .messages-container {
   flex: 1;
@@ -138,8 +147,8 @@
   padding: 4rem 0;
 }
 
-.welcome-overlay h1 { font-size: 2rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 0.5rem; color: white; }
-.welcome-overlay p { color: var(--text-muted); font-size: 12px; }
+.welcome-overlay h1 { font-size: 2rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 0.5rem; color: var(--text-color); }
+.welcome-overlay p { color: var(--text-muted); font-size: 13px; line-height: 1.6; }
 
 .suggestion-grid {
   display: flex;
@@ -149,22 +158,23 @@
 }
 
 .suggestion-grid button {
-  background: rgba(255,255,255,0.01);
+  background: var(--surface-elevated);
   border: 1px solid var(--glass-border);
-  color: #888;
-  padding: 0.8rem;
-  border-radius: 6px;
+  color: var(--text-muted);
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 1px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
   text-align: left;
+  transition: all 0.2s;
 }
 
 .suggestion-grid button:hover {
-  background: rgba(255,255,255,0.03);
-  color: white;
-  border-color: var(--accent-color);
+  background: var(--surface-hover);
+  color: var(--text-color);
+  border-color: rgba(255, 157, 0, 0.3);
 }
 
 .message-wrapper { display: flex; width: 100%; }
@@ -173,11 +183,12 @@
 .message-bubble {
   max-width: 80%;
   padding: 1rem 1.5rem;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.02);
+  border-radius: 12px;
+  background: var(--surface-elevated);
   border: 1px solid var(--glass-border);
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.7;
+  color: var(--text-color);
 }
 
 .msg-header {
@@ -190,10 +201,10 @@
 }
 
 .message-bubble.accent {
-  background: rgba(255, 157, 0, 0.05);
+  background: rgba(255, 157, 0, 0.06);
   border-color: rgba(255, 157, 0, 0.2);
 }
-.message-bubble.accent .msg-header { color: #fff; }
+.message-bubble.accent .msg-header { color: var(--text-color); }
 
 .msg-content {
   word-break: break-word;
@@ -202,7 +213,7 @@
 .timestamp {
   display: block;
   font-size: 9px;
-  color: #555;
+  color: var(--text-dim);
   margin-top: 8px;
   font-family: monospace;
 }
@@ -212,20 +223,25 @@
 }
 
 .input-wrapper-technical {
-  background: rgba(255,255,255,0.01);
+  background: var(--surface-elevated);
   border: 1px solid var(--glass-border);
-  border-radius: 8px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   padding: 0.5rem 1rem;
   gap: 1rem;
+  transition: border-color 0.2s;
+}
+
+.input-wrapper-technical:focus-within {
+  border-color: rgba(255, 157, 0, 0.4);
 }
 
 textarea {
   flex: 1;
   background: transparent;
   border: none;
-  color: white;
+  color: var(--text-color);
   padding: 0.8rem 0;
   resize: none;
   outline: none;
@@ -233,19 +249,33 @@ textarea {
   font-size: 13px;
 }
 
+textarea::placeholder {
+  color: var(--text-dim);
+}
+
 .send-button-technical {
-  background: #333;
-  color: #888;
-  border: 1px solid var(--glass-border);
-  padding: 6px 12px;
-  border-radius: 4px;
+  background: rgba(255, 157, 0, 0.12);
+  color: var(--accent-color);
+  border: 1px solid rgba(255, 157, 0, 0.25);
+  padding: 8px 16px;
+  border-radius: 8px;
   font-size: 10px;
   font-weight: 800;
   cursor: pointer;
   letter-spacing: 1px;
+  transition: all 0.2s;
 }
 
-.send-button-technical:not(:disabled):hover { background: var(--accent-color); color: white; border-color: transparent; }
+.send-button-technical:not(:disabled):hover {
+  background: var(--accent-color);
+  color: white;
+  border-color: transparent;
+}
+
+.send-button-technical:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 .typing .analyzing { font-size: 10px; font-weight: 800; color: var(--accent-color); letter-spacing: 1px; }
 
@@ -273,5 +303,4 @@ textarea {
 
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 2px; }
-
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 2px; }

@@ -172,8 +172,8 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
       display: flex;
       flex-direction: column;
       gap: 1rem;
-      background: #0a0a0a;
-      color: #e0e0e0;
+      background: var(--bg-color);
+      color: var(--text-color);
       overflow: hidden;
       font-size: 13px;
     }
@@ -193,7 +193,7 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
     .coach-stats { display: flex; gap: 2rem; }
     .stat { display: flex; flex-direction: column; align-items: flex-end; }
     .stat .label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-    .stat .value { font-size: 16px; font-weight: 700; color: white; }
+    .stat .value { font-size: 16px; font-weight: 700; color: var(--text-color); }
 
     .content {
       flex: 1;
@@ -220,14 +220,19 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
     .section-header h3 { font-size: 11px; letter-spacing: 1px; color: var(--text-muted); }
 
     .add-btn {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--glass-border);
-      color: white;
-      padding: 4px 8px;
-      border-radius: 4px;
+      background: rgba(255, 157, 0, 0.08);
+      border: 1px solid rgba(255, 157, 0, 0.2);
+      color: var(--accent-color);
+      padding: 4px 10px;
+      border-radius: 6px;
       font-size: 9px;
       font-weight: 800;
       cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .add-btn:hover {
+      background: rgba(255, 157, 0, 0.15);
     }
 
     .athletes {
@@ -258,8 +263,9 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
     .avatar-sm {
       width: 32px;
       height: 32px;
-      background: #333;
-      border-radius: 4px;
+      background: rgba(255, 157, 0, 0.12);
+      color: var(--accent-color);
+      border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -268,13 +274,13 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
     }
 
     .info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
-    .info .name { font-weight: 700; font-size: 12px; color: #f0f0f0; }
+    .info .name { font-weight: 700; font-size: 12px; color: var(--text-color); }
 
     .mini-metrics { display: flex; gap: 4px; }
     .chip { font-size: 8px; font-weight: 800; padding: 1px 4px; border-radius: 2px; }
-    .fitness { background: rgba(0, 160, 233, 0.1); color: var(--secondary-color); }
-    .fatigue { background: rgba(231, 76, 60, 0.1); color: #e74c3c; }
-    .form { background: rgba(46, 204, 113, 0.1); color: #2ecc71; }
+    .fitness { background: rgba(0, 160, 233, 0.12); color: var(--secondary-color); }
+    .fatigue { background: rgba(248, 113, 113, 0.12); color: var(--danger-color); }
+    .form { background: rgba(52, 211, 153, 0.12); color: var(--success-color); }
     .tag { background: rgba(255, 157, 0, 0.15); color: var(--accent-color); }
 
     .tag-chips { display: flex; gap: 3px; flex-wrap: wrap; }
@@ -393,7 +399,7 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
       align-items: flex-start;
     }
 
-    .profile-summary h2 { font-size: 24px; font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; }
+    .profile-summary h2 { font-size: 24px; font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; color: var(--text-color); }
 
     .physiological-tabs { display: flex; gap: 20px; border-bottom: 1px solid var(--glass-border); }
     .tab { font-size: 10px; font-weight: 800; letter-spacing: 1px; padding: 8px 0; color: var(--text-muted); cursor: pointer; }
@@ -401,13 +407,18 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
 
     .assign-btn {
       background: var(--accent-color);
-      color: white;
+      color: #000;
       border: none;
       padding: 8px 16px;
-      border-radius: 4px;
+      border-radius: 8px;
       font-size: 11px;
       font-weight: 800;
       cursor: pointer;
+      transition: filter 0.2s;
+    }
+
+    .assign-btn:hover {
+      filter: brightness(1.15);
     }
 
     .metrics-dashboard {
@@ -417,7 +428,7 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
     }
 
     .m-card {
-      background: rgba(255,255,255,0.02);
+      background: var(--surface-elevated);
       border: 1px solid var(--glass-border);
       padding: 1.2rem;
       border-radius: 12px;
@@ -427,10 +438,10 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
     }
 
     .m-label { font-size: 9px; font-weight: 800; color: var(--text-muted); letter-spacing: 1px; }
-    .m-value { font-size: 20px; font-weight: 800; color: white; }
+    .m-value { font-size: 20px; font-weight: 800; color: var(--text-color); }
     .m-trend { font-size: 10px; font-weight: 700; }
-    .m-trend.up { color: #2ecc71; }
-    .m-trend.down { color: #e74c3c; }
+    .m-trend.up { color: var(--success-color); }
+    .m-trend.down { color: var(--danger-color); }
     .m-meta { font-size: 10px; color: var(--text-muted); }
     .m-condition { font-size: 10px; font-weight: 800; color: var(--secondary-color); }
 
@@ -444,7 +455,7 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
     .week-label { color: var(--accent-color); }
 
     .schedule-table {
-      background: rgba(255,255,255,0.01);
+      background: var(--surface-elevated);
       border: 1px solid var(--glass-border);
       border-radius: 8px;
     }
@@ -469,8 +480,8 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
     }
 
     .table-row:last-child { border: none; }
-    .t-date { font-weight: 700; color: #aaa; }
-    .t-title { font-weight: 700; color: white; }
+    .t-date { font-weight: 700; color: var(--text-muted); }
+    .t-title { font-weight: 700; color: var(--text-color); }
     .t-status { font-size: 9px; font-weight: 800; text-transform: uppercase; }
     .t-status.pending { color: var(--accent-color); }
 
@@ -487,7 +498,7 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
 
     .empty-detail { text-align: center; color: var(--text-muted); max-width: 300px; }
     .empty-detail .icon { font-size: 3rem; display: block; margin-bottom: 1.5rem; opacity: 0.3; }
-    .empty-detail h3 { font-size: 12px; font-weight: 800; letter-spacing: 1px; color: #fff; margin-bottom: 8px; }
+    .empty-detail h3 { font-size: 12px; font-weight: 800; letter-spacing: 1px; color: var(--text-color); margin-bottom: 8px; }
     .empty-detail p { font-size: 11px; line-height: 1.6; }
 
     ::-webkit-scrollbar { width: 4px; }

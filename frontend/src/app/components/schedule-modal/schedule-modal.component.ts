@@ -79,7 +79,7 @@ import { AuthService, User } from '../../services/auth.service';
       width: 440px;
       max-height: 80vh;
       overflow-y: auto;
-      background: rgba(20, 20, 20, 0.95);
+      background: rgba(22, 22, 28, 0.97);
       border: 1px solid var(--glass-border);
       border-radius: 12px;
       display: flex;
@@ -136,11 +136,11 @@ import { AuthService, User } from '../../services/auth.service';
     .optional { font-weight: 400; opacity: 0.6; }
 
     select, input[type="date"], textarea {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--surface-elevated);
       border: 1px solid var(--glass-border);
       border-radius: 6px;
       padding: 10px 12px;
-      color: #e0e0e0;
+      color: var(--text-color);
       font-size: 13px;
       font-family: inherit;
       outline: none;
@@ -152,8 +152,8 @@ import { AuthService, User } from '../../services/auth.service';
     }
 
     select option {
-      background: #1a1a1a;
-      color: #e0e0e0;
+      background: var(--surface-color);
+      color: var(--text-color);
     }
 
     textarea {
@@ -238,7 +238,7 @@ import { AuthService, User } from '../../services/auth.service';
       border: none;
       color: #000;
       padding: 8px 20px;
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 11px;
       font-weight: 800;
       cursor: pointer;

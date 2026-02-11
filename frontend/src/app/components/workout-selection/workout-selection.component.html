@@ -2,11 +2,7 @@
   <app-sidebar></app-sidebar>
 
   <main class="selection-main">
-    <!-- Schedule sections — always visible when there are workouts -->
-    <div
-      class="schedule-sections"
-      *ngIf="(overdueWorkouts$ | async)?.length || (upcomingWorkouts$ | async)?.length"
-    >
+    <div class="schedule-sections">
       <!-- Overdue -->
       <section class="schedule-section overdue-section" *ngIf="(overdueWorkouts$ | async)?.length">
         <h2 class="section-title overdue-title">Overdue</h2>
@@ -24,9 +20,9 @@
       </section>
 
       <!-- This Week -->
-      <section class="schedule-section" *ngIf="(upcomingWorkouts$ | async)?.length">
+      <section class="schedule-section">
         <h2 class="section-title">This Week</h2>
-        <div class="workout-cards">
+        <div class="workout-cards" *ngIf="(upcomingWorkouts$ | async)?.length">
           <div
             class="schedule-card glass"
             *ngFor="let w of upcomingWorkouts$ | async"
@@ -37,6 +33,9 @@
             <div class="card-duration">{{ formatScheduleDuration(w) }}</div>
           </div>
         </div>
+        <div class="empty-week" *ngIf="!(upcomingWorkouts$ | async)?.length">
+          No training scheduled for this week
+        </div>
       </section>
     </div>
 
@@ -46,10 +45,10 @@
       [training]="selectedTraining$ | async"
     ></app-workout-visualization>
 
-    <!-- Hero fallback — only when nothing selected AND no schedule -->
+    <!-- Hero fallback — only when nothing selected -->
     <div
       class="empty-state"
-      *ngIf="!(selectedTraining$ | async) && !(overdueWorkouts$ | async)?.length && !(upcomingWorkouts$ | async)?.length"
+      *ngIf="!(selectedTraining$ | async)"
     >
       <div class="hero-content glass">
         <h1>Hyper-Personalized AI Coaching</h1>

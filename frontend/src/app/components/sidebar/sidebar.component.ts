@@ -59,7 +59,7 @@ import { WorkoutHistoryComponent } from '../workout-history/workout-history.comp
       height: 100%;
       display: flex;
       flex-direction: column;
-      background: rgba(18, 18, 18, 0.6);
+      background: var(--sidebar-color);
       border-right: 1px solid var(--glass-border);
       backdrop-filter: blur(20px);
       padding: 16px 0;
@@ -86,9 +86,9 @@ import { WorkoutHistoryComponent } from '../workout-history/workout-history.comp
       flex: 1;
       padding: 10px;
       background: transparent;
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid var(--glass-border);
       border-radius: 8px;
-      color: rgba(255,255,255,0.5);
+      color: var(--text-muted);
       font-size: 11px;
       font-weight: 700;
       cursor: pointer;
@@ -96,8 +96,8 @@ import { WorkoutHistoryComponent } from '../workout-history/workout-history.comp
     }
 
     .tab-btn:hover {
-      background: rgba(255,255,255,0.05);
-      color: rgba(255,255,255,0.7);
+      background: var(--surface-hover);
+      color: var(--text-color);
     }
 
     .tab-btn.active {
@@ -119,10 +119,15 @@ import { WorkoutHistoryComponent } from '../workout-history/workout-history.comp
       align-items: center;
       gap: 8px;
       padding: 12px;
-      background: rgba(255,255,255,0.03);
+      background: var(--surface-elevated);
+      border: 1px solid var(--glass-border);
       border-radius: 8px;
       cursor: pointer;
       transition: 0.2s;
+    }
+
+    .device-status-bar:hover {
+      background: var(--surface-hover);
     }
 
     .status-chip {
@@ -161,16 +166,22 @@ import { WorkoutHistoryComponent } from '../workout-history/workout-history.comp
       display: flex;
       align-items: center;
       gap: 10px;
-      background: rgba(255,255,255,0.05);
+      background: var(--surface-elevated);
       padding: 8px 12px;
       border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid var(--glass-border);
+    }
+
+    .ftp-input-wrapper span {
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 12px;
     }
 
     .ftp-input-wrapper input {
       background: transparent;
       border: none;
-      color: white;
+      color: var(--text-color);
       font-weight: 700;
       width: 60px;
       outline: none;
@@ -205,7 +216,7 @@ import { WorkoutHistoryComponent } from '../workout-history/workout-history.comp
       justify-content: center;
       font-weight: 800;
       font-size: 12px;
-      color: black;
+      color: #000;
     }
 
     .user-info {
@@ -216,13 +227,12 @@ import { WorkoutHistoryComponent } from '../workout-history/workout-history.comp
     .name {
       font-size: 13px;
       font-weight: 700;
-      color: white;
+      color: var(--text-color);
     }
 
     .status {
       font-size: 10px;
       color: var(--accent-color);
-      opacity: 0.8;
     }
 
     .switch {
@@ -245,7 +255,7 @@ import { WorkoutHistoryComponent } from '../workout-history/workout-history.comp
       left: 0;
       right: 0;
       bottom: 0;
-      background-color: #333;
+      background-color: rgba(255, 255, 255, 0.12);
       transition: .4s;
     }
 

@@ -41,7 +41,7 @@ import { BluetoothService } from './services/bluetooth.service';
       height: 100vh;
       width: 100vw;
       overflow: hidden;
-      background: linear-gradient(135deg, #121212 0%, #1a1a1a 100%);
+      background: var(--bg-color);
     }
     .main-content {
       flex: 1;

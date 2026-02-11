@@ -184,7 +184,7 @@ import { map } from 'rxjs';
       flex-direction: column;
       padding: 30px;
       animation: fadeIn 0.3s ease-out;
-      background: #111; /* Solid dark background instead of glass */
+      background: var(--bg-color);
       border: 1px solid var(--glass-border);
       border-radius: 20px;
     }
@@ -196,18 +196,18 @@ import { map } from 'rxjs';
       align-items: center;
       margin-bottom: 40px;
     }
-    .workout-title { font-size: 24px; font-weight: 700; color: white; }
+    .workout-title { font-size: 24px; font-weight: 700; color: var(--text-color); }
     .stop-btn {
-      background: rgba(231, 76, 60, 0.2);
-      border: 1px solid #e74c3c;
-      color: #e74c3c;
+      background: rgba(248, 113, 113, 0.15);
+      border: 1px solid var(--danger-color);
+      color: var(--danger-color);
       padding: 8px 16px;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 600;
       transition: all 0.2s;
     }
-    .stop-btn:hover { background: #e74c3c; color: white; }
+    .stop-btn:hover { background: var(--danger-color); color: #fff; }
 
     .top-controls { display: flex; align-items: center; gap: 20px; }
 
@@ -219,40 +219,40 @@ import { map } from 'rxjs';
       height: 180px;
     }
     .metric-card {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--surface-elevated);
       border-radius: 12px;
       padding: 12px;
       display: flex;
       flex-direction: column;
       border: 1px solid var(--glass-border);
     }
-    .main-block { background: rgba(255, 255, 255, 0.08); }
+    .main-block { background: var(--surface-hover); }
     
     .header { display: flex; justify-content: space-between; align-items: baseline; width: 100%; margin-bottom: auto; }
     .label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
     
     .main-display { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
     .live-value { font-size: 48px; font-weight: 800; line-height: 1; }
-    .secondary-block .value { font-size: 32px; font-weight: 800; color: white; }
+    .secondary-block .value { font-size: 32px; font-weight: 800; color: var(--text-color); }
     .unit { font-size: 9px; font-weight: 700; color: var(--text-muted); margin-top: 2px; }
     
     .footer-stats { display: flex; justify-content: space-around; width: 100%; margin-top: auto; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); }
     .stat { display: flex; flex-direction: column; align-items: center; }
     .stat-label { font-size: 8px; color: var(--text-muted); margin-bottom: 2px; }
-    .stat-value { font-size: 14px; font-weight: 700; color: white; }
+    .stat-value { font-size: 14px; font-weight: 700; color: var(--text-color); }
     .stat-value.highlight { color: var(--accent-color); }
-    .stat-value.hr { color: #e74c3c; }
+    .stat-value.hr { color: var(--danger-color); }
 
     .target-value { font-size: 16px; color: var(--accent-color); font-weight: 700; }
-    .value.hr { color: #e74c3c; }
+    .value.hr { color: var(--danger-color); }
 
     .progress-section { margin-bottom: 20px; }
     .block-info { display: grid; grid-template-columns: 1fr 120px 1fr; align-items: center; gap: 20px; margin-bottom: 8px; }
     .current-block { text-align: left; overflow: hidden; }
     .next-block { text-align: right; overflow: hidden; }
     .block-tag { font-size: 9px; font-weight: 700; color: var(--accent-color); margin-bottom: 2px; }
-    .block-label { font-size: 14px; font-weight: 600; color: white; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
-    .timer { font-size: 32px; font-weight: 800; color: white; font-variant-numeric: tabular-nums; text-align: center; }
+    .block-label { font-size: 14px; font-weight: 600; color: var(--text-color); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+    .timer { font-size: 32px; font-weight: 800; color: var(--text-color); font-variant-numeric: tabular-nums; text-align: center; }
     .progress-bar-container {
       height: 8px;
       background: rgba(255, 255, 255, 0.1);
@@ -272,7 +272,7 @@ import { map } from 'rxjs';
     }
     .metric-item { display: flex; align-items: baseline; gap: 10px; }
     .metric-item .label { font-size: 12px; color: var(--text-muted); }
-    .metric-item .value { font-size: 18px; font-weight: 700; color: white; }
+    .metric-item .value { font-size: 18px; font-weight: 700; color: var(--text-color); }
     .value.highlight { color: var(--accent-color); }
 
     .graph-area {
@@ -295,10 +295,10 @@ import { map } from 'rxjs';
       cursor: pointer;
       transition: all 0.2s;
     }
-    .control-btn.primary { background: white; color: black; }
-    .control-btn.secondary { background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--glass-border); }
+    .control-btn.primary { background: var(--text-color); color: var(--bg-color); }
+    .control-btn.secondary { background: var(--surface-hover); color: var(--text-color); border: 1px solid var(--glass-border); }
     .control-btn:hover { transform: scale(1.05); }
-    .control-btn.danger { background: #e74c3c; color: white; border: none; }
+    .control-btn.danger { background: var(--danger-color); color: #fff; border: none; }
     
     .top-center { align-items: flex-start; padding-top: 100px; }
     .confirmation-card { padding: 40px; width: 600px; }
@@ -503,9 +503,9 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     const current = this.bluetoothService['metricsSubject'].value.power;
     const diff = Math.abs(target - current);
 
-    if (diff < 10) return '#2ecc71'; // Close
-    if (diff < 30) return '#f1c40f'; // Warning
-    return '#e74c3c'; // Off
+    if (diff < 10) return '#34d399'; // Close
+    if (diff < 30) return '#fbbf24'; // Warning
+    return '#f87171'; // Off
   }
 
   async togglePause(state: any) {

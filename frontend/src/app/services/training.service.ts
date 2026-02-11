@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { AuthService } from './auth.service';
 
 export interface WorkoutBlock {
@@ -121,6 +121,10 @@ export class TrainingService {
     }
 
     getTrainingById(id: string): Observable<Training> {
+        const cached = this.trainingsSubject.value.find((t) => t.id === id);
+        if (cached) {
+            return of(cached);
+        }
         return this.http.get<Training>(`${this.apiUrl}/${id}`, {
             headers: { 'X-User-Id': this.getUserId() },
         });
