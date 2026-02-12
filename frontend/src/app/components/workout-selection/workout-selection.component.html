@@ -39,16 +39,22 @@
       </section>
     </div>
 
+    <!-- Session detail (completed workout from history) -->
+    <app-session-detail
+      *ngIf="selectedSession$ | async as session"
+      [session]="session"
+    ></app-session-detail>
+
     <!-- Workout visualization -->
     <app-workout-visualization
-      *ngIf="selectedTraining$ | async"
+      *ngIf="(selectedTraining$ | async) && !(selectedSession$ | async)"
       [training]="selectedTraining$ | async"
     ></app-workout-visualization>
 
     <!-- Hero fallback — only when nothing selected -->
     <div
       class="empty-state"
-      *ngIf="!(selectedTraining$ | async)"
+      *ngIf="!(selectedTraining$ | async) && !(selectedSession$ | async)"
     >
       <div class="hero-content glass">
         <h1>Hyper-Personalized AI Coaching</h1>

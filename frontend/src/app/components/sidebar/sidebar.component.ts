@@ -58,11 +58,11 @@ import { WorkoutHistoryComponent } from '../workout-history/workout-history.comp
 
     .view-tabs {
       display: flex;
-      gap: 8px;
+      gap: 4px;
       padding: 12px;
       background: rgba(255,255,255,0.02);
       border-radius: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 4px;
     }
 
     .tab-btn {

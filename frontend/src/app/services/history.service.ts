@@ -16,6 +16,13 @@ export class HistoryService {
     private sessionsSubject = new BehaviorSubject<SavedSession[]>([]);
     sessions$ = this.sessionsSubject.asObservable();
 
+    private selectedSessionSubject = new BehaviorSubject<SavedSession | null>(null);
+    selectedSession$ = this.selectedSessionSubject.asObservable();
+
+    selectSession(session: SavedSession | null) {
+        this.selectedSessionSubject.next(session);
+    }
+
     saveSession(summary: SessionSummary): SavedSession {
         const savedSession: SavedSession = {
             ...summary,

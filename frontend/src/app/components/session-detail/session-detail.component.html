@@ -1,0 +1,93 @@
+<div class="detail-container">
+  <div class="detail-header">
+    <h1>{{ session.title }}</h1>
+    <span class="date">{{ formatDate(session.date) }}</span>
+  </div>
+
+  <div class="top-stats">
+    <div class="stat-item">
+      <span class="label">Total Time</span>
+      <span class="value">{{ formatTime(session.totalDuration) }}</span>
+    </div>
+    <div class="stat-item">
+      <span class="label">Avg Power</span>
+      <span class="value">{{ session.avgPower }}W</span>
+    </div>
+    <div class="stat-item">
+      <span class="label">Avg HR</span>
+      <span class="value hr">{{ session.avgHR > 0 ? session.avgHR : '--' }}</span>
+    </div>
+    <div class="stat-item">
+      <span class="label">Avg Cadence</span>
+      <span class="value">{{ session.avgCadence }} RPM</span>
+    </div>
+  </div>
+
+  <div class="chart-section" *ngIf="hasHistory">
+    <div class="chart-toggles">
+      <button
+        class="toggle-btn power"
+        [class.active]="showPower"
+        (click)="showPower = !showPower; drawChart()"
+      >
+        <span class="dot"></span> Power
+      </button>
+      <button
+        class="toggle-btn heartrate"
+        [class.active]="showHR"
+        (click)="showHR = !showHR; drawChart()"
+      >
+        <span class="dot"></span> Heart Rate
+      </button>
+      <button
+        class="toggle-btn cadence"
+        [class.active]="showCadence"
+        (click)="showCadence = !showCadence; drawChart()"
+      >
+        <span class="dot"></span> Cadence
+      </button>
+    </div>
+    <div class="chart-area">
+      <canvas #chartCanvas></canvas>
+    </div>
+  </div>
+
+  <div class="chart-section" *ngIf="!hasHistory">
+    <div class="chart-area">
+      <div class="no-chart">No time-series data available for this session</div>
+    </div>
+  </div>
+
+  <div class="table-container" *ngIf="session.blockSummaries.length > 0">
+    <table class="summary-table">
+      <thead>
+        <tr>
+          <th>Interval</th>
+          <th>Duration</th>
+          <th>Target</th>
+          <th>Actual</th>
+          <th>Delta</th>
+          <th>HR</th>
+          <th>Cadence</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let block of session.blockSummaries">
+          <td>
+            <span class="block-type" [class]="block.type.toLowerCase()">{{ block.label }}</span>
+          </td>
+          <td>{{ formatTime(block.durationSeconds) }}</td>
+          <td>{{ block.targetPower }}W</td>
+          <td>{{ block.actualPower }}W</td>
+          <td>
+            <span class="delta" [class.positive]="getDelta(block) >= 0" [class.negative]="getDelta(block) < 0">
+              {{ getDelta(block) > 0 ? '+' : '' }}{{ getDelta(block) }}%
+            </span>
+          </td>
+          <td>{{ block.actualHR > 0 ? block.actualHR : '--' }}</td>
+          <td>{{ block.actualCadence }} RPM</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -8,6 +8,7 @@ import {
     TRAINING_TYPE_COLORS,
     TRAINING_TYPE_LABELS,
 } from '../../services/training.service';
+import { HistoryService } from '../../services/history.service';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -20,6 +21,7 @@ import { map } from 'rxjs/operators';
 })
 export class TrainingHistoryComponent {
     private trainingService = inject(TrainingService);
+    private historyService = inject(HistoryService);
 
     readonly trainingTypes = TRAINING_TYPES;
 
@@ -39,6 +41,7 @@ export class TrainingHistoryComponent {
     );
 
     onSelect(training: Training): void {
+        this.historyService.selectSession(null);
         this.trainingService.selectTraining(training);
     }
 

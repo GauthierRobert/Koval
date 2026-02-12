@@ -7,8 +7,10 @@ import { RouterModule } from '@angular/router';
 import { WorkoutVisualizationComponent } from '../workout-visualization/workout-visualization.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { WorkoutDetailModalComponent } from '../workout-detail-modal/workout-detail-modal.component';
+import { SessionDetailComponent } from '../session-detail/session-detail.component';
 import { CalendarService } from '../../services/calendar.service';
 import { AuthService } from '../../services/auth.service';
+import { HistoryService } from '../../services/history.service';
 import { ScheduledWorkout } from '../../services/coach.service';
 
 function toDateKey(d: Date): string {
@@ -27,6 +29,7 @@ function toDateKey(d: Date): string {
     RouterModule,
     SidebarComponent,
     WorkoutDetailModalComponent,
+    SessionDetailComponent,
   ],
   templateUrl: './workout-selection.component.html',
   styleUrl: './workout-selection.component.css',
@@ -35,8 +38,10 @@ export class WorkoutSelectionComponent implements OnInit {
   private trainingService = inject(TrainingService);
   private calendarService = inject(CalendarService);
   private authService = inject(AuthService);
+  private historyService = inject(HistoryService);
 
   selectedTraining$: Observable<Training | null> = this.trainingService.selectedTraining$;
+  selectedSession$ = this.historyService.selectedSession$;
 
   upcomingWorkouts$!: Observable<ScheduledWorkout[]>;
   overdueWorkouts$!: Observable<ScheduledWorkout[]>;

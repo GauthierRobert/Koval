@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HistoryService, SavedSession } from '../../services/history.service';
+import { TrainingService } from '../../services/training.service';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -15,9 +16,11 @@ import { Observable } from 'rxjs';
           <p>No completed workouts yet</p>
         </div>
 
-        <div 
-          *ngFor="let session of sessions" 
+        <div
+          *ngFor="let session of sessions"
           class="history-item"
+          [class.active]="(selectedSession$ | async)?.id === session.id"
+          (click)="onSelect(session)"
         >
           <div class="item-icon">✓</div>
           <div class="item-details">
@@ -70,6 +73,10 @@ import { Observable } from 'rxjs';
     .history-item:hover {
       background: rgba(255, 255, 255, 0.05);
     }
+    .history-item.active {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--accent-color);
+    }
     .item-icon {
       font-size: 20px;
       color: #2ecc71;
@@ -106,7 +113,14 @@ import { Observable } from 'rxjs';
 })
 export class WorkoutHistoryComponent {
     private historyService = inject(HistoryService);
+    private trainingService = inject(TrainingService);
     sessions$: Observable<SavedSession[]> = this.historyService.sessions$;
+    selectedSession$ = this.historyService.selectedSession$;
+
+    onSelect(session: SavedSession) {
+        this.trainingService.selectTraining(null);
+        this.historyService.selectSession(session);
+    }
 
     formatTime(seconds: number): string {
         const h = Math.floor(seconds / 3600);

@@ -3,6 +3,8 @@ import { BehaviorSubject, Observable, Subscription, interval } from 'rxjs';
 import { Training, WorkoutBlock } from './training.service';
 import { BluetoothService, LiveMetrics } from './bluetooth.service';
 
+export type { LiveMetrics } from './bluetooth.service';
+
 export interface BlockSummary {
     label: string;
     durationSeconds: number;
@@ -20,6 +22,7 @@ export interface SessionSummary {
     avgHR: number;
     avgCadence: number;
     blockSummaries: BlockSummary[];
+    history: LiveMetrics[];
 }
 
 export interface ActiveSessionState {
@@ -123,7 +126,8 @@ export class WorkoutExecutionService {
                 avgPower: finalState.averages.power,
                 avgHR: finalState.averages.heartRate,
                 avgCadence: finalState.averages.cadence,
-                blockSummaries: finalState.blockSummaries
+                blockSummaries: finalState.blockSummaries,
+                history: finalState.history
             };
 
             this.stateSubject.next({ ...finalState, isActive: false, isPaused: false, finalSummary: summary });
