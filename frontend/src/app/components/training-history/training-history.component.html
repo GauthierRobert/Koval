@@ -1,0 +1,50 @@
+<div class="history-container">
+  <h3 class="section-title">Your Workouts</h3>
+
+  <div class="type-filters">
+    <span
+      class="type-pill"
+      [class.active]="(activeTypeFilter$ | async) === null"
+      (click)="clearTypeFilter()"
+    >All</span>
+    <span
+      *ngFor="let type of trainingTypes"
+      class="type-pill"
+      [class.active]="(activeTypeFilter$ | async) === type"
+      [style.--pill-color]="getTypeColor(type)"
+      (click)="setTypeFilter(type)"
+    >{{ getTypeLabel(type) }}</span>
+  </div>
+
+  <div class="history-list">
+    <div
+      *ngFor="let training of filteredTrainings$ | async"
+      class="history-item"
+      [class.active]="(selectedTraining$ | async)?.id === training.id"
+      (click)="onSelect(training)"
+    >
+      <div class="item-icon">⚡</div>
+      <div class="item-details">
+        <div class="item-title-row">
+          <span class="item-title">{{ training.title }}</span>
+          <span
+            *ngIf="training.trainingType"
+            class="type-badge"
+            [style.background]="getTypeColor(training.trainingType) + '20'"
+            [style.color]="getTypeColor(training.trainingType)"
+            [style.border-color]="getTypeColor(training.trainingType) + '40'"
+          >{{ getTypeLabel(training.trainingType) }}</span>
+        </div>
+        <span class="item-meta">{{ getDuration(training) }} &bull; {{ training.blocks.length }} blocks</span>
+        <div class="item-tags" *ngIf="training.tags && training.tags.length > 0">
+          <span *ngFor="let tag of training.tags" class="tag-chip">{{ tag }}</span>
+        </div>
+      </div>
+      <button
+        class="delete-btn"
+        title="Delete training"
+        (click)="onDelete($event, training)"
+      >&times;</button>
+    </div>
+  </div>
+</div>

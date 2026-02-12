@@ -18,6 +18,7 @@ export interface ScheduledWorkout {
     createdAt?: string;
     // Enriched fields from backend
     trainingTitle?: string;
+    trainingType?: string;
     totalDurationSeconds?: number;
     // Legacy display fields (kept for compatibility)
     title?: string;

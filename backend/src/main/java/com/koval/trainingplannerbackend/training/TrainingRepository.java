@@ -15,4 +15,8 @@ public interface TrainingRepository extends MongoRepository<Training, String> {
     List<Training> findByVisibility(TrainingVisibility visibility);
 
     List<Training> findByTagsContaining(String tag);
+
+    List<Training> findByTrainingType(TrainingType trainingType);
+
+    List<Training> findByTagsIn(List<String> tags);
 }

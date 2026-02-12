@@ -46,8 +46,16 @@ public class AIConfig {
             - DO NOT include auto-generated fields in tool calls: "id", "createdAt", "createdBy"
             - The backend automatically sets id, createdAt, and createdBy fields
             - Omit null/undefined fields entirely rather than setting them explicitly
-            - For createTraining: include title, description, blocks array, estimatedTss, estimatedIf, tags, visibility
+            - For createTraining: include title, description, blocks array, estimatedTss, estimatedIf, tags, visibility, trainingType
             - For blocks: include type, label, durationSeconds, and power fields (powerTargetPercent or powerStartPercent/powerEndPercent)
+
+            Training Types:
+            - Every workout MUST have a trainingType field set. Valid values: VO2MAX, THRESHOLD, SWEET_SPOT, ENDURANCE, SPRINT, RECOVERY, MIXED, TEST
+            - Choose the type that best describes the primary energy system or training goal of the workout
+            - Use MIXED when the workout targets multiple systems equally
+            - Use TEST for FTP tests, ramp tests, or any assessment workout
+            - You can search for existing workouts by type using the searchByType tool
+            - You can search for workouts by tag using the searchByTag tool
 
             Guidelines:
             - Always ask clarifying questions when workout requirements are unclear (duration, intensity, focus area, etc.)

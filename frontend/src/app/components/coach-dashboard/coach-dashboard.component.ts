@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CoachService, ScheduledWorkout } from '../../services/coach.service';
 import { AuthService, User } from '../../services/auth.service';
 import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.component';
+import { TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../services/training.service';
 
 @Component({
   selector: 'app-coach-dashboard',
@@ -128,6 +129,7 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
               <div class="table-header">
                 <span>DATE</span>
                 <span>SESSION TITLE</span>
+                <span>TYPE</span>
                 <span>DUR</span>
                 <span>IF</span>
                 <span>TSS</span>
@@ -136,6 +138,16 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
               <div *ngFor="let workout of athleteSchedule" class="table-row">
                 <span class="t-date">{{ workout.scheduledDate | date:'MMM d, EEE' }}</span>
                 <span class="t-title">{{ getWorkoutTitle(workout) }}</span>
+                <span class="t-type">
+                  <span
+                    *ngIf="workout.trainingType"
+                    class="schedule-type-badge"
+                    [style.background]="getTypeColor(workout.trainingType) + '20'"
+                    [style.color]="getTypeColor(workout.trainingType)"
+                    [style.border-color]="getTypeColor(workout.trainingType) + '40'"
+                  >{{ getTypeLabel(workout.trainingType) }}</span>
+                  <span *ngIf="!workout.trainingType">-</span>
+                </span>
                 <span class="t-dur">{{ getWorkoutDuration(workout) }}</span>
                 <span class="t-if">{{ workout.intensityFactor || workout.if || '-' }}</span>
                 <span class="t-tss">{{ workout.tss || '-' }}</span>
@@ -462,7 +474,7 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
 
     .table-header, .table-row {
       display: grid;
-      grid-template-columns: 120px 1fr 80px 60px 60px 100px;
+      grid-template-columns: 120px 1fr 90px 80px 60px 60px 100px;
       padding: 12px 16px;
       align-items: center;
     }
@@ -484,6 +496,17 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
     .t-title { font-weight: 700; color: var(--text-color); }
     .t-status { font-size: 9px; font-weight: 800; text-transform: uppercase; }
     .t-status.pending { color: var(--accent-color); }
+
+    .schedule-type-badge {
+      font-size: 8px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
 
     .empty-row { grid-template-columns: 1fr; }
     .t-empty { color: var(--text-muted); font-size: 11px; text-align: center; }
@@ -626,6 +649,14 @@ export class CoachDashboardComponent implements OnInit {
     const tagSet = new Set<string>();
     this.athletes.forEach(a => a.tags?.forEach(t => tagSet.add(t)));
     this.allTags = [...tagSet].sort();
+  }
+
+  getTypeColor(type: string): string {
+    return TRAINING_TYPE_COLORS[type as TrainingType] || '#888';
+  }
+
+  getTypeLabel(type: string): string {
+    return TRAINING_TYPE_LABELS[type as TrainingType] || type;
   }
 
   addAthlete() {

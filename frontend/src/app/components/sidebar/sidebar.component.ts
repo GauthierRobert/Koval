@@ -1,7 +1,5 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { TrainingService } from '../../services/training.service';
 import { BluetoothService } from '../../services/bluetooth.service';
 import { TrainingHistoryComponent } from '../training-history/training-history.component';
 import { WorkoutHistoryComponent } from '../workout-history/workout-history.component';
@@ -9,7 +7,7 @@ import { WorkoutHistoryComponent } from '../workout-history/workout-history.comp
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, FormsModule, TrainingHistoryComponent, WorkoutHistoryComponent],
+  imports: [CommonModule, TrainingHistoryComponent, WorkoutHistoryComponent],
   template: `
     <aside class="sidebar glass">
       <div class="sidebar-content">
@@ -21,21 +19,6 @@ import { WorkoutHistoryComponent } from '../workout-history/workout-history.comp
         <app-workout-history *ngIf="viewMode === 'history'"></app-workout-history>
       </div>
       <div class="sidebar-footer">
-        <div class="device-status-bar" (click)="bluetoothService.toggleDeviceManager()">
-           <div class="status-chip" [class.on]="(trainerStatus$ | async) === 'Connected'" title="Smart Trainer">🚲</div>
-           <div class="status-chip" [class.on]="(hrStatus$ | async) === 'Connected'" title="Heart Rate">❤️</div>
-           <div class="status-chip" [class.on]="(pmStatus$ | async) === 'Connected'" title="Power Meter">⚡</div>
-           <div class="status-chip" [class.on]="(cadenceStatus$ | async) === 'Connected'" title="Cadence Sensor">🔄</div>
-           <span class="status-text">DEVICES</span>
-        </div>
-
-        <div class="settings-panel" *ngIf="ftp$ | async as ftp">
-          <label>Functional Threshold Power</label>
-          <div class="ftp-input-wrapper">
-            <input type="number" [ngModel]="ftp" (ngModelChange)="onFtpChange($event)" />
-            <span>W</span>
-          </div>
-        </div>
         <div class="simulation-panel">
           <label class="switch">
             <input type="checkbox" (change)="toggleSimulation($event)">
@@ -112,79 +95,6 @@ import { WorkoutHistoryComponent } from '../workout-history/workout-history.comp
       display: flex;
       flex-direction: column;
       gap: 20px;
-    }
-
-    .device-status-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px;
-      background: var(--surface-elevated);
-      border: 1px solid var(--glass-border);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .device-status-bar:hover {
-      background: var(--surface-hover);
-    }
-
-    .status-chip {
-      font-size: 16px;
-      opacity: 0.3;
-      filter: grayscale(1);
-    }
-
-    .status-chip.on {
-      opacity: 1;
-      filter: grayscale(0);
-    }
-
-    .status-text {
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      color: var(--text-muted);
-      margin-left: auto;
-    }
-
-    .settings-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .settings-panel label {
-      font-size: 11px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      letter-spacing: 0.5px;
-    }
-
-    .ftp-input-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--surface-elevated);
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--glass-border);
-    }
-
-    .ftp-input-wrapper span {
-      color: var(--text-muted);
-      font-weight: 600;
-      font-size: 12px;
-    }
-
-    .ftp-input-wrapper input {
-      background: transparent;
-      border: none;
-      color: var(--text-color);
-      font-weight: 700;
-      width: 60px;
-      outline: none;
     }
 
     .simulation-panel {
@@ -288,25 +198,9 @@ import { WorkoutHistoryComponent } from '../workout-history/workout-history.comp
   `]
 })
 export class SidebarComponent {
-  trainingService = inject(TrainingService);
   bluetoothService = inject(BluetoothService);
 
   viewMode: 'plans' | 'history' = 'plans';
-  showDeviceManager = false;
-
-  trainerStatus$ = this.bluetoothService.trainerStatus$;
-  hrStatus$ = this.bluetoothService.hrStatus$;
-  pmStatus$ = this.bluetoothService.pmStatus$;
-  cadenceStatus$ = this.bluetoothService.cadenceStatus$;
-  ftp$ = this.trainingService.ftp$;
-
-  toggleDeviceManager() {
-    this.showDeviceManager = !this.showDeviceManager;
-  }
-
-  onFtpChange(ftp: number) {
-    this.trainingService.setFtp(ftp);
-  }
 
   toggleSimulation(event: any) {
     this.bluetoothService.toggleSimulation(event.target.checked);

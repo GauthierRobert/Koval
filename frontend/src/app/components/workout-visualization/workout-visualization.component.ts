@@ -47,19 +47,19 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
           <span *ngFor="let label of getYAxisLabels()">{{ label }}%</span>
         </div>
         <div class="chart-area">
-          <div 
-            *ngFor="let block of training.blocks; let i = index" 
+          <div
+            *ngFor="let block of training.blocks; let i = index"
             class="block-bar-wrapper"
             [style.width.%]="getBlockWidth(block)"
           >
             <div class="bar-container" [style.height.%]="getBlockHeight(block)">
-              <div 
+              <div
                 class="block-bar"
                 [style.background]="getBlockColor(block)"
                 [style.clip-path]="getBlockClipPath(block)"
                 [attr.data-type]="block.type"
               ></div>
-              
+
               <div class="block-tooltip glass" *ngIf="ftp$ | async as ftp">
                 <span class="tooltip-label">{{ block.label }}</span>
                 <span class="tooltip-type">{{ block.type }}</span>
@@ -71,7 +71,7 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
                 </ng-container>
                 <span class="tooltip-duration">{{ formatDuration(block.durationSeconds) }}</span>
               </div>
-              
+
               <div class="block-label" *ngIf="getBlockWidth(block) > 5">
                  {{ getDisplayPower(block) }}
               </div>
@@ -102,7 +102,7 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
       height: 100%;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 8px;
       overflow-y: auto;
     }
     .header {
@@ -312,7 +312,7 @@ import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.compone
       border: 2px solid #6c5ce7;
       backdrop-filter: blur(4px);
     }
-    
+
     .block-label {
       position: absolute;
       bottom: 10px;

@@ -26,6 +26,8 @@ public class Training {
     private Integer estimatedTss;
     private Double estimatedIf;
 
+    private TrainingType trainingType;
+
     // New fields for coaching support
     private String createdBy; // User ID of creator
     private TrainingVisibility visibility = TrainingVisibility.PRIVATE;

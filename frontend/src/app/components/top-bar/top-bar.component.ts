@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ChatService } from '../../services/chat.service';
+import { BluetoothService } from '../../services/bluetooth.service';
+import { TrainingService } from '../../services/training.service';
+import { combineLatest, map } from 'rxjs';
 
 @Component({
   selector: 'app-top-bar',
@@ -31,6 +34,26 @@ import { ChatService } from '../../services/chat.service';
             <span class="label">SYSTEM:</span>
             <span class="value">STABLE</span>
           </div>
+        </div>
+
+        <div class="topbar-controls">
+          <div class="ftp-compact" title="Functional Threshold Power">
+            <span class="ftp-label">FTP</span>
+            <input
+              type="number"
+              class="ftp-input"
+              [ngModel]="ftp$ | async"
+              (ngModelChange)="onFtpChange($event)"
+            />
+            <span class="ftp-unit">W</span>
+          </div>
+
+          <button class="device-btn" (click)="toggleDevices()" title="Manage Devices">
+            <svg class="bt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6.5 6.5l11 11L12 23V1l5.5 5.5-11 11"/>
+            </svg>
+            <span class="device-badge" *ngIf="(connectedCount$ | async)! > 0">{{ connectedCount$ | async }}</span>
+          </button>
         </div>
 
         <div class="action-wrapper">
@@ -179,6 +202,98 @@ import { ChatService } from '../../services/chat.service';
       border-radius: 50%;
     }
 
+    .topbar-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ftp-compact {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 0 10px;
+      height: 36px;
+    }
+
+    .ftp-label {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    .ftp-input {
+      background: transparent;
+      border: none;
+      color: var(--text-color);
+      font-weight: 700;
+      font-size: 13px;
+      font-family: inherit;
+      width: 40px;
+      outline: none;
+      text-align: right;
+      -moz-appearance: textfield;
+    }
+
+    .ftp-input::-webkit-inner-spin-button,
+    .ftp-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .ftp-unit {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .device-btn {
+      position: relative;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-muted);
+    }
+
+    .device-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: var(--text-color);
+    }
+
+    .bt-icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    .device-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: var(--accent-color);
+      color: #000;
+      font-size: 9px;
+      font-weight: 800;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
     .action-wrapper {
       position: relative;
     }
@@ -312,9 +427,29 @@ import { ChatService } from '../../services/chat.service';
 export class TopBarComponent {
   private router = inject(Router);
   private chatService = inject(ChatService);
+  private bluetoothService = inject(BluetoothService);
+  private trainingService = inject(TrainingService);
 
   isPopupOpen = false;
   requestDescription = '';
+  ftp$ = this.trainingService.ftp$;
+
+  connectedCount$ = combineLatest([
+    this.bluetoothService.trainerStatus$,
+    this.bluetoothService.hrStatus$,
+    this.bluetoothService.pmStatus$,
+    this.bluetoothService.cadenceStatus$,
+  ]).pipe(
+    map(statuses => statuses.filter(s => s === 'Connected').length)
+  );
+
+  onFtpChange(ftp: number) {
+    this.trainingService.setFtp(ftp);
+  }
+
+  toggleDevices() {
+    this.bluetoothService.toggleDeviceManager();
+  }
 
   togglePopup(event: Event) {
     event.stopPropagation();

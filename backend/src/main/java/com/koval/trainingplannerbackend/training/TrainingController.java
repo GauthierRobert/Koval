@@ -1,5 +1,7 @@
 package com.koval.trainingplannerbackend.training;
 
+import com.koval.trainingplannerbackend.auth.User;
+import com.koval.trainingplannerbackend.auth.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,9 +16,11 @@ import java.util.List;
 public class TrainingController {
 
     private final TrainingManagementService trainingService;
+    private final UserService userService;
 
-    public TrainingController(TrainingManagementService trainingService) {
+    public TrainingController(TrainingManagementService trainingService, UserService userService) {
         this.trainingService = trainingService;
+        this.userService = userService;
     }
 
     /**
@@ -91,5 +95,31 @@ public class TrainingController {
     @GetMapping("/search")
     public ResponseEntity<List<Training>> searchByTag(@RequestParam String tag) {
         return ResponseEntity.ok(trainingService.searchByTag(tag));
+    }
+
+    /**
+     * Search trainings by type.
+     */
+    @GetMapping("/search/type")
+    public ResponseEntity<List<Training>> searchByType(@RequestParam TrainingType type) {
+        return ResponseEntity.ok(trainingService.searchByType(type));
+    }
+
+    /**
+     * Discover trainings based on user's tags.
+     */
+    @GetMapping("/discover")
+    public ResponseEntity<List<Training>> discoverTrainings(
+            @RequestHeader(value = "X-User-Id", required = false) String userId) {
+        if (userId == null || userId.isEmpty()) {
+            return ResponseEntity.ok(List.of());
+        }
+        User user = userService.getUserById(userId);
+        if (user == null) {
+            return ResponseEntity.ok(List.of());
+        }
+        List<Training> discovered = trainingService.discoverTrainingsByUserTags(
+                user.getTags(), userId, user.getCoachId());
+        return ResponseEntity.ok(discovered);
     }
 }
