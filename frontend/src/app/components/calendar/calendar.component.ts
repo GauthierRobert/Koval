@@ -86,7 +86,7 @@ export class CalendarComponent implements OnInit {
       tap((user) => (this.userId = user!.id)),
       switchMap(() => this.reload$),
       switchMap(() =>
-        this.calendarService.getMySchedule(this.userId, this.weekDays[0].key, this.weekDays[6].key)
+        this.calendarService.getMySchedule(this.weekDays[0].key, this.weekDays[6].key)
       ),
       map(groupByDay)
     );
@@ -131,7 +131,7 @@ export class CalendarComponent implements OnInit {
 
   deleteWorkout(workout: ScheduledWorkout): void {
     this.calendarService
-      .deleteScheduledWorkout(this.userId, workout.id)
+      .deleteScheduledWorkout(workout.id)
       .subscribe(() => this.reload$.next());
   }
 

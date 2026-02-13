@@ -111,6 +111,7 @@ npm run watch              # Watch mode build
 - RxJS BehaviorSubjects for reactive state
 - No external state library; services expose observables ending with `$`
 - Example pattern: `private subject = new BehaviorSubject<T>(initial); public observable$ = subject.asObservable();`
+- **IMPORTANT**: Always use `| async` pipe in templates to subscribe to observables. Never manually subscribe in components to set plain properties for template binding — use `Observable` + `| async` instead. This ensures proper change detection and automatic unsubscription.
 
 **Routing**: Defined in `app.routes.ts`
 - `/dashboard` → Workout selection

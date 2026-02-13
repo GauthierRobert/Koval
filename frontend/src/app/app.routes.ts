@@ -7,15 +7,17 @@ import { CoachDashboardComponent } from './components/coach-dashboard/coach-dash
 import { AIChatPageComponent } from './components/ai-chat-page/ai-chat-page.component';
 import { LoginComponent } from './components/auth/login.component';
 import { AuthCallbackComponent } from './components/auth/auth-callback.component';
+import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
-    { path: 'dashboard', component: WorkoutSelectionComponent },
-    { path: 'active-session', component: LiveDashboardComponent },
-    { path: 'history', component: WorkoutHistoryComponent },
-    { path: 'calendar', component: CalendarComponent },
-    { path: 'coach', component: CoachDashboardComponent },
-    { path: 'chat', component: AIChatPageComponent },
+    { path: 'dashboard', component: WorkoutSelectionComponent, canActivate: [authGuard] },
+    { path: 'active-session', component: LiveDashboardComponent, canActivate: [authGuard] },
+    { path: 'history', component: WorkoutHistoryComponent, canActivate: [authGuard] },
+    { path: 'calendar', component: CalendarComponent, canActivate: [authGuard] },
+    { path: 'coach', component: CoachDashboardComponent, canActivate: [authGuard] },
+    { path: 'chat', component: AIChatPageComponent, canActivate: [authGuard] },
     { path: 'login', component: LoginComponent },
     { path: 'auth/callback', component: AuthCallbackComponent },
+    { path: 'auth/google/callback', component: AuthCallbackComponent },
 ];

@@ -304,15 +304,15 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
       }
 
       if (this.mode === 'coach' && this.userId) {
-        this.coachService.getAthletes(this.userId).subscribe(athletes => {
+        this.coachService.getAthletes().subscribe(athletes => {
           this.availableAthletes = athletes;
           // Re-apply preselection after athletes load
           if (this.preselectedAthletes && this.preselectedAthletes.length > 0) {
             this.selectedAthleteIds = this.preselectedAthletes.map(a => a.id);
           }
         });
-        this.coachService.getAllTags(this.userId).subscribe(tags => {
-          this.availableTags = tags;
+        this.coachService.getAllTags().subscribe(tags => {
+          this.availableTags = tags.map(t => t.name);
         });
       }
     }
@@ -368,7 +368,7 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
 
     if (this.mode === 'coach') {
       this.coachService
-        .assignTraining(this.userId, this.selectedTrainingId, this.selectedAthleteIds, this.selectedDate, this.notes || undefined)
+        .assignTraining(this.selectedTrainingId, this.selectedAthleteIds, this.selectedDate, this.notes || undefined)
         .subscribe({
           next: () => {
             this.scheduled.emit();
@@ -378,7 +378,7 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
         });
     } else {
       this.calendarService
-        .scheduleWorkout(this.userId, this.selectedTrainingId, this.selectedDate, this.notes || undefined)
+        .scheduleWorkout(this.selectedTrainingId, this.selectedDate, this.notes || undefined)
         .subscribe({
           next: () => {
             this.scheduled.emit();

@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.ai;
 
+import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.http.MediaType;
@@ -27,10 +28,8 @@ public class AIController {
 
     @PostMapping("/chat")
     public ResponseEntity<AIService.ChatMessageResponse> chat(
-            @RequestBody ChatRequest request,
-            @RequestHeader(value = "X-User-Id", required = false) String headerUserId) {
-
-        String userId = resolveUserId(headerUserId, request.userId());
+            @RequestBody ChatRequest request) {
+        String userId = SecurityUtils.getCurrentUserId();
         var response = aiService.chat(request.message(), userId, request.chatHistoryId());
         return ResponseEntity.ok(response);
     }
@@ -38,10 +37,8 @@ public class AIController {
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> chatStream(
             @RequestBody ChatRequest request,
-            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
             HttpServletResponse response) {
-
-        String userId = resolveUserId(headerUserId, request.userId());
+        String userId = SecurityUtils.getCurrentUserId();
         var streamResponse = aiService.chatStream(request.message(), userId, request.chatHistoryId());
         response.setHeader("X-Chat-History-Id", streamResponse.chatHistoryId());
         return streamResponse.events();
@@ -50,15 +47,9 @@ public class AIController {
     // ── History ─────────────────────────────────────────────────────────
 
     @GetMapping("/history")
-    public ResponseEntity<List<ChatHistory>> getUserHistory(
-            @RequestHeader(value = "X-User-Id", required = false) String userId,
-            @RequestParam(required = false) String userIdParam) {
-
-        String finalUserId = userId != null ? userId : userIdParam;
-        if (finalUserId == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.ok(chatHistoryService.findByUser(finalUserId));
+    public ResponseEntity<List<ChatHistory>> getUserHistory() {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(chatHistoryService.findByUser(userId));
     }
 
     @GetMapping("/history/{chatHistoryId}")
@@ -85,15 +76,9 @@ public class AIController {
         return ResponseEntity.noContent().build();
     }
 
-    // ── Helpers & DTOs ──────────────────────────────────────────────────
+    // ── DTOs ──────────────────────────────────────────────────
 
-    private String resolveUserId(String headerUserId, String requestUserId) {
-        if (headerUserId != null) return headerUserId;
-        if (requestUserId != null) return requestUserId;
-        return "anonymous";
-    }
-
-    public record ChatRequest(String message, String chatHistoryId, String userId) {}
+    public record ChatRequest(String message, String chatHistoryId) {}
     public record ConversationMessage(String role, String content) {}
     public record ChatHistoryDetail(ChatHistory metadata, List<ConversationMessage> messages) {}
 }

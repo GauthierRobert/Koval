@@ -5,30 +5,24 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Document(collection = "users")
 public class User {
     @Id
     private String id;
 
-    @Indexed(unique = true)
+    @Indexed(unique = true, sparse = true)
     private String stravaId;
+
+    @Indexed(unique = true, sparse = true)
+    private String googleId;
+
+    private AuthProvider authProvider;
 
     private String email;
     private String displayName;
     private String profilePicture;
     private UserRole role = UserRole.ATHLETE;
-
-    // If ATHLETE, the coach's user ID
-    private String coachId;
-
-    // If COACH, list of athlete user IDs
-    private List<String> athleteIds = new ArrayList<>();
-
-    // Tags for grouping athletes (e.g. "Club BTC", "Junior", "Triathlon")
-    private List<String> tags = new ArrayList<>();
 
     private Integer ftp = 250;
     private Double ctl = 0.0;
@@ -63,6 +57,22 @@ public class User {
         this.stravaId = stravaId;
     }
 
+    public String getGoogleId() {
+        return googleId;
+    }
+
+    public void setGoogleId(String googleId) {
+        this.googleId = googleId;
+    }
+
+    public AuthProvider getAuthProvider() {
+        return authProvider;
+    }
+
+    public void setAuthProvider(AuthProvider authProvider) {
+        this.authProvider = authProvider;
+    }
+
     public String getEmail() {
         return email;
     }
@@ -93,22 +103,6 @@ public class User {
 
     public void setRole(UserRole role) {
         this.role = role;
-    }
-
-    public String getCoachId() {
-        return coachId;
-    }
-
-    public void setCoachId(String coachId) {
-        this.coachId = coachId;
-    }
-
-    public List<String> getAthleteIds() {
-        return athleteIds;
-    }
-
-    public void setAthleteIds(List<String> athleteIds) {
-        this.athleteIds = athleteIds;
     }
 
     public Integer getFtp() {
@@ -183,20 +177,8 @@ public class User {
         this.stravaTokenExpiresAt = stravaTokenExpiresAt;
     }
 
-    public List<String> getTags() {
-        return tags;
-    }
-
-    public void setTags(List<String> tags) {
-        this.tags = tags;
-    }
-
     // Helper methods
     public boolean isCoach() {
         return this.role == UserRole.COACH;
-    }
-
-    public boolean hasCoach() {
-        return this.coachId != null && !this.coachId.isEmpty();
     }
 }

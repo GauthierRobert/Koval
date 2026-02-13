@@ -1,17 +1,19 @@
 package com.koval.trainingplannerbackend.coach;
 
+import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.User;
+import com.koval.trainingplannerbackend.training.tag.Tag;
+import com.koval.trainingplannerbackend.training.tag.TagService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * REST Controller for Coach-specific operations.
- */
 @RestController
 @RequestMapping("/api/coach")
 @CrossOrigin(origins = "*")
@@ -19,97 +21,40 @@ public class CoachController {
 
     private final CoachService coachService;
     private final ScheduleController scheduleController;
+    private final TagService tagService;
 
-    public CoachController(CoachService coachService, ScheduleController scheduleController) {
+    public CoachController(CoachService coachService, ScheduleController scheduleController, TagService tagService) {
         this.coachService = coachService;
         this.scheduleController = scheduleController;
+        this.tagService = tagService;
     }
 
-    /**
-     * DTO for assignment request.
-     */
-    public static class AssignmentRequest {
-        private String trainingId;
-        private List<String> athleteIds;
-        private LocalDate scheduledDate;
-        private String notes;
-        private Integer tss;
-        private Double intensityFactor;
+    public record AssignmentRequest(
+            String trainingId,
+            List<String> athleteIds,
+            LocalDate scheduledDate,
+            String notes,
+            Integer tss,
+            Double intensityFactor
+    ) {}
 
-        // Getters and Setters
-        public String getTrainingId() {
-            return trainingId;
-        }
-
-        public void setTrainingId(String trainingId) {
-            this.trainingId = trainingId;
-        }
-
-        public List<String> getAthleteIds() {
-            return athleteIds;
-        }
-
-        public void setAthleteIds(List<String> athleteIds) {
-            this.athleteIds = athleteIds;
-        }
-
-        public LocalDate getScheduledDate() {
-            return scheduledDate;
-        }
-
-        public void setScheduledDate(LocalDate scheduledDate) {
-            this.scheduledDate = scheduledDate;
-        }
-
-        public String getNotes() {
-            return notes;
-        }
-
-        public void setNotes(String notes) {
-            this.notes = notes;
-        }
-
-        public Integer getTss() {
-            return tss;
-        }
-
-        public void setTss(Integer tss) {
-            this.tss = tss;
-        }
-
-        public Double getIntensityFactor() {
-            return intensityFactor;
-        }
-
-        public void setIntensityFactor(Double intensityFactor) {
-            this.intensityFactor = intensityFactor;
-        }
-    }
-
-    /**
-     * Assign a training to athletes.
-     * TODO: Get coachId from JWT token in real implementation
-     */
     @PostMapping("/assign")
     public ResponseEntity<List<ScheduledWorkout>> assignTraining(
-            @RequestBody AssignmentRequest request,
-            @RequestHeader(value = "X-User-Id") String coachId) {
+            @RequestBody AssignmentRequest request) {
+        String coachId = SecurityUtils.getCurrentUserId();
         try {
             List<ScheduledWorkout> assignments = coachService.assignTraining(
                     coachId,
-                    request.getTrainingId(),
-                    request.getAthleteIds(),
-                    request.getScheduledDate(),
-                    request.getNotes());
+                    request.trainingId(),
+                    request.athleteIds(),
+                    request.scheduledDate(),
+                    request.notes());
             return ResponseEntity.ok(assignments);
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
-    /**
-     * Unassign a scheduled workout.
-     */
     @DeleteMapping("/assign/{id}")
     public ResponseEntity<Void> unassignTraining(@PathVariable String id) {
         try {
@@ -120,44 +65,38 @@ public class CoachController {
         }
     }
 
-    /**
-     * Get coach's athletes.
-     */
     @GetMapping("/athletes")
-    public ResponseEntity<List<User>> getAthletes(
-            @RequestHeader(value = "X-User-Id") String coachId) {
-        return ResponseEntity.ok(coachService.getCoachAthletes(coachId));
+    public ResponseEntity<List<Map<String, Object>>> getAthletes() {
+        String coachId = SecurityUtils.getCurrentUserId();
+        List<User> athletes = coachService.getCoachAthletes(coachId);
+        List<Tag> coachTags = tagService.getTagsForCoach(coachId);
+
+        List<Map<String, Object>> enriched = athletes.stream().map(athlete -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", athlete.getId());
+            map.put("displayName", athlete.getDisplayName());
+            map.put("profilePicture", athlete.getProfilePicture());
+            map.put("role", athlete.getRole().name());
+            map.put("ftp", athlete.getFtp());
+            List<String> athleteTagNames = coachTags.stream()
+                    .filter(tag -> tag.getAthleteIds().contains(athlete.getId()))
+                    .map(Tag::getName)
+                    .toList();
+            map.put("tags", athleteTagNames);
+            map.put("hasCoach", true);
+            return map;
+        }).toList();
+
+        return ResponseEntity.ok(enriched);
     }
 
-    /**
-     * Add an athlete to coach's roster.
-     */
-    @PostMapping("/athletes/{athleteId}")
-    public ResponseEntity<Void> addAthlete(
-            @PathVariable String athleteId,
-            @RequestHeader(value = "X-User-Id") String coachId) {
-        try {
-            coachService.addAthlete(coachId, athleteId);
-            return ResponseEntity.ok().build();
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    /**
-     * Remove an athlete from coach's roster.
-     */
     @DeleteMapping("/athletes/{athleteId}")
-    public ResponseEntity<Void> removeAthlete(
-            @PathVariable String athleteId,
-            @RequestHeader(value = "X-User-Id") String coachId) {
+    public ResponseEntity<Void> removeAthlete(@PathVariable String athleteId) {
+        String coachId = SecurityUtils.getCurrentUserId();
         coachService.removeAthlete(coachId, athleteId);
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Get an athlete's schedule (enriched with training metadata).
-     */
     @GetMapping("/schedule/{athleteId}")
     public ResponseEntity<List<ScheduledWorkoutResponse>> getAthleteSchedule(
             @PathVariable String athleteId,
@@ -170,47 +109,21 @@ public class CoachController {
         return ResponseEntity.ok(scheduleController.enrichList(workouts));
     }
 
-    public static class CompletionRequest {
-        private Integer tss;
-        private Double intensityFactor;
+    public record CompletionRequest(Integer tss, Double intensityFactor) {}
 
-        // Getters and Setters
-        public Integer getTss() {
-            return tss;
-        }
-
-        public void setTss(Integer tss) {
-            this.tss = tss;
-        }
-
-        public Double getIntensityFactor() {
-            return intensityFactor;
-        }
-
-        public void setIntensityFactor(Double intensityFactor) {
-            this.intensityFactor = intensityFactor;
-        }
-    }
-
-    /**
-     * Mark a scheduled workout as completed.
-     */
     @PostMapping("/schedule/{id}/complete")
     public ResponseEntity<ScheduledWorkout> markCompleted(
             @PathVariable String id,
             @RequestBody(required = false) CompletionRequest request) {
         try {
-            Integer tss = request != null ? request.getTss() : null;
-            Double intensityFactor = request != null ? request.getIntensityFactor() : null;
+            Integer tss = request != null ? request.tss() : null;
+            Double intensityFactor = request != null ? request.intensityFactor() : null;
             return ResponseEntity.ok(coachService.markCompleted(id, tss, intensityFactor));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
-    /**
-     * Mark a scheduled workout as skipped.
-     */
     @PostMapping("/schedule/{id}/skip")
     public ResponseEntity<ScheduledWorkout> markSkipped(@PathVariable String id) {
         try {
@@ -222,61 +135,98 @@ public class CoachController {
 
     // --- Tag management endpoints ---
 
-    /**
-     * Replace all tags for an athlete.
-     */
     @PutMapping("/athletes/{athleteId}/tags")
-    public ResponseEntity<User> setAthleteTags(
+    public ResponseEntity<List<Tag>> setAthleteTags(
             @PathVariable String athleteId,
-            @RequestBody Map<String, List<String>> body,
-            @RequestHeader(value = "X-User-Id") String coachId) {
+            @RequestBody Map<String, List<String>> body) {
+        String coachId = SecurityUtils.getCurrentUserId();
         try {
-            List<String> tags = body.get("tags");
-            if (tags == null) tags = List.of();
-            return ResponseEntity.ok(coachService.setAthleteTags(coachId, athleteId, tags));
+            List<String> tagIds = body.get("tags");
+            if (tagIds == null) tagIds = List.of();
+            return ResponseEntity.ok(coachService.setAthleteTags(coachId, athleteId, tagIds));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
-    /**
-     * Add a single tag to an athlete.
-     */
     @PostMapping("/athletes/{athleteId}/tags")
-    public ResponseEntity<User> addAthleteTag(
+    public ResponseEntity<Tag> addAthleteTag(
             @PathVariable String athleteId,
-            @RequestBody Map<String, String> body,
-            @RequestHeader(value = "X-User-Id") String coachId) {
+            @RequestBody Map<String, String> body) {
+        String coachId = SecurityUtils.getCurrentUserId();
         try {
-            String tag = body.get("tag");
-            if (tag == null || tag.isBlank()) return ResponseEntity.badRequest().build();
-            return ResponseEntity.ok(coachService.addTagToAthlete(coachId, athleteId, tag));
+            String tagName = body.get("tag");
+            if (tagName == null || tagName.isBlank()) return ResponseEntity.badRequest().build();
+            return ResponseEntity.ok(coachService.addTagToAthlete(coachId, athleteId, tagName));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
-    /**
-     * Remove a single tag from an athlete.
-     */
-    @DeleteMapping("/athletes/{athleteId}/tags/{tag}")
-    public ResponseEntity<User> removeAthleteTag(
+    @DeleteMapping("/athletes/{athleteId}/tags/{tagId}")
+    public ResponseEntity<Tag> removeAthleteTag(
             @PathVariable String athleteId,
-            @PathVariable String tag,
-            @RequestHeader(value = "X-User-Id") String coachId) {
+            @PathVariable String tagId) {
+        String coachId = SecurityUtils.getCurrentUserId();
         try {
-            return ResponseEntity.ok(coachService.removeTagFromAthlete(coachId, athleteId, tag));
+            return ResponseEntity.ok(coachService.removeTagFromAthlete(coachId, athleteId, tagId));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
-    /**
-     * Get all unique tags across the coach's athletes.
-     */
     @GetMapping("/athletes/tags")
-    public ResponseEntity<List<String>> getAllTags(
-            @RequestHeader(value = "X-User-Id") String coachId) {
+    public ResponseEntity<List<Tag>> getAllTags() {
+        String coachId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(coachService.getAthleteTagsForCoach(coachId));
+    }
+
+    // --- Invite Code endpoints ---
+
+    public record InviteCodeRequest(List<String> tags, int maxUses, LocalDateTime expiresAt) {}
+
+    public record RedeemRequest(String code) {}
+
+    @PostMapping("/invite-codes")
+    public ResponseEntity<InviteCode> generateInviteCode(
+            @RequestBody InviteCodeRequest request) {
+        String coachId = SecurityUtils.getCurrentUserId();
+        try {
+            InviteCode code = coachService.generateInviteCode(
+                    coachId, request.tags(), request.maxUses(), request.expiresAt());
+            return ResponseEntity.ok(code);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/invite-codes")
+    public ResponseEntity<List<InviteCode>> getInviteCodes() {
+        String coachId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(coachService.getInviteCodes(coachId));
+    }
+
+    @DeleteMapping("/invite-codes/{id}")
+    public ResponseEntity<Void> deactivateInviteCode(@PathVariable String id) {
+        String coachId = SecurityUtils.getCurrentUserId();
+        try {
+            coachService.deactivateInviteCode(coachId, id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping("/redeem-invite")
+    public ResponseEntity<User> redeemInviteCode(@RequestBody RedeemRequest request) {
+        String userId = SecurityUtils.getCurrentUserId();
+        try {
+            User updated = coachService.redeemInviteCode(userId, request.code());
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

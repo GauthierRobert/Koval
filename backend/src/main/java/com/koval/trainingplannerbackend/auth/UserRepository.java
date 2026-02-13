@@ -11,11 +11,11 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     Optional<User> findByStravaId(String stravaId);
 
-    Optional<User> findByEmail(String email);
+    Optional<User> findByGoogleId(String googleId);
 
-    List<User> findByCoachId(String coachId);
+    Optional<User> findByEmail(String email);
 
     List<User> findByRole(UserRole role);
 
-    List<User> findByCoachIdAndTagsContaining(String coachId, String tag);
+    List<User> findByIdIn(List<String> ids);
 }

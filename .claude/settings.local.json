@@ -9,7 +9,8 @@
       "Bash(javap:*)",
       "Bash(npm run build:*)",
       "Bash(mvn clean compile:*)",
-      "Bash(npx ng build:*)"
+      "Bash(npx ng build:*)",
+      "Bash(mvn clean install:*)"
     ]
   }
 }

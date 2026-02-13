@@ -1,7 +1,6 @@
 import { Injectable, NgZone, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject } from 'rxjs';
-import { AuthService } from './auth.service';
 import { TrainingService } from './training.service';
 
 export interface ChatMessage {
@@ -31,7 +30,6 @@ interface ChatHistoryDetail {
 export class ChatService {
   private apiUrl = 'http://localhost:8080/api/ai';
   private http = inject(HttpClient);
-  private authService = inject(AuthService);
   private ngZone = inject(NgZone);
   private trainingService = inject(TrainingService);
 
@@ -50,23 +48,12 @@ export class ChatService {
   private activityStatusSubject = new BehaviorSubject<ActivityStatus>('idle');
   activityStatus$ = this.activityStatusSubject.asObservable();
 
-  private getUserIdFromSnapshot(): string {
-    let userId = 'mock-user-123';
-    const sub = this.authService.user$.subscribe((user) => {
-      if (user) userId = user.id;
-    });
-    sub.unsubscribe();
-    return userId;
-  }
-
   private emitScheduled = false;
   private pendingEmit = false;
 
   private emit(): void {
-    // Mark that we have pending changes
     this.pendingEmit = true;
 
-    // Throttle to ~60fps
     if (this.emitScheduled) return;
     this.emitScheduled = true;
 
@@ -90,8 +77,6 @@ export class ChatService {
   }
 
   async sendMessage(message: string): Promise<void> {
-    const userId = this.getUserIdFromSnapshot();
-
     this.addMessage({ role: 'user', content: message, timestamp: new Date() });
 
     const aiMessage: ChatMessage = { role: 'assistant', content: '', timestamp: new Date() };
@@ -102,7 +87,6 @@ export class ChatService {
       const jwt = localStorage.getItem('token');
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'X-User-Id': userId,
       };
       if (jwt) {
         headers['Authorization'] = `Bearer ${jwt}`;
@@ -114,7 +98,6 @@ export class ChatService {
         body: JSON.stringify({
           message,
           chatHistoryId: this.activeChatIdSubject.value,
-          userId,
         }),
       });
 
@@ -132,55 +115,42 @@ export class ChatService {
 
         buffer += decoder.decode(value, { stream: true });
 
-        // Normalize line endings (\r\n -> \n, \r -> \n)
         buffer = buffer.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-        // Split on double newline to separate events
         const events = buffer.split('\n\n');
 
-        // Keep the last incomplete event in the buffer
         buffer = events.pop() || '';
 
         for (const event of events) {
-          if (!event.trim()) continue; // Skip empty events
+          if (!event.trim()) continue;
 
           const lines = event.split('\n');
           let eventType = '';
           const dataLines: string[] = [];
 
-          // Parse the SSE event structure
           for (const line of lines) {
             if (line.startsWith('event:')) {
-              // Extract event type (trim whitespace after colon)
               eventType = line.substring(6).trim();
             } else if (line.startsWith('data:')) {
-              // Extract data - preserve leading space if present (it's part of content)
-              // slice(5) keeps everything after 'data:' including leading space
               dataLines.push(line.substring(5));
             } else if (line.startsWith('id:') || line.startsWith('retry:')) {
-              // Ignore id and retry fields
               continue;
             } else if (line.startsWith(':')) {
-              // Comment line - ignore
               continue;
             }
           }
 
-          // Combine multi-line data with newlines
           const data = dataLines.join('\n');
 
-          // Handle different event types
           if (eventType === 'status') {
             const statusValue = data.trim() as ActivityStatus;
             this.ngZone.run(() => {
               this.activityStatusSubject.next(statusValue);
             });
           } else if (eventType === 'content') {
-            // Don't trim - preserve exact content including leading/trailing spaces
             aiMessage.content += data;
             this.emit();
           } else if (eventType === 'conversation_id') {
-            // Save conversation ID
             const conversationId = data.trim();
             if (conversationId) {
               this.ngZone.run(() => this.activeChatIdSubject.next(conversationId));
@@ -189,7 +159,6 @@ export class ChatService {
         }
       }
 
-      // Process any remaining buffer content
       if (buffer.trim()) {
         const lines = buffer.split('\n');
         let eventType = '';
@@ -211,7 +180,6 @@ export class ChatService {
         }
       }
 
-      // Final flush to ensure last tokens are rendered
       this.emitImmediate();
 
       this.loadHistories();
@@ -230,11 +198,8 @@ export class ChatService {
   }
 
   loadHistories(): void {
-    const userId = this.getUserIdFromSnapshot();
     this.http
-      .get<ChatHistoryItem[]>(`${this.apiUrl}/history`, {
-        headers: { 'X-User-Id': userId },
-      })
+      .get<ChatHistoryItem[]>(`${this.apiUrl}/history`)
       .subscribe({
         next: (histories) => this.chatHistoriesSubject.next(histories),
         error: () => this.chatHistoriesSubject.next([]),

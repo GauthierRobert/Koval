@@ -1,15 +1,16 @@
 package com.koval.trainingplannerbackend.training;
 
+import com.koval.trainingplannerbackend.auth.UserRepository;
+import com.koval.trainingplannerbackend.training.tag.Tag;
 import com.koval.trainingplannerbackend.training.tag.TagService;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Service for Training CRUD operations.
@@ -21,10 +22,13 @@ public class TrainingManagementService {
 
     private final TrainingRepository trainingRepository;
     private final TagService tagService;
+    private final UserRepository userRepository;
 
-    public TrainingManagementService(TrainingRepository trainingRepository, TagService tagService) {
+    public TrainingManagementService(TrainingRepository trainingRepository, TagService tagService,
+                                     UserRepository userRepository) {
         this.trainingRepository = trainingRepository;
         this.tagService = tagService;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -37,9 +41,7 @@ public class TrainingManagementService {
         if (training.getVisibility() == null) {
             training.setVisibility(TrainingVisibility.PRIVATE);
         }
-        Training saved = trainingRepository.save(training);
-        tagService.registerTags(training.getTags(), userId);
-        return saved;
+        return trainingRepository.save(training);
     }
 
     /**
@@ -82,7 +84,6 @@ public class TrainingManagementService {
 
     /**
      * Get a training by ID.
-     * AI Function: getTraining
      */
     public Training getTrainingById(String trainingId) {
         return trainingRepository.findById(trainingId)
@@ -105,9 +106,9 @@ public class TrainingManagementService {
     }
 
     /**
-     * Search trainings by tag.
+     * Search trainings by tag (tag ID).
      */
-    @Tool(description = "Search training plans by tag name")
+    @Tool(description = "Search training plans by tag ID")
     public List<Training> searchByTag(String tag) {
         return trainingRepository.findByTagsContaining(tag);
     }
@@ -121,35 +122,35 @@ public class TrainingManagementService {
     }
 
     /**
-     * Discover trainings available to a user based on their tags.
-     * PUBLIC tags: include all public trainings with that tag.
-     * PRIVATE tags: include trainings with that tag only if created by the user or their coach.
+     * Discover trainings available to an athlete based on their tags.
+     * Uses TagService to find athlete's tags, then finds trainings with those tag IDs.
      */
-    public List<Training> discoverTrainingsByUserTags(List<String> userTags, String userId, String coachId) {
-        if (userTags == null || userTags.isEmpty()) {
+    public List<Training> discoverTrainingsByUserTags(String athleteId) {
+        List<Tag> athleteTags = tagService.getTagsForAthlete(athleteId);
+        if (athleteTags.isEmpty()) {
             return List.of();
         }
 
-        Set<Training> result = new LinkedHashSet<>();
-        List<Training> taggedTrainings = trainingRepository.findByTagsIn(userTags);
+        List<String> tagIds = athleteTags.stream().map(Tag::getId).toList();
+        return trainingRepository.findByTagsIn(tagIds);
+    }
 
-        for (Training training : taggedTrainings) {
-            for (String tag : training.getTags()) {
-                if (!userTags.contains(tag)) continue;
-
-                boolean isPublicTag = tagService.isTagPublic(tag);
-                if (isPublicTag && training.getVisibility() == TrainingVisibility.PUBLIC) {
-                    result.add(training);
-                } else if (!isPublicTag) {
-                    // Private tag: only include if created by user or user's coach
-                    if (userId.equals(training.getCreatedBy()) ||
-                            (coachId != null && coachId.equals(training.getCreatedBy()))) {
-                        result.add(training);
-                    }
-                }
-            }
+    /**
+     * Get training folders for an athlete grouped by tag name.
+     * Uses TagService to find athlete's tags, then finds trainings with those tag IDs.
+     */
+    public Map<String, List<Training>> getTrainingFolders(String athleteId) {
+        List<Tag> athleteTags = tagService.getTagsForAthlete(athleteId);
+        if (athleteTags.isEmpty()) {
+            return Map.of();
         }
 
-        return new ArrayList<>(result);
+        Map<String, List<Training>> folders = new HashMap<>();
+        for (Tag tag : athleteTags) {
+            List<Training> trainings = trainingRepository.findByTagsContaining(tag.getId());
+            folders.put(tag.getName(), trainings);
+        }
+
+        return folders;
     }
 }

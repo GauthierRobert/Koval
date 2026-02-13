@@ -1,5 +1,8 @@
 package com.koval.trainingplannerbackend.training.tag;
 
+import com.koval.trainingplannerbackend.auth.SecurityUtils;
+import com.koval.trainingplannerbackend.auth.User;
+import com.koval.trainingplannerbackend.auth.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,47 +14,52 @@ import java.util.List;
 public class TagController {
 
     private final TagService tagService;
+    private final UserRepository userRepository;
 
-    public TagController(TagService tagService) {
+    public TagController(TagService tagService, UserRepository userRepository) {
         this.tagService = tagService;
+        this.userRepository = userRepository;
     }
 
-    /**
-     * List all tags visible to the current user.
-     */
     @GetMapping
-    public ResponseEntity<List<Tag>> getTags(
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
-        String uid = userId != null ? userId : "anonymous";
-        return ResponseEntity.ok(tagService.getVisibleTags(uid));
+    public ResponseEntity<List<Tag>> getTags() {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseEntity.ok(List.of());
+        }
+        if (user.isCoach()) {
+            return ResponseEntity.ok(tagService.getTagsForCoach(userId));
+        } else {
+            return ResponseEntity.ok(tagService.getTagsForAthlete(userId));
+        }
     }
 
-    /**
-     * Create a new tag.
-     */
     @PostMapping
-    public ResponseEntity<Tag> createTag(@RequestBody CreateTagRequest request,
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
-        String uid = userId != null ? userId : "anonymous";
-        TagVisibility visibility = request.visibility() != null ? request.visibility() : TagVisibility.PUBLIC;
-        Tag tag = tagService.getOrCreateTag(request.name(), visibility, uid);
+    public ResponseEntity<Tag> createTag(@RequestBody CreateTagRequest request) {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null || !user.isCoach()) {
+            return ResponseEntity.status(403).build();
+        }
+        Tag tag = tagService.getOrCreateTag(request.name(), userId);
         return ResponseEntity.ok(tag);
     }
 
-    /**
-     * Delete a tag. Only the creator can delete.
-     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTag(@PathVariable String id,
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
-        String uid = userId != null ? userId : "anonymous";
+    public ResponseEntity<Void> deleteTag(@PathVariable String id) {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null || !user.isCoach()) {
+            return ResponseEntity.status(403).build();
+        }
         try {
-            tagService.deleteTag(id, uid);
+            tagService.deleteTag(id, userId);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(403).build();
         }
     }
 
-    record CreateTagRequest(String name, TagVisibility visibility) {}
+    record CreateTagRequest(String name) {}
 }

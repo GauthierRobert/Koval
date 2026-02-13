@@ -3,6 +3,19 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { User } from './auth.service';
+import { Tag } from './tag.service';
+
+export interface InviteCode {
+    id: string;
+    code: string;
+    coachId: string;
+    tags: string[];
+    maxUses: number;
+    currentUses: number;
+    expiresAt?: string;
+    active: boolean;
+    createdAt: string;
+}
 
 export interface ScheduledWorkout {
     id: string;
@@ -16,21 +29,13 @@ export interface ScheduledWorkout {
     intensityFactor?: number;
     completedAt?: string;
     createdAt?: string;
-    // Enriched fields from backend
     trainingTitle?: string;
     trainingType?: string;
     totalDurationSeconds?: number;
-    // Legacy display fields (kept for compatibility)
     title?: string;
     duration?: string;
     if?: number;
 }
-
-const MOCK_ATHLETES: User[] = [
-    { id: 'ath-1', displayName: 'Thomas Pidcock', profilePicture: '', role: 'ATHLETE', hasCoach: true, tags: ['Club BTC', 'Junior'] },
-    { id: 'ath-2', displayName: 'Mathieu van der Poel', profilePicture: '', role: 'ATHLETE', hasCoach: true, tags: ['Club BTC', 'Triathlon'] },
-    { id: 'ath-3', displayName: 'Wout van Aert', profilePicture: '', role: 'ATHLETE', hasCoach: true, tags: ['Triathlon'] },
-];
 
 @Injectable({
     providedIn: 'root',
@@ -40,30 +45,25 @@ export class CoachService {
 
     constructor(private http: HttpClient) {}
 
-    getAthletes(userId: string): Observable<User[]> {
-        return this.http
-            .get<User[]>(`${this.apiUrl}/athletes`, {
-                headers: { 'X-User-Id': userId },
-            })
-            .pipe(catchError(() => of(MOCK_ATHLETES)));
+    getAthletes(): Observable<User[]> {
+        return this.http.get<User[]>(`${this.apiUrl}/athletes`).pipe(
+            catchError(() => of([]))
+        );
     }
 
     getAthleteSchedule(
-        userId: string,
         athleteId: string,
         start: string,
         end: string
     ): Observable<ScheduledWorkout[]> {
         return this.http
             .get<ScheduledWorkout[]>(`${this.apiUrl}/schedule/${athleteId}`, {
-                headers: { 'X-User-Id': userId },
                 params: { start, end },
             })
             .pipe(catchError(() => of([])));
     }
 
     assignTraining(
-        userId: string,
         trainingId: string,
         athleteIds: string[],
         date: string,
@@ -71,39 +71,49 @@ export class CoachService {
     ): Observable<ScheduledWorkout[]> {
         return this.http.post<ScheduledWorkout[]>(
             `${this.apiUrl}/assign`,
-            { trainingId, athleteIds, scheduledDate: date, notes },
-            { headers: { 'X-User-Id': userId } }
+            { trainingId, athleteIds, scheduledDate: date, notes }
         );
     }
 
-    updateAthleteTags(userId: string, athleteId: string, tags: string[]): Observable<User> {
-        return this.http.put<User>(`${this.apiUrl}/athletes/${athleteId}/tags`, { tags }, {
-            headers: { 'X-User-Id': userId },
-        });
+    updateAthleteTags(athleteId: string, tags: string[]): Observable<User> {
+        return this.http.put<User>(`${this.apiUrl}/athletes/${athleteId}/tags`, { tags });
     }
 
-    addAthleteTag(userId: string, athleteId: string, tag: string): Observable<User> {
-        return this.http.post<User>(`${this.apiUrl}/athletes/${athleteId}/tags`, { tag }, {
-            headers: { 'X-User-Id': userId },
-        });
+    addAthleteTag(athleteId: string, tag: string): Observable<User> {
+        return this.http.post<User>(`${this.apiUrl}/athletes/${athleteId}/tags`, { tag });
     }
 
-    removeAthleteTag(userId: string, athleteId: string, tag: string): Observable<User> {
-        return this.http.delete<User>(`${this.apiUrl}/athletes/${athleteId}/tags/${encodeURIComponent(tag)}`, {
-            headers: { 'X-User-Id': userId },
-        });
+    removeAthleteTag(athleteId: string, tag: string): Observable<User> {
+        return this.http.delete<User>(`${this.apiUrl}/athletes/${athleteId}/tags/${encodeURIComponent(tag)}`);
     }
 
-    getAllTags(userId: string): Observable<string[]> {
+    getAllTags(): Observable<Tag[]> {
         return this.http
-            .get<string[]>(`${this.apiUrl}/athletes/tags`, {
-                headers: { 'X-User-Id': userId },
-            })
-            .pipe(
-                catchError(() => {
-                    const allTags = MOCK_ATHLETES.flatMap(a => a.tags || []);
-                    return of([...new Set(allTags)].sort());
-                })
-            );
+            .get<Tag[]>(`${this.apiUrl}/athletes/tags`)
+            .pipe(catchError(() => of([])));
+    }
+
+    generateInviteCode(tags: string[], maxUses: number): Observable<InviteCode> {
+        return this.http.post<InviteCode>(
+            `${this.apiUrl}/invite-codes`,
+            { tags, maxUses }
+        );
+    }
+
+    getInviteCodes(): Observable<InviteCode[]> {
+        return this.http
+            .get<InviteCode[]>(`${this.apiUrl}/invite-codes`)
+            .pipe(catchError(() => of([])));
+    }
+
+    deactivateInviteCode(codeId: string): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/invite-codes/${codeId}`);
+    }
+
+    redeemInviteCode(code: string): Observable<User> {
+        return this.http.post<User>(
+            `${this.apiUrl}/redeem-invite`,
+            { code }
+        );
     }
 }

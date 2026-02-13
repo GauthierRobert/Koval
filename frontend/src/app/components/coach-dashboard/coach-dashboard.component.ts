@@ -1,15 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { BehaviorSubject, combineLatest, Observable, of, switchMap, map } from 'rxjs';
 import { CoachService, ScheduledWorkout } from '../../services/coach.service';
 import { AuthService, User } from '../../services/auth.service';
+import { Tag } from '../../services/tag.service';
 import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.component';
-import { TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../services/training.service';
+import { InviteCodeModalComponent } from '../invite-code-modal/invite-code-modal.component';
+import { ShareTrainingModalComponent } from '../share-training-modal/share-training-modal.component';
+import { Training, TrainingService, TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../services/training.service';
 
 @Component({
   selector: 'app-coach-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, ScheduleModalComponent],
+  imports: [CommonModule, FormsModule, ScheduleModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent],
   template: `
     <div class="coach-container">
       <div class="header glass">
@@ -19,7 +23,7 @@ import { TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../
         <div class="coach-stats">
           <div class="stat">
             <span class="label">Roster</span>
-            <span class="value">{{ athletes.length }}</span>
+            <span class="value">{{ (athletes$ | async)?.length || 0 }}</span>
           </div>
           <div class="stat">
             <span class="label">Analysis Needed</span>
@@ -34,32 +38,45 @@ import { TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../
             <button class="add-btn" (click)="addAthlete()">+ REGISTER</button>
           </div>
 
-          <div class="tag-filters" *ngIf="allTags.length > 0">
-            <span *ngFor="let tag of allTags"
-                  class="tag-filter-chip"
-                  [class.active]="activeTagFilter === tag"
-                  (click)="toggleTagFilter(tag)">{{ tag }}</span>
-          </div>
+          <ng-container *ngIf="allTags$ | async as tags">
+            <div class="tag-filters" *ngIf="tags.length > 0">
+              <span class="tag-filter-chip"
+                    [class.active]="!activeTagFilter"
+                    (click)="setTagFilter(null)">All ({{ (athletes$ | async)?.length || 0 }})</span>
+              <span *ngFor="let tag of tags"
+                    class="tag-filter-chip"
+                    [class.active]="activeTagFilter === tag.name"
+                    (click)="toggleTagFilter(tag.name)">{{ tag.name }} ({{ getTagCount(tag.name) }})</span>
+            </div>
+          </ng-container>
 
-          <div class="athletes">
-            <div *ngFor="let athlete of filteredAthletes"
-                 class="athlete-row"
-                 [class.selected]="selectedAthlete?.id === athlete.id"
-                 (click)="selectAthlete(athlete)">
-              <div class="avatar-sm">{{ athlete.displayName[0].toUpperCase() }}</div>
-              <div class="info">
-                <span class="name">{{ athlete.displayName }}</span>
-                <div class="tag-chips" *ngIf="athlete.tags && athlete.tags.length > 0">
-                  <span *ngFor="let tag of athlete.tags" class="chip tag">{{ tag }}</span>
-                </div>
-                <div class="mini-metrics">
-                   <span class="chip fitness">C: 84</span>
-                   <span class="chip fatigue">A: 102</span>
-                   <span class="chip form positive">F: +12</span>
+          <ng-container *ngIf="filteredAthletes$ | async as filtered">
+            <div class="athletes" *ngIf="filtered.length > 0">
+              <div *ngFor="let athlete of filtered"
+                   class="athlete-row"
+                   [class.selected]="selectedAthlete?.id === athlete.id"
+                   (click)="selectAthlete(athlete)">
+                <div class="avatar-sm">{{ athlete.displayName[0].toUpperCase() }}</div>
+                <div class="info">
+                  <span class="name">{{ athlete.displayName }}</span>
+                  <div class="tag-chips" *ngIf="athlete.tags && athlete.tags.length > 0">
+                    <span *ngFor="let tag of athlete.tags" class="chip tag">{{ tag }}</span>
+                  </div>
+                  <div class="mini-metrics">
+                     <span class="chip fitness">C: 84</span>
+                     <span class="chip fatigue">A: 102</span>
+                     <span class="chip form positive">F: +12</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+            <div class="empty-athletes" *ngIf="filtered.length === 0 && activeTagFilter">
+              No athletes with tag "{{ activeTagFilter }}"
+            </div>
+            <div class="empty-athletes" *ngIf="filtered.length === 0 && !activeTagFilter && (allTags$ | async)?.length">
+              No athletes registered yet
+            </div>
+          </ng-container>
         </div>
         <div class="athlete-detail glass" *ngIf="selectedAthlete">
           <div class="detail-header">
@@ -73,6 +90,7 @@ import { TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../
                 </div>
               </div>
               <div class="actions">
+                <button class="share-btn" (click)="openShareModal()">SHARE</button>
                 <button class="assign-btn" (click)="assignWorkout()">ASSIGN WORKOUT</button>
               </div>
             </div>
@@ -93,7 +111,7 @@ import { TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../
                     list="tag-suggestions"
                   />
                   <datalist id="tag-suggestions">
-                    <option *ngFor="let tag of allTags" [value]="tag"></option>
+                    <option *ngFor="let tag of allTags$ | async" [value]="tag.name"></option>
                   </datalist>
                   <button class="tag-add-btn" (click)="addTag(selectedAthlete)">+</button>
                 </div>
@@ -135,27 +153,29 @@ import { TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../
                 <span>TSS</span>
                 <span>STATUS</span>
               </div>
-              <div *ngFor="let workout of athleteSchedule" class="table-row">
-                <span class="t-date">{{ workout.scheduledDate | date:'MMM d, EEE' }}</span>
-                <span class="t-title">{{ getWorkoutTitle(workout) }}</span>
-                <span class="t-type">
-                  <span
-                    *ngIf="workout.trainingType"
-                    class="schedule-type-badge"
-                    [style.background]="getTypeColor(workout.trainingType) + '20'"
-                    [style.color]="getTypeColor(workout.trainingType)"
-                    [style.border-color]="getTypeColor(workout.trainingType) + '40'"
-                  >{{ getTypeLabel(workout.trainingType) }}</span>
-                  <span *ngIf="!workout.trainingType">-</span>
-                </span>
-                <span class="t-dur">{{ getWorkoutDuration(workout) }}</span>
-                <span class="t-if">{{ workout.intensityFactor || workout.if || '-' }}</span>
-                <span class="t-tss">{{ workout.tss || '-' }}</span>
-                <span class="t-status" [class.pending]="workout.status === 'PENDING'">{{ workout.status }}</span>
-              </div>
-              <div *ngIf="athleteSchedule.length === 0" class="table-row empty-row">
-                <span class="t-empty">No scheduled workouts for this period</span>
-              </div>
+              <ng-container *ngIf="athleteSchedule$ | async as schedule">
+                <div *ngFor="let workout of schedule" class="table-row">
+                  <span class="t-date">{{ workout.scheduledDate | date:'MMM d, EEE' }}</span>
+                  <span class="t-title">{{ getWorkoutTitle(workout) }}</span>
+                  <span class="t-type">
+                    <span
+                      *ngIf="workout.trainingType"
+                      class="schedule-type-badge"
+                      [style.background]="getTypeColor(workout.trainingType) + '20'"
+                      [style.color]="getTypeColor(workout.trainingType)"
+                      [style.border-color]="getTypeColor(workout.trainingType) + '40'"
+                    >{{ getTypeLabel(workout.trainingType) }}</span>
+                    <span *ngIf="!workout.trainingType">-</span>
+                  </span>
+                  <span class="t-dur">{{ getWorkoutDuration(workout) }}</span>
+                  <span class="t-if">{{ workout.intensityFactor || workout.if || '-' }}</span>
+                  <span class="t-tss">{{ workout.tss || '-' }}</span>
+                  <span class="t-status" [class.pending]="workout.status === 'PENDING'">{{ workout.status }}</span>
+                </div>
+                <div *ngIf="schedule.length === 0" class="table-row empty-row">
+                  <span class="t-empty">No scheduled workouts for this period</span>
+                </div>
+              </ng-container>
             </div>
           </div>
         </div>
@@ -176,6 +196,21 @@ import { TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../
       (closed)="isScheduleModalOpen = false"
       (scheduled)="onScheduled()"
     ></app-schedule-modal>
+
+    <app-invite-code-modal
+      [isOpen]="isInviteCodeModalOpen"
+      [availableTags]="(allTags$ | async) || []"
+      (closed)="isInviteCodeModalOpen = false"
+      (codeGenerated)="onCodeGenerated()"
+    ></app-invite-code-modal>
+
+    <app-share-training-modal
+      [isOpen]="isShareModalOpen"
+      [training]="trainingToShare"
+      [availableTags]="(allTags$ | async) || []"
+      (closed)="isShareModalOpen = false"
+      (shared)="onTrainingShared()"
+    ></app-share-training-modal>
   `,
   styles: [`
     .coach-container {
@@ -318,6 +353,14 @@ import { TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../
       transition: all 0.2s;
     }
 
+    .empty-athletes {
+      padding: 16px 12px;
+      color: var(--text-muted);
+      font-size: 11px;
+      text-align: center;
+      font-style: italic;
+    }
+
     .tag-filter-chip:hover { background: rgba(255, 157, 0, 0.12); color: var(--accent-color); }
     .tag-filter-chip.active {
       background: rgba(255, 157, 0, 0.2);
@@ -416,6 +459,22 @@ import { TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../
     .physiological-tabs { display: flex; gap: 20px; border-bottom: 1px solid var(--glass-border); }
     .tab { font-size: 10px; font-weight: 800; letter-spacing: 1px; padding: 8px 0; color: var(--text-muted); cursor: pointer; }
     .tab.active { color: var(--accent-color); border-bottom: 2px solid var(--accent-color); }
+
+    .actions { display: flex; gap: 8px; }
+
+    .share-btn {
+      background: rgba(255, 157, 0, 0.08);
+      border: 1px solid rgba(255, 157, 0, 0.2);
+      color: var(--accent-color);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .share-btn:hover { background: rgba(255, 157, 0, 0.15); }
 
     .assign-btn {
       background: var(--accent-color);
@@ -530,19 +589,41 @@ import { TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../
   `]
 })
 export class CoachDashboardComponent implements OnInit {
-  athletes: User[] = [];
   selectedAthlete: User | null = null;
-  athleteSchedule: ScheduledWorkout[] = [];
   isScheduleModalOpen = false;
-  allTags: string[] = [];
+  isInviteCodeModalOpen = false;
+  isShareModalOpen = false;
+  trainingToShare: Training | null = null;
   activeTagFilter: string | null = null;
   newTagInput = '';
 
   private userId = '';
 
+  // Reactive state
+  private athletesSubject = new BehaviorSubject<User[]>([]);
+  athletes$ = this.athletesSubject.asObservable();
+
+  private tagsSubject = new BehaviorSubject<Tag[]>([]);
+  allTags$ = this.tagsSubject.asObservable();
+
+  private tagFilterSubject = new BehaviorSubject<string | null>(null);
+
+  filteredAthletes$: Observable<User[]> = combineLatest([
+    this.athletes$,
+    this.tagFilterSubject,
+  ]).pipe(
+    map(([athletes, filter]) => filter ? athletes.filter(a => a.tags?.includes(filter)) : athletes)
+  );
+
+  private scheduleSubject = new BehaviorSubject<ScheduledWorkout[]>([]);
+  athleteSchedule$ = this.scheduleSubject.asObservable();
+
+  coachTrainings$: Observable<Training[]> = of([]);
+
   constructor(
     private coachService: CoachService,
-    private authService: AuthService
+    private authService: AuthService,
+    private trainingService: TrainingService
   ) { }
 
   ngOnInit(): void {
@@ -553,29 +634,34 @@ export class CoachDashboardComponent implements OnInit {
         this.loadTags();
       }
     });
+    this.coachTrainings$ = this.trainingService.trainings$;
   }
 
   loadAthletes() {
-    this.coachService.getAthletes(this.userId).subscribe({
-      next: (data) => this.athletes = data,
+    this.coachService.getAthletes().subscribe({
+      next: (data) => this.athletesSubject.next(data),
       error: (err) => console.error('Error loading athletes', err)
     });
   }
 
   loadTags() {
-    this.coachService.getAllTags(this.userId).subscribe({
-      next: (tags) => this.allTags = tags,
+    this.coachService.getAllTags().subscribe({
+      next: (tags) => this.tagsSubject.next(tags),
       error: (err) => console.error('Error loading tags', err)
     });
   }
 
-  get filteredAthletes(): User[] {
-    if (!this.activeTagFilter) return this.athletes;
-    return this.athletes.filter(a => a.tags?.includes(this.activeTagFilter!));
+  getTagCount(tag: string): number {
+    return this.athletesSubject.value.filter(a => a.tags?.includes(tag)).length;
+  }
+
+  setTagFilter(tag: string | null) {
+    this.activeTagFilter = tag;
+    this.tagFilterSubject.next(tag);
   }
 
   toggleTagFilter(tag: string) {
-    this.activeTagFilter = this.activeTagFilter === tag ? null : tag;
+    this.setTagFilter(this.activeTagFilter === tag ? null : tag);
   }
 
   selectAthlete(athlete: User) {
@@ -588,8 +674,8 @@ export class CoachDashboardComponent implements OnInit {
     const start = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
     const end = new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
 
-    this.coachService.getAthleteSchedule(this.userId, athleteId, start, end).subscribe({
-      next: (data) => this.athleteSchedule = data,
+    this.coachService.getAthleteSchedule(athleteId, start, end).subscribe({
+      next: (data) => this.scheduleSubject.next(data),
       error: (err) => console.error('Error loading schedule', err)
     });
   }
@@ -612,43 +698,33 @@ export class CoachDashboardComponent implements OnInit {
   addTag(athlete: User | null) {
     if (!athlete || !this.newTagInput.trim()) return;
     const tag = this.newTagInput.trim();
-    this.coachService.addAthleteTag(this.userId, athlete.id, tag).subscribe({
+    this.coachService.addAthleteTag(athlete.id, tag).subscribe({
       next: (updated) => {
         athlete.tags = updated.tags;
         this.newTagInput = '';
         this.loadTags();
       },
       error: () => {
-        // Fallback for mock mode
         if (!athlete.tags) athlete.tags = [];
         if (!athlete.tags.includes(tag)) athlete.tags.push(tag);
         this.newTagInput = '';
-        this.refreshLocalTags();
       }
     });
   }
 
   removeTag(athlete: User | null, tag: string) {
     if (!athlete) return;
-    this.coachService.removeAthleteTag(this.userId, athlete.id, tag).subscribe({
+    this.coachService.removeAthleteTag(athlete.id, tag).subscribe({
       next: (updated) => {
         athlete.tags = updated.tags;
         this.loadTags();
       },
       error: () => {
-        // Fallback for mock mode
         if (athlete.tags) {
           athlete.tags = athlete.tags.filter(t => t !== tag);
         }
-        this.refreshLocalTags();
       }
     });
-  }
-
-  private refreshLocalTags() {
-    const tagSet = new Set<string>();
-    this.athletes.forEach(a => a.tags?.forEach(t => tagSet.add(t)));
-    this.allTags = [...tagSet].sort();
   }
 
   getTypeColor(type: string): string {
@@ -660,7 +736,24 @@ export class CoachDashboardComponent implements OnInit {
   }
 
   addAthlete() {
-    alert('Search for athletes to add them to your roster.');
+    this.isInviteCodeModalOpen = true;
+  }
+
+  onCodeGenerated() {
+    this.loadTags();
+  }
+
+  openShareModal() {
+    this.coachTrainings$.subscribe(trainings => {
+      if (trainings.length > 0) {
+        this.trainingToShare = trainings[0];
+        this.isShareModalOpen = true;
+      }
+    }).unsubscribe;
+  }
+
+  onTrainingShared() {
+    this.isShareModalOpen = false;
   }
 
   assignWorkout() {

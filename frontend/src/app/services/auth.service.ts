@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 
 export interface User {
@@ -33,24 +33,15 @@ export class AuthService {
                 headers: { Authorization: `Bearer ${token}` }
             }).subscribe({
                 next: (user) => this.userSubject.next(user),
-                error: () => this.provideMockUser()
+                error: () => {
+                    localStorage.removeItem('token');
+                    this.router.navigate(['/login']);
+                }
             });
-        } else {
-            this.provideMockUser();
         }
     }
 
-    private provideMockUser() {
-        console.warn('Backend unreachable or no token, providing mock user session');
-        this.userSubject.next({
-            id: 'mock-user-123',
-            displayName: 'Demo Athlete',
-            profilePicture: '',
-            role: 'COACH', // Set to COACH so we can see both parts of the app
-            hasCoach: false,
-            ftp: 250
-        });
-    }
+    // --- Strava OAuth ---
 
     getStravaAuthUrl(): Observable<{ authUrl: string }> {
         return this.http.get<{ authUrl: string }>(`${this.apiUrl}/strava`);
@@ -65,10 +56,31 @@ export class AuthService {
         );
     }
 
+    // --- Google OAuth ---
+
+    getGoogleAuthUrl(): Observable<{ authUrl: string }> {
+        return this.http.get<{ authUrl: string }>(`${this.apiUrl}/google`);
+    }
+
+    handleGoogleCallback(code: string): Observable<{ token: string, user: User }> {
+        return this.http.get<{ token: string, user: User }>(`${this.apiUrl}/google/callback?code=${code}`).pipe(
+            tap(response => {
+                localStorage.setItem('token', response.token);
+                this.userSubject.next(response.user);
+            })
+        );
+    }
+
+    // --- Session management ---
+
     logout() {
         localStorage.removeItem('token');
         this.userSubject.next(null);
         this.router.navigate(['/login']);
+    }
+
+    get currentUser(): User | null {
+        return this.userSubject.value;
     }
 
     isAuthenticated(): boolean {
@@ -77,5 +89,20 @@ export class AuthService {
 
     isCoach(): boolean {
         return this.userSubject.value?.role === 'COACH';
+    }
+
+    updateUser(user: User): void {
+        this.userSubject.next(user);
+    }
+
+    refreshUser(): void {
+        const token = localStorage.getItem('token');
+        if (token) {
+            this.http.get<User>(`${this.apiUrl}/me`, {
+                headers: { Authorization: `Bearer ${token}` }
+            }).subscribe({
+                next: (user) => this.userSubject.next(user),
+            });
+        }
     }
 }

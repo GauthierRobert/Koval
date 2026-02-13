@@ -16,14 +16,20 @@ export class AuthCallbackComponent implements OnInit {
     ngOnInit() {
         this.route.queryParams.subscribe(params => {
             const code = params['code'];
-            if (code) {
-                this.authService.handleStravaCallback(code).subscribe({
-                    next: () => this.router.navigate(['/']),
-                    error: () => this.router.navigate(['/login'])
-                });
-            } else {
+            if (!code) {
                 this.router.navigate(['/login']);
+                return;
             }
+
+            const isGoogle = this.router.url.startsWith('/auth/google');
+            const handler = isGoogle
+                ? this.authService.handleGoogleCallback(code)
+                : this.authService.handleStravaCallback(code);
+
+            handler.subscribe({
+                next: () => this.router.navigate(['/']),
+                error: () => this.router.navigate(['/login'])
+            });
         });
     }
 }

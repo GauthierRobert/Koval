@@ -9,7 +9,7 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
 import { WorkoutDetailModalComponent } from '../workout-detail-modal/workout-detail-modal.component';
 import { SessionDetailComponent } from '../session-detail/session-detail.component';
 import { CalendarService } from '../../services/calendar.service';
-import { AuthService } from '../../services/auth.service';
+import { AuthService, User } from '../../services/auth.service';
 import { HistoryService } from '../../services/history.service';
 import { ScheduledWorkout } from '../../services/coach.service';
 
@@ -47,24 +47,25 @@ export class WorkoutSelectionComponent implements OnInit {
   overdueWorkouts$!: Observable<ScheduledWorkout[]>;
 
   selectedScheduledWorkout: ScheduledWorkout | null = null;
+  currentUser: User | null = null;
 
   private reload$ = new BehaviorSubject<void>(undefined);
 
   ngOnInit(): void {
+    this.authService.user$.subscribe(u => this.currentUser = u);
+
     const schedule$ = this.authService.user$.pipe(
       filter((u) => !!u),
-      switchMap((user) => this.reload$.pipe(map(() => user!.id))),
-      switchMap((userId) => {
+      switchMap(() => this.reload$),
+      switchMap(() => {
         const today = new Date();
         const thirtyDaysAgo = new Date(today);
         thirtyDaysAgo.setDate(today.getDate() - 30);
 
-        // End of this week (Sunday)
         const endOfWeek = new Date(today);
         endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
 
         return this.calendarService.getMySchedule(
-          userId,
           toDateKey(thirtyDaysAgo),
           toDateKey(endOfWeek)
         );
@@ -116,4 +117,5 @@ export class WorkoutSelectionComponent implements OnInit {
     if (h > 0) return `${h}h ${m}m`;
     return `${m}m`;
   }
+
 }

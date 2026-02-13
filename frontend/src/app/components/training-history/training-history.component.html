@@ -1,4 +1,56 @@
 <div class="history-container">
+  <!-- Tag folders from coach -->
+  <div class="tag-folders" *ngIf="folderNames.length">
+    <!-- Collapsed view -->
+    <ng-container *ngIf="!expandedFolder">
+      <h3 class="section-title">Coach Trainings</h3>
+      <div class="folder-list">
+        <div
+          *ngFor="let name of folderNames"
+          class="folder-item"
+          (click)="expandFolder(name)"
+        >
+          <span class="folder-icon">&#128193;</span>
+          <span class="folder-name">{{ name }}</span>
+          <span class="folder-count">{{ folders[name].length }}</span>
+        </div>
+      </div>
+    </ng-container>
+    <!-- Expanded view -->
+    <ng-container *ngIf="expandedFolder">
+      <div class="folder-back-row">
+        <button class="folder-back-btn" (click)="collapseFolder()">&larr;</button>
+        <h3 class="section-title" style="margin-bottom: 0">{{ expandedFolder }}</h3>
+      </div>
+      <div class="folder-trainings" *ngIf="folders[expandedFolder]?.length">
+        <div
+          *ngFor="let t of folders[expandedFolder]"
+          class="history-item"
+          [class.active]="(selectedTraining$ | async)?.id === t.id"
+          (click)="onSelectFolderTraining(t)"
+        >
+          <div class="item-icon">&#128193;</div>
+          <div class="item-details">
+            <div class="item-title-row">
+              <span class="item-title">{{ t.title }}</span>
+              <span
+                *ngIf="t.trainingType"
+                class="type-badge"
+                [style.background]="getTypeColor(t.trainingType) + '20'"
+                [style.color]="getTypeColor(t.trainingType)"
+                [style.border-color]="getTypeColor(t.trainingType) + '40'"
+              >{{ getTypeLabel(t.trainingType) }}</span>
+            </div>
+            <span class="item-meta">{{ getDuration(t) }} &bull; {{ t.blocks.length }} blocks</span>
+          </div>
+        </div>
+      </div>
+      <div class="folder-empty" *ngIf="!folders[expandedFolder]?.length">
+        No trainings shared yet
+      </div>
+    </ng-container>
+  </div>
+
   <h3 class="section-title">Your Workouts</h3>
 
   <div class="type-filters">

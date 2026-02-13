@@ -1,15 +1,13 @@
 package com.koval.trainingplannerbackend.training;
 
-import com.koval.trainingplannerbackend.auth.User;
+import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
-/**
- * REST Controller for Training CRUD operations.
- */
 @RestController
 @RequestMapping("/api/trainings")
 @CrossOrigin(origins = "*")
@@ -23,21 +21,13 @@ public class TrainingController {
         this.userService = userService;
     }
 
-    /**
-     * Create a new training.
-     * TODO: Get userId from JWT token in real implementation
-     */
     @PostMapping
-    public ResponseEntity<Training> createTraining(@RequestBody Training training,
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
-        String ownerId = userId != null ? userId : "anonymous";
-        Training created = trainingService.createTraining(training, ownerId);
+    public ResponseEntity<Training> createTraining(@RequestBody Training training) {
+        String userId = SecurityUtils.getCurrentUserId();
+        Training created = trainingService.createTraining(training, userId);
         return ResponseEntity.ok(created);
     }
 
-    /**
-     * Get a training by ID.
-     */
     @GetMapping("/{id}")
     public ResponseEntity<Training> getTraining(@PathVariable String id) {
         try {
@@ -48,9 +38,6 @@ public class TrainingController {
         }
     }
 
-    /**
-     * Update a training.
-     */
     @PutMapping("/{id}")
     public ResponseEntity<Training> updateTraining(@PathVariable String id,
             @RequestBody Training updates) {
@@ -62,9 +49,6 @@ public class TrainingController {
         }
     }
 
-    /**
-     * Delete a training.
-     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTraining(@PathVariable String id) {
         try {
@@ -75,51 +59,35 @@ public class TrainingController {
         }
     }
 
-    /**
-     * List trainings for a user.
-     * TODO: Get userId from JWT token in real implementation
-     */
     @GetMapping
-    public ResponseEntity<List<Training>> listTrainings(
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
-        if (userId == null || userId.isEmpty()) {
-            // Return public trainings if no user specified
-            return ResponseEntity.ok(trainingService.listPublicTrainings());
-        }
+    public ResponseEntity<List<Training>> listTrainings() {
+        String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(trainingService.listTrainingsByUser(userId));
     }
 
-    /**
-     * Search trainings by tag.
-     */
     @GetMapping("/search")
     public ResponseEntity<List<Training>> searchByTag(@RequestParam String tag) {
         return ResponseEntity.ok(trainingService.searchByTag(tag));
     }
 
-    /**
-     * Search trainings by type.
-     */
     @GetMapping("/search/type")
     public ResponseEntity<List<Training>> searchByType(@RequestParam TrainingType type) {
         return ResponseEntity.ok(trainingService.searchByType(type));
     }
 
-    /**
-     * Discover trainings based on user's tags.
-     */
     @GetMapping("/discover")
-    public ResponseEntity<List<Training>> discoverTrainings(
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
-        if (userId == null || userId.isEmpty()) {
-            return ResponseEntity.ok(List.of());
+    public ResponseEntity<List<Training>> discoverTrainings() {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(trainingService.discoverTrainingsByUserTags(userId));
+    }
+
+    @GetMapping("/folders")
+    public ResponseEntity<Map<String, List<Training>>> getTrainingFolders() {
+        String userId = SecurityUtils.getCurrentUserId();
+        try {
+            return ResponseEntity.ok(trainingService.getTrainingFolders(userId));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.ok(Map.of());
         }
-        User user = userService.getUserById(userId);
-        if (user == null) {
-            return ResponseEntity.ok(List.of());
-        }
-        List<Training> discovered = trainingService.discoverTrainingsByUserTags(
-                user.getTags(), userId, user.getCoachId());
-        return ResponseEntity.ok(discovered);
     }
 }

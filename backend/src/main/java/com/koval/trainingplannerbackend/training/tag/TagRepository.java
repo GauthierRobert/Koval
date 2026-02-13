@@ -9,11 +9,13 @@ import java.util.Optional;
 @Repository
 public interface TagRepository extends MongoRepository<Tag, String> {
 
-    Optional<Tag> findByName(String name);
+    List<Tag> findByCoachId(String coachId);
 
-    List<Tag> findByVisibility(TagVisibility visibility);
+    Optional<Tag> findByCoachIdAndName(String coachId, String name);
 
-    List<Tag> findByCreatedBy(String userId);
+    List<Tag> findByAthleteIdsContaining(String athleteId);
 
-    List<Tag> findByNameIn(List<String> names);
+    boolean existsByAthleteIdsContaining(String athleteId);
+
+    List<Tag> findByIdIn(List<String> ids);
 }

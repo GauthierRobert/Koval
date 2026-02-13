@@ -123,6 +123,81 @@
   align-items: center;
 }
 
+/* Join Coach Banner */
+.join-banner {
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 157, 0, 0.2);
+  background: rgba(255, 157, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.join-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.join-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.join-input {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #e0e0e0;
+  font-size: 14px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  width: 160px;
+  outline: none;
+}
+
+.join-input:focus {
+  border-color: var(--accent-color);
+}
+
+.join-input::placeholder {
+  letter-spacing: 1px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.join-btn {
+  background: var(--accent-color);
+  color: #000;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+
+.join-btn:hover {
+  filter: brightness(1.15);
+}
+
+.join-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.join-error {
+  font-size: 0.7rem;
+  color: var(--danger-color);
+  font-weight: 600;
+}
+
 /* Hero */
 .hero-content {
   padding: 60px;

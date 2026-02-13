@@ -12,43 +12,27 @@ export class CalendarService {
 
     constructor(private http: HttpClient) {}
 
-    private getUserId(): string {
-        // Sync read from auth — same pattern used by TrainingService
-        const stored = localStorage.getItem('token');
-        // For now, use the mock user id when no real auth
-        return 'mock-user-123';
-    }
-
-    private getHeaders(userId?: string) {
-        return { 'X-User-Id': userId || this.getUserId() };
-    }
-
-    getMySchedule(userId: string, start: string, end: string): Observable<ScheduledWorkout[]> {
+    getMySchedule(start: string, end: string): Observable<ScheduledWorkout[]> {
         return this.http
             .get<ScheduledWorkout[]>(this.apiUrl, {
-                headers: { 'X-User-Id': userId },
                 params: { start, end },
             })
             .pipe(catchError(() => of([])));
     }
 
     scheduleWorkout(
-        userId: string,
         trainingId: string,
         scheduledDate: string,
         notes?: string
     ): Observable<ScheduledWorkout> {
         return this.http.post<ScheduledWorkout>(
             this.apiUrl,
-            { trainingId, scheduledDate, notes },
-            { headers: { 'X-User-Id': userId } }
+            { trainingId, scheduledDate, notes }
         );
     }
 
-    deleteScheduledWorkout(userId: string, id: string): Observable<void> {
-        return this.http.delete<void>(`${this.apiUrl}/${id}`, {
-            headers: { 'X-User-Id': userId },
-        });
+    deleteScheduledWorkout(id: string): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/${id}`);
     }
 
     markCompleted(scheduledWorkoutId: string): Observable<ScheduledWorkout> {

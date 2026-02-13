@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ChatService } from '../../services/chat.service';
 import { BluetoothService } from '../../services/bluetooth.service';
 import { TrainingService } from '../../services/training.service';
+import { AuthService } from '../../services/auth.service';
 import { combineLatest, map } from 'rxjs';
 
 @Component({
@@ -27,15 +28,11 @@ import { combineLatest, map } from 'rxjs';
         <a routerLink="/coach" routerLinkActive="active" class="nav-link">COACHING</a>
       </nav>
 
-      <div class="right-section">
-        <div class="status-indicators">
-          <div class="status-item active">
-            <span class="dot"></span>
-            <span class="label">SYSTEM:</span>
-            <span class="value">STABLE</span>
-          </div>
-        </div>
+      <div class="user-tags" *ngIf="(userTags$ | async)?.length">
+        <span class="tag-chip" *ngFor="let tag of userTags$ | async">{{ tag }}</span>
+      </div>
 
+      <div class="right-section">
         <div class="topbar-controls">
           <div class="ftp-compact" title="Functional Threshold Power">
             <span class="ftp-label">FTP</span>
@@ -177,29 +174,31 @@ import { combineLatest, map } from 'rxjs';
       box-shadow: 0 -2px 10px rgba(255, 102, 0, 0.3);
     }
 
+    .user-tags {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 16px;
+    }
+
+    .tag-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
     .right-section {
       display: flex;
       align-items: center;
       gap: 40px;
-    }
-
-    .status-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-    }
-
-    .status-item .label { color: var(--text-dim); }
-    .status-item .value { color: var(--text-muted); }
-
-    .status-item.active .dot {
-      width: 4px;
-      height: 4px;
-      background: var(--success-color);
-      border-radius: 50%;
     }
 
     .topbar-controls {
@@ -429,10 +428,12 @@ export class TopBarComponent {
   private chatService = inject(ChatService);
   private bluetoothService = inject(BluetoothService);
   private trainingService = inject(TrainingService);
+  private authService = inject(AuthService);
 
   isPopupOpen = false;
   requestDescription = '';
   ftp$ = this.trainingService.ftp$;
+  userTags$ = this.authService.user$.pipe(map(u => u?.tags ?? []));
 
   connectedCount$ = combineLatest([
     this.bluetoothService.trainerStatus$,
@@ -470,9 +471,7 @@ export class TopBarComponent {
     const desc = this.requestDescription.trim();
     this.closePopup();
 
-    // Redirect to chat first to ensure components are ready
     this.router.navigate(['/chat']).then(() => {
-      // Small timeout to allow AIChatPage to initialize and listen
       setTimeout(() => {
         this.chatService.sendMessage(desc);
       }, 100);

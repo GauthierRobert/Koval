@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.coach;
 
+import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.training.Training;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
 import com.koval.trainingplannerbackend.training.WorkoutBlock;
@@ -13,10 +14,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/**
- * REST Controller for athlete self-scheduling.
- * No role check — any authenticated user can schedule workouts for themselves.
- */
 @RestController
 @RequestMapping("/api/schedule")
 @CrossOrigin(origins = "*")
@@ -47,13 +44,10 @@ public class ScheduleController {
         public void setNotes(String notes) { this.notes = notes; }
     }
 
-    /**
-     * Schedule a workout for the current user (self-assignment).
-     */
     @PostMapping
     public ResponseEntity<ScheduledWorkoutResponse> scheduleWorkout(
-            @RequestBody ScheduleRequest request,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestBody ScheduleRequest request) {
+        String userId = SecurityUtils.getCurrentUserId();
 
         ScheduledWorkout workout = new ScheduledWorkout();
         workout.setTrainingId(request.getTrainingId());
@@ -67,27 +61,20 @@ public class ScheduleController {
         return ResponseEntity.ok(enrichSingle(saved));
     }
 
-    /**
-     * Get current user's scheduled workouts by date range.
-     */
     @GetMapping
     public ResponseEntity<List<ScheduledWorkoutResponse>> getMySchedule(
-            @RequestHeader("X-User-Id") String userId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+        String userId = SecurityUtils.getCurrentUserId();
 
         List<ScheduledWorkout> workouts = scheduledWorkoutRepository
                 .findByAthleteIdAndScheduledDateBetween(userId, start, end);
         return ResponseEntity.ok(enrichList(workouts));
     }
 
-    /**
-     * Delete a scheduled workout (must be owned by the user).
-     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteScheduledWorkout(
-            @PathVariable String id,
-            @RequestHeader("X-User-Id") String userId) {
+    public ResponseEntity<Void> deleteScheduledWorkout(@PathVariable String id) {
+        String userId = SecurityUtils.getCurrentUserId();
 
         return scheduledWorkoutRepository.findById(id)
                 .map(workout -> {
@@ -100,9 +87,6 @@ public class ScheduleController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Mark a scheduled workout as completed.
-     */
     @PostMapping("/{id}/complete")
     public ResponseEntity<ScheduledWorkoutResponse> markCompleted(@PathVariable String id) {
         try {
@@ -113,9 +97,6 @@ public class ScheduleController {
         }
     }
 
-    /**
-     * Mark a scheduled workout as skipped.
-     */
     @PostMapping("/{id}/skip")
     public ResponseEntity<ScheduledWorkoutResponse> markSkipped(@PathVariable String id) {
         try {
