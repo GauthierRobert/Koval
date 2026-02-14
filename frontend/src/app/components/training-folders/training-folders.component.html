@@ -1,0 +1,48 @@
+    <!-- Collapsed: folder cards row -->
+    <div class="folders-row" *ngIf="!expandedFolder && folderNames.length">
+      <h2 class="section-title">Coach Trainings</h2>
+      <div class="folder-cards">
+        <div
+          *ngFor="let name of folderNames"
+          class="folder-card glass"
+          (click)="expand(name)"
+        >
+          <div class="folder-icon">&#128193;</div>
+          <div class="folder-name">{{ name }}</div>
+          <div class="folder-count">{{ folders[name].length }} training{{ folders[name].length === 1 ? '' : 's' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expanded: training list for a folder -->
+    <div class="folder-expanded" *ngIf="expandedFolder">
+      <div class="folder-header">
+        <button class="back-btn" (click)="collapse()">&larr;</button>
+        <h2 class="section-title">{{ expandedFolder }}</h2>
+      </div>
+      <div class="training-cards" *ngIf="folders[expandedFolder]?.length">
+        <div
+          *ngFor="let t of folders[expandedFolder]"
+          class="training-card glass"
+          (click)="selectTraining(t)"
+        >
+          <div class="card-top">
+            <span
+              *ngIf="t.trainingType"
+              class="type-badge"
+              [style.background]="getTypeColor(t.trainingType) + '20'"
+              [style.color]="getTypeColor(t.trainingType)"
+              [style.border-color]="getTypeColor(t.trainingType) + '40'"
+            >{{ getTypeLabel(t.trainingType) }}</span>
+            <span class="card-duration">{{ formatDuration(t) }}</span>
+          </div>
+          <div class="card-title">{{ t.title }}</div>
+          <div class="card-actions">
+            <button class="schedule-btn" (click)="schedule(t, $event)">SCHEDULE</button>
+          </div>
+        </div>
+      </div>
+      <div class="empty-folder" *ngIf="!folders[expandedFolder]?.length">
+        No trainings shared in this group yet
+      </div>
+    </div>

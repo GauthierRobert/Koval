@@ -1,0 +1,160 @@
+    <div class="live-container" *ngIf="state$ | async as state">
+      <div class="top-bar">
+        <div class="workout-title">{{ state.training?.title }}</div>
+        <div class="top-controls">
+           <button class="stop-btn" (click)="stopWorkout()">STOP WORKOUT</button>
+        </div>
+      </div>
+
+      <ng-container>
+
+      <div class="metrics-grid">
+        <!-- Power Block -->
+        <div class="metric-card power-block main-block">
+          <div class="header">
+            <span class="label">TARGET</span>
+            <span class="target-value">{{ getTargetPower(state) }}W</span>
+          </div>
+          <div class="main-display">
+            <div class="live-value" [style.color]="getPowerColor(state)">
+              {{ (metrics$ | async)?.power }}
+            </div>
+            <div class="unit">WATTS</div>
+          </div>
+          <div class="footer-stats">
+            <div class="stat">
+              <span class="stat-label">SESS AVG</span>
+              <span class="stat-value">{{ state.averages.power }}W</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">BLOCK AVG</span>
+              <span class="stat-value highlight">{{ state.currentBlockAverages.power }}W</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cadence Block -->
+        <div class="metric-card secondary-block">
+          <div class="header"><span class="label">CADENCE</span></div>
+          <div class="main-display">
+            <div class="value">{{ (metrics$ | async)?.cadence }}</div>
+            <div class="unit">RPM</div>
+          </div>
+          <div class="footer-stats">
+            <div class="stat">
+              <span class="stat-label">SESS</span>
+              <span class="stat-value">{{ state.averages.cadence }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">BLOCK</span>
+              <span class="stat-value highlight">{{ state.currentBlockAverages.cadence }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Heart Rate Block -->
+        <div class="metric-card secondary-block">
+          <div class="header"><span class="label">HEART RATE</span></div>
+          <div class="main-display">
+            <div class="value hr">{{ (metrics$ | async)?.heartRate || '--' }}</div>
+            <div class="unit">BPM</div>
+          </div>
+          <div class="footer-stats">
+            <div class="stat">
+              <span class="stat-label">SESS</span>
+              <span class="stat-value">{{ state.averages.heartRate }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">BLOCK</span>
+              <span class="stat-value highlight">{{ state.currentBlockAverages.heartRate }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Speed Block -->
+        <div class="metric-card secondary-block">
+          <div class="header"><span class="label">SPEED</span></div>
+          <div class="main-display">
+            <div class="value">{{ (metrics$ | async)?.speed | number:'1.1-1' }}</div>
+            <div class="unit">KM/H</div>
+          </div>
+          <div class="footer-stats">
+            <div class="stat">
+              <span class="stat-label">SESS</span>
+              <span class="stat-value">{{ state.averages.speed | number:'1.1-1' }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">BLOCK</span>
+              <span class="stat-value highlight">{{ state.currentBlockAverages.speed | number:'1.1-1' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress Section -->
+      <div class="progress-section">
+        <div class="block-info">
+          <div class="current-block">
+            <div class="block-tag">CURRENT</div>
+            <div class="block-label">{{ state.training?.blocks?.[state.currentBlockIndex]?.label }}</div>
+          </div>
+          <div class="timer">{{ formatTime(state.remainingBlockSeconds) }}</div>
+          <div class="next-block" *ngIf="state.training?.blocks?.[state.currentBlockIndex + 1] as next">
+            <div class="block-tag">UP NEXT</div>
+            <div class="block-label">{{ next.label }} ({{ formatTime(next.durationSeconds) }})</div>
+          </div>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar" [style.width.%]="getBlockProgress(state)"></div>
+        </div>
+        <div class="total-progress">
+          Total Elapsed: {{ formatTime(state.elapsedTotalSeconds) }}
+        </div>
+      </div>
+
+      <!-- Live Graph or Game -->
+      <div class="graph-area">
+        <canvas #canvas [hidden]="showGame"></canvas>
+        <app-zombie-game
+          *ngIf="showGame && (metrics$ | async) as metrics"
+          [targetPower]="getTargetPower(state)"
+          [currentPower]="metrics.power"
+          (gameEnded)="showGame = false">
+        </app-zombie-game>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+         <button class="control-btn secondary" (click)="togglePip(state)">
+           {{ isPipActive ? 'CLOSE POP-OUT' : '📺 POP OUT METRICS' }}
+         </button>
+         <button class="control-btn secondary" (click)="toggleGame()">
+           {{ showGame ? 'HIDE GAME' : 'START MINI-GAME' }}
+         </button>
+         <button class="control-btn secondary" (click)="skipBlock()">SKIP STEP</button>
+         <button class="control-btn primary" (click)="togglePause(state)">
+           {{ state.isPaused ? (state.elapsedTotalSeconds === 0 ? 'START WORKOUT' : 'RESUME') : 'PAUSE' }}
+         </button>
+      </div>
+      </ng-container>
+
+      <!-- Exit Confirmation Overlay -->
+      <div class="summary-overlay top-center" *ngIf="showExitConfirm">
+        <div class="summary-card confirmation-card">
+          <h2>STOP WORKOUT?</h2>
+          <p>The workout is now paused. Choose how to proceed:</p>
+          <div class="confirm-actions">
+            <button class="control-btn secondary" (click)="cancelExit()">RESUME</button>
+            <button class="control-btn primary" (click)="saveAndSync()">SAVE & SYNC</button>
+            <button class="control-btn danger" (click)="discardSession()">DISCARD</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Session Summary Overlay -->
+      <app-session-summary
+        *ngIf="state.finalSummary"
+        [summary]="state.finalSummary"
+        (close)="closeSummary()">
+      </app-session-summary>
+    </div>

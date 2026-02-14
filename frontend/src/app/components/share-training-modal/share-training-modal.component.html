@@ -1,0 +1,41 @@
+    <div class="modal-backdrop" *ngIf="isOpen" (click)="close()">
+      <div class="modal-card glass" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>SHARE <span class="highlight">TRAINING</span></h2>
+          <button class="close-btn" (click)="close()">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="field">
+            <label>Training</label>
+            <select [(ngModel)]="selectedTrainingId" (ngModelChange)="onTrainingSelected()">
+              <option value="" disabled>Select a training...</option>
+              <option *ngFor="let t of allTrainings" [value]="t.id">{{ t.title }}</option>
+            </select>
+          </div>
+
+          <div class="field" *ngIf="activeTraining">
+            <label>Share with tag groups</label>
+            <div class="tag-selector">
+              <span
+                *ngFor="let tag of availableTags"
+                class="tag-chip"
+                [class.selected]="selectedTagIds.includes(tag.id)"
+                (click)="toggleTag(tag)"
+              >{{ tag.name }}</span>
+            </div>
+            <div class="hint" *ngIf="availableTags.length === 0">
+              No tags available. Add tags to your athletes first.
+            </div>
+          </div>
+
+          <button
+            class="save-btn"
+            (click)="save()"
+            [disabled]="saving || !activeTraining"
+          >
+            {{ saving ? 'SAVING...' : 'SAVE' }}
+          </button>
+        </div>
+      </div>
+    </div>

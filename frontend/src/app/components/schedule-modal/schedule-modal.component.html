@@ -1,0 +1,51 @@
+    <div class="modal-backdrop" *ngIf="isOpen" (click)="close()">
+      <div class="modal-card glass" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ mode === 'coach' ? 'ASSIGN' : 'SCHEDULE' }} <span class="highlight">WORKOUT</span></h2>
+          <button class="close-btn" (click)="close()">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="field">
+            <label>Training</label>
+            <select [(ngModel)]="selectedTrainingId">
+              <option value="" disabled>Select a training...</option>
+              <option *ngFor="let t of trainings" [value]="t.id">{{ t.title }}</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Date</label>
+            <input type="date" [(ngModel)]="selectedDate" />
+          </div>
+
+          <div class="field" *ngIf="mode === 'coach' && availableAthletes.length > 0">
+            <label>Athletes</label>
+            <div class="tag-filter-row" *ngIf="availableTags.length > 0">
+              <span *ngFor="let tag of availableTags"
+                    class="modal-tag-chip"
+                    [class.active]="isTagActive(tag)"
+                    (click)="toggleTag(tag)">{{ tag }}</span>
+            </div>
+            <div class="athlete-checkboxes">
+              <label *ngFor="let a of availableAthletes" class="checkbox-label">
+                <input type="checkbox" [checked]="isAthleteSelected(a.id)" (change)="toggleAthlete(a.id)" />
+                <span>{{ a.displayName }}</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Notes <span class="optional">(optional)</span></label>
+            <textarea [(ngModel)]="notes" placeholder="e.g. Focus on cadence during intervals" rows="3"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="cancel-btn" (click)="close()">CANCEL</button>
+          <button class="submit-btn" (click)="submit()" [disabled]="!canSubmit()">
+            {{ mode === 'coach' ? 'ASSIGN' : 'SCHEDULE' }}
+          </button>
+        </div>
+      </div>
+    </div>

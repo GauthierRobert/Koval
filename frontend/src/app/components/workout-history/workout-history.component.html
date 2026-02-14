@@ -1,0 +1,27 @@
+    <div class="history-container">
+      <h3 class="section-title">Completed Sessions</h3>
+      <div class="history-list" *ngIf="sessions$ | async as sessions">
+        <div class="empty-state" *ngIf="sessions.length === 0">
+          <p>No completed workouts yet</p>
+        </div>
+
+        <div
+          *ngFor="let session of sessions"
+          class="history-item"
+          [class.active]="(selectedSession$ | async)?.id === session.id"
+          (click)="onSelect(session)"
+        >
+          <div class="item-icon">✓</div>
+          <div class="item-details">
+            <span class="item-title">{{ session.title }}</span>
+            <span class="item-meta">
+              {{ formatTime(session.totalDuration) }} • {{ session.avgPower }}W avg
+              <span class="sync-icons">
+                <span *ngIf="session.syncedToStrava" title="Synced to Strava">🚴</span>
+                <span *ngIf="session.syncedToGarmin" title="Synced to Garmin">⌚</span>
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>

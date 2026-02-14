@@ -1,0 +1,33 @@
+    <div class="game-viewport">
+      <div class="game-background" [style.background-position-x.px]="bgPos"></div>
+
+      <!-- HUD -->
+      <div class="game-hud">
+        <div class="lives">
+          <span *ngFor="let life of [1,2,3]; let i = index"
+                class="heart"
+                [class.lost]="i >= lives">❤️</span>
+        </div>
+        <div class="power-meter">
+          <div class="label">TARGET: {{ targetPower }}W</div>
+          <div class="current-power" [style.color]="getPowerColor()">{{ currentPower }}W</div>
+        </div>
+        <div class="warning" *ngIf="isTooFast">TOO FAST! RELAX!</div>
+      </div>
+
+      <!-- Entities -->
+      <div class="entities">
+        <div class="cyclist" [style.left.px]="playerX">
+          <img src="assets/player.png" alt="cyclist">
+        </div>
+        <div class="zombie" [style.left.px]="zombieX">
+          <img src="assets/zombie.png" alt="zombie">
+        </div>
+      </div>
+
+      <div class="game-overlay" *ngIf="lives === 0">
+        <h2>GAME OVER</h2>
+        <p>Stay focused on the workout!</p>
+        <button (click)="closeGame()">RETURN TO DASHBOARD</button>
+      </div>
+    </div>

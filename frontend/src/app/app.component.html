@@ -1,0 +1,14 @@
+    <div class="app-container">
+      <main class="main-content">
+        <app-top-bar></app-top-bar>
+        <div class="page-content">
+          <router-outlet></router-outlet>
+        </div>
+      </main>
+
+      <!-- Global Overlays -->
+      <app-device-manager *ngIf="showDeviceManager$ | async"></app-device-manager>
+
+      <!-- Live Workout Overlay -->
+      <app-live-dashboard *ngIf="(executionState$ | async)?.isActive || (executionState$ | async)?.finalSummary"></app-live-dashboard>
+    </div>

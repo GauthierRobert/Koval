@@ -1,0 +1,37 @@
+    <div class="login-container">
+      <div class="login-card">
+        <div class="logo">
+          <div class="logo-icon">
+            <div class="logo-inner"></div>
+          </div>
+          <h1>Koval <span class="accent">TRAINING</span></h1>
+        </div>
+        <p class="subtitle">AI-powered cycling & triathlon training</p>
+        <div class="auth-buttons">
+          <button class="auth-btn strava" (click)="loginWithStrava()">
+            <span class="btn-text">Connect with Strava</span>
+          </button>
+          <button class="auth-btn google" (click)="loginWithGoogle()">
+            <span class="btn-text">Continue with Google</span>
+          </button>
+        </div>
+
+        <!-- DEV ONLY -->
+        <div class="dev-section">
+          <div class="dev-label">DEV LOGIN</div>
+          <div class="dev-row">
+            <input
+              class="dev-input"
+              [(ngModel)]="devUserId"
+              placeholder="User ID"
+              (keydown.enter)="devLogin()"
+            />
+            <select class="dev-select" [(ngModel)]="devRole">
+              <option value="ATHLETE">Athlete</option>
+              <option value="COACH">Coach</option>
+            </select>
+            <button class="dev-btn" (click)="devLogin()" [disabled]="!devUserId.trim()">GO</button>
+          </div>
+        </div>
+      </div>
+    </div>

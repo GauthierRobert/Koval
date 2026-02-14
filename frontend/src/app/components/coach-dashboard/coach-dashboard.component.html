@@ -1,0 +1,196 @@
+    <div class="coach-container">
+      <div class="header glass">
+        <div class="brand">
+          <span class="highlight">COACH</span> <span class="dim">MANAGEMENT</span>
+        </div>
+        <div class="coach-stats">
+          <div class="stat">
+            <span class="label">Roster</span>
+            <span class="value">{{ (athletes$ | async)?.length || 0 }}</span>
+          </div>
+          <div class="stat">
+            <span class="label">Analysis Needed</span>
+            <span class="value">4</span>
+          </div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="athlete-list glass">
+          <div class="section-header">
+            <h3>ATHLETES</h3>
+            <button class="add-btn" (click)="addAthlete()">+ REGISTER</button>
+          </div>
+
+          <ng-container *ngIf="allTags$ | async as tags">
+            <div class="tag-filters" *ngIf="tags.length > 0">
+              <span class="tag-filter-chip"
+                    [class.active]="!activeTagFilter"
+                    (click)="setTagFilter(null)">All ({{ (athletes$ | async)?.length || 0 }})</span>
+              <span *ngFor="let tag of tags"
+                    class="tag-filter-chip"
+                    [class.active]="activeTagFilter === tag.name"
+                    (click)="toggleTagFilter(tag.name)">{{ tag.name }} ({{ getTagCount(tag.name) }})</span>
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="filteredAthletes$ | async as filtered">
+            <div class="athletes" *ngIf="filtered.length > 0">
+              <div *ngFor="let athlete of filtered"
+                   class="athlete-row"
+                   [class.selected]="selectedAthlete?.id === athlete.id"
+                   (click)="selectAthlete(athlete)">
+                <div class="avatar-sm">{{ athlete.displayName[0].toUpperCase() }}</div>
+                <div class="info">
+                  <span class="name">{{ athlete.displayName }}</span>
+                  <div class="tag-chips" *ngIf="athlete.tags && athlete.tags.length > 0">
+                    <span *ngFor="let tag of athlete.tags" class="chip tag">{{ tag }}</span>
+                  </div>
+                  <div class="mini-metrics">
+                     <span class="chip fitness">C: 84</span>
+                     <span class="chip fatigue">A: 102</span>
+                     <span class="chip form positive">F: +12</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="empty-athletes" *ngIf="filtered.length === 0 && activeTagFilter">
+              No athletes with tag "{{ activeTagFilter }}"
+            </div>
+            <div class="empty-athletes" *ngIf="filtered.length === 0 && !activeTagFilter && (allTags$ | async)?.length">
+              No athletes registered yet
+            </div>
+          </ng-container>
+        </div>
+        <div class="athlete-detail glass" *ngIf="selectedAthlete">
+          <div class="detail-header">
+            <div class="profile-summary">
+              <div class="main-info">
+                <h2>{{ selectedAthlete.displayName }}</h2>
+                <div class="physiological-tabs">
+                   <div class="tab active">PERFORMANCE</div>
+                   <div class="tab">PHYSIOLOGY</div>
+                   <div class="tab">HISTORY</div>
+                </div>
+              </div>
+              <div class="actions">
+                <button class="share-btn" (click)="openShareModal()">SHARE</button>
+                <button class="assign-btn" (click)="assignWorkout()">ASSIGN WORKOUT</button>
+              </div>
+            </div>
+
+            <div class="detail-tags">
+              <span class="detail-tags-label">TAGS</span>
+              <div class="detail-tags-row">
+                <span *ngFor="let tag of selectedAthlete.tags || []" class="editable-tag">
+                  {{ tag }}
+                  <button class="tag-remove" (click)="removeTag(selectedAthlete, tag)">&times;</button>
+                </span>
+                <div class="tag-add-inline">
+                  <input
+                    class="tag-input"
+                    [(ngModel)]="newTagInput"
+                    (keydown.enter)="addTag(selectedAthlete)"
+                    placeholder="Add tag..."
+                    list="tag-suggestions"
+                  />
+                  <datalist id="tag-suggestions">
+                    <option *ngFor="let tag of allTags$ | async" [value]="tag.name"></option>
+                  </datalist>
+                  <button class="tag-add-btn" (click)="addTag(selectedAthlete)">+</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="metrics-dashboard">
+               <div class="m-card">
+                 <span class="m-label">FITNESS (CTL)</span>
+                 <span class="m-value">84.2</span>
+                 <span class="m-trend up">↑ 2.4</span>
+               </div>
+               <div class="m-card">
+                 <span class="m-label">FATIGUE (ATL)</span>
+                 <span class="m-value">102.8</span>
+                 <span class="m-trend down">↓ 5.1</span>
+               </div>
+               <div class="m-card">
+                 <span class="m-label">FORM (TSB)</span>
+                 <span class="m-value">+12.4</span>
+                 <span class="m-condition fresh">FRESH</span>
+               </div>
+               <div class="m-card">
+                 <span class="m-label">FTP (EST)</span>
+                 <span class="m-value">315W</span>
+                 <span class="m-meta">4.2 W/kg</span>
+               </div>
+            </div>
+          </div>
+          <div class="technical-schedule">
+            <div class="section-title">TECHNICAL SCHEDULE <span class="week-label">WEEK 06</span></div>
+            <div class="schedule-table">
+              <div class="table-header">
+                <span>DATE</span>
+                <span>SESSION TITLE</span>
+                <span>TYPE</span>
+                <span>DUR</span>
+                <span>IF</span>
+                <span>TSS</span>
+                <span>STATUS</span>
+              </div>
+              <ng-container *ngIf="athleteSchedule$ | async as schedule">
+                <div *ngFor="let workout of schedule" class="table-row">
+                  <span class="t-date">{{ workout.scheduledDate | date:'MMM d, EEE' }}</span>
+                  <span class="t-title">{{ getWorkoutTitle(workout) }}</span>
+                  <span class="t-type">
+                    <span
+                      *ngIf="workout.trainingType"
+                      class="schedule-type-badge"
+                      [style.background]="getTypeColor(workout.trainingType) + '20'"
+                      [style.color]="getTypeColor(workout.trainingType)"
+                      [style.border-color]="getTypeColor(workout.trainingType) + '40'"
+                    >{{ getTypeLabel(workout.trainingType) }}</span>
+                    <span *ngIf="!workout.trainingType">-</span>
+                  </span>
+                  <span class="t-dur">{{ getWorkoutDuration(workout) }}</span>
+                  <span class="t-if">{{ workout.intensityFactor || workout.if || '-' }}</span>
+                  <span class="t-tss">{{ workout.tss || '-' }}</span>
+                  <span class="t-status" [class.pending]="workout.status === 'PENDING'">{{ workout.status }}</span>
+                </div>
+                <div *ngIf="schedule.length === 0" class="table-row empty-row">
+                  <span class="t-empty">No scheduled workouts for this period</span>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+        <div class="placeholder-detail glass" *ngIf="!selectedAthlete">
+           <div class="empty-detail">
+             <span class="icon">&#128269;</span>
+             <h3>SELECT ATHLETE FOR DETAILED PHYSIOLOGICAL ANALYSIS</h3>
+             <p>Manage training loads and performance progression.</p>
+           </div>
+        </div>
+      </div>
+    </div>
+
+    <app-schedule-modal
+      [isOpen]="isScheduleModalOpen"
+      [preselectedAthletes]="selectedAthlete ? [selectedAthlete] : null"
+      mode="coach"
+      (closed)="isScheduleModalOpen = false"
+      (scheduled)="onScheduled()"
+    ></app-schedule-modal>
+
+    <app-invite-code-modal
+      [isOpen]="isInviteCodeModalOpen"
+      [availableTags]="(allTags$ | async) || []"
+      (closed)="isInviteCodeModalOpen = false"
+      (codeGenerated)="onCodeGenerated()"
+    ></app-invite-code-modal>
+
+    <app-share-training-modal
+      [isOpen]="isShareModalOpen"
+      [training]="trainingToShare"
+      [availableTags]="(allTags$ | async) || []"
+      (closed)="isShareModalOpen = false"
+      (shared)="onTrainingShared()"
+    ></app-share-training-modal>

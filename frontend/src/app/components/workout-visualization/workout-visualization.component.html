@@ -1,0 +1,85 @@
+    <div class="viz-container" *ngIf="training">
+      <div class="header">
+        <div class="title-section">
+          <h1>{{ training.title }}</h1>
+          <p class="description">{{ training.description }}</p>
+        </div>
+        <div class="action-buttons">
+          <div class="export-dropdown">
+            <button class="export-btn" (click)="toggleExportDropdown($event)">
+              EXPORT
+              <span class="dropdown-caret">▼</span>
+            </button>
+            <div class="dropdown-menu glass" *ngIf="isExportDropdownOpen">
+              <button class="dropdown-item" (click)="exportToZwift()">Zwift (.zwo)</button>
+              <button class="dropdown-item" (click)="exportToJSON()">JSON</button>
+            </div>
+          </div>
+          <button class="schedule-btn" (click)="openScheduleModal()">SCHEDULE</button>
+          <button class="start-btn" (click)="startWorkout()">
+            <span class="play-icon">▶</span> START WORKOUT
+          </button>
+        </div>
+      </div>
+
+      <app-schedule-modal
+        [isOpen]="isScheduleModalOpen"
+        [preselectedTraining]="training"
+        mode="athlete"
+        (closed)="isScheduleModalOpen = false"
+        (scheduled)="isScheduleModalOpen = false"
+      ></app-schedule-modal>
+
+      <div class="chart-wrapper glass">
+        <div class="y-axis">
+          <span *ngFor="let label of getYAxisLabels()">{{ label }}%</span>
+        </div>
+        <div class="chart-area">
+          <div
+            *ngFor="let block of training.blocks; let i = index"
+            class="block-bar-wrapper"
+            [style.width.%]="getBlockWidth(block)"
+          >
+            <div class="bar-container" [style.height.%]="getBlockHeight(block)">
+              <div
+                class="block-bar"
+                [style.background]="getBlockColor(block)"
+                [style.clip-path]="getBlockClipPath(block)"
+                [attr.data-type]="block.type"
+              ></div>
+
+              <div class="block-tooltip glass" *ngIf="ftp$ | async as ftp">
+                <span class="tooltip-label">{{ block.label }}</span>
+                <span class="tooltip-type">{{ block.type }}</span>
+                <ng-container *ngIf="block.type !== 'FREE'">
+                  <span class="tooltip-power" *ngIf="block.type !== 'RAMP'">{{ block.powerTargetPercent }}%</span>
+                  <span class="tooltip-power" *ngIf="block.type === 'RAMP'">{{ block.powerStartPercent }}% → {{ block.powerEndPercent }}%</span>
+                  <span class="tooltip-watts" *ngIf="block.type !== 'RAMP'">{{ calculateWatts(block.powerTargetPercent || 0, ftp) }}W</span>
+                  <span class="tooltip-watts" *ngIf="block.type === 'RAMP'">{{ calculateWatts(block.powerStartPercent || 0, ftp) }}W → {{ calculateWatts(block.powerEndPercent || 0, ftp) }}W</span>
+                </ng-container>
+                <span class="tooltip-duration">{{ formatDuration(block.durationSeconds) }}</span>
+              </div>
+
+              <div class="block-label" *ngIf="getBlockWidth(block) > 5">
+                 {{ getDisplayPower(block) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats glass">
+        <div class="stat">
+          <span class="label">Duration</span>
+          <span class="value">{{ getTotalDuration() }}</span>
+        </div>
+        <div class="stat">
+          <span class="label">Blocks</span>
+          <span class="value">{{ training.blocks.length }}</span>
+        </div>
+        <div class="stat">
+          <span class="label">Intensity</span>
+          <span class="value">High</span>
+        </div>
+      </div>
+    </div>

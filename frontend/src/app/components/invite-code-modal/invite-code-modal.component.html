@@ -1,0 +1,93 @@
+    <div class="modal-backdrop" *ngIf="isOpen" (click)="close()">
+      <div class="modal-card glass" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>INVITE <span class="highlight">CODES</span></h2>
+          <button class="close-btn" (click)="close()">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Generate new code -->
+          <div class="generate-section">
+            <h3 class="sub-title">GENERATE NEW CODE</h3>
+
+            <div class="field">
+              <label>Tags (athletes will receive these)</label>
+              <div class="tag-selector">
+                <span
+                  *ngFor="let tag of unassignedTags"
+                  class="tag-chip"
+                  [class.selected]="selectedTagIds.includes(tag.id)"
+                  (click)="toggleTag(tag)"
+                >{{ tag.name }}</span>
+                <div class="tag-add-inline" *ngIf="unassignedTags.length === 0 || showNewTagInput">
+                  <input
+                    class="tag-input"
+                    [(ngModel)]="newTagInput"
+                    (keydown.enter)="addNewTag()"
+                    placeholder="New tag..."
+                  />
+                  <button class="tag-add-btn" (click)="addNewTag()">+</button>
+                </div>
+                <button
+                  class="tag-new-btn"
+                  *ngIf="!showNewTagInput && unassignedTags.length > 0"
+                  (click)="showNewTagInput = true"
+                >+ New tag</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Max uses (0 = unlimited)</label>
+              <input type="number" class="num-input" [(ngModel)]="maxUses" min="0" />
+            </div>
+
+            <button class="generate-btn" (click)="generate()" [disabled]="generating">
+              {{ generating ? 'GENERATING...' : 'GENERATE CODE' }}
+            </button>
+          </div>
+
+          <!-- Generated code display -->
+          <div class="code-display" *ngIf="generatedCode">
+            <div class="code-display-inner">
+              <span class="code-display-label">Share this code with your athletes</span>
+              <div class="code-value">{{ generatedCode }}</div>
+            </div>
+            <button class="copy-btn" (click)="copyCode()">
+              {{ copied ? 'COPIED!' : 'COPY' }}
+            </button>
+          </div>
+
+          <!-- Existing codes -->
+          <div class="codes-section" *ngIf="(inviteCodes$ | async)?.length">
+            <div class="codes-header">
+              <h3 class="sub-title">EXISTING CODES</h3>
+              <button class="toggle-inactive-btn" (click)="toggleShowInactive()" *ngIf="hasInactiveCodes$ | async">
+                {{ showInactive ? 'HIDE' : 'SHOW' }} INACTIVE
+              </button>
+            </div>
+            <div class="code-list">
+              <div *ngFor="let code of displayedCodes$ | async" class="code-row" [class.inactive]="!code.active">
+                <div class="code-left">
+                  <span class="code-mono">{{ code.code }}</span>
+                  <span class="code-status-dot" [class.active-dot]="code.active"></span>
+                </div>
+                <div class="code-meta">
+                  <div class="code-tags">
+                    <span *ngFor="let tagId of code.tags" class="mini-tag">{{ resolveTagName(tagId) }}</span>
+                    <span *ngIf="code.tags.length === 0" class="no-tags">No tags</span>
+                  </div>
+                  <span class="code-uses">{{ code.currentUses }}{{ code.maxUses > 0 ? ' / ' + code.maxUses : '' }} uses</span>
+                </div>
+                <button
+                  class="deactivate-btn"
+                  *ngIf="code.active"
+                  (click)="deactivate(code)"
+                  title="Deactivate"
+                >&times;</button>
+                <span class="inactive-badge" *ngIf="!code.active">INACTIVE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>

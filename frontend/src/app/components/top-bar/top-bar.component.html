@@ -1,0 +1,66 @@
+    <header class="top-bar glass">
+      <div class="brand" routerLink="/dashboard" style="cursor: pointer">
+        <div class="logo">
+          <div class="logo-inner"></div>
+        </div>
+        <span class="app-title">Koval <span class="accent">TRAINING</span></span>
+      </div>
+
+      <nav class="nav-links">
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">DASHBOARD</a>
+        <a routerLink="/chat" routerLinkActive="active" class="nav-link">ASSISTANT</a>
+        <a routerLink="/calendar" routerLinkActive="active" class="nav-link">CALENDAR</a>
+        <a routerLink="/coach" routerLinkActive="active" class="nav-link">COACHING</a>
+      </nav>
+
+      <div class="right-section">
+        <div class="topbar-controls">
+          <div class="ftp-compact" title="Functional Threshold Power">
+            <span class="ftp-label">FTP</span>
+            <input
+              type="number"
+              class="ftp-input"
+              [ngModel]="ftp$ | async"
+              (ngModelChange)="onFtpChange($event)"
+            />
+            <span class="ftp-unit">W</span>
+          </div>
+
+          <button class="device-btn" (click)="toggleDevices()" title="Manage Devices">
+            <svg class="bt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6.5 6.5l11 11L12 23V1l5.5 5.5-11 11"/>
+            </svg>
+            <span class="device-badge" *ngIf="(connectedCount$ | async)! > 0">{{ connectedCount$ | async }}</span>
+          </button>
+        </div>
+
+        <div class="action-wrapper">
+          <button class="action-btn" (click)="togglePopup($event)">
+            NEW TRAINING
+          </button>
+
+          <!-- Quick Chat Popup -->
+          <div class="quick-chat-popup glass" *ngIf="isPopupOpen" (click)="$event.stopPropagation()">
+            <div class="popup-header">
+              <h4>Generate Training</h4>
+              <button class="close-btn" (click)="closePopup()">×</button>
+            </div>
+            <p class="popup-intro">Describe your goal to the Assistant:</p>
+            <textarea
+              [(ngModel)]="requestDescription"
+              placeholder="e.g., I want an FTP booster session with over-unders..."
+              (keydown.enter)="$event.preventDefault(); submitRequest()"
+              autofocus
+            ></textarea>
+            <div class="popup-footer">
+              <button class="submit-btn" [disabled]="!requestDescription.trim()" (click)="submitRequest()">
+                GENERATE TRAINING
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Overlay to close popup when clicking outside -->
+    <div class="popup-overlay" *ngIf="isPopupOpen" (click)="closePopup()"></div>
