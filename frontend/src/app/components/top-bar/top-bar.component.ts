@@ -5,7 +5,6 @@ import { FormsModule } from '@angular/forms';
 import { ChatService } from '../../services/chat.service';
 import { BluetoothService } from '../../services/bluetooth.service';
 import { TrainingService } from '../../services/training.service';
-import { AuthService } from '../../services/auth.service';
 import { combineLatest, map } from 'rxjs';
 
 @Component({
@@ -27,10 +26,6 @@ import { combineLatest, map } from 'rxjs';
         <a routerLink="/calendar" routerLinkActive="active" class="nav-link">CALENDAR</a>
         <a routerLink="/coach" routerLinkActive="active" class="nav-link">COACHING</a>
       </nav>
-
-      <div class="user-tags" *ngIf="(userTags$ | async)?.length">
-        <span class="tag-chip" *ngFor="let tag of userTags$ | async">{{ tag }}</span>
-      </div>
 
       <div class="right-section">
         <div class="topbar-controls">
@@ -172,27 +167,6 @@ import { combineLatest, map } from 'rxjs';
       height: 2px;
       background: var(--accent-color);
       box-shadow: 0 -2px 10px rgba(255, 102, 0, 0.3);
-    }
-
-    .user-tags {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-left: 16px;
-    }
-
-    .tag-chip {
-      display: inline-flex;
-      align-items: center;
-      padding: 3px 10px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      color: var(--text-muted);
-      white-space: nowrap;
     }
 
     .right-section {
@@ -428,12 +402,10 @@ export class TopBarComponent {
   private chatService = inject(ChatService);
   private bluetoothService = inject(BluetoothService);
   private trainingService = inject(TrainingService);
-  private authService = inject(AuthService);
 
   isPopupOpen = false;
   requestDescription = '';
   ftp$ = this.trainingService.ftp$;
-  userTags$ = this.authService.user$.pipe(map(u => u?.tags ?? []));
 
   connectedCount$ = combineLatest([
     this.bluetoothService.trainerStatus$,

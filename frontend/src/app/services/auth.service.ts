@@ -71,6 +71,19 @@ export class AuthService {
         );
     }
 
+    // --- DEV ONLY — login with arbitrary userId ---
+
+    devLogin(userId: string, displayName?: string, role?: 'ATHLETE' | 'COACH'): Observable<{ token: string, user: User }> {
+        return this.http.post<{ token: string, user: User }>(`${this.apiUrl}/dev/login`, {
+            userId, displayName, role
+        }).pipe(
+            tap(response => {
+                localStorage.setItem('token', response.token);
+                this.userSubject.next(response.user);
+            })
+        );
+    }
+
     // --- Session management ---
 
     logout() {

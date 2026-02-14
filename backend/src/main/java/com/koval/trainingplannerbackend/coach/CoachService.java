@@ -6,7 +6,6 @@ import com.koval.trainingplannerbackend.auth.UserRole;
 import com.koval.trainingplannerbackend.auth.UserService;
 import com.koval.trainingplannerbackend.training.tag.Tag;
 import com.koval.trainingplannerbackend.training.tag.TagService;
-import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -48,7 +47,6 @@ public class CoachService {
     /**
      * Assign a training to one or more athletes.
      */
-    @Tool(description = "Assign a training plan to one or more athletes on a specific date")
     public List<ScheduledWorkout> assignTraining(
             String coachId,
             String trainingId,
@@ -88,7 +86,6 @@ public class CoachService {
     /**
      * Allow any user to assign a training to themselves on a specific date.
      */
-    @Tool(description = "Assign a training plan to yourself (the current user) on a specific date. Any user can use this, regardless of role.")
     public ScheduledWorkout selfAssignTraining(
             String userId,
             String trainingId,
@@ -111,7 +108,6 @@ public class CoachService {
     /**
      * Unassign a scheduled workout.
      */
-    @Tool(description = "Unassign a scheduled workout by its Id")
     public void unassignTraining(String scheduledWorkoutId) {
         if (!scheduledWorkoutRepository.existsById(scheduledWorkoutId)) {
             throw new IllegalArgumentException("Scheduled workout not found: " + scheduledWorkoutId);
@@ -122,7 +118,6 @@ public class CoachService {
     /**
      * Get an athlete's schedule within a date range.
      */
-    @Tool(description = "Get the training schedule for a specific athlete within a date range")
     public List<ScheduledWorkout> getAthleteSchedule(String athleteId, LocalDate start, LocalDate end) {
         return scheduledWorkoutRepository.findByAthleteIdAndScheduledDateBetween(athleteId, start, end);
     }
@@ -137,7 +132,6 @@ public class CoachService {
     /**
      * Get all athletes for a coach (derived from tags).
      */
-    @Tool(description = "Get the list of athletes assigned to a specific coach")
     public List<User> getCoachAthletes(String coachId) {
         List<String> athleteIds = tagService.getAthleteIdsForCoach(coachId);
         if (athleteIds.isEmpty()) return List.of();
@@ -182,7 +176,6 @@ public class CoachService {
     /**
      * Get athletes filtered by tag for a specific coach.
      */
-    @Tool(description = "Get athletes for a coach filtered by a specific tag ID. Returns the list of athletes that belong to the given tag.")
     public List<User> getAthletesByTag(String coachId, String tagId) {
         Tag tag = tagService.getTagById(tagId);
         if (!coachId.equals(tag.getCoachId())) {
@@ -195,7 +188,6 @@ public class CoachService {
     /**
      * Get all tags for a coach (Tag objects).
      */
-    @Tool(description = "Get all tags for a coach. Use this to discover what tags exist before filtering by tag.")
     public List<Tag> getAthleteTagsForCoach(String coachId) {
         return tagService.getTagsForCoach(coachId);
     }
@@ -203,7 +195,6 @@ public class CoachService {
     /**
      * Add a tag to an athlete. Coach-only. Creates the tag if it doesn't exist, then adds athlete.
      */
-    @Tool(description = "Add an athlete to a tag (e.g. 'Club BTC', 'Junior', 'Triathlon'). Creates the tag if it doesn't exist. Only coaches can use this.")
     public Tag addTagToAthlete(String coachId, String athleteId, String tagName) {
         User coach = userRepository.findById(coachId)
                 .orElseThrow(() -> new IllegalArgumentException("Coach not found: " + coachId));
@@ -222,7 +213,6 @@ public class CoachService {
     /**
      * Remove a tag from an athlete. Coach-only.
      */
-    @Tool(description = "Remove an athlete from a tag. Only coaches can use this.")
     public Tag removeTagFromAthlete(String coachId, String athleteId, String tagId) {
         User coach = userRepository.findById(coachId)
                 .orElseThrow(() -> new IllegalArgumentException("Coach not found: " + coachId));
@@ -242,7 +232,6 @@ public class CoachService {
      * Replace all tags for an athlete under this coach.
      * Removes athlete from all current coach tags, then adds to specified tags.
      */
-    @Tool(description = "Replace all tags for an athlete with a new list of tag IDs. Only coaches can use this.")
     public List<Tag> setAthleteTags(String coachId, String athleteId, List<String> tagIds) {
         User coach = userRepository.findById(coachId)
                 .orElseThrow(() -> new IllegalArgumentException("Coach not found: " + coachId));

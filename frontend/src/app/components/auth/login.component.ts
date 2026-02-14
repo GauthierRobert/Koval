@@ -1,8 +1,13 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
     selector: 'app-login',
+    standalone: true,
+    imports: [CommonModule, FormsModule],
     template: `
     <div class="login-container">
       <div class="login-card">
@@ -20,6 +25,24 @@ import { AuthService } from '../../services/auth.service';
           <button class="auth-btn google" (click)="loginWithGoogle()">
             <span class="btn-text">Continue with Google</span>
           </button>
+        </div>
+
+        <!-- DEV ONLY -->
+        <div class="dev-section">
+          <div class="dev-label">DEV LOGIN</div>
+          <div class="dev-row">
+            <input
+              class="dev-input"
+              [(ngModel)]="devUserId"
+              placeholder="User ID"
+              (keydown.enter)="devLogin()"
+            />
+            <select class="dev-select" [(ngModel)]="devRole">
+              <option value="ATHLETE">Athlete</option>
+              <option value="COACH">Coach</option>
+            </select>
+            <button class="dev-btn" (click)="devLogin()" [disabled]="!devUserId.trim()">GO</button>
+          </div>
         </div>
       </div>
     </div>
@@ -125,10 +148,82 @@ import { AuthService } from '../../services/auth.service';
       background: white;
       color: #333;
     }
+
+    /* DEV ONLY */
+    .dev-section {
+      width: 100%;
+      padding-top: 20px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    }
+
+    .dev-label {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #f59e0b;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .dev-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .dev-input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #e0e0e0;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .dev-input:focus {
+      border-color: #f59e0b;
+    }
+
+    .dev-select {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 10px 8px;
+      color: #e0e0e0;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .dev-select option {
+      background: #1a1a1e;
+    }
+
+    .dev-btn {
+      background: #f59e0b;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: filter 0.2s;
+    }
+
+    .dev-btn:hover { filter: brightness(1.15); }
+    .dev-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   `]
 })
 export class LoginComponent {
-    constructor(private authService: AuthService) { }
+    devUserId = '';
+    devRole: 'ATHLETE' | 'COACH' = 'ATHLETE';
+
+    constructor(private authService: AuthService, private router: Router) { }
 
     loginWithStrava() {
         this.authService.getStravaAuthUrl().subscribe(res => {
@@ -139,6 +234,13 @@ export class LoginComponent {
     loginWithGoogle() {
         this.authService.getGoogleAuthUrl().subscribe(res => {
             window.location.href = res.authUrl;
+        });
+    }
+
+    devLogin() {
+        if (!this.devUserId.trim()) return;
+        this.authService.devLogin(this.devUserId.trim(), this.devUserId.trim(), this.devRole).subscribe({
+            next: () => this.router.navigate(['/']),
         });
     }
 }

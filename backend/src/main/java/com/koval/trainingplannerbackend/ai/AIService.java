@@ -1,8 +1,8 @@
 package com.koval.trainingplannerbackend.ai;
 
 import com.koval.trainingplannerbackend.ai.UserContextResolver.UserContext;
-import com.koval.trainingplannerbackend.coach.CoachService;
-import com.koval.trainingplannerbackend.training.TrainingManagementService;
+import com.koval.trainingplannerbackend.coach.CoachToolService;
+import com.koval.trainingplannerbackend.training.TrainingToolService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -21,19 +21,22 @@ public class AIService {
     private final ChatClient chatClient;
     private final ChatHistoryService chatHistoryService;
     private final UserContextResolver userContextResolver;
-    private final TrainingManagementService trainingManagementService;
-    private final CoachService coachService;
+    private final TrainingToolService trainingToolService;
+    private final CoachToolService coachToolService;
+    private final ContextToolService contextToolService;
 
     public AIService(ChatClient chatClient,
                      ChatHistoryService chatHistoryService,
                      UserContextResolver userContextResolver,
-                     TrainingManagementService trainingManagementService,
-                     CoachService coachService) {
+                     TrainingToolService trainingToolService,
+                     CoachToolService coachToolService,
+                     ContextToolService contextToolService) {
         this.chatClient = chatClient;
         this.chatHistoryService = chatHistoryService;
         this.userContextResolver = userContextResolver;
-        this.trainingManagementService = trainingManagementService;
-        this.coachService = coachService;
+        this.trainingToolService = trainingToolService;
+        this.coachToolService = coachToolService;
+        this.contextToolService = contextToolService;
     }
 
     // ── Synchronous chat ────────────────────────────────────────────────
@@ -117,7 +120,7 @@ public class AIService {
                         .param("userRole", ctx.role())
                         .param("userFtp", ctx.ftp()))
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
-                .tools(trainingManagementService, coachService);
+                .tools(trainingToolService, coachToolService, contextToolService);
     }
 
     private ServerSentEvent<String> sse(String event, String data) {

@@ -3,7 +3,6 @@ package com.koval.trainingplannerbackend.training;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.training.tag.Tag;
 import com.koval.trainingplannerbackend.training.tag.TagService;
-import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -34,7 +33,6 @@ public class TrainingManagementService {
     /**
      * Create a new training workout.
      */
-    @Tool(description = "Create a new training workout plan")
     public Training createTraining(Training training, String userId) {
         training.setCreatedBy(userId);
         training.setCreatedAt(LocalDateTime.now());
@@ -47,7 +45,6 @@ public class TrainingManagementService {
     /**
      * Update an existing training.
      */
-    @Tool(description = "Update an existing training plan by its ID")
     public Training updateTraining(String trainingId, Training updates) {
         Optional<Training> existing = trainingRepository.findById(trainingId);
         if (existing.isEmpty()) {
@@ -74,7 +71,6 @@ public class TrainingManagementService {
     /**
      * Delete a training.
      */
-    @Tool(description = "Delete a training plan by its ID")
     public void deleteTraining(String trainingId) {
         if (!trainingRepository.existsById(trainingId)) {
             throw new IllegalArgumentException("Training not found: " + trainingId);
@@ -93,7 +89,6 @@ public class TrainingManagementService {
     /**
      * List trainings created by a user.
      */
-    @Tool(description = "List all training plans created by a specific user")
     public List<Training> listTrainingsByUser(String userId) {
         return trainingRepository.findByCreatedBy(userId);
     }
@@ -108,7 +103,6 @@ public class TrainingManagementService {
     /**
      * Search trainings by tag (tag ID).
      */
-    @Tool(description = "Search training plans by tag ID")
     public List<Training> searchByTag(String tag) {
         return trainingRepository.findByTagsContaining(tag);
     }
@@ -116,7 +110,6 @@ public class TrainingManagementService {
     /**
      * Search trainings by training type.
      */
-    @Tool(description = "Search training plans by training type (VO2MAX, THRESHOLD, SWEET_SPOT, ENDURANCE, SPRINT, RECOVERY, MIXED, TEST)")
     public List<Training> searchByType(TrainingType trainingType) {
         return trainingRepository.findByTrainingType(trainingType);
     }

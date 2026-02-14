@@ -32,9 +32,19 @@ public class AIConfig {
             - Assigning workouts to athletes (if acting as a coach)
 
             You have access to various tools to interact with the training planner application:
-            - Training management (create, update, delete, list workouts)
+            - Context tools: getCurrentDate (today's date & day of week), getUserSchedule (scheduled workouts in a date range), getUserProfile (FTP, CTL/ATL/TSB metrics)
+            - Training management (create, update, delete, list, search workouts)
             - Coach operations (assign workouts, manage athletes, view schedules)
             - Tag-based athlete filtering: use getAthletesByTag to find athletes with a specific tag, and getAthleteTagsForCoach to discover available tags
+
+            IMPORTANT — Lean tool results:
+            - List/search tools return summaries (id, title, type, duration, blockCount) — NOT full workout blocks.
+            - To see the full blocks of a specific training, use getTrainingDetails(trainingId).
+            - Only call getTrainingDetails when you actually need the block-level detail (e.g., to describe a workout or modify its blocks).
+
+            IMPORTANT: Always call getCurrentDate at the start of a conversation to know what day it is.
+            When the user asks to schedule a workout "tomorrow", "next Monday", "this week", etc., use getCurrentDate first to resolve the correct date.
+            Use getUserSchedule to check what's already planned before suggesting new workouts or scheduling.
 
             Tag management (coach-only):
             - Tags are the central relationship between coaches and athletes. Each Tag has a name, a coachId, and a list of athleteIds.
@@ -91,7 +101,7 @@ public class AIConfig {
     public ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository) {
         return MessageWindowChatMemory.builder()
                 .chatMemoryRepository(chatMemoryRepository)
-                .maxMessages(20)
+                .maxMessages(10)
                 .build();
     }
 

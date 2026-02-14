@@ -24,6 +24,7 @@ public class AuthController {
     private final StravaOAuthService stravaOAuthService;
     private final GoogleOAuthService googleOAuthService;
     private final UserService userService;
+    private final UserRepository userRepository;
     private final TagService tagService;
 
     @Value("${jwt.secret:your-256-bit-secret-key-here-must-be-at-least-32-chars}")
@@ -33,10 +34,11 @@ public class AuthController {
     private long jwtExpiration;
 
     public AuthController(StravaOAuthService stravaOAuthService, GoogleOAuthService googleOAuthService,
-                          UserService userService, TagService tagService) {
+                          UserService userService, UserRepository userRepository, TagService tagService) {
         this.stravaOAuthService = stravaOAuthService;
         this.googleOAuthService = googleOAuthService;
         this.userService = userService;
+        this.userRepository = userRepository;
         this.tagService = tagService;
     }
 
@@ -108,6 +110,35 @@ public class AuthController {
             error.put("error", "Authentication failed: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
+    }
+
+    // --- DEV ONLY — login with arbitrary userId, no password ---
+
+    public record DevLoginRequest(String userId, String displayName, UserRole role) {}
+
+    @PostMapping("/dev/login")
+    public ResponseEntity<Map<String, Object>> devLogin(@RequestBody DevLoginRequest request) {
+        String userId = request.userId();
+        if (userId == null || userId.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        User user = userRepository.findById(userId).orElseGet(() -> {
+            User newUser = new User();
+            newUser.setId(userId);
+            newUser.setAuthProvider(AuthProvider.GOOGLE);
+            newUser.setDisplayName(request.displayName() != null ? request.displayName() : userId);
+            newUser.setRole(request.role() != null ? request.role() : UserRole.ATHLETE);
+            newUser.setFtp(250);
+            return userRepository.save(newUser);
+        });
+
+        String jwt = generateJwtToken(user);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", jwt);
+        response.put("user", userToMap(user));
+        return ResponseEntity.ok(response);
     }
 
     // --- Current User ---
