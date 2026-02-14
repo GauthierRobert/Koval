@@ -68,7 +68,7 @@ public class ScheduleController {
         String userId = SecurityUtils.getCurrentUserId();
 
         List<ScheduledWorkout> workouts = scheduledWorkoutRepository
-                .findByAthleteIdAndScheduledDateBetween(userId, start, end);
+                .findByAthleteIdAndScheduledDateBetween(userId, start.minusDays(1), end.plusDays(1));
         return ResponseEntity.ok(enrichList(workouts));
     }
 
@@ -124,10 +124,11 @@ public class ScheduleController {
                 .map(sw -> {
                     Training t = trainingsMap.get(sw.getTrainingId());
                     String title = t != null ? t.getTitle() : null;
+                    var type = t != null ? t.getTrainingType() : null;
                     Integer duration = t != null && t.getBlocks() != null
                             ? t.getBlocks().stream().mapToInt(WorkoutBlock::getDurationSeconds).sum()
                             : null;
-                    return ScheduledWorkoutResponse.from(sw, title, duration);
+                    return ScheduledWorkoutResponse.from(sw, title, type, duration);
                 })
                 .toList();
     }
@@ -138,8 +139,8 @@ public class ScheduleController {
                     Integer duration = t.getBlocks() != null
                             ? t.getBlocks().stream().mapToInt(WorkoutBlock::getDurationSeconds).sum()
                             : null;
-                    return ScheduledWorkoutResponse.from(sw, t.getTitle(), duration);
+                    return ScheduledWorkoutResponse.from(sw, t.getTitle(), t.getTrainingType(), duration);
                 })
-                .orElse(ScheduledWorkoutResponse.from(sw, null, null));
+                .orElse(ScheduledWorkoutResponse.from(sw, null, null, null));
     }
 }

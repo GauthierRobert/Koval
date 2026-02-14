@@ -23,9 +23,10 @@
         <div class="workout-slot">
           <div
             *ngFor="let workout of wbd.get(day.key) || EMPTY; trackBy: trackByWorkout"
-            class="workout-card accent-border clickable"
+            class="workout-card clickable"
             [class.completed]="workout.status === 'COMPLETED'"
             [class.skipped]="workout.status === 'SKIPPED'"
+            [style.border-left]="'3px solid ' + (workout.trainingType ? getTypeColor(workout.trainingType) : 'var(--accent-color)')"
             (click)="selectWorkout(workout)"
           >
             <div class="card-top">
@@ -44,6 +45,13 @@
               <span class="workout-title">
                 {{ workout.trainingTitle || workout.title || 'Session #' + workout.trainingId.substring(0, 6) }}
               </span>
+              <span
+                *ngIf="workout.trainingType"
+                class="type-badge"
+                [style.background]="getTypeColor(workout.trainingType) + '20'"
+                [style.color]="getTypeColor(workout.trainingType)"
+                [style.border-color]="getTypeColor(workout.trainingType) + '40'"
+              >{{ getTypeLabel(workout.trainingType) }}</span>
 
               <div class="technical-metrics">
                 <div class="m-item">

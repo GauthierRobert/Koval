@@ -6,6 +6,11 @@ import { filter, map, switchMap, tap } from 'rxjs/operators';
 import { CalendarService } from '../../services/calendar.service';
 import { AuthService } from '../../services/auth.service';
 import { ScheduledWorkout } from '../../services/coach.service';
+import {
+  TrainingType,
+  TRAINING_TYPE_COLORS,
+  TRAINING_TYPE_LABELS,
+} from '../../services/training.service';
 import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.component';
 import { WorkoutDetailModalComponent } from '../workout-detail-modal/workout-detail-modal.component';
 
@@ -27,13 +32,16 @@ function toDateKey(d: Date): string {
 }
 
 function buildWeek(baseDate: Date): CalendarDay[] {
-  const sunday = new Date(baseDate);
-  sunday.setDate(baseDate.getDate() - baseDate.getDay());
+  const monday = new Date(baseDate);
+  // getDay(): 0=Sun, 1=Mon, ... 6=Sat → offset so Monday=0
+  const dayOfWeek = monday.getDay();
+  const offset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  monday.setDate(baseDate.getDate() + offset);
   const todayStr = new Date().toDateString();
 
   return Array.from({ length: DAYS_IN_WEEK }, (_, i) => {
-    const date = new Date(sunday);
-    date.setDate(sunday.getDate() + i);
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + i);
     return { date, key: toDateKey(date), isToday: date.toDateString() === todayStr };
   });
 }
@@ -156,6 +164,14 @@ export class CalendarComponent implements OnInit {
 
   trackByWorkout(_: number, workout: ScheduledWorkout): string {
     return workout.id;
+  }
+
+  getTypeColor(type: string): string {
+    return TRAINING_TYPE_COLORS[type as TrainingType] || '#888';
+  }
+
+  getTypeLabel(type: string): string {
+    return TRAINING_TYPE_LABELS[type as TrainingType] || type;
   }
 
   private setWeek(baseDate: Date): void {

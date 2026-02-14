@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -119,7 +120,7 @@ public class CoachService {
      * Get an athlete's schedule within a date range.
      */
     public List<ScheduledWorkout> getAthleteSchedule(String athleteId, LocalDate start, LocalDate end) {
-        return scheduledWorkoutRepository.findByAthleteIdAndScheduledDateBetween(athleteId, start, end);
+        return scheduledWorkoutRepository.findByAthleteIdAndScheduledDateBetween(athleteId, start.minusDays(1), end.plusDays(1));
     }
 
     /**
