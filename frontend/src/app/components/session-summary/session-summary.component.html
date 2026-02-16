@@ -1,60 +1,60 @@
-    <div class="summary-overlay">
-      <div class="summary-card">
-        <header class="summary-header">
-          <h1>WORKOUT COMPLETE</h1>
-          <p class="workout-title">{{ summary.title }}</p>
-        </header>
+<div class="summary-overlay">
+  <div class="summary-card">
+    <header class="summary-header">
+      <h1>WORKOUT COMPLETE</h1>
+      <p class="workout-title">{{ summary.title }}</p>
+    </header>
 
-        <div class="top-stats">
-          <div class="stat-item">
-            <span class="label">TOTAL TIME</span>
-            <span class="value">{{ formatTime(summary.totalDuration) }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="label">AVG POWER</span>
-            <span class="value">{{ summary.avgPower }}W</span>
-          </div>
-          <div class="stat-item">
-            <span class="label">AVG HR</span>
-            <span class="value hr">{{ summary.avgHR > 0 ? summary.avgHR : '--' }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="label">AVG CADENCE</span>
-            <span class="value">{{ summary.avgCadence }} RPM</span>
-          </div>
-        </div>
-
-        <div class="table-container">
-          <table class="summary-table">
-            <thead>
-              <tr>
-                <th>INTERVAL</th>
-                <th>DURATION</th>
-                <th>TARGET</th>
-                <th>ACTUAL</th>
-                <th>DELTA</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let block of summary.blockSummaries">
-                <td>
-                  <span class="block-type" [class]="block.type.toLowerCase()">{{ block.label }}</span>
-                </td>
-                <td>{{ formatTime(block.durationSeconds) }}</td>
-                <td>{{ block.targetPower }}W</td>
-                <td>{{ block.actualPower }}W</td>
-                <td>
-                  <span class="delta" [class.positive]="getDelta(block) >= 0" [class.negative]="getDelta(block) < 0">
-                    {{ getDelta(block) > 0 ? '+' : '' }}{{ getDelta(block) }}%
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <footer class="summary-footer">
-          <button class="done-btn" (click)="close.emit()">DONE</button>
-        </footer>
+    <div class="top-stats">
+      <div class="stat-item">
+        <span class="label">TOTAL TIME</span>
+        <span class="value">{{ formatTime(summary.totalDuration) }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="label">AVG {{ getSportLabel() }}</span>
+        <span class="value">{{ summary.avgPower }}{{ getSportUnit() }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="label">AVG HR</span>
+        <span class="value hr">{{ summary.avgHR > 0 ? summary.avgHR : '--' }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="label">AVG CADENCE</span>
+        <span class="value">{{ summary.avgCadence }} RPM</span>
       </div>
     </div>
+
+    <div class="table-container">
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>INTERVAL</th>
+            <th>DURATION</th>
+            <th>TARGET</th>
+            <th>ACTUAL</th>
+            <th>DELTA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let block of summary.blockSummaries">
+            <td>
+              <span class="block-type" [class]="block.type.toLowerCase()">{{ block.label }}</span>
+            </td>
+            <td>{{ formatTime(block.durationSeconds) }}</td>
+            <td>{{ block.targetPower }}{{ getSportUnit() }}</td>
+            <td>{{ block.actualPower }}{{ getSportUnit() }}</td>
+            <td>
+              <span class="delta" [class.positive]="getDelta(block) >= 0" [class.negative]="getDelta(block) < 0">
+                {{ getDelta(block) > 0 ? '+' : '' }}{{ getDelta(block) }}%
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="summary-footer">
+      <button class="done-btn" (click)="close.emit()">DONE</button>
+    </footer>
+  </div>
+</div>

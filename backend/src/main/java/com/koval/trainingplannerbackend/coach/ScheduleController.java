@@ -24,8 +24,8 @@ public class ScheduleController {
     private final CoachService coachService;
 
     public ScheduleController(ScheduledWorkoutRepository scheduledWorkoutRepository,
-                              TrainingRepository trainingRepository,
-                              CoachService coachService) {
+            TrainingRepository trainingRepository,
+            CoachService coachService) {
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
         this.trainingRepository = trainingRepository;
         this.coachService = coachService;
@@ -36,12 +36,29 @@ public class ScheduleController {
         private LocalDate scheduledDate;
         private String notes;
 
-        public String getTrainingId() { return trainingId; }
-        public void setTrainingId(String trainingId) { this.trainingId = trainingId; }
-        public LocalDate getScheduledDate() { return scheduledDate; }
-        public void setScheduledDate(LocalDate scheduledDate) { this.scheduledDate = scheduledDate; }
-        public String getNotes() { return notes; }
-        public void setNotes(String notes) { this.notes = notes; }
+        public String getTrainingId() {
+            return trainingId;
+        }
+
+        public void setTrainingId(String trainingId) {
+            this.trainingId = trainingId;
+        }
+
+        public LocalDate getScheduledDate() {
+            return scheduledDate;
+        }
+
+        public void setScheduledDate(LocalDate scheduledDate) {
+            this.scheduledDate = scheduledDate;
+        }
+
+        public String getNotes() {
+            return notes;
+        }
+
+        public void setNotes(String notes) {
+            this.notes = notes;
+        }
     }
 
     @PostMapping
@@ -110,7 +127,8 @@ public class ScheduleController {
     // --- Enrichment helpers ---
 
     List<ScheduledWorkoutResponse> enrichList(List<ScheduledWorkout> workouts) {
-        if (workouts.isEmpty()) return List.of();
+        if (workouts.isEmpty())
+            return List.of();
 
         List<String> trainingIds = workouts.stream()
                 .map(ScheduledWorkout::getTrainingId)
@@ -125,9 +143,7 @@ public class ScheduleController {
                     Training t = trainingsMap.get(sw.getTrainingId());
                     String title = t != null ? t.getTitle() : null;
                     var type = t != null ? t.getTrainingType() : null;
-                    Integer duration = t != null && t.getBlocks() != null
-                            ? t.getBlocks().stream().mapToInt(WorkoutBlock::getDurationSeconds).sum()
-                            : null;
+                    Integer duration = t != null ? t.getTotalDurationSeconds() : null;
                     return ScheduledWorkoutResponse.from(sw, title, type, duration);
                 })
                 .toList();
@@ -136,9 +152,7 @@ public class ScheduleController {
     private ScheduledWorkoutResponse enrichSingle(ScheduledWorkout sw) {
         return trainingRepository.findById(sw.getTrainingId())
                 .map(t -> {
-                    Integer duration = t.getBlocks() != null
-                            ? t.getBlocks().stream().mapToInt(WorkoutBlock::getDurationSeconds).sum()
-                            : null;
+                    Integer duration = t.getTotalDurationSeconds();
                     return ScheduledWorkoutResponse.from(sw, t.getTitle(), t.getTrainingType(), duration);
                 })
                 .orElse(ScheduledWorkoutResponse.from(sw, null, null, null));

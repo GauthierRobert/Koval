@@ -94,4 +94,25 @@ public class UserService {
             user.setEmail(email);
         return userRepository.save(user);
     }
+
+    public User updateSettings(String userId, Integer ftp, Integer functionalThresholdPace,
+            Integer criticalSwimSpeed, Integer pace5k, Integer pace10k,
+            Integer paceHalfMarathon, Integer paceMarathon) {
+        User user = getUserById(userId);
+        if (ftp != null)
+            user.setFtp(ftp);
+        if (functionalThresholdPace != null)
+            user.setFunctionalThresholdPace(functionalThresholdPace);
+        if (criticalSwimSpeed != null)
+            user.setCriticalSwimSpeed(criticalSwimSpeed);
+        if (pace5k != null)
+            user.setPace5k(pace5k);
+        if (pace10k != null)
+            user.setPace10k(pace10k);
+        if (paceHalfMarathon != null)
+            user.setPaceHalfMarathon(paceHalfMarathon);
+        if (paceMarathon != null)
+            user.setPaceMarathon(paceMarathon);
+        return userRepository.save(user);
+    }
 }

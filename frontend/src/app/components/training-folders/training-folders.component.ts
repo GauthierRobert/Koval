@@ -17,7 +17,7 @@ export class TrainingFoldersComponent implements OnInit {
   folderNames: string[] = [];
   expandedFolder: string | null = null;
 
-  constructor(private trainingService: TrainingService) {}
+  constructor(private trainingService: TrainingService) { }
 
   ngOnInit(): void {
     this.trainingService.getTrainingFolders().subscribe({
@@ -59,7 +59,7 @@ export class TrainingFoldersComponent implements OnInit {
 
   formatDuration(training: Training): string {
     if (!training.blocks || training.blocks.length === 0) return '';
-    const totalSec = training.blocks.reduce((sum, b) => sum + (b.durationSeconds || 0), 0);
+    const totalSec = training.estimatedDurationSeconds || (training.blocks ? training.blocks.reduce((sum, b) => sum + (b.durationSeconds || 0) * (b.repeats || 1), 0) : 0);
     const h = Math.floor(totalSec / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
     if (h > 0) return `${h}h ${m}m`;

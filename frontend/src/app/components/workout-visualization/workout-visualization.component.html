@@ -1,85 +1,120 @@
-    <div class="viz-container" *ngIf="training">
-      <div class="header">
-        <div class="title-section">
-          <h1>{{ training.title }}</h1>
-          <p class="description">{{ training.description }}</p>
-        </div>
-        <div class="action-buttons">
-          <div class="export-dropdown">
-            <button class="export-btn" (click)="toggleExportDropdown($event)">
-              EXPORT
-              <span class="dropdown-caret">▼</span>
-            </button>
-            <div class="dropdown-menu glass" *ngIf="isExportDropdownOpen">
-              <button class="dropdown-item" (click)="exportToZwift()">Zwift (.zwo)</button>
-              <button class="dropdown-item" (click)="exportToJSON()">JSON</button>
-            </div>
-          </div>
-          <button class="schedule-btn" (click)="openScheduleModal()">SCHEDULE</button>
-          <button class="start-btn" (click)="startWorkout()">
-            <span class="play-icon">▶</span> START WORKOUT
-          </button>
+<div class="viz-container" *ngIf="training">
+  <div class="header">
+    <div class="title-section">
+      <h1>{{ training.title }}</h1>
+      <p class="description">{{ training.description }}</p>
+    </div>
+    <div class="action-buttons">
+      <div class="export-dropdown">
+        <button class="export-btn" (click)="toggleExportDropdown($event)">
+          EXPORT
+          <span class="dropdown-caret">▼</span>
+        </button>
+        <div class="dropdown-menu glass" *ngIf="isExportDropdownOpen">
+          <button class="dropdown-item" *ngIf="training.sportType === 'CYCLING'" (click)="exportToZwift()">Zwift
+            (.zwo)</button>
+          <button class="dropdown-item" (click)="exportToJSON()">JSON</button>
         </div>
       </div>
+      <button class="schedule-btn" (click)="openScheduleModal()">SCHEDULE</button>
+      <button class="start-btn" (click)="startWorkout()">
+        <span class="play-icon">▶</span> START WORKOUT
+      </button>
+    </div>
+  </div>
 
-      <app-schedule-modal
-        [isOpen]="isScheduleModalOpen"
-        [preselectedTraining]="training"
-        mode="athlete"
-        (closed)="isScheduleModalOpen = false"
-        (scheduled)="isScheduleModalOpen = false"
-      ></app-schedule-modal>
+  <app-schedule-modal [isOpen]="isScheduleModalOpen" [preselectedTraining]="training" mode="athlete"
+    (closed)="isScheduleModalOpen = false" (scheduled)="isScheduleModalOpen = false"></app-schedule-modal>
 
-      <div class="chart-wrapper glass">
-        <div class="y-axis">
-          <span *ngFor="let label of getYAxisLabels()">{{ label }}%</span>
-        </div>
-        <div class="chart-area">
-          <div
-            *ngFor="let block of training.blocks; let i = index"
-            class="block-bar-wrapper"
-            [style.width.%]="getBlockWidth(block)"
-          >
-            <div class="bar-container" [style.height.%]="getBlockHeight(block)">
-              <div
-                class="block-bar"
-                [style.background]="getBlockColor(block)"
-                [style.clip-path]="getBlockClipPath(block)"
-                [attr.data-type]="block.type"
-              ></div>
+  <div class="chart-wrapper glass">
+    <div class="y-axis">
+      <span *ngFor="let label of getYAxisLabels()">{{ label }}%</span>
+    </div>
+    <div class="chart-area">
+      <div *ngFor="let block of training.blocks; let i = index" class="block-bar-wrapper"
+        [style.width.%]="getBlockWidth(block)">
+        <div class="bar-container" [style.height.%]="getBlockHeight(block)">
+          <div class="block-bar" [style.background]="getBlockColor(block)" [style.clip-path]="getBlockClipPath(block)"
+            [attr.data-type]="block.type"></div>
 
-              <div class="block-tooltip glass" *ngIf="ftp$ | async as ftp">
-                <span class="tooltip-label">{{ block.label }}</span>
-                <span class="tooltip-type">{{ block.type }}</span>
-                <ng-container *ngIf="block.type !== 'FREE'">
-                  <span class="tooltip-power" *ngIf="block.type !== 'RAMP'">{{ block.powerTargetPercent }}%</span>
-                  <span class="tooltip-power" *ngIf="block.type === 'RAMP'">{{ block.powerStartPercent }}% → {{ block.powerEndPercent }}%</span>
-                  <span class="tooltip-watts" *ngIf="block.type !== 'RAMP'">{{ calculateWatts(block.powerTargetPercent || 0, ftp) }}W</span>
-                  <span class="tooltip-watts" *ngIf="block.type === 'RAMP'">{{ calculateWatts(block.powerStartPercent || 0, ftp) }}W → {{ calculateWatts(block.powerEndPercent || 0, ftp) }}W</span>
-                </ng-container>
-                <span class="tooltip-duration">{{ formatDuration(block.durationSeconds) }}</span>
-              </div>
-
-              <div class="block-label" *ngIf="getBlockWidth(block) > 5">
-                 {{ getDisplayPower(block) }}
-              </div>
-            </div>
+          <div class="block-tooltip glass">
+            <span class="tooltip-label">{{ block.label }}</span>
+            <span class="tooltip-type">{{ block.type }}</span>
+            <ng-container *ngIf="block.type !== 'FREE' && block.type !== 'PAUSE'">
+              <span class="tooltip-power" *ngIf="block.type !== 'RAMP'">{{ getEffectiveIntensity(block, 'TARGET') |
+                number:'1.0-0' }}%</span>
+              <span class="tooltip-power" *ngIf="block.type === 'RAMP'">{{ getEffectiveIntensity(block, 'START') |
+                number:'1.0-0' }}% → {{
+                getEffectiveIntensity(block, 'END') | number:'1.0-0' }}%</span>
+              <span class="tooltip-watts" *ngIf="block.type !== 'RAMP'">{{
+                calculateIntensityValue(getEffectiveIntensity(block, 'TARGET')) }}</span>
+              <span class="tooltip-watts" *ngIf="block.type === 'RAMP'">{{
+                calculateIntensityValue(getEffectiveIntensity(block, 'START')) }} → {{
+                calculateIntensityValue(getEffectiveIntensity(block, 'END'))
+                }}</span>
+            </ng-container>
+            <span class="tooltip-duration">{{ formatDuration(block.durationSeconds) }}</span>
           </div>
-        </div>
-      </div>
 
-      <div class="stats glass">
-        <div class="stat">
-          <span class="label">Duration</span>
-          <span class="value">{{ getTotalDuration() }}</span>
-        </div>
-        <div class="stat">
-          <span class="label">Blocks</span>
-          <span class="value">{{ training.blocks.length }}</span>
-        </div>
-        <div class="stat">
-          <span class="label">Intensity</span>
-          <span class="value">High</span>
+          <div class="block-label" *ngIf="getBlockWidth(block) > 5">
+            {{ getDisplayIntensity(block) }}
+          </div>
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="stats glass">
+    <div class="stat">
+      <span class="label">Duration</span>
+      <span class="value">{{ getTotalDuration() }}</span>
+    </div>
+    <div class="stat">
+      <span class="label">Blocks</span>
+      <span class="value">{{ (training.blocks || []).length }}</span>
+    </div>
+    <div class="stat">
+      <span class="label">Intensity</span>
+      <span class="value">{{ training.estimatedIf | number:'1.2-2' }}</span>
+    </div>
+    <div class="stat detail-toggle">
+      <button class="details-btn" [class.active]="showBlockDetails" (click)="toggleDetails()">
+        {{ showBlockDetails ? 'HIDE DETAILS' : 'SHOW DETAILS' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="block-details-view glass" *ngIf="showBlockDetails">
+    <div class="details-table">
+      <div class="details-header">
+        <span class="col-num">#</span>
+        <span class="col-label">Description</span>
+        <span class="col-dur">Time</span>
+        <span class="col-int">Intensity</span>
+      </div>
+      <div class="details-row-wrapper" *ngFor="let b of training.blocks; let i = index">
+        <div class="set-container" [class.is-set]="(b.repeats || 1) > 1">
+          <div class="set-header" *ngIf="(b.repeats || 1) > 1">
+            <div class="set-badge">{{ b.repeats }}x</div>
+            <div class="set-line"></div>
+          </div>
+          <div class="details-row">
+            <span class="col-num">{{ i + 1 }}</span>
+            <span class="col-label">{{ b.label || b.type }}</span>
+            <span class="col-dur">{{ formatDuration(b.durationSeconds) }}</span>
+            <span class="col-int">
+              <ng-container *ngIf="b.type !== 'FREE' && b.type !== 'PAUSE'">
+                <span *ngIf="b.type !== 'RAMP'">{{ getEffectiveIntensity(b, 'TARGET') | number:'1.0-0' }}% ({{
+                  calculateIntensityValue(getEffectiveIntensity(b, 'TARGET')) }})</span>
+                <span *ngIf="b.type === 'RAMP'">{{ getEffectiveIntensity(b, 'START') | number:'1.0-0' }}%→{{
+                  getEffectiveIntensity(b, 'END') | number:'1.0-0' }}%</span>
+              </ng-container>
+              <span *ngIf="b.type === 'FREE'">Z2 (Free)</span>
+              <span *ngIf="b.type === 'PAUSE'">Pause</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

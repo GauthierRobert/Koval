@@ -1,0 +1,118 @@
+<div class="zone-page">
+    <div class="zone-header">
+        <h1>Training Zones</h1>
+        <p class="subtitle">Configure power and pace zone systems for training intensity</p>
+    </div>
+
+    <div class="zone-layout">
+        <!-- Sidebar -->
+        <div class="systems-panel glass">
+            <div class="panel-header">
+                <h2>SYSTEMS</h2>
+                <div class="add-buttons">
+                    <button class="add-btn" (click)="createNewSystem('CYCLING')" title="Add Cycling">🚴 +</button>
+                    <button class="add-btn" (click)="createNewSystem('RUNNING')" title="Add Running">🏃 +</button>
+                    <button class="add-btn" (click)="createNewSystem('SWIMMING')" title="Add Swimming">🏊 +</button>
+                </div>
+            </div>
+            <div class="system-list">
+                <div *ngFor="let system of zoneSystems" class="system-item"
+                    [class.selected]="selectedSystem?.id === system.id" (click)="selectSystem(system)">
+                    <div class="system-main">
+                        <span class="sport-emoji">
+                            {{ system.sportType === 'CYCLING' ? '🚴' : system.sportType === 'RUNNING' ? '🏃' : '🏊' }}
+                        </span>
+                        <span class="system-name">{{ system.name }}</span>
+                    </div>
+                    <div class="system-badges">
+                        <span *ngIf="system.isActive" class="badge badge-active">Active</span>
+                        <span *ngIf="system.isDefault" class="badge badge-default">Default</span>
+                    </div>
+                </div>
+                <div *ngIf="zoneSystems.length === 0" class="empty-list">
+                    <p>No zone systems yet</p>
+                    <p class="hint">Create one using the buttons above</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor -->
+        <div class="editor-panel" *ngIf="selectedSystem; else noSelection">
+            <div class="editor-top glass">
+                <div class="editor-title-row">
+                    <input [(ngModel)]="selectedSystem.name" class="name-input" placeholder="System Name">
+                    <div class="editor-buttons">
+                        <button class="btn-set-active" (click)="setActive(selectedSystem)"
+                            [disabled]="selectedSystem.isActive">
+                            {{ selectedSystem.isActive ? '✓ Active' : 'Set Active' }}
+                        </button>
+                        <button class="btn-delete" (click)="deleteSystem(selectedSystem.id!)">Delete</button>
+                    </div>
+                </div>
+
+                <div class="config-row">
+                    <div class="config-field">
+                        <label>Sport Type</label>
+                        <select [(ngModel)]="selectedSystem.sportType">
+                            <option *ngFor="let s of sportTypes" [value]="s">{{ s }}</option>
+                        </select>
+                    </div>
+                    <div class="config-field">
+                        <label>Reference Intensity</label>
+                        <select [(ngModel)]="selectedSystem.referenceType">
+                            <option [ngValue]="null">Raw Values (Native Units)</option>
+                            <option *ngFor="let r of referenceTypes" [value]="r">{{ r }}</option>
+                        </select>
+                        <span class="config-hint">Treat high/low values as % of reference</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="zones-card glass">
+                <div class="zones-header-row">
+                    <div class="zh-label">Label</div>
+                    <div class="zh-range">Range (%)</div>
+                    <div class="zh-desc">Description</div>
+                    <div class="zh-actions"></div>
+                </div>
+                <div *ngFor="let zone of selectedSystem.zones; let i = index" class="zone-row">
+                    <div class="zr-label">
+                        <input [(ngModel)]="zone.label" placeholder="Z1">
+                    </div>
+                    <div class="zr-range">
+                        <input type="number" [(ngModel)]="zone.low" class="range-num">
+                        <span class="range-sep">–</span>
+                        <input type="number" [(ngModel)]="zone.high" class="range-num">
+                        <span class="range-unit">%</span>
+                    </div>
+                    <div class="zr-desc">
+                        <input [(ngModel)]="zone.description" placeholder="Description">
+                    </div>
+                    <div class="zr-actions">
+                        <button (click)="moveZone(i, -1)" [disabled]="i === 0" class="icon-btn">↑</button>
+                        <button (click)="moveZone(i, 1)" [disabled]="i === selectedSystem.zones.length - 1"
+                            class="icon-btn">↓</button>
+                        <button (click)="removeZone(i)" class="icon-btn icon-danger">×</button>
+                    </div>
+                </div>
+                <button (click)="addZone()" class="add-zone-btn">+ Add Zone</button>
+            </div>
+
+            <div class="save-bar">
+                <button class="save-btn" (click)="saveSystem()" [disabled]="saving">
+                    <span *ngIf="!saving && !saved">SAVE ZONES</span>
+                    <span *ngIf="saving">SAVING…</span>
+                    <span *ngIf="saved" class="saved-text">✓ SAVED</span>
+                </button>
+            </div>
+        </div>
+
+        <ng-template #noSelection>
+            <div class="empty-state">
+                <div class="empty-icon">🎚️</div>
+                <h2>Select or Create a Zone System</h2>
+                <p>Manage training zones for different sports to ensure accurate intensity calculations.</p>
+            </div>
+        </ng-template>
+    </div>
+</div>

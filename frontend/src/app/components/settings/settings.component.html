@@ -1,0 +1,84 @@
+<div class="settings-page">
+    <div class="settings-header">
+        <h1>Reference Values</h1>
+        <p class="subtitle">Configure your training thresholds and race paces</p>
+    </div>
+
+    <div class="settings-grid">
+        <!-- Cycling Section -->
+        <section class="settings-card glass">
+            <div class="card-header">
+                <span class="sport-icon">🚴</span>
+                <h2>Cycling</h2>
+            </div>
+            <div class="card-body">
+                <div class="field-row">
+                    <div class="field-info">
+                        <label>FTP</label>
+                        <span class="hint">Functional Threshold Power</span>
+                    </div>
+                    <div class="field-input ftp-input-group">
+                        <input type="number" [(ngModel)]="ftp" min="50" max="600" class="value-input numeric" />
+                        <span class="unit">W</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Running Section -->
+        <section class="settings-card glass">
+            <div class="card-header">
+                <span class="sport-icon">🏃</span>
+                <h2>Running</h2>
+            </div>
+            <div class="card-body">
+                <div class="field-row" *ngFor="let field of runFields">
+                    <div class="field-info">
+                        <label>{{ field.label }}</label>
+                        <span class="hint">{{ field.hint }}</span>
+                    </div>
+                    <div class="field-input pace-input-group">
+                        <input type="number" [(ngModel)]="field.minutes" min="0" max="15"
+                            class="value-input pace-part" />
+                        <span class="pace-sep">:</span>
+                        <input type="number" [(ngModel)]="field.seconds" min="0" max="59"
+                            class="value-input pace-part" />
+                        <span class="unit">/km</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Swimming Section -->
+        <section class="settings-card glass">
+            <div class="card-header">
+                <span class="sport-icon">🏊</span>
+                <h2>Swimming</h2>
+            </div>
+            <div class="card-body">
+                <div class="field-row" *ngFor="let field of swimFields">
+                    <div class="field-info">
+                        <label>{{ field.label }}</label>
+                        <span class="hint">{{ field.hint }}</span>
+                    </div>
+                    <div class="field-input pace-input-group">
+                        <input type="number" [(ngModel)]="field.minutes" min="0" max="10"
+                            class="value-input pace-part" />
+                        <span class="pace-sep">:</span>
+                        <input type="number" [(ngModel)]="field.seconds" min="0" max="59"
+                            class="value-input pace-part" />
+                        <span class="unit">/100m</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="actions-bar">
+        <button class="save-btn" (click)="save()" [disabled]="saving">
+            <span *ngIf="!saving && !saved">SAVE SETTINGS</span>
+            <span *ngIf="saving">SAVING…</span>
+            <span *ngIf="saved" class="saved-text">✓ SAVED</span>
+        </button>
+    </div>
+</div>

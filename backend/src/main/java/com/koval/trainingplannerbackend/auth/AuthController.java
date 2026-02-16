@@ -34,7 +34,7 @@ public class AuthController {
     private long jwtExpiration;
 
     public AuthController(StravaOAuthService stravaOAuthService, GoogleOAuthService googleOAuthService,
-                          UserService userService, UserRepository userRepository, TagService tagService) {
+            UserService userService, UserRepository userRepository, TagService tagService) {
         this.stravaOAuthService = stravaOAuthService;
         this.googleOAuthService = googleOAuthService;
         this.userService = userService;
@@ -114,7 +114,8 @@ public class AuthController {
 
     // --- DEV ONLY — login with arbitrary userId, no password ---
 
-    public record DevLoginRequest(String userId, String displayName, UserRole role) {}
+    public record DevLoginRequest(String userId, String displayName, UserRole role) {
+    }
 
     @PostMapping("/dev/login")
     public ResponseEntity<Map<String, Object>> devLogin(@RequestBody DevLoginRequest request) {
@@ -162,7 +163,8 @@ public class AuthController {
         }
     }
 
-    public record RoleRequest(UserRole role) {}
+    public record RoleRequest(UserRole role) {
+    }
 
     @PostMapping("/role")
     public ResponseEntity<Map<String, Object>> setRole(
@@ -179,6 +181,32 @@ public class AuthController {
             return ResponseEntity.ok(userToMap(user));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
+    public record SettingsRequest(Integer ftp, Integer functionalThresholdPace,
+            Integer criticalSwimSpeed, Integer pace5k, Integer pace10k,
+            Integer paceHalfMarathon, Integer paceMarathon) {
+    }
+
+    @PutMapping("/settings")
+    public ResponseEntity<Map<String, Object>> updateSettings(
+            @RequestBody SettingsRequest request,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            String userId = parseJwtToken(authHeader.substring(7));
+            User user = userService.updateSettings(userId,
+                    request.ftp(), request.functionalThresholdPace(),
+                    request.criticalSwimSpeed(), request.pace5k(), request.pace10k(),
+                    request.paceHalfMarathon(), request.paceMarathon());
+            return ResponseEntity.ok(userToMap(user));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -213,6 +241,12 @@ public class AuthController {
         map.put("profilePicture", user.getProfilePicture());
         map.put("role", user.getRole().name());
         map.put("ftp", user.getFtp());
+        map.put("functionalThresholdPace", user.getFunctionalThresholdPace());
+        map.put("criticalSwimSpeed", user.getCriticalSwimSpeed());
+        map.put("pace5k", user.getPace5k());
+        map.put("pace10k", user.getPace10k());
+        map.put("paceHalfMarathon", user.getPaceHalfMarathon());
+        map.put("paceMarathon", user.getPaceMarathon());
 
         map.put("hasCoach", tagService.athleteHasCoach(user.getId()));
         List<Tag> userTags = tagService.getTagsForAthlete(user.getId());

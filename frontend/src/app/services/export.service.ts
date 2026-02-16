@@ -7,6 +7,10 @@ import { Training, WorkoutBlock } from './training.service';
 export class ExportService {
 
     exportToZwift(training: Training, ftp: number = 250): void {
+        if (training.sportType !== 'CYCLING') {
+            console.error('Zwift export is only available for cycling workouts.');
+            return;
+        }
         const xml = this.generateZwiftXML(training, ftp);
         this.downloadFile(xml, `${this.sanitizeFilename(training.title)}.zwo`, 'application/xml');
     }
@@ -17,7 +21,7 @@ export class ExportService {
     }
 
     private generateZwiftXML(training: Training, ftp: number): string {
-        const blocks = training.blocks.map(block => this.blockToZwiftXML(block, ftp)).join('\n        ');
+        const workoutContent = this.blocksToZwiftXML(training.blocks || [], ftp);
 
         return `<?xml version="1.0" encoding="UTF-8"?>
 <workout_file>
@@ -27,15 +31,33 @@ export class ExportService {
     <sportType>bike</sportType>
     <tags></tags>
     <workout>
-        ${blocks}
+        ${workoutContent}
     </workout>
 </workout_file>`;
     }
 
+    private blocksToZwiftXML(blocks: WorkoutBlock[], ftp: number): string {
+        if (!blocks) return '';
+        return blocks.map(b => {
+            const repeats = b.repeats || 1;
+            const blockXml = this.blockToZwiftXML(b, ftp);
+            let repeated = '';
+            for (let i = 0; i < repeats; i++) {
+                repeated += blockXml + '\n        ';
+            }
+            return repeated.trim();
+        }).filter(xml => xml !== '').join('\n        ');
+    }
+
     private blockToZwiftXML(block: WorkoutBlock, ftp: number): string {
-        const duration = block.durationSeconds;
+        const duration = block.durationSeconds || 0;
+        if (duration === 0 && block.type !== 'PAUSE') return ''; // Avoid zero-duration blocks in Zwift
 
         switch (block.type) {
+            case 'PAUSE':
+                return `<SteadyState Duration="${duration}" Power="0" pace="0">
+            <textevent timeoffset="0" message="PAUSE: ${this.escapeXML(block.label)}"/>
+        </SteadyState>`;
             case 'WARMUP':
                 const warmupPower = (block.powerTargetPercent || 50) / 100;
                 return `<Warmup Duration="${duration}" PowerLow="0.5" PowerHigh="${warmupPower.toFixed(2)}" pace="0">

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/trainings")
@@ -32,6 +33,10 @@ public class TrainingController {
     public ResponseEntity<Training> getTraining(@PathVariable String id) {
         try {
             Training training = trainingService.getTrainingById(id);
+            // Resolve zones for the current user (viewer)
+            String userId = SecurityUtils.getCurrentUserId();
+            trainingService.resolveTraining(training, userId);
+
             return ResponseEntity.ok(training);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
@@ -40,7 +45,7 @@ public class TrainingController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Training> updateTraining(@PathVariable String id,
-            @RequestBody Training updates) {
+                                                   @RequestBody Training updates) {
         try {
             Training updated = trainingService.updateTraining(id, updates);
             return ResponseEntity.ok(updated);
@@ -62,30 +67,46 @@ public class TrainingController {
     @GetMapping
     public ResponseEntity<List<Training>> listTrainings() {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(trainingService.listTrainingsByUser(userId));
+        List<Training> trainings = trainingService.listTrainingsByUser(userId)
+                .stream().map(t -> trainingService.resolveTraining(t, userId))
+                .toList();
+        return ResponseEntity.ok(trainings);
     }
 
     @GetMapping("/search")
     public ResponseEntity<List<Training>> searchByTag(@RequestParam String tag) {
-        return ResponseEntity.ok(trainingService.searchByTag(tag));
+        String userId = SecurityUtils.getCurrentUserId();
+        List<Training> trainings = trainingService.searchByTag(tag).stream()
+                .map(t -> trainingService.resolveTraining(t, userId))
+                .toList();
+        return ResponseEntity.ok(trainings);
     }
 
     @GetMapping("/search/type")
     public ResponseEntity<List<Training>> searchByType(@RequestParam TrainingType type) {
-        return ResponseEntity.ok(trainingService.searchByType(type));
+        String userId = SecurityUtils.getCurrentUserId();
+        List<Training> trainings = trainingService.searchByType(type)
+                .stream().map(t -> trainingService.resolveTraining(t, userId))
+                .toList();
+        return ResponseEntity.ok(trainings);
     }
 
     @GetMapping("/discover")
     public ResponseEntity<List<Training>> discoverTrainings() {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(trainingService.discoverTrainingsByUserTags(userId));
+        List<Training> trainings = trainingService.discoverTrainingsByUserTags(userId)
+                .stream().map(t -> trainingService.resolveTraining(t, userId))
+                .toList();
+        return ResponseEntity.ok(trainings);
     }
 
     @GetMapping("/folders")
     public ResponseEntity<Map<String, List<Training>>> getTrainingFolders() {
         String userId = SecurityUtils.getCurrentUserId();
         try {
-            return ResponseEntity.ok(trainingService.getTrainingFolders(userId));
+            Map<String, List<Training>> folders = trainingService.getTrainingFolders(userId);
+            folders.values().forEach(list -> list.forEach(t -> trainingService.resolveTraining(t, userId)));
+            return ResponseEntity.ok(folders);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.ok(Map.of());
         }

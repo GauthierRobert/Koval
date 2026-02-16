@@ -10,10 +10,12 @@ import { InviteCodeModalComponent } from '../invite-code-modal/invite-code-modal
 import { ShareTrainingModalComponent } from '../share-training-modal/share-training-modal.component';
 import { Training, TrainingService, TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../services/training.service';
 
+import { RouterModule } from '@angular/router';
+
 @Component({
   selector: 'app-coach-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, ScheduleModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ScheduleModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent],
   templateUrl: './coach-dashboard.component.html',
   styleUrl: './coach-dashboard.component.css',
 })

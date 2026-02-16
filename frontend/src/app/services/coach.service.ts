@@ -35,6 +35,7 @@ export interface ScheduledWorkout {
     title?: string;
     duration?: string;
     if?: number;
+    sportType?: 'CYCLING' | 'RUNNING' | 'SWIMMING';
 }
 
 @Injectable({
@@ -43,7 +44,7 @@ export interface ScheduledWorkout {
 export class CoachService {
     private apiUrl = 'http://localhost:8080/api/coach';
 
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient) { }
 
     getAthletes(): Observable<User[]> {
         return this.http.get<User[]>(`${this.apiUrl}/athletes`).pipe(

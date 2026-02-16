@@ -1,13 +1,18 @@
 package com.koval.trainingplannerbackend.auth;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
+@Setter
+@Getter
 @Document(collection = "users")
 public class User {
+    // Getters and Setters
     @Id
     private String id;
 
@@ -40,142 +45,12 @@ public class User {
         this.createdAt = LocalDateTime.now();
     }
 
-    // Getters and Setters
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getStravaId() {
-        return stravaId;
-    }
-
-    public void setStravaId(String stravaId) {
-        this.stravaId = stravaId;
-    }
-
-    public String getGoogleId() {
-        return googleId;
-    }
-
-    public void setGoogleId(String googleId) {
-        this.googleId = googleId;
-    }
-
-    public AuthProvider getAuthProvider() {
-        return authProvider;
-    }
-
-    public void setAuthProvider(AuthProvider authProvider) {
-        this.authProvider = authProvider;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
-
-    public String getProfilePicture() {
-        return profilePicture;
-    }
-
-    public void setProfilePicture(String profilePicture) {
-        this.profilePicture = profilePicture;
-    }
-
-    public UserRole getRole() {
-        return role;
-    }
-
-    public void setRole(UserRole role) {
-        this.role = role;
-    }
-
-    public Integer getFtp() {
-        return ftp;
-    }
-
-    public void setFtp(Integer ftp) {
-        this.ftp = ftp;
-    }
-
-    public Double getCtl() {
-        return ctl;
-    }
-
-    public void setCtl(Double ctl) {
-        this.ctl = ctl;
-    }
-
-    public Double getAtl() {
-        return atl;
-    }
-
-    public void setAtl(Double atl) {
-        this.atl = atl;
-    }
-
-    public Double getTsb() {
-        return tsb;
-    }
-
-    public void setTsb(Double tsb) {
-        this.tsb = tsb;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getLastLogin() {
-        return lastLogin;
-    }
-
-    public void setLastLogin(LocalDateTime lastLogin) {
-        this.lastLogin = lastLogin;
-    }
-
-    public String getStravaAccessToken() {
-        return stravaAccessToken;
-    }
-
-    public void setStravaAccessToken(String stravaAccessToken) {
-        this.stravaAccessToken = stravaAccessToken;
-    }
-
-    public String getStravaRefreshToken() {
-        return stravaRefreshToken;
-    }
-
-    public void setStravaRefreshToken(String stravaRefreshToken) {
-        this.stravaRefreshToken = stravaRefreshToken;
-    }
-
-    public Long getStravaTokenExpiresAt() {
-        return stravaTokenExpiresAt;
-    }
-
-    public void setStravaTokenExpiresAt(Long stravaTokenExpiresAt) {
-        this.stravaTokenExpiresAt = stravaTokenExpiresAt;
-    }
+    private Integer functionalThresholdPace = 300; // Seconds per km (5:00/km)
+    private Integer criticalSwimSpeed = 120; // Seconds per 100m (2:00/100m)
+    private Integer pace5k = 270; // Seconds per km (4:30/km)
+    private Integer pace10k = 285; // Seconds per km (4:45/km)
+    private Integer paceHalfMarathon = 300; // Seconds per km (5:00/km)
+    private Integer paceMarathon = 315; // Seconds per km (5:15/km)
 
     // Helper methods
     public boolean isCoach() {

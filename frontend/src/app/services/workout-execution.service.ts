@@ -23,6 +23,7 @@ export interface SessionSummary {
     avgCadence: number;
     blockSummaries: BlockSummary[];
     history: LiveMetrics[];
+    sportType: 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK';
 }
 
 export interface ActiveSessionState {
@@ -32,6 +33,7 @@ export interface ActiveSessionState {
     elapsedTotalSeconds: number;
     isActive: boolean;
     isPaused: boolean;
+    flatBlocks: WorkoutBlock[];
     history: LiveMetrics[];
     blockSummaries: BlockSummary[];
     finalSummary: SessionSummary | null;
@@ -62,6 +64,7 @@ export class WorkoutExecutionService {
         elapsedTotalSeconds: 0,
         isActive: false,
         isPaused: false,
+        flatBlocks: [],
         history: [],
         blockSummaries: [],
         finalSummary: null,
@@ -73,14 +76,32 @@ export class WorkoutExecutionService {
     private timerSubscription?: Subscription;
     private metricsSubscription?: Subscription;
 
+    private flattenElements(blocks: WorkoutBlock[]): WorkoutBlock[] {
+        const flat: WorkoutBlock[] = [];
+        if (!blocks) return flat;
+        for (const b of blocks) {
+            const repeats = b.repeats || 1;
+            for (let i = 0; i < repeats; i++) {
+                flat.push({ ...b });
+            }
+        }
+        return flat;
+    }
+
     startWorkout(training: Training) {
+        const flatBlocks = this.flattenElements(training.blocks || []);
+        if (flatBlocks.length === 0) return;
+
+        const initialDuration = flatBlocks[0].durationSeconds || 0;
+
         this.stateSubject.next({
             training,
             currentBlockIndex: 0,
-            remainingBlockSeconds: training.blocks[0].durationSeconds,
+            remainingBlockSeconds: initialDuration,
             elapsedTotalSeconds: 0,
             isActive: true,
-            isPaused: true, // Start in paused/pending state
+            isPaused: true,
+            flatBlocks,
             history: [],
             blockSummaries: [],
             finalSummary: null,
@@ -127,7 +148,8 @@ export class WorkoutExecutionService {
                 avgHR: finalState.averages.heartRate,
                 avgCadence: finalState.averages.cadence,
                 blockSummaries: finalState.blockSummaries,
-                history: finalState.history
+                history: finalState.history,
+                sportType: state.training.sportType
             };
 
             this.stateSubject.next({ ...finalState, isActive: false, isPaused: false, finalSummary: summary });
@@ -140,7 +162,7 @@ export class WorkoutExecutionService {
         const state = this.stateSubject.value;
         if (!state.training) return;
 
-        const block = state.training.blocks[state.currentBlockIndex];
+        const block = state.flatBlocks[state.currentBlockIndex];
         const ftp = 250; // Mock FTP or get from training service if needed. Using 250 as placeholder like in TrainingService
 
         // Calculate target power for archiving (simple version)
@@ -151,9 +173,10 @@ export class WorkoutExecutionService {
             target = Math.round((block.powerTargetPercent || 0) * ftp / 100);
         }
 
+        const duration = block.durationSeconds || 0;
         const summary: BlockSummary = {
             label: block.label,
-            durationSeconds: block.durationSeconds - state.remainingBlockSeconds, // Actual time spent
+            durationSeconds: duration - state.remainingBlockSeconds, // Actual time spent
             targetPower: target,
             actualPower: state.currentBlockAverages.power,
             actualCadence: state.currentBlockAverages.cadence,
@@ -172,11 +195,11 @@ export class WorkoutExecutionService {
         if (!state.isActive || !state.training) return;
 
         const nextIndex = state.currentBlockIndex + 1;
-        if (nextIndex < state.training.blocks.length) {
+        if (nextIndex < state.flatBlocks.length) {
             this.stateSubject.next({
                 ...state,
                 currentBlockIndex: nextIndex,
-                remainingBlockSeconds: state.training.blocks[nextIndex].durationSeconds,
+                remainingBlockSeconds: state.flatBlocks[nextIndex].durationSeconds || 0,
                 currentBlockAverages: { power: 0, cadence: 0, heartRate: 0, speed: 0 }
             });
         } else {
@@ -207,8 +230,8 @@ export class WorkoutExecutionService {
             const updatedState = this.stateSubject.value; // Get state with archived block
 
             index++;
-            if (index < updatedState.training!.blocks.length) {
-                remaining = updatedState.training!.blocks[index].durationSeconds;
+            if (index < state.flatBlocks.length) {
+                remaining = state.flatBlocks[index].durationSeconds || 0;
                 this.stateSubject.next({
                     ...updatedState,
                     currentBlockIndex: index,
@@ -246,7 +269,8 @@ export class WorkoutExecutionService {
             const count = newHistory.length;
 
             // Current block metrics mapping
-            const samplesInBlock = Math.max(1, state.training!.blocks[state.currentBlockIndex].durationSeconds - state.remainingBlockSeconds);
+            const blockDuration = state.flatBlocks[state.currentBlockIndex].durationSeconds || 0;
+            const samplesInBlock = Math.max(1, blockDuration - state.remainingBlockSeconds);
             const blockHistory = newHistory.slice(-samplesInBlock);
             const blockPower = Math.round(blockHistory.reduce((acc, m) => acc + m.power, 0) / blockHistory.length);
             const blockCadence = Math.round(blockHistory.reduce((acc, m) => acc + m.cadence, 0) / blockHistory.length);

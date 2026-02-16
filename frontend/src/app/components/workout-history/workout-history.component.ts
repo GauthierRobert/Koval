@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { SportIconComponent } from '../sport-icon/sport-icon.component';
 import { HistoryService, SavedSession } from '../../services/history.service';
 import { TrainingService } from '../../services/training.service';
 import { Observable } from 'rxjs';
@@ -7,7 +8,7 @@ import { Observable } from 'rxjs';
 @Component({
     selector: 'app-workout-history',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, SportIconComponent],
     templateUrl: './workout-history.component.html',
     styleUrl: './workout-history.component.css'
 })
@@ -37,5 +38,11 @@ export class WorkoutHistoryComponent {
             hour: '2-digit',
             minute: '2-digit'
         });
+    }
+
+    getSportUnit(session: SavedSession): string {
+        if (session.sportType === 'RUNNING') return '/km';
+        if (session.sportType === 'SWIMMING') return '/100m';
+        return 'W';
     }
 }

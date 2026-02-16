@@ -7,6 +7,7 @@ import { ZombieGameComponent } from '../zombie-game/zombie-game.component';
 import { SessionSummaryComponent } from '../session-summary/session-summary.component';
 import { PipService } from '../../services/pip.service';
 import { HistoryService } from '../../services/history.service';
+import { AuthService } from '../../services/auth.service';
 import { map } from 'rxjs';
 
 @Component({
@@ -20,6 +21,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
   private executionService = inject(WorkoutExecutionService);
   private bluetoothService = inject(BluetoothService);
   private trainingService = inject(TrainingService);
+  private authService = inject(AuthService);
 
   state$ = this.executionService.state$;
   metrics$ = this.bluetoothService.metrics$;
@@ -114,7 +116,8 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
       ctx.stroke();
 
       // Label
-      ctx.fillText(`${val}W`, padding.left - 8, y + 4);
+      const label = state.training?.sportType === 'CYCLING' ? `${val}W` : val.toString() + '%';
+      ctx.fillText(label, padding.left - 8, y + 4);
     }
 
     // Draw Base Line (X-Axis)
@@ -179,32 +182,94 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
   }
 
-  formatTime(seconds: number): string {
+  formatTime(seconds: number | undefined): string {
+    if (seconds === undefined || seconds === null) return '0:00';
     const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
+    const s = Math.floor(seconds % 60);
     return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
   getBlockProgress(state: any): number {
     if (!state.training) return 0;
     const block = state.training.blocks[state.currentBlockIndex];
-    return ((block.durationSeconds - state.remainingBlockSeconds) / block.durationSeconds) * 100;
+    const duration = block.durationSeconds || 0;
+    if (duration === 0) return 0;
+    return ((duration - state.remainingBlockSeconds) / duration) * 100;
   }
 
   getTargetPower(state: any): number {
     if (!state.training) return 0;
     const block = state.training.blocks[state.currentBlockIndex];
+    if (state.training.sportType !== 'CYCLING') return this.getCurrentTargetIntensity(state);
     const ftp = this.trainingService['ftpSubject'].value;
 
     if (block.type === 'RAMP') {
-      // Simple interpolation for ramp
-      const progress = (block.durationSeconds - state.remainingBlockSeconds) / block.durationSeconds;
+      const duration = block.durationSeconds || 1;
+      const progress = (duration - state.remainingBlockSeconds) / duration;
       const start = block.powerStartPercent || 0;
       const end = block.powerEndPercent || 0;
       return Math.round(((start + (end - start) * progress) * ftp) / 100);
     }
 
     return Math.round(((block.powerTargetPercent || 0) * ftp) / 100);
+  }
+
+  getCurrentTargetIntensity(state: any): number {
+    if (!state.training) return 0;
+    const block = state.training.blocks[state.currentBlockIndex];
+    if (block.type === 'RAMP') {
+      const duration = block.durationSeconds || 1;
+      const progress = (duration - state.remainingBlockSeconds) / duration;
+      const start = block.powerStartPercent || 0;
+      const end = block.powerEndPercent || 0;
+      return start + (end - start) * progress;
+    }
+    return block.powerTargetPercent || 0;
+  }
+
+  calculateIntensityValue(percent: number | undefined, training: any): string {
+    if (percent === undefined || !training) return '0';
+    const user = this.authService.currentUser;
+
+    if (training.sportType === 'CYCLING') {
+      const ftp = user?.ftp || 250;
+      return Math.round((percent * ftp) / 100).toString();
+    }
+
+    if (training.sportType === 'RUNNING') {
+      const threshold = user?.functionalThresholdPace || 240;
+      const secondsPerKm = threshold / (percent / 100);
+      return this.formatPace(secondsPerKm);
+    }
+
+    if (training.sportType === 'SWIMMING') {
+      const threshold = user?.criticalSwimSpeed || 90;
+      const secondsPer100m = threshold / (percent / 100);
+      return this.formatPace(secondsPer100m);
+    }
+
+    return percent.toString();
+  }
+
+  getSportUnit(training: any): string {
+    if (!training) return '';
+    if (training.sportType === 'CYCLING') return 'W';
+    if (training.sportType === 'RUNNING') return '/km';
+    if (training.sportType === 'SWIMMING') return '/100m';
+    return '%';
+  }
+
+  getSportLabel(training: any): string {
+    if (!training) return 'POWER';
+    if (training.sportType === 'CYCLING') return 'WATTS';
+    if (training.sportType === 'RUNNING' || training.sportType === 'SWIMMING') return 'PACE';
+    return 'INTENSITY';
+  }
+
+  formatPace(totalSeconds: number): string {
+    const m = Math.floor(totalSeconds / 60);
+    const s = Math.round(totalSeconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
   getPowerColor(state: any): string {

@@ -34,10 +34,10 @@ public class CoachService {
     private final TagService tagService;
 
     public CoachService(UserRepository userRepository,
-                        UserService userService,
-                        ScheduledWorkoutRepository scheduledWorkoutRepository,
-                        InviteCodeRepository inviteCodeRepository,
-                        TagService tagService) {
+            UserService userService,
+            ScheduledWorkoutRepository scheduledWorkoutRepository,
+            InviteCodeRepository inviteCodeRepository,
+            TagService tagService) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
@@ -120,7 +120,8 @@ public class CoachService {
      * Get an athlete's schedule within a date range.
      */
     public List<ScheduledWorkout> getAthleteSchedule(String athleteId, LocalDate start, LocalDate end) {
-        return scheduledWorkoutRepository.findByAthleteIdAndScheduledDateBetween(athleteId, start.minusDays(1), end.plusDays(1));
+        return scheduledWorkoutRepository.findByAthleteIdAndScheduledDateBetween(athleteId, start.minusDays(1),
+                end.plusDays(1));
     }
 
     /**
@@ -135,7 +136,8 @@ public class CoachService {
      */
     public List<User> getCoachAthletes(String coachId) {
         List<String> athleteIds = tagService.getAthleteIdsForCoach(coachId);
-        if (athleteIds.isEmpty()) return List.of();
+        if (athleteIds.isEmpty())
+            return List.of();
         return userRepository.findByIdIn(athleteIds);
     }
 
@@ -182,7 +184,8 @@ public class CoachService {
         if (!coachId.equals(tag.getCoachId())) {
             throw new IllegalStateException("Tag does not belong to this coach");
         }
-        if (tag.getAthleteIds().isEmpty()) return List.of();
+        if (tag.getAthleteIds().isEmpty())
+            return List.of();
         return userRepository.findByIdIn(tag.getAthleteIds());
     }
 
@@ -194,7 +197,8 @@ public class CoachService {
     }
 
     /**
-     * Add a tag to an athlete. Coach-only. Creates the tag if it doesn't exist, then adds athlete.
+     * Add a tag to an athlete. Coach-only. Creates the tag if it doesn't exist,
+     * then adds athlete.
      */
     public Tag addTagToAthlete(String coachId, String athleteId, String tagName) {
         User coach = userRepository.findById(coachId)

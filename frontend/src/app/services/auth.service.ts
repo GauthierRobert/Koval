@@ -11,6 +11,12 @@ export interface User {
     role: 'ATHLETE' | 'COACH';
     hasCoach: boolean;
     ftp?: number;
+    functionalThresholdPace?: number;
+    criticalSwimSpeed?: number;
+    pace5k?: number;
+    pace10k?: number;
+    paceHalfMarathon?: number;
+    paceMarathon?: number;
     tags?: string[];
 }
 
@@ -106,6 +112,15 @@ export class AuthService {
 
     updateUser(user: User): void {
         this.userSubject.next(user);
+    }
+
+    updateSettings(settings: Partial<User>): Observable<any> {
+        const token = localStorage.getItem('token');
+        return this.http.put<any>(`${this.apiUrl}/settings`, settings, {
+            headers: { Authorization: `Bearer ${token}` }
+        }).pipe(
+            tap(user => this.userSubject.next(user))
+        );
     }
 
     refreshUser(): void {

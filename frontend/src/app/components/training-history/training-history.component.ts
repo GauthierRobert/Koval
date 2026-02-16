@@ -1,5 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
+
 import { CommonModule } from '@angular/common';
+import { SportIconComponent } from '../sport-icon/sport-icon.component';
 import {
     TrainingService,
     Training,
@@ -16,7 +18,7 @@ import { map, filter } from 'rxjs/operators';
 @Component({
     selector: 'app-training-history',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, SportIconComponent],
     templateUrl: './training-history.component.html',
     styleUrl: './training-history.component.css',
 })
@@ -96,11 +98,13 @@ export class TrainingHistoryComponent implements OnInit {
     }
 
     getDuration(training: Training): string {
-        const totalSeconds = training.blocks.reduce((acc, block) => acc + block.durationSeconds, 0);
-        const minutes = Math.floor(totalSeconds / 60);
-        return `${minutes} min`;
+        if (!training.blocks || training.blocks.length === 0) return '';
+        const totalSec = training.estimatedDurationSeconds || (training.blocks ? training.blocks.reduce((sum, b) => sum + (b.durationSeconds || 0) * (b.repeats || 1), 0) : 0);
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        if (h > 0) return `${h}h ${m}m`;
+        return `${m}m`;
     }
-
     getTypeColor(type: TrainingType): string {
         return TRAINING_TYPE_COLORS[type] || '#888';
     }

@@ -1,0 +1,190 @@
+.settings-page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 24px 120px;
+}
+
+.settings-header {
+    margin-bottom: 40px;
+}
+
+.settings-header h1 {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--text-color);
+    margin: 0 0 8px;
+}
+
+.subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Grid */
+.settings-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Cards */
+.settings-card {
+    background: rgba(22, 22, 28, 0.6);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sport-icon {
+    font-size: 22px;
+}
+
+.card-header h2 {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: var(--text-color);
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.card-body {
+    padding: 8px 0;
+}
+
+/* Field rows */
+.field-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 24px;
+    transition: background 0.15s;
+}
+
+.field-row:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.field-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.field-info label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.hint {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* Inputs */
+.field-input {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.value-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: var(--text-color);
+    font-weight: 700;
+    font-size: 14px;
+    font-family: inherit;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s;
+    -moz-appearance: textfield;
+}
+
+.value-input::-webkit-inner-spin-button,
+.value-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.value-input:focus {
+    border-color: var(--accent-color);
+}
+
+.numeric {
+    width: 64px;
+    height: 40px;
+}
+
+.pace-part {
+    width: 48px;
+    height: 40px;
+}
+
+.pace-sep {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-muted);
+    line-height: 1;
+}
+
+.unit {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    min-width: 36px;
+}
+
+/* Save bar */
+.actions-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    background: linear-gradient(transparent, rgba(10, 10, 12, 0.95) 30%);
+    z-index: 100;
+}
+
+.save-btn {
+    background: var(--accent-color);
+    color: #fff;
+    border: none;
+    padding: 14px 48px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 180px;
+}
+
+.save-btn:hover:not(:disabled) {
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(255, 102, 0, 0.25);
+}
+
+.save-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.saved-text {
+    color: #4ade80;
+}

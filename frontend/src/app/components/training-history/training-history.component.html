@@ -5,14 +5,10 @@
     <ng-container *ngIf="!expandedFolder">
       <h3 class="section-title">Coach Trainings</h3>
       <div class="folder-list">
-        <div
-          *ngFor="let name of folderNames"
-          class="folder-item"
-          (click)="expandFolder(name)"
-        >
+        <div *ngFor="let name of folderNames" class="folder-item" (click)="expandFolder(name)">
           <span class="folder-icon">&#128193;</span>
           <span class="folder-name">{{ name }}</span>
-          <span class="folder-count">{{ folders[name].length }}</span>
+          <span class="folder-count">{{ folders[name]?.length || 0 }}</span>
         </div>
       </div>
     </ng-container>
@@ -23,25 +19,17 @@
         <h3 class="section-title" style="margin-bottom: 0">{{ expandedFolder }}</h3>
       </div>
       <div class="folder-trainings" *ngIf="folders[expandedFolder]?.length">
-        <div
-          *ngFor="let t of folders[expandedFolder]"
-          class="history-item"
-          [class.active]="(selectedTraining$ | async)?.id === t.id"
-          (click)="onSelectFolderTraining(t)"
-        >
+        <div *ngFor="let t of folders[expandedFolder]" class="history-item"
+          [class.active]="(selectedTraining$ | async)?.id === t.id" (click)="onSelectFolderTraining(t)">
           <div class="item-icon">&#128193;</div>
           <div class="item-details">
             <div class="item-title-row">
               <span class="item-title">{{ t.title }}</span>
-              <span
-                *ngIf="t.trainingType"
-                class="type-badge"
-                [style.background]="getTypeColor(t.trainingType) + '20'"
+              <span *ngIf="t.trainingType" class="type-badge" [style.background]="getTypeColor(t.trainingType) + '20'"
                 [style.color]="getTypeColor(t.trainingType)"
-                [style.border-color]="getTypeColor(t.trainingType) + '40'"
-              >{{ getTypeLabel(t.trainingType) }}</span>
+                [style.border-color]="getTypeColor(t.trainingType) + '40'">{{ getTypeLabel(t.trainingType) }}</span>
             </div>
-            <span class="item-meta">{{ getDuration(t) }} &bull; {{ t.blocks.length }} blocks</span>
+            <span class="item-meta">{{ getDuration(t) }} &bull; {{ (t.blocks || []).length }} blocks</span>
           </div>
         </div>
       </div>
@@ -54,49 +42,32 @@
   <h3 class="section-title">Your Workouts</h3>
 
   <div class="type-filters">
-    <span
-      class="type-pill"
-      [class.active]="(activeTypeFilter$ | async) === null"
-      (click)="clearTypeFilter()"
-    >All</span>
-    <span
-      *ngFor="let type of trainingTypes"
-      class="type-pill"
-      [class.active]="(activeTypeFilter$ | async) === type"
-      [style.--pill-color]="getTypeColor(type)"
-      (click)="setTypeFilter(type)"
-    >{{ getTypeLabel(type) }}</span>
+    <span class="type-pill" [class.active]="(activeTypeFilter$ | async) === null" (click)="clearTypeFilter()">All</span>
+    <span *ngFor="let type of trainingTypes" class="type-pill" [class.active]="(activeTypeFilter$ | async) === type"
+      [style.--pill-color]="getTypeColor(type)" (click)="setTypeFilter(type)">{{ getTypeLabel(type) }}</span>
   </div>
 
   <div class="history-list">
-    <div
-      *ngFor="let training of filteredTrainings$ | async"
-      class="history-item"
-      [class.active]="(selectedTraining$ | async)?.id === training.id"
-      (click)="onSelect(training)"
-    >
-      <div class="item-icon">⚡</div>
+    <div *ngFor="let training of filteredTrainings$ | async" class="history-item"
+      [class.active]="(selectedTraining$ | async)?.id === training.id" (click)="onSelect(training)">
+      <div class="item-icon">
+        <app-sport-icon [sport]="training.sportType" [size]="20"></app-sport-icon>
+      </div>
       <div class="item-details">
         <div class="item-title-row">
           <span class="item-title">{{ training.title }}</span>
-          <span
-            *ngIf="training.trainingType"
-            class="type-badge"
+          <span *ngIf="training.trainingType" class="type-badge"
             [style.background]="getTypeColor(training.trainingType) + '20'"
             [style.color]="getTypeColor(training.trainingType)"
-            [style.border-color]="getTypeColor(training.trainingType) + '40'"
-          >{{ getTypeLabel(training.trainingType) }}</span>
+            [style.border-color]="getTypeColor(training.trainingType) + '40'">{{ getTypeLabel(training.trainingType)
+            }}</span>
         </div>
-        <span class="item-meta">{{ getDuration(training) }} &bull; {{ training.blocks.length }} blocks</span>
-        <div class="item-tags" *ngIf="training.tags && training.tags.length > 0">
+        <span class="item-meta">{{ getDuration(training) }} &bull; {{ (training.blocks || []).length }} blocks</span>
+        <div class="item-tags" *ngIf="training.tags?.length">
           <span *ngFor="let tag of training.tags" class="tag-chip">{{ tag }}</span>
         </div>
       </div>
-      <button
-        class="delete-btn"
-        title="Delete training"
-        (click)="onDelete($event, training)"
-      >&times;</button>
+      <button class="delete-btn" title="Delete training" (click)="onDelete($event, training)">&times;</button>
     </div>
   </div>
 </div>

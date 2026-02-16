@@ -6,5 +6,6 @@ public enum BlockType {
     INTERVAL,
     COOLDOWN,
     RAMP,
-    FREE
+    FREE,
+    PAUSE
 }

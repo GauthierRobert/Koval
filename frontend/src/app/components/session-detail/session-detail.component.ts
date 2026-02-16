@@ -245,4 +245,17 @@ export class SessionDetailComponent implements AfterViewInit, OnChanges {
         const diff = block.actualPower - block.targetPower;
         return Math.round((diff / block.targetPower) * 100);
     }
+
+    getSportUnit(): string {
+        if (!this.session) return 'W';
+        if (this.session.sportType === 'RUNNING') return '/km';
+        if (this.session.sportType === 'SWIMMING') return '/100m';
+        return 'W';
+    }
+
+    getSportLabel(): string {
+        if (!this.session) return 'POWER';
+        if (this.session.sportType === 'RUNNING' || this.session.sportType === 'SWIMMING') return 'PACE';
+        return 'POWER';
+    }
 }

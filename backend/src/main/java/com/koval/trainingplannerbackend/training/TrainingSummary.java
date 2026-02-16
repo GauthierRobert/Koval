@@ -13,7 +13,7 @@ public record TrainingSummary(
 ) {
     public static TrainingSummary from(Training t) {
         int totalSeconds = t.getBlocks() != null
-                ? t.getBlocks().stream().mapToInt(WorkoutBlock::getDurationSeconds).sum()
+                ? t.getBlocks().stream().mapToInt(WorkoutBlock::durationSeconds).sum()
                 : 0;
         return new TrainingSummary(
                 t.getId(),

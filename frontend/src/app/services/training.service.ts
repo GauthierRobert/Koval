@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 export type TrainingType =
     | 'VO2MAX'
@@ -48,27 +49,36 @@ export const TRAINING_TYPE_LABELS: Record<TrainingType, string> = {
 };
 
 export interface WorkoutBlock {
-    type: 'WARMUP' | 'STEADY' | 'INTERVAL' | 'COOLDOWN' | 'RAMP' | 'FREE';
-    durationSeconds: number;
+    type: 'WARMUP' | 'STEADY' | 'INTERVAL' | 'COOLDOWN' | 'RAMP' | 'FREE' | 'PAUSE';
+    durationSeconds?: number;
+    distanceMeters?: number;
+    repeats?: number;
     powerTargetPercent?: number;
     powerStartPercent?: number;
     powerEndPercent?: number;
+    paceTargetSecondsPerKm?: number;
+    paceStartSecondsPerKm?: number;
+    paceEndSecondsPerKm?: number;
+    swimPacePer100m?: number;
+    swimStrokeRate?: number;
     cadenceTarget?: number;
-    repeats?: number;
     label: string;
+    zoneLabel?: string;
 }
 
 export interface Training {
     id: string;
     title: string;
     description: string;
-    blocks: WorkoutBlock[];
+    blocks?: WorkoutBlock[];
+    sportType: 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK';
     trainingType?: TrainingType;
     tags?: string[];
     visibility?: TrainingVisibility;
     createdBy?: string;
     estimatedTss?: number;
     estimatedIf?: number;
+    estimatedDurationSeconds?: number;
     createdAt?: string;
 }
 
@@ -107,7 +117,7 @@ export class TrainingService {
         this.http.get<Training[]>(this.apiUrl).subscribe({
             next: (trainings) => {
                 this.trainingsSubject.next(trainings);
-                if (!this.selectedTrainingSubject.value && trainings.length > 0) {
+                if (!this.selectedTrainingSubject.value && trainings?.length > 0) {
                     this.selectedTrainingSubject.next(trainings[0]);
                 }
             },
@@ -125,6 +135,31 @@ export class TrainingService {
         return this.http.get<Training>(`${this.apiUrl}/${id}`);
     }
 
+    createTraining(training: Partial<Training>): Observable<Training> {
+        return this.http.post<Training>(this.apiUrl, training).pipe(
+            tap(newTraining => {
+                const current = this.trainingsSubject.value;
+                this.trainingsSubject.next([...current, newTraining]);
+            })
+        );
+    }
+
+    updateTraining(id: string, training: Partial<Training>): Observable<Training> {
+        return this.http.put<Training>(`${this.apiUrl}/${id}`, training).pipe(
+            tap(updated => {
+                const current = this.trainingsSubject.value;
+                const index = current.findIndex(t => t.id === id);
+                if (index !== -1) {
+                    current[index] = updated;
+                    this.trainingsSubject.next([...current]);
+                }
+                if (this.selectedTrainingSubject.value?.id === id) {
+                    this.selectedTrainingSubject.next(updated);
+                }
+            })
+        );
+    }
+
     selectTraining(training: Training | null): void {
         this.selectedTrainingSubject.next(training);
     }
@@ -135,7 +170,9 @@ export class TrainingService {
     }
 
     deleteTraining(id: string): Observable<void> {
-        return this.http.delete<void>(`${this.apiUrl}/${id}`);
+        return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+            tap(() => this.removeTrainingLocally(id))
+        );
     }
 
     removeTrainingLocally(id: string): void {

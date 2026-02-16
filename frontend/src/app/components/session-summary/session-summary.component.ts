@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SessionSummary, BlockSummary } from '../../services/workout-execution.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
     selector: 'app-session-summary',
@@ -12,6 +13,7 @@ import { SessionSummary, BlockSummary } from '../../services/workout-execution.s
 export class SessionSummaryComponent {
     @Input() summary!: SessionSummary;
     @Output() close = new EventEmitter<void>();
+    private authService = inject(AuthService);
 
     formatTime(seconds: number): string {
         const m = Math.floor(seconds / 60);
@@ -23,5 +25,24 @@ export class SessionSummaryComponent {
         if (block.targetPower === 0) return 0;
         const diff = block.actualPower - block.targetPower;
         return Math.round((diff / block.targetPower) * 100);
+    }
+
+    getSportLabel(): string {
+        if (!this.summary) return 'POWER';
+        if (this.summary.sportType === 'RUNNING' || this.summary.sportType === 'SWIMMING') return 'PACE';
+        return 'POWER';
+    }
+
+    getSportUnit(): string {
+        if (!this.summary) return 'W';
+        if (this.summary.sportType === 'RUNNING') return '/km';
+        if (this.summary.sportType === 'SWIMMING') return '/100m';
+        return 'W';
+    }
+
+    formatIntensity(watts: number): string {
+        if (!this.summary || this.summary.sportType === 'CYCLING') return watts + 'W';
+        // For run/swim, watts here is actually raw power—show as-is with unit
+        return watts + this.getSportUnit();
     }
 }
