@@ -29,16 +29,4 @@ export class ZoneService {
     deleteZoneSystem(id: string): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/coach/${id}`);
     }
-
-    /** PUT /api/zones/coach/{id}/active — set a zone system as active (JWT auth) */
-    setActiveSystem(zoneSystemId: string): Observable<void> {
-        return this.http.put<void>(`${this.apiUrl}/coach/${zoneSystemId}/active`, {});
-    }
-
-    /** GET /api/zones/athlete/effective?sportType=X — get effective zones for athlete (JWT auth) */
-    getEffectiveZones(sportType: SportType): Observable<Zone[]> {
-        return this.http.get<Zone[]>(`${this.apiUrl}/athlete/effective`, {
-            params: { sportType }
-        });
-    }
 }

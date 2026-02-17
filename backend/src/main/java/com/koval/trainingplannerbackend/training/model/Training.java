@@ -1,4 +1,4 @@
-package com.koval.trainingplannerbackend.training;
+package com.koval.trainingplannerbackend.training.model;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -37,6 +37,7 @@ public abstract class Training {
     private Integer estimatedTss;
     private Double estimatedIf;
     private Integer estimatedDurationSeconds;
+    private Integer estimatedDistance;
 
     public Integer getTotalDurationSeconds() {
         return estimatedDurationSeconds;
@@ -47,7 +48,6 @@ public abstract class Training {
 
     // New fields for coaching support
     private String createdBy; // User ID of creator
-    private TrainingVisibility visibility = TrainingVisibility.PRIVATE;
     private List<String> tags = new ArrayList<>();
 
 }

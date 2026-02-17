@@ -1,6 +1,6 @@
 package com.koval.trainingplannerbackend.coach;
 
-import com.koval.trainingplannerbackend.training.TrainingType;
+import com.koval.trainingplannerbackend.training.model.TrainingType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

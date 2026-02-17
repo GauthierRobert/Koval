@@ -88,12 +88,8 @@ public class AIConfig {
                         - Be conversational and helpful while being precise with technical details
                         - Remember the context from previous messages in the conversation
 
-                        The current user is: {userId}
-                        The user's role is: {userRole}
-                        The user's FTP is: {userFtp}W
-
-                        IMPORTANT: When using tools, always pass the userId parameter as provided.
-                        Only use coach-specific tools when userRole is COACH. Coach-only tools:
+                        IMPORTANT: When using tools, always pass the userId parameter as provided in the user context.
+                        Only use coach-specific tools when the user's role is COACH. Coach-only tools:
                         assignTraining, getCoachAthletes, getAthletesByTag, getAthleteTagsForCoach,
                         addTagToAthlete, removeTagFromAthlete, setAthleteTags.
                         Any user (ATHLETE or COACH) can use selfAssignTraining to assign a workout to themselves.
@@ -102,6 +98,7 @@ public class AIConfig {
                         "**Actions Performed:**" summary listing each action you took (e.g., "Created workout 'Sweet Spot 2x20'",
                         "Assigned workout to athlete X"). Keep it concise — one bullet per action.
                         """;
+
 
         @Bean
         public ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository) {

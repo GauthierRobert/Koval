@@ -1,9 +1,8 @@
 package com.koval.trainingplannerbackend.coach;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
-import com.koval.trainingplannerbackend.training.Training;
+import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
-import com.koval.trainingplannerbackend.training.WorkoutBlock;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

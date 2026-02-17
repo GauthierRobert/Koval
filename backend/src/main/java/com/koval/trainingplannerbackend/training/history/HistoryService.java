@@ -1,6 +1,6 @@
 package com.koval.trainingplannerbackend.training.history;
 
-import com.koval.trainingplannerbackend.training.Training;
+import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
 import org.springframework.stereotype.Service;
 

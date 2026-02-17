@@ -54,7 +54,8 @@ jwt:
 logging:
   level:
     # Suppress "Unhandled event type" warnings from Anthropic streaming
-    org.springframework.ai.anthropic.api.AnthropicApi: ERROR
-    org.springframework.ai.anthropic: WARN
+    org.springframework.ai.anthropic.api.AnthropicApi: DEBUG
+    org.springframework.ai.anthropic: DEBUG
+    org.springframework.ai: DEBUG
     # Keep INFO level for application code
     com.example.trainingplannerbackend: INFO

@@ -5,7 +5,7 @@ import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.coach.ScheduleSummary;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkoutRepository;
-import com.koval.trainingplannerbackend.training.Training;
+import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;

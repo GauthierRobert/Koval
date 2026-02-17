@@ -1,6 +1,6 @@
 package com.koval.trainingplannerbackend.training.history;
 
-import com.koval.trainingplannerbackend.training.Training;
+import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

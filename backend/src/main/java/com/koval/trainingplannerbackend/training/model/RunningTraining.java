@@ -1,4 +1,4 @@
-package com.koval.trainingplannerbackend.training;
+package com.koval.trainingplannerbackend.training.model;
 
 import lombok.Getter;
 import lombok.Setter;

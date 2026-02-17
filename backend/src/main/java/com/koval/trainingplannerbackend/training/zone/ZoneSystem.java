@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.training.zone;
 
+import com.koval.trainingplannerbackend.training.model.SportType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,20 +19,13 @@ import java.util.List;
 public class ZoneSystem {
     @Id
     private String id;
-
     @Indexed
     private String coachId;
-
     private String name;
-    private com.koval.trainingplannerbackend.training.SportType sportType = com.koval.trainingplannerbackend.training.SportType.CYCLING;
+    private SportType sportType = SportType.CYCLING;
     private ZoneReferenceType referenceType;
+    private String referenceName;
     private List<Zone> zones = new ArrayList<>();
-
-    private boolean isActive;
-    // If true, this is the system used if no other active system is found or for
-    // fallback
-    private boolean isDefault;
-
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
 }

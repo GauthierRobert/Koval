@@ -4,7 +4,16 @@ import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.UserRole;
 import com.koval.trainingplannerbackend.auth.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -67,25 +76,10 @@ public class ZoneSystemController {
         return ResponseEntity.ok(zoneSystemService.getZoneSystemsForCoach(userId));
     }
 
-    @PutMapping("/coach/{id}/active")
-    public ResponseEntity<Void> setActiveZoneSystem(@PathVariable String id) {
+    @GetMapping("/coach/search")
+    public ResponseEntity<ZoneSystem> getCoachZoneSystemsByName(@RequestParam String name) {
         String userId = SecurityUtils.getCurrentUserId();
-        try {
-            zoneSystemService.setActiveSystem(userId, id);
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(zoneSystemService.getZoneSystemsForCoach(userId, name));
     }
 
-    // --- Athlete Endpoints ---
-
-    @GetMapping("/athlete/effective")
-    public ResponseEntity<List<Zone>> getEffectiveZones(
-            @RequestParam(required = false, defaultValue = "CYCLING") com.koval.trainingplannerbackend.training.SportType sportType) {
-        String userId = SecurityUtils.getCurrentUserId();
-        // Resolve zones for the current athlete (from their primary coach) for the
-        // specified sport
-        return ResponseEntity.ok(zoneSystemService.getEffectiveZones(userId, sportType));
-    }
 }

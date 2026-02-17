@@ -1,7 +1,7 @@
 package com.koval.trainingplannerbackend.coach;
 
 import com.koval.trainingplannerbackend.training.TrainingRepository;
-import com.koval.trainingplannerbackend.training.Training;
+import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.tag.Tag;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**

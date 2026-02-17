@@ -24,10 +24,6 @@
                         </span>
                         <span class="system-name">{{ system.name }}</span>
                     </div>
-                    <div class="system-badges">
-                        <span *ngIf="system.isActive" class="badge badge-active">Active</span>
-                        <span *ngIf="system.isDefault" class="badge badge-default">Default</span>
-                    </div>
                 </div>
                 <div *ngIf="zoneSystems.length === 0" class="empty-list">
                     <p>No zone systems yet</p>
@@ -42,10 +38,6 @@
                 <div class="editor-title-row">
                     <input [(ngModel)]="selectedSystem.name" class="name-input" placeholder="System Name">
                     <div class="editor-buttons">
-                        <button class="btn-set-active" (click)="setActive(selectedSystem)"
-                            [disabled]="selectedSystem.isActive">
-                            {{ selectedSystem.isActive ? '✓ Active' : 'Set Active' }}
-                        </button>
                         <button class="btn-delete" (click)="deleteSystem(selectedSystem.id!)">Delete</button>
                     </div>
                 </div>
