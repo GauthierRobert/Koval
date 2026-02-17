@@ -7,41 +7,34 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record WorkoutBlock(
 
-        @JsonPropertyDescription("Type: WARMUP, ACTIVE, REST, INTERVAL, COOLDOWN, FREE, PAUSE")
+        @JsonPropertyDescription("WARMUP, INTERVAL, STEADY, COOLDOWN, RAMP, FREE, PAUSE")
         @JsonProperty(required = true)
         BlockType type,
 
-        @JsonPropertyDescription("Duration in seconds (ONLY if distance is not set)")
+        @JsonPropertyDescription("Duration (sec). Omit if distance set.")
         Integer durationSeconds,
 
-        @JsonPropertyDescription("Distance in meters (ONLY if duration is not set, e.g. for Swimming/Running)")
+        @JsonPropertyDescription("Distance (m). Omit if duration set.")
         Integer distanceMeters,
 
-        @JsonPropertyDescription("Label (e.g. 'Hard', 'Recovery'). Add Zone Label (e.g. 'Z2', 'Z4', or Custom name). " +
-                                 "Use Custom Zone System if zoneSystemId is not null. Else use Default.")
+        @JsonPropertyDescription("Label (e.g., 'Z2 Endurance').")
         @JsonProperty(required = true)
         String label,
 
-        @JsonPropertyDescription("Zone Label: Custom zone System Id, if specified by the Coach. " +
-                                 "Optional. " +
-                                 "Replace Default reference Target value if Set")
+        @JsonPropertyDescription("ID for custom coach zone system. Optional.")
         String zoneSystemId,
 
-        // --- UNIFIED INTENSITY FIELDS (PERCENTAGES) ---
-        @JsonPropertyDescription("Target Intensity as % of Reference (FTP for Bike, Threshold Pace for Run, CSS for Swim). " +
-                                 "Example: 90 = 90%.")
+        // --- UNIFIED INTENSITY ---
+        @JsonPropertyDescription("% of reference (FTP/Pace/CSS). Example: 90.")
         Integer intensityTarget,
 
-        @JsonPropertyDescription("Start Intensity % (For Ramps). " +
-                                 "Reference: FTP/Threshold/CSS.")
+        @JsonPropertyDescription("Start % for ramps.")
         Integer intensityStart,
 
-        @JsonPropertyDescription("End Intensity % (For Ramps). " +
-                                 "Reference: FTP/Threshold/CSS.")
+        @JsonPropertyDescription("End % for ramps.")
         Integer intensityEnd,
 
         // --- CADENCE ---
-        @JsonPropertyDescription("Cadence target (RPM for Bike/Run, SPM for Swim). " +
-                                 "Optional.")
+        @JsonPropertyDescription("Target RPM (Bike/Run) or SPM (Swim).")
         Integer cadenceTarget
 ) {}

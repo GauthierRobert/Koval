@@ -6,6 +6,7 @@ import com.koval.trainingplannerbackend.training.tools.TrainingToolService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.http.codec.ServerSentEvent;
@@ -46,8 +47,8 @@ public class AIService {
         UserContext ctx = userContextResolver.resolve(userId);
         ChatHistory chatHistory = chatHistoryService.findOrCreate(userId, chatHistoryId);
 
-        ChatResponse response = buildPrompt(chatHistory.getId())
-                .user(buildUserMessage(ctx, userMessage))
+        ChatResponse response = buildPrompt(ctx, chatHistory.getId())
+                .user(userMessage)
                 .call()
                 .chatResponse();
 
@@ -76,8 +77,8 @@ public class AIService {
         Flux<ServerSentEvent<String>> statusStart = Flux.just(sse("status", "in_progress"));
 
         // 2. Stream ChatResponse chunks — extract content and tool calls
-        Flux<ServerSentEvent<String>> responseFlux = buildPrompt(conversationId)
-                .user(buildUserMessage(ctx, userMessage))
+        Flux<ServerSentEvent<String>> responseFlux = buildPrompt(ctx, conversationId)
+                .user(userMessage)
                 .stream()
                 .chatResponse()
                 .flatMap(this::mapChatResponseToEvents);
@@ -123,21 +124,14 @@ public class AIService {
         return Flux.empty();
     }
 
-    private ChatClient.ChatClientRequestSpec buildPrompt(String conversationId) {
+    private ChatClient.ChatClientRequestSpec buildPrompt(UserContext ctx, String conversationId) {
         return chatClient.prompt()
+                .messages(new SystemMessage("""
+                        The current user is: %s
+                        The user's role is: %s
+                        The user's FTP is: %sW""".formatted(ctx.userId(), ctx.role(), ctx.ftp())))
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .tools(trainingToolService, coachToolService, contextToolService);
-    }
-
-    private String buildUserMessage(UserContext ctx, String userMessage) {
-        return """
-                [User Context]
-                The current user is: %s
-                The user's role is: %s
-                The user's FTP is: %sW
-
-                [User Message]
-                %s""".formatted(ctx.userId(), ctx.role(), ctx.ftp(), userMessage);
     }
 
     private ServerSentEvent<String> sse(String event, String data) {
