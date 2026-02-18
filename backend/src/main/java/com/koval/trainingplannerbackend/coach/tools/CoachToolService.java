@@ -29,55 +29,45 @@ public class CoachToolService {
         this.trainingRepository = trainingRepository;
     }
 
-    @Tool(description = "Assign a training plan to one or more athletes on a specific date. Returns schedule summaries.")
+    @Tool(description = "Assign a training to one or more athletes on a date.")
     public List<ScheduleSummary> assignTraining(
-            @ToolParam(description = "The coach's user ID") String coachId,
-            @ToolParam(description = "The training ID to assign") String trainingId,
-            @ToolParam(description = "List of athlete user IDs") List<String> athleteIds,
-            @ToolParam(description = "The date to schedule (YYYY-MM-DD)") LocalDate scheduledDate,
-            @ToolParam(description = "Optional notes for the assignment") String notes) {
+            @ToolParam(description = "Coach ID") String coachId,
+            @ToolParam(description = "Training ID") String trainingId,
+            @ToolParam(description = "Athlete IDs") List<String> athleteIds,
+            @ToolParam(description = "Date (YYYY-MM-DD)") LocalDate scheduledDate,
+            @ToolParam(description = "Notes (optional)") String notes) {
         List<ScheduledWorkout> workouts = coachService.assignTraining(coachId, trainingId, athleteIds, scheduledDate, notes);
         String title = resolveTrainingTitle(trainingId);
         return workouts.stream().map(sw -> ScheduleSummary.from(sw, title)).toList();
     }
 
-    @Tool(description = "Assign a training plan to yourself (the current user) on a specific date. Any user can use this, regardless of role.")
-    public ScheduleSummary selfAssignTraining(
-            @ToolParam(description = "The user ID") String userId,
-            @ToolParam(description = "The training ID to assign") String trainingId,
-            @ToolParam(description = "The date to schedule (YYYY-MM-DD)") LocalDate scheduledDate,
-            @ToolParam(description = "Optional notes") String notes) {
-        ScheduledWorkout sw = coachService.selfAssignTraining(userId, trainingId, scheduledDate, notes);
-        return ScheduleSummary.from(sw, resolveTrainingTitle(trainingId));
-    }
-
-    @Tool(description = "Get the training schedule for a specific athlete within a date range. Returns summaries with training titles.")
+    @Tool(description = "Get an athlete's schedule in a date range.")
     public List<ScheduleSummary> getAthleteSchedule(
-            @ToolParam(description = "The athlete's user ID") String athleteId,
-            @ToolParam(description = "Start date (inclusive, YYYY-MM-DD)") LocalDate start,
-            @ToolParam(description = "End date (inclusive, YYYY-MM-DD)") LocalDate end) {
+            @ToolParam(description = "Athlete ID") String athleteId,
+            @ToolParam(description = "Start date (YYYY-MM-DD)") LocalDate start,
+            @ToolParam(description = "End date (YYYY-MM-DD)") LocalDate end) {
         List<ScheduledWorkout> workouts = coachService.getAthleteSchedule(athleteId, start, end);
         return enrichWithTitles(workouts);
     }
 
-    @Tool(description = "Get the list of athletes assigned to a specific coach. Returns lean summaries (no tokens/emails).")
+    @Tool(description = "List athletes assigned to this coach.")
     public List<AthleteSummary> getCoachAthletes(
-            @ToolParam(description = "The coach's user ID") String coachId) {
+            @ToolParam(description = "Coach ID") String coachId) {
         return coachService.getCoachAthletes(coachId).stream()
                 .map(AthleteSummary::from).toList();
     }
 
-    @Tool(description = "Get athletes for a coach filtered by a specific tag ID. Returns lean summaries.")
+    @Tool(description = "List coach's athletes filtered by tag.")
     public List<AthleteSummary> getAthletesByTag(
-            @ToolParam(description = "The coach's user ID") String coachId,
-            @ToolParam(description = "The tag ID to filter by") String tagId) {
+            @ToolParam(description = "Coach ID") String coachId,
+            @ToolParam(description = "Tag ID") String tagId) {
         return coachService.getAthletesByTag(coachId, tagId).stream()
                 .map(AthleteSummary::from).toList();
     }
 
-    @Tool(description = "Get all tags for a coach. Use this to discover what tags exist before filtering by tag.")
+    @Tool(description = "List all tags for this coach. Call before getAthletesByTag.")
     public List<Tag> getAthleteTagsForCoach(
-            @ToolParam(description = "The coach's user ID") String coachId) {
+            @ToolParam(description = "Coach ID") String coachId) {
         return coachService.getAthleteTagsForCoach(coachId);
     }
 

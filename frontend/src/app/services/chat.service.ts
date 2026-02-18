@@ -77,6 +77,10 @@ export class ChatService {
   }
 
   async sendMessage(message: string): Promise<void> {
+    return this.sendMessageStream(message);
+  }
+
+  private async sendMessageStream(message: string): Promise<void> {
     this.addMessage({ role: 'user', content: message, timestamp: new Date() });
 
     const aiMessage: ChatMessage = { role: 'assistant', content: '', timestamp: new Date() };

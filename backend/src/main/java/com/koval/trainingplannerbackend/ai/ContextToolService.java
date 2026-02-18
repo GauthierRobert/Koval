@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.ai;
 
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
+import com.koval.trainingplannerbackend.coach.CoachService;
 import com.koval.trainingplannerbackend.coach.tools.ScheduleSummary;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkoutRepository;
@@ -25,18 +26,19 @@ public class ContextToolService {
     private final UserRepository userRepository;
     private final ScheduledWorkoutRepository scheduledWorkoutRepository;
     private final TrainingRepository trainingRepository;
+    private final CoachService coachService;
 
     public ContextToolService(UserRepository userRepository,
                               ScheduledWorkoutRepository scheduledWorkoutRepository,
-                              TrainingRepository trainingRepository) {
+                              TrainingRepository trainingRepository,
+                              CoachService coachService) {
         this.userRepository = userRepository;
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
         this.trainingRepository = trainingRepository;
+        this.coachService = coachService;
     }
 
-    @Tool(description = "Get today's date, day of the week, and current week boundaries. " +
-            "Use this whenever you need to know the current date, schedule workouts relative to today, " +
-            "or determine which day of the week it is.")
+    @Tool(description = "Today's date, day of week, and current week boundaries (Mon–Sun).")
     public Map<String, String> getCurrentDate() {
         LocalDate today = LocalDate.now();
         DayOfWeek dow = today.getDayOfWeek();
@@ -51,13 +53,11 @@ public class ContextToolService {
         );
     }
 
-    @Tool(description = "Get the scheduled workouts for a user within a date range. " +
-            "Returns lean summaries with training titles and status (PENDING, COMPLETED, SKIPPED). " +
-            "Useful to see what the user has planned or completed recently before suggesting new workouts.")
+    @Tool(description = "Scheduled workouts for a user in a date range. Status: PENDING, COMPLETED, SKIPPED.")
     public List<ScheduleSummary> getUserSchedule(
-            @ToolParam(description = "The user ID to get the schedule for") String userId,
-            @ToolParam(description = "Start date (inclusive) in YYYY-MM-DD format") LocalDate startDate,
-            @ToolParam(description = "End date (inclusive) in YYYY-MM-DD format") LocalDate endDate) {
+            @ToolParam(description = "User ID") String userId,
+            @ToolParam(description = "Start date (YYYY-MM-DD, inclusive)") LocalDate startDate,
+            @ToolParam(description = "End date (YYYY-MM-DD, inclusive)") LocalDate endDate) {
         List<ScheduledWorkout> workouts = scheduledWorkoutRepository
                 .findByAthleteIdAndScheduledDateBetween(userId, startDate, endDate);
 
@@ -73,8 +73,8 @@ public class ContextToolService {
                 .toList();
     }
 
-    @Tool(description = "Get detailed profile information for a user, including FTP, training load metrics " +
-            "(CTL, ATL, TSB), role, and display name. Use this to personalize advice and workout recommendations.")
+    @Tool(description = "Get detailed profile information for a user, FTP, (CTL, ATL, TSB), role, and display name. " +
+                        "Use this to personalize advice and workout recommendations.")
     public Map<String, Object> getUserProfile(
             @ToolParam(description = "The user ID to get the profile for") String userId) {
         User user = userRepository.findById(userId)
@@ -88,5 +88,17 @@ public class ContextToolService {
                 "atl", user.getAtl() != null ? user.getAtl() : 0,
                 "tsb", user.getTsb() != null ? user.getTsb() : 0
         );
+    }
+
+    @Tool(description = "Schedule a training plan for yourself on a specific date. Available to all users regardless of role.")
+    public ScheduleSummary selfAssignTraining(
+            @ToolParam(description = "The user ID") String userId,
+            @ToolParam(description = "The training ID to schedule") String trainingId,
+            @ToolParam(description = "The date to schedule (YYYY-MM-DD)") LocalDate scheduledDate,
+            @ToolParam(description = "Optional notes") String notes) {
+        ScheduledWorkout sw = coachService.selfAssignTraining(userId, trainingId, scheduledDate, notes);
+        String title = trainingRepository.findById(trainingId)
+                .map(Training::getTitle).orElse("Unknown");
+        return ScheduleSummary.from(sw, title);
     }
 }

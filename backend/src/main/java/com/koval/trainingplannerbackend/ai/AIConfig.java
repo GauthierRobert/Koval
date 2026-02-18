@@ -2,23 +2,24 @@ package com.koval.trainingplannerbackend.ai;
 
 import com.koval.trainingplannerbackend.coach.tools.CoachToolService;
 import com.koval.trainingplannerbackend.training.tools.TrainingToolService;
-import org.springaicommunity.tool.search.ToolSearchToolCallAdvisor;
-import org.springaicommunity.tool.search.ToolSearcher;
-import org.springaicommunity.tool.searcher.LuceneToolSearcher;
 import org.springframework.ai.anthropic.AnthropicChatModel;
 import org.springframework.ai.anthropic.AnthropicChatOptions;
 import org.springframework.ai.anthropic.api.AnthropicCacheOptions;
 import org.springframework.ai.anthropic.api.AnthropicCacheStrategy;
+import org.springframework.ai.anthropic.api.AnthropicCacheTtl;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
-import org.springframework.ai.model.tool.DefaultToolCallingManager;
-import org.springframework.ai.model.tool.ToolCallingManager;
+import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+
+import java.util.HashMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Configuration for AI chatbot functionality using Anthropic Claude.
@@ -28,23 +29,25 @@ import org.springframework.context.annotation.Primary;
 @Configuration
 public class AIConfig {
 
+    private static final String MODEL = "claude-sonnet-4-5";
+
     private static final String SYSTEM_PROMPT = """
             Role: Expert Triathlon/Cycling Coach AI.
             Goal: Manage training plans, analyze performance, provide coaching, and assign workouts.
-            
+
             ## TOOL USAGE & RULES
             1. **Context First:** ALWAYS call `getCurrentDate` at session start. Use `getUserSchedule` before scheduling.
             2. **Lean Data:** List/Search return summaries. Call `getTrainingDetails(id)` ONLY for block-level edits/descriptions.
             3. **JSON Only:** Arguments must be valid JSON. NO JS code, expressions, or `Date.now()`.
             4. **Auto-Fields:** Omit `id`, `createdAt`, `createdBy`. Omit null/undefined fields.
             5. **UserId:** Always pass `userId` from context.
-            
+
             ## COACHING OPERATIONS (Coach Role Only)
             - **Tags:** Central for athlete grouping and training folders.
             - **Tools:** `getAthleteTagsForCoach`, `addTagToAthlete`, `removeTagFromAthlete`, `setAthleteTags`, `getAthletesByTag`.
             - **Group Assign:** Get tag ID -> get athletes -> `assignTraining`.
             - **Folders:** Share workouts by adding tagId to training `tags` via `updateTraining`.
-            
+
             ## WORKOUT CREATION SCHEMA
             - **Required Training Fields:** `title`, `description`, `blocks`, `estimatedTss`, `estimatedIf`, `tags`, `visibility`, `trainingType`.
             - **TrainingType (Enum):** VO2MAX, THRESHOLD, SWEET_SPOT, ENDURANCE, SPRINT, RECOVERY, MIXED, TEST.
@@ -63,12 +66,13 @@ public class AIConfig {
                 - *Swimming:* CSS. Focus on drills and RPE (1-10).
             - **Repeat:**
                 - Expand all repeated sequences: If a WorkoutBlock or group requires repetition, explicitly duplicate the content for each iteration in a linear, sequential format rather than using multipliers (e.g., 'x3') or shorthand labels.
-            
+
             ## OUTPUT FORMAT
-            End tool-use responses with:
-            "**Actions Performed:**"
-            - [Action 1]
-            - [Action 2]""";
+            - No preamble, no "Great!", no restating the request.
+            - After tool use: "**Done:**" + one bullet per action (title + key numbers: duration, TSS, IF).
+            - **Never describe workout content.** Blocks, intervals, targets, and advice are in the training object — do not repeat them in text.
+            - Responses: ≤ 6 lines. Use extra lines for relevant coaching context (fatigue, timing, load) if genuinely useful.
+            - Errors: one sentence.""";
 
 
     @Bean
@@ -79,33 +83,48 @@ public class AIConfig {
                 .build();
     }
 
-    @Bean
-    public ToolCallingManager toolCallingManager() {
-        return DefaultToolCallingManager.builder().build();
-    }
-
-
+    // ── COACH streaming client (all tools, @Primary)
     @Bean
     @Primary
     public ChatClient chatClient(AnthropicChatModel chatModel,
                                  ChatMemory chatMemory,
+                                 ContextToolService contextToolService,
                                  TrainingToolService trainingToolService,
-                                 CoachToolService coachToolService,
-                                 ContextToolService contextToolService) {
+                                 CoachToolService coachToolService) {
 
         return ChatClient.builder(chatModel)
                 .defaultSystem(SYSTEM_PROMPT)
-                .defaultOptions(AnthropicChatOptions.builder()
-                        .model("claude-sonnet-4-5")
-                        .temperature(0.7)
-                        .maxTokens(4096)
-                        .cacheOptions(AnthropicCacheOptions.builder()
-                                .strategy(AnthropicCacheStrategy.SYSTEM_AND_TOOLS)
-                                .build())
-                        .build())
+                .defaultOptions(cachedOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultTools(trainingToolService, coachToolService, contextToolService)
+                .defaultTools(contextToolService, trainingToolService, coachToolService)
                 .build();
     }
 
+    // ── ATHLETE streaming client (coach tools absent — smaller cache prefix)
+    @Bean
+    public ChatClient athleteChatClient(AnthropicChatModel chatModel,
+                                        ChatMemory chatMemory,
+                                        ContextToolService contextToolService,
+                                        TrainingToolService trainingToolService) {
+
+        return ChatClient.builder(chatModel)
+                .defaultSystem(SYSTEM_PROMPT)
+                .defaultOptions(cachedOptions())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .defaultTools(contextToolService, trainingToolService)
+                .build();
+    }
+
+    private AnthropicChatOptions cachedOptions() {
+        return AnthropicChatOptions.builder()
+                .model(MODEL)
+                .temperature(0.7)
+                .maxTokens(4096)
+                .cacheOptions(AnthropicCacheOptions.builder()
+                        .strategy(AnthropicCacheStrategy.SYSTEM_AND_TOOLS)
+                        .messageTypeTtl(Stream.of(MessageType.values())
+                                .collect(Collectors.toMap(mt -> mt, _ -> AnthropicCacheTtl.ONE_HOUR, (m1, _) -> m1, HashMap::new)))
+                        .build())
+                .build();
+    }
 }

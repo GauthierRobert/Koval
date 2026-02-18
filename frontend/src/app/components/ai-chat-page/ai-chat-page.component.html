@@ -38,6 +38,7 @@
           <span class="coach-name">KOVAL <span class="dim">TECHNICAL ASSISTANT</span></span>
         </div>
       </div>
+
     </div>
 
     @let messages = chatService.chatMessages$ | async;
@@ -70,11 +71,7 @@
       @if (streaming) {
         <div class="message-wrapper ai">
           <div class="message-bubble glass typing">
-            @if (activityStatus === 'in_progress') {
-              <span class="analyzing">PROCESSING</span>
-            } @else {
-              <span class="analyzing">GENERATING RESPONSE</span>
-            }
+            <span class="analyzing">{{ activityStatus === 'in_progress' ? 'PROCESSING' : 'GENERATING RESPONSE' }}</span>
             <div class="dots"><span>.</span><span>.</span><span>.</span></div>
           </div>
         </div>

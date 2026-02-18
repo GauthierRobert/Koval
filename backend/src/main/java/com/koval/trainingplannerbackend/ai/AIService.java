@@ -5,7 +5,6 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.SystemMessage;
-import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
@@ -18,16 +17,20 @@ import reactor.core.publisher.Flux;
 @Service
 public class AIService {
 
+    /** Streaming — COACH (all tools, @Primary). */
     private final ChatClient chatClient;
-    private final ChatClient toolAdvicedChatClient;
+    /** Streaming — ATHLETE (context + training tools only). */
+    private final ChatClient athleteChatClient;
+
     private final ChatHistoryService chatHistoryService;
     private final UserContextResolver userContextResolver;
 
-    public AIService(ChatClient chatClient, ChatClient toolAdvicedChatClient,
+    public AIService(ChatClient chatClient,
+                     ChatClient athleteChatClient,
                      ChatHistoryService chatHistoryService,
                      UserContextResolver userContextResolver) {
         this.chatClient = chatClient;
-        this.toolAdvicedChatClient = toolAdvicedChatClient;
+        this.athleteChatClient = athleteChatClient;
         this.chatHistoryService = chatHistoryService;
         this.userContextResolver = userContextResolver;
     }
@@ -38,7 +41,7 @@ public class AIService {
         UserContext ctx = userContextResolver.resolve(userId);
         ChatHistory chatHistory = chatHistoryService.findOrCreate(userId, chatHistoryId);
 
-        ChatResponse response = buildPrompt(toolAdvicedChatClient, ctx, chatHistory.getId())
+        ChatResponse response = buildPrompt(ctx, chatHistory.getId())
                 .user(userMessage)
                 .call()
                 .chatResponse();
@@ -66,17 +69,17 @@ public class AIService {
         String conversationId = chatHistory.getId();
 
         // 1. Status: in_progress
-        Flux<ServerSentEvent<String>> statusStart = Flux.just(sse("status", "in_progress"));
+        var statusStart = Flux.just(sse("status", "in_progress"));
 
         // 2. Stream ChatResponse chunks — extract content and tool calls
-        Flux<ServerSentEvent<String>> responseFlux = buildPrompt(chatClient, ctx, conversationId)
+        var responseFlux = buildPrompt(ctx, conversationId)
                 .user(userMessage)
                 .stream()
                 .chatResponse()
                 .flatMap(this::mapChatResponseToEvents);
 
         // 3. After stream: status complete + conversation ID
-        Flux<ServerSentEvent<String>> postStream = Flux.defer(() -> {
+        var postStream = Flux.defer(() -> {
             chatHistoryService.updateAfterResponse(chatHistory, userMessage);
             return Flux.just(
                     sse("status", "complete"),
@@ -109,13 +112,22 @@ public class AIService {
         return Flux.empty();
     }
 
-    private ChatClient.ChatClientRequestSpec buildPrompt(ChatClient chatClient, UserContext ctx, String conversationId) {
-        return chatClient.prompt()
-                .messages(new SystemMessage("""
-                        The current user is: %s
-                        The user's role is: %s
-                        The user's FTP is: %sW""".formatted(ctx.userId(), ctx.role(), ctx.ftp())))
+    /**
+     * Builds a prompt spec. Selects the role-appropriate ChatClient bean so the
+     * SYSTEM_AND_TOOLS cache prefix is stable and hits correctly on Anthropic's side.
+     */
+    private ChatClient.ChatClientRequestSpec buildPrompt(UserContext ctx, String conversationId) {
+        ChatClient client = "COACH".equals(ctx.role()) ? chatClient : athleteChatClient;
+        return client.prompt()
+                .messages(new SystemMessage(systemContext(ctx)))
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId));
+    }
+
+    private String systemContext(UserContext ctx) {
+        return """
+                The current user is: %s
+                The user's role is: %s
+                The user's FTP is: %sW""".formatted(ctx.userId(), ctx.role(), ctx.ftp());
     }
 
     private ServerSentEvent<String> sse(String event, String data) {
