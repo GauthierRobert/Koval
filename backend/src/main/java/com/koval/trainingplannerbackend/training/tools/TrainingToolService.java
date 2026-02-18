@@ -2,7 +2,6 @@ package com.koval.trainingplannerbackend.training.tools;
 
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.TrainingService;
-import com.koval.trainingplannerbackend.training.model.TrainingType;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
@@ -11,7 +10,7 @@ import java.util.List;
 
 /**
  * AI-facing tool service for Training operations.
- * Returns lean summaries to minimize token usage; use getTrainingDetails for full blocks.
+ * Returns lean summaries to minimize token usage.
  */
 @Service
 public class TrainingToolService {

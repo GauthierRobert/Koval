@@ -1,71 +1,92 @@
 <div class="coach-container">
-  <div class="header glass">
-    <div class="brand">
-      <span class="highlight">COACH</span> <span class="dim">MANAGEMENT</span>
+  <!-- Left sidebar - full height -->
+  <div class="athlete-list" *ngIf="!showZoneManager">
+    <div class="section-header">
+      <h3>ATHLETES</h3>
+      <button class="add-btn" (click)="addAthlete()">+ REGISTER</button>
     </div>
-    <div class="coach-stats">
-      <button class="nav-zones-btn" routerLink="/zones">MANAGE ZONES</button>
-      <div class="stat">
-        <span class="label">Roster</span>
-        <span class="value">{{ (athletes$ | async)?.length || 0 }}</span>
-      </div>
-      <div class="stat">
-        <span class="label">Analysis Needed</span>
-        <span class="value">4</span>
-      </div>
-    </div>
-  </div>
-  <div class="content">
-    <div class="athlete-list glass">
-      <div class="section-header">
-        <h3>ATHLETES</h3>
-        <button class="add-btn" (click)="addAthlete()">+ REGISTER</button>
-      </div>
 
-      <ng-container *ngIf="allTags$ | async as tags">
-        <div class="tag-filters" *ngIf="tags.length > 0">
-          <span class="tag-filter-chip" [class.active]="!activeTagFilter" (click)="setTagFilter(null)">All ({{
-            (athletes$ | async)?.length || 0 }})</span>
-          <span *ngFor="let tag of tags" class="tag-filter-chip" [class.active]="activeTagFilter === tag.name"
-            (click)="toggleTagFilter(tag.name)">{{ tag.name }} ({{ getTagCount(tag.name) }})</span>
-        </div>
-      </ng-container>
+    <ng-container *ngIf="allTags$ | async as tags">
+      <div class="tag-filters" *ngIf="tags.length > 0">
+        <span class="tag-filter-chip" [class.active]="!activeTagFilter" (click)="setTagFilter(null)">All ({{
+          (athletes$ | async)?.length || 0 }})</span>
+        <span *ngFor="let tag of tags" class="tag-filter-chip" [class.active]="activeTagFilter === tag.name"
+          (click)="toggleTagFilter(tag.name)">{{ tag.name }} ({{ getTagCount(tag.name) }})</span>
+      </div>
+    </ng-container>
 
-      <ng-container *ngIf="filteredAthletes$ | async as filtered">
-        <div class="athletes" *ngIf="filtered.length > 0">
-          <div *ngFor="let athlete of filtered" class="athlete-row"
-            [class.selected]="selectedAthlete?.id === athlete.id" (click)="selectAthlete(athlete)">
-            <div class="avatar-sm">{{ athlete.displayName[0].toUpperCase() }}</div>
-            <div class="info">
-              <span class="name">{{ athlete.displayName }}</span>
-              <div class="tag-chips" *ngIf="athlete.tags && athlete.tags.length > 0">
-                <span *ngFor="let tag of athlete.tags" class="chip tag">{{ tag }}</span>
-              </div>
-              <div class="mini-metrics">
-                <span class="chip fitness">C: 84</span>
-                <span class="chip fatigue">A: 102</span>
-                <span class="chip form positive">F: +12</span>
-              </div>
+    <ng-container *ngIf="filteredAthletes$ | async as filtered">
+      <div class="athletes" *ngIf="filtered.length > 0">
+        <div *ngFor="let athlete of filtered" class="athlete-row"
+          [class.selected]="selectedAthlete?.id === athlete.id" (click)="selectAthlete(athlete)">
+          <div class="avatar-sm">{{ athlete.displayName[0].toUpperCase() }}</div>
+          <div class="info">
+            <span class="name">{{ athlete.displayName }}</span>
+            <div class="tag-chips" *ngIf="athlete.tags && athlete.tags.length > 0">
+              <span *ngFor="let tag of athlete.tags" class="chip tag">{{ tag }}</span>
+            </div>
+            <div class="mini-metrics">
+              <span class="chip fitness">C: 84</span>
+              <span class="chip fatigue">A: 102</span>
+              <span class="chip form positive">F: +12</span>
             </div>
           </div>
         </div>
-        <div class="empty-athletes" *ngIf="filtered.length === 0 && activeTagFilter">
-          No athletes with tag "{{ activeTagFilter }}"
+      </div>
+      <div class="empty-athletes" *ngIf="filtered.length === 0 && activeTagFilter">
+        No athletes with tag "{{ activeTagFilter }}"
+      </div>
+      <div class="empty-athletes" *ngIf="filtered.length === 0 && !activeTagFilter && (allTags$ | async)?.length">
+        No athletes registered yet
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Right area: header + detail -->
+  <div class="main-area" *ngIf="!showZoneManager">
+    <div class="header">
+      <div class="header-left">
+        <div class="header-avatar">C</div>
+        <div class="header-info">
+          <span class="header-title">COACH <span class="dim">MANAGEMENT</span></span>
+          <span class="header-subtitle">Athlete roster &amp; performance tracking</span>
         </div>
-        <div class="empty-athletes" *ngIf="filtered.length === 0 && !activeTagFilter && (allTags$ | async)?.length">
-          No athletes registered yet
+      </div>
+      <div class="header-right">
+        <button class="nav-zones-btn" [class.active]="showZoneManager" (click)="showZoneManager = !showZoneManager">
+          {{ showZoneManager ? 'ATHLETES' : 'ZONES' }}
+        </button>
+        <div class="header-divider"></div>
+        <div class="stat">
+          <span class="label">Roster</span>
+          <span class="value">{{ (athletes$ | async)?.length || 0 }}</span>
         </div>
-      </ng-container>
+        <div class="stat">
+          <span class="label">Pending</span>
+          <span class="value accent">4</span>
+        </div>
+      </div>
     </div>
-    <div class="athlete-detail glass" *ngIf="selectedAthlete">
+    <div class="athlete-detail" *ngIf="selectedAthlete">
       <div class="detail-header">
-        <div class="profile-summary">
-          <div class="main-info">
-            <h2>{{ selectedAthlete.displayName }}</h2>
-            <div class="physiological-tabs">
-              <div class="tab active">PERFORMANCE</div>
-              <div class="tab">PHYSIOLOGY</div>
-              <div class="tab">HISTORY</div>
+        <div class="profile-banner">
+          <div class="profile-left">
+            <div class="profile-avatar">{{ selectedAthlete.displayName[0].toUpperCase() }}</div>
+            <div class="profile-identity">
+              <h2>{{ selectedAthlete.displayName }}</h2>
+              <div class="detail-tags-row">
+                <span *ngFor="let tag of selectedAthlete.tags || []" class="editable-tag">
+                  {{ tag }}
+                  <button class="tag-remove" (click)="removeTag(selectedAthlete, tag)">&times;</button>
+                </span>
+                <div class="tag-add-inline">
+                  <input class="tag-input" [(ngModel)]="newTagInput" (keydown.enter)="addTag(selectedAthlete)"
+                    placeholder="+ tag" list="tag-suggestions" />
+                  <datalist id="tag-suggestions">
+                    <option *ngFor="let tag of allTags$ | async" [value]="tag.name"></option>
+                  </datalist>
+                </div>
+              </div>
             </div>
           </div>
           <div class="actions">
@@ -74,22 +95,10 @@
           </div>
         </div>
 
-        <div class="detail-tags">
-          <span class="detail-tags-label">TAGS</span>
-          <div class="detail-tags-row">
-            <span *ngFor="let tag of selectedAthlete.tags || []" class="editable-tag">
-              {{ tag }}
-              <button class="tag-remove" (click)="removeTag(selectedAthlete, tag)">&times;</button>
-            </span>
-            <div class="tag-add-inline">
-              <input class="tag-input" [(ngModel)]="newTagInput" (keydown.enter)="addTag(selectedAthlete)"
-                placeholder="Add tag..." list="tag-suggestions" />
-              <datalist id="tag-suggestions">
-                <option *ngFor="let tag of allTags$ | async" [value]="tag.name"></option>
-              </datalist>
-              <button class="tag-add-btn" (click)="addTag(selectedAthlete)">+</button>
-            </div>
-          </div>
+        <div class="physiological-tabs">
+          <div class="tab active">PERFORMANCE</div>
+          <div class="tab">PHYSIOLOGY</div>
+          <div class="tab">HISTORY</div>
         </div>
 
         <div class="metrics-dashboard">
@@ -151,13 +160,23 @@
         </div>
       </div>
     </div>
-    <div class="placeholder-detail glass" *ngIf="!selectedAthlete">
+    <div class="placeholder-detail" *ngIf="!selectedAthlete">
       <div class="empty-detail">
-        <span class="icon">&#128269;</span>
-        <h3>SELECT ATHLETE FOR DETAILED PHYSIOLOGICAL ANALYSIS</h3>
-        <p>Manage training loads and performance progression.</p>
+        <div class="empty-icon-ring">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <h3>Select an Athlete</h3>
+        <p>Choose an athlete from the roster to view performance metrics, manage training loads, and track progression.</p>
       </div>
     </div>
+  </div>
+
+  <!-- Zone manager (when active, replaces everything) -->
+  <div class="zone-content-area" *ngIf="showZoneManager">
+    <app-zone-manager [embedded]="true" (closed)="showZoneManager = false"></app-zone-manager>
   </div>
 </div>
 

@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.ai;
 
 import com.koval.trainingplannerbackend.coach.tools.CoachToolService;
 import com.koval.trainingplannerbackend.training.tools.TrainingToolService;
+import com.koval.trainingplannerbackend.training.zone.ZoneToolService;
 import org.springframework.ai.anthropic.AnthropicChatModel;
 import org.springframework.ai.anthropic.AnthropicChatOptions;
 import org.springframework.ai.anthropic.api.AnthropicCacheOptions;
@@ -36,17 +37,36 @@ public class AIConfig {
             Goal: Manage training plans, analyze performance, provide coaching, and assign workouts.
 
             ## TOOL USAGE & RULES
-            1. **Context First:** ALWAYS call `getCurrentDate` at session start. Use `getUserSchedule` before scheduling.
-            2. **Lean Data:** List/Search return summaries. Call `getTrainingDetails(id)` ONLY for block-level edits/descriptions.
-            3. **JSON Only:** Arguments must be valid JSON. NO JS code, expressions, or `Date.now()`.
-            4. **Auto-Fields:** Omit `id`, `createdAt`, `createdBy`. Omit null/undefined fields.
-            5. **UserId:** Always pass `userId` from context.
+            1. **Context First:** Date and user info are in system context — do NOT call tools to get them. Use `getUserSchedule` before scheduling.
+            2. **JSON Only:** Arguments must be valid, compact JSON (no whitespace, no pretty-print). NO JS code, expressions, or `Date.now()`.
+            3. **Auto-Fields:** Omit `id`, `createdAt`, `createdBy`. Omit null/undefined fields.
+            4. **UserId:** Always pass `userId` from context.
 
-            ## COACHING OPERATIONS (Coach Role Only)
-            - **Tags:** Central for athlete grouping and training folders.
-            - **Tools:** `getAthleteTagsForCoach`, `addTagToAthlete`, `removeTagFromAthlete`, `setAthleteTags`, `getAthletesByTag`.
-            - **Group Assign:** Get tag ID -> get athletes -> `assignTraining`.
-            - **Folders:** Share workouts by adding tagId to training `tags` via `updateTraining`.
+            ## AVAILABLE TOOLS
+
+            ### Context Tools (All Users)
+            - `getCurrentDate()` — today's date, day of week, week boundaries (rarely needed, date is in context).
+            - `getUserSchedule(userId, startDate, endDate)` — scheduled workouts in a date range. Status: PENDING, COMPLETED, SKIPPED.
+            - `getUserProfile(userId)` — user profile: FTP, CTL, ATL, TSB, role, display name.
+            - `selfAssignTraining(userId, trainingId, scheduledDate, notes)` — schedule a training for yourself.
+
+            ### Training Tools (All Users)
+            - `listTrainingsByUser(userId)` — list all training plans (returns summaries).
+            - `createTraining(create, userId)` — create a new training plan.
+            - `updateTraining(trainingId, updates)` — update an existing training plan.
+
+            ### Coach Tools (Coach Role Only)
+            - `assignTraining(coachId, trainingId, athleteIds, scheduledDate, notes)` — assign training to athletes.
+            - `getAthleteSchedule(athleteId, start, end)` — athlete's schedule in a date range.
+            - `getCoachAthletes(coachId)` — list coach's athletes.
+            - `getAthletesByTag(coachId, tagId)` — filter athletes by tag.
+            - `getAthleteTagsForCoach(coachId)` — list all tags. Call before `getAthletesByTag`.
+
+            ### Zone Tools (Coach Role Only)
+            - `createZoneSystem(coachId, name, sportType, referenceType, referenceName, zones)` — define custom intensity zones.
+            - `listZoneSystems(coachId)` — list all zone systems for the coach.
+            - **Zone bounds:** low/high as % of reference (FTP, Threshold Pace, CSS, etc.).
+            - **Reference types:** FTP, VO2MAX_POWER, THRESHOLD_PACE, VO2MAX_PACE, CSS, PACE_5K, PACE_10K, PACE_HALF_MARATHON, PACE_MARATHON, CUSTOM.
 
             ## WORKOUT CREATION SCHEMA
             - **Required Training Fields:** `title`, `description`, `blocks`, `estimatedTss`, `estimatedIf`, `tags`, `visibility`, `trainingType`.
@@ -90,13 +110,14 @@ public class AIConfig {
                                  ChatMemory chatMemory,
                                  ContextToolService contextToolService,
                                  TrainingToolService trainingToolService,
-                                 CoachToolService coachToolService) {
+                                 CoachToolService coachToolService,
+                                 ZoneToolService zoneToolService) {
 
         return ChatClient.builder(chatModel)
                 .defaultSystem(SYSTEM_PROMPT)
                 .defaultOptions(cachedOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultTools(contextToolService, trainingToolService, coachToolService)
+                .defaultTools(contextToolService, trainingToolService, coachToolService, zoneToolService)
                 .build();
     }
 

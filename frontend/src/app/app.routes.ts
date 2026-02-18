@@ -8,6 +8,7 @@ import { AIChatPageComponent } from './components/ai-chat-page/ai-chat-page.comp
 import { LoginComponent } from './components/auth/login.component';
 import { AuthCallbackComponent } from './components/auth/auth-callback.component';
 import { authGuard } from './guards/auth.guard';
+import { coachGuard } from './guards/coach.guard';
 import { ZoneManagerComponent } from './components/zone-manager/zone-manager.component';
 
 export const routes: Routes = [
@@ -16,7 +17,7 @@ export const routes: Routes = [
     { path: 'active-session', component: LiveDashboardComponent, canActivate: [authGuard] },
     { path: 'history', component: WorkoutHistoryComponent, canActivate: [authGuard] },
     { path: 'calendar', component: CalendarComponent, canActivate: [authGuard] },
-    { path: 'coach', component: CoachDashboardComponent, canActivate: [authGuard] },
+    { path: 'coach', component: CoachDashboardComponent, canActivate: [authGuard, coachGuard] },
     { path: 'zones', component: ZoneManagerComponent, canActivate: [authGuard] },
     { path: 'chat', component: AIChatPageComponent, canActivate: [authGuard] },
     { path: 'login', component: LoginComponent },

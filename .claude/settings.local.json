@@ -10,7 +10,9 @@
       "Bash(npm run build:*)",
       "Bash(mvn clean compile:*)",
       "Bash(npx ng build:*)",
-      "Bash(mvn clean install:*)"
+      "Bash(mvn clean install:*)",
+      "Bash(cd:*)",
+      "Bash(xargs cat:*)"
     ]
   }
 }

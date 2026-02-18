@@ -11,11 +11,12 @@ import { ShareTrainingModalComponent } from '../share-training-modal/share-train
 import { Training, TrainingService, TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../services/training.service';
 
 import { RouterModule } from '@angular/router';
+import { ZoneManagerComponent } from '../zone-manager/zone-manager.component';
 
 @Component({
   selector: 'app-coach-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ScheduleModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ScheduleModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, ZoneManagerComponent],
   templateUrl: './coach-dashboard.component.html',
   styleUrl: './coach-dashboard.component.css',
 })
@@ -24,6 +25,7 @@ export class CoachDashboardComponent implements OnInit {
   isScheduleModalOpen = false;
   isInviteCodeModalOpen = false;
   isShareModalOpen = false;
+  showZoneManager = false;
   trainingToShare: Training | null = null;
   activeTagFilter: string | null = null;
   newTagInput = '';

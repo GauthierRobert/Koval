@@ -23,6 +23,8 @@ export class TopBarComponent {
   isPopupOpen = false;
   requestDescription = '';
 
+  isCoach$ = this.authService.user$.pipe(map(u => u?.role === 'COACH'));
+
   connectedCount$ = combineLatest([
     this.bluetoothService.trainerStatus$,
     this.bluetoothService.hrStatus$,

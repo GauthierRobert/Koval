@@ -10,6 +10,11 @@ import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.TextStyle;
+import java.util.Locale;
+
 /**
  * Orchestrates AI chat interactions (synchronous and streaming).
  * Delegates history to {@link ChatHistoryService}, user context to {@link UserContextResolver}.
@@ -124,10 +129,19 @@ public class AIService {
     }
 
     private String systemContext(UserContext ctx) {
+        LocalDate today = LocalDate.now();
+        DayOfWeek dow = today.getDayOfWeek();
+        LocalDate weekStart = today.with(DayOfWeek.MONDAY);
+        LocalDate weekEnd = today.with(DayOfWeek.SUNDAY);
+
         return """
                 The current user is: %s
                 The user's role is: %s
-                The user's FTP is: %sW""".formatted(ctx.userId(), ctx.role(), ctx.ftp());
+                The user's FTP is: %sW
+                Today: %s (%s) — Week: %s to %s""".formatted(
+                ctx.userId(), ctx.role(), ctx.ftp(),
+                today, dow.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
+                weekStart, weekEnd);
     }
 
     private ServerSentEvent<String> sse(String event, String data) {
