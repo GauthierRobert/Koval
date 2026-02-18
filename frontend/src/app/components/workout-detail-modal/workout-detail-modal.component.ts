@@ -1,11 +1,15 @@
+
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BehaviorSubject, of } from 'rxjs';
 import { switchMap, map, catchError, startWith } from 'rxjs/operators';
-import { Training, WorkoutBlock, TrainingService } from '../../services/training.service';
+import { Training, WorkoutBlock, TrainingService, TrainingType } from '../../services/training.service';
 import { ScheduledWorkout } from '../../services/coach.service';
 import { CalendarService } from '../../services/calendar.service';
 import { WorkoutExecutionService } from '../../services/workout-execution.service';
+import { DurationEstimationService } from '../../services/duration-estimation.service';
+import { ZoneService } from '../../services/zone.service';
+import { ZoneSystem } from '../../services/zone';
 import { AuthService } from '../../services/auth.service';
 
 interface TrainingState {
@@ -27,6 +31,18 @@ const LOADING_STATE: TrainingState = { training: null, loading: true, error: nul
 export class WorkoutDetailModalComponent {
   @Input() set workout(value: ScheduledWorkout | null) {
     this.workout$.next(value);
+    if (value?.trainingId) {
+      this.trainingService.getTrainingById(value.trainingId).subscribe(training => {
+        if (training?.zoneSystemId) {
+          this.zoneService.getZoneSystemById(training.zoneSystemId).subscribe({
+            next: (zs) => this.currentZoneSystem = zs,
+            error: () => this.currentZoneSystem = null
+          });
+        } else {
+          this.currentZoneSystem = null;
+        }
+      });
+    }
   }
   @Output() closed = new EventEmitter<void>();
   @Output() started = new EventEmitter<void>();
@@ -36,6 +52,9 @@ export class WorkoutDetailModalComponent {
   private calendarService = inject(CalendarService);
   private executionService = inject(WorkoutExecutionService);
   private authService = inject(AuthService);
+  private durationService = inject(DurationEstimationService);
+  private zoneService = inject(ZoneService);
+  private currentZoneSystem: ZoneSystem | null = null;
 
   workout$ = new BehaviorSubject<ScheduledWorkout | null>(null);
 
@@ -84,20 +103,15 @@ export class WorkoutDetailModalComponent {
   }
 
   private flattenElements(blocks: WorkoutBlock[]): WorkoutBlock[] {
-    const flat: WorkoutBlock[] = [];
-    for (const b of blocks) {
-      const repeats = b.repeats || 1;
-      for (let i = 0; i < repeats; i++) {
-        flat.push({ ...b });
-      }
-    }
-    return flat;
+    // Backend now returns flattened blocks or handles repeats differently.
+    // This is a pass-through now that 'repeats' is removed.
+    return blocks;
   }
 
   getBlockWidth(block: WorkoutBlock, training: Training): number {
     const total = this.getNumericalTotalDuration(training);
     if (total === 0) return 0;
-    return ((block.durationSeconds || 0) / total) * 100;
+    return ((this.getEstimatedBlockDuration(block, training)) / total) * 100;
   }
 
   getBlockHeight(block: WorkoutBlock, training: Training): number {
@@ -106,16 +120,16 @@ export class WorkoutDetailModalComponent {
     if (block.type === 'FREE') return (65 / maxI) * 100;
     const intensity =
       block.type === 'RAMP'
-        ? Math.max(block.powerStartPercent || 0, block.powerEndPercent || 0)
-        : block.powerTargetPercent || 0;
+        ? Math.max(block.intensityStart || 0, block.intensityEnd || 0)
+        : block.intensityTarget || 0;
     return (intensity / maxI) * 100;
   }
 
   getBlockClipPath(block: WorkoutBlock, training: Training): string {
     if (block.type !== 'RAMP') return 'none';
     const maxI = this.getMaxIntensity(training);
-    const startH = ((block.powerStartPercent || 0) / maxI) * 100;
-    const endH = ((block.powerEndPercent || 0) / maxI) * 100;
+    const startH = ((block.intensityStart || 0) / maxI) * 100;
+    const endH = ((block.intensityEnd || 0) / maxI) * 100;
     const currentH = Math.max(startH, endH);
     const startRel = 100 - (startH / currentH) * 100;
     const endRel = 100 - (endH / currentH) * 100;
@@ -129,8 +143,8 @@ export class WorkoutDetailModalComponent {
     if (block.type === 'COOLDOWN') return 'rgba(108, 92, 231, 0.6)';
     const intensity =
       block.type === 'RAMP'
-        ? ((block.powerStartPercent || 0) + (block.powerEndPercent || 0)) / 2
-        : block.powerTargetPercent || 0;
+        ? ((block.intensityStart || 0) + (block.intensityEnd || 0)) / 2
+        : block.intensityTarget || 0;
     if (intensity < 55) return '#b2bec3';
     if (intensity < 75) return '#3498db';
     if (intensity < 90) return '#2ecc71';
@@ -142,7 +156,12 @@ export class WorkoutDetailModalComponent {
   getNumericalTotalDuration(training: Training): number {
     if (training.estimatedDurationSeconds) return training.estimatedDurationSeconds;
     if (!training.blocks) return 0;
-    return training.blocks.reduce((acc, b) => acc + (b.durationSeconds || 0) * (b.repeats || 1), 0);
+    return training.blocks.reduce((acc, b) => acc + (this.getEstimatedBlockDuration(b, training)), 0);
+  }
+
+  // Helper
+  getEstimatedBlockDuration(block: WorkoutBlock, training: Training): number {
+    return this.durationService.estimateDuration(block, training, this.currentZoneSystem);
   }
 
   getTotalDuration(training: Training): string {
@@ -150,8 +169,8 @@ export class WorkoutDetailModalComponent {
     if (totalSec === 0) return '0m';
     const h = Math.floor(totalSec / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
-    if (h > 0) return `${h}h ${m}m`;
-    return `${m}m`;
+    if (h > 0) return `${h}h ${m} m`;
+    return `${m} m`;
   }
 
   getFormattedDate(workout: ScheduledWorkout): string {
@@ -162,9 +181,9 @@ export class WorkoutDetailModalComponent {
   private getMaxIntensity(training: Training): number {
     if (!training.blocks) return 150;
     const intensities = training.blocks.flatMap((b) => [
-      b.powerTargetPercent || 0,
-      b.powerStartPercent || 0,
-      b.powerEndPercent || 0,
+      b.intensityTarget || 0,
+      b.intensityStart || 0,
+      b.intensityEnd || 0,
     ]);
     const maxBlockIntensity = intensities.length > 0 ? Math.max(...intensities) : 0;
     return Math.max(150, maxBlockIntensity + 20);
@@ -173,8 +192,8 @@ export class WorkoutDetailModalComponent {
   getDisplayIntensity(block: WorkoutBlock): string {
     if (block.type === 'PAUSE') return 'PAUSE';
     if (block.type === 'FREE') return 'FREE';
-    if (block.type === 'RAMP') return `${block.powerStartPercent}%-${block.powerEndPercent}%`;
-    return `${block.powerTargetPercent}%`;
+    if (block.type === 'RAMP') return `${block.intensityStart}%-${block.intensityEnd}%`;
+    return `${block.intensityTarget}%`;
   }
 
   calculateIntensityValue(percent: number | undefined, training: Training): string {

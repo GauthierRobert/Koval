@@ -24,8 +24,7 @@
           [style.color]="getTypeColor(t.trainingType)" [style.border-color]="getTypeColor(t.trainingType) + '40'">{{
           getTypeLabel(t.trainingType) }}</span>
         <div class="card-meta">
-          <span class="sport-icon">{{ t.sportType === 'CYCLING' ? '🚲' : t.sportType === 'RUNNING' ? '🏃' : '🏊'
-            }}</span>
+          <app-sport-icon [sport]="t.sportType" [size]="18"></app-sport-icon>
           <span class="card-duration">{{ formatDuration(t) }}</span>
         </div>
       </div>

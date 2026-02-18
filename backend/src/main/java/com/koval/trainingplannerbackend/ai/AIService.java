@@ -1,8 +1,6 @@
 package com.koval.trainingplannerbackend.ai;
 
 import com.koval.trainingplannerbackend.ai.UserContextResolver.UserContext;
-import com.koval.trainingplannerbackend.coach.CoachToolService;
-import com.koval.trainingplannerbackend.training.tools.TrainingToolService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -21,24 +19,17 @@ import reactor.core.publisher.Flux;
 public class AIService {
 
     private final ChatClient chatClient;
+    private final ChatClient toolAdvicedChatClient;
     private final ChatHistoryService chatHistoryService;
     private final UserContextResolver userContextResolver;
-    private final TrainingToolService trainingToolService;
-    private final CoachToolService coachToolService;
-    private final ContextToolService contextToolService;
 
-    public AIService(ChatClient chatClient,
+    public AIService(ChatClient chatClient, ChatClient toolAdvicedChatClient,
                      ChatHistoryService chatHistoryService,
-                     UserContextResolver userContextResolver,
-                     TrainingToolService trainingToolService,
-                     CoachToolService coachToolService,
-                     ContextToolService contextToolService) {
+                     UserContextResolver userContextResolver) {
         this.chatClient = chatClient;
+        this.toolAdvicedChatClient = toolAdvicedChatClient;
         this.chatHistoryService = chatHistoryService;
         this.userContextResolver = userContextResolver;
-        this.trainingToolService = trainingToolService;
-        this.coachToolService = coachToolService;
-        this.contextToolService = contextToolService;
     }
 
     // ── Synchronous chat ────────────────────────────────────────────────
@@ -47,7 +38,7 @@ public class AIService {
         UserContext ctx = userContextResolver.resolve(userId);
         ChatHistory chatHistory = chatHistoryService.findOrCreate(userId, chatHistoryId);
 
-        ChatResponse response = buildPrompt(ctx, chatHistory.getId())
+        ChatResponse response = buildPrompt(toolAdvicedChatClient, ctx, chatHistory.getId())
                 .user(userMessage)
                 .call()
                 .chatResponse();
@@ -56,13 +47,14 @@ public class AIService {
         return new ChatMessageResponse(chatHistory.getId(), response.getResult().getOutput());
     }
 
-    public record ChatMessageResponse(String chatHistoryId, AssistantMessage message) {}
+    public record ChatMessageResponse(String chatHistoryId, AssistantMessage message) {
+    }
 
     // ── Streaming chat ──────────────────────────────────────────────────
 
     /**
      * Streams AI response as SSE events using ChatClient.stream().chatResponse().
-     *
+     * <p>
      * SSE events emitted:
      * - status: "in_progress" at start, "complete" at end
      * - content: text token from the AI
@@ -77,7 +69,7 @@ public class AIService {
         Flux<ServerSentEvent<String>> statusStart = Flux.just(sse("status", "in_progress"));
 
         // 2. Stream ChatResponse chunks — extract content and tool calls
-        Flux<ServerSentEvent<String>> responseFlux = buildPrompt(ctx, conversationId)
+        Flux<ServerSentEvent<String>> responseFlux = buildPrompt(chatClient, ctx, conversationId)
                 .user(userMessage)
                 .stream()
                 .chatResponse()
@@ -95,7 +87,9 @@ public class AIService {
         return new StreamResponse(conversationId, Flux.concat(statusStart, responseFlux, postStream));
     }
 
-    public record StreamResponse(String chatHistoryId, Flux<ServerSentEvent<String>> events) {}
+    public record StreamResponse(String chatHistoryId, Flux<ServerSentEvent<String>> events) {
+
+    }
 
     // ── Internals ───────────────────────────────────────────────────────
 
@@ -107,15 +101,6 @@ public class AIService {
             return Flux.empty();
         }
 
-        // Récupération de l'usage global
-        Usage usage = response.getMetadata().getUsage();
-        long total = usage.getTotalTokens();
-        long prompt = usage.getPromptTokens();
-        long generation = usage.getCompletionTokens();
-        System.out.println("Total total Tokens: " + total);
-        System.out.println("Total prompt Tokens: " + prompt);
-        System.out.println("Total generation Tokens: " + generation);
-
         String text = response.getResult().getOutput().getText();
         if (text != null && !text.isEmpty()) {
             return Flux.just(sse("content", text));
@@ -124,14 +109,13 @@ public class AIService {
         return Flux.empty();
     }
 
-    private ChatClient.ChatClientRequestSpec buildPrompt(UserContext ctx, String conversationId) {
+    private ChatClient.ChatClientRequestSpec buildPrompt(ChatClient chatClient, UserContext ctx, String conversationId) {
         return chatClient.prompt()
                 .messages(new SystemMessage("""
                         The current user is: %s
                         The user's role is: %s
                         The user's FTP is: %sW""".formatted(ctx.userId(), ctx.role(), ctx.ftp())))
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
-                .tools(trainingToolService, coachToolService, contextToolService);
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId));
     }
 
     private ServerSentEvent<String> sse(String event, String data) {

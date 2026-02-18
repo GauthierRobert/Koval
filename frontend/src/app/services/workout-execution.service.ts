@@ -77,15 +77,8 @@ export class WorkoutExecutionService {
     private metricsSubscription?: Subscription;
 
     private flattenElements(blocks: WorkoutBlock[]): WorkoutBlock[] {
-        const flat: WorkoutBlock[] = [];
-        if (!blocks) return flat;
-        for (const b of blocks) {
-            const repeats = b.repeats || 1;
-            for (let i = 0; i < repeats; i++) {
-                flat.push({ ...b });
-            }
-        }
-        return flat;
+        // Backend now handles flattening. Pass through.
+        return blocks || [];
     }
 
     startWorkout(training: Training) {
@@ -168,9 +161,9 @@ export class WorkoutExecutionService {
         // Calculate target power for archiving (simple version)
         let target = 0;
         if (block.type === 'RAMP') {
-            target = Math.round(((block.powerStartPercent || 0) + (block.powerEndPercent || 0)) / 2 * ftp / 100);
+            target = Math.round(((block.intensityStart || 0) + (block.intensityEnd || 0)) / 2 * ftp / 100);
         } else {
-            target = Math.round((block.powerTargetPercent || 0) * ftp / 100);
+            target = Math.round((block.intensityTarget || 0) * ftp / 100);
         }
 
         const duration = block.durationSeconds || 0;

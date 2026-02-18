@@ -39,7 +39,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     const nextStepBlock = training?.blocks?.[state.currentBlockIndex + 1];
     const nextStep = nextStepBlock?.label || (nextStepBlock ? 'RECOVERY' : 'FINISH');
     const ftp = this.trainingService['ftpSubject'].value;
-    const nextStepPower = nextStepBlock ? Math.round((ftp * (nextStepBlock.powerTargetPercent || 0)) / 100) : 0;
+    const nextStepPower = nextStepBlock ? Math.round((ftp * (nextStepBlock.intensityTarget || 0)) / 100) : 0;
 
     const data = {
       power: metrics.power,
@@ -161,7 +161,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
       const nextStepBlock = training?.blocks?.[state.currentBlockIndex + 1];
       const nextStep = nextStepBlock?.label || (nextStepBlock ? 'RECOVERY' : 'FINISH');
       const ftp = (this.trainingService as any).ftpSubject.value;
-      const nextStepPower = nextStepBlock ? Math.round((ftp * (nextStepBlock.powerTargetPercent || 0)) / 100) : 0;
+      const nextStepPower = nextStepBlock ? Math.round((ftp * (nextStepBlock.intensityTarget || 0)) / 100) : 0;
 
       this.pipService.updateCanvas({
         power: metrics.power,
@@ -206,12 +206,12 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     if (block.type === 'RAMP') {
       const duration = block.durationSeconds || 1;
       const progress = (duration - state.remainingBlockSeconds) / duration;
-      const start = block.powerStartPercent || 0;
-      const end = block.powerEndPercent || 0;
+      const start = block.intensityStart || 0;
+      const end = block.intensityEnd || 0;
       return Math.round(((start + (end - start) * progress) * ftp) / 100);
     }
 
-    return Math.round(((block.powerTargetPercent || 0) * ftp) / 100);
+    return Math.round(((block.intensityTarget || 0) * ftp) / 100);
   }
 
   getCurrentTargetIntensity(state: any): number {
@@ -220,11 +220,11 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     if (block.type === 'RAMP') {
       const duration = block.durationSeconds || 1;
       const progress = (duration - state.remainingBlockSeconds) / duration;
-      const start = block.powerStartPercent || 0;
-      const end = block.powerEndPercent || 0;
+      const start = block.intensityStart || 0;
+      const end = block.intensityEnd || 0;
       return start + (end - start) * progress;
     }
-    return block.powerTargetPercent || 0;
+    return block.intensityTarget || 0;
   }
 
   calculateIntensityValue(percent: number | undefined, training: any): string {

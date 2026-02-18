@@ -21,9 +21,6 @@ public record WorkoutBlock(
         @JsonProperty(required = true)
         String label,
 
-        @JsonPropertyDescription("ID for custom coach zone system. Optional.")
-        String zoneSystemId,
-
         // --- UNIFIED INTENSITY ---
         @JsonPropertyDescription("% of reference (FTP/Pace/CSS). Example: 90.")
         Integer intensityTarget,
@@ -37,4 +34,10 @@ public record WorkoutBlock(
         // --- CADENCE ---
         @JsonPropertyDescription("Target RPM (Bike/Run) or SPM (Swim).")
         Integer cadenceTarget
-) {}
+) {
+
+    public WorkoutBlock updateType(BlockType type) {
+        return new WorkoutBlock(type, this.durationSeconds(), this.distanceMeters(), this.label(), this.intensityTarget(), this.intensityStart(), this.intensityEnd(), this.cadenceTarget());
+    }
+
+}

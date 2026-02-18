@@ -4,11 +4,12 @@ import {FormsModule} from '@angular/forms';
 import {ZoneService} from '../../services/zone.service';
 import {AuthService} from '../../services/auth.service';
 import {SportType, ZoneReferenceType, ZoneSystem} from '../../services/zone';
+import {SportIconComponent} from '../sport-icon/sport-icon.component';
 
 @Component({
   selector: 'app-zone-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SportIconComponent],
   templateUrl: './zone-manager.component.html',
   styleUrls: ['./zone-manager.component.css']
 })

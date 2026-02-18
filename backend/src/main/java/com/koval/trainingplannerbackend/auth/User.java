@@ -51,6 +51,8 @@ public class User {
     private Integer pace10k = 285; // Seconds per km (4:45/km)
     private Integer paceHalfMarathon = 300; // Seconds per km (5:00/km)
     private Integer paceMarathon = 315; // Seconds per km (5:15/km)
+    private Integer vo2maxPower;   // Watts (VO2MAX_POWER reference)
+    private Integer vo2maxPace;    // Seconds per km (VO2MAX_PACE reference)
 
     // Helper methods
     public boolean isCoach() {

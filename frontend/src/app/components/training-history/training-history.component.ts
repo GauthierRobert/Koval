@@ -99,7 +99,7 @@ export class TrainingHistoryComponent implements OnInit {
 
     getDuration(training: Training): string {
         if (!training.blocks || training.blocks.length === 0) return '';
-        const totalSec = training.estimatedDurationSeconds || (training.blocks ? training.blocks.reduce((sum, b) => sum + (b.durationSeconds || 0) * (b.repeats || 1), 0) : 0);
+        const totalSec = training.estimatedDurationSeconds || (training.blocks ? training.blocks.reduce((sum, b) => sum + (b.durationSeconds || 0), 0) : 0);
         const h = Math.floor(totalSec / 3600);
         const m = Math.floor((totalSec % 3600) / 60);
         if (h > 0) return `${h}h ${m}m`;

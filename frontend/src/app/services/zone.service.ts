@@ -29,4 +29,9 @@ export class ZoneService {
     deleteZoneSystem(id: string): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/coach/${id}`);
     }
+
+    /** GET /api/zones/{id} — get a single zone system by ID (JWT auth) */
+    getZoneSystemById(id: string): Observable<ZoneSystem> {
+        return this.http.get<ZoneSystem>(`${this.apiUrl}/${id}`);
+    }
 }

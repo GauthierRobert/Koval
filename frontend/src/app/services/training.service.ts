@@ -52,16 +52,11 @@ export interface WorkoutBlock {
     type: 'WARMUP' | 'STEADY' | 'INTERVAL' | 'COOLDOWN' | 'RAMP' | 'FREE' | 'PAUSE';
     durationSeconds?: number;
     distanceMeters?: number;
-    repeats?: number;
-    powerTargetPercent?: number;
-    powerStartPercent?: number;
-    powerEndPercent?: number;
-    paceTargetSecondsPerKm?: number;
-    paceStartSecondsPerKm?: number;
-    paceEndSecondsPerKm?: number;
-    swimPacePer100m?: number;
-    swimStrokeRate?: number;
+    intensityTarget?: number;
+    intensityStart?: number;
+    intensityEnd?: number;
     cadenceTarget?: number;
+    zoneSystemId?: string;
     label: string;
     zoneLabel?: string;
 }
@@ -79,6 +74,7 @@ export interface Training {
     estimatedTss?: number;
     estimatedIf?: number;
     estimatedDurationSeconds?: number;
+    zoneSystemId?: string;
     createdAt?: string;
 }
 

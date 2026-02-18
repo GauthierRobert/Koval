@@ -35,7 +35,7 @@ export interface ScheduledWorkout {
     title?: string;
     duration?: string;
     if?: number;
-    sportType?: 'CYCLING' | 'RUNNING' | 'SWIMMING';
+    sportType: 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK' | 'GYM' ;
 }
 
 @Injectable({

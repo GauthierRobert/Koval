@@ -1,4 +1,7 @@
-package com.koval.trainingplannerbackend.coach;
+package com.koval.trainingplannerbackend.coach.tools;
+
+import com.koval.trainingplannerbackend.coach.ScheduleStatus;
+import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 
 import java.time.LocalDate;
 

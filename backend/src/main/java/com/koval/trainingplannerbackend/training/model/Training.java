@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.training.model;
 
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.AllArgsConstructor;
@@ -38,14 +39,9 @@ public abstract class Training {
     private Double estimatedIf;
     private Integer estimatedDurationSeconds;
     private Integer estimatedDistance;
-
-    public Integer getTotalDurationSeconds() {
-        return estimatedDurationSeconds;
-    }
-
+    private String zoneSystemId;
     private TrainingType trainingType;
     private SportType sportType = SportType.CYCLING;
-
     // New fields for coaching support
     private String createdBy; // User ID of creator
     private List<String> tags = new ArrayList<>();

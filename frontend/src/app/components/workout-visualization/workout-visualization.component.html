@@ -16,6 +16,9 @@
           <button class="dropdown-item" (click)="exportToJSON()">JSON</button>
         </div>
       </div>
+      <button class="unit-toggle-btn" (click)="toggleUnits()">
+        {{ displayUnit === 'PERCENT' ? '%' : getSportUnit() }}
+      </button>
       <button class="schedule-btn" (click)="openScheduleModal()">SCHEDULE</button>
       <button class="start-btn" (click)="startWorkout()">
         <span class="play-icon">▶</span> START WORKOUT
@@ -53,11 +56,12 @@
                 calculateIntensityValue(getEffectiveIntensity(block, 'END'))
                 }}</span>
             </ng-container>
-            <span class="tooltip-duration">{{ formatDuration(block.durationSeconds) }}</span>
+            <span class="tooltip-duration">{{ formatBlockDurationOrDistance(block) }}</span>
           </div>
 
-          <div class="block-label" *ngIf="getBlockWidth(block) > 5">
-            {{ getDisplayIntensity(block) }}
+          <div class="block-label" [class.vertical]="isNarrowBlock(block)" *ngIf="getBlockWidth(block) > 2">
+            <span class="label-intensity">{{ getDisplayIntensity(block) }}</span>
+            <span class="label-duration">{{ formatBlockDurationOrDistance(block) }}</span>
           </div>
         </div>
       </div>
@@ -93,26 +97,20 @@
         <span class="col-int">Intensity</span>
       </div>
       <div class="details-row-wrapper" *ngFor="let b of training.blocks; let i = index">
-        <div class="set-container" [class.is-set]="(b.repeats || 1) > 1">
-          <div class="set-header" *ngIf="(b.repeats || 1) > 1">
-            <div class="set-badge">{{ b.repeats }}x</div>
-            <div class="set-line"></div>
-          </div>
-          <div class="details-row">
-            <span class="col-num">{{ i + 1 }}</span>
-            <span class="col-label">{{ b.label || b.type }}</span>
-            <span class="col-dur">{{ formatDuration(b.durationSeconds) }}</span>
-            <span class="col-int">
-              <ng-container *ngIf="b.type !== 'FREE' && b.type !== 'PAUSE'">
-                <span *ngIf="b.type !== 'RAMP'">{{ getEffectiveIntensity(b, 'TARGET') | number:'1.0-0' }}% ({{
-                  calculateIntensityValue(getEffectiveIntensity(b, 'TARGET')) }})</span>
-                <span *ngIf="b.type === 'RAMP'">{{ getEffectiveIntensity(b, 'START') | number:'1.0-0' }}%→{{
-                  getEffectiveIntensity(b, 'END') | number:'1.0-0' }}%</span>
-              </ng-container>
-              <span *ngIf="b.type === 'FREE'">Z2 (Free)</span>
-              <span *ngIf="b.type === 'PAUSE'">Pause</span>
-            </span>
-          </div>
+        <div class="details-row">
+          <span class="col-num">{{ i + 1 }}</span>
+          <span class="col-label">{{ b.label || b.type }}</span>
+          <span class="col-dur">{{ formatDuration(b.durationSeconds, b) }}</span>
+          <span class="col-int">
+            <ng-container *ngIf="b.type !== 'FREE' && b.type !== 'PAUSE'">
+              <span *ngIf="b.type !== 'RAMP'">{{ getEffectiveIntensity(b, 'TARGET') | number:'1.0-0' }}% ({{
+                calculateIntensityValue(getEffectiveIntensity(b, 'TARGET')) }})</span>
+              <span *ngIf="b.type === 'RAMP'">{{ getEffectiveIntensity(b, 'START') | number:'1.0-0' }}%→{{
+                getEffectiveIntensity(b, 'END') | number:'1.0-0' }}%</span>
+            </ng-container>
+            <span *ngIf="b.type === 'FREE'">Z2 (Free)</span>
+            <span *ngIf="b.type === 'PAUSE'">Pause</span>
+          </span>
         </div>
       </div>
     </div>

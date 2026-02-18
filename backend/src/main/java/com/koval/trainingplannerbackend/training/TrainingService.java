@@ -2,13 +2,13 @@ package com.koval.trainingplannerbackend.training;
 
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
+import com.koval.trainingplannerbackend.training.model.BlockType;
 import com.koval.trainingplannerbackend.training.model.SportType;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.model.TrainingType;
 import com.koval.trainingplannerbackend.training.model.WorkoutBlock;
 import com.koval.trainingplannerbackend.training.tag.Tag;
 import com.koval.trainingplannerbackend.training.tag.TagService;
-import com.koval.trainingplannerbackend.training.zone.ZoneSystemService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -43,7 +43,25 @@ public class TrainingService {
         training.setCreatedBy(userId);
         training.setCreatedAt(LocalDateTime.now());
         calculateTrainingMetrics(training, userId);
+        training.setBlocks(training.getBlocks().stream().map(this::standardizeBlockType).toList());
         return trainingRepository.save(training);
+    }
+
+    /**
+     * Because AI can be Wrong
+     */
+    private WorkoutBlock standardizeBlockType(WorkoutBlock workoutBlock) {
+        if ((workoutBlock.intensityEnd() != null && workoutBlock.intensityEnd() > 0) &&
+            (workoutBlock.intensityStart() != null && workoutBlock.intensityStart() > 0)) {
+            return workoutBlock.updateType(BlockType.RAMP);
+        }
+
+        if ((workoutBlock.intensityEnd() == null || workoutBlock.intensityEnd() == 0) &&
+            (workoutBlock.intensityStart() == null || workoutBlock.intensityStart() == 0) &&
+            (workoutBlock.intensityTarget() == null || workoutBlock.intensityTarget() == 0)) {
+            return workoutBlock.updateType(BlockType.PAUSE);
+        }
+        return workoutBlock;
     }
 
     /**
@@ -61,7 +79,7 @@ public class TrainingService {
         if (updates.getDescription() != null)
             training.setDescription(updates.getDescription());
         if (updates.getBlocks() != null)
-            training.setBlocks(updates.getBlocks());
+            training.setBlocks((updates.getBlocks().stream().map(this::standardizeBlockType).toList()));
         if (updates.getTags() != null)
             training.setTags(updates.getTags());
         if (updates.getTrainingType() != null)
@@ -166,7 +184,7 @@ public class TrainingService {
         if (sport == null)
             sport = SportType.CYCLING;
 
-        MetricsResult result = calculateBlocksMetrics(training.getBlocks(), user, sport);
+        MetricsResult result = calculateBlocksMetrics(training, user, sport);
 
         training.setEstimatedTss((int) Math.round(result.totalTss()));
 
@@ -185,14 +203,9 @@ public class TrainingService {
     }
 
     //TODO
-    private MetricsResult calculateBlocksMetrics(List<WorkoutBlock> blocks,
-            User user, SportType sport) {
-
+    //Calculate metrics based on user's thresholds'
+    // First get if training has Sp
+    private MetricsResult calculateBlocksMetrics(Training training, User user, SportType sport) {
         return new MetricsResult(0, 0, 0);
-    }
-
-    //TODO
-    private MetricsResult calculateBlockMetrics(WorkoutBlock block, User user, SportType sport) {
-       return new MetricsResult(0, 0, 0);
     }
 }

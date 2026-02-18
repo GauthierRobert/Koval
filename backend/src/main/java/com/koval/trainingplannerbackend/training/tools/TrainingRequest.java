@@ -24,6 +24,9 @@ public record TrainingRequest(
     @JsonPropertyDescription("Estimated TSS")
     Integer estimatedTss,
 
+    @JsonPropertyDescription("Zone System Id")
+    String zoneSystemId,
+
     @JsonPropertyDescription("List of intervals")
     List<WorkoutBlock> blocks,
     

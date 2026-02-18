@@ -1,17 +1,9 @@
 package com.koval.trainingplannerbackend.training.zone;
 
-import com.koval.trainingplannerbackend.auth.User;
-import com.koval.trainingplannerbackend.training.model.SportType;
-import com.koval.trainingplannerbackend.training.model.WorkoutBlock;
-import com.koval.trainingplannerbackend.training.tag.Tag;
-import com.koval.trainingplannerbackend.training.tag.TagRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class ZoneSystemService {
@@ -62,6 +54,11 @@ public class ZoneSystemService {
     public ZoneSystem getZoneSystemsForCoach(String coachId, String name) {
         return zoneSystemRepository.findByCoachIdAndName(coachId, name).stream().findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("ZoneSystem does not exist for this coach and name"));
+    }
+
+    public ZoneSystem getZoneSystem(String id) {
+        return zoneSystemRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("ZoneSystem not found: " + id));
     }
 
 }

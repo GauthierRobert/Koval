@@ -186,7 +186,8 @@ public class AuthController {
 
     public record SettingsRequest(Integer ftp, Integer functionalThresholdPace,
             Integer criticalSwimSpeed, Integer pace5k, Integer pace10k,
-            Integer paceHalfMarathon, Integer paceMarathon) {
+            Integer paceHalfMarathon, Integer paceMarathon,
+            Integer vo2maxPower, Integer vo2maxPace) {
     }
 
     @PutMapping("/settings")
@@ -203,7 +204,8 @@ public class AuthController {
             User user = userService.updateSettings(userId,
                     request.ftp(), request.functionalThresholdPace(),
                     request.criticalSwimSpeed(), request.pace5k(), request.pace10k(),
-                    request.paceHalfMarathon(), request.paceMarathon());
+                    request.paceHalfMarathon(), request.paceMarathon(),
+                    request.vo2maxPower(), request.vo2maxPace());
             return ResponseEntity.ok(userToMap(user));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -247,6 +249,8 @@ public class AuthController {
         map.put("pace10k", user.getPace10k());
         map.put("paceHalfMarathon", user.getPaceHalfMarathon());
         map.put("paceMarathon", user.getPaceMarathon());
+        map.put("vo2maxPower", user.getVo2maxPower());
+        map.put("vo2maxPace", user.getVo2maxPace());
 
         map.put("hasCoach", tagService.athleteHasCoach(user.getId()));
         List<Tag> userTags = tagService.getTagsForAthlete(user.getId());

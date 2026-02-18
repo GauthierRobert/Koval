@@ -1,11 +1,12 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Training, TrainingService, TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../services/training.service';
+import { SportIconComponent } from '../sport-icon/sport-icon.component';
 
 @Component({
   selector: 'app-training-folders',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SportIconComponent],
   templateUrl: './training-folders.component.html',
   styleUrl: './training-folders.component.css'
 })
@@ -59,7 +60,7 @@ export class TrainingFoldersComponent implements OnInit {
 
   formatDuration(training: Training): string {
     if (!training.blocks || training.blocks.length === 0) return '';
-    const totalSec = training.estimatedDurationSeconds || (training.blocks ? training.blocks.reduce((sum, b) => sum + (b.durationSeconds || 0) * (b.repeats || 1), 0) : 0);
+    const totalSec = training.estimatedDurationSeconds || (training.blocks ? training.blocks.reduce((sum, b) => sum + (b.durationSeconds || 0), 0) : 0);
     const h = Math.floor(totalSec / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
     if (h > 0) return `${h}h ${m}m`;

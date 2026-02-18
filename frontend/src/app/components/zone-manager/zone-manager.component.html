@@ -10,18 +10,16 @@
             <div class="panel-header">
                 <h2>SYSTEMS</h2>
                 <div class="add-buttons">
-                    <button class="add-btn" (click)="createNewSystem('CYCLING')" title="Add Cycling">🚴 +</button>
-                    <button class="add-btn" (click)="createNewSystem('RUNNING')" title="Add Running">🏃 +</button>
-                    <button class="add-btn" (click)="createNewSystem('SWIMMING')" title="Add Swimming">🏊 +</button>
+                    <button class="add-btn" (click)="createNewSystem('CYCLING')" title="Add Cycling"><app-sport-icon sport="CYCLING" [size]="14"></app-sport-icon> +</button>
+                    <button class="add-btn" (click)="createNewSystem('RUNNING')" title="Add Running"><app-sport-icon sport="RUNNING" [size]="14"></app-sport-icon> +</button>
+                    <button class="add-btn" (click)="createNewSystem('SWIMMING')" title="Add Swimming"><app-sport-icon sport="SWIMMING" [size]="14"></app-sport-icon> +</button>
                 </div>
             </div>
             <div class="system-list">
                 <div *ngFor="let system of zoneSystems" class="system-item"
                     [class.selected]="selectedSystem?.id === system.id" (click)="selectSystem(system)">
                     <div class="system-main">
-                        <span class="sport-emoji">
-                            {{ system.sportType === 'CYCLING' ? '🚴' : system.sportType === 'RUNNING' ? '🏃' : '🏊' }}
-                        </span>
+                        <app-sport-icon [sport]="system.sportType" [size]="16"></app-sport-icon>
                         <span class="system-name">{{ system.name }}</span>
                     </div>
                 </div>

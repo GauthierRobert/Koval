@@ -1,14 +1,14 @@
-<div class="settings-page">
-    <div class="settings-header">
-        <h1>Reference Values</h1>
-        <p class="subtitle">Configure your training thresholds and race paces</p>
+<div class="settings-modal glass">
+    <div class="header">
+        <h3>REFERENCE VALUES</h3>
+        <button class="close-btn" (click)="close()">&#10005;</button>
     </div>
 
-    <div class="settings-grid">
+    <div class="modal-body">
         <!-- Cycling Section -->
-        <section class="settings-card glass">
+        <section class="settings-card">
             <div class="card-header">
-                <span class="sport-icon">🚴</span>
+                <app-sport-icon sport="CYCLING" [size]="22"></app-sport-icon>
                 <h2>Cycling</h2>
             </div>
             <div class="card-body">
@@ -22,13 +22,23 @@
                         <span class="unit">W</span>
                     </div>
                 </div>
+                <div class="field-row">
+                    <div class="field-info">
+                        <label>VO2max Power</label>
+                        <span class="hint">VO2max intensity power</span>
+                    </div>
+                    <div class="field-input ftp-input-group">
+                        <input type="number" [(ngModel)]="vo2maxPower" min="50" max="800" class="value-input numeric" placeholder="—" />
+                        <span class="unit">W</span>
+                    </div>
+                </div>
             </div>
         </section>
 
         <!-- Running Section -->
-        <section class="settings-card glass">
+        <section class="settings-card">
             <div class="card-header">
-                <span class="sport-icon">🏃</span>
+                <app-sport-icon sport="RUNNING" [size]="22"></app-sport-icon>
                 <h2>Running</h2>
             </div>
             <div class="card-body">
@@ -50,9 +60,9 @@
         </section>
 
         <!-- Swimming Section -->
-        <section class="settings-card glass">
+        <section class="settings-card">
             <div class="card-header">
-                <span class="sport-icon">🏊</span>
+                <app-sport-icon sport="SWIMMING" [size]="22"></app-sport-icon>
                 <h2>Swimming</h2>
             </div>
             <div class="card-body">
@@ -77,8 +87,8 @@
     <div class="actions-bar">
         <button class="save-btn" (click)="save()" [disabled]="saving">
             <span *ngIf="!saving && !saved">SAVE SETTINGS</span>
-            <span *ngIf="saving">SAVING…</span>
-            <span *ngIf="saved" class="saved-text">✓ SAVED</span>
+            <span *ngIf="saving">SAVING...</span>
+            <span *ngIf="saved" class="saved-text">&#10003; SAVED</span>
         </button>
     </div>
 </div>

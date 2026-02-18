@@ -1,5 +1,7 @@
-package com.koval.trainingplannerbackend.coach;
+package com.koval.trainingplannerbackend.coach.tools;
 
+import com.koval.trainingplannerbackend.coach.CoachService;
+import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.tag.Tag;
@@ -49,13 +51,6 @@ public class CoachToolService {
         return ScheduleSummary.from(sw, resolveTrainingTitle(trainingId));
     }
 
-    @Tool(description = "Unassign a scheduled workout by its ID")
-    public String unassignTraining(
-            @ToolParam(description = "The scheduled workout ID to remove") String scheduledWorkoutId) {
-        coachService.unassignTraining(scheduledWorkoutId);
-        return "Scheduled workout " + scheduledWorkoutId + " unassigned successfully.";
-    }
-
     @Tool(description = "Get the training schedule for a specific athlete within a date range. Returns summaries with training titles.")
     public List<ScheduleSummary> getAthleteSchedule(
             @ToolParam(description = "The athlete's user ID") String athleteId,
@@ -84,30 +79,6 @@ public class CoachToolService {
     public List<Tag> getAthleteTagsForCoach(
             @ToolParam(description = "The coach's user ID") String coachId) {
         return coachService.getAthleteTagsForCoach(coachId);
-    }
-
-    @Tool(description = "Add an athlete to a tag (e.g. 'Club BTC', 'Junior', 'Triathlon'). Creates the tag if it doesn't exist. Only coaches can use this.")
-    public Tag addTagToAthlete(
-            @ToolParam(description = "The coach's user ID") String coachId,
-            @ToolParam(description = "The athlete's user ID") String athleteId,
-            @ToolParam(description = "The tag name") String tagName) {
-        return coachService.addTagToAthlete(coachId, athleteId, tagName);
-    }
-
-    @Tool(description = "Remove an athlete from a tag. Only coaches can use this.")
-    public Tag removeTagFromAthlete(
-            @ToolParam(description = "The coach's user ID") String coachId,
-            @ToolParam(description = "The athlete's user ID") String athleteId,
-            @ToolParam(description = "The tag ID") String tagId) {
-        return coachService.removeTagFromAthlete(coachId, athleteId, tagId);
-    }
-
-    @Tool(description = "Replace all tags for an athlete with a new list of tag IDs. Only coaches can use this.")
-    public List<Tag> setAthleteTags(
-            @ToolParam(description = "The coach's user ID") String coachId,
-            @ToolParam(description = "The athlete's user ID") String athleteId,
-            @ToolParam(description = "List of tag IDs to assign") List<String> tagIds) {
-        return coachService.setAthleteTags(coachId, athleteId, tagIds);
     }
 
     private List<ScheduleSummary> enrichWithTitles(List<ScheduledWorkout> workouts) {

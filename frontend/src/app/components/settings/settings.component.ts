@@ -2,6 +2,7 @@ import {Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {AuthService, User} from '../../services/auth.service';
+import {SportIconComponent} from '../sport-icon/sport-icon.component';
 
 interface PaceField {
     key: string;
@@ -14,7 +15,7 @@ interface PaceField {
 @Component({
     selector: 'app-settings',
     standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SportIconComponent],
     templateUrl: './settings.component.html',
     styleUrls: ['./settings.component.css']
 })
@@ -22,11 +23,13 @@ export class SettingsComponent implements OnInit {
     private authService = inject(AuthService);
 
     ftp: number = 250;
+    vo2maxPower: number | null = null;
     saving = false;
     saved = false;
 
     runFields: PaceField[] = [
         { key: 'functionalThresholdPace', label: 'Threshold Pace', hint: 'Lactate threshold pace', minutes: 5, seconds: 0 },
+        { key: 'vo2maxPace', label: 'VO2max Pace', hint: 'VO2max intensity pace', minutes: 3, seconds: 45 },
         { key: 'pace5k', label: '5K Pace', hint: 'Current 5K race pace', minutes: 4, seconds: 30 },
         { key: 'pace10k', label: '10K Pace', hint: 'Current 10K race pace', minutes: 4, seconds: 45 },
         { key: 'paceHalfMarathon', label: 'Half Marathon Pace', hint: 'Current half marathon race pace', minutes: 5, seconds: 0 },
@@ -45,6 +48,7 @@ export class SettingsComponent implements OnInit {
 
     private loadFromUser(user: User) {
         this.ftp = user.ftp || 250;
+        this.vo2maxPower = user.vo2maxPower || null;
 
         for (const field of this.runFields) {
             const val = (user as any)[field.key] as number | undefined;
@@ -73,11 +77,15 @@ export class SettingsComponent implements OnInit {
         return `${m}:${s.toString().padStart(2, '0')}`;
     }
 
+    close() {
+        this.authService.toggleSettings(false);
+    }
+
     save() {
         this.saving = true;
         this.saved = false;
 
-        const settings: any = { ftp: this.ftp };
+        const settings: any = { ftp: this.ftp, vo2maxPower: this.vo2maxPower };
         for (const field of [...this.runFields, ...this.swimFields]) {
             settings[field.key] = this.paceToSeconds(field);
         }

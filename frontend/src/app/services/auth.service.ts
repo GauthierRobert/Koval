@@ -17,6 +17,8 @@ export interface User {
     pace10k?: number;
     paceHalfMarathon?: number;
     paceMarathon?: number;
+    vo2maxPower?: number;
+    vo2maxPace?: number;
     tags?: string[];
 }
 
@@ -27,6 +29,9 @@ export class AuthService {
     private apiUrl = 'http://localhost:8080/api/auth';
     private userSubject = new BehaviorSubject<User | null>(null);
     user$ = this.userSubject.asObservable();
+
+    private showSettingsSubject = new BehaviorSubject<boolean>(false);
+    showSettings$ = this.showSettingsSubject.asObservable();
 
     constructor(private http: HttpClient, private router: Router) {
         this.loadUserFromToken();
@@ -108,6 +113,14 @@ export class AuthService {
 
     isCoach(): boolean {
         return this.userSubject.value?.role === 'COACH';
+    }
+
+    toggleSettings(show?: boolean): void {
+        if (show !== undefined) {
+            this.showSettingsSubject.next(show);
+        } else {
+            this.showSettingsSubject.next(!this.showSettingsSubject.value);
+        }
     }
 
     updateUser(user: User): void {

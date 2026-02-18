@@ -35,8 +35,7 @@
 
             <div class="workout-info">
               <div class="title-row">
-                <span class="sport-icon">{{ workout.sportType === 'CYCLING' ? '🚲' : workout.sportType === 'RUNNING' ?
-                  '🏃' : '🏊' }}</span>
+                <app-sport-icon [sport]="workout.sportType" [size]="18"></app-sport-icon>
                 <span class="workout-title">
                   {{ workout.trainingTitle || workout.title || 'Session #' + workout.trainingId.substring(0, 6) }}
                 </span>

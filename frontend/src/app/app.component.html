@@ -8,6 +8,7 @@
 
       <!-- Global Overlays -->
       <app-device-manager *ngIf="showDeviceManager$ | async"></app-device-manager>
+      <app-settings *ngIf="showSettings$ | async"></app-settings>
 
       <!-- Live Workout Overlay -->
       <app-live-dashboard *ngIf="(executionState$ | async)?.isActive || (executionState$ | async)?.finalSummary"></app-live-dashboard>

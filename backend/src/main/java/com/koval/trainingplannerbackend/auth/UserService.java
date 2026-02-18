@@ -97,7 +97,8 @@ public class UserService {
 
     public User updateSettings(String userId, Integer ftp, Integer functionalThresholdPace,
             Integer criticalSwimSpeed, Integer pace5k, Integer pace10k,
-            Integer paceHalfMarathon, Integer paceMarathon) {
+            Integer paceHalfMarathon, Integer paceMarathon,
+            Integer vo2maxPower, Integer vo2maxPace) {
         User user = getUserById(userId);
         if (ftp != null)
             user.setFtp(ftp);
@@ -113,6 +114,10 @@ public class UserService {
             user.setPaceHalfMarathon(paceHalfMarathon);
         if (paceMarathon != null)
             user.setPaceMarathon(paceMarathon);
+        if (vo2maxPower != null)
+            user.setVo2maxPower(vo2maxPower);
+        if (vo2maxPace != null)
+            user.setVo2maxPace(vo2maxPace);
         return userRepository.save(user);
     }
 }

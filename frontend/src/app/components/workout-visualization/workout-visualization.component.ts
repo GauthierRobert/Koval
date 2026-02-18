@@ -5,6 +5,9 @@ import { WorkoutExecutionService } from '../../services/workout-execution.servic
 import { ExportService } from '../../services/export.service';
 import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.component';
 import { AuthService } from '../../services/auth.service';
+import { DurationEstimationService } from '../../services/duration-estimation.service';
+import { ZoneService } from '../../services/zone.service';
+import { ZoneSystem } from '../../services/zone';
 
 @Component({
   selector: 'app-workout-visualization',
@@ -18,14 +21,33 @@ export class WorkoutVisualizationComponent {
   private trainingService = inject(TrainingService);
   private executionService = inject(WorkoutExecutionService);
   private authService = inject(AuthService);
-  ftp$ = this.trainingService.ftp$;
+  private durationService = inject(DurationEstimationService);
+  private zoneService = inject(ZoneService);
+
+  private currentZoneSystem: ZoneSystem | null = null;
+
+  ngOnChanges() {
+    if (this.training?.zoneSystemId) {
+      this.zoneService.getZoneSystemById(this.training.zoneSystemId).subscribe({
+        next: (zs) => this.currentZoneSystem = zs,
+        error: () => this.currentZoneSystem = null
+      });
+    } else {
+      this.currentZoneSystem = null;
+    }
+  }
   user$ = this.authService.user$;
   isExportDropdownOpen = false;
   isScheduleModalOpen = false;
   showBlockDetails = false;
+  displayUnit: 'PERCENT' | 'ABSOLUTE' = 'PERCENT'; // Default to %
 
   toggleDetails() {
     this.showBlockDetails = !this.showBlockDetails;
+  }
+
+  toggleUnits() {
+    this.displayUnit = this.displayUnit === 'PERCENT' ? 'ABSOLUTE' : 'PERCENT';
   }
 
   openScheduleModal() {
@@ -42,55 +64,16 @@ export class WorkoutVisualizationComponent {
     if (!this.training) return 0;
     const totalDuration = this.getNumericalTotalDuration();
     if (totalDuration === 0) return 0;
-    return ((block.durationSeconds || 0) / totalDuration) * 100;
+    return ((this.getEstimatedBlockDuration(block)) / totalDuration) * 100;
   }
 
   getEffectiveIntensity(block: WorkoutBlock, type: 'TARGET' | 'START' | 'END' = 'TARGET'): number {
-    const user = this.authService.currentUser;
-    if (!this.training || !user) return 0;
+    let percent: number | undefined;
+    if (type === 'TARGET') percent = block.intensityTarget;
+    else if (type === 'START') percent = block.intensityStart;
+    else if (type === 'END') percent = block.intensityEnd;
 
-    // 1. CYCLING
-    if (this.training.sportType === 'CYCLING') {
-      let percent: number | undefined;
-      if (type === 'TARGET') percent = block.powerTargetPercent;
-      else if (type === 'START') percent = block.powerStartPercent;
-      else if (type === 'END') percent = block.powerEndPercent;
-
-      if (percent !== undefined && percent !== null) return percent;
-      return 0;
-    }
-
-    // 2. RUNNING
-    if (this.training.sportType === 'RUNNING') {
-      const thresholdPace = user.functionalThresholdPace || 240; // Default 4:00/km
-      let targetPace: number | undefined;
-
-      if (type === 'TARGET') targetPace = block.paceTargetSecondsPerKm;
-      else if (type === 'START') targetPace = block.paceStartSecondsPerKm;
-      else if (type === 'END') targetPace = block.paceEndSecondsPerKm;
-
-      if (targetPace && targetPace > 0) {
-        return (thresholdPace / targetPace) * 100;
-      }
-      return 0;
-    }
-
-    // 3. SWIMMING
-    if (this.training.sportType === 'SWIMMING') {
-      const thresholdCss = user.criticalSwimSpeed || 90; // Default 1:30/100m
-      let targetPace: number | undefined;
-
-      if (type === 'TARGET') targetPace = block.swimPacePer100m;
-      // Ramp/Interval swimming usually follows steady pace, or complex structure not fully mapped yet.
-      // Fallback to generic pace fields if swim-specific is missing? 
-      // For now, strict swim usage.
-
-      if (targetPace && targetPace > 0) {
-        return (thresholdCss / targetPace) * 100;
-      }
-      return 0;
-    }
-
+    if (percent !== undefined && percent !== null) return percent;
     return 0;
   }
 
@@ -155,13 +138,20 @@ export class WorkoutVisualizationComponent {
     if (block.type === 'PAUSE') return 'PAUSE';
     if (block.type === 'FREE') return 'FREE';
 
-    // For RAMP, showing "Start% - End%" might mean recalculating text
-    const start = Math.round(this.getEffectiveIntensity(block, 'START'));
-    const end = Math.round(this.getEffectiveIntensity(block, 'END'));
-    const target = Math.round(this.getEffectiveIntensity(block, 'TARGET'));
+    const start = this.getEffectiveIntensity(block, 'START');
+    const end = this.getEffectiveIntensity(block, 'END');
+    const target = this.getEffectiveIntensity(block, 'TARGET');
 
-    if (block.type === 'RAMP') return `${start}%-${end}%`;
-    return `${target}%`;
+    if (this.displayUnit === 'ABSOLUTE') {
+      if (block.type === 'RAMP') {
+        return `${this.calculateIntensityValue(start)} - ${this.calculateIntensityValue(end)}`;
+      }
+      return this.calculateIntensityValue(target);
+    }
+
+    // PERCENT mode
+    if (block.type === 'RAMP') return `${Math.round(start)}%-${Math.round(end)}%`;
+    return `${Math.round(target)}%`;
   }
 
   getMaxIntensity(): number {
@@ -192,7 +182,13 @@ export class WorkoutVisualizationComponent {
     if (!this.training) return 0;
     if (this.training.estimatedDurationSeconds) return this.training.estimatedDurationSeconds;
     if (!this.training.blocks) return 0;
-    return this.training.blocks.reduce((acc, b) => acc + (b.durationSeconds ?? 0) * (b.repeats || 1), 0);
+    return this.training.blocks.reduce((acc, b) => acc + (this.getEstimatedBlockDuration(b)), 0);
+  }
+
+  // Helper to centralize estimation
+  getEstimatedBlockDuration(block: WorkoutBlock): number {
+    if (!this.training) return 0;
+    return this.durationService.estimateDuration(block, this.training, this.currentZoneSystem);
   }
 
   getTotalDuration(): string {
@@ -202,12 +198,37 @@ export class WorkoutVisualizationComponent {
     return `${m}m`;
   }
 
-  formatDuration(seconds: number | undefined): string {
+  formatDuration(seconds: number | undefined, block?: WorkoutBlock): string {
+    // If undefined provided, try to estimate from block if given?
+    if (seconds === undefined && block) {
+      seconds = this.getEstimatedBlockDuration(block);
+    }
     if (seconds === undefined) return '0m';
+
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     if (s === 0) return `${m}m`;
     return `${m}m ${s}s`;
+  }
+
+  /**
+   * Returns the display string for a block's duration/distance.
+   * When no duration is set but distance is, shows the distance.
+   */
+  formatBlockDurationOrDistance(block: WorkoutBlock): string {
+    if (!block.durationSeconds && block.distanceMeters) {
+      const km = block.distanceMeters / 1000;
+      return km >= 1 ? `${km}km` : `${block.distanceMeters}m`;
+    }
+    return this.formatDuration(block.durationSeconds, block);
+  }
+
+  /**
+   * Returns true when the block is too narrow to display a horizontal label.
+   * Threshold is 5% of total width.
+   */
+  isNarrowBlock(block: WorkoutBlock): boolean {
+    return block.type === 'PAUSE' || this.getBlockWidth(block) < 5;
   }
 
   calculateIntensityValue(percent: number | undefined): string {

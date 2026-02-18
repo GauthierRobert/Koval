@@ -142,7 +142,7 @@ public class ScheduleController {
                     Training t = trainingsMap.get(sw.getTrainingId());
                     String title = t != null ? t.getTitle() : null;
                     var type = t != null ? t.getTrainingType() : null;
-                    Integer duration = t != null ? t.getTotalDurationSeconds() : null;
+                    Integer duration = t != null ? t.getEstimatedDurationSeconds() : null;
                     return ScheduledWorkoutResponse.from(sw, title, type, duration);
                 })
                 .toList();
@@ -151,7 +151,7 @@ public class ScheduleController {
     private ScheduledWorkoutResponse enrichSingle(ScheduledWorkout sw) {
         return trainingRepository.findById(sw.getTrainingId())
                 .map(t -> {
-                    Integer duration = t.getTotalDurationSeconds();
+                    Integer duration = t.getEstimatedDurationSeconds();
                     return ScheduledWorkoutResponse.from(sw, t.getTitle(), t.getTrainingType(), duration);
                 })
                 .orElse(ScheduledWorkoutResponse.from(sw, null, null, null));

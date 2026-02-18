@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ChatService } from '../../services/chat.service';
 import { BluetoothService } from '../../services/bluetooth.service';
+import { AuthService } from '../../services/auth.service';
 import { combineLatest, map } from 'rxjs';
 
 @Component({
@@ -17,6 +18,7 @@ export class TopBarComponent {
   private router = inject(Router);
   private chatService = inject(ChatService);
   private bluetoothService = inject(BluetoothService);
+  private authService = inject(AuthService);
 
   isPopupOpen = false;
   requestDescription = '';
@@ -29,6 +31,10 @@ export class TopBarComponent {
   ]).pipe(
     map(statuses => statuses.filter(s => s === 'Connected').length)
   );
+
+  toggleSettings() {
+    this.authService.toggleSettings();
+  }
 
   toggleDevices() {
     this.bluetoothService.toggleDeviceManager();

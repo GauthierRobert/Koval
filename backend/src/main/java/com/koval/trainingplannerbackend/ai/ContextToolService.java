@@ -2,7 +2,7 @@ package com.koval.trainingplannerbackend.ai;
 
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
-import com.koval.trainingplannerbackend.coach.ScheduleSummary;
+import com.koval.trainingplannerbackend.coach.tools.ScheduleSummary;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkoutRepository;
 import com.koval.trainingplannerbackend.training.model.Training;

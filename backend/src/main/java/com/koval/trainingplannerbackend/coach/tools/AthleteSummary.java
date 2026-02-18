@@ -1,4 +1,4 @@
-package com.koval.trainingplannerbackend.coach;
+package com.koval.trainingplannerbackend.coach.tools;
 
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRole;

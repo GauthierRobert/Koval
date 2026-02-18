@@ -17,33 +17,31 @@ import { CommonModule } from '@angular/common';
       stroke-linejoin="round"
       [class]="className">
 
-      <!-- CYCLING -->
+      <!-- CYCLING: two frame lines + two wheels -->
       <ng-container *ngIf="sport === 'CYCLING'">
-        <circle cx="5.5" cy="17.5" r="3.5"/>
-        <circle cx="18.5" cy="17.5" r="3.5"/>
-        <path d="M15 6h-5l-3 11.5"/>
-        <path d="M9 17.5h.5a2 2 0 0 0 1.5-2l2.5-10"/> <!-- Frame -->
-        <path d="M15 6a2 2 0 0 0 2 2h3"/> <!-- Handlebars -->
-        <circle cx="15" cy="5" r="1"/> <!-- Head -->
-        <path d="M12 17.5V14l-3-3 4-3 2 3h2"/> <!-- Body -->
+        <circle cx="6" cy="17" r="3.5"/>                  <!-- rear wheel -->
+        <circle cx="18" cy="17" r="3.5"/>                 <!-- front wheel -->
+        <path d="M6 17 L11 8 L18 17"/>                    <!-- frame line 1: seat-tube + chain-stay -->
+        <path d="M11 8 L17 13"/>                          <!-- frame line 2: top-tube -->
+        <path d="M9 8 L13 8"/>                            <!-- saddle -->
+        <path d="M17 13 L20 11"/>                         <!-- handlebar -->
       </ng-container>
 
-      <!-- RUNNING -->
+      <!-- RUNNING: three lines + legs with shoes -->
       <ng-container *ngIf="sport === 'RUNNING'">
-        <path d="M4 16l2-1 2.5-4h3l2.8 5.7c.2.4.6.7 1.1.7H20"/> <!-- Back Leg -->
-        <path d="M8 8l-2 3-3 4.5"/> <!-- Front Arm -->
-        <path d="M13 7l2-3h3"/> <!-- Back Arm -->
-        <path d="M13 7v6l2 3"/> <!-- Front Leg / Body -->
-        <circle cx="13" cy="4" r="1.5"/> <!-- Head -->
+        <circle cx="14" cy="4" r="1.5"/>                  <!-- head -->
+        <path d="M14 5.5 L12 12"/>                        <!-- line 1: torso -->
+        <path d="M13 8 L17 6"/>                           <!-- line 2: forward arm -->
+        <path d="M13 8 L9 10"/>                           <!-- line 3: back arm -->
+        <path d="M12 12 L15 17 L18 18"/>                  <!-- front leg + shoe -->
+        <path d="M12 12 L10 17 L7 19"/>                   <!-- back leg + shoe -->
       </ng-container>
 
-      <!-- SWIMMING -->
+      <!-- SWIMMING: one body line + sea wave -->
       <ng-container *ngIf="sport === 'SWIMMING'">
-        <path d="M2 12h20"/> <!-- Water -->
-        <path d="M2 16h20"/> <!-- Water -->
-        <path d="M2 8c.5-1 2-2 4-2s3.5 1 4 2 2 2 4 2 2-1 4-2 3.5-1 4-2"/> <!-- Splash/Arm -->
-        <circle cx="17" cy="5" r="1.5"/> <!-- Head -->
-        <path d="M13 9l2-2 2 2"/> <!-- Arm -->
+        <circle cx="19" cy="7" r="2"/>                    <!-- head -->
+        <path d="M3 11 C7 8 13 9 17 10"/>                 <!-- body: one stretched line -->
+        <path d="M2 16 Q5.5 13 9 16 Q12.5 19 16 16 Q19.5 13 22 15"/> <!-- sea wave -->
       </ng-container>
 
       <!-- BRICK (Stack/Layers) -->

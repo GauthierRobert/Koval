@@ -38,15 +38,9 @@ export class ExportService {
 
     private blocksToZwiftXML(blocks: WorkoutBlock[], ftp: number): string {
         if (!blocks) return '';
-        return blocks.map(b => {
-            const repeats = b.repeats || 1;
-            const blockXml = this.blockToZwiftXML(b, ftp);
-            let repeated = '';
-            for (let i = 0; i < repeats; i++) {
-                repeated += blockXml + '\n        ';
-            }
-            return repeated.trim();
-        }).filter(xml => xml !== '').join('\n        ');
+        return blocks.map(b => this.blockToZwiftXML(b, ftp))
+            .filter(xml => xml !== '')
+            .join('\n        ');
     }
 
     private blockToZwiftXML(block: WorkoutBlock, ftp: number): string {
@@ -59,20 +53,20 @@ export class ExportService {
             <textevent timeoffset="0" message="PAUSE: ${this.escapeXML(block.label)}"/>
         </SteadyState>`;
             case 'WARMUP':
-                const warmupPower = (block.powerTargetPercent || 50) / 100;
+                const warmupPower = (block.intensityTarget || 50) / 100;
                 return `<Warmup Duration="${duration}" PowerLow="0.5" PowerHigh="${warmupPower.toFixed(2)}" pace="0">
             <textevent timeoffset="10" message="${this.escapeXML(block.label)}"/>
         </Warmup>`;
 
             case 'COOLDOWN':
-                const cooldownPower = (block.powerTargetPercent || 50) / 100;
+                const cooldownPower = (block.intensityTarget || 50) / 100;
                 return `<Cooldown Duration="${duration}" PowerLow="${cooldownPower.toFixed(2)}" PowerHigh="0.5" pace="0">
             <textevent timeoffset="10" message="${this.escapeXML(block.label)}"/>
         </Cooldown>`;
 
             case 'RAMP':
-                const rampStart = (block.powerStartPercent || 50) / 100;
-                const rampEnd = (block.powerEndPercent || 100) / 100;
+                const rampStart = (block.intensityStart || 50) / 100;
+                const rampEnd = (block.intensityEnd || 100) / 100;
                 return `<Ramp Duration="${duration}" PowerLow="${rampStart.toFixed(2)}" PowerHigh="${rampEnd.toFixed(2)}" pace="0">
             <textevent timeoffset="10" message="${this.escapeXML(block.label)}"/>
         </Ramp>`;
@@ -85,7 +79,7 @@ export class ExportService {
             case 'STEADY':
             case 'INTERVAL':
             default:
-                const power = (block.powerTargetPercent || 75) / 100;
+                const power = (block.intensityTarget || 75) / 100;
                 const cadence = block.cadenceTarget || 90;
                 return `<SteadyState Duration="${duration}" Power="${power.toFixed(2)}" pace="0" Cadence="${cadence}">
             <textevent timeoffset="10" message="${this.escapeXML(block.label)}"/>
