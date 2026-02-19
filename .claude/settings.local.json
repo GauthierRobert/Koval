@@ -10,7 +10,8 @@
       "Bash(npm run build:*)",
       "Bash(mvn clean compile:*)",
       "Bash(npx ng build:*)",
-      "Bash(mvn clean install:*)"
+      "Bash(mvn clean install:*)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

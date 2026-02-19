@@ -19,7 +19,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "trainings")
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "sportType", visible = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "sport", visible = true)
 @JsonSubTypes({
         @JsonSubTypes.Type(value = CyclingTraining.class, name = "CYCLING"),
         @JsonSubTypes.Type(value = RunningTraining.class, name = "RUNNING"),

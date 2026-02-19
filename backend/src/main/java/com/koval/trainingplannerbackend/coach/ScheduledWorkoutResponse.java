@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.coach;
 
+import com.koval.trainingplannerbackend.training.model.SportType;
 import com.koval.trainingplannerbackend.training.model.TrainingType;
 
 import java.time.LocalDate;
@@ -23,9 +24,10 @@ public record ScheduledWorkoutResponse(
         // Enriched fields
         String trainingTitle,
         TrainingType trainingType,
-        Integer totalDurationSeconds) {
+        Integer totalDurationSeconds,
+        SportType sportType) {
 
-    public static ScheduledWorkoutResponse from(ScheduledWorkout sw, String trainingTitle, TrainingType trainingType, Integer totalDurationSeconds) {
+    public static ScheduledWorkoutResponse from(ScheduledWorkout sw, String trainingTitle, TrainingType trainingType, Integer totalDurationSeconds, SportType sportType) {
         return new ScheduledWorkoutResponse(
                 sw.getId(),
                 sw.getTrainingId(),
@@ -40,6 +42,7 @@ public record ScheduledWorkoutResponse(
                 sw.getCreatedAt(),
                 trainingTitle,
                 trainingType,
-                totalDurationSeconds);
+                totalDurationSeconds,
+                sportType);
     }
 }

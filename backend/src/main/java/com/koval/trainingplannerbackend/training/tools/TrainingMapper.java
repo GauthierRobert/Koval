@@ -9,8 +9,8 @@ import com.koval.trainingplannerbackend.training.model.TrainingType;
 import com.koval.trainingplannerbackend.training.model.WorkoutBlock;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class TrainingMapper {
@@ -19,19 +19,19 @@ public class TrainingMapper {
      * Convertit une requête DTO simplifiée (provenant de l'IA) en une entité Training riche.
      */
     public Training mapToEntity(TrainingRequest request) {
-        Training training = createInstance(request.sportType());
+        Training training = createInstance(request.sport());
 
         // 2. Champs de base
         training.setTitle(request.title());
-        training.setDescription(request.description());
+        training.setDescription(request.desc());
         
         // Gestion des tags (liste vide par défaut si null)
         training.setTags(request.tags() != null ? request.tags() : new ArrayList<>());
 
         // 3. Enums (Gestion sécurisée)
-        if (request.trainingType() != null) {
+        if (request.type() != null) {
             try {
-                training.setTrainingType(TrainingType.valueOf(request.trainingType().toUpperCase()));
+                training.setTrainingType(TrainingType.valueOf(request.type().toUpperCase()));
             } catch (IllegalArgumentException e) {
                 // Fallback par défaut si l'IA invente un type
                 training.setTrainingType(TrainingType.MIXED);
@@ -40,18 +40,19 @@ public class TrainingMapper {
             training.setTrainingType(TrainingType.MIXED);
         }
 
-        if (request.estimatedTss() != null) {
-            training.setEstimatedTss(request.estimatedTss());
+        if (request.tss() != null) {
+            training.setEstimatedTss(request.tss());
         }
 
         // 4. Mapping des Blocs + Calcul de la durée totale
         if (request.blocks() != null && !request.blocks().isEmpty()) {
+            List<WorkoutBlock> blocks = request.blocks().stream()
+                    .map(b -> new WorkoutBlock(b.type(), b.dur(), b.dist(), b.label(), b.pct(), b.pctFrom(), b.pctTo(), b.cad()))
+                    .toList();
+            training.setBlocks(blocks);
 
-            training.setBlocks(request.blocks());
-
-            // Calcul automatique de la durée totale (somme des blocs)
-            int totalDuration = request.blocks().stream()
-                    .mapToInt(WorkoutBlock::durationSeconds)
+            int totalDuration = blocks.stream()
+                    .mapToInt(wb -> wb.durationSeconds() != null ? wb.durationSeconds() : 0)
                     .sum();
             training.setEstimatedDurationSeconds(totalDuration);
         } else {
