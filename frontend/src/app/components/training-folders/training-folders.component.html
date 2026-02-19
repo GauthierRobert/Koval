@@ -25,7 +25,7 @@
           getTypeLabel(t.trainingType) }}</span>
         <div class="card-meta">
           <app-sport-icon [sport]="t.sportType" [size]="18"></app-sport-icon>
-          <span class="card-duration">{{ formatDuration(t) }}</span>
+          <span class="card-duration" [style.font-style]="isDurationEstimated(t) ? 'italic' : ''">{{ formatDuration(t) }}</span>
         </div>
       </div>
       <div class="card-title">{{ t.title }}</div>

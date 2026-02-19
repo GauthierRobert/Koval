@@ -1,12 +1,14 @@
 import { Injectable, NgZone, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject } from 'rxjs';
+import { skip, take } from 'rxjs/operators';
 import { TrainingService } from './training.service';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  createdTraining?: { id: string; title: string; sportType: string; estimatedDurationSeconds?: number };
 }
 
 export interface ChatHistoryItem {
@@ -81,6 +83,10 @@ export class ChatService {
   }
 
   private async sendMessageStream(message: string): Promise<void> {
+    // Snapshot current training IDs to detect newly created ones after the response
+    const knownIds = new Set<string>();
+    this.trainingService.trainings$.pipe(take(1)).subscribe((ts) => ts.forEach((t) => knownIds.add(t.id)));
+
     this.addMessage({ role: 'user', content: message, timestamp: new Date() });
 
     const aiMessage: ChatMessage = { role: 'assistant', content: '', timestamp: new Date() };
@@ -187,6 +193,20 @@ export class ChatService {
       this.emitImmediate();
 
       this.loadHistories();
+
+      // Detect newly created training: subscribe before calling loadTrainings so we catch the emission
+      this.trainingService.trainings$.pipe(skip(1), take(1)).subscribe((newTrainings) => {
+        const newT = newTrainings.find((t) => !knownIds.has(t.id));
+        if (newT) {
+          aiMessage.createdTraining = {
+            id: newT.id,
+            title: newT.title,
+            sportType: newT.sportType,
+            estimatedDurationSeconds: newT.estimatedDurationSeconds,
+          };
+          this.ngZone.run(() => this.emitImmediate());
+        }
+      });
       this.trainingService.loadTrainings();
     } catch {
       if (!aiMessage.content) {

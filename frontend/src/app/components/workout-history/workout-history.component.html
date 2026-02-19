@@ -1,5 +1,8 @@
 <div class="history-container">
   <h3 class="section-title">Completed Sessions</h3>
+  <ng-container *ngIf="sessions$ | async as sessions">
+    <app-progression-chart [sessions]="sessions"></app-progression-chart>
+  </ng-container>
   <div class="history-list" *ngIf="sessions$ | async as sessions">
     <div class="empty-state" *ngIf="sessions.length === 0">
       <p>No completed workouts yet</p>

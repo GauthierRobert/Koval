@@ -14,6 +14,7 @@ import {
 import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.component';
 import { WorkoutDetailModalComponent } from '../workout-detail-modal/workout-detail-modal.component';
 import { SportIconComponent } from '../sport-icon/sport-icon.component';
+import { TrainingLoadChartComponent } from '../training-load-chart/training-load-chart.component';
 
 export interface CalendarDay {
   date: Date;
@@ -63,7 +64,7 @@ function groupByDay(schedule: ScheduledWorkout[]): WorkoutsByDay {
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [CommonModule, ScheduleModalComponent, WorkoutDetailModalComponent, SportIconComponent],
+  imports: [CommonModule, ScheduleModalComponent, WorkoutDetailModalComponent, SportIconComponent, TrainingLoadChartComponent],
   templateUrl: './calendar.component.html',
   styleUrl: './calendar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

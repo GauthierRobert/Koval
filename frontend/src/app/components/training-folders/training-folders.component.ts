@@ -1,6 +1,7 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Training, TrainingService, TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../services/training.service';
+import { Training, TrainingService, TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS, hasDurationEstimate } from '../../services/training.service';
+import { DurationEstimationService } from '../../services/duration-estimation.service';
 import { SportIconComponent } from '../sport-icon/sport-icon.component';
 
 @Component({
@@ -17,6 +18,8 @@ export class TrainingFoldersComponent implements OnInit {
   folders: Record<string, Training[]> = {};
   folderNames: string[] = [];
   expandedFolder: string | null = null;
+
+  private durationService = inject(DurationEstimationService);
 
   constructor(private trainingService: TrainingService) { }
 
@@ -60,10 +63,17 @@ export class TrainingFoldersComponent implements OnInit {
 
   formatDuration(training: Training): string {
     if (!training.blocks || training.blocks.length === 0) return '';
-    const totalSec = training.estimatedDurationSeconds || (training.blocks ? training.blocks.reduce((sum, b) => sum + (b.durationSeconds || 0), 0) : 0);
+    const totalSec =
+      training.estimatedDurationSeconds ||
+      training.blocks.reduce((sum, b) => sum + this.durationService.estimateDuration(b, training, null), 0);
+    if (totalSec === 0) return '';
     const h = Math.floor(totalSec / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
     if (h > 0) return `${h}h ${m}m`;
     return `${m}m`;
+  }
+
+  isDurationEstimated(training: Training): boolean {
+    return hasDurationEstimate(training);
   }
 }

@@ -4,11 +4,12 @@ import { SportIconComponent } from '../sport-icon/sport-icon.component';
 import { HistoryService, SavedSession } from '../../services/history.service';
 import { TrainingService } from '../../services/training.service';
 import { Observable } from 'rxjs';
+import { ProgressionChartComponent } from '../progression-chart/progression-chart.component';
 
 @Component({
     selector: 'app-workout-history',
     standalone: true,
-    imports: [CommonModule, SportIconComponent],
+    imports: [CommonModule, SportIconComponent, ProgressionChartComponent],
     templateUrl: './workout-history.component.html',
     styleUrl: './workout-history.component.css'
 })

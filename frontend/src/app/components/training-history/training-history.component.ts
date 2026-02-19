@@ -9,7 +9,9 @@ import {
     TRAINING_TYPES,
     TRAINING_TYPE_COLORS,
     TRAINING_TYPE_LABELS,
+    hasDurationEstimate,
 } from '../../services/training.service';
+import { DurationEstimationService } from '../../services/duration-estimation.service';
 import { AuthService } from '../../services/auth.service';
 import { HistoryService } from '../../services/history.service';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
@@ -35,6 +37,7 @@ export class TrainingHistoryComponent implements OnInit {
     private trainingService = inject(TrainingService);
     private historyService = inject(HistoryService);
     private authService = inject(AuthService);
+    private durationService = inject(DurationEstimationService);
 
     readonly sportOptions = SPORT_OPTIONS;
     readonly trainingTypes = TRAINING_TYPES;
@@ -143,11 +146,16 @@ export class TrainingHistoryComponent implements OnInit {
         if (!training.blocks || training.blocks.length === 0) return '';
         const totalSec =
             training.estimatedDurationSeconds ||
-            (training.blocks ? training.blocks.reduce((sum, b) => sum + (b.durationSeconds || 0), 0) : 0);
+            training.blocks.reduce((sum, b) => sum + this.durationService.estimateDuration(b, training, null), 0);
+        if (totalSec === 0) return '';
         const h = Math.floor(totalSec / 3600);
         const m = Math.floor((totalSec % 3600) / 60);
         if (h > 0) return `${h}h ${m}m`;
         return `${m}m`;
+    }
+
+    isDurationEstimated(training: Training): boolean {
+        return hasDurationEstimate(training);
     }
 
     getTypeColor(type: TrainingType): string {

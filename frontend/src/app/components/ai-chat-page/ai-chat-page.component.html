@@ -66,6 +66,26 @@
             <span class="timestamp">{{ msg.timestamp | date:'HH:mm:ss' }}</span>
           </div>
         </div>
+        @if (msg.role === 'assistant' && msg.createdTraining) {
+          <div class="message-wrapper ai">
+            <div class="created-training-card glass">
+              <div class="ct-body">
+                <span class="ct-sport-icon">
+                  {{ msg.createdTraining.sportType === 'RUNNING' ? '🏃' : msg.createdTraining.sportType === 'SWIMMING' ? '🏊' : '🚴' }}
+                </span>
+                <div class="ct-info">
+                  <span class="ct-title">{{ msg.createdTraining.title }}</span>
+                  @if (msg.createdTraining.estimatedDurationSeconds) {
+                    <span class="ct-duration">{{ (msg.createdTraining.estimatedDurationSeconds / 60) | number:'1.0-0' }} min</span>
+                  }
+                </div>
+              </div>
+              <button class="schedule-btn" (click)="openScheduleModal(msg.createdTraining!)">
+                Add to Calendar
+              </button>
+            </div>
+          </div>
+        }
       }
 
       @if (streaming) {
@@ -98,3 +118,11 @@
     </div>
   </div>
 </div>
+
+<app-schedule-modal
+  [isOpen]="showScheduleModal"
+  [preselectedTraining]="selectedTrainingForSchedule"
+  mode="athlete"
+  (closed)="onScheduleModalClose()"
+  (scheduled)="onScheduleModalClose()"
+></app-schedule-modal>

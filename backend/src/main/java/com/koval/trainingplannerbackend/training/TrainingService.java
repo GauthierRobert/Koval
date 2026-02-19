@@ -202,10 +202,66 @@ public class TrainingService {
     private record MetricsResult(double totalTss, int totalDurationSeconds, int totalDistance) {
     }
 
-    //TODO
-    //Calculate metrics based on user's thresholds'
-    // First get if training has Sp
     private MetricsResult calculateBlocksMetrics(Training training, User user, SportType sport) {
-        return new MetricsResult(0, 0, 0);
+        int ftpPaceSecPerKm = user.getFunctionalThresholdPace() != null ? user.getFunctionalThresholdPace() : 300;
+        int cssSecPer100m = user.getCriticalSwimSpeed() != null ? user.getCriticalSwimSpeed() : 120;
+
+        int totalDurationSeconds = 0;
+        int totalDistance = 0;
+        double totalTss = 0;
+
+        for (WorkoutBlock block : training.getBlocks()) {
+            double intensity = getBlockIntensity(block);
+            int blockDuration;
+            int blockDistance;
+
+            if (block.durationSeconds() != null && block.durationSeconds() > 0) {
+                blockDuration = block.durationSeconds();
+                blockDistance = estimateDistance(blockDuration, intensity, sport, ftpPaceSecPerKm, cssSecPer100m);
+            } else if (block.distanceMeters() != null && block.distanceMeters() > 0) {
+                blockDistance = block.distanceMeters();
+                blockDuration = estimateDuration(blockDistance, intensity, sport, ftpPaceSecPerKm, cssSecPer100m);
+            } else {
+                continue;
+            }
+
+            totalDurationSeconds += blockDuration;
+            totalDistance += blockDistance;
+            if (intensity > 0) {
+                totalTss += (blockDuration / 3600.0) * Math.pow(intensity / 100.0, 2) * 100.0;
+            }
+        }
+
+        return new MetricsResult(totalTss, totalDurationSeconds, totalDistance);
+    }
+
+    private double getBlockIntensity(WorkoutBlock block) {
+        if (block.intensityStart() != null && block.intensityStart() > 0
+                && block.intensityEnd() != null && block.intensityEnd() > 0) {
+            return (block.intensityStart() + block.intensityEnd()) / 2.0;
+        }
+        return block.intensityTarget() != null && block.intensityTarget() > 0 ? block.intensityTarget() : 50.0;
+    }
+
+    private int estimateDuration(int distanceMeters, double intensity, SportType sport,
+                                  int ftpPaceSecPerKm, int cssSecPer100m) {
+        if (intensity <= 0) return 0;
+        double speedMps = switch (sport) {
+            case RUNNING -> (1000.0 / ftpPaceSecPerKm) * (intensity / 100.0);
+            case SWIMMING -> (100.0 / cssSecPer100m) * (intensity / 100.0);
+            case CYCLING, BRICK -> 8.33 * Math.sqrt(intensity / 100.0);
+        };
+        return speedMps > 0 ? (int) Math.round(distanceMeters / speedMps) : 0;
+    }
+
+    private int estimateDistance(int durationSeconds, double intensity, SportType sport,
+                                  int ftpPaceSecPerKm, int cssSecPer100m) {
+        if (intensity <= 0) return 0;
+        double speedMps = switch (sport) {
+            case RUNNING -> (1000.0 / ftpPaceSecPerKm) * (intensity / 100.0);
+            case SWIMMING -> (100.0 / cssSecPer100m) * (intensity / 100.0);
+            case CYCLING, BRICK -> 8.33 * Math.sqrt(intensity / 100.0);
+        };
+        return (int) Math.round(durationSeconds * speedMps);
     }
 }
