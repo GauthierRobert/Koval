@@ -9,6 +9,7 @@
   </div>
 
   <ng-container *ngIf="workoutsByDay$ | async as wbd">
+    <app-training-load-chart [workoutsByDay]="wbd" [days]="weekDays"></app-training-load-chart>
     <div class="calendar-grid">
       <div *ngFor="let day of weekDays; trackBy: trackByDay" class="day-column glass" [class.today]="day.isToday">
         <div class="day-header">

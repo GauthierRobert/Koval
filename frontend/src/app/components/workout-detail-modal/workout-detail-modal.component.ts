@@ -3,7 +3,7 @@ import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BehaviorSubject, of } from 'rxjs';
 import { switchMap, map, catchError, startWith } from 'rxjs/operators';
-import { Training, WorkoutBlock, TrainingService, TrainingType } from '../../services/training.service';
+import { Training, WorkoutBlock, TrainingService, TrainingType, hasDurationEstimate } from '../../services/training.service';
 import { ScheduledWorkout } from '../../services/coach.service';
 import { CalendarService } from '../../services/calendar.service';
 import { WorkoutExecutionService } from '../../services/workout-execution.service';
@@ -162,6 +162,10 @@ export class WorkoutDetailModalComponent {
   // Helper
   getEstimatedBlockDuration(block: WorkoutBlock, training: Training): number {
     return this.durationService.estimateDuration(block, training, this.currentZoneSystem);
+  }
+
+  isDurationEstimated(training: Training): boolean {
+    return hasDurationEstimate(training);
   }
 
   getTotalDuration(training: Training): string {

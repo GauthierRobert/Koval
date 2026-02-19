@@ -1,6 +1,6 @@
 import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Training, WorkoutBlock, TrainingService } from '../../services/training.service';
+import { Training, WorkoutBlock, TrainingService, hasDurationEstimate } from '../../services/training.service';
 import { WorkoutExecutionService } from '../../services/workout-execution.service';
 import { ExportService } from '../../services/export.service';
 import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.component';
@@ -189,6 +189,10 @@ export class WorkoutVisualizationComponent {
   getEstimatedBlockDuration(block: WorkoutBlock): number {
     if (!this.training) return 0;
     return this.durationService.estimateDuration(block, this.training, this.currentZoneSystem);
+  }
+
+  isDurationEstimated(): boolean {
+    return this.training ? hasDurationEstimate(this.training) : false;
   }
 
   getTotalDuration(): string {

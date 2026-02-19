@@ -29,7 +29,7 @@
                 [style.color]="getTypeColor(t.trainingType)"
                 [style.border-color]="getTypeColor(t.trainingType) + '40'">{{ getTypeLabel(t.trainingType) }}</span>
             </div>
-            <span class="item-meta">{{ getDuration(t) }} &bull; {{ (t.blocks || []).length }} blocks</span>
+            <span class="item-meta"><span [style.font-style]="isDurationEstimated(t) ? 'italic' : ''">{{ getDuration(t) }}</span> &bull; {{ (t.blocks || []).length }} blocks</span>
           </div>
         </div>
       </div>
@@ -41,10 +41,31 @@
 
   <h3 class="section-title">Your Workouts</h3>
 
+  <!-- Tag filter: My Workouts + one pill per tag -->
   <div class="type-filters">
-    <span class="type-pill" [class.active]="(activeTypeFilter$ | async) === null" (click)="clearTypeFilter()">All</span>
-    <span *ngFor="let type of trainingTypes" class="type-pill" [class.active]="(activeTypeFilter$ | async) === type"
-      [style.--pill-color]="getTypeColor(type)" (click)="setTypeFilter(type)">{{ getTypeLabel(type) }}</span>
+    <span class="type-pill"
+      [class.active]="(activeTagFilter$ | async) === '__mine__'"
+      (click)="setTagFilter('__mine__')">My Workouts</span>
+    <ng-container *ngIf="availableTags$ | async as tags">
+      <span *ngFor="let tag of tags" class="type-pill"
+        [class.active]="(activeTagFilter$ | async) === tag"
+        (click)="setTagFilter(tag)">{{ tag }}</span>
+    </ng-container>
+  </div>
+
+  <!-- Sport filter -->
+  <div class="type-filters">
+    <span *ngFor="let s of sportOptions" class="type-pill"
+      [class.active]="(activeSportFilter$ | async) === s.value"
+      (click)="setSportFilter(s.value)">{{ s.label }}</span>
+  </div>
+
+  <!-- Training type filter -->
+  <div class="type-filters">
+    <span *ngFor="let type of trainingTypes" class="type-pill"
+      [class.active]="(activeTypeFilter$ | async) === type"
+      [style.--pill-color]="getTypeColor(type)"
+      (click)="setTypeFilter(type)">{{ getTypeLabel(type) }}</span>
   </div>
 
   <div class="history-list">
@@ -59,10 +80,9 @@
           <span *ngIf="training.trainingType" class="type-badge"
             [style.background]="getTypeColor(training.trainingType) + '20'"
             [style.color]="getTypeColor(training.trainingType)"
-            [style.border-color]="getTypeColor(training.trainingType) + '40'">{{ getTypeLabel(training.trainingType)
-            }}</span>
+            [style.border-color]="getTypeColor(training.trainingType) + '40'">{{ getTypeLabel(training.trainingType) }}</span>
         </div>
-        <span class="item-meta">{{ getDuration(training) }} &bull; {{ (training.blocks || []).length }} blocks</span>
+        <span class="item-meta"><span [style.font-style]="isDurationEstimated(training) ? 'italic' : ''">{{ getDuration(training) }}</span> &bull; {{ (training.blocks || []).length }} blocks</span>
         <div class="item-tags" *ngIf="training.tags?.length">
           <span *ngFor="let tag of training.tags" class="tag-chip">{{ tag }}</span>
         </div>

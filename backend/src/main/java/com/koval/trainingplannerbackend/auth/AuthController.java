@@ -81,16 +81,19 @@ public class AuthController {
     // --- Google OAuth ---
 
     @GetMapping("/google")
-    public ResponseEntity<Map<String, String>> getGoogleAuthUrl() {
+    public ResponseEntity<Map<String, String>> getGoogleAuthUrl(
+            @RequestParam(required = false) String redirectUri) {
         Map<String, String> response = new HashMap<>();
-        response.put("authUrl", googleOAuthService.getAuthorizationUrl());
+        response.put("authUrl", googleOAuthService.getAuthorizationUrl(redirectUri));
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/google/callback")
-    public ResponseEntity<Map<String, Object>> handleGoogleCallback(@RequestParam String code) {
+    public ResponseEntity<Map<String, Object>> handleGoogleCallback(
+            @RequestParam String code,
+            @RequestParam(required = false) String redirectUri) {
         try {
-            GoogleOAuthService.GoogleUserInfo googleUser = googleOAuthService.exchangeCodeAndGetUserInfo(code);
+            GoogleOAuthService.GoogleUserInfo googleUser = googleOAuthService.exchangeCodeAndGetUserInfo(code, redirectUri);
 
             User user = userService.findOrCreateFromGoogle(
                     googleUser.getGoogleId(),

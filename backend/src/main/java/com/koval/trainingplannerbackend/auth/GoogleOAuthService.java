@@ -27,17 +27,19 @@ public class GoogleOAuthService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public String getAuthorizationUrl() {
+    public String getAuthorizationUrl(String overrideRedirectUri) {
+        String uri = (overrideRedirectUri != null && !overrideRedirectUri.isEmpty()) ? overrideRedirectUri : redirectUri;
         return GOOGLE_AUTH_URL +
                 "?client_id=" + clientId +
-                "&redirect_uri=" + redirectUri +
+                "&redirect_uri=" + uri +
                 "&response_type=code" +
                 "&scope=openid%20email%20profile" +
                 "&access_type=offline" +
                 "&prompt=consent";
     }
 
-    public GoogleUserInfo exchangeCodeAndGetUserInfo(String code) {
+    public GoogleUserInfo exchangeCodeAndGetUserInfo(String code, String overrideRedirectUri) {
+        String uri = (overrideRedirectUri != null && !overrideRedirectUri.isEmpty()) ? overrideRedirectUri : redirectUri;
         // Exchange code for tokens
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -47,7 +49,7 @@ public class GoogleOAuthService {
         body.add("client_secret", clientSecret);
         body.add("code", code);
         body.add("grant_type", "authorization_code");
-        body.add("redirect_uri", redirectUri);
+        body.add("redirect_uri", uri);
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
         ResponseEntity<Map> tokenResponse = restTemplate.postForEntity(GOOGLE_TOKEN_URL, request, Map.class);

@@ -71,7 +71,7 @@
   <div class="stats glass">
     <div class="stat">
       <span class="label">Duration</span>
-      <span class="value">{{ getTotalDuration() }}</span>
+      <span class="value" [style.font-style]="isDurationEstimated() ? 'italic' : ''">{{ getTotalDuration() }}</span>
     </div>
     <div class="stat">
       <span class="label">Blocks</span>

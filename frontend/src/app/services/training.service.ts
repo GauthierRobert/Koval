@@ -74,8 +74,16 @@ export interface Training {
     estimatedTss?: number;
     estimatedIf?: number;
     estimatedDurationSeconds?: number;
+    estimatedDistance?: number;
     zoneSystemId?: string;
     createdAt?: string;
+}
+
+/** Returns true when at least one block is distance-based (no explicit durationSeconds). */
+export function hasDurationEstimate(training: Training): boolean {
+    return (training.blocks ?? []).some(
+        (b) => (b.distanceMeters ?? 0) > 0 && !((b.durationSeconds ?? 0) > 0)
+    );
 }
 
 @Injectable({

@@ -9,7 +9,7 @@ Training Planner AI is a full-stack application for creating and executing cycli
 **Architecture**: Monorepo with separate frontend and backend directories.
 
 - **Frontend**: Angular 21 (standalone components), TypeScript, RxJS
-- **Backend**: Spring Boot 3.3.4, Java 21, MongoDB, Spring AI with Anthropic
+- **Backend**: Spring Boot 4.0.2, Java 25, MongoDB, Spring AI (2.0.0) with Anthropic
 
 ## Development Commands
 

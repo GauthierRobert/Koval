@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { ChatService } from '../../services/chat.service';
+import { Training } from '../../services/training.service';
+import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.component';
 
 @Component({
   selector: 'app-ai-chat-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ScheduleModalComponent],
   templateUrl: './ai-chat-page.component.html',
   styleUrl: './ai-chat-page.component.css',
 })
@@ -16,6 +18,8 @@ export class AIChatPageComponent implements OnInit, OnDestroy {
 
   chatService = inject(ChatService);
   userInput = '';
+  selectedTrainingForSchedule: Training | null = null;
+  showScheduleModal = false;
   private nearBottom = true;
   private subscription!: Subscription;
 
@@ -75,4 +79,13 @@ export class AIChatPageComponent implements OnInit, OnDestroy {
     this.chatService.sendMessage(text);
   }
 
+  openScheduleModal(training: { id: string; title: string; sportType: string; estimatedDurationSeconds?: number }): void {
+    this.selectedTrainingForSchedule = training as Training;
+    this.showScheduleModal = true;
+  }
+
+  onScheduleModalClose(): void {
+    this.showScheduleModal = false;
+    this.selectedTrainingForSchedule = null;
+  }
 }
