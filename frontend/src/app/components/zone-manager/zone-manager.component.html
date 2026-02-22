@@ -1,6 +1,6 @@
 <div class="zone-container" [class.embedded]="embedded">
   <!-- Header -->
-  <div class="zone-header glass">
+  <div class="zone-header">
     <div class="header-left">
       <span class="highlight">ZONE</span> <span class="dim">SYSTEMS</span>
       <span class="zone-count">{{ zoneSystems.length }}</span>
@@ -22,13 +22,14 @@
           </button>
         </div>
       </div>
-      <button *ngIf="embedded" class="close-btn" (click)="closed.emit()">&times;</button>
+      <button class="nav-athletes-btn" (click)="closed.emit()">ATHLETES</button>
+
     </div>
   </div>
 
   <div class="zone-content">
     <!-- Systems list (left) -->
-    <div class="systems-list glass">
+    <div class="systems-list">
       <div *ngFor="let system of filteredSystems" class="system-card"
         [class.selected]="selectedSystem?.id === system.id" (click)="selectSystem(system)">
         <div class="system-card-top">
@@ -53,7 +54,7 @@
     </div>
 
     <!-- Editor (right) -->
-    <div class="editor glass" *ngIf="editingSystem; else noSelection">
+    <div class="editor" *ngIf="editingSystem; else noSelection">
       <!-- Editor header -->
       <div class="editor-header">
         <div class="editor-title">
@@ -128,7 +129,7 @@
     </div>
 
     <ng-template #noSelection>
-      <div class="empty-editor glass">
+      <div class="empty-editor">
         <div class="empty-content">
           <div class="empty-icon">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"

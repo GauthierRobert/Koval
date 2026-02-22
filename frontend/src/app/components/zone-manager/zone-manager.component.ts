@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ZoneService } from '../../services/zone.service';
 import { AuthService } from '../../services/auth.service';
 import { SportType, ZoneReferenceType, ZoneSystem, Zone } from '../../services/zone';
@@ -19,6 +20,7 @@ export class ZoneManagerComponent implements OnInit {
 
   private zoneService = inject(ZoneService);
   private authService = inject(AuthService);
+  private router = inject(Router);
 
   zoneSystems: ZoneSystem[] = [];
   selectedSystem: ZoneSystem | null = null;
@@ -215,6 +217,10 @@ export class ZoneManagerComponent implements OnInit {
 
   getSportLabel(sport: SportType): string {
     return sport.charAt(0) + sport.slice(1).toLowerCase();
+  }
+
+  goToAthletes() {
+    this.router.navigate(['/coach']);
   }
 
   trackByIndex(index: number): number {
