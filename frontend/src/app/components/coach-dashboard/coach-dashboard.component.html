@@ -159,6 +159,36 @@
           </ng-container>
         </div>
       </div>
+
+      <!-- Recent sessions -->
+      <ng-container *ngIf="athleteSessions$ | async as sessions">
+        <div class="coach-sessions-panel" *ngIf="sessions.length > 0">
+          <div class="section-title">RECENT SESSIONS</div>
+          <div class="sessions-mini-table">
+            <div class="sm-header">
+              <span>Sport</span>
+              <span>Session</span>
+              <span>TSS</span>
+              <span>IF</span>
+            </div>
+            <div *ngFor="let s of sessions.slice(0, 5)" class="sm-row">
+              <span class="sm-sport"><app-sport-icon [sport]="s.sportType" [size]="12"></app-sport-icon></span>
+              <span class="sm-title">{{ s.title }}</span>
+              <span class="sm-badge tss">{{ s.tss | number:'1.0-0' }}</span>
+              <span class="sm-badge if">{{ s.intensityFactor | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Athlete PMC chart -->
+      <ng-container *ngIf="athletePmc$ | async as pmcData">
+        <div class="coach-pmc-panel" *ngIf="pmcData.length > 0">
+          <div class="section-title">PMC — LAST 3 MONTHS</div>
+          <app-pmc-chart [data]="pmcData"></app-pmc-chart>
+        </div>
+      </ng-container>
+
     </div>
     <div class="placeholder-detail" *ngIf="!selectedAthlete">
       <div class="empty-detail">

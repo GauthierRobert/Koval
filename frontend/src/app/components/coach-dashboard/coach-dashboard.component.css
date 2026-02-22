@@ -749,3 +749,73 @@
   color: var(--text-dim);
 }
 
+/* ── Recent Sessions Mini Table ── */
+
+.coach-sessions-panel,
+.coach-pmc-panel {
+  margin-top: 20px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+}
+
+.sessions-mini-table {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 10px;
+}
+
+.sm-header {
+  display: grid;
+  grid-template-columns: 24px 1fr 60px 60px;
+  gap: 8px;
+  padding: 4px 6px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.sm-row {
+  display: grid;
+  grid-template-columns: 24px 1fr 60px 60px;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  font-size: 11px;
+  transition: background 0.15s;
+}
+
+.sm-row:hover { background: rgba(255, 255, 255, 0.04); }
+
+.sm-sport { display: flex; align-items: center; color: #2ecc71; }
+
+.sm-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sm-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.sm-badge.tss {
+  background: rgba(255, 157, 0, 0.12);
+  border: 1px solid rgba(255, 157, 0, 0.25);
+  color: var(--accent-color);
+}
+
+.sm-badge.if {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+}
+

@@ -1,0 +1,113 @@
+<div class="analysis-page">
+  <ng-container *ngIf="session$ | async as session; else notFound">
+    <ng-container *ngIf="ftp$ | async as ftp">
+
+      <!-- Header -->
+      <div class="page-header glass">
+        <button class="back-btn" (click)="goBack()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          Back
+        </button>
+        <div class="header-info">
+          <div class="header-sport">
+            <app-sport-icon [sport]="session.sportType" [size]="22"></app-sport-icon>
+          </div>
+          <div>
+            <h1 class="session-title">{{ session.title }}</h1>
+            <span class="session-date">{{ formatDate(session.date) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="stats-grid">
+        <div class="stat-card accent">
+          <span class="stat-label">TSS</span>
+          <span class="stat-value">{{ getTss(session, ftp) }}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">IF</span>
+          <span class="stat-value">{{ getIF(session, ftp) | number:'1.2-2' }}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Duration</span>
+          <span class="stat-value">{{ formatTime(session.totalDuration) }}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Avg Power</span>
+          <span class="stat-value">{{ session.avgPower }}<span class="stat-unit">W</span></span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Avg HR</span>
+          <span class="stat-value">{{ session.avgHR }}<span class="stat-unit">bpm</span></span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Avg Cadence</span>
+          <span class="stat-value">{{ session.avgCadence }}<span class="stat-unit">rpm</span></span>
+        </div>
+      </div>
+
+      <!-- FIT timeseries chart -->
+      <div class="chart-section glass">
+        <div class="section-label">FIT TIME-SERIES</div>
+        <ng-container *ngIf="!fitLoading && !fitError && fitRecords.length > 0">
+          <app-fit-timeseries-chart [records]="fitRecords" [ftp]="ftp"></app-fit-timeseries-chart>
+        </ng-container>
+        <div class="no-fit-msg" *ngIf="!fitLoading && !fitError && fitRecords.length === 0">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
+            <path d="M3 3l18 18M10.5 10.677A2 2 0 0 0 10 12a2 2 0 0 0 4 0 2 2 0 0 0-.5-1.323"/>
+            <path d="M3 10l3 2 2-4 2 7 2-5 2 2h5"/>
+          </svg>
+          <p>No FIT data stored for this session</p>
+          <p class="hint">Start a live session to auto-record time-series data, or import a .FIT file</p>
+        </div>
+        <div class="no-fit-msg" *ngIf="fitLoading">
+          <div class="loading-dots"><span></span><span></span><span></span></div>
+          <p>Loading FIT data...</p>
+        </div>
+        <div class="no-fit-msg error" *ngIf="fitError">
+          Could not load or parse the FIT file.
+        </div>
+      </div>
+
+      <!-- Block breakdown -->
+      <div class="blocks-section glass" *ngIf="session.blockSummaries.length">
+        <div class="section-label">BLOCK BREAKDOWN</div>
+        <div class="blocks-table">
+          <div class="blocks-header">
+            <span>Block</span>
+            <span>Type</span>
+            <span>Duration</span>
+            <span>Target</span>
+            <span>Actual Pwr</span>
+            <span>HR</span>
+            <span>Cad</span>
+          </div>
+          <div *ngFor="let block of session.blockSummaries" class="blocks-row">
+            <span class="b-label">{{ block.label }}</span>
+            <span class="b-type">{{ block.type }}</span>
+            <span class="b-dur">{{ formatTime(block.durationSeconds) }}</span>
+            <span class="b-target">{{ block.targetPower ? (block.targetPower + 'W') : '—' }}</span>
+            <span class="b-actual" [class.above]="block.actualPower > block.targetPower * 1.05"
+              [class.below]="block.targetPower > 0 && block.actualPower < block.targetPower * 0.95">
+              {{ block.actualPower | number:'1.0-0' }}W
+            </span>
+            <span class="b-hr">{{ block.actualHR | number:'1.0-0' }}</span>
+            <span class="b-cad">{{ block.actualCadence | number:'1.0-0' }}</span>
+          </div>
+        </div>
+      </div>
+
+    </ng-container>
+  </ng-container>
+
+  <ng-template #notFound>
+    <div class="not-found glass">
+      <h2>Session not found</h2>
+      <p>The requested session could not be located.</p>
+      <button class="back-btn" (click)="goBack()">← Back to History</button>
+    </div>
+  </ng-template>
+</div>

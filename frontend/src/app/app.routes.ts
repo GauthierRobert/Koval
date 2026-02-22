@@ -55,6 +55,20 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'analysis/:id',
+    loadComponent: () =>
+      import('./components/session-analysis/session-analysis.component').then(
+        (m) => m.SessionAnalysisComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'pmc',
+    loadComponent: () =>
+      import('./components/pmc-page/pmc-page.component').then((m) => m.PmcPageComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'login',
     loadComponent: () =>
       import('./components/auth/login.component').then((m) => m.LoginComponent),

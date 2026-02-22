@@ -20,6 +20,9 @@ export interface User {
     vo2maxPower?: number;
     vo2maxPace?: number;
     tags?: string[];
+    ctl?: number;
+    atl?: number;
+    tsb?: number;
 }
 
 @Injectable({

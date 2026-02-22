@@ -1,14 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { BehaviorSubject, combineLatest, Observable, of, switchMap, map } from 'rxjs';
+import { BehaviorSubject, combineLatest, Observable, of, map } from 'rxjs';
 import { CoachService, ScheduledWorkout } from '../../services/coach.service';
 import { AuthService, User } from '../../services/auth.service';
 import { Tag } from '../../services/tag.service';
+import { PmcDataPoint } from '../../services/metrics.service';
 import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.component';
 import { InviteCodeModalComponent } from '../invite-code-modal/invite-code-modal.component';
 import { ShareTrainingModalComponent } from '../share-training-modal/share-training-modal.component';
 import { Training, TrainingService, TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../services/training.service';
+import { SportIconComponent } from '../sport-icon/sport-icon.component';
+import { PmcChartComponent } from '../pmc-chart/pmc-chart.component';
 
 import { RouterModule } from '@angular/router';
 import { ZoneManagerComponent } from '../zone-manager/zone-manager.component';
@@ -16,7 +19,7 @@ import { ZoneManagerComponent } from '../zone-manager/zone-manager.component';
 @Component({
   selector: 'app-coach-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ScheduleModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, ZoneManagerComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ScheduleModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, ZoneManagerComponent, SportIconComponent, PmcChartComponent],
   templateUrl: './coach-dashboard.component.html',
   styleUrl: './coach-dashboard.component.css',
 })
@@ -50,6 +53,12 @@ export class CoachDashboardComponent implements OnInit {
 
   private scheduleSubject = new BehaviorSubject<ScheduledWorkout[]>([]);
   athleteSchedule$ = this.scheduleSubject.asObservable();
+
+  private athleteSessionsSubject = new BehaviorSubject<any[]>([]);
+  athleteSessions$ = this.athleteSessionsSubject.asObservable();
+
+  private athletePmcSubject = new BehaviorSubject<PmcDataPoint[]>([]);
+  athletePmc$ = this.athletePmcSubject.asObservable();
 
   coachTrainings$: Observable<Training[]> = of([]);
 
@@ -100,6 +109,24 @@ export class CoachDashboardComponent implements OnInit {
   selectAthlete(athlete: User) {
     this.selectedAthlete = athlete;
     this.loadAthleteSchedule(athlete.id);
+    this.loadAthleteSessions(athlete.id);
+    this.loadAthletePmc(athlete.id);
+  }
+
+  loadAthleteSessions(athleteId: string): void {
+    this.coachService.getAthleteSessions(athleteId).subscribe({
+      next: (sessions: any[]) => this.athleteSessionsSubject.next(sessions),
+      error: () => this.athleteSessionsSubject.next([]),
+    });
+  }
+
+  loadAthletePmc(athleteId: string): void {
+    const to = new Date().toISOString().split('T')[0];
+    const from = (() => { const d = new Date(); d.setMonth(d.getMonth() - 3); return d.toISOString().split('T')[0]; })();
+    this.coachService.getAthletePmc(athleteId, from, to).subscribe({
+      next: (data) => this.athletePmcSubject.next(data),
+      error: () => this.athletePmcSubject.next([]),
+    });
   }
 
   loadAthleteSchedule(athleteId: string) {

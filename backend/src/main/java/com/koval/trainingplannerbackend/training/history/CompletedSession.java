@@ -30,6 +30,10 @@ public class CompletedSession {
     private String sportType;
     private List<BlockSummary> blockSummaries;
 
+    private Double tss;
+    private Double intensityFactor;
+    private String fitFileId;   // GridFS ObjectId; null when no FIT stored
+
     public record BlockSummary(
             String label,
             String type,

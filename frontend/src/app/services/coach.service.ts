@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { User } from './auth.service';
 import { Tag } from './tag.service';
+import { PmcDataPoint } from './metrics.service';
 
 export interface InviteCode {
     id: string;
@@ -116,5 +117,21 @@ export class CoachService {
             `${this.apiUrl}/redeem-invite`,
             { code }
         );
+    }
+
+    getAthleteSessions(athleteId: string): Observable<any[]> {
+        return this.http
+            .get<any[]>(`${this.apiUrl}/athletes/${athleteId}/sessions`)
+            .pipe(
+                catchError(() => of([])),
+            );
+    }
+
+    getAthletePmc(athleteId: string, from: string, to: string): Observable<PmcDataPoint[]> {
+        return this.http
+            .get<PmcDataPoint[]>(`${this.apiUrl}/athletes/${athleteId}/pmc`, {
+                params: { from, to },
+            })
+            .pipe(catchError(() => of([])));
     }
 }

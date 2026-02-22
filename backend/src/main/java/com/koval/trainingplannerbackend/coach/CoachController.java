@@ -2,6 +2,9 @@ package com.koval.trainingplannerbackend.coach;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.User;
+import com.koval.trainingplannerbackend.training.history.AnalyticsService;
+import com.koval.trainingplannerbackend.training.history.CompletedSession;
+import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
 import com.koval.trainingplannerbackend.training.tag.Tag;
 import com.koval.trainingplannerbackend.training.tag.TagService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -22,11 +25,17 @@ public class CoachController {
     private final CoachService coachService;
     private final ScheduleController scheduleController;
     private final TagService tagService;
+    private final CompletedSessionRepository sessionRepository;
+    private final AnalyticsService analyticsService;
 
-    public CoachController(CoachService coachService, ScheduleController scheduleController, TagService tagService) {
+    public CoachController(CoachService coachService, ScheduleController scheduleController,
+                           TagService tagService, CompletedSessionRepository sessionRepository,
+                           AnalyticsService analyticsService) {
         this.coachService = coachService;
         this.scheduleController = scheduleController;
         this.tagService = tagService;
+        this.sessionRepository = sessionRepository;
+        this.analyticsService = analyticsService;
     }
 
     public record AssignmentRequest(
@@ -179,6 +188,30 @@ public class CoachController {
     public ResponseEntity<List<Tag>> getAllTags() {
         String coachId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(coachService.getAthleteTagsForCoach(coachId));
+    }
+
+    // --- Athlete analytics endpoints ---
+
+    @GetMapping("/athletes/{athleteId}/sessions")
+    public ResponseEntity<List<CompletedSession>> getAthleteSessions(@PathVariable String athleteId) {
+        String coachId = SecurityUtils.getCurrentUserId();
+        // Validate coach owns this athlete
+        List<User> athletes = coachService.getCoachAthletes(coachId);
+        boolean owns = athletes.stream().anyMatch(a -> a.getId().equals(athleteId));
+        if (!owns) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(sessionRepository.findByUserIdOrderByCompletedAtDesc(athleteId));
+    }
+
+    @GetMapping("/athletes/{athleteId}/pmc")
+    public ResponseEntity<List<AnalyticsService.PmcDataPoint>> getAthletePmc(
+            @PathVariable String athleteId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        String coachId = SecurityUtils.getCurrentUserId();
+        List<User> athletes = coachService.getCoachAthletes(coachId);
+        boolean owns = athletes.stream().anyMatch(a -> a.getId().equals(athleteId));
+        if (!owns) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(analyticsService.generatePmc(athleteId, from, to));
     }
 
     // --- Invite Code endpoints ---

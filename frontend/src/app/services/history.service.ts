@@ -4,12 +4,17 @@ import { filter } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { SessionSummary } from './workout-execution.service';
 import { AuthService } from './auth.service';
+import { FitExportService } from './fit-export.service';
+import { MetricsService } from './metrics.service';
 
 export interface SavedSession extends SessionSummary {
     id: string;
     date: Date;
     syncedToStrava: boolean;
     syncedToGarmin: boolean;
+    tss?: number;
+    intensityFactor?: number;
+    fitFileId?: string;
 }
 
 @Injectable({
@@ -19,6 +24,8 @@ export class HistoryService {
     private readonly apiUrl = 'http://localhost:8080/api/sessions';
     private http = inject(HttpClient);
     private authService = inject(AuthService);
+    private fitExport = inject(FitExportService);
+    private metricsService = inject(MetricsService);
 
     private sessionsSubject = new BehaviorSubject<SavedSession[]>([]);
     sessions$ = this.sessionsSubject.asObservable();
@@ -46,6 +53,9 @@ export class HistoryService {
                     date: new Date(s.completedAt),
                     syncedToStrava: false,
                     syncedToGarmin: false,
+                    tss: s.tss ?? undefined,
+                    intensityFactor: s.intensityFactor ?? undefined,
+                    fitFileId: s.fitFileId ?? undefined,
                 }));
                 this.sessionsSubject.next(parsed);
             },
@@ -77,8 +87,27 @@ export class HistoryService {
                     syncedToStrava: false,
                     syncedToGarmin: false,
                     history: [],
+                    tss: saved.tss ?? undefined,
+                    intensityFactor: saved.intensityFactor ?? undefined,
+                    fitFileId: saved.fitFileId ?? undefined,
                 };
                 this.sessionsSubject.next([session, ...this.sessionsSubject.value]);
+
+                // Auto-upload FIT if per-second history is available
+                if (summary.history && summary.history.length > 0) {
+                    try {
+                        const buffer = this.fitExport.buildFit(summary, new Date(saved.completedAt));
+                        this.metricsService.uploadFit(saved.id, buffer).subscribe({
+                            next: () => {
+                                // Update the session in list with fitFileId
+                                this.loadSessions();
+                            },
+                            error: () => {},
+                        });
+                    } catch (e) {
+                        // FIT generation failed — non-fatal
+                    }
+                }
             },
             error: () => {
                 const session: SavedSession = {

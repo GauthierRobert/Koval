@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SessionSummary, BlockSummary } from '../../services/workout-execution.service';
 import { AuthService } from '../../services/auth.service';
+import { FitExportService } from '../../services/fit-export.service';
 
 @Component({
     selector: 'app-session-summary',
@@ -14,6 +15,7 @@ export class SessionSummaryComponent {
     @Input() summary!: SessionSummary;
     @Output() close = new EventEmitter<void>();
     private authService = inject(AuthService);
+    private fitExport = inject(FitExportService);
 
     formatTime(seconds: number): string {
         const m = Math.floor(seconds / 60);
@@ -38,6 +40,10 @@ export class SessionSummaryComponent {
         if (this.summary.sportType === 'RUNNING') return '/km';
         if (this.summary.sportType === 'SWIMMING') return '/100m';
         return 'W';
+    }
+
+    downloadFit(): void {
+        this.fitExport.exportSession(this.summary);
     }
 
     formatIntensity(watts: number): string {

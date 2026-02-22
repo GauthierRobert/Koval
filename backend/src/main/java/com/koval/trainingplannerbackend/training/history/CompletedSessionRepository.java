@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface CompletedSessionRepository extends MongoRepository<CompletedSession, String> {
     List<CompletedSession> findByUserIdOrderByCompletedAtDesc(String userId);
+    List<CompletedSession> findByUserIdOrderByCompletedAtAsc(String userId);
 }

@@ -88,7 +88,32 @@
     .delta.positive { color: #2ecc71; }
     .delta.negative { color: #e74c3c; }
 
-    .summary-footer { text-align: center; }
+    .summary-footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    .fit-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.7);
+      padding: 15px 28px;
+      font-size: 13px;
+      font-weight: 800;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: 0.2s;
+      letter-spacing: 0.5px;
+    }
+    .fit-btn:hover {
+      background: rgba(255, 157, 0, 0.12);
+      border-color: rgba(255, 157, 0, 0.3);
+      color: var(--accent-color);
+    }
     .done-btn {
       background: var(--accent-color);
       color: white;

@@ -1,0 +1,98 @@
+<div class="pmc-page">
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">PERFORMANCE MANAGEMENT</h1>
+      <p class="page-sub">Track fitness, fatigue, and form over time</p>
+    </div>
+
+    <ng-container *ngIf="user$ | async as user">
+      <div class="load-badges">
+        <div class="load-badge ctl">
+          <span class="badge-label">CTL</span>
+          <span class="badge-value">{{ user.ctl | number:'1.1-1' }}</span>
+          <span class="badge-desc">Fitness</span>
+        </div>
+        <div class="load-badge atl">
+          <span class="badge-label">ATL</span>
+          <span class="badge-value">{{ user.atl | number:'1.1-1' }}</span>
+          <span class="badge-desc">Fatigue</span>
+        </div>
+        <div class="load-badge tsb" [class.positive]="(user.tsb ?? 0) >= 0" [class.negative]="(user.tsb ?? 0) < 0">
+          <span class="badge-label">TSB</span>
+          <span class="badge-value">{{ (user.tsb ?? 0) >= 0 ? '+' : '' }}{{ user.tsb | number:'1.1-1' }}</span>
+          <span class="badge-desc">{{ (user.tsb ?? 0) >= 0 ? 'Fresh' : 'Fatigued' }}</span>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Date range controls -->
+  <div class="controls-bar glass">
+    <div class="date-inputs">
+      <div class="input-group">
+        <label>From</label>
+        <input type="date" [(ngModel)]="fromDate" class="date-input" />
+      </div>
+      <div class="input-group">
+        <label>To</label>
+        <input type="date" [(ngModel)]="toDate" class="date-input" />
+      </div>
+    </div>
+    <button class="refresh-btn" (click)="loadPmc()" [disabled]="loading">
+      {{ loading ? 'Loading...' : 'Refresh' }}
+    </button>
+  </div>
+
+  <!-- PMC Chart -->
+  <div class="chart-section glass">
+    <div class="section-label">PERFORMANCE MANAGEMENT CHART</div>
+    <div class="chart-loading" *ngIf="loading">
+      <div class="loading-dots"><span></span><span></span><span></span></div>
+    </div>
+    <div class="chart-error" *ngIf="error && !loading">
+      Could not load PMC data. Make sure the backend is running.
+    </div>
+    <ng-container *ngIf="!loading">
+      <app-pmc-chart [data]="fullPmcData$ | async"></app-pmc-chart>
+    </ng-container>
+  </div>
+
+  <!-- Taper / projection panel -->
+  <div class="projection-section glass">
+    <div class="section-label">PEAK FORM PREDICTION</div>
+    <div class="projection-body">
+      <div class="sliders">
+        <div class="slider-row">
+          <label>Projected daily TSS</label>
+          <div class="slider-control">
+            <input type="range" min="0" max="200" [value]="taperTss"
+              (input)="taperTss = +$any($event.target).value; onTaperTssChange(taperTss)" />
+            <span class="slider-val">{{ taperTss }}</span>
+          </div>
+        </div>
+        <div class="slider-row">
+          <label>Projection window (days)</label>
+          <div class="slider-control">
+            <input type="range" min="7" max="120" [value]="taperDays"
+              (input)="taperDays = +$any($event.target).value; onTaperDaysChange(taperDays)" />
+            <span class="slider-val">{{ taperDays }}d</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="peak-result" *ngIf="peakForm$ | async as peak; else noPeak">
+        <div class="peak-icon">★</div>
+        <div class="peak-info">
+          <span class="peak-label">Peak form on</span>
+          <span class="peak-date">{{ formatPeakDate(peak.date) }}</span>
+          <span class="peak-tsb">TSB <strong>+{{ peak.tsb | number:'1.0-0' }}</strong></span>
+        </div>
+      </div>
+      <ng-template #noPeak>
+        <div class="no-peak">
+          Increase taper duration or reduce TSS to find a peak form window.
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>
