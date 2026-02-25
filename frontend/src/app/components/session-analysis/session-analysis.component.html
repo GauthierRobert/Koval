@@ -1,14 +1,14 @@
-<div class="analysis-page">
-  <ng-container *ngIf="session$ | async as session; else notFound">
-    <ng-container *ngIf="ftp$ | async as ftp">
+<ng-container *ngIf="session$ | async as session">
+  <ng-container *ngIf="ftp$ | async as ftp">
+    <div class="analysis-page">
 
       <!-- Header -->
       <div class="page-header glass">
-        <button class="back-btn" (click)="goBack()">
+        <button class="back-btn" (click)="closed.emit()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
-          Back
+          Close
         </button>
         <div class="header-info">
           <div class="header-sport">
@@ -52,24 +52,26 @@
       <!-- FIT timeseries chart -->
       <div class="chart-section glass">
         <div class="section-label">FIT TIME-SERIES</div>
-        <ng-container *ngIf="!fitLoading && !fitError && fitRecords.length > 0">
-          <app-fit-timeseries-chart [records]="fitRecords" [ftp]="ftp"></app-fit-timeseries-chart>
+        <ng-container *ngIf="fitState$ | async as fit">
+          <app-fit-timeseries-chart *ngIf="!fit.loading && !fit.error && fit.records.length > 0"
+            [records]="fit.records" [ftp]="ftp" [sportType]="session.sportType">
+          </app-fit-timeseries-chart>
+          <div class="no-fit-msg" *ngIf="!fit.loading && !fit.error && fit.records.length === 0">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
+              <path d="M3 3l18 18M10.5 10.677A2 2 0 0 0 10 12a2 2 0 0 0 4 0 2 2 0 0 0-.5-1.323"/>
+              <path d="M3 10l3 2 2-4 2 7 2-5 2 2h5"/>
+            </svg>
+            <p>No FIT data stored for this session</p>
+            <p class="hint">Start a live session to auto-record time-series data, or import a .FIT file</p>
+          </div>
+          <div class="no-fit-msg" *ngIf="fit.loading">
+            <div class="loading-dots"><span></span><span></span><span></span></div>
+            <p>Loading FIT data...</p>
+          </div>
+          <div class="no-fit-msg error" *ngIf="fit.error">
+            Could not load or parse the FIT file.
+          </div>
         </ng-container>
-        <div class="no-fit-msg" *ngIf="!fitLoading && !fitError && fitRecords.length === 0">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
-            <path d="M3 3l18 18M10.5 10.677A2 2 0 0 0 10 12a2 2 0 0 0 4 0 2 2 0 0 0-.5-1.323"/>
-            <path d="M3 10l3 2 2-4 2 7 2-5 2 2h5"/>
-          </svg>
-          <p>No FIT data stored for this session</p>
-          <p class="hint">Start a live session to auto-record time-series data, or import a .FIT file</p>
-        </div>
-        <div class="no-fit-msg" *ngIf="fitLoading">
-          <div class="loading-dots"><span></span><span></span><span></span></div>
-          <p>Loading FIT data...</p>
-        </div>
-        <div class="no-fit-msg error" *ngIf="fitError">
-          Could not load or parse the FIT file.
-        </div>
       </div>
 
       <!-- Block breakdown -->
@@ -100,14 +102,6 @@
         </div>
       </div>
 
-    </ng-container>
-  </ng-container>
-
-  <ng-template #notFound>
-    <div class="not-found glass">
-      <h2>Session not found</h2>
-      <p>The requested session could not be located.</p>
-      <button class="back-btn" (click)="goBack()">← Back to History</button>
     </div>
-  </ng-template>
-</div>
+  </ng-container>
+</ng-container>

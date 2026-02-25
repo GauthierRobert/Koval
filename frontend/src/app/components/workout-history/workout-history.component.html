@@ -27,8 +27,7 @@
         <p class="empty-hint">Upload a .FIT file from your device to get started</p>
       </div>
 
-      <div *ngFor="let session of sessions" class="history-item"
-        [class.active]="(selectedSession$ | async)?.id === session.id" (click)="onSelect(session)">
+      <div *ngFor="let session of sessions" class="history-item" (click)="onSelect(session)">
         <div class="item-icon">
           <app-sport-icon [sport]="session.sportType" [size]="20"></app-sport-icon>
         </div>
@@ -47,7 +46,6 @@
           </div>
         </div>
         <div class="item-actions">
-          <button class="analysis-btn" (click)="navigateToAnalysis($event, session)" title="View analysis">→</button>
           <button class="dl-fit-btn" (click)="downloadFit($event, session)" title="Download FIT file">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>

@@ -124,78 +124,144 @@ export class FitExportService {
         ]);
         w.writeMsg(0, [endTs, 255, 0, 0, 4]);
 
+        const isCycling = summary.sportType === 'CYCLING';
+        const isSwimming = summary.sportType === 'SWIMMING';
+        const subSport = isSwimming ? 4 : 0; // 4 = lap_swimming, 0 = generic
+
         // ── laps (global msg 19) ───────────────────────────────────────────────
         if (summary.blockSummaries?.length) {
-            w.defineMsg(1, 19, [
-                [253, 4, UINT32], // timestamp       (lap end)
-                [2,   4, UINT32], // start_time
-                [7,   4, UINT32], // total_elapsed_time (ms)
-                [8,   4, UINT32], // total_timer_time   (ms)
-                [0,   1, ENUM  ], // event          (9 = lap)
-                [1,   1, ENUM  ], // event_type     (1 = stop)
-                [5,   1, ENUM  ], // sport
-                [19,  2, UINT16], // avg_power (W)
-                [16,  1, UINT8 ], // avg_heart_rate (bpm)
-                [18,  1, UINT8 ], // avg_cadence (rpm)
-            ]);
+            if (isCycling) {
+                w.defineMsg(1, 19, [
+                    [253, 4, UINT32], // timestamp       (lap end)
+                    [2,   4, UINT32], // start_time
+                    [7,   4, UINT32], // total_elapsed_time (ms)
+                    [8,   4, UINT32], // total_timer_time   (ms)
+                    [0,   1, ENUM  ], // event          (9 = lap)
+                    [1,   1, ENUM  ], // event_type     (1 = stop)
+                    [5,   1, ENUM  ], // sport
+                    [6,   1, ENUM  ], // sub_sport
+                    [19,  2, UINT16], // avg_power (W)
+                    [16,  1, UINT8 ], // avg_heart_rate (bpm)
+                    [18,  1, UINT8 ], // avg_cadence (rpm)
+                ]);
+            } else {
+                w.defineMsg(1, 19, [
+                    [253, 4, UINT32], // timestamp
+                    [2,   4, UINT32], // start_time
+                    [7,   4, UINT32], // total_elapsed_time (ms)
+                    [8,   4, UINT32], // total_timer_time   (ms)
+                    [0,   1, ENUM  ], // event
+                    [1,   1, ENUM  ], // event_type
+                    [5,   1, ENUM  ], // sport
+                    [6,   1, ENUM  ], // sub_sport
+                    [9,   4, UINT32], // total_distance (cm)
+                    [16,  1, UINT8 ], // avg_heart_rate (bpm)
+                    [18,  1, UINT8 ], // avg_cadence (rpm/spm)
+                ]);
+            }
 
             let lapStartTs = startTs;
+            let cumulativeDistanceCm = 0;
             for (const lap of summary.blockSummaries) {
                 const lapEndTs = lapStartTs + lap.durationSeconds;
                 const lapMs    = lap.durationSeconds * 1000;
-                w.writeMsg(1, [lapEndTs, lapStartTs, lapMs, lapMs, 9, 1, sport,
-                               lap.actualPower, lap.actualHR, lap.actualCadence]);
+                if (isCycling) {
+                    w.writeMsg(1, [lapEndTs, lapStartTs, lapMs, lapMs, 9, 1, sport, subSport,
+                                   lap.actualPower, lap.actualHR, lap.actualCadence]);
+                } else {
+                    // Estimate lap distance from average speed (stored in actualPower slot for non-cycling)
+                    const lapDistanceCm = Math.round(lap.durationSeconds * (summary.avgSpeed || 0) * 100);
+                    cumulativeDistanceCm += lapDistanceCm;
+                    w.writeMsg(1, [lapEndTs, lapStartTs, lapMs, lapMs, 9, 1, sport, subSport,
+                                   lapDistanceCm, lap.actualHR, lap.actualCadence]);
+                }
                 lapStartTs = lapEndTs;
             }
         }
 
         // ── per-second records (global msg 20) ────────────────────────────────
         if (summary.history?.length) {
-            w.defineMsg(2, 20, [
-                [253, 4, UINT32], // timestamp
-                [7,   2, UINT16], // power (W)
-                [3,   1, UINT8 ], // heart_rate (bpm)
-                [4,   1, UINT8 ], // cadence (rpm)
-                [6,   2, UINT16], // speed  (scale 1000 → m/s; raw = speed_kmh / 3.6 * 1000)
-            ]);
-
-            summary.history.forEach((m, i) => {
-                const speedRaw = Math.round((m.speed || 0) / 3.6 * 1000);
-                w.writeMsg(2, [
-                    startTs + i,
-                    m.power   || 0,
-                    m.heartRate || 0,
-                    m.cadence || 0,
-                    speedRaw,
+            if (isCycling) {
+                w.defineMsg(2, 20, [
+                    [253, 4, UINT32], // timestamp
+                    [7,   2, UINT16], // power (W)
+                    [3,   1, UINT8 ], // heart_rate (bpm)
+                    [4,   1, UINT8 ], // cadence (rpm)
+                    [6,   2, UINT16], // speed (m/s × 1000)
                 ]);
-            });
+                summary.history.forEach((m, i) => {
+                    const speedRaw = Math.round((m.speed || 0) * 1000);
+                    w.writeMsg(2, [startTs + i, m.power || 0, m.heartRate || 0, m.cadence || 0, speedRaw]);
+                });
+            } else {
+                // Running / Swimming: replace power with cumulative distance (cm)
+                w.defineMsg(2, 20, [
+                    [253, 4, UINT32], // timestamp
+                    [0,   4, UINT32], // distance (cm, accumulated)
+                    [3,   1, UINT8 ], // heart_rate (bpm)
+                    [4,   1, UINT8 ], // cadence (rpm/spm)
+                    [6,   2, UINT16], // speed (m/s × 1000)
+                ]);
+                let distCm = 0;
+                summary.history.forEach((m, i) => {
+                    distCm += Math.round((m.speed || 0) * 100); // 1 second × speed(m/s) × 100 = cm
+                    const speedRaw = Math.round((m.speed || 0) * 1000);
+                    w.writeMsg(2, [startTs + i, distCm, m.heartRate || 0, m.cadence || 0, speedRaw]);
+                });
+            }
         }
 
         // ── session (global msg 18) ────────────────────────────────────────────
-        w.defineMsg(3, 18, [
-            [253, 4, UINT32], // timestamp      (session end)
-            [2,   4, UINT32], // start_time
-            [7,   4, UINT32], // total_elapsed_time (ms)
-            [8,   4, UINT32], // total_timer_time   (ms)
-            [0,   1, ENUM  ], // event          (9 = session)
-            [1,   1, ENUM  ], // event_type     (1 = stop)
-            [5,   1, ENUM  ], // sport
-            [6,   1, ENUM  ], // sub_sport      (0 = generic)
-            [19,  2, UINT16], // avg_power (W)
-            [16,  1, UINT8 ], // avg_heart_rate (bpm)
-            [18,  1, UINT8 ], // avg_cadence (rpm)
-            [25,  2, UINT16], // first_lap_index
-            [26,  2, UINT16], // num_laps
-        ]);
-        w.writeMsg(3, [
-            endTs, startTs, elapsed, elapsed,
-            9, 1,                             // event=session, event_type=stop
-            sport, 0,                         // sport, sub_sport
-            summary.avgPower    || 0,
-            summary.avgHR       || 0,
-            summary.avgCadence  || 0,
-            0, numLaps,
-        ]);
+        if (isCycling) {
+            w.defineMsg(3, 18, [
+                [253, 4, UINT32], // timestamp      (session end)
+                [2,   4, UINT32], // start_time
+                [7,   4, UINT32], // total_elapsed_time (ms)
+                [8,   4, UINT32], // total_timer_time   (ms)
+                [0,   1, ENUM  ], // event          (9 = session)
+                [1,   1, ENUM  ], // event_type     (1 = stop)
+                [5,   1, ENUM  ], // sport
+                [6,   1, ENUM  ], // sub_sport
+                [19,  2, UINT16], // avg_power (W)
+                [16,  1, UINT8 ], // avg_heart_rate (bpm)
+                [18,  1, UINT8 ], // avg_cadence (rpm)
+                [25,  2, UINT16], // first_lap_index
+                [26,  2, UINT16], // num_laps
+            ]);
+            w.writeMsg(3, [
+                endTs, startTs, elapsed, elapsed,
+                9, 1, sport, subSport,
+                summary.avgPower   || 0,
+                summary.avgHR      || 0,
+                summary.avgCadence || 0,
+                0, numLaps,
+            ]);
+        } else {
+            const totalDistanceCm = Math.round(summary.totalDuration * (summary.avgSpeed || 0) * 100);
+            w.defineMsg(3, 18, [
+                [253, 4, UINT32], // timestamp
+                [2,   4, UINT32], // start_time
+                [7,   4, UINT32], // total_elapsed_time (ms)
+                [8,   4, UINT32], // total_timer_time   (ms)
+                [0,   1, ENUM  ], // event
+                [1,   1, ENUM  ], // event_type
+                [5,   1, ENUM  ], // sport
+                [6,   1, ENUM  ], // sub_sport
+                [9,   4, UINT32], // total_distance (cm)
+                [16,  1, UINT8 ], // avg_heart_rate (bpm)
+                [18,  1, UINT8 ], // avg_cadence (rpm/spm)
+                [25,  2, UINT16], // first_lap_index
+                [26,  2, UINT16], // num_laps
+            ]);
+            w.writeMsg(3, [
+                endTs, startTs, elapsed, elapsed,
+                9, 1, sport, subSport,
+                totalDistanceCm,
+                summary.avgHR      || 0,
+                summary.avgCadence || 0,
+                0, numLaps,
+            ]);
+        }
 
         // ── activity (global msg 34) ───────────────────────────────────────────
         w.defineMsg(4, 34, [

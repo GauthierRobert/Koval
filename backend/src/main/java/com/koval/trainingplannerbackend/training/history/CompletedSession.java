@@ -27,6 +27,7 @@ public class CompletedSession {
     private double avgPower;
     private double avgHR;
     private double avgCadence;
+    private double avgSpeed; // m/s
     private String sportType;
     private List<BlockSummary> blockSummaries;
 

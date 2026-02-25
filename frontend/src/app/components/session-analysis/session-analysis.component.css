@@ -1,11 +1,8 @@
 .analysis-page {
-  min-height: 100vh;
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  max-width: 1100px;
-  margin: 0 auto;
 }
 
 .glass {

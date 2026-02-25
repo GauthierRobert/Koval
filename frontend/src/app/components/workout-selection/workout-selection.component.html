@@ -2,9 +2,11 @@
   <app-sidebar></app-sidebar>
 
   <main class="selection-main">
-    <div class="schedule-sections">
+
+    <!-- Sticky top bar: scheduled workouts -->
+    <div class="schedule-bar">
       <!-- Overdue -->
-      <section class="schedule-section overdue-section" *ngIf="(overdueWorkouts$ | async)?.length">
+      <div class="schedule-section overdue-section" *ngIf="(overdueWorkouts$ | async)?.length">
         <h2 class="section-title overdue-title">Overdue</h2>
         <div class="workout-cards">
           <div
@@ -17,10 +19,10 @@
             <div class="card-duration">{{ formatScheduleDuration(w) }}</div>
           </div>
         </div>
-      </section>
+      </div>
 
       <!-- This Week -->
-      <section class="schedule-section">
+      <div class="schedule-section">
         <h2 class="section-title">This Week</h2>
         <div class="workout-cards" *ngIf="(upcomingWorkouts$ | async)?.length">
           <div
@@ -36,36 +38,41 @@
         <div class="empty-week" *ngIf="!(upcomingWorkouts$ | async)?.length">
           No training scheduled for this week
         </div>
-      </section>
-
-    </div>
-
-    <!-- Session detail (completed workout from history) -->
-    <app-session-detail
-      *ngIf="selectedSession$ | async as session"
-      [session]="session"
-    ></app-session-detail>
-
-    <!-- Workout visualization -->
-    <app-workout-visualization
-      *ngIf="(selectedTraining$ | async) && !(selectedSession$ | async)"
-      [training]="selectedTraining$ | async"
-    ></app-workout-visualization>
-
-    <!-- Hero fallback — only when nothing selected -->
-    <div
-      class="empty-state"
-      *ngIf="!(selectedTraining$ | async) && !(selectedSession$ | async)"
-    >
-      <div class="hero-content glass">
-        <h1>Hyper-Personalized AI Coaching</h1>
-        <p>
-          Select a workout from the history or start a new conversation with our Assistant to
-          generate a training plan tailored to your profile.
-        </p>
-        <button class="cta-btn" routerLink="/chat">Chat with Assistant</button>
       </div>
     </div>
+
+    <!-- Content area -->
+    <div class="content-area">
+
+      <!-- Session analysis (takes priority when a session is selected) -->
+      <app-session-analysis
+        *ngIf="selectedSession$ | async as session"
+        [session]="session"
+        (closed)="onSessionClosed()"
+      ></app-session-analysis>
+
+      <!-- Workout visualization -->
+      <app-workout-visualization
+        *ngIf="(selectedTraining$ | async) && !(selectedSession$ | async)"
+        [training]="selectedTraining$ | async"
+      ></app-workout-visualization>
+
+      <!-- Hero fallback — only when nothing selected -->
+      <div
+        class="empty-state"
+        *ngIf="!(selectedTraining$ | async) && !(selectedSession$ | async)"
+      >
+        <div class="hero-content glass">
+          <h1>Hyper-Personalized AI Coaching</h1>
+          <p>
+            Select a workout from the history or start a new conversation with our Assistant to
+            generate a training plan tailored to your profile.
+          </p>
+          <button class="cta-btn" routerLink="/chat">Chat with Assistant</button>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 

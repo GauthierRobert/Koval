@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.training.history;
 
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
+import com.koval.trainingplannerbackend.training.model.SportType;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -25,19 +26,63 @@ public class AnalyticsService {
     }
 
     /**
-     * Compute TSS and IF for a session given the user's FTP, and store on the session object in place.
+     * Compute TSS and IF for a session using sport-type-appropriate formulas:
+     * - CYCLING: power-based TSS using FTP
+     * - RUNNING: speed-based rTSS using functionalThresholdPace
+     * - SWIMMING: speed-based sTSS using criticalSwimSpeed
      */
-    public void computeAndAttachMetrics(CompletedSession session, int ftp) {
-        if (ftp <= 0) return;
-        double avgPower = session.getAvgPower();
-        if (avgPower <= 0) return;
-
-        double intensityFactor = avgPower / (double) ftp;
+    public void computeAndAttachMetrics(CompletedSession session, User user) {
+        if (user == null) return;
         double durationHours = session.getTotalDurationSeconds() / 3600.0;
-        double tss = durationHours * intensityFactor * intensityFactor * 100.0;
+        if (durationHours <= 0) return;
 
+        SportType sport = parseSportType(session.getSportType());
+        double intensityFactor = 0;
+
+        if (sport == SportType.CYCLING) {
+            int ftp = user.getFtp() != null ? user.getFtp() : 0;
+            if (ftp <= 0 || session.getAvgPower() <= 0) return;
+            intensityFactor = session.getAvgPower() / (double) ftp;
+
+        } else if (sport == SportType.RUNNING) {
+            int ftPaceSec = user.getFunctionalThresholdPace() != null ? user.getFunctionalThresholdPace() : 0;
+            if (ftPaceSec <= 0 || session.getAvgSpeed() <= 0) return;
+            // functionalThresholdPace is sec/km → threshold speed in m/s = 1000 / sec/km
+            double thresholdSpeed = 1000.0 / ftPaceSec;
+            intensityFactor = session.getAvgSpeed() / thresholdSpeed;
+
+        } else if (sport == SportType.SWIMMING) {
+            int cssSec = user.getCriticalSwimSpeed() != null ? user.getCriticalSwimSpeed() : 0;
+            if (cssSec <= 0 || session.getAvgSpeed() <= 0) return;
+            // criticalSwimSpeed is sec/100m → CSS in m/s = 100 / sec/100m
+            double cssSpeed = 100.0 / cssSec;
+            intensityFactor = session.getAvgSpeed() / cssSpeed;
+
+        } else {
+            // BRICK: prefer power if available, fall back to running pace
+            int ftp = user.getFtp() != null ? user.getFtp() : 0;
+            if (ftp > 0 && session.getAvgPower() > 0) {
+                intensityFactor = session.getAvgPower() / (double) ftp;
+            } else {
+                int ftPaceSec = user.getFunctionalThresholdPace() != null ? user.getFunctionalThresholdPace() : 0;
+                if (ftPaceSec <= 0 || session.getAvgSpeed() <= 0) return;
+                intensityFactor = session.getAvgSpeed() / (1000.0 / ftPaceSec);
+            }
+        }
+
+        if (intensityFactor <= 0) return;
+        double tss = durationHours * intensityFactor * intensityFactor * 100.0;
         session.setIntensityFactor(Math.round(intensityFactor * 1000.0) / 1000.0);
         session.setTss(Math.round(tss * 10.0) / 10.0);
+    }
+
+    private SportType parseSportType(String sportType) {
+        if (sportType == null) return SportType.CYCLING;
+        try {
+            return SportType.valueOf(sportType);
+        } catch (IllegalArgumentException e) {
+            return SportType.CYCLING;
+        }
     }
 
     /**

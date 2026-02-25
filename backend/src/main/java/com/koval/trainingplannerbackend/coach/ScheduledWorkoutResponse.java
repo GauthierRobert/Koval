@@ -27,7 +27,8 @@ public record ScheduledWorkoutResponse(
         Integer totalDurationSeconds,
         SportType sportType) {
 
-    public static ScheduledWorkoutResponse from(ScheduledWorkout sw, String trainingTitle, TrainingType trainingType, Integer totalDurationSeconds, SportType sportType) {
+    public static ScheduledWorkoutResponse from(ScheduledWorkout sw, String trainingTitle, TrainingType trainingType,
+            Integer totalDurationSeconds, SportType sportType, Integer estimatedTss, Double estimatedIf) {
         return new ScheduledWorkoutResponse(
                 sw.getId(),
                 sw.getTrainingId(),
@@ -36,8 +37,8 @@ public record ScheduledWorkoutResponse(
                 sw.getScheduledDate(),
                 sw.getStatus(),
                 sw.getNotes(),
-                sw.getTss(),
-                sw.getIntensityFactor(),
+                sw.getTss() != null ? sw.getTss() : estimatedTss,
+                sw.getIntensityFactor() != null ? sw.getIntensityFactor() : estimatedIf,
                 sw.getCompletedAt(),
                 sw.getCreatedAt(),
                 trainingTitle,

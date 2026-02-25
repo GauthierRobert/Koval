@@ -46,6 +46,7 @@ export class HistoryService {
                     avgPower: s.avgPower,
                     avgHR: s.avgHR,
                     avgCadence: s.avgCadence,
+                    avgSpeed: s.avgSpeed || 0,
                     blockSummaries: s.blockSummaries || [],
                     history: [],
                     sportType: s.sportType,
@@ -67,13 +68,14 @@ export class HistoryService {
         this.selectedSessionSubject.next(session);
     }
 
-    saveSession(summary: SessionSummary): void {
+    saveSession(summary: SessionSummary, fitBuffer?: ArrayBuffer): void {
         const payload = {
             title: summary.title,
             totalDurationSeconds: summary.totalDuration,
             avgPower: summary.avgPower,
             avgHR: summary.avgHR,
             avgCadence: summary.avgCadence,
+            avgSpeed: summary.avgSpeed,
             sportType: summary.sportType,
             blockSummaries: summary.blockSummaries,
         };
@@ -93,20 +95,20 @@ export class HistoryService {
                 };
                 this.sessionsSubject.next([session, ...this.sessionsSubject.value]);
 
-                // Auto-upload FIT if per-second history is available
-                if (summary.history && summary.history.length > 0) {
+                // Use provided fitBuffer (manual import), otherwise generate from per-second history
+                let bufferToUpload: ArrayBuffer | null = fitBuffer ?? null;
+                if (!bufferToUpload && summary.history && summary.history.length > 0) {
                     try {
-                        const buffer = this.fitExport.buildFit(summary, new Date(saved.completedAt));
-                        this.metricsService.uploadFit(saved.id, buffer).subscribe({
-                            next: () => {
-                                // Update the session in list with fitFileId
-                                this.loadSessions();
-                            },
-                            error: () => {},
-                        });
+                        bufferToUpload = this.fitExport.buildFit(summary, new Date(saved.completedAt));
                     } catch (e) {
                         // FIT generation failed — non-fatal
                     }
+                }
+                if (bufferToUpload) {
+                    this.metricsService.uploadFit(saved.id, bufferToUpload).subscribe({
+                        next: () => this.loadSessions(),
+                        error: () => {},
+                    });
                 }
             },
             error: () => {

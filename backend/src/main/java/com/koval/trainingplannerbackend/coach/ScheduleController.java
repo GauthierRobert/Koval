@@ -144,14 +144,17 @@ public class ScheduleController {
                     var type = t != null ? t.getTrainingType() : null;
                     Integer duration = t != null ? t.getEstimatedDurationSeconds() : null;
                     var sport = t != null ? t.getSportType() : null;
-                    return ScheduledWorkoutResponse.from(sw, title, type, duration, sport);
+                    Integer estimatedTss = t != null ? t.getEstimatedTss() : null;
+                    Double estimatedIf = t != null ? t.getEstimatedIf() : null;
+                    return ScheduledWorkoutResponse.from(sw, title, type, duration, sport, estimatedTss, estimatedIf);
                 })
                 .toList();
     }
 
     private ScheduledWorkoutResponse enrichSingle(ScheduledWorkout sw) {
         return trainingRepository.findById(sw.getTrainingId())
-                .map(t -> ScheduledWorkoutResponse.from(sw, t.getTitle(), t.getTrainingType(), t.getEstimatedDurationSeconds(), t.getSportType()))
-                .orElse(ScheduledWorkoutResponse.from(sw, null, null, null, null));
+                .map(t -> ScheduledWorkoutResponse.from(sw, t.getTitle(), t.getTrainingType(),
+                        t.getEstimatedDurationSeconds(), t.getSportType(), t.getEstimatedTss(), t.getEstimatedIf()))
+                .orElse(ScheduledWorkoutResponse.from(sw, null, null, null, null, null, null));
     }
 }

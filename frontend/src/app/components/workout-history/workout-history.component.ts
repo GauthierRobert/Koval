@@ -1,11 +1,8 @@
 import { Component, inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { SportIconComponent } from '../sport-icon/sport-icon.component';
 import { HistoryService, SavedSession } from '../../services/history.service';
-import { TrainingService } from '../../services/training.service';
-import { Observable } from 'rxjs';
 import { ProgressionChartComponent } from '../progression-chart/progression-chart.component';
 import { SessionSummary, BlockSummary } from '../../services/workout-execution.service';
 import { FitExportService } from '../../services/fit-export.service';
@@ -26,14 +23,11 @@ export class WorkoutHistoryComponent {
     @ViewChild('fitInput') fitInputRef!: ElementRef<HTMLInputElement>;
 
     private historyService = inject(HistoryService);
-    private trainingService = inject(TrainingService);
     private fitExport = inject(FitExportService);
     private authService = inject(AuthService);
     private metricsService = inject(MetricsService);
-    private router = inject(Router);
 
-    sessions$: Observable<SavedSession[]> = this.historyService.sessions$;
-    selectedSession$ = this.historyService.selectedSession$;
+    sessions$ = this.historyService.sessions$;
 
     ftp$ = this.authService.user$.pipe(map((u) => u?.ftp ?? 250));
 
@@ -50,19 +44,13 @@ export class WorkoutHistoryComponent {
         return this.metricsService.computeIF(session.avgPower, ftp);
     }
 
-    navigateToAnalysis(event: Event, session: SavedSession): void {
-        event.stopPropagation();
-        this.router.navigate(['/analysis', session.id]);
+    onSelect(session: SavedSession): void {
+        this.historyService.selectSession(session);
     }
 
     downloadFit(event: Event, session: SavedSession) {
         event.stopPropagation();
         this.fitExport.exportSession(session, session.date);
-    }
-
-    onSelect(session: SavedSession) {
-        this.trainingService.selectTraining(null);
-        this.historyService.selectSession(session);
     }
 
     triggerUpload() {
@@ -79,8 +67,9 @@ export class WorkoutHistoryComponent {
         this.importError = false;
 
         try {
-            const session = await this.parseFit(file);
-            this.historyService.saveSession(session);
+            const buffer = await file.arrayBuffer();
+            const session = await this.parseFit(file.name, buffer);
+            this.historyService.saveSession(session, buffer);
         } catch (e) {
             console.error('Failed to import FIT file', e);
             this.importError = true;
@@ -90,66 +79,59 @@ export class WorkoutHistoryComponent {
         }
     }
 
-    private parseFit(file: File): Promise<SessionSummary> {
+    private parseFit(fileName: string, buffer: ArrayBuffer): Promise<SessionSummary> {
         return new Promise((resolve, reject) => {
-            const reader = new FileReader();
+            const parser = new FitParser({ force: true, mode: 'list' });
 
-            reader.onload = (e) => {
-                const buffer = e.target!.result as ArrayBuffer;
-                const parser = new FitParser({ force: true, mode: 'list' });
+            parser.parse(buffer, (error: any, data: any) => {
+                if (error) {
+                    reject(new Error(error));
+                    return;
+                }
 
-                parser.parse(buffer, (error: any, data: any) => {
-                    if (error) {
-                        reject(new Error(error));
-                        return;
-                    }
+                const session = data.sessions?.[0];
+                if (!session) {
+                    reject(new Error('No session found in FIT file'));
+                    return;
+                }
 
-                    const session = data.sessions?.[0];
-                    if (!session) {
-                        reject(new Error('No session found in FIT file'));
-                        return;
-                    }
+                const sportMap: Record<string, SessionSummary['sportType']> = {
+                    cycling: 'CYCLING',
+                    running: 'RUNNING',
+                    swimming: 'SWIMMING',
+                };
 
-                    const sportMap: Record<string, SessionSummary['sportType']> = {
-                        cycling: 'CYCLING',
-                        running: 'RUNNING',
-                        swimming: 'SWIMMING',
-                    };
+                const blockSummaries: BlockSummary[] = (data.laps || []).map(
+                    (lap: any, i: number) => ({
+                        label: `Lap ${i + 1}`,
+                        durationSeconds: Math.round(lap.total_elapsed_time || 0),
+                        targetPower: 0,
+                        actualPower: Math.round(lap.avg_power || 0),
+                        actualCadence: Math.round(lap.avg_cadence || 0),
+                        actualHR: Math.round(lap.avg_heart_rate || 0),
+                        type: 'STEADY',
+                    }),
+                );
 
-                    const blockSummaries: BlockSummary[] = (data.laps || []).map(
-                        (lap: any, i: number) => ({
-                            label: `Lap ${i + 1}`,
-                            durationSeconds: Math.round(lap.total_elapsed_time || 0),
-                            targetPower: 0,
-                            actualPower: Math.round(lap.avg_power || 0),
-                            actualCadence: Math.round(lap.avg_cadence || 0),
-                            actualHR: Math.round(lap.avg_heart_rate || 0),
-                            type: 'STEADY',
-                        }),
-                    );
+                const name = fileName
+                    .replace(/\.fit$/i, '')
+                    .replace(/[_-]+/g, ' ')
+                    .trim();
 
-                    const name = file.name
-                        .replace(/\.fit$/i, '')
-                        .replace(/[_-]+/g, ' ')
-                        .trim();
-
-                    resolve({
-                        title: name || 'Uploaded Session',
-                        totalDuration: Math.round(
-                            session.total_elapsed_time || session.total_timer_time || 0,
-                        ),
-                        avgPower: Math.round(session.avg_power || 0),
-                        avgHR: Math.round(session.avg_heart_rate || 0),
-                        avgCadence: Math.round(session.avg_cadence || 0),
-                        sportType: sportMap[session.sport?.toLowerCase()] ?? 'CYCLING',
-                        blockSummaries,
-                        history: [],
-                    });
+                resolve({
+                    title: name || 'Uploaded Session',
+                    totalDuration: Math.round(
+                        session.total_elapsed_time || session.total_timer_time || 0,
+                    ),
+                    avgPower: Math.round(session.avg_power || 0),
+                    avgHR: Math.round(session.avg_heart_rate || 0),
+                    avgCadence: Math.round(session.avg_cadence || 0),
+                    avgSpeed: session.avg_speed || 0,
+                    sportType: sportMap[session.sport?.toLowerCase()] ?? 'CYCLING',
+                    blockSummaries,
+                    history: [],
                 });
-            };
-
-            reader.onerror = () => reject(new Error('Failed to read file'));
-            reader.readAsArrayBuffer(file);
+            });
         });
     }
 

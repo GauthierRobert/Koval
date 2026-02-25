@@ -12,22 +12,34 @@
   flex-direction: column;
 }
 
-.empty-state {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-}
-
-/* Schedule sections */
-.schedule-sections {
+/* Sticky schedule top bar */
+.schedule-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   padding: 16px 40px;
   display: flex;
   flex-direction: column;
   gap: 14px;
   flex-shrink: 0;
   border-bottom: 1px solid var(--glass-border);
+  background: var(--bg-color);
+}
+
+/* Scrollable content below the sticky bar */
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
 }
 
 .schedule-section {

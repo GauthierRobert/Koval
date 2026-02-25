@@ -21,6 +21,7 @@ export interface SessionSummary {
     avgPower: number;
     avgHR: number;
     avgCadence: number;
+    avgSpeed: number; // m/s
     blockSummaries: BlockSummary[];
     history: LiveMetrics[];
     sportType: 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK';
@@ -140,6 +141,7 @@ export class WorkoutExecutionService {
                 avgPower: finalState.averages.power,
                 avgHR: finalState.averages.heartRate,
                 avgCadence: finalState.averages.cadence,
+                avgSpeed: finalState.averages.speed,
                 blockSummaries: finalState.blockSummaries,
                 history: finalState.history,
                 sportType: state.training.sportType

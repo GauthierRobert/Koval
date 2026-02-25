@@ -7,7 +7,7 @@ import { RouterModule } from '@angular/router';
 import { WorkoutVisualizationComponent } from '../workout-visualization/workout-visualization.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { WorkoutDetailModalComponent } from '../workout-detail-modal/workout-detail-modal.component';
-import { SessionDetailComponent } from '../session-detail/session-detail.component';
+import { SessionAnalysisComponent } from '../session-analysis/session-analysis.component';
 import { CalendarService } from '../../services/calendar.service';
 import { AuthService, User } from '../../services/auth.service';
 import { HistoryService } from '../../services/history.service';
@@ -29,7 +29,7 @@ function toDateKey(d: Date): string {
     RouterModule,
     SidebarComponent,
     WorkoutDetailModalComponent,
-    SessionDetailComponent,
+    SessionAnalysisComponent,
   ],
   templateUrl: './workout-selection.component.html',
   styleUrl: './workout-selection.component.css',
@@ -102,6 +102,10 @@ export class WorkoutSelectionComponent implements OnInit {
   onDetailStatusChanged(): void {
     this.selectedScheduledWorkout = null;
     this.reload$.next();
+  }
+
+  onSessionClosed(): void {
+    this.historyService.selectSession(null);
   }
 
   formatScheduleDate(dateStr: string): string {

@@ -16,8 +16,8 @@ import { FitRecord } from '../../services/metrics.service';
     template: `
         <div class="chart-wrap">
             <div class="chart-toggles">
-                <button class="toggle-btn" [class.active]="showPower" (click)="showPower = !showPower; draw()">
-                    <span class="dot power"></span> Power
+                <button class="toggle-btn" [class.active]="showPrimary" (click)="showPrimary = !showPrimary; draw()">
+                    <span class="dot power"></span> {{ primaryLabel }}
                 </button>
                 <button class="toggle-btn" [class.active]="showHR" (click)="showHR = !showHR; draw()">
                     <span class="dot hr"></span> Heart Rate
@@ -59,14 +59,18 @@ import { FitRecord } from '../../services/metrics.service';
 export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
     @Input() records: FitRecord[] = [];
     @Input() ftp = 250;
+    @Input() sportType = 'CYCLING';
 
     @ViewChild('canvas') private canvasRef!: ElementRef<HTMLCanvasElement>;
 
-    showPower = true;
+    showPrimary = true;
     showHR = true;
     showCadence = false;
 
     private ready = false;
+
+    get isCycling(): boolean { return this.sportType === 'CYCLING'; }
+    get primaryLabel(): string { return this.isCycling ? 'Power' : 'Speed'; }
 
     ngAfterViewInit(): void {
         this.ready = true;
@@ -91,53 +95,99 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         const mL = 48, mR = 48, mT = 12, mB = 28;
         const cW = W - mL - mR;
         const cH = H - mT - mB;
-
-        const smoothed = this.rollingAvg(this.records.map((r) => r.power), 5);
-        const maxP = Math.max(this.ftp * 1.5, ...smoothed) || 1;
-
         const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#ff9d00';
         const n = this.records.length;
         const xOf = (i: number) => mL + (i / (n - 1)) * cW;
-        const yOfPow = (p: number) => mT + cH * (1 - p / maxP);
 
-        // FTP reference line
-        const ftpY = yOfPow(this.ftp);
-        ctx.save();
-        ctx.setLineDash([4, 4]);
-        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(mL, ftpY);
-        ctx.lineTo(W - mR, ftpY);
-        ctx.stroke();
-        ctx.restore();
-        ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        ctx.font = '9px monospace';
-        ctx.textAlign = 'left';
-        ctx.fillText('FTP', mL + 2, ftpY - 3);
+        if (this.isCycling) {
+            // ── Primary metric: Power (W) ─────────────────────────────────────
+            const smoothed = this.rollingAvg(this.records.map((r) => r.power), 5);
+            const maxP = Math.max(this.ftp * 1.5, ...smoothed) || 1;
+            const yOfPow = (p: number) => mT + cH * (1 - p / maxP);
 
-        // Power filled area
-        if (this.showPower && smoothed.length > 1) {
+            // FTP reference line
+            const ftpY = yOfPow(this.ftp);
+            ctx.save();
+            ctx.setLineDash([4, 4]);
+            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+            ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(xOf(0), H - mB);
-            smoothed.forEach((p, i) => ctx.lineTo(xOf(i), yOfPow(p)));
-            ctx.lineTo(xOf(n - 1), H - mB);
-            ctx.closePath();
-            const grad = ctx.createLinearGradient(0, mT, 0, H - mB);
-            grad.addColorStop(0, accent + '80');
-            grad.addColorStop(1, accent + '08');
-            ctx.fillStyle = grad;
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.moveTo(xOf(0), yOfPow(smoothed[0]));
-            smoothed.forEach((p, i) => ctx.lineTo(xOf(i), yOfPow(p)));
-            ctx.strokeStyle = accent;
-            ctx.lineWidth = 2;
+            ctx.moveTo(mL, ftpY); ctx.lineTo(W - mR, ftpY);
             ctx.stroke();
+            ctx.restore();
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.font = '9px monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText('FTP', mL + 2, ftpY - 3);
+
+            if (this.showPrimary && smoothed.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(xOf(0), H - mB);
+                smoothed.forEach((p, i) => ctx.lineTo(xOf(i), yOfPow(p)));
+                ctx.lineTo(xOf(n - 1), H - mB);
+                ctx.closePath();
+                const grad = ctx.createLinearGradient(0, mT, 0, H - mB);
+                grad.addColorStop(0, accent + '80');
+                grad.addColorStop(1, accent + '08');
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(xOf(0), yOfPow(smoothed[0]));
+                smoothed.forEach((p, i) => ctx.lineTo(xOf(i), yOfPow(p)));
+                ctx.strokeStyle = accent;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // Left Y-axis labels (watts)
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.font = '9px monospace';
+            ctx.textAlign = 'right';
+            [0, 0.5, 1].forEach((frac) => {
+                const p = Math.round(maxP * frac);
+                ctx.fillText(String(p), mL - 4, yOfPow(p) + 4);
+            });
+
+        } else {
+            // ── Primary metric: Speed (km/h) for running/swimming ─────────────
+            // speed in FitRecord is m/s → convert to km/h for display
+            const speeds = this.records.map((r) => (r.speed || 0) * 3.6);
+            const smoothed = this.rollingAvg(speeds, 5);
+            const maxS = Math.max(...smoothed.filter((v) => v > 0), 1);
+            const yOfSpd = (s: number) => mT + cH * (1 - s / maxS);
+
+            if (this.showPrimary && smoothed.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(xOf(0), H - mB);
+                smoothed.forEach((s, i) => ctx.lineTo(xOf(i), yOfSpd(s)));
+                ctx.lineTo(xOf(n - 1), H - mB);
+                ctx.closePath();
+                const grad = ctx.createLinearGradient(0, mT, 0, H - mB);
+                grad.addColorStop(0, accent + '80');
+                grad.addColorStop(1, accent + '08');
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(xOf(0), yOfSpd(smoothed[0]));
+                smoothed.forEach((s, i) => ctx.lineTo(xOf(i), yOfSpd(s)));
+                ctx.strokeStyle = accent;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // Left Y-axis labels (km/h)
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.font = '9px monospace';
+            ctx.textAlign = 'right';
+            [0, 0.5, 1].forEach((frac) => {
+                const s = Math.round(maxS * frac * 10) / 10;
+                ctx.fillText(s + ' km/h', mL - 4, yOfSpd(s) + 4);
+            });
         }
 
-        // HR line (right scale)
+        // ── HR line (right scale, all sports) ────────────────────────────────
         if (this.showHR) {
             const hrs = this.records.map((r) => r.heartRate).filter((v) => v > 0);
             const maxHR = hrs.length ? Math.max(...hrs) * 1.05 : 220;
@@ -157,14 +207,13 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
             ctx.stroke();
             ctx.restore();
 
-            // Right axis label
             ctx.fillStyle = '#e74c3c';
             ctx.font = '9px monospace';
             ctx.textAlign = 'right';
             ctx.fillText('HR', W - 2, mT + 10);
         }
 
-        // Cadence line (right scale)
+        // ── Cadence line (right scale, all sports) ───────────────────────────
         if (this.showCadence) {
             const cads = this.records.map((r) => r.cadence).filter((v) => v > 0);
             const maxCad = cads.length ? Math.max(...cads) * 1.1 : 120;
@@ -185,7 +234,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
             ctx.restore();
         }
 
-        // X-axis labels (elapsed minutes)
+        // ── X-axis labels (elapsed minutes) ──────────────────────────────────
         const totalSec = n;
         const tickEvery = this.pickTickInterval(totalSec);
         ctx.fillStyle = 'rgba(255,255,255,0.4)';
@@ -195,13 +244,6 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
             const x = mL + (s / totalSec) * cW;
             ctx.fillText(`${Math.round(s / 60)}m`, x, H - 6);
         }
-
-        // Left Y-axis labels (power)
-        ctx.textAlign = 'right';
-        [0, 0.5, 1].forEach((frac) => {
-            const p = Math.round(maxP * frac);
-            ctx.fillText(String(p), mL - 4, yOfPow(p) + 4);
-        });
     }
 
     private rollingAvg(data: number[], window: number): number[] {

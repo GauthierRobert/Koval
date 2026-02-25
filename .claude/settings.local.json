@@ -17,7 +17,8 @@
       "mcp__ide__getDiagnostics",
       "Bash(npx tsc:*)",
       "Bash(npm install:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(find C:\\\\Users\\\\gauth\\\\Documents\\\\Dev Projects\\\\training-planner-ai\\\\training-planner-ai\\\\backend:*)"
     ]
   }
 }

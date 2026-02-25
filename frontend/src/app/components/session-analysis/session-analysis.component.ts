@@ -1,69 +1,55 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { combineLatest, Observable, of, switchMap } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { BehaviorSubject, from, Observable, of } from 'rxjs';
+import { catchError, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
 import { HistoryService, SavedSession } from '../../services/history.service';
 import { AuthService } from '../../services/auth.service';
 import { MetricsService, FitRecord } from '../../services/metrics.service';
 import { SportIconComponent } from '../sport-icon/sport-icon.component';
 import { FitTimeseriesChartComponent } from '../fit-timeseries-chart/fit-timeseries-chart.component';
 
+interface FitState {
+    loading: boolean;
+    error: boolean;
+    records: FitRecord[];
+}
+
 @Component({
     selector: 'app-session-analysis',
     standalone: true,
-    imports: [CommonModule, RouterModule, SportIconComponent, FitTimeseriesChartComponent],
+    imports: [CommonModule, SportIconComponent, FitTimeseriesChartComponent],
     templateUrl: './session-analysis.component.html',
     styleUrl: './session-analysis.component.css',
 })
-export class SessionAnalysisComponent implements OnInit {
-    private route = inject(ActivatedRoute);
-    private router = inject(Router);
-    private historyService = inject(HistoryService);
+export class SessionAnalysisComponent {
     private authService = inject(AuthService);
     private metricsService = inject(MetricsService);
 
-    session$!: Observable<SavedSession | null>;
+    @Output() closed = new EventEmitter<void>();
+
+    private sessionSubject = new BehaviorSubject<SavedSession | null>(null);
+
+    @Input() set session(s: SavedSession | null) {
+        this.sessionSubject.next(s ?? null);
+    }
+
+    session$ = this.sessionSubject.asObservable();
     ftp$ = this.authService.user$.pipe(map((u) => u?.ftp ?? 250));
 
-    fitRecords: FitRecord[] = [];
-    fitLoading = false;
-    fitError = false;
-
-    ngOnInit(): void {
-        this.session$ = combineLatest([
-            this.route.paramMap,
-            this.historyService.sessions$,
-        ]).pipe(
-            map(([params, sessions]) => {
-                const id = params.get('id');
-                return sessions.find((s) => s.id === id) ?? null;
-            }),
-        );
-
-        // Load FIT data when session resolves
-        this.session$.pipe(
-            switchMap((session) => {
-                if (!session?.fitFileId) return of(null);
-                this.fitLoading = true;
-                return this.metricsService.downloadStoredFit(session.id);
-            }),
-        ).subscribe({
-            next: (buffer) => {
-                this.fitLoading = false;
-                if (!buffer) { this.fitRecords = []; return; }
-                this.metricsService.parseFitTimeSeries(buffer).then((records) => {
-                    this.fitRecords = records;
-                }).catch(() => {
-                    this.fitError = true;
-                });
-            },
-            error: () => {
-                this.fitLoading = false;
-                this.fitError = true;
-            },
-        });
-    }
+    fitState$: Observable<FitState> = this.sessionSubject.pipe(
+        distinctUntilChanged((a, b) => a?.fitFileId === b?.fitFileId),
+        switchMap((session) => {
+            if (!session?.fitFileId) {
+                return of({ loading: false, error: false, records: [] as FitRecord[] });
+            }
+            return this.metricsService.downloadStoredFit(session.id).pipe(
+                switchMap((buffer) => from(this.metricsService.parseFitTimeSeries(buffer))),
+                map((records) => ({ loading: false, error: false, records })),
+                catchError(() => of({ loading: false, error: true, records: [] as FitRecord[] })),
+                startWith({ loading: true, error: false, records: [] as FitRecord[] }),
+            );
+        }),
+    );
 
     getTss(session: SavedSession, ftp: number): number {
         if (session.tss != null) return Math.round(session.tss);
@@ -90,9 +76,5 @@ export class SessionAnalysisComponent implements OnInit {
             day: 'numeric',
             year: 'numeric',
         });
-    }
-
-    goBack(): void {
-        this.router.navigate(['/history']);
     }
 }

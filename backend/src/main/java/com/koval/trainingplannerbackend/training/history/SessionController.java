@@ -2,8 +2,12 @@ package com.koval.trainingplannerbackend.training.history;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.UserRepository;
+import com.mongodb.client.gridfs.model.GridFSFile;
 import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
+import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -45,11 +49,10 @@ public class SessionController {
             session.setCompletedAt(LocalDateTime.now());
         }
 
-        // Compute TSS / IF before saving
-        userRepository.findById(userId).ifPresent(user -> {
-            int ftp = user.getFtp() != null ? user.getFtp() : 250;
-            analyticsService.computeAndAttachMetrics(session, ftp);
-        });
+        // Compute TSS / IF before saving (sport-type-aware)
+        userRepository.findById(userId).ifPresent(user ->
+            analyticsService.computeAndAttachMetrics(session, user)
+        );
 
         CompletedSession saved = repository.save(session);
 
@@ -75,11 +78,12 @@ public class SessionController {
                     if (s.getFitFileId() != null) {
                         try {
                             gridFsOperations.delete(
-                                    org.springframework.data.mongodb.core.query.Query.query(
-                                            org.springframework.data.mongodb.core.query.Criteria.where("_id").is(new ObjectId(s.getFitFileId()))
+                                    Query.query(
+                                            Criteria.where("_id").is(new ObjectId(s.getFitFileId()))
                                     )
                             );
-                        } catch (Exception ignored) {}
+                        } catch (Exception ignored) {
+                        }
                     }
                     repository.delete(s);
                     return ResponseEntity.<Void>noContent().build();
@@ -101,7 +105,7 @@ public class SessionController {
 
     @PostMapping("/{id}/fit")
     public ResponseEntity<CompletedSession> uploadFit(@PathVariable String id,
-                                                       @RequestParam("file") MultipartFile file) throws IOException {
+                                                      @RequestParam("file") MultipartFile file) throws IOException {
         String userId = SecurityUtils.getCurrentUserId();
         return repository.findById(id)
                 .filter(s -> userId.equals(s.getUserId()))
@@ -110,12 +114,9 @@ public class SessionController {
                         // Delete old FIT file if replacing
                         if (s.getFitFileId() != null) {
                             try {
-                                gridFsOperations.delete(
-                                        org.springframework.data.mongodb.core.query.Query.query(
-                                                org.springframework.data.mongodb.core.query.Criteria.where("_id").is(new ObjectId(s.getFitFileId()))
-                                        )
-                                );
-                            } catch (Exception ignored) {}
+                                gridFsOperations.delete(Query.query(Criteria.where("_id").is(new ObjectId(s.getFitFileId()))));
+                            } catch (Exception ignored) {
+                            }
                         }
                         ObjectId fileId = gridFsOperations.store(
                                 file.getInputStream(),
@@ -139,15 +140,11 @@ public class SessionController {
                 .filter(s -> s.getFitFileId() != null)
                 .map(s -> {
                     try {
-                        com.mongodb.client.gridfs.model.GridFSFile gridFile =
-                                gridFsOperations.findOne(
-                                        org.springframework.data.mongodb.core.query.Query.query(
-                                                org.springframework.data.mongodb.core.query.Criteria.where("_id").is(new ObjectId(s.getFitFileId()))
-                                        )
-                                );
-                        if (gridFile == null) return ResponseEntity.<byte[]>notFound().build();
+                        GridFSFile gridFile =
+                                gridFsOperations.findOne(Query.query(Criteria.where("_id").is(new ObjectId(s.getFitFileId()))));
+                        if (gridFile == null) return ResponseEntity.notFound().build();
 
-                        org.springframework.data.mongodb.gridfs.GridFsResource resource = gridFsOperations.getResource(gridFile);
+                        GridFsResource resource = gridFsOperations.getResource(gridFile);
                         byte[] bytes = resource.getInputStream().readAllBytes();
                         return ResponseEntity.ok()
                                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + s.getId() + ".fit\"")
