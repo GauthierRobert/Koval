@@ -27,7 +27,7 @@ export class PmcPageComponent implements OnInit {
     pmcData$ = this.pmcDataSubject.asObservable();
 
     // Period selector
-    selectedPeriod: Period = '6m';
+    selectedPeriod: Period = '1w';
     readonly periods: { key: Period; label: string }[] = [
         { key: '1w', label: '1W' },
         { key: '1m', label: '1M' },
