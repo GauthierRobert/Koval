@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { Training, WorkoutBlock } from './training.service';
+import {Injectable} from '@angular/core';
+import {Training, WorkoutBlock} from './training.service';
 
 @Injectable({
     providedIn: 'root'

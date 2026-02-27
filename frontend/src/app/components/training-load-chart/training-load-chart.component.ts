@@ -14,6 +14,18 @@ interface DayInfo {
     isToday: boolean;
 }
 
+const SPORT_COLORS: Record<string, string> = {
+    CYCLING: '#FF9D00',
+    RUNNING: '#34D399',
+    SWIMMING: '#60A5FA',
+    BRICK: '#A78BFA',
+    GYM: '#F472B6',
+};
+
+function getSportColor(sport?: string): string {
+    return SPORT_COLORS[sport || ''] || '#FF9D00';
+}
+
 @Component({
     selector: 'app-training-load-chart',
     standalone: true,
@@ -72,67 +84,102 @@ export class TrainingLoadChartComponent implements OnChanges, AfterViewInit {
         const ctx = canvas.getContext('2d')!;
         ctx.clearRect(0, 0, W, H);
 
-        const accent =
-            getComputedStyle(document.documentElement)
-                .getPropertyValue('--accent-color')
-                .trim() || '#00d4ff';
-
-        const marginL = 0;
         const marginB = 18;
         const chartH = H - marginB - 4;
-        const barSlot = (W - marginL) / 7;
+        const barSlot = W / 7;
+
+        // Build per-day, per-sport load data
+        interface SportLoad {
+            sport: string;
+            color: string;
+            load: number;
+        }
 
         const dailyData = this.days.map((day) => {
             const workouts = this.workoutsByDay.get(day.key) || [];
-            const completedLoad = workouts
-                .filter((w) => w.status === 'COMPLETED')
-                .reduce(
-                    (sum, w) =>
-                        sum + (w.tss || (w.totalDurationSeconds ? w.totalDurationSeconds / 60 : 0)),
-                    0
-                );
-            const pendingLoad = workouts
-                .filter((w) => w.status !== 'COMPLETED')
-                .reduce(
-                    (sum, w) =>
-                        sum + (w.tss || (w.totalDurationSeconds ? w.totalDurationSeconds / 60 : 0)),
-                    0
-                );
-            return { day, completedLoad, pendingLoad };
+            const sportMap = new Map<string, { completed: number; pending: number }>();
+
+            for (const w of workouts) {
+                const sport = w.sportType || 'CYCLING';
+                const entry = sportMap.get(sport) || { completed: 0, pending: 0 };
+                const load = w.tss || (w.totalDurationSeconds ? w.totalDurationSeconds / 60 : 0);
+                if (w.status === 'COMPLETED') {
+                    entry.completed += load;
+                } else {
+                    entry.pending += load;
+                }
+                sportMap.set(sport, entry);
+            }
+
+            const totalLoad = Array.from(sportMap.values()).reduce(
+                (sum, e) => sum + e.completed + e.pending,
+                0,
+            );
+
+            return { day, sportMap, totalLoad };
         });
 
-        const maxLoad = Math.max(...dailyData.map((d) => d.completedLoad + d.pendingLoad), 1);
-
+        const maxLoad = Math.max(...dailyData.map((d) => d.totalLoad), 1);
         const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
         dailyData.forEach((d, i) => {
-            const x = marginL + i * barSlot + barSlot * 0.15;
+            const x = i * barSlot + barSlot * 0.15;
             const bw = barSlot * 0.7;
-            const totalH = chartH * ((d.completedLoad + d.pendingLoad) / maxLoad);
-            const completedH = chartH * (d.completedLoad / maxLoad);
+            const totalBarH = chartH * (d.totalLoad / maxLoad);
 
-            if (d.pendingLoad > 0) {
-                ctx.globalAlpha = 0.22;
-                ctx.fillStyle = accent;
-                ctx.fillRect(x, H - marginB - totalH, bw, totalH);
+            // Stack sport segments bottom-up
+            let y = H - marginB;
+            const sportEntries = Array.from(d.sportMap.entries());
+
+            for (const [sport, entry] of sportEntries) {
+                const color = getSportColor(sport);
+
+                // Completed portion (solid)
+                if (entry.completed > 0) {
+                    const segH = chartH * (entry.completed / maxLoad);
+                    ctx.globalAlpha = 1;
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x, y - segH, bw, segH);
+                    y -= segH;
+                }
+
+                // Pending portion (translucent)
+                if (entry.pending > 0) {
+                    const segH = chartH * (entry.pending / maxLoad);
+                    ctx.globalAlpha = 0.25;
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x, y - segH, bw, segH);
+                    y -= segH;
+                }
             }
 
-            if (d.completedLoad > 0) {
+            // Load value label inside bar (if wide enough)
+            if (d.totalLoad > 0 && totalBarH > 14 && bw > 20) {
                 ctx.globalAlpha = 1;
-                ctx.fillStyle = accent;
-                ctx.fillRect(x, H - marginB - completedH, bw, completedH);
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 8px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                ctx.fillText(
+                    Math.round(d.totalLoad).toString(),
+                    x + bw / 2,
+                    H - marginB - totalBarH + 2,
+                );
             }
 
+            // Today marker
             if (d.day.isToday) {
                 ctx.globalAlpha = 1;
-                ctx.fillStyle = accent;
+                ctx.fillStyle = '#fff';
                 ctx.fillRect(x, H - marginB, bw, 2);
             }
 
+            // Day label
             ctx.globalAlpha = d.day.isToday ? 1 : 0.5;
             ctx.fillStyle = '#ffffff';
             ctx.font = `${d.day.isToday ? 'bold ' : ''}10px monospace`;
             ctx.textAlign = 'center';
+            ctx.textBaseline = 'alphabetic';
             ctx.fillText(DAY_LABELS[i], x + bw / 2, H - 3);
         });
 

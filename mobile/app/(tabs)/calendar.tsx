@@ -1,26 +1,26 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  RefreshControl,
-  Alert,
-  ActivityIndicator,
-  SafeAreaView,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    RefreshControl,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import { Ionicons } from '@expo/vector-icons';
+import {StatusBar} from 'expo-status-bar';
+import {Ionicons} from '@expo/vector-icons';
 import {
-  fetchSchedule,
-  markCompleted,
-  markSkipped,
-  deleteScheduledWorkout,
-  ScheduledWorkout,
+    deleteScheduledWorkout,
+    fetchSchedule,
+    markCompleted,
+    markSkipped,
+    ScheduledWorkout,
 } from '../../services/calendarService';
-import { WorkoutCard } from '../../components/calendar/WorkoutCard';
-import { theme } from '../../constants/theme';
+import {WorkoutCard} from '../../components/calendar/WorkoutCard';
+import {theme} from '../../constants/theme';
 
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 

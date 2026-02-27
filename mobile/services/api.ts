@@ -1,5 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
-import { API_URL } from '../constants/env';
+import {API_URL} from '../constants/env';
 
 const TOKEN_KEY = 'koval_jwt';
 

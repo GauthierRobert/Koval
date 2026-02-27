@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -151,7 +150,8 @@ public class CoachService {
     /**
      * Mark a scheduled workout as completed.
      */
-    public ScheduledWorkout markCompleted(String scheduledWorkoutId, Integer tss, Double intensityFactor) {
+    public ScheduledWorkout markCompleted(String scheduledWorkoutId, Integer tss, Double intensityFactor,
+            String sessionId) {
         ScheduledWorkout workout = scheduledWorkoutRepository.findById(scheduledWorkoutId)
                 .orElseThrow(() -> new IllegalArgumentException("Scheduled workout not found: " + scheduledWorkoutId));
 
@@ -161,8 +161,14 @@ public class CoachService {
             workout.setTss(tss);
         if (intensityFactor != null)
             workout.setIntensityFactor(intensityFactor);
+        if (sessionId != null)
+            workout.setSessionId(sessionId);
 
         return scheduledWorkoutRepository.save(workout);
+    }
+
+    public ScheduledWorkout markCompleted(String scheduledWorkoutId, Integer tss, Double intensityFactor) {
+        return markCompleted(scheduledWorkoutId, tss, intensityFactor, null);
     }
 
     /**

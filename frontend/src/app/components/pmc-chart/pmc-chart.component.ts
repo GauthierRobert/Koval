@@ -1,12 +1,17 @@
-import {
-    Component,
-    Input,
-    OnChanges,
-    AfterViewInit,
-    ViewChild,
-    ElementRef,
-} from '@angular/core';
-import { PmcDataPoint } from '../../services/metrics.service';
+import {AfterViewInit, Component, ElementRef, Input, OnChanges, ViewChild,} from '@angular/core';
+import {PmcDataPoint} from '../../services/metrics.service';
+
+const SPORT_COLORS: Record<string, string> = {
+    CYCLING: '#FF9D00',
+    RUNNING: '#34D399',
+    SWIMMING: '#60A5FA',
+    BRICK: '#A78BFA',
+    GYM: '#F472B6',
+};
+
+function getSportColor(sport?: string): string {
+    return SPORT_COLORS[sport || ''] || '#FF9D00';
+}
 
 @Component({
     selector: 'app-pmc-chart',
@@ -68,12 +73,12 @@ export class PmcChartComponent implements OnChanges, AfterViewInit {
         const canvas = this.canvasRef?.nativeElement;
         if (!canvas) return;
 
-        const W = (canvas.width  = canvas.offsetWidth  || 700);
+        const W = (canvas.width = canvas.offsetWidth || 700);
         const H = (canvas.height = canvas.offsetHeight || 420);
         const ctx = canvas.getContext('2d')!;
         ctx.clearRect(0, 0, W, H);
 
-        const FONT    = '11px Inter, system-ui, sans-serif';
+        const FONT = '11px Inter, system-ui, sans-serif';
         const FONT_SM = '10px Inter, system-ui, sans-serif';
         const FONT_XS = '9px Inter, system-ui, sans-serif';
 
@@ -95,25 +100,25 @@ export class PmcChartComponent implements OnChanges, AfterViewInit {
 
         // ── Scales ────────────────────────────────────────────────────────────
         const maxLoad = Math.max(...points.map(p => p.ctl), ...points.map(p => p.atl), 1) * 1.15;
-        const tsbMax  = Math.max(...points.map(p => Math.abs(p.tsb)), 1) * 1.2;
-        const maxTss  = Math.max(...points.map(p => p.dailyTss), 1);
+        const tsbMax = Math.max(...points.map(p => Math.abs(p.tsb)), 1) * 1.2;
+        const maxTss = Math.max(...points.map(p => p.dailyTss), 1);
 
-        const n      = points.length;
-        const xOf    = (i: number) => mL + (i / (n - 1)) * cW;
-        const yLoad  = (v: number) => mT + cH * (1 - v / maxLoad);
-        const yTsb   = (v: number) => mT + cH * (1 - (v + tsbMax) / (2 * tsbMax));
+        const n = points.length;
+        const xOf = (i: number) => mL + (i / (n - 1)) * cW;
+        const yLoad = (v: number) => mT + cH * (1 - v / maxLoad);
+        const yTsb = (v: number) => mT + cH * (1 - (v + tsbMax) / (2 * tsbMax));
 
-        const accent  = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#ff9d00';
-        const today   = new Date().toISOString().split('T')[0];
-        const zeroY   = yTsb(0);
+        const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#ff9d00';
+        const today = new Date().toISOString().split('T')[0];
+        const zeroY = yTsb(0);
 
-        const todayIdx  = points.findIndex(p => p.date === today);
+        const todayIdx = points.findIndex(p => p.date === today);
         const predStart = points.findIndex(p => p.predicted);
 
         // ── Future background ─────────────────────────────────────────────────
         const splitX = predStart > 0 ? xOf(predStart - 1)
-                     : todayIdx   > 0 ? xOf(todayIdx)
-                     : W - mR;
+            : todayIdx > 0 ? xOf(todayIdx)
+                : W - mR;
 
         if (splitX < W - mR) {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
@@ -126,10 +131,26 @@ export class PmcChartComponent implements OnChanges, AfterViewInit {
 
         // ── Daily TSS bars ────────────────────────────────────────────────────
         const barW = Math.max(1.5, cW / n - 0.5);
-        ctx.fillStyle = 'rgba(255,255,255,0.08)';
         points.forEach((p, i) => {
-            const bH = (p.dailyTss / maxTss) * cH;
-            ctx.fillRect(xOf(i) - barW / 2, H - mB - bH, barW, bH);
+            const x = xOf(i) - barW / 2;
+            let currentY = H - mB;
+
+            if (p.sportTss && Object.keys(p.sportTss).length > 0) {
+                // Stacked sport bars
+                Object.entries(p.sportTss).forEach(([sport, tss]) => {
+                    if (tss <= 0) return;
+                    const bH = (tss / maxTss) * cH;
+                    ctx.fillStyle = getSportColor(sport);
+                    ctx.globalAlpha = 0.4;
+                    ctx.fillRect(x, currentY - bH, barW, bH);
+                    currentY -= bH;
+                });
+            } else {
+                // Fallback to single gray bar
+                const bH = (p.dailyTss / maxTss) * cH;
+                ctx.fillStyle = 'rgba(255,255,255,0.08)';
+                ctx.fillRect(x, currentY - bH, barW, bH);
+            }
         });
 
         // ── Fatigue zone fill ─────────────────────────────────────────────────
@@ -234,9 +255,9 @@ export class PmcChartComponent implements OnChanges, AfterViewInit {
             ctx.restore();
         };
 
-        drawLine(p => yLoad(p.ctl), accent,    2.5);
+        drawLine(p => yLoad(p.ctl), accent, 2.5);
         drawLine(p => yLoad(p.atl), '#e74c3c', 2.5);
-        drawLine(p => yTsb(p.tsb),  '#3b82f6', 2);
+        drawLine(p => yTsb(p.tsb), '#3b82f6', 2);
 
         // ── Today marker ──────────────────────────────────────────────────────
         if (todayIdx >= 0) {
@@ -297,11 +318,11 @@ export class PmcChartComponent implements OnChanges, AfterViewInit {
 
         // ── Legend ────────────────────────────────────────────────────────────
         const legendItems = [
-            { label: 'CTL — Fitness', color: accent,                  bar: false, fill: false },
-            { label: 'ATL — Fatigue', color: '#e74c3c',               bar: false, fill: false },
-            { label: 'TSB — Form',    color: '#3b82f6',               bar: false, fill: false },
-            { label: 'Daily TSS',     color: 'rgba(255,255,255,0.3)', bar: true,  fill: false },
-            { label: 'Fatigue zone',  color: 'rgba(239,68,68,0.4)',   bar: false, fill: true  },
+            { label: 'CTL — Fitness', color: accent, bar: false, fill: false },
+            { label: 'ATL — Fatigue', color: '#e74c3c', bar: false, fill: false },
+            { label: 'TSB — Form', color: '#3b82f6', bar: false, fill: false },
+            { label: 'Daily TSS', color: 'rgba(255,255,255,0.3)', bar: true, fill: false },
+            { label: 'Fatigue zone', color: 'rgba(239,68,68,0.4)', bar: false, fill: true },
         ];
         const itemW = cW / legendItems.length;
         const ly0 = 22;
@@ -328,8 +349,8 @@ export class PmcChartComponent implements OnChanges, AfterViewInit {
 
         // ── Hover crosshair + tooltip ─────────────────────────────────────────
         if (this.hoverIdx === null) return;
-        const p   = points[this.hoverIdx];
-        const hx  = xOf(this.hoverIdx);
+        const p = points[this.hoverIdx];
+        const hx = xOf(this.hoverIdx);
 
         // Vertical crosshair
         ctx.save();
@@ -343,9 +364,9 @@ export class PmcChartComponent implements OnChanges, AfterViewInit {
 
         // Dots on each line
         const lineDots = [
-            { y: yLoad(p.ctl), color: accent    },
+            { y: yLoad(p.ctl), color: accent },
             { y: yLoad(p.atl), color: '#e74c3c' },
-            { y: yTsb(p.tsb),  color: '#3b82f6' },
+            { y: yTsb(p.tsb), color: '#3b82f6' },
         ];
         lineDots.forEach(({ y, color }) => {
             ctx.beginPath();
@@ -360,16 +381,16 @@ export class PmcChartComponent implements OnChanges, AfterViewInit {
         // Tooltip box
         const tsbSign = p.tsb >= 0 ? '+' : '';
         const rows: Array<{ label: string; value: string; color: string }> = [
-            { label: 'CTL',  value: p.ctl.toFixed(1),                      color: accent    },
-            { label: 'ATL',  value: p.atl.toFixed(1),                      color: '#e74c3c' },
-            { label: 'TSB',  value: `${tsbSign}${p.tsb.toFixed(1)}`,       color: p.tsb >= 0 ? '#3b82f6' : '#f87171' },
-            { label: 'TSS',  value: String(Math.round(p.dailyTss)),         color: 'rgba(255,255,255,0.55)' },
+            { label: 'CTL', value: p.ctl.toFixed(1), color: accent },
+            { label: 'ATL', value: p.atl.toFixed(1), color: '#e74c3c' },
+            { label: 'TSB', value: `${tsbSign}${p.tsb.toFixed(1)}`, color: p.tsb >= 0 ? '#3b82f6' : '#f87171' },
+            { label: 'TSS', value: String(Math.round(p.dailyTss)), color: 'rgba(255,255,255,0.55)' },
         ];
 
-        const pad    = 10;
-        const rowH   = 18;
-        const boxW   = 130;
-        const boxH   = pad + 18 + rows.length * rowH + pad; // date + rows + padding
+        const pad = 10;
+        const rowH = 18;
+        const boxW = 130;
+        const boxH = pad + 18 + rows.length * rowH + pad; // date + rows + padding
         const dateStr = new Date(p.date + 'T12:00:00').toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' });
 
         let tx = hx + 14;

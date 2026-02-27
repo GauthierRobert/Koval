@@ -1,17 +1,9 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  Image,
-} from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import { AntDesign, Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../hooks/useAuth';
-import { theme } from '../constants/theme';
+import React, {useState} from 'react';
+import {ActivityIndicator, Alert, Image, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
+import {StatusBar} from 'expo-status-bar';
+import {AntDesign, Ionicons} from '@expo/vector-icons';
+import {useAuth} from '../hooks/useAuth';
+import {theme} from '../constants/theme';
 
 export default function LoginScreen() {
   const { login } = useAuth();

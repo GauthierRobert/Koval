@@ -24,8 +24,8 @@ interface FitState {
 export class SessionAnalysisComponent {
     private authService = inject(AuthService);
     private metricsService = inject(MetricsService);
+    private historyService = inject(HistoryService);
 
-    @Output() closed = new EventEmitter<void>();
 
     private sessionSubject = new BehaviorSubject<SavedSession | null>(null);
 
@@ -52,8 +52,17 @@ export class SessionAnalysisComponent {
     );
 
     getTss(session: SavedSession, ftp: number): number {
-        if (session.tss != null) return Math.round(session.tss);
+        if (session.tss != null && session.tss > 0) return Math.round(session.tss);
+        if (session.rpe != null && session.rpe > 0) {
+            return Math.round(this.metricsService.computeTssFromRpe(session.totalDuration, session.rpe));
+        }
         return Math.round(this.metricsService.computeTss(session.totalDuration, session.avgPower, ftp));
+    }
+
+    saveRpe(session: SavedSession, event: any) {
+        const val = parseInt(event.target.value, 10);
+        if (isNaN(val) || val < 1 || val > 10) return;
+        this.historyService.updateSession(session.id, { rpe: val });
     }
 
     getIF(session: SavedSession, ftp: number): number {

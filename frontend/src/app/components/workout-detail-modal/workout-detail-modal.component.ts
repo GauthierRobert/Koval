@@ -80,7 +80,8 @@ export class WorkoutDetailModalComponent {
   }
 
   startTraining(training: Training): void {
-    this.executionService.startWorkout(training);
+    const workout = this.workout$.value;
+    this.executionService.startWorkout(training, workout ? workout.id : null);
     this.started.emit();
   }
 
@@ -175,6 +176,13 @@ export class WorkoutDetailModalComponent {
     const m = Math.floor((totalSec % 3600) / 60);
     if (h > 0) return `${h}h ${m} m`;
     return `${m} m`;
+  }
+
+  isFutureDate(dateKey: string): boolean {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const d = new Date(dateKey + 'T00:00:00');
+    return d > today;
   }
 
   getFormattedDate(workout: ScheduledWorkout): string {

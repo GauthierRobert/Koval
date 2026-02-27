@@ -1,11 +1,11 @@
-import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
-import { filter } from 'rxjs/operators';
-import { HttpClient } from '@angular/common/http';
-import { SessionSummary } from './workout-execution.service';
-import { AuthService } from './auth.service';
-import { FitExportService } from './fit-export.service';
-import { MetricsService } from './metrics.service';
+import {inject, Injectable} from '@angular/core';
+import {BehaviorSubject} from 'rxjs';
+import {filter} from 'rxjs/operators';
+import {HttpClient} from '@angular/common/http';
+import {SessionSummary} from './workout-execution.service';
+import {AuthService} from './auth.service';
+import {FitExportService} from './fit-export.service';
+import {MetricsService} from './metrics.service';
 
 export interface SavedSession extends SessionSummary {
     id: string;
@@ -15,6 +15,8 @@ export interface SavedSession extends SessionSummary {
     tss?: number;
     intensityFactor?: number;
     fitFileId?: string;
+    rpe?: number;
+    scheduledWorkoutId?: string;
 }
 
 @Injectable({
@@ -57,10 +59,12 @@ export class HistoryService {
                     tss: s.tss ?? undefined,
                     intensityFactor: s.intensityFactor ?? undefined,
                     fitFileId: s.fitFileId ?? undefined,
+                    rpe: s.rpe ?? undefined,
                 }));
+                parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
                 this.sessionsSubject.next(parsed);
             },
-            error: () => {},
+            error: () => { },
         });
     }
 
@@ -78,6 +82,7 @@ export class HistoryService {
             avgSpeed: summary.avgSpeed,
             sportType: summary.sportType,
             blockSummaries: summary.blockSummaries,
+            scheduledWorkoutId: summary.scheduledWorkoutId
         };
 
         this.http.post<any>(this.apiUrl, payload).subscribe({
@@ -107,7 +112,7 @@ export class HistoryService {
                 if (bufferToUpload) {
                     this.metricsService.uploadFit(saved.id, bufferToUpload).subscribe({
                         next: () => this.loadSessions(),
-                        error: () => {},
+                        error: () => { },
                     });
                 }
             },
@@ -136,5 +141,17 @@ export class HistoryService {
         if (this.selectedSessionSubject.value?.id === id) {
             this.selectedSessionSubject.next(null);
         }
+    }
+
+    updateSession(id: string, updates: Partial<SavedSession>) {
+        return this.http.patch<any>(`${this.apiUrl}/${id}`, updates).subscribe({
+            next: (updated) => {
+                const list = this.sessionsSubject.value.map(s => s.id === id ? { ...s, ...updates } : s);
+                this.sessionsSubject.next(list);
+                if (this.selectedSessionSubject.value?.id === id) {
+                    this.selectedSessionSubject.next({ ...this.selectedSessionSubject.value, ...updates });
+                }
+            }
+        });
     }
 }

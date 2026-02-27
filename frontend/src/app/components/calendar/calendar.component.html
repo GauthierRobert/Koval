@@ -1,25 +1,45 @@
 <div class="calendar-layout">
   <div class="header">
     <h1>Training <span class="highlight">Calendar</span></h1>
-    <div class="nav-controls">
-      <button (click)="navigateWeek(-1)">&lt; Prev</button>
-      <span class="date-range">{{ startDate | date : 'MMM d' }} - {{ endDate | date : 'MMM d, y' }}</span>
-      <button (click)="navigateWeek(1)">Next &gt;</button>
+    <div class="header-right">
+      <!-- Overdue workouts inline with header -->
+      <div class="overdue-strip" *ngIf="overdueWorkouts$ | async as overdue">
+        <ng-container *ngIf="overdue.length > 0">
+          <span class="overdue-label">OVERDUE</span>
+          <span *ngFor="let w of overdue" class="overdue-chip" (click)="selectWorkout(w)">
+            <app-sport-icon [sport]="w.sportType" [size]="12"></app-sport-icon>
+            {{ w.trainingTitle || w.title || 'Workout' }}
+          </span>
+        </ng-container>
+      </div>
+      <div class="view-selector">
+        <button [class.active]="viewMode === 'week'" (click)="setViewMode('week')">Week</button>
+        <button [class.active]="viewMode === 'month'" (click)="setViewMode('month')">Month</button>
+      </div>
+      <div class="nav-controls">
+        <button (click)="navigateWeek(-1)">&lt; {{ viewMode === 'week' ? 'Prev' : 'Last Month' }}</button>
+        <span class="date-range" *ngIf="viewMode === 'week'">{{ startDate | date : 'MMM d' }} - {{ endDate | date : 'MMM d, y' }}</span>
+        <span class="date-range" *ngIf="viewMode === 'month'">{{ startDate | date : 'MMMM yyyy' }}</span>
+        <button (click)="navigateWeek(1)">{{ viewMode === 'week' ? 'Next' : 'Next Month' }} &gt;</button>
+      </div>
     </div>
   </div>
 
   <ng-container *ngIf="workoutsByDay$ | async as wbd">
-    <app-training-load-chart [workoutsByDay]="wbd" [days]="weekDays"></app-training-load-chart>
-    <div class="calendar-grid">
+    <div class="calendar-grid" *ngIf="viewMode === 'week'">
+      <!-- ... existing week grid content ... -->
       <div *ngFor="let day of weekDays; trackBy: trackByDay" class="day-column glass" [class.today]="day.isToday">
+        <!-- Week Day Column Content - KEEP EXISTING -->
         <div class="day-header">
           <span class="weekday">{{ day.date | date : 'EEE' }}</span>
           <span class="day-number">{{ day.date | date : 'd' }}</span>
         </div>
 
-        <div class="workout-slot">
+        <div class="workout-slot" cdkDropList [cdkDropListData]="wbd.get(day.key) || EMPTY"
+          (cdkDropListDropped)="onDrop($event, day)">
           <div *ngFor="let workout of wbd.get(day.key) || EMPTY; trackBy: trackByWorkout" class="workout-card clickable"
-            [class.completed]="workout.status === 'COMPLETED'" [class.skipped]="workout.status === 'SKIPPED'"
+            cdkDrag [cdkDragData]="workout" [class.completed]="workout.status === 'COMPLETED'"
+            [class.skipped]="workout.status === 'SKIPPED'"
             [style.border-left]="'3px solid ' + (workout.trainingType ? getTypeColor(workout.trainingType) : 'var(--accent-color)')"
             (click)="selectWorkout(workout)">
             <div class="card-top">
@@ -64,7 +84,8 @@
             </div>
 
             <div class="workout-actions" *ngIf="workout.status === 'PENDING'">
-              <button class="btn-complete" (click)="markComplete(workout); $event.stopPropagation()">COMPLETE</button>
+              <button class="btn-complete" [disabled]="isFutureDate(workout.scheduledDate)"
+                (click)="markComplete(workout); $event.stopPropagation()">COMPLETE</button>
               <button class="btn-skip" (click)="markSkipped(workout); $event.stopPropagation()">SKIP</button>
             </div>
           </div>
@@ -72,6 +93,34 @@
           <button class="add-btn" (click)="openScheduleModal(day)">+ ADD</button>
 
           <div *ngIf="!(wbd.get(day.key) || EMPTY).length" class="rest-day">REST DAY</div>
+        </div>
+      </div>
+    </div>
+
+    <app-training-load-chart *ngIf="viewMode === 'week'" [workoutsByDay]="wbd"
+      [days]="weekDays"></app-training-load-chart>
+
+    <div class="month-grid" *ngIf="viewMode === 'month'">
+      <div class="month-day-names">
+        <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
+      </div>
+      <div class="month-body">
+        <div *ngFor="let day of monthDays; trackBy: trackByDay" class="month-cell glass" [class.today]="day.isToday"
+          [class.other-month]="day.date.getMonth() !== startDate.getMonth()">
+          <div class="cell-header">
+            <span class="cell-day">{{ day.date | date : 'd' }}</span>
+            <button class="cell-add" (click)="openScheduleModal(day)">+</button>
+          </div>
+          <div class="cell-workouts" cdkDropList [cdkDropListData]="wbd.get(day.key) || EMPTY"
+            (cdkDropListDropped)="onDrop($event, day)">
+            <div *ngFor="let workout of wbd.get(day.key) || EMPTY; trackBy: trackByWorkout" class="mini-card" cdkDrag
+              [cdkDragData]="workout" (click)="selectWorkout(workout)"
+              [style.border-left]="'2px solid ' + (workout.trainingType ? getTypeColor(workout.trainingType) : 'var(--accent-color)')">
+              <app-sport-icon [sport]="workout.sportType" [size]="10"></app-sport-icon>
+              <span class="mini-title">{{ workout.trainingTitle || workout.title || 'Workout' }}</span>
+              <span class="mini-tss">{{ workout.tss || 0 }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

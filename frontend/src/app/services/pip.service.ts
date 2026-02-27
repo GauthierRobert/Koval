@@ -1,4 +1,4 @@
-import { Injectable, EventEmitter } from '@angular/core';
+import {EventEmitter, Injectable} from '@angular/core';
 
 @Injectable({
     providedIn: 'root'
@@ -40,8 +40,8 @@ export class PipService {
             // Sync media session state to reflect actual workout state
             this.setupMediaSession(data.isPaused);
 
-            // If strictly paused, we could pause the video here, but keeping it "playing" 
-            // ensures the canvas updates are reflected if the UI repaints. 
+            // If strictly paused, we could pause the video here, but keeping it "playing"
+            // ensures the canvas updates are reflected if the UI repaints.
             // The MediaSession state handles the OS controls.
         }
     }

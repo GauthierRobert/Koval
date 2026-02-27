@@ -6,15 +6,11 @@
 
 - **Overdue workouts inline with week panel** — Overdue scheduled workouts should appear on the same row/line as the current week panel header, not below it as a separate section.
 
-- **Reschedule workouts via drag & drop** — In the calendar view, allow dragging a scheduled workout card to a different day to reschedule it. Should update the `scheduledDate` on drop and reflect the change immediately in the UI.
-
 - **Month view for calendar** — Add a month display mode alongside the existing week view. Toggle between Week / Month with a selector. Month view should show workout cards compactly (label + TSS or sport icon).
 
 - **Differentiate sports in workout load** — Calendar workout load bars/indicators must use distinct colors per sport (cycling, running, swimming, etc.). Add a label showing the workout load value inside the indicator; fall back to a tooltip when the element is too narrow to display text.
 
-- **Link executed sessions to scheduled workouts in calendar** — Completed workout sessions should appear in the calendar. When a session date matches a scheduled workout, link them automatically. If the match is ambiguous, expose a manual picker so the user can associate a session with a scheduled workout.
-
-- **Disable "complete" action for future workouts** — The button/action to mark a workout as completed must be disabled (greyed out, not hidden) when the scheduled date is in the future.
+- **Disable "complete" action for future workouts** — The button/action to mark a workout as completed must be disabled. In summary panel as well
 
 ---
 
@@ -28,9 +24,7 @@
 
 - **Compact history workout cards** — History workout boxes should match the visual density of workout plan cards. Reduce padding, font sizes, and spacing so more items are visible without scrolling.
 
-- **Remove Power Progression from history panel** — Delete the "Power Progression" block/chart from the history detail panel. It is not needed there.
-
-- **Scheduled training card: remove top border** — In the week / overdue panel, the top border of scheduled training cards should be hidden to give them a cleaner, flush appearance.
+- **Scheduled training card** — In the week / overdue panel, the top border of scheduled training cards is translated of 2 px making it to disapear. Fix this issue so it remains visible.
 
 ---
 

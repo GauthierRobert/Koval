@@ -1,11 +1,11 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { AuthService } from '../../services/auth.service';
-import { MetricsService, PmcDataPoint } from '../../services/metrics.service';
-import { CalendarService } from '../../services/calendar.service';
-import { PmcChartComponent } from '../pmc-chart/pmc-chart.component';
+import {Component, inject, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {BehaviorSubject, combineLatest, Observable} from 'rxjs';
+import {map} from 'rxjs/operators';
+import {AuthService} from '../../services/auth.service';
+import {MetricsService, PmcDataPoint} from '../../services/metrics.service';
+import {CalendarService} from '../../services/calendar.service';
+import {PmcChartComponent} from '../pmc-chart/pmc-chart.component';
 
 type Period = '1w' | '1m' | '3m' | '6m' | '1y';
 

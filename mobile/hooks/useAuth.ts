@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, fetchCurrentUser, loginWithGoogle, logout as logoutService } from '../services/authService';
-import { getToken } from '../services/api';
+import React, {createContext, useContext, useEffect, useState} from 'react';
+import {fetchCurrentUser, loginWithGoogle, logout as logoutService, User} from '../services/authService';
+import {getToken} from '../services/api';
 
 interface AuthContextValue {
   user: User | null;

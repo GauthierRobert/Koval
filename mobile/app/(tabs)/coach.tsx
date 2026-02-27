@@ -1,32 +1,32 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-  ScrollView,
-  SafeAreaView,
-  Image,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    Image,
+    RefreshControl,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useAuth';
+import {StatusBar} from 'expo-status-bar';
+import {Ionicons} from '@expo/vector-icons';
+import {useAuth} from '../../hooks/useAuth';
 import {
-  fetchAthletes,
-  fetchAthleteSchedule,
-  computeMetrics,
-  coachMarkCompleted,
-  coachMarkSkipped,
-  Athlete,
-  AthleteMetrics,
+    Athlete,
+    AthleteMetrics,
+    coachMarkCompleted,
+    coachMarkSkipped,
+    computeMetrics,
+    fetchAthletes,
+    fetchAthleteSchedule,
 } from '../../services/coachService';
-import { ScheduledWorkout } from '../../services/calendarService';
-import { WorkoutCard } from '../../components/calendar/WorkoutCard';
-import { theme } from '../../constants/theme';
+import {ScheduledWorkout} from '../../services/calendarService';
+import {WorkoutCard} from '../../components/calendar/WorkoutCard';
+import {theme} from '../../constants/theme';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 

@@ -1,9 +1,8 @@
-import React from 'react';
-import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect } from 'react';
-import { AuthProvider, useAuth } from '../hooks/useAuth';
-import { ActivityIndicator, View } from 'react-native';
-import { theme } from '../constants/theme';
+import React, {useEffect} from 'react';
+import {Stack, useRouter, useSegments} from 'expo-router';
+import {AuthProvider, useAuth} from '../hooks/useAuth';
+import {ActivityIndicator, View} from 'react-native';
+import {theme} from '../constants/theme';
 
 function RootLayoutInner() {
   const { user, loading } = useAuth();

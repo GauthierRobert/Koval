@@ -1,11 +1,11 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { ChatService } from '../../services/chat.service';
-import { BluetoothService } from '../../services/bluetooth.service';
-import { AuthService } from '../../services/auth.service';
-import { combineLatest, map } from 'rxjs';
+import {Component, inject} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {Router, RouterModule} from '@angular/router';
+import {FormsModule} from '@angular/forms';
+import {ChatService} from '../../services/chat.service';
+import {BluetoothService} from '../../services/bluetooth.service';
+import {AuthService} from '../../services/auth.service';
+import {combineLatest, map} from 'rxjs';
 
 @Component({
   selector: 'app-top-bar',

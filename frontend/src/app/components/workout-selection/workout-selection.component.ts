@@ -12,6 +12,7 @@ import { CalendarService } from '../../services/calendar.service';
 import { AuthService, User } from '../../services/auth.service';
 import { HistoryService } from '../../services/history.service';
 import { ScheduledWorkout } from '../../services/coach.service';
+import { SportIconComponent } from '../sport-icon/sport-icon.component';
 
 function toDateKey(d: Date): string {
   const y = d.getFullYear();
@@ -30,6 +31,7 @@ function toDateKey(d: Date): string {
     SidebarComponent,
     WorkoutDetailModalComponent,
     SessionAnalysisComponent,
+    SportIconComponent,
   ],
   templateUrl: './workout-selection.component.html',
   styleUrl: './workout-selection.component.css',

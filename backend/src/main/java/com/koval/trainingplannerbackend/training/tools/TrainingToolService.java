@@ -1,7 +1,7 @@
 package com.koval.trainingplannerbackend.training.tools;
 
-import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.TrainingService;
+import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;

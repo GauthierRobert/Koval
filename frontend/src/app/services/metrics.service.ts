@@ -1,6 +1,6 @@
-import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import {inject, Injectable} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {Observable} from 'rxjs';
 
 // @ts-ignore
 import FitParser from 'fit-file-parser';
@@ -11,6 +11,7 @@ export interface PmcDataPoint {
     atl: number;
     tsb: number;
     dailyTss: number;
+    sportTss?: Record<string, number>;
     predicted: boolean;
 }
 
@@ -39,6 +40,13 @@ export class MetricsService {
         if (!ftp || ftp <= 0 || !avgPower || !durationSeconds) return 0;
         const IF = this.computeIF(avgPower, ftp);
         return (durationSeconds / 3600) * IF * IF * 100;
+    }
+
+    computeTssFromRpe(durationSeconds: number, rpe: number): number {
+        if (!durationSeconds || !rpe) return 0;
+        // Simple heuristic: (RPE/10)^2 * hours * 100
+        const intensity = rpe / 10;
+        return (durationSeconds / 3600) * intensity * intensity * 100;
     }
 
     // ── PMC HTTP calls ────────────────────────────────────────────────────────
@@ -152,7 +160,7 @@ export class MetricsService {
                     reject(new Error(error));
                     return;
                 }
-              console.log(data.records[3])
+                console.log(data.records[3])
                 const records: FitRecord[] = (data.records || []).map((r: any) => ({
                     timestamp: r.timestamp ? Math.round(new Date(r.timestamp).getTime() / 1000) : 0,
                     power: Math.round(r.power || 0),

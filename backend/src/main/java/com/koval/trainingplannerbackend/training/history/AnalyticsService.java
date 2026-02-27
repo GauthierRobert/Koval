@@ -18,7 +18,8 @@ public class AnalyticsService {
     private final UserRepository userRepository;
 
     public record PmcDataPoint(LocalDate date, double ctl, double atl,
-                               double tsb, double dailyTss, boolean predicted) {}
+            double tsb, double dailyTss, Map<String, Double> sportTss, boolean predicted) {
+    }
 
     public AnalyticsService(CompletedSessionRepository sessionRepository, UserRepository userRepository) {
         this.sessionRepository = sessionRepository;
@@ -32,28 +33,33 @@ public class AnalyticsService {
      * - SWIMMING: speed-based sTSS using criticalSwimSpeed
      */
     public void computeAndAttachMetrics(CompletedSession session, User user) {
-        if (user == null) return;
+        if (user == null)
+            return;
         double durationHours = session.getTotalDurationSeconds() / 3600.0;
-        if (durationHours <= 0) return;
+        if (durationHours <= 0)
+            return;
 
         SportType sport = parseSportType(session.getSportType());
         double intensityFactor = 0;
 
         if (sport == SportType.CYCLING) {
             int ftp = user.getFtp() != null ? user.getFtp() : 0;
-            if (ftp <= 0 || session.getAvgPower() <= 0) return;
+            if (ftp <= 0 || session.getAvgPower() <= 0)
+                return;
             intensityFactor = session.getAvgPower() / (double) ftp;
 
         } else if (sport == SportType.RUNNING) {
             int ftPaceSec = user.getFunctionalThresholdPace() != null ? user.getFunctionalThresholdPace() : 0;
-            if (ftPaceSec <= 0 || session.getAvgSpeed() <= 0) return;
+            if (ftPaceSec <= 0 || session.getAvgSpeed() <= 0)
+                return;
             // functionalThresholdPace is sec/km → threshold speed in m/s = 1000 / sec/km
             double thresholdSpeed = 1000.0 / ftPaceSec;
             intensityFactor = session.getAvgSpeed() / thresholdSpeed;
 
         } else if (sport == SportType.SWIMMING) {
             int cssSec = user.getCriticalSwimSpeed() != null ? user.getCriticalSwimSpeed() : 0;
-            if (cssSec <= 0 || session.getAvgSpeed() <= 0) return;
+            if (cssSec <= 0 || session.getAvgSpeed() <= 0)
+                return;
             // criticalSwimSpeed is sec/100m → CSS in m/s = 100 / sec/100m
             double cssSpeed = 100.0 / cssSec;
             intensityFactor = session.getAvgSpeed() / cssSpeed;
@@ -65,19 +71,22 @@ public class AnalyticsService {
                 intensityFactor = session.getAvgPower() / (double) ftp;
             } else {
                 int ftPaceSec = user.getFunctionalThresholdPace() != null ? user.getFunctionalThresholdPace() : 0;
-                if (ftPaceSec <= 0 || session.getAvgSpeed() <= 0) return;
+                if (ftPaceSec <= 0 || session.getAvgSpeed() <= 0)
+                    return;
                 intensityFactor = session.getAvgSpeed() / (1000.0 / ftPaceSec);
             }
         }
 
-        if (intensityFactor <= 0) return;
+        if (intensityFactor <= 0)
+            return;
         double tss = durationHours * intensityFactor * intensityFactor * 100.0;
         session.setIntensityFactor(Math.round(intensityFactor * 1000.0) / 1000.0);
         session.setTss(Math.round(tss * 10.0) / 10.0);
     }
 
     private SportType parseSportType(String sportType) {
-        if (sportType == null) return SportType.CYCLING;
+        if (sportType == null)
+            return SportType.CYCLING;
         try {
             return SportType.valueOf(sportType);
         } catch (IllegalArgumentException e) {
@@ -86,19 +95,21 @@ public class AnalyticsService {
     }
 
     /**
-     * Load all sessions for a user in chronological order, recompute CTL/ATL/TSB via EMA,
+     * Load all sessions for a user in chronological order, recompute CTL/ATL/TSB
+     * via EMA,
      * and save the final values on the User document.
      */
     public void recomputeAndSaveUserLoad(String userId) {
         userRepository.findById(userId).ifPresent(user -> {
             List<CompletedSession> sessions = sessionRepository.findByUserIdOrderByCompletedAtAsc(userId);
-            if (sessions.isEmpty()) return;
+            if (sessions.isEmpty())
+                return;
 
             LocalDate firstDate = sessions.get(0).getCompletedAt().toLocalDate();
             LocalDate today = LocalDate.now();
 
             // Build a map of date -> total TSS for that day
-            Map<LocalDate, Double> dailyTssMap = buildDailyTssMap(sessions);
+            Map<LocalDate, Map<String, Double>> dailyTssMap = buildDailyTssMap(sessions);
 
             double ctl = 0.0;
             double atl = 0.0;
@@ -107,7 +118,8 @@ public class AnalyticsService {
 
             LocalDate cursor = firstDate;
             while (!cursor.isAfter(today)) {
-                double dailyTss = dailyTssMap.getOrDefault(cursor, 0.0);
+                Map<String, Double> sports = dailyTssMap.getOrDefault(cursor, Map.of());
+                double dailyTss = sports.values().stream().mapToDouble(Double::doubleValue).sum();
                 ctl = ctl + (dailyTss - ctl) * kCTL;
                 atl = atl + (dailyTss - atl) * kATL;
                 cursor = cursor.plusDays(1);
@@ -121,17 +133,19 @@ public class AnalyticsService {
     }
 
     /**
-     * Generate PMC data points for the given date range, including decay on rest days.
+     * Generate PMC data points for the given date range, including decay on rest
+     * days.
      */
     public List<PmcDataPoint> generatePmc(String userId, LocalDate from, LocalDate to) {
         List<CompletedSession> sessions = sessionRepository.findByUserIdOrderByCompletedAtAsc(userId);
 
         // Build daily TSS map from all sessions (not just the window)
-        Map<LocalDate, Double> dailyTssMap = buildDailyTssMap(sessions);
+        Map<LocalDate, Map<String, Double>> dailyTssMap = buildDailyTssMap(sessions);
 
         // Start EMA from the earliest session or from 'from' date, whichever is earlier
         LocalDate startDate = sessions.isEmpty() ? from : sessions.get(0).getCompletedAt().toLocalDate();
-        if (from.isBefore(startDate)) startDate = from;
+        if (from.isBefore(startDate))
+            startDate = from;
 
         double ctl = 0.0;
         double atl = 0.0;
@@ -141,7 +155,8 @@ public class AnalyticsService {
         // Warm up EMA from startDate to the day before 'from'
         LocalDate cursor = startDate;
         while (cursor.isBefore(from)) {
-            double dailyTss = dailyTssMap.getOrDefault(cursor, 0.0);
+            Map<String, Double> sports = dailyTssMap.getOrDefault(cursor, Map.of());
+            double dailyTss = sports.values().stream().mapToDouble(Double::doubleValue).sum();
             ctl = ctl + (dailyTss - ctl) * kCTL;
             atl = atl + (dailyTss - atl) * kATL;
             cursor = cursor.plusDays(1);
@@ -151,7 +166,8 @@ public class AnalyticsService {
         List<PmcDataPoint> result = new ArrayList<>();
         cursor = from;
         while (!cursor.isAfter(to)) {
-            double dailyTss = dailyTssMap.getOrDefault(cursor, 0.0);
+            Map<String, Double> sports = dailyTssMap.getOrDefault(cursor, Map.of());
+            double dailyTss = sports.values().stream().mapToDouble(Double::doubleValue).sum();
             ctl = ctl + (dailyTss - ctl) * kCTL;
             atl = atl + (dailyTss - atl) * kATL;
             double tsb = ctl - atl;
@@ -161,20 +177,24 @@ public class AnalyticsService {
                     Math.round(atl * 10.0) / 10.0,
                     Math.round(tsb * 10.0) / 10.0,
                     dailyTss,
-                    false
-            ));
+                    sports,
+                    false));
             cursor = cursor.plusDays(1);
         }
 
         return result;
     }
 
-    private Map<LocalDate, Double> buildDailyTssMap(List<CompletedSession> sessions) {
-        Map<LocalDate, Double> map = new HashMap<>();
+    private Map<LocalDate, Map<String, Double>> buildDailyTssMap(List<CompletedSession> sessions) {
+        Map<LocalDate, Map<String, Double>> map = new HashMap<>();
         for (CompletedSession s : sessions) {
-            if (s.getTss() == null || s.getCompletedAt() == null) continue;
+            if (s.getTss() == null || s.getCompletedAt() == null)
+                continue;
             LocalDate date = s.getCompletedAt().toLocalDate();
-            map.merge(date, s.getTss(), Double::sum);
+            String sport = s.getSportType() != null ? s.getSportType() : "CYCLING";
+
+            map.computeIfAbsent(date, k -> new HashMap<>())
+                    .merge(sport, s.getTss(), Double::sum);
         }
         return map;
     }

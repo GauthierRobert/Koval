@@ -1,6 +1,7 @@
     .history-container {
       padding: 12px 0;
     }
+
     .section-header {
       display: flex;
       align-items: center;
@@ -8,6 +9,7 @@
       padding: 0 12px;
       margin-bottom: 16px;
     }
+
     .section-title {
       font-size: 12px;
       text-transform: uppercase;
@@ -15,6 +17,7 @@
       letter-spacing: 1px;
       margin: 0;
     }
+
     .import-btn {
       display: flex;
       align-items: center;
@@ -30,16 +33,20 @@
       cursor: pointer;
       transition: all 0.2s;
     }
+
     .import-btn:hover:not(:disabled) {
       background: rgba(255, 157, 0, 0.15);
     }
+
     .import-btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
+
     .fit-input {
       display: none;
     }
+
     .import-error {
       margin: 0 12px 12px;
       padding: 8px 12px;
@@ -49,63 +56,80 @@
       color: #f87171;
       font-size: 11px;
     }
+
     .empty-hint {
       font-size: 10px;
       color: var(--text-dim);
       margin-top: 4px;
     }
+
     .history-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 2px;
     }
+
     .empty-state {
       padding: 20px 12px;
       text-align: center;
       color: var(--text-muted);
       font-size: 12px;
     }
+
     .history-item {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px;
-      border-radius: 12px;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 10px;
       cursor: pointer;
       transition: background 0.2s;
       border: 1px solid transparent;
     }
+
     .history-item:hover {
       background: rgba(255, 255, 255, 0.05);
     }
-    .history-item.active {
-      background: rgba(255, 255, 255, 0.08);
+
+    /* Redundant with .selected, keep for safety or remove if unused elsewhere */
+    .history-item.selected {
+      background: rgba(255, 157, 0, 0.08);
       border-color: var(--accent-color);
     }
+
+    .history-item.selected {
+      background: rgba(255, 157, 0, 0.08);
+      border-color: rgba(255, 157, 0, 0.35);
+    }
+
     .item-icon {
       font-size: 20px;
       color: #2ecc71;
     }
+
     .item-details {
       display: flex;
       flex-direction: column;
       overflow: hidden;
       flex: 1;
     }
+
     .item-title {
-      font-size: 14px;
-      font-weight: 500;
+      font-size: 12px;
+      font-weight: 600;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
     .item-meta {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--text-muted);
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
     }
+
     .dl-fit-btn {
       flex-shrink: 0;
       background: none;
@@ -121,27 +145,33 @@
       transition: all 0.15s;
       opacity: 0;
     }
+
     .history-item:hover .dl-fit-btn {
       opacity: 1;
     }
+
     .dl-fit-btn:hover {
       background: rgba(255, 157, 0, 0.1);
       border-color: rgba(255, 157, 0, 0.3);
       color: var(--accent-color);
     }
+
     .sync-icons {
       display: inline-flex;
       gap: 4px;
       margin-left: 4px;
     }
+
     .sync-icons span {
       font-size: 10px;
     }
+
     .item-metrics {
       display: flex;
       gap: 5px;
       margin-top: 3px;
     }
+
     .metric-badge {
       font-size: 9px;
       font-weight: 700;
@@ -149,22 +179,26 @@
       padding: 1px 6px;
       border-radius: 4px;
     }
+
     .metric-badge.tss {
       background: rgba(255, 157, 0, 0.12);
       border: 1px solid rgba(255, 157, 0, 0.3);
       color: var(--accent-color);
     }
+
     .metric-badge.if {
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.1);
       color: var(--text-muted);
     }
+
     .item-actions {
       display: flex;
       flex-direction: column;
       gap: 4px;
       flex-shrink: 0;
     }
+
     .analysis-btn {
       background: none;
       border: 1px solid transparent;
@@ -181,9 +215,11 @@
       transition: all 0.15s;
       opacity: 0;
     }
+
     .history-item:hover .analysis-btn {
       opacity: 1;
     }
+
     .analysis-btn:hover {
       background: rgba(255, 157, 0, 0.1);
       border-color: rgba(255, 157, 0, 0.3);

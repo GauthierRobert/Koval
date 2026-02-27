@@ -1,8 +1,8 @@
-import { Injectable, NgZone, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject } from 'rxjs';
-import { skip, take } from 'rxjs/operators';
-import { TrainingService } from './training.service';
+import {inject, Injectable, NgZone} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {BehaviorSubject} from 'rxjs';
+import {skip, take} from 'rxjs/operators';
+import {TrainingService} from './training.service';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';

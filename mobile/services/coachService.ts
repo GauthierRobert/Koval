@@ -1,5 +1,5 @@
-import { apiJson, apiFetch } from './api';
-import type { ScheduledWorkout } from './calendarService';
+import {apiFetch, apiJson} from './api';
+import type {ScheduledWorkout} from './calendarService';
 
 export interface Athlete {
   id: string;

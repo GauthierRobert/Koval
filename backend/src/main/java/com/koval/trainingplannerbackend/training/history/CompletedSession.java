@@ -31,9 +31,10 @@ public class CompletedSession {
     private String sportType;
     private List<BlockSummary> blockSummaries;
 
+    private String scheduledWorkoutId; // Reference to ScheduledWorkout
     private Double tss;
     private Double intensityFactor;
-    private String fitFileId;   // GridFS ObjectId; null when no FIT stored
+    private String fitFileId; // GridFS ObjectId; null when no FIT stored
 
     public record BlockSummary(
             String label,
@@ -42,6 +43,6 @@ public class CompletedSession {
             double targetPower,
             double actualPower,
             double actualCadence,
-            double actualHR
-    ) {}
+            double actualHR) {
+    }
 }

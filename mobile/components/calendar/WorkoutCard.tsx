@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../constants/theme';
-import { SportIcon } from '../SportIcon';
-import type { ScheduledWorkout } from '../../services/calendarService';
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import {theme} from '../../constants/theme';
+import {SportIcon} from '../SportIcon';
+import type {ScheduledWorkout} from '../../services/calendarService';
 
 interface WorkoutCardProps {
   workout: ScheduledWorkout;

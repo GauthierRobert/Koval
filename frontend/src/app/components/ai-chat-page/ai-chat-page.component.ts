@@ -1,10 +1,10 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
-import { ChatService } from '../../services/chat.service';
-import { Training } from '../../services/training.service';
-import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.component';
+import {Component, ElementRef, inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {Subscription} from 'rxjs';
+import {ChatService} from '../../services/chat.service';
+import {Training} from '../../services/training.service';
+import {ScheduleModalComponent} from '../schedule-modal/schedule-modal.component';
 
 @Component({
   selector: 'app-ai-chat-page',

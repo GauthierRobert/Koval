@@ -1,7 +1,7 @@
-import { Injectable, inject } from '@angular/core';
-import { AuthService, User } from './auth.service';
-import { Training, WorkoutBlock } from './training.service';
-import { ZoneSystem } from './zone';
+import {inject, Injectable} from '@angular/core';
+import {AuthService, User} from './auth.service';
+import {Training, WorkoutBlock} from './training.service';
+import {ZoneSystem} from './zone';
 
 @Injectable({
     providedIn: 'root'
@@ -37,7 +37,7 @@ export class DurationEstimationService {
             // Simplified physics model for visualization:
             // Assume 30km/h (8.33 m/s) at Threshold (100% FTP or Intensity)
             // Speed scales roughly with cube root of power, but let's use sqrt for a "visual feel" or just linear for simplicity.
-            // Let's us a simple linear approximation around 30km/h. 
+            // Let's us a simple linear approximation around 30km/h.
             // 100% -> 30km/h
             // 50% -> 20km/h?
 

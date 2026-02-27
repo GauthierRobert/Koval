@@ -1,4 +1,4 @@
-import { apiJson, apiFetch } from './api';
+import {apiFetch, apiJson} from './api';
 
 export type ScheduleStatus = 'PENDING' | 'COMPLETED' | 'SKIPPED';
 export type SportType = 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK';

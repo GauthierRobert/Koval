@@ -1,13 +1,7 @@
-import React, { useState } from 'react';
-import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Animated,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../constants/theme';
+import React, {useState} from 'react';
+import {StyleSheet, TextInput, TouchableOpacity, View,} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import {theme} from '../../constants/theme';
 
 interface ChatInputProps {
   onSend: (text: string) => void;

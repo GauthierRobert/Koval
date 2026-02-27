@@ -139,6 +139,7 @@
   gap: 0.6rem;
   position: relative;
   border: 1px solid var(--glass-border);
+  border-top: none;
 }
 
 .accent-border {
@@ -303,6 +304,12 @@
   filter: brightness(1.2);
 }
 
+.btn-complete:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  filter: none;
+}
+
 .btn-skip {
   background: var(--surface-hover);
   color: var(--text-muted);
@@ -335,6 +342,72 @@
   background: rgba(255, 157, 0, 0.05);
 }
 
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.overdue-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.overdue-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #f87171;
+}
+
+.overdue-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: #fca5a5;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.overdue-chip:hover {
+  background: rgba(248, 113, 113, 0.2);
+}
+
+/* CDK drag-drop */
+.cdk-drag-preview {
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  opacity: 0.9;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.3;
+}
+
+.cdk-drag-animating {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cdk-drop-list-dragging .workout-card:not(.cdk-drag-placeholder) {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
 /* Rest Day */
 .rest-day {
   flex: 1;
@@ -347,4 +420,173 @@
   letter-spacing: 3px;
   font-size: 0.7rem;
   transform: rotate(-90deg);
+}
+
+/* View Selector */
+.view-selector {
+  display: flex;
+  background: var(--surface-elevated);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+}
+
+.view-selector button {
+  background: none;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.view-selector button.active {
+  background: var(--accent-color);
+  color: #000;
+}
+
+/* Month Grid */
+.month-grid {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 1px;
+  background: var(--glass-border);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+}
+
+.month-day-names {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: var(--surface-elevated);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.month-day-names span {
+  padding: 8px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+.month-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 1px;
+}
+
+.month-cell {
+  background: var(--bg-color);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.month-cell:hover {
+  background: var(--surface-hover);
+}
+
+.month-cell.today {
+  background: rgba(255, 157, 0, 0.03);
+}
+
+.month-cell.today .cell-day {
+  background: var(--accent-color);
+  color: #000;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.month-cell.other-month {
+  opacity: 0.35;
+}
+
+.cell-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cell-day {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.cell-add {
+  background: none;
+  border: none;
+  color: var(--accent-color);
+  font-size: 16px;
+  font-weight: 300;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.month-cell:hover .cell-add {
+  opacity: 1;
+}
+
+.cell-workouts {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow-y: auto;
+}
+
+.mini-card {
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: var(--surface-elevated);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  cursor: pointer;
+  border: 1px solid var(--glass-border);
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.mini-card:hover {
+  transform: translateX(2px);
+  border-color: rgba(255, 157, 0, 0.4);
+}
+
+.mini-title {
+  flex: 1;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-color);
+}
+
+.mini-tss {
+  font-weight: 900;
+  color: var(--accent-color);
+  font-size: 9px;
+  opacity: 0.8;
 }

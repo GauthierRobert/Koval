@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { SessionSummary } from './workout-execution.service';
+import {Injectable} from '@angular/core';
+import {SessionSummary} from './workout-execution.service';
 
 // FIT epoch offset: seconds between Unix epoch and FIT epoch (1989-12-31T00:00:00Z)
 const FIT_EPOCH_OFFSET = 631065600;

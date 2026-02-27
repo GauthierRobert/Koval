@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import { ScheduledWorkout } from './coach.service';
+import {Injectable} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {Observable, of} from 'rxjs';
+import {catchError} from 'rxjs/operators';
+import {ScheduledWorkout} from './coach.service';
 
 @Injectable({
     providedIn: 'root',
@@ -10,7 +10,7 @@ import { ScheduledWorkout } from './coach.service';
 export class CalendarService {
     private apiUrl = 'http://localhost:8080/api/schedule';
 
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient) { }
 
     getMySchedule(start: string, end: string): Observable<ScheduledWorkout[]> {
         return this.http
@@ -46,6 +46,13 @@ export class CalendarService {
         return this.http.post<ScheduledWorkout>(
             `${this.apiUrl}/${scheduledWorkoutId}/skip`,
             {}
+        );
+    }
+
+    rescheduleWorkout(id: string, newDate: string): Observable<ScheduledWorkout> {
+        return this.http.patch<ScheduledWorkout>(
+            `${this.apiUrl}/${id}/reschedule`,
+            { scheduledDate: newDate }
         );
     }
 }

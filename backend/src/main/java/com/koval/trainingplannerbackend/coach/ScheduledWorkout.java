@@ -24,6 +24,7 @@ public class ScheduledWorkout {
     private String notes; // Coach notes for this assignment
     private Integer tss;
     private Double intensityFactor;
+    private String sessionId; // Reference to CompletedSession
     private LocalDateTime completedAt;
     private LocalDateTime createdAt;
 

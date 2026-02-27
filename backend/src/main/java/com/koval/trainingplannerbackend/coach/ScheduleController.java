@@ -1,11 +1,20 @@
 package com.koval.trainingplannerbackend.coach;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
-import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
+import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -111,6 +120,31 @@ public class ScheduleController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @PatchMapping("/{id}/reschedule")
+    public ResponseEntity<ScheduledWorkoutResponse> rescheduleWorkout(
+            @PathVariable String id,
+            @RequestBody Map<String, String> body) {
+        String userId = SecurityUtils.getCurrentUserId();
+        String newDate = body.get("scheduledDate");
+        if (newDate == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        return scheduledWorkoutRepository.findById(id)
+                .map(workout -> {
+                    if (!userId.equals(workout.getAthleteId())) {
+                        return ResponseEntity.status(403).<ScheduledWorkoutResponse>build();
+                    }
+                    if (workout.getStatus() != ScheduleStatus.PENDING) {
+                        return ResponseEntity.badRequest().<ScheduledWorkoutResponse>build();
+                    }
+                    workout.setScheduledDate(LocalDate.parse(newDate));
+                    ScheduledWorkout saved = scheduledWorkoutRepository.save(workout);
+                    return ResponseEntity.ok(enrichSingle(saved));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/{id}/skip")

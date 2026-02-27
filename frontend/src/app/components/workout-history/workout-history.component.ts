@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { map } from 'rxjs/operators';
 import { SportIconComponent } from '../sport-icon/sport-icon.component';
 import { HistoryService, SavedSession } from '../../services/history.service';
-import { ProgressionChartComponent } from '../progression-chart/progression-chart.component';
+
 import { SessionSummary, BlockSummary } from '../../services/workout-execution.service';
 import { FitExportService } from '../../services/fit-export.service';
 import { AuthService } from '../../services/auth.service';
@@ -15,14 +15,14 @@ import FitParser from 'fit-file-parser';
 @Component({
     selector: 'app-workout-history',
     standalone: true,
-    imports: [CommonModule, SportIconComponent, ProgressionChartComponent],
+    imports: [CommonModule, SportIconComponent],
     templateUrl: './workout-history.component.html',
     styleUrl: './workout-history.component.css',
 })
 export class WorkoutHistoryComponent {
     @ViewChild('fitInput') fitInputRef!: ElementRef<HTMLInputElement>;
 
-    private historyService = inject(HistoryService);
+    historyService = inject(HistoryService);
     private fitExport = inject(FitExportService);
     private authService = inject(AuthService);
     private metricsService = inject(MetricsService);

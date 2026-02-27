@@ -2,39 +2,36 @@
   <ng-container *ngIf="ftp$ | async as ftp">
     <div class="analysis-page">
 
-      <!-- Header -->
+      <!-- Header with inline key metrics -->
       <div class="page-header glass">
-        <button class="back-btn" (click)="closed.emit()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-          Close
-        </button>
         <div class="header-info">
           <div class="header-sport">
-            <app-sport-icon [sport]="session.sportType" [size]="22"></app-sport-icon>
+            <app-sport-icon [sport]="session.sportType" [size]="20"></app-sport-icon>
           </div>
-          <div>
-            <h1 class="session-title">{{ session.title }}</h1>
+          <div class="header-title-block">
+            <div class="title-row-compact">
+              <h1 class="session-title">{{ session.title }}</h1>
+              <div class="inline-metrics secondary">
+                <span class="inline-metric highlight">{{ getTss(session, ftp) }} <small>TSS</small></span>
+                <span class="inline-metric">{{ getIF(session, ftp) | number:'1.1-1' }} <small>IF</small></span>
+                <span class="inline-metric">{{ formatTime(session.totalDuration) }} <small>DUR</small></span>
+              </div>
+            </div>
             <span class="session-date">{{ formatDate(session.date) }}</span>
           </div>
         </div>
+        <div class="rpe-input-block" *ngIf="!session.tss && !session.rpe">
+          <span class="rpe-label">RATE EFFORT (1-10):</span>
+          <input type="number" min="1" max="10" (change)="saveRpe(session, $event)" placeholder="—" class="rpe-input">
+        </div>
+        <div class="rpe-display" *ngIf="!session.tss && session.rpe">
+          <span class="rpe-label">RPE:</span>
+          <span class="rpe-val">{{ session.rpe }}</span>
+        </div>
       </div>
 
-      <!-- Stat cards -->
+      <!-- Secondary stat cards -->
       <div class="stats-grid">
-        <div class="stat-card accent">
-          <span class="stat-label">TSS</span>
-          <span class="stat-value">{{ getTss(session, ftp) }}</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">IF</span>
-          <span class="stat-value">{{ getIF(session, ftp) | number:'1.2-2' }}</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Duration</span>
-          <span class="stat-value">{{ formatTime(session.totalDuration) }}</span>
-        </div>
         <div class="stat-card">
           <span class="stat-label">Avg Power</span>
           <span class="stat-value">{{ session.avgPower }}<span class="stat-unit">W</span></span>
@@ -53,13 +50,14 @@
       <div class="chart-section glass">
         <div class="section-label">FIT TIME-SERIES</div>
         <ng-container *ngIf="fitState$ | async as fit">
-          <app-fit-timeseries-chart *ngIf="!fit.loading && !fit.error && fit.records.length > 0"
-            [records]="fit.records" [ftp]="ftp" [sportType]="session.sportType">
+          <app-fit-timeseries-chart *ngIf="!fit.loading && !fit.error && fit.records.length > 0" [records]="fit.records"
+            [ftp]="ftp" [sportType]="session.sportType">
           </app-fit-timeseries-chart>
           <div class="no-fit-msg" *ngIf="!fit.loading && !fit.error && fit.records.length === 0">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
-              <path d="M3 3l18 18M10.5 10.677A2 2 0 0 0 10 12a2 2 0 0 0 4 0 2 2 0 0 0-.5-1.323"/>
-              <path d="M3 10l3 2 2-4 2 7 2-5 2 2h5"/>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+              opacity="0.4">
+              <path d="M3 3l18 18M10.5 10.677A2 2 0 0 0 10 12a2 2 0 0 0 4 0 2 2 0 0 0-.5-1.323" />
+              <path d="M3 10l3 2 2-4 2 7 2-5 2 2h5" />
             </svg>
             <p>No FIT data stored for this session</p>
             <p class="hint">Start a live session to auto-record time-series data, or import a .FIT file</p>

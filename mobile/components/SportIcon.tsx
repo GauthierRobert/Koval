@@ -1,6 +1,6 @@
 import React from 'react';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { SportType } from '../services/calendarService';
+import {MaterialCommunityIcons} from '@expo/vector-icons';
+import type {SportType} from '../services/calendarService';
 
 interface SportIconProps {
   sport?: SportType | null;

@@ -52,7 +52,8 @@
           <!-- Stats -->
           <div class="stats-row">
             <div class="stat">
-              <span class="stat-value" [style.font-style]="isDurationEstimated(training) ? 'italic' : ''">{{ getTotalDuration(training) }}</span>
+              <span class="stat-value" [style.font-style]="isDurationEstimated(training) ? 'italic' : ''">{{
+                getTotalDuration(training) }}</span>
               <span class="stat-label">Duration</span>
             </div>
             <div class="stat">
@@ -75,7 +76,8 @@
               <span class="play-icon">&#9654;</span> Start Training
             </button>
             <ng-container *ngIf="workout.status === 'PENDING'">
-              <button class="complete-btn" (click)="markComplete()">Mark Complete</button>
+              <button class="complete-btn" [disabled]="isFutureDate(workout.scheduledDate)"
+                (click)="markComplete()">Mark Complete</button>
               <button class="skip-btn" (click)="markSkipped()">Skip</button>
             </ng-container>
           </div>

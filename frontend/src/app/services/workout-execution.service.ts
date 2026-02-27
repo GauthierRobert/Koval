@@ -1,7 +1,7 @@
-import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable, Subscription, interval } from 'rxjs';
-import { Training, WorkoutBlock } from './training.service';
-import { BluetoothService, LiveMetrics } from './bluetooth.service';
+import {inject, Injectable} from '@angular/core';
+import {BehaviorSubject, interval, Subscription} from 'rxjs';
+import {Training, WorkoutBlock} from './training.service';
+import {BluetoothService, LiveMetrics} from './bluetooth.service';
 
 export type { LiveMetrics } from './bluetooth.service';
 
@@ -25,6 +25,7 @@ export interface SessionSummary {
     blockSummaries: BlockSummary[];
     history: LiveMetrics[];
     sportType: 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK';
+    scheduledWorkoutId?: string;
 }
 
 export interface ActiveSessionState {
@@ -38,6 +39,7 @@ export interface ActiveSessionState {
     history: LiveMetrics[];
     blockSummaries: BlockSummary[];
     finalSummary: SessionSummary | null;
+    scheduledWorkoutId: string | null;
     averages: {
         power: number;
         cadence: number;
@@ -69,6 +71,7 @@ export class WorkoutExecutionService {
         history: [],
         blockSummaries: [],
         finalSummary: null,
+        scheduledWorkoutId: null,
         averages: { power: 0, cadence: 0, speed: 0, heartRate: 0 },
         currentBlockAverages: { power: 0, cadence: 0, heartRate: 0, speed: 0 }
     });
@@ -82,7 +85,7 @@ export class WorkoutExecutionService {
         return blocks || [];
     }
 
-    startWorkout(training: Training) {
+    startWorkout(training: Training, scheduledWorkoutId: string | null = null) {
         const flatBlocks = this.flattenElements(training.blocks || []);
         if (flatBlocks.length === 0) return;
 
@@ -99,6 +102,7 @@ export class WorkoutExecutionService {
             history: [],
             blockSummaries: [],
             finalSummary: null,
+            scheduledWorkoutId,
             averages: { power: 0, cadence: 0, speed: 0, heartRate: 0 },
             currentBlockAverages: { power: 0, cadence: 0, heartRate: 0, speed: 0 }
         });
@@ -144,7 +148,8 @@ export class WorkoutExecutionService {
                 avgSpeed: finalState.averages.speed,
                 blockSummaries: finalState.blockSummaries,
                 history: finalState.history,
-                sportType: state.training.sportType
+                sportType: state.training.sportType,
+                scheduledWorkoutId: state.scheduledWorkoutId || undefined
             };
 
             this.stateSubject.next({ ...finalState, isActive: false, isPaused: false, finalSummary: summary });

@@ -80,7 +80,11 @@ export class TrainingHistoryComponent implements OnInit {
             else if (tag) result = result.filter((t) => t.tags?.includes(tag));
             if (sport) result = result.filter((t) => t.sportType === sport);
             if (type) result = result.filter((t) => t.trainingType === type);
-            return result;
+            return [...result].sort((a, b) => {
+                const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                return db - da;
+            });
         }),
     );
 

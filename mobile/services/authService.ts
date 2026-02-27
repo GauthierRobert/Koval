@@ -1,7 +1,7 @@
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
-import { API_URL, MOBILE_REDIRECT_URI } from '../constants/env';
-import { saveToken, removeToken, apiJson } from './api';
+import {API_URL, MOBILE_REDIRECT_URI} from '../constants/env';
+import {apiJson, removeToken, saveToken} from './api';
 
 WebBrowser.maybeCompleteAuthSession();
 

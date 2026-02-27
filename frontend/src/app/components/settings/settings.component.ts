@@ -15,7 +15,7 @@ interface PaceField {
 @Component({
     selector: 'app-settings',
     standalone: true,
-  imports: [CommonModule, FormsModule, SportIconComponent],
+    imports: [CommonModule, FormsModule, SportIconComponent],
     templateUrl: './settings.component.html',
     styleUrls: ['./settings.component.css']
 })
@@ -94,7 +94,7 @@ export class SettingsComponent implements OnInit {
             next: () => {
                 this.saving = false;
                 this.saved = true;
-                setTimeout(() => this.saved = false, 2500);
+                this.close();
             },
             error: () => {
                 this.saving = false;

@@ -16,9 +16,7 @@
     Could not parse FIT file. Make sure it contains a valid session.
   </div>
 
-  <ng-container *ngIf="sessions$ | async as sessions">
-    <app-progression-chart [sessions]="sessions"></app-progression-chart>
-  </ng-container>
+
 
   <ng-container *ngIf="ftp$ | async as ftp">
     <div class="history-list" *ngIf="sessions$ | async as sessions">
@@ -27,7 +25,9 @@
         <p class="empty-hint">Upload a .FIT file from your device to get started</p>
       </div>
 
-      <div *ngFor="let session of sessions" class="history-item" (click)="onSelect(session)">
+      <div *ngFor="let session of sessions" class="history-item"
+        [class.selected]="(historyService.selectedSession$ | async)?.id === session.id"
+        (click)="onSelect(session)">
         <div class="item-icon">
           <app-sport-icon [sport]="session.sportType" [size]="20"></app-sport-icon>
         </div>

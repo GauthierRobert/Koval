@@ -1,22 +1,22 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
-  View,
-  FlatList,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  SafeAreaView,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
+    Alert,
+    FlatList,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import { Ionicons } from '@expo/vector-icons';
-import { useStreamingChat } from '../../hooks/useStreamingChat';
-import { MessageBubble } from '../../components/chat/MessageBubble';
-import { ChatInput } from '../../components/chat/ChatInput';
-import { theme } from '../../constants/theme';
+import {StatusBar} from 'expo-status-bar';
+import {Ionicons} from '@expo/vector-icons';
+import {useStreamingChat} from '../../hooks/useStreamingChat';
+import {MessageBubble} from '../../components/chat/MessageBubble';
+import {ChatInput} from '../../components/chat/ChatInput';
+import {theme} from '../../constants/theme';
 
 const SUGGESTIONS = [
   'Create a 60-min FTP builder workout',

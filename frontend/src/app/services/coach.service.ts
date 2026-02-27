@@ -1,10 +1,10 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import { User } from './auth.service';
-import { Tag } from './tag.service';
-import { PmcDataPoint } from './metrics.service';
+import {Injectable} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {Observable, of} from 'rxjs';
+import {catchError} from 'rxjs/operators';
+import {User} from './auth.service';
+import {Tag} from './tag.service';
+import {PmcDataPoint} from './metrics.service';
 
 export interface InviteCode {
     id: string;
@@ -36,7 +36,8 @@ export interface ScheduledWorkout {
     title?: string;
     duration?: string;
     if?: number;
-    sportType: 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK' | 'GYM' ;
+    sportType: 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK' | 'GYM';
+    sessionId?: string;
 }
 
 @Injectable({

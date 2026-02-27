@@ -1,5 +1,5 @@
-import { getToken } from './api';
-import { API_URL } from '../constants/env';
+import {getToken} from './api';
+import {API_URL} from '../constants/env';
 
 export interface ChatHistory {
   id: string;

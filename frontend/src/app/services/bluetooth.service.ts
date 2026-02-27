@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, interval, map } from 'rxjs';
+import {Injectable} from '@angular/core';
+import {BehaviorSubject, interval} from 'rxjs';
 
 export interface LiveMetrics {
     power: number;
