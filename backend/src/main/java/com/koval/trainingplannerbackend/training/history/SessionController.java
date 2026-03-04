@@ -3,6 +3,10 @@ package com.koval.trainingplannerbackend.training.history;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.coach.CoachService;
+import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
+import com.koval.trainingplannerbackend.coach.ScheduledWorkoutRepository;
+import com.koval.trainingplannerbackend.training.TrainingRepository;
+import com.koval.trainingplannerbackend.training.model.Training;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -13,21 +17,16 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/sessions")
@@ -39,17 +38,23 @@ public class SessionController {
     private final UserRepository userRepository;
     private final CoachService coachService;
     private final GridFsOperations gridFsOperations;
+    private final ScheduledWorkoutRepository scheduledWorkoutRepository;
+    private final TrainingRepository trainingRepository;
 
     public SessionController(CompletedSessionRepository repository,
             AnalyticsService analyticsService,
             UserRepository userRepository,
             CoachService coachService,
-            GridFsOperations gridFsOperations) {
+            GridFsOperations gridFsOperations,
+            ScheduledWorkoutRepository scheduledWorkoutRepository,
+            TrainingRepository trainingRepository) {
         this.repository = repository;
         this.analyticsService = analyticsService;
         this.userRepository = userRepository;
         this.coachService = coachService;
         this.gridFsOperations = gridFsOperations;
+        this.scheduledWorkoutRepository = scheduledWorkoutRepository;
+        this.trainingRepository = trainingRepository;
     }
 
     @PostMapping
@@ -63,12 +68,17 @@ public class SessionController {
         // Compute TSS / IF before saving (sport-type-aware)
         userRepository.findById(userId).ifPresent(user -> analyticsService.computeAndAttachMetrics(session, user));
 
+        // Auto-associate to a scheduled workout if none provided
+        if (session.getScheduledWorkoutId() == null) {
+            tryAutoAssociate(session, userId);
+        }
+
         CompletedSession saved = repository.save(session);
 
         // Update CTL/ATL/TSB on the user document
         analyticsService.recomputeAndSaveUserLoad(userId);
 
-        // Link to scheduled workout if provided
+        // Link to scheduled workout if provided or auto-associated
         if (saved.getScheduledWorkoutId() != null) {
             try {
                 coachService.markCompleted(saved.getScheduledWorkoutId(),
@@ -83,10 +93,124 @@ public class SessionController {
         return ResponseEntity.ok(saved);
     }
 
+    private void tryAutoAssociate(CompletedSession session, String userId) {
+        LocalDate day = session.getCompletedAt().toLocalDate();
+        List<ScheduledWorkout> candidates = scheduledWorkoutRepository
+                .findByAthleteIdAndScheduledDate(userId, day);
+
+        ScheduledWorkout best = null;
+        int bestScore = 0;
+
+        for (ScheduledWorkout sw : candidates) {
+            if (!"PENDING".equals(sw.getStatus() != null ? sw.getStatus().name() : null)) continue;
+            Optional<Training> trainingOpt = trainingRepository.findById(sw.getTrainingId());
+            if (trainingOpt.isEmpty()) continue;
+            int s = scoreCandidate(session, sw, trainingOpt.get());
+            if (s > bestScore) {
+                bestScore = s;
+                best = sw;
+            }
+        }
+
+        if (bestScore >= 60 && best != null) {
+            session.setScheduledWorkoutId(best.getId());
+        }
+    }
+
+    private static int scoreCandidate(CompletedSession session, ScheduledWorkout sw, Training training) {
+        // Sport type match — hard gate
+        String sessionSport = session.getSportType();
+        if (training.getSportType() == null ||
+                !training.getSportType().name().equalsIgnoreCase(sessionSport)) {
+            return 0;
+        }
+
+        int score = 30; // sport match
+
+        // Same calendar day
+        if (sw.getScheduledDate() != null &&
+                sw.getScheduledDate().equals(session.getCompletedAt().toLocalDate())) {
+            score += 20;
+        }
+
+        // Duration proximity
+        if (training.getEstimatedDurationSeconds() != null && training.getEstimatedDurationSeconds() > 0) {
+            int planned = training.getEstimatedDurationSeconds();
+            int actual = session.getTotalDurationSeconds();
+            double ratio = Math.abs((double) (actual - planned)) / planned;
+            if (ratio <= 0.20) {
+                score += 25;
+            } else if (ratio <= 0.40) {
+                score += 10;
+            }
+        }
+
+        // Title word overlap (5 pts per shared word, capped at 25)
+        if (training.getTitle() != null && session.getTitle() != null) {
+            Set<String> planWords = wordSet(training.getTitle());
+            planWords.retainAll(wordSet(session.getTitle()));
+            score += Math.min(planWords.size() * 5, 25);
+        }
+
+        return score;
+    }
+
+    private static Set<String> wordSet(String text) {
+        Set<String> words = new HashSet<>();
+        for (String w : text.toLowerCase().split("\\W+")) {
+            if (w.length() > 2) words.add(w);
+        }
+        return words;
+    }
+
     @GetMapping
     public ResponseEntity<List<CompletedSession>> list() {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(repository.findByUserIdOrderByCompletedAtDesc(userId));
+    }
+
+    @GetMapping("/calendar")
+    public ResponseEntity<List<CompletedSession>> listForCalendar(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(repository.findByUserIdAndCompletedAtBetween(
+                userId, start.atStartOfDay(), end.atTime(23, 59, 59)));
+    }
+
+    @PostMapping("/{sessionId}/link/{scheduledWorkoutId}")
+    public ResponseEntity<CompletedSession> linkToSchedule(
+            @PathVariable String sessionId,
+            @PathVariable String scheduledWorkoutId) {
+        String userId = SecurityUtils.getCurrentUserId();
+
+        CompletedSession session = repository.findById(sessionId)
+                .filter(s -> userId.equals(s.getUserId()))
+                .orElse(null);
+        if (session == null) return ResponseEntity.notFound().build();
+
+        // Clear old link if session was previously linked to a different scheduled workout
+        String oldSwId = session.getScheduledWorkoutId();
+        if (oldSwId != null && !oldSwId.equals(scheduledWorkoutId)) {
+            scheduledWorkoutRepository.findById(oldSwId).ifPresent(oldSw -> {
+                oldSw.setSessionId(null);
+                scheduledWorkoutRepository.save(oldSw);
+            });
+        }
+
+        session.setScheduledWorkoutId(scheduledWorkoutId);
+        CompletedSession saved = repository.save(session);
+
+        try {
+            coachService.markCompleted(scheduledWorkoutId,
+                    saved.getTss() != null ? saved.getTss().intValue() : null,
+                    saved.getIntensityFactor(),
+                    saved.getId());
+        } catch (Exception ignored) {
+            // Non-fatal
+        }
+
+        return ResponseEntity.ok(saved);
     }
 
     @DeleteMapping("/{id}")

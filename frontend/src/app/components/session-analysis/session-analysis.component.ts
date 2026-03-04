@@ -59,9 +59,11 @@ export class SessionAnalysisComponent {
         return Math.round(this.metricsService.computeTss(session.totalDuration, session.avgPower, ftp));
     }
 
-    saveRpe(session: SavedSession, event: any) {
-        const val = parseInt(event.target.value, 10);
-        if (isNaN(val) || val < 1 || val > 10) return;
+    rpeValues = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+    selectRpe(session: SavedSession, val: number) {
+        const updated = { ...session, rpe: val };
+        this.sessionSubject.next(updated);
         this.historyService.updateSession(session.id, { rpe: val });
     }
 

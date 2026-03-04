@@ -8,9 +8,13 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactor.core.publisher.Flux;
+import reactor.util.retry.Retry;
 
+import java.net.SocketException;
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.TextStyle;
 import java.util.Locale;
@@ -81,7 +85,11 @@ public class AIService {
                 .user(userMessage)
                 .stream()
                 .chatResponse()
-                .flatMap(this::mapChatResponseToEvents);
+                .flatMap(this::mapChatResponseToEvents)
+                .retryWhen(Retry.backoff(2, Duration.ofSeconds(2))
+                        .jitter(0.5)
+                        .filter(AIService::isTransientNetworkError))
+                .onErrorResume(ex -> Flux.just(sse("error", streamErrorMessage(ex))));
 
         // 3. After stream: status complete + conversation ID
         var postStream = Flux.defer(() -> {
@@ -146,5 +154,24 @@ public class AIService {
 
     private ServerSentEvent<String> sse(String event, String data) {
         return ServerSentEvent.<String>builder().event(event).data(data).build();
+    }
+
+    private static boolean isTransientNetworkError(Throwable ex) {
+        if (ex instanceof WebClientRequestException) return true;
+        if (ex instanceof SocketException) return true;
+        Throwable cause = ex.getCause();
+        return cause instanceof SocketException || cause instanceof java.io.IOException;
+    }
+
+    private String streamErrorMessage(Throwable ex) {
+        String msg = ex.getMessage() != null ? ex.getMessage() : "";
+        if (msg.contains("429") || msg.contains("rate_limit")) {
+            return "Rate limit exceeded. Your request was too large or too many requests were sent. "
+                    + "Please shorten your message or wait a moment and try again.";
+        }
+        if (isTransientNetworkError(ex) || msg.contains("Connection reset") || msg.contains("Connection refused")) {
+            return "Connection to the AI service was interrupted. Please try again.";
+        }
+        return "An unexpected error occurred. Please try again.";
     }
 }

@@ -98,26 +98,32 @@
   color: var(--accent-color);
 }
 
-.nav-zones-btn {
+.coach-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.coach-tabs button {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--glass-border);
-  color: var(--text-color);
-  padding: 7px 14px;
+  color: var(--text-muted);
+  padding: 6px 14px;
   border-radius: 8px;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 1px;
   cursor: pointer;
   transition: all 0.2s;
+  font-family: inherit;
 }
 
-.nav-zones-btn:hover {
+.coach-tabs button:hover {
   background: rgba(255, 157, 0, 0.1);
   border-color: rgba(255, 157, 0, 0.3);
   color: var(--accent-color);
 }
 
-.nav-zones-btn.active {
+.coach-tabs button.active {
   background: rgba(255, 157, 0, 0.12);
   border-color: var(--accent-color);
   color: var(--accent-color);
@@ -817,5 +823,180 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-muted);
+}
+
+/* ── Physiology Tab ── */
+
+.physiology-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.phys-stats {
+  display: flex;
+  gap: 1rem;
+}
+
+.phys-stat {
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+
+.phys-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.phys-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-color);
+  letter-spacing: -0.5px;
+}
+
+.zones-table {
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.zone-row {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 12px;
+}
+
+.zone-row:last-child {
+  border: none;
+}
+
+.zone-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.zone-name {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.zone-range {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.sport-dist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dist-row {
+  display: grid;
+  grid-template-columns: 16px 80px 1fr 40px;
+  align-items: center;
+  gap: 10px;
+}
+
+.dist-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.dist-bar-wrap {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.dist-bar {
+  height: 100%;
+  background: var(--accent-color);
+  border-radius: 3px;
+  opacity: 0.6;
+  transition: width 0.3s ease;
+}
+
+.dist-pct {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.empty-tab {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* ── History Tab ── */
+
+.history-table {
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.hist-header,
+.hist-row {
+  display: grid;
+  grid-template-columns: 60px 32px 1fr 70px 60px 55px 55px;
+  padding: 10px 16px;
+  align-items: center;
+  gap: 8px;
+}
+
+.hist-header {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.hist-row {
+  font-size: 11px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  transition: background 0.15s;
+}
+
+.hist-row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.hist-row:last-child {
+  border: none;
+}
+
+.hist-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  color: var(--text-color);
 }
 

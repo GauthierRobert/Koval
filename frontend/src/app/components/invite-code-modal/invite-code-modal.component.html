@@ -16,23 +16,17 @@
                 <span
                   *ngFor="let tag of unassignedTags"
                   class="tag-chip"
-                  [class.selected]="selectedTagIds.includes(tag.id)"
-                  (click)="toggleTag(tag)"
+                  [class.selected]="selectedTagId === tag.id"
+                  (click)="selectTag(tag)"
                 >{{ tag.name }}</span>
-                <div class="tag-add-inline" *ngIf="unassignedTags.length === 0 || showNewTagInput">
+                <div class="tag-add-inline">
                   <input
                     class="tag-input"
                     [(ngModel)]="newTagInput"
                     (keydown.enter)="addNewTag()"
-                    placeholder="New tag..."
+                    placeholder="Tag name, then Enter..."
                   />
-                  <button class="tag-add-btn" (click)="addNewTag()">+</button>
                 </div>
-                <button
-                  class="tag-new-btn"
-                  *ngIf="!showNewTagInput && unassignedTags.length > 0"
-                  (click)="showNewTagInput = true"
-                >+ New tag</button>
               </div>
             </div>
 

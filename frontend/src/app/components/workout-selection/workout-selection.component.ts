@@ -75,6 +75,9 @@ export class WorkoutSelectionComponent implements OnInit {
     );
 
     const todayKey = toDateKey(new Date());
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const sevenDaysAgoKey = toDateKey(sevenDaysAgo);
 
     this.upcomingWorkouts$ = schedule$.pipe(
       map((workouts) =>
@@ -84,7 +87,7 @@ export class WorkoutSelectionComponent implements OnInit {
 
     this.overdueWorkouts$ = schedule$.pipe(
       map((workouts) =>
-        workouts.filter((w) => w.status === 'PENDING' && w.scheduledDate < todayKey)
+        workouts.filter((w) => w.status === 'PENDING' && w.scheduledDate <= sevenDaysAgoKey)
       )
     );
   }

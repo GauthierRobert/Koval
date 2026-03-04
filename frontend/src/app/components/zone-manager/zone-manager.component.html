@@ -75,10 +75,10 @@
           </div>
         </div>
         <div class="editor-actions">
-          <button class="save-btn" (click)="saveSystem()" [disabled]="saving">
+          <button class="save-btn" [class.saved]="saved" (click)="saveSystem()" [disabled]="saving || saved">
             <span *ngIf="!saving && !saved">SAVE</span>
             <span *ngIf="saving">SAVING...</span>
-            <span *ngIf="saved" class="saved-check">SAVED</span>
+            <span *ngIf="saved">✓ SAVED</span>
           </button>
           <button class="delete-btn" (click)="deleteSystem()" [disabled]="deleting">DELETE</button>
         </div>

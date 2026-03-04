@@ -24,6 +24,13 @@ export class TopBarComponent {
   requestDescription = '';
 
   isCoach$ = this.authService.user$.pipe(map(u => u?.role === 'COACH'));
+  uiMode$ = this.authService.uiMode$;
+
+  setUiMode(mode: 'athlete' | 'coach'): void {
+    this.authService.setUiMode(mode);
+    if (mode === 'athlete') this.router.navigate(['/dashboard']);
+    else this.router.navigate(['/coach']);
+  }
 
   connectedCount$ = combineLatest([
     this.bluetoothService.trainerStatus$,

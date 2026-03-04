@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend.training.zone;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -30,7 +31,9 @@ public class ZoneSystemService {
         }
 
         existing.setName(updates.getName());
-        existing.setZones(updates.getZones());
+        existing.setSportType(updates.getSportType());
+        existing.setReferenceType(updates.getReferenceType());
+        existing.setZones(new ArrayList<>(updates.getZones()));
         existing.setUpdatedAt(LocalDateTime.now());
 
         return zoneSystemRepository.save(existing);

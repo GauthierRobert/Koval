@@ -25,7 +25,8 @@ public record ScheduledWorkoutResponse(
         String trainingTitle,
         TrainingType trainingType,
         Integer totalDurationSeconds,
-        SportType sportType) {
+        SportType sportType,
+        String sessionId) {
 
     public static ScheduledWorkoutResponse from(ScheduledWorkout sw, String trainingTitle, TrainingType trainingType,
             Integer totalDurationSeconds, SportType sportType, Integer estimatedTss, Double estimatedIf) {
@@ -44,6 +45,7 @@ public record ScheduledWorkoutResponse(
                 trainingTitle,
                 trainingType,
                 totalDurationSeconds,
-                sportType);
+                sportType,
+                sw.getSessionId());
     }
 }

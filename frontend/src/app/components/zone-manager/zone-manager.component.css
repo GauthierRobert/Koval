@@ -400,8 +400,9 @@
   cursor: not-allowed;
 }
 
-.saved-check {
-  color: #065f46;
+.save-btn.saved {
+  background: #22c55e;
+  color: #000;
 }
 
 .delete-btn {

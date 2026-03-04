@@ -156,11 +156,16 @@ export class ZoneManagerComponent implements OnInit {
     this.zoneService.updateZoneSystem(this.editingSystem.id, this.editingSystem).subscribe({
       next: (updated) => {
         const index = this.zoneSystems.findIndex((s) => s.id === updated.id);
-        if (index !== -1) this.zoneSystems[index] = updated;
+        if (index !== -1) {
+          this.zoneSystems[index] = updated;
+          // Replace array reference so Angular detects the mutation
+          this.zoneSystems = [...this.zoneSystems];
+        }
         this.selectedSystem = updated;
         this.editingSystem = { ...updated, zones: updated.zones.map((z) => ({ ...z })) };
         this.saving = false;
         this.saved = true;
+        this.loadZoneSystems();
         setTimeout(() => (this.saved = false), 2500);
       },
       error: (err) => {

@@ -7,11 +7,18 @@
   </div>
 
   <nav class="nav-links">
-    <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">DASHBOARD</a>
-    <a routerLink="/chat" routerLinkActive="active" class="nav-link">ASSISTANT</a>
-    <a routerLink="/calendar" routerLinkActive="active" class="nav-link">CALENDAR</a>
-    <a routerLink="/pmc" routerLinkActive="active" class="nav-link">PMC</a>
-    <a routerLink="/coach" routerLinkActive="active" class="nav-link" *ngIf="isCoach$ | async">COACHING</a>
+    <ng-container *ngIf="{ coach: isCoach$ | async, mode: uiMode$ | async } as vm">
+      <ng-container *ngIf="!vm.coach || vm.mode === 'athlete'">
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">DASHBOARD</a>
+        <a routerLink="/chat"      routerLinkActive="active" class="nav-link">ASSISTANT</a>
+        <a routerLink="/calendar"  routerLinkActive="active" class="nav-link">CALENDAR</a>
+        <a routerLink="/pmc"       routerLinkActive="active" class="nav-link">PMC</a>
+      </ng-container>
+      <ng-container *ngIf="vm.coach && vm.mode === 'coach'">
+        <a routerLink="/chat"  routerLinkActive="active" class="nav-link">ASSISTANT</a>
+        <a routerLink="/coach" routerLinkActive="active" class="nav-link">COACHING</a>
+      </ng-container>
+    </ng-container>
   </nav>
 
   <div class="right-section">
@@ -55,6 +62,13 @@
         </div>
       </div>
     </div>
+
+    <ng-container *ngIf="{ coach: isCoach$ | async, mode: uiMode$ | async } as vm">
+      <div class="mode-toggle" *ngIf="vm.coach">
+        <button [class.active]="vm.mode === 'athlete'" (click)="setUiMode('athlete')">ATHLETE</button>
+        <button [class.active]="vm.mode === 'coach'"   (click)="setUiMode('coach')">COACH</button>
+      </div>
+    </ng-container>
   </div>
 </header>
 

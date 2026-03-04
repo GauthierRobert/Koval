@@ -400,8 +400,8 @@ export class PmcChartComponent implements OnChanges, AfterViewInit {
 
         // Background
         ctx.save();
-        ctx.fillStyle = 'rgba(8, 8, 18, 0.92)';
-        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.fillStyle = 'rgba(32, 34, 52, 0.97)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.22)';
         ctx.lineWidth = 1;
         ctx.beginPath();
         const r = 8;
@@ -420,19 +420,19 @@ export class PmcChartComponent implements OnChanges, AfterViewInit {
         ctx.restore();
 
         // Date header
-        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
         ctx.font = FONT_XS;
         ctx.textAlign = 'left';
         ctx.fillText(dateStr, tx + pad, ty + pad + 8);
 
         // Separator
-        ctx.fillStyle = 'rgba(255,255,255,0.07)';
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
         ctx.fillRect(tx + pad, ty + pad + 13, boxW - pad * 2, 1);
 
         // Value rows
         rows.forEach((row, ri) => {
             const ry = ty + pad + 18 + ri * rowH + 11;
-            ctx.fillStyle = 'rgba(255,255,255,0.35)';
+            ctx.fillStyle = 'rgba(255,255,255,0.65)';
             ctx.font = FONT_XS;
             ctx.textAlign = 'left';
             ctx.fillText(row.label, tx + pad, ry);

@@ -33,6 +33,12 @@ export class AuthService {
     private userSubject = new BehaviorSubject<User | null>(null);
     user$ = this.userSubject.asObservable();
 
+    private readonly UI_MODE_KEY = 'uiMode';
+    private uiModeSubject = new BehaviorSubject<'athlete' | 'coach'>(
+        (localStorage.getItem('uiMode') as 'athlete' | 'coach') ?? 'coach'
+    );
+    uiMode$ = this.uiModeSubject.asObservable();
+
     private showSettingsSubject = new BehaviorSubject<boolean>(false);
     showSettings$ = this.showSettingsSubject.asObservable();
 
@@ -55,6 +61,11 @@ export class AuthService {
         }
     }
 
+    setUiMode(mode: 'athlete' | 'coach'): void {
+        localStorage.setItem(this.UI_MODE_KEY, mode);
+        this.uiModeSubject.next(mode);
+    }
+
     // --- Strava OAuth ---
 
     getStravaAuthUrl(): Observable<{ authUrl: string }> {
@@ -66,6 +77,7 @@ export class AuthService {
             tap(response => {
                 localStorage.setItem('token', response.token);
                 this.userSubject.next(response.user);
+                this.setUiMode(response.user.role === 'COACH' ? 'coach' : 'athlete');
             })
         );
     }
@@ -81,6 +93,7 @@ export class AuthService {
             tap(response => {
                 localStorage.setItem('token', response.token);
                 this.userSubject.next(response.user);
+                this.setUiMode(response.user.role === 'COACH' ? 'coach' : 'athlete');
             })
         );
     }
@@ -94,6 +107,7 @@ export class AuthService {
             tap(response => {
                 localStorage.setItem('token', response.token);
                 this.userSubject.next(response.user);
+                this.setUiMode(response.user.role === 'COACH' ? 'coach' : 'athlete');
             })
         );
     }
@@ -102,7 +116,9 @@ export class AuthService {
 
     logout() {
         localStorage.removeItem('token');
+        localStorage.removeItem(this.UI_MODE_KEY);
         this.userSubject.next(null);
+        this.uiModeSubject.next('coach');
         this.router.navigate(['/login']);
     }
 

@@ -6,22 +6,19 @@ import org.springframework.ai.chat.messages.Message;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ai")
 @CrossOrigin(origins = "*", exposedHeaders = "X-Chat-History-Id")
 public class AIController {
+
+    /** Hard limit on user message length to stay within TPM budget. */
+    private static final int MAX_MESSAGE_CHARS = 8_000;
 
     private final AIService aiService;
     private final ChatHistoryService chatHistoryService;
@@ -34,19 +31,38 @@ public class AIController {
     // ── Chat ────────────────────────────────────────────────────────────
 
     @PostMapping("/chat")
-    public ResponseEntity<AIService.ChatMessageResponse> chat(
-            @RequestBody ChatRequest request) {
-        String userId = SecurityUtils.getCurrentUserId();
-        var response = aiService.chat(request.message(), userId, request.chatHistoryId());
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> chat(@RequestBody ChatRequest request) {
+        String msg = request.message();
+        if (msg == null || msg.isBlank()) {
+            return ResponseEntity.badRequest().body(error("empty_message", "Message cannot be empty."));
+        }
+        if (msg.length() > MAX_MESSAGE_CHARS) {
+            return ResponseEntity.badRequest().body(error("message_too_long",
+                    "Your message is too long (" + msg.length() + " chars). Please keep it under "
+                            + MAX_MESSAGE_CHARS + " characters and try again."));
+        }
+        try {
+            String userId = SecurityUtils.getCurrentUserId();
+            var response = aiService.chat(msg, userId, request.chatHistoryId());
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException ex) {
+            return handleAiException(ex);
+        }
     }
 
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> chatStream(
             @RequestBody ChatRequest request,
             HttpServletResponse response) {
+        String msg = request.message();
+        if (msg == null || msg.isBlank() || msg.length() > MAX_MESSAGE_CHARS) {
+            String errMsg = (msg == null || msg.isBlank())
+                    ? "Message cannot be empty."
+                    : "Your message is too long. Please keep it under " + MAX_MESSAGE_CHARS + " characters.";
+            return Flux.just(ServerSentEvent.<String>builder().event("error").data(errMsg).build());
+        }
         String userId = SecurityUtils.getCurrentUserId();
-        var streamResponse = aiService.chatStream(request.message(), userId, request.chatHistoryId());
+        var streamResponse = aiService.chatStream(msg, userId, request.chatHistoryId());
         response.setHeader("X-Chat-History-Id", streamResponse.chatHistoryId());
         return streamResponse.events();
     }
@@ -88,4 +104,21 @@ public class AIController {
     public record ChatRequest(String message, String chatHistoryId) {}
     public record ConversationMessage(String role, String content) {}
     public record ChatHistoryDetail(ChatHistory metadata, List<ConversationMessage> messages) {}
+
+    // ── Error handling ─────────────────────────────────────────────────
+
+    private ResponseEntity<Map<String, String>> handleAiException(RuntimeException ex) {
+        String msg = ex.getMessage() != null ? ex.getMessage() : "";
+        if (msg.contains("429") || msg.contains("rate_limit")) {
+            return ResponseEntity.status(429).body(error("rate_limit_exceeded",
+                    "Your request was too large or you've sent too many requests this minute. "
+                            + "Please shorten your message or wait a moment and try again."));
+        }
+        // Re-throw unknown exceptions so Spring's error handler picks them up
+        throw ex;
+    }
+
+    private Map<String, String> error(String code, String message) {
+        return Map.of("error", code, "message", message);
+    }
 }

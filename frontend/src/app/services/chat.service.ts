@@ -82,7 +82,22 @@ export class ChatService {
     return this.sendMessageStream(message);
   }
 
+  private readonly MAX_MESSAGE_CHARS = 8_000;
+
   private async sendMessageStream(message: string): Promise<void> {
+    // Client-side length guard — mirrors backend validation
+    if (message.length > this.MAX_MESSAGE_CHARS) {
+      this.addMessage({ role: 'user', content: message, timestamp: new Date() });
+      const errMsg: ChatMessage = {
+        role: 'assistant',
+        content: `⚠️ Your message is too long (${message.length.toLocaleString()} characters). Please keep it under ${this.MAX_MESSAGE_CHARS.toLocaleString()} characters and try again.`,
+        timestamp: new Date(),
+      };
+      this.addMessage(errMsg);
+      this.ngZone.run(() => this.activityStatusSubject.next('error'));
+      return;
+    }
+
     // Snapshot current training IDs to detect newly created ones after the response
     const knownIds = new Set<string>();
     this.trainingService.trainings$.pipe(take(1)).subscribe((ts) => ts.forEach((t) => knownIds.add(t.id)));
@@ -160,6 +175,10 @@ export class ChatService {
           } else if (eventType === 'content') {
             aiMessage.content += data;
             this.emit();
+          } else if (eventType === 'error') {
+            aiMessage.content = data.trim();
+            this.ngZone.run(() => this.activityStatusSubject.next('error'));
+            this.emitImmediate();
           } else if (eventType === 'conversation_id') {
             const conversationId = data.trim();
             if (conversationId) {

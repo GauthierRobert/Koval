@@ -73,7 +73,7 @@ public class AIConfig {
             - **TrainingType (Enum):** VO2MAX, THRESHOLD, SWEET_SPOT, ENDURANCE, SPRINT, RECOVERY, MIXED, TEST.
             - **ZoneSystemId**: Custom Zone System. Optional. Use to override default reference in WorkoutBlock.
             - **WorkoutBlock Object:**
-                - `type`: WARMUP, INTERVAL, STEADY, COOLDOWN, RAMP, FREE, PAUSE.
+                - `type`: WARMUP, INTERVAL, STEADY, COOLDOWN, RAMP, FREE, PAUSE. PAUSE is for passive rest, STEADY is for active rest.
                 - `durationSeconds`: Use for time-based blocks.
                 - `distanceMeters`: Use for distance-based blocks (Run/Swim).
                 - `label`: Description + Zone (e.g., "Main Set - Z4").

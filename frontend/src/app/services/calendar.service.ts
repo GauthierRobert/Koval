@@ -1,14 +1,17 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable, of} from 'rxjs';
-import {catchError} from 'rxjs/operators';
+import {catchError, map} from 'rxjs/operators';
 import {ScheduledWorkout} from './coach.service';
+import {SavedSession} from './history.service';
+
+const BASE = 'http://localhost:8080';
 
 @Injectable({
     providedIn: 'root',
 })
 export class CalendarService {
-    private apiUrl = 'http://localhost:8080/api/schedule';
+    private apiUrl = `${BASE}/api/schedule`;
 
     constructor(private http: HttpClient) { }
 
@@ -54,5 +57,34 @@ export class CalendarService {
             `${this.apiUrl}/${id}/reschedule`,
             { scheduledDate: newDate }
         );
+    }
+
+    getSessionsForCalendar(start: string, end: string): Observable<SavedSession[]> {
+        return this.http.get<any[]>(`${BASE}/api/sessions/calendar`, { params: { start, end } }).pipe(
+            map(ss => ss.map(s => ({
+                id: s.id,
+                title: s.title,
+                totalDuration: s.totalDurationSeconds,
+                avgPower: s.avgPower,
+                avgHR: s.avgHR,
+                avgCadence: s.avgCadence,
+                avgSpeed: s.avgSpeed ?? 0,
+                blockSummaries: s.blockSummaries ?? [],
+                history: [],
+                sportType: s.sportType,
+                date: new Date(s.completedAt),
+                syncedToStrava: false,
+                syncedToGarmin: false,
+                tss: s.tss ?? undefined,
+                intensityFactor: s.intensityFactor ?? undefined,
+                fitFileId: s.fitFileId ?? undefined,
+                scheduledWorkoutId: s.scheduledWorkoutId ?? undefined,
+            } as SavedSession))),
+            catchError(() => of([]))
+        );
+    }
+
+    linkSessionToSchedule(sessionId: string, scheduledWorkoutId: string): Observable<any> {
+        return this.http.post(`${BASE}/api/sessions/${sessionId}/link/${scheduledWorkoutId}`, {});
     }
 }

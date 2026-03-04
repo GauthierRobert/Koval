@@ -19,13 +19,12 @@ export class InviteCodeModalComponent implements OnChanges {
   @Output() closed = new EventEmitter<void>();
   @Output() codeGenerated = new EventEmitter<InviteCode>();
 
-  selectedTagIds: string[] = [];
+  selectedTagId: string | null = null;
   maxUses = 0;
   generating = false;
   generatedCode: string | null = null;
   copied = false;
   newTagInput = '';
-  showNewTagInput = false;
   showInactive = false;
   unassignedTags: Tag[] = [];
 
@@ -60,9 +59,8 @@ export class InviteCodeModalComponent implements OnChanges {
     if (changes['isOpen'] && this.isOpen) {
       this.generatedCode = null;
       this.copied = false;
-      this.selectedTagIds = [];
+      this.selectedTagId = null;
       this.maxUses = 0;
-      this.showNewTagInput = false;
       this.newTagInput = '';
       this.loadCodes();
     }
@@ -92,13 +90,8 @@ export class InviteCodeModalComponent implements OnChanges {
     this.showInactiveSubject.next(this.showInactive);
   }
 
-  toggleTag(tag: Tag): void {
-    const idx = this.selectedTagIds.indexOf(tag.id);
-    if (idx >= 0) {
-      this.selectedTagIds.splice(idx, 1);
-    } else {
-      this.selectedTagIds.push(tag.id);
-    }
+  selectTag(tag: Tag): void {
+    this.selectedTagId = this.selectedTagId === tag.id ? null : tag.id;
   }
 
   addNewTag(): void {
@@ -113,11 +106,8 @@ export class InviteCodeModalComponent implements OnChanges {
         if (!this.unassignedTags.find(t => t.id === tag.id)) {
           this.unassignedTags = [...this.unassignedTags, tag];
         }
-        if (!this.selectedTagIds.includes(tag.id)) {
-          this.selectedTagIds.push(tag.id);
-        }
+        this.selectedTagId = tag.id;
         this.newTagInput = '';
-        this.showNewTagInput = false;
       },
     });
   }
@@ -129,7 +119,7 @@ export class InviteCodeModalComponent implements OnChanges {
 
   generate(): void {
     this.generating = true;
-    this.coachService.generateInviteCode(this.selectedTagIds, this.maxUses).subscribe({
+    this.coachService.generateInviteCode(this.selectedTagId ? [this.selectedTagId] : [], this.maxUses).subscribe({
       next: (code) => {
         this.generatedCode = code.code;
         this.generating = false;

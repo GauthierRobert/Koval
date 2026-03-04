@@ -1,8 +1,9 @@
 import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {BehaviorSubject, Observable} from 'rxjs';
+import {BehaviorSubject, combineLatest, Observable, of} from 'rxjs';
 import {filter, map, shareReplay, switchMap, tap} from 'rxjs/operators';
 import {CdkDrag, CdkDragDrop, CdkDropList} from '@angular/cdk/drag-drop';
+import {Router} from '@angular/router';
 
 import {CalendarService} from '../../services/calendar.service';
 import {AuthService} from '../../services/auth.service';
@@ -12,6 +13,7 @@ import {ScheduleModalComponent} from '../schedule-modal/schedule-modal.component
 import {WorkoutDetailModalComponent} from '../workout-detail-modal/workout-detail-modal.component';
 import {SportIconComponent} from '../sport-icon/sport-icon.component';
 import {TrainingLoadChartComponent} from '../training-load-chart/training-load-chart.component';
+import {HistoryService, SavedSession} from '../../services/history.service';
 
 export interface CalendarDay {
   date: Date;
@@ -19,11 +21,17 @@ export interface CalendarDay {
   isToday: boolean;
 }
 
+export interface ScheduledEntry { kind: 'scheduled'; scheduled: ScheduledWorkout; }
+export interface FusedEntry      { kind: 'fused'; scheduled: ScheduledWorkout; session: SavedSession; }
+export interface StandaloneEntry { kind: 'standalone'; session: SavedSession; }
+export type CalendarEntry = ScheduledEntry | FusedEntry | StandaloneEntry;
+export type EntriesByDay = Map<string, CalendarEntry[]>;
+
 type WorkoutsByDay = Map<string, ScheduledWorkout[]>;
 
 const DAYS_IN_WEEK = 7;
 
-function toDateKey(d: Date): string {
+export function toDateKey(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
@@ -58,6 +66,30 @@ function groupByDay(schedule: ScheduledWorkout[]): WorkoutsByDay {
   return byDay;
 }
 
+function buildEntriesByDay(scheduled: ScheduledWorkout[], sessions: SavedSession[]): EntriesByDay {
+  const byDay: EntriesByDay = new Map();
+  const sessionById = new Map(sessions.map(s => [s.id, s]));
+  const consumed = new Set<string>();
+
+  for (const sw of scheduled) {
+    if (!byDay.has(sw.scheduledDate)) byDay.set(sw.scheduledDate, []);
+    if (sw.status === 'COMPLETED' && sw.sessionId && sessionById.has(sw.sessionId)) {
+      consumed.add(sw.sessionId);
+      byDay.get(sw.scheduledDate)!.push({ kind: 'fused', scheduled: sw, session: sessionById.get(sw.sessionId)! });
+    } else {
+      byDay.get(sw.scheduledDate)!.push({ kind: 'scheduled', scheduled: sw });
+    }
+  }
+
+  for (const sess of sessions) {
+    if (consumed.has(sess.id)) continue;
+    const key = toDateKey(new Date(sess.date));
+    if (!byDay.has(key)) byDay.set(key, []);
+    byDay.get(key)!.push({ kind: 'standalone', session: sess });
+  }
+  return byDay;
+}
+
 @Component({
   selector: 'app-calendar',
   standalone: true,
@@ -67,7 +99,8 @@ function groupByDay(schedule: ScheduledWorkout[]): WorkoutsByDay {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CalendarComponent implements OnInit {
-  readonly EMPTY: ScheduledWorkout[] = [];
+  readonly EMPTY: CalendarEntry[] = [];
+  readonly emptyMap: WorkoutsByDay = new Map();
 
   weekDays: CalendarDay[] = [];
   monthDays: CalendarDay[] = [];
@@ -75,38 +108,63 @@ export class CalendarComponent implements OnInit {
   startDate!: Date;
   endDate!: Date;
 
-  workoutsByDay$!: Observable<WorkoutsByDay>;
+  entriesByDay$!: Observable<EntriesByDay>;
+  scheduleByDay$!: Observable<WorkoutsByDay>;
   overdueWorkouts$!: Observable<ScheduledWorkout[]>;
 
   isScheduleModalOpen = false;
   selectedDate: string | null = null;
   selectedWorkout: ScheduledWorkout | null = null;
 
+  linkPickerState: { sessionId: string } | null = null;
+  nearbyScheduled$: Observable<ScheduledWorkout[]> = of([]);
+
   private readonly calendarService = inject(CalendarService);
   private readonly authService = inject(AuthService);
+  private readonly historyService = inject(HistoryService);
+  private readonly router = inject(Router);
 
   private userId = '';
   private readonly reload$ = new BehaviorSubject<void>(undefined);
+  private savedWeekDate: Date | null = null;
+  private savedMonthDate: Date | null = null;
 
   ngOnInit(): void {
     this.setWeek(new Date());
 
-    const schedule$ = this.authService.user$.pipe(
+    const user$ = this.authService.user$.pipe(
       filter((u) => !!u),
-      tap((user) => (this.userId = user!.id)),
-      switchMap(() => this.reload$),
+      tap((user) => (this.userId = user!.id))
+    );
+
+    const trigger$ = combineLatest([user$, this.reload$]);
+
+    const schedule$ = trigger$.pipe(
       switchMap(() =>
         this.calendarService.getMySchedule(this.startDateKey(), this.endDateKey())
       ),
       shareReplay(1)
     );
 
-    this.workoutsByDay$ = schedule$.pipe(map(groupByDay));
+    const sessions$ = trigger$.pipe(
+      switchMap(() =>
+        this.calendarService.getSessionsForCalendar(this.startDateKey(), this.endDateKey())
+      ),
+      shareReplay(1)
+    );
 
-    const todayKey = toDateKey(new Date());
+    this.scheduleByDay$ = schedule$.pipe(map(groupByDay));
+
+    this.entriesByDay$ = combineLatest([schedule$, sessions$]).pipe(
+      map(([sched, sess]) => buildEntriesByDay(sched, sess))
+    );
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const sevenDaysAgoKey = toDateKey(sevenDaysAgo);
     this.overdueWorkouts$ = schedule$.pipe(
       map((workouts) =>
-        workouts.filter((w) => w.status === 'PENDING' && w.scheduledDate < todayKey)
+        workouts.filter((w) => w.status === 'PENDING' && w.scheduledDate <= sevenDaysAgoKey)
       )
     );
   }
@@ -135,6 +193,28 @@ export class CalendarComponent implements OnInit {
     this.selectedWorkout = workout;
   }
 
+  selectSession(session: SavedSession): void {
+    this.historyService.setSelectedSession(session);
+    this.router.navigate(['/history']);
+  }
+
+  openLinkPicker(session: SavedSession): void {
+    this.linkPickerState = { sessionId: session.id };
+    const d = new Date(session.date);
+    const from = new Date(d); from.setDate(d.getDate() - 3);
+    const to   = new Date(d); to.setDate(d.getDate() + 3);
+    this.nearbyScheduled$ = this.calendarService
+      .getMySchedule(toDateKey(from), toDateKey(to)).pipe(
+        map(ws => ws.filter(w => w.status === 'PENDING' && !w.sessionId))
+      );
+  }
+
+  confirmLink(scheduledWorkoutId: string): void {
+    if (!this.linkPickerState) return;
+    this.calendarService.linkSessionToSchedule(this.linkPickerState.sessionId, scheduledWorkoutId)
+      .subscribe(() => { this.linkPickerState = null; this.reload$.next(); });
+  }
+
   onDetailClosed(): void {
     this.selectedWorkout = null;
   }
@@ -145,15 +225,14 @@ export class CalendarComponent implements OnInit {
 
   setViewMode(mode: 'week' | 'month'): void {
     if (this.viewMode === mode) return;
-    this.viewMode = mode;
-    this.refreshView();
-  }
-
-  private refreshView(): void {
     if (this.viewMode === 'week') {
-      this.setWeek(this.startDate);
+      this.savedWeekDate = new Date(this.startDate);
+      this.viewMode = 'month';
+      this.setMonth(this.savedMonthDate ?? new Date());
     } else {
-      this.setMonth(this.startDate);
+      this.savedMonthDate = new Date(this.startDate);
+      this.viewMode = 'week';
+      this.setWeek(this.savedWeekDate ?? new Date());
     }
     this.reload$.next();
   }
@@ -197,12 +276,22 @@ export class CalendarComponent implements OnInit {
     return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   }
 
+  formatSessionDuration(session: SavedSession): string {
+    const totalSec = session.totalDuration;
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
   trackByDay(_: number, day: CalendarDay): string {
     return day.key;
   }
 
-  trackByWorkout(_: number, workout: ScheduledWorkout): string {
-    return workout.id;
+  trackByEntry(_: number, e: CalendarEntry): string {
+    if (e.kind === 'fused') return 'fused-' + e.scheduled.id;
+    if (e.kind === 'scheduled') return 'sw-' + e.scheduled.id;
+    return 'sess-' + e.session.id;
   }
 
   getTypeColor(type: string): string {
@@ -220,7 +309,7 @@ export class CalendarComponent implements OnInit {
     return d > today;
   }
 
-  onDrop(event: CdkDragDrop<ScheduledWorkout[]>, targetDay: CalendarDay): void {
+  onDrop(event: CdkDragDrop<CalendarEntry[]>, targetDay: CalendarDay): void {
     const workout: ScheduledWorkout = event.item.data;
     if (!workout || workout.scheduledDate === targetDay.key) return;
     this.calendarService.rescheduleWorkout(workout.id, targetDay.key).subscribe(() =>

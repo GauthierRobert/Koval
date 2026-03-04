@@ -60,6 +60,7 @@ export class HistoryService {
                     intensityFactor: s.intensityFactor ?? undefined,
                     fitFileId: s.fitFileId ?? undefined,
                     rpe: s.rpe ?? undefined,
+                    scheduledWorkoutId: s.scheduledWorkoutId ?? undefined,
                 }));
                 parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
                 this.sessionsSubject.next(parsed);
@@ -69,6 +70,10 @@ export class HistoryService {
     }
 
     selectSession(session: SavedSession | null) {
+        this.selectedSessionSubject.next(session);
+    }
+
+    setSelectedSession(session: SavedSession) {
         this.selectedSessionSubject.next(session);
     }
 
