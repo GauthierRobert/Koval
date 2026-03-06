@@ -1,0 +1,49 @@
+<div class="month-grid">
+  <div class="month-day-names">
+    <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
+  </div>
+  <div class="month-body" cdkDropListGroup>
+    <div *ngFor="let day of days; trackBy: trackByDay" class="month-cell glass" [class.today]="day.isToday"
+      [class.other-month]="day.date.getMonth() !== startDate.getMonth()">
+      <div class="cell-header">
+        <span class="cell-day">{{ day.date | date : 'd' }}</span>
+        <button class="cell-add" (click)="addDay.emit(day)">+</button>
+      </div>
+      <div class="cell-workouts" cdkDropList [cdkDropListData]="entriesByDay.get(day.key) || EMPTY"
+        (cdkDropListDropped)="dropped.emit({ drop: $event, day: day })">
+        <ng-container *ngFor="let entry of entriesByDay.get(day.key) || EMPTY; trackBy: trackByEntry">
+
+          <!-- Scheduled mini-card -->
+          <div *ngIf="entry.kind === 'scheduled'" class="mini-card" cdkDrag
+            [cdkDragData]="entry.scheduled"
+            (click)="workoutSelected.emit(entry.scheduled)"
+            [style.border-left]="'2px solid ' + (entry.scheduled.trainingType ? getTypeColor(entry.scheduled.trainingType) : 'var(--accent-color)')">
+            <app-sport-icon [sport]="entry.scheduled.sportType" [size]="10"></app-sport-icon>
+            <span class="mini-title">{{ entry.scheduled.trainingTitle || entry.scheduled.title || 'Workout' }}</span>
+            <span class="mini-tss">{{ entry.scheduled.tss || 0 }}</span>
+          </div>
+
+          <!-- Fused mini-card -->
+          <div *ngIf="entry.kind === 'fused'" class="mini-card mini-card--fused" cdkDrag
+            [cdkDragData]="entry.scheduled"
+            (click)="workoutSelected.emit(entry.scheduled)"
+            [style.border-left]="'2px solid #34d399'">
+            <app-sport-icon [sport]="entry.scheduled.sportType" [size]="10"></app-sport-icon>
+            <span class="mini-title">{{ entry.scheduled.trainingTitle || 'Workout' }}</span>
+            <span class="mini-tss">{{ entry.session.tss || 0 }}</span>
+          </div>
+
+          <!-- Standalone session mini-card -->
+          <div *ngIf="entry.kind === 'standalone'" class="mini-card mini-card--session"
+            (click)="sessionSelected.emit(entry.session)"
+            style="border-left: 2px solid #0891b2">
+            <app-sport-icon [sport]="entry.session.sportType" [size]="10"></app-sport-icon>
+            <span class="mini-title">{{ entry.session.title }}</span>
+            <span class="mini-tss">{{ entry.session.tss || 0 }}</span>
+          </div>
+
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>

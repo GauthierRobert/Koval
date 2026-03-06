@@ -1,0 +1,158 @@
+<div class="calendar-grid" cdkDropListGroup>
+  <div *ngFor="let day of days; trackBy: trackByDay" class="day-column glass" [class.today]="day.isToday">
+    <div class="day-header">
+      <span class="weekday">{{ day.date | date : 'EEE' }}</span>
+      <span class="day-number">{{ day.date | date : 'd' }}</span>
+    </div>
+
+    <div class="workout-slot" cdkDropList [cdkDropListData]="entriesByDay.get(day.key) || EMPTY"
+      (cdkDropListDropped)="dropped.emit({ drop: $event, day: day })">
+
+      <ng-container *ngFor="let entry of entriesByDay.get(day.key) || EMPTY; trackBy: trackByEntry">
+
+        <!-- SCHEDULED card -->
+        <ng-container *ngIf="entry.kind === 'scheduled'">
+          <div class="workout-card clickable"
+            cdkDrag [cdkDragData]="entry.scheduled"
+            [class.completed]="entry.scheduled.status === 'COMPLETED'"
+            [class.skipped]="entry.scheduled.status === 'SKIPPED'"
+            [style.border-left]="'3px solid ' + (entry.scheduled.trainingType ? getTypeColor(entry.scheduled.trainingType) : 'var(--accent-color)')"
+            (click)="workoutSelected.emit(entry.scheduled)">
+            <div class="card-top">
+              <span class="workout-time">08:00 AM</span>
+              <div class="card-top-right">
+                <span class="status-badge" *ngIf="entry.scheduled.status !== 'PENDING'">{{ entry.scheduled.status }}</span>
+                <button class="delete-btn" (click)="workoutDeleted.emit(entry.scheduled); $event.stopPropagation()" title="Remove">&times;</button>
+              </div>
+            </div>
+            <div class="workout-info">
+              <div class="title-row">
+                <app-sport-icon [sport]="entry.scheduled.sportType" [size]="18"></app-sport-icon>
+                <span class="workout-title">
+                  {{ entry.scheduled.trainingTitle || entry.scheduled.title || 'Session #' + entry.scheduled.trainingId.substring(0, 6) }}
+                </span>
+              </div>
+              <span *ngIf="entry.scheduled.trainingType" class="type-badge"
+                [style.background]="getTypeColor(entry.scheduled.trainingType) + '20'"
+                [style.color]="getTypeColor(entry.scheduled.trainingType)"
+                [style.border-color]="getTypeColor(entry.scheduled.trainingType) + '40'">{{ getTypeLabel(entry.scheduled.trainingType) }}</span>
+              <div class="technical-metrics">
+                <div class="m-item">
+                  <span class="m-val">{{ formatDuration(entry.scheduled) }}</span>
+                  <span class="m-unit">DUR</span>
+                </div>
+                <div class="m-item">
+                  <span class="m-val">{{ entry.scheduled.tss || '-' }}</span>
+                  <span class="m-unit">TSS</span>
+                </div>
+                <div class="m-item">
+                  <span class="m-val">{{ entry.scheduled.intensityFactor || entry.scheduled.if || '-' }}</span>
+                  <span class="m-unit">IF</span>
+                </div>
+              </div>
+            </div>
+            <div class="workout-actions" *ngIf="entry.scheduled.status === 'PENDING'">
+              <button class="btn-complete" [disabled]="isFutureDate(entry.scheduled.scheduledDate)"
+                (click)="complete.emit(entry.scheduled); $event.stopPropagation()">COMPLETE</button>
+              <button class="btn-skip" (click)="skip.emit(entry.scheduled); $event.stopPropagation()">SKIP</button>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- FUSED card -->
+        <ng-container *ngIf="entry.kind === 'fused'">
+          <div class="workout-card workout-card--fused clickable"
+            cdkDrag [cdkDragData]="entry.scheduled"
+            [style.border-left]="'3px solid ' + (entry.scheduled.trainingType ? getTypeColor(entry.scheduled.trainingType) : '#34d399')"
+            (click)="workoutSelected.emit(entry.scheduled)">
+            <div class="card-top">
+              <span class="fused-badge">✓ DONE</span>
+              <button class="delete-btn" (click)="$event.stopPropagation(); workoutDeleted.emit(entry.scheduled)" title="Remove">&times;</button>
+            </div>
+            <div class="workout-info">
+              <div class="title-row">
+                <app-sport-icon [sport]="entry.scheduled.sportType" [size]="14"></app-sport-icon>
+                <span class="workout-title">{{ entry.scheduled.trainingTitle }}</span>
+              </div>
+              <div class="fused-metrics">
+                <div class="fused-col">
+                  <span class="fused-label">PLANNED</span>
+                  <div class="technical-metrics">
+                    <div class="m-item">
+                      <span class="m-val">{{ formatDuration(entry.scheduled) }}</span>
+                      <span class="m-unit">DUR</span>
+                    </div>
+                    <div class="m-item">
+                      <span class="m-val">{{ entry.scheduled.tss || '—' }}</span>
+                      <span class="m-unit">TSS</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="fused-divider"></div>
+                <div class="fused-col fused-col--actual">
+                  <span class="fused-label">ACTUAL</span>
+                  <div class="technical-metrics">
+                    <div class="m-item">
+                      <span class="m-val">{{ formatSessionDuration(entry.session) }}</span>
+                      <span class="m-unit">DUR</span>
+                    </div>
+                    <div class="m-item">
+                      <span class="m-val">{{ entry.session.tss || '—' }}</span>
+                      <span class="m-unit">TSS</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- STANDALONE session card -->
+        <ng-container *ngIf="entry.kind === 'standalone'">
+          <div class="workout-card workout-card--session clickable" (click)="sessionSelected.emit(entry.session)">
+            <div class="card-top">
+              <span class="session-badge">RECORDED</span>
+            </div>
+            <div class="workout-info">
+              <div class="title-row">
+                <app-sport-icon [sport]="entry.session.sportType" [size]="14"></app-sport-icon>
+                <span class="workout-title">{{ entry.session.title }}</span>
+              </div>
+              <div class="technical-metrics">
+                <div class="m-item">
+                  <span class="m-val">{{ formatSessionDuration(entry.session) }}</span>
+                  <span class="m-unit">DUR</span>
+                </div>
+                <div class="m-item">
+                  <span class="m-val">{{ entry.session.tss || '—' }}</span>
+                  <span class="m-unit">TSS</span>
+                </div>
+                <div class="m-item">
+                  <span class="m-val">{{ entry.session.avgPower | number:'1.0-0' }}W</span>
+                  <span class="m-unit">PWR</span>
+                </div>
+              </div>
+            </div>
+            <button class="btn-link-session" (click)="$event.stopPropagation(); openLinkPicker(entry.session)">LINK TO PLAN</button>
+            <!-- Inline link picker -->
+            <div class="link-picker" *ngIf="linkPickerState?.sessionId === entry.session.id" (click)="$event.stopPropagation()">
+              <ng-container *ngIf="nearbyScheduled$ | async as nearby">
+                <div *ngIf="!nearby.length" class="link-picker-empty">No nearby pending workouts</div>
+                <div *ngFor="let sw of nearby" class="link-picker-item" (click)="confirmLink(sw.id)">
+                  {{ sw.trainingTitle }} — {{ sw.scheduledDate }}
+                </div>
+              </ng-container>
+              <button class="link-picker-cancel" (click)="linkPickerState = null">Cancel</button>
+            </div>
+          </div>
+        </ng-container>
+
+      </ng-container>
+
+      <button class="add-btn" (click)="addDay.emit(day)">+ ADD</button>
+      <div *ngIf="!(entriesByDay.get(day.key) || EMPTY).length" class="rest-day">REST DAY</div>
+    </div>
+  </div>
+</div>
+
+<app-training-load-chart [workoutsByDay]="workoutsByDay" [days]="days"></app-training-load-chart>

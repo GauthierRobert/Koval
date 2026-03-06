@@ -1,23 +1,23 @@
-import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {BehaviorSubject, combineLatest, Observable, of} from 'rxjs';
-import {filter, map, shareReplay, switchMap, tap} from 'rxjs/operators';
-import {CdkDrag, CdkDragDrop, CdkDropList, CdkDropListGroup} from '@angular/cdk/drag-drop';
-import {Router} from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
+import { filter, map, shareReplay, switchMap, tap } from 'rxjs/operators';
+import { CdkDragDrop } from '@angular/cdk/drag-drop';
+import { Router } from '@angular/router';
 
-import {CalendarService} from '../../services/calendar.service';
-import {AuthService} from '../../services/auth.service';
-import {ScheduledWorkout} from '../../services/coach.service';
-import {TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS, TrainingType,} from '../../services/training.service';
-import {ScheduleModalComponent} from '../schedule-modal/schedule-modal.component';
-import {WorkoutDetailModalComponent} from '../workout-detail-modal/workout-detail-modal.component';
-import {SportIconComponent} from '../sport-icon/sport-icon.component';
-import {TrainingLoadChartComponent} from '../training-load-chart/training-load-chart.component';
-import {HistoryService, SavedSession} from '../../services/history.service';
+import { CalendarService } from '../../services/calendar.service';
+import { AuthService } from '../../services/auth.service';
+import { ScheduledWorkout } from '../../services/coach.service';
+import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.component';
+import { WorkoutDetailModalComponent } from '../workout-detail-modal/workout-detail-modal.component';
+import { SportIconComponent } from '../sport-icon/sport-icon.component';
+import { HistoryService, SavedSession } from '../../services/history.service';
+import { CalendarWeekViewComponent } from './week-view/calendar-week-view.component';
+import { CalendarMonthViewComponent } from './month-view/calendar-month-view.component';
 
 export interface CalendarDay {
   date: Date;
-  key: string; // 'YYYY-MM-DD' for map lookup
+  key: string;
   isToday: boolean;
 }
 
@@ -26,8 +26,7 @@ export interface FusedEntry      { kind: 'fused'; scheduled: ScheduledWorkout; s
 export interface StandaloneEntry { kind: 'standalone'; session: SavedSession; }
 export type CalendarEntry = ScheduledEntry | FusedEntry | StandaloneEntry;
 export type EntriesByDay = Map<string, CalendarEntry[]>;
-
-type WorkoutsByDay = Map<string, ScheduledWorkout[]>;
+export type WorkoutsByDay = Map<string, ScheduledWorkout[]>;
 
 const DAYS_IN_WEEK = 7;
 
@@ -40,7 +39,6 @@ export function toDateKey(d: Date): string {
 
 function buildWeek(baseDate: Date): CalendarDay[] {
   const monday = new Date(baseDate);
-  // getDay(): 0=Sun, 1=Mon, ... 6=Sat → offset so Monday=0
   const dayOfWeek = monday.getDay();
   const offset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
   monday.setDate(baseDate.getDate() + offset);
@@ -57,11 +55,7 @@ function groupByDay(schedule: ScheduledWorkout[]): WorkoutsByDay {
   const byDay: WorkoutsByDay = new Map();
   for (const w of schedule) {
     const list = byDay.get(w.scheduledDate);
-    if (list) {
-      list.push(w);
-    } else {
-      byDay.set(w.scheduledDate, [w]);
-    }
+    if (list) { list.push(w); } else { byDay.set(w.scheduledDate, [w]); }
   }
   return byDay;
 }
@@ -93,13 +87,19 @@ function buildEntriesByDay(scheduled: ScheduledWorkout[], sessions: SavedSession
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [CommonModule, CdkDropList, CdkDrag, CdkDropListGroup, ScheduleModalComponent, WorkoutDetailModalComponent, SportIconComponent, TrainingLoadChartComponent],
+  imports: [
+    CommonModule,
+    ScheduleModalComponent,
+    WorkoutDetailModalComponent,
+    SportIconComponent,
+    CalendarWeekViewComponent,
+    CalendarMonthViewComponent,
+  ],
   templateUrl: './calendar.component.html',
   styleUrl: './calendar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CalendarComponent implements OnInit {
-  readonly EMPTY: CalendarEntry[] = [];
   readonly emptyMap: WorkoutsByDay = new Map();
 
   weekDays: CalendarDay[] = [];
@@ -116,8 +116,7 @@ export class CalendarComponent implements OnInit {
   selectedDate: string | null = null;
   selectedWorkout: ScheduledWorkout | null = null;
 
-  linkPickerState: { sessionId: string } | null = null;
-  nearbyScheduled$: Observable<ScheduledWorkout[]> = of([]);
+  readonly reload$ = new BehaviorSubject<void>(undefined);
 
   private readonly calendarService = inject(CalendarService);
   private readonly authService = inject(AuthService);
@@ -125,7 +124,6 @@ export class CalendarComponent implements OnInit {
   private readonly router = inject(Router);
 
   private userId = '';
-  private readonly reload$ = new BehaviorSubject<void>(undefined);
   private savedWeekDate: Date | null = null;
   private savedMonthDate: Date | null = null;
 
@@ -140,16 +138,12 @@ export class CalendarComponent implements OnInit {
     const trigger$ = combineLatest([user$, this.reload$]);
 
     const schedule$ = trigger$.pipe(
-      switchMap(() =>
-        this.calendarService.getMySchedule(this.startDateKey(), this.endDateKey())
-      ),
+      switchMap(() => this.calendarService.getMySchedule(this.startDateKey(), this.endDateKey())),
       shareReplay(1)
     );
 
     const sessions$ = trigger$.pipe(
-      switchMap(() =>
-        this.calendarService.getSessionsForCalendar(this.startDateKey(), this.endDateKey())
-      ),
+      switchMap(() => this.calendarService.getSessionsForCalendar(this.startDateKey(), this.endDateKey())),
       shareReplay(1)
     );
 
@@ -173,11 +167,7 @@ export class CalendarComponent implements OnInit {
   }
 
   goToToday(): void {
-    if (this.viewMode === 'week') {
-      this.setWeek(new Date());
-    } else {
-      this.setMonth(new Date());
-    }
+    if (this.viewMode === 'week') { this.setWeek(new Date()); } else { this.setMonth(new Date()); }
     this.reload$.next();
   }
 
@@ -191,48 +181,6 @@ export class CalendarComponent implements OnInit {
       this.setMonth(base);
     }
     this.reload$.next();
-  }
-
-  markComplete(workout: ScheduledWorkout): void {
-    this.calendarService.markCompleted(workout.id).subscribe(() => this.reload$.next());
-  }
-
-  markSkipped(workout: ScheduledWorkout): void {
-    this.calendarService.markSkipped(workout.id).subscribe(() => this.reload$.next());
-  }
-
-  selectWorkout(workout: ScheduledWorkout): void {
-    this.selectedWorkout = workout;
-  }
-
-  selectSession(session: SavedSession): void {
-    this.historyService.setSelectedSession(session);
-    this.router.navigate(['/history']);
-  }
-
-  openLinkPicker(session: SavedSession): void {
-    this.linkPickerState = { sessionId: session.id };
-    const d = new Date(session.date);
-    const from = new Date(d); from.setDate(d.getDate() - 3);
-    const to   = new Date(d); to.setDate(d.getDate() + 3);
-    this.nearbyScheduled$ = this.calendarService
-      .getMySchedule(toDateKey(from), toDateKey(to)).pipe(
-        map(ws => ws.filter(w => w.status === 'PENDING' && !w.sessionId))
-      );
-  }
-
-  confirmLink(scheduledWorkoutId: string): void {
-    if (!this.linkPickerState) return;
-    this.calendarService.linkSessionToSchedule(this.linkPickerState.sessionId, scheduledWorkoutId)
-      .subscribe(() => { this.linkPickerState = null; this.reload$.next(); });
-  }
-
-  onDetailClosed(): void {
-    this.selectedWorkout = null;
-  }
-
-  onDetailStarted(): void {
-    this.selectedWorkout = null;
   }
 
   setViewMode(mode: 'week' | 'month'): void {
@@ -249,28 +197,9 @@ export class CalendarComponent implements OnInit {
     this.reload$.next();
   }
 
-  private startDateKey(): string {
-    return this.viewMode === 'week' ? this.weekDays[0].key : this.monthDays[0].key;
-  }
-
-  private endDateKey(): string {
-    return this.viewMode === 'week' ? this.weekDays[6].key : this.monthDays[this.monthDays.length - 1].key;
-  }
-
-  onDetailStatusChanged(): void {
-    this.selectedWorkout = null;
-    this.reload$.next();
-  }
-
   openScheduleModal(day: CalendarDay): void {
     this.selectedDate = day.key;
     this.isScheduleModalOpen = true;
-  }
-
-  deleteWorkout(workout: ScheduledWorkout): void {
-    this.calendarService
-      .deleteScheduledWorkout(workout.id)
-      .subscribe(() => this.reload$.next());
   }
 
   onScheduled(): void {
@@ -278,55 +207,41 @@ export class CalendarComponent implements OnInit {
     this.reload$.next();
   }
 
-  formatDuration(workout: ScheduledWorkout): string {
-    if (!workout.totalDurationSeconds) return workout.duration || '-';
-
-    const totalSec = workout.totalDurationSeconds;
-    const h = Math.floor(totalSec / 3600);
-    const m = Math.floor((totalSec % 3600) / 60);
-    const s = totalSec % 60;
-    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  markComplete(workout: ScheduledWorkout): void {
+    this.calendarService.markCompleted(workout.id).subscribe(() => this.reload$.next());
   }
 
-  formatSessionDuration(session: SavedSession): string {
-    const totalSec = session.totalDuration;
-    const h = Math.floor(totalSec / 3600);
-    const m = Math.floor((totalSec % 3600) / 60);
-    const s = totalSec % 60;
-    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  markSkipped(workout: ScheduledWorkout): void {
+    this.calendarService.markSkipped(workout.id).subscribe(() => this.reload$.next());
   }
 
-  trackByDay(_: number, day: CalendarDay): string {
-    return day.key;
-  }
-
-  trackByEntry(_: number, e: CalendarEntry): string {
-    if (e.kind === 'fused') return 'fused-' + e.scheduled.id;
-    if (e.kind === 'scheduled') return 'sw-' + e.scheduled.id;
-    return 'sess-' + e.session.id;
-  }
-
-  getTypeColor(type: string): string {
-    return TRAINING_TYPE_COLORS[type as TrainingType] || '#888';
-  }
-
-  getTypeLabel(type: string): string {
-    return TRAINING_TYPE_LABELS[type as TrainingType] || type;
-  }
-
-  isFutureDate(dateKey: string): boolean {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const d = new Date(dateKey + 'T00:00:00');
-    return d > today;
+  deleteWorkout(workout: ScheduledWorkout): void {
+    this.calendarService.deleteScheduledWorkout(workout.id).subscribe(() => this.reload$.next());
   }
 
   onDrop(event: CdkDragDrop<CalendarEntry[]>, targetDay: CalendarDay): void {
     const workout: ScheduledWorkout = event.item.data;
     if (!workout || workout.scheduledDate === targetDay.key) return;
-    this.calendarService.rescheduleWorkout(workout.id, targetDay.key).subscribe(() =>
-      this.reload$.next()
-    );
+    this.calendarService.rescheduleWorkout(workout.id, targetDay.key).subscribe(() => this.reload$.next());
+  }
+
+  selectWorkout(workout: ScheduledWorkout): void { this.selectedWorkout = workout; }
+
+  selectSession(session: SavedSession): void {
+    this.historyService.setSelectedSession(session);
+    this.router.navigate(['/history']);
+  }
+
+  onDetailClosed(): void { this.selectedWorkout = null; }
+  onDetailStarted(): void { this.selectedWorkout = null; }
+  onDetailStatusChanged(): void { this.selectedWorkout = null; this.reload$.next(); }
+
+  private startDateKey(): string {
+    return this.viewMode === 'week' ? this.weekDays[0].key : this.monthDays[0].key;
+  }
+
+  private endDateKey(): string {
+    return this.viewMode === 'week' ? this.weekDays[6].key : this.monthDays[this.monthDays.length - 1].key;
   }
 
   private setWeek(baseDate: Date): void {
@@ -344,15 +259,10 @@ export class CalendarComponent implements OnInit {
 
     const days: CalendarDay[] = [];
     const todayStr = new Date().toDateString();
-    // 6 weeks to ensure we cover the whole month
     for (let i = 0; i < 42; i++) {
       const date = new Date(startGrid);
       date.setDate(startGrid.getDate() + i);
-      days.push({
-        date,
-        key: toDateKey(date),
-        isToday: date.toDateString() === todayStr
-      });
+      days.push({ date, key: toDateKey(date), isToday: date.toDateString() === todayStr });
     }
     this.monthDays = days;
     this.startDate = startOfMonth;
