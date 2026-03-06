@@ -3,6 +3,7 @@ import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {catchError} from 'rxjs/operators';
 import {of} from 'rxjs';
+import {environment} from '../../environments/environment';
 
 export interface Tag {
     id: string;
@@ -17,7 +18,7 @@ export interface Tag {
     providedIn: 'root',
 })
 export class TagService {
-    private apiUrl = 'http://localhost:8080/api/tags';
+    private apiUrl = `${environment.apiUrl}/api/tags`;
     private http = inject(HttpClient);
 
     getTags(): Observable<Tag[]> {

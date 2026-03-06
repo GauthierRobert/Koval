@@ -4,8 +4,9 @@ import {Observable, of} from 'rxjs';
 import {catchError, map} from 'rxjs/operators';
 import {ScheduledWorkout} from './coach.service';
 import {SavedSession} from './history.service';
+import {environment} from '../../environments/environment';
 
-const BASE = 'http://localhost:8080';
+const BASE = environment.apiUrl;
 
 @Injectable({
     providedIn: 'root',

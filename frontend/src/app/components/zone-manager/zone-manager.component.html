@@ -3,7 +3,7 @@
   <div class="zone-header">
     <div class="header-left">
       <span class="highlight">ZONE</span> <span class="dim">SYSTEMS</span>
-      <span class="zone-count">{{ zoneSystems.length }}</span>
+      <span class="zone-count">{{ (zoneSystems$ | async)?.length }}</span>
     </div>
     <div class="header-right">
       <div class="sport-filters">
@@ -30,27 +30,29 @@
   <div class="zone-content">
     <!-- Systems list (left) -->
     <div class="systems-list">
-      <div *ngFor="let system of filteredSystems" class="system-card"
-        [class.selected]="selectedSystem?.id === system.id" (click)="selectSystem(system)">
-        <div class="system-card-top">
-          <app-sport-icon [sport]="system.sportType" [size]="14"></app-sport-icon>
-          <span class="system-name">{{ system.name }}</span>
-        </div>
-        <div class="system-card-meta">
-          <span class="meta-badge">{{ system.referenceType }}</span>
-          <span class="meta-count">{{ system.zones.length }} zones</span>
-        </div>
-        <div class="zone-bar-preview">
-          <div *ngFor="let zone of system.zones; let i = index" class="bar-segment"
-            [style.flex]="zone.high - zone.low" [style.background]="getZoneColor(i)">
+      <ng-container *ngIf="filteredSystems$ | async as systems">
+        <div *ngFor="let system of systems" class="system-card"
+          [class.selected]="selectedSystem?.id === system.id" (click)="selectSystem(system)">
+          <div class="system-card-top">
+            <app-sport-icon [sport]="system.sportType" [size]="14"></app-sport-icon>
+            <span class="system-name">{{ system.name }}</span>
+          </div>
+          <div class="system-card-meta">
+            <span class="meta-badge">{{ system.referenceType }}</span>
+            <span class="meta-count">{{ system.zones.length }} zones</span>
+          </div>
+          <div class="zone-bar-preview">
+            <div *ngFor="let zone of system.zones; let i = index" class="bar-segment"
+              [style.flex]="zone.high - zone.low" [style.background]="getZoneColor(i)">
+            </div>
           </div>
         </div>
-      </div>
 
-      <div *ngIf="filteredSystems.length === 0" class="empty-systems">
-        <p>No zone systems</p>
-        <p class="hint">Click <strong>+ NEW</strong> to create one</p>
-      </div>
+        <div *ngIf="systems.length === 0" class="empty-systems">
+          <p>No zone systems</p>
+          <p class="hint">Click <strong>+ NEW</strong> to create one</p>
+        </div>
+      </ng-container>
     </div>
 
     <!-- Editor (right) -->

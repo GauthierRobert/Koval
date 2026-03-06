@@ -12,6 +12,7 @@ import com.koval.trainingplannerbackend.training.tag.TagService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -155,7 +156,7 @@ public class TrainingService {
             return Map.of();
         }
 
-        Map<String, List<Training>> folders = new java.util.HashMap<>();
+        Map<String, List<Training>> folders = new HashMap<>();
         for (Tag tag : athleteTags) {
             List<Training> trainings = trainingRepository.findByTagsContaining(tag.getId());
             folders.put(tag.getName(), trainings);

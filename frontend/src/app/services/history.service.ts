@@ -6,6 +6,7 @@ import {SessionSummary} from './workout-execution.service';
 import {AuthService} from './auth.service';
 import {FitExportService} from './fit-export.service';
 import {MetricsService} from './metrics.service';
+import {environment} from '../../environments/environment';
 
 export interface SavedSession extends SessionSummary {
     id: string;
@@ -23,7 +24,7 @@ export interface SavedSession extends SessionSummary {
     providedIn: 'root',
 })
 export class HistoryService {
-    private readonly apiUrl = 'http://localhost:8080/api/sessions';
+    private readonly apiUrl = `${environment.apiUrl}/api/sessions`;
     private http = inject(HttpClient);
     private authService = inject(AuthService);
     private fitExport = inject(FitExportService);

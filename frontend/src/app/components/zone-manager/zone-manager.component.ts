@@ -1,6 +1,8 @@
 import { Component, inject, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { BehaviorSubject, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ZoneService } from '../../services/zone.service';
 import { AuthService } from '../../services/auth.service';
@@ -22,13 +24,21 @@ export class ZoneManagerComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  zoneSystems: ZoneSystem[] = [];
+  private zoneSystemsSubject = new BehaviorSubject<ZoneSystem[]>([]);
+  private sportFilterSubject = new BehaviorSubject<SportType | null>(null);
+
+  zoneSystems$ = this.zoneSystemsSubject.asObservable();
+  filteredSystems$ = combineLatest([this.zoneSystemsSubject, this.sportFilterSubject]).pipe(
+    map(([systems, filter]) => filter ? systems.filter(s => s.sportType === filter) : systems)
+  );
+
+  get activeSportFilter(): SportType | null { return this.sportFilterSubject.value; }
+
   selectedSystem: ZoneSystem | null = null;
   editingSystem: ZoneSystem | null = null;
   saving = false;
   saved = false;
   deleting = false;
-  activeSportFilter: SportType | null = null;
   showCreateMenu = false;
 
   sportTypes: SportType[] = ['CYCLING', 'RUNNING', 'SWIMMING'];
@@ -90,14 +100,9 @@ export class ZoneManagerComponent implements OnInit {
 
   loadZoneSystems() {
     this.zoneService.getCoachZoneSystems().subscribe({
-      next: (systems) => (this.zoneSystems = systems),
+      next: (systems) => this.zoneSystemsSubject.next(systems),
       error: (err) => console.error('Failed to load zone systems', err),
     });
-  }
-
-  get filteredSystems(): ZoneSystem[] {
-    if (!this.activeSportFilter) return this.zoneSystems;
-    return this.zoneSystems.filter((s) => s.sportType === this.activeSportFilter);
   }
 
   get availableReferenceTypes(): { value: ZoneReferenceType; label: string }[] {
@@ -106,7 +111,7 @@ export class ZoneManagerComponent implements OnInit {
   }
 
   setSportFilter(sport: SportType | null) {
-    this.activeSportFilter = this.activeSportFilter === sport ? null : sport;
+    this.sportFilterSubject.next(this.sportFilterSubject.value === sport ? null : sport);
   }
 
   createNewSystem(sport: SportType) {
@@ -129,7 +134,7 @@ export class ZoneManagerComponent implements OnInit {
 
     this.zoneService.createZoneSystem(newSystem).subscribe({
       next: (saved) => {
-        this.zoneSystems.push(saved);
+        this.zoneSystemsSubject.next([...this.zoneSystemsSubject.value, saved]);
         this.selectSystem(saved);
         this.showCreateMenu = false;
       },
@@ -155,11 +160,12 @@ export class ZoneManagerComponent implements OnInit {
 
     this.zoneService.updateZoneSystem(this.editingSystem.id, this.editingSystem).subscribe({
       next: (updated) => {
-        const index = this.zoneSystems.findIndex((s) => s.id === updated.id);
+        const systems = this.zoneSystemsSubject.value;
+        const index = systems.findIndex((s) => s.id === updated.id);
         if (index !== -1) {
-          this.zoneSystems[index] = updated;
-          // Replace array reference so Angular detects the mutation
-          this.zoneSystems = [...this.zoneSystems];
+          const next = [...systems];
+          next[index] = updated;
+          this.zoneSystemsSubject.next(next);
         }
         this.selectedSystem = updated;
         this.editingSystem = { ...updated, zones: updated.zones.map((z) => ({ ...z })) };
@@ -181,7 +187,7 @@ export class ZoneManagerComponent implements OnInit {
 
     this.zoneService.deleteZoneSystem(this.selectedSystem.id).subscribe({
       next: () => {
-        this.zoneSystems = this.zoneSystems.filter((s) => s.id !== this.selectedSystem!.id);
+        this.zoneSystemsSubject.next(this.zoneSystemsSubject.value.filter((s) => s.id !== this.selectedSystem!.id));
         this.selectedSystem = null;
         this.editingSystem = null;
         this.deleting = false;

@@ -245,3 +245,13 @@
 .cta-btn:hover {
   transform: scale(1.05);
 }
+
+.empty-week-small {
+  padding: 4px 0;
+}
+
+.empty-week-small .dim {
+  font-size: 11px;
+  opacity: 0.45;
+  font-weight: 400;
+}

@@ -1,0 +1,31 @@
+spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+
+  ai:
+    anthropic:
+      chat:
+        options:
+          temperature: 0.7
+          max-tokens: 4096
+
+strava:
+  redirect-uri: ${STRAVA_REDIRECT_URI:}
+
+google:
+  redirect-uri: ${GOOGLE_REDIRECT_URI:}
+
+cors:
+  allowed-origins: ${ALLOWED_ORIGINS}
+
+app:
+  ai:
+    debug-calls: false
+
+logging:
+  level:
+    org.springframework.ai.anthropic.api.AnthropicApi: WARN
+    org.springframework.ai.anthropic: WARN
+    org.springframework.ai: WARN
+    com.example.trainingplannerbackend: INFO

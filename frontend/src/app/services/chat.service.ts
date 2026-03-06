@@ -3,6 +3,7 @@ import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject} from 'rxjs';
 import {skip, take} from 'rxjs/operators';
 import {TrainingService} from './training.service';
+import {environment} from '../../environments/environment';
 
 export type AgentType =
   | 'TRAINING_CREATION'
@@ -39,7 +40,7 @@ interface ChatHistoryDetail {
   providedIn: 'root',
 })
 export class ChatService {
-  private apiUrl = 'http://localhost:8080/api/ai';
+  private apiUrl = `${environment.apiUrl}/api/ai`;
   private http = inject(HttpClient);
   private ngZone = inject(NgZone);
   private trainingService = inject(TrainingService);

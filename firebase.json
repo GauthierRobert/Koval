@@ -1,0 +1,7 @@
+{
+  "hosting": {
+    "public": "frontend/dist/training-planner-frontend/browser",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [{ "source": "**", "destination": "/index.html" }]
+  }
+}

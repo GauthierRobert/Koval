@@ -5,6 +5,7 @@ import {catchError} from 'rxjs/operators';
 import {User} from './auth.service';
 import {Tag} from './tag.service';
 import {PmcDataPoint} from './metrics.service';
+import {environment} from '../../environments/environment';
 
 export interface InviteCode {
     id: string;
@@ -44,7 +45,7 @@ export interface ScheduledWorkout {
     providedIn: 'root',
 })
 export class CoachService {
-    private apiUrl = 'http://localhost:8080/api/coach';
+    private apiUrl = `${environment.apiUrl}/api/coach`;
 
     constructor(private http: HttpClient) { }
 

@@ -3,6 +3,7 @@ import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject, Observable} from 'rxjs';
 import {tap} from 'rxjs/operators';
 import {Router} from '@angular/router';
+import {environment} from '../../environments/environment';
 
 export interface User {
     id: string;
@@ -29,7 +30,7 @@ export interface User {
     providedIn: 'root'
 })
 export class AuthService {
-    private apiUrl = 'http://localhost:8080/api/auth';
+    private apiUrl = `${environment.apiUrl}/api/auth`;
     private userSubject = new BehaviorSubject<User | null>(null);
     user$ = this.userSubject.asObservable();
 
@@ -117,9 +118,7 @@ export class AuthService {
     logout() {
         localStorage.removeItem('token');
         localStorage.removeItem(this.UI_MODE_KEY);
-        this.userSubject.next(null);
-        this.uiModeSubject.next('coach');
-        this.router.navigate(['/login']);
+        window.location.href = '/login';
     }
 
     get currentUser(): User | null {

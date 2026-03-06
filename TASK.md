@@ -22,6 +22,15 @@
 - ~~Bug with Chat history session link and retrieval of history.~~ ✅
 - ~~Bugs with PMC display, completly flat (I have not .fit, But I have manual completed workout, and scheduled Workout)~~ ✅
 - In Coach Page, the Zone Dashboard is still in the same page as the Athelte page. Create a seperated tab 'like for TAGS'
+- When refresh the page, we always arrive in the main dashboard, but we should just stay on the page/component we are. Even when coach, I can see the dashboard.
+- When connecting for the first Time with google or strava, user must say if coach or athlete, FTP, CSS, and hreshold pace in run. Only Coach/athlete is mandatory
+- Remove the dev connector
+- API http://localhost:8080/api/sessions/699f5bb89268b9733f42e4d2 return 403 and CORS error, same for http://localhost:8080/api/schedule/69ab2c0b34bf549c8b87fa4b/reschedule
+- ~~On Physiology Page, I want to see all 3 default zone in Swim bike, run. Coggan has 7 zones. A percentage of reference value in the zone display/graph~~ ✅
+- ~~There is an issue with the calendar in month view, the page is larger and the 3% of the  rigth page is not visible~~ ✅
+- Day in week view in calendar must be locally scrollable/ OR Find a way to display more than 2 training
+- The link of complete fit workout works but the display of the action is ugly and not visible at all. It the linked training, a link to the compelted training mist be abalable and a icon visible in the calednar for this workout
+- The sport distribution in physiology must be display before the zones in coach dashboard when looking at athlete
 
 
 ## Nice too have

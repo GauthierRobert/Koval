@@ -72,7 +72,7 @@
 
           <!-- Actions -->
           <div class="modal-actions">
-            <button class="start-btn" (click)="startTraining(training)">
+            <button class="start-btn" *ngIf="training.sportType === 'CYCLING'" (click)="startTraining(training)">
               <span class="play-icon">&#9654;</span> Start Training
             </button>
             <ng-container *ngIf="workout.status === 'PENDING'">

@@ -1,7 +1,9 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject, Observable, of} from 'rxjs';
-import {tap} from 'rxjs/operators';
+import {filter, tap} from 'rxjs/operators';
+import {environment} from '../../environments/environment';
+import {AuthService} from './auth.service';
 
 export type TrainingType =
     | 'VO2MAX'
@@ -90,7 +92,7 @@ export function hasDurationEstimate(training: Training): boolean {
     providedIn: 'root',
 })
 export class TrainingService {
-    private apiUrl = 'http://localhost:8080/api/trainings';
+    private apiUrl = `${environment.apiUrl}/api/trainings`;
     private http = inject(HttpClient);
 
     private trainingsSubject = new BehaviorSubject<Training[]>([]);
@@ -104,8 +106,13 @@ export class TrainingService {
     private ftpSubject = new BehaviorSubject<number>(this.loadFtp());
     ftp$ = this.ftpSubject.asObservable();
 
+    private authService = inject(AuthService);
+
     constructor() {
-        this.loadTrainings();
+        this.authService.user$.pipe(filter(user => !!user)).subscribe(() => {
+            this.selectedTrainingSubject.next(null);
+            this.loadTrainings();
+        });
     }
 
     private loadFtp(): number {

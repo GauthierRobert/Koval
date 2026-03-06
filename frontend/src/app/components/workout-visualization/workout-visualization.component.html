@@ -20,7 +20,7 @@
         {{ displayUnit === 'PERCENT' ? '%' : getSportUnit() }}
       </button>
       <button class="schedule-btn" (click)="openScheduleModal()">SCHEDULE</button>
-      <button class="start-btn" (click)="startWorkout()">
+      <button class="start-btn" (click)="startWorkout()" *ngIf="training.sportType === 'CYCLING'">
         <span class="play-icon">▶</span> START WORKOUT
       </button>
     </div>

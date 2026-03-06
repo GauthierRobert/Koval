@@ -1,0 +1,94 @@
+name: Deploy to GCP
+
+on:
+  push:
+    branches: [main]
+
+env:
+  GCP_REGION: us-central1
+  ARTIFACT_REPO: training-planner
+  IMAGE_NAME: backend
+
+jobs:
+  backend:
+    name: Deploy Backend to Cloud Run
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: temurin
+
+      - name: Build JAR
+        working-directory: backend
+        run: mvn clean package -DskipTests
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: backend
+          push: true
+          tags: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: training-planner-backend
+          region: ${{ env.GCP_REGION }}
+          image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          env_vars: |
+            SPRING_PROFILES_ACTIVE=prod
+          secrets: |
+            ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest
+            JWT_SECRET=JWT_SECRET:latest
+            MONGODB_URI=MONGODB_URI:latest
+            ALLOWED_ORIGINS=ALLOWED_ORIGINS:latest
+            STRAVA_CLIENT_ID=STRAVA_CLIENT_ID:latest
+            STRAVA_CLIENT_SECRET=STRAVA_CLIENT_SECRET:latest
+            STRAVA_REDIRECT_URI=STRAVA_REDIRECT_URI:latest
+            GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID:latest
+            GOOGLE_CLIENT_SECRET=GOOGLE_CLIENT_SECRET:latest
+            GOOGLE_REDIRECT_URI=GOOGLE_REDIRECT_URI:latest
+          flags: --allow-unauthenticated --port=8080
+
+  frontend:
+    name: Deploy Frontend to Firebase Hosting
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build Angular app
+        working-directory: frontend
+        run: npm run build -- --configuration production
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: ${{ secrets.GCP_PROJECT_ID }}

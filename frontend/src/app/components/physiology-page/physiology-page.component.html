@@ -1,15 +1,15 @@
 <div class="physiology-page" *ngIf="user$ | async as user">
   <div class="page-header">
     <h2>PHYSIOLOGY</h2>
-    <p class="subtitle">Your physiological profile and power zones</p>
+    <p class="subtitle">Your physiological profile and training zones</p>
   </div>
 
   <div class="phys-stats">
-    <div class="phys-stat">
+    <div class="phys-stat" *ngIf="user.ftp">
       <span class="phys-label">FTP</span>
-      <span class="phys-value">{{ user.ftp || '—' }}{{ user.ftp ? 'W' : '' }}</span>
+      <span class="phys-value">{{ user.ftp }}<span class="phys-unit">W</span></span>
     </div>
-    <div class="phys-stat">
+    <div class="phys-stat" *ngIf="user.ftp">
       <span class="phys-label">VO2MAX (est.)</span>
       <span class="phys-value">{{ getEstimatedVo2Max(user.ftp) }} <span class="phys-unit">ml/kg/min</span></span>
     </div>
@@ -17,17 +17,57 @@
       <span class="phys-label">W/kg</span>
       <span class="phys-value">{{ (user.ftp / 70) | number:'1.1-1' }}</span>
     </div>
-  </div>
-
-  <div class="section-title" style="margin-top: 1.5rem">COGGAN POWER ZONES</div>
-  <div class="zones-table" *ngIf="user.ftp; else noFtp">
-    <div *ngFor="let z of getPowerZones(user.ftp)" class="zone-row">
-      <span class="zone-dot" [style.background]="z.color"></span>
-      <span class="zone-name">{{ z.name }}</span>
-      <span class="zone-range">{{ z.low }}–{{ z.high !== null ? z.high + 'W' : '∞' }}</span>
+    <div class="phys-stat" *ngIf="user.functionalThresholdPace">
+      <span class="phys-label">THRESHOLD PACE</span>
+      <span class="phys-value">{{ formatPace(user.functionalThresholdPace) }}<span class="phys-unit">/km</span></span>
+    </div>
+    <div class="phys-stat" *ngIf="user.criticalSwimSpeed">
+      <span class="phys-label">CSS</span>
+      <span class="phys-value">{{ formatPace(user.criticalSwimSpeed) }}<span class="phys-unit">/100m</span></span>
     </div>
   </div>
-  <ng-template #noFtp>
-    <div class="empty-note">No FTP set. Update your reference values in Settings.</div>
-  </ng-template>
+
+  <!-- Sport tab selector -->
+  <div class="sport-tabs">
+    <button class="tab-btn" [class.active]="activeSport === 'CYCLING'" (click)="activeSport = 'CYCLING'">
+      CYCLING
+    </button>
+    <button class="tab-btn" [class.active]="activeSport === 'RUNNING'" (click)="activeSport = 'RUNNING'">
+      RUNNING
+    </button>
+    <button class="tab-btn" [class.active]="activeSport === 'SWIMMING'" (click)="activeSport = 'SWIMMING'">
+      SWIMMING
+    </button>
+  </div>
+
+  <!-- Section header -->
+  <div class="section-header">
+    <span class="section-title">{{ getSectionTitle() }}</span>
+    <span class="ref-badge" *ngIf="getRefBadge(user) as badge">{{ badge }}</span>
+  </div>
+
+  <!-- Visual zone bar -->
+  <div class="zone-bar">
+    <div
+      *ngFor="let z of zones[activeSport]; let i = index"
+      class="zone-segment"
+      [style.flex]="getZoneBarFlex(z)"
+      [style.background]="getZoneColor(i)"
+    >
+      <span class="seg-label">{{ z.label }}</span>
+    </div>
+  </div>
+
+  <!-- Zone table -->
+  <div class="zones-table">
+    <div *ngFor="let z of zones[activeSport]; let i = index" class="zone-row">
+      <span class="zone-dot" [style.background]="getZoneColor(i)"></span>
+      <span class="zone-label">{{ z.label }}</span>
+      <span class="zone-name">{{ z.description }}</span>
+      <span class="zone-pct">{{ z.low }}–{{ z.high }}%</span>
+      <span class="zone-actual" *ngIf="getActualRange(z, user, activeSport) as actual">{{ actual }}</span>
+    </div>
+  </div>
+
+  <div class="empty-note" *ngIf="!hasRef(user)">{{ getEmptyNote() }}</div>
 </div>

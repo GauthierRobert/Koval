@@ -2,12 +2,13 @@ import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {ZoneSystem} from './zone';
+import {environment} from '../../environments/environment';
 
 @Injectable({
     providedIn: 'root',
 })
 export class ZoneService {
-    private apiUrl = 'http://localhost:8080/api/zones';
+    private apiUrl = `${environment.apiUrl}/api/zones`;
     private http = inject(HttpClient);
 
     /** GET /api/zones/coach — list all zone systems for the current coach (JWT auth) */

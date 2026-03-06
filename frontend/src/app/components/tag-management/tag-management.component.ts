@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { TagService, Tag } from '../../services/tag.service';
 import { CoachService } from '../../services/coach.service';
 import { User } from '../../services/auth.service';
@@ -15,9 +16,15 @@ import { User } from '../../services/auth.service';
 })
 export class TagManagementComponent implements OnInit {
   private tagsSubject = new BehaviorSubject<Tag[]>([]);
-  tags$: Observable<Tag[]> = this.tagsSubject.asObservable();
+  private athletesSubject = new BehaviorSubject<User[]>([]);
 
-  tagAthletes = new Map<string, User[]>();
+  tagData$ = combineLatest([this.tagsSubject, this.athletesSubject]).pipe(
+    map(([tags, athletes]) => tags.map(tag => ({
+      ...tag,
+      tagAthletes: athletes.filter(a => a.tags?.includes(tag.name))
+    })))
+  );
+
   editingTagId: string | null = null;
   editingName = '';
   newTagName = '';
@@ -33,28 +40,13 @@ export class TagManagementComponent implements OnInit {
     this.tagService.getTags().subscribe({
       next: (tags) => {
         this.tagsSubject.next(tags);
-        this.loadAthletesForTags(tags);
+        this.coachService.getAthletes().subscribe({
+          next: (athletes) => this.athletesSubject.next(athletes),
+          error: () => {},
+        });
       },
       error: () => this.tagsSubject.next([]),
     });
-  }
-
-  private loadAthletesForTags(tags: Tag[]): void {
-    this.coachService.getAthletes().subscribe({
-      next: (athletes) => {
-        for (const tag of tags) {
-          this.tagAthletes.set(
-            tag.id,
-            athletes.filter((a) => a.tags?.includes(tag.name))
-          );
-        }
-      },
-      error: () => {},
-    });
-  }
-
-  getAthletes(tagId: string): User[] {
-    return this.tagAthletes.get(tagId) ?? [];
   }
 
   startEdit(tag: Tag): void {

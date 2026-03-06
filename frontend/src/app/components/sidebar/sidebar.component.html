@@ -28,23 +28,5 @@
         <span class="join-error" *ngIf="joinError">{{ joinError }}</span>
       </div>
     </ng-container>
-    <ng-container *ngIf="user$ | async as u">
-      <div class="user-profile">
-        <div class="avatar" *ngIf="!u.profilePicture">{{ getInitials(u.displayName) }}</div>
-        <img class="avatar-img" *ngIf="u.profilePicture" [src]="u.profilePicture" alt="Profile" />
-        <div class="user-info">
-          <span class="name">{{ u.displayName }}</span>
-          <span class="status">{{ u.role }}</span>
-        </div>
-        <button class="logout-btn" (click)="logout()" title="Logout">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-          </svg>
-        </button>
-      </div>
-    </ng-container>
   </div>
 </aside>
