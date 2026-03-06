@@ -222,21 +222,17 @@ public class CoachService {
     }
 
     /**
-     * Remove a tag from an athlete. Coach-only.
+     * Remove a tag from an athlete by tag name. Coach-only.
      */
-    public Tag removeTagFromAthlete(String coachId, String athleteId, String tagId) {
+    public Tag removeTagFromAthlete(String coachId, String athleteId, String tagName) {
         User coach = userRepository.findById(coachId)
                 .orElseThrow(() -> new IllegalArgumentException("Coach not found: " + coachId));
         if (coach.getRole() != UserRole.COACH) {
             throw new IllegalStateException("Only coaches can modify athlete tags");
         }
 
-        Tag tag = tagService.getTagById(tagId);
-        if (!coachId.equals(tag.getCoachId())) {
-            throw new IllegalStateException("Tag does not belong to this coach");
-        }
-
-        return tagService.removeAthleteFromTag(tagId, athleteId);
+        Tag tag = tagService.getTagByNameAndCoach(tagName, coachId);
+        return tagService.removeAthleteFromTag(tag.getId(), athleteId);
     }
 
     /**

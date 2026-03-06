@@ -181,13 +181,13 @@ public class CoachController {
         }
     }
 
-    @DeleteMapping("/athletes/{athleteId}/tags/{tagId}")
+    @DeleteMapping("/athletes/{athleteId}/tags/{tagName}")
     public ResponseEntity<Tag> removeAthleteTag(
             @PathVariable String athleteId,
-            @PathVariable String tagId) {
+            @PathVariable String tagName) {
         String coachId = SecurityUtils.getCurrentUserId();
         try {
-            return ResponseEntity.ok(coachService.removeTagFromAthlete(coachId, athleteId, tagId));
+            return ResponseEntity.ok(coachService.removeTagFromAthlete(coachId, athleteId, tagName));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().build();
         }

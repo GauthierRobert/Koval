@@ -150,6 +150,14 @@ public class TagService {
     }
 
     /**
+     * Get a tag by name (case-insensitive) for a specific coach.
+     */
+    public Tag getTagByNameAndCoach(String name, String coachId) {
+        return tagRepository.findByCoachIdAndName(coachId, name.toLowerCase().trim())
+                .orElseThrow(() -> new IllegalArgumentException("Tag not found: " + name));
+    }
+
+    /**
      * Get tags by a list of IDs.
      */
     public List<Tag> getTagsByIds(List<String> tagIds) {
