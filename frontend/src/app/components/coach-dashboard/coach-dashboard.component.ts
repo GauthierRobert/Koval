@@ -13,7 +13,7 @@ import { Training, TrainingService, TrainingType, TRAINING_TYPE_COLORS, TRAINING
 import { SportIconComponent } from '../sport-icon/sport-icon.component';
 import { PmcChartComponent } from '../pmc-chart/pmc-chart.component';
 
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { ZoneManagerComponent } from '../zone-manager/zone-manager.component';
 
 @Component({
@@ -66,7 +66,8 @@ export class CoachDashboardComponent implements OnInit {
   constructor(
     private coachService: CoachService,
     private authService: AuthService,
-    private trainingService: TrainingService
+    private trainingService: TrainingService,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
@@ -122,12 +123,21 @@ export class CoachDashboardComponent implements OnInit {
   }
 
   loadAthletePmc(athleteId: string): void {
-    const to = new Date().toISOString().split('T')[0];
-    const from = (() => { const d = new Date(); d.setMonth(d.getMonth() - 3); return d.toISOString().split('T')[0]; })();
-    this.coachService.getAthletePmc(athleteId, from, to).subscribe({
+    const now = new Date();
+    const from = new Date(now); from.setDate(from.getDate() - 30);
+    const to = new Date(now); to.setDate(to.getDate() + 30);
+    this.coachService.getAthletePmc(
+      athleteId,
+      from.toISOString().split('T')[0],
+      to.toISOString().split('T')[0]
+    ).subscribe({
       next: (data) => this.athletePmcSubject.next(data),
       error: () => this.athletePmcSubject.next([]),
     });
+  }
+
+  viewAthletePmc(athleteId: string): void {
+    this.router.navigate(['/pmc'], { queryParams: { athleteId } });
   }
 
   loadAthleteSchedule(athleteId: string) {

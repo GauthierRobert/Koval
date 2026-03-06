@@ -2,9 +2,11 @@ import {Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {BehaviorSubject, combineLatest, Observable} from 'rxjs';
 import {map} from 'rxjs/operators';
+import {ActivatedRoute, Router} from '@angular/router';
 import {AuthService} from '../../services/auth.service';
 import {MetricsService, PmcDataPoint} from '../../services/metrics.service';
 import {CalendarService} from '../../services/calendar.service';
+import {CoachService} from '../../services/coach.service';
 import {PmcChartComponent} from '../pmc-chart/pmc-chart.component';
 
 type Period = '1w' | '1m' | '3m' | '6m' | '1y';
@@ -20,8 +22,13 @@ export class PmcPageComponent implements OnInit {
     private authService = inject(AuthService);
     private metricsService = inject(MetricsService);
     private calendarService = inject(CalendarService);
+    private coachService = inject(CoachService);
+    private route = inject(ActivatedRoute);
+    private router = inject(Router);
 
     user$ = this.authService.user$;
+
+    athleteId: string | null = null;
 
     private pmcDataSubject = new BehaviorSubject<PmcDataPoint[]>([]);
     pmcData$ = this.pmcDataSubject.asObservable();
@@ -76,8 +83,11 @@ export class PmcPageComponent implements OnInit {
     error = false;
 
     ngOnInit(): void {
+        this.athleteId = this.route.snapshot.queryParamMap.get('athleteId');
         this.loadPmc();
-        this.loadScheduledWorkouts();
+        if (!this.athleteId) {
+            this.loadScheduledWorkouts();
+        }
     }
 
     setPeriod(p: Period): void {
@@ -88,10 +98,24 @@ export class PmcPageComponent implements OnInit {
     loadPmc(): void {
         this.loading = true;
         this.error = false;
-        this.metricsService.getPmc(this.fromDate(), this.today()).subscribe({
-            next: (data) => { this.pmcDataSubject.next(data); this.loading = false; },
-            error: () => { this.loading = false; this.error = true; },
-        });
+        if (this.athleteId) {
+            const now = new Date();
+            const from = new Date(now); from.setDate(from.getDate() - 365);
+            const to = new Date(now); to.setDate(to.getDate() + 90);
+            this.coachService.getAthletePmc(
+                this.athleteId,
+                from.toISOString().split('T')[0],
+                to.toISOString().split('T')[0]
+            ).subscribe({
+                next: (data) => { this.pmcDataSubject.next(data); this.loading = false; },
+                error: () => { this.loading = false; this.error = true; },
+            });
+        } else {
+            this.metricsService.getPmc(this.fromDate(), this.today()).subscribe({
+                next: (data) => { this.pmcDataSubject.next(data); this.loading = false; },
+                error: () => { this.loading = false; this.error = true; },
+            });
+        }
     }
 
     loadScheduledWorkouts(): void {
@@ -122,6 +146,10 @@ export class PmcPageComponent implements OnInit {
         return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {
             weekday: 'long', month: 'long', day: 'numeric',
         });
+    }
+
+    backToCoach(): void {
+        this.router.navigate(['/coach']);
     }
 
     private fromDate(): string {

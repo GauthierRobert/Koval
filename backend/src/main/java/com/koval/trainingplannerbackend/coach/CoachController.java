@@ -225,7 +225,7 @@ public class CoachController {
 
     // --- Invite Code endpoints ---
 
-    public record InviteCodeRequest(List<String> tags, int maxUses, LocalDateTime expiresAt) {}
+    public record InviteCodeRequest(List<String> tags, int maxUses, LocalDateTime expiresAt, String code) {}
 
     public record RedeemRequest(String code) {}
 
@@ -235,7 +235,7 @@ public class CoachController {
         String coachId = SecurityUtils.getCurrentUserId();
         try {
             InviteCode code = coachService.generateInviteCode(
-                    coachId, request.tags(), request.maxUses(), request.expiresAt());
+                    coachId, request.tags(), request.maxUses(), request.expiresAt(), request.code());
             return ResponseEntity.ok(code);
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().build();

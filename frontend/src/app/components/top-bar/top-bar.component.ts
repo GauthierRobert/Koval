@@ -23,6 +23,7 @@ export class TopBarComponent {
   isPopupOpen = false;
   requestDescription = '';
 
+  user$ = this.authService.user$;
   isCoach$ = this.authService.user$.pipe(map(u => u?.role === 'COACH'));
   uiMode$ = this.authService.uiMode$;
 

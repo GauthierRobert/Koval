@@ -25,6 +25,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -210,6 +211,30 @@ public class SessionController {
             // Non-fatal
         }
 
+        return ResponseEntity.ok(saved);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<CompletedSession> patch(@PathVariable String id,
+            @RequestBody Map<String, Object> body) {
+        String userId = SecurityUtils.getCurrentUserId();
+        CompletedSession session = repository.findById(id)
+                .filter(s -> userId.equals(s.getUserId()))
+                .orElse(null);
+        if (session == null) return ResponseEntity.notFound().build();
+
+        if (body.containsKey("rpe")) {
+            int rpe = ((Number) body.get("rpe")).intValue();
+            session.setRpe(rpe);
+            if (session.getTss() == null) {
+                double durationHours = session.getTotalDurationSeconds() / 3600.0;
+                session.setTss(Math.pow(rpe / 10.0, 2) * durationHours * 100);
+                session.setIntensityFactor(rpe / 10.0);
+            }
+        }
+
+        CompletedSession saved = repository.save(session);
+        analyticsService.recomputeAndSaveUserLoad(userId);
         return ResponseEntity.ok(saved);
     }
 

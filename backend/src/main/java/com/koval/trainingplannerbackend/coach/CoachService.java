@@ -270,7 +270,7 @@ public class CoachService {
     /**
      * Generate an invite code for a coach. Tags param contains Tag document IDs.
      */
-    public InviteCode generateInviteCode(String coachId, List<String> tagIds, int maxUses, LocalDateTime expiresAt) {
+    public InviteCode generateInviteCode(String coachId, List<String> tagIds, int maxUses, LocalDateTime expiresAt, String customCode) {
         User coach = userRepository.findById(coachId)
                 .orElseThrow(() -> new IllegalArgumentException("Coach not found: " + coachId));
 
@@ -279,7 +279,9 @@ public class CoachService {
         }
 
         InviteCode inviteCode = new InviteCode();
-        inviteCode.setCode(generateUniqueCode());
+        inviteCode.setCode(customCode != null && !customCode.isBlank()
+                ? customCode.toUpperCase().trim()
+                : generateUniqueCode());
         inviteCode.setCoachId(coachId);
         inviteCode.setTags(tagIds != null ? tagIds : new ArrayList<>());
         inviteCode.setMaxUses(maxUses);

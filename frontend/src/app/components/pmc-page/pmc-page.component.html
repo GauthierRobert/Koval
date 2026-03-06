@@ -1,4 +1,8 @@
 <div class="pmc-page">
+  <div class="athlete-pmc-banner" *ngIf="athleteId">
+    <button class="back-btn" (click)="backToCoach()">← BACK TO COACH</button>
+    <span class="athlete-pmc-label">Viewing athlete PMC</span>
+  </div>
   <div class="pmc-body">
 
     <!-- ── Left column (25%) ─────────────────────────────── -->

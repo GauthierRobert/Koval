@@ -159,12 +159,15 @@ export class CalendarComponent implements OnInit {
       map(([sched, sess]) => buildEntriesByDay(sched, sess))
     );
 
+    const today = toDateKey(new Date());
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const sevenDaysAgoKey = toDateKey(sevenDaysAgo);
     this.overdueWorkouts$ = schedule$.pipe(
       map((workouts) =>
-        workouts.filter((w) => w.status === 'PENDING' && w.scheduledDate <= sevenDaysAgoKey)
+        workouts.filter(
+          (w) => w.status === 'PENDING' && w.scheduledDate >= sevenDaysAgoKey && w.scheduledDate < today
+        )
       )
     );
   }

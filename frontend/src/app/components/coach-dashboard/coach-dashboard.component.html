@@ -196,7 +196,10 @@
           <!-- Athlete PMC chart -->
           <ng-container *ngIf="athletePmc$ | async as pmcData">
             <div class="coach-pmc-panel" *ngIf="pmcData.length > 0">
-              <div class="section-title">PMC — LAST 3 MONTHS</div>
+              <div class="coach-pmc-header">
+                <div class="section-title">PMC — 30 DAYS</div>
+                <button class="view-pmc-btn" (click)="viewAthletePmc(selectedAthlete!.id)">VIEW FULL PMC →</button>
+              </div>
               <app-pmc-chart [data]="pmcData"></app-pmc-chart>
             </div>
           </ng-container>

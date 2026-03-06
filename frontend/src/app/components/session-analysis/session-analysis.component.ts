@@ -1,7 +1,7 @@
-import { Component, inject, Input, Output, EventEmitter } from '@angular/core';
+import { Component, inject, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { BehaviorSubject, from, Observable, of } from 'rxjs';
-import { catchError, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
+import { BehaviorSubject, from, Observable, of, Subject } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
 import { HistoryService, SavedSession } from '../../services/history.service';
 import { AuthService } from '../../services/auth.service';
 import { MetricsService, FitRecord } from '../../services/metrics.service';
@@ -21,13 +21,24 @@ interface FitState {
     templateUrl: './session-analysis.component.html',
     styleUrl: './session-analysis.component.css',
 })
-export class SessionAnalysisComponent {
+export class SessionAnalysisComponent implements OnDestroy {
     private authService = inject(AuthService);
     private metricsService = inject(MetricsService);
     private historyService = inject(HistoryService);
 
-
     private sessionSubject = new BehaviorSubject<SavedSession | null>(null);
+    private rpeUpdate$ = new Subject<{ id: string; rpe: number }>();
+
+    constructor() {
+        this.rpeUpdate$.pipe(
+            debounceTime(400),
+            switchMap(({ id, rpe }) => this.historyService.updateSession(id, { rpe }))
+        ).subscribe();
+    }
+
+    ngOnDestroy(): void {
+        this.rpeUpdate$.complete();
+    }
 
     @Input() set session(s: SavedSession | null) {
         this.sessionSubject.next(s ?? null);
@@ -64,7 +75,7 @@ export class SessionAnalysisComponent {
     selectRpe(session: SavedSession, val: number) {
         const updated = { ...session, rpe: val };
         this.sessionSubject.next(updated);
-        this.historyService.updateSession(session.id, { rpe: val });
+        this.rpeUpdate$.next({ id: session.id, rpe: val });
     }
 
     getIF(session: SavedSession, ftp: number): number {

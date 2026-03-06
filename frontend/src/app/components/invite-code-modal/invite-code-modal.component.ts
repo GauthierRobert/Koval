@@ -97,17 +97,23 @@ export class InviteCodeModalComponent implements OnChanges {
   addNewTag(): void {
     const name = this.newTagInput.trim();
     if (!name) return;
-    // Create tag on backend first, then add to local state
     this.tagService.createTag(name).subscribe({
       next: (tag) => {
         if (!this.availableTags.find(t => t.id === tag.id)) {
           this.availableTags = [...this.availableTags, tag];
         }
-        if (!this.unassignedTags.find(t => t.id === tag.id)) {
-          this.unassignedTags = [...this.unassignedTags, tag];
-        }
-        this.selectedTagId = tag.id;
         this.newTagInput = '';
+        // Auto-generate invite code using tag name as the code
+        this.generating = true;
+        this.coachService.generateInviteCode([tag.id], this.maxUses, name.toUpperCase()).subscribe({
+          next: (inviteCode) => {
+            this.generatedCode = inviteCode.code;
+            this.generating = false;
+            this.codeGenerated.emit(inviteCode);
+            this.loadCodes();
+          },
+          error: () => { this.generating = false; },
+        });
       },
     });
   }

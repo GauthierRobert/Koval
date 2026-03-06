@@ -1,6 +1,6 @@
 import {inject, Injectable} from '@angular/core';
-import {BehaviorSubject} from 'rxjs';
-import {filter} from 'rxjs/operators';
+import {BehaviorSubject, Observable} from 'rxjs';
+import {filter, tap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
 import {SessionSummary} from './workout-execution.service';
 import {AuthService} from './auth.service';
@@ -148,15 +148,15 @@ export class HistoryService {
         }
     }
 
-    updateSession(id: string, updates: Partial<SavedSession>) {
-        return this.http.patch<any>(`${this.apiUrl}/${id}`, updates).subscribe({
-            next: (updated) => {
-                const list = this.sessionsSubject.value.map(s => s.id === id ? { ...s, ...updates } : s);
+    updateSession(id: string, updates: Partial<SavedSession>): Observable<SavedSession> {
+        return this.http.patch<SavedSession>(`${this.apiUrl}/${id}`, updates).pipe(
+            tap((updated) => {
+                const list = this.sessionsSubject.value.map(s => s.id === id ? { ...s, ...updated } : s);
                 this.sessionsSubject.next(list);
                 if (this.selectedSessionSubject.value?.id === id) {
-                    this.selectedSessionSubject.next({ ...this.selectedSessionSubject.value, ...updates });
+                    this.selectedSessionSubject.next({ ...this.selectedSessionSubject.value, ...updated });
                 }
-            }
-        });
+            })
+        );
     }
 }

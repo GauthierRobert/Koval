@@ -96,10 +96,10 @@ export class CoachService {
             .pipe(catchError(() => of([])));
     }
 
-    generateInviteCode(tags: string[], maxUses: number): Observable<InviteCode> {
+    generateInviteCode(tags: string[], maxUses: number, code?: string): Observable<InviteCode> {
         return this.http.post<InviteCode>(
             `${this.apiUrl}/invite-codes`,
-            { tags, maxUses }
+            { tags, maxUses, code }
         );
     }
 

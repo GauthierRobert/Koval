@@ -35,6 +35,7 @@ public class CompletedSession {
     private Double tss;
     private Double intensityFactor;
     private String fitFileId; // GridFS ObjectId; null when no FIT stored
+    private Integer rpe;
 
     public record BlockSummary(
             String label,

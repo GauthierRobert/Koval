@@ -69,6 +69,11 @@
         <button [class.active]="vm.mode === 'coach'"   (click)="setUiMode('coach')">COACH</button>
       </div>
     </ng-container>
+
+    <div class="user-info" *ngIf="user$ | async as user">
+      <img class="user-avatar" [src]="user.profilePicture" [alt]="user.displayName" *ngIf="user.profilePicture" />
+      <span class="user-name">{{ user.displayName }}</span>
+    </div>
   </div>
 </header>
 

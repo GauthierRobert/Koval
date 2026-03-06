@@ -87,7 +87,9 @@ export class WorkoutSelectionComponent implements OnInit {
 
     this.overdueWorkouts$ = schedule$.pipe(
       map((workouts) =>
-        workouts.filter((w) => w.status === 'PENDING' && w.scheduledDate <= sevenDaysAgoKey)
+        workouts.filter(
+          (w) => w.status === 'PENDING' && w.scheduledDate >= sevenDaysAgoKey && w.scheduledDate < todayKey
+        )
       )
     );
   }
