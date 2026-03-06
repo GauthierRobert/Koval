@@ -5,6 +5,8 @@ import { BehaviorSubject, combineLatest, Observable, of, map } from 'rxjs';
 import { CoachService, ScheduledWorkout } from '../../services/coach.service';
 import { AuthService, User } from '../../services/auth.service';
 import { Tag } from '../../services/tag.service';
+import { ZoneService } from '../../services/zone.service';
+import { ZoneSystem } from '../../services/zone';
 import { PmcDataPoint } from '../../services/metrics.service';
 import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.component';
 import { InviteCodeModalComponent } from '../invite-code-modal/invite-code-modal.component';
@@ -31,8 +33,16 @@ export class CoachDashboardComponent implements OnInit {
   showZoneManager = false;
   trainingToShare: Training | null = null;
   activeTagFilter: string | null = null;
-  newTagInput = '';
   activeTab: 'performance' | 'physiology' | 'history' = 'performance';
+
+  scheduleWeekStart: Date = this.getMondayOfWeek(new Date());
+  scheduleWeekEnd: Date = this.getSundayOfWeek(new Date());
+
+  private coachZoneSystemsSubject = new BehaviorSubject<ZoneSystem[]>([]);
+  coachZoneSystems$ = this.coachZoneSystemsSubject.asObservable();
+
+  readonly ZONE_COLORS = ['#6366f1', '#3b82f6', '#22c55e', '#eab308', '#f97316', '#ef4444', '#7f1d1d'];
+  getZoneColor(i: number): string { return this.ZONE_COLORS[i % this.ZONE_COLORS.length]; }
 
   private userId = '';
 
@@ -67,6 +77,7 @@ export class CoachDashboardComponent implements OnInit {
     private coachService: CoachService,
     private authService: AuthService,
     private trainingService: TrainingService,
+    private zoneService: ZoneService,
     private router: Router
   ) { }
 
@@ -76,9 +87,42 @@ export class CoachDashboardComponent implements OnInit {
         this.userId = u.id;
         this.loadAthletes();
         this.loadTags();
+        this.zoneService.getCoachZoneSystems().subscribe({
+          next: (systems) => this.coachZoneSystemsSubject.next(systems),
+          error: () => {}
+        });
       }
     });
     this.coachTrainings$ = this.trainingService.trainings$;
+  }
+
+  private getMondayOfWeek(d: Date): Date {
+    const day = d.getDay();
+    const offset = day === 0 ? -6 : 1 - day;
+    const m = new Date(d);
+    m.setDate(d.getDate() + offset);
+    m.setHours(0, 0, 0, 0);
+    return m;
+  }
+
+  private getSundayOfWeek(d: Date): Date {
+    const mon = this.getMondayOfWeek(d);
+    const sun = new Date(mon);
+    sun.setDate(mon.getDate() + 6);
+    return sun;
+  }
+
+  navigateScheduleWeek(dir: -1 | 1): void {
+    this.scheduleWeekStart.setDate(this.scheduleWeekStart.getDate() + dir * 7);
+    this.scheduleWeekEnd.setDate(this.scheduleWeekEnd.getDate() + dir * 7);
+    this.scheduleWeekStart = new Date(this.scheduleWeekStart);
+    this.scheduleWeekEnd = new Date(this.scheduleWeekEnd);
+    if (this.selectedAthlete) this.loadAthleteSchedule(this.selectedAthlete.id);
+  }
+
+  get scheduleWeekLabel(): string {
+    const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+    return `${this.scheduleWeekStart.toLocaleDateString('en-US', opts)} – ${this.scheduleWeekEnd.toLocaleDateString('en-US', opts)}`;
   }
 
   loadAthletes() {
@@ -109,6 +153,8 @@ export class CoachDashboardComponent implements OnInit {
   }
 
   selectAthlete(athlete: User) {
+    this.scheduleWeekStart = this.getMondayOfWeek(new Date());
+    this.scheduleWeekEnd = this.getSundayOfWeek(new Date());
     this.selectedAthlete = athlete;
     this.loadAthleteSchedule(athlete.id);
     this.loadAthleteSessions(athlete.id);
@@ -141,9 +187,8 @@ export class CoachDashboardComponent implements OnInit {
   }
 
   loadAthleteSchedule(athleteId: string) {
-    const now = new Date();
-    const start = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
-    const end = new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
+    const start = this.scheduleWeekStart.toISOString().split('T')[0];
+    const end = this.scheduleWeekEnd.toISOString().split('T')[0];
 
     this.coachService.getAthleteSchedule(athleteId, start, end).subscribe({
       next: (data) => this.scheduleSubject.next(data),
@@ -164,23 +209,6 @@ export class CoachDashboardComponent implements OnInit {
       return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     }
     return workout.duration || '-';
-  }
-
-  addTag(athlete: User | null) {
-    if (!athlete || !this.newTagInput.trim()) return;
-    const tag = this.newTagInput.trim();
-    this.coachService.addAthleteTag(athlete.id, tag).subscribe({
-      next: (updated) => {
-        athlete.tags = updated.tags;
-        this.newTagInput = '';
-        this.loadTags();
-      },
-      error: () => {
-        if (!athlete.tags) athlete.tags = [];
-        if (!athlete.tags.includes(tag)) athlete.tags.push(tag);
-        this.newTagInput = '';
-      }
-    });
   }
 
   removeTag(athlete: User | null, tag: string) {

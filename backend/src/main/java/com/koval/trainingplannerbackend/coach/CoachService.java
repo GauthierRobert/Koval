@@ -217,7 +217,7 @@ public class CoachService {
         userRepository.findById(athleteId)
                 .orElseThrow(() -> new IllegalArgumentException("Athlete not found: " + athleteId));
 
-        Tag tag = tagService.getOrCreateTag(tagName, coachId);
+        Tag tag = tagService.getOrCreateTag(tagName, coachId, 0);
         return tagService.addAthleteToTag(tag.getId(), athleteId);
     }
 

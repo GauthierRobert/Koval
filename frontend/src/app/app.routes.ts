@@ -69,6 +69,22 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'tags',
+    loadComponent: () =>
+      import('./components/tag-management/tag-management.component').then(
+        (m) => m.TagManagementComponent,
+      ),
+    canActivate: [authGuard, coachGuard],
+  },
+  {
+    path: 'physiology',
+    loadComponent: () =>
+      import('./components/physiology-page/physiology-page.component').then(
+        (m) => m.PhysiologyPageComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
     path: 'login',
     loadComponent: () =>
       import('./components/auth/login.component').then((m) => m.LoginComponent),

@@ -155,6 +155,11 @@ export class ChatService {
         throw new Error(`HTTP ${response.status}`);
       }
 
+      const chatHistoryId = response.headers.get('X-Chat-History-Id');
+      if (chatHistoryId) {
+        this.ngZone.run(() => this.activeChatIdSubject.next(chatHistoryId));
+      }
+
       const reader = response.body!.getReader();
       const decoder = new TextDecoder();
       let buffer = '';

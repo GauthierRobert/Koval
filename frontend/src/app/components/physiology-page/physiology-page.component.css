@@ -1,0 +1,107 @@
+.physiology-page {
+  padding: 2rem;
+  max-width: 720px;
+  margin: 0 auto;
+  color: var(--text-color);
+}
+
+.page-header h2 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  margin: 0 0 4px;
+}
+
+.subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0 0 1.5rem;
+}
+
+.phys-stats {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.phys-stat {
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+}
+
+.phys-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+.phys-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-color);
+}
+
+.phys-unit {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.section-title {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.zones-table {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.zone-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+}
+
+.zone-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.zone-name {
+  flex: 1;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.zone-range {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.empty-note {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 1rem 0;
+}

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -49,8 +50,21 @@ public class TagController {
         if (user == null || !user.isCoach()) {
             return ResponseEntity.status(403).build();
         }
-        Tag tag = tagService.getOrCreateTag(request.name(), userId);
+        Tag tag = tagService.getOrCreateTag(request.name(), userId, request.maxAthletes());
         return ResponseEntity.ok(tag);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Tag> renameTag(@PathVariable String id, @RequestBody RenameTagRequest request) {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null || !user.isCoach()) return ResponseEntity.status(403).build();
+        try {
+            Tag tag = tagService.renameTag(id, request.name(), userId);
+            return ResponseEntity.ok(tag);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(403).build();
+        }
     }
 
     @DeleteMapping("/{id}")
@@ -68,5 +82,6 @@ public class TagController {
         }
     }
 
-    record CreateTagRequest(String name) {}
+    record CreateTagRequest(String name, int maxAthletes) {}
+    record RenameTagRequest(String name) {}
 }

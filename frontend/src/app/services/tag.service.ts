@@ -1,12 +1,15 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
+import {catchError} from 'rxjs/operators';
+import {of} from 'rxjs';
 
 export interface Tag {
     id: string;
     name: string;
     coachId: string;
     athleteIds: string[];
+    maxAthletes: number;
     createdAt: string;
 }
 
@@ -21,8 +24,12 @@ export class TagService {
         return this.http.get<Tag[]>(this.apiUrl);
     }
 
-    createTag(name: string): Observable<Tag> {
-        return this.http.post<Tag>(this.apiUrl, { name });
+    createTag(name: string, maxAthletes: number = 0): Observable<Tag> {
+        return this.http.post<Tag>(this.apiUrl, { name, maxAthletes });
+    }
+
+    renameTag(id: string, name: string): Observable<Tag> {
+        return this.http.put<Tag>(`${this.apiUrl}/${id}`, { name }).pipe(catchError(() => of(null as any)));
     }
 
     deleteTag(id: string): Observable<void> {

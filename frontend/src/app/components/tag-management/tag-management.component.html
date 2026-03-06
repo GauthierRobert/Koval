@@ -1,0 +1,48 @@
+<div class="tags-page">
+  <div class="page-header">
+    <h2>TAG MANAGEMENT</h2>
+    <p class="subtitle">Manage athlete tags — rename, remove athletes, or delete tags</p>
+  </div>
+
+  <div class="create-form">
+    <input class="create-input" [(ngModel)]="newTagName" placeholder="Tag name" (keydown.enter)="createTag()" />
+    <input class="create-input create-input--num" type="number" [(ngModel)]="newTagMaxAthletes" min="0" placeholder="Max athletes (0=∞)" />
+    <button class="create-btn" (click)="createTag()" [disabled]="!newTagName.trim()">CREATE</button>
+  </div>
+
+  <ng-container *ngIf="tags$ | async as tags">
+    <div *ngIf="tags.length === 0" class="empty-state">
+      No tags yet. Use the form above to create your first tag.
+    </div>
+
+    <div class="tags-list" *ngIf="tags.length > 0">
+      <div *ngFor="let tag of tags" class="tag-card">
+        <div class="tag-card-header">
+          <div class="tag-name-row">
+            <ng-container *ngIf="editingTagId !== tag.id">
+              <span class="tag-name" (click)="startEdit(tag)" title="Click to rename">{{ tag.name }}</span>
+              <button class="icon-btn edit-btn" (click)="startEdit(tag)" title="Rename">✎</button>
+            </ng-container>
+            <ng-container *ngIf="editingTagId === tag.id">
+              <input class="rename-input" [(ngModel)]="editingName"
+                (keydown.enter)="saveEdit(tag)" (keydown.escape)="cancelEdit()"
+                (blur)="saveEdit(tag)" autofocus />
+            </ng-container>
+          </div>
+          <span class="tag-athlete-count">{{ getAthletes(tag.id).length }}{{ tag.maxAthletes > 0 ? ' / ' + tag.maxAthletes : '' }}</span>
+          <button class="delete-btn" (click)="deleteTag(tag)" title="Delete tag">DELETE</button>
+        </div>
+
+        <div class="athletes-section">
+          <div class="athletes-label">Athletes ({{ getAthletes(tag.id).length }})</div>
+          <div *ngIf="getAthletes(tag.id).length === 0" class="no-athletes">No athletes in this tag</div>
+          <div *ngFor="let athlete of getAthletes(tag.id)" class="athlete-row">
+            <div class="avatar-sm">{{ athlete.displayName[0].toUpperCase() }}</div>
+            <span class="athlete-name">{{ athlete.displayName }}</span>
+            <button class="remove-btn" (click)="removeAthleteFromTag(athlete, tag)" title="Remove from tag">&times;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

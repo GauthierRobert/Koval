@@ -21,6 +21,7 @@ public class Tag {
 
     private String name;
     private String coachId;
+    private int maxAthletes = 0;
 
     @Indexed
     private List<String> athleteIds = new ArrayList<>();

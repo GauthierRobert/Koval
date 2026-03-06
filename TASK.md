@@ -12,12 +12,17 @@
 - ~~Tss Value in week load in calendar are difficult to read. Make it bigger~~ ✅
 - ~~When using IA, Tags are linked to my training, but Tags to training must only be possible for coach and it must be explicilty asked (like assign to group/tag xxx)~~ ✅
 - ~~Add a button in calendar to reset to current Month or week~~ ✅
-- The list of scheduled training of the athelete in Coach dashboard must be displayed week by week nd it should be possible to navigate between week
-- In the Physiologic (in Coach), I want to see the three default zone in swim, bike and run and also the Custom Zone I have defined
-- TAG management must be in a separated Tab in the top bar (ONLY for coach), Rename, remove athlete,..., When a tag is removed from an athlete it do not delete all the training but it will not be possible to see future training;  Find the best way to do it.
-- Add the physiology tab also in the athlete page (as a main page)
+- ~~The list of scheduled training of the athelete in Coach dashboard must be displayed week by week nd it should be possible to navigate between week~~ ✅
+- ~~In the Physiologic (in Coach), I want to see the three default zone in swim, bike and run and also the Custom Zone I have defined~~ ✅
+- ~~TAG management must be in a separated Tab in the top bar (ONLY for coach), Rename, remove athlete,..., When a tag is removed from an athlete it do not delete all the training but it will not be possible to see future training;  Find the best way to do it.~~ ✅
+- ~~Add the physiology tab also in the athlete page (as a main page)~~ ✅
+- ~~Migrate the TAG creation from coach Dashboard to TAG Page. Make the tag creation more explicit, With One input for the tag name, one for the max use, and a button to create the tag.~~ ✅
+- ~~Bug with User info display in top right of top bar. I want that the user display with lougout button from main dashborad was moved in top right of top bar~~ ✅
+- ~~Bug With Drag and drop of Workout in Calendar. Drag works but drop is not possible and does not work~~ ✅
+- ~~Bug with Chat history session link and retrieval of history.~~ ✅
+- ~~Bugs with PMC display, completly flat (I have not .fit, But I have manual completed workout, and scheduled Workout)~~ ✅
+- In Coach Page, the Zone Dashboard is still in the same page as the Athelte page. Create a seperated tab 'like for TAGS'
+
 
 ## Nice too have
 - **Retrieve FIT files from Strava** — Implement an endpoint + service to fetch FIT activity files from Strava for the authenticated user. Requires the user to have granted all metric scopes (`activity:read_all`). Parse the FIT data and ingest relevant metrics (power, HR, cadence, TSS) into the session/history store.
-- AGENT in AI instead of one unique chat
-- 

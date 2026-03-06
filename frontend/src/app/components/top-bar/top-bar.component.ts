@@ -42,6 +42,10 @@ export class TopBarComponent {
     map(statuses => statuses.filter(s => s === 'Connected').length)
   );
 
+  logout(): void {
+    this.authService.logout();
+  }
+
   toggleSettings() {
     this.authService.toggleSettings();
   }

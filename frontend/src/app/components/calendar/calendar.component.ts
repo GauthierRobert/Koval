@@ -2,7 +2,7 @@ import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core'
 import {CommonModule} from '@angular/common';
 import {BehaviorSubject, combineLatest, Observable, of} from 'rxjs';
 import {filter, map, shareReplay, switchMap, tap} from 'rxjs/operators';
-import {CdkDrag, CdkDragDrop, CdkDropList} from '@angular/cdk/drag-drop';
+import {CdkDrag, CdkDragDrop, CdkDropList, CdkDropListGroup} from '@angular/cdk/drag-drop';
 import {Router} from '@angular/router';
 
 import {CalendarService} from '../../services/calendar.service';
@@ -93,7 +93,7 @@ function buildEntriesByDay(scheduled: ScheduledWorkout[], sessions: SavedSession
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [CommonModule, CdkDropList, CdkDrag, ScheduleModalComponent, WorkoutDetailModalComponent, SportIconComponent, TrainingLoadChartComponent],
+  imports: [CommonModule, CdkDropList, CdkDrag, CdkDropListGroup, ScheduleModalComponent, WorkoutDetailModalComponent, SportIconComponent, TrainingLoadChartComponent],
   templateUrl: './calendar.component.html',
   styleUrl: './calendar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -77,8 +77,16 @@ public class AnalyticsService {
             }
         }
 
-        if (intensityFactor <= 0)
+        if (intensityFactor <= 0) {
+            // RPE fallback — use heuristic when no sensor data available
+            if (session.getRpe() != null && session.getRpe() > 0) {
+                double intensity = session.getRpe() / 10.0;
+                double tss = durationHours * intensity * intensity * 100.0;
+                session.setIntensityFactor(Math.round(intensity * 1000.0) / 1000.0);
+                session.setTss(Math.round(tss * 10.0) / 10.0);
+            }
             return;
+        }
         double tss = durationHours * intensityFactor * intensityFactor * 100.0;
         session.setIntensityFactor(Math.round(intensityFactor * 1000.0) / 1000.0);
         session.setTss(Math.round(tss * 10.0) / 10.0);

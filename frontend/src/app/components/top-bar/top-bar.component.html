@@ -9,14 +9,16 @@
   <nav class="nav-links">
     <ng-container *ngIf="{ coach: isCoach$ | async, mode: uiMode$ | async } as vm">
       <ng-container *ngIf="!vm.coach || vm.mode === 'athlete'">
-        <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">DASHBOARD</a>
-        <a routerLink="/chat"      routerLinkActive="active" class="nav-link">ASSISTANT</a>
-        <a routerLink="/calendar"  routerLinkActive="active" class="nav-link">CALENDAR</a>
-        <a routerLink="/pmc"       routerLinkActive="active" class="nav-link">PMC</a>
+        <a routerLink="/dashboard"   routerLinkActive="active" class="nav-link">DASHBOARD</a>
+        <a routerLink="/chat"        routerLinkActive="active" class="nav-link">ASSISTANT</a>
+        <a routerLink="/calendar"    routerLinkActive="active" class="nav-link">CALENDAR</a>
+        <a routerLink="/pmc"         routerLinkActive="active" class="nav-link">PMC</a>
+        <a routerLink="/physiology"  routerLinkActive="active" class="nav-link">PHYSIOLOGY</a>
       </ng-container>
       <ng-container *ngIf="vm.coach && vm.mode === 'coach'">
         <a routerLink="/chat"  routerLinkActive="active" class="nav-link">ASSISTANT</a>
         <a routerLink="/coach" routerLinkActive="active" class="nav-link">COACHING</a>
+        <a routerLink="/tags"  routerLinkActive="active" class="nav-link">TAGS</a>
       </ng-container>
     </ng-container>
   </nav>
@@ -73,6 +75,7 @@
     <div class="user-info" *ngIf="user$ | async as user">
       <img class="user-avatar" [src]="user.profilePicture" [alt]="user.displayName" *ngIf="user.profilePicture" />
       <span class="user-name">{{ user.displayName }}</span>
+      <button class="logout-btn" (click)="logout()" title="Logout">↩</button>
     </div>
   </div>
 </header>

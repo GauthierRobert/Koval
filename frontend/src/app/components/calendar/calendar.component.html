@@ -27,7 +27,7 @@
   </div>
 
   <ng-container *ngIf="entriesByDay$ | async as ebd">
-    <div class="calendar-grid" *ngIf="viewMode === 'week'">
+    <div class="calendar-grid" cdkDropListGroup *ngIf="viewMode === 'week'">
       <div *ngFor="let day of weekDays; trackBy: trackByDay" class="day-column glass" [class.today]="day.isToday">
         <div class="day-header">
           <span class="weekday">{{ day.date | date : 'EEE' }}</span>
@@ -192,7 +192,7 @@
       <div class="month-day-names">
         <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
       </div>
-      <div class="month-body">
+      <div class="month-body" cdkDropListGroup>
         <div *ngFor="let day of monthDays; trackBy: trackByDay" class="month-cell glass" [class.today]="day.isToday"
           [class.other-month]="day.date.getMonth() !== startDate.getMonth()">
           <div class="cell-header">

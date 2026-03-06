@@ -22,7 +22,7 @@ public class TagService {
     /**
      * Get or create a tag for a specific coach.
      */
-    public Tag getOrCreateTag(String name, String coachId) {
+    public Tag getOrCreateTag(String name, String coachId, int maxAthletes) {
         String normalized = name.toLowerCase().trim();
         Optional<Tag> existing = tagRepository.findByCoachIdAndName(coachId, normalized);
         if (existing.isPresent()) {
@@ -32,6 +32,7 @@ public class TagService {
         Tag tag = new Tag();
         tag.setName(normalized);
         tag.setCoachId(coachId);
+        tag.setMaxAthletes(maxAthletes);
         tag.setCreatedAt(LocalDateTime.now());
         return tagRepository.save(tag);
     }
@@ -113,6 +114,19 @@ public class TagService {
                 .map(Tag::getCoachId)
                 .distinct()
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Rename a tag. Only the coach who owns it can rename.
+     */
+    public Tag renameTag(String tagId, String newName, String coachId) {
+        Tag tag = tagRepository.findById(tagId)
+                .orElseThrow(() -> new IllegalArgumentException("Tag not found: " + tagId));
+        if (!coachId.equals(tag.getCoachId())) {
+            throw new IllegalArgumentException("Only the tag owner can rename this tag");
+        }
+        tag.setName(newName.toLowerCase().trim());
+        return tagRepository.save(tag);
     }
 
     /**

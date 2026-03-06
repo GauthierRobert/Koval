@@ -618,8 +618,57 @@
   padding: 0 4px;
 }
 
-.week-label {
+.week-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 10px;
+}
+
+.week-nav-btn {
+  background: none;
+  border: 1px solid var(--glass-border);
   color: var(--accent-color);
+  border-radius: 4px;
+  padding: 0 6px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.week-nav-btn:hover {
+  background: rgba(255, 157, 0, 0.12);
+}
+
+.week-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 120px;
+  text-align: center;
+}
+
+.zone-system-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 1rem 0 0.3rem;
+}
+
+.zone-sys-name {
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: var(--text-color);
+}
+
+.zone-sys-sport,
+.zone-sys-ref {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-muted);
 }
 
 .schedule-table {
