@@ -84,7 +84,7 @@ export class TrainingLoadChartComponent implements OnChanges, AfterViewInit {
         const ctx = canvas.getContext('2d')!;
         ctx.clearRect(0, 0, W, H);
 
-        const marginB = 18;
+        const marginB = 20;
         const chartH = H - marginB - 4;
         const barSlot = W / 7;
 
@@ -154,10 +154,10 @@ export class TrainingLoadChartComponent implements OnChanges, AfterViewInit {
             }
 
             // Load value label inside bar (if wide enough)
-            if (d.totalLoad > 0 && totalBarH > 14 && bw > 20) {
+            if (d.totalLoad > 0 && totalBarH > 16 && bw > 20) {
                 ctx.globalAlpha = 1;
-                ctx.fillStyle = '#000';
-                ctx.font = 'bold 8px monospace';
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 11px monospace';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'top';
                 ctx.fillText(

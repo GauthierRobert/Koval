@@ -221,7 +221,51 @@
 }
 
 .chat-input-container {
-  padding: 1.5rem 3rem;
+  padding: 1rem 3rem 1.5rem;
+}
+
+.agent-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.agent-tab {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.agent-tab:hover {
+  background: var(--surface-hover);
+  color: var(--text-color);
+}
+
+.agent-tab.active {
+  background: rgba(255, 157, 0, 0.15);
+  color: var(--accent-color);
+  border-color: rgba(255, 157, 0, 0.3);
+}
+
+.agent-badge {
+  display: inline-block;
+  background: rgba(255, 157, 0, 0.12);
+  color: var(--accent-color);
+  border: 1px solid rgba(255, 157, 0, 0.25);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-left: 6px;
+  vertical-align: middle;
 }
 
 .input-wrapper-technical {
@@ -346,7 +390,6 @@ textarea::placeholder {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--text-primary, #fff);
 }
 
 .ct-duration {

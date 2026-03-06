@@ -51,7 +51,7 @@
           <h1>Technical Assistance.</h1>
           <p>Define objectives or request physiological analysis.</p>
           <div class="suggestion-grid">
-            <button (click)="quickSend('Generate threshold training 3x12 minutes for a total of one hour')">THRESHOLD 3×12 MIN</button>
+            <button (click)="quickSend('Generate threshold training 3x12 minutes for a total of one hour')">THRESHOLD 3x12 MIN</button>
             <button (click)="quickSend('Assign 1H endurance training to my athlete tomorrow morning')">ASSIGN ENDURANCE TRAINING</button>
             <button (click)="quickSend('Analyse the last workout of Wout Van Aert')">ANALYZE WOUT VAN AERT</button>
           </div>
@@ -61,7 +61,12 @@
       @for (msg of messages; track $index) {
         <div class="message-wrapper" [class.ai]="msg.role === 'assistant'" [class.user]="msg.role === 'user'">
           <div class="message-bubble glass" [class.accent]="msg.role === 'user'">
-            <div class="msg-header">{{ msg.role === 'assistant' ? 'COACH AI' : 'YOU' }}</div>
+            <div class="msg-header">
+              {{ msg.role === 'assistant' ? 'COACH AI' : 'YOU' }}
+              @if (msg.role === 'assistant' && msg.agentType) {
+                <span class="agent-badge">{{ getAgentLabel(msg.agentType) }}</span>
+              }
+            </div>
             <span class="msg-content" [style.white-space]="'pre-wrap'">{{ msg.content }}</span>
             <span class="timestamp">{{ msg.timestamp | date:'HH:mm:ss' }}</span>
           </div>
@@ -99,6 +104,15 @@
     </div>
 
     <div class="chat-input-container">
+      <div class="agent-tabs">
+        @for (opt of agentOptions; track opt.label; let i = $index) {
+          <button
+            class="agent-tab"
+            [class.active]="selectedAgentIndex === i"
+            (click)="selectAgent(i)"
+          >{{ opt.label }}</button>
+        }
+      </div>
       <div class="input-wrapper-technical">
         <textarea
           [(ngModel)]="userInput"

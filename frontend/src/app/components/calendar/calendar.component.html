@@ -18,6 +18,7 @@
       </div>
       <div class="nav-controls">
         <button (click)="navigateWeek(-1)">&lt; {{ viewMode === 'week' ? 'Prev' : 'Last Month' }}</button>
+        <button class="today-btn" (click)="goToToday()">TODAY</button>
         <span class="date-range" *ngIf="viewMode === 'week'">{{ startDate | date : 'MMM d' }} - {{ endDate | date : 'MMM d, y' }}</span>
         <span class="date-range" *ngIf="viewMode === 'month'">{{ startDate | date : 'MMMM yyyy' }}</span>
         <button (click)="navigateWeek(1)">{{ viewMode === 'week' ? 'Next' : 'Next Month' }} &gt;</button>

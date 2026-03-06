@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.ai;
 
+import com.koval.trainingplannerbackend.ai.agents.AgentType;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.stereotype.Service;
@@ -40,11 +41,14 @@ public class ChatHistoryService {
         return chatHistoryRepository.save(chatHistory);
     }
 
-    public void updateAfterResponse(ChatHistory chatHistory, String userMessage) {
+    public void updateAfterResponse(ChatHistory chatHistory, String userMessage, AgentType agentType) {
         if (chatHistory.getTitle() == null) {
             chatHistory.setTitle(truncate(userMessage, 80));
         }
         chatHistory.setLastUpdatedAt(LocalDateTime.now());
+        if (agentType != null) {
+            chatHistory.setLastAgentType(agentType.name());
+        }
         chatHistoryRepository.save(chatHistory);
     }
 

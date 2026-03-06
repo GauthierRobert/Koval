@@ -39,6 +39,7 @@ import java.util.List;
  *
  * <p>This class is <b>stateless</b> (use {@link #parse(String)}) and has no Spring dependencies.
  */
+@Deprecated(forRemoval = true)
 public class WorkoutNotationParser {
 
     // ── Token types ──────────────────────────────────────────────────────────

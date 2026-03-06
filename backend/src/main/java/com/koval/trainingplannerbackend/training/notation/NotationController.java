@@ -22,6 +22,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/notation")
 @CrossOrigin(origins = "*")
+@Deprecated(forRemoval = true)
 public class NotationController {
 
     // ── DTOs ──────────────────────────────────────────────────────────────────

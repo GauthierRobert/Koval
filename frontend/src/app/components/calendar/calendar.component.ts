@@ -172,6 +172,15 @@ export class CalendarComponent implements OnInit {
     );
   }
 
+  goToToday(): void {
+    if (this.viewMode === 'week') {
+      this.setWeek(new Date());
+    } else {
+      this.setMonth(new Date());
+    }
+    this.reload$.next();
+  }
+
   navigateWeek(direction: -1 | 1): void {
     const base = new Date(this.startDate);
     if (this.viewMode === 'week') {

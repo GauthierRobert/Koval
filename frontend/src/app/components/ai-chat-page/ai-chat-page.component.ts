@@ -2,9 +2,14 @@ import {Component, ElementRef, inject, OnDestroy, OnInit, ViewChild} from '@angu
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Subscription} from 'rxjs';
-import {ChatService} from '../../services/chat.service';
+import {AgentType, ChatService} from '../../services/chat.service';
 import {Training} from '../../services/training.service';
 import {ScheduleModalComponent} from '../schedule-modal/schedule-modal.component';
+
+interface AgentOption {
+  label: string;
+  value: AgentType | null;
+}
 
 @Component({
   selector: 'app-ai-chat-page',
@@ -23,10 +28,19 @@ export class AIChatPageComponent implements OnInit, OnDestroy {
   private nearBottom = true;
   private subscription!: Subscription;
 
+  selectedAgentIndex = 0;
+
+  agentOptions: AgentOption[] = [
+    { label: 'AUTO', value: null },
+    { label: 'CREATE', value: 'TRAINING_CREATION' },
+    { label: 'SCHEDULE', value: 'SCHEDULING' },
+    { label: 'ANALYSE', value: 'ANALYSIS' },
+    { label: 'COACH', value: 'COACH_MANAGEMENT' },
+  ];
+
   ngOnInit(): void {
     this.chatService.loadHistories();
 
-    // Auto-scroll when messages change and user is near the bottom
     this.subscription = this.chatService.chatMessages$.subscribe(() => {
       if (this.nearBottom) {
         requestAnimationFrame(() => this.scrollToBottom());
@@ -41,7 +55,6 @@ export class AIChatPageComponent implements OnInit, OnDestroy {
   onScroll(): void {
     const el = this.scrollContainer?.nativeElement;
     if (!el) return;
-    // Consider "near bottom" if within 150px of the bottom
     this.nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
   }
 
@@ -50,6 +63,23 @@ export class AIChatPageComponent implements OnInit, OnDestroy {
     if (el) {
       el.scrollTop = el.scrollHeight;
     }
+  }
+
+  selectAgent(index: number): void {
+    this.selectedAgentIndex = index;
+    this.chatService.setAgentType(this.agentOptions[index].value);
+  }
+
+  getAgentLabel(agentType: string | undefined): string {
+    if (!agentType) return '';
+    const labels: Record<string, string> = {
+      TRAINING_CREATION: 'CREATE',
+      SCHEDULING: 'SCHEDULE',
+      ANALYSIS: 'ANALYSE',
+      COACH_MANAGEMENT: 'COACH',
+      GENERAL: 'GENERAL',
+    };
+    return labels[agentType] ?? agentType;
   }
 
   newChat(): void {

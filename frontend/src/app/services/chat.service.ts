@@ -4,10 +4,18 @@ import {BehaviorSubject} from 'rxjs';
 import {skip, take} from 'rxjs/operators';
 import {TrainingService} from './training.service';
 
+export type AgentType =
+  | 'TRAINING_CREATION'
+  | 'SCHEDULING'
+  | 'ANALYSIS'
+  | 'COACH_MANAGEMENT'
+  | 'GENERAL';
+
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  agentType?: string;
   createdTraining?: { id: string; title: string; sportType: string; estimatedDurationSeconds?: number };
 }
 
@@ -17,6 +25,7 @@ export interface ChatHistoryItem {
   title: string;
   startedAt: string;
   lastUpdatedAt: string;
+  lastAgentType?: string;
 }
 
 export type ActivityStatus = 'idle' | 'in_progress' | 'complete' | 'error';
@@ -50,8 +59,18 @@ export class ChatService {
   private activityStatusSubject = new BehaviorSubject<ActivityStatus>('idle');
   activityStatus$ = this.activityStatusSubject.asObservable();
 
+  private agentTypeSubject = new BehaviorSubject<AgentType | null>(null);
+  agentType$ = this.agentTypeSubject.asObservable();
+
+  private lastAgentTypeSubject = new BehaviorSubject<string | null>(null);
+  lastAgentType$ = this.lastAgentTypeSubject.asObservable();
+
   private emitScheduled = false;
   private pendingEmit = false;
+
+  setAgentType(agentType: AgentType | null): void {
+    this.agentTypeSubject.next(agentType);
+  }
 
   private emit(): void {
     this.pendingEmit = true;
@@ -90,7 +109,7 @@ export class ChatService {
       this.addMessage({ role: 'user', content: message, timestamp: new Date() });
       const errMsg: ChatMessage = {
         role: 'assistant',
-        content: `⚠️ Your message is too long (${message.length.toLocaleString()} characters). Please keep it under ${this.MAX_MESSAGE_CHARS.toLocaleString()} characters and try again.`,
+        content: `Your message is too long (${message.length.toLocaleString()} characters). Please keep it under ${this.MAX_MESSAGE_CHARS.toLocaleString()} characters and try again.`,
         timestamp: new Date(),
       };
       this.addMessage(errMsg);
@@ -117,13 +136,19 @@ export class ChatService {
         headers['Authorization'] = `Bearer ${jwt}`;
       }
 
+      const body: Record<string, string | null> = {
+        message,
+        chatHistoryId: this.activeChatIdSubject.value,
+      };
+      const selectedAgent = this.agentTypeSubject.value;
+      if (selectedAgent) {
+        body['agentType'] = selectedAgent;
+      }
+
       const response = await fetch(`${this.apiUrl}/chat/stream`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({
-          message,
-          chatHistoryId: this.activeChatIdSubject.value,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
@@ -184,6 +209,11 @@ export class ChatService {
             if (conversationId) {
               this.ngZone.run(() => this.activeChatIdSubject.next(conversationId));
             }
+          } else if (eventType === 'agent') {
+            const agentLabel = data.trim();
+            aiMessage.agentType = agentLabel;
+            this.ngZone.run(() => this.lastAgentTypeSubject.next(agentLabel));
+            this.emit();
           }
         }
       }
@@ -282,6 +312,7 @@ export class ChatService {
     this.activeChatIdSubject.next(null);
     this.chatMessagesSubject.next([]);
     this.activityStatusSubject.next('idle');
+    this.lastAgentTypeSubject.next(null);
   }
 
   addMessage(msg: ChatMessage): void {

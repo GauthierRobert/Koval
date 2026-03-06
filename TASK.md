@@ -9,13 +9,13 @@
 - ~~The User info must be display in the top right of the top bar~~ ✅
 - ~~The creation of TAG from the coach, must be : only one input for the tag name, and use that input value for the tag assiciation with the code~~ ✅
 - ~~In Coahc dashboard, the PMC graph of the athlete must be display at least 30 days in the future and 30 days in the past. Coach must have the possiblity to go to the PMC page of the athlete to see the estimation and other timeline/analysis (A button must be there in this case to switch back to athelte page on coach dahsboard)~~ ✅
-- Tss Value in week load in calendar are difficult to read. Make it bigger
-- When using IA, Tags are linked to my training, but Tags to training must only be possible for coach and it must be explicilty asked (like assign to group/tag xxx)
-- Add a button in calendar to reset to current Month or week
-- The list of scheduled training must be displayed week by week nd it should be possible to navigate between week
-- In the Physiologic, I want to see the 3 default zone in swil, bike and run and also the Custom Zone I have defined
+- ~~Tss Value in week load in calendar are difficult to read. Make it bigger~~ ✅
+- ~~When using IA, Tags are linked to my training, but Tags to training must only be possible for coach and it must be explicilty asked (like assign to group/tag xxx)~~ ✅
+- ~~Add a button in calendar to reset to current Month or week~~ ✅
+- The list of scheduled training of the athelete in Coach dashboard must be displayed week by week nd it should be possible to navigate between week
+- In the Physiologic (in Coach), I want to see the three default zone in swim, bike and run and also the Custom Zone I have defined
 - TAG management must be in a separated Tab in the top bar (ONLY for coach), Rename, remove athlete,..., When a tag is removed from an athlete it do not delete all the training but it will not be possible to see future training;  Find the best way to do it.
-
+- Add the physiology tab also in the athlete page (as a main page)
 
 ## Nice too have
 - **Retrieve FIT files from Strava** — Implement an endpoint + service to fetch FIT activity files from Strava for the authenticated user. Requires the user to have granted all metric scopes (`activity:read_all`). Parse the FIT data and ingest relevant metrics (power, HR, cadence, TSS) into the session/history store.

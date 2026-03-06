@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.ai;
 
+import com.koval.trainingplannerbackend.ai.agents.AgentType;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.ai.chat.messages.Message;
@@ -43,7 +44,8 @@ public class AIController {
         }
         try {
             String userId = SecurityUtils.getCurrentUserId();
-            var response = aiService.chat(msg, userId, request.chatHistoryId());
+            AgentType agentType = parseAgentType(request.agentType());
+            var response = aiService.chat(msg, userId, request.chatHistoryId(), agentType);
             return ResponseEntity.ok(response);
         } catch (RuntimeException ex) {
             return handleAiException(ex);
@@ -62,7 +64,8 @@ public class AIController {
             return Flux.just(ServerSentEvent.<String>builder().event("error").data(errMsg).build());
         }
         String userId = SecurityUtils.getCurrentUserId();
-        var streamResponse = aiService.chatStream(msg, userId, request.chatHistoryId());
+        AgentType agentType = parseAgentType(request.agentType());
+        var streamResponse = aiService.chatStream(msg, userId, request.chatHistoryId(), agentType);
         response.setHeader("X-Chat-History-Id", streamResponse.chatHistoryId());
         return streamResponse.events();
     }
@@ -101,11 +104,22 @@ public class AIController {
 
     // ── DTOs ──────────────────────────────────────────────────
 
-    public record ChatRequest(String message, String chatHistoryId) {}
+    public record ChatRequest(String message, String chatHistoryId, String agentType) {}
     public record ConversationMessage(String role, String content) {}
     public record ChatHistoryDetail(ChatHistory metadata, List<ConversationMessage> messages) {}
 
-    // ── Error handling ─────────────────────────────────────────────────
+    // ── Helpers ─────────────────────────────────────────────────────────
+
+    private AgentType parseAgentType(String agentType) {
+        if (agentType == null || agentType.isBlank()) {
+            return null; // router will classify
+        }
+        try {
+            return AgentType.valueOf(agentType.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
 
     private ResponseEntity<Map<String, String>> handleAiException(RuntimeException ex) {
         String msg = ex.getMessage() != null ? ex.getMessage() : "";
@@ -114,7 +128,6 @@ public class AIController {
                     "Your request was too large or you've sent too many requests this minute. "
                             + "Please shorten your message or wait a moment and try again."));
         }
-        // Re-throw unknown exceptions so Spring's error handler picks them up
         throw ex;
     }
 

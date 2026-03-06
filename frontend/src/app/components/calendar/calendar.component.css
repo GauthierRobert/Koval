@@ -652,6 +652,23 @@
 .mini-card--fused { background: rgba(52, 211, 153, 0.08); }
 .mini-card--session { background: rgba(8, 145, 178, 0.08); }
 
+.today-btn {
+  background: rgba(255, 157, 0, 0.12);
+  color: var(--accent-color);
+  border: 1px solid rgba(255, 157, 0, 0.25);
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.today-btn:hover {
+  background: var(--accent-color);
+  color: #000;
+}
+
 /* Title row */
 .title-row {
   display: flex;

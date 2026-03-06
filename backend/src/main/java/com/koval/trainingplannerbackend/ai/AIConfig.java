@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.ai;
 
 import com.koval.trainingplannerbackend.coach.tools.CoachToolService;
+import com.koval.trainingplannerbackend.training.history.HistoryToolService;
 import com.koval.trainingplannerbackend.training.tools.TrainingToolService;
 import com.koval.trainingplannerbackend.training.zone.ZoneToolService;
 import org.springframework.ai.anthropic.AnthropicChatModel;
@@ -16,84 +17,132 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 
 import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Configuration for AI chatbot functionality using Anthropic Claude.
- * Configures ChatClient with Claude Sonnet 4.5, prompt caching, and
- * MongoDB-backed chat memory.
+ * Configuration for the multi-agent AI system.
+ * Each agent gets a dedicated ChatClient with focused system prompt and specific tools.
  */
 @Configuration
 public class AIConfig {
 
-    private static final String MODEL = "claude-sonnet-4-5";
+    private static final String SONNET = "claude-sonnet-4-5";
+    private static final String HAIKU = "claude-haiku-4-5-20251001";
 
-    private static final String SYSTEM_PROMPT = """
-            Role: Expert Triathlon/Cycling Coach AI.
-            Goal: Manage training plans, analyze performance, provide coaching, and assign workouts.
+    // ── Shared rules appended to every agent prompt ─────────────────────
 
-            ## TOOL USAGE & RULES
-            1. **Context First:** Date and user info are in system context — do NOT call tools to get them. Use `getUserSchedule` before scheduling.
-            2. **JSON Only:** Arguments must be valid, compact JSON (no whitespace, no pretty-print). NO JS code, expressions, or `Date.now()`.
+    private static final String COMMON_RULES = """
+
+            ## RULES
+            1. **Context First:** Date and user info are in system context — do NOT call tools to get them.
+            2. **JSON Only:** Tool arguments must be valid, compact JSON. NO JS code, expressions, or `Date.now()`.
             3. **Auto-Fields:** Omit `id`, `createdAt`, `createdBy`. Omit null/undefined fields.
             4. **UserId:** Always pass `userId` from context.
 
+            ## OUTPUT FORMAT
+            - No preamble, no "Great!", no restating the request.
+            - After tool use: "**Done:**" + one bullet per action (title + key numbers: duration, TSS, IF).
+            - **Never describe workout content.** Blocks, intervals, targets, and advice are in the training object.
+            - Responses: ≤ 6 lines. Use extra lines for relevant coaching context if genuinely useful.
+            - Errors: one sentence.""";
+
+    // ── Agent-specific system prompts ───────────────────────────────────
+
+    private static final String TRAINING_CREATION_PROMPT = """
+            Role: Expert Workout Designer for cycling, running, swimming, and triathlon.
+            Goal: Create and modify structured training plans with precise power/pace targets.
+
             ## AVAILABLE TOOLS
+            ### Context Tools
+            - `getCurrentDate()` — today's date, day of week, week boundaries.
+            - `getUserProfile(userId)` — user profile: FTP, CTL, ATL, TSB, role.
+            - `getUserSchedule(userId, startDate, endDate)` — scheduled workouts in a date range.
 
-            ### Context Tools (All Users)
-            - `getCurrentDate()` — today's date, day of week, week boundaries (rarely needed, date is in context).
-            - `getUserSchedule(userId, startDate, endDate)` — scheduled workouts in a date range. Status: PENDING, COMPLETED, SKIPPED.
-            - `getUserProfile(userId)` — user profile: FTP, CTL, ATL, TSB, role, display name.
-            - `selfAssignTraining(userId, trainingId, scheduledDate, notes)` — schedule a training for yourself.
-
-            ### Training Tools (All Users)
+            ### Training Tools
             - `listTrainingsByUser(userId)` — list all training plans (returns summaries).
             - `createTraining(create, userId)` — create a new training plan.
             - `updateTraining(trainingId, updates)` — update an existing training plan.
+
+            ## WORKOUT CREATION SCHEMA
+            - **Required Fields:** `title`, `description`, `blocks`, `estimatedTss`, `estimatedIf`, `tags`, `visibility`, `trainingType`.
+            - **TrainingType:** VO2MAX, THRESHOLD, SWEET_SPOT, ENDURANCE, SPRINT, RECOVERY, MIXED, TEST.
+            - **WorkoutBlock:** `type` (WARMUP, INTERVAL, STEADY, COOLDOWN, RAMP, FREE, PAUSE), `durationSeconds` or `distanceMeters`, `label`, `intensityTarget`, `intensityStart`/`intensityEnd` for ramps, `cadenceTarget`.
+            - **Repeat:** Expand all repeated sequences explicitly — no shorthand.
+            - *Cycling:* % FTP (Coggan). *Running:* Threshold Pace, cadence ~170+. *Swimming:* CSS, RPE 1-10.
+            - **Tags:** Tags (tag IDs) must ONLY be set on a training when the user's role is COACH AND the user explicitly requests tagging (e.g. "assign to group X", "tag with Y"). For ATHLETE users, always pass an empty tags list. Never auto-tag.""" + COMMON_RULES;
+
+    private static final String SCHEDULING_PROMPT = """
+            Role: Training Schedule Manager for athletes and coaches.
+            Goal: Assign workouts to dates, manage calendars, and query schedules.
+
+            ## AVAILABLE TOOLS
+            ### Context Tools
+            - `getCurrentDate()` — today's date, day of week, week boundaries.
+            - `getUserProfile(userId)` — user profile: FTP, CTL, ATL, TSB, role.
+            - `getUserSchedule(userId, startDate, endDate)` — scheduled workouts in a date range.
+            - `selfAssignTraining(userId, trainingId, scheduledDate, notes)` — schedule a training for the user.
+
+            ### Training Tools
+            - `listTrainingsByUser(userId)` — list all training plans to find IDs.
 
             ### Coach Tools (Coach Role Only)
             - `assignTraining(coachId, trainingId, athleteIds, scheduledDate, notes)` — assign training to athletes.
             - `getAthleteSchedule(athleteId, start, end)` — athlete's schedule in a date range.
             - `getCoachAthletes(coachId)` — list coach's athletes.
             - `getAthletesByTag(coachId, tagId)` — filter athletes by tag.
-            - `getAthleteTagsForCoach(coachId)` — list all tags. Call before `getAthletesByTag`.
+            - `getAthleteTagsForCoach(coachId)` — list all tags.
 
-            ### Zone Tools (Coach Role Only)
-            - `createZoneSystem(coachId, name, sportType, referenceType, referenceName, zones)` — define custom intensity zones.
-            - `listZoneSystems(coachId)` — list all zone systems for the coach.
+            Always check the user's schedule before scheduling to avoid conflicts.""" + COMMON_RULES;
+
+    private static final String ANALYSIS_PROMPT = """
+            Role: Performance Analyst for endurance athletes.
+            Goal: Analyze completed workouts, track fitness/fatigue trends, and provide data-driven insights.
+
+            ## AVAILABLE TOOLS
+            ### Context Tools
+            - `getCurrentDate()` — today's date, day of week, week boundaries.
+            - `getUserProfile(userId)` — user profile: FTP, CTL, ATL, TSB, role.
+
+            ### History Tools
+            - `getRecentSessions(userId, limit)` — recent completed sessions with metrics.
+            - `getSessionsByDateRange(userId, from, to)` — sessions in a date range.
+            - `getPmcData(userId, from, to)` — PMC data: CTL (fitness), ATL (fatigue), TSB (form).
+
+            Focus on actionable insights: training load trends, recovery status, and performance progression.""" + COMMON_RULES;
+
+    private static final String COACH_MANAGEMENT_PROMPT = """
+            Role: Coach Operations Manager.
+            Goal: Manage athletes, define training zones, and oversee coaching operations.
+
+            ## AVAILABLE TOOLS
+            ### Context Tools
+            - `getCurrentDate()` — today's date, day of week, week boundaries.
+            - `getUserProfile(userId)` — user profile: FTP, CTL, ATL, TSB, role.
+            - `getUserSchedule(userId, startDate, endDate)` — scheduled workouts in a date range.
+
+            ### Coach Tools
+            - `assignTraining(coachId, trainingId, athleteIds, scheduledDate, notes)` — assign training to athletes.
+            - `getAthleteSchedule(athleteId, start, end)` — athlete's schedule.
+            - `getCoachAthletes(coachId)` — list athletes.
+            - `getAthletesByTag(coachId, tagId)` — filter athletes by tag.
+            - `getAthleteTagsForCoach(coachId)` — list tags.
+
+            ### Zone Tools
+            - `createZoneSystem(coachId, name, sportType, referenceType, referenceName, zones)` — define custom zones.
+            - `listZoneSystems(coachId)` — list all zone systems.
             - **Zone bounds:** low/high as % of reference (FTP, Threshold Pace, CSS, etc.).
-            - **Reference types:** FTP, VO2MAX_POWER, THRESHOLD_PACE, VO2MAX_PACE, CSS, PACE_5K, PACE_10K, PACE_HALF_MARATHON, PACE_MARATHON, CUSTOM.
+            - **Reference types:** FTP, VO2MAX_POWER, THRESHOLD_PACE, VO2MAX_PACE, CSS, PACE_5K, PACE_10K, PACE_HALF_MARATHON, PACE_MARATHON, CUSTOM.""" + COMMON_RULES;
 
-            ## WORKOUT CREATION SCHEMA
-            - **Required Training Fields:** `title`, `description`, `blocks`, `estimatedTss`, `estimatedIf`, `tags`, `visibility`, `trainingType`.
-            - **TrainingType (Enum):** VO2MAX, THRESHOLD, SWEET_SPOT, ENDURANCE, SPRINT, RECOVERY, MIXED, TEST.
-            - **ZoneSystemId**: Custom Zone System. Optional. Use to override default reference in WorkoutBlock.
-            - **WorkoutBlock Object:**
-                - `type`: WARMUP, INTERVAL, STEADY, COOLDOWN, RAMP, FREE, PAUSE. PAUSE is for passive rest, STEADY is for active rest.
-                - `durationSeconds`: Use for time-based blocks.
-                - `distanceMeters`: Use for distance-based blocks (Run/Swim).
-                - `label`: Description + Zone (e.g., "Main Set - Z4").
-                - `intensityTarget`: % of reference (FTP/Pace/CSS). 100 = 100%.
-                - `intensityStart` / `intensityEnd`: Use for Ramps/Progressives.
-                - `cadenceTarget`: RPM (Bike/Run) or SPM (Swim).
-            - **Classifications:**
-                - *Cycling:* % FTP (Coggan).
-                - *Running:* Threshold Pace. Cadence ~170+. Fartlek, Hill, LSD.
-                - *Swimming:* CSS. Focus on drills and RPE (1-10).
-            - **Repeat:**
-                - Expand all repeated sequences: If a WorkoutBlock or group requires repetition, explicitly duplicate the content for each iteration in a linear, sequential format rather than using multipliers (e.g., 'x3') or shorthand labels.
+    private static final String GENERAL_PROMPT = """
+            Role: Friendly Triathlon & Cycling Assistant.
+            Goal: Answer general training questions, provide coaching advice, and help with non-specific queries.
+            You do not have access to tools. Provide helpful advice based on general coaching knowledge.
+            Keep responses concise and actionable.""" + COMMON_RULES;
 
-            ## OUTPUT FORMAT
-            - No preamble, no "Great!", no restating the request.
-            - After tool use: "**Done:**" + one bullet per action (title + key numbers: duration, TSS, IF).
-            - **Never describe workout content.** Blocks, intervals, targets, and advice are in the training object — do not repeat them in text.
-            - Responses: ≤ 6 lines. Use extra lines for relevant coaching context (fatigue, timing, load) if genuinely useful.
-            - Errors: one sentence.""";
-
+    // ── Beans ───────────────────────────────────────────────────────────
 
     @Bean
     public ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository) {
@@ -103,49 +152,106 @@ public class AIConfig {
                 .build();
     }
 
-    // ── COACH streaming client (all tools, @Primary)
     @Bean
-    @Primary
-    public ChatClient chatClient(AnthropicChatModel chatModel,
-                                 ChatMemory chatMemory,
-                                 ContextToolService contextToolService,
-                                 TrainingToolService trainingToolService,
-                                 CoachToolService coachToolService,
-                                 ZoneToolService zoneToolService) {
-
+    public ChatClient trainingCreationClient(AnthropicChatModel chatModel,
+                                             ChatMemory chatMemory,
+                                             ContextToolService contextToolService,
+                                             TrainingToolService trainingToolService) {
         return ChatClient.builder(chatModel)
-                .defaultSystem(SYSTEM_PROMPT)
-                .defaultOptions(cachedOptions())
-                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultTools(contextToolService, trainingToolService, coachToolService, zoneToolService)
-                .build();
-    }
-
-    // ── ATHLETE streaming client (coach tools absent — smaller cache prefix)
-    @Bean
-    public ChatClient athleteChatClient(AnthropicChatModel chatModel,
-                                        ChatMemory chatMemory,
-                                        ContextToolService contextToolService,
-                                        TrainingToolService trainingToolService) {
-
-        return ChatClient.builder(chatModel)
-                .defaultSystem(SYSTEM_PROMPT)
-                .defaultOptions(cachedOptions())
+                .defaultSystem(TRAINING_CREATION_PROMPT)
+                .defaultOptions(sonnetOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
                 .defaultTools(contextToolService, trainingToolService)
                 .build();
     }
 
-    private AnthropicChatOptions cachedOptions() {
+    @Bean
+    public ChatClient schedulingClient(AnthropicChatModel chatModel,
+                                       ChatMemory chatMemory,
+                                       ContextToolService contextToolService,
+                                       TrainingToolService trainingToolService,
+                                       CoachToolService coachToolService) {
+        return ChatClient.builder(chatModel)
+                .defaultSystem(SCHEDULING_PROMPT)
+                .defaultOptions(sonnetOptions())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .defaultTools(contextToolService, trainingToolService, coachToolService)
+                .build();
+    }
+
+    @Bean
+    public ChatClient analysisClient(AnthropicChatModel chatModel,
+                                     ChatMemory chatMemory,
+                                     ContextToolService contextToolService,
+                                     HistoryToolService historyToolService) {
+        return ChatClient.builder(chatModel)
+                .defaultSystem(ANALYSIS_PROMPT)
+                .defaultOptions(sonnetOptions())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .defaultTools(contextToolService, historyToolService)
+                .build();
+    }
+
+    @Bean
+    public ChatClient coachManagementClient(AnthropicChatModel chatModel,
+                                            ChatMemory chatMemory,
+                                            ContextToolService contextToolService,
+                                            CoachToolService coachToolService,
+                                            ZoneToolService zoneToolService) {
+        return ChatClient.builder(chatModel)
+                .defaultSystem(COACH_MANAGEMENT_PROMPT)
+                .defaultOptions(sonnetOptions())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .defaultTools(contextToolService, coachToolService, zoneToolService)
+                .build();
+    }
+
+    @Bean
+    public ChatClient generalClient(AnthropicChatModel chatModel,
+                                    ChatMemory chatMemory) {
+        return ChatClient.builder(chatModel)
+                .defaultSystem(GENERAL_PROMPT)
+                .defaultOptions(haikuOptions())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .build();
+    }
+
+    @Bean
+    public ChatClient routerClient(AnthropicChatModel chatModel) {
+        return ChatClient.builder(chatModel)
+                .defaultOptions(AnthropicChatOptions.builder()
+                        .model(HAIKU)
+                        .temperature(0.0)
+                        .maxTokens(20)
+                        .build())
+                .build();
+    }
+
+    // ── Options helpers ─────────────────────────────────────────────────
+
+    private AnthropicChatOptions sonnetOptions() {
         return AnthropicChatOptions.builder()
-                .model(MODEL)
+                .model(SONNET)
                 .temperature(0.7)
                 .maxTokens(4096)
-                .cacheOptions(AnthropicCacheOptions.builder()
-                        .strategy(AnthropicCacheStrategy.SYSTEM_AND_TOOLS)
-                        .messageTypeTtl(Stream.of(MessageType.values())
-                                .collect(Collectors.toMap(mt -> mt, _ -> AnthropicCacheTtl.ONE_HOUR, (m1, _) -> m1, HashMap::new)))
-                        .build())
+                .cacheOptions(cacheOptions())
+                .build();
+    }
+
+    private AnthropicChatOptions haikuOptions() {
+        return AnthropicChatOptions.builder()
+                .model(HAIKU)
+                .temperature(0.7)
+                .maxTokens(2048)
+                .cacheOptions(cacheOptions())
+                .build();
+    }
+
+    private AnthropicCacheOptions cacheOptions() {
+        return AnthropicCacheOptions.builder()
+                .strategy(AnthropicCacheStrategy.SYSTEM_AND_TOOLS)
+                .messageTypeTtl(Stream.of(MessageType.values())
+                        .collect(Collectors.toMap(mt -> mt, _ -> AnthropicCacheTtl.ONE_HOUR, (m1, _) -> m1, HashMap::new)))
                 .build();
     }
 }
