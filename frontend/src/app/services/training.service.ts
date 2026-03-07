@@ -1,9 +1,18 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, Observable, of} from 'rxjs';
-import {filter, tap} from 'rxjs/operators';
+import {BehaviorSubject, combineLatest, Observable, of} from 'rxjs';
+import {filter, map, tap} from 'rxjs/operators';
 import {environment} from '../../environments/environment';
 import {AuthService} from './auth.service';
+
+export type SportFilter = 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK' | null;
+
+export const SPORT_OPTIONS: { label: string; value: SportFilter }[] = [
+    { label: 'Swim', value: 'SWIMMING' },
+    { label: 'Bike', value: 'CYCLING' },
+    { label: 'Run', value: 'RUNNING' },
+    { label: 'Brick', value: 'BRICK' },
+];
 
 export type TrainingType =
     | 'VO2MAX'
@@ -100,6 +109,55 @@ export class TrainingService {
 
     private selectedTrainingSubject = new BehaviorSubject<Training | null>(null);
     selectedTraining$ = this.selectedTrainingSubject.asObservable();
+
+    // ── Filter state (shared across sidebar list + filter bar) ──────────
+    private tagFilterSubject = new BehaviorSubject<string | null>(null);
+    private sportFilterSubject = new BehaviorSubject<SportFilter>(null);
+    private typeFilterSubject = new BehaviorSubject<TrainingType | null>(null);
+
+    activeTagFilter$ = this.tagFilterSubject.asObservable();
+    activeSportFilter$ = this.sportFilterSubject.asObservable();
+    activeTypeFilter$ = this.typeFilterSubject.asObservable();
+
+    availableTags$ = this.trainings$.pipe(
+        map((trainings) => {
+            const tagSet = new Set<string>();
+            trainings.forEach((t) => t.tags?.forEach((tag) => tagSet.add(tag)));
+            return Array.from(tagSet).sort();
+        }),
+    );
+
+    filteredTrainings$ = combineLatest([
+        this.trainings$,
+        this.tagFilterSubject,
+        this.sportFilterSubject,
+        this.typeFilterSubject,
+    ]).pipe(
+        map(([trainings, tag, sport, type]) => {
+            let result = trainings;
+            if (tag === '__mine__') result = result.filter((t) => !t.tags?.length);
+            else if (tag) result = result.filter((t) => t.tags?.includes(tag));
+            if (sport) result = result.filter((t) => t.sportType === sport);
+            if (type) result = result.filter((t) => t.trainingType === type);
+            return [...result].sort((a, b) => {
+                const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                return db - da;
+            });
+        }),
+    );
+
+    setTagFilter(value: string): void {
+        this.tagFilterSubject.next(this.tagFilterSubject.value === value ? null : value);
+    }
+
+    setSportFilter(value: SportFilter): void {
+        this.sportFilterSubject.next(this.sportFilterSubject.value === value ? null : value);
+    }
+
+    setTypeFilter(value: TrainingType): void {
+        this.typeFilterSubject.next(this.typeFilterSubject.value === value ? null : value);
+    }
 
     private static readonly FTP_STORAGE_KEY = 'koval_ftp';
 

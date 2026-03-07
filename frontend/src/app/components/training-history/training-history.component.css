@@ -104,43 +104,6 @@
   font-style: italic;
 }
 
-.type-filters {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  padding: 0 8px 8px;
-  margin-bottom: 4px;
-}
-
-.type-filters:last-of-type {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  margin-bottom: 8px;
-  padding-bottom: 12px;
-}
-
-.type-pill {
-  font-size: 9px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #aaa;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.type-pill:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ddd;
-}
-
-.type-pill.selected {
-  background: rgba(255, 157, 0, 0.15);
-  border-color: var(--pill-color, var(--accent-color));
-  color: var(--pill-color, var(--accent-color));
-}
 
 .history-list {
   display: flex;

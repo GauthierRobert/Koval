@@ -6,7 +6,6 @@ import {
     TrainingService,
     Training,
     TrainingType,
-    TRAINING_TYPES,
     TRAINING_TYPE_COLORS,
     TRAINING_TYPE_LABELS,
     hasDurationEstimate,
@@ -14,17 +13,7 @@ import {
 import { DurationEstimationService } from '../../services/duration-estimation.service';
 import { AuthService } from '../../services/auth.service';
 import { HistoryService } from '../../services/history.service';
-import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
-import { map, filter } from 'rxjs/operators';
-
-type SportFilter = 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK' | null;
-
-const SPORT_OPTIONS: { label: string; value: SportFilter }[] = [
-    { label: 'Swim', value: 'SWIMMING' },
-    { label: 'Bike', value: 'CYCLING' },
-    { label: 'Run', value: 'RUNNING' },
-    { label: 'Brick', value: 'BRICK' },
-];
+import { filter } from 'rxjs/operators';
 
 @Component({
     selector: 'app-training-history',
@@ -39,54 +28,13 @@ export class TrainingHistoryComponent implements OnInit {
     private authService = inject(AuthService);
     private durationService = inject(DurationEstimationService);
 
-    readonly sportOptions = SPORT_OPTIONS;
-    readonly trainingTypes = TRAINING_TYPES;
-
     selectedTraining$ = this.trainingService.selectedTraining$;
+    filteredTrainings$ = this.trainingService.filteredTrainings$;
 
     // Tag folders
     folders: Record<string, Training[]> = {};
     folderNames: string[] = [];
     expandedFolder: string | null = null;
-
-    // ── Filters ─────────────────────────────────────────────────────────
-    // null = no filter; '__mine__' = My Workouts (no tags); string = tag name
-    private tagFilterSubject = new BehaviorSubject<string | null>(null);
-    private sportFilterSubject = new BehaviorSubject<SportFilter>(null);
-    private typeFilterSubject = new BehaviorSubject<TrainingType | null>(null);
-
-    activeTagFilter$ = this.tagFilterSubject.asObservable();
-    activeSportFilter$ = this.sportFilterSubject.asObservable();
-    activeTypeFilter$ = this.typeFilterSubject.asObservable();
-
-    /** Unique tags collected from all loaded trainings. */
-    availableTags$: Observable<string[]> = this.trainingService.trainings$.pipe(
-        map((trainings) => {
-            const tagSet = new Set<string>();
-            trainings.forEach((t) => t.tags?.forEach((tag) => tagSet.add(tag)));
-            return Array.from(tagSet).sort();
-        }),
-    );
-
-    filteredTrainings$: Observable<Training[]> = combineLatest([
-        this.trainingService.trainings$,
-        this.tagFilterSubject,
-        this.sportFilterSubject,
-        this.typeFilterSubject,
-    ]).pipe(
-        map(([trainings, tag, sport, type]) => {
-            let result = trainings;
-            if (tag === '__mine__') result = result.filter((t) => !t.tags?.length);
-            else if (tag) result = result.filter((t) => t.tags?.includes(tag));
-            if (sport) result = result.filter((t) => t.sportType === sport);
-            if (type) result = result.filter((t) => t.trainingType === type);
-            return [...result].sort((a, b) => {
-                const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-                const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-                return db - da;
-            });
-        }),
-    );
 
     ngOnInit(): void {
         this.authService.user$.pipe(
@@ -132,18 +80,6 @@ export class TrainingHistoryComponent implements OnInit {
             next: () => this.trainingService.removeTrainingLocally(training.id),
             error: () => this.trainingService.removeTrainingLocally(training.id),
         });
-    }
-
-    setTagFilter(value: string): void {
-        this.tagFilterSubject.next(this.tagFilterSubject.value === value ? null : value);
-    }
-
-    setSportFilter(value: SportFilter): void {
-        this.sportFilterSubject.next(this.sportFilterSubject.value === value ? null : value);
-    }
-
-    setTypeFilter(value: TrainingType): void {
-        this.typeFilterSubject.next(this.typeFilterSubject.value === value ? null : value);
     }
 
     getDuration(training: Training): string {

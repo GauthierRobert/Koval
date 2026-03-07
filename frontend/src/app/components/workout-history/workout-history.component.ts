@@ -2,6 +2,7 @@ import { Component, inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { map } from 'rxjs/operators';
 import { SportIconComponent } from '../sport-icon/sport-icon.component';
+import { SessionAnalysisComponent } from '../session-analysis/session-analysis.component';
 import { HistoryService, SavedSession } from '../../services/history.service';
 
 import { SessionSummary, BlockSummary } from '../../services/workout-execution.service';
@@ -15,7 +16,7 @@ import FitParser from 'fit-file-parser';
 @Component({
     selector: 'app-workout-history',
     standalone: true,
-    imports: [CommonModule, SportIconComponent],
+    imports: [CommonModule, SportIconComponent, SessionAnalysisComponent],
     templateUrl: './workout-history.component.html',
     styleUrl: './workout-history.component.css',
 })

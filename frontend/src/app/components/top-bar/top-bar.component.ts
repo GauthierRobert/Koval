@@ -21,6 +21,8 @@ export class TopBarComponent {
   private authService = inject(AuthService);
 
   isPopupOpen = false;
+  isAnalyticsOpen = false;
+  isTrainingOpen = false;
   requestDescription = '';
 
   user$ = this.authService.user$;
@@ -54,12 +56,31 @@ export class TopBarComponent {
     this.bluetoothService.toggleDeviceManager();
   }
 
+  toggleTraining(event: Event) {
+    event.stopPropagation();
+    this.isTrainingOpen = !this.isTrainingOpen;
+    if (this.isTrainingOpen) { this.isPopupOpen = false; this.isAnalyticsOpen = false; }
+  }
+
+  closeTraining() {
+    this.isTrainingOpen = false;
+  }
+
+  toggleAnalytics(event: Event) {
+    event.stopPropagation();
+    this.isAnalyticsOpen = !this.isAnalyticsOpen;
+    if (this.isAnalyticsOpen) { this.isPopupOpen = false; this.isTrainingOpen = false; }
+  }
+
+  closeAnalytics() {
+    this.isAnalyticsOpen = false;
+  }
+
   togglePopup(event: Event) {
     event.stopPropagation();
     this.isPopupOpen = !this.isPopupOpen;
-    if (!this.isPopupOpen) {
-      this.requestDescription = '';
-    }
+    if (this.isPopupOpen) { this.isAnalyticsOpen = false; this.isTrainingOpen = false; }
+    if (!this.isPopupOpen) this.requestDescription = '';
   }
 
   closePopup() {

@@ -9,11 +9,67 @@
   <nav class="nav-links">
     <ng-container *ngIf="{ coach: isCoach$ | async, mode: uiMode$ | async } as vm">
       <ng-container *ngIf="!vm.coach || vm.mode === 'athlete'">
-        <a routerLink="/dashboard"   routerLinkActive="active" class="nav-link">DASHBOARD</a>
-        <a routerLink="/chat"        routerLinkActive="active" class="nav-link">ASSISTANT</a>
-        <a routerLink="/calendar"    routerLinkActive="active" class="nav-link">CALENDAR</a>
-        <a routerLink="/pmc"         routerLinkActive="active" class="nav-link">PMC</a>
-        <a routerLink="/physiology"  routerLinkActive="active" class="nav-link">PHYSIOLOGY</a>
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">DASHBOARD</a>
+        <a routerLink="/chat"      routerLinkActive="active" class="nav-link">ASSISTANT</a>
+
+        <!-- Training dropdown -->
+        <div class="nav-dropdown-wrapper">
+          <button
+            class="nav-link nav-dropdown-trigger"
+            [class.active]="isTrainingOpen"
+            (click)="toggleTraining($event)">
+            TRAINING
+            <svg class="dropdown-chevron" [class.open]="isTrainingOpen"
+              width="8" height="8" viewBox="0 0 10 6" fill="none">
+              <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="nav-dropdown glass" *ngIf="isTrainingOpen" (click)="$event.stopPropagation()">
+            <a routerLink="/trainings" routerLinkActive="active" class="dropdown-item"
+              (click)="closeTraining()">
+              <span class="dropdown-label">TRAININGS</span>
+              <span class="dropdown-desc">Browse your training library</span>
+            </a>
+            <a routerLink="/history" routerLinkActive="active" class="dropdown-item"
+              (click)="closeTraining()">
+              <span class="dropdown-label">HISTORY</span>
+              <span class="dropdown-desc">Past activities &amp; analysis</span>
+            </a>
+            <a routerLink="/calendar" routerLinkActive="active" class="dropdown-item"
+              (click)="closeTraining()">
+              <span class="dropdown-label">CALENDAR</span>
+              <span class="dropdown-desc">Scheduled workouts</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Analytics dropdown -->
+        <div class="nav-dropdown-wrapper">
+          <button
+            class="nav-link nav-dropdown-trigger"
+            [class.active]="isAnalyticsOpen"
+            (click)="toggleAnalytics($event)">
+            ANALYTICS
+            <svg class="dropdown-chevron" [class.open]="isAnalyticsOpen"
+              width="8" height="8" viewBox="0 0 10 6" fill="none">
+              <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="nav-dropdown glass" *ngIf="isAnalyticsOpen" (click)="$event.stopPropagation()">
+            <a routerLink="/pmc"        routerLinkActive="active" class="dropdown-item"
+              (click)="closeAnalytics()">
+              <span class="dropdown-label">PMC</span>
+              <span class="dropdown-desc">Performance Management Chart</span>
+            </a>
+            <a routerLink="/physiology" routerLinkActive="active" class="dropdown-item"
+              (click)="closeAnalytics()">
+              <span class="dropdown-label">PHYSIOLOGY</span>
+              <span class="dropdown-desc">Zones &amp; physiological data</span>
+            </a>
+          </div>
+        </div>
       </ng-container>
       <ng-container *ngIf="vm.coach && vm.mode === 'coach'">
         <a routerLink="/chat"  routerLinkActive="active" class="nav-link">ASSISTANT</a>
@@ -93,5 +149,7 @@
   </div>
 </header>
 
-<!-- Overlay to close popup when clicking outside -->
-<div class="popup-overlay" *ngIf="isPopupOpen" (click)="closePopup()"></div>
+<!-- Overlays to close dropdowns when clicking outside -->
+<div class="popup-overlay" *ngIf="isPopupOpen"     (click)="closePopup()"></div>
+<div class="popup-overlay" *ngIf="isTrainingOpen"  (click)="closeTraining()"></div>
+<div class="popup-overlay" *ngIf="isAnalyticsOpen" (click)="closeAnalytics()"></div>

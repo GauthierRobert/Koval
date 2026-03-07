@@ -1,11 +1,6 @@
 <aside class="sidebar glass">
   <div class="sidebar-content">
-    <div class="view-tabs">
-      <button class="tab-btn" [class.active]="viewMode === 'plans'" (click)="switchView('plans')">PLANS</button>
-      <button class="tab-btn" [class.active]="viewMode === 'history'" (click)="switchView('history')">HISTORY</button>
-    </div>
-    <app-training-history *ngIf="viewMode === 'plans'"></app-training-history>
-    <app-workout-history *ngIf="viewMode === 'history'"></app-workout-history>
+    <app-training-history></app-training-history>
   </div>
   <div class="sidebar-footer">
     <div class="simulation-panel">

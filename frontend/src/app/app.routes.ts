@@ -7,6 +7,12 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     loadComponent: () =>
+      import('./components/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'trainings',
+    loadComponent: () =>
       import('./components/workout-selection/workout-selection.component').then(
         (m) => m.WorkoutSelectionComponent,
       ),

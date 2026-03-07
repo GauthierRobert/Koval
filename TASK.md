@@ -32,6 +32,12 @@
 - ~~The sport distribution in physiology must be display before the zones in coach dashboard when looking at athlete~~ ✅
 - ~~Training Creation: In blocks, distance or duration must be setted, never both. The other is extrapolted in backend not by the IA~~ ✅
 
+- The Dashboard, must be a real summary dashboard, currenlty, it is a training done and plan dhasboard. 
+    First Split the training dashboard in two others 1. The Trainings I have 2. The completed Training (Only .fit)
+    Secondly modify the current dashboard, to display the main metric of the athlete. Keep the Overdue and Week panel to display the training to do this week and overdue training
+    Some metrics on the current week, like Bike/run/Swim total duration/distance/TSS/... Find anything relevant
+    On the new Main dashboard, add also to the latest .fit workout done of the athelte
+    Propose in your plan other improvements you could do
 ## Nice too have
 - **Retrieve FIT files from Strava** — Implement an endpoint + service to fetch FIT activity files from Strava for the authenticated user. Requires the user to have granted all metric scopes (`activity:read_all`). Parse the FIT data and ingest relevant metrics (power, HR, cadence, TSS) into the session/history store.
 

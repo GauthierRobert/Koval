@@ -10,112 +10,64 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
-/* Sticky schedule top bar */
-.schedule-bar {
+/* ─── Sticky filter bar ──────────────────────────────────────── */
+.filter-bar {
   position: sticky;
   top: 0;
   z-index: 10;
-  padding: 16px 24px;
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--glass-border);
-  background: var(--bg-color);
-  max-height: 40vh;
-  overflow-y: auto;
-}
-
-.schedule-strip {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.overdue-strip,
-.weekly-strip {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.chips-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.strip-label {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.overdue-label {
-  color: #f87171;
-}
-
-.weekly-label {
-  color: var(--accent-color);
-  opacity: 0.8;
-}
-
-.workout-chip {
-  display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: var(--surface-elevated);
-  border: 1px solid var(--glass-border);
-  color: var(--text-color);
-  font-size: 11px;
-  font-weight: 600;
+  padding: 10px 20px;
+  background: var(--bg-color);
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #aaa;
   cursor: pointer;
   transition: all 0.15s;
+  white-space: nowrap;
+  user-select: none;
 }
 
-.workout-chip:hover {
-  background: var(--surface-hover);
-  border-color: var(--accent-color);
-  transform: translateY(-1px);
+.filter-pill:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #ddd;
 }
 
-.workout-chip.overdue {
-  background: rgba(248, 113, 113, 0.08);
-  border-color: rgba(248, 113, 113, 0.3);
-  color: #fca5a5;
+.filter-pill.selected {
+  background: rgba(255, 157, 0, 0.12);
+  border-color: var(--pill-color, var(--accent-color));
+  color: var(--pill-color, var(--accent-color));
 }
 
-.workout-chip.overdue:hover {
-  background: rgba(248, 113, 113, 0.15);
-  border-color: #f87171;
+.filter-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--glass-border);
+  flex-shrink: 0;
+  margin: 0 2px;
 }
 
-.chip-date {
-  font-size: 9px;
-  opacity: 0.6;
-  font-weight: 800;
-}
-
-.chip-title {
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.chip-duration {
-  font-size: 9px;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 1px 4px;
-  border-radius: 3px;
-  opacity: 0.8;
-}
-
-/* Scrollable content below the sticky bar */
 .content-area {
   flex: 1;
   min-height: 0;
@@ -246,12 +198,3 @@
   transform: scale(1.05);
 }
 
-.empty-week-small {
-  padding: 4px 0;
-}
-
-.empty-week-small .dim {
-  font-size: 11px;
-  opacity: 0.45;
-  font-weight: 400;
-}
