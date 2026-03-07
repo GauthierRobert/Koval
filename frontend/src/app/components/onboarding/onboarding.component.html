@@ -1,0 +1,78 @@
+<div class="onboarding-overlay">
+  <div class="onboarding-card glass">
+    <div class="onboarding-header">
+      <div class="logo-mark"></div>
+      <h1>Welcome to <span class="accent">Koval Training</span></h1>
+      <p class="subtitle">Tell us a bit about yourself to get started</p>
+    </div>
+
+    <form class="onboarding-form" (ngSubmit)="submit()">
+      <!-- Role -->
+      <div class="field-group">
+        <label class="field-label">I am a <span class="required">*</span></label>
+        <div class="role-toggle">
+          <button type="button" class="role-btn" [class.active]="role === 'ATHLETE'" (click)="role = 'ATHLETE'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="7" r="4"/><path d="M5.2 20a7 7 0 0 1 13.6 0"/>
+            </svg>
+            ATHLETE
+          </button>
+          <button type="button" class="role-btn" [class.active]="role === 'COACH'" (click)="role = 'COACH'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            COACH
+          </button>
+        </div>
+      </div>
+
+      <!-- FTP -->
+      <div class="field-group">
+        <label class="field-label">FTP — Functional Threshold Power <span class="optional">(optional)</span></label>
+        <div class="input-row">
+          <input type="number" class="field-input" [(ngModel)]="ftp" name="ftp"
+            min="50" max="600" placeholder="e.g. 280" />
+          <span class="field-unit">W</span>
+        </div>
+        <span class="field-hint">Your best sustained power for ~60 min. Used for bike zones.</span>
+      </div>
+
+      <!-- Threshold Run Pace -->
+      <div class="field-group">
+        <label class="field-label">Threshold Run Pace <span class="optional">(optional)</span></label>
+        <div class="pace-row">
+          <input type="number" class="pace-input" [(ngModel)]="thresholdPaceMinutes" name="tpMin"
+            min="2" max="15" />
+          <span class="pace-sep">:</span>
+          <input type="number" class="pace-input pace-sec" [(ngModel)]="thresholdPaceSeconds" name="tpSec"
+            min="0" max="59" />
+          <span class="field-unit">/km</span>
+        </div>
+        <span class="field-hint">Lactate threshold pace. Used for run zones.</span>
+      </div>
+
+      <!-- CSS -->
+      <div class="field-group">
+        <label class="field-label">Critical Swim Speed (CSS) <span class="optional">(optional)</span></label>
+        <div class="pace-row">
+          <input type="number" class="pace-input" [(ngModel)]="cssMinutes" name="cssMin"
+            min="1" max="5" />
+          <span class="pace-sep">:</span>
+          <input type="number" class="pace-input pace-sec" [(ngModel)]="cssSeconds" name="cssSec"
+            min="0" max="59" />
+          <span class="field-unit">/100m</span>
+        </div>
+        <span class="field-hint">Your threshold swim pace. Used for swim zones.</span>
+      </div>
+
+      <div class="error-msg" *ngIf="error">{{ error }}</div>
+
+      <button type="submit" class="submit-btn" [disabled]="saving">
+        {{ saving ? 'SAVING...' : 'GET STARTED' }}
+      </button>
+
+      <p class="skip-note">You can update these values anytime in Settings.</p>
+    </form>
+  </div>
+</div>

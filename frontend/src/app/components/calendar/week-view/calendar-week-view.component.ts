@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CdkDrag, CdkDragDrop, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
+import { RouterModule } from '@angular/router';
 
 import { CalendarService } from '../../../services/calendar.service';
 import { ScheduledWorkout } from '../../../services/coach.service';
@@ -16,7 +17,7 @@ import { WorkoutsByDay } from '../calendar.component';
 @Component({
   selector: 'app-calendar-week-view',
   standalone: true,
-  imports: [CommonModule, CdkDropList, CdkDrag, CdkDropListGroup, SportIconComponent, TrainingLoadChartComponent],
+  imports: [CommonModule, RouterModule, CdkDropList, CdkDrag, CdkDropListGroup, SportIconComponent, TrainingLoadChartComponent],
   templateUrl: './calendar-week-view.component.html',
   styleUrl: './calendar-week-view.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

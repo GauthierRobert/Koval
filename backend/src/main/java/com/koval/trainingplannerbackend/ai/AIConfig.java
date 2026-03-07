@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.ai;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.koval.trainingplannerbackend.coach.tools.CoachToolService;
 import com.koval.trainingplannerbackend.training.history.HistoryToolService;
 import com.koval.trainingplannerbackend.training.tools.TrainingToolService;
@@ -69,10 +70,15 @@ public class AIConfig {
             ## WORKOUT CREATION SCHEMA
             - **Required Fields:** `title`, `description`, `blocks`, `estimatedTss`, `estimatedIf`, `tags`, `visibility`, `trainingType`.
             - **TrainingType:** VO2MAX, THRESHOLD, SWEET_SPOT, ENDURANCE, SPRINT, RECOVERY, MIXED, TEST.
-            - **WorkoutBlock:** `type` (WARMUP, INTERVAL, STEADY, COOLDOWN, RAMP, FREE, PAUSE), `durationSeconds` or `distanceMeters`, `label`, `intensityTarget`, `intensityStart`/`intensityEnd` for ramps, `cadenceTarget`.
+            - **WorkoutBlock:** `type` (WARMUP, INTERVAL, STEADY, COOLDOWN, RAMP, FREE, PAUSE), **exactly one of** `durationSeconds` **or** `distanceMeters` (never both — backend extrapolates the other), `label`, `intensityTarget`, `intensityStart`/`intensityEnd` for ramps, `cadenceTarget`. Prefer `durationSeconds` for CYCLING; prefer `distanceMeters` for RUNNING and SWIMMING intervals.
             - **Repeat:** Expand all repeated sequences explicitly — no shorthand.
             - *Cycling:* % FTP (Coggan). *Running:* Threshold Pace, cadence ~170+. *Swimming:* CSS, RPE 1-10.
-            - **Tags:** Tags (tag IDs) must ONLY be set on a training when the user's role is COACH AND the user explicitly requests tagging (e.g. "assign to group X", "tag with Y"). For ATHLETE users, always pass an empty tags list. Never auto-tag.""" + COMMON_RULES;
+            - **Tags:** Tags (tag IDs) must ONLY be set on a training when the user's role is COACH AND the user explicitly requests tagging (e.g. "assign to group X", "tag with Y"). For ATHLETE users, always pass an empty tags list. Never auto-tag.
+
+            ## BULK CREATION RULE (CRITICAL)
+            - **One tool call per turn.** Never call `createTraining` or `updateTraining` more than once in a single response.
+            - After each tool call output exactly: `✓ [n/total] [title]` then immediately continue in the next turn.
+            - Do NOT plan all workouts upfront. Design and create them one at a time.""" + COMMON_RULES;
 
     private static final String SCHEDULING_PROMPT = """
             Role: Training Schedule Manager for athletes and coaches.
@@ -143,6 +149,11 @@ public class AIConfig {
             Keep responses concise and actionable.""" + COMMON_RULES;
 
     // ── Beans ───────────────────────────────────────────────────────────
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
+    }
 
     @Bean
     public ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository) {
@@ -227,13 +238,32 @@ public class AIConfig {
                 .build();
     }
 
+    @Bean
+    public ChatClient plannerClient(AnthropicChatModel chatModel) {
+        return ChatClient.builder(chatModel)
+                .defaultOptions(AnthropicChatOptions.builder()
+                        .model(HAIKU)
+                        .temperature(0.0)
+                        .maxTokens(512)
+                        .build())
+                .defaultSystem("""
+                        Decompose the user request into atomic independent tasks.
+                        Return ONLY a JSON array: [{"task":"...","agentType":"TRAINING_CREATION|SCHEDULING|ANALYSIS|COACH_MANAGEMENT|GENERAL"}]
+                        Rules:
+                        - If tasks depend on each other (e.g. create then schedule same workout), merge into ONE task string.
+                        - If truly independent (e.g. create 20 different workouts), split into N tasks.
+                        - If single/unclear: return single-element array.
+                        - Return raw JSON only. No markdown, no explanation.""")
+                .build();
+    }
+
     // ── Options helpers ─────────────────────────────────────────────────
 
     private AnthropicChatOptions sonnetOptions() {
         return AnthropicChatOptions.builder()
                 .model(SONNET)
                 .temperature(0.7)
-                .maxTokens(4096)
+                .maxTokens(8192)
                 .cacheOptions(cacheOptions())
                 .build();
     }

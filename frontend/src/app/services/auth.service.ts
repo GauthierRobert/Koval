@@ -24,6 +24,7 @@ export interface User {
     ctl?: number;
     atl?: number;
     tsb?: number;
+    needsOnboarding?: boolean;
 }
 
 @Injectable({
@@ -163,5 +164,15 @@ export class AuthService {
                 next: (user) => this.userSubject.next(user),
             });
         }
+    }
+
+    completeOnboarding(data: { role: 'ATHLETE' | 'COACH'; ftp?: number; criticalSwimSpeed?: number; functionalThresholdPace?: number }): Observable<{ token: string; user: User }> {
+        return this.http.post<{ token: string; user: User }>(`${this.apiUrl}/onboarding`, data).pipe(
+            tap(response => {
+                localStorage.setItem('token', response.token);
+                this.userSubject.next(response.user);
+                this.setUiMode(response.user.role === 'COACH' ? 'coach' : 'athlete');
+            })
+        );
     }
 }

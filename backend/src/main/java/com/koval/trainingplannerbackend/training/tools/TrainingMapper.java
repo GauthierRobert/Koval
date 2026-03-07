@@ -46,8 +46,9 @@ public class TrainingMapper {
 
         // 4. Mapping des Blocs + Calcul de la durée totale
         if (request.blocks() != null && !request.blocks().isEmpty()) {
+            String sport = request.sport() != null ? request.sport().toUpperCase() : "CYCLING";
             List<WorkoutBlock> blocks = request.blocks().stream()
-                    .map(b -> new WorkoutBlock(b.type(), b.dur(), b.dist(), b.label(), b.pct(), b.pctFrom(), b.pctTo(), b.cad()))
+                    .map(b -> enforceDistanceXorDuration(b, sport))
                     .toList();
             training.setBlocks(blocks);
 
@@ -61,6 +62,46 @@ public class TrainingMapper {
         }
 
         return training;
+    }
+
+    /**
+     * Enforces that each block has exactly one of durationSeconds or distanceMeters.
+     * If both are provided, the preferred dimension per sport is kept and the other extrapolated.
+     * If only one is provided, the other is extrapolated from typical sport speeds.
+     *
+     * Typical speeds used for extrapolation:
+     *   CYCLING:  ~30 km/h  (8.33 m/s)
+     *   RUNNING:  ~12 km/h  (3.33 m/s)
+     *   SWIMMING: ~3.6 km/h (1.00 m/s)
+     */
+    private WorkoutBlock enforceDistanceXorDuration(WorkoutBlockRequest b, String sport) {
+        Integer dur = b.dur();
+        Integer dist = b.dist();
+
+        boolean hasDur = dur != null && dur > 0;
+        boolean hasDist = dist != null && dist > 0;
+
+        double metersPerSecond = switch (sport) {
+            case "RUNNING" -> 3.33;
+            case "SWIMMING" -> 1.00;
+            default -> 8.33; // CYCLING / BRICK
+        };
+
+        if (hasDur && hasDist) {
+            // Both set — keep the primary dimension per sport, extrapolate the other
+            // For swimming/running distance-based sports prefer distance; for cycling prefer duration
+            if ("RUNNING".equals(sport) || "SWIMMING".equals(sport)) {
+                dur = (int) Math.round(dist / metersPerSecond);
+            } else {
+                dist = (int) Math.round(dur * metersPerSecond);
+            }
+        } else if (hasDur) {
+            dist = (int) Math.round(dur * metersPerSecond);
+        } else if (hasDist) {
+            dur = (int) Math.round(dist / metersPerSecond);
+        }
+
+        return new WorkoutBlock(b.type(), dur, dist, b.label(), b.pct(), b.pctFrom(), b.pctTo(), b.cad());
     }
 
     /**

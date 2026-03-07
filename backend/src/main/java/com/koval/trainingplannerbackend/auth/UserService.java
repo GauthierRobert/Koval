@@ -37,6 +37,7 @@ public class UserService {
         newUser.setStravaTokenExpiresAt(expiresAt);
         newUser.setRole(UserRole.ATHLETE);
         newUser.setLastLogin(LocalDateTime.now());
+        newUser.setNeedsOnboarding(true);
 
         return userRepository.save(newUser);
     }
@@ -61,6 +62,7 @@ public class UserService {
         newUser.setProfilePicture(profilePicture);
         newUser.setRole(UserRole.ATHLETE);
         newUser.setLastLogin(LocalDateTime.now());
+        newUser.setNeedsOnboarding(true);
 
         return userRepository.save(newUser);
     }

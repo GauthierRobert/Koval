@@ -11,6 +11,7 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 import reactor.util.retry.Retry;
 
 import java.net.SocketException;
@@ -19,6 +20,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.TextStyle;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Shared logic for all specialist agents: prompt building, streaming, error handling.
@@ -48,11 +50,13 @@ public abstract class BaseAgentService implements TrainingAgent {
     public StreamResponse chatStream(String userMessage, String userId, String conversationId) {
         UserContext ctx = userContextResolver.resolve(userId);
 
-        var statusStart = Flux.just(sse("status", "in_progress"));
+        Sinks.Many<ServerSentEvent<String>> toolSink =
+                Sinks.many().multicast().onBackpressureBuffer();
 
+        var statusStart = Flux.just(sse("status", "in_progress"));
         var agentEvent = Flux.just(sse("agent", getAgentType().name()));
 
-        var responseFlux = buildPrompt(ctx, conversationId)
+        var responseFlux = buildPrompt(ctx, conversationId, toolSink)
                 .user(userMessage)
                 .stream()
                 .chatResponse()
@@ -60,20 +64,30 @@ public abstract class BaseAgentService implements TrainingAgent {
                 .retryWhen(Retry.backoff(2, Duration.ofSeconds(2))
                         .jitter(0.5)
                         .filter(BaseAgentService::isTransientNetworkError))
-                .onErrorResume(ex -> Flux.just(sse("error", streamErrorMessage(ex))));
+                .onErrorResume(ex -> Flux.just(sse("error", streamErrorMessage(ex))))
+                .doOnTerminate(toolSink::tryEmitComplete);
 
         var postStream = Flux.just(
                 sse("status", "complete"),
                 sse("conversation_id", conversationId));
 
-        return new StreamResponse(conversationId,
-                Flux.concat(statusStart, agentEvent, responseFlux, postStream));
+        var merged = Flux.merge(
+                Flux.concat(statusStart, agentEvent, responseFlux),
+                toolSink.asFlux());
+
+        return new StreamResponse(conversationId, Flux.concat(merged, postStream));
     }
 
     private ChatClient.ChatClientRequestSpec buildPrompt(UserContext ctx, String conversationId) {
         return chatClient.prompt()
                 .messages(new SystemMessage(systemContext(ctx)))
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId));
+    }
+
+    private ChatClient.ChatClientRequestSpec buildPrompt(UserContext ctx, String conversationId,
+                                                         Sinks.Many<ServerSentEvent<String>> toolSink) {
+        return buildPrompt(ctx, conversationId)
+                .toolContext(Map.of("toolSink", toolSink));
     }
 
     protected String systemContext(UserContext ctx) {

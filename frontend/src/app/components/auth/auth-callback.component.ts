@@ -4,6 +4,7 @@ import {AuthService} from '../../services/auth.service';
 
 @Component({
     selector: 'app-auth-callback',
+    standalone: true,
     templateUrl: './auth-callback.component.html',
     styleUrl: './auth-callback.component.css'
 })
@@ -28,7 +29,13 @@ export class AuthCallbackComponent implements OnInit {
                 : this.authService.handleStravaCallback(code);
 
             handler.subscribe({
-                next: () => this.router.navigate(['/']),
+                next: (res) => {
+                    if (res.user.needsOnboarding) {
+                        this.router.navigate(['/onboarding']);
+                    } else {
+                        this.router.navigate(['/']);
+                    }
+                },
                 error: () => this.router.navigate(['/login'])
             });
         });

@@ -1,10 +1,14 @@
 package com.koval.trainingplannerbackend.ai;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.koval.trainingplannerbackend.ai.UserContextResolver.UserContext;
 import com.koval.trainingplannerbackend.ai.agents.AgentType;
 import com.koval.trainingplannerbackend.ai.agents.RouterService;
 import com.koval.trainingplannerbackend.ai.agents.TrainingAgent;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -25,16 +29,22 @@ public class AIService {
     private final RouterService routerService;
     private final ChatHistoryService chatHistoryService;
     private final UserContextResolver userContextResolver;
+    private final ChatClient plannerClient;
+    private final ObjectMapper objectMapper;
 
     public AIService(List<TrainingAgent> agentList,
                      RouterService routerService,
                      ChatHistoryService chatHistoryService,
-                     UserContextResolver userContextResolver) {
+                     UserContextResolver userContextResolver,
+                     @Qualifier("plannerClient") ChatClient plannerClient,
+                     ObjectMapper objectMapper) {
         this.agents = agentList.stream()
                 .collect(Collectors.toMap(TrainingAgent::getAgentType, Function.identity()));
         this.routerService = routerService;
         this.chatHistoryService = chatHistoryService;
         this.userContextResolver = userContextResolver;
+        this.plannerClient = plannerClient;
+        this.objectMapper = objectMapper;
     }
 
     // ── Synchronous chat ────────────────────────────────────────────────
@@ -74,6 +84,24 @@ public class AIService {
     }
 
     public record StreamResponse(String chatHistoryId, Flux<ServerSentEvent<String>> events) {
+    }
+
+    // ── Planner ─────────────────────────────────────────────────────────
+
+    public record PlanTask(String task, String agentType) {}
+
+    public List<PlanTask> plan(String userMessage) {
+        String json = plannerClient.prompt().user(userMessage).call().content();
+        try {
+            // Strip markdown code fences if present
+            String cleaned = json.trim();
+            if (cleaned.startsWith("```")) {
+                cleaned = cleaned.replaceAll("(?s)^```[a-z]*\\n?", "").replaceAll("```$", "").trim();
+            }
+            return objectMapper.readValue(cleaned, new TypeReference<List<PlanTask>>() {});
+        } catch (Exception e) {
+            return List.of(new PlanTask(userMessage, "TRAINING_CREATION"));
+        }
     }
 
     // ── Internals ───────────────────────────────────────────────────────

@@ -2,6 +2,9 @@ package com.koval.trainingplannerbackend.coach;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
+import com.koval.trainingplannerbackend.training.history.AnalyticsService;
+import com.koval.trainingplannerbackend.training.history.CompletedSession;
+import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
 import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -30,13 +34,19 @@ public class ScheduleController {
     private final ScheduledWorkoutRepository scheduledWorkoutRepository;
     private final TrainingRepository trainingRepository;
     private final CoachService coachService;
+    private final CompletedSessionRepository completedSessionRepository;
+    private final AnalyticsService analyticsService;
 
     public ScheduleController(ScheduledWorkoutRepository scheduledWorkoutRepository,
             TrainingRepository trainingRepository,
-            CoachService coachService) {
+            CoachService coachService,
+            CompletedSessionRepository completedSessionRepository,
+            AnalyticsService analyticsService) {
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
         this.trainingRepository = trainingRepository;
         this.coachService = coachService;
+        this.completedSessionRepository = completedSessionRepository;
+        this.analyticsService = analyticsService;
     }
 
     public static class ScheduleRequest {
@@ -114,12 +124,50 @@ public class ScheduleController {
 
     @PostMapping("/{id}/complete")
     public ResponseEntity<ScheduledWorkoutResponse> markCompleted(@PathVariable String id) {
-        try {
-            ScheduledWorkout updated = coachService.markCompleted(id, null, null);
-            return ResponseEntity.ok(enrichSingle(updated));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
+        ScheduledWorkout workout = scheduledWorkoutRepository.findById(id).orElse(null);
+        if (workout == null) return ResponseEntity.notFound().build();
+
+        // If a real (non-synthetic) session is already linked, just mark complete
+        if (workout.getSessionId() != null) {
+            boolean isSynthetic = completedSessionRepository.findById(workout.getSessionId())
+                    .map(CompletedSession::isSyntheticCompletion).orElse(false);
+            if (!isSynthetic) {
+                ScheduledWorkout updated = coachService.markCompleted(id,
+                        workout.getTss(), workout.getIntensityFactor(), workout.getSessionId());
+                return ResponseEntity.ok(enrichSingle(updated));
+            }
+            // Delete existing synthetic session before creating a fresh one
+            completedSessionRepository.deleteById(workout.getSessionId());
         }
+
+        // Create a synthetic CompletedSession from planned training data
+        Training training = trainingRepository.findById(workout.getTrainingId()).orElse(null);
+        CompletedSession session = new CompletedSession();
+        session.setUserId(workout.getAthleteId());
+        session.setSyntheticCompletion(true);
+        session.setScheduledWorkoutId(id);
+        session.setCompletedAt(workout.getScheduledDate() != null
+                ? workout.getScheduledDate().atTime(12, 0) : LocalDateTime.now());
+
+        if (training != null) {
+            session.setTitle(training.getTitle());
+            session.setSportType(training.getSportType() != null ? training.getSportType().name() : "CYCLING");
+            if (training.getEstimatedDurationSeconds() != null)
+                session.setTotalDurationSeconds(training.getEstimatedDurationSeconds());
+            if (training.getEstimatedTss() != null)
+                session.setTss(training.getEstimatedTss().doubleValue());
+            if (training.getEstimatedIf() != null)
+                session.setIntensityFactor(training.getEstimatedIf());
+        }
+
+        CompletedSession saved = completedSessionRepository.save(session);
+        analyticsService.recomputeAndSaveUserLoad(workout.getAthleteId());
+
+        ScheduledWorkout updated = coachService.markCompleted(id,
+                saved.getTss() != null ? saved.getTss().intValue() : null,
+                saved.getIntensityFactor(),
+                saved.getId());
+        return ResponseEntity.ok(enrichSingle(updated));
     }
 
     @PatchMapping("/{id}/reschedule")
@@ -134,7 +182,9 @@ public class ScheduleController {
 
         return scheduledWorkoutRepository.findById(id)
                 .map(workout -> {
-                    if (!userId.equals(workout.getAthleteId())) {
+                    boolean isOwner = userId.equals(workout.getAthleteId());
+                    boolean isAssigner = userId.equals(workout.getAssignedBy());
+                    if (!isOwner && !isAssigner) {
                         return ResponseEntity.status(403).<ScheduledWorkoutResponse>build();
                     }
                     if (workout.getStatus() != ScheduleStatus.PENDING) {

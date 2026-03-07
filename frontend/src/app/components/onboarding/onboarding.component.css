@@ -1,0 +1,223 @@
+.onboarding-overlay {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-color);
+  padding: 2rem;
+}
+
+.onboarding-card {
+  width: 100%;
+  max-width: 520px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 2.5rem;
+}
+
+.onboarding-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.logo-mark {
+  width: 48px;
+  height: 48px;
+  background: var(--accent-color);
+  border-radius: 12px;
+  margin: 0 auto 1.2rem;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+.onboarding-header h1 {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--text-color);
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.5px;
+}
+
+.accent {
+  color: var(--accent-color);
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.onboarding-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+}
+
+.required {
+  color: var(--accent-color);
+}
+
+.optional {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  opacity: 0.6;
+}
+
+.role-toggle {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.role-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.9rem;
+  border: 1.5px solid var(--glass-border);
+  border-radius: 10px;
+  background: var(--surface-hover);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.role-btn.active {
+  border-color: var(--accent-color);
+  background: rgba(255, 157, 0, 0.08);
+  color: var(--accent-color);
+}
+
+.role-btn:hover:not(.active) {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--text-color);
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.field-input {
+  flex: 1;
+  background: var(--surface-hover);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  color: var(--text-color);
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: border-color 0.2s;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.pace-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pace-input {
+  width: 64px;
+  background: var(--surface-hover);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 0.7rem 0.5rem;
+  color: var(--text-color);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.pace-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.pace-sec {
+  width: 56px;
+}
+
+.pace-sep {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.field-unit {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.field-hint {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  opacity: 0.6;
+}
+
+.error-msg {
+  color: var(--danger-color);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.submit-btn {
+  background: var(--accent-color);
+  color: #000;
+  border: none;
+  border-radius: 10px;
+  padding: 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: filter 0.2s, opacity 0.2s;
+  margin-top: 0.5rem;
+}
+
+.submit-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.skip-note {
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  opacity: 0.5;
+  margin: 0;
+}

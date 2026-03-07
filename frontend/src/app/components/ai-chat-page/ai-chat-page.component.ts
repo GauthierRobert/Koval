@@ -2,7 +2,7 @@ import {Component, ElementRef, inject, OnDestroy, OnInit, ViewChild} from '@angu
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Subscription} from 'rxjs';
-import {AgentType, ChatService} from '../../services/chat.service';
+import {AgentType, ChatService, PlanTask} from '../../services/chat.service';
 import {Training} from '../../services/training.service';
 import {ScheduleModalComponent} from '../schedule-modal/schedule-modal.component';
 
@@ -117,5 +117,10 @@ export class AIChatPageComponent implements OnInit, OnDestroy {
   onScheduleModalClose(): void {
     this.showScheduleModal = false;
     this.selectedTrainingForSchedule = null;
+  }
+
+  executePlan(tasks: PlanTask[]): void {
+    this.nearBottom = true;
+    this.chatService.executePlan(tasks);
   }
 }

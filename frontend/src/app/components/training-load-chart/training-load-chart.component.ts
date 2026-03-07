@@ -39,7 +39,7 @@ function getSportColor(sport?: string): string {
     styles: [
         `
             .load-chart-wrap {
-                padding: 8px 0 4px;
+                padding: 0 0 4px;
             }
             .load-chart-label {
                 font-size: 10px;

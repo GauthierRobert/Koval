@@ -5,13 +5,17 @@ import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.tag.Tag;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Sinks;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -35,10 +39,14 @@ public class CoachToolService {
             @ToolParam(description = "Training ID") String trainingId,
             @ToolParam(description = "Athlete IDs") List<String> athleteIds,
             @ToolParam(description = "Date (YYYY-MM-DD)") LocalDate scheduledDate,
-            @ToolParam(description = "Notes (optional)") String notes) {
+            @ToolParam(description = "Notes (optional)") String notes,
+            ToolContext context) {
+        emitToolCall(context, "assignTraining", "Scheduling for " + athleteIds.size() + " athlete(s)...");
         List<ScheduledWorkout> workouts = coachService.assignTraining(coachId, trainingId, athleteIds, scheduledDate, notes);
         String title = resolveTrainingTitle(trainingId);
-        return workouts.stream().map(sw -> ScheduleSummary.from(sw, title)).toList();
+        List<ScheduleSummary> result = workouts.stream().map(sw -> ScheduleSummary.from(sw, title)).toList();
+        emitToolResult(context, "assignTraining", "Assigned to " + result.size() + " athlete(s)", true);
+        return result;
     }
 
     @Tool(description = "Get an athlete's schedule in a date range.")
@@ -87,5 +95,32 @@ public class CoachToolService {
     private String resolveTrainingTitle(String trainingId) {
         return trainingRepository.findById(trainingId)
                 .map(Training::getTitle).orElse("Unknown");
+    }
+
+    // ── Tool event helpers ───────────────────────────────────────────────
+
+    private static void emitToolCall(ToolContext ctx, String name, String label) {
+        getSink(ctx).ifPresent(s -> s.tryEmitNext(toolSse("tool_call", name, label, true)));
+    }
+
+    private static void emitToolResult(ToolContext ctx, String name, String label, boolean ok) {
+        getSink(ctx).ifPresent(s -> s.tryEmitNext(toolSse("tool_result", name, label, ok)));
+    }
+
+    private static ServerSentEvent<String> toolSse(String event, String name, String label, boolean success) {
+        String data = "{\"name\":\"%s\",\"label\":\"%s\",\"success\":%b}"
+                .formatted(name, escapeJson(label), success);
+        return ServerSentEvent.<String>builder().event(event).data(data).build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Optional<Sinks.Many<ServerSentEvent<String>>> getSink(ToolContext ctx) {
+        if (ctx == null) return Optional.empty();
+        return Optional.ofNullable(
+                (Sinks.Many<ServerSentEvent<String>>) ctx.getContext().get("toolSink"));
+    }
+
+    private static String escapeJson(String s) {
+        return s == null ? "" : s.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }

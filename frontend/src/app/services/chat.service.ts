@@ -12,12 +12,26 @@ export type AgentType =
   | 'COACH_MANAGEMENT'
   | 'GENERAL';
 
+export interface ActionStep {
+  name: string;
+  label: string;
+  status: 'pending' | 'done' | 'error';
+}
+
+export interface PlanTask {
+  task: string;
+  agentType: string;
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
   agentType?: string;
   createdTraining?: { id: string; title: string; sportType: string; estimatedDurationSeconds?: number };
+  actions?: ActionStep[];
+  isPlan?: boolean;
+  planTasks?: PlanTask[];
 }
 
 export interface ChatHistoryItem {
@@ -68,6 +82,7 @@ export class ChatService {
 
   private emitScheduled = false;
   private pendingEmit = false;
+  private streamingCount = 0;
 
   setAgentType(agentType: AgentType | null): void {
     this.agentTypeSubject.next(agentType);
@@ -98,53 +113,89 @@ export class ChatService {
     });
   }
 
-  async sendMessage(message: string): Promise<void> {
-    return this.sendMessageStream(message);
-  }
-
   private readonly MAX_MESSAGE_CHARS = 8_000;
 
-  private async sendMessageStream(message: string): Promise<void> {
-    // Client-side length guard — mirrors backend validation
+  async sendMessage(message: string): Promise<void> {
     if (message.length > this.MAX_MESSAGE_CHARS) {
       this.addMessage({ role: 'user', content: message, timestamp: new Date() });
-      const errMsg: ChatMessage = {
+      this.addMessage({
         role: 'assistant',
         content: `Your message is too long (${message.length.toLocaleString()} characters). Please keep it under ${this.MAX_MESSAGE_CHARS.toLocaleString()} characters and try again.`,
         timestamp: new Date(),
-      };
-      this.addMessage(errMsg);
+      });
       this.ngZone.run(() => this.activityStatusSubject.next('error'));
       return;
     }
 
-    // Snapshot current training IDs to detect newly created ones after the response
     const knownIds = new Set<string>();
     this.trainingService.trainings$.pipe(take(1)).subscribe((ts) => ts.forEach((t) => knownIds.add(t.id)));
 
     this.addMessage({ role: 'user', content: message, timestamp: new Date() });
 
-    const aiMessage: ChatMessage = { role: 'assistant', content: '', timestamp: new Date() };
+    let plan: PlanTask[] = [];
+    try {
+      plan = await this.fetchPlan(message);
+    } catch {
+      plan = [{ task: message, agentType: 'TRAINING_CREATION' }];
+    }
+
+    if (plan.length > 1) {
+      const planMsg: ChatMessage = {
+        role: 'assistant',
+        content: '',
+        timestamp: new Date(),
+        isPlan: true,
+        planTasks: plan,
+      };
+      this.addMessage(planMsg);
+      this.ngZone.run(() => this.activityStatusSubject.next('complete'));
+      return;
+    }
+
+    return this.streamToAiMessage(message, this.activeChatIdSubject.value, knownIds);
+  }
+
+  async executePlan(tasks: PlanTask[]): Promise<void> {
+    const convId = this.activeChatIdSubject.value;
+    await Promise.all(tasks.map((t) => this.streamToAiMessage(t.task, convId, null)));
+  }
+
+  private setStreaming(delta: 1 | -1): void {
+    this.streamingCount += delta;
+    this.ngZone.run(() => this.streamingSubject.next(this.streamingCount > 0));
+  }
+
+  private async fetchPlan(message: string): Promise<PlanTask[]> {
+    const jwt = localStorage.getItem('token');
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (jwt) headers['Authorization'] = `Bearer ${jwt}`;
+
+    const response = await fetch(`${this.apiUrl}/plan`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ message }),
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  }
+
+  private async streamToAiMessage(
+    message: string,
+    convId: string | null,
+    knownIds: Set<string> | null,
+  ): Promise<void> {
+    const aiMessage: ChatMessage = { role: 'assistant', content: '', timestamp: new Date(), actions: [] };
     this.addMessage(aiMessage);
-    this.ngZone.run(() => this.streamingSubject.next(true));
+    this.setStreaming(1);
 
     try {
       const jwt = localStorage.getItem('token');
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-      if (jwt) {
-        headers['Authorization'] = `Bearer ${jwt}`;
-      }
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (jwt) headers['Authorization'] = `Bearer ${jwt}`;
 
-      const body: Record<string, string | null> = {
-        message,
-        chatHistoryId: this.activeChatIdSubject.value,
-      };
+      const body: Record<string, string | null> = { message, chatHistoryId: convId };
       const selectedAgent = this.agentTypeSubject.value;
-      if (selectedAgent) {
-        body['agentType'] = selectedAgent;
-      }
+      if (selectedAgent) body['agentType'] = selectedAgent;
 
       const response = await fetch(`${this.apiUrl}/chat/stream`, {
         method: 'POST',
@@ -152,9 +203,7 @@ export class ChatService {
         body: JSON.stringify(body),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const chatHistoryId = response.headers.get('X-Chat-History-Id');
       if (chatHistoryId) {
@@ -170,11 +219,9 @@ export class ChatService {
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
-
         buffer = buffer.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
         const events = buffer.split('\n\n');
-
         buffer = events.pop() || '';
 
         for (const event of events) {
@@ -189,9 +236,7 @@ export class ChatService {
               eventType = line.substring(6).trim();
             } else if (line.startsWith('data:')) {
               dataLines.push(line.substring(5));
-            } else if (line.startsWith('id:') || line.startsWith('retry:')) {
-              continue;
-            } else if (line.startsWith(':')) {
+            } else if (line.startsWith('id:') || line.startsWith('retry:') || line.startsWith(':')) {
               continue;
             }
           }
@@ -200,9 +245,7 @@ export class ChatService {
 
           if (eventType === 'status') {
             const statusValue = data.trim() as ActivityStatus;
-            this.ngZone.run(() => {
-              this.activityStatusSubject.next(statusValue);
-            });
+            this.ngZone.run(() => this.activityStatusSubject.next(statusValue));
           } else if (eventType === 'content') {
             aiMessage.content += data;
             this.emit();
@@ -220,6 +263,25 @@ export class ChatService {
             aiMessage.agentType = agentLabel;
             this.ngZone.run(() => this.lastAgentTypeSubject.next(agentLabel));
             this.emit();
+          } else if (eventType === 'tool_call') {
+            try {
+              const { name, label } = JSON.parse(data);
+              if (!aiMessage.actions) aiMessage.actions = [];
+              aiMessage.actions.push({ name, label, status: 'pending' });
+              this.emit();
+            } catch { /* ignore malformed */ }
+          } else if (eventType === 'tool_result') {
+            try {
+              const { name, label, success } = JSON.parse(data);
+              const step = [...(aiMessage.actions ?? [])].reverse().find(
+                (a) => a.name === name && a.status === 'pending',
+              );
+              if (step) {
+                step.label = label;
+                step.status = success ? 'done' : 'error';
+              }
+              this.emit();
+            } catch { /* ignore malformed */ }
           }
         }
       }
@@ -228,17 +290,11 @@ export class ChatService {
         const lines = buffer.split('\n');
         let eventType = '';
         const dataLines: string[] = [];
-
         for (const line of lines) {
-          if (line.startsWith('event:')) {
-            eventType = line.substring(6).trim();
-          } else if (line.startsWith('data:')) {
-            dataLines.push(line.substring(5));
-          }
+          if (line.startsWith('event:')) eventType = line.substring(6).trim();
+          else if (line.startsWith('data:')) dataLines.push(line.substring(5));
         }
-
         const data = dataLines.join('\n');
-
         if (eventType === 'content' && data) {
           aiMessage.content += data;
           this.emit();
@@ -246,33 +302,30 @@ export class ChatService {
       }
 
       this.emitImmediate();
-
       this.loadHistories();
 
-      // Detect newly created training: subscribe before calling loadTrainings so we catch the emission
-      this.trainingService.trainings$.pipe(skip(1), take(1)).subscribe((newTrainings) => {
-        const newT = newTrainings.find((t) => !knownIds.has(t.id));
-        if (newT) {
-          aiMessage.createdTraining = {
-            id: newT.id,
-            title: newT.title,
-            sportType: newT.sportType,
-            estimatedDurationSeconds: newT.estimatedDurationSeconds,
-          };
-          this.ngZone.run(() => this.emitImmediate());
-        }
-      });
-      this.trainingService.loadTrainings();
+      if (knownIds) {
+        this.trainingService.trainings$.pipe(skip(1), take(1)).subscribe((newTrainings) => {
+          const newT = newTrainings.find((t) => !knownIds.has(t.id));
+          if (newT) {
+            aiMessage.createdTraining = {
+              id: newT.id,
+              title: newT.title,
+              sportType: newT.sportType,
+              estimatedDurationSeconds: newT.estimatedDurationSeconds,
+            };
+            this.ngZone.run(() => this.emitImmediate());
+          }
+        });
+        this.trainingService.loadTrainings();
+      }
     } catch {
       if (!aiMessage.content) {
-        aiMessage.content =
-          "Sorry, I'm having trouble connecting to the assistant. Is the system operational?";
+        aiMessage.content = "Sorry, I'm having trouble connecting to the assistant. Is the system operational?";
       }
       this.emit();
     } finally {
-      this.ngZone.run(() => {
-        this.streamingSubject.next(false);
-      });
+      this.setStreaming(-1);
     }
   }
 

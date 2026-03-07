@@ -36,6 +36,7 @@ public class CompletedSession {
     private Double intensityFactor;
     private String fitFileId; // GridFS ObjectId; null when no FIT stored
     private Integer rpe;
+    private boolean syntheticCompletion; // true when created from planned data via COMPLETE button
 
     public record BlockSummary(
             String label,

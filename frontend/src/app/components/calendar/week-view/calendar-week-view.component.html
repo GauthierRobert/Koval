@@ -67,7 +67,14 @@
             (click)="workoutSelected.emit(entry.scheduled)">
             <div class="card-top">
               <span class="fused-badge">✓ DONE</span>
-              <button class="delete-btn" (click)="$event.stopPropagation(); workoutDeleted.emit(entry.scheduled)" title="Remove">&times;</button>
+              <div class="card-top-right">
+                <a class="analysis-link" [routerLink]="['/analysis', entry.session.id]" (click)="$event.stopPropagation()" title="View analysis">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                  </svg>
+                </a>
+                <button class="delete-btn" (click)="$event.stopPropagation(); workoutDeleted.emit(entry.scheduled)" title="Remove">&times;</button>
+              </div>
             </div>
             <div class="workout-info">
               <div class="title-row">

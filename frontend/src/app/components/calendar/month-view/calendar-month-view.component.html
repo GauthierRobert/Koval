@@ -7,7 +7,7 @@
       [class.other-month]="day.date.getMonth() !== startDate.getMonth()">
       <div class="cell-header">
         <span class="cell-day">{{ day.date | date : 'd' }}</span>
-        <button class="cell-add" (click)="addDay.emit(day)">+</button>
+        <button class="cell-add-bar" (click)="addDay.emit(day)">+ ADD</button>
       </div>
       <div class="cell-workouts" cdkDropList [cdkDropListData]="entriesByDay.get(day.key) || EMPTY"
         (cdkDropListDropped)="dropped.emit({ drop: $event, day: day })">

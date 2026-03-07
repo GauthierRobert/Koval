@@ -1,3 +1,9 @@
+    .top-bar.disabled {
+      pointer-events: none;
+      opacity: 0.35;
+      filter: grayscale(0.5);
+    }
+
     .top-bar {
       height: 64px;
       display: flex;

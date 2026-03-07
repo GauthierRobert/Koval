@@ -1,6 +1,6 @@
 <div class="coach-container">
   <!-- Left sidebar - full height -->
-  <div class="athlete-list" *ngIf="!showZoneManager">
+  <div class="athlete-list">
     <div class="section-header">
       <h3>ATHLETES</h3>
       <button class="add-btn" (click)="addAthlete()">+ REGISTER</button>
@@ -53,11 +53,6 @@
         </div>
       </div>
       <div class="header-right">
-        <div class="coach-tabs">
-          <button [class.active]="!showZoneManager" (click)="showZoneManager = false">ATHLETES</button>
-          <button [class.active]="showZoneManager"  (click)="showZoneManager = true">ZONES</button>
-        </div>
-        <div class="header-divider"></div>
         <div class="stat">
           <span class="label">Roster</span>
           <span class="value">{{ (athletes$ | async)?.length || 0 }}</span>
@@ -69,13 +64,8 @@
       </div>
     </div>
 
-    <!-- Zone manager -->
-    <div class="zone-content-area" *ngIf="showZoneManager">
-      <app-zone-manager [embedded]="true" (closed)="showZoneManager = false"></app-zone-manager>
-    </div>
-
     <!-- Athlete detail -->
-    <ng-container *ngIf="!showZoneManager">
+    <ng-container>
       <div class="athlete-detail" *ngIf="selectedAthlete">
         <div class="detail-header">
           <div class="profile-banner">
@@ -218,15 +208,6 @@
             </div>
           </div>
 
-          <div class="section-title" style="margin-top: 1.5rem">POWER ZONES</div>
-          <div class="zones-table">
-            <div *ngFor="let z of getPowerZones(selectedAthlete.ftp)" class="zone-row">
-              <span class="zone-dot" [style.background]="z.color"></span>
-              <span class="zone-name">{{ z.name }}</span>
-              <span class="zone-range">{{ z.low }}–{{ z.high !== null ? z.high + 'W' : '∞' }}</span>
-            </div>
-          </div>
-
           <ng-container *ngIf="athleteSessions$ | async as sessions">
             <div class="section-title" style="margin-top: 1.5rem">SPORT DISTRIBUTION</div>
             <div class="sport-dist" *ngIf="sessions.length > 0">
@@ -241,6 +222,15 @@
             </div>
             <div *ngIf="sessions.length === 0" class="empty-tab">No session data yet.</div>
           </ng-container>
+
+          <div class="section-title" style="margin-top: 1.5rem">POWER ZONES</div>
+          <div class="zones-table">
+            <div *ngFor="let z of getPowerZones(selectedAthlete.ftp)" class="zone-row">
+              <span class="zone-dot" [style.background]="z.color"></span>
+              <span class="zone-name">{{ z.name }}</span>
+              <span class="zone-range">{{ z.low }}–{{ z.high !== null ? z.high + 'W' : '∞' }}</span>
+            </div>
+          </div>
 
           <ng-container *ngIf="coachZoneSystems$ | async as systems">
             <ng-container *ngIf="systems.length > 0">

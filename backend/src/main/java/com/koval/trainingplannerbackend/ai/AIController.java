@@ -70,6 +70,21 @@ public class AIController {
         return streamResponse.events();
     }
 
+    // ── Planner ─────────────────────────────────────────────────────────
+
+    @PostMapping("/plan")
+    public ResponseEntity<?> plan(@RequestBody ChatRequest request) {
+        String msg = request.message();
+        if (msg == null || msg.isBlank()) {
+            return ResponseEntity.badRequest().body(error("empty_message", "Message cannot be empty."));
+        }
+        try {
+            return ResponseEntity.ok(aiService.plan(msg));
+        } catch (RuntimeException ex) {
+            return handleAiException(ex);
+        }
+    }
+
     // ── History ─────────────────────────────────────────────────────────
 
     @GetMapping("/history")

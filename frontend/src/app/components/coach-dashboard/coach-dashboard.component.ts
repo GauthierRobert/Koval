@@ -16,12 +16,11 @@ import { SportIconComponent } from '../sport-icon/sport-icon.component';
 import { PmcChartComponent } from '../pmc-chart/pmc-chart.component';
 
 import { Router, RouterModule } from '@angular/router';
-import { ZoneManagerComponent } from '../zone-manager/zone-manager.component';
 
 @Component({
   selector: 'app-coach-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ScheduleModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, ZoneManagerComponent, SportIconComponent, PmcChartComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ScheduleModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, SportIconComponent, PmcChartComponent],
   templateUrl: './coach-dashboard.component.html',
   styleUrl: './coach-dashboard.component.css',
 })
@@ -30,7 +29,6 @@ export class CoachDashboardComponent implements OnInit {
   isScheduleModalOpen = false;
   isInviteCodeModalOpen = false;
   isShareModalOpen = false;
-  showZoneManager = false;
   trainingToShare: Training | null = null;
   activeTagFilter: string | null = null;
   activeTab: 'performance' | 'physiology' | 'history' = 'performance';

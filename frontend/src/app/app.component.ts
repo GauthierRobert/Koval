@@ -35,7 +35,7 @@ export class AppComponent {
     private trainingService: TrainingService,
     private executionService: WorkoutExecutionService,
     private bluetoothService: BluetoothService,
-    private authService: AuthService
+    private authService: AuthService,
   ) {
     this.selectedTraining$ = this.trainingService.selectedTraining$;
     this.executionState$ = this.executionService.state$;

@@ -267,10 +267,48 @@ public class AuthController {
         List<Tag> userTags = tagService.getTagsForAthlete(user.getId());
         map.put("tags", userTags.stream().map(Tag::getName).toList());
 
+        map.put("needsOnboarding", user.isNeedsOnboarding());
+
         if (user.isCoach()) {
             List<String> athleteIds = tagService.getAthleteIdsForCoach(user.getId());
             map.put("athleteCount", athleteIds.size());
         }
         return map;
+    }
+
+    public record OnboardingRequest(UserRole role, Integer ftp, Integer criticalSwimSpeed,
+            Integer functionalThresholdPace) {
+    }
+
+    @PostMapping("/onboarding")
+    public ResponseEntity<Map<String, Object>> completeOnboarding(
+            @RequestBody OnboardingRequest request,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            String userId = parseJwtToken(authHeader.substring(7));
+            User user = userService.getUserById(userId);
+
+            if (request.role() != null) user.setRole(request.role());
+            if (request.ftp() != null) user.setFtp(request.ftp());
+            if (request.criticalSwimSpeed() != null) user.setCriticalSwimSpeed(request.criticalSwimSpeed());
+            if (request.functionalThresholdPace() != null) user.setFunctionalThresholdPace(request.functionalThresholdPace());
+            user.setNeedsOnboarding(false);
+
+            userRepository.save(user);
+
+            // Re-issue JWT with potentially updated role
+            String jwt = generateJwtToken(user);
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", jwt);
+            response.put("user", userToMap(user));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

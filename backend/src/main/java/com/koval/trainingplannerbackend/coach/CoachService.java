@@ -141,6 +141,14 @@ public class CoachService {
     }
 
     /**
+     * Check whether a coach has access to a given athlete.
+     */
+    public boolean isCoachOfAthlete(String coachId, String athleteId) {
+        List<String> athleteIds = tagService.getAthleteIdsForCoach(coachId);
+        return athleteIds.contains(athleteId);
+    }
+
+    /**
      * Remove an athlete from a coach's roster (remove from all coach tags).
      */
     public void removeAthlete(String coachId, String athleteId) {

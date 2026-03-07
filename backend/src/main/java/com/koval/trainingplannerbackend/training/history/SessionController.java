@@ -74,6 +74,11 @@ public class SessionController {
             tryAutoAssociate(session, userId);
         }
 
+        // Delete any synthetic session linked to this scheduled workout before saving real one
+        if (session.getScheduledWorkoutId() != null) {
+            deleteSyntheticSessionForSchedule(session.getScheduledWorkoutId());
+        }
+
         CompletedSession saved = repository.save(session);
 
         // Update CTL/ATL/TSB on the user document
@@ -92,6 +97,24 @@ public class SessionController {
         }
 
         return ResponseEntity.ok(saved);
+    }
+
+    /**
+     * If the given scheduled workout has a synthetic (planned) session linked, delete it
+     * so the real session can take its place.
+     */
+    private void deleteSyntheticSessionForSchedule(String scheduledWorkoutId) {
+        scheduledWorkoutRepository.findById(scheduledWorkoutId).ifPresent(sw -> {
+            if (sw.getSessionId() != null) {
+                repository.findById(sw.getSessionId()).ifPresent(existing -> {
+                    if (existing.isSyntheticCompletion()) {
+                        repository.delete(existing);
+                        sw.setSessionId(null);
+                        scheduledWorkoutRepository.save(sw);
+                    }
+                });
+            }
+        });
     }
 
     private void tryAutoAssociate(CompletedSession session, String userId) {
@@ -170,6 +193,23 @@ public class SessionController {
         return ResponseEntity.ok(repository.findByUserIdOrderByCompletedAtDesc(userId));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<CompletedSession> getById(@PathVariable String id) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return repository.findById(id)
+                .filter(s -> userId.equals(s.getUserId()) || isCoachOfAthlete(userId, s.getUserId()))
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    private boolean isCoachOfAthlete(String coachId, String athleteId) {
+        try {
+            return coachService.isCoachOfAthlete(coachId, athleteId);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     @GetMapping("/calendar")
     public ResponseEntity<List<CompletedSession>> listForCalendar(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
@@ -198,6 +238,9 @@ public class SessionController {
                 scheduledWorkoutRepository.save(oldSw);
             });
         }
+
+        // Delete any synthetic session already linked to the target scheduled workout
+        deleteSyntheticSessionForSchedule(scheduledWorkoutId);
 
         session.setScheduledWorkoutId(scheduledWorkoutId);
         CompletedSession saved = repository.save(session);
