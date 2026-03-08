@@ -34,7 +34,7 @@
 
     .export-btn {
       background: rgba(255, 255, 255, 0.1);
-      color: white;
+      color: var(--color-white);
       border: 1px solid var(--glass-border);
       padding: 10px 18px;
       border-radius: 10px;
@@ -88,7 +88,7 @@
 
     .dropdown-item:hover {
       background: rgba(255, 255, 255, 0.1);
-      color: white;
+      color: var(--color-white);
     }
 
     .schedule-btn,
@@ -110,8 +110,8 @@
     }
 
     .start-btn {
-      background: #2ecc71;
-      color: white;
+      background: var(--positive-color);
+      color: var(--color-white);
       border: none;
       padding: 12px 24px;
       border-radius: 12px;
@@ -233,7 +233,7 @@
     .tooltip-power {
       font-size: 16px;
       font-weight: 700;
-      color: white;
+      color: var(--color-white);
     }
 
     .tooltip-watts {
@@ -367,7 +367,7 @@
 
     .details-btn:hover {
       background: rgba(255, 255, 255, 0.1);
-      color: white;
+      color: var(--color-white);
       border-color: rgba(255, 255, 255, 0.3);
     }
 
@@ -441,7 +441,7 @@
 
     .col-label {
       font-weight: 600;
-      color: white;
+      color: var(--color-white);
     }
 
     .col-dur {

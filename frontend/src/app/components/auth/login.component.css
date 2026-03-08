@@ -38,7 +38,7 @@
     .logo-inner {
       width: 18px;
       height: 18px;
-      background: white;
+      background: var(--color-white);
       clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
     }
 
@@ -90,13 +90,13 @@
     }
 
     .auth-btn.strava {
-      background: #fc4c02;
-      color: white;
+      background: var(--strava-color);
+      color: var(--color-white);
     }
 
     .auth-btn.google {
-      background: white;
-      color: #333;
+      background: var(--color-white);
+      color: var(--color-dark-gray);
     }
 
     /* DEV ONLY */
@@ -126,7 +126,7 @@
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 8px;
       padding: 10px 12px;
-      color: #e0e0e0;
+      color: var(--color-light-gray);
       font-size: 13px;
       font-family: inherit;
       outline: none;
@@ -141,7 +141,7 @@
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 8px;
       padding: 10px 8px;
-      color: #e0e0e0;
+      color: var(--color-light-gray);
       font-size: 11px;
       font-weight: 700;
       font-family: inherit;
@@ -155,7 +155,7 @@
 
     .dev-btn {
       background: #f59e0b;
-      color: #000;
+      color: var(--color-black);
       border: none;
       border-radius: 8px;
       padding: 10px 16px;

@@ -29,7 +29,7 @@
       font-weight: 600;
       transition: all 0.2s;
     }
-    .stop-btn:hover { background: var(--danger-color); color: #fff; }
+    .stop-btn:hover { background: var(--danger-color); color: var(--color-white); }
 
     .top-controls { display: flex; align-items: center; gap: 20px; }
 
@@ -120,7 +120,7 @@
     .control-btn.primary { background: var(--text-color); color: var(--bg-color); }
     .control-btn.secondary { background: var(--surface-hover); color: var(--text-color); border: 1px solid var(--glass-border); }
     .control-btn:hover { transform: scale(1.05); }
-    .control-btn.danger { background: var(--danger-color); color: #fff; border: none; }
+    .control-btn.danger { background: var(--danger-color); color: var(--color-white); border: none; }
 
     .top-center { align-items: flex-start; padding-top: 100px; }
     .confirmation-card { padding: 40px; width: 600px; }

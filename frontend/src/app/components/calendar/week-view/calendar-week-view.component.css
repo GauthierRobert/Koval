@@ -124,12 +124,12 @@
 
 .completed .status-badge {
   background: var(--success-color);
-  color: #000;
+  color: var(--color-black);
 }
 
 .skipped .status-badge {
   background: var(--danger-color);
-  color: #fff;
+  color: var(--color-white);
   opacity: 0.8;
 }
 
@@ -229,7 +229,7 @@
 
 .btn-complete {
   background: var(--accent-color);
-  color: #000;
+  color: var(--color-black);
 }
 
 .btn-complete:hover {
@@ -316,7 +316,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   background: var(--success-color);
-  color: #000;
+  color: var(--color-black);
 }
 
 .fused-metrics { display: flex; align-items: flex-start; gap: 0.4rem; }
@@ -348,7 +348,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   background: var(--session-color);
-  color: #fff;
+  color: var(--color-white);
 }
 
 .btn-link-session {

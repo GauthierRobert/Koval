@@ -65,7 +65,7 @@
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 8px;
       padding: 8px 12px;
-      color: #e0e0e0;
+      color: var(--color-light-gray);
       font-size: 12px;
       font-family: inherit;
       outline: none;
@@ -86,7 +86,7 @@
       border-radius: 10px;
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.15);
-      color: #ccc;
+      color: var(--color-medium-gray);
       cursor: pointer;
       transition: all 0.2s;
     }
@@ -109,7 +109,7 @@
 
     .save-btn {
       background: var(--accent-color);
-      color: #000;
+      color: var(--color-black);
       border: none;
       padding: 10px 20px;
       border-radius: 8px;

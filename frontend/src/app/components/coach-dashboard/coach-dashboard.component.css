@@ -17,7 +17,6 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--glass-border);
-  background: var(--sidebar-color);
 }
 
 .header-left {
@@ -159,12 +158,10 @@
   display: flex;
   flex-direction: column;
   padding: 1rem;
-  border-radius: 0;
   border-right: 1px solid var(--glass-border);
   border-top: none;
   border-bottom: none;
   border-left: none;
-  background: var(--sidebar-color);
   overflow-y: auto;
 }
 
@@ -307,7 +304,7 @@
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #ccc;
+  color: var(--color-medium-gray);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -372,7 +369,7 @@
   justify-content: center;
   font-weight: 800;
   font-size: 18px;
-  color: #fff;
+  color: var(--color-white);
   flex-shrink: 0;
 }
 
@@ -496,7 +493,7 @@
 
 .assign-btn:hover {
   background: var(--accent-color);
-  color: #000;
+  color: var(--color-black);
   border-color: transparent;
 }
 

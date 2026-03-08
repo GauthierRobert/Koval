@@ -99,7 +99,7 @@
 
 .view-selector button.active {
   background: var(--accent-color);
-  color: #000;
+  color: var(--color-black);
 }
 
 .nav-controls {
@@ -154,7 +154,7 @@
 
 .today-btn:hover {
   background: var(--accent-color);
-  color: #000;
+  color: var(--color-black);
 }
 
 /* CDK drag-drop — must be in a non-encapsulated scope since preview is appended to body */

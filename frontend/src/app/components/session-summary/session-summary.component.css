@@ -24,7 +24,7 @@
 
     .summary-header { text-align: center; margin-bottom: 40px; }
     .summary-header h1 { font-size: 14px; color: var(--accent-color); letter-spacing: 4px; margin-bottom: 8px; font-weight: 800; }
-    .workout-title { font-size: 32px; font-weight: 700; color: white; }
+    .workout-title { font-size: 32px; font-weight: 700; color: var(--color-white); }
 
     .top-stats {
       display: grid;
@@ -39,8 +39,8 @@
       text-align: center;
     }
     .stat-item .label { display: block; font-size: 10px; color: rgba(255,255,255,0.5); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
-    .stat-item .value { font-size: 24px; font-weight: 800; color: white; }
-    .stat-item .value.hr { color: #e74c3c; }
+    .stat-item .value { font-size: 24px; font-weight: 800; color: var(--color-white); }
+    .stat-item .value.hr { color: var(--negative-color); }
 
     .table-container {
       max-height: 400px;
@@ -66,7 +66,7 @@
     .summary-table td {
       padding: 15px 20px;
       font-size: 15px;
-      color: white;
+      color: var(--color-white);
       border-bottom: 1px solid rgba(255,255,255,0.03);
     }
 
@@ -79,14 +79,14 @@
       background: rgba(255,255,255,0.1);
       text-transform: uppercase;
     }
-    .block-type.warmup { background: rgba(52, 152, 219, 0.2); color: #3498db; }
-    .block-type.interval { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
-    .block-type.cooldown { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
-    .block-type.steady { background: rgba(155, 89, 182, 0.2); color: #9b59b6; }
+    .block-type.warmup { background: rgba(52, 152, 219, 0.2); color: var(--metric-cadence); }
+    .block-type.interval { background: rgba(231, 76, 60, 0.2); color: var(--negative-color); }
+    .block-type.cooldown { background: rgba(46, 204, 113, 0.2); color: var(--positive-color); }
+    .block-type.steady { background: rgba(155, 89, 182, 0.2); color: var(--block-steady); }
 
     .delta { font-weight: 700; }
-    .delta.positive { color: #2ecc71; }
-    .delta.negative { color: #e74c3c; }
+    .delta.positive { color: var(--positive-color); }
+    .delta.negative { color: var(--negative-color); }
 
     .summary-footer {
       display: flex;
@@ -116,7 +116,7 @@
     }
     .done-btn {
       background: var(--accent-color);
-      color: white;
+      color: var(--color-white);
       border: none;
       padding: 15px 60px;
       font-size: 18px;

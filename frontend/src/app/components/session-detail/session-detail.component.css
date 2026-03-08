@@ -21,7 +21,7 @@
 .detail-header h1 {
   font-size: 28px;
   font-weight: 700;
-  color: white;
+  color: var(--color-white);
   margin: 0 0 6px;
 }
 
@@ -56,11 +56,11 @@
 .stat-item .value {
   font-size: 24px;
   font-weight: 800;
-  color: white;
+  color: var(--color-white);
 }
 
 .stat-item .value.hr {
-  color: #e74c3c;
+  color: var(--negative-color);
 }
 
 .chart-section {
@@ -100,12 +100,12 @@
   border-radius: 50%;
 }
 
-.toggle-btn.power { color: #f39c12; }
-.toggle-btn.power .dot { background: #f39c12; }
-.toggle-btn.heartrate { color: #e74c3c; }
-.toggle-btn.heartrate .dot { background: #e74c3c; }
-.toggle-btn.cadence { color: #3498db; }
-.toggle-btn.cadence .dot { background: #3498db; }
+.toggle-btn.power { color: var(--metric-power); }
+.toggle-btn.power .dot { background: var(--metric-power); }
+.toggle-btn.heartrate { color: var(--metric-heartrate); }
+.toggle-btn.heartrate .dot { background: var(--metric-heartrate); }
+.toggle-btn.cadence { color: var(--metric-cadence); }
+.toggle-btn.cadence .dot { background: var(--metric-cadence); }
 
 .toggle-btn:not(.active) .dot {
   opacity: 0.3;
@@ -161,7 +161,7 @@
 .summary-table td {
   padding: 14px 18px;
   font-size: 14px;
-  color: white;
+  color: var(--color-white);
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
 }
 
@@ -175,21 +175,21 @@
   text-transform: uppercase;
 }
 
-.block-type.warmup { background: rgba(52, 152, 219, 0.2); color: #3498db; }
-.block-type.interval { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
-.block-type.cooldown { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
-.block-type.steady { background: rgba(155, 89, 182, 0.2); color: #9b59b6; }
-.block-type.ramp { background: rgba(241, 196, 15, 0.2); color: #f1c40f; }
-.block-type.free { background: rgba(149, 165, 166, 0.2); color: #95a5a6; }
+.block-type.warmup { background: rgba(52, 152, 219, 0.2); color: var(--metric-cadence); }
+.block-type.interval { background: rgba(231, 76, 60, 0.2); color: var(--negative-color); }
+.block-type.cooldown { background: rgba(46, 204, 113, 0.2); color: var(--positive-color); }
+.block-type.steady { background: rgba(155, 89, 182, 0.2); color: var(--block-steady); }
+.block-type.ramp { background: rgba(241, 196, 15, 0.2); color: var(--block-ramp); }
+.block-type.free { background: rgba(149, 165, 166, 0.2); color: var(--block-free); }
 
 .delta {
   font-weight: 700;
 }
 
 .delta.positive {
-  color: #2ecc71;
+  color: var(--positive-color);
 }
 
 .delta.negative {
-  color: #e74c3c;
+  color: var(--negative-color);
 }

@@ -103,7 +103,7 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
   padding: 8px 12px;
-  color: #e0e0e0;
+  color: var(--color-light-gray);
   font-size: 14px;
   font-family: 'SF Mono', 'Fira Code', monospace;
   font-weight: 700;
@@ -125,7 +125,7 @@
 
 .join-btn {
   background: var(--accent-color);
-  color: #000;
+  color: var(--color-black);
   border: none;
   padding: 8px 16px;
   border-radius: 8px;
@@ -185,7 +185,7 @@
 
 .cta-btn {
   background: var(--accent-color);
-  color: white;
+  color: var(--color-white);
   border: none;
   padding: 1rem 2rem;
   border-radius: 12px;

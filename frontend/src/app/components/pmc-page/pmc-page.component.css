@@ -141,14 +141,14 @@
   color: var(--text-muted);
 }
 .load-badge.ctl .badge-label { color: var(--accent-color); }
-.load-badge.atl .badge-label { color: #e74c3c; }
-.load-badge.tsb.positive .badge-label { color: #3b82f6; }
-.load-badge.tsb.negative .badge-label { color: #f87171; }
+.load-badge.atl .badge-label { color: var(--negative-color); }
+.load-badge.tsb.positive .badge-label { color: var(--chart-tsb-positive); }
+.load-badge.tsb.negative .badge-label { color: var(--metric-fatigue); }
 
 .badge-value {
   font-size: 20px;
   font-weight: 800;
-  color: #fff;
+  color: var(--color-white);
   line-height: 1.2;
 }
 
@@ -185,7 +185,7 @@
   transition: all 0.15s;
 }
 
-.period-btn:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.period-btn:hover { background: rgba(255, 255, 255, 0.08); color: var(--color-white); }
 
 .period-btn.active {
   background: rgba(255, 157, 0, 0.15);
@@ -211,7 +211,7 @@
 
 .chart-error {
   font-size: 11px;
-  color: #f87171;
+  color: var(--metric-fatigue);
   text-align: center;
 }
 
@@ -299,7 +299,7 @@
 
 .peak-icon {
   font-size: 22px;
-  color: #3b82f6;
+  color: var(--chart-tsb-positive);
 }
 
 .peak-info {
@@ -311,12 +311,12 @@
 .peak-date {
   font-size: 13px;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-white);
 }
 
 .peak-tsb {
   font-size: 11px;
-  color: #3b82f6;
+  color: var(--chart-tsb-positive);
 }
 
 .no-peak {

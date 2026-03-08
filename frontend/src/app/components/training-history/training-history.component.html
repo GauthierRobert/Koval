@@ -43,8 +43,6 @@
     </div>
   </div>
 
-  <h3 class="section-title">Your Workouts</h3>
-
   <div class="history-list">
     <div *ngFor="let training of filteredTrainings$ | async" class="history-item"
       [class.selected]="(selectedTraining$ | async)?.id === training.id" (click)="onSelect(training)">

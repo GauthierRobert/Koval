@@ -59,7 +59,7 @@
 
 .month-cell.today .cell-day {
   background: var(--accent-color);
-  color: #000;
+  color: var(--color-black);
   width: 22px;
   height: 22px;
   display: flex;

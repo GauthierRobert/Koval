@@ -236,7 +236,7 @@
 .start-btn {
   flex: 1;
   background: var(--success-color);
-  color: #000;
+  color: var(--color-black);
   border: none;
   padding: 14px 24px;
   border-radius: 12px;

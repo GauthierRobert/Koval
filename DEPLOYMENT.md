@@ -22,9 +22,7 @@ This guide walks through the one-time GCP setup required for the GitHub Actions 
 ## 1. Create the GCP Project
 
 ```bash
-gcloud projects create koval-training --name="Koval Training"
-gcloud config set project koval-training
-gcloud beta billing projects link koval-training --billing-account=YOUR_BILLING_ACCOUNT_ID
+gcloud projects create koval-training --name="Koval Training" && gcloud config set project koval-training && gcloud beta billing projects link koval-training --billing-account=YOUR_BILLING_ACCOUNT_ID
 ```
 
 Get your billing account ID:
@@ -37,13 +35,7 @@ gcloud beta billing accounts list
 ## 2. Enable Required APIs
 
 ```bash
-gcloud services enable \
-  run.googleapis.com \
-  artifactregistry.googleapis.com \
-  secretmanager.googleapis.com \
-  cloudbuild.googleapis.com \
-  iam.googleapis.com \
-  firebase.googleapis.com
+gcloud services enable   run.googleapis.com   artifactregistry.googleapis.com   secretmanager.googleapis.com  cloudbuild.googleapis.com   iam.googleapis.com  firebase.googleapis.com
 ```
 
 ---

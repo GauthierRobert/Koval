@@ -126,7 +126,7 @@
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 20px;
       padding: 6px 14px;
-      color: #e0e0e0;
+      color: var(--color-light-gray);
       font-size: 12px;
       font-family: inherit;
       width: 120px;
@@ -174,7 +174,7 @@
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 10px;
       padding: 10px 14px;
-      color: #e0e0e0;
+      color: var(--color-light-gray);
       font-size: 14px;
       font-family: inherit;
       width: 110px;
@@ -186,7 +186,7 @@
 
     .generate-btn {
       background: var(--accent-color);
-      color: #000;
+      color: var(--color-black);
       border: none;
       padding: 12px 28px;
       border-radius: 10px;

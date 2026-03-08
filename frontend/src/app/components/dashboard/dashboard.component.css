@@ -49,19 +49,19 @@
 }
 
 .stat-value.fitness {
-  color: #60a5fa;
+  color: var(--metric-fitness);
 }
 
 .stat-value.fatigue {
-  color: #f87171;
+  color: var(--metric-fatigue);
 }
 
 .stat-value.form-positive {
-  color: #4ade80;
+  color: var(--positive-alt);
 }
 
 .stat-value.form-negative {
-  color: #f87171;
+  color: var(--metric-fatigue);
 }
 
 .stat-value.form-neutral {
@@ -140,7 +140,7 @@
 }
 
 .overdue-label {
-  color: #f87171;
+  color: var(--metric-fatigue);
 }
 
 .week-label {
@@ -184,7 +184,7 @@
 
 .workout-chip.overdue:hover {
   background: rgba(248, 113, 113, 0.15);
-  border-color: #f87171;
+  border-color: var(--metric-fatigue);
 }
 
 .chip-date {
@@ -309,11 +309,11 @@
 
 /* ─── Trend colors ──────────────────────────────────────────── */
 .trend-up {
-  color: #4ade80;
+  color: var(--positive-alt);
 }
 
 .trend-down {
-  color: #f87171;
+  color: var(--metric-fatigue);
 }
 
 /* ─── Next + Latest row ─────────────────────────────────────── */
@@ -422,7 +422,7 @@
   padding: 2px 6px;
   border-radius: 3px;
   background: rgba(74, 222, 128, 0.15);
-  color: #4ade80;
+  color: var(--positive-alt);
   border: 1px solid rgba(74, 222, 128, 0.3);
 }
 

@@ -112,7 +112,7 @@
       align-items: center;
       gap: 8px;
       font-size: 12px;
-      color: #ccc;
+      color: var(--color-medium-gray);
       cursor: pointer;
       padding: 4px 0;
     }
@@ -135,7 +135,7 @@
       border-radius: 10px;
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.15);
-      color: #ccc;
+      color: var(--color-medium-gray);
       cursor: pointer;
       transition: all 0.2s;
     }
@@ -170,7 +170,7 @@
     .submit-btn {
       background: var(--accent-color);
       border: none;
-      color: #000;
+      color: var(--color-black);
       padding: 8px 20px;
       border-radius: 8px;
       font-size: 11px;

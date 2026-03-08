@@ -379,7 +379,7 @@
 
 .save-btn {
   background: var(--accent-color);
-  color: #000;
+  color: var(--color-black);
   border: none;
   padding: 8px 20px;
   border-radius: 6px;
@@ -402,7 +402,7 @@
 
 .save-btn.saved {
   background: #22c55e;
-  color: #000;
+  color: var(--color-black);
 }
 
 .delete-btn {

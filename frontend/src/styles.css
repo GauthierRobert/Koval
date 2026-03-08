@@ -35,6 +35,48 @@
 
   /* Richer card surface — the "dark blue" of glass elements */
   --surface-card: rgba(22, 22, 28, 0.92);
+
+  /* Semantic colors for UI elements */
+  --color-white: #fff;
+  --color-black: #000;
+  --color-light-gray: #e0e0e0;
+  --color-medium-gray: #ccc;
+  --color-dark-gray: #333;
+  --color-very-dark: #1e272e;
+
+  /* External brand colors */
+  --strava-color: #fc4c02;
+  --dev-accent-color: #f59e0b;
+  --google-white: #fff;
+  --google-text: #333;
+
+  /* Positive/negative sentiment colors (for metrics and comparisons) */
+  --positive-color: #2ecc71;
+  --positive-alt: #4ade80;
+  --negative-color: #e74c3c;
+
+  /* Chart/metric colors */
+  --metric-fitness: #60a5fa;
+  --metric-fatigue: #f87171;
+  --metric-form-positive: #4ade80;
+  --metric-form-negative: #f87171;
+  --metric-power: #f39c12;
+  --metric-heartrate: #e74c3c;
+  --metric-cadence: #3498db;
+
+  /* Workout block type colors */
+  --block-warmup: #3498db;
+  --block-cooldown: #6c5ce7;
+  --block-interval: #e74c3c;
+  --block-steady: #9b59b6;
+  --block-ramp: #f1c40f;
+  --block-free: #95a5a6;
+
+  /* Chart colors for visualization */
+  --chart-tsb-positive: #3b82f6;
+  --chart-tsb-negative: #e74c3c;
+  --chart-warmup: #0984e3;
+  --chart-cooldown: #6c5ce7;
 }
 
 * {
@@ -140,4 +182,14 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+  border-radius: 12px
 }

@@ -190,7 +190,7 @@ h3 {
 
 .save-btn {
     background: var(--accent-color);
-    color: #fff;
+    color: var(--color-white);
     border: none;
     padding: 10px 36px;
     border-radius: 8px;
@@ -213,5 +213,5 @@ h3 {
 }
 
 .saved-text {
-    color: #4ade80;
+    color: var(--positive-alt);
 }

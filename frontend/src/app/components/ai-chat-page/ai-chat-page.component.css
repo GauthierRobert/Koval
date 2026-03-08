@@ -14,15 +14,6 @@
   background: var(--sidebar-color);
 }
 
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 14px 12px;
-  border-bottom: 1px solid var(--glass-border);
-  flex-shrink: 0;
-}
-
 .sidebar-title {
   font-size: 10px;
   font-weight: 800;
@@ -323,7 +314,7 @@ textarea::placeholder {
 
 .send-button-technical:not(:disabled):hover {
   background: var(--accent-color);
-  color: white;
+  color: var(--color-white);
   border-color: transparent;
 }
 
@@ -411,7 +402,7 @@ textarea::placeholder {
   flex-shrink: 0;
   padding: 6px 12px;
   background: var(--accent-color, #00d4ff);
-  color: #000;
+  color: var(--color-black);
   border: none;
   border-radius: 4px;
   font-size: 11px;
@@ -511,7 +502,7 @@ textarea::placeholder {
 .run-parallel-btn {
   align-self: flex-start;
   background: var(--accent-color);
-  color: #000;
+  color: var(--color-black);
   border: none;
   border-radius: 6px;
   padding: 6px 14px;
