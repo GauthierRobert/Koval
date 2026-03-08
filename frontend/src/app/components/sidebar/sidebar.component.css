@@ -6,7 +6,24 @@
   background: var(--sidebar-color);
   border-right: 1px solid var(--glass-border);
   backdrop-filter: blur(20px);
-  padding: 16px 0;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.sidebar-title {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin: 0;
+  flex: 1;
 }
 
 .sidebar-content {

@@ -181,8 +181,8 @@
 
 .delete-btn {
   background: none;
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  color: #ef4444;
+  border: 1px solid var(--danger-border);
+  color: var(--danger-color);
   border-radius: 4px;
   font-size: 0.6rem;
   font-weight: 700;
@@ -193,7 +193,7 @@
 }
 
 .delete-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--danger-subtle);
 }
 
 /* Task 5: Invite button per tag */
@@ -283,5 +283,5 @@
 }
 
 .remove-btn:hover {
-  color: #ef4444;
+  color: var(--danger-color);
 }

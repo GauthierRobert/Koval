@@ -297,7 +297,7 @@ export class WorkoutVisualizationComponent {
     this.closeDropdownListener(); // Close menu
     // Use current FTP value from service, default to 250
     this.trainingService.ftp$.subscribe(ftp => {
-      this.exportService.exportToZwift(this.training!, ftp);
+      this.exportService.exportToZwift(this.training!, ftp ?? undefined);
     }).unsubscribe();
   }
 

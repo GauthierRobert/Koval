@@ -29,7 +29,7 @@
 .header-avatar {
   width: 34px;
   height: 34px;
-  background: rgba(255, 157, 0, 0.12);
+  background: var(--accent-subtle);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -118,13 +118,13 @@
 }
 
 .coach-tabs button:hover {
-  background: rgba(255, 157, 0, 0.1);
-  border-color: rgba(255, 157, 0, 0.3);
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
   color: var(--accent-color);
 }
 
 .coach-tabs button.active {
-  background: rgba(255, 157, 0, 0.12);
+  background: var(--accent-subtle);
   border-color: var(--accent-color);
   color: var(--accent-color);
 }
@@ -182,8 +182,8 @@
 }
 
 .add-btn {
-  background: rgba(255, 157, 0, 0.08);
-  border: 1px solid rgba(255, 157, 0, 0.2);
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
   color: var(--accent-color);
   padding: 4px 10px;
   border-radius: 6px;
@@ -194,7 +194,7 @@
 }
 
 .add-btn:hover {
-  background: rgba(255, 157, 0, 0.15);
+  background: var(--accent-hover);
 }
 
 .athletes {
@@ -221,14 +221,14 @@
 }
 
 .athlete-row.selected {
-  background: rgba(255, 157, 0, 0.05);
-  border-color: rgba(255, 157, 0, 0.2);
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
 }
 
 .avatar-sm {
   width: 32px;
   height: 32px;
-  background: rgba(255, 157, 0, 0.12);
+  background: var(--accent-subtle);
   color: var(--accent-color);
   border-radius: 6px;
   display: flex;
@@ -313,12 +313,12 @@
 }
 
 .tag-filter-chip:hover {
-  background: rgba(255, 157, 0, 0.12);
+  background: var(--accent-subtle);
   color: var(--accent-color);
 }
 
 .tag-filter-chip.active {
-  background: rgba(255, 157, 0, 0.2);
+  background: var(--accent-hover);
   border-color: var(--accent-color);
   color: var(--accent-color);
 }
@@ -403,8 +403,8 @@
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 10px;
-  background: rgba(255, 157, 0, 0.1);
-  border: 1px solid rgba(255, 157, 0, 0.25);
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
   color: var(--accent-color);
   display: flex;
   align-items: center;
@@ -482,9 +482,9 @@
 }
 
 .assign-btn {
-  background: rgba(255, 157, 0, 0.12);
+  background: var(--accent-subtle);
   color: var(--accent-color);
-  border: 1px solid rgba(255, 157, 0, 0.25);
+  border: 1px solid var(--accent-border);
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 10px;
@@ -649,7 +649,7 @@
 }
 
 .week-nav-btn:hover {
-  background: rgba(255, 157, 0, 0.12);
+  background: var(--accent-subtle);
 }
 
 .week-label {
@@ -792,8 +792,8 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: rgba(255, 157, 0, 0.06);
-  border: 1px solid rgba(255, 157, 0, 0.15);
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -835,9 +835,9 @@
 }
 
 .view-pmc-btn {
-  background: rgba(255, 157, 0, 0.08);
+  background: var(--accent-subtle);
   color: var(--accent-color);
-  border: 1px solid rgba(255, 157, 0, 0.2);
+  border: 1px solid var(--accent-border);
   padding: 5px 12px;
   border-radius: 6px;
   font-size: 9px;
@@ -848,7 +848,7 @@
 }
 
 .view-pmc-btn:hover {
-  background: rgba(255, 157, 0, 0.15);
+  background: var(--accent-hover);
   border-color: var(--accent-color);
 }
 
@@ -883,7 +883,7 @@
 
 .sm-row:hover { background: rgba(255, 255, 255, 0.04); }
 
-.sm-sport { display: flex; align-items: center; color: #2ecc71; }
+.sm-sport { display: flex; align-items: center; color: var(--success-color); }
 
 .sm-title {
   white-space: nowrap;
@@ -900,8 +900,8 @@
 }
 
 .sm-badge.tss {
-  background: rgba(255, 157, 0, 0.12);
-  border: 1px solid rgba(255, 157, 0, 0.25);
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
   color: var(--accent-color);
 }
 

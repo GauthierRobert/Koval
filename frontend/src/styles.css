@@ -15,6 +15,26 @@
   --accent-color: #ff9d00;
   --success-color: #34d399;
   --danger-color: #f87171;
+
+  /* Semantic tints — used for card types and states */
+  --accent-subtle: rgba(255, 157, 0, 0.08);
+  --accent-border: rgba(255, 157, 0, 0.25);
+  --accent-hover: rgba(255, 157, 0, 0.15);
+
+  --success-subtle: rgba(52, 211, 153, 0.08);
+  --success-border: rgba(52, 211, 153, 0.22);
+
+  --danger-subtle: rgba(248, 113, 113, 0.08);
+  --danger-border: rgba(248, 113, 113, 0.25);
+
+  /* Cyan — used for standalone FIT sessions */
+  --session-color: #0891b2;
+  --session-subtle: rgba(8, 145, 178, 0.08);
+  --session-border: rgba(8, 145, 178, 0.25);
+  --session-text: #38bdf8;
+
+  /* Richer card surface — the "dark blue" of glass elements */
+  --surface-card: rgba(22, 22, 28, 0.92);
 }
 
 * {

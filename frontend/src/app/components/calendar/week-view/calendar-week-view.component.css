@@ -20,13 +20,13 @@
   min-width: 0;
   overflow: hidden;
   max-height: 520px;
-  background: var(--surface-elevated);
+  background: var(--surface-card);
   border: 1px solid var(--glass-border);
 }
 
 .day-column.today {
-  background: rgba(255, 157, 0, 0.04);
-  border: 1px solid rgba(255, 157, 0, 0.25);
+  background: rgba(255, 157, 0, 0.06);
+  border: 1px solid var(--accent-border);
 }
 
 .day-header {
@@ -63,7 +63,7 @@
 
 /* Workout Card */
 .workout-card {
-  background: var(--surface-hover);
+  background: var(--surface-elevated);
   padding: 0.8rem;
   border-radius: 8px;
   display: flex;
@@ -71,7 +71,7 @@
   gap: 0.6rem;
   position: relative;
   border: 1px solid var(--glass-border);
-  border-top: none;
+  border-top: 3px solid var(--accent-color);
 }
 
 .workout-card.clickable {
@@ -81,12 +81,13 @@
 
 .workout-card.clickable:hover {
   background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 157, 0, 0.3);
+  border-color: var(--accent-border);
 }
 
 .completed {
-  border-color: rgba(52, 211, 153, 0.2);
-  background: rgba(52, 211, 153, 0.05);
+  border-color: var(--success-border);
+  background: var(--success-subtle);
+  border-top-color: var(--success-color);
 }
 
 .skipped {
@@ -269,7 +270,7 @@
 .add-btn:hover {
   border-color: var(--accent-color);
   color: var(--accent-color);
-  background: rgba(255, 157, 0, 0.05);
+  background: var(--accent-subtle);
 }
 
 .rest-day {
@@ -288,15 +289,16 @@
 
 /* Fused card */
 .workout-card--fused {
-  border-color: rgba(52, 211, 153, 0.3);
-  background: rgba(52, 211, 153, 0.06);
+  border-color: var(--success-border);
+  background: var(--success-subtle);
+  border-top-color: var(--success-color);
 }
 
 .analysis-link {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #34d399;
+  color: var(--success-color);
   opacity: 0.7;
   text-decoration: none;
   transition: opacity 0.2s;
@@ -313,7 +315,7 @@
   border-radius: 4px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: #34d399;
+  background: var(--success-color);
   color: #000;
 }
 
@@ -326,14 +328,15 @@
   letter-spacing: 1px;
   color: var(--text-muted);
 }
-.fused-col--actual .fused-label { color: #34d399; }
+.fused-col--actual .fused-label { color: var(--success-color); }
 .fused-divider { width: 1px; background: var(--glass-border); align-self: stretch; margin: 0.2rem 0; }
 
 /* Standalone session card */
 .workout-card--session {
-  border-color: rgba(8, 145, 178, 0.3);
-  background: rgba(8, 145, 178, 0.06);
-  border-left: 3px solid #0891b2 !important;
+  border-color: var(--session-border);
+  background: var(--session-subtle);
+  border-left: 3px solid var(--session-color) !important;
+  border-top: none;
   position: relative;
 }
 
@@ -344,14 +347,14 @@
   border-radius: 4px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: #0891b2;
+  background: var(--session-color);
   color: #fff;
 }
 
 .btn-link-session {
-  background: rgba(8, 145, 178, 0.15);
-  border: 1px solid rgba(8, 145, 178, 0.4);
-  color: #38bdf8;
+  background: var(--session-subtle);
+  border: 1px solid var(--session-border);
+  color: var(--session-text);
   font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.5px;
@@ -362,7 +365,7 @@
   width: 100%;
 }
 
-.btn-link-session:hover { background: rgba(8, 145, 178, 0.3); }
+.btn-link-session:hover { background: rgba(8, 145, 178, 0.2); }
 
 /* Task 4: Link picker modal overlay */
 .link-modal-overlay {
@@ -377,8 +380,8 @@
 }
 
 .link-modal {
-  background: #0f1923;
-  border: 1px solid #0891b2;
+  background: var(--surface-color);
+  border: 1px solid var(--session-border);
   border-radius: 14px;
   padding: 1.5rem;
   width: 420px;
@@ -409,7 +412,7 @@
 }
 
 .link-modal-session strong {
-  color: #38bdf8;
+  color: var(--session-text);
 }
 
 .link-modal-list {
@@ -430,13 +433,13 @@
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-color);
-  background: rgba(8, 145, 178, 0.06);
-  border: 1px solid rgba(8, 145, 178, 0.15);
+  background: var(--session-subtle);
+  border: 1px solid var(--session-border);
   transition: all 0.15s;
 }
 
 .link-picker-item:hover {
-  background: rgba(8, 145, 178, 0.18);
+  background: rgba(8, 145, 178, 0.15);
   border-color: rgba(8, 145, 178, 0.4);
 }
 

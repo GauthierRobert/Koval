@@ -54,7 +54,7 @@
 }
 
 .month-cell.today {
-  background: rgba(255, 157, 0, 0.03);
+  background: var(--accent-subtle);
 }
 
 .month-cell.today .cell-day {
@@ -101,8 +101,8 @@
 
 .month-cell:hover .cell-add-bar {
   opacity: 1;
-  border-color: rgba(255, 157, 0, 0.35);
-  background: rgba(255, 157, 0, 0.06);
+  border-color: var(--accent-border);
+  background: var(--accent-subtle);
 }
 
 .cell-workouts {
@@ -129,7 +129,7 @@
 
 .mini-card:hover {
   transform: translateX(2px);
-  border-color: rgba(255, 157, 0, 0.4);
+  border-color: var(--accent-border);
 }
 
 .mini-title {
@@ -148,5 +148,5 @@
   opacity: 0.8;
 }
 
-.mini-card--fused { background: rgba(52, 211, 153, 0.08); }
-.mini-card--session { background: rgba(8, 145, 178, 0.08); }
+.mini-card--fused { background: var(--success-subtle); border-color: var(--success-border); }
+.mini-card--session { background: var(--session-subtle); border-color: var(--session-border); }

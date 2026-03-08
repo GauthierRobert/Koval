@@ -38,7 +38,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     const blockLabel = training?.blocks?.[state.currentBlockIndex]?.label || 'WORKOUT';
     const nextStepBlock = training?.blocks?.[state.currentBlockIndex + 1];
     const nextStep = nextStepBlock?.label || (nextStepBlock ? 'RECOVERY' : 'FINISH');
-    const ftp = this.trainingService['ftpSubject'].value;
+    const ftp = this.trainingService['ftpSubject'].value ?? 250;
     const nextStepPower = nextStepBlock ? Math.round((ftp * (nextStepBlock.intensityTarget || 0)) / 100) : 0;
 
     const data = {
@@ -201,7 +201,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     if (!state.training) return 0;
     const block = state.training.blocks[state.currentBlockIndex];
     if (state.training.sportType !== 'CYCLING') return this.getCurrentTargetIntensity(state);
-    const ftp = this.trainingService['ftpSubject'].value;
+    const ftp = this.trainingService['ftpSubject'].value ?? 250;
 
     if (block.type === 'RAMP') {
       const duration = block.durationSeconds || 1;
