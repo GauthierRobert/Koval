@@ -6,11 +6,13 @@ import { map } from 'rxjs/operators';
 import { TagService, Tag } from '../../services/tag.service';
 import { CoachService } from '../../services/coach.service';
 import { User } from '../../services/auth.service';
+import { Router } from '@angular/router';
+import { InviteCodeModalComponent } from '../invite-code-modal/invite-code-modal.component';
 
 @Component({
   selector: 'app-tag-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, InviteCodeModalComponent],
   templateUrl: './tag-management.component.html',
   styleUrl: './tag-management.component.css',
 })
@@ -30,7 +32,15 @@ export class TagManagementComponent implements OnInit {
   newTagName = '';
   newTagMaxAthletes = 0;
 
-  constructor(private tagService: TagService, private coachService: CoachService) {}
+  // Task 5: Invite modal per tag
+  isInviteModalOpen = false;
+  selectedTagForInvite: Tag | null = null;
+
+  constructor(
+    private tagService: TagService,
+    private coachService: CoachService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.loadTags();
@@ -97,5 +107,16 @@ export class TagManagementComponent implements OnInit {
       next: () => this.loadTags(),
       error: () => {},
     });
+  }
+
+  // Task 5: Open invite modal filtered to this tag
+  openInviteModal(tag: Tag): void {
+    this.selectedTagForInvite = tag;
+    this.isInviteModalOpen = true;
+  }
+
+  // Task 6: Navigate to coach page for a specific athlete
+  navigateToCoach(athleteId: string): void {
+    this.router.navigate(['/coach'], { queryParams: { athleteId } });
   }
 }

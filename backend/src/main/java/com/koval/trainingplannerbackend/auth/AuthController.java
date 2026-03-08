@@ -195,7 +195,7 @@ public class AuthController {
         }
     }
 
-    public record SettingsRequest(Integer ftp, Integer functionalThresholdPace,
+    public record SettingsRequest(Integer ftp, Integer weightKg, Integer functionalThresholdPace,
             Integer criticalSwimSpeed, Integer pace5k, Integer pace10k,
             Integer paceHalfMarathon, Integer paceMarathon,
             Integer vo2maxPower, Integer vo2maxPace) {
@@ -213,7 +213,7 @@ public class AuthController {
         try {
             String userId = parseJwtToken(authHeader.substring(7));
             User user = userService.updateSettings(userId,
-                    request.ftp(), request.functionalThresholdPace(),
+                    request.ftp(), request.weightKg(), request.functionalThresholdPace(),
                     request.criticalSwimSpeed(), request.pace5k(), request.pace10k(),
                     request.paceHalfMarathon(), request.paceMarathon(),
                     request.vo2maxPower(), request.vo2maxPace());
@@ -254,6 +254,7 @@ public class AuthController {
         map.put("profilePicture", user.getProfilePicture());
         map.put("role", user.getRole().name());
         map.put("ftp", user.getFtp());
+        map.put("weightKg", user.getWeightKg());
         map.put("functionalThresholdPace", user.getFunctionalThresholdPace());
         map.put("criticalSwimSpeed", user.getCriticalSwimSpeed());
         map.put("pace5k", user.getPace5k());
@@ -276,7 +277,7 @@ public class AuthController {
         return map;
     }
 
-    public record OnboardingRequest(UserRole role, Integer ftp, Integer criticalSwimSpeed,
+    public record OnboardingRequest(UserRole role, Integer ftp, Integer weightKg, Integer criticalSwimSpeed,
             Integer functionalThresholdPace) {
     }
 
@@ -295,6 +296,7 @@ public class AuthController {
 
             if (request.role() != null) user.setRole(request.role());
             if (request.ftp() != null) user.setFtp(request.ftp());
+            if (request.weightKg() != null) user.setWeightKg(request.weightKg());
             if (request.criticalSwimSpeed() != null) user.setCriticalSwimSpeed(request.criticalSwimSpeed());
             if (request.functionalThresholdPace() != null) user.setFunctionalThresholdPace(request.functionalThresholdPace());
             user.setNeedsOnboarding(false);

@@ -5,6 +5,28 @@
     </div>
 
     <div class="modal-body">
+        <!-- Physical Profile -->
+        <section class="settings-card">
+            <div class="card-header">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <circle cx="12" cy="7" r="4"/><path d="M5.2 20a7 7 0 0 1 13.6 0"/>
+                </svg>
+                <h2>Physical Profile</h2>
+            </div>
+            <div class="card-body">
+                <div class="field-row">
+                    <div class="field-info">
+                        <label>Body Weight</label>
+                        <span class="hint">Used for W/kg calculations</span>
+                    </div>
+                    <div class="field-input ftp-input-group">
+                        <input type="number" [(ngModel)]="weightKg" min="30" max="200" class="value-input numeric" placeholder="—" />
+                        <span class="unit">kg</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Cycling Section -->
         <section class="settings-card">
             <div class="card-header">
@@ -18,7 +40,7 @@
                         <span class="hint">Functional Threshold Power</span>
                     </div>
                     <div class="field-input ftp-input-group">
-                        <input type="number" [(ngModel)]="ftp" min="50" max="600" class="value-input numeric" />
+                        <input type="number" [(ngModel)]="ftp" min="50" max="600" class="value-input numeric" placeholder="—" />
                         <span class="unit">W</span>
                     </div>
                 </div>
@@ -49,10 +71,10 @@
                     </div>
                     <div class="field-input pace-input-group">
                         <input type="number" [(ngModel)]="field.minutes" min="0" max="15"
-                            class="value-input pace-part" />
+                            class="value-input pace-part" placeholder="—" />
                         <span class="pace-sep">:</span>
                         <input type="number" [(ngModel)]="field.seconds" min="0" max="59"
-                            class="value-input pace-part" />
+                            class="value-input pace-part" placeholder="00" />
                         <span class="unit">/km</span>
                     </div>
                 </div>
@@ -73,10 +95,10 @@
                     </div>
                     <div class="field-input pace-input-group">
                         <input type="number" [(ngModel)]="field.minutes" min="0" max="10"
-                            class="value-input pace-part" />
+                            class="value-input pace-part" placeholder="—" />
                         <span class="pace-sep">:</span>
                         <input type="number" [(ngModel)]="field.seconds" min="0" max="59"
-                            class="value-input pace-part" />
+                            class="value-input pace-part" placeholder="00" />
                         <span class="unit">/100m</span>
                     </div>
                 </div>

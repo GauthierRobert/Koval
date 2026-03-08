@@ -45,7 +45,7 @@ export class SessionAnalysisComponent implements OnDestroy {
     }
 
     session$ = this.sessionSubject.asObservable();
-    ftp$ = this.authService.user$.pipe(map((u) => u?.ftp ?? 250));
+    ftp$ = this.authService.user$.pipe(map((u) => u?.ftp ?? null));
 
     fitState$: Observable<FitState> = this.sessionSubject.pipe(
         distinctUntilChanged((a, b) => a?.fitFileId === b?.fitFileId),
@@ -62,11 +62,12 @@ export class SessionAnalysisComponent implements OnDestroy {
         }),
     );
 
-    getTss(session: SavedSession, ftp: number): number {
+    getTss(session: SavedSession, ftp: number | null): number | null {
         if (session.tss != null && session.tss > 0) return Math.round(session.tss);
         if (session.rpe != null && session.rpe > 0) {
             return Math.round(this.metricsService.computeTssFromRpe(session.totalDuration, session.rpe));
         }
+        if (!ftp) return null;
         return Math.round(this.metricsService.computeTss(session.totalDuration, session.avgPower, ftp));
     }
 
@@ -78,8 +79,9 @@ export class SessionAnalysisComponent implements OnDestroy {
         this.rpeUpdate$.next({ id: session.id, rpe: val });
     }
 
-    getIF(session: SavedSession, ftp: number): number {
+    getIF(session: SavedSession, ftp: number | null): number | null {
         if (session.intensityFactor != null) return session.intensityFactor;
+        if (!ftp) return null;
         return this.metricsService.computeIF(session.avgPower, ftp);
     }
 

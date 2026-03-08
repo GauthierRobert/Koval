@@ -12,6 +12,7 @@ export interface User {
     role: 'ATHLETE' | 'COACH';
     hasCoach: boolean;
     ftp?: number;
+    weightKg?: number;
     functionalThresholdPace?: number;
     criticalSwimSpeed?: number;
     pace5k?: number;
@@ -166,7 +167,7 @@ export class AuthService {
         }
     }
 
-    completeOnboarding(data: { role: 'ATHLETE' | 'COACH'; ftp?: number; criticalSwimSpeed?: number; functionalThresholdPace?: number }): Observable<{ token: string; user: User }> {
+    completeOnboarding(data: { role: 'ATHLETE' | 'COACH'; ftp?: number; weightKg?: number; criticalSwimSpeed?: number; functionalThresholdPace?: number }): Observable<{ token: string; user: User }> {
         return this.http.post<{ token: string; user: User }>(`${this.apiUrl}/onboarding`, data).pipe(
             tap(response => {
                 localStorage.setItem('token', response.token);

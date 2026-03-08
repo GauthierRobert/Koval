@@ -161,7 +161,7 @@ export class TrainingService {
 
     private static readonly FTP_STORAGE_KEY = 'koval_ftp';
 
-    private ftpSubject = new BehaviorSubject<number>(this.loadFtp());
+    private ftpSubject = new BehaviorSubject<number | null>(this.loadFtp());
     ftp$ = this.ftpSubject.asObservable();
 
     private authService = inject(AuthService);
@@ -173,13 +173,13 @@ export class TrainingService {
         });
     }
 
-    private loadFtp(): number {
+    private loadFtp(): number | null {
         const stored = localStorage.getItem(TrainingService.FTP_STORAGE_KEY);
         if (stored) {
             const parsed = parseInt(stored, 10);
             if (!isNaN(parsed) && parsed > 0) return parsed;
         }
-        return 250;
+        return null;
     }
 
     loadTrainings(): void {

@@ -1,0 +1,216 @@
+<ng-container *ngIf="vm$ | async as vm">
+  <div class="dashboard-layout">
+
+    <!-- Status strip: CTL / ATL / TSB / FTP — sourced from live PMC API -->
+    <div class="status-strip glass" *ngIf="vm.form.ctl != null || vm.form.ftp">
+      <div class="stat-item" *ngIf="vm.form.ctl != null">
+        <span class="stat-label">FITNESS</span>
+        <span class="stat-value fitness">{{ vm.form.ctl | number:'1.0-0' }}</span>
+        <span class="stat-sublabel">CTL</span>
+      </div>
+      <div class="stat-sep" *ngIf="vm.form.atl != null"></div>
+      <div class="stat-item" *ngIf="vm.form.atl != null">
+        <span class="stat-label">FATIGUE</span>
+        <span class="stat-value fatigue">{{ vm.form.atl | number:'1.0-0' }}</span>
+        <span class="stat-sublabel">ATL</span>
+      </div>
+      <div class="stat-sep" *ngIf="vm.form.tsb != null"></div>
+      <div class="stat-item" *ngIf="vm.form.tsb != null">
+        <span class="stat-label">FORM</span>
+        <span class="stat-value"
+          [class.form-positive]="vm.form.tsb! > 5"
+          [class.form-negative]="vm.form.tsb! < -10"
+          [class.form-neutral]="vm.form.tsb! >= -10 && vm.form.tsb! <= 5">
+          {{ vm.form.tsb! > 0 ? '+' : '' }}{{ vm.form.tsb | number:'1.0-0' }}
+        </span>
+        <span class="stat-sublabel">TSB</span>
+      </div>
+      <div class="stat-sep" *ngIf="vm.form.ftp"></div>
+      <div class="stat-item" *ngIf="vm.form.ftp">
+        <span class="stat-label">FTP</span>
+        <span class="stat-value ftp">{{ vm.form.ftp }}W</span>
+        <span class="stat-sublabel">threshold</span>
+      </div>
+      <div class="stat-spacer"></div>
+      <a routerLink="/pmc" class="stat-pmc-link">FULL PMC →</a>
+    </div>
+
+    <div class="dashboard-body">
+
+      <!-- Schedule row: overdue + this week -->
+      <div class="schedule-row">
+        <div class="schedule-panel overdue-panel" *ngIf="vm.overdue.length > 0">
+          <span class="panel-label overdue-label">OVERDUE</span>
+          <div class="chips-row">
+            <div class="workout-chip overdue" *ngFor="let w of vm.overdue" (click)="openDetail(w)">
+              <app-sport-icon [sport]="w.sportType" [size]="12"></app-sport-icon>
+              <span class="chip-date">{{ formatScheduleDate(w.scheduledDate) }}</span>
+              <span class="chip-title">{{ w.trainingTitle || w.title || 'Workout' }}</span>
+              <span class="chip-dur" *ngIf="formatScheduleDuration(w)">{{ formatScheduleDuration(w) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="schedule-panel week-panel">
+          <span class="panel-label week-label">THIS WEEK</span>
+          <div class="chips-row" *ngIf="vm.upcoming.length > 0">
+            <div class="workout-chip" *ngFor="let w of vm.upcoming" (click)="openDetail(w)">
+              <app-sport-icon [sport]="w.sportType" [size]="12"></app-sport-icon>
+              <span class="chip-date">{{ formatScheduleDate(w.scheduledDate) }}</span>
+              <span class="chip-title">{{ w.trainingTitle || w.title || 'Workout' }}</span>
+              <span class="chip-dur" *ngIf="formatScheduleDuration(w)">{{ formatScheduleDuration(w) }}</span>
+            </div>
+          </div>
+          <span class="empty-dim" *ngIf="!vm.upcoming.length">No workouts scheduled</span>
+        </div>
+      </div>
+
+      <!-- Week TSS summary -->
+      <div class="week-tss-bar" *ngIf="hasAnyActivity(vm.weekMetrics)">
+        <span class="week-tss-total">{{ totalWeekTss(vm.weekMetrics) }} TSS this week</span>
+        <span class="week-tss-vs" *ngIf="totalPrevTss(vm.weekMetrics) > 0">
+          <span
+            [class.trend-up]="totalWeekTss(vm.weekMetrics) > totalPrevTss(vm.weekMetrics)"
+            [class.trend-down]="totalWeekTss(vm.weekMetrics) < totalPrevTss(vm.weekMetrics)">
+            {{ totalWeekTss(vm.weekMetrics) >= totalPrevTss(vm.weekMetrics) ? '▲' : '▼' }}
+            {{ (totalWeekTss(vm.weekMetrics) - totalPrevTss(vm.weekMetrics)) | number:'1.0-0' }}
+            vs last week
+          </span>
+        </span>
+      </div>
+
+      <!-- Sport cards -->
+      <div class="sport-cards">
+        <div
+          class="sport-card glass"
+          *ngFor="let stat of vm.weekMetrics.current"
+          [class.dim-card]="stat.sessionCount === 0">
+          <div class="sport-header">
+            <span class="sport-name">{{ stat.sport }}</span>
+            <span class="trend-badge" [ngClass]="getTrendClass(stat, vm.weekMetrics.previous)">
+              {{ getTrend(stat, vm.weekMetrics.previous) }}
+            </span>
+          </div>
+          <ng-container *ngIf="stat.sessionCount > 0; else emptyCard">
+            <div class="sport-duration">{{ formatDuration(stat.durationSeconds) }}</div>
+            <div class="sport-meta">
+              <span *ngIf="stat.distanceMeters > 0" class="meta-dist">
+                {{ formatDistance(stat.distanceMeters, stat.sport) }}
+              </span>
+              <span class="meta-tss">TSS {{ stat.tss | number:'1.0-0' }}</span>
+            </div>
+          </ng-container>
+          <ng-template #emptyCard>
+            <div class="sport-duration sport-empty">—</div>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Next workout + Latest activity row -->
+      <div class="workout-row" *ngIf="vm.upcoming.length > 0 || vm.latestFit">
+        <div class="next-workout glass" *ngIf="vm.upcoming.length > 0">
+          <div class="next-header">
+            <span class="next-label">NEXT WORKOUT</span>
+            <span class="next-date">{{ formatScheduleDate(vm.upcoming[0].scheduledDate) }}</span>
+          </div>
+          <div class="next-body">
+            <app-sport-icon [sport]="vm.upcoming[0].sportType" [size]="16"></app-sport-icon>
+            <span class="next-title">{{ vm.upcoming[0].trainingTitle || vm.upcoming[0].title || 'Workout' }}</span>
+            <span class="next-dur" *ngIf="formatScheduleDuration(vm.upcoming[0])">
+              {{ formatScheduleDuration(vm.upcoming[0]) }}
+            </span>
+          </div>
+          <a routerLink="/calendar" class="view-link">VIEW IN CALENDAR →</a>
+        </div>
+
+        <div class="latest-fit glass" *ngIf="vm.latestFit as fit">
+          <div class="fit-header">
+            <span class="fit-label">LATEST ACTIVITY</span>
+            <span class="fit-badge">FIT</span>
+          </div>
+          <div class="fit-body">
+            <app-sport-icon [sport]="fit.sportType" [size]="16"></app-sport-icon>
+            <span class="fit-title">{{ fit.title }}</span>
+            <span class="fit-sep">·</span>
+            <span class="fit-date">{{ formatDate(fit.date) }}</span>
+            <span class="fit-sep">·</span>
+            <span class="fit-dur">{{ formatDuration(fit.totalDuration) }}</span>
+            <ng-container *ngIf="fit.avgPower">
+              <span class="fit-sep">·</span>
+              <span class="fit-power">{{ fit.avgPower | number:'1.0-0' }}W avg</span>
+            </ng-container>
+            <ng-container *ngIf="fit.tss">
+              <span class="fit-sep">·</span>
+              <span class="fit-tss">TSS {{ fit.tss | number:'1.0-0' }}</span>
+            </ng-container>
+          </div>
+          <button class="view-btn" (click)="openAnalysis(fit)">VIEW ANALYSIS →</button>
+        </div>
+      </div>
+
+      <!-- Mini PMC chart -->
+      <div class="mini-pmc glass" *ngIf="vm.pmcData.length > 1">
+        <div class="mini-pmc-header">
+          <span class="mini-pmc-label">PERFORMANCE MANAGEMENT</span>
+          <a routerLink="/pmc" class="view-link">FULL VIEW →</a>
+        </div>
+        <app-pmc-chart [data]="vm.pmcData"></app-pmc-chart>
+      </div>
+
+      <!-- Empty state CTAs -->
+      <div
+        class="empty-ctas"
+        *ngIf="!hasAnyActivity(vm.weekMetrics) && !vm.upcoming.length && !vm.overdue.length && !vm.latestFit">
+        <a class="cta-card glass" routerLink="/history">
+          <div class="cta-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+          </div>
+          <div class="cta-text">
+            <strong>Import Activity</strong>
+            <span>Upload a .FIT file from your device</span>
+          </div>
+        </a>
+        <a class="cta-card glass" routerLink="/chat">
+          <div class="cta-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+          </div>
+          <div class="cta-text">
+            <strong>Generate with AI</strong>
+            <span>Let the assistant plan your training</span>
+          </div>
+        </a>
+        <a class="cta-card glass" routerLink="/calendar">
+          <div class="cta-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </div>
+          <div class="cta-text">
+            <strong>Plan Your Week</strong>
+            <span>Schedule workouts on your calendar</span>
+          </div>
+        </a>
+      </div>
+
+    </div>
+  </div>
+</ng-container>
+
+<app-workout-detail-modal
+  [workout]="selectedScheduledWorkout"
+  (closed)="onDetailClosed()"
+  (started)="onDetailStarted()"
+  (statusChanged)="onDetailStatusChanged()">
+</app-workout-detail-modal>

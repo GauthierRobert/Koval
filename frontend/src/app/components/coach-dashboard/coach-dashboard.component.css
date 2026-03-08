@@ -597,7 +597,19 @@
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.m-condition.fresh {
   color: var(--success-color);
+}
+
+.m-condition.tired {
+  color: var(--danger-color);
+}
+
+.m-condition.neutral {
+  color: var(--accent-color);
 }
 
 /* ── Schedule Table ── */
@@ -905,6 +917,72 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+/* Task 1: 3-column zones grid */
+.zones-3col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.zone-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.zone-col-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.zone-col-title {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.zone-col-ref {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent-color);
+  opacity: 0.8;
+}
+
+.zone-no-data {
+  padding: 1rem;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-style: italic;
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+}
+
+/* Task 1: Custom zone range with actual + % */
+.zone-range--dual {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.zone-actual {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.zone-pct {
+  font-size: 9px;
+  color: var(--text-dim);
 }
 
 .phys-stats {

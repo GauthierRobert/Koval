@@ -27,15 +27,29 @@
         </div>
       </div>
 
-      <!-- FTP -->
-      <div class="field-group">
-        <label class="field-label">FTP — Functional Threshold Power <span class="optional">(optional)</span></label>
-        <div class="input-row">
-          <input type="number" class="field-input" [(ngModel)]="ftp" name="ftp"
-            min="50" max="600" placeholder="e.g. 280" />
-          <span class="field-unit">W</span>
+      <div class="section-divider">Physical Profile <span class="optional-group">(optional — improves zone accuracy)</span></div>
+
+      <!-- Weight + FTP row -->
+      <div class="field-row-2">
+        <div class="field-group">
+          <label class="field-label">Body Weight <span class="optional">(optional)</span></label>
+          <div class="input-row">
+            <input type="number" class="field-input" [(ngModel)]="weightKg" name="weight"
+              min="30" max="200" placeholder="—" />
+            <span class="field-unit">kg</span>
+          </div>
+          <span class="field-hint">Used for W/kg calculations.</span>
         </div>
-        <span class="field-hint">Your best sustained power for ~60 min. Used for bike zones.</span>
+
+        <div class="field-group">
+          <label class="field-label">FTP <span class="optional">(optional)</span></label>
+          <div class="input-row">
+            <input type="number" class="field-input" [(ngModel)]="ftp" name="ftp"
+              min="50" max="600" placeholder="—" />
+            <span class="field-unit">W</span>
+          </div>
+          <span class="field-hint">Best sustained power ~60 min. Bike zones.</span>
+        </div>
       </div>
 
       <!-- Threshold Run Pace -->
@@ -43,10 +57,10 @@
         <label class="field-label">Threshold Run Pace <span class="optional">(optional)</span></label>
         <div class="pace-row">
           <input type="number" class="pace-input" [(ngModel)]="thresholdPaceMinutes" name="tpMin"
-            min="2" max="15" />
+            min="2" max="15" placeholder="—" />
           <span class="pace-sep">:</span>
           <input type="number" class="pace-input pace-sec" [(ngModel)]="thresholdPaceSeconds" name="tpSec"
-            min="0" max="59" />
+            min="0" max="59" placeholder="00" />
           <span class="field-unit">/km</span>
         </div>
         <span class="field-hint">Lactate threshold pace. Used for run zones.</span>
@@ -57,13 +71,20 @@
         <label class="field-label">Critical Swim Speed (CSS) <span class="optional">(optional)</span></label>
         <div class="pace-row">
           <input type="number" class="pace-input" [(ngModel)]="cssMinutes" name="cssMin"
-            min="1" max="5" />
+            min="1" max="5" placeholder="—" />
           <span class="pace-sep">:</span>
           <input type="number" class="pace-input pace-sec" [(ngModel)]="cssSeconds" name="cssSec"
-            min="0" max="59" />
+            min="0" max="59" placeholder="00" />
           <span class="field-unit">/100m</span>
         </div>
-        <span class="field-hint">Your threshold swim pace. Used for swim zones.</span>
+        <span class="field-hint">Threshold swim pace. Used for swim zones.</span>
+      </div>
+
+      <div class="unset-note">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Values left empty will show as "not set" — zones and metrics requiring them won't be displayed until you add them in Settings.
       </div>
 
       <div class="error-msg" *ngIf="error">{{ error }}</div>

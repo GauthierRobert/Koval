@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, NgZone, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BehaviorSubject, combineLatest, Observable, of, map } from 'rxjs';
@@ -15,7 +15,7 @@ import { Training, TrainingService, TrainingType, TRAINING_TYPE_COLORS, TRAINING
 import { SportIconComponent } from '../sport-icon/sport-icon.component';
 import { PmcChartComponent } from '../pmc-chart/pmc-chart.component';
 
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-coach-dashboard',
@@ -31,7 +31,7 @@ export class CoachDashboardComponent implements OnInit {
   isShareModalOpen = false;
   trainingToShare: Training | null = null;
   activeTagFilter: string | null = null;
-  activeTab: 'performance' | 'physiology' | 'history' = 'performance';
+  activeTab: 'performance' | 'physiology' | 'history' | 'pmc' = 'performance';
 
   scheduleWeekStart: Date = this.getMondayOfWeek(new Date());
   scheduleWeekEnd: Date = this.getSundayOfWeek(new Date());
@@ -66,8 +66,29 @@ export class CoachDashboardComponent implements OnInit {
   private athleteSessionsSubject = new BehaviorSubject<any[]>([]);
   athleteSessions$ = this.athleteSessionsSubject.asObservable();
 
+  private athleteSessionsErrorSubject = new BehaviorSubject<boolean>(false);
+  athleteSessionsError$ = this.athleteSessionsErrorSubject.asObservable();
+
   private athletePmcSubject = new BehaviorSubject<PmcDataPoint[]>([]);
   athletePmc$ = this.athletePmcSubject.asObservable();
+
+  // Task 7: Real fitness/fatigue/form metrics derived from PMC data
+  athleteMetrics$ = this.athletePmc$.pipe(
+    map(data => {
+      if (!data.length) return null;
+      const real = data.filter(d => !d.predicted);
+      if (!real.length) return null;
+      const latest = real[real.length - 1];
+      const tenDaysAgo = real.length > 10 ? real[real.length - 11] : null;
+      return {
+        ctl: latest?.ctl ?? 0,
+        atl: latest?.atl ?? 0,
+        tsb: latest?.tsb ?? 0,
+        ctlTrend: tenDaysAgo ? latest.ctl - tenDaysAgo.ctl : 0,
+        atlTrend: tenDaysAgo ? latest.atl - tenDaysAgo.atl : 0,
+      };
+    })
+  );
 
   coachTrainings$: Observable<Training[]> = of([]);
 
@@ -76,7 +97,9 @@ export class CoachDashboardComponent implements OnInit {
     private authService: AuthService,
     private trainingService: TrainingService,
     private zoneService: ZoneService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute,
+    private ngZone: NgZone
   ) { }
 
   ngOnInit(): void {
@@ -86,7 +109,7 @@ export class CoachDashboardComponent implements OnInit {
         this.loadAthletes();
         this.loadTags();
         this.zoneService.getCoachZoneSystems().subscribe({
-          next: (systems) => this.coachZoneSystemsSubject.next(systems),
+          next: (systems) => this.ngZone.run(() => this.coachZoneSystemsSubject.next(systems)),
           error: () => {}
         });
       }
@@ -125,14 +148,22 @@ export class CoachDashboardComponent implements OnInit {
 
   loadAthletes() {
     this.coachService.getAthletes().subscribe({
-      next: (data) => this.athletesSubject.next(data),
+      next: (data) => this.ngZone.run(() => {
+        this.athletesSubject.next(data);
+        // Task 6: Auto-select athlete from query params after athletes load
+        const athleteId = this.route.snapshot.queryParamMap.get('athleteId');
+        if (athleteId) {
+          const athlete = data.find(a => a.id === athleteId);
+          if (athlete) this.selectAthlete(athlete);
+        }
+      }),
       error: (err) => console.error('Error loading athletes', err)
     });
   }
 
   loadTags() {
     this.coachService.getAllTags().subscribe({
-      next: (tags) => this.tagsSubject.next(tags),
+      next: (tags) => this.ngZone.run(() => this.tagsSubject.next(tags)),
       error: (err) => console.error('Error loading tags', err)
     });
   }
@@ -159,10 +190,18 @@ export class CoachDashboardComponent implements OnInit {
     this.loadAthletePmc(athlete.id);
   }
 
+  // Task 3: Wrap athleteSessionsSubject.next() in ngZone.run()
   loadAthleteSessions(athleteId: string): void {
+    this.athleteSessionsErrorSubject.next(false);
     this.coachService.getAthleteSessions(athleteId).subscribe({
-      next: (sessions: any[]) => this.athleteSessionsSubject.next(sessions),
-      error: () => this.athleteSessionsSubject.next([]),
+      next: (sessions: any[]) => this.ngZone.run(() => {
+        this.athleteSessionsSubject.next(sessions);
+        this.athleteSessionsErrorSubject.next(false);
+      }),
+      error: () => this.ngZone.run(() => {
+        this.athleteSessionsSubject.next([]);
+        this.athleteSessionsErrorSubject.next(true);
+      }),
     });
   }
 
@@ -175,8 +214,8 @@ export class CoachDashboardComponent implements OnInit {
       from.toISOString().split('T')[0],
       to.toISOString().split('T')[0]
     ).subscribe({
-      next: (data) => this.athletePmcSubject.next(data),
-      error: () => this.athletePmcSubject.next([]),
+      next: (data) => this.ngZone.run(() => this.athletePmcSubject.next(data)),
+      error: () => this.ngZone.run(() => this.athletePmcSubject.next([])),
     });
   }
 
@@ -189,7 +228,7 @@ export class CoachDashboardComponent implements OnInit {
     const end = this.scheduleWeekEnd.toISOString().split('T')[0];
 
     this.coachService.getAthleteSchedule(athleteId, start, end).subscribe({
-      next: (data) => this.scheduleSubject.next(data),
+      next: (data) => this.ngZone.run(() => this.scheduleSubject.next(data)),
       error: (err) => console.error('Error loading schedule', err)
     });
   }
@@ -277,6 +316,55 @@ export class CoachDashboardComponent implements OnInit {
     ];
   }
 
+  // Task 1: Run zones (Coggan) — pace in sec/km derived from functionalThresholdPace
+  getRunZones(ftp: number | undefined, thresholdPace: number | undefined): { name: string; low: number | null; high: number | null; color: string }[] {
+    if (!thresholdPace) return [];
+    // thresholdPace is in sec/km at threshold. Lower = faster.
+    // Zone boundaries as percentage of threshold pace (inverse relationship — higher % means slower)
+    return [
+      { name: 'Z1 — Recovery',   low: Math.round(thresholdPace * 1.29), high: null,                              color: '#60a5fa' },
+      { name: 'Z2 — Endurance',  low: Math.round(thresholdPace * 1.14), high: Math.round(thresholdPace * 1.29),  color: '#34d399' },
+      { name: 'Z3 — Tempo',      low: Math.round(thresholdPace * 1.06), high: Math.round(thresholdPace * 1.14),  color: '#fbbf24' },
+      { name: 'Z4 — Threshold',  low: Math.round(thresholdPace * 0.99), high: Math.round(thresholdPace * 1.06),  color: '#f97316' },
+      { name: 'Z5 — VO2Max',     low: null,                             high: Math.round(thresholdPace * 0.99),  color: '#f43f5e' },
+    ];
+  }
+
+  // Task 1: Swim zones derived from critical swim speed (sec/100m)
+  getSwimZones(css: number | undefined): { name: string; low: number | null; high: number | null; color: string }[] {
+    if (!css) return [];
+    return [
+      { name: 'Z1 — Recovery',   low: Math.round(css * 1.30), high: null,                          color: '#60a5fa' },
+      { name: 'Z2 — Endurance',  low: Math.round(css * 1.15), high: Math.round(css * 1.30),        color: '#34d399' },
+      { name: 'Z3 — Tempo',      low: Math.round(css * 1.05), high: Math.round(css * 1.15),        color: '#fbbf24' },
+      { name: 'Z4 — Threshold',  low: Math.round(css * 0.97), high: Math.round(css * 1.05),        color: '#f97316' },
+      { name: 'Z5 — VO2Max',     low: null,                   high: Math.round(css * 0.97),        color: '#f43f5e' },
+    ];
+  }
+
+  // Task 1: Compute actual watts/pace from athlete ref value + zone %
+  getCustomZoneActualRange(zone: { low: number; high: number }, athlete: User): string {
+    const refValue = athlete.ftp || 0;
+    if (!refValue) return `${zone.low}–${zone.high}%`;
+    const low = Math.round(refValue * zone.low / 100);
+    const high = Math.round(refValue * zone.high / 100);
+    return `${low}–${high}W`;
+  }
+
+  formatPace(secPerKm: number | null): string {
+    if (secPerKm === null) return '∞';
+    const min = Math.floor(secPerKm / 60);
+    const sec = secPerKm % 60;
+    return `${min}:${String(sec).padStart(2, '0')}/km`;
+  }
+
+  formatSwimPace(secPer100m: number | null): string {
+    if (secPer100m === null) return '∞';
+    const min = Math.floor(secPer100m / 60);
+    const sec = secPer100m % 60;
+    return `${min}:${String(sec).padStart(2, '0')}/100m`;
+  }
+
   getEstimatedVo2Max(ftp: number | undefined): string {
     if (!ftp) return '—';
     return ((ftp / 0.757) * (10.8 / 70)).toFixed(1);
@@ -295,5 +383,12 @@ export class CoachDashboardComponent implements OnInit {
     const m = Math.floor((sec % 3600) / 60);
     const s = sec % 60;
     return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  // Task 7: Form condition label
+  getFormCondition(tsb: number): string {
+    if (tsb > 5) return 'FRESH';
+    if (tsb < -10) return 'TIRED';
+    return 'NEUTRAL';
   }
 }

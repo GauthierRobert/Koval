@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Training, TrainingService } from '../../services/training.service';
@@ -38,7 +38,8 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
     private trainingService: TrainingService,
     private calendarService: CalendarService,
     private coachService: CoachService,
-    private authService: AuthService
+    private authService: AuthService,
+    private ngZone: NgZone
   ) {}
 
   ngOnInit(): void {
@@ -64,14 +65,18 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
 
       if (this.mode === 'coach' && this.userId) {
         this.coachService.getAthletes().subscribe(athletes => {
-          this.availableAthletes = athletes;
-          // Re-apply preselection after athletes load
-          if (this.preselectedAthletes && this.preselectedAthletes.length > 0) {
-            this.selectedAthleteIds = this.preselectedAthletes.map(a => a.id);
-          }
+          this.ngZone.run(() => {
+            this.availableAthletes = athletes;
+            // Re-apply preselection after athletes load
+            if (this.preselectedAthletes && this.preselectedAthletes.length > 0) {
+              this.selectedAthleteIds = this.preselectedAthletes.map(a => a.id);
+            }
+          });
         });
         this.coachService.getAllTags().subscribe(tags => {
-          this.availableTags = tags.map(t => t.name);
+          this.ngZone.run(() => {
+            this.availableTags = tags.map(t => t.name);
+          });
         });
       }
     }
@@ -130,8 +135,10 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
         .assignTraining(this.selectedTrainingId, this.selectedAthleteIds, this.selectedDate, this.notes || undefined)
         .subscribe({
           next: () => {
-            this.scheduled.emit();
-            this.close();
+            this.ngZone.run(() => {
+              this.scheduled.emit();
+              this.close();
+            });
           },
           error: (err) => console.error('Failed to assign training', err),
         });
@@ -140,8 +147,10 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
         .scheduleWorkout(this.selectedTrainingId, this.selectedDate, this.notes || undefined)
         .subscribe({
           next: () => {
-            this.scheduled.emit();
-            this.close();
+            this.ngZone.run(() => {
+              this.scheduled.emit();
+              this.close();
+            });
           },
           error: (err) => console.error('Failed to schedule workout', err),
         });

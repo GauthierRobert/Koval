@@ -40,12 +40,14 @@ export class CalendarWeekViewComponent {
   @Output() linked = new EventEmitter<void>();
 
   linkPickerState: { sessionId: string } | null = null;
+  linkSession: SavedSession | null = null;
   nearbyScheduled$: Observable<ScheduledWorkout[]> = of([]);
 
   private readonly calendarService = inject(CalendarService);
 
   openLinkPicker(session: SavedSession): void {
     this.linkPickerState = { sessionId: session.id };
+    this.linkSession = session;
     const d = new Date(session.date);
     const from = new Date(d); from.setDate(d.getDate() - 3);
     const to = new Date(d); to.setDate(d.getDate() + 3);

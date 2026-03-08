@@ -55,6 +55,66 @@
   color: var(--text-muted);
 }
 
+.phys-stat-unset {
+  border-style: dashed;
+  opacity: 0.55;
+}
+
+.phys-unset {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.phys-unset-val {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.phys-note {
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  opacity: 0.55;
+  font-style: italic;
+}
+
+.no-ref-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(255, 157, 0, 0.06);
+  border: 1px solid rgba(255, 157, 0, 0.2);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.no-ref-banner svg {
+  flex-shrink: 0;
+  color: var(--accent-color);
+  opacity: 0.8;
+}
+
+.ref-cta {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: var(--accent-color);
+  opacity: 0.85;
+}
+
+.ref-cta strong {
+  font-weight: 800;
+}
+
+.zone-row-dim {
+  pointer-events: none;
+  user-select: none;
+}
+
 /* Sport tabs */
 .sport-tabs {
   display: flex;

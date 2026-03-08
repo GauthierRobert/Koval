@@ -135,9 +135,17 @@ export class PhysiologyPageComponent {
     ];
   }
 
-  getEstimatedVo2Max(ftp: number | undefined): string {
-    if (!ftp) return '—';
-    return ((ftp / 0.757) * (10.8 / 70)).toFixed(1);
+  getWkg(user: User): string {
+    if (!user.ftp) return '—';
+    const weight = user.weightKg ?? null;
+    if (!weight) return '— (weight not set)';
+    return (user.ftp / weight).toFixed(2);
+  }
+
+  getEstimatedVo2Max(user: User): string {
+    if (!user.ftp) return '—';
+    const weight = user.weightKg ?? 70;
+    return ((user.ftp / 0.757) * (10.8 / weight)).toFixed(1);
   }
 
   getSportDistribution(sessions: any[]): { sport: string; count: number; pct: number }[] {

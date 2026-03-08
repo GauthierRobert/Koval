@@ -30,18 +30,20 @@ export class WorkoutHistoryComponent {
 
     sessions$ = this.historyService.sessions$;
 
-    ftp$ = this.authService.user$.pipe(map((u) => u?.ftp ?? 250));
+    ftp$ = this.authService.user$.pipe(map((u) => u?.ftp ?? null));
 
     importing = false;
     importError = false;
 
-    getTss(session: SavedSession, ftp: number): number {
+    getTss(session: SavedSession, ftp: number | null): number | null {
         if (session.tss != null) return Math.round(session.tss);
+        if (!ftp) return null;
         return Math.round(this.metricsService.computeTss(session.totalDuration, session.avgPower, ftp));
     }
 
-    getIF(session: SavedSession, ftp: number): number {
+    getIF(session: SavedSession, ftp: number | null): number | null {
         if (session.intensityFactor != null) return session.intensityFactor;
+        if (!ftp) return null;
         return this.metricsService.computeIF(session.avgPower, ftp);
     }
 

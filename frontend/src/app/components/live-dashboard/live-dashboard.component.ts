@@ -232,19 +232,19 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     const user = this.authService.currentUser;
 
     if (training.sportType === 'CYCLING') {
-      const ftp = user?.ftp || 250;
-      return Math.round((percent * ftp) / 100).toString();
+      if (!user?.ftp) return `${percent}%`;
+      return Math.round((percent * user.ftp) / 100).toString();
     }
 
     if (training.sportType === 'RUNNING') {
-      const threshold = user?.functionalThresholdPace || 240;
-      const secondsPerKm = threshold / (percent / 100);
+      if (!user?.functionalThresholdPace) return `${percent}%`;
+      const secondsPerKm = user.functionalThresholdPace / (percent / 100);
       return this.formatPace(secondsPerKm);
     }
 
     if (training.sportType === 'SWIMMING') {
-      const threshold = user?.criticalSwimSpeed || 90;
-      const secondsPer100m = threshold / (percent / 100);
+      if (!user?.criticalSwimSpeed) return `${percent}%`;
+      const secondsPer100m = user.criticalSwimSpeed / (percent / 100);
       return this.formatPace(secondsPer100m);
     }
 

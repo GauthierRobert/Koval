@@ -32,16 +32,22 @@
               </ng-container>
             </div>
             <span class="tag-athlete-count">{{ tag.tagAthletes.length }}{{ tag.maxAthletes > 0 ? ' / ' + tag.maxAthletes : '' }}</span>
+            <!-- Task 5: GENERATE INVITE button per tag -->
+            <button class="invite-btn" (click)="openInviteModal(tag)" title="Generate invite code for this tag">GENERATE INVITE</button>
             <button class="delete-btn" (click)="deleteTag(tag)" title="Delete tag">DELETE</button>
           </div>
 
           <div class="athletes-section">
             <div class="athletes-label">ATHLETES ({{ tag.tagAthletes.length }})</div>
             <div *ngIf="tag.tagAthletes.length === 0" class="no-athletes">No athletes in this tag</div>
-            <div *ngFor="let athlete of tag.tagAthletes" class="athlete-row">
+            <!-- Task 6: Click athlete -> navigate to coach page -->
+            <div *ngFor="let athlete of tag.tagAthletes" class="athlete-row"
+              style="cursor: pointer"
+              (click)="navigateToCoach(athlete.id)"
+              title="View in coach dashboard">
               <div class="avatar-sm">{{ athlete.displayName[0].toUpperCase() }}</div>
               <span class="athlete-name">{{ athlete.displayName }}</span>
-              <button class="remove-btn" (click)="removeAthleteFromTag(athlete, tag)" title="Remove from tag">&times;</button>
+              <button class="remove-btn" (click)="$event.stopPropagation(); removeAthleteFromTag(athlete, tag)" title="Remove from tag">&times;</button>
             </div>
           </div>
         </div>
@@ -49,3 +55,11 @@
     </ng-container>
   </div>
 </div>
+
+<!-- Task 5: Invite code modal at bottom, pre-filtered to selected tag -->
+<app-invite-code-modal
+  [isOpen]="isInviteModalOpen"
+  [availableTags]="selectedTagForInvite ? [selectedTagForInvite] : []"
+  (closed)="isInviteModalOpen = false; selectedTagForInvite = null"
+  (codeGenerated)="isInviteModalOpen = false">
+</app-invite-code-modal>

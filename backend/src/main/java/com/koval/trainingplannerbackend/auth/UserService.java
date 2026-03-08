@@ -97,29 +97,22 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User updateSettings(String userId, Integer ftp, Integer functionalThresholdPace,
+    public User updateSettings(String userId, Integer ftp, Integer weightKg, Integer functionalThresholdPace,
             Integer criticalSwimSpeed, Integer pace5k, Integer pace10k,
             Integer paceHalfMarathon, Integer paceMarathon,
             Integer vo2maxPower, Integer vo2maxPace) {
         User user = getUserById(userId);
-        if (ftp != null)
-            user.setFtp(ftp);
-        if (functionalThresholdPace != null)
-            user.setFunctionalThresholdPace(functionalThresholdPace);
-        if (criticalSwimSpeed != null)
-            user.setCriticalSwimSpeed(criticalSwimSpeed);
-        if (pace5k != null)
-            user.setPace5k(pace5k);
-        if (pace10k != null)
-            user.setPace10k(pace10k);
-        if (paceHalfMarathon != null)
-            user.setPaceHalfMarathon(paceHalfMarathon);
-        if (paceMarathon != null)
-            user.setPaceMarathon(paceMarathon);
-        if (vo2maxPower != null)
-            user.setVo2maxPower(vo2maxPower);
-        if (vo2maxPace != null)
-            user.setVo2maxPace(vo2maxPace);
+        // Always set all fields — null means "clear this value"
+        user.setFtp(ftp);
+        user.setWeightKg(weightKg);
+        user.setFunctionalThresholdPace(functionalThresholdPace);
+        user.setCriticalSwimSpeed(criticalSwimSpeed);
+        user.setPace5k(pace5k);
+        user.setPace10k(pace10k);
+        user.setPaceHalfMarathon(paceHalfMarathon);
+        user.setPaceMarathon(paceMarathon);
+        user.setVo2maxPower(vo2maxPower);
+        user.setVo2maxPace(vo2maxPace);
         return userRepository.save(user);
     }
 }

@@ -29,7 +29,8 @@ public class User {
     private String profilePicture;
     private UserRole role = UserRole.ATHLETE;
 
-    private Integer ftp = 250;
+    private Integer ftp;
+    private Integer weightKg;
     private Double ctl = 0.0;
     private Double atl = 0.0;
     private Double tsb = 0.0;
@@ -45,12 +46,12 @@ public class User {
         this.createdAt = LocalDateTime.now();
     }
 
-    private Integer functionalThresholdPace = 300; // Seconds per km (5:00/km)
-    private Integer criticalSwimSpeed = 120; // Seconds per 100m (2:00/100m)
-    private Integer pace5k = 270; // Seconds per km (4:30/km)
-    private Integer pace10k = 285; // Seconds per km (4:45/km)
-    private Integer paceHalfMarathon = 300; // Seconds per km (5:00/km)
-    private Integer paceMarathon = 315; // Seconds per km (5:15/km)
+    private Integer functionalThresholdPace;
+    private Integer criticalSwimSpeed;
+    private Integer pace5k;
+    private Integer pace10k;
+    private Integer paceHalfMarathon;
+    private Integer paceMarathon;
     private Integer vo2maxPower;   // Watts (VO2MAX_POWER reference)
     private Integer vo2maxPace;    // Seconds per km (VO2MAX_PACE reference)
 

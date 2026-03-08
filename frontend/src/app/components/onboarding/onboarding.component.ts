@@ -14,24 +14,27 @@ import { AuthService } from '../../services/auth.service';
 export class OnboardingComponent {
     role: 'ATHLETE' | 'COACH' = 'ATHLETE';
     ftp: number | null = null;
+    weightKg: number | null = null;
 
-    cssMinutes = 2;
-    cssSeconds = 0;
+    cssMinutes: number | null = null;
+    cssSeconds: number | null = null;
 
-    thresholdPaceMinutes = 5;
-    thresholdPaceSeconds = 0;
+    thresholdPaceMinutes: number | null = null;
+    thresholdPaceSeconds: number | null = null;
 
     saving = false;
     error = '';
 
     constructor(private authService: AuthService, private router: Router) {}
 
-    get cssSeconds_total(): number {
-        return this.cssMinutes * 60 + this.cssSeconds;
+    get cssTotal(): number | undefined {
+        if (this.cssMinutes == null && this.cssSeconds == null) return undefined;
+        return (this.cssMinutes ?? 0) * 60 + (this.cssSeconds ?? 0);
     }
 
-    get thresholdPaceSeconds_total(): number {
-        return this.thresholdPaceMinutes * 60 + this.thresholdPaceSeconds;
+    get thresholdPaceTotal(): number | undefined {
+        if (this.thresholdPaceMinutes == null && this.thresholdPaceSeconds == null) return undefined;
+        return (this.thresholdPaceMinutes ?? 0) * 60 + (this.thresholdPaceSeconds ?? 0);
     }
 
     submit() {
@@ -39,9 +42,10 @@ export class OnboardingComponent {
         this.error = '';
         this.authService.completeOnboarding({
             role: this.role,
-            ftp: this.ftp || undefined,
-            criticalSwimSpeed: this.cssSeconds_total || undefined,
-            functionalThresholdPace: this.thresholdPaceSeconds_total || undefined,
+            ftp: this.ftp ?? undefined,
+            weightKg: this.weightKg ?? undefined,
+            criticalSwimSpeed: this.cssTotal,
+            functionalThresholdPace: this.thresholdPaceTotal,
         }).subscribe({
             next: () => this.router.navigate([this.role === 'COACH' ? '/coach' : '/']),
             error: () => {

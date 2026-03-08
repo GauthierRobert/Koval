@@ -58,7 +58,7 @@ import { FitRecord } from '../../services/metrics.service';
 })
 export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
     @Input() records: FitRecord[] = [];
-    @Input() ftp = 250;
+    @Input() ftp: number | null = null;
     @Input() sportType = 'CYCLING';
 
     @ViewChild('canvas') private canvasRef!: ElementRef<HTMLCanvasElement>;
@@ -102,23 +102,25 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         if (this.isCycling) {
             // ── Primary metric: Power (W) ─────────────────────────────────────
             const smoothed = this.rollingAvg(this.records.map((r) => r.power), 5);
-            const maxP = Math.max(this.ftp * 1.5, ...smoothed) || 1;
+            const maxP = Math.max(this.ftp ? this.ftp * 1.5 : 0, ...smoothed) || 1;
             const yOfPow = (p: number) => mT + cH * (1 - p / maxP);
 
-            // FTP reference line
-            const ftpY = yOfPow(this.ftp);
-            ctx.save();
-            ctx.setLineDash([4, 4]);
-            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(mL, ftpY); ctx.lineTo(W - mR, ftpY);
-            ctx.stroke();
-            ctx.restore();
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            ctx.font = '9px monospace';
-            ctx.textAlign = 'left';
-            ctx.fillText('FTP', mL + 2, ftpY - 3);
+            // FTP reference line (only if FTP is set)
+            if (this.ftp) {
+                const ftpY = yOfPow(this.ftp);
+                ctx.save();
+                ctx.setLineDash([4, 4]);
+                ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(mL, ftpY); ctx.lineTo(W - mR, ftpY);
+                ctx.stroke();
+                ctx.restore();
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.font = '9px monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText('FTP', mL + 2, ftpY - 3);
+            }
 
             if (this.showPrimary && smoothed.length > 1) {
                 ctx.beginPath();

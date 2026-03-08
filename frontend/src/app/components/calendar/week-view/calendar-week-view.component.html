@@ -141,16 +141,6 @@
               </div>
             </div>
             <button class="btn-link-session" (click)="$event.stopPropagation(); openLinkPicker(entry.session)">LINK TO PLAN</button>
-            <!-- Inline link picker -->
-            <div class="link-picker" *ngIf="linkPickerState?.sessionId === entry.session.id" (click)="$event.stopPropagation()">
-              <ng-container *ngIf="nearbyScheduled$ | async as nearby">
-                <div *ngIf="!nearby.length" class="link-picker-empty">No nearby pending workouts</div>
-                <div *ngFor="let sw of nearby" class="link-picker-item" (click)="confirmLink(sw.id)">
-                  {{ sw.trainingTitle }} — {{ sw.scheduledDate }}
-                </div>
-              </ng-container>
-              <button class="link-picker-cancel" (click)="linkPickerState = null">Cancel</button>
-            </div>
           </div>
         </ng-container>
 
@@ -163,3 +153,27 @@
 </div>
 
 <app-training-load-chart [workoutsByDay]="workoutsByDay" [days]="days"></app-training-load-chart>
+
+<!-- Task 4: Link session modal overlay -->
+<div class="link-modal-overlay" *ngIf="linkPickerState !== null" (click)="linkPickerState = null; linkSession = null">
+  <div class="link-modal" (click)="$event.stopPropagation()">
+    <div class="link-modal-header">
+      <span class="link-modal-title">Link Session to Planned Workout</span>
+      <span class="link-modal-session" *ngIf="linkSession">
+        <strong>{{ linkSession.title }}</strong> &mdash; {{ linkSession.date | date:'MMM d, yyyy' }}
+      </span>
+    </div>
+    <div class="link-modal-list">
+      <ng-container *ngIf="nearbyScheduled$ | async as nearby">
+        <div *ngIf="!nearby.length" class="link-picker-empty">No nearby pending workouts found within ±3 days</div>
+        <div *ngFor="let sw of nearby" class="link-picker-item" (click)="confirmLink(sw.id)">
+          <span>{{ sw.trainingTitle || 'Workout' }}</span>
+          <span style="color: var(--text-muted); font-size: 0.7rem; margin-left: auto;">{{ sw.scheduledDate | date:'MMM d' }}</span>
+        </div>
+      </ng-container>
+    </div>
+    <div class="link-modal-footer">
+      <button class="link-picker-cancel" (click)="linkPickerState = null; linkSession = null">Cancel</button>
+    </div>
+  </div>
+</div>

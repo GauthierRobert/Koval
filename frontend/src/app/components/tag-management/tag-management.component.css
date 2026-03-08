@@ -196,6 +196,31 @@
   background: rgba(239, 68, 68, 0.1);
 }
 
+/* Task 5: Invite button per tag */
+.invite-btn {
+  background: rgba(255, 157, 0, 0.08);
+  border: 1px solid rgba(255, 157, 0, 0.25);
+  color: var(--accent-color);
+  border-radius: 4px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.invite-btn:hover {
+  background: rgba(255, 157, 0, 0.16);
+}
+
+/* Task 6: Athlete row hover for navigation */
+.athlete-row:hover {
+  background: rgba(255, 157, 0, 0.05);
+  border-radius: 4px;
+}
+
 /* ── Athletes section ── */
 .athletes-section {
   padding: 0.6rem 0.9rem;
