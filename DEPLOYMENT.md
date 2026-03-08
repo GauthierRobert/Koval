@@ -21,21 +21,12 @@ This guide walks through the one-time GCP setup required for the GitHub Actions 
 
 ## 1. Create the GCP Project
 
-```bash
-gcloud projects create koval-training --name="Koval Training" && gcloud config set project koval-training && gcloud beta billing projects link koval-training --billing-account=YOUR_BILLING_ACCOUNT_ID
-```
-
-Get your billing account ID:
-```bash
-gcloud beta billing accounts list
-```
-
 ---
 
 ## 2. Enable Required APIs
 
 ```bash
-gcloud services enable   run.googleapis.com   artifactregistry.googleapis.com   secretmanager.googleapis.com  cloudbuild.googleapis.com   iam.googleapis.com  firebase.googleapis.com
+gcloud services enable run.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com cloudbuild.googleapis.com iam.googleapis.com firebase.googleapis.com
 ```
 
 ---
@@ -45,10 +36,7 @@ gcloud services enable   run.googleapis.com   artifactregistry.googleapis.com   
 This stores the backend Docker images.
 
 ```bash
-gcloud artifacts repositories create training-planner \
-  --repository-format=docker \
-  --location=us-central1 \
-  --description="Koval Training backend images"
+gcloud artifacts repositories create training-planner --repository-format=docker --location=europe-west1 --description="Koval Training backend images"
 ```
 
 ---
@@ -56,42 +44,19 @@ gcloud artifacts repositories create training-planner \
 ## 4. Create the Service Account for GitHub Actions
 
 ```bash
-gcloud iam service-accounts create github-actions \
-  --display-name="GitHub Actions Deployer"
+gcloud iam service-accounts create github-actions --display-name="GitHub Actions Deployer"
 ```
 
 Grant the required roles:
 
 ```bash
-export PROJECT_ID=koval-training
-export SA_EMAIL=github-actions@${PROJECT_ID}.iam.gserviceaccount.com
-
-# Cloud Run deployment
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:${SA_EMAIL}" \
-  --role="roles/run.admin"
-
-# Push images to Artifact Registry
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:${SA_EMAIL}" \
-  --role="roles/artifactregistry.writer"
-
-# Read secrets from Secret Manager
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:${SA_EMAIL}" \
-  --role="roles/secretmanager.secretAccessor"
-
-# Required to deploy as a service account
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:${SA_EMAIL}" \
-  --role="roles/iam.serviceAccountUser"
+export PROJECT_ID=koval && export SA_EMAIL=github-actions@${PROJECT_ID}.iam.gserviceaccount.com && gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:${SA_EMAIL}" --role="roles/run.admin" && gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:${SA_EMAIL}" --role="roles/artifactregistry.writer" && gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:${SA_EMAIL}" --role="roles/secretmanager.secretAccessor" && gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:${SA_EMAIL}" --role="roles/iam.serviceAccountUser"
 ```
 
 Generate and download the JSON key:
 
 ```bash
-gcloud iam service-accounts keys create gcp-sa-key.json \
-  --iam-account=${SA_EMAIL}
+gcloud iam service-accounts keys create gcp-sa-key.json --iam-account=${SA_EMAIL}
 ```
 
 > Keep this file secure — you will paste its contents into GitHub Secrets below.
@@ -120,9 +85,7 @@ gcloud secrets create GOOGLE_REDIRECT_URI  --data-file=<(echo -n "https://koval.
 Grant the Cloud Run service agent access to read secrets:
 
 ```bash
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:${SA_EMAIL}" \
-  --role="roles/secretmanager.secretAccessor"
+gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:${SA_EMAIL}" --role="roles/secretmanager.secretAccessor"
 ```
 
 To update a secret later:
@@ -143,15 +106,10 @@ firebase use koval-training
 Generate the Firebase service account for GitHub Actions:
 
 ```bash
-# In the Firebase Console: Project Settings → Service Accounts → Generate new private key
-# Save as firebase-service-account.json
+gcloud iam service-accounts keys create firebase-service-account.json --iam-account=firebase-adminsdk-XXXXX@koval-training.iam.gserviceaccount.com
 ```
 
-Or via CLI:
-```bash
-gcloud iam service-accounts keys create firebase-service-account.json \
-  --iam-account=firebase-adminsdk-XXXXX@koval-training.iam.gserviceaccount.com
-```
+(First get your service account email from Firebase Console: Project Settings → Service Accounts)
 
 ---
 
@@ -181,23 +139,7 @@ The workflow cannot deploy a Cloud Run service that does not exist yet.
 Run this once to create it with a placeholder image:
 
 ```bash
-gcloud run deploy training-planner-backend \
-  --image=us-central1-docker.pkg.dev/koval-training/training-planner/backend:latest \
-  --region=us-central1 \
-  --platform=managed \
-  --allow-unauthenticated \
-  --port=8080 \
-  --set-secrets=\
-ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest,\
-JWT_SECRET=JWT_SECRET:latest,\
-MONGODB_URI=MONGODB_URI:latest,\
-ALLOWED_ORIGINS=ALLOWED_ORIGINS:latest,\
-STRAVA_CLIENT_ID=STRAVA_CLIENT_ID:latest,\
-STRAVA_CLIENT_SECRET=STRAVA_CLIENT_SECRET:latest,\
-STRAVA_REDIRECT_URI=STRAVA_REDIRECT_URI:latest,\
-GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID:latest,\
-GOOGLE_CLIENT_SECRET=GOOGLE_CLIENT_SECRET:latest,\
-GOOGLE_REDIRECT_URI=GOOGLE_REDIRECT_URI:latest
+gcloud run deploy training-planner-backend --image=europe-west1-docker.pkg.dev/koval-training/training-planner/backend:latest --region=europe-west1 --platform=managed --allow-unauthenticated --port=8080 --set-secrets=ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest,JWT_SECRET=JWT_SECRET:latest,MONGODB_URI=MONGODB_URI:latest,ALLOWED_ORIGINS=ALLOWED_ORIGINS:latest,STRAVA_CLIENT_ID=STRAVA_CLIENT_ID:latest,STRAVA_CLIENT_SECRET=STRAVA_CLIENT_SECRET:latest,STRAVA_REDIRECT_URI=STRAVA_REDIRECT_URI:latest,GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID:latest,GOOGLE_CLIENT_SECRET=GOOGLE_CLIENT_SECRET:latest,GOOGLE_REDIRECT_URI=GOOGLE_REDIRECT_URI:latest
 ```
 
 After this, every push to `main` will redeploy automatically.
@@ -230,18 +172,12 @@ Firebase provisions a free managed SSL certificate automatically.
 
 Get the Cloud Run service URL:
 ```bash
-gcloud run services describe training-planner-backend \
-  --region=us-central1 \
-  --format="value(status.url)"
-# → https://training-planner-backend-XXXX-uc.a.run.app
+gcloud run services describe training-planner-backend --region=europe-west1 --format="value(status.url)"
 ```
 
 Map a custom domain to Cloud Run:
 ```bash
-gcloud beta run domain-mappings create \
-  --service=training-planner-backend \
-  --domain=api.koval.com \
-  --region=us-central1
+gcloud beta run domain-mappings create --service=training-planner-backend --domain=api.koval.com --region=europe-west1
 ```
 
 This outputs DNS records to add at your registrar:
