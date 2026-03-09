@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 env:
-  GCP_REGION: us-central1
+  GCP_REGION: europe-west1
   ARTIFACT_REPO: training-planner
   IMAGE_NAME: backend
 

@@ -1,5 +1,6 @@
-package com.koval.trainingplannerbackend.auth;
+package com.koval.trainingplannerbackend;
 
+import com.koval.trainingplannerbackend.auth.JwtAuthenticationFilter;
 import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
