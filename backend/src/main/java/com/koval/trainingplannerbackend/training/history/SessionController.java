@@ -69,6 +69,9 @@ public class SessionController {
         // Compute TSS / IF before saving (sport-type-aware)
         userRepository.findById(userId).ifPresent(user -> analyticsService.computeAndAttachMetrics(session, user));
 
+        // Estimate per-block distance when not provided
+        analyticsService.computeBlockDistances(session);
+
         // Auto-associate to a scheduled workout if none provided
         if (session.getScheduledWorkoutId() == null) {
             tryAutoAssociate(session, userId);

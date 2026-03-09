@@ -33,8 +33,7 @@
 - ~~Training Creation: In blocks, distance or duration must be setted, never both. The other is extrapolted in backend not by the IA~~ ✅
 - ~~The Dashboard, must be a real summary dashboard, currenlty, it is a training done and plan dhasboard. First Split the training dashboard in two others 1. The Trainings I have 2. The completed Training (Only .fit)
     Secondly modify the current dashboard, to display the main metric of the athlete. Keep the Overdue and Week panel to display the training to do this week and overdue training Some metrics on the current week, like Bike/run/Swim total duration/distance/TSS/... Find anything relevant
-    On the new Main dashboard, add also to the latest .fit workout done of the athelte. Propose in your plan other improvements you could do~~ ✅
-    
+    On the new Main dashboard, add also to the latest .fit workout done of the athelte. Propose in your plan other improvements you could do~~ ✅ 
 - ~~The Physiology in Coach Dashboard shows only Cycling and Custom ZOnes. First Custom zone must dislay the value and the percentage based on the referenced value of the athlete. Secondly, Only Cycling default zones are visibles, not the SWIM or Running defualt ZONE. Thridly, you can make 3 columns, one for each deufalt zones,then diplays the cusotme zones below~~ ✅
 - ~~Make the PMC graph a sperated TAB in the COach Dashboard~~ ✅
 - ~~The History page does not show the data in the Hsitory Tab i Coach Dahsboard~~ ✅
@@ -43,7 +42,9 @@
 - ~~In the tab, there is an ahtlete list. I want that when click on the ahtlete I am redirect the coach Page witht this athlete selected.~~ ✅
 - ~~I want real metric value (Fitness, fatigue, form) of the athlete in the Athlete ese coach page. Make the tendency icon relly based on real value (Use latest 10 days)~~ ✅
 - ~~When assign a Workout to an athelte, there is issue with the Change detection. As it is no zone (like Change detection on PUSH) Fix the issue~~ ✅
-
+- ~~In the calendar, the workout name must be truncated if too long.~~ ✅
+- In the calendar, when clicked on a planned workout, The modal must have a button to display the details of the workout. A link to the Training page with the workout selected must also be present (in the details part of the modal)
+- The estimation of distance or duration for steps is not correct. It must be done at retreive because it depend on the user reference value.
 ## Nice too have
 - **Retrieve FIT files from Strava** — Implement an endpoint + service to fetch FIT activity files from Strava for the authenticated user. Requires the user to have granted all metric scopes (`activity:read_all`). Parse the FIT data and ingest relevant metrics (power, HR, cadence, TSS) into the session/history store.
 

@@ -92,6 +92,29 @@ public class AnalyticsService {
         session.setTss(Math.round(tss * 10.0) / 10.0);
     }
 
+    /**
+     * For each block where distanceMeters is 0, estimate distance from
+     * durationSeconds × session-level avgSpeed.
+     */
+    public void computeBlockDistances(CompletedSession session) {
+        if (session.getBlockSummaries() == null || session.getAvgSpeed() <= 0) return;
+
+        boolean changed = false;
+        var updated = new java.util.ArrayList<CompletedSession.BlockSummary>();
+        for (var b : session.getBlockSummaries()) {
+            if (b.distanceMeters() <= 0 && b.durationSeconds() > 0) {
+                updated.add(new CompletedSession.BlockSummary(
+                        b.label(), b.type(), b.durationSeconds(),
+                        b.targetPower(), b.actualPower(), b.actualCadence(), b.actualHR(),
+                        Math.round(b.durationSeconds() * session.getAvgSpeed() * 10.0) / 10.0));
+                changed = true;
+            } else {
+                updated.add(b);
+            }
+        }
+        if (changed) session.setBlockSummaries(updated);
+    }
+
     private SportType parseSportType(String sportType) {
         if (sportType == null)
             return SportType.CYCLING;

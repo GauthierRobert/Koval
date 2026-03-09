@@ -5,6 +5,7 @@ import { catchError, debounceTime, distinctUntilChanged, map, startWith, switchM
 import { HistoryService, SavedSession } from '../../services/history.service';
 import { AuthService } from '../../services/auth.service';
 import { MetricsService, FitRecord } from '../../services/metrics.service';
+import { BlockSummary } from '../../services/workout-execution.service';
 import { SportIconComponent } from '../sport-icon/sport-icon.component';
 import { FitTimeseriesChartComponent } from '../fit-timeseries-chart/fit-timeseries-chart.component';
 
@@ -91,6 +92,13 @@ export class SessionAnalysisComponent implements OnDestroy {
         const s = seconds % 60;
         if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         return `${m}:${String(s).padStart(2, '0')}`;
+    }
+
+    formatDistance(block: BlockSummary): string {
+        const m = block.distanceMeters;
+        if (m == null || m <= 0) return '—';
+        if (m >= 1000) return (m / 1000).toFixed(2) + ' km';
+        return Math.round(m) + ' m';
     }
 
     formatDate(date: Date): string {

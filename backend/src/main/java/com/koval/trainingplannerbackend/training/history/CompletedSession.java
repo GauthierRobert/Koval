@@ -45,6 +45,7 @@ public class CompletedSession {
             double targetPower,
             double actualPower,
             double actualCadence,
-            double actualHR) {
+            double actualHR,
+            double distanceMeters) {
     }
 }

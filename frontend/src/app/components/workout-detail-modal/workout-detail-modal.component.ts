@@ -201,6 +201,26 @@ export class WorkoutDetailModalComponent {
     return Math.max(150, maxBlockIntensity + 20);
   }
 
+  formatBlockDuration(block: WorkoutBlock, training: Training): string {
+    const sec = this.getEstimatedBlockDuration(block, training);
+    if (sec <= 0) return '—';
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    if (m >= 60) {
+      const h = Math.floor(m / 60);
+      const rm = m % 60;
+      return `${h}h${rm > 0 ? rm + 'm' : ''}`;
+    }
+    return s > 0 ? `${m}:${s.toString().padStart(2, '0')}` : `${m}m`;
+  }
+
+  formatBlockDistance(block: WorkoutBlock, training: Training): string {
+    const meters = this.durationService.estimateDistance(block, training, this.currentZoneSystem);
+    if (meters <= 0) return '—';
+    if (meters >= 1000) return (meters / 1000).toFixed(2) + ' km';
+    return Math.round(meters) + ' m';
+  }
+
   getDisplayIntensity(block: WorkoutBlock): string {
     if (block.type === 'PAUSE') return 'PAUSE';
     if (block.type === 'FREE') return 'FREE';

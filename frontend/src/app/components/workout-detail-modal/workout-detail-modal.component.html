@@ -49,6 +49,21 @@
             </div>
           </div>
 
+          <!-- Block list -->
+          <div class="blocks-list" *ngIf="training.blocks && training.blocks.length">
+            <div *ngFor="let block of training.blocks; let i = index" class="block-item">
+              <span class="block-index">{{ i + 1 }}</span>
+              <span class="block-label">{{ block.label || block.type }}</span>
+              <span class="block-intensity">{{ getDisplayIntensity(block) }}</span>
+              <span class="block-duration" [class.estimated]="!block.durationSeconds">
+                {{ formatBlockDuration(block, training) }}
+              </span>
+              <span class="block-distance" [class.estimated]="!block.distanceMeters">
+                {{ formatBlockDistance(block, training) }}
+              </span>
+            </div>
+          </div>
+
           <!-- Stats -->
           <div class="stats-row">
             <div class="stat">

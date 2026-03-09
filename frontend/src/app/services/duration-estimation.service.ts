@@ -29,6 +29,26 @@ export class DurationEstimationService {
         return 0;
     }
 
+    estimateDistance(block: WorkoutBlock, training: Training, zoneSystem: ZoneSystem | null): number {
+        // 1. If explicit distance exists, use it.
+        if (block.distanceMeters && block.distanceMeters > 0) {
+            return block.distanceMeters;
+        }
+
+        // 2. If explicit duration exists, estimate distance from speed.
+        if (block.durationSeconds && block.durationSeconds > 0) {
+            const user = this.authService.currentUser;
+            if (!user) return 0;
+
+            const speedMps = this.getEstimatedSpeed(block, training, user, zoneSystem);
+            if (speedMps > 0) {
+                return Math.round(block.durationSeconds * speedMps);
+            }
+        }
+
+        return 0;
+    }
+
     private getEstimatedSpeed(block: WorkoutBlock, training: Training, user: User, zoneSystem: ZoneSystem | null): number {
         const intensity = block.intensityTarget || 50; // Default 50% if missing
 

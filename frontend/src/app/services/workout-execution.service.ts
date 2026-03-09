@@ -13,6 +13,7 @@ export interface BlockSummary {
     actualCadence: number;
     actualHR: number;
     type: string;
+    distanceMeters?: number;
 }
 
 export interface SessionSummary {
@@ -174,14 +175,16 @@ export class WorkoutExecutionService {
         }
 
         const duration = block.durationSeconds || 0;
+        const actualDuration = duration - state.remainingBlockSeconds;
         const summary: BlockSummary = {
             label: block.label,
-            durationSeconds: duration - state.remainingBlockSeconds, // Actual time spent
+            durationSeconds: actualDuration,
             targetPower: target,
             actualPower: state.currentBlockAverages.power,
             actualCadence: state.currentBlockAverages.cadence,
             actualHR: state.currentBlockAverages.heartRate,
-            type: block.type
+            type: block.type,
+            distanceMeters: Math.round(state.currentBlockAverages.speed * actualDuration * 10) / 10
         };
 
         this.stateSubject.next({
