@@ -11,8 +11,9 @@ import { SavedSession } from '../../../services/history.service';
 import { TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS, TrainingType } from '../../../services/training.service';
 import { SportIconComponent } from '../../sport-icon/sport-icon.component';
 import { TrainingLoadChartComponent } from '../../training-load-chart/training-load-chart.component';
-import { CalendarDay, CalendarEntry, EntriesByDay, toDateKey } from '../calendar.component';
+import { CalendarDay, CalendarEntry, EntriesByDay, GoalsByDay, toDateKey } from '../calendar.component';
 import { WorkoutsByDay } from '../calendar.component';
+import { RaceGoalService } from '../../../services/race-goal.service';
 
 @Component({
   selector: 'app-calendar-week-view',
@@ -29,6 +30,7 @@ export class CalendarWeekViewComponent {
   @Input() days: CalendarDay[] = [];
   @Input() entriesByDay: EntriesByDay = new Map();
   @Input() workoutsByDay: WorkoutsByDay = new Map();
+  @Input() goalsByDay: GoalsByDay = new Map();
 
   @Output() addDay = new EventEmitter<CalendarDay>();
   @Output() workoutSelected = new EventEmitter<ScheduledWorkout>();
@@ -44,6 +46,11 @@ export class CalendarWeekViewComponent {
   nearbyScheduled$: Observable<ScheduledWorkout[]> = of([]);
 
   private readonly calendarService = inject(CalendarService);
+  private readonly raceGoalService = inject(RaceGoalService);
+
+  getPriorityColor(priority: string): string {
+    return this.raceGoalService.getPriorityColor(priority);
+  }
 
   openLinkPicker(session: SavedSession): void {
     this.linkPickerState = { sessionId: session.id };

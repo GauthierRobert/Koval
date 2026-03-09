@@ -8,6 +8,7 @@ import {MetricsService, PmcDataPoint} from '../../services/metrics.service';
 import {CalendarService} from '../../services/calendar.service';
 import {CoachService} from '../../services/coach.service';
 import {PmcChartComponent} from '../pmc-chart/pmc-chart.component';
+import {RaceGoal, RaceGoalService} from '../../services/race-goal.service'; // RaceGoal used for BehaviorSubject typing
 
 type Period = '1w' | '1m' | '3m' | '6m' | '1y';
 
@@ -23,6 +24,7 @@ export class PmcPageComponent implements OnInit {
     private metricsService = inject(MetricsService);
     private calendarService = inject(CalendarService);
     private coachService = inject(CoachService);
+    private raceGoalService = inject(RaceGoalService);
     private route = inject(ActivatedRoute);
     private router = inject(Router);
 
@@ -79,14 +81,22 @@ export class PmcPageComponent implements OnInit {
         }),
     );
 
+    private athleteGoalsSubject = new BehaviorSubject<RaceGoal[]>([]);
+    athleteGoals$ = this.athleteGoalsSubject.asObservable();
+
+    // Will be set after ngOnInit determines athleteId
+    displayGoals$!: Observable<RaceGoal[]>;
+
     loading = false;
     error = false;
 
     ngOnInit(): void {
         this.athleteId = this.route.snapshot.queryParamMap.get('athleteId');
+        this.displayGoals$ = this.athleteId ? this.athleteGoals$ : this.raceGoalService.goals$;
         this.loadPmc();
         if (!this.athleteId) {
             this.loadScheduledWorkouts();
+            this.raceGoalService.loadGoals();
         }
     }
 
@@ -114,6 +124,12 @@ export class PmcPageComponent implements OnInit {
             this.metricsService.getPmc(this.fromDate(), this.today()).subscribe({
                 next: (data) => { this.pmcDataSubject.next(data); this.loading = false; },
                 error: () => { this.loading = false; this.error = true; },
+            });
+        }
+        if (this.athleteId) {
+            this.raceGoalService.getAthleteGoals(this.athleteId).subscribe({
+                next: (goals) => this.athleteGoalsSubject.next(goals),
+                error: () => this.athleteGoalsSubject.next([]),
             });
         }
     }

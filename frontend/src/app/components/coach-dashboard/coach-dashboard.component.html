@@ -102,6 +102,7 @@
             <div class="tab" [class.active]="activeTab === 'physiology'" (click)="activeTab = 'physiology'">PHYSIOLOGY</div>
             <div class="tab" [class.active]="activeTab === 'history'"    (click)="activeTab = 'history'">HISTORY</div>
             <div class="tab" [class.active]="activeTab === 'pmc'"        (click)="activeTab = 'pmc'">PMC</div>
+            <div class="tab" [class.active]="activeTab === 'goals'"      (click)="activeTab = 'goals'">GOALS</div>
           </div>
         </div>
 
@@ -388,9 +389,59 @@
                 <div class="section-title">PMC — 30 DAYS</div>
                 <button class="view-pmc-btn" (click)="viewAthletePmc(selectedAthlete!.id)">VIEW FULL PMC →</button>
               </div>
-              <app-pmc-chart [data]="pmcData"></app-pmc-chart>
+              <app-pmc-chart [data]="pmcData" [goals]="athleteGoals$ | async"></app-pmc-chart>
             </div>
             <div *ngIf="pmcData.length === 0" class="empty-tab">No PMC data available.</div>
+          </ng-container>
+        </ng-container>
+
+        <!-- GOALS tab -->
+        <ng-container *ngIf="activeTab === 'goals'">
+          <ng-container *ngIf="athleteGoals$ | async as goals">
+            <div class="goals-tab-panel" *ngIf="goals.length > 0; else noGoals">
+              <div class="section-title">RACE GOALS</div>
+              <table class="goals-table">
+                <thead>
+                  <tr>
+                    <th>Priority</th>
+                    <th>Race</th>
+                    <th>Sport</th>
+                    <th>Date</th>
+                    <th>Days</th>
+                    <th>Distance</th>
+                    <th>Target Time</th>
+                    <th>Location</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let goal of goals">
+                    <td>
+                      <span class="goal-priority-dot"
+                        [style.background-color]="getPriorityColor(goal.priority)"
+                        [title]="goal.priority === 'A' ? 'Goal Race' : goal.priority === 'B' ? 'Target Race' : 'Training Race'">
+                        {{ goal.priority }}
+                      </span>
+                    </td>
+                    <td class="goal-title-cell">{{ goal.title }}</td>
+                    <td>{{ goal.sport }}</td>
+                    <td>{{ goal.raceDate | date:'MMM d, y' }}</td>
+                    <td>
+                      <span class="days-badge-coach" [class.past]="daysUntil(goal.raceDate) < 0">
+                        {{ daysUntil(goal.raceDate) < 0 ? (daysUntil(goal.raceDate) * -1) + 'd ago' : daysUntil(goal.raceDate) + 'd' }}
+                      </span>
+                    </td>
+                    <td>{{ goal.distance || '—' }}</td>
+                    <td>{{ goal.targetTime || '—' }}</td>
+                    <td>{{ goal.location || '—' }}</td>
+                    <td class="notes-cell">{{ goal.notes || '—' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <ng-template #noGoals>
+              <div class="empty-tab">No race goals for this athlete.</div>
+            </ng-template>
           </ng-container>
         </ng-container>
 

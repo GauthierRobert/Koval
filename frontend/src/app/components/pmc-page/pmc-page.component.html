@@ -119,7 +119,7 @@
       <div class="panel glass chart-panel">
         <div class="panel-title">PERFORMANCE MANAGEMENT CHART</div>
         <div class="chart-wrap">
-          <app-pmc-chart [data]="fullPmcData$ | async"></app-pmc-chart>
+          <app-pmc-chart [data]="fullPmcData$ | async" [goals]="displayGoals$ | async"></app-pmc-chart>
         </div>
       </div>
     </div>

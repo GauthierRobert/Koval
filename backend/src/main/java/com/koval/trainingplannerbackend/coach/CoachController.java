@@ -2,6 +2,8 @@ package com.koval.trainingplannerbackend.coach;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.User;
+import com.koval.trainingplannerbackend.goal.RaceGoal;
+import com.koval.trainingplannerbackend.goal.RaceGoalService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
@@ -36,15 +38,17 @@ public class CoachController {
     private final TagService tagService;
     private final CompletedSessionRepository sessionRepository;
     private final AnalyticsService analyticsService;
+    private final RaceGoalService raceGoalService;
 
     public CoachController(CoachService coachService, ScheduleController scheduleController,
                            TagService tagService, CompletedSessionRepository sessionRepository,
-                           AnalyticsService analyticsService) {
+                           AnalyticsService analyticsService, RaceGoalService raceGoalService) {
         this.coachService = coachService;
         this.scheduleController = scheduleController;
         this.tagService = tagService;
         this.sessionRepository = sessionRepository;
         this.analyticsService = analyticsService;
+        this.raceGoalService = raceGoalService;
     }
 
     public record AssignmentRequest(
@@ -221,6 +225,15 @@ public class CoachController {
         boolean owns = athletes.stream().anyMatch(a -> a.getId().equals(athleteId));
         if (!owns) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(analyticsService.generatePmc(athleteId, from, to));
+    }
+
+    @GetMapping("/athletes/{athleteId}/goals")
+    public ResponseEntity<List<RaceGoal>> getAthleteGoals(@PathVariable String athleteId) {
+        String coachId = SecurityUtils.getCurrentUserId();
+        List<User> athletes = coachService.getCoachAthletes(coachId);
+        boolean owns = athletes.stream().anyMatch(a -> a.getId().equals(athleteId));
+        if (!owns) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(raceGoalService.getGoalsForAthlete(athleteId));
     }
 
     // --- Invite Code endpoints ---

@@ -65,6 +65,24 @@
         </div>
       </div>
 
+      <!-- Next Race Goal -->
+      <div class="next-goal-card glass" *ngIf="vm.nextGoal as goal" [routerLink]="['/goals']"
+        [style.border-left-color]="getGoalPriorityColor(goal.priority)">
+        <div class="next-goal-label">NEXT RACE GOAL</div>
+        <div class="next-goal-body">
+          <span class="next-goal-flag">🏁</span>
+          <div class="next-goal-info">
+            <span class="next-goal-title">{{ goal.title }}</span>
+            <span class="next-goal-meta">{{ goal.sport }} · {{ goal.raceDate | date:'MMM d, y' }}</span>
+          </div>
+          <div class="next-goal-right">
+            <span class="next-goal-days" [style.color]="getGoalPriorityColor(goal.priority)">{{ daysUntilGoal(goal) }}d</span>
+            <span class="next-goal-priority" [style.background-color]="getGoalPriorityColor(goal.priority) + '22'"
+              [style.color]="getGoalPriorityColor(goal.priority)">{{ goal.priority }}</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Week TSS summary -->
       <div class="week-tss-bar" *ngIf="hasAnyActivity(vm.weekMetrics)">
         <span class="week-tss-total">{{ totalWeekTss(vm.weekMetrics) }} TSS this week</span>

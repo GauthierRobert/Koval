@@ -150,3 +150,30 @@
 
 .mini-card--fused { background: var(--success-subtle); border-color: var(--success-border); }
 .mini-card--session { background: var(--session-subtle); border-color: var(--session-border); }
+
+.goal-pill {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid;
+  font-size: 0.65rem;
+  margin: 1px 0;
+  cursor: default;
+  overflow: hidden;
+}
+
+.goal-pill-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.goal-pill-priority {
+  font-weight: 700;
+  font-size: 0.62rem;
+  flex-shrink: 0;
+}

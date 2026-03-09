@@ -1,0 +1,106 @@
+<div class="goals-page">
+  <div class="page-header">
+    <h1>Race <span class="accent">Goals</span></h1>
+    <button class="btn-primary" (click)="openCreate()">+ ADD GOAL</button>
+  </div>
+
+  <ng-container *ngIf="goals$ | async as goals">
+    <div class="goals-grid" *ngIf="goals.length > 0; else empty">
+      <div *ngFor="let goal of goals" class="goal-card glass">
+        <div class="goal-priority-bar" [style.background-color]="getPriorityColor(goal.priority)"></div>
+        <div class="goal-body">
+          <div class="goal-header-row">
+            <span class="priority-badge" [style.background-color]="getPriorityColor(goal.priority) + '22'"
+              [style.color]="getPriorityColor(goal.priority)" [style.border-color]="getPriorityColor(goal.priority) + '55'">
+              {{ goal.priority }}
+            </span>
+            <span class="goal-sport">{{ goal.sport }}</span>
+            <div class="goal-actions">
+              <button class="icon-btn" (click)="openEdit(goal)" title="Edit">✏️</button>
+              <button class="icon-btn delete" (click)="delete(goal)" title="Delete">🗑</button>
+            </div>
+          </div>
+          <h2 class="goal-title">{{ goal.title }}</h2>
+          <div class="goal-date">
+            <span class="flag">🏁</span>
+            <span>{{ formatDate(goal.raceDate) }}</span>
+            <span class="days-badge" [class.past]="daysUntil(goal.raceDate) < 0"
+              [class.soon]="daysUntil(goal.raceDate) >= 0 && daysUntil(goal.raceDate) <= 30">
+              {{ daysUntil(goal.raceDate) < 0 ? (daysUntil(goal.raceDate) * -1) + 'd ago' : daysUntil(goal.raceDate) + 'd' }}
+            </span>
+          </div>
+          <div class="goal-meta">
+            <span *ngIf="goal.distance" class="meta-item">📏 {{ goal.distance }}</span>
+            <span *ngIf="goal.location" class="meta-item">📍 {{ goal.location }}</span>
+            <span *ngIf="goal.targetTime" class="meta-item">⏱ {{ goal.targetTime }}</span>
+          </div>
+          <p class="goal-notes" *ngIf="goal.notes">{{ goal.notes }}</p>
+        </div>
+      </div>
+    </div>
+    <ng-template #empty>
+      <div class="empty-state glass">
+        <span class="empty-icon">🏁</span>
+        <p>No race goals yet. Add your first goal to start planning!</p>
+        <button class="btn-primary" (click)="openCreate()">ADD GOAL</button>
+      </div>
+    </ng-template>
+  </ng-container>
+</div>
+
+<!-- Goal Form Modal -->
+<div class="modal-backdrop" *ngIf="isFormOpen" (click)="closeForm()">
+  <div class="modal glass" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ editingGoal ? 'Edit Goal' : 'New Race Goal' }}</h3>
+      <button class="close-btn" (click)="closeForm()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Race Name *</label>
+        <input [(ngModel)]="form.title" placeholder="e.g. Paris-Roubaix 2026" class="form-input" />
+      </div>
+      <div class="form-row two-col">
+        <div>
+          <label>Sport *</label>
+          <select [(ngModel)]="form.sport" class="form-input">
+            <option *ngFor="let s of sports" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+        <div>
+          <label>Priority *</label>
+          <select [(ngModel)]="form.priority" class="form-input">
+            <option *ngFor="let p of priorities" [value]="p.value">{{ p.label }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Race Date *</label>
+        <input type="date" [(ngModel)]="form.raceDate" class="form-input" />
+      </div>
+      <div class="form-row two-col">
+        <div>
+          <label>Distance</label>
+          <input [(ngModel)]="form.distance" placeholder="e.g. 100km" class="form-input" />
+        </div>
+        <div>
+          <label>Target Time</label>
+          <input [(ngModel)]="form.targetTime" placeholder="e.g. 3:30:00" class="form-input" />
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Location</label>
+        <input [(ngModel)]="form.location" placeholder="e.g. Paris, France" class="form-input" />
+      </div>
+      <div class="form-row">
+        <label>Notes</label>
+        <textarea [(ngModel)]="form.notes" placeholder="Goals, strategy, context..." class="form-input" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeForm()">CANCEL</button>
+      <button class="btn-primary" (click)="save()"
+        [disabled]="!form.title || !form.raceDate || !form.sport || !form.priority">SAVE</button>
+    </div>
+  </div>
+</div>

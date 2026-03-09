@@ -20,8 +20,8 @@ public class RouterService {
             Classify the user message into exactly one of these categories:
 
             TRAINING_CREATION — creating, modifying, or designing workout plans
-            SCHEDULING — assigning workouts to dates, calendar management, schedule queries
-            ANALYSIS — reviewing past sessions, performance metrics, PMC/CTL/ATL/TSB analysis
+            SCHEDULING — assigning workouts to dates, calendar management, schedule queries, race goals (add/edit/delete/list goals)
+            ANALYSIS — reviewing past sessions, performance metrics, PMC/CTL/ATL/TSB analysis, fitness relative to race goals
             COACH_MANAGEMENT — managing athletes, tags, zone systems, coach-specific operations
             GENERAL — greetings, general questions, anything that doesn't fit above
 

@@ -100,9 +100,9 @@ public class AnalyticsService {
         if (session.getBlockSummaries() == null || session.getAvgSpeed() <= 0) return;
 
         boolean changed = false;
-        var updated = new java.util.ArrayList<CompletedSession.BlockSummary>();
+        var updated = new ArrayList<CompletedSession.BlockSummary>();
         for (var b : session.getBlockSummaries()) {
-            if (b.distanceMeters() <= 0 && b.durationSeconds() > 0) {
+            if ((b.distanceMeters() == null || b.distanceMeters() <= 0) && b.durationSeconds() > 0) {
                 updated.add(new CompletedSession.BlockSummary(
                         b.label(), b.type(), b.durationSeconds(),
                         b.targetPower(), b.actualPower(), b.actualCadence(), b.actualHR(),

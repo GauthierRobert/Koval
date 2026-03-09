@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { BehaviorSubject, combineLatest, Observable, of, map } from 'rxjs';
 import { CoachService, ScheduledWorkout } from '../../services/coach.service';
 import { AuthService, User } from '../../services/auth.service';
+import { RaceGoal, RaceGoalService } from '../../services/race-goal.service';
 import { Tag } from '../../services/tag.service';
 import { ZoneService } from '../../services/zone.service';
 import { ZoneSystem } from '../../services/zone';
@@ -31,7 +32,7 @@ export class CoachDashboardComponent implements OnInit {
   isShareModalOpen = false;
   trainingToShare: Training | null = null;
   activeTagFilter: string | null = null;
-  activeTab: 'performance' | 'physiology' | 'history' | 'pmc' = 'performance';
+  activeTab: 'performance' | 'physiology' | 'history' | 'pmc' | 'goals' = 'performance';
 
   scheduleWeekStart: Date = this.getMondayOfWeek(new Date());
   scheduleWeekEnd: Date = this.getSundayOfWeek(new Date());
@@ -72,6 +73,9 @@ export class CoachDashboardComponent implements OnInit {
   private athletePmcSubject = new BehaviorSubject<PmcDataPoint[]>([]);
   athletePmc$ = this.athletePmcSubject.asObservable();
 
+  private athleteGoalsSubject = new BehaviorSubject<RaceGoal[]>([]);
+  athleteGoals$ = this.athleteGoalsSubject.asObservable();
+
   // Task 7: Real fitness/fatigue/form metrics derived from PMC data
   athleteMetrics$ = this.athletePmc$.pipe(
     map(data => {
@@ -97,6 +101,7 @@ export class CoachDashboardComponent implements OnInit {
     private authService: AuthService,
     private trainingService: TrainingService,
     private zoneService: ZoneService,
+    private raceGoalService: RaceGoalService,
     private router: Router,
     private route: ActivatedRoute,
     private ngZone: NgZone
@@ -188,6 +193,14 @@ export class CoachDashboardComponent implements OnInit {
     this.loadAthleteSchedule(athlete.id);
     this.loadAthleteSessions(athlete.id);
     this.loadAthletePmc(athlete.id);
+    this.loadAthleteGoals(athlete.id);
+  }
+
+  loadAthleteGoals(athleteId: string): void {
+    this.raceGoalService.getAthleteGoals(athleteId).subscribe({
+      next: (goals) => this.ngZone.run(() => this.athleteGoalsSubject.next(goals)),
+      error: () => this.ngZone.run(() => this.athleteGoalsSubject.next([])),
+    });
   }
 
   // Task 3: Wrap athleteSessionsSubject.next() in ngZone.run()
@@ -383,6 +396,17 @@ export class CoachDashboardComponent implements OnInit {
     const m = Math.floor((sec % 3600) / 60);
     const s = sec % 60;
     return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  getPriorityColor(priority: string): string {
+    return this.raceGoalService.getPriorityColor(priority);
+  }
+
+  daysUntil(dateStr: string): number {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(dateStr + 'T00:00:00');
+    return Math.round((target.getTime() - today.getTime()) / 86400000);
   }
 
   // Task 7: Form condition label

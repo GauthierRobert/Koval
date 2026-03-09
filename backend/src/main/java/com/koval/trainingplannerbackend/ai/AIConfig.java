@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.ai;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.koval.trainingplannerbackend.coach.tools.CoachToolService;
+import com.koval.trainingplannerbackend.goal.GoalToolService;
 import com.koval.trainingplannerbackend.training.history.HistoryToolService;
 import com.koval.trainingplannerbackend.training.tools.TrainingToolService;
 import com.koval.trainingplannerbackend.training.zone.ZoneToolService;
@@ -101,7 +102,14 @@ public class AIConfig {
             - `getAthletesByTag(coachId, tagId)` — filter athletes by tag.
             - `getAthleteTagsForCoach(coachId)` — list all tags.
 
-            Always check the user's schedule before scheduling to avoid conflicts.""" + COMMON_RULES;
+            ### Goal Tools
+            - `listGoals(userId)` — list athlete's race goals with days-until countdown.
+            - `createGoal(userId, title, sport, raceDate, priority, distance, location, targetTime, notes)` — add a new race goal.
+            - `updateGoal(goalId, userId, ...)` — update fields of an existing goal.
+            - `deleteGoal(goalId, userId)` — remove a goal.
+            - Priority: A = goal race, B = target race, C = training race.
+
+            When scheduling, consider the athlete's A-priority race date to guide training load.""" + COMMON_RULES;
 
     private static final String ANALYSIS_PROMPT = """
             Role: Performance Analyst for endurance athletes.
@@ -117,6 +125,10 @@ public class AIConfig {
             - `getSessionsByDateRange(userId, from, to)` — sessions in a date range.
             - `getPmcData(userId, from, to)` — PMC data: CTL (fitness), ATL (fatigue), TSB (form).
 
+            ### Goal Tools
+            - `listGoals(userId)` — list race goals with days-until to give context for analysis.
+
+            Use race goal dates to frame fitness/fatigue status (e.g. "X days to your A race").
             Focus on actionable insights: training load trends, recovery status, and performance progression.""" + COMMON_RULES;
 
     private static final String COACH_MANAGEMENT_PROMPT = """
@@ -140,7 +152,10 @@ public class AIConfig {
             - `createZoneSystem(coachId, name, sportType, referenceType, referenceName, zones)` — define custom zones.
             - `listZoneSystems(coachId)` — list all zone systems.
             - **Zone bounds:** low/high as % of reference (FTP, Threshold Pace, CSS, etc.).
-            - **Reference types:** FTP, VO2MAX_POWER, THRESHOLD_PACE, VO2MAX_PACE, CSS, PACE_5K, PACE_10K, PACE_HALF_MARATHON, PACE_MARATHON, CUSTOM.""" + COMMON_RULES;
+            - **Reference types:** FTP, VO2MAX_POWER, THRESHOLD_PACE, VO2MAX_PACE, CSS, PACE_5K, PACE_10K, PACE_HALF_MARATHON, PACE_MARATHON, CUSTOM.
+
+            ### Goal Tools (view athlete goals)
+            - `listGoals(athleteId)` — list an athlete's race goals to understand their race calendar.""" + COMMON_RULES;
 
     private static final String GENERAL_PROMPT = """
             Role: Friendly Triathlon & Cycling Assistant.
@@ -181,12 +196,13 @@ public class AIConfig {
                                        ChatMemory chatMemory,
                                        ContextToolService contextToolService,
                                        TrainingToolService trainingToolService,
-                                       CoachToolService coachToolService) {
+                                       CoachToolService coachToolService,
+                                       GoalToolService goalToolService) {
         return ChatClient.builder(chatModel)
                 .defaultSystem(SCHEDULING_PROMPT)
                 .defaultOptions(sonnetOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultTools(contextToolService, trainingToolService, coachToolService)
+                .defaultTools(contextToolService, trainingToolService, coachToolService, goalToolService)
                 .build();
     }
 
@@ -194,12 +210,13 @@ public class AIConfig {
     public ChatClient analysisClient(AnthropicChatModel chatModel,
                                      ChatMemory chatMemory,
                                      ContextToolService contextToolService,
-                                     HistoryToolService historyToolService) {
+                                     HistoryToolService historyToolService,
+                                     GoalToolService goalToolService) {
         return ChatClient.builder(chatModel)
                 .defaultSystem(ANALYSIS_PROMPT)
                 .defaultOptions(sonnetOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultTools(contextToolService, historyToolService)
+                .defaultTools(contextToolService, historyToolService, goalToolService)
                 .build();
     }
 
@@ -208,12 +225,13 @@ public class AIConfig {
                                             ChatMemory chatMemory,
                                             ContextToolService contextToolService,
                                             CoachToolService coachToolService,
-                                            ZoneToolService zoneToolService) {
+                                            ZoneToolService zoneToolService,
+                                            GoalToolService goalToolService) {
         return ChatClient.builder(chatModel)
                 .defaultSystem(COACH_MANAGEMENT_PROMPT)
                 .defaultOptions(sonnetOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultTools(contextToolService, coachToolService, zoneToolService)
+                .defaultTools(contextToolService, coachToolService, zoneToolService, goalToolService)
                 .build();
     }
 

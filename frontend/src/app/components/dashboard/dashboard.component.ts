@@ -8,6 +8,7 @@ import { CalendarService } from '../../services/calendar.service';
 import { HistoryService, SavedSession } from '../../services/history.service';
 import { MetricsService, PmcDataPoint } from '../../services/metrics.service';
 import { ScheduledWorkout } from '../../services/coach.service';
+import { RaceGoal, RaceGoalService } from '../../services/race-goal.service';
 import { SportIconComponent } from '../sport-icon/sport-icon.component';
 import { WorkoutDetailModalComponent } from '../workout-detail-modal/workout-detail-modal.component';
 import { PmcChartComponent } from '../pmc-chart/pmc-chart.component';
@@ -85,6 +86,7 @@ export class DashboardComponent {
   private calendarService = inject(CalendarService);
   private historyService = inject(HistoryService);
   private metricsService = inject(MetricsService);
+  private raceGoalService = inject(RaceGoalService);
   private router = inject(Router);
 
   private readonly todayKey = toDateKey(new Date());
@@ -157,6 +159,7 @@ export class DashboardComponent {
     latestFit: this.latestFit$,
     form: this.formStats$,
     pmcData: this.pmcData$,
+    nextGoal: this.raceGoalService.nextGoal$,
   });
 
   selectedScheduledWorkout: ScheduledWorkout | null = null;
@@ -239,5 +242,16 @@ export class DashboardComponent {
 
   hasAnyActivity(metrics: WeekMetrics): boolean {
     return metrics.current.some((s) => s.sessionCount > 0);
+  }
+
+  daysUntilGoal(goal: RaceGoal): number {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(goal.raceDate + 'T00:00:00');
+    return Math.round((target.getTime() - today.getTime()) / 86400000);
+  }
+
+  getGoalPriorityColor(priority: string): string {
+    return this.raceGoalService.getPriorityColor(priority);
   }
 }

@@ -43,6 +43,17 @@
           </div>
 
         </ng-container>
+
+        <!-- Goal pills -->
+        <ng-container *ngFor="let goal of goalsByDay.get(day.key) || []">
+          <div class="goal-pill" [style.background-color]="getPriorityColor(goal.priority) + '22'"
+            [style.border-color]="getPriorityColor(goal.priority) + '66'"
+            [title]="goal.title">
+            <span>🏁</span>
+            <span class="goal-pill-title">{{ goal.title }}</span>
+            <span class="goal-pill-priority" [style.color]="getPriorityColor(goal.priority)">{{ goal.priority }}</span>
+          </div>
+        </ng-container>
       </div>
     </div>
   </div>

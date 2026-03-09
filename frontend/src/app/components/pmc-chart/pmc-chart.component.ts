@@ -1,5 +1,6 @@
 import {AfterViewInit, Component, ElementRef, Input, OnChanges, ViewChild,} from '@angular/core';
 import {PmcDataPoint} from '../../services/metrics.service';
+import {RaceGoal, PRIORITY_COLORS} from '../../services/race-goal.service';
 
 const SPORT_COLORS: Record<string, string> = {
     CYCLING: '#FF9D00',
@@ -33,6 +34,7 @@ function getSportColor(sport?: string): string {
 })
 export class PmcChartComponent implements OnChanges, AfterViewInit {
     @Input() data: PmcDataPoint[] | null = [];
+    @Input() goals: RaceGoal[] | null = [];
 
     @ViewChild('canvas') private canvasRef!: ElementRef<HTMLCanvasElement>;
     private ready = false;
@@ -274,6 +276,52 @@ export class PmcChartComponent implements OnChanges, AfterViewInit {
             ctx.font = FONT_XS;
             ctx.textAlign = 'center';
             ctx.fillText('TODAY', tx, mT - 4);
+        }
+
+        // ── Race Goal markers ─────────────────────────────────────────────────
+        const goalsToShow = (this.goals ?? []).filter(g => {
+            const idx = points.findIndex(p => p.date === g.raceDate);
+            return idx >= 0;
+        });
+        for (const goal of goalsToShow) {
+            const gIdx = points.findIndex(p => p.date === goal.raceDate);
+            const gx = xOf(gIdx);
+            const color = PRIORITY_COLORS[goal.priority] ?? '#9CA3AF';
+
+            // Vertical line
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.globalAlpha = 0.75;
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.moveTo(gx, mT); ctx.lineTo(gx, H - mB);
+            ctx.stroke();
+
+            // Triangle flag at top
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 0.9;
+            ctx.beginPath();
+            ctx.moveTo(gx, mT + 2);
+            ctx.lineTo(gx + 10, mT + 7);
+            ctx.lineTo(gx, mT + 12);
+            ctx.closePath();
+            ctx.fill();
+
+            // Priority letter above line
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = color;
+            ctx.font = `bold ${FONT_XS}`;
+            ctx.textAlign = 'center';
+            ctx.fillText(goal.priority, gx - 5, mT - 2);
+
+            // Truncated title below flag
+            const title = goal.title.length > 14 ? goal.title.substring(0, 13) + '…' : goal.title;
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.font = FONT_XS;
+            ctx.textAlign = 'left';
+            ctx.fillText(title, gx + 3, mT + 22);
+            ctx.restore();
         }
 
         // ── Peak TSB dot ──────────────────────────────────────────────────────

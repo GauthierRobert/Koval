@@ -71,7 +71,7 @@
   gap: 0.6rem;
   position: relative;
   border: 1px solid var(--glass-border);
-  border-top: 3px solid var(--accent-color);
+  border-top: none;
 }
 
 .workout-card.clickable {
@@ -478,4 +478,31 @@
 .link-picker-cancel:hover {
   background: rgba(255, 255, 255, 0.1);
   color: var(--text-color);
+}
+
+.goal-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid;
+  font-size: 0.72rem;
+  margin: 2px 0;
+  cursor: default;
+  overflow: hidden;
+}
+
+.goal-pill-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.goal-pill-priority {
+  font-weight: 700;
+  font-size: 0.68rem;
+  flex-shrink: 0;
 }

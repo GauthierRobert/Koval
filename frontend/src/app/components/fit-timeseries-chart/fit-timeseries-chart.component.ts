@@ -100,8 +100,20 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
 
         const cW = canvas.width - this.ML - this.MR;
         const n = this.records.length;
-        const idx = Math.round((mouseX - this.ML) / cW * (n - 1));
-        const clamped = Math.max(0, Math.min(n - 1, idx));
+        const t0 = this.records[0].timestamp;
+        const totalSec = this.records[n - 1].timestamp - t0 || n;
+
+        // Convert mouseX to target timestamp, then find nearest record
+        const targetT = t0 + ((mouseX - this.ML) / cW) * totalSec;
+        let lo = 0, hi = n - 1;
+        while (lo < hi) {
+            const mid = (lo + hi) >> 1;
+            if (this.records[mid].timestamp < targetT) lo = mid + 1;
+            else hi = mid;
+        }
+        // Pick whichever neighbour is closer
+        const clamped = (lo > 0 && Math.abs(this.records[lo - 1].timestamp - targetT) < Math.abs(this.records[lo].timestamp - targetT))
+            ? lo - 1 : lo;
 
         if (clamped !== this.hoverIdx) {
             this.hoverIdx = clamped;
@@ -130,7 +142,9 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         const cH = H - mT - mB;
         const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#ff9d00';
         const n = this.records.length;
-        const xOf = (i: number) => mL + (i / (n - 1)) * cW;
+        const t0 = this.records[0].timestamp;
+        const totalSec = this.records[n - 1].timestamp - t0 || n;
+        const xOf = (i: number) => mL + ((this.records[i].timestamp - t0) / totalSec) * cW;
 
         // Hoisted scale functions for reuse in tooltip
         let yOfPrimary: ((v: number) => number) | null = null;
@@ -285,7 +299,6 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
             ctx.lineWidth = 1;
 
             let accTime = 0;
-            const totalSec = n; // 1 record ≈ 1 second
             for (let i = 0; i < this.blockSummaries.length - 1; i++) {
                 accTime += this.blockSummaries[i].durationSeconds;
                 const x = mL + (accTime / totalSec) * cW;
@@ -298,7 +311,6 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         }
 
         // ── X-axis labels (elapsed minutes) ──────────────────────────────────
-        const totalSec = n;
         const tickEvery = this.pickTickInterval(totalSec);
         ctx.fillStyle = 'rgba(255,255,255,0.4)';
         ctx.font = '9px monospace';
@@ -363,7 +375,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
 
         if (rows.length === 0) return;
 
-        const elapsed = this.hoverIdx;
+        const elapsed = this.records[this.hoverIdx].timestamp - t0;
         const em = Math.floor(elapsed / 60);
         const es = elapsed % 60;
         const timeStr = `${em}:${String(es).padStart(2, '0')}`;

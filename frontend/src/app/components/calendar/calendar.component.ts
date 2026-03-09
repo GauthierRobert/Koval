@@ -14,6 +14,7 @@ import { SportIconComponent } from '../sport-icon/sport-icon.component';
 import { HistoryService, SavedSession } from '../../services/history.service';
 import { CalendarWeekViewComponent } from './week-view/calendar-week-view.component';
 import { CalendarMonthViewComponent } from './month-view/calendar-month-view.component';
+import { RaceGoal, RaceGoalService } from '../../services/race-goal.service';
 
 export interface CalendarDay {
   date: Date;
@@ -27,6 +28,7 @@ export interface StandaloneEntry { kind: 'standalone'; session: SavedSession; }
 export type CalendarEntry = ScheduledEntry | FusedEntry | StandaloneEntry;
 export type EntriesByDay = Map<string, CalendarEntry[]>;
 export type WorkoutsByDay = Map<string, ScheduledWorkout[]>;
+export type GoalsByDay = Map<string, RaceGoal[]>;
 
 const DAYS_IN_WEEK = 7;
 
@@ -101,6 +103,7 @@ function buildEntriesByDay(scheduled: ScheduledWorkout[], sessions: SavedSession
 })
 export class CalendarComponent implements OnInit {
   readonly emptyMap: WorkoutsByDay = new Map();
+  readonly emptyGoalsMap: GoalsByDay = new Map();
 
   weekDays: CalendarDay[] = [];
   monthDays: CalendarDay[] = [];
@@ -110,6 +113,7 @@ export class CalendarComponent implements OnInit {
 
   entriesByDay$!: Observable<EntriesByDay>;
   scheduleByDay$!: Observable<WorkoutsByDay>;
+  goalsByDay$!: Observable<GoalsByDay>;
   overdueWorkouts$!: Observable<ScheduledWorkout[]>;
 
   isScheduleModalOpen = false;
@@ -121,6 +125,7 @@ export class CalendarComponent implements OnInit {
   private readonly calendarService = inject(CalendarService);
   private readonly authService = inject(AuthService);
   private readonly historyService = inject(HistoryService);
+  private readonly raceGoalService = inject(RaceGoalService);
   private readonly router = inject(Router);
 
   private userId = '';
@@ -152,6 +157,18 @@ export class CalendarComponent implements OnInit {
     this.entriesByDay$ = combineLatest([schedule$, sessions$]).pipe(
       map(([sched, sess]) => buildEntriesByDay(sched, sess))
     );
+
+    this.goalsByDay$ = this.raceGoalService.goals$.pipe(
+      map((goals) => {
+        const byDay: GoalsByDay = new Map();
+        for (const g of goals) {
+          const list = byDay.get(g.raceDate);
+          if (list) { list.push(g); } else { byDay.set(g.raceDate, [g]); }
+        }
+        return byDay;
+      })
+    );
+    this.raceGoalService.loadGoals();
 
     const today = toDateKey(new Date());
     const sevenDaysAgo = new Date();
