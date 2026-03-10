@@ -1,0 +1,498 @@
+package com.koval.trainingplannerbackend.club;
+
+import com.koval.trainingplannerbackend.auth.User;
+import com.koval.trainingplannerbackend.auth.UserService;
+import com.koval.trainingplannerbackend.goal.RaceGoal;
+import com.koval.trainingplannerbackend.goal.RaceGoalRepository;
+import com.koval.trainingplannerbackend.training.history.CompletedSession;
+import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+public class ClubService {
+
+    private final ClubRepository clubRepository;
+    private final ClubMembershipRepository membershipRepository;
+    private final ClubTrainingSessionRepository sessionRepository;
+    private final ClubActivityRepository activityRepository;
+    private final CompletedSessionRepository completedSessionRepository;
+    private final RaceGoalRepository raceGoalRepository;
+    private final UserService userService;
+    private final ClubTagRepository clubTagRepository;
+
+    public ClubService(ClubRepository clubRepository,
+                       ClubMembershipRepository membershipRepository,
+                       ClubTrainingSessionRepository sessionRepository,
+                       ClubActivityRepository activityRepository,
+                       CompletedSessionRepository completedSessionRepository,
+                       RaceGoalRepository raceGoalRepository,
+                       UserService userService,
+                       ClubTagRepository clubTagRepository) {
+        this.clubRepository = clubRepository;
+        this.membershipRepository = membershipRepository;
+        this.sessionRepository = sessionRepository;
+        this.activityRepository = activityRepository;
+        this.completedSessionRepository = completedSessionRepository;
+        this.raceGoalRepository = raceGoalRepository;
+        this.userService = userService;
+        this.clubTagRepository = clubTagRepository;
+    }
+
+    // --- Club CRUD ---
+
+    public Club createClub(String userId, ClubController.CreateClubRequest req) {
+        Club club = new Club();
+        club.setName(req.name());
+        club.setDescription(req.description());
+        club.setLocation(req.location());
+        club.setLogoUrl(req.logoUrl());
+        club.setVisibility(req.visibility() != null ? req.visibility() : ClubVisibility.PUBLIC);
+        club.setOwnerId(userId);
+        club.setMemberCount(1);
+        club.setCreatedAt(LocalDateTime.now());
+        club = clubRepository.save(club);
+
+        ClubMembership membership = new ClubMembership();
+        membership.setClubId(club.getId());
+        membership.setUserId(userId);
+        membership.setRole(ClubMemberRole.OWNER);
+        membership.setStatus(ClubMemberStatus.ACTIVE);
+        membership.setJoinedAt(LocalDateTime.now());
+        membership.setRequestedAt(LocalDateTime.now());
+        membershipRepository.save(membership);
+
+        emitActivity(club.getId(), ClubActivityType.MEMBER_JOINED, userId, null, null);
+        return club;
+    }
+
+    public List<ClubController.ClubSummaryResponse> getUserClubs(String userId) {
+        List<ClubMembership> memberships = membershipRepository.findByUserId(userId);
+        List<String> clubIds = memberships.stream().map(ClubMembership::getClubId).toList();
+        Map<String, Club> clubMap = clubRepository.findAllById(clubIds).stream()
+                .collect(Collectors.toMap(Club::getId, c -> c));
+        Map<String, ClubMembership> membershipByClubId = memberships.stream()
+                .collect(Collectors.toMap(ClubMembership::getClubId, m -> m));
+
+        return clubIds.stream()
+                .filter(clubMap::containsKey)
+                .map(id -> {
+                    Club c = clubMap.get(id);
+                    ClubMembership m = membershipByClubId.get(id);
+                    return new ClubController.ClubSummaryResponse(
+                            c.getId(), c.getName(), c.getDescription(), c.getLogoUrl(),
+                            c.getVisibility(), c.getMemberCount(),
+                            m.getStatus().name() + "_" + m.getRole().name());
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<Club> browsePublicClubs(Pageable pageable) {
+        return clubRepository.findByVisibility(ClubVisibility.PUBLIC);
+    }
+
+    public ClubController.ClubDetailResponse getClubDetail(String clubId, String userId) {
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(() -> new IllegalArgumentException("Club not found"));
+        Optional<ClubMembership> membership = membershipRepository.findByClubIdAndUserId(clubId, userId);
+        String membershipStatus = membership.map(m -> m.getStatus().name()).orElse(null);
+        ClubMemberRole memberRole = membership.map(ClubMembership::getRole).orElse(null);
+        return new ClubController.ClubDetailResponse(
+                club.getId(), club.getName(), club.getDescription(), club.getLocation(),
+                club.getLogoUrl(), club.getVisibility(), club.getMemberCount(),
+                club.getOwnerId(), membershipStatus, memberRole, club.getCreatedAt());
+    }
+
+    public ClubMembership joinClub(String userId, String clubId) {
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(() -> new IllegalArgumentException("Club not found"));
+
+        Optional<ClubMembership> existing = membershipRepository.findByClubIdAndUserId(clubId, userId);
+        if (existing.isPresent()) {
+            throw new IllegalStateException("Already a member or pending");
+        }
+
+        ClubMembership membership = new ClubMembership();
+        membership.setClubId(clubId);
+        membership.setUserId(userId);
+        membership.setRole(ClubMemberRole.MEMBER);
+        membership.setRequestedAt(LocalDateTime.now());
+
+        if (club.getVisibility() == ClubVisibility.PUBLIC) {
+            membership.setStatus(ClubMemberStatus.ACTIVE);
+            membership.setJoinedAt(LocalDateTime.now());
+            club.setMemberCount(club.getMemberCount() + 1);
+            clubRepository.save(club);
+            emitActivity(clubId, ClubActivityType.MEMBER_JOINED, userId, null, null);
+        } else {
+            membership.setStatus(ClubMemberStatus.PENDING);
+        }
+        return membershipRepository.save(membership);
+    }
+
+    public void leaveClub(String userId, String clubId) {
+        ClubMembership membership = membershipRepository.findByClubIdAndUserId(clubId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("Not a member"));
+
+        if (membership.getRole() == ClubMemberRole.OWNER) {
+            throw new IllegalStateException("Owner cannot leave the club");
+        }
+
+        if (membership.getStatus() == ClubMemberStatus.ACTIVE) {
+            Club club = clubRepository.findById(clubId)
+                    .orElseThrow(() -> new IllegalArgumentException("Club not found"));
+            club.setMemberCount(Math.max(0, club.getMemberCount() - 1));
+            clubRepository.save(club);
+            emitActivity(clubId, ClubActivityType.MEMBER_LEFT, userId, null, null);
+        }
+        membershipRepository.delete(membership);
+    }
+
+    public ClubMembership approveRequest(String adminId, String membershipId) {
+        ClubMembership target = membershipRepository.findById(membershipId)
+                .orElseThrow(() -> new IllegalArgumentException("Membership not found"));
+        validateAdminRole(adminId, target.getClubId());
+
+        target.setStatus(ClubMemberStatus.ACTIVE);
+        target.setJoinedAt(LocalDateTime.now());
+        membershipRepository.save(target);
+
+        Club club = clubRepository.findById(target.getClubId())
+                .orElseThrow(() -> new IllegalArgumentException("Club not found"));
+        club.setMemberCount(club.getMemberCount() + 1);
+        clubRepository.save(club);
+        emitActivity(target.getClubId(), ClubActivityType.MEMBER_JOINED, target.getUserId(), null, null);
+        return target;
+    }
+
+    public void rejectRequest(String adminId, String membershipId) {
+        ClubMembership target = membershipRepository.findById(membershipId)
+                .orElseThrow(() -> new IllegalArgumentException("Membership not found"));
+        validateAdminRole(adminId, target.getClubId());
+        membershipRepository.delete(target);
+    }
+
+    public List<ClubController.ClubMemberResponse> getMembers(String clubId) {
+        List<ClubMembership> memberships = membershipRepository.findByClubIdAndStatus(clubId, ClubMemberStatus.ACTIVE);
+
+        // Build userId → List<tagName> map from all club tags
+        List<ClubTag> allTags = clubTagRepository.findByClubId(clubId);
+        Map<String, List<String>> userTagsMap = new HashMap<>();
+        for (ClubTag tag : allTags) {
+            for (String memberId : tag.getMemberIds()) {
+                userTagsMap.computeIfAbsent(memberId, k -> new ArrayList<>()).add(tag.getName());
+            }
+        }
+
+        return memberships.stream().map(m -> {
+            User user = userService.findById(m.getUserId()).orElse(null);
+            String displayName = user != null ? user.getDisplayName() : m.getUserId();
+            String pic = user != null ? user.getProfilePicture() : null;
+            List<String> tags = userTagsMap.getOrDefault(m.getUserId(), List.of());
+            return new ClubController.ClubMemberResponse(
+                    m.getId(), m.getUserId(), displayName, pic, m.getRole(), m.getJoinedAt(), tags);
+        }).collect(Collectors.toList());
+    }
+
+    public List<ClubController.ClubMemberResponse> getPendingRequests(String adminId, String clubId) {
+        validateAdminRole(adminId, clubId);
+        List<ClubMembership> pending = membershipRepository.findByClubIdAndStatus(clubId, ClubMemberStatus.PENDING);
+        return pending.stream().map(m -> {
+            User user = userService.findById(m.getUserId()).orElse(null);
+            String displayName = user != null ? user.getDisplayName() : m.getUserId();
+            String pic = user != null ? user.getProfilePicture() : null;
+            return new ClubController.ClubMemberResponse(
+                    m.getId(), m.getUserId(), displayName, pic, m.getRole(), m.getRequestedAt(), List.of());
+        }).collect(Collectors.toList());
+    }
+
+    // --- Role management ---
+
+    public ClubMembership updateMemberRole(String ownerId, String clubId, String membershipId, ClubMemberRole newRole) {
+        ClubMembership caller = membershipRepository.findByClubIdAndUserId(clubId, ownerId)
+                .orElseThrow(() -> new IllegalStateException("Not a member"));
+        if (caller.getRole() != ClubMemberRole.OWNER) {
+            throw new IllegalStateException("Only the owner can change member roles");
+        }
+        if (newRole == ClubMemberRole.OWNER) {
+            throw new IllegalStateException("Cannot promote a member to OWNER");
+        }
+
+        ClubMembership target = membershipRepository.findById(membershipId)
+                .orElseThrow(() -> new IllegalArgumentException("Membership not found"));
+        if (target.getRole() == ClubMemberRole.OWNER) {
+            throw new IllegalStateException("Cannot change the owner's role");
+        }
+        target.setRole(newRole);
+        return membershipRepository.save(target);
+    }
+
+    // --- Scoped roles ---
+
+    public List<ClubController.MyClubRoleEntry> getMyClubRoles(String userId) {
+        List<ClubMembership> memberships = membershipRepository.findByUserId(userId).stream()
+                .filter(m -> m.getStatus() == ClubMemberStatus.ACTIVE)
+                .collect(Collectors.toList());
+        List<String> clubIds = memberships.stream().map(ClubMembership::getClubId).toList();
+        Map<String, Club> clubMap = clubRepository.findAllById(clubIds).stream()
+                .collect(Collectors.toMap(Club::getId, c -> c));
+
+        return memberships.stream()
+                .filter(m -> clubMap.containsKey(m.getClubId()))
+                .map(m -> {
+                    Club c = clubMap.get(m.getClubId());
+                    return new ClubController.MyClubRoleEntry(c.getId(), c.getName(), m.getRole());
+                })
+                .collect(Collectors.toList());
+    }
+
+    // --- Tags ---
+
+    public ClubTag createTag(String adminId, String clubId, String name) {
+        validateAdminOrOwner(adminId, clubId);
+        if (clubTagRepository.findByClubIdAndName(clubId, name).isPresent()) {
+            throw new IllegalStateException("Tag with this name already exists in the club");
+        }
+        ClubTag tag = new ClubTag();
+        tag.setClubId(clubId);
+        tag.setName(name);
+        tag.setCreatedAt(LocalDateTime.now());
+        return clubTagRepository.save(tag);
+    }
+
+    public List<ClubTag> listTags(String clubId) {
+        return clubTagRepository.findByClubId(clubId);
+    }
+
+    public void deleteTag(String adminId, String clubId, String tagId) {
+        validateAdminOrOwner(adminId, clubId);
+        ClubTag tag = clubTagRepository.findById(tagId)
+                .orElseThrow(() -> new IllegalArgumentException("Tag not found"));
+        if (!tag.getClubId().equals(clubId)) {
+            throw new IllegalArgumentException("Tag does not belong to this club");
+        }
+        clubTagRepository.delete(tag);
+    }
+
+    public ClubTag addMemberToTag(String adminId, String clubId, String tagId, String targetUserId) {
+        validateAdminOrOwner(adminId, clubId);
+        ClubTag tag = clubTagRepository.findById(tagId)
+                .orElseThrow(() -> new IllegalArgumentException("Tag not found"));
+        if (!tag.getClubId().equals(clubId)) {
+            throw new IllegalArgumentException("Tag does not belong to this club");
+        }
+        // Validate target is an active member
+        ClubMembership targetMembership = membershipRepository.findByClubIdAndUserId(clubId, targetUserId)
+                .orElseThrow(() -> new IllegalArgumentException("User is not a member of this club"));
+        if (targetMembership.getStatus() != ClubMemberStatus.ACTIVE) {
+            throw new IllegalStateException("User must be an active member to be tagged");
+        }
+        if (!tag.getMemberIds().contains(targetUserId)) {
+            tag.getMemberIds().add(targetUserId);
+            clubTagRepository.save(tag);
+        }
+        return tag;
+    }
+
+    public ClubTag removeMemberFromTag(String adminId, String clubId, String tagId, String targetUserId) {
+        validateAdminOrOwner(adminId, clubId);
+        ClubTag tag = clubTagRepository.findById(tagId)
+                .orElseThrow(() -> new IllegalArgumentException("Tag not found"));
+        if (!tag.getClubId().equals(clubId)) {
+            throw new IllegalArgumentException("Tag does not belong to this club");
+        }
+        tag.getMemberIds().remove(targetUserId);
+        return clubTagRepository.save(tag);
+    }
+
+    // --- Sessions ---
+
+    public ClubTrainingSession createSession(String userId, String clubId, ClubController.CreateSessionRequest req) {
+        validateActiveMember(userId, clubId);
+        validateAdminOrCoach(userId, clubId);
+
+        ClubTrainingSession session = new ClubTrainingSession();
+        session.setClubId(clubId);
+        session.setCreatedBy(userId);
+        session.setTitle(req.title());
+        session.setSport(req.sport());
+        session.setScheduledAt(req.scheduledAt());
+        session.setLocation(req.location());
+        session.setDescription(req.description());
+        session.setLinkedTrainingId(req.linkedTrainingId());
+        session.setCreatedAt(LocalDateTime.now());
+        session = sessionRepository.save(session);
+
+        emitActivity(clubId, ClubActivityType.SESSION_CREATED, userId, session.getId(), session.getTitle());
+        return session;
+    }
+
+    public List<ClubTrainingSession> listSessions(String clubId) {
+        return sessionRepository.findByClubIdOrderByScheduledAtDesc(clubId);
+    }
+
+    public ClubTrainingSession joinSession(String userId, String sessionId) {
+        ClubTrainingSession session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        if (!session.getParticipantIds().contains(userId)) {
+            session.getParticipantIds().add(userId);
+            sessionRepository.save(session);
+            emitActivity(session.getClubId(), ClubActivityType.SESSION_JOINED, userId, sessionId, session.getTitle());
+        }
+        return session;
+    }
+
+    public ClubTrainingSession cancelSessionParticipation(String userId, String sessionId) {
+        ClubTrainingSession session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        session.getParticipantIds().remove(userId);
+        return sessionRepository.save(session);
+    }
+
+    // --- Feed ---
+
+    public List<ClubController.ClubActivityResponse> getActivityFeed(String clubId, Pageable pageable) {
+        List<ClubActivity> activities = activityRepository.findByClubIdOrderByOccurredAtDesc(clubId, pageable);
+        return activities.stream().map(a -> {
+            User actor = userService.findById(a.getActorId()).orElse(null);
+            String actorName = actor != null ? actor.getDisplayName() : a.getActorId();
+            return new ClubController.ClubActivityResponse(
+                    a.getId(), a.getType(), a.getActorId(), actorName,
+                    a.getTargetId(), a.getTargetTitle(), a.getOccurredAt());
+        }).collect(Collectors.toList());
+    }
+
+    // --- Stats ---
+
+    public ClubController.ClubWeeklyStatsResponse getWeeklyStats(String clubId) {
+        List<String> memberIds = getActiveMemberIds(clubId);
+        LocalDateTime weekStart = LocalDate.now().with(DayOfWeek.MONDAY).atStartOfDay();
+        LocalDateTime weekEnd = weekStart.plusDays(7);
+
+        List<CompletedSession> sessions = completedSessionRepository
+                .findByUserIdInAndCompletedAtBetween(memberIds, weekStart, weekEnd);
+
+        double swimKm = 0, bikeKm = 0, runKm = 0;
+        for (CompletedSession s : sessions) {
+            double dist = s.getBlockSummaries() != null
+                    ? s.getBlockSummaries().stream()
+                    .filter(b -> b.distanceMeters() != null)
+                    .mapToDouble(CompletedSession.BlockSummary::distanceMeters).sum()
+                    : 0;
+            String sport = s.getSportType();
+            if ("SWIMMING".equalsIgnoreCase(sport)) swimKm += dist / 1000.0;
+            else if ("CYCLING".equalsIgnoreCase(sport)) bikeKm += dist / 1000.0;
+            else if ("RUNNING".equalsIgnoreCase(sport)) runKm += dist / 1000.0;
+        }
+        return new ClubController.ClubWeeklyStatsResponse(swimKm, bikeKm, runKm, sessions.size(), memberIds.size());
+    }
+
+    public List<ClubController.LeaderboardEntry> getLeaderboard(String clubId) {
+        List<String> memberIds = getActiveMemberIds(clubId);
+        LocalDateTime weekStart = LocalDate.now().with(DayOfWeek.MONDAY).atStartOfDay();
+        LocalDateTime weekEnd = weekStart.plusDays(7);
+
+        List<CompletedSession> sessions = completedSessionRepository
+                .findByUserIdInAndCompletedAtBetween(memberIds, weekStart, weekEnd);
+
+        Map<String, Double> tssMap = new LinkedHashMap<>();
+        Map<String, Integer> countMap = new LinkedHashMap<>();
+        for (CompletedSession s : sessions) {
+            String uid = s.getUserId();
+            tssMap.merge(uid, s.getTss() != null ? s.getTss() : 0.0, Double::sum);
+            countMap.merge(uid, 1, Integer::sum);
+        }
+
+        List<Map.Entry<String, Double>> sorted = new ArrayList<>(tssMap.entrySet());
+        sorted.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
+
+        List<ClubController.LeaderboardEntry> leaderboard = new ArrayList<>();
+        for (int i = 0; i < sorted.size(); i++) {
+            String uid = sorted.get(i).getKey();
+            User user = userService.findById(uid).orElse(null);
+            leaderboard.add(new ClubController.LeaderboardEntry(
+                    uid,
+                    user != null ? user.getDisplayName() : uid,
+                    user != null ? user.getProfilePicture() : null,
+                    sorted.get(i).getValue(),
+                    countMap.getOrDefault(uid, 0),
+                    i + 1));
+        }
+        return leaderboard;
+    }
+
+    public List<ClubController.ClubRaceGoalResponse> getRaceGoals(String clubId) {
+        List<String> memberIds = getActiveMemberIds(clubId);
+        List<RaceGoal> goals = raceGoalRepository.findByAthleteIdInOrderByRaceDateAsc(memberIds);
+        List<ClubTrainingSession> sessions = sessionRepository.findByClubIdOrderByScheduledAtDesc(clubId);
+
+        return goals.stream().map(g -> {
+            boolean hasSession = sessions.stream().anyMatch(s ->
+                    s.getScheduledAt() != null &&
+                    s.getScheduledAt().toLocalDate().isAfter(LocalDate.now()) &&
+                    s.getScheduledAt().toLocalDate().isBefore(g.getRaceDate().plusDays(1)));
+            return new ClubController.ClubRaceGoalResponse(g, hasSession);
+        }).collect(Collectors.toList());
+    }
+
+    // --- Helpers ---
+
+    private void validateAdminRole(String userId, String clubId) {
+        ClubMembership m = membershipRepository.findByClubIdAndUserId(clubId, userId)
+                .orElseThrow(() -> new IllegalStateException("Not a member"));
+        if (m.getRole() != ClubMemberRole.OWNER && m.getRole() != ClubMemberRole.ADMIN) {
+            throw new IllegalStateException("Admin or owner role required");
+        }
+    }
+
+    private void validateActiveMember(String userId, String clubId) {
+        ClubMembership m = membershipRepository.findByClubIdAndUserId(clubId, userId)
+                .orElseThrow(() -> new IllegalStateException("Not a member"));
+        if (m.getStatus() != ClubMemberStatus.ACTIVE) {
+            throw new IllegalStateException("Active membership required");
+        }
+    }
+
+    private void validateAdminOrOwner(String userId, String clubId) {
+        ClubMembership m = membershipRepository.findByClubIdAndUserId(clubId, userId)
+                .orElseThrow(() -> new IllegalStateException("Not a member"));
+        if (m.getRole() != ClubMemberRole.OWNER && m.getRole() != ClubMemberRole.ADMIN) {
+            throw new IllegalStateException("Admin or owner role required");
+        }
+    }
+
+    private void validateAdminOrCoach(String userId, String clubId) {
+        ClubMembership m = membershipRepository.findByClubIdAndUserId(clubId, userId)
+                .orElseThrow(() -> new IllegalStateException("Not a member"));
+        if (m.getRole() == ClubMemberRole.MEMBER) {
+            throw new IllegalStateException("Coach, admin, or owner role required");
+        }
+        if (m.getStatus() != ClubMemberStatus.ACTIVE) {
+            throw new IllegalStateException("Active membership required");
+        }
+    }
+
+    private List<String> getActiveMemberIds(String clubId) {
+        return membershipRepository.findByClubIdAndStatus(clubId, ClubMemberStatus.ACTIVE)
+                .stream().map(ClubMembership::getUserId).collect(Collectors.toList());
+    }
+
+    private void emitActivity(String clubId, ClubActivityType type, String actorId,
+                               String targetId, String targetTitle) {
+        ClubActivity activity = new ClubActivity();
+        activity.setClubId(clubId);
+        activity.setType(type);
+        activity.setActorId(actorId);
+        activity.setTargetId(targetId);
+        activity.setTargetTitle(targetTitle);
+        activity.setOccurredAt(LocalDateTime.now());
+        activityRepository.save(activity);
+    }
+}

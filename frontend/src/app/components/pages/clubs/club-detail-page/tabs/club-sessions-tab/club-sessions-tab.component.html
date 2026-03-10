@@ -1,0 +1,82 @@
+<div class="sessions-tab">
+  <div class="tab-header">
+    <h3>Upcoming Sessions</h3>
+    <button class="btn-primary" *ngIf="canCreate" (click)="openForm()">+ CREATE SESSION</button>
+  </div>
+
+  <ng-container *ngIf="sessions$ | async as sessions">
+    <div class="sessions-list" *ngIf="sessions.length > 0; else emptySessions">
+      <div *ngFor="let session of sessions" class="session-card glass">
+        <div class="session-header">
+          <span class="session-sport-badge">{{ session.sport || 'GENERAL' }}</span>
+          <h4 class="session-title">{{ session.title }}</h4>
+        </div>
+        <div class="session-meta">
+          <span *ngIf="session.scheduledAt">📅 {{ formatDateTime(session.scheduledAt) }}</span>
+          <span *ngIf="session.location">📍 {{ session.location }}</span>
+          <span>👥 {{ session.participantIds.length }} participants</span>
+        </div>
+        <p class="session-desc" *ngIf="session.description">{{ session.description }}</p>
+        <div class="session-actions">
+          <button
+            class="btn-primary"
+            *ngIf="!isParticipant(session)"
+            (click)="joinSession(session, $event)">
+            JOIN
+          </button>
+          <button
+            class="btn-ghost"
+            *ngIf="isParticipant(session)"
+            (click)="cancelSession(session, $event)">
+            CANCEL
+          </button>
+        </div>
+      </div>
+    </div>
+    <ng-template #emptySessions>
+      <div class="empty-tab">
+        <span>📅</span>
+        <p>No sessions scheduled yet.</p>
+        <button class="btn-primary" *ngIf="canCreate" (click)="openForm()">SCHEDULE SESSION</button>
+      </div>
+    </ng-template>
+  </ng-container>
+</div>
+
+<!-- Session Form Modal -->
+<div class="modal-backdrop" *ngIf="isFormOpen" (click)="closeForm()">
+  <div class="modal glass" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Create Session</h3>
+      <button class="close-btn" (click)="closeForm()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Title *</label>
+        <input [(ngModel)]="form.title" placeholder="e.g. Saturday Group Ride" class="form-input" />
+      </div>
+      <div class="form-row">
+        <label>Sport</label>
+        <select [(ngModel)]="form.sport" class="form-input">
+          <option *ngFor="let s of sports" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Date & Time</label>
+        <input type="datetime-local" [(ngModel)]="form.scheduledAt" class="form-input" />
+      </div>
+      <div class="form-row">
+        <label>Location</label>
+        <input [(ngModel)]="form.location" placeholder="Meeting point" class="form-input" />
+      </div>
+      <div class="form-row">
+        <label>Description</label>
+        <textarea [(ngModel)]="form.description" placeholder="Details..." class="form-input" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeForm()">CANCEL</button>
+      <button class="btn-primary" (click)="save()" [disabled]="!form.title">CREATE</button>
+    </div>
+  </div>
+</div>

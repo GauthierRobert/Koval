@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Training Planner AI — DB Schema</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0d14; color: #e2e8f0; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; height: 100vh; }
+
+    header {
+      position: fixed; top: 0; left: 0; right: 0; height: 50px;
+      background: rgba(10,13,20,0.95); border-bottom: 1px solid rgba(255,255,255,0.07);
+      display: flex; align-items: center; padding: 0 1.25rem; gap: 1rem; z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+    header h1 { font-size: 0.9rem; font-weight: 600; color: #f1f5f9; letter-spacing: 0.01em; }
+    header span { font-size: 0.72rem; color: #64748b; }
+
+    .legend {
+      position: fixed; top: 62px; right: 14px;
+      background: rgba(10,13,20,0.92); border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 10px; padding: 0.7rem 0.9rem; z-index: 100; backdrop-filter: blur(12px);
+    }
+    .legend-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; margin-bottom: 0.5rem; font-weight: 600; }
+    .legend-item { display: flex; align-items: center; gap: 0.45rem; margin-bottom: 0.28rem; font-size: 0.72rem; color: #94a3b8; }
+    .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .legend-sep { border-top: 1px solid rgba(255,255,255,0.07); margin: 0.4rem 0; }
+    .legend-note { font-size: 0.65rem; color: #475569; }
+
+    svg { position: fixed; top: 50px; left: 0; width: 100vw; height: calc(100vh - 50px); }
+
+    .node-group { cursor: grab; }
+    .node-group:active { cursor: grabbing; }
+
+    .tooltip {
+      position: fixed; background: rgba(10,13,20,0.97); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 9px; padding: 0.65rem 0.9rem; font-size: 0.72rem; pointer-events: none;
+      z-index: 200; min-width: 190px; max-width: 290px; backdrop-filter: blur(16px); display: none;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    }
+    .tooltip-name { font-size: 0.85rem; font-weight: 700; color: #f1f5f9; margin-bottom: 0.15rem; }
+    .tooltip-coll { font-size: 0.65rem; color: #475569; margin-bottom: 0.5rem; font-family: monospace; }
+    .tooltip-field { color: #64748b; padding: 0.08rem 0; line-height: 1.4; }
+    .tooltip-field b { color: #94a3b8; }
+
+    .hint { position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 0.67rem; color: #334155; background: rgba(10,13,20,0.7); padding: 0.28rem 0.75rem; border-radius: 999px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Training Planner AI — Database Entity Relationships</h1>
+  <span>17 collections · MongoDB · Hover for fields · Drag to rearrange · Scroll to zoom</span>
+</header>
+
+<div class="legend">
+  <div class="legend-title">Domains</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>Auth</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div>Training</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#34d399"></div>History</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>Coaching</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ec4899"></div>Goals</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#06b6d4"></div>AI / Chat</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#6366f1"></div>Clubs</div>
+  <div class="legend-sep"></div>
+  <div class="legend-note">━━ reference &nbsp; ╌╌ embedded</div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+<div class="hint">🖱 Drag · Scroll to zoom · Hover for field details</div>
+
+<svg id="graph"></svg>
+
+<script>
+// ─── Domain palette ─────────────────────────────────────────────────────────
+const D = {
+  auth:     { fill: 'rgba(59,130,246,0.13)',  stroke: 'rgba(59,130,246,0.55)',  accent: '#3b82f6'  },
+  training: { fill: 'rgba(167,139,250,0.13)', stroke: 'rgba(167,139,250,0.55)', accent: '#a78bfa'  },
+  history:  { fill: 'rgba(52,211,153,0.13)',  stroke: 'rgba(52,211,153,0.55)',  accent: '#34d399'  },
+  coaching: { fill: 'rgba(249,115,22,0.13)',  stroke: 'rgba(249,115,22,0.55)',  accent: '#f97316'  },
+  goals:    { fill: 'rgba(236,72,153,0.13)',  stroke: 'rgba(236,72,153,0.55)',  accent: '#ec4899'  },
+  ai:       { fill: 'rgba(6,182,212,0.13)',   stroke: 'rgba(6,182,212,0.55)',   accent: '#06b6d4'  },
+  clubs:    { fill: 'rgba(99,102,241,0.13)',  stroke: 'rgba(99,102,241,0.55)',  accent: '#6366f1'  },
+};
+
+// ─── Nodes ───────────────────────────────────────────────────────────────────
+const nodes = [
+  { id:'User', domain:'auth', coll:'users', w:132, h:50,
+    fields:['id (PK)','stravaId / googleId','email · displayName','role: ATHLETE | COACH','ftp · weightKg','ctl · atl · tsb (fitness metrics)','stravaAccessToken/RefreshToken'] },
+
+  { id:'Training', domain:'training', coll:'trainings (polymorphic)', w:162, h:50,
+    fields:['id (PK)','title · description','sport: CYCLING|RUNNING|SWIMMING|BRICK','createdBy → User','chatHistoryId → ChatHistory','zoneSystemId → ZoneSystem','tags: String[]','blocks: WorkoutBlock[] ⤵ embedded'] },
+  { id:'WorkoutBlock', domain:'training', coll:'embedded in Training', w:148, h:44, embedded:true,
+    fields:['type: WARMUP|STEADY|INTERVAL|RAMP|COOLDOWN|FREE','durationSeconds / distanceMeters','intensityTarget (% of FTP/Pace/CSS)','intensityStart · intensityEnd (ramps)','cadenceTarget (RPM/SPM)','label'] },
+  { id:'ZoneSystem', domain:'training', coll:'zone_systems', w:140, h:50,
+    fields:['id (PK)','coachId → User','name · sportType','referenceType: FTP|PACE|CSS|…','zones: Zone[] ⤵ embedded'] },
+  { id:'Zone', domain:'training', coll:'embedded in ZoneSystem', w:122, h:44, embedded:true,
+    fields:['name (e.g. "Z2 Aerobic")','minPercent · maxPercent','color · description'] },
+
+  { id:'CompletedSession', domain:'history', coll:'completed_sessions', w:174, h:50,
+    fields:['id (PK)','userId → User','trainingId → Training','scheduledWorkoutId → ScheduledWorkout','completedAt · totalDurationSeconds','avgPower · avgHR · avgCadence · avgSpeed','tss · intensityFactor · rpe','fitFileId (GridFS)','blockSummaries: BlockSummary[] ⤵'] },
+  { id:'BlockSummary', domain:'history', coll:'embedded in CompletedSession', w:168, h:44, embedded:true,
+    fields:['label · type','durationSeconds','targetPower · actualPower','actualHR · actualCadence','distanceMeters'] },
+
+  { id:'ScheduledWorkout', domain:'coaching', coll:'scheduled_workouts', w:174, h:50,
+    fields:['id (PK)','trainingId → Training','athleteId → User (athlete)','assignedBy → User (coach)','scheduledDate · status: PENDING|COMPLETED|SKIPPED','sessionId → CompletedSession (on completion)','tss · intensityFactor · notes'] },
+  { id:'Tag', domain:'coaching', coll:'tags', w:128, h:50,
+    fields:['id (PK)','name','coachId → User','athleteIds: User[] →','maxAthletes (0=unlimited)'] },
+  { id:'InviteCode', domain:'coaching', coll:'invite_codes', w:142, h:50,
+    fields:['id (PK)','code (unique)','coachId → User','tags: Tag[] → (auto-assign)','maxUses · currentUses','expiresAt · active'] },
+
+  { id:'RaceGoal', domain:'goals', coll:'race_goals', w:134, h:50,
+    fields:['id (PK)','athleteId → User','title · sport','raceDate · priority: A|B|C','distance · location','targetTime · notes'] },
+
+  { id:'ChatHistory', domain:'ai', coll:'chat_history', w:144, h:50,
+    fields:['id (PK)','userId → User','title','startedAt · lastUpdatedAt','lastAgentType'] },
+
+  { id:'Club', domain:'clubs', coll:'clubs', w:126, h:50,
+    fields:['id (PK)','name · description · location','ownerId → User','visibility: PUBLIC|PRIVATE','memberCount · createdAt'] },
+  { id:'ClubMembership', domain:'clubs', coll:'club_memberships', w:164, h:50,
+    fields:['id (PK)','clubId → Club','userId → User','role: OWNER|ADMIN|COACH|MEMBER','status: ACTIVE|PENDING','joinedAt · requestedAt'] },
+  { id:'ClubTag', domain:'clubs', coll:'club_tags', w:136, h:50,
+    fields:['id (PK)','clubId → Club','name (unique per club)','memberIds: User[] →','createdAt'] },
+  { id:'ClubActivity', domain:'clubs', coll:'club_activities', w:146, h:50,
+    fields:['id (PK)','clubId → Club','type: MEMBER_JOINED|SESSION_CREATED|…','actorId → User','targetId · targetTitle','occurredAt'] },
+  { id:'ClubTrainingSession', domain:'clubs', coll:'club_training_sessions', w:192, h:50,
+    fields:['id (PK)','clubId → Club','createdBy → User','linkedTrainingId → Training (opt.)','title · sport · scheduledAt','location · description','participantIds: User[] →'] },
+];
+
+// ─── Links ───────────────────────────────────────────────────────────────────
+const links = [
+  // Auth ↔ Training domain
+  { s:'User',       t:'Training',             lbl:'createdBy',         type:'ref' },
+  { s:'User',       t:'ZoneSystem',           lbl:'coachId',           type:'ref' },
+  { s:'ZoneSystem', t:'Training',             lbl:'zoneSystemId',      type:'ref' },
+  { s:'Training',   t:'WorkoutBlock',         lbl:'blocks[ ]',         type:'emb' },
+  { s:'ZoneSystem', t:'Zone',                 lbl:'zones[ ]',          type:'emb' },
+  // AI
+  { s:'User',       t:'ChatHistory',          lbl:'userId',            type:'ref' },
+  { s:'Training',   t:'ChatHistory',          lbl:'chatHistoryId',     type:'ref' },
+  // History
+  { s:'User',       t:'CompletedSession',     lbl:'userId',            type:'ref' },
+  { s:'Training',   t:'CompletedSession',     lbl:'trainingId',        type:'ref' },
+  { s:'CompletedSession', t:'BlockSummary',   lbl:'blockSummaries[ ]', type:'emb' },
+  // Coaching
+  { s:'User',       t:'ScheduledWorkout',     lbl:'athleteId',         type:'ref' },
+  { s:'User',       t:'ScheduledWorkout',     lbl:'assignedBy (coach)',type:'ref' },
+  { s:'Training',   t:'ScheduledWorkout',     lbl:'trainingId',        type:'ref' },
+  { s:'CompletedSession', t:'ScheduledWorkout', lbl:'sessionId',       type:'ref' },
+  { s:'User',       t:'Tag',                  lbl:'coachId',           type:'ref' },
+  { s:'Tag',        t:'User',                 lbl:'athleteIds[ ]',     type:'ref' },
+  { s:'User',       t:'InviteCode',           lbl:'coachId',           type:'ref' },
+  { s:'Tag',        t:'InviteCode',           lbl:'tags[ ]',           type:'ref' },
+  // Goals
+  { s:'User',       t:'RaceGoal',             lbl:'athleteId',         type:'ref' },
+  // Clubs
+  { s:'User',       t:'Club',                 lbl:'ownerId',           type:'ref' },
+  { s:'Club',       t:'ClubMembership',       lbl:'clubId',            type:'ref' },
+  { s:'User',       t:'ClubMembership',       lbl:'userId',            type:'ref' },
+  { s:'Club',       t:'ClubTag',              lbl:'clubId',            type:'ref' },
+  { s:'ClubTag',    t:'User',                 lbl:'memberIds[ ]',      type:'ref' },
+  { s:'Club',       t:'ClubActivity',         lbl:'clubId',            type:'ref' },
+  { s:'User',       t:'ClubActivity',         lbl:'actorId',           type:'ref' },
+  { s:'Club',       t:'ClubTrainingSession',  lbl:'clubId',            type:'ref' },
+  { s:'User',       t:'ClubTrainingSession',  lbl:'createdBy',         type:'ref' },
+  { s:'Training',   t:'ClubTrainingSession',  lbl:'linkedTrainingId',  type:'ref' },
+];
+
+// ─── Fixed initial positions (clustered by domain) ───────────────────────────
+const INIT = {
+  User:                { x: 440,  y: 200 },
+  ChatHistory:         { x: 740,  y: 110 },
+  Training:            { x: 440,  y: 390 },
+  WorkoutBlock:        { x: 210,  y: 490 },
+  ZoneSystem:          { x: 175,  y: 310 },
+  Zone:                { x: 55,   y: 420 },
+  CompletedSession:    { x: 440,  y: 570 },
+  BlockSummary:        { x: 230,  y: 660 },
+  ScheduledWorkout:    { x: 740,  y: 390 },
+  Tag:                 { x: 970,  y: 220 },
+  InviteCode:          { x: 1090, y: 350 },
+  RaceGoal:            { x: 810,  y: 560 },
+  Club:                { x: 560,  y: 740 },
+  ClubMembership:      { x: 310,  y: 830 },
+  ClubTag:             { x: 640,  y: 870 },
+  ClubActivity:        { x: 890,  y: 750 },
+  ClubTrainingSession: { x: 1100, y: 640 },
+};
+
+nodes.forEach(n => { n.x = INIT[n.id]?.x ?? 600; n.y = INIT[n.id]?.y ?? 450; });
+
+// Build D3 links with object references
+const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
+const linkData  = links.map(l => ({ ...l, source: nodeById[l.s], target: nodeById[l.t] }));
+
+const W = window.innerWidth, H = window.innerHeight - 50;
+const svg = d3.select('#graph');
+const root = svg.append('g').attr('class', 'root');
+
+svg.call(
+  d3.zoom().scaleExtent([0.18, 3.5])
+    .on('zoom', e => root.attr('transform', e.transform))
+);
+
+// ── Arrow markers ────────────────────────────────────────────────────────────
+const defs = svg.append('defs');
+['ref','emb'].forEach(t => {
+  defs.append('marker').attr('id','arrow-'+t)
+    .attr('viewBox','0 -5 10 10').attr('refX', 9).attr('refY', 0)
+    .attr('markerWidth', 5).attr('markerHeight', 5).attr('orient','auto')
+    .append('path').attr('d','M0,-5L10,0L0,5')
+    .attr('fill', t==='emb' ? '#374151' : '#4b5563');
+});
+
+// ── Force simulation ─────────────────────────────────────────────────────────
+const sim = d3.forceSimulation(nodes)
+  .force('link',    d3.forceLink(linkData).id(d=>d.id).distance(d=>d.type==='emb'?85:195).strength(0.35))
+  .force('charge',  d3.forceManyBody().strength(-780))
+  .force('center',  d3.forceCenter(W/2, H/2).strength(0.04))
+  .force('collide', d3.forceCollide(d => Math.hypot(d.w, d.h)/2 + 24))
+  .alphaDecay(0.022);
+
+// ── Draw edges ───────────────────────────────────────────────────────────────
+const edgeLine = root.selectAll('.edge-line')
+  .data(linkData).enter().append('line')
+  .attr('class','edge-line')
+  .attr('stroke', d => d.type==='emb' ? '#1e2d3d' : '#1e293b')
+  .attr('stroke-width', d => d.type==='emb' ? 1.5 : 1.8)
+  .attr('stroke-dasharray', d => d.type==='emb' ? '5 4' : null)
+  .attr('marker-end', d => `url(#arrow-${d.type})`);
+
+const edgeLbl = root.selectAll('.edge-lbl')
+  .data(linkData).enter().append('text')
+  .attr('class','edge-lbl')
+  .attr('font-size', 8.5)
+  .attr('fill','#334155')
+  .attr('text-anchor','middle')
+  .attr('dominant-baseline','middle')
+  .attr('pointer-events','none')
+  .text(d => d.lbl);
+
+// ── Draw nodes ───────────────────────────────────────────────────────────────
+const nodeG = root.selectAll('.node-group')
+  .data(nodes).enter().append('g').attr('class','node-group')
+  .call(
+    d3.drag()
+      .on('start', (e,d) => { if (!e.active) sim.alphaTarget(0.12).restart(); d.fx=d.x; d.fy=d.y; })
+      .on('drag',  (e,d) => { d.fx=e.x; d.fy=e.y; })
+      .on('end',   (e,d) => { if (!e.active) sim.alphaTarget(0); /* keep pinned: leave fx/fy */ })
+  );
+
+// Background rect
+nodeG.append('rect')
+  .attr('x', d => -d.w/2).attr('y', d => -d.h/2)
+  .attr('width', d=>d.w).attr('height', d=>d.h)
+  .attr('rx', 7)
+  .attr('fill', d => D[d.domain].fill)
+  .attr('stroke', d => d.embedded ? 'rgba(255,255,255,0.1)' : D[d.domain].stroke)
+  .attr('stroke-width', d => d.embedded ? 1 : 1.5)
+  .attr('stroke-dasharray', d => d.embedded ? '4 3' : null);
+
+// Top accent line
+nodeG.filter(d => !d.embedded).append('rect')
+  .attr('x', d => -d.w/2).attr('y', d => -d.h/2)
+  .attr('width', d=>d.w).attr('height', 3)
+  .attr('rx', 7)
+  .attr('fill', d => D[d.domain].accent)
+  .attr('opacity', 0.7);
+
+// Entity name
+nodeG.append('text')
+  .attr('text-anchor','middle').attr('dominant-baseline','middle')
+  .attr('y', d => d.embedded ? -6 : -9)
+  .attr('font-size', d => d.embedded ? 10.5 : 12)
+  .attr('font-weight', d => d.embedded ? 500 : 700)
+  .attr('fill', d => d.embedded ? '#94a3b8' : '#f1f5f9')
+  .attr('pointer-events','none')
+  .text(d => d.id);
+
+// Collection name
+nodeG.append('text')
+  .attr('text-anchor','middle').attr('dominant-baseline','middle')
+  .attr('y', d => d.embedded ? 9 : 9)
+  .attr('font-size', 8)
+  .attr('fill', '#475569')
+  .attr('pointer-events','none')
+  .attr('font-family', 'monospace')
+  .text(d => d.coll);
+
+// ── Tooltip ──────────────────────────────────────────────────────────────────
+const tip = document.getElementById('tooltip');
+nodeG
+  .on('mouseenter', (e,d) => {
+    const rows = d.fields.map(f => `<div class="tooltip-field">${f}</div>`).join('');
+    tip.innerHTML = `<div class="tooltip-name">${d.id}</div><div class="tooltip-coll">${d.coll}</div>${rows}`;
+    tip.style.display = 'block';
+  })
+  .on('mousemove', e => {
+    const margin = 14;
+    let tx = e.clientX + margin;
+    let ty = e.clientY - 10;
+    if (tx + tip.offsetWidth > window.innerWidth - 8) tx = e.clientX - tip.offsetWidth - margin;
+    if (ty + tip.offsetHeight > window.innerHeight - 8) ty = window.innerHeight - tip.offsetHeight - 8;
+    tip.style.left = tx + 'px';
+    tip.style.top  = ty + 'px';
+  })
+  .on('mouseleave', () => { tip.style.display = 'none'; });
+
+// ── Simulation tick ──────────────────────────────────────────────────────────
+sim.on('tick', () => {
+  edgeLine
+    .attr('x1', d => edgePt(d.source, d.target, true).x)
+    .attr('y1', d => edgePt(d.source, d.target, true).y)
+    .attr('x2', d => edgePt(d.source, d.target, false).x)
+    .attr('y2', d => edgePt(d.source, d.target, false).y);
+
+  edgeLbl
+    .attr('x', d => (d.source.x + d.target.x) / 2)
+    .attr('y', d => (d.source.y + d.target.y) / 2 - 5);
+
+  nodeG.attr('transform', d => `translate(${d.x},${d.y})`);
+});
+
+// Rectangle–edge intersection
+function edgePt(src, tgt, fromSrc) {
+  const node  = fromSrc ? src : tgt;
+  const other = fromSrc ? tgt : src;
+  const dx = other.x - node.x;
+  const dy = other.y - node.y;
+  if (dx === 0 && dy === 0) return { x: node.x, y: node.y };
+  const angle  = Math.atan2(dy, dx);
+  const hw = node.w / 2 + 4;
+  const hh = node.h / 2 + 4;
+  const ac = Math.abs(Math.cos(angle));
+  const as = Math.abs(Math.sin(angle));
+  let ex, ey;
+  if (hw * as <= hh * ac) {
+    ex = Math.sign(dx) * hw;
+    ey = ex * Math.tan(angle);
+  } else {
+    ey = Math.sign(dy) * hh;
+    ex = ey / Math.tan(angle);
+  }
+  return { x: node.x + ex, y: node.y + ey };
+}
+
+// Double-click to unpin a node
+nodeG.on('dblclick', (e, d) => { d.fx = null; d.fy = null; sim.alphaTarget(0.08).restart(); });
+</script>
+</body>
+</html>

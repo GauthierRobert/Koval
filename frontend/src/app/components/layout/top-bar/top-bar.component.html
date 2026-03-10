@@ -11,6 +11,7 @@
       <ng-container *ngIf="!vm.coach || vm.mode === 'athlete'">
         <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">DASHBOARD</a>
         <a routerLink="/chat"      routerLinkActive="active" class="nav-link">ASSISTANT</a>
+        <a routerLink="/clubs"     routerLinkActive="active" class="nav-link">CLUBS</a>
 
         <!-- Training dropdown -->
         <div class="nav-dropdown-wrapper">
@@ -78,6 +79,7 @@
       </ng-container>
       <ng-container *ngIf="vm.coach && vm.mode === 'coach'">
         <a routerLink="/chat"  routerLinkActive="active" class="nav-link">ASSISTANT</a>
+        <a routerLink="/clubs" routerLinkActive="active" class="nav-link">CLUBS</a>
         <a routerLink="/coach" routerLinkActive="active" class="nav-link">COACHING</a>
         <a routerLink="/tags"  routerLinkActive="active" class="nav-link">TAGS</a>
         <a routerLink="/zones" routerLinkActive="active" class="nav-link">ZONES</a>

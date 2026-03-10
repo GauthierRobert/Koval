@@ -1,0 +1,58 @@
+<div class="detail-page">
+  <ng-container *ngIf="selectedClub$ | async as club; else loading">
+    <!-- Header -->
+    <div class="club-header glass">
+      <button class="back-btn" (click)="goBack()">← CLUBS</button>
+      <div class="club-logo">
+        <img *ngIf="club.logoUrl" [src]="club.logoUrl" alt="Club logo" />
+        <div class="club-initials" *ngIf="!club.logoUrl">{{ club.name.charAt(0).toUpperCase() }}</div>
+      </div>
+      <div class="club-meta-info">
+        <h1 class="club-name">{{ club.name }}</h1>
+        <p class="club-desc" *ngIf="club.description">{{ club.description }}</p>
+        <div class="club-badges">
+          <span class="meta-badge">{{ club.memberCount }} members</span>
+          <span class="meta-badge" *ngIf="club.location">📍 {{ club.location }}</span>
+          <span class="meta-badge visibility-badge" [class.private]="club.visibility === 'PRIVATE'">
+            {{ club.visibility }}
+          </span>
+          <span class="meta-badge role-badge" *ngIf="club.currentMembershipStatus">
+            {{ getMembershipLabel(club.currentMembershipStatus) }}
+            <span *ngIf="club.currentMemberRole"> — {{ club.currentMemberRole }}</span>
+          </span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-primary" *ngIf="!club.currentMembershipStatus" (click)="join(club)">JOIN</button>
+        <button class="btn-ghost" *ngIf="club.currentMembershipStatus && club.currentMemberRole !== 'OWNER'" (click)="leave(club)">LEAVE</button>
+      </div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar glass">
+      <button
+        *ngFor="let tab of tabs"
+        class="tab-btn"
+        [class.active]="activeTab === tab.id"
+        (click)="activateTab(tab.id)">
+        {{ tab.label }}
+      </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <app-club-feed-tab *ngIf="activeTab === 'feed'"></app-club-feed-tab>
+      <app-club-sessions-tab *ngIf="activeTab === 'sessions'" [club]="club"></app-club-sessions-tab>
+      <app-club-members-tab *ngIf="activeTab === 'members'" [club]="club"></app-club-members-tab>
+      <app-club-stats-tab *ngIf="activeTab === 'stats'"></app-club-stats-tab>
+      <app-club-leaderboard-tab *ngIf="activeTab === 'leaderboard'"></app-club-leaderboard-tab>
+      <app-club-race-goals-tab *ngIf="activeTab === 'race-goals'"></app-club-race-goals-tab>
+    </div>
+  </ng-container>
+
+  <ng-template #loading>
+    <div class="loading-state">
+      <p>Loading club...</p>
+    </div>
+  </ng-template>
+</div>

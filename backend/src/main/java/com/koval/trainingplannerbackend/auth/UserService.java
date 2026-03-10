@@ -79,6 +79,10 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
     }
 
+    public Optional<User> findById(String userId) {
+        return userRepository.findById(userId);
+    }
+
     public Optional<User> findByStravaId(String stravaId) {
         return userRepository.findByStravaId(stravaId);
     }

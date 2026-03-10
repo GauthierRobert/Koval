@@ -1,0 +1,9 @@
+.feed-tab { padding: 1rem 0; }
+.feed-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.feed-item { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem 1.25rem; border-radius: 10px; }
+.feed-icon { font-size: 1.4rem; flex-shrink: 0; }
+.feed-content { flex: 1; }
+.feed-text { margin: 0 0 0.25rem; font-size: 0.9rem; color: var(--text-primary); }
+.feed-time { font-size: 0.75rem; color: var(--text-secondary); }
+.empty-tab { text-align: center; padding: 3rem; color: var(--text-secondary); }
+.empty-tab span { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; }

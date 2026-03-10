@@ -103,6 +103,22 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'clubs',
+    loadComponent: () =>
+      import('./components/pages/clubs/clubs-list-page/clubs-list-page.component').then(
+        (m) => m.ClubsListPageComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'clubs/:id',
+    loadComponent: () =>
+      import('./components/pages/clubs/club-detail-page/club-detail-page.component').then(
+        (m) => m.ClubDetailPageComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
     path: 'login',
     loadComponent: () =>
       import('./components/pages/auth/login.component').then((m) => m.LoginComponent),

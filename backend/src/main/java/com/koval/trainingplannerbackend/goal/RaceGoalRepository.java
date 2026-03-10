@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface RaceGoalRepository extends MongoRepository<RaceGoal, String> {
     List<RaceGoal> findByAthleteIdOrderByRaceDateAsc(String athleteId);
+    List<RaceGoal> findByAthleteIdInOrderByRaceDateAsc(List<String> athleteIds);
 }

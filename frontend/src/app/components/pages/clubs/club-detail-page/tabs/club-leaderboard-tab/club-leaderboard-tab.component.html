@@ -1,0 +1,31 @@
+<div class="leaderboard-tab">
+  <h4 class="section-title">Weekly TSS Leaderboard</h4>
+  <ng-container *ngIf="leaderboard$ | async as entries">
+    <div class="leaderboard-list" *ngIf="entries.length > 0; else emptyBoard">
+      <div
+        *ngFor="let entry of entries"
+        class="leaderboard-row glass"
+        [class.current-user]="entry.userId === currentUserId">
+        <div class="rank">{{ getRankIcon(entry.rank) }}</div>
+        <img class="avatar" *ngIf="entry.profilePicture" [src]="entry.profilePicture" alt="avatar" />
+        <div class="avatar-placeholder" *ngIf="!entry.profilePicture">{{ (entry.displayName || '?').charAt(0).toUpperCase() }}</div>
+        <div class="entry-info">
+          <span class="entry-name">{{ entry.displayName || entry.userId }}</span>
+          <div class="tss-bar-track">
+            <div class="tss-bar" [style.width.%]="getBarWidth(entry.weeklyTss, getMaxTss(entries))"></div>
+          </div>
+        </div>
+        <div class="entry-stats">
+          <span class="tss-value">{{ entry.weeklyTss | number:'1.0-0' }} TSS</span>
+          <span class="session-count">{{ entry.sessionCount }} sessions</span>
+        </div>
+      </div>
+    </div>
+    <ng-template #emptyBoard>
+      <div class="empty-tab">
+        <span>🏆</span>
+        <p>No activity recorded this week yet.</p>
+      </div>
+    </ng-template>
+  </ng-container>
+</div>

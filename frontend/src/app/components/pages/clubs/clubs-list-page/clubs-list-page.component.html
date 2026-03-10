@@ -1,0 +1,113 @@
+<div class="clubs-page">
+  <div class="page-header">
+    <h1>My <span class="accent">Clubs</span></h1>
+    <button class="btn-primary" (click)="openCreate()">+ CREATE CLUB</button>
+  </div>
+
+  <!-- My Clubs -->
+  <ng-container *ngIf="userClubs$ | async as userClubs">
+    <div class="clubs-grid" *ngIf="userClubs.length > 0; else noClubs">
+      <div
+        *ngFor="let club of userClubs"
+        class="club-card glass"
+        (click)="openDetail(club.id)"
+        [class.club-card--private]="club.visibility === 'PRIVATE'">
+        <div class="club-logo" *ngIf="club.logoUrl; else initials">
+          <img [src]="club.logoUrl" alt="Club logo" />
+        </div>
+        <ng-template #initials>
+          <div class="club-initials">{{ club.name.charAt(0).toUpperCase() }}</div>
+        </ng-template>
+        <div class="club-info">
+          <h3 class="club-name">{{ club.name }}</h3>
+          <p class="club-desc" *ngIf="club.description">{{ club.description }}</p>
+          <div class="club-meta">
+            <span class="meta-badge">{{ club.memberCount }} members</span>
+            <span class="meta-badge visibility-badge" [class.private]="club.visibility === 'PRIVATE'">
+              {{ club.visibility }}
+            </span>
+            <span class="meta-badge role-badge">{{ getMembershipLabel(club.membershipStatus) }}</span>
+          </div>
+        </div>
+        <button class="btn-ghost leave-btn" (click)="leave(club.id, $event)"
+          *ngIf="getMembershipLabel(club.membershipStatus) !== 'OWNER'">
+          LEAVE
+        </button>
+      </div>
+    </div>
+    <ng-template #noClubs>
+      <div class="empty-state glass">
+        <span class="empty-icon">🏋️</span>
+        <p>You haven't joined any clubs yet.</p>
+        <button class="btn-primary" (click)="openCreate()">CREATE YOUR FIRST CLUB</button>
+      </div>
+    </ng-template>
+  </ng-container>
+
+  <!-- Browse Public Clubs -->
+  <section class="browse-section" *ngIf="publicClubs.length > 0">
+    <h2>Browse <span class="accent">Public Clubs</span></h2>
+    <div class="clubs-grid">
+      <div
+        *ngFor="let club of publicClubs"
+        class="club-card glass browse-card"
+        (click)="openDetail(club.id)">
+        <div class="club-initials">{{ club.name.charAt(0).toUpperCase() }}</div>
+        <div class="club-info">
+          <h3 class="club-name">{{ club.name }}</h3>
+          <p class="club-desc" *ngIf="club.description">{{ club.description }}</p>
+          <div class="club-meta">
+            <span class="meta-badge">{{ club.memberCount }} members</span>
+          </div>
+        </div>
+        <button
+          class="btn-primary join-btn"
+          (click)="join(club.id, $event)"
+          *ngIf="!club.membershipStatus">
+          JOIN
+        </button>
+        <span class="meta-badge role-badge" *ngIf="club.membershipStatus">
+          {{ getMembershipLabel(club.membershipStatus) }}
+        </span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Create Club Modal -->
+<div class="modal-backdrop" *ngIf="isFormOpen" (click)="closeForm()">
+  <div class="modal glass" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Create New Club</h3>
+      <button class="close-btn" (click)="closeForm()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Club Name *</label>
+        <input [(ngModel)]="form.name" placeholder="e.g. Morning Riders" class="form-input" />
+      </div>
+      <div class="form-row">
+        <label>Description</label>
+        <textarea
+          [(ngModel)]="form.description"
+          placeholder="What's this club about?"
+          class="form-input"
+          rows="3"></textarea>
+      </div>
+      <div class="form-row">
+        <label>Location</label>
+        <input [(ngModel)]="form.location" placeholder="e.g. Paris, France" class="form-input" />
+      </div>
+      <div class="form-row">
+        <label>Visibility *</label>
+        <select [(ngModel)]="form.visibility" class="form-input">
+          <option *ngFor="let v of visibilityOptions" [value]="v.value">{{ v.label }}</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeForm()">CANCEL</button>
+      <button class="btn-primary" (click)="save()" [disabled]="!form.name">CREATE</button>
+    </div>
+  </div>
+</div>
