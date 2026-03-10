@@ -1,5 +1,7 @@
 import { Component, inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { BehaviorSubject, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { SportIconComponent } from '../sport-icon/sport-icon.component';
 import { SessionAnalysisComponent } from '../session-analysis/session-analysis.component';
@@ -13,10 +15,12 @@ import { MetricsService } from '../../services/metrics.service';
 // @ts-ignore
 import FitParser from 'fit-file-parser';
 
+type SportFilter = string | null;
+
 @Component({
     selector: 'app-workout-history',
     standalone: true,
-    imports: [CommonModule, SportIconComponent, SessionAnalysisComponent],
+    imports: [CommonModule, FormsModule, SportIconComponent, SessionAnalysisComponent],
     templateUrl: './workout-history.component.html',
     styleUrl: './workout-history.component.css',
 })
@@ -29,6 +33,60 @@ export class WorkoutHistoryComponent {
     private metricsService = inject(MetricsService);
 
     sessions$ = this.historyService.sessions$;
+
+    // Filters
+    readonly sportOptions = [
+        { label: 'ALL', value: null },
+        { label: 'Bike', value: 'CYCLING' },
+        { label: 'Run', value: 'RUNNING' },
+        { label: 'Swim', value: 'SWIMMING' },
+    ];
+
+    private sportFilterSubject = new BehaviorSubject<SportFilter>(null);
+    private dateFromSubject = new BehaviorSubject<string>('');
+    private dateToSubject = new BehaviorSubject<string>('');
+
+    activeSportFilter: SportFilter = null;
+    dateFrom = '';
+    dateTo = '';
+
+    filteredSessions$ = combineLatest([
+        this.historyService.sessions$,
+        this.sportFilterSubject,
+        this.dateFromSubject,
+        this.dateToSubject,
+    ]).pipe(
+        map(([sessions, sport, from, to]) => {
+            let filtered = sessions;
+            if (sport) {
+                filtered = filtered.filter(s => s.sportType === sport);
+            }
+            if (from) {
+                const fromDate = new Date(from + 'T00:00:00');
+                filtered = filtered.filter(s => new Date(s.date) >= fromDate);
+            }
+            if (to) {
+                const toDate = new Date(to + 'T23:59:59');
+                filtered = filtered.filter(s => new Date(s.date) <= toDate);
+            }
+            return filtered;
+        })
+    );
+
+    setSportFilter(value: SportFilter): void {
+        this.activeSportFilter = value;
+        this.sportFilterSubject.next(value);
+    }
+
+    onDateFromChange(value: string): void {
+        this.dateFrom = value;
+        this.dateFromSubject.next(value);
+    }
+
+    onDateToChange(value: string): void {
+        this.dateTo = value;
+        this.dateToSubject.next(value);
+    }
 
     ftp$ = this.authService.user$.pipe(map((u) => u?.ftp ?? null));
 

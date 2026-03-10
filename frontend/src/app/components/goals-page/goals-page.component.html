@@ -6,7 +6,9 @@
 
   <ng-container *ngIf="goals$ | async as goals">
     <div class="goals-grid" *ngIf="goals.length > 0; else empty">
-      <div *ngFor="let goal of goals" class="goal-card glass">
+      <div *ngFor="let goal of goals" class="goal-card glass"
+        [class.goal-card--a]="goal.priority === 'A'"
+        [class.goal-card--past]="!isUpcoming(goal)">
         <div class="goal-priority-bar" [style.background-color]="getPriorityColor(goal.priority)"></div>
         <div class="goal-body">
           <div class="goal-header-row">
@@ -14,6 +16,7 @@
               [style.color]="getPriorityColor(goal.priority)" [style.border-color]="getPriorityColor(goal.priority) + '55'">
               {{ goal.priority }}
             </span>
+            <app-sport-icon [sport]="$any(goal.sport)" [size]="16"></app-sport-icon>
             <span class="goal-sport">{{ goal.sport }}</span>
             <div class="goal-actions">
               <button class="icon-btn" (click)="openEdit(goal)" title="Edit">✏️</button>
@@ -22,17 +25,29 @@
           </div>
           <h2 class="goal-title">{{ goal.title }}</h2>
           <div class="goal-date">
-            <span class="flag">🏁</span>
             <span>{{ formatDate(goal.raceDate) }}</span>
             <span class="days-badge" [class.past]="daysUntil(goal.raceDate) < 0"
               [class.soon]="daysUntil(goal.raceDate) >= 0 && daysUntil(goal.raceDate) <= 30">
               {{ daysUntil(goal.raceDate) < 0 ? (daysUntil(goal.raceDate) * -1) + 'd ago' : daysUntil(goal.raceDate) + 'd' }}
             </span>
           </div>
+
+          <!-- Weeks until race -->
+          <div class="weeks-display" *ngIf="isUpcoming(goal)">
+            <span class="weeks-number">{{ weeksUntil(goal.raceDate) }}</span>
+            <span class="weeks-label">weeks to go</span>
+          </div>
+
+          <!-- Progress bar -->
+          <div class="progress-track" *ngIf="isUpcoming(goal)">
+            <div class="progress-fill" [style.width.%]="getProgressPercent(goal)"
+              [style.background-color]="getPriorityColor(goal.priority)"></div>
+          </div>
+
           <div class="goal-meta">
-            <span *ngIf="goal.distance" class="meta-item">📏 {{ goal.distance }}</span>
-            <span *ngIf="goal.location" class="meta-item">📍 {{ goal.location }}</span>
-            <span *ngIf="goal.targetTime" class="meta-item">⏱ {{ goal.targetTime }}</span>
+            <span *ngIf="goal.distance" class="meta-item">{{ goal.distance }}</span>
+            <span *ngIf="goal.location" class="meta-item">{{ goal.location }}</span>
+            <span *ngIf="goal.targetTime" class="meta-item">{{ goal.targetTime }}</span>
           </div>
           <p class="goal-notes" *ngIf="goal.notes">{{ goal.notes }}</p>
         </div>

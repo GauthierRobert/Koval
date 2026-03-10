@@ -483,14 +483,16 @@
 .goal-pill {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  border: 1px solid;
-  font-size: 0.72rem;
-  margin: 2px 0;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1.5px solid;
+  font-size: 0.78rem;
+  margin: 0 -0.6rem;
+  margin-bottom: 4px;
   cursor: default;
   overflow: hidden;
+  order: -1;
 }
 
 .goal-pill-title {
@@ -498,11 +500,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .goal-pill-priority {
-  font-weight: 700;
-  font-size: 0.68rem;
+  font-weight: 800;
+  font-size: 0.72rem;
   flex-shrink: 0;
 }

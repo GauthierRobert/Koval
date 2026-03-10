@@ -171,7 +171,7 @@ export class PmcChartComponent implements OnChanges, AfterViewInit {
         });
         if (inFatigue) ctx.lineTo(xOf(n - 1), zeroY);
         ctx.closePath();
-        ctx.fillStyle = 'rgba(239,68,68,0.14)';
+        ctx.fillStyle = 'rgba(239,68,68,0.06)';
         ctx.fill();
         ctx.restore();
 
@@ -188,7 +188,7 @@ export class PmcChartComponent implements OnChanges, AfterViewInit {
         // ── Zero TSB line ─────────────────────────────────────────────────────
         ctx.save();
         ctx.setLineDash([4, 4]);
-        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(mL, zeroY); ctx.lineTo(W - mR, zeroY);
@@ -258,7 +258,7 @@ export class PmcChartComponent implements OnChanges, AfterViewInit {
         };
 
         drawLine(p => yLoad(p.ctl), accent, 2.5);
-        drawLine(p => yLoad(p.atl), '#e74c3c', 2.5);
+        drawLine(p => yLoad(p.atl), '#e74c3c', 2);
         drawLine(p => yTsb(p.tsb), '#3b82f6', 2);
 
         // ── Today marker ──────────────────────────────────────────────────────
@@ -283,44 +283,84 @@ export class PmcChartComponent implements OnChanges, AfterViewInit {
             const idx = points.findIndex(p => p.date === g.raceDate);
             return idx >= 0;
         });
-        for (const goal of goalsToShow) {
+        // Sort goals so A-priority renders last (on top)
+        const sortedGoals = [...goalsToShow].sort((a, b) => {
+            const order: Record<string, number> = { C: 0, B: 1, A: 2 };
+            return (order[a.priority] ?? 0) - (order[b.priority] ?? 0);
+        });
+        // Track used label Y positions to offset overlapping labels
+        const usedLabelYs: number[] = [];
+
+        for (const goal of sortedGoals) {
             const gIdx = points.findIndex(p => p.date === goal.raceDate);
             const gx = xOf(gIdx);
             const color = PRIORITY_COLORS[goal.priority] ?? '#9CA3AF';
+            const isA = goal.priority === 'A';
 
-            // Vertical line
+            // Background highlight band for A-priority goals
+            if (isA) {
+                ctx.save();
+                ctx.fillStyle = color;
+                ctx.globalAlpha = 0.06;
+                ctx.fillRect(gx - 8, mT, 16, cH);
+                ctx.restore();
+            }
+
+            // Vertical line — thicker + more opaque for A, subtler for B/C
             ctx.save();
             ctx.strokeStyle = color;
-            ctx.lineWidth = 1.5;
-            ctx.globalAlpha = 0.75;
+            ctx.lineWidth = isA ? 2 : 1.5;
+            ctx.globalAlpha = isA ? 0.85 : 0.5;
             ctx.setLineDash([]);
             ctx.beginPath();
             ctx.moveTo(gx, mT); ctx.lineTo(gx, H - mB);
             ctx.stroke();
 
-            // Triangle flag at top
+            // Triangle flag at top — larger for A
             ctx.fillStyle = color;
             ctx.globalAlpha = 0.9;
             ctx.beginPath();
-            ctx.moveTo(gx, mT + 2);
-            ctx.lineTo(gx + 10, mT + 7);
-            ctx.lineTo(gx, mT + 12);
+            if (isA) {
+                ctx.moveTo(gx, mT + 2);
+                ctx.lineTo(gx + 14, mT + 9);
+                ctx.lineTo(gx, mT + 16);
+            } else {
+                ctx.moveTo(gx, mT + 2);
+                ctx.lineTo(gx + 10, mT + 7);
+                ctx.lineTo(gx, mT + 12);
+            }
             ctx.closePath();
             ctx.fill();
 
             // Priority letter above line
             ctx.globalAlpha = 1;
             ctx.fillStyle = color;
-            ctx.font = `bold ${FONT_XS}`;
+            ctx.font = isA ? `bold ${FONT}` : `bold ${FONT_XS}`;
             ctx.textAlign = 'center';
             ctx.fillText(goal.priority, gx - 5, mT - 2);
 
+            // Label Y offset to avoid overlapping labels
+            let labelY = mT + (isA ? 26 : 22);
+            for (const usedY of usedLabelYs) {
+                if (Math.abs(gx - usedY) < 60) {
+                    labelY += 22;
+                }
+            }
+            usedLabelYs.push(gx);
+
             // Truncated title below flag
             const title = goal.title.length > 14 ? goal.title.substring(0, 13) + '…' : goal.title;
-            ctx.fillStyle = 'rgba(255,255,255,0.7)';
-            ctx.font = FONT_XS;
+            ctx.fillStyle = isA ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.7)';
+            ctx.font = isA ? `bold ${FONT_SM}` : FONT_XS;
             ctx.textAlign = 'left';
-            ctx.fillText(title, gx + 3, mT + 22);
+            ctx.fillText(title, gx + 3, labelY);
+
+            // Date text below title
+            const dateLabel = new Date(goal.raceDate + 'T12:00:00')
+                .toLocaleDateString('en', { month: 'short', day: 'numeric' });
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.font = FONT_XS;
+            ctx.fillText(dateLabel, gx + 3, labelY + 12);
             ctx.restore();
         }
 
@@ -370,7 +410,7 @@ export class PmcChartComponent implements OnChanges, AfterViewInit {
             { label: 'ATL — Fatigue', color: '#e74c3c', bar: false, fill: false },
             { label: 'TSB — Form', color: '#3b82f6', bar: false, fill: false },
             { label: 'Daily TSS', color: 'rgba(255,255,255,0.3)', bar: true, fill: false },
-            { label: 'Fatigue zone', color: 'rgba(239,68,68,0.4)', bar: false, fill: true },
+            { label: 'Fatigue zone', color: 'rgba(239,68,68,0.2)', bar: false, fill: true },
         ];
         const itemW = cW / legendItems.length;
         const ly0 = 22;
@@ -380,9 +420,9 @@ export class PmcChartComponent implements OnChanges, AfterViewInit {
                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
                 ctx.fillRect(lx, ly0 - 7, 10, 12);
             } else if (item.fill) {
-                ctx.fillStyle = 'rgba(239,68,68,0.35)';
+                ctx.fillStyle = 'rgba(239,68,68,0.15)';
                 ctx.fillRect(lx, ly0 - 7, 14, 12);
-                ctx.strokeStyle = 'rgba(239,68,68,0.6)';
+                ctx.strokeStyle = 'rgba(239,68,68,0.4)';
                 ctx.lineWidth = 1;
                 ctx.strokeRect(lx, ly0 - 7, 14, 12);
             } else {

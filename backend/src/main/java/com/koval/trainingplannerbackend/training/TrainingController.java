@@ -25,9 +25,11 @@ import java.util.Map;
 public class TrainingController {
 
     private final TrainingService trainingService;
+    private final UserService userService;
 
     public TrainingController(TrainingService trainingService, UserService userService) {
         this.trainingService = trainingService;
+        this.userService = userService;
     }
 
     @PostMapping
@@ -40,7 +42,10 @@ public class TrainingController {
     @GetMapping("/{id}")
     public ResponseEntity<Training> getTraining(@PathVariable String id) {
         try {
-            return ResponseEntity.ok(trainingService.getTrainingById(id));
+            Training training = trainingService.getTrainingById(id);
+            String userId = SecurityUtils.getCurrentUserId();
+            trainingService.enrichTrainingForUser(training, userId);
+            return ResponseEntity.ok(training);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }

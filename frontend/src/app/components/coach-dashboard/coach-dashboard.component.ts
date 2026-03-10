@@ -220,7 +220,7 @@ export class CoachDashboardComponent implements OnInit {
 
   loadAthletePmc(athleteId: string): void {
     const now = new Date();
-    const from = new Date(now); from.setDate(from.getDate() - 30);
+    const from = new Date(now); from.setDate(from.getDate() - 90);
     const to = new Date(now); to.setDate(to.getDate() + 30);
     this.coachService.getAthletePmc(
       athleteId,

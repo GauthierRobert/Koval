@@ -167,6 +167,20 @@ public class TrainingService {
 
 
     /**
+     * Re-calculates estimation metrics (duration, distance, TSS, IF) using the
+     * requesting user's reference values instead of the creator's.
+     */
+    public void enrichTrainingForUser(Training training, String userId) {
+        if (training.getBlocks() == null || training.getBlocks().isEmpty()) {
+            return;
+        }
+        // Only recalculate if the requesting user is different from the creator
+        if (userId != null && !userId.equals(training.getCreatedBy())) {
+            calculateTrainingMetrics(training, userId);
+        }
+    }
+
+    /**
      * Calculates estimated TSS and IF for the training based on user's thresholds.
      */
     private void calculateTrainingMetrics(Training training, String userId) {

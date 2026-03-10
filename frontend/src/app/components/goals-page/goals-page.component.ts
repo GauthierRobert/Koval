@@ -1,12 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { map } from 'rxjs/operators';
 import { RaceGoal, RaceGoalService } from '../../services/race-goal.service';
+import { SportIconComponent } from '../sport-icon/sport-icon.component';
 
 @Component({
   selector: 'app-goals-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SportIconComponent],
   templateUrl: './goals-page.component.html',
   styleUrl: './goals-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -14,7 +16,9 @@ import { RaceGoal, RaceGoalService } from '../../services/race-goal.service';
 export class GoalsPageComponent implements OnInit {
   private raceGoalService = inject(RaceGoalService);
 
-  goals$ = this.raceGoalService.goals$;
+  goals$ = this.raceGoalService.goals$.pipe(
+    map(goals => this.sortGoals(goals))
+  );
 
   isFormOpen = false;
   editingGoal: RaceGoal | null = null;
@@ -85,6 +89,41 @@ export class GoalsPageComponent implements OnInit {
     if (confirm(`Delete "${goal.title}"?`)) {
       this.raceGoalService.deleteGoal(goal.id);
     }
+  }
+
+  weeksUntil(dateStr: string): number {
+    return Math.ceil(this.daysUntil(dateStr) / 7);
+  }
+
+  getProgressPercent(goal: RaceGoal): number {
+    if (!goal.createdAt) return 0;
+    const created = new Date(goal.createdAt).getTime();
+    const race = new Date(goal.raceDate + 'T00:00:00').getTime();
+    const now = Date.now();
+    if (now >= race) return 100;
+    if (now <= created) return 0;
+    return Math.round(((now - created) / (race - created)) * 100);
+  }
+
+  isUpcoming(goal: RaceGoal): boolean {
+    return this.daysUntil(goal.raceDate) >= 0;
+  }
+
+  private sortGoals(goals: RaceGoal[]): RaceGoal[] {
+    const priorityOrder: Record<string, number> = { A: 0, B: 1, C: 2 };
+    const upcoming = goals.filter(g => this.isUpcoming(g));
+    const past = goals.filter(g => !this.isUpcoming(g));
+
+    const sortFn = (a: RaceGoal, b: RaceGoal) => {
+      const pa = priorityOrder[a.priority] ?? 3;
+      const pb = priorityOrder[b.priority] ?? 3;
+      if (pa !== pb) return pa - pb;
+      return new Date(a.raceDate).getTime() - new Date(b.raceDate).getTime();
+    };
+
+    return [...upcoming.sort(sortFn), ...past.sort((a, b) =>
+      new Date(b.raceDate).getTime() - new Date(a.raceDate).getTime()
+    )];
   }
 
   private emptyForm(): Partial<RaceGoal> {

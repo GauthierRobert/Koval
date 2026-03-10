@@ -154,14 +154,15 @@
 .goal-pill {
   display: flex;
   align-items: center;
-  gap: 3px;
-  padding: 2px 5px;
-  border-radius: 4px;
-  border: 1px solid;
-  font-size: 0.65rem;
+  gap: 4px;
+  padding: 3px 6px;
+  border-radius: 5px;
+  border: 1.5px solid;
+  font-size: 0.68rem;
   margin: 1px 0;
   cursor: default;
   overflow: hidden;
+  order: -1;
 }
 
 .goal-pill-title {
@@ -169,11 +170,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .goal-pill-priority {
-  font-weight: 700;
-  font-size: 0.62rem;
+  font-weight: 800;
+  font-size: 0.65rem;
   flex-shrink: 0;
 }

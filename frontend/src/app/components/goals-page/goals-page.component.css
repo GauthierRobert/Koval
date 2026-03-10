@@ -87,9 +87,21 @@
 .icon-btn:hover { background: rgba(255, 255, 255, 0.1); }
 .icon-btn.delete:hover { background: rgba(239, 68, 68, 0.2); }
 
+.goal-card--a {
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.goal-card--a .goal-title {
+  font-size: 1.3rem;
+}
+
+.goal-card--past {
+  opacity: 0.6;
+}
+
 .goal-title {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.15rem;
+  font-weight: 700;
   margin: 0 0 0.5rem;
 }
 
@@ -113,6 +125,44 @@
 
 .days-badge.soon { background: rgba(245, 158, 11, 0.2); color: #F59E0B; }
 .days-badge.past { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+
+/* Weeks display */
+.weeks-display {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.weeks-number {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--accent-color, #ff9d00);
+  line-height: 1;
+}
+
+.weeks-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Progress bar */
+.progress-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 0.6rem;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s;
+}
 
 .goal-meta {
   display: flex;

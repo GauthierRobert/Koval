@@ -1,6 +1,7 @@
 
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { BehaviorSubject, of } from 'rxjs';
 import { switchMap, map, catchError, startWith } from 'rxjs/operators';
 import { Training, WorkoutBlock, TrainingService, TrainingType, hasDurationEstimate } from '../../services/training.service';
@@ -54,7 +55,10 @@ export class WorkoutDetailModalComponent {
   private authService = inject(AuthService);
   private durationService = inject(DurationEstimationService);
   private zoneService = inject(ZoneService);
+  private router = inject(Router);
   private currentZoneSystem: ZoneSystem | null = null;
+
+  showBlockDetails = false;
 
   workout$ = new BehaviorSubject<ScheduledWorkout | null>(null);
 
@@ -101,6 +105,16 @@ export class WorkoutDetailModalComponent {
       this.statusChanged.emit();
       this.close();
     });
+  }
+
+  toggleBlockDetails(): void {
+    this.showBlockDetails = !this.showBlockDetails;
+  }
+
+  viewInLibrary(training: Training): void {
+    this.trainingService.selectTraining(training);
+    this.close();
+    this.router.navigate(['/trainings']);
   }
 
   private flattenElements(blocks: WorkoutBlock[]): WorkoutBlock[] {

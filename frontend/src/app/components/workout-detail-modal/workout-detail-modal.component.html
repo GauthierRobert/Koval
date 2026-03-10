@@ -49,18 +49,24 @@
             </div>
           </div>
 
-          <!-- Block list -->
-          <div class="blocks-list" *ngIf="training.blocks && training.blocks.length">
-            <div *ngFor="let block of training.blocks; let i = index" class="block-item">
-              <span class="block-index">{{ i + 1 }}</span>
-              <span class="block-label">{{ block.label || block.type }}</span>
-              <span class="block-intensity">{{ getDisplayIntensity(block) }}</span>
-              <span class="block-duration" [class.estimated]="!block.durationSeconds">
-                {{ formatBlockDuration(block, training) }}
-              </span>
-              <span class="block-distance" [class.estimated]="!block.distanceMeters">
-                {{ formatBlockDistance(block, training) }}
-              </span>
+          <!-- Block list (collapsible) -->
+          <div class="blocks-section" *ngIf="training.blocks && training.blocks.length">
+            <button class="toggle-details-btn" (click)="toggleBlockDetails()">
+              <span class="toggle-arrow" [class.open]="showBlockDetails">&#9654;</span>
+              View Details ({{ training.blocks.length }} blocks)
+            </button>
+            <div class="blocks-list" *ngIf="showBlockDetails">
+              <div *ngFor="let block of training.blocks; let i = index" class="block-item">
+                <span class="block-index">{{ i + 1 }}</span>
+                <span class="block-label">{{ block.label || block.type }}</span>
+                <span class="block-intensity">{{ getDisplayIntensity(block) }}</span>
+                <span class="block-duration" [class.estimated]="!block.durationSeconds">
+                  {{ formatBlockDuration(block, training) }}
+                </span>
+                <span class="block-distance" [class.estimated]="!block.distanceMeters">
+                  {{ formatBlockDistance(block, training) }}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -95,6 +101,7 @@
                 (click)="markComplete()">Mark Complete</button>
               <button class="skip-btn" (click)="markSkipped()">Skip</button>
             </ng-container>
+            <button class="library-link-btn" (click)="viewInLibrary(training)">View in Training Library</button>
           </div>
         </ng-container>
       </ng-container>

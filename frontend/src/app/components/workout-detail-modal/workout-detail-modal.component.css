@@ -354,3 +354,61 @@
   background: rgba(255, 255, 255, 0.1);
   color: var(--text-color);
 }
+
+/* Collapsible details toggle */
+.blocks-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.toggle-details-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+
+.toggle-details-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-color);
+}
+
+.toggle-arrow {
+  font-size: 8px;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.toggle-arrow.open {
+  transform: rotate(90deg);
+}
+
+/* View in Training Library link */
+.library-link-btn {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  border: 1px solid var(--glass-border);
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+
+.library-link-btn:hover {
+  background: rgba(255, 157, 0, 0.1);
+  color: var(--accent-color);
+  border-color: rgba(255, 157, 0, 0.3);
+}

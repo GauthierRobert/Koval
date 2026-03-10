@@ -386,7 +386,7 @@
           <ng-container *ngIf="athletePmc$ | async as pmcData">
             <div class="coach-pmc-panel" *ngIf="pmcData.length > 0">
               <div class="coach-pmc-header">
-                <div class="section-title">PMC — 30 DAYS</div>
+                <div class="section-title">PMC — 90 DAYS</div>
                 <button class="view-pmc-btn" (click)="viewAthletePmc(selectedAthlete!.id)">VIEW FULL PMC →</button>
               </div>
               <app-pmc-chart [data]="pmcData" [goals]="athleteGoals$ | async"></app-pmc-chart>

@@ -20,8 +20,26 @@
       Could not parse FIT file. Make sure it contains a valid session.
     </div>
 
+    <!-- Sport filter pills -->
+    <div class="filter-bar">
+      <button *ngFor="let opt of sportOptions"
+        class="filter-pill"
+        [class.selected]="activeSportFilter === opt.value"
+        (click)="setSportFilter(opt.value)">
+        {{ opt.label }}
+      </button>
+    </div>
+
+    <!-- Date range filter -->
+    <div class="date-filter-bar">
+      <label class="date-label">From</label>
+      <input type="date" class="date-input" [ngModel]="dateFrom" (ngModelChange)="onDateFromChange($event)" />
+      <label class="date-label">To</label>
+      <input type="date" class="date-input" [ngModel]="dateTo" (ngModelChange)="onDateToChange($event)" />
+    </div>
+
     <ng-container *ngIf="ftp$ | async as ftp">
-      <div class="session-list" *ngIf="sessions$ | async as sessions">
+      <div class="session-list" *ngIf="filteredSessions$ | async as sessions">
         <div class="empty-state" *ngIf="sessions.length === 0">
           <p>No activities yet</p>
           <p class="empty-hint">Upload a .FIT file to get started</p>
