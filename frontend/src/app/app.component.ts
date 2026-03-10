@@ -2,12 +2,12 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { WorkoutExecutionService } from './services/workout-execution.service';
-import { LiveDashboardComponent } from './components/live-dashboard/live-dashboard.component';
-import { TopBarComponent } from './components/top-bar/top-bar.component';
+import { LiveDashboardComponent } from './components/pages/live-session/live-dashboard.component';
+import { TopBarComponent } from './components/layout/top-bar/top-bar.component';
 import { TrainingService, Training } from './services/training.service';
 import { Observable } from 'rxjs';
-import { DeviceManagerComponent } from './components/device-manager/device-manager.component';
-import { SettingsComponent } from './components/settings/settings.component';
+import { DeviceManagerComponent } from './components/shared/device-manager/device-manager.component';
+import { SettingsComponent } from './components/layout/settings/settings.component';
 import { BluetoothService } from './services/bluetooth.service';
 import { AuthService } from './services/auth.service';
 

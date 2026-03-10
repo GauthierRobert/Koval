@@ -1,0 +1,6 @@
+<span
+  *ngFor="let opt of options"
+  class="filter-pill"
+  [class.selected]="selected === opt.value"
+  [style.--pill-color]="opt.color || null"
+  (click)="onSelect(opt.value)">{{ opt.label }}</span>

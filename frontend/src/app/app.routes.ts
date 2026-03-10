@@ -7,13 +7,13 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     loadComponent: () =>
-      import('./components/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+      import('./components/pages/dashboard/dashboard.component').then((m) => m.DashboardComponent),
     canActivate: [authGuard],
   },
   {
     path: 'trainings',
     loadComponent: () =>
-      import('./components/workout-selection/workout-selection.component').then(
+      import('./components/pages/workout-selection/workout-selection.component').then(
         (m) => m.WorkoutSelectionComponent,
       ),
     canActivate: [authGuard],
@@ -21,7 +21,7 @@ export const routes: Routes = [
   {
     path: 'active-session',
     loadComponent: () =>
-      import('./components/live-dashboard/live-dashboard.component').then(
+      import('./components/pages/live-session/live-dashboard.component').then(
         (m) => m.LiveDashboardComponent,
       ),
     canActivate: [authGuard],
@@ -29,7 +29,7 @@ export const routes: Routes = [
   {
     path: 'history',
     loadComponent: () =>
-      import('./components/workout-history/workout-history.component').then(
+      import('./components/pages/workout-history/workout-history.component').then(
         (m) => m.WorkoutHistoryComponent,
       ),
     canActivate: [authGuard],
@@ -37,13 +37,13 @@ export const routes: Routes = [
   {
     path: 'calendar',
     loadComponent: () =>
-      import('./components/calendar/calendar.component').then((m) => m.CalendarComponent),
+      import('./components/pages/calendar/calendar.component').then((m) => m.CalendarComponent),
     canActivate: [authGuard],
   },
   {
     path: 'coach',
     loadComponent: () =>
-      import('./components/coach-dashboard/coach-dashboard.component').then(
+      import('./components/pages/coach-dashboard/coach-dashboard.component').then(
         (m) => m.CoachDashboardComponent,
       ),
     canActivate: [authGuard, coachGuard],
@@ -51,19 +51,19 @@ export const routes: Routes = [
   {
     path: 'zones',
     loadComponent: () =>
-      import('./components/zone-manager/zone-manager.component').then((m) => m.ZoneManagerComponent),
+      import('./components/pages/zone-manager/zone-manager.component').then((m) => m.ZoneManagerComponent),
     canActivate: [authGuard],
   },
   {
     path: 'chat',
     loadComponent: () =>
-      import('./components/ai-chat-page/ai-chat-page.component').then((m) => m.AIChatPageComponent),
+      import('./components/pages/ai-chat-page/ai-chat-page.component').then((m) => m.AIChatPageComponent),
     canActivate: [authGuard],
   },
   {
     path: 'analysis/:id',
     loadComponent: () =>
-      import('./components/session-analysis/session-analysis.component').then(
+      import('./components/pages/session-analysis/session-analysis.component').then(
         (m) => m.SessionAnalysisComponent,
       ),
     canActivate: [authGuard],
@@ -71,13 +71,13 @@ export const routes: Routes = [
   {
     path: 'pmc',
     loadComponent: () =>
-      import('./components/pmc-page/pmc-page.component').then((m) => m.PmcPageComponent),
+      import('./components/pages/pmc-page/pmc-page.component').then((m) => m.PmcPageComponent),
     canActivate: [authGuard],
   },
   {
     path: 'tags',
     loadComponent: () =>
-      import('./components/tag-management/tag-management.component').then(
+      import('./components/pages/tag-management/tag-management.component').then(
         (m) => m.TagManagementComponent,
       ),
     canActivate: [authGuard, coachGuard],
@@ -85,7 +85,7 @@ export const routes: Routes = [
   {
     path: 'physiology',
     loadComponent: () =>
-      import('./components/physiology-page/physiology-page.component').then(
+      import('./components/pages/physiology-page/physiology-page.component').then(
         (m) => m.PhysiologyPageComponent,
       ),
     canActivate: [authGuard],
@@ -93,28 +93,28 @@ export const routes: Routes = [
   {
     path: 'goals',
     loadComponent: () =>
-      import('./components/goals-page/goals-page.component').then((m) => m.GoalsPageComponent),
+      import('./components/pages/goals-page/goals-page.component').then((m) => m.GoalsPageComponent),
     canActivate: [authGuard],
   },
   {
     path: 'onboarding',
     loadComponent: () =>
-      import('./components/onboarding/onboarding.component').then((m) => m.OnboardingComponent),
+      import('./components/pages/onboarding/onboarding.component').then((m) => m.OnboardingComponent),
     canActivate: [authGuard],
   },
   {
     path: 'login',
     loadComponent: () =>
-      import('./components/auth/login.component').then((m) => m.LoginComponent),
+      import('./components/pages/auth/login.component').then((m) => m.LoginComponent),
   },
   {
     path: 'auth/callback',
     loadComponent: () =>
-      import('./components/auth/auth-callback.component').then((m) => m.AuthCallbackComponent),
+      import('./components/pages/auth/auth-callback.component').then((m) => m.AuthCallbackComponent),
   },
   {
     path: 'auth/google/callback',
     loadComponent: () =>
-      import('./components/auth/auth-callback.component').then((m) => m.AuthCallbackComponent),
+      import('./components/pages/auth/auth-callback.component').then((m) => m.AuthCallbackComponent),
   },
 ];
