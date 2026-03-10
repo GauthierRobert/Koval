@@ -1,0 +1,215 @@
+<div class="pacing-page">
+  <div class="page-header">
+    <h1>Race Pacing</h1>
+    <p class="subtitle">Upload a GPX course file and generate an elevation-aware pacing plan</p>
+  </div>
+
+  <div class="content-grid" [class.has-results]="(pacingPlan$ | async) !== null">
+    <!-- Left: Input Form -->
+    <div class="form-panel glass">
+      <h2 class="section-title">Course & Profile</h2>
+
+      <!-- GPX Upload -->
+      <div
+        class="gpx-dropzone"
+        [class.dragging]="isDragging"
+        [class.has-file]="gpxFile"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave()"
+        (drop)="onDrop($event)"
+        (click)="fileInput.click()"
+      >
+        <input #fileInput type="file" accept=".gpx" hidden (change)="onFileSelected($event)" />
+        <svg *ngIf="!gpxFile" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+        <span *ngIf="!gpxFile">Drop GPX file here or click to browse</span>
+        <span *ngIf="gpxFile" class="file-name">{{ gpxFileName }}</span>
+      </div>
+
+      <!-- Discipline Selector -->
+      <div class="field-group">
+        <label class="field-label">Discipline</label>
+        <div class="pill-group">
+          <button class="pill" [class.active]="discipline === 'BIKE'" (click)="discipline = 'BIKE'">Bike</button>
+          <button class="pill" [class.active]="discipline === 'RUN'" (click)="discipline = 'RUN'">Run</button>
+          <button class="pill" [class.active]="discipline === 'BOTH'" (click)="discipline = 'BOTH'">Both</button>
+        </div>
+      </div>
+
+      <!-- Athlete Metrics -->
+      <h3 class="subsection-title">Athlete Metrics</h3>
+
+      <div class="field-row">
+        <div class="field">
+          <label>FTP (W)</label>
+          <input type="number" [(ngModel)]="profile.ftp" placeholder="250" min="50" max="500" />
+        </div>
+        <div class="field">
+          <label>Weight (kg)</label>
+          <input type="number" [(ngModel)]="profile.weightKg" placeholder="75" min="30" max="200" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Threshold Pace (s/km)</label>
+          <input type="number" [(ngModel)]="profile.thresholdPaceSec" placeholder="270" min="120" max="600" />
+        </div>
+        <div class="field">
+          <label>Swim CSS (s/100m)</label>
+          <input type="number" [(ngModel)]="profile.swimCssSec" placeholder="95" min="40" max="200" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Fatigue Resistance</label>
+          <input type="range" [(ngModel)]="profile.fatigueResistance" min="0" max="1" step="0.05" />
+          <span class="range-value">{{ (profile.fatigueResistance || 0) | number: '1.0-2' }}</span>
+        </div>
+        <div class="field">
+          <label>Nutrition</label>
+          <select [(ngModel)]="profile.nutritionPreference">
+            <option value="MIXED">Mixed</option>
+            <option value="GELS">Gels</option>
+            <option value="DRINK">Drink</option>
+            <option value="SOLID">Solid</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Environment -->
+      <h3 class="subsection-title">Environment</h3>
+      <div class="field-row">
+        <div class="field">
+          <label>Temperature (°C)</label>
+          <input type="number" [(ngModel)]="profile.temperature" placeholder="20" min="-10" max="50" />
+        </div>
+        <div class="field">
+          <label>Wind Speed (m/s)</label>
+          <input type="number" [(ngModel)]="profile.windSpeed" placeholder="0" min="0" max="30" step="0.5" />
+        </div>
+      </div>
+
+      <!-- Error display -->
+      <div class="error-msg" *ngIf="localError$ | async as err">{{ err }}</div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button class="generate-btn" (click)="generate()" [disabled]="(loading$ | async) || !gpxFile">
+          <span *ngIf="!(loading$ | async)">GENERATE PLAN</span>
+          <span *ngIf="loading$ | async">GENERATING...</span>
+        </button>
+        <button class="clear-btn" *ngIf="pacingPlan$ | async" (click)="clearPlan()">CLEAR</button>
+      </div>
+    </div>
+
+    <!-- Right: Results -->
+    <div class="results-panel" *ngIf="pacingPlan$ | async as plan">
+      <!-- Summary Cards -->
+      <div class="summary-row">
+        <div class="summary-card glass" *ngIf="plan.bikeSummary as bs">
+          <span class="summary-label">BIKE</span>
+          <div class="summary-stats">
+            <div class="stat">
+              <span class="stat-value">{{ formatDistance(bs.totalDistance) }}</span>
+              <span class="stat-label">Distance</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value">{{ formatTime(bs.estimatedTotalTime) }}</span>
+              <span class="stat-label">Est. Time</span>
+            </div>
+            <div class="stat" *ngIf="bs.averagePower">
+              <span class="stat-value">{{ bs.averagePower }}W</span>
+              <span class="stat-label">Avg Power</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value">{{ bs.totalCalories }}</span>
+              <span class="stat-label">Calories</span>
+            </div>
+          </div>
+          <div class="nutrition-plan">{{ bs.nutritionPlan }}</div>
+        </div>
+
+        <div class="summary-card glass" *ngIf="plan.runSummary as rs">
+          <span class="summary-label run">RUN</span>
+          <div class="summary-stats">
+            <div class="stat">
+              <span class="stat-value">{{ formatDistance(rs.totalDistance) }}</span>
+              <span class="stat-label">Distance</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value">{{ formatTime(rs.estimatedTotalTime) }}</span>
+              <span class="stat-label">Est. Time</span>
+            </div>
+            <div class="stat" *ngIf="rs.averagePace">
+              <span class="stat-value">{{ rs.averagePace }}</span>
+              <span class="stat-label">Avg Pace</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value">{{ rs.totalCalories }}</span>
+              <span class="stat-label">Calories</span>
+            </div>
+          </div>
+          <div class="nutrition-plan">{{ rs.nutritionPlan }}</div>
+        </div>
+      </div>
+
+      <!-- Tab switcher -->
+      <div class="tab-row" *ngIf="plan.bikeSegments && plan.runSegments">
+        <button class="tab-btn" [class.active]="activeTab === 'BIKE'" (click)="activeTab = 'BIKE'">Bike</button>
+        <button class="tab-btn" [class.active]="activeTab === 'RUN'" (click)="activeTab = 'RUN'">Run</button>
+      </div>
+
+      <!-- Elevation Chart -->
+      <app-elevation-chart [segments]="getActiveSegments(plan)"></app-elevation-chart>
+
+      <!-- Segment Table -->
+      <div class="table-wrapper glass">
+        <table class="segment-table">
+          <thead>
+            <tr>
+              <th>From</th>
+              <th>To</th>
+              <th>Gradient</th>
+              <th>Elevation</th>
+              <th *ngIf="activeTab === 'BIKE'">Power</th>
+              <th *ngIf="activeTab === 'RUN'">Pace</th>
+              <th>Time</th>
+              <th>Fatigue</th>
+              <th>Nutrition</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let seg of getActiveSegments(plan)" [class.climb]="seg.gradient > 3"
+              [class.descent]="seg.gradient < -3">
+              <td>{{ formatDistance(seg.startDistance) }}</td>
+              <td>{{ formatDistance(seg.endDistance) }}</td>
+              <td [class.positive]="seg.gradient > 0" [class.negative]="seg.gradient < 0">
+                {{ seg.gradient > 0 ? '+' : '' }}{{ seg.gradient.toFixed(1) }}%
+              </td>
+              <td>{{ seg.elevation | number: '1.0-0' }}m</td>
+              <td *ngIf="activeTab === 'BIKE'">{{ seg.targetPower }}W</td>
+              <td *ngIf="activeTab === 'RUN'">{{ seg.targetPace }}</td>
+              <td>{{ formatTime(seg.estimatedSegmentTime) }}</td>
+              <td>
+                <div class="fatigue-bar">
+                  <div class="fatigue-fill" [style.width.%]="seg.cumulativeFatigue * 100"></div>
+                </div>
+              </td>
+              <td class="nutrition-cell">
+                <span class="nutrition-badge" *ngIf="seg.nutritionSuggestion" [title]="seg.nutritionSuggestion">
+                  N
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

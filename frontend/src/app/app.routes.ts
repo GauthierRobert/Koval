@@ -97,6 +97,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'pacing',
+    loadComponent: () =>
+      import('./components/pages/pacing/pacing-page.component').then((m) => m.PacingPageComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'onboarding',
     loadComponent: () =>
       import('./components/pages/onboarding/onboarding.component').then((m) => m.OnboardingComponent),
