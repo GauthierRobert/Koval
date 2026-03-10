@@ -1,4 +1,4 @@
-import {Component, ElementRef, inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {ChangeDetectionStrategy, Component, ElementRef, inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Subscription} from 'rxjs';
@@ -17,6 +17,7 @@ interface AgentOption {
   imports: [CommonModule, FormsModule, ScheduleModalComponent],
   templateUrl: './ai-chat-page.component.html',
   styleUrl: './ai-chat-page.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AIChatPageComponent implements OnInit, OnDestroy {
   @ViewChild('scrollMe') private scrollContainer!: ElementRef;

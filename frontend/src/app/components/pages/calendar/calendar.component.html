@@ -5,7 +5,7 @@
       <div class="overdue-strip" *ngIf="overdueWorkouts$ | async as overdue">
         <ng-container *ngIf="overdue.length > 0">
           <span class="overdue-label">OVERDUE</span>
-          <span *ngFor="let w of overdue" class="overdue-chip" (click)="selectWorkout(w)">
+          <span *ngFor="let w of overdue; trackBy: trackWorkoutById" class="overdue-chip" (click)="selectWorkout(w)">
             <app-sport-icon [sport]="w.sportType" [size]="12"></app-sport-icon>
             {{ w.trainingTitle || w.title || 'Workout' }}
           </span>

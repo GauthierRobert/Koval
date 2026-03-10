@@ -1,6 +1,6 @@
 .physiology-page {
-  padding: 2rem;
-  max-width: 1080px;
+  padding: var(--page-padding);
+  max-width: var(--page-max-width);
   margin: 0 auto;
   color: var(--text-color);
 }
@@ -13,7 +13,7 @@
 }
 
 .subtitle {
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   margin: 0 0 1.5rem;
 }
@@ -28,7 +28,7 @@
 .phys-stat {
   background: var(--surface-elevated);
   border: 1px solid var(--glass-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 0.75rem 1.25rem;
   display: flex;
   flex-direction: column;
@@ -86,7 +86,7 @@
   gap: 0.6rem;
   background: rgba(255, 157, 0, 0.06);
   border: 1px solid rgba(255, 157, 0, 0.2);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 0.85rem 1rem;
   font-size: 0.78rem;
   color: var(--text-muted);
@@ -123,8 +123,8 @@
 }
 
 .tab-btn {
-  padding: 6px 16px;
-  border-radius: 6px;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--glass-border);
   background: var(--surface-elevated);
   color: var(--text-muted);
@@ -209,10 +209,10 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 10px;
+  padding: var(--space-sm) 10px;
   background: var(--surface-elevated);
   border: 1px solid var(--glass-border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .zone-dot {
@@ -223,7 +223,7 @@
 }
 
 .zone-label {
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
   font-weight: 800;
   color: var(--text-color);
   min-width: 24px;
@@ -245,7 +245,7 @@
 }
 
 .zone-actual {
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
   font-weight: 700;
   color: var(--text-color);
   font-variant-numeric: tabular-nums;

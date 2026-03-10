@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild, ElementRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BehaviorSubject, combineLatest } from 'rxjs';
@@ -25,6 +25,7 @@ type SportFilter = string | null;
     imports: [CommonModule, FormsModule, SportIconComponent, SessionAnalysisComponent, FilterPillsComponent],
     templateUrl: './workout-history.component.html',
     styleUrl: './workout-history.component.css',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkoutHistoryComponent {
     @ViewChild('fitInput') fitInputRef!: ElementRef<HTMLInputElement>;
@@ -216,5 +217,9 @@ export class WorkoutHistoryComponent {
         if (session.sportType === 'RUNNING') return '/km';
         if (session.sportType === 'SWIMMING') return '/100m';
         return 'W';
+    }
+
+    trackSessionById(_index: number, session: SavedSession): string {
+        return session.id;
     }
 }

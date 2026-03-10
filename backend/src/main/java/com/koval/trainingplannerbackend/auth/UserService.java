@@ -1,17 +1,24 @@
 package com.koval.trainingplannerbackend.auth;
 
+import com.koval.trainingplannerbackend.training.tag.Tag;
+import com.koval.trainingplannerbackend.training.tag.TagService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final TagService tagService;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, TagService tagService) {
         this.userRepository = userRepository;
+        this.tagService = tagService;
     }
 
     public User findOrCreateFromStrava(String stravaId, String displayName, String profilePicture,
@@ -114,5 +121,39 @@ public class UserService {
         user.setVo2maxPower(vo2maxPower);
         user.setVo2maxPace(vo2maxPace);
         return userRepository.save(user);
+    }
+
+    /**
+     * Convert a User entity to a Map suitable for JSON responses.
+     * Includes tag information and coach-specific metadata.
+     */
+    public Map<String, Object> userToMap(User user) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", user.getId());
+        map.put("displayName", user.getDisplayName());
+        map.put("profilePicture", user.getProfilePicture());
+        map.put("role", user.getRole().name());
+        map.put("ftp", user.getFtp());
+        map.put("weightKg", user.getWeightKg());
+        map.put("functionalThresholdPace", user.getFunctionalThresholdPace());
+        map.put("criticalSwimSpeed", user.getCriticalSwimSpeed());
+        map.put("pace5k", user.getPace5k());
+        map.put("pace10k", user.getPace10k());
+        map.put("paceHalfMarathon", user.getPaceHalfMarathon());
+        map.put("paceMarathon", user.getPaceMarathon());
+        map.put("vo2maxPower", user.getVo2maxPower());
+        map.put("vo2maxPace", user.getVo2maxPace());
+
+        map.put("hasCoach", tagService.athleteHasCoach(user.getId()));
+        List<Tag> userTags = tagService.getTagsForAthlete(user.getId());
+        map.put("tags", userTags.stream().map(Tag::getName).toList());
+
+        map.put("needsOnboarding", user.isNeedsOnboarding());
+
+        if (user.isCoach()) {
+            List<String> athleteIds = tagService.getAthleteIdsForCoach(user.getId());
+            map.put("athleteCount", athleteIds.size());
+        }
+        return map;
     }
 }

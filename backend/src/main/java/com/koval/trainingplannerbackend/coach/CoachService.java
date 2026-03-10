@@ -7,6 +7,7 @@ import com.koval.trainingplannerbackend.auth.UserService;
 import com.koval.trainingplannerbackend.training.tag.Tag;
 import com.koval.trainingplannerbackend.training.tag.TagService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDate;
@@ -47,6 +48,7 @@ public class CoachService {
     /**
      * Assign a training to one or more athletes.
      */
+    @Transactional
     public List<ScheduledWorkout> assignTraining(
             String coachId,
             String trainingId,
@@ -298,6 +300,7 @@ public class CoachService {
      * Redeem an invite code as an athlete.
      * Multi-coach is now allowed — no "already has a coach" check.
      */
+    @Transactional
     public User redeemInviteCode(String athleteId, String code) {
         User athlete = userService.getUserById(athleteId);
 

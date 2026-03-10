@@ -1,4 +1,4 @@
-import {Component, inject} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {Router, RouterModule} from '@angular/router';
 import {FormsModule} from '@angular/forms';
@@ -13,6 +13,7 @@ import {combineLatest, map} from 'rxjs';
   imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './top-bar.component.html',
   styleUrl: './top-bar.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TopBarComponent {
   private router = inject(Router);

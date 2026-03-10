@@ -24,6 +24,7 @@ public class User {
 
     private AuthProvider authProvider;
 
+    @Indexed
     private String email;
     private String displayName;
     private String profilePicture;

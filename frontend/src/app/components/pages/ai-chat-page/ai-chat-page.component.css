@@ -7,7 +7,7 @@
 }
 
 .chat-sidebar {
-  width: 260px;
+  width: var(--sidebar-width);
   border-right: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
@@ -15,7 +15,7 @@
 }
 
 .sidebar-title {
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 800;
   letter-spacing: 0.12em;
   color: var(--text-muted);
@@ -51,8 +51,8 @@
 }
 
 .history-item {
-  padding: 8px 12px;
-  border-radius: 6px;
+  padding: var(--space-sm) 12px;
+  border-radius: var(--radius-sm);
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
@@ -129,13 +129,13 @@
   color: var(--accent-color);
 }
 
-.coach-name { font-weight: 800; color: var(--text-color); letter-spacing: 1px; font-size: 12px; }
+.coach-name { font-weight: 800; color: var(--text-color); letter-spacing: 1px; font-size: var(--text-sm); }
 
 .dim { opacity: 0.4; font-weight: 400; }
 
 .messages-container {
   flex: 1;
-  padding: 1.5rem 3rem;
+  padding: var(--page-padding) var(--space-2xl);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -184,8 +184,8 @@
 
 .message-bubble {
   max-width: 80%;
-  padding: 1rem 1.5rem;
-  border-radius: 12px;
+  padding: var(--space-md) var(--page-padding);
+  border-radius: var(--radius-lg);
   background: var(--surface-elevated);
   border: 1px solid var(--glass-border);
   font-size: 13px;
@@ -221,7 +221,7 @@
 }
 
 .chat-input-container {
-  padding: 1rem 3rem 1.5rem;
+  padding: var(--space-md) var(--space-2xl) var(--page-padding);
 }
 
 .agent-tabs {
@@ -271,7 +271,7 @@
 .input-wrapper-technical {
   background: var(--surface-elevated);
   border: 1px solid var(--glass-border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   padding: 0.5rem 1rem;
@@ -303,9 +303,9 @@ textarea::placeholder {
   background: var(--accent-subtle);
   color: var(--accent-color);
   border: 1px solid var(--accent-border);
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 10px;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--space-sm);
+  font-size: var(--text-xs);
   font-weight: 800;
   cursor: pointer;
   letter-spacing: 1px;
@@ -359,7 +359,7 @@ textarea::placeholder {
   padding: 10px 14px;
   border: 1px solid var(--glass-border, rgba(255,255,255,0.1));
   border-left: 3px solid var(--accent-color, #00d4ff);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   max-width: 420px;
   margin-top: 4px;
 }
@@ -384,7 +384,7 @@ textarea::placeholder {
 }
 
 .ct-title {
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 600;
   letter-spacing: 0.04em;
   white-space: nowrap;
@@ -393,7 +393,7 @@ textarea::placeholder {
 }
 
 .ct-duration {
-  font-size: 10px;
+  font-size: var(--text-xs);
   color: var(--text-muted, #888);
   letter-spacing: 0.06em;
 }
@@ -463,10 +463,10 @@ textarea::placeholder {
 /* ── Plan card ───────────────────────────────────────────────────── */
 
 .plan-card {
-  padding: 12px 16px;
+  padding: 12px var(--space-md);
   background: var(--surface-elevated);
   border: 1px solid var(--glass-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -474,7 +474,7 @@ textarea::placeholder {
 }
 
 .plan-header {
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 800;
   letter-spacing: 1px;
   color: var(--text-muted);
@@ -504,7 +504,7 @@ textarea::placeholder {
   background: var(--accent-color);
   color: var(--color-black);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 6px 14px;
   font-size: 11px;
   font-weight: 800;

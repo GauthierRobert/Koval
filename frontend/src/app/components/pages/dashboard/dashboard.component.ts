@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { BehaviorSubject, combineLatest } from 'rxjs';
@@ -81,6 +81,7 @@ function computeWeekMetrics(sessions: SavedSession[]): WeekMetrics {
   imports: [CommonModule, RouterModule, SportIconComponent, WorkoutDetailModalComponent, PmcChartComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent {
   private authService = inject(AuthService);
@@ -247,5 +248,13 @@ export class DashboardComponent {
 
   getGoalPriorityColor(priority: string): string {
     return this.raceGoalService.getPriorityColor(priority);
+  }
+
+  trackWorkoutById(_index: number, workout: ScheduledWorkout): string {
+    return workout.id;
+  }
+
+  trackBySport(_index: number, stat: SportStats): string {
+    return stat.sport;
   }
 }

@@ -9,6 +9,9 @@ import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
 import com.koval.trainingplannerbackend.training.tag.Tag;
 import com.koval.trainingplannerbackend.training.tag.TagService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -34,17 +37,17 @@ import java.util.Map;
 public class CoachController {
 
     private final CoachService coachService;
-    private final ScheduleController scheduleController;
+    private final ScheduleService scheduleService;
     private final TagService tagService;
     private final CompletedSessionRepository sessionRepository;
     private final AnalyticsService analyticsService;
     private final RaceGoalService raceGoalService;
 
-    public CoachController(CoachService coachService, ScheduleController scheduleController,
+    public CoachController(CoachService coachService, ScheduleService scheduleService,
                            TagService tagService, CompletedSessionRepository sessionRepository,
                            AnalyticsService analyticsService, RaceGoalService raceGoalService) {
         this.coachService = coachService;
-        this.scheduleController = scheduleController;
+        this.scheduleService = scheduleService;
         this.tagService = tagService;
         this.sessionRepository = sessionRepository;
         this.analyticsService = analyticsService;
@@ -112,6 +115,34 @@ public class CoachController {
         return ResponseEntity.ok(enriched);
     }
 
+    @GetMapping(value = "/athletes", params = "page")
+    public ResponseEntity<Page<Map<String, Object>>> getAthletes(Pageable pageable) {
+        String coachId = SecurityUtils.getCurrentUserId();
+        List<User> athletes = coachService.getCoachAthletes(coachId);
+        List<Tag> coachTags = tagService.getTagsForCoach(coachId);
+
+        List<Map<String, Object>> enriched = athletes.stream().map(athlete -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", athlete.getId());
+            map.put("displayName", athlete.getDisplayName());
+            map.put("profilePicture", athlete.getProfilePicture());
+            map.put("role", athlete.getRole().name());
+            map.put("ftp", athlete.getFtp());
+            List<String> athleteTagNames = coachTags.stream()
+                    .filter(tag -> tag.getAthleteIds().contains(athlete.getId()))
+                    .map(Tag::getName)
+                    .toList();
+            map.put("tags", athleteTagNames);
+            map.put("hasCoach", true);
+            return map;
+        }).toList();
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), enriched.size());
+        List<Map<String, Object>> pageContent = start >= enriched.size() ? List.of() : enriched.subList(start, end);
+        return ResponseEntity.ok(new PageImpl<>(pageContent, pageable, enriched.size()));
+    }
+
     @DeleteMapping("/athletes/{athleteId}")
     public ResponseEntity<Void> removeAthlete(@PathVariable String athleteId) {
         String coachId = SecurityUtils.getCurrentUserId();
@@ -128,7 +159,7 @@ public class CoachController {
         List<ScheduledWorkout> workouts = (start != null && end != null)
                 ? coachService.getAthleteSchedule(athleteId, start, end)
                 : coachService.getAthleteSchedule(athleteId);
-        return ResponseEntity.ok(scheduleController.enrichList(workouts));
+        return ResponseEntity.ok(scheduleService.enrichList(workouts));
     }
 
     public record CompletionRequest(Integer tss, Double intensityFactor) {}

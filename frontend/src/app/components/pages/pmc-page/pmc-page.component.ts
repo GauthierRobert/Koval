@@ -1,4 +1,4 @@
-import {Component, inject, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {BehaviorSubject, combineLatest, Observable} from 'rxjs';
 import {map} from 'rxjs/operators';
@@ -18,6 +18,7 @@ type Period = '1w' | '1m' | '3m' | '6m' | '1y';
     imports: [CommonModule, PmcChartComponent],
     templateUrl: './pmc-page.component.html',
     styleUrl: './pmc-page.component.css',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PmcPageComponent implements OnInit {
     private authService = inject(AuthService);

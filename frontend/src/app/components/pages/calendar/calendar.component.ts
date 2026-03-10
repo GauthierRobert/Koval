@@ -253,6 +253,8 @@ export class CalendarComponent implements OnInit {
   onDetailStarted(): void { this.selectedWorkout = null; }
   onDetailStatusChanged(): void { this.selectedWorkout = null; this.reload$.next(); }
 
+  trackWorkoutById(_index: number, workout: ScheduledWorkout): string { return workout.id; }
+
   private startDateKey(): string {
     return this.viewMode === 'week' ? this.weekDays[0].key : this.monthDays[0].key;
   }

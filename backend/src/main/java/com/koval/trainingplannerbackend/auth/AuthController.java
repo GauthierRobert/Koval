@@ -1,7 +1,5 @@
 package com.koval.trainingplannerbackend.auth;
 
-import com.koval.trainingplannerbackend.training.tag.Tag;
-import com.koval.trainingplannerbackend.training.tag.TagService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +19,6 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -33,7 +30,6 @@ public class AuthController {
     private final GoogleOAuthService googleOAuthService;
     private final UserService userService;
     private final UserRepository userRepository;
-    private final TagService tagService;
 
     @Value("${jwt.secret:your-256-bit-secret-key-here-must-be-at-least-32-chars}")
     private String jwtSecret;
@@ -42,12 +38,11 @@ public class AuthController {
     private long jwtExpiration;
 
     public AuthController(StravaOAuthService stravaOAuthService, GoogleOAuthService googleOAuthService,
-            UserService userService, UserRepository userRepository, TagService tagService) {
+            UserService userService, UserRepository userRepository) {
         this.stravaOAuthService = stravaOAuthService;
         this.googleOAuthService = googleOAuthService;
         this.userService = userService;
         this.userRepository = userRepository;
-        this.tagService = tagService;
     }
 
     // --- Strava OAuth ---
@@ -76,7 +71,7 @@ public class AuthController {
 
             Map<String, Object> response = new HashMap<>();
             response.put("token", jwt);
-            response.put("user", userToMap(user));
+            response.put("user", userService.userToMap(user));
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -113,7 +108,7 @@ public class AuthController {
 
             Map<String, Object> response = new HashMap<>();
             response.put("token", jwt);
-            response.put("user", userToMap(user));
+            response.put("user", userService.userToMap(user));
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -149,7 +144,7 @@ public class AuthController {
 
         Map<String, Object> response = new HashMap<>();
         response.put("token", jwt);
-        response.put("user", userToMap(user));
+        response.put("user", userService.userToMap(user));
         return ResponseEntity.ok(response);
     }
 
@@ -168,7 +163,7 @@ public class AuthController {
             String userId = parseJwtToken(token);
 
             User user = userService.getUserById(userId);
-            return ResponseEntity.ok(userToMap(user));
+            return ResponseEntity.ok(userService.userToMap(user));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -189,7 +184,7 @@ public class AuthController {
         try {
             String userId = parseJwtToken(authHeader.substring(7));
             User user = userService.setRole(userId, request.role());
-            return ResponseEntity.ok(userToMap(user));
+            return ResponseEntity.ok(userService.userToMap(user));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -217,7 +212,7 @@ public class AuthController {
                     request.criticalSwimSpeed(), request.pace5k(), request.pace10k(),
                     request.paceHalfMarathon(), request.paceMarathon(),
                     request.vo2maxPower(), request.vo2maxPace());
-            return ResponseEntity.ok(userToMap(user));
+            return ResponseEntity.ok(userService.userToMap(user));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -245,36 +240,6 @@ public class AuthController {
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
-    }
-
-    private Map<String, Object> userToMap(User user) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("id", user.getId());
-        map.put("displayName", user.getDisplayName());
-        map.put("profilePicture", user.getProfilePicture());
-        map.put("role", user.getRole().name());
-        map.put("ftp", user.getFtp());
-        map.put("weightKg", user.getWeightKg());
-        map.put("functionalThresholdPace", user.getFunctionalThresholdPace());
-        map.put("criticalSwimSpeed", user.getCriticalSwimSpeed());
-        map.put("pace5k", user.getPace5k());
-        map.put("pace10k", user.getPace10k());
-        map.put("paceHalfMarathon", user.getPaceHalfMarathon());
-        map.put("paceMarathon", user.getPaceMarathon());
-        map.put("vo2maxPower", user.getVo2maxPower());
-        map.put("vo2maxPace", user.getVo2maxPace());
-
-        map.put("hasCoach", tagService.athleteHasCoach(user.getId()));
-        List<Tag> userTags = tagService.getTagsForAthlete(user.getId());
-        map.put("tags", userTags.stream().map(Tag::getName).toList());
-
-        map.put("needsOnboarding", user.isNeedsOnboarding());
-
-        if (user.isCoach()) {
-            List<String> athleteIds = tagService.getAthleteIdsForCoach(user.getId());
-            map.put("athleteCount", athleteIds.size());
-        }
-        return map;
     }
 
     public record OnboardingRequest(UserRole role, Integer ftp, Integer weightKg, Integer criticalSwimSpeed,
@@ -307,7 +272,7 @@ public class AuthController {
             String jwt = generateJwtToken(user);
             Map<String, Object> response = new HashMap<>();
             response.put("token", jwt);
-            response.put("user", userToMap(user));
+            response.put("user", userService.userToMap(user));
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

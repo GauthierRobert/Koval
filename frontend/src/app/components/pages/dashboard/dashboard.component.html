@@ -42,7 +42,7 @@
         <div class="schedule-panel overdue-panel" *ngIf="vm.overdue.length > 0">
           <span class="panel-label overdue-label">OVERDUE</span>
           <div class="chips-row">
-            <div class="workout-chip overdue" *ngFor="let w of vm.overdue" (click)="openDetail(w)">
+            <div class="workout-chip overdue" *ngFor="let w of vm.overdue; trackBy: trackWorkoutById" (click)="openDetail(w)">
               <app-sport-icon [sport]="w.sportType" [size]="12"></app-sport-icon>
               <span class="chip-date">{{ formatScheduleDate(w.scheduledDate) }}</span>
               <span class="chip-title">{{ w.trainingTitle || w.title || 'Workout' }}</span>
@@ -54,7 +54,7 @@
         <div class="schedule-panel week-panel">
           <span class="panel-label week-label">THIS WEEK</span>
           <div class="chips-row" *ngIf="vm.upcoming.length > 0">
-            <div class="workout-chip" *ngFor="let w of vm.upcoming" (click)="openDetail(w)">
+            <div class="workout-chip" *ngFor="let w of vm.upcoming; trackBy: trackWorkoutById" (click)="openDetail(w)">
               <app-sport-icon [sport]="w.sportType" [size]="12"></app-sport-icon>
               <span class="chip-date">{{ formatScheduleDate(w.scheduledDate) }}</span>
               <span class="chip-title">{{ w.trainingTitle || w.title || 'Workout' }}</span>
@@ -101,7 +101,7 @@
       <div class="sport-cards">
         <div
           class="sport-card glass"
-          *ngFor="let stat of vm.weekMetrics.current"
+          *ngFor="let stat of vm.weekMetrics.current; trackBy: trackBySport"
           [class.dim-card]="stat.sessionCount === 0">
           <div class="sport-header">
             <span class="sport-name">{{ stat.sport }}</span>

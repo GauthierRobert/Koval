@@ -19,7 +19,6 @@
   gap: 0.6rem;
   min-width: 0;
   overflow: hidden;
-  max-height: 520px;
   background: var(--surface-card);
   border: 1px solid var(--glass-border);
 }

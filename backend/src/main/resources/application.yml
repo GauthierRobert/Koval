@@ -65,3 +65,12 @@ logging:
     org.springframework.ai: DEBUG
     # Keep INFO level for application code
     com.example.trainingplannerbackend: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized

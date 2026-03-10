@@ -12,7 +12,7 @@
   max-width: 520px;
   background: var(--surface-elevated);
   border: 1px solid var(--glass-border);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   padding: 2.5rem;
 }
 
@@ -25,13 +25,13 @@
   width: 48px;
   height: 48px;
   background: var(--accent-color);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   margin: 0 auto 1.2rem;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
 
 .onboarding-header h1 {
-  font-size: 1.6rem;
+  font-size: var(--text-2xl);
   font-weight: 900;
   color: var(--text-color);
   margin: 0 0 0.5rem;
@@ -61,7 +61,7 @@
 }
 
 .field-label {
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -94,10 +94,10 @@
   gap: 0.6rem;
   padding: 0.9rem;
   border: 1.5px solid var(--glass-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--surface-hover);
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
   font-weight: 900;
   letter-spacing: 0.8px;
   cursor: pointer;
@@ -125,7 +125,7 @@
   flex: 1;
   background: var(--surface-hover);
   border: 1px solid var(--glass-border);
-  border-radius: 8px;
+  border-radius: var(--space-sm);
   padding: 0.7rem 1rem;
   color: var(--text-color);
   font-size: 0.95rem;
@@ -148,7 +148,7 @@
   width: 64px;
   background: var(--surface-hover);
   border: 1px solid var(--glass-border);
-  border-radius: 8px;
+  border-radius: var(--space-sm);
   padding: 0.7rem 0.5rem;
   color: var(--text-color);
   font-size: 0.95rem;
@@ -173,7 +173,7 @@
 }
 
 .field-unit {
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
   font-weight: 700;
   color: var(--text-muted);
   white-space: nowrap;
@@ -195,7 +195,7 @@
   background: var(--accent-color);
   color: var(--color-black);
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 0.9rem;
   font-size: 0.85rem;
   font-weight: 900;
@@ -256,7 +256,7 @@
   color: var(--text-muted);
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--glass-border);
-  border-radius: 8px;
+  border-radius: var(--space-sm);
   padding: 0.75rem;
   line-height: 1.5;
 }

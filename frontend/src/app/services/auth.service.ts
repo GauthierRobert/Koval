@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject, Observable} from 'rxjs';
 import {tap} from 'rxjs/operators';
@@ -45,7 +45,10 @@ export class AuthService {
     private showSettingsSubject = new BehaviorSubject<boolean>(false);
     showSettings$ = this.showSettingsSubject.asObservable();
 
-    constructor(private http: HttpClient, private router: Router) {
+    private readonly http = inject(HttpClient);
+    private readonly router = inject(Router);
+
+    constructor() {
         this.loadUserFromToken();
     }
 

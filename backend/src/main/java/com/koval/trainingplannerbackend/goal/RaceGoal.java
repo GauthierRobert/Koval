@@ -6,6 +6,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -20,8 +23,10 @@ public class RaceGoal {
     @Indexed
     private String athleteId;
 
+    @NotBlank
     private String title;
     private String sport;        // CYCLING | RUNNING | SWIMMING | TRIATHLON | OTHER
+    @NotNull
     private LocalDate raceDate;
     private String priority;     // A | B | C
     private String distance;

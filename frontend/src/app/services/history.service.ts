@@ -1,6 +1,7 @@
-import {inject, Injectable} from '@angular/core';
-import {BehaviorSubject, Observable} from 'rxjs';
-import {filter, tap} from 'rxjs/operators';
+import {DestroyRef, inject, Injectable} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {BehaviorSubject, Observable, of} from 'rxjs';
+import {catchError, filter, tap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
 import {SessionSummary} from './workout-execution.service';
 import {AuthService} from './auth.service';
@@ -29,6 +30,7 @@ export class HistoryService {
     private authService = inject(AuthService);
     private fitExport = inject(FitExportService);
     private metricsService = inject(MetricsService);
+    private destroyRef = inject(DestroyRef);
 
     private sessionsSubject = new BehaviorSubject<SavedSession[]>([]);
     sessions$ = this.sessionsSubject.asObservable();
@@ -36,11 +38,18 @@ export class HistoryService {
     private selectedSessionSubject = new BehaviorSubject<SavedSession | null>(null);
     selectedSession$ = this.selectedSessionSubject.asObservable();
 
+    private errorSubject = new BehaviorSubject<string | null>(null);
+    error$ = this.errorSubject.asObservable();
+
     constructor() {
-        this.authService.user$.pipe(filter((u) => !!u)).subscribe(() => this.loadSessions());
+        this.authService.user$.pipe(
+            filter((u) => !!u),
+            takeUntilDestroyed(this.destroyRef),
+        ).subscribe(() => this.loadSessions());
     }
 
     private loadSessions(): void {
+        this.errorSubject.next(null);
         this.http.get<any[]>(this.apiUrl).subscribe({
             next: (sessions) => {
                 const parsed: SavedSession[] = sessions.map((s) => ({
@@ -66,7 +75,9 @@ export class HistoryService {
                 parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
                 this.sessionsSubject.next(parsed);
             },
-            error: () => { },
+            error: () => {
+                this.errorSubject.next('Failed to load sessions');
+            },
         });
     }
 

@@ -46,7 +46,7 @@
 
         <div
           class="session-item"
-          *ngFor="let session of sessions"
+          *ngFor="let session of sessions; trackBy: trackSessionById"
           [class.active]="(historyService.selectedSession$ | async)?.id === session.id"
           (click)="onSelect(session)">
           <div class="item-sport">

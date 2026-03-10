@@ -1,4 +1,5 @@
-import { Component, inject, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, DestroyRef, inject, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { WorkoutExecutionService } from '../../../services/workout-execution.service';
 import { BluetoothService } from '../../../services/bluetooth.service';
@@ -32,14 +33,15 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
   showExitConfirm = false;
   private historyService = inject(HistoryService);
   private pipService = inject(PipService);
+  private destroyRef = inject(DestroyRef);
 
   async togglePip(state: any) {
-    const metrics = this.bluetoothService['metricsSubject'].value;
+    const metrics = this.bluetoothService.currentMetrics;
     const training = state.training;
     const blockLabel = training?.blocks?.[state.currentBlockIndex]?.label || 'WORKOUT';
     const nextStepBlock = training?.blocks?.[state.currentBlockIndex + 1];
     const nextStep = nextStepBlock?.label || (nextStepBlock ? 'RECOVERY' : 'FINISH');
-    const ftp = this.trainingService['ftpSubject'].value ?? 250;
+    const ftp = this.trainingService.currentFtp ?? 250;
     const nextStepPower = nextStepBlock ? Math.round((ftp * (nextStepBlock.intensityTarget || 0)) / 100) : 0;
 
     const data = {
@@ -68,15 +70,15 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     this.drawGraph();
 
     // Wire PiP controls
-    this.pipService.onPlay.subscribe(() => {
-      const state = this.executionService['stateSubject'].value;
+    this.pipService.onPlay.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      const state = this.executionService.currentState;
       if (state.isPaused) this.togglePause(state);
     });
-    this.pipService.onPause.subscribe(() => {
-      const state = this.executionService['stateSubject'].value;
+    this.pipService.onPause.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      const state = this.executionService.currentState;
       if (!state.isPaused) this.togglePause(state);
     });
-    this.pipService.onStop.subscribe(() => {
+    this.pipService.onStop.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.stopWorkout();
     });
   }
@@ -88,7 +90,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
   }
 
   drawGraph() {
-    const state = this.executionService['stateSubject'].value;
+    const state = this.executionService.currentState;
     const canvas = this.canvas.nativeElement;
     const ctx = this.ctx;
     const padding = { left: 40, right: 10, top: 10, bottom: 20 };
@@ -155,26 +157,26 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
 
     // Also update PiP if active
     if (this.isPipActive) {
-      const metrics = this.bluetoothService['metricsSubject'].value;
-      const state = this.executionService['stateSubject'].value;
-      const training = state.training;
-      const blockLabel = training?.blocks?.[state.currentBlockIndex]?.label || 'WORKOUT';
-      const nextStepBlock = training?.blocks?.[state.currentBlockIndex + 1];
+      const metrics = this.bluetoothService.currentMetrics;
+      const pipState = this.executionService.currentState;
+      const training = pipState.training;
+      const blockLabel = training?.blocks?.[pipState.currentBlockIndex]?.label || 'WORKOUT';
+      const nextStepBlock = training?.blocks?.[pipState.currentBlockIndex + 1];
       const nextStep = nextStepBlock?.label || (nextStepBlock ? 'RECOVERY' : 'FINISH');
-      const ftp = (this.trainingService as any).ftpSubject.value;
+      const ftp = this.trainingService.currentFtp ?? 250;
       const nextStepPower = nextStepBlock ? Math.round((ftp * (nextStepBlock.intensityTarget || 0)) / 100) : 0;
 
       this.pipService.updateCanvas({
         power: metrics.power,
-        target: this.getTargetPower(state),
+        target: this.getTargetPower(pipState),
         hr: metrics.heartRate || 0,
-        time: this.formatTime(state.remainingBlockSeconds),
-        color: this.getPowerColor(state),
+        time: this.formatTime(pipState.remainingBlockSeconds),
+        color: this.getPowerColor(pipState),
         blockLabel: blockLabel,
         nextStepLabel: nextStep,
         nextStepPower: nextStepPower,
-        totalTime: this.formatTime(state.elapsedTotalSeconds),
-        isPaused: state.isPaused
+        totalTime: this.formatTime(pipState.elapsedTotalSeconds),
+        isPaused: pipState.isPaused
       });
     }
   }
@@ -199,7 +201,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     if (!state.training) return 0;
     const block = state.training.blocks[state.currentBlockIndex];
     if (state.training.sportType !== 'CYCLING') return this.getCurrentTargetIntensity(state);
-    const ftp = this.trainingService['ftpSubject'].value ?? 250;
+    const ftp = this.trainingService.currentFtp ?? 250;
 
     if (block.type === 'RAMP') {
       const duration = block.durationSeconds || 1;
@@ -270,7 +272,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
 
   getPowerColor(state: any): string {
     const target = this.getTargetPower(state);
-    const current = this.bluetoothService['metricsSubject'].value.power;
+    const current = this.bluetoothService.currentMetrics.power;
     const diff = Math.abs(target - current);
 
     if (diff < 10) return '#34d399'; // Close
@@ -312,17 +314,16 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
       this.isPipActive = false;
     }
     // Save to history when summary is generated
-    const state = this.executionService['stateSubject'].value;
-    if (state.finalSummary) {
-      this.historyService.saveSession(state.finalSummary);
+    const currentState = this.executionService.currentState;
+    if (currentState.finalSummary) {
+      this.historyService.saveSession(currentState.finalSummary);
     }
   }
 
   discardSession() {
     this.showExitConfirm = false;
     // Stop without saving
-    this.executionService['stateSubject'].next({
-      ...this.executionService['stateSubject'].value,
+    this.executionService.updateState({
       isActive: false,
       isPaused: false,
       finalSummary: null
@@ -334,8 +335,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
   }
 
   closeSummary() {
-    this.executionService['stateSubject'].next({
-      ...this.executionService['stateSubject'].value,
+    this.executionService.updateState({
       finalSummary: null
     });
   }

@@ -112,22 +112,22 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 20px 28px 28px;
+  gap: var(--space-md);
+  padding: var(--page-padding);
   overflow-y: auto;
 }
 
 /* ─── Schedule row ──────────────────────────────────────────── */
 .schedule-row {
   display: flex;
-  gap: 16px;
+  gap: var(--space-md);
   flex-wrap: wrap;
 }
 
 .schedule-panel {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-sm);
   flex: 1;
   min-width: 0;
 }
@@ -151,15 +151,15 @@
 .chips-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--space-sm);
 }
 
 .workout-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-sm);
   padding: 5px 10px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--surface-elevated);
   border: 1px solid var(--glass-border);
   color: var(--text-color);
@@ -239,11 +239,11 @@
 }
 
 .sport-card {
-  padding: 18px 20px;
-  border-radius: 14px;
+  padding: var(--card-padding);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-sm);
   transition: border-color 0.2s;
 }
 
@@ -289,7 +289,7 @@
 .sport-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 .meta-dist {
@@ -299,10 +299,10 @@
 }
 
 .meta-tss {
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 700;
   padding: 2px 7px;
-  border-radius: 4px;
+  border-radius: var(--space-xs);
   background: rgba(255, 255, 255, 0.06);
   color: var(--text-muted);
 }
@@ -325,8 +325,8 @@
 
 /* ─── Next workout ──────────────────────────────────────────── */
 .next-workout {
-  padding: 16px 20px;
-  border-radius: 14px;
+  padding: var(--card-padding);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -361,7 +361,7 @@
 }
 
 .next-title {
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 700;
   flex: 1;
   overflow: hidden;
@@ -393,8 +393,8 @@
 
 /* ─── Latest .fit ───────────────────────────────────────────── */
 .latest-fit {
-  padding: 16px 20px;
-  border-radius: 14px;
+  padding: var(--card-padding);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -434,21 +434,21 @@
 }
 
 .fit-title {
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 700;
 }
 
 .fit-sep {
   color: var(--text-muted);
   opacity: 0.4;
-  font-size: 12px;
+  font-size: var(--text-sm);
 }
 
 .fit-date,
 .fit-dur,
 .fit-power,
 .fit-tss {
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   font-weight: 600;
 }
@@ -473,8 +473,8 @@
 
 /* ─── Mini PMC chart ────────────────────────────────────────── */
 .mini-pmc {
-  padding: 16px 20px;
-  border-radius: 14px;
+  padding: var(--card-padding);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -500,15 +500,15 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  margin-top: 8px;
+  margin-top: var(--space-sm);
 }
 
 .cta-card {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 20px;
-  border-radius: 14px;
+  padding: var(--card-padding);
+  border-radius: var(--radius-lg);
   text-decoration: none;
   color: var(--text-color);
   cursor: pointer;
@@ -564,7 +564,7 @@
   }
 
   .dashboard-body {
-    padding: 16px;
+    padding: var(--space-md);
   }
 }
 
@@ -573,7 +573,7 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   border-left: 3px solid;
   margin-bottom: 0.75rem;
   cursor: pointer;
@@ -610,7 +610,7 @@
 }
 
 .next-goal-meta {
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
   color: rgba(255, 255, 255, 0.5);
 }
 
@@ -622,7 +622,7 @@
 }
 
 .next-goal-days {
-  font-size: 1rem;
+  font-size: var(--text-lg);
   font-weight: 700;
 }
 

@@ -5,6 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+
 import java.util.List;
 
 @RestController
@@ -25,13 +27,13 @@ public class RaceGoalController {
     }
 
     @PostMapping
-    public ResponseEntity<RaceGoal> createGoal(@RequestBody RaceGoal goal) {
+    public ResponseEntity<RaceGoal> createGoal(@Valid @RequestBody RaceGoal goal) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.status(HttpStatus.CREATED).body(service.createGoal(userId, goal));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<RaceGoal> updateGoal(@PathVariable String id, @RequestBody RaceGoal goal) {
+    public ResponseEntity<RaceGoal> updateGoal(@PathVariable String id, @Valid @RequestBody RaceGoal goal) {
         String userId = SecurityUtils.getCurrentUserId();
         try {
             return ResponseEntity.ok(service.updateGoal(id, userId, goal));

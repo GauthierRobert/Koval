@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
 import { AuthService, User } from '../../../services/auth.service';
@@ -13,6 +13,7 @@ type Sport = 'CYCLING' | 'RUNNING' | 'SWIMMING';
   imports: [CommonModule],
   templateUrl: './physiology-page.component.html',
   styleUrl: './physiology-page.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PhysiologyPageComponent {
   user$: Observable<User | null>;

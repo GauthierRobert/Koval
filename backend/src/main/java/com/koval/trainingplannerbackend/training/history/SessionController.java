@@ -9,6 +9,8 @@ import com.koval.trainingplannerbackend.training.TrainingRepository;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import org.bson.types.ObjectId;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
@@ -194,6 +196,12 @@ public class SessionController {
     public ResponseEntity<List<CompletedSession>> list() {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(repository.findByUserIdOrderByCompletedAtDesc(userId));
+    }
+
+    @GetMapping(params = "page")
+    public ResponseEntity<Page<CompletedSession>> list(Pageable pageable) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(repository.findByUserIdOrderByCompletedAtDesc(userId, pageable));
     }
 
     @GetMapping("/{id}")

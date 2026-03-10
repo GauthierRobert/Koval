@@ -9,7 +9,7 @@
 
 /* ── Header bar ── */
 .page-header {
-  padding: 0.7rem 1.5rem;
+  padding: var(--space-sm) var(--page-padding);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -19,7 +19,7 @@
 }
 
 .page-header-left h2 {
-  font-size: 1rem;
+  font-size: var(--text-lg);
   font-weight: 800;
   letter-spacing: 2px;
   color: var(--text-color);
@@ -42,7 +42,7 @@
 .create-input {
   background: var(--surface-elevated);
   border: 1px solid var(--glass-border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text-color);
   font-size: 0.8rem;
   padding: 5px 10px;
@@ -62,7 +62,7 @@
   background: rgba(255, 157, 0, 0.1);
   border: 1px solid rgba(255, 157, 0, 0.3);
   color: var(--accent-color);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 1px;
@@ -90,10 +90,10 @@
 .empty-state {
   color: var(--text-muted);
   font-size: 0.85rem;
-  padding: 3rem;
+  padding: var(--space-2xl);
   text-align: center;
   border: 1px dashed var(--glass-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   margin-top: 1rem;
 }
 
@@ -107,7 +107,7 @@
 .tag-card {
   background: var(--surface-elevated);
   border: 1px solid var(--glass-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -264,7 +264,7 @@
 
 .athlete-name {
   flex: 1;
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;

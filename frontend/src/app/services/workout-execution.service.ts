@@ -78,6 +78,15 @@ export class WorkoutExecutionService {
     });
 
     state$ = this.stateSubject.asObservable();
+
+    get currentState(): ActiveSessionState {
+        return this.stateSubject.value;
+    }
+
+    updateState(partial: Partial<ActiveSessionState>): void {
+        this.stateSubject.next({ ...this.stateSubject.value, ...partial });
+    }
+
     private timerSubscription?: Subscription;
     private metricsSubscription?: Subscription;
 

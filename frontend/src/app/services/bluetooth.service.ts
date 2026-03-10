@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, interval} from 'rxjs';
+import {BehaviorSubject, interval, Subscription} from 'rxjs';
 
 export interface LiveMetrics {
     power: number;
@@ -44,6 +44,7 @@ export class BluetoothService {
     private showDeviceManagerSubject = new BehaviorSubject<boolean>(false);
     showDeviceManager$ = this.showDeviceManagerSubject.asObservable();
     private isSimulating = false;
+    private simulationSubscription: Subscription | null = null;
 
     constructor() { }
 
@@ -264,25 +265,31 @@ export class BluetoothService {
         this.isConnectedSubject.next(anyConnected);
     }
 
+    get currentMetrics(): LiveMetrics {
+        return this.metricsSubject.value;
+    }
+
     toggleSimulation(active: boolean) {
         this.isSimulating = active;
         if (active) {
             this.isConnectedSubject.next(true);
             this.startSimulation();
         } else {
+            this.simulationSubscription?.unsubscribe();
+            this.simulationSubscription = null;
             this.checkOverallConnection();
         }
     }
 
     private startSimulation() {
-        interval(1000).subscribe(() => {
+        this.simulationSubscription?.unsubscribe();
+        this.simulationSubscription = interval(1000).subscribe(() => {
             if (!this.isSimulating) return;
 
             const basePower = 200;
             const baseCadence = 85;
             const baseSpeed = 30;
 
-            const current = this.metricsSubject.value;
             this.metricsSubject.next({
                 power: basePower + Math.floor(Math.random() * 20 - 10),
                 cadence: baseCadence + Math.floor(Math.random() * 6 - 3),
@@ -299,6 +306,8 @@ export class BluetoothService {
         if (this.powerMeterDevice) this.powerMeterDevice.gatt.disconnect();
         if (this.cadenceDevice) this.cadenceDevice.gatt.disconnect();
         this.isSimulating = false;
+        this.simulationSubscription?.unsubscribe();
+        this.simulationSubscription = null;
         this.trainerStatusSubject.next('Disconnected');
         this.hrStatusSubject.next('Disconnected');
         this.pmStatusSubject.next('Disconnected');

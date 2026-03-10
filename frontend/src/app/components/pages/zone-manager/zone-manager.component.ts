@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BehaviorSubject, combineLatest } from 'rxjs';
@@ -15,6 +15,7 @@ import { SportIconComponent } from '../../shared/sport-icon/sport-icon.component
   imports: [CommonModule, FormsModule, SportIconComponent],
   templateUrl: './zone-manager.component.html',
   styleUrls: ['./zone-manager.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ZoneManagerComponent implements OnInit {
   @Input() embedded = false;

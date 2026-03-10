@@ -9,6 +9,8 @@ import com.koval.trainingplannerbackend.training.model.TrainingType;
 import com.koval.trainingplannerbackend.training.model.WorkoutBlock;
 import com.koval.trainingplannerbackend.training.tag.Tag;
 import com.koval.trainingplannerbackend.training.tag.TagService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -113,6 +115,13 @@ public class TrainingService {
      */
     public List<Training> listTrainingsByUser(String userId) {
         return trainingRepository.findByCreatedBy(userId);
+    }
+
+    /**
+     * List trainings created by a user with pagination.
+     */
+    public Page<Training> listTrainingsByUser(String userId, Pageable pageable) {
+        return trainingRepository.findByCreatedBy(userId, pageable);
     }
 
 

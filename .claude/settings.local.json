@@ -19,7 +19,13 @@
       "Bash(npm install:*)",
       "Bash(xargs:*)",
       "Bash(find C:\\\\Users\\\\gauth\\\\Documents\\\\Dev Projects\\\\training-planner-ai\\\\training-planner-ai\\\\backend:*)",
-      "Bash(mkdir -p frontend/src/app/components/pages/live-session && \\\\\ngit mv frontend/src/app/components/live-dashboard/live-dashboard.component.ts frontend/src/app/components/pages/live-session/ && \\\\\ngit mv frontend/src/app/components/live-dashboard/live-dashboard.component.html frontend/src/app/components/pages/live-session/ && \\\\\ngit mv frontend/src/app/components/live-dashboard/live-dashboard.component.css frontend/src/app/components/pages/live-session/ && \\\\\nrmdir frontend/src/app/components/live-dashboard 2>/dev/null && \\\\\ngit mv frontend/src/app/components/session-summary frontend/src/app/components/pages/live-session/session-summary && \\\\\ngit mv frontend/src/app/components/zombie-game frontend/src/app/components/pages/live-session/zombie-game)"
+      "Bash(mkdir -p frontend/src/app/components/pages/live-session && \\\\\ngit mv frontend/src/app/components/live-dashboard/live-dashboard.component.ts frontend/src/app/components/pages/live-session/ && \\\\\ngit mv frontend/src/app/components/live-dashboard/live-dashboard.component.html frontend/src/app/components/pages/live-session/ && \\\\\ngit mv frontend/src/app/components/live-dashboard/live-dashboard.component.css frontend/src/app/components/pages/live-session/ && \\\\\nrmdir frontend/src/app/components/live-dashboard 2>/dev/null && \\\\\ngit mv frontend/src/app/components/session-summary frontend/src/app/components/pages/live-session/session-summary && \\\\\ngit mv frontend/src/app/components/zombie-game frontend/src/app/components/pages/live-session/zombie-game)",
+      "Bash(find /c/Users/GAR/Documents/POC/Koval/frontend -maxdepth 2 -type f \\\\\\( -name \"proxy.conf.*\" -o -name \"angular.json\" \\\\\\) 2>/dev/null | head -5)",
+      "Bash(find /c/Users/GAR/Documents/POC/Koval/backend -maxdepth 2 -type f -name \"*.yml\" -o -name \"*.yaml\" -o -name \"application*.properties\" 2>/dev/null | head -10)",
+      "Bash(for id:*)",
+      "Bash(do echo:*)",
+      "Read(//c/Users/GAR/Documents/POC/Koval/UsersGARAppDataLocalTempclaudeC--Users-GAR-Documents-POC-Kovaltasks/**)",
+      "Bash(java -version 2>&1)"
     ]
   }
 }

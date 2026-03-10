@@ -1,4 +1,4 @@
-import {Component, inject} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {BehaviorSubject} from 'rxjs';
@@ -13,6 +13,7 @@ import {TrainingHistoryComponent} from '../training-history/training-history.com
     imports: [CommonModule, FormsModule, TrainingHistoryComponent],
     templateUrl: './sidebar.component.html',
     styleUrl: './sidebar.component.css',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SidebarComponent {
     private bluetoothService = inject(BluetoothService);

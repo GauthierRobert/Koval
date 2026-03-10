@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
@@ -15,6 +15,7 @@ import { InviteCodeModalComponent } from '../../shared/invite-code-modal/invite-
   imports: [CommonModule, FormsModule, InviteCodeModalComponent],
   templateUrl: './tag-management.component.html',
   styleUrl: './tag-management.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TagManagementComponent implements OnInit {
   private tagsSubject = new BehaviorSubject<Tag[]>([]);

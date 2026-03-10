@@ -1,4 +1,5 @@
-import {inject, Injectable} from '@angular/core';
+import {DestroyRef, inject, Injectable} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject, combineLatest, Observable, of} from 'rxjs';
 import {filter, map, tap} from 'rxjs/operators';
@@ -110,6 +111,9 @@ export class TrainingService {
     private selectedTrainingSubject = new BehaviorSubject<Training | null>(null);
     selectedTraining$ = this.selectedTrainingSubject.asObservable();
 
+    private errorSubject = new BehaviorSubject<string | null>(null);
+    error$ = this.errorSubject.asObservable();
+
     // ── Filter state (shared across sidebar list + filter bar) ──────────
     private tagFilterSubject = new BehaviorSubject<string | null>(null);
     private sportFilterSubject = new BehaviorSubject<SportFilter>(null);
@@ -165,12 +169,20 @@ export class TrainingService {
     ftp$ = this.ftpSubject.asObservable();
 
     private authService = inject(AuthService);
+    private destroyRef = inject(DestroyRef);
 
     constructor() {
-        this.authService.user$.pipe(filter(user => !!user)).subscribe(() => {
+        this.authService.user$.pipe(
+            filter(user => !!user),
+            takeUntilDestroyed(this.destroyRef),
+        ).subscribe(() => {
             this.selectedTrainingSubject.next(null);
             this.loadTrainings();
         });
+    }
+
+    get currentFtp(): number | null {
+        return this.ftpSubject.value;
     }
 
     private loadFtp(): number | null {
@@ -183,6 +195,7 @@ export class TrainingService {
     }
 
     loadTrainings(): void {
+        this.errorSubject.next(null);
         this.http.get<Training[]>(this.apiUrl).subscribe({
             next: (trainings) => {
                 this.trainingsSubject.next(trainings);
@@ -191,6 +204,7 @@ export class TrainingService {
                 }
             },
             error: () => {
+                this.errorSubject.next('Failed to load trainings');
                 this.trainingsSubject.next([]);
             },
         });

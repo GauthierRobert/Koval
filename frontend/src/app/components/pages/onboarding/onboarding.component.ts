@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,6 +10,7 @@ import { AuthService } from '../../../services/auth.service';
     imports: [CommonModule, FormsModule],
     templateUrl: './onboarding.component.html',
     styleUrl: './onboarding.component.css',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OnboardingComponent {
     role: 'ATHLETE' | 'COACH' = 'ATHLETE';

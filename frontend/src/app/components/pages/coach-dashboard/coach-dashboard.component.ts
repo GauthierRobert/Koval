@@ -1,4 +1,5 @@
-import { Component, NgZone, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, NgZone, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BehaviorSubject, combineLatest, Observable, of, map } from 'rxjs';
@@ -25,6 +26,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
   imports: [CommonModule, FormsModule, RouterModule, ScheduleModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, SportIconComponent, PmcChartComponent],
   templateUrl: './coach-dashboard.component.html',
   styleUrl: './coach-dashboard.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CoachDashboardComponent implements OnInit {
   selectedAthlete: User | null = null;
@@ -97,19 +99,18 @@ export class CoachDashboardComponent implements OnInit {
 
   coachTrainings$: Observable<Training[]> = of([]);
 
-  constructor(
-    private coachService: CoachService,
-    private authService: AuthService,
-    private trainingService: TrainingService,
-    private zoneService: ZoneService,
-    private raceGoalService: RaceGoalService,
-    private router: Router,
-    private route: ActivatedRoute,
-    private ngZone: NgZone
-  ) { }
+  private readonly coachService = inject(CoachService);
+  private readonly authService = inject(AuthService);
+  private readonly trainingService = inject(TrainingService);
+  private readonly zoneService = inject(ZoneService);
+  private readonly raceGoalService = inject(RaceGoalService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly ngZone = inject(NgZone);
+  private readonly destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
-    this.authService.user$.subscribe(u => {
+    this.authService.user$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(u => {
       if (u) {
         this.userId = u.id;
         this.loadAthletes();
@@ -404,4 +405,15 @@ export class CoachDashboardComponent implements OnInit {
     if (tsb < -10) return 'TIRED';
     return 'NEUTRAL';
   }
+
+  trackTagByName(_index: number, tag: Tag): string { return tag.name; }
+  trackAthleteById(_index: number, athlete: User): string { return athlete.id; }
+  trackByValue(_index: number, value: string): string { return value; }
+  trackScheduleById(_index: number, workout: ScheduledWorkout): string { return workout.id; }
+  trackSessionById(_index: number, s: any): string { return s.id; }
+  trackZoneByName(_index: number, z: { name: string }): string { return z.name; }
+  trackZoneByLabel(_index: number, z: { label: string }): string { return z.label; }
+  trackDistBySport(_index: number, d: { sport: string }): string { return d.sport; }
+  trackSystemByName(_index: number, sys: { name: string }): string { return sys.name; }
+  trackGoalById(_index: number, goal: RaceGoal): string { return goal.id; }
 }

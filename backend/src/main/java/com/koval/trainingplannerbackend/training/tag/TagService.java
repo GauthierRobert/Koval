@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.training.tag;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -77,12 +78,17 @@ public class TagService {
     /**
      * Remove an athlete from all tags owned by a specific coach.
      */
+    @Transactional
     public void removeAthleteFromAllCoachTags(String coachId, String athleteId) {
         List<Tag> coachTags = tagRepository.findByCoachId(coachId);
+        List<Tag> modifiedTags = new ArrayList<>();
         for (Tag tag : coachTags) {
             if (tag.getAthleteIds().remove(athleteId)) {
-                tagRepository.save(tag);
+                modifiedTags.add(tag);
             }
+        }
+        if (!modifiedTags.isEmpty()) {
+            tagRepository.saveAll(modifiedTags);
         }
     }
 
