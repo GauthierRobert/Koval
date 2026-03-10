@@ -26,7 +26,7 @@ public class ClubService {
     private final CompletedSessionRepository completedSessionRepository;
     private final RaceGoalRepository raceGoalRepository;
     private final UserService userService;
-    private final ClubTagRepository clubTagRepository;
+    private final ClubGroupRepository clubGroupRepository;
 
     public ClubService(ClubRepository clubRepository,
                        ClubMembershipRepository membershipRepository,
@@ -35,7 +35,7 @@ public class ClubService {
                        CompletedSessionRepository completedSessionRepository,
                        RaceGoalRepository raceGoalRepository,
                        UserService userService,
-                       ClubTagRepository clubTagRepository) {
+                       ClubGroupRepository clubGroupRepository) {
         this.clubRepository = clubRepository;
         this.membershipRepository = membershipRepository;
         this.sessionRepository = sessionRepository;
@@ -43,7 +43,7 @@ public class ClubService {
         this.completedSessionRepository = completedSessionRepository;
         this.raceGoalRepository = raceGoalRepository;
         this.userService = userService;
-        this.clubTagRepository = clubTagRepository;
+        this.clubGroupRepository = clubGroupRepository;
     }
 
     // --- Club CRUD ---
@@ -182,12 +182,12 @@ public class ClubService {
     public List<ClubController.ClubMemberResponse> getMembers(String clubId) {
         List<ClubMembership> memberships = membershipRepository.findByClubIdAndStatus(clubId, ClubMemberStatus.ACTIVE);
 
-        // Build userId → List<tagName> map from all club tags
-        List<ClubTag> allTags = clubTagRepository.findByClubId(clubId);
-        Map<String, List<String>> userTagsMap = new HashMap<>();
-        for (ClubTag tag : allTags) {
-            for (String memberId : tag.getMemberIds()) {
-                userTagsMap.computeIfAbsent(memberId, k -> new ArrayList<>()).add(tag.getName());
+        // Build userId → List<groupName> map from all club groups
+        List<ClubGroup> allGroups = clubGroupRepository.findByClubId(clubId);
+        Map<String, List<String>> userGroupsMap = new HashMap<>();
+        for (ClubGroup group : allGroups) {
+            for (String memberId : group.getMemberIds()) {
+                userGroupsMap.computeIfAbsent(memberId, k -> new ArrayList<>()).add(group.getName());
             }
         }
 
@@ -195,7 +195,7 @@ public class ClubService {
             User user = userService.findById(m.getUserId()).orElse(null);
             String displayName = user != null ? user.getDisplayName() : m.getUserId();
             String pic = user != null ? user.getProfilePicture() : null;
-            List<String> tags = userTagsMap.getOrDefault(m.getUserId(), List.of());
+            List<String> tags = userGroupsMap.getOrDefault(m.getUserId(), List.of());
             return new ClubController.ClubMemberResponse(
                     m.getId(), m.getUserId(), displayName, pic, m.getRole(), m.getJoinedAt(), tags);
         }).collect(Collectors.toList());
@@ -253,63 +253,63 @@ public class ClubService {
                 .collect(Collectors.toList());
     }
 
-    // --- Tags ---
+    // --- Groups ---
 
-    public ClubTag createTag(String adminId, String clubId, String name) {
+    public ClubGroup createGroup(String adminId, String clubId, String name) {
         validateAdminOrOwner(adminId, clubId);
-        if (clubTagRepository.findByClubIdAndName(clubId, name).isPresent()) {
-            throw new IllegalStateException("Tag with this name already exists in the club");
+        if (clubGroupRepository.findByClubIdAndName(clubId, name).isPresent()) {
+            throw new IllegalStateException("Group with this name already exists in the club");
         }
-        ClubTag tag = new ClubTag();
-        tag.setClubId(clubId);
-        tag.setName(name);
-        tag.setCreatedAt(LocalDateTime.now());
-        return clubTagRepository.save(tag);
+        ClubGroup group = new ClubGroup();
+        group.setClubId(clubId);
+        group.setName(name);
+        group.setCreatedAt(LocalDateTime.now());
+        return clubGroupRepository.save(group);
     }
 
-    public List<ClubTag> listTags(String clubId) {
-        return clubTagRepository.findByClubId(clubId);
+    public List<ClubGroup> listGroups(String clubId) {
+        return clubGroupRepository.findByClubId(clubId);
     }
 
-    public void deleteTag(String adminId, String clubId, String tagId) {
+    public void deleteGroup(String adminId, String clubId, String groupId) {
         validateAdminOrOwner(adminId, clubId);
-        ClubTag tag = clubTagRepository.findById(tagId)
-                .orElseThrow(() -> new IllegalArgumentException("Tag not found"));
-        if (!tag.getClubId().equals(clubId)) {
-            throw new IllegalArgumentException("Tag does not belong to this club");
+        ClubGroup group = clubGroupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
+        if (!group.getClubId().equals(clubId)) {
+            throw new IllegalArgumentException("Group does not belong to this club");
         }
-        clubTagRepository.delete(tag);
+        clubGroupRepository.delete(group);
     }
 
-    public ClubTag addMemberToTag(String adminId, String clubId, String tagId, String targetUserId) {
+    public ClubGroup addMemberToGroup(String adminId, String clubId, String groupId, String targetUserId) {
         validateAdminOrOwner(adminId, clubId);
-        ClubTag tag = clubTagRepository.findById(tagId)
-                .orElseThrow(() -> new IllegalArgumentException("Tag not found"));
-        if (!tag.getClubId().equals(clubId)) {
-            throw new IllegalArgumentException("Tag does not belong to this club");
+        ClubGroup group = clubGroupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
+        if (!group.getClubId().equals(clubId)) {
+            throw new IllegalArgumentException("Group does not belong to this club");
         }
         // Validate target is an active member
         ClubMembership targetMembership = membershipRepository.findByClubIdAndUserId(clubId, targetUserId)
                 .orElseThrow(() -> new IllegalArgumentException("User is not a member of this club"));
         if (targetMembership.getStatus() != ClubMemberStatus.ACTIVE) {
-            throw new IllegalStateException("User must be an active member to be tagged");
+            throw new IllegalStateException("User must be an active member to be added to a group");
         }
-        if (!tag.getMemberIds().contains(targetUserId)) {
-            tag.getMemberIds().add(targetUserId);
-            clubTagRepository.save(tag);
+        if (!group.getMemberIds().contains(targetUserId)) {
+            group.getMemberIds().add(targetUserId);
+            clubGroupRepository.save(group);
         }
-        return tag;
+        return group;
     }
 
-    public ClubTag removeMemberFromTag(String adminId, String clubId, String tagId, String targetUserId) {
+    public ClubGroup removeMemberFromGroup(String adminId, String clubId, String groupId, String targetUserId) {
         validateAdminOrOwner(adminId, clubId);
-        ClubTag tag = clubTagRepository.findById(tagId)
-                .orElseThrow(() -> new IllegalArgumentException("Tag not found"));
-        if (!tag.getClubId().equals(clubId)) {
-            throw new IllegalArgumentException("Tag does not belong to this club");
+        ClubGroup group = clubGroupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
+        if (!group.getClubId().equals(clubId)) {
+            throw new IllegalArgumentException("Group does not belong to this club");
         }
-        tag.getMemberIds().remove(targetUserId);
-        return clubTagRepository.save(tag);
+        group.getMemberIds().remove(targetUserId);
+        return clubGroupRepository.save(group);
     }
 
     // --- Sessions ---

@@ -4,8 +4,8 @@ import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.auth.UserRole;
 import com.koval.trainingplannerbackend.auth.UserService;
-import com.koval.trainingplannerbackend.training.tag.Tag;
-import com.koval.trainingplannerbackend.training.tag.TagService;
+import com.koval.trainingplannerbackend.training.group.Group;
+import com.koval.trainingplannerbackend.training.group.GroupService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,18 +31,18 @@ public class CoachService {
     private final UserService userService;
     private final ScheduledWorkoutRepository scheduledWorkoutRepository;
     private final InviteCodeRepository inviteCodeRepository;
-    private final TagService tagService;
+    private final GroupService groupService;
 
     public CoachService(UserRepository userRepository,
             UserService userService,
             ScheduledWorkoutRepository scheduledWorkoutRepository,
             InviteCodeRepository inviteCodeRepository,
-            TagService tagService) {
+            GroupService groupService) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
         this.inviteCodeRepository = inviteCodeRepository;
-        this.tagService = tagService;
+        this.groupService = groupService;
     }
 
     /**
@@ -62,8 +62,8 @@ public class CoachService {
             throw new IllegalStateException("User is not a coach: " + coachId);
         }
 
-        // Verify all athletes belong to this coach via tags
-        List<String> coachAthleteIds = tagService.getAthleteIdsForCoach(coachId);
+        // Verify all athletes belong to this coach via groups
+        List<String> coachAthleteIds = groupService.getAthleteIdsForCoach(coachId);
 
         List<ScheduledWorkout> assignments = new ArrayList<>();
         for (String athleteId : athleteIds) {
@@ -133,10 +133,10 @@ public class CoachService {
     }
 
     /**
-     * Get all athletes for a coach (derived from tags).
+     * Get all athletes for a coach (derived from groups).
      */
     public List<User> getCoachAthletes(String coachId) {
-        List<String> athleteIds = tagService.getAthleteIdsForCoach(coachId);
+        List<String> athleteIds = groupService.getAthleteIdsForCoach(coachId);
         if (athleteIds.isEmpty())
             return List.of();
         return userRepository.findByIdIn(athleteIds);
@@ -146,15 +146,15 @@ public class CoachService {
      * Check whether a coach has access to a given athlete.
      */
     public boolean isCoachOfAthlete(String coachId, String athleteId) {
-        List<String> athleteIds = tagService.getAthleteIdsForCoach(coachId);
+        List<String> athleteIds = groupService.getAthleteIdsForCoach(coachId);
         return athleteIds.contains(athleteId);
     }
 
     /**
-     * Remove an athlete from a coach's roster (remove from all coach tags).
+     * Remove an athlete from a coach's roster (remove from all coach groups).
      */
     public void removeAthlete(String coachId, String athleteId) {
-        tagService.removeAthleteFromAllCoachTags(coachId, athleteId);
+        groupService.removeAthleteFromAllCoachGroups(coachId, athleteId);
     }
 
     /**
@@ -193,80 +193,80 @@ public class CoachService {
     }
 
     /**
-     * Get athletes filtered by tag for a specific coach.
+     * Get athletes filtered by group for a specific coach.
      */
-    public List<User> getAthletesByTag(String coachId, String tagId) {
-        Tag tag = tagService.getTagById(tagId);
-        if (!coachId.equals(tag.getCoachId())) {
-            throw new IllegalStateException("Tag does not belong to this coach");
+    public List<User> getAthletesByGroup(String coachId, String groupId) {
+        Group group = groupService.getGroupById(groupId);
+        if (!coachId.equals(group.getCoachId())) {
+            throw new IllegalStateException("Group does not belong to this coach");
         }
-        if (tag.getAthleteIds().isEmpty())
+        if (group.getAthleteIds().isEmpty())
             return List.of();
-        return userRepository.findByIdIn(tag.getAthleteIds());
+        return userRepository.findByIdIn(group.getAthleteIds());
     }
 
     /**
-     * Get all tags for a coach (Tag objects).
+     * Get all groups for a coach (Group objects).
      */
-    public List<Tag> getAthleteTagsForCoach(String coachId) {
-        return tagService.getTagsForCoach(coachId);
+    public List<Group> getAthleteGroupsForCoach(String coachId) {
+        return groupService.getGroupsForCoach(coachId);
     }
 
     /**
-     * Add a tag to an athlete. Coach-only. Creates the tag if it doesn't exist,
+     * Add a group to an athlete. Coach-only. Creates the group if it doesn't exist,
      * then adds athlete.
      */
-    public Tag addTagToAthlete(String coachId, String athleteId, String tagName) {
+    public Group addGroupToAthlete(String coachId, String athleteId, String groupName) {
         User coach = userRepository.findById(coachId)
                 .orElseThrow(() -> new IllegalArgumentException("Coach not found: " + coachId));
         if (coach.getRole() != UserRole.COACH) {
-            throw new IllegalStateException("Only coaches can assign tags to athletes");
+            throw new IllegalStateException("Only coaches can assign groups to athletes");
         }
 
         // Verify athlete exists
         userRepository.findById(athleteId)
                 .orElseThrow(() -> new IllegalArgumentException("Athlete not found: " + athleteId));
 
-        Tag tag = tagService.getOrCreateTag(tagName, coachId, 0);
-        return tagService.addAthleteToTag(tag.getId(), athleteId);
+        Group group = groupService.getOrCreateGroup(groupName, coachId, 0);
+        return groupService.addAthleteToGroup(group.getId(), athleteId);
     }
 
     /**
-     * Remove a tag from an athlete by tag name. Coach-only.
+     * Remove a group from an athlete by group name. Coach-only.
      */
-    public Tag removeTagFromAthlete(String coachId, String athleteId, String tagName) {
+    public Group removeGroupFromAthlete(String coachId, String athleteId, String groupName) {
         User coach = userRepository.findById(coachId)
                 .orElseThrow(() -> new IllegalArgumentException("Coach not found: " + coachId));
         if (coach.getRole() != UserRole.COACH) {
-            throw new IllegalStateException("Only coaches can modify athlete tags");
+            throw new IllegalStateException("Only coaches can modify athlete groups");
         }
 
-        Tag tag = tagService.getTagByNameAndCoach(tagName, coachId);
-        return tagService.removeAthleteFromTag(tag.getId(), athleteId);
+        Group group = groupService.getGroupByNameAndCoach(groupName, coachId);
+        return groupService.removeAthleteFromGroup(group.getId(), athleteId);
     }
 
     /**
-     * Replace all tags for an athlete under this coach.
-     * Removes athlete from all current coach tags, then adds to specified tags.
+     * Replace all groups for an athlete under this coach.
+     * Removes athlete from all current coach groups, then adds to specified groups.
      */
-    public List<Tag> setAthleteTags(String coachId, String athleteId, List<String> tagIds) {
+    public List<Group> setAthleteGroups(String coachId, String athleteId, List<String> groupIds) {
         User coach = userRepository.findById(coachId)
                 .orElseThrow(() -> new IllegalArgumentException("Coach not found: " + coachId));
         if (coach.getRole() != UserRole.COACH) {
-            throw new IllegalStateException("Only coaches can modify athlete tags");
+            throw new IllegalStateException("Only coaches can modify athlete groups");
         }
 
-        // Remove from all current coach tags
-        tagService.removeAthleteFromAllCoachTags(coachId, athleteId);
+        // Remove from all current coach groups
+        groupService.removeAthleteFromAllCoachGroups(coachId, athleteId);
 
-        // Add to each specified tag
-        List<Tag> result = new ArrayList<>();
-        for (String tagId : tagIds) {
-            Tag tag = tagService.getTagById(tagId);
-            if (!coachId.equals(tag.getCoachId())) {
-                throw new IllegalStateException("Tag " + tagId + " does not belong to this coach");
+        // Add to each specified group
+        List<Group> result = new ArrayList<>();
+        for (String groupId : groupIds) {
+            Group group = groupService.getGroupById(groupId);
+            if (!coachId.equals(group.getCoachId())) {
+                throw new IllegalStateException("Group " + groupId + " does not belong to this coach");
             }
-            result.add(tagService.addAthleteToTag(tagId, athleteId));
+            result.add(groupService.addAthleteToGroup(groupId, athleteId));
         }
         return result;
     }
@@ -274,9 +274,9 @@ public class CoachService {
     // --- Invite Code operations ---
 
     /**
-     * Generate an invite code for a coach. Tags param contains Tag document IDs.
+     * Generate an invite code for a coach. Groups param contains Group document IDs.
      */
-    public InviteCode generateInviteCode(String coachId, List<String> tagIds, int maxUses, LocalDateTime expiresAt, String customCode) {
+    public InviteCode generateInviteCode(String coachId, List<String> groupIds, int maxUses, LocalDateTime expiresAt, String customCode) {
         User coach = userRepository.findById(coachId)
                 .orElseThrow(() -> new IllegalArgumentException("Coach not found: " + coachId));
 
@@ -289,7 +289,7 @@ public class CoachService {
                 ? customCode.toUpperCase().trim()
                 : generateUniqueCode());
         inviteCode.setCoachId(coachId);
-        inviteCode.setTags(tagIds != null ? tagIds : new ArrayList<>());
+        inviteCode.setGroupIds(groupIds != null ? groupIds : new ArrayList<>());
         inviteCode.setMaxUses(maxUses);
         inviteCode.setExpiresAt(expiresAt);
 
@@ -319,9 +319,9 @@ public class CoachService {
             throw new IllegalStateException("Invite code has reached maximum uses");
         }
 
-        // Add athlete to each Tag referenced by the invite code
-        for (String tagId : inviteCode.getTags()) {
-            tagService.addAthleteToTag(tagId, athleteId);
+        // Add athlete to each Group referenced by the invite code
+        for (String groupId : inviteCode.getGroupIds()) {
+            groupService.addAthleteToGroup(groupId, athleteId);
         }
 
         // Increment usage

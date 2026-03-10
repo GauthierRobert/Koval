@@ -58,6 +58,7 @@
 - Drop down in zones (sport and reference) have white white ground
 - When custom reference, an input should appear to insert the name of the reference. The reference can be read only (It mean that the value is only setted by the coach) and athlete that have this zone will have new physiology (based on reference value). If 
 - When creating a tag, the input must have tooltip and description. The tag creation must in the same time create the code.  The tag card must display the CODE and remove the GENERATE Invite as the CODE will be generated. TAg and code must be related
+
 ## Nice too have
 - **Retrieve FIT files from Strava** — Implement an endpoint + service to fetch FIT activity files from Strava for the authenticated user. Requires the user to have granted all metric scopes (`activity:read_all`). Parse the FIT data and ingest relevant metrics (power, HR, cadence, TSS) into the session/history store.
 

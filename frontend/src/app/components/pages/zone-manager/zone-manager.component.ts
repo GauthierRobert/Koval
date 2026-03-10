@@ -8,11 +8,13 @@ import { ZoneService } from '../../../services/zone.service';
 import { AuthService } from '../../../services/auth.service';
 import { SportType, ZoneReferenceType, ZoneSystem, Zone } from '../../../services/zone';
 import { SportIconComponent } from '../../shared/sport-icon/sport-icon.component';
+import { CreateWithAiModalComponent } from '../../shared/create-with-ai-modal/create-with-ai-modal.component';
+import { ActionResult } from '../../../services/ai-action.service';
 
 @Component({
   selector: 'app-zone-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule, SportIconComponent],
+  imports: [CommonModule, FormsModule, SportIconComponent, CreateWithAiModalComponent],
   templateUrl: './zone-manager.component.html',
   styleUrls: ['./zone-manager.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,6 +43,7 @@ export class ZoneManagerComponent implements OnInit {
   saved = false;
   deleting = false;
   showCreateMenu = false;
+  showAiModal = false;
 
   sportTypes: SportType[] = ['CYCLING', 'RUNNING', 'SWIMMING'];
 
@@ -229,6 +232,11 @@ export class ZoneManagerComponent implements OnInit {
 
   getSportLabel(sport: SportType): string {
     return sport.charAt(0) + sport.slice(1).toLowerCase();
+  }
+
+  onAiZoneCreated(_result: ActionResult): void {
+    this.showAiModal = false;
+    this.loadZoneSystems();
   }
 
   goToAthletes() {

@@ -9,6 +9,8 @@ import { ClubMembersTabComponent } from './tabs/club-members-tab/club-members-ta
 import { ClubStatsTabComponent } from './tabs/club-stats-tab/club-stats-tab.component';
 import { ClubLeaderboardTabComponent } from './tabs/club-leaderboard-tab/club-leaderboard-tab.component';
 import { ClubRaceGoalsTabComponent } from './tabs/club-race-goals-tab/club-race-goals-tab.component';
+import { CreateWithAiModalComponent } from '../../../shared/create-with-ai-modal/create-with-ai-modal.component';
+import { ActionContext, ActionResult } from '../../../../services/ai-action.service';
 import { Subscription } from 'rxjs';
 
 type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals';
@@ -25,6 +27,7 @@ type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-g
     ClubStatsTabComponent,
     ClubLeaderboardTabComponent,
     ClubRaceGoalsTabComponent,
+    CreateWithAiModalComponent,
   ],
   templateUrl: './club-detail-page.component.html',
   styleUrl: './club-detail-page.component.css',
@@ -44,6 +47,8 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   loadedTabs = new Set<TabId>();
 
   clubId = '';
+  showAiModal = false;
+  aiContext: ActionContext = {};
   private subs = new Subscription();
 
   readonly tabs: Array<{ id: TabId; label: string }> = [
@@ -94,7 +99,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
         break;
       case 'members':
         this.clubService.loadMembers(this.clubId);
-        this.clubService.loadTags(this.clubId);
+        this.clubService.loadGroups(this.clubId);
         break;
       case 'stats':
         this.clubService.loadWeeklyStats(this.clubId);
@@ -124,6 +129,19 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
 
   hasPendingBadge(tab: TabId): boolean {
     return tab === 'members';
+  }
+
+  openAiModal(club: ClubDetail): void {
+    this.aiContext = { clubId: club.id };
+    this.showAiModal = true;
+    this.cdr.markForCheck();
+  }
+
+  onAiCreated(_result: ActionResult): void {
+    this.showAiModal = false;
+    this.loadedTabs.delete('sessions');
+    this.activateTab('sessions');
+    this.cdr.markForCheck();
   }
 
   getMembershipLabel(status: string | undefined): string {

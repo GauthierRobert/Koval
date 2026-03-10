@@ -1,4 +1,4 @@
-package com.koval.trainingplannerbackend.training.tag;
+package com.koval.trainingplannerbackend.training.group;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.User;
@@ -17,71 +17,71 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/tags")
+@RequestMapping("/api/groups")
 @CrossOrigin(origins = "*")
-public class TagController {
+public class GroupController {
 
-    private final TagService tagService;
+    private final GroupService groupService;
     private final UserRepository userRepository;
 
-    public TagController(TagService tagService, UserRepository userRepository) {
-        this.tagService = tagService;
+    public GroupController(GroupService groupService, UserRepository userRepository) {
+        this.groupService = groupService;
         this.userRepository = userRepository;
     }
 
     @GetMapping
-    public ResponseEntity<List<Tag>> getTags() {
+    public ResponseEntity<List<Group>> getGroups() {
         String userId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
             return ResponseEntity.ok(List.of());
         }
         if (user.isCoach()) {
-            return ResponseEntity.ok(tagService.getTagsForCoach(userId));
+            return ResponseEntity.ok(groupService.getGroupsForCoach(userId));
         } else {
-            return ResponseEntity.ok(tagService.getTagsForAthlete(userId));
+            return ResponseEntity.ok(groupService.getGroupsForAthlete(userId));
         }
     }
 
     @PostMapping
-    public ResponseEntity<Tag> createTag(@RequestBody CreateTagRequest request) {
+    public ResponseEntity<Group> createGroup(@RequestBody CreateGroupRequest request) {
         String userId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findById(userId).orElse(null);
         if (user == null || !user.isCoach()) {
             return ResponseEntity.status(403).build();
         }
-        Tag tag = tagService.getOrCreateTag(request.name(), userId, request.maxAthletes());
-        return ResponseEntity.ok(tag);
+        Group group = groupService.getOrCreateGroup(request.name(), userId, request.maxAthletes());
+        return ResponseEntity.ok(group);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Tag> renameTag(@PathVariable String id, @RequestBody RenameTagRequest request) {
+    public ResponseEntity<Group> renameGroup(@PathVariable String id, @RequestBody RenameGroupRequest request) {
         String userId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findById(userId).orElse(null);
         if (user == null || !user.isCoach()) return ResponseEntity.status(403).build();
         try {
-            Tag tag = tagService.renameTag(id, request.name(), userId);
-            return ResponseEntity.ok(tag);
+            Group group = groupService.renameGroup(id, request.name(), userId);
+            return ResponseEntity.ok(group);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(403).build();
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTag(@PathVariable String id) {
+    public ResponseEntity<Void> deleteGroup(@PathVariable String id) {
         String userId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findById(userId).orElse(null);
         if (user == null || !user.isCoach()) {
             return ResponseEntity.status(403).build();
         }
         try {
-            tagService.deleteTag(id, userId);
+            groupService.deleteGroup(id, userId);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(403).build();
         }
     }
 
-    record CreateTagRequest(String name, int maxAthletes) {}
-    record RenameTagRequest(String name) {}
+    record CreateGroupRequest(String name, int maxAthletes) {}
+    record RenameGroupRequest(String name) {}
 }

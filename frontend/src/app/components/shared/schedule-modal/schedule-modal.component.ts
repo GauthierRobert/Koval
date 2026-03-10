@@ -73,9 +73,9 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
             }
           });
         });
-        this.coachService.getAllTags().subscribe(tags => {
+        this.coachService.getAllGroups().subscribe(groups => {
           this.ngZone.run(() => {
-            this.availableTags = tags.map(t => t.name);
+            this.availableTags = groups.map(g => g.name);
           });
         });
       }
@@ -102,16 +102,16 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
   toggleTag(tag: string): void {
     if (this.activeTags.has(tag)) {
       this.activeTags.delete(tag);
-      // Deselect athletes that have this tag
+      // Deselect athletes that have this group
       const taggedIds = this.availableAthletes
-        .filter(a => a.tags?.includes(tag))
+        .filter(a => a.groups?.includes(tag))
         .map(a => a.id);
       this.selectedAthleteIds = this.selectedAthleteIds.filter(id => !taggedIds.includes(id));
     } else {
       this.activeTags.add(tag);
-      // Select all athletes with this tag
+      // Select all athletes with this group
       const taggedIds = this.availableAthletes
-        .filter(a => a.tags?.includes(tag))
+        .filter(a => a.groups?.includes(tag))
         .map(a => a.id);
       for (const id of taggedIds) {
         if (!this.selectedAthleteIds.includes(id)) {

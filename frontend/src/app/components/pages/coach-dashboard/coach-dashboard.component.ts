@@ -6,7 +6,7 @@ import { BehaviorSubject, combineLatest, Observable, of, map } from 'rxjs';
 import { CoachService, ScheduledWorkout } from '../../../services/coach.service';
 import { AuthService, User } from '../../../services/auth.service';
 import { RaceGoal, RaceGoalService } from '../../../services/race-goal.service';
-import { Tag } from '../../../services/tag.service';
+import { Group } from '../../../services/group.service';
 import { ZoneService } from '../../../services/zone.service';
 import { ZoneSystem } from '../../../services/zone';
 import { MetricsService, PmcDataPoint } from '../../../services/metrics.service';
@@ -52,8 +52,8 @@ export class CoachDashboardComponent implements OnInit {
   private athletesSubject = new BehaviorSubject<User[]>([]);
   athletes$ = this.athletesSubject.asObservable();
 
-  private tagsSubject = new BehaviorSubject<Tag[]>([]);
-  allTags$ = this.tagsSubject.asObservable();
+  private groupsSubject = new BehaviorSubject<Group[]>([]);
+  allTags$ = this.groupsSubject.asObservable();
 
   private tagFilterSubject = new BehaviorSubject<string | null>(null);
 
@@ -61,7 +61,7 @@ export class CoachDashboardComponent implements OnInit {
     this.athletes$,
     this.tagFilterSubject,
   ]).pipe(
-    map(([athletes, filter]) => filter ? athletes.filter(a => a.tags?.includes(filter)) : athletes)
+    map(([athletes, filter]) => filter ? athletes.filter(a => a.groups?.includes(filter)) : athletes)
   );
 
   private scheduleSubject = new BehaviorSubject<ScheduledWorkout[]>([]);
@@ -179,14 +179,14 @@ export class CoachDashboardComponent implements OnInit {
   }
 
   loadTags() {
-    this.coachService.getAllTags().subscribe({
-      next: (tags) => this.ngZone.run(() => this.tagsSubject.next(tags)),
-      error: (err) => console.error('Error loading tags', err)
+    this.coachService.getAllGroups().subscribe({
+      next: (groups) => this.ngZone.run(() => this.groupsSubject.next(groups)),
+      error: (err) => console.error('Error loading groups', err)
     });
   }
 
   getTagCount(tag: string): number {
-    return this.athletesSubject.value.filter(a => a.tags?.includes(tag)).length;
+    return this.athletesSubject.value.filter(a => a.groups?.includes(tag)).length;
   }
 
   setTagFilter(tag: string | null) {
@@ -296,14 +296,14 @@ export class CoachDashboardComponent implements OnInit {
 
   removeTag(athlete: User | null, tag: string) {
     if (!athlete) return;
-    this.coachService.removeAthleteTag(athlete.id, tag).subscribe({
+    this.coachService.removeAthleteGroup(athlete.id, tag).subscribe({
       next: (updated) => {
-        athlete.tags = updated.tags;
+        athlete.groups = updated.groups;
         this.loadTags();
       },
       error: () => {
-        if (athlete.tags) {
-          athlete.tags = athlete.tags.filter(t => t !== tag);
+        if (athlete.groups) {
+          athlete.groups = athlete.groups.filter(t => t !== tag);
         }
       }
     });
@@ -437,7 +437,7 @@ export class CoachDashboardComponent implements OnInit {
     return 'NEUTRAL';
   }
 
-  trackTagByName(_index: number, tag: Tag): string { return tag.name; }
+  trackTagByName(_index: number, group: Group): string { return group.name; }
   trackAthleteById(_index: number, athlete: User): string { return athlete.id; }
   trackByValue(_index: number, value: string): string { return value; }
   trackScheduleById(_index: number, workout: ScheduledWorkout): string { return workout.id; }

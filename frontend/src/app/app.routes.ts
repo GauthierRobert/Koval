@@ -75,7 +75,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'tags',
+    path: 'groups',
     loadComponent: () =>
       import('./components/pages/tag-management/tag-management.component').then(
         (m) => m.TagManagementComponent,

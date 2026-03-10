@@ -62,8 +62,8 @@
           <span [style.font-style]="isDurationEstimated(training) ? 'italic' : ''">{{ getDuration(training) }}</span>
           &bull; {{ (training.blocks || []).length }} blocks
         </span>
-        <div class="item-tags" *ngIf="training.tags?.length">
-          <span *ngFor="let tag of training.tags" class="tag-chip">{{ tag }}</span>
+        <div class="item-tags" *ngIf="training.groupIds?.length">
+          <span *ngFor="let tag of training.groupIds" class="tag-chip">{{ tag }}</span>
         </div>
       </div>
       <button class="delete-btn" title="Delete training" (click)="onDelete($event, training)">&times;</button>

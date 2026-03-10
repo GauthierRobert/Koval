@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { TagService, Tag } from '../../../services/tag.service';
+import { GroupService, Group } from '../../../services/group.service';
 import { CoachService } from '../../../services/coach.service';
 import { User } from '../../../services/auth.service';
 import { Router } from '@angular/router';
@@ -18,13 +18,13 @@ import { InviteCodeModalComponent } from '../../shared/invite-code-modal/invite-
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TagManagementComponent implements OnInit {
-  private tagsSubject = new BehaviorSubject<Tag[]>([]);
+  private groupsSubject = new BehaviorSubject<Group[]>([]);
   private athletesSubject = new BehaviorSubject<User[]>([]);
 
-  tagData$ = combineLatest([this.tagsSubject, this.athletesSubject]).pipe(
-    map(([tags, athletes]) => tags.map(tag => ({
-      ...tag,
-      tagAthletes: athletes.filter(a => a.tags?.includes(tag.name))
+  tagData$ = combineLatest([this.groupsSubject, this.athletesSubject]).pipe(
+    map(([groups, athletes]) => groups.map(group => ({
+      ...group,
+      tagAthletes: athletes.filter(a => a.groups?.includes(group.name))
     })))
   );
 
@@ -33,47 +33,47 @@ export class TagManagementComponent implements OnInit {
   newTagName = '';
   newTagMaxAthletes = 0;
 
-  // Task 5: Invite modal per tag
+  // Invite modal per group
   isInviteModalOpen = false;
-  selectedTagForInvite: Tag | null = null;
+  selectedTagForInvite: Group | null = null;
 
   constructor(
-    private tagService: TagService,
+    private groupService: GroupService,
     private coachService: CoachService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.loadTags();
+    this.loadGroups();
   }
 
-  private loadTags(): void {
-    this.tagService.getTags().subscribe({
-      next: (tags) => {
-        this.tagsSubject.next(tags);
+  private loadGroups(): void {
+    this.groupService.getGroups().subscribe({
+      next: (groups) => {
+        this.groupsSubject.next(groups);
         this.coachService.getAthletes().subscribe({
           next: (athletes) => this.athletesSubject.next(athletes),
           error: () => {},
         });
       },
-      error: () => this.tagsSubject.next([]),
+      error: () => this.groupsSubject.next([]),
     });
   }
 
-  startEdit(tag: Tag): void {
-    this.editingTagId = tag.id;
-    this.editingName = tag.name;
+  startEdit(group: Group): void {
+    this.editingTagId = group.id;
+    this.editingName = group.name;
   }
 
-  saveEdit(tag: Tag): void {
-    if (!this.editingName.trim() || this.editingName.trim() === tag.name) {
+  saveEdit(group: Group): void {
+    if (!this.editingName.trim() || this.editingName.trim() === group.name) {
       this.editingTagId = null;
       return;
     }
-    this.tagService.renameTag(tag.id, this.editingName.trim()).subscribe({
+    this.groupService.renameGroup(group.id, this.editingName.trim()).subscribe({
       next: () => {
         this.editingTagId = null;
-        this.loadTags();
+        this.loadGroups();
       },
       error: () => { this.editingTagId = null; },
     });
@@ -83,40 +83,40 @@ export class TagManagementComponent implements OnInit {
     this.editingTagId = null;
   }
 
-  removeAthleteFromTag(athlete: User, tag: Tag): void {
-    this.coachService.removeAthleteTag(athlete.id, tag.name).subscribe({
-      next: () => this.loadTags(),
+  removeAthleteFromTag(athlete: User, group: Group): void {
+    this.coachService.removeAthleteGroup(athlete.id, group.name).subscribe({
+      next: () => this.loadGroups(),
       error: () => {},
     });
   }
 
   createTag(): void {
     if (!this.newTagName.trim()) return;
-    this.tagService.createTag(this.newTagName.trim(), this.newTagMaxAthletes).subscribe({
+    this.groupService.createGroup(this.newTagName.trim(), this.newTagMaxAthletes).subscribe({
       next: () => {
         this.newTagName = '';
         this.newTagMaxAthletes = 0;
-        this.loadTags();
+        this.loadGroups();
       },
       error: () => {},
     });
   }
 
-  deleteTag(tag: Tag): void {
-    if (!confirm(`Delete tag "${tag.name}"? This will remove it from all athletes.`)) return;
-    this.tagService.deleteTag(tag.id).subscribe({
-      next: () => this.loadTags(),
+  deleteTag(group: Group): void {
+    if (!confirm(`Delete group "${group.name}"? This will remove it from all athletes.`)) return;
+    this.groupService.deleteGroup(group.id).subscribe({
+      next: () => this.loadGroups(),
       error: () => {},
     });
   }
 
-  // Task 5: Open invite modal filtered to this tag
-  openInviteModal(tag: Tag): void {
-    this.selectedTagForInvite = tag;
+  // Open invite modal filtered to this group
+  openInviteModal(group: Group): void {
+    this.selectedTagForInvite = group;
     this.isInviteModalOpen = true;
   }
 
-  // Task 6: Navigate to coach page for a specific athlete
+  // Navigate to coach page for a specific athlete
   navigateToCoach(athleteId: string): void {
     this.router.navigate(['/coach'], { queryParams: { athleteId } });
   }

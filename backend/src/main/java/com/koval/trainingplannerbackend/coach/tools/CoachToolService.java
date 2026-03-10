@@ -5,7 +5,7 @@ import com.koval.trainingplannerbackend.coach.CoachService;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
 import com.koval.trainingplannerbackend.training.model.Training;
-import com.koval.trainingplannerbackend.training.tag.Tag;
+import com.koval.trainingplannerbackend.training.group.Group;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
@@ -63,18 +63,18 @@ public class CoachToolService {
                 .map(AthleteSummary::from).toList();
     }
 
-    @Tool(description = "List coach's athletes filtered by tag.")
-    public List<AthleteSummary> getAthletesByTag(
+    @Tool(description = "List coach's athletes filtered by group.")
+    public List<AthleteSummary> getAthletesByGroup(
             @ToolParam(description = "Coach ID") String coachId,
-            @ToolParam(description = "Tag ID") String tagId) {
-        return coachService.getAthletesByTag(coachId, tagId).stream()
+            @ToolParam(description = "Group ID") String groupId) {
+        return coachService.getAthletesByGroup(coachId, groupId).stream()
                 .map(AthleteSummary::from).toList();
     }
 
-    @Tool(description = "List all tags for this coach. Call before getAthletesByTag.")
-    public List<Tag> getAthleteTagsForCoach(
+    @Tool(description = "List all groups for this coach. Call before getAthletesByGroup.")
+    public List<Group> getAthleteGroupsForCoach(
             @ToolParam(description = "Coach ID") String coachId) {
-        return coachService.getAthleteTagsForCoach(coachId);
+        return coachService.getAthleteGroupsForCoach(coachId);
     }
 
     private List<ScheduleSummary> enrichWithTitles(List<ScheduledWorkout> workouts) {

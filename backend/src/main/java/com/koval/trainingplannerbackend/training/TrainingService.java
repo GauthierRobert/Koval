@@ -7,8 +7,8 @@ import com.koval.trainingplannerbackend.training.model.SportType;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.model.TrainingType;
 import com.koval.trainingplannerbackend.training.model.WorkoutBlock;
-import com.koval.trainingplannerbackend.training.tag.Tag;
-import com.koval.trainingplannerbackend.training.tag.TagService;
+import com.koval.trainingplannerbackend.training.group.Group;
+import com.koval.trainingplannerbackend.training.group.GroupService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,14 +28,14 @@ import java.util.Optional;
 public class TrainingService {
 
     private final TrainingRepository trainingRepository;
-    private final TagService tagService;
+    private final GroupService groupService;
     private final UserRepository userRepository;
 
     public TrainingService(TrainingRepository trainingRepository,
-                           TagService tagService,
+                           GroupService groupService,
                            UserRepository userRepository) {
         this.trainingRepository = trainingRepository;
-        this.tagService = tagService;
+        this.groupService = groupService;
         this.userRepository = userRepository;
     }
 
@@ -83,10 +83,14 @@ public class TrainingService {
             training.setDescription(updates.getDescription());
         if (updates.getBlocks() != null)
             training.setBlocks((updates.getBlocks().stream().map(this::standardizeBlockType).toList()));
-        if (updates.getTags() != null)
-            training.setTags(updates.getTags());
+        if (updates.getGroupIds() != null)
+            training.setGroupIds(updates.getGroupIds());
         if (updates.getTrainingType() != null)
             training.setTrainingType(updates.getTrainingType());
+        if (updates.getClubId() != null)
+            training.setClubId(updates.getClubId());
+        if (updates.getClubGroupIds() != null)
+            training.setClubGroupIds(updates.getClubGroupIds());
 
         calculateTrainingMetrics(training, existing.get().getCreatedBy());
         return trainingRepository.save(training);
@@ -126,10 +130,15 @@ public class TrainingService {
 
 
     /**
-     * Search trainings by tag (tag ID).
+     * Search trainings by group (group ID).
      */
+    public List<Training> searchByGroup(String groupId) {
+        return trainingRepository.findByGroupIdsContaining(groupId);
+    }
+
+    // Keep backward-compatible alias used by TrainingController
     public List<Training> searchByTag(String tag) {
-        return trainingRepository.findByTagsContaining(tag);
+        return searchByGroup(tag);
     }
 
     /**
@@ -140,35 +149,40 @@ public class TrainingService {
     }
 
     /**
-     * Discover trainings available to an athlete based on their tags.
-     * Uses TagService to find athlete's tags, then finds trainings with those tag
+     * Discover trainings available to an athlete based on their groups.
+     * Uses GroupService to find athlete's groups, then finds trainings with those group
      * IDs.
      */
-    public List<Training> discoverTrainingsByUserTags(String athleteId) {
-        List<Tag> athleteTags = tagService.getTagsForAthlete(athleteId);
-        if (athleteTags.isEmpty()) {
+    public List<Training> discoverTrainingsByUserGroups(String athleteId) {
+        List<Group> athleteGroups = groupService.getGroupsForAthlete(athleteId);
+        if (athleteGroups.isEmpty()) {
             return List.of();
         }
 
-        List<String> tagIds = athleteTags.stream().map(Tag::getId).toList();
-        return trainingRepository.findByTagsIn(tagIds);
+        List<String> groupIds = athleteGroups.stream().map(Group::getId).toList();
+        return trainingRepository.findByGroupIdsIn(groupIds);
+    }
+
+    // Keep backward-compatible alias used by TrainingController
+    public List<Training> discoverTrainingsByUserTags(String athleteId) {
+        return discoverTrainingsByUserGroups(athleteId);
     }
 
     /**
-     * Get training folders for an athlete grouped by tag name.
-     * Uses TagService to find athlete's tags, then finds trainings with those tag
+     * Get training folders for an athlete grouped by group name.
+     * Uses GroupService to find athlete's groups, then finds trainings with those group
      * IDs.
      */
     public Map<String, List<Training>> getTrainingFolders(String athleteId) {
-        List<Tag> athleteTags = tagService.getTagsForAthlete(athleteId);
-        if (athleteTags.isEmpty()) {
+        List<Group> athleteGroups = groupService.getGroupsForAthlete(athleteId);
+        if (athleteGroups.isEmpty()) {
             return Map.of();
         }
 
         Map<String, List<Training>> folders = new HashMap<>();
-        for (Tag tag : athleteTags) {
-            List<Training> trainings = trainingRepository.findByTagsContaining(tag.getId());
-            folders.put(tag.getName(), trainings);
+        for (Group group : athleteGroups) {
+            List<Training> trainings = trainingRepository.findByGroupIdsContaining(group.getId());
+            folders.put(group.getName(), trainings);
         }
 
         return folders;

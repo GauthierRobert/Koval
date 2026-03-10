@@ -91,7 +91,7 @@ const nodes = [
     fields:['id (PK)','stravaId / googleId','email · displayName','role: ATHLETE | COACH','ftp · weightKg','ctl · atl · tsb (fitness metrics)','stravaAccessToken/RefreshToken'] },
 
   { id:'Training', domain:'training', coll:'trainings (polymorphic)', w:162, h:50,
-    fields:['id (PK)','title · description','sport: CYCLING|RUNNING|SWIMMING|BRICK','createdBy → User','chatHistoryId → ChatHistory','zoneSystemId → ZoneSystem','tags: String[]','blocks: WorkoutBlock[] ⤵ embedded'] },
+    fields:['id (PK)','title · description','sport: CYCLING|RUNNING|SWIMMING|BRICK','createdBy → User','zoneSystemId → ZoneSystem','tags: String[]','blocks: WorkoutBlock[] ⤵ embedded'] },
   { id:'WorkoutBlock', domain:'training', coll:'embedded in Training', w:148, h:44, embedded:true,
     fields:['type: WARMUP|STEADY|INTERVAL|RAMP|COOLDOWN|FREE','durationSeconds / distanceMeters','intensityTarget (% of FTP/Pace/CSS)','intensityStart · intensityEnd (ramps)','cadenceTarget (RPM/SPM)','label'] },
   { id:'ZoneSystem', domain:'training', coll:'zone_systems', w:140, h:50,
@@ -139,7 +139,6 @@ const links = [
   { s:'ZoneSystem', t:'Zone',                 lbl:'zones[ ]',          type:'emb' },
   // AI
   { s:'User',       t:'ChatHistory',          lbl:'userId',            type:'ref' },
-  { s:'Training',   t:'ChatHistory',          lbl:'chatHistoryId',     type:'ref' },
   // History
   { s:'User',       t:'CompletedSession',     lbl:'userId',            type:'ref' },
   { s:'Training',   t:'CompletedSession',     lbl:'trainingId',        type:'ref' },

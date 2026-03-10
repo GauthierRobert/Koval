@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ClubDetail, ClubMemberRole, ClubService, ClubTag } from '../../../../../../services/club.service';
+import { ClubDetail, ClubMemberRole, ClubService, ClubGroup } from '../../../../../../services/club.service';
 
 @Component({
   selector: 'app-club-members-tab',
@@ -17,7 +17,7 @@ export class ClubMembersTabComponent implements OnInit {
   private clubService = inject(ClubService);
   members$ = this.clubService.members$;
   pending$ = this.clubService.pending$;
-  tags$ = this.clubService.tags$;
+  tags$ = this.clubService.groups$;
 
   newTagName = '';
   tagPanelOpen = false;
@@ -51,7 +51,7 @@ export class ClubMembersTabComponent implements OnInit {
   createTag(): void {
     const name = this.newTagName.trim();
     if (!name) return;
-    this.clubService.createTag(this.club.id, name).subscribe({
+    this.clubService.createGroup(this.club.id, name).subscribe({
       next: () => {
         this.newTagName = '';
       },
@@ -59,18 +59,18 @@ export class ClubMembersTabComponent implements OnInit {
     });
   }
 
-  deleteTag(tagId: string): void {
-    this.clubService.deleteTag(this.club.id, tagId).subscribe({ error: () => {} });
+  deleteTag(groupId: string): void {
+    this.clubService.deleteGroup(this.club.id, groupId).subscribe({ error: () => {} });
   }
 
-  addToTag(tagId: string, userId: string): void {
-    if (!tagId) return;
-    this.clubService.addMemberToTag(this.club.id, tagId, userId).subscribe({ error: () => {} });
+  addToTag(groupId: string, userId: string): void {
+    if (!groupId) return;
+    this.clubService.addMemberToGroup(this.club.id, groupId, userId).subscribe({ error: () => {} });
   }
 
-  removeFromTag(tagId: string | undefined, userId: string): void {
-    if (!tagId) return;
-    this.clubService.removeMemberFromTag(this.club.id, tagId, userId).subscribe({ error: () => {} });
+  removeFromTag(groupId: string | undefined, userId: string): void {
+    if (!groupId) return;
+    this.clubService.removeMemberFromGroup(this.club.id, groupId, userId).subscribe({ error: () => {} });
   }
 
   changeRole(membershipId: string | undefined, role: string): void {
@@ -82,12 +82,12 @@ export class ClubMembersTabComponent implements OnInit {
     });
   }
 
-  getAvailableTags(member: { userId: string }, allTags: ClubTag[]): ClubTag[] {
-    return allTags.filter((t) => !t.memberIds.includes(member.userId));
+  getAvailableTags(member: { userId: string }, allGroups: ClubGroup[]): ClubGroup[] {
+    return allGroups.filter((g) => !g.memberIds.includes(member.userId));
   }
 
-  getTagIdByName(name: string, allTags: ClubTag[]): string | undefined {
-    return allTags.find((t) => t.name === name)?.id;
+  getTagIdByName(name: string, allGroups: ClubGroup[]): string | undefined {
+    return allGroups.find((g) => g.name === name)?.id;
   }
 
   getRoleBadgeClass(role: string): string {

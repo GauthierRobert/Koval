@@ -138,6 +138,18 @@
   color: #a5b4fc;
 }
 
+.tab-btn.ai-btn {
+  margin-left: auto;
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.tab-btn.ai-btn:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #c7d2fe;
+}
+
 .tab-content {
   min-height: 300px;
 }

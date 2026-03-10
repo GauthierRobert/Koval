@@ -25,7 +25,7 @@ public record TrainingSummary(
                 durationMin,
                 t.getEstimatedDistance() == null ? 0 : t.getEstimatedDistance(),
                 t.getBlocks() != null ? t.getBlocks().size() : 0,
-                t.getTags()
+                t.getGroupIds()
         );
     }
 }

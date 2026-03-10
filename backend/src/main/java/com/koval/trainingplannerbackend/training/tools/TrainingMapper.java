@@ -25,8 +25,8 @@ public class TrainingMapper {
         training.setTitle(request.title());
         training.setDescription(request.desc());
 
-        // Tags (default to empty list if null)
-        training.setTags(request.tags() != null ? request.tags() : new ArrayList<>());
+        // Groups (default to empty list if null)
+        training.setGroupIds(request.tags() != null ? request.tags() : new ArrayList<>());
 
         // Enums (safe handling)
         if (request.type() != null) {

@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.ai;
 
+import com.koval.trainingplannerbackend.ai.action.AIActionToolService;
 import com.koval.trainingplannerbackend.coach.tools.CoachToolService;
 import com.koval.trainingplannerbackend.goal.GoalToolService;
 import com.koval.trainingplannerbackend.training.history.HistoryToolService;
@@ -74,7 +75,7 @@ public class AIConfig {
             - **WorkoutBlock:** `type` (WARMUP, INTERVAL, STEADY, COOLDOWN, RAMP, FREE, PAUSE), **exactly one of** `durationSeconds` **or** `distanceMeters` (never both — backend extrapolates the other), `label`, `intensityTarget`, `intensityStart`/`intensityEnd` for ramps, `cadenceTarget`. Prefer `durationSeconds` for CYCLING; prefer `distanceMeters` for RUNNING and SWIMMING intervals.
             - **Repeat:** Expand all repeated sequences explicitly — no shorthand.
             - *Cycling:* % FTP (Coggan). *Running:* Threshold Pace, cadence ~170+. *Swimming:* CSS, RPE 1-10.
-            - **Tags:** Tags (tag IDs) must ONLY be set on a training when the user's role is COACH AND the user explicitly requests tagging (e.g. "assign to group X", "tag with Y"). For ATHLETE users, always pass an empty tags list. Never auto-tag.
+            - **Groups:** Groups (group IDs) must ONLY be set on a training when the user's role is COACH AND the user explicitly requests grouping (e.g. "assign to group X", "tag with Y"). For ATHLETE users, always pass an empty groups list. Never auto-assign groups.
 
             ## BULK CREATION RULE (CRITICAL)
             - **One tool call per turn.** Never call `createTraining` or `updateTraining` more than once in a single response.
@@ -99,8 +100,8 @@ public class AIConfig {
             - `assignTraining(coachId, trainingId, athleteIds, scheduledDate, notes)` — assign training to athletes.
             - `getAthleteSchedule(athleteId, start, end)` — athlete's schedule in a date range.
             - `getCoachAthletes(coachId)` — list coach's athletes.
-            - `getAthletesByTag(coachId, tagId)` — filter athletes by tag.
-            - `getAthleteTagsForCoach(coachId)` — list all tags.
+            - `getAthletesByGroup(coachId, groupId)` — filter athletes by group.
+            - `getAthleteGroupsForCoach(coachId)` — list all groups.
 
             ### Goal Tools
             - `listGoals(userId)` — list athlete's race goals with days-until countdown.
@@ -145,8 +146,8 @@ public class AIConfig {
             - `assignTraining(coachId, trainingId, athleteIds, scheduledDate, notes)` — assign training to athletes.
             - `getAthleteSchedule(athleteId, start, end)` — athlete's schedule.
             - `getCoachAthletes(coachId)` — list athletes.
-            - `getAthletesByTag(coachId, tagId)` — filter athletes by tag.
-            - `getAthleteTagsForCoach(coachId)` — list tags.
+            - `getAthletesByGroup(coachId, groupId)` — filter athletes by group.
+            - `getAthleteGroupsForCoach(coachId)` — list groups.
 
             ### Zone Tools
             - `createZoneSystem(coachId, name, sportType, referenceType, referenceName, zones)` — define custom zones.
@@ -156,6 +157,20 @@ public class AIConfig {
 
             ### Goal Tools (view athlete goals)
             - `listGoals(athleteId)` — list an athlete's race goals to understand their race calendar.""" + COMMON_RULES;
+
+    private static final String ACTION_ZONE_PROMPT = """
+            You are a zone system designer.
+            Create exactly one zone system based on the user's description.
+            Call createZoneSystem exactly ONCE using coachId = the userId from system context.
+            No preamble. After the tool call: one-line confirmation only.""";
+
+    private static final String ACTION_TRAINING_SESSION_PROMPT = """
+            You are a workout designer for club sessions.
+            Create exactly one training + optional club session based on the user's description.
+            Call createTrainingWithClubSession exactly ONCE.
+            Fixed context — read from system context and pass these values exactly as-is to the tool:
+              userId, clubId, clubTagId, coachTagId
+            No preamble. After the tool call: one-line confirmation only.""";
 
     private static final String GENERAL_PROMPT = """
             Role: Friendly Triathlon & Cycling Assistant.
@@ -251,6 +266,26 @@ public class AIConfig {
     }
 
     @Bean
+    public ChatClient actionZoneClient(AnthropicChatModel chatModel,
+                                       ZoneToolService zoneToolService) {
+        return ChatClient.builder(chatModel)
+                .defaultSystem(ACTION_ZONE_PROMPT)
+                .defaultOptions(haikuActionOptions())
+                .defaultTools(zoneToolService)
+                .build();
+    }
+
+    @Bean
+    public ChatClient actionTrainingSessionClient(AnthropicChatModel chatModel,
+                                                  AIActionToolService aiActionToolService) {
+        return ChatClient.builder(chatModel)
+                .defaultSystem(ACTION_TRAINING_SESSION_PROMPT)
+                .defaultOptions(haikuActionOptions())
+                .defaultTools(aiActionToolService)
+                .build();
+    }
+
+    @Bean
     public ChatClient routerClient(AnthropicChatModel chatModel) {
         return ChatClient.builder(chatModel)
                 .defaultOptions(AnthropicChatOptions.builder()
@@ -297,6 +332,14 @@ public class AIConfig {
                 .temperature(0.7)
                 .maxTokens(2048)
                 .cacheOptions(cacheOptions())
+                .build();
+    }
+
+    private AnthropicChatOptions haikuActionOptions() {
+        return AnthropicChatOptions.builder()
+                .model(HAIKU)
+                .temperature(0.3)
+                .maxTokens(2048)
                 .build();
     }
 

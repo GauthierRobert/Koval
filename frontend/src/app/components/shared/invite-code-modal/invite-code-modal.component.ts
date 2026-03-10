@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { BehaviorSubject, combineLatest, map, Observable } from 'rxjs';
 import { CoachService, InviteCode } from '../../../services/coach.service';
 import { AuthService } from '../../../services/auth.service';
-import { Tag, TagService } from '../../../services/tag.service';
+import { Group, GroupService } from '../../../services/group.service';
 
 @Component({
   selector: 'app-invite-code-modal',
@@ -15,7 +15,7 @@ import { Tag, TagService } from '../../../services/tag.service';
 })
 export class InviteCodeModalComponent implements OnChanges {
   @Input() isOpen = false;
-  @Input() availableTags: Tag[] = [];
+  @Input() availableTags: Group[] = [];
   @Output() closed = new EventEmitter<void>();
   @Output() codeGenerated = new EventEmitter<InviteCode>();
 
@@ -26,7 +26,7 @@ export class InviteCodeModalComponent implements OnChanges {
   copied = false;
   newTagInput = '';
   showInactive = false;
-  unassignedTags: Tag[] = [];
+  unassignedTags: Group[] = [];
 
   private userId = '';
   private inviteCodesSubject = new BehaviorSubject<InviteCode[]>([]);
@@ -48,7 +48,7 @@ export class InviteCodeModalComponent implements OnChanges {
   constructor(
     private coachService: CoachService,
     private authService: AuthService,
-    private tagService: TagService
+    private groupService: GroupService
   ) {
     this.authService.user$.subscribe(u => {
       if (u) this.userId = u.id;
@@ -76,13 +76,13 @@ export class InviteCodeModalComponent implements OnChanges {
   }
 
   private computeUnassignedTags(codes: InviteCode[]): void {
-    const usedTagIds = new Set<string>();
+    const usedGroupIds = new Set<string>();
     for (const code of codes) {
       if (code.active) {
-        code.tags.forEach(t => usedTagIds.add(t));
+        code.groupIds.forEach(g => usedGroupIds.add(g));
       }
     }
-    this.unassignedTags = this.availableTags.filter(t => !usedTagIds.has(t.id));
+    this.unassignedTags = this.availableTags.filter(t => !usedGroupIds.has(t.id));
   }
 
   toggleShowInactive(): void {
@@ -90,14 +90,14 @@ export class InviteCodeModalComponent implements OnChanges {
     this.showInactiveSubject.next(this.showInactive);
   }
 
-  selectTag(tag: Tag): void {
-    this.selectedTagId = this.selectedTagId === tag.id ? null : tag.id;
+  selectTag(group: Group): void {
+    this.selectedTagId = this.selectedTagId === group.id ? null : group.id;
   }
 
   addNewTag(): void {
     const name = this.newTagInput.trim();
     if (!name) return;
-    this.tagService.createTag(name).subscribe({
+    this.groupService.createGroup(name).subscribe({
       next: (tag) => {
         if (!this.availableTags.find(t => t.id === tag.id)) {
           this.availableTags = [...this.availableTags, tag];
@@ -118,9 +118,9 @@ export class InviteCodeModalComponent implements OnChanges {
     });
   }
 
-  resolveTagName(tagId: string): string {
-    const tag = this.availableTags.find(t => t.id === tagId);
-    return tag ? tag.name : tagId;
+  resolveTagName(groupId: string): string {
+    const group = this.availableTags.find(g => g.id === groupId);
+    return group ? group.name : groupId;
   }
 
   generate(): void {

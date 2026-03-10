@@ -17,8 +17,8 @@ public class InviteCode {
     private String code;
 
     private String coachId;
-    // Contains Tag document IDs (not tag names)
-    private List<String> tags = new ArrayList<>();
+    // Contains Group document IDs (not group names)
+    private List<String> groupIds = new ArrayList<>();
     private int maxUses; // 0 = unlimited
     private int currentUses;
     private LocalDateTime expiresAt; // nullable = never expires
@@ -39,8 +39,8 @@ public class InviteCode {
     public String getCoachId() { return coachId; }
     public void setCoachId(String coachId) { this.coachId = coachId; }
 
-    public List<String> getTags() { return tags; }
-    public void setTags(List<String> tags) { this.tags = tags; }
+    public List<String> getGroupIds() { return groupIds; }
+    public void setGroupIds(List<String> groupIds) { this.groupIds = groupIds; }
 
     public int getMaxUses() { return maxUses; }
     public void setMaxUses(int maxUses) { this.maxUses = maxUses; }

@@ -1,4 +1,4 @@
-package com.koval.trainingplannerbackend.club;
+package com.koval.trainingplannerbackend.training.group;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -13,16 +13,22 @@ import java.util.List;
 
 @Getter
 @Setter
-@Document(collection = "club_tags")
-@CompoundIndex(name = "clubId_name", def = "{'clubId': 1, 'name': 1}", unique = true)
-public class ClubTag {
+@Document(collection = "groups")
+@CompoundIndex(name = "name_coachId", def = "{'name': 1, 'coachId': 1}", unique = true)
+public class Group {
     @Id
     private String id;
 
-    @Indexed
-    private String clubId;
-
     private String name;
-    private List<String> memberIds = new ArrayList<>();
+    private String coachId;
+    private int maxAthletes = 0;
+
+    @Indexed
+    private List<String> athleteIds = new ArrayList<>();
+
     private LocalDateTime createdAt;
+
+    public Group() {
+        this.createdAt = LocalDateTime.now();
+    }
 }

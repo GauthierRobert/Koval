@@ -80,7 +80,7 @@ export interface Training {
     blocks?: WorkoutBlock[];
     sportType: 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK';
     trainingType?: TrainingType;
-    tags?: string[];
+    groupIds?: string[];
     visibility?: TrainingVisibility;
     createdBy?: string;
     estimatedTss?: number;
@@ -89,6 +89,8 @@ export interface Training {
     estimatedDistance?: number;
     zoneSystemId?: string;
     createdAt?: string;
+    clubId?: string;
+    clubGroupIds?: string[];
 }
 
 /** Returns true when at least one block is distance-based (no explicit durationSeconds). */
@@ -126,7 +128,7 @@ export class TrainingService {
     availableTags$ = this.trainings$.pipe(
         map((trainings) => {
             const tagSet = new Set<string>();
-            trainings.forEach((t) => t.tags?.forEach((tag) => tagSet.add(tag)));
+            trainings.forEach((t) => t.groupIds?.forEach((tag) => tagSet.add(tag)));
             return Array.from(tagSet).sort();
         }),
     );
@@ -139,8 +141,8 @@ export class TrainingService {
     ]).pipe(
         map(([trainings, tag, sport, type]) => {
             let result = trainings;
-            if (tag === '__mine__') result = result.filter((t) => !t.tags?.length);
-            else if (tag) result = result.filter((t) => t.tags?.includes(tag));
+            if (tag === '__mine__') result = result.filter((t) => !t.groupIds?.length);
+            else if (tag) result = result.filter((t) => t.groupIds?.includes(tag));
             if (sport) result = result.filter((t) => t.sportType === sport);
             if (type) result = result.filter((t) => t.trainingType === type);
             return [...result].sort((a, b) => {
@@ -282,8 +284,13 @@ export class TrainingService {
         });
     }
 
+    updateTrainingGroups(trainingId: string, groupIds: string[]): Observable<Training> {
+        return this.http.put<Training>(`${this.apiUrl}/${trainingId}`, { groupIds });
+    }
+
+    // Keep backward-compatible alias
     updateTrainingTags(trainingId: string, tagIds: string[]): Observable<Training> {
-        return this.http.put<Training>(`${this.apiUrl}/${trainingId}`, { tags: tagIds });
+        return this.updateTrainingGroups(trainingId, tagIds);
     }
 
     getTrainingFolders(): Observable<Record<string, Training[]>> {

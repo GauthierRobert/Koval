@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Training, TrainingService } from '../../../services/training.service';
-import { Tag } from '../../../services/tag.service';
+import { Group } from '../../../services/group.service';
 
 @Component({
   selector: 'app-share-training-modal',
@@ -14,7 +14,7 @@ import { Tag } from '../../../services/tag.service';
 export class ShareTrainingModalComponent implements OnChanges {
   @Input() isOpen = false;
   @Input() training: Training | null = null;
-  @Input() availableTags: Tag[] = [];
+  @Input() availableTags: Group[] = [];
   @Output() closed = new EventEmitter<void>();
   @Output() shared = new EventEmitter<Training>();
 
@@ -32,7 +32,7 @@ export class ShareTrainingModalComponent implements OnChanges {
       if (this.training) {
         this.activeTraining = this.training;
         this.selectedTrainingId = this.training.id;
-        this.selectedTagIds = [...(this.training.tags || [])];
+        this.selectedTagIds = [...(this.training.groupIds || [])];
       } else {
         this.activeTraining = null;
         this.selectedTrainingId = '';
@@ -43,22 +43,22 @@ export class ShareTrainingModalComponent implements OnChanges {
 
   onTrainingSelected(): void {
     this.activeTraining = this.allTrainings.find(t => t.id === this.selectedTrainingId) || null;
-    this.selectedTagIds = [...(this.activeTraining?.tags || [])];
+    this.selectedTagIds = [...(this.activeTraining?.groupIds || [])];
   }
 
-  toggleTag(tag: Tag): void {
-    const idx = this.selectedTagIds.indexOf(tag.id);
+  toggleTag(group: Group): void {
+    const idx = this.selectedTagIds.indexOf(group.id);
     if (idx >= 0) {
       this.selectedTagIds.splice(idx, 1);
     } else {
-      this.selectedTagIds.push(tag.id);
+      this.selectedTagIds.push(group.id);
     }
   }
 
   save(): void {
     if (!this.activeTraining) return;
     this.saving = true;
-    this.trainingService.updateTrainingTags(this.activeTraining.id, this.selectedTagIds).subscribe({
+    this.trainingService.updateTrainingGroups(this.activeTraining.id, this.selectedTagIds).subscribe({
       next: (updated) => {
         this.saving = false;
         this.shared.emit(updated);

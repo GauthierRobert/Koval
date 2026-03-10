@@ -67,8 +67,8 @@
                 </div>
                 <div class="code-meta">
                   <div class="code-tags">
-                    <span *ngFor="let tagId of code.tags" class="mini-tag">{{ resolveTagName(tagId) }}</span>
-                    <span *ngIf="code.tags.length === 0" class="no-tags">No tags</span>
+                    <span *ngFor="let groupId of code.groupIds" class="mini-tag">{{ resolveTagName(groupId) }}</span>
+                    <span *ngIf="code.groupIds.length === 0" class="no-tags">No groups</span>
                   </div>
                   <span class="code-uses">{{ code.currentUses }}{{ code.maxUses > 0 ? ' / ' + code.maxUses : '' }} uses</span>
                 </div>

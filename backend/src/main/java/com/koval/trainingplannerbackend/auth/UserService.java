@@ -1,7 +1,7 @@
 package com.koval.trainingplannerbackend.auth;
 
-import com.koval.trainingplannerbackend.training.tag.Tag;
-import com.koval.trainingplannerbackend.training.tag.TagService;
+import com.koval.trainingplannerbackend.training.group.Group;
+import com.koval.trainingplannerbackend.training.group.GroupService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,11 +14,11 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final TagService tagService;
+    private final GroupService groupService;
 
-    public UserService(UserRepository userRepository, TagService tagService) {
+    public UserService(UserRepository userRepository, GroupService groupService) {
         this.userRepository = userRepository;
-        this.tagService = tagService;
+        this.groupService = groupService;
     }
 
     public User findOrCreateFromStrava(String stravaId, String displayName, String profilePicture,
@@ -148,14 +148,14 @@ public class UserService {
         map.put("vo2maxPower", user.getVo2maxPower());
         map.put("vo2maxPace", user.getVo2maxPace());
 
-        map.put("hasCoach", tagService.athleteHasCoach(user.getId()));
-        List<Tag> userTags = tagService.getTagsForAthlete(user.getId());
-        map.put("tags", userTags.stream().map(Tag::getName).toList());
+        map.put("hasCoach", groupService.athleteHasCoach(user.getId()));
+        List<Group> userGroups = groupService.getGroupsForAthlete(user.getId());
+        map.put("groups", userGroups.stream().map(Group::getName).toList());
 
         map.put("needsOnboarding", user.isNeedsOnboarding());
 
         if (user.isCoach()) {
-            List<String> athleteIds = tagService.getAthleteIdsForCoach(user.getId());
+            List<String> athleteIds = groupService.getAthleteIdsForCoach(user.getId());
             map.put("athleteCount", athleteIds.size());
         }
         return map;

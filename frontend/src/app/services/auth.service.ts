@@ -21,7 +21,7 @@ export interface User {
     paceMarathon?: number;
     vo2maxPower?: number;
     vo2maxPace?: number;
-    tags?: string[];
+    groups?: string[];
     ctl?: number;
     atl?: number;
     tsb?: number;

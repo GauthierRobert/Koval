@@ -25,26 +25,25 @@ import java.util.stream.Collectors;
 @Service
 public class AIService {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private final Map<AgentType, TrainingAgent> agents;
     private final RouterService routerService;
     private final ChatHistoryService chatHistoryService;
     private final UserContextResolver userContextResolver;
     private final ChatClient plannerClient;
-    private final ObjectMapper objectMapper;
 
     public AIService(List<TrainingAgent> agentList,
                      RouterService routerService,
                      ChatHistoryService chatHistoryService,
                      UserContextResolver userContextResolver,
-                     @Qualifier("plannerClient") ChatClient plannerClient,
-                     ObjectMapper objectMapper) {
+                     @Qualifier("plannerClient") ChatClient plannerClient) {
         this.agents = agentList.stream()
                 .collect(Collectors.toMap(TrainingAgent::getAgentType, Function.identity()));
         this.routerService = routerService;
         this.chatHistoryService = chatHistoryService;
         this.userContextResolver = userContextResolver;
         this.plannerClient = plannerClient;
-        this.objectMapper = objectMapper;
     }
 
     // ── Synchronous chat ────────────────────────────────────────────────
@@ -98,7 +97,7 @@ public class AIService {
             if (cleaned.startsWith("```")) {
                 cleaned = cleaned.replaceAll("(?s)^```[a-z]*\\n?", "").replaceAll("```$", "").trim();
             }
-            return objectMapper.readValue(cleaned, new TypeReference<List<PlanTask>>() {});
+            return OBJECT_MAPPER.readValue(cleaned, new TypeReference<List<PlanTask>>() {});
         } catch (Exception e) {
             // Fall back to GENERAL instead of TRAINING_CREATION to avoid sending arbitrary text
             // through the most capable agent (#7)

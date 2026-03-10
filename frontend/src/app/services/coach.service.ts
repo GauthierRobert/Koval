@@ -3,7 +3,7 @@ import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject, Observable, of} from 'rxjs';
 import {catchError} from 'rxjs/operators';
 import {User} from './auth.service';
-import {Tag} from './tag.service';
+import {Group} from './group.service';
 import {PmcDataPoint} from './metrics.service';
 import {environment} from '../../environments/environment';
 
@@ -11,7 +11,7 @@ export interface InviteCode {
     id: string;
     code: string;
     coachId: string;
-    tags: string[];
+    groupIds: string[];
     maxUses: number;
     currentUses: number;
     expiresAt?: string;
@@ -90,31 +90,31 @@ export class CoachService {
         );
     }
 
-    updateAthleteTags(athleteId: string, tags: string[]): Observable<User> {
-        return this.http.put<User>(`${this.apiUrl}/athletes/${athleteId}/tags`, { tags });
+    updateAthleteGroups(athleteId: string, groupIds: string[]): Observable<User> {
+        return this.http.put<User>(`${this.apiUrl}/athletes/${athleteId}/groups`, { groups: groupIds });
     }
 
-    addAthleteTag(athleteId: string, tag: string): Observable<User> {
-        return this.http.post<User>(`${this.apiUrl}/athletes/${athleteId}/tags`, { tag });
+    addAthleteGroup(athleteId: string, groupName: string): Observable<User> {
+        return this.http.post<User>(`${this.apiUrl}/athletes/${athleteId}/groups`, { group: groupName });
     }
 
-    removeAthleteTag(athleteId: string, tag: string): Observable<User> {
-        return this.http.delete<User>(`${this.apiUrl}/athletes/${athleteId}/tags/${encodeURIComponent(tag)}`);
+    removeAthleteGroup(athleteId: string, groupName: string): Observable<User> {
+        return this.http.delete<User>(`${this.apiUrl}/athletes/${athleteId}/groups/${encodeURIComponent(groupName)}`);
     }
 
-    getAllTags(): Observable<Tag[]> {
+    getAllGroups(): Observable<Group[]> {
         return this.http
-            .get<Tag[]>(`${this.apiUrl}/athletes/tags`)
+            .get<Group[]>(`${this.apiUrl}/athletes/groups`)
             .pipe(catchError(() => {
-                this.errorSubject.next('Failed to load tags');
-                return of([] as Tag[]);
+                this.errorSubject.next('Failed to load groups');
+                return of([] as Group[]);
             }));
     }
 
-    generateInviteCode(tags: string[], maxUses: number, code?: string): Observable<InviteCode> {
+    generateInviteCode(groupIds: string[], maxUses: number, code?: string): Observable<InviteCode> {
         return this.http.post<InviteCode>(
             `${this.apiUrl}/invite-codes`,
-            { tags, maxUses, code }
+            { groups: groupIds, maxUses, code }
         );
     }
 

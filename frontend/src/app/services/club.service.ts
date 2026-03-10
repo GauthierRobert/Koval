@@ -48,7 +48,7 @@ export interface ClubMember {
   tags?: string[];
 }
 
-export interface ClubTag {
+export interface ClubGroup {
   id: string;
   clubId: string;
   name: string;
@@ -168,8 +168,8 @@ export class ClubService {
   private raceGoalsSubject = new BehaviorSubject<ClubRaceGoalResponse[]>([]);
   raceGoals$ = this.raceGoalsSubject.asObservable();
 
-  private tagsSubject = new BehaviorSubject<ClubTag[]>([]);
-  tags$ = this.tagsSubject.asObservable();
+  private groupsSubject = new BehaviorSubject<ClubGroup[]>([]);
+  groups$ = this.groupsSubject.asObservable();
 
   private myClubRolesSubject = new BehaviorSubject<MyClubRoleEntry[]>([]);
   myClubRoles$ = this.myClubRolesSubject.asObservable();
@@ -368,20 +368,20 @@ export class ClubService {
       .subscribe((goals) => this.ngZone.run(() => this.raceGoalsSubject.next(goals)));
   }
 
-  loadTags(clubId: string): void {
+  loadGroups(clubId: string): void {
     this.http
-      .get<ClubTag[]>(`${this.apiUrl}/${clubId}/tags`)
-      .pipe(catchError(() => of([] as ClubTag[])))
-      .subscribe((tags) => this.ngZone.run(() => this.tagsSubject.next(tags)));
+      .get<ClubGroup[]>(`${this.apiUrl}/${clubId}/groups`)
+      .pipe(catchError(() => of([] as ClubGroup[])))
+      .subscribe((groups) => this.ngZone.run(() => this.groupsSubject.next(groups)));
   }
 
-  createTag(clubId: string, name: string): Observable<ClubTag> {
+  createGroup(clubId: string, name: string): Observable<ClubGroup> {
     return new Observable((observer) => {
-      this.http.post<ClubTag>(`${this.apiUrl}/${clubId}/tags`, { name }).subscribe({
-        next: (tag) => {
+      this.http.post<ClubGroup>(`${this.apiUrl}/${clubId}/groups`, { name }).subscribe({
+        next: (group) => {
           this.ngZone.run(() => {
-            this.loadTags(clubId);
-            observer.next(tag);
+            this.loadGroups(clubId);
+            observer.next(group);
             observer.complete();
           });
         },
@@ -390,12 +390,12 @@ export class ClubService {
     });
   }
 
-  deleteTag(clubId: string, tagId: string): Observable<void> {
+  deleteGroup(clubId: string, groupId: string): Observable<void> {
     return new Observable((observer) => {
-      this.http.delete<void>(`${this.apiUrl}/${clubId}/tags/${tagId}`).subscribe({
+      this.http.delete<void>(`${this.apiUrl}/${clubId}/groups/${groupId}`).subscribe({
         next: () => {
           this.ngZone.run(() => {
-            this.loadTags(clubId);
+            this.loadGroups(clubId);
             this.loadMembers(clubId);
             observer.next();
             observer.complete();
@@ -406,14 +406,14 @@ export class ClubService {
     });
   }
 
-  addMemberToTag(clubId: string, tagId: string, userId: string): Observable<ClubTag> {
+  addMemberToGroup(clubId: string, groupId: string, userId: string): Observable<ClubGroup> {
     return new Observable((observer) => {
-      this.http.post<ClubTag>(`${this.apiUrl}/${clubId}/tags/${tagId}/members/${userId}`, {}).subscribe({
-        next: (tag) => {
+      this.http.post<ClubGroup>(`${this.apiUrl}/${clubId}/groups/${groupId}/members/${userId}`, {}).subscribe({
+        next: (group) => {
           this.ngZone.run(() => {
-            this.loadTags(clubId);
+            this.loadGroups(clubId);
             this.loadMembers(clubId);
-            observer.next(tag);
+            observer.next(group);
             observer.complete();
           });
         },
@@ -422,14 +422,14 @@ export class ClubService {
     });
   }
 
-  removeMemberFromTag(clubId: string, tagId: string, userId: string): Observable<ClubTag> {
+  removeMemberFromGroup(clubId: string, groupId: string, userId: string): Observable<ClubGroup> {
     return new Observable((observer) => {
-      this.http.delete<ClubTag>(`${this.apiUrl}/${clubId}/tags/${tagId}/members/${userId}`).subscribe({
-        next: (tag) => {
+      this.http.delete<ClubGroup>(`${this.apiUrl}/${clubId}/groups/${groupId}/members/${userId}`).subscribe({
+        next: (group) => {
           this.ngZone.run(() => {
-            this.loadTags(clubId);
+            this.loadGroups(clubId);
             this.loadMembers(clubId);
-            observer.next(tag);
+            observer.next(group);
             observer.complete();
           });
         },
@@ -469,6 +469,6 @@ export class ClubService {
     this.weeklyStatsSubject.next(null);
     this.leaderboardSubject.next([]);
     this.raceGoalsSubject.next([]);
-    this.tagsSubject.next([]);
+    this.groupsSubject.next([]);
   }
 }

@@ -7,8 +7,8 @@ import com.koval.trainingplannerbackend.goal.RaceGoalService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
-import com.koval.trainingplannerbackend.training.tag.Tag;
-import com.koval.trainingplannerbackend.training.tag.TagService;
+import com.koval.trainingplannerbackend.training.group.Group;
+import com.koval.trainingplannerbackend.training.group.GroupService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -38,17 +38,17 @@ public class CoachController {
 
     private final CoachService coachService;
     private final ScheduleService scheduleService;
-    private final TagService tagService;
+    private final GroupService groupService;
     private final CompletedSessionRepository sessionRepository;
     private final AnalyticsService analyticsService;
     private final RaceGoalService raceGoalService;
 
     public CoachController(CoachService coachService, ScheduleService scheduleService,
-                           TagService tagService, CompletedSessionRepository sessionRepository,
+                           GroupService groupService, CompletedSessionRepository sessionRepository,
                            AnalyticsService analyticsService, RaceGoalService raceGoalService) {
         this.coachService = coachService;
         this.scheduleService = scheduleService;
-        this.tagService = tagService;
+        this.groupService = groupService;
         this.sessionRepository = sessionRepository;
         this.analyticsService = analyticsService;
         this.raceGoalService = raceGoalService;
@@ -94,7 +94,7 @@ public class CoachController {
     public ResponseEntity<List<Map<String, Object>>> getAthletes() {
         String coachId = SecurityUtils.getCurrentUserId();
         List<User> athletes = coachService.getCoachAthletes(coachId);
-        List<Tag> coachTags = tagService.getTagsForCoach(coachId);
+        List<Group> coachGroups = groupService.getGroupsForCoach(coachId);
 
         List<Map<String, Object>> enriched = athletes.stream().map(athlete -> {
             Map<String, Object> map = new HashMap<>();
@@ -103,11 +103,11 @@ public class CoachController {
             map.put("profilePicture", athlete.getProfilePicture());
             map.put("role", athlete.getRole().name());
             map.put("ftp", athlete.getFtp());
-            List<String> athleteTagNames = coachTags.stream()
-                    .filter(tag -> tag.getAthleteIds().contains(athlete.getId()))
-                    .map(Tag::getName)
+            List<String> athleteGroupNames = coachGroups.stream()
+                    .filter(group -> group.getAthleteIds().contains(athlete.getId()))
+                    .map(Group::getName)
                     .toList();
-            map.put("tags", athleteTagNames);
+            map.put("groups", athleteGroupNames);
             map.put("hasCoach", true);
             return map;
         }).toList();
@@ -119,7 +119,7 @@ public class CoachController {
     public ResponseEntity<Page<Map<String, Object>>> getAthletes(Pageable pageable) {
         String coachId = SecurityUtils.getCurrentUserId();
         List<User> athletes = coachService.getCoachAthletes(coachId);
-        List<Tag> coachTags = tagService.getTagsForCoach(coachId);
+        List<Group> coachGroups = groupService.getGroupsForCoach(coachId);
 
         List<Map<String, Object>> enriched = athletes.stream().map(athlete -> {
             Map<String, Object> map = new HashMap<>();
@@ -128,11 +128,11 @@ public class CoachController {
             map.put("profilePicture", athlete.getProfilePicture());
             map.put("role", athlete.getRole().name());
             map.put("ftp", athlete.getFtp());
-            List<String> athleteTagNames = coachTags.stream()
-                    .filter(tag -> tag.getAthleteIds().contains(athlete.getId()))
-                    .map(Tag::getName)
+            List<String> athleteGroupNames = coachGroups.stream()
+                    .filter(group -> group.getAthleteIds().contains(athlete.getId()))
+                    .map(Group::getName)
                     .toList();
-            map.put("tags", athleteTagNames);
+            map.put("groups", athleteGroupNames);
             map.put("hasCoach", true);
             return map;
         }).toList();
@@ -186,52 +186,52 @@ public class CoachController {
         }
     }
 
-    // --- Tag management endpoints ---
+    // --- Group management endpoints ---
 
-    @PutMapping("/athletes/{athleteId}/tags")
-    public ResponseEntity<List<Tag>> setAthleteTags(
+    @PutMapping("/athletes/{athleteId}/groups")
+    public ResponseEntity<List<Group>> setAthleteGroups(
             @PathVariable String athleteId,
             @RequestBody Map<String, List<String>> body) {
         String coachId = SecurityUtils.getCurrentUserId();
         try {
-            List<String> tagIds = body.get("tags");
-            if (tagIds == null) tagIds = List.of();
-            return ResponseEntity.ok(coachService.setAthleteTags(coachId, athleteId, tagIds));
+            List<String> groupIds = body.get("groups");
+            if (groupIds == null) groupIds = List.of();
+            return ResponseEntity.ok(coachService.setAthleteGroups(coachId, athleteId, groupIds));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
-    @PostMapping("/athletes/{athleteId}/tags")
-    public ResponseEntity<Tag> addAthleteTag(
+    @PostMapping("/athletes/{athleteId}/groups")
+    public ResponseEntity<Group> addAthleteGroup(
             @PathVariable String athleteId,
             @RequestBody Map<String, String> body) {
         String coachId = SecurityUtils.getCurrentUserId();
         try {
-            String tagName = body.get("tag");
-            if (tagName == null || tagName.isBlank()) return ResponseEntity.badRequest().build();
-            return ResponseEntity.ok(coachService.addTagToAthlete(coachId, athleteId, tagName));
+            String groupName = body.get("group");
+            if (groupName == null || groupName.isBlank()) return ResponseEntity.badRequest().build();
+            return ResponseEntity.ok(coachService.addGroupToAthlete(coachId, athleteId, groupName));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
-    @DeleteMapping("/athletes/{athleteId}/tags/{tagName}")
-    public ResponseEntity<Tag> removeAthleteTag(
+    @DeleteMapping("/athletes/{athleteId}/groups/{groupName}")
+    public ResponseEntity<Group> removeAthleteGroup(
             @PathVariable String athleteId,
-            @PathVariable String tagName) {
+            @PathVariable String groupName) {
         String coachId = SecurityUtils.getCurrentUserId();
         try {
-            return ResponseEntity.ok(coachService.removeTagFromAthlete(coachId, athleteId, tagName));
+            return ResponseEntity.ok(coachService.removeGroupFromAthlete(coachId, athleteId, groupName));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
-    @GetMapping("/athletes/tags")
-    public ResponseEntity<List<Tag>> getAllTags() {
+    @GetMapping("/athletes/groups")
+    public ResponseEntity<List<Group>> getAllGroups() {
         String coachId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(coachService.getAthleteTagsForCoach(coachId));
+        return ResponseEntity.ok(coachService.getAthleteGroupsForCoach(coachId));
     }
 
     // --- Athlete analytics endpoints ---
@@ -269,7 +269,7 @@ public class CoachController {
 
     // --- Invite Code endpoints ---
 
-    public record InviteCodeRequest(List<String> tags, int maxUses, LocalDateTime expiresAt, String code) {}
+    public record InviteCodeRequest(List<String> groups, int maxUses, LocalDateTime expiresAt, String code) {}
 
     public record RedeemRequest(String code) {}
 
@@ -279,7 +279,7 @@ public class CoachController {
         String coachId = SecurityUtils.getCurrentUserId();
         try {
             InviteCode code = coachService.generateInviteCode(
-                    coachId, request.tags(), request.maxUses(), request.expiresAt(), request.code());
+                    coachId, request.groups(), request.maxUses(), request.expiresAt(), request.code());
             return ResponseEntity.ok(code);
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().build();

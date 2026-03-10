@@ -21,8 +21,8 @@
           <div class="avatar-sm">{{ athlete.displayName[0].toUpperCase() }}</div>
           <div class="info">
             <span class="name">{{ athlete.displayName }}</span>
-            <div class="tag-chips" *ngIf="athlete.tags && athlete.tags.length > 0">
-              <span *ngFor="let tag of athlete.tags; trackBy: trackByValue" class="chip tag">{{ tag }}</span>
+            <div class="tag-chips" *ngIf="athlete.groups && athlete.groups.length > 0">
+              <span *ngFor="let tag of athlete.groups; trackBy: trackByValue" class="chip tag">{{ tag }}</span>
             </div>
             <!-- Task 7: Real mini-metrics from athlete PMC data or dashes -->
             <ng-container *ngIf="selectedAthlete?.id === athlete.id && (athleteMetrics$ | async) as m; else dashMetrics">
@@ -83,7 +83,7 @@
               <div class="profile-identity">
                 <h2>{{ selectedAthlete.displayName }}</h2>
                 <div class="detail-tags-row">
-                  <span *ngFor="let tag of selectedAthlete.tags || []; trackBy: trackByValue" class="editable-tag">
+                  <span *ngFor="let tag of selectedAthlete.groups || []; trackBy: trackByValue" class="editable-tag">
                     {{ tag }}
                     <button class="tag-remove" (click)="removeTag(selectedAthlete, tag)">&times;</button>
                   </span>

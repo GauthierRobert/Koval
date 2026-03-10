@@ -13,6 +13,7 @@
           {{ getSportLabel(sport) }}
         </button>
       </div>
+      <button class="ai-btn" (click)="showAiModal = true">✨ CREATE WITH AI</button>
       <div class="create-dropdown">
         <button class="create-btn" (click)="showCreateMenu = !showCreateMenu">+ NEW</button>
         <div class="create-menu" *ngIf="showCreateMenu">
@@ -146,4 +147,13 @@
       </div>
     </ng-template>
   </div>
+
+  <app-create-with-ai-modal
+    [isOpen]="showAiModal"
+    actionType="ZONE_CREATION"
+    [context]="{}"
+    label="Create Zone System with AI"
+    (closed)="showAiModal = false"
+    (created)="onAiZoneCreated($event)">
+  </app-create-with-ai-modal>
 </div>

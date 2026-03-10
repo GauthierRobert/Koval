@@ -38,7 +38,7 @@ export class TrainingHistoryComponent implements OnInit {
 
     ngOnInit(): void {
         this.authService.user$.pipe(
-            filter((u) => !!u && !!u.tags?.length),
+            filter((u) => !!u && !!u.groups?.length),
         ).subscribe(() => this.loadFolders());
     }
 

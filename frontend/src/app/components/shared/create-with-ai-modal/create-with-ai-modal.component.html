@@ -1,0 +1,49 @@
+<div class="modal-backdrop" *ngIf="isOpen" (click)="close()">
+  <div class="modal-panel" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <span class="ai-icon">✨</span> {{ label }}
+      </h2>
+      <button class="close-btn" (click)="close()" [disabled]="loading">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <p class="hint">Describe what you want to create in natural language.</p>
+
+      <div class="form-group" *ngIf="showTagSelector && availableTags.length > 0">
+        <label class="field-label">Club Tag (optional)</label>
+        <select class="field-select" [(ngModel)]="selectedTagId">
+          <option value="">— No tag —</option>
+          <option *ngFor="let tag of availableTags" [value]="tag.id">{{ tag.name }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label">Prompt</label>
+        <textarea
+          class="prompt-textarea"
+          [(ngModel)]="prompt"
+          placeholder="e.g. Create a 60-min sweet-spot group ride for Tuesday evening at 7pm"
+          rows="4"
+          [disabled]="loading"
+        ></textarea>
+      </div>
+
+      <div class="status-message error" *ngIf="errorMessage">{{ errorMessage }}</div>
+      <div class="status-message success" *ngIf="successMessage">{{ successMessage }}</div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="close()" [disabled]="loading">Cancel</button>
+      <button
+        class="btn-primary"
+        (click)="submit()"
+        [disabled]="!prompt.trim() || loading">
+        <span *ngIf="!loading">Generate</span>
+        <span *ngIf="loading" class="spinner">Generating...</span>
+      </button>
+    </div>
+
+  </div>
+</div>

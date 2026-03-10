@@ -37,7 +37,6 @@ public abstract class Training {
     private String description;
     private List<WorkoutBlock> blocks;
     private LocalDateTime createdAt;
-    private String chatHistoryId;
     private Integer estimatedTss;
     private Double estimatedIf;
     private Integer estimatedDurationSeconds;
@@ -48,6 +47,11 @@ public abstract class Training {
     // New fields for coaching support
     @Indexed
     private String createdBy; // User ID of creator
-    private List<String> tags = new ArrayList<>();
+    private List<String> groupIds = new ArrayList<>(); // ID list of coach Group IDs
+
+    // Club linking
+    @Indexed
+    private String clubId;                                 // Optional: club this training belongs to
+    private List<String> clubGroupIds = new ArrayList<>(); // Optional: club groups within that club
 
 }

@@ -16,9 +16,9 @@ public interface TrainingRepository extends MongoRepository<Training, String> {
 
     Page<Training> findByCreatedBy(String userId, Pageable pageable);
 
-    List<Training> findByTagsContaining(String tag);
+    List<Training> findByGroupIdsContaining(String groupId);
 
     List<Training> findByTrainingType(TrainingType trainingType);
 
-    List<Training> findByTagsIn(List<String> tags);
+    List<Training> findByGroupIdsIn(List<String> groupIds);
 }

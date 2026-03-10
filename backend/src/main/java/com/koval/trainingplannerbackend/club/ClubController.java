@@ -25,7 +25,7 @@ public class ClubController {
     public record CreateSessionRequest(String title, String sport, LocalDateTime scheduledAt,
                                        String location, String description, String linkedTrainingId) {}
 
-    public record CreateTagRequest(String name) {}
+    public record CreateGroupRequest(String name) {}
 
     public record UpdateMemberRoleRequest(ClubMemberRole role) {}
 
@@ -134,39 +134,39 @@ public class ClubController {
         return ResponseEntity.ok(clubService.updateMemberRole(userId, id, membershipId, req.role()));
     }
 
-    @PostMapping("/{id}/tags")
-    public ResponseEntity<ClubTag> createTag(@PathVariable String id,
-                                              @RequestBody CreateTagRequest req) {
+    @PostMapping("/{id}/groups")
+    public ResponseEntity<ClubGroup> createGroup(@PathVariable String id,
+                                                  @RequestBody CreateGroupRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(clubService.createTag(userId, id, req.name()));
+        return ResponseEntity.ok(clubService.createGroup(userId, id, req.name()));
     }
 
-    @GetMapping("/{id}/tags")
-    public ResponseEntity<List<ClubTag>> listTags(@PathVariable String id) {
-        return ResponseEntity.ok(clubService.listTags(id));
+    @GetMapping("/{id}/groups")
+    public ResponseEntity<List<ClubGroup>> listGroups(@PathVariable String id) {
+        return ResponseEntity.ok(clubService.listGroups(id));
     }
 
-    @DeleteMapping("/{id}/tags/{tagId}")
-    public ResponseEntity<Void> deleteTag(@PathVariable String id, @PathVariable String tagId) {
+    @DeleteMapping("/{id}/groups/{groupId}")
+    public ResponseEntity<Void> deleteGroup(@PathVariable String id, @PathVariable String groupId) {
         String userId = SecurityUtils.getCurrentUserId();
-        clubService.deleteTag(userId, id, tagId);
+        clubService.deleteGroup(userId, id, groupId);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{id}/tags/{tagId}/members/{targetUserId}")
-    public ResponseEntity<ClubTag> addMemberToTag(@PathVariable String id,
-                                                   @PathVariable String tagId,
-                                                   @PathVariable String targetUserId) {
+    @PostMapping("/{id}/groups/{groupId}/members/{targetUserId}")
+    public ResponseEntity<ClubGroup> addMemberToGroup(@PathVariable String id,
+                                                       @PathVariable String groupId,
+                                                       @PathVariable String targetUserId) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(clubService.addMemberToTag(userId, id, tagId, targetUserId));
+        return ResponseEntity.ok(clubService.addMemberToGroup(userId, id, groupId, targetUserId));
     }
 
-    @DeleteMapping("/{id}/tags/{tagId}/members/{targetUserId}")
-    public ResponseEntity<ClubTag> removeMemberFromTag(@PathVariable String id,
-                                                        @PathVariable String tagId,
-                                                        @PathVariable String targetUserId) {
+    @DeleteMapping("/{id}/groups/{groupId}/members/{targetUserId}")
+    public ResponseEntity<ClubGroup> removeMemberFromGroup(@PathVariable String id,
+                                                            @PathVariable String groupId,
+                                                            @PathVariable String targetUserId) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(clubService.removeMemberFromTag(userId, id, tagId, targetUserId));
+        return ResponseEntity.ok(clubService.removeMemberFromGroup(userId, id, groupId, targetUserId));
     }
 
     @GetMapping("/{id}/feed")
