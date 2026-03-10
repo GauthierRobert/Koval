@@ -53,7 +53,7 @@ public class ChatHistoryService {
     }
 
     public List<ChatHistory> findByUser(String userId) {
-        return chatHistoryRepository.findByUserId(userId);
+        return chatHistoryRepository.findByUserIdOrderByLastUpdatedAtDesc(userId);
     }
 
     public ChatHistory findById(String chatHistoryId) {

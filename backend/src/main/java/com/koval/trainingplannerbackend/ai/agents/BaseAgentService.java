@@ -2,7 +2,6 @@ package com.koval.trainingplannerbackend.ai.agents;
 
 import com.koval.trainingplannerbackend.ai.AIService.ChatMessageResponse;
 import com.koval.trainingplannerbackend.ai.AIService.StreamResponse;
-import com.koval.trainingplannerbackend.ai.UserContextResolver;
 import com.koval.trainingplannerbackend.ai.UserContextResolver.UserContext;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -28,17 +27,13 @@ import java.util.Map;
 public abstract class BaseAgentService implements TrainingAgent {
 
     private final ChatClient chatClient;
-    private final UserContextResolver userContextResolver;
 
-    protected BaseAgentService(ChatClient chatClient,
-                               UserContextResolver userContextResolver) {
+    protected BaseAgentService(ChatClient chatClient) {
         this.chatClient = chatClient;
-        this.userContextResolver = userContextResolver;
     }
 
     @Override
-    public ChatMessageResponse chat(String userMessage, String userId, String conversationId) {
-        UserContext ctx = userContextResolver.resolve(userId);
+    public ChatMessageResponse chat(String userMessage, String userId, String conversationId, UserContext ctx) {
         var response = buildPrompt(ctx, conversationId)
                 .user(userMessage)
                 .call()
@@ -47,9 +42,7 @@ public abstract class BaseAgentService implements TrainingAgent {
     }
 
     @Override
-    public StreamResponse chatStream(String userMessage, String userId, String conversationId) {
-        UserContext ctx = userContextResolver.resolve(userId);
-
+    public StreamResponse chatStream(String userMessage, String userId, String conversationId, UserContext ctx) {
         Sinks.Many<ServerSentEvent<String>> toolSink =
                 Sinks.many().multicast().onBackpressureBuffer();
 

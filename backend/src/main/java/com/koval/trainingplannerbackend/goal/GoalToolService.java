@@ -9,21 +9,21 @@ import java.util.List;
 
 /**
  * AI-facing tool service for Race Goal operations.
- * Allows the AI to create, list, update, and delete race goals on behalf of the athlete.
+ * Delegates to RaceGoalService for all business logic.
  */
 @Service
 public class GoalToolService {
 
-    private final RaceGoalRepository repository;
+    private final RaceGoalService raceGoalService;
 
-    public GoalToolService(RaceGoalRepository repository) {
-        this.repository = repository;
+    public GoalToolService(RaceGoalService raceGoalService) {
+        this.raceGoalService = raceGoalService;
     }
 
     @Tool(description = "List all race goals for a user, ordered by race date ascending.")
     public List<GoalSummary> listGoals(
             @ToolParam(description = "Athlete user ID") String userId) {
-        return repository.findByAthleteIdOrderByRaceDateAsc(userId)
+        return raceGoalService.getGoalsForAthlete(userId)
                 .stream()
                 .map(GoalSummary::from)
                 .toList();
@@ -42,7 +42,6 @@ public class GoalToolService {
             @ToolParam(description = "Notes or strategy (optional)") String notes) {
 
         RaceGoal goal = new RaceGoal();
-        goal.setAthleteId(userId);
         goal.setTitle(title);
         goal.setSport(sport);
         goal.setRaceDate(raceDate);
@@ -51,9 +50,8 @@ public class GoalToolService {
         goal.setLocation(location);
         goal.setTargetTime(targetTime);
         goal.setNotes(notes);
-        goal.setCreatedAt(java.time.LocalDateTime.now());
 
-        return GoalSummary.from(repository.save(goal));
+        return GoalSummary.from(raceGoalService.createGoal(userId, goal));
     }
 
     @Tool(description = "Update an existing race goal. Pass only the fields to change; omit unchanged fields.")
@@ -69,36 +67,25 @@ public class GoalToolService {
             @ToolParam(description = "New target time (optional)") String targetTime,
             @ToolParam(description = "New notes (optional)") String notes) {
 
-        RaceGoal goal = repository.findById(goalId)
-                .orElseThrow(() -> new IllegalArgumentException("Goal not found: " + goalId));
-        if (!goal.getAthleteId().equals(userId)) {
-            throw new IllegalStateException("Goal does not belong to user " + userId);
-        }
+        RaceGoal updates = new RaceGoal();
+        if (title != null)      updates.setTitle(title);
+        if (sport != null)      updates.setSport(sport);
+        if (raceDate != null)   updates.setRaceDate(raceDate);
+        if (priority != null)   updates.setPriority(priority);
+        if (distance != null)   updates.setDistance(distance);
+        if (location != null)   updates.setLocation(location);
+        if (targetTime != null) updates.setTargetTime(targetTime);
+        if (notes != null)      updates.setNotes(notes);
 
-        if (title != null)      goal.setTitle(title);
-        if (sport != null)      goal.setSport(sport);
-        if (raceDate != null)   goal.setRaceDate(raceDate);
-        if (priority != null)   goal.setPriority(priority);
-        if (distance != null)   goal.setDistance(distance);
-        if (location != null)   goal.setLocation(location);
-        if (targetTime != null) goal.setTargetTime(targetTime);
-        if (notes != null)      goal.setNotes(notes);
-
-        return GoalSummary.from(repository.save(goal));
+        return GoalSummary.from(raceGoalService.updateGoal(goalId, userId, updates));
     }
 
     @Tool(description = "Delete a race goal by ID.")
     public String deleteGoal(
             @ToolParam(description = "Goal ID") String goalId,
             @ToolParam(description = "Athlete user ID (ownership check)") String userId) {
-
-        RaceGoal goal = repository.findById(goalId)
-                .orElseThrow(() -> new IllegalArgumentException("Goal not found: " + goalId));
-        if (!goal.getAthleteId().equals(userId)) {
-            throw new IllegalStateException("Goal does not belong to user " + userId);
-        }
-        repository.deleteById(goalId);
-        return "Deleted goal: " + goal.getTitle();
+        raceGoalService.deleteGoal(goalId, userId);
+        return "Goal deleted.";
     }
 
     /** Lean summary to minimize token usage. */

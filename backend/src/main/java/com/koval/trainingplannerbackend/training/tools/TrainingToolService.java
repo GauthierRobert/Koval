@@ -1,16 +1,14 @@
 package com.koval.trainingplannerbackend.training.tools;
 
+import com.koval.trainingplannerbackend.ai.ToolEventEmitter;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Sinks;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * AI-facing tool service for Training operations.
@@ -39,10 +37,10 @@ public class TrainingToolService {
             @ToolParam(description = "The training object to create") TrainingRequest create,
             @ToolParam(description = "The user ID of the creator") String userId,
             ToolContext context) {
-        emitToolCall(context, "createTraining", "Creating: " + create.title());
+        ToolEventEmitter.emitToolCall(context, "createTraining", "Creating: " + create.title());
         Training training = trainingMapper.mapToEntity(create);
         TrainingSummary result = TrainingSummary.from(trainingManagementService.createTraining(training, userId));
-        emitToolResult(context, "createTraining", result.title(), true);
+        ToolEventEmitter.emitToolResult(context, "createTraining", result.title(), true);
         return result;
     }
 
@@ -51,37 +49,27 @@ public class TrainingToolService {
             @ToolParam(description = "The training ID to update") String trainingId,
             @ToolParam(description = "The training fields to update") TrainingRequest updates,
             ToolContext context) {
-        emitToolCall(context, "updateTraining", "Updating: " + updates.title());
+        ToolEventEmitter.emitToolCall(context, "updateTraining", "Updating: " + updates.title());
         Training training = trainingMapper.mapToEntity(updates);
         TrainingSummary result = TrainingSummary.from(trainingManagementService.updateTraining(trainingId, training));
-        emitToolResult(context, "updateTraining", result.title(), true);
+        ToolEventEmitter.emitToolResult(context, "updateTraining", result.title(), true);
         return result;
     }
 
-    // ── Tool event helpers ───────────────────────────────────────────────
-
-    private static void emitToolCall(ToolContext ctx, String name, String label) {
-        getSink(ctx).ifPresent(s -> s.tryEmitNext(toolSse("tool_call", name, label, true)));
-    }
-
-    private static void emitToolResult(ToolContext ctx, String name, String label, boolean ok) {
-        getSink(ctx).ifPresent(s -> s.tryEmitNext(toolSse("tool_result", name, label, ok)));
-    }
-
-    private static ServerSentEvent<String> toolSse(String event, String name, String label, boolean success) {
-        String data = "{\"name\":\"%s\",\"label\":\"%s\",\"success\":%b}"
-                .formatted(name, escapeJson(label), success);
-        return ServerSentEvent.<String>builder().event(event).data(data).build();
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Optional<Sinks.Many<ServerSentEvent<String>>> getSink(ToolContext ctx) {
-        if (ctx == null) return Optional.empty();
-        return Optional.ofNullable(
-                (Sinks.Many<ServerSentEvent<String>>) ctx.getContext().get("toolSink"));
-    }
-
-    private static String escapeJson(String s) {
-        return s == null ? "" : s.replace("\\", "\\\\").replace("\"", "\\\"");
+    @Tool(description = "Delete a training plan by its ID. Only the creator can delete their own training.")
+    public String deleteTraining(
+            @ToolParam(description = "The training ID to delete") String trainingId,
+            @ToolParam(description = "The user ID (ownership check)") String userId,
+            ToolContext context) {
+        ToolEventEmitter.emitToolCall(context, "deleteTraining", "Deleting training...");
+        Training existing = trainingManagementService.getTrainingById(trainingId);
+        if (!userId.equals(existing.getCreatedBy())) {
+            ToolEventEmitter.emitToolResult(context, "deleteTraining", "Not authorized", false);
+            throw new IllegalStateException("Training does not belong to user " + userId);
+        }
+        String title = existing.getTitle();
+        trainingManagementService.deleteTraining(trainingId);
+        ToolEventEmitter.emitToolResult(context, "deleteTraining", title, true);
+        return "Deleted training: " + title;
     }
 }

@@ -25,6 +25,9 @@ public class RouterService {
             COACH_MANAGEMENT — managing athletes, tags, zone systems, coach-specific operations
             GENERAL — greetings, general questions, anything that doesn't fit above
 
+            The previous message in this conversation was handled by: {lastAgent}.
+            If the message is ambiguous or a follow-up (e.g. "now schedule it", "delete that one"), prefer staying with the previous agent.
+
             Reply with ONLY the category label, nothing else.""";
 
     private final ChatClient routerClient;
@@ -33,10 +36,13 @@ public class RouterService {
         this.routerClient = routerClient;
     }
 
-    public AgentType classify(String userMessage, String userRole) {
+    public AgentType classify(String userMessage, String userRole, String lastAgentType) {
         try {
+            String lastAgent = lastAgentType != null ? lastAgentType : "NONE";
+            String systemPrompt = ROUTER_SYSTEM.replace("{lastAgent}", lastAgent);
+
             String result = routerClient.prompt()
-                    .system(ROUTER_SYSTEM)
+                    .system(systemPrompt)
                     .user(userMessage)
                     .call()
                     .content();

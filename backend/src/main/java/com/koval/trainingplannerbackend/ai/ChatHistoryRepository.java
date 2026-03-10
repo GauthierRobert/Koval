@@ -8,5 +8,5 @@ import java.util.List;
 @Repository
 public interface ChatHistoryRepository extends MongoRepository<ChatHistory, String> {
 
-    List<ChatHistory> findByUserId(String userId);
+    List<ChatHistory> findByUserIdOrderByLastUpdatedAtDesc(String userId);
 }

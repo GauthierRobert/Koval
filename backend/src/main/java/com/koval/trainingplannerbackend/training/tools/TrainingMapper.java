@@ -16,24 +16,24 @@ import java.util.List;
 public class TrainingMapper {
 
     /**
-     * Convertit une requête DTO simplifiée (provenant de l'IA) en une entité Training riche.
+     * Converts a simplified DTO request (from the AI) into a rich Training entity.
      */
     public Training mapToEntity(TrainingRequest request) {
         Training training = createInstance(request.sport());
 
-        // 2. Champs de base
+        // Base fields
         training.setTitle(request.title());
         training.setDescription(request.desc());
-        
-        // Gestion des tags (liste vide par défaut si null)
+
+        // Tags (default to empty list if null)
         training.setTags(request.tags() != null ? request.tags() : new ArrayList<>());
 
-        // 3. Enums (Gestion sécurisée)
+        // Enums (safe handling)
         if (request.type() != null) {
             try {
                 training.setTrainingType(TrainingType.valueOf(request.type().toUpperCase()));
             } catch (IllegalArgumentException e) {
-                // Fallback par défaut si l'IA invente un type
+                // Fallback if the AI invents an unknown type
                 training.setTrainingType(TrainingType.MIXED);
             }
         } else {
@@ -44,7 +44,7 @@ public class TrainingMapper {
             training.setEstimatedTss(request.tss());
         }
 
-        // 4. Mapping des Blocs + Calcul de la durée totale
+        // Block mapping + total duration calculation
         if (request.blocks() != null && !request.blocks().isEmpty()) {
             String sport = request.sport() != null ? request.sport().toUpperCase() : "CYCLING";
             List<WorkoutBlock> blocks = request.blocks().stream()
@@ -88,8 +88,8 @@ public class TrainingMapper {
         };
 
         if (hasDur && hasDist) {
-            // Both set — keep the primary dimension per sport, extrapolate the other
-            // For swimming/running distance-based sports prefer distance; for cycling prefer duration
+            // Both set — keep the primary dimension per sport, extrapolate the other.
+            // For swimming/running (distance-based sports) prefer distance; for cycling prefer duration.
             if ("RUNNING".equals(sport) || "SWIMMING".equals(sport)) {
                 dur = (int) Math.round(dist / metersPerSecond);
             } else {
@@ -105,11 +105,11 @@ public class TrainingMapper {
     }
 
     /**
-     * Crée l'instance Java spécifique selon le type de sport string.
+     * Creates the sport-specific Training subclass based on the sport type string.
      */
     private Training createInstance(String sportType) {
         if (sportType == null) {
-            return new CyclingTraining(); // Défaut
+            return new CyclingTraining(); // Default
         }
         return switch (sportType.trim().toUpperCase()) {
             case "RUNNING" -> new RunningTraining();

@@ -14,6 +14,7 @@ import org.springframework.util.StreamUtils;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Logs every raw HTTP request/response to the Anthropic API.
@@ -28,12 +29,12 @@ class AnthropicCallLogger implements ClientHttpRequestInterceptor {
     private static final Logger log = LoggerFactory.getLogger(AnthropicCallLogger.class);
     private static final ObjectMapper JSON = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
-    private int callIndex = 0;
+    private final AtomicInteger callIndex = new AtomicInteger(0);
 
     @Override
     public ClientHttpResponse intercept(HttpRequest request, byte[] body,
                                         ClientHttpRequestExecution execution) throws IOException {
-        int idx = ++callIndex;
+        int idx = callIndex.incrementAndGet();
         logRequest(idx, body);
         ClientHttpResponse response = execution.execute(request, body);
         return logAndBuffer(idx, response);

@@ -79,6 +79,7 @@ public class AIController {
             return ResponseEntity.badRequest().body(error("empty_message", "Message cannot be empty."));
         }
         try {
+            SecurityUtils.getCurrentUserId(); // audit: ensure authenticated
             return ResponseEntity.ok(aiService.plan(msg));
         } catch (RuntimeException ex) {
             return handleAiException(ex);

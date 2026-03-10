@@ -53,10 +53,10 @@ public class AIService {
         UserContext ctx = userContextResolver.resolve(userId);
         ChatHistory chatHistory = chatHistoryService.findOrCreate(userId, chatHistoryId);
 
-        AgentType resolved = resolveAgent(agentType, userMessage, ctx.role());
+        AgentType resolved = resolveAgent(agentType, userMessage, ctx.role(), chatHistory.getLastAgentType());
         TrainingAgent agent = agents.get(resolved);
 
-        ChatMessageResponse response = agent.chat(userMessage, userId, chatHistory.getId());
+        ChatMessageResponse response = agent.chat(userMessage, userId, chatHistory.getId(), ctx);
         chatHistoryService.updateAfterResponse(chatHistory, userMessage, resolved);
         return response;
     }
@@ -71,14 +71,14 @@ public class AIService {
         ChatHistory chatHistory = chatHistoryService.findOrCreate(userId, chatHistoryId);
         String conversationId = chatHistory.getId();
 
-        AgentType resolved = resolveAgent(agentType, userMessage, ctx.role());
+        AgentType resolved = resolveAgent(agentType, userMessage, ctx.role(), chatHistory.getLastAgentType());
         TrainingAgent agent = agents.get(resolved);
 
-        StreamResponse agentResponse = agent.chatStream(userMessage, userId, conversationId);
+        StreamResponse agentResponse = agent.chatStream(userMessage, userId, conversationId, ctx);
 
-        // Wrap to handle post-stream history update
+        // Use doFinally to handle history update on both complete and error (#8)
         Flux<ServerSentEvent<String>> wrappedEvents = agentResponse.events()
-                .doOnComplete(() -> chatHistoryService.updateAfterResponse(chatHistory, userMessage, resolved));
+                .doFinally(signal -> chatHistoryService.updateAfterResponse(chatHistory, userMessage, resolved));
 
         return new StreamResponse(conversationId, wrappedEvents);
     }
@@ -100,13 +100,15 @@ public class AIService {
             }
             return objectMapper.readValue(cleaned, new TypeReference<List<PlanTask>>() {});
         } catch (Exception e) {
-            return List.of(new PlanTask(userMessage, "TRAINING_CREATION"));
+            // Fall back to GENERAL instead of TRAINING_CREATION to avoid sending arbitrary text
+            // through the most capable agent (#7)
+            return List.of(new PlanTask(userMessage, "GENERAL"));
         }
     }
 
     // ── Internals ───────────────────────────────────────────────────────
 
-    private AgentType resolveAgent(AgentType explicit, String userMessage, String userRole) {
+    private AgentType resolveAgent(AgentType explicit, String userMessage, String userRole, String lastAgentType) {
         if (explicit != null) {
             // Prevent ATHLETE from using COACH_MANAGEMENT
             if (explicit == AgentType.COACH_MANAGEMENT && !"COACH".equals(userRole)) {
@@ -114,6 +116,6 @@ public class AIService {
             }
             return explicit;
         }
-        return routerService.classify(userMessage, userRole);
+        return routerService.classify(userMessage, userRole, lastAgentType);
     }
 }

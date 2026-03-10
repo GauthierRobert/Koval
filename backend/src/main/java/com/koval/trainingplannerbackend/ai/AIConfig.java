@@ -1,6 +1,5 @@
 package com.koval.trainingplannerbackend.ai;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.koval.trainingplannerbackend.coach.tools.CoachToolService;
 import com.koval.trainingplannerbackend.goal.GoalToolService;
 import com.koval.trainingplannerbackend.training.history.HistoryToolService;
@@ -67,6 +66,7 @@ public class AIConfig {
             - `listTrainingsByUser(userId)` — list all training plans (returns summaries).
             - `createTraining(create, userId)` — create a new training plan.
             - `updateTraining(trainingId, updates)` — update an existing training plan.
+            - `deleteTraining(trainingId, userId)` — delete a training plan (ownership verified).
 
             ## WORKOUT CREATION SCHEMA
             - **Required Fields:** `title`, `description`, `blocks`, `estimatedTss`, `estimatedIf`, `tags`, `visibility`, `trainingType`.
@@ -160,21 +160,23 @@ public class AIConfig {
     private static final String GENERAL_PROMPT = """
             Role: Friendly Triathlon & Cycling Assistant.
             Goal: Answer general training questions, provide coaching advice, and help with non-specific queries.
-            You do not have access to tools. Provide helpful advice based on general coaching knowledge.
-            Keep responses concise and actionable.""" + COMMON_RULES;
+            Keep responses concise and actionable.
+
+            ## AVAILABLE TOOLS (read-only)
+            - `getUserProfile(userId)` — user profile: FTP, CTL, ATL, TSB, role.
+            - `getUserSchedule(userId, startDate, endDate)` — scheduled workouts in a date range.
+            - `getRecentSessions(userId, limit)` — recent completed sessions with metrics.
+            - `getCurrentDate()` — today's date, day of week, week boundaries.
+
+            Use these tools to ground your advice in the user's actual data when relevant.""" + COMMON_RULES;
 
     // ── Beans ───────────────────────────────────────────────────────────
-
-    @Bean
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper();
-    }
 
     @Bean
     public ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository) {
         return MessageWindowChatMemory.builder()
                 .chatMemoryRepository(chatMemoryRepository)
-                .maxMessages(8)
+                .maxMessages(20)
                 .build();
     }
 
@@ -237,11 +239,14 @@ public class AIConfig {
 
     @Bean
     public ChatClient generalClient(AnthropicChatModel chatModel,
-                                    ChatMemory chatMemory) {
+                                    ChatMemory chatMemory,
+                                    ContextToolService contextToolService,
+                                    HistoryToolService historyToolService) {
         return ChatClient.builder(chatModel)
                 .defaultSystem(GENERAL_PROMPT)
                 .defaultOptions(haikuOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .defaultTools(contextToolService, historyToolService)
                 .build();
     }
 
