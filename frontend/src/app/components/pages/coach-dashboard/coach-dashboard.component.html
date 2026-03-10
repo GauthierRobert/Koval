@@ -383,7 +383,7 @@
 
         <!-- Task 2: PMC tab (separate from performance) -->
         <ng-container *ngIf="activeTab === 'pmc'">
-          <ng-container *ngIf="athletePmc$ | async as pmcData">
+          <ng-container *ngIf="fullAthletePmc$ | async as pmcData">
             <div class="coach-pmc-panel" *ngIf="pmcData.length > 0">
               <div class="coach-pmc-header">
                 <div class="section-title">PMC — 90 DAYS</div>

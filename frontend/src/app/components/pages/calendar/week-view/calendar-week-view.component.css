@@ -63,14 +63,13 @@
 /* Workout Card */
 .workout-card {
   background: var(--surface-elevated);
-  padding: 0.8rem;
+  padding: 0.5rem 0.6rem;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.4rem;
   position: relative;
   border: 1px solid var(--glass-border);
-  border-top: none;
 }
 
 .workout-card.clickable {
@@ -152,7 +151,7 @@
 .workout-info {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.3rem;
 }
 
 .title-row {
@@ -165,7 +164,7 @@
 
 .workout-title {
   font-weight: 800;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   line-height: 1.2;
   color: var(--text-color);
   overflow: hidden;
@@ -213,19 +212,24 @@
   font-weight: 900;
 }
 
-.workout-actions {
+.badge-actions-row {
   display: flex;
-  gap: 0.4rem;
-  margin-top: 0.4rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.3rem;
 }
 
-.workout-actions button {
-  flex: 1;
+.inline-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.inline-actions button {
   border: none;
-  padding: 0.4rem;
-  border-radius: 6px;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   font-weight: 800;
   letter-spacing: 0.5px;
   transition: all 0.2s;

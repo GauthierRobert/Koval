@@ -128,15 +128,40 @@ export class DashboardComponent {
     switchMap(() => {
       const from = new Date();
       from.setMonth(from.getMonth() - 3);
-      const to = new Date();
-      to.setDate(to.getDate() + 30);
       return this.metricsService.getPmc(
         from.toISOString().split('T')[0],
-        to.toISOString().split('T')[0],
+        new Date().toISOString().split('T')[0],
       );
     }),
     startWith([] as PmcDataPoint[]),
     shareReplay(1),
+  );
+
+  private projectionTssMap$ = this.authService.user$.pipe(
+    filter((u) => !!u),
+    switchMap(() => {
+      const today = toDateKey(new Date());
+      const future = toDateKey(subDays(new Date(), -30));
+      return this.calendarService.getMySchedule(today, future);
+    }),
+    map((workouts) => {
+      const m = new Map<string, number>();
+      for (const w of workouts) {
+        if (w.status === 'PENDING' && w.tss) {
+          m.set(w.scheduledDate, (m.get(w.scheduledDate) ?? 0) + w.tss);
+        }
+      }
+      return m;
+    }),
+    startWith(new Map<string, number>()),
+    shareReplay(1),
+  );
+
+  fullPmcData$ = combineLatest([this.pmcData$, this.projectionTssMap$]).pipe(
+    map(([real, tssMap]) => [
+      ...real,
+      ...this.metricsService.projectPmcFromSchedule(real, tssMap, 30),
+    ]),
   );
 
   // Derive CTL/ATL/TSB from the live PMC data — same source as the PMC page
@@ -160,7 +185,7 @@ export class DashboardComponent {
     weekMetrics: this.weekMetrics$,
     latestFit: this.latestFit$,
     form: this.formStats$,
-    pmcData: this.pmcData$,
+    pmcData: this.fullPmcData$,
     nextGoal: this.raceGoalService.nextGoal$,
   });
 

@@ -1,16 +1,15 @@
-import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {BehaviorSubject, combineLatest, Observable} from 'rxjs';
-import {map} from 'rxjs/operators';
+import {BehaviorSubject, combineLatest, Observable, Subject} from 'rxjs';
+import {debounceTime, distinctUntilChanged, map} from 'rxjs/operators';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router} from '@angular/router';
 import {AuthService} from '../../../services/auth.service';
 import {MetricsService, PmcDataPoint} from '../../../services/metrics.service';
 import {CalendarService} from '../../../services/calendar.service';
 import {CoachService} from '../../../services/coach.service';
 import {PmcChartComponent} from '../../shared/pmc-chart/pmc-chart.component';
-import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service'; // RaceGoal used for BehaviorSubject typing
-
-type Period = '1w' | '1m' | '3m' | '6m' | '1y';
+import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
 
 @Component({
     selector: 'app-pmc-page',
@@ -28,6 +27,7 @@ export class PmcPageComponent implements OnInit {
     private raceGoalService = inject(RaceGoalService);
     private route = inject(ActivatedRoute);
     private router = inject(Router);
+    private destroyRef = inject(DestroyRef);
 
     user$ = this.authService.user$;
 
@@ -36,43 +36,40 @@ export class PmcPageComponent implements OnInit {
     private pmcDataSubject = new BehaviorSubject<PmcDataPoint[]>([]);
     pmcData$ = this.pmcDataSubject.asObservable();
 
-    // Period selector
-    selectedPeriod: Period = '3m';
-    readonly periods: { key: Period; label: string }[] = [
-        { key: '1w', label: '1W' },
-        { key: '1m', label: '1M' },
-        { key: '3m', label: '3M' },
-        { key: '6m', label: '6M' },
-        { key: '1y', label: '1Y' },
-    ];
-
-    // Projection mode
-    useScheduledProjection$ = new BehaviorSubject<boolean>(true);
-    useScheduledProjection = true;
+    // Dynamic loading state
+    private loadedFrom = '';
+    private loadedTo = '';
+    private viewRange$ = new Subject<{start: string, end: string}>();
+    private fetchingLeft = false;
+    private fetchingRight = false;
+    private readonly BUFFER_DAYS = 60;
+    private readonly FETCH_CHUNK_DAYS = 180;
 
     // Scheduled workout TSS map: date → total TSS
     private scheduledTssMap$ = new BehaviorSubject<Map<string, number>>(new Map());
     scheduledWorkoutCount$ = this.scheduledTssMap$.pipe(map((m) => m.size));
 
-    // Manual TSS projection controls
-    taperTss$ = new BehaviorSubject<number>(50);
-    taperDays$ = new BehaviorSubject<number>(30);
-    taperTss = 50;
-    taperDays = 30;
+    // Projection extends dynamically as the user pans into the future
+    private viewEndDate$ = new BehaviorSubject<string>(this.addDays(new Date(), 30));
+    private projectionDays$: Observable<number> = this.viewEndDate$.pipe(
+        map((viewEnd) => {
+            const todayMs = new Date(this.today() + 'T12:00:00').getTime();
+            const endMs = new Date(viewEnd + 'T12:00:00').getTime();
+            const daysToEnd = Math.ceil((endMs - todayMs) / 86400000);
+            return Math.max(30, daysToEnd + 30);
+        }),
+        distinctUntilChanged(),
+    );
 
     fullPmcData$: Observable<PmcDataPoint[]> = combineLatest([
         this.pmcData$,
-        this.taperTss$,
-        this.taperDays$,
         this.scheduledTssMap$,
-        this.useScheduledProjection$,
+        this.projectionDays$,
     ]).pipe(
-        map(([real, tss, days, scheduledMap, useScheduled]) => {
-            const projected = useScheduled
-                ? this.metricsService.projectPmcFromSchedule(real, scheduledMap, days)
-                : this.metricsService.projectPmc(real, tss, days);
-            return [...real, ...projected];
-        }),
+        map(([real, scheduledMap, days]) => [
+            ...real,
+            ...this.metricsService.projectPmcFromSchedule(real, scheduledMap, days),
+        ]),
     );
 
     peakForm$: Observable<{ date: string; tsb: number } | null> = this.fullPmcData$.pipe(
@@ -99,11 +96,16 @@ export class PmcPageComponent implements OnInit {
             this.loadScheduledWorkouts();
             this.raceGoalService.loadGoals();
         }
+
+        this.viewRange$.pipe(
+            debounceTime(300),
+            takeUntilDestroyed(this.destroyRef),
+        ).subscribe(range => this.checkAndFetchData(range));
     }
 
-    setPeriod(p: Period): void {
-        this.selectedPeriod = p;
-        this.loadPmc();
+    onViewRangeChange(range: {start: string, end: string}): void {
+        this.viewRange$.next(range);
+        this.viewEndDate$.next(range.end);
     }
 
     loadPmc(): void {
@@ -113,17 +115,29 @@ export class PmcPageComponent implements OnInit {
             const now = new Date();
             const from = new Date(now); from.setDate(from.getDate() - 365);
             const to = new Date(now); to.setDate(to.getDate() + 90);
-            this.coachService.getAthletePmc(
-                this.athleteId,
-                from.toISOString().split('T')[0],
-                to.toISOString().split('T')[0]
-            ).subscribe({
-                next: (data) => { this.pmcDataSubject.next(data); this.loading = false; },
+            const fromStr = from.toISOString().split('T')[0];
+            const toStr = to.toISOString().split('T')[0];
+            this.coachService.getAthletePmc(this.athleteId, fromStr, toStr).subscribe({
+                next: (data) => {
+                    this.pmcDataSubject.next(data);
+                    this.loadedFrom = fromStr;
+                    this.loadedTo = toStr;
+                    this.loading = false;
+                },
                 error: () => { this.loading = false; this.error = true; },
             });
         } else {
-            this.metricsService.getPmc(this.fromDate(), this.today()).subscribe({
-                next: (data) => { this.pmcDataSubject.next(data); this.loading = false; },
+            const from = new Date();
+            from.setDate(from.getDate() - 365);
+            const fromStr = from.toISOString().split('T')[0];
+            const toStr = this.today();
+            this.metricsService.getPmc(fromStr, toStr).subscribe({
+                next: (data) => {
+                    this.pmcDataSubject.next(data);
+                    this.loadedFrom = fromStr;
+                    this.loadedTo = toStr;
+                    this.loading = false;
+                },
                 error: () => { this.loading = false; this.error = true; },
             });
         }
@@ -151,14 +165,6 @@ export class PmcPageComponent implements OnInit {
         });
     }
 
-    toggleProjectionMode(): void {
-        this.useScheduledProjection = !this.useScheduledProjection;
-        this.useScheduledProjection$.next(this.useScheduledProjection);
-    }
-
-    onTaperTssChange(val: number): void { this.taperTss$.next(val); }
-    onTaperDaysChange(val: number): void { this.taperDays$.next(val); }
-
     formatPeakDate(dateStr: string): string {
         return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {
             weekday: 'long', month: 'long', day: 'numeric',
@@ -169,16 +175,50 @@ export class PmcPageComponent implements OnInit {
         this.router.navigate(['/coach']);
     }
 
-    private fromDate(): string {
-        const d = new Date();
-        switch (this.selectedPeriod) {
-            case '1w': d.setDate(d.getDate() - 7); break;
-            case '1m': d.setMonth(d.getMonth() - 1); break;
-            case '3m': d.setMonth(d.getMonth() - 3); break;
-            case '6m': d.setMonth(d.getMonth() - 6); break;
-            case '1y': d.setFullYear(d.getFullYear() - 1); break;
+    private checkAndFetchData(range: {start: string, end: string}): void {
+        if (!this.loadedFrom || !this.loadedTo) return;
+        const rStart = this.toDays(range.start);
+        const lFrom = this.toDays(this.loadedFrom);
+        const rEnd = this.toDays(range.end);
+        const lTo = this.toDays(this.loadedTo);
+
+        // Need older data?
+        if (rStart - lFrom < this.BUFFER_DAYS && !this.fetchingLeft) {
+            const newFrom = this.addDaysStr(this.loadedFrom, -this.FETCH_CHUNK_DAYS);
+            this.fetchingLeft = true;
+            this.fetchAndMerge(newFrom, this.loadedFrom, 'left');
         }
-        return d.toISOString().split('T')[0];
+        // Need newer data? (cap at today — projection handles future)
+        if (lTo - rEnd < this.BUFFER_DAYS && !this.fetchingRight) {
+            const todayStr = this.today();
+            const newTo = this.addDaysStr(this.loadedTo, this.FETCH_CHUNK_DAYS);
+            const cappedTo = newTo > todayStr ? todayStr : newTo;
+            if (cappedTo > this.loadedTo) {
+                this.fetchingRight = true;
+                this.fetchAndMerge(this.loadedTo, cappedTo, 'right');
+            }
+        }
+    }
+
+    private fetchAndMerge(from: string, to: string, dir: 'left' | 'right'): void {
+        const fetch$ = this.athleteId
+            ? this.coachService.getAthletePmc(this.athleteId, from, to)
+            : this.metricsService.getPmc(from, to);
+
+        fetch$.subscribe({
+            next: (newData) => {
+                const existing = this.pmcDataSubject.value;
+                const map = new Map<string, PmcDataPoint>();
+                for (const p of existing) map.set(p.date, p);
+                for (const p of newData) map.set(p.date, p);
+                const merged = Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
+                this.pmcDataSubject.next(merged);
+                if (from < this.loadedFrom) this.loadedFrom = from;
+                if (to > this.loadedTo) this.loadedTo = to;
+            },
+            complete: () => { if (dir === 'left') this.fetchingLeft = false; else this.fetchingRight = false; },
+            error: () => { if (dir === 'left') this.fetchingLeft = false; else this.fetchingRight = false; },
+        });
     }
 
     private today(): string { return new Date().toISOString().split('T')[0]; }
@@ -186,6 +226,16 @@ export class PmcPageComponent implements OnInit {
     private addDays(date: Date, days: number): string {
         const d = new Date(date);
         d.setDate(d.getDate() + days);
+        return d.toISOString().split('T')[0];
+    }
+
+    private toDays(date: string): number {
+        return Math.round(new Date(date + 'T12:00:00').getTime() / 86400000);
+    }
+
+    private addDaysStr(date: string, n: number): string {
+        const d = new Date(date + 'T12:00:00');
+        d.setDate(d.getDate() + n);
         return d.toISOString().split('T')[0];
     }
 }

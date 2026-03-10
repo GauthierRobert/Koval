@@ -1,4 +1,4 @@
-## Must fix
+## DONE
 
 - ~~When switching Month to week, it should saved the month page and switch back to that page when rechanging it. It must be the same when changing from week to month. Save current week, Switch to month (use today date for month as first occurence) and then swtich to saved week when switch back~~ ✅
 - ~~Physiologic and hsitoric pages are not implemented in COACH Page.~~ ✅
@@ -43,17 +43,21 @@
 - ~~I want real metric value (Fitness, fatigue, form) of the athlete in the Athlete ese coach page. Make the tendency icon relly based on real value (Use latest 10 days)~~ ✅
 - ~~When assign a Workout to an athelte, there is issue with the Change detection. As it is no zone (like Change detection on PUSH) Fix the issue~~ ✅
 - ~~In the calendar, the workout name must be truncated if too long.~~ ✅
+- ~~Make the filter for sport and training type a little bigger~~ ✅
+- ~~Add Sport filter in History as well and add a Time range search element~~ ✅
+- ~~Make the font a little bigger when displaying the block info (on graph and tooltip)~~ ✅
+- ~~In PMC, make the fatigue zone less visible. The lines are challenging to read. FInd a smart way to improve that. Keep a solid line instead of dot/dash. The change of background is enough to understand~~ ✅
+## TODO
 
 - In the calendar, when clicked on a planned workout, The modal must have a button to display the details of the workout. A link to the Training page with the workout selected must also be present (in the details part of the modal)
 - The estimation of distance or duration for steps is not correct. It must be done at retrieve and not during save because it depends on the user reference value.
 - The goal page is not professional enough. The Goal on the calendar is not visible enough. Find a smart way to display it.
-- In PMC, make the fatigue zone less visible. The lines are challenging to read. FInd a smart way to improve that. Keep a solid line instead of dot/dash. The change of background is enough to understand
 - The display of the goal in PMC needs also to be improved
 - The PMC graph in COACH dashboard for his athlete do not work and show falt data
-- Make the filter for sport and training type a little bigger
-- Add Sport filter in History as well and add a Time range search element
-- Make the font a little bigger when displaying the block info (on graph and tooltip) 
-
+- Complete and skip button must be icon instead in calendar week view
+- Drop down in zones (sport and reference) have white white ground
+- When custom reference, an input should appear to insert the name of the reference. The reference can be read only (It mean that the value is only setted by the coach) and athlete that have this zone will have new physiology (based on reference value). If 
+- When creating a tag, the input must have tooltip and description. The tag creation must in the same time create the code.  The tag card must display the CODE and remove the GENERATE Invite as the CODE will be generated. TAg and code must be related
 ## Nice too have
 - **Retrieve FIT files from Strava** — Implement an endpoint + service to fetch FIT activity files from Strava for the authenticated user. Requires the user to have granted all metric scopes (`activity:read_all`). Parse the FIT data and ingest relevant metrics (power, HR, cadence, TSS) into the session/history store.
 

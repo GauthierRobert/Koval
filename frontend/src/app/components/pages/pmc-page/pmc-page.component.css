@@ -33,79 +33,92 @@
   letter-spacing: 0.05em;
 }
 
-/* ── Page shell ──────────────────────────────────────────── */
-.pmc-page {
-  height: 100%;
+/* ── Container — matches .coach-container ──────────────── */
+.pmc-container {
+  padding: 0;
+  height: calc(100vh - 64px);
   display: flex;
   flex-direction: column;
-  padding: var(--space-md);
-  box-sizing: border-box;
   overflow: hidden;
 }
 
+/* ── Body — horizontal flex (sidebar + main) ───────────── */
 .pmc-body {
   flex: 1;
   display: flex;
-  gap: var(--space-md);
   min-height: 0;
 }
 
-/* ── Left column ─────────────────────────────────────────── */
-.pmc-left {
-  width: 25%;
+/* ── Sidebar — matches .athlete-list pattern ───────────── */
+.pmc-sidebar {
+  width: var(--sidebar-width);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  padding: 1rem;
   gap: 12px;
-  min-height: 0;
-}
-
-.prediction-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  border-right: 1px solid var(--glass-border);
+  border-top: none;
+  border-bottom: none;
+  border-left: none;
+  border-radius: 0;
   overflow-y: auto;
 }
 
-/* ── Right column ────────────────────────────────────────── */
-.pmc-right {
-  flex: 1;
-  min-width: 0;
+/* ── Section headers — matches coach .section-header h3 ── */
+.section-header {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.chart-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.chart-wrap {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ── Shared panel styles ─────────────────────────────────── */
-.panel {
-  padding: var(--card-padding);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.panel-title {
+.section-header h3 {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.12em;
   color: var(--text-muted);
   text-transform: uppercase;
+  margin: 0;
 }
 
+/* ── Main area — matches coach .main-area ──────────────── */
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* ── Header bar — matches coach .header ────────────────── */
+.header {
+  padding: var(--space-sm) var(--page-padding);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--glass-border);
+  border-radius: 0;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  flex-shrink: 0;
+}
+
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-info { display: flex; flex-direction: column; gap: 2px; }
+.header-title { font-size: var(--text-sm); font-weight: 800; letter-spacing: 1px; color: var(--text-color); }
+.header-subtitle { font-size: var(--text-xs); color: var(--text-dim); font-weight: 500; }
+.dim { opacity: 0.4; font-weight: 400; }
+
+/* ── Chart area — fills remaining space ────────────────── */
+.chart-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ── Divider ───────────────────────────────────────────── */
 .divider {
   height: 1px;
   background: rgba(255, 255, 255, 0.07);
@@ -157,42 +170,6 @@
   color: var(--text-muted);
 }
 
-/* ── Period buttons ──────────────────────────────────────── */
-.field-label {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
-
-.period-btns {
-  display: flex;
-  gap: 4px;
-}
-
-.period-btn {
-  flex: 1;
-  padding: 6px 0;
-  border-radius: 7px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-muted);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.period-btn:hover { background: rgba(255, 255, 255, 0.08); color: var(--color-white); }
-
-.period-btn.active {
-  background: rgba(255, 157, 0, 0.15);
-  border-color: rgba(255, 157, 0, 0.4);
-  color: var(--accent-color);
-}
-
 /* ── Refresh button ──────────────────────────────────────── */
 .refresh-btn {
   background: rgba(255, 157, 0, 0.08);
@@ -215,34 +192,6 @@
   text-align: center;
 }
 
-/* ── Mode toggle ─────────────────────────────────────────── */
-.mode-toggle {
-  display: flex;
-  gap: 2px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 3px;
-}
-
-.mode-btn {
-  flex: 1;
-  padding: 5px 0;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.mode-btn.active {
-  background: rgba(255, 157, 0, 0.15);
-  color: var(--accent-color);
-}
-
 /* ── Schedule pill ───────────────────────────────────────── */
 .schedule-pill {
   font-size: 11px;
@@ -257,33 +206,6 @@
   color: var(--text-muted);
   background: rgba(255, 255, 255, 0.03);
   border-color: rgba(255, 255, 255, 0.08);
-}
-
-/* ── Sliders ─────────────────────────────────────────────── */
-.slider-row {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.slider-control {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.slider-control input[type="range"] {
-  flex: 1;
-  accent-color: var(--accent-color);
-  cursor: pointer;
-}
-
-.slider-val {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--accent-color);
-  min-width: 32px;
-  text-align: right;
 }
 
 /* ── Peak form ───────────────────────────────────────────── */

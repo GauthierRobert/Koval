@@ -16,7 +16,6 @@
             cdkDrag [cdkDragData]="entry.scheduled"
             [class.completed]="entry.scheduled.status === 'COMPLETED'"
             [class.skipped]="entry.scheduled.status === 'SKIPPED'"
-            [style.border-left]="'3px solid ' + (entry.scheduled.trainingType ? getTypeColor(entry.scheduled.trainingType) : 'var(--accent-color)')"
             (click)="workoutSelected.emit(entry.scheduled)">
             <div class="card-top">
               <span class="workout-time">08:00 AM</span>
@@ -32,10 +31,17 @@
                   {{ entry.scheduled.trainingTitle || entry.scheduled.title || 'Session #' + entry.scheduled.trainingId.substring(0, 6) }}
                 </span>
               </div>
-              <span *ngIf="entry.scheduled.trainingType" class="type-badge"
-                [style.background]="getTypeColor(entry.scheduled.trainingType) + '20'"
-                [style.color]="getTypeColor(entry.scheduled.trainingType)"
-                [style.border-color]="getTypeColor(entry.scheduled.trainingType) + '40'">{{ getTypeLabel(entry.scheduled.trainingType) }}</span>
+              <div class="badge-actions-row">
+                <span *ngIf="entry.scheduled.trainingType" class="type-badge"
+                  [style.background]="getTypeColor(entry.scheduled.trainingType) + '20'"
+                  [style.color]="getTypeColor(entry.scheduled.trainingType)"
+                  [style.border-color]="getTypeColor(entry.scheduled.trainingType) + '40'">{{ getTypeLabel(entry.scheduled.trainingType) }}</span>
+                <div class="inline-actions" *ngIf="entry.scheduled.status === 'PENDING'">
+                  <button class="btn-complete" [disabled]="isFutureDate(entry.scheduled.scheduledDate)"
+                    (click)="complete.emit(entry.scheduled); $event.stopPropagation()">COMPLETE</button>
+                  <button class="btn-skip" (click)="skip.emit(entry.scheduled); $event.stopPropagation()">SKIP</button>
+                </div>
+              </div>
               <div class="technical-metrics">
                 <div class="m-item">
                   <span class="m-val">{{ formatDuration(entry.scheduled) }}</span>
@@ -51,11 +57,6 @@
                 </div>
               </div>
             </div>
-            <div class="workout-actions" *ngIf="entry.scheduled.status === 'PENDING'">
-              <button class="btn-complete" [disabled]="isFutureDate(entry.scheduled.scheduledDate)"
-                (click)="complete.emit(entry.scheduled); $event.stopPropagation()">COMPLETE</button>
-              <button class="btn-skip" (click)="skip.emit(entry.scheduled); $event.stopPropagation()">SKIP</button>
-            </div>
           </div>
         </ng-container>
 
@@ -63,7 +64,6 @@
         <ng-container *ngIf="entry.kind === 'fused'">
           <div class="workout-card workout-card--fused clickable"
             cdkDrag [cdkDragData]="entry.scheduled"
-            [style.border-left]="'3px solid ' + (entry.scheduled.trainingType ? getTypeColor(entry.scheduled.trainingType) : '#34d399')"
             (click)="workoutSelected.emit(entry.scheduled)">
             <div class="card-top">
               <span class="fused-badge">✓ DONE</span>

@@ -9,7 +9,7 @@ import { RaceGoal, RaceGoalService } from '../../../services/race-goal.service';
 import { Tag } from '../../../services/tag.service';
 import { ZoneService } from '../../../services/zone.service';
 import { ZoneSystem } from '../../../services/zone';
-import { PmcDataPoint } from '../../../services/metrics.service';
+import { MetricsService, PmcDataPoint } from '../../../services/metrics.service';
 import { ScheduleModalComponent } from '../../shared/schedule-modal/schedule-modal.component';
 import { InviteCodeModalComponent } from '../../shared/invite-code-modal/invite-code-modal.component';
 import { ShareTrainingModalComponent } from '../../shared/share-training-modal/share-training-modal.component';
@@ -76,6 +76,15 @@ export class CoachDashboardComponent implements OnInit {
   private athletePmcSubject = new BehaviorSubject<PmcDataPoint[]>([]);
   athletePmc$ = this.athletePmcSubject.asObservable();
 
+  private athleteScheduleTssSubject = new BehaviorSubject<Map<string, number>>(new Map());
+
+  fullAthletePmc$ = combineLatest([this.athletePmc$, this.athleteScheduleTssSubject]).pipe(
+    map(([real, tssMap]) => [
+      ...real,
+      ...this.metricsService.projectPmcFromSchedule(real, tssMap, 30),
+    ]),
+  );
+
   private athleteGoalsSubject = new BehaviorSubject<RaceGoal[]>([]);
   athleteGoals$ = this.athleteGoalsSubject.asObservable();
 
@@ -101,6 +110,7 @@ export class CoachDashboardComponent implements OnInit {
 
   private readonly coachService = inject(CoachService);
   private readonly authService = inject(AuthService);
+  private readonly metricsService = inject(MetricsService);
   private readonly trainingService = inject(TrainingService);
   private readonly zoneService = inject(ZoneService);
   private readonly raceGoalService = inject(RaceGoalService);
@@ -191,11 +201,13 @@ export class CoachDashboardComponent implements OnInit {
   selectAthlete(athlete: User) {
     this.scheduleWeekStart = this.getMondayOfWeek(new Date());
     this.scheduleWeekEnd = this.getSundayOfWeek(new Date());
+    this.athleteScheduleTssSubject.next(new Map());
     this.selectedAthlete = athlete;
     this.loadAthleteSchedule(athlete.id);
     this.loadAthleteSessions(athlete.id);
     this.loadAthletePmc(athlete.id);
     this.loadAthleteGoals(athlete.id);
+    this.loadAthleteProjectionSchedule(athlete.id);
   }
 
   loadAthleteGoals(athleteId: string): void {
@@ -231,6 +243,25 @@ export class CoachDashboardComponent implements OnInit {
     ).subscribe({
       next: (data) => this.ngZone.run(() => this.athletePmcSubject.next(data)),
       error: () => this.ngZone.run(() => this.athletePmcSubject.next([])),
+    });
+  }
+
+  private loadAthleteProjectionSchedule(athleteId: string): void {
+    const today = new Date().toISOString().split('T')[0];
+    const future = new Date();
+    future.setDate(future.getDate() + 30);
+    const futureStr = future.toISOString().split('T')[0];
+    this.coachService.getAthleteSchedule(athleteId, today, futureStr).subscribe({
+      next: (workouts) => {
+        const m = new Map<string, number>();
+        for (const w of workouts) {
+          if (w.status === 'PENDING' && w.tss) {
+            m.set(w.scheduledDate, (m.get(w.scheduledDate) ?? 0) + w.tss);
+          }
+        }
+        this.ngZone.run(() => this.athleteScheduleTssSubject.next(m));
+      },
+      error: () => this.ngZone.run(() => this.athleteScheduleTssSubject.next(new Map())),
     });
   }
 
