@@ -11,11 +11,11 @@
     <div class="modal-body">
       <p class="hint">Describe what you want to create in natural language.</p>
 
-      <div class="form-group" *ngIf="showTagSelector && availableTags.length > 0">
-        <label class="field-label">Club Tag (optional)</label>
-        <select class="field-select" [(ngModel)]="selectedTagId">
-          <option value="">— No tag —</option>
-          <option *ngFor="let tag of availableTags" [value]="tag.id">{{ tag.name }}</option>
+      <div class="form-group" *ngIf="showTagSelector && availableGroups.length > 0">
+        <label class="field-label">Club Group (optional)</label>
+        <select class="field-select" [(ngModel)]="selectedGroupId">
+          <option value="">— No group —</option>
+          <option *ngFor="let group of availableGroups" [value]="group.id">{{ group.name }}</option>
         </select>
       </div>
 

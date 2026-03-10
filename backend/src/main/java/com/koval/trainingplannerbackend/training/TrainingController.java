@@ -101,8 +101,8 @@ public class TrainingController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Training>> searchByTag(@RequestParam String tag) {
-        return ResponseEntity.ok(trainingService.searchByTag(tag));
+    public ResponseEntity<List<Training>> searchByGroup(@RequestParam String group) {
+        return ResponseEntity.ok(trainingService.searchByGroup(group));
     }
 
     @GetMapping("/search/type")
@@ -113,7 +113,7 @@ public class TrainingController {
     @GetMapping("/discover")
     public ResponseEntity<List<Training>> discoverTrainings() {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(trainingService.discoverTrainingsByUserTags(userId));
+        return ResponseEntity.ok(trainingService.discoverTrainingsByUserGroups(userId));
     }
 
     @GetMapping("/folders")

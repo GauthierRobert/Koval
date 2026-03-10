@@ -70,7 +70,7 @@ public class AIConfig {
             - `deleteTraining(trainingId, userId)` — delete a training plan (ownership verified).
 
             ## WORKOUT CREATION SCHEMA
-            - **Required Fields:** `title`, `description`, `blocks`, `estimatedTss`, `estimatedIf`, `tags`, `visibility`, `trainingType`.
+            - **Required Fields:** `title`, `description`, `blocks`, `estimatedTss`, `estimatedIf`, `groups`, `visibility`, `trainingType`.
             - **TrainingType:** VO2MAX, THRESHOLD, SWEET_SPOT, ENDURANCE, SPRINT, RECOVERY, MIXED, TEST.
             - **WorkoutBlock:** `type` (WARMUP, INTERVAL, STEADY, COOLDOWN, RAMP, FREE, PAUSE), **exactly one of** `durationSeconds` **or** `distanceMeters` (never both — backend extrapolates the other), `label`, `intensityTarget`, `intensityStart`/`intensityEnd` for ramps, `cadenceTarget`. Prefer `durationSeconds` for CYCLING; prefer `distanceMeters` for RUNNING and SWIMMING intervals.
             - **Repeat:** Expand all repeated sequences explicitly — no shorthand.
@@ -169,7 +169,7 @@ public class AIConfig {
             Create exactly one training + optional club session based on the user's description.
             Call createTrainingWithClubSession exactly ONCE.
             Fixed context — read from system context and pass these values exactly as-is to the tool:
-              userId, clubId, clubTagId, coachTagId
+              userId, clubId, clubGroupId, coachGroupId
             No preamble. After the tool call: one-line confirmation only.""";
 
     private static final String GENERAL_PROMPT = """

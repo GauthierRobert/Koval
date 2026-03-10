@@ -136,11 +136,6 @@ public class TrainingService {
         return trainingRepository.findByGroupIdsContaining(groupId);
     }
 
-    // Keep backward-compatible alias used by TrainingController
-    public List<Training> searchByTag(String tag) {
-        return searchByGroup(tag);
-    }
-
     /**
      * Search trainings by training type.
      */
@@ -161,11 +156,6 @@ public class TrainingService {
 
         List<String> groupIds = athleteGroups.stream().map(Group::getId).toList();
         return trainingRepository.findByGroupIdsIn(groupIds);
-    }
-
-    // Keep backward-compatible alias used by TrainingController
-    public List<Training> discoverTrainingsByUserTags(String athleteId) {
-        return discoverTrainingsByUserGroups(athleteId);
     }
 
     /**

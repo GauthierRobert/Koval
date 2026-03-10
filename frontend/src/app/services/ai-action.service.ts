@@ -7,8 +7,8 @@ export type AIActionType = 'ZONE_CREATION' | 'TRAINING_WITH_SESSION';
 
 export interface ActionContext {
   clubId?: string;
-  clubTagId?: string;
-  coachTagId?: string;
+  clubGroupId?: string;
+  coachGroupId?: string;
 }
 
 export interface ActionResult {

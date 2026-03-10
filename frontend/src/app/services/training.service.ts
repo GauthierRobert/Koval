@@ -278,19 +278,14 @@ export class TrainingService {
         });
     }
 
-    searchByTag(tag: string): Observable<Training[]> {
+    searchByGroup(group: string): Observable<Training[]> {
         return this.http.get<Training[]>(`${this.apiUrl}/search`, {
-            params: { tag },
+            params: { group },
         });
     }
 
     updateTrainingGroups(trainingId: string, groupIds: string[]): Observable<Training> {
         return this.http.put<Training>(`${this.apiUrl}/${trainingId}`, { groupIds });
-    }
-
-    // Keep backward-compatible alias
-    updateTrainingTags(trainingId: string, tagIds: string[]): Observable<Training> {
-        return this.updateTrainingGroups(trainingId, tagIds);
     }
 
     getTrainingFolders(): Observable<Record<string, Training[]>> {

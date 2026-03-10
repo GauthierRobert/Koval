@@ -37,7 +37,7 @@ public class AIActionToolService {
 
     @Tool(description = """
             Create a new training plan and optionally a linked club training session in a single atomic action.
-            Call this exactly ONCE. Pass userId, clubId, clubTagId, and coachTagId exactly as provided in the system context.""")
+            Call this exactly ONCE. Pass userId, clubId, clubGroupId, and coachGroupId exactly as provided in the system context.""")
     public ActionResult createTrainingWithClubSession(
             @ToolParam(description = "User ID — pass exactly from system context") String userId,
             @ToolParam(description = "Sport type: CYCLING|RUNNING|SWIMMING|BRICK") String sportType,
@@ -51,17 +51,17 @@ public class AIActionToolService {
             @ToolParam(description = "Location for the club session") String location,
             @ToolParam(description = "Scheduled datetime ISO-8601 (e.g. 2025-06-10T19:00:00), null if unscheduled") String scheduledAt,
             @ToolParam(description = "Club ID from system context — pass null if not in club context") String clubId,
-            @ToolParam(description = "Club tag ID from system context — pass null if not applicable") String clubTagId,
-            @ToolParam(description = "Coach tag ID from system context — pass null if not applicable") String coachTagId) {
+            @ToolParam(description = "Club group ID from system context — pass null if not applicable") String clubGroupId,
+            @ToolParam(description = "Coach group ID from system context — pass null if not applicable") String coachGroupId) {
 
         // 1. Build and save the Training
         List<String> groupIds = new ArrayList<>();
-        if (coachTagId != null && !coachTagId.equals("null")) {
-            groupIds.add(coachTagId);
+        if (coachGroupId != null && !coachGroupId.equals("null")) {
+            groupIds.add(coachGroupId);
         }
         List<String> clubGroupIds = new ArrayList<>();
-        if (clubTagId != null && !clubTagId.equals("null")) {
-            clubGroupIds.add(clubTagId);
+        if (clubGroupId != null && !clubGroupId.equals("null")) {
+            clubGroupIds.add(clubGroupId);
         }
         String resolvedClubId = (clubId != null && !clubId.equals("null")) ? clubId : null;
 

@@ -38,8 +38,8 @@ export class CreateWithAiModalComponent implements OnChanges {
   errorMessage = '';
   successMessage = '';
 
-  availableTags: ClubGroup[] = [];
-  selectedTagId = '';
+  availableGroups: ClubGroup[] = [];
+  selectedGroupId = '';
 
   get showTagSelector(): boolean {
     return this.actionType === 'TRAINING_WITH_SESSION' && !!this.context.clubId;
@@ -51,7 +51,7 @@ export class CreateWithAiModalComponent implements OnChanges {
       if (this.showTagSelector) {
         this.clubService.loadGroups(this.context.clubId!);
         this.clubService.groups$.subscribe((groups) => {
-          this.ngZone.run(() => (this.availableTags = groups));
+          this.ngZone.run(() => (this.availableGroups = groups));
         });
       }
     }
@@ -66,7 +66,7 @@ export class CreateWithAiModalComponent implements OnChanges {
 
     const ctx: ActionContext = {
       ...this.context,
-      clubTagId: this.selectedTagId || this.context.clubTagId,
+      clubGroupId: this.selectedGroupId || this.context.clubGroupId,
     };
 
     this.aiActionService.executeAction(this.prompt.trim(), this.actionType, ctx).subscribe({
@@ -100,7 +100,7 @@ export class CreateWithAiModalComponent implements OnChanges {
     this.loading = false;
     this.errorMessage = '';
     this.successMessage = '';
-    this.selectedTagId = '';
-    this.availableTags = [];
+    this.selectedGroupId = '';
+    this.availableGroups = [];
   }
 }
