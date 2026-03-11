@@ -127,9 +127,12 @@ jobs:
           restore-keys: gradle-
 
       - name: Create google-services.json
-        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
         working-directory: mobile
         run: |
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+            echo "::notice::GOOGLE_SERVICES_JSON secret not set, skipping"
+            exit 0
+          fi
           echo "$GOOGLE_SERVICES_JSON" > google-services.json
           python3 -c "import json; json.load(open('google-services.json'))" || {
             echo "::error::google-services.json is not valid JSON. Check the GOOGLE_SERVICES_JSON secret."
