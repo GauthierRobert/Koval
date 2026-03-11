@@ -16,6 +16,7 @@ public class AIActionService {
 
     private final ChatClient actionZoneClient;
     private final ChatClient actionTrainingSessionClient;
+    private final ChatClient actionNotationTrainingClient;
     private final UserContextResolver userContextResolver;
 
     public record ActionContext(String clubId, String clubGroupId, String coachGroupId) {}
@@ -23,17 +24,21 @@ public class AIActionService {
 
     public AIActionService(@Qualifier("actionZoneClient") ChatClient actionZoneClient,
                            @Qualifier("actionTrainingSessionClient") ChatClient actionTrainingSessionClient,
+                           @Qualifier("actionNotationTrainingClient") ChatClient actionNotationTrainingClient,
                            UserContextResolver userContextResolver) {
         this.actionZoneClient = actionZoneClient;
         this.actionTrainingSessionClient = actionTrainingSessionClient;
+        this.actionNotationTrainingClient = actionNotationTrainingClient;
         this.userContextResolver = userContextResolver;
     }
 
     public ActionResult execute(String userMessage, AIActionType actionType, ActionContext context, String userId) {
         UserContext userCtx = userContextResolver.resolve(userId);
-        ChatClient client = actionType == AIActionType.ZONE_CREATION
-                ? actionZoneClient
-                : actionTrainingSessionClient;
+        ChatClient client = switch (actionType) {
+            case ZONE_CREATION          -> actionZoneClient;
+            case TRAINING_WITH_SESSION  -> actionTrainingSessionClient;
+            case TRAINING_FROM_NOTATION -> actionNotationTrainingClient;
+        };
 
         String systemContext = buildSystemContext(userCtx, context);
 

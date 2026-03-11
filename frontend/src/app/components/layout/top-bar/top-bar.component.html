@@ -112,29 +112,8 @@
       </button>
     </div>
 
-    <div class="action-wrapper">
-      <button class="action-btn" (click)="togglePopup($event)">
-        NEW TRAINING
-      </button>
 
-      <!-- Quick Chat Popup -->
-      <div class="quick-chat-popup glass" *ngIf="isPopupOpen" (click)="$event.stopPropagation()">
-        <div class="popup-header">
-          <h4>Generate Training</h4>
-          <button class="close-btn" (click)="closePopup()">×</button>
-        </div>
-        <p class="popup-intro">Describe your goal to the Assistant:</p>
-        <textarea [(ngModel)]="requestDescription" placeholder="e.g., I want an FTP booster session with over-unders..."
-          (keydown.enter)="$event.preventDefault(); submitRequest()" autofocus></textarea>
-        <div class="popup-footer">
-          <button class="submit-btn" [disabled]="!requestDescription.trim()" (click)="submitRequest()">
-            GENERATE TRAINING
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <ng-container *ngIf="{ coach: isCoach$ | async, mode: uiMode$ | async } as vm">
+<ng-container *ngIf="{ coach: isCoach$ | async, mode: uiMode$ | async } as vm">
       <div class="mode-toggle" *ngIf="vm.coach">
         <button [class.active]="vm.mode === 'athlete'" (click)="setUiMode('athlete')">ATHLETE</button>
         <button [class.active]="vm.mode === 'coach'"   (click)="setUiMode('coach')">COACH</button>
@@ -162,6 +141,5 @@
 </header>
 
 <!-- Overlays to close dropdowns when clicking outside -->
-<div class="popup-overlay" *ngIf="isPopupOpen"     (click)="closePopup()"></div>
 <div class="popup-overlay" *ngIf="isTrainingOpen"  (click)="closeTraining()"></div>
 <div class="popup-overlay" *ngIf="isAnalyticsOpen" (click)="closeAnalytics()"></div>

@@ -42,7 +42,8 @@ export class CreateWithAiModalComponent implements OnChanges {
   selectedGroupId = '';
 
   get showTagSelector(): boolean {
-    return this.actionType === 'TRAINING_WITH_SESSION' && !!this.context.clubId;
+    return (this.actionType === 'TRAINING_WITH_SESSION' || this.actionType === 'TRAINING_FROM_NOTATION')
+        && !!this.context.clubId;
   }
 
   ngOnChanges(changes: SimpleChanges): void {

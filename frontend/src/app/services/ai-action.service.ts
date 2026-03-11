@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-export type AIActionType = 'ZONE_CREATION' | 'TRAINING_WITH_SESSION';
+export type AIActionType = 'ZONE_CREATION' | 'TRAINING_WITH_SESSION' | 'TRAINING_FROM_NOTATION';
 
 export interface ActionContext {
   clubId?: string;

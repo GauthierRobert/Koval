@@ -1,8 +1,6 @@
 import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {Router, RouterModule} from '@angular/router';
-import {FormsModule} from '@angular/forms';
-import {ChatService} from '../../../services/chat.service';
 import {BluetoothService} from '../../../services/bluetooth.service';
 import {AuthService} from '../../../services/auth.service';
 import {combineLatest, map} from 'rxjs';
@@ -10,21 +8,18 @@ import {combineLatest, map} from 'rxjs';
 @Component({
   selector: 'app-top-bar',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './top-bar.component.html',
   styleUrl: './top-bar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TopBarComponent {
   private router = inject(Router);
-  private chatService = inject(ChatService);
   private bluetoothService = inject(BluetoothService);
   private authService = inject(AuthService);
 
-  isPopupOpen = false;
   isAnalyticsOpen = false;
   isTrainingOpen = false;
-  requestDescription = '';
 
   user$ = this.authService.user$;
   isCoach$ = this.authService.user$.pipe(map(u => u?.role === 'COACH'));
@@ -60,7 +55,7 @@ export class TopBarComponent {
   toggleTraining(event: Event) {
     event.stopPropagation();
     this.isTrainingOpen = !this.isTrainingOpen;
-    if (this.isTrainingOpen) { this.isPopupOpen = false; this.isAnalyticsOpen = false; }
+    if (this.isTrainingOpen) { this.isAnalyticsOpen = false; }
   }
 
   closeTraining() {
@@ -70,35 +65,11 @@ export class TopBarComponent {
   toggleAnalytics(event: Event) {
     event.stopPropagation();
     this.isAnalyticsOpen = !this.isAnalyticsOpen;
-    if (this.isAnalyticsOpen) { this.isPopupOpen = false; this.isTrainingOpen = false; }
+    if (this.isAnalyticsOpen) { this.isTrainingOpen = false; }
   }
 
   closeAnalytics() {
     this.isAnalyticsOpen = false;
   }
 
-  togglePopup(event: Event) {
-    event.stopPropagation();
-    this.isPopupOpen = !this.isPopupOpen;
-    if (this.isPopupOpen) { this.isAnalyticsOpen = false; this.isTrainingOpen = false; }
-    if (!this.isPopupOpen) this.requestDescription = '';
-  }
-
-  closePopup() {
-    this.isPopupOpen = false;
-    this.requestDescription = '';
-  }
-
-  submitRequest() {
-    if (!this.requestDescription.trim()) return;
-
-    const desc = this.requestDescription.trim();
-    this.closePopup();
-
-    this.router.navigate(['/chat']).then(() => {
-      setTimeout(() => {
-        this.chatService.sendMessage(desc);
-      }, 100);
-    });
-  }
 }

@@ -11,7 +11,9 @@
           <span class="header-subtitle">Browse and manage your workouts</span>
         </div>
       </div>
-      <div class="header-right"></div>
+      <div class="header-right">
+        <button class="tab-btn tab-btn--ai" (click)="showAiModal = true">CREATE WITH AI</button>
+      </div>
     </div>
 
     <!-- Sticky filter bar -->
@@ -46,6 +48,16 @@
         </app-filter-pills>
       </div>
     </div>
+
+    <!-- AI modal -->
+    <app-create-with-ai-modal
+      [isOpen]="showAiModal"
+      actionType="TRAINING_FROM_NOTATION"
+      [context]="{}"
+      label="Create Training with AI"
+      (closed)="showAiModal = false"
+      (created)="onAiCreated($event)">
+    </app-create-with-ai-modal>
 
     <!-- Content area -->
     <div class="content-area">

@@ -10,7 +10,6 @@ import { AuthService } from '../../../services/auth.service';
 import { ScheduledWorkout } from '../../../services/coach.service';
 import { ScheduleModalComponent } from '../../shared/schedule-modal/schedule-modal.component';
 import { WorkoutDetailModalComponent } from '../../shared/workout-detail-modal/workout-detail-modal.component';
-import { SportIconComponent } from '../../shared/sport-icon/sport-icon.component';
 import { HistoryService, SavedSession } from '../../../services/history.service';
 import { CalendarWeekViewComponent } from './week-view/calendar-week-view.component';
 import { CalendarMonthViewComponent } from './month-view/calendar-month-view.component';
@@ -93,7 +92,6 @@ function buildEntriesByDay(scheduled: ScheduledWorkout[], sessions: SavedSession
     CommonModule,
     ScheduleModalComponent,
     WorkoutDetailModalComponent,
-    SportIconComponent,
     CalendarWeekViewComponent,
     CalendarMonthViewComponent,
   ],
@@ -114,7 +112,6 @@ export class CalendarComponent implements OnInit {
   entriesByDay$!: Observable<EntriesByDay>;
   scheduleByDay$!: Observable<WorkoutsByDay>;
   goalsByDay$!: Observable<GoalsByDay>;
-  overdueWorkouts$!: Observable<ScheduledWorkout[]>;
 
   isScheduleModalOpen = false;
   selectedDate: string | null = null;
@@ -170,17 +167,6 @@ export class CalendarComponent implements OnInit {
     );
     this.raceGoalService.loadGoals();
 
-    const today = toDateKey(new Date());
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const sevenDaysAgoKey = toDateKey(sevenDaysAgo);
-    this.overdueWorkouts$ = schedule$.pipe(
-      map((workouts) =>
-        workouts.filter(
-          (w) => w.status === 'PENDING' && w.scheduledDate >= sevenDaysAgoKey && w.scheduledDate < today
-        )
-      )
-    );
   }
 
   goToToday(): void {
@@ -252,8 +238,6 @@ export class CalendarComponent implements OnInit {
   onDetailClosed(): void { this.selectedWorkout = null; }
   onDetailStarted(): void { this.selectedWorkout = null; }
   onDetailStatusChanged(): void { this.selectedWorkout = null; this.reload$.next(); }
-
-  trackWorkoutById(_index: number, workout: ScheduledWorkout): string { return workout.id; }
 
   private startDateKey(): string {
     return this.viewMode === 'week' ? this.weekDays[0].key : this.monthDays[0].key;

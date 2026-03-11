@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.ai;
 
 import com.koval.trainingplannerbackend.ai.action.AIActionToolService;
+import com.koval.trainingplannerbackend.ai.action.NotationToolService;
 import com.koval.trainingplannerbackend.coach.tools.CoachToolService;
 import com.koval.trainingplannerbackend.goal.GoalToolService;
 import com.koval.trainingplannerbackend.training.history.HistoryToolService;
@@ -181,6 +182,39 @@ public class AIConfig {
               userId, clubId, clubGroupId, coachGroupId
             No preamble. After the tool call: one-line confirmation only.""";
 
+    private static final String ACTION_NOTATION_PROMPT = """
+            You are a workout encoder for endurance sports.
+            Convert the user's training description into compact notation, then call createTrainingFromNotation ONCE.
+
+            ## COMPACT NOTATION FORMAT
+            Sections separated by ` + `
+            Outer set: Nx(inner)/r:time  — N=set count, /r:=passive PAUSE after each outer repetition
+            Inner reps: Mx work/R:rest   — M=rep count, /R:=active rest block
+            Single block: [dist][code]   — e.g., 300mFC or 10minWARM
+
+            ## DISTANCE / TIME
+            300m · 1km · 45s · 10min · 1h
+
+            ## TIME (rest format)
+            2'30 = 2 min 30 sec  ·  2' = 2 min  ·  30" = 30 sec
+
+            ## INTENSITY CODES
+            Two options (zone label OR direct %):
+            - Zone label: use zone names exactly as defined in the zone system (e.g., FC, E4, SC, Z3)
+            - Direct %: append a percentage of the sport's reference value (e.g., 300m80%, 10min75%)
+          
+            Always use WARM for warmup and COOL for cooldown.
+            Prefer zone labels when a zone system exists; use % for precision or when zones are unknown.
+
+            ## EXAMPLES
+            "5x100m fast / 100m easy recovery" → 5x100mFC/R:100mE3
+            "2 sets of 4x300m fast + 2min rest" → 2x(4x300mFC)/r:2'
+            "Warmup + 3x500m threshold + cooldown" → 400mWARM + 3x500mSC + 200mCOOL
+
+            Read userId from system context. Pass zoneSystemId as "null" unless user specifies one.
+            When clubId/clubGroupId are present in system context, pass them to link the training to the club.
+            Pass scheduledAt as ISO-8601 if user mentions a date/time, otherwise "null".""";
+
     private static final String GENERAL_PROMPT = """
             Role: Friendly Triathlon & Cycling Assistant.
             Goal: Answer general training questions, provide coaching advice, and help with non-specific queries.
@@ -291,6 +325,16 @@ public class AIConfig {
                 .defaultSystem(ACTION_TRAINING_SESSION_PROMPT)
                 .defaultOptions(haikuActionOptions())
                 .defaultTools(aiActionToolService)
+                .build();
+    }
+
+    @Bean
+    public ChatClient actionNotationTrainingClient(AnthropicChatModel chatModel,
+                                                   NotationToolService notationToolService) {
+        return ChatClient.builder(chatModel)
+                .defaultSystem(ACTION_NOTATION_PROMPT)
+                .defaultOptions(haikuActionOptions())
+                .defaultTools(notationToolService)
                 .build();
     }
 

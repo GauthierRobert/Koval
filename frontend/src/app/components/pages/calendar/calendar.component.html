@@ -2,16 +2,7 @@
   <div class="header">
     <h1>Training <span class="highlight">Calendar</span></h1>
     <div class="header-right">
-      <div class="overdue-strip" *ngIf="overdueWorkouts$ | async as overdue">
-        <ng-container *ngIf="overdue.length > 0">
-          <span class="overdue-label">OVERDUE</span>
-          <span *ngFor="let w of overdue; trackBy: trackWorkoutById" class="overdue-chip" (click)="selectWorkout(w)">
-            <app-sport-icon [sport]="w.sportType" [size]="12"></app-sport-icon>
-            {{ w.trainingTitle || w.title || 'Workout' }}
-          </span>
-        </ng-container>
-      </div>
-      <div class="view-selector">
+<div class="view-selector">
         <button [class.active]="viewMode === 'week'" (click)="setViewMode('week')">Week</button>
         <button [class.active]="viewMode === 'month'" (click)="setViewMode('month')">Month</button>
       </div>

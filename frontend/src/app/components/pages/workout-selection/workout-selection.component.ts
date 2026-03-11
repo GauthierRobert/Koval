@@ -10,21 +10,32 @@ import {
   SPORT_OPTIONS,
   SportFilter,
 } from '../../../services/training.service';
-import { Observable, map, combineLatest } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { RouterModule } from '@angular/router';
 import { WorkoutVisualizationComponent } from '../../shared/workout-visualization/workout-visualization.component';
 import { SidebarComponent } from '../../layout/sidebar/sidebar.component';
 import { FilterPillsComponent, FilterPillOption } from '../../shared/filter-pills/filter-pills.component';
+import { CreateWithAiModalComponent } from '../../shared/create-with-ai-modal/create-with-ai-modal.component';
+import { ActionResult } from '../../../services/ai-action.service';
 
 @Component({
   selector: 'app-workout-selection',
   standalone: true,
-  imports: [CommonModule, WorkoutVisualizationComponent, RouterModule, SidebarComponent, FilterPillsComponent],
+  imports: [
+    CommonModule,
+    WorkoutVisualizationComponent,
+    RouterModule,
+    SidebarComponent,
+    FilterPillsComponent,
+    CreateWithAiModalComponent,
+  ],
   templateUrl: './workout-selection.component.html',
   styleUrl: './workout-selection.component.css',
 })
 export class WorkoutSelectionComponent {
   trainingService = inject(TrainingService);
+
+  showAiModal = false;
 
   readonly sportOptions: FilterPillOption[] = SPORT_OPTIONS.map((o) => ({
     label: o.label,
@@ -56,5 +67,10 @@ export class WorkoutSelectionComponent {
 
   setTagFilter(value: string | null): void {
     this.trainingService.setTagFilter(value as string);
+  }
+
+  onAiCreated(_result: ActionResult): void {
+    this.showAiModal = false;
+    this.trainingService.loadTrainings();
   }
 }
