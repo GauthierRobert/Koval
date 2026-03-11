@@ -1,24 +1,23 @@
-
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { BehaviorSubject, of } from 'rxjs';
-import { switchMap, map, catchError, startWith } from 'rxjs/operators';
-import { Training, WorkoutBlock, TrainingService, TrainingType, hasDurationEstimate } from '../../../services/training.service';
-import { ScheduledWorkout } from '../../../services/coach.service';
-import { CalendarService } from '../../../services/calendar.service';
-import { WorkoutExecutionService } from '../../../services/workout-execution.service';
-import { DurationEstimationService } from '../../../services/duration-estimation.service';
-import { ZoneService } from '../../../services/zone.service';
-import { ZoneSystem } from '../../../services/zone';
-import { AuthService } from '../../../services/auth.service';
-import { formatPace as sharedFormatPace } from '../format/format.utils';
+import {Component, EventEmitter, inject, Input, Output} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {Router} from '@angular/router';
+import {BehaviorSubject, of} from 'rxjs';
+import {catchError, map, startWith, switchMap} from 'rxjs/operators';
+import {hasDurationEstimate, Training, TrainingService, WorkoutBlock} from '../../../services/training.service';
+import {ScheduledWorkout} from '../../../services/coach.service';
+import {CalendarService} from '../../../services/calendar.service';
+import {WorkoutExecutionService} from '../../../services/workout-execution.service';
+import {DurationEstimationService} from '../../../services/duration-estimation.service';
+import {ZoneService} from '../../../services/zone.service';
+import {ZoneSystem} from '../../../services/zone';
+import {AuthService} from '../../../services/auth.service';
+import {formatPace as sharedFormatPace} from '../format/format.utils';
 import {
-  getMaxIntensity,
-  getBlockHeight as sharedGetBlockHeight,
   getBlockClipPath as sharedGetBlockClipPath,
   getBlockColor as sharedGetBlockColor,
+  getBlockHeight as sharedGetBlockHeight,
   getDisplayIntensity as sharedGetDisplayIntensity,
+  getMaxIntensity,
 } from '../block-helpers/block-helpers';
 
 interface TrainingState {
@@ -211,6 +210,18 @@ export class WorkoutDetailModalComponent {
 
   getDisplayIntensity(block: WorkoutBlock): string {
     return sharedGetDisplayIntensity(block);
+  }
+
+  getBlockIntensityPercent(block: WorkoutBlock): number | undefined {
+    if (block.intensityTarget && block.intensityTarget > 0) return block.intensityTarget;
+    if (block.intensityStart && block.intensityStart > 0 && block.intensityEnd && block.intensityEnd > 0) {
+      return (block.intensityStart + block.intensityEnd) / 2;
+    }
+    return undefined;
+  }
+
+  isEstimationRelevant(training: Training): boolean {
+    return training.sportType === 'CYCLING';
   }
 
   calculateIntensityValue(percent: number | undefined, training: Training): string {

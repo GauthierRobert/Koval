@@ -19,7 +19,7 @@
           "options": {
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
-            "allowedCommonJsDependencies": ["fit-file-parser"],
+            "allowedCommonJsDependencies": ["fit-file-parser", "leaflet"],
             "assets": [
               {
                 "glob": "**/*",
@@ -29,9 +29,15 @@
                 "glob": "firebase-messaging-sw.js",
                 "input": "src",
                 "output": "/"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/leaflet/dist/images",
+                "output": "/assets/leaflet"
               }
             ],
             "styles": [
+              "node_modules/leaflet/dist/leaflet.css",
               "src/styles.css"
             ]
           },

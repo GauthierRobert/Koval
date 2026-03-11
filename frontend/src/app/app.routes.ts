@@ -1,6 +1,6 @@
-import { Routes } from '@angular/router';
-import { authGuard } from './guards/auth.guard';
-import { coachGuard } from './guards/coach.guard';
+import {Routes} from '@angular/router';
+import {authGuard} from './guards/auth.guard';
+import {coachGuard} from './guards/coach.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -77,8 +77,8 @@ export const routes: Routes = [
   {
     path: 'groups',
     loadComponent: () =>
-      import('./components/pages/tag-management/tag-management.component').then(
-        (m) => m.TagManagementComponent,
+      import('./components/pages/group-management/group-management.component').then(
+        (m) => m.GroupManagementComponent,
       ),
     canActivate: [authGuard, coachGuard],
   },

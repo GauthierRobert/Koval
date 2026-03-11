@@ -25,7 +25,7 @@ export interface ZoneSystem {
   coachId: string;
   sportType: SportType;
   referenceType: ZoneReferenceType;
-  referenceName?: String;
+  referenceName?: string;
   zones: Zone[];
   createdAt?: string;
   updatedAt?: string;

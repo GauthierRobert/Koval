@@ -73,6 +73,10 @@
                 <option *ngFor="let r of availableReferenceTypes" [value]="r.value">{{ r.label }}</option>
               </select>
             </div>
+            <div class="config-item" *ngIf="editingSystem.referenceType === 'CUSTOM'">
+              <label>REFERENCE NAME</label>
+              <input class="config-input" [(ngModel)]="editingSystem.referenceName" placeholder="e.g., Lactate Threshold" />
+            </div>
           </div>
         </div>
         <div class="editor-actions">

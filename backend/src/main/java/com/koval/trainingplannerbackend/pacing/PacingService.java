@@ -1,6 +1,10 @@
 package com.koval.trainingplannerbackend.pacing;
 
-import com.koval.trainingplannerbackend.pacing.dto.*;
+import com.koval.trainingplannerbackend.pacing.dto.AthleteProfile;
+import com.koval.trainingplannerbackend.pacing.dto.PacingPlanResponse;
+import com.koval.trainingplannerbackend.pacing.dto.PacingSegment;
+import com.koval.trainingplannerbackend.pacing.dto.PacingSummary;
+import com.koval.trainingplannerbackend.pacing.dto.RouteCoordinate;
 import com.koval.trainingplannerbackend.pacing.gpx.CourseSegment;
 import org.springframework.stereotype.Service;
 
@@ -11,15 +15,27 @@ import java.util.List;
 public class PacingService {
 
     // Cycling physics constants
-    private static final double CRR = 0.005;        // Rolling resistance coefficient
-    private static final double CDA = 0.32;          // Drag area (m^2) for aero position
-    private static final double AIR_DENSITY = 1.225; // kg/m^3 at sea level, 15°C
     private static final double DRIVETRAIN_LOSS = 0.03;
     private static final double GRAVITY = 9.81;
 
-    // Pacing intensity factors (fraction of FTP)
-    private static final double BIKE_INTENSITY_FACTOR = 0.75;
-    private static final double MIN_POWER_FRACTION = 0.55;
+    private record BikeAero(double cda, double crr) {}
+
+    private static BikeAero getBikeAero(String bikeType) {
+        return switch (bikeType != null ? bikeType : "ROAD_AERO") {
+            case "TT"        -> new BikeAero(0.24, 0.004);  // full TT setup
+            case "ROAD_AERO" -> new BikeAero(0.28, 0.005);  // road + clip-on extensions
+            default          -> new BikeAero(0.32, 0.005);   // standard road bike
+        };
+    }
+
+    // Slope-based power distribution (bike) — more watts on climbs, fewer on descents
+    private static final double STEEP_CLIMB_FACTOR = 1.15;      // gradient > 6%
+    private static final double MODERATE_CLIMB_FACTOR = 1.08;   // gradient 3–6%
+    private static final double SLIGHT_CLIMB_FACTOR = 1.03;     // gradient 1–3%
+    private static final double FLAT_FACTOR = 1.0;              // gradient -1 to 1%
+    private static final double MODERATE_DESCENT_FACTOR = 0.88; // gradient -1 to -6%
+    private static final double STEEP_DESCENT_FACTOR = 0.75;    // gradient < -6%
+    private static final int NORMALIZATION_ITERATIONS = 3;
 
     // Run adjustment factors
     private static final double RUN_UPHILL_FACTOR = 0.04;   // +4% pace per 1% gradient
@@ -27,64 +43,226 @@ public class PacingService {
     private static final double RUN_DOWNHILL_CAP = 0.06;     // Max 6% pace benefit from downhill
     private static final double HEAT_FACTOR = 0.015;         // +1.5% per degree above 20°C
 
-    public PacingPlanResponse generatePlan(List<CourseSegment> segments, AthleteProfile profile, String discipline) {
-        List<PacingSegment> bikeSegments = null;
-        List<PacingSegment> runSegments = null;
+    // Smart target reference points: distance (m) → % FTP
+    private static final double[] BIKE_DIST_POINTS = {20_000, 40_000, 90_000, 180_000};
+    private static final double[] BIKE_FTP_PCTS    = {0.875,  0.825,  0.755,  0.705};
+
+    // Smart target reference points: distance (m) → pace multiplier of threshold
+    private static final double[] RUN_DIST_POINTS  = {5_000, 10_000, 21_097, 42_195};
+    private static final double[] RUN_PACE_FACTORS = {0.97,  1.02,   1.08,   1.15};
+
+    // Smart target reference points: swim distance (m) → pace multiplier of CSS
+    private static final double[] SWIM_DIST_POINTS  = {750, 1500, 1900, 3800};
+    private static final double[] SWIM_PACE_FACTORS = {0.97, 1.02, 1.05, 1.08};
+
+    public PacingPlanResponse generatePlan(List<CourseSegment> bikeSegments, List<CourseSegment> runSegments,
+                                           AthleteProfile profile, String discipline,
+                                           List<RouteCoordinate> bikeRouteCoordinates,
+                                           List<RouteCoordinate> runRouteCoordinates) {
+        // Compute course totals from the appropriate segments
+        List<CourseSegment> bikeSource = bikeSegments != null ? bikeSegments : List.of();
+        List<CourseSegment> runSource = runSegments != null ? runSegments : List.of();
+
+        double bikeTotalDistance = bikeSource.stream().mapToDouble(CourseSegment::length).sum();
+        double bikeTotalElevGain = bikeSource.stream()
+                .mapToDouble(s -> Math.max(0, (s.endElevation() - s.startElevation())))
+                .sum();
+        double runTotalDistance = runSource.stream().mapToDouble(CourseSegment::length).sum();
+        double runTotalElevGain = runSource.stream()
+                .mapToDouble(s -> Math.max(0, (s.endElevation() - s.startElevation())))
+                .sum();
+
+        // For single-discipline, use its own totals
+        double totalDistance = bikeTotalDistance > 0 ? bikeTotalDistance : runTotalDistance;
+        double totalElevationGain = bikeTotalDistance > 0 ? bikeTotalElevGain : runTotalElevGain;
+
+        // Smart default: bike target (use bike course totals)
+        String bikeTargetBasis = null;
+        Integer bikeComputedTarget = null;
+        int effectiveBikePower;
+        if (profile.targetPowerWatts() != null && profile.targetPowerWatts() > 0) {
+            effectiveBikePower = profile.targetPowerWatts();
+        } else {
+            effectiveBikePower = computeBikeTarget(bikeTotalDistance, bikeTotalElevGain, profile.ftp());
+            bikeComputedTarget = effectiveBikePower;
+            int pct = (int) Math.round(100.0 * effectiveBikePower / profile.ftp());
+            bikeTargetBasis = pct + "% FTP for " + formatDistKm(bikeTotalDistance) + " course"
+                    + (bikeTotalElevGain > 50 ? " (" + (int) bikeTotalElevGain + "m climbing)" : "");
+        }
+
+        // Smart default: run target (use run course totals)
+        String runTargetBasis = null;
+        Integer runComputedTarget = null;
+        int effectiveRunPace;
+        if (profile.targetPaceSecPerKm() != null && profile.targetPaceSecPerKm() > 0) {
+            effectiveRunPace = profile.targetPaceSecPerKm();
+        } else if (profile.thresholdPaceSec() != null && profile.thresholdPaceSec() > 0) {
+            effectiveRunPace = computeRunTarget(runTotalDistance, runTotalElevGain, profile.thresholdPaceSec());
+            runComputedTarget = effectiveRunPace;
+            int paceMin = effectiveRunPace / 60;
+            int paceSec = effectiveRunPace % 60;
+            runTargetBasis = paceMin + ":" + String.format("%02d", paceSec) + "/km for "
+                    + formatDistKm(runTotalDistance)
+                    + (runTotalElevGain > 50 ? " (" + (int) runTotalElevGain + "m climbing)" : "");
+        } else {
+            effectiveRunPace = 300; // fallback 5:00/km
+        }
+
+        // Build effective profile with computed targets
+        AthleteProfile effectiveProfile = new AthleteProfile(
+                profile.ftp(), profile.weightKg(), profile.thresholdPaceSec(), profile.swimCssSec(),
+                profile.fatigueResistance(), profile.nutritionPreference(),
+                profile.temperature(), profile.windSpeed(),
+                effectiveBikePower, effectiveRunPace,
+                profile.swimDistanceM(), profile.targetSwimPaceSecPer100m(),
+                profile.bikeType()
+        );
+
+        List<PacingSegment> bikePacingSegments = null;
+        List<PacingSegment> runPacingSegments = null;
         PacingSummary bikeSummary = null;
         PacingSummary runSummary = null;
 
         double priorFatigue = 0.0;
 
-        if ("BIKE".equals(discipline) || "BOTH".equals(discipline)) {
-            bikeSegments = generateBikeSegments(segments, profile, 0.0);
-            bikeSummary = buildBikeSummary(bikeSegments, profile);
-            priorFatigue = bikeSegments.isEmpty() ? 0.0
-                    : bikeSegments.get(bikeSegments.size() - 1).cumulativeFatigue();
+        if ("BIKE".equals(discipline) || "TRIATHLON".equals(discipline)) {
+            bikePacingSegments = generateBikeSegments(bikeSource, effectiveProfile, 0.0);
+            bikeSummary = buildBikeSummary(bikePacingSegments, effectiveProfile, bikeTargetBasis, bikeComputedTarget);
+            priorFatigue = bikePacingSegments.isEmpty() ? 0.0
+                    : bikePacingSegments.getLast().cumulativeFatigue();
         }
 
-        if ("RUN".equals(discipline) || "BOTH".equals(discipline)) {
-            runSegments = generateRunSegments(segments, profile, priorFatigue);
-            runSummary = buildRunSummary(runSegments, profile);
+        if ("RUN".equals(discipline) || "TRIATHLON".equals(discipline)) {
+            runPacingSegments = generateRunSegments(runSource, effectiveProfile, priorFatigue);
+            runSummary = buildRunSummary(runPacingSegments, effectiveProfile, runTargetBasis, runComputedTarget);
         }
 
-        return new PacingPlanResponse(bikeSegments, runSegments, bikeSummary, runSummary);
+        // Swim summary (no segments — just time/pace estimate)
+        PacingSummary swimSummary = null;
+        if ("SWIM".equals(discipline) || "TRIATHLON".equals(discipline)) {
+            swimSummary = buildSwimSummary(profile);
+        }
+
+        return new PacingPlanResponse(bikePacingSegments, runPacingSegments, bikeSummary, runSummary, swimSummary,
+                bikeRouteCoordinates, runRouteCoordinates);
+    }
+
+    // ---- SMART TARGET COMPUTATION ----
+
+    private static double interpolate(double x, double[] xs, double[] ys) {
+        if (x <= xs[0]) return ys[0];
+        if (x >= xs[xs.length - 1]) return ys[ys.length - 1];
+        for (int i = 0; i < xs.length - 1; i++) {
+            if (x <= xs[i + 1]) {
+                double ratio = (x - xs[i]) / (xs[i + 1] - xs[i]);
+                return ys[i] + ratio * (ys[i + 1] - ys[i]);
+            }
+        }
+        return ys[ys.length - 1];
+    }
+
+    private int computeBikeTarget(double totalDistM, double elevGainM, int ftp) {
+        double basePct = interpolate(totalDistM, BIKE_DIST_POINTS, BIKE_FTP_PCTS);
+
+        // Elevation penalty: -0.5% FTP per 10 m/km above 5 m/km baseline, capped at 3%
+        double distKm = totalDistM / 1000.0;
+        double gainPerKm = distKm > 0 ? elevGainM / distKm : 0;
+        double elevPenalty = 0;
+        if (gainPerKm > 5.0) {
+            elevPenalty = ((gainPerKm - 5.0) / 10.0) * 0.005;
+            elevPenalty = Math.min(elevPenalty, 0.03);
+        }
+
+        return (int) Math.round(ftp * (basePct - elevPenalty));
+    }
+
+    private int computeRunTarget(double totalDistM, double elevGainM, int thresholdPace) {
+        double baseFactor = interpolate(totalDistM, RUN_DIST_POINTS, RUN_PACE_FACTORS);
+
+        // Elevation penalty: +1% pace per 10 m/km above 5 m/km baseline, capped at 5%
+        double distKm = totalDistM / 1000.0;
+        double gainPerKm = distKm > 0 ? elevGainM / distKm : 0;
+        double elevPenalty = 0;
+        if (gainPerKm > 5.0) {
+            elevPenalty = ((gainPerKm - 5.0) / 10.0) * 0.01;
+            elevPenalty = Math.min(elevPenalty, 0.05);
+        }
+
+        return (int) Math.round(thresholdPace * (baseFactor + elevPenalty));
+    }
+
+    private int computeSwimTarget(double swimDistM, int cssPer100m) {
+        double factor = interpolate(swimDistM, SWIM_DIST_POINTS, SWIM_PACE_FACTORS);
+        return (int) Math.round(cssPer100m * factor);
     }
 
     // ---- BIKE PACING ----
 
+    private double bikeSlopeAdjustment(double gradientPercent) {
+        if (gradientPercent > 6.0) return STEEP_CLIMB_FACTOR;
+        if (gradientPercent > 3.0) return MODERATE_CLIMB_FACTOR;
+        if (gradientPercent > 1.0) return SLIGHT_CLIMB_FACTOR;
+        if (gradientPercent >= -1.0) return FLAT_FACTOR;
+        if (gradientPercent >= -6.0) return MODERATE_DESCENT_FACTOR;
+        return STEEP_DESCENT_FACTOR;
+    }
+
     private List<PacingSegment> generateBikeSegments(List<CourseSegment> course, AthleteProfile profile, double startFatigue) {
-        List<PacingSegment> result = new ArrayList<>();
         int ftp = profile.ftp();
         int weight = profile.weightKg();
+        BikeAero aero = getBikeAero(profile.bikeType());
+
+        double targetPower = profile.targetPowerWatts();
+
+        // Phase A — Raw slope-adjusted powers
+        double[] segPowers = new double[course.size()];
+        for (int i = 0; i < course.size(); i++) {
+            segPowers[i] = targetPower * bikeSlopeAdjustment(course.get(i).averageGradient());
+        }
+
+        // Phase B — Iterative normalization (power→speed→time feedback)
+        for (int iter = 0; iter < NORMALIZATION_ITERATIONS; iter++) {
+            double weightedPowerSum = 0.0;
+            double totalTime = 0.0;
+
+            for (int i = 0; i < course.size(); i++) {
+                CourseSegment seg = course.get(i);
+                double gradient = seg.averageGradient() / 100.0;
+                double speed = estimateSpeedFromPower(segPowers[i], weight, gradient, profile.windSpeed(), seg.startElevation(), aero.cda, aero.crr);
+                speed = Math.max(speed, 2.0);
+                double segTime = seg.length() / speed;
+
+                weightedPowerSum += segPowers[i] * segTime;
+                totalTime += segTime;
+            }
+
+            double computedAvg = weightedPowerSum / totalTime;
+            double scale = targetPower / computedAvg;
+            for (int i = 0; i < course.size(); i++) {
+                segPowers[i] *= scale;
+            }
+        }
+
+        // Phase C — Build segments with converged powers
+        List<PacingSegment> result = new ArrayList<>();
         double fatigue = startFatigue;
         double cumulativeTime = 0.0;
         int lastNutritionMinute = 0;
 
-        for (CourseSegment seg : course) {
-            double gradient = seg.averageGradient() / 100.0; // convert % to fraction
-            double basePower = ftp * BIKE_INTENSITY_FACTOR;
+        for (int i = 0; i < course.size(); i++) {
+            CourseSegment seg = course.get(i);
+            double power = segPowers[i];
+            double gradient = seg.averageGradient() / 100.0;
 
-            // Gradient adjustment: increase power on climbs, reduce on descents
-            double gradientAdjustment = 1.0 + (seg.averageGradient() * 0.025);
-            double targetPower = basePower * gradientAdjustment;
+            double speed = estimateSpeedFromPower(power, weight, gradient, profile.windSpeed(), seg.startElevation(), aero.cda, aero.crr);
+            speed = Math.max(speed, 2.0);
+            double speedKmh = Math.round(speed * 3.6 * 10.0) / 10.0;
 
-            // Apply fatigue reduction
-            double fatigueReduction = fatigue * (1.0 - profile.fatigueResistance());
-            targetPower *= (1.0 - fatigueReduction);
+            double segmentTime = seg.length() / speed;
 
-            // Clamp power
-            targetPower = Math.max(targetPower, ftp * MIN_POWER_FRACTION);
-            targetPower = Math.min(targetPower, ftp * 1.2);
-
-            // Estimate speed from power using cycling physics
-            double speed = estimateSpeedFromPower(targetPower, weight, gradient, profile.windSpeed());
-            speed = Math.max(speed, 2.0); // Minimum 2 m/s (~7 km/h)
-
-            double segmentLength = seg.length();
-            double segmentTime = segmentLength / speed;
-
-            // Accumulate fatigue (simplified TSS-based model)
-            double segmentTSS = (segmentTime / 3600.0) * Math.pow(targetPower / ftp, 2) * 100.0;
+            // Accumulate fatigue (TSS-based)
+            // TODO: Scale fatigue rate by profile.fatigueResistance()
+            double segmentTSS = (segmentTime / 3600.0) * Math.pow(power / ftp, 2) * 100.0;
             fatigue += segmentTSS / 500.0;
 
             cumulativeTime += segmentTime;
@@ -99,7 +277,7 @@ public class PacingService {
 
             result.add(new PacingSegment(
                     seg.startDistance(), seg.endDistance(), "BIKE",
-                    (int) Math.round(targetPower), null,
+                    (int) Math.round(power), null, speedKmh,
                     Math.round(segmentTime * 10.0) / 10.0,
                     Math.round(fatigue * 1000.0) / 1000.0,
                     nutrition, seg.averageGradient(), seg.startElevation()
@@ -111,22 +289,25 @@ public class PacingService {
 
     /**
      * Estimate cycling speed (m/s) from power using simplified physics.
-     * P = (Crr * m * g * v) + (0.5 * CdA * rho * v^3) + (m * g * grade * v)
+     * P = (Crr * m * g * v) + (0.5 * CdA * rho * (v+w)^2 * v) + (m * g * grade * v)
      * Solved iteratively via Newton's method.
+     * Air density adjusted for altitude: rho = 1.225 * exp(-elevation / 8500).
      */
-    private double estimateSpeedFromPower(double power, int weightKg, double gradient, double windSpeed) {
+    private double estimateSpeedFromPower(double power, int weightKg, double gradient, double windSpeed, double elevation, double cda, double crr) {
         double effectivePower = power * (1.0 - DRIVETRAIN_LOSS);
         double mass = weightKg + 8.0; // rider + bike
+        double rho = 1.225 * Math.exp(-elevation / 8500.0); // altitude-adjusted air density
 
         // Newton's method to solve for v
         double v = 8.0; // initial guess (m/s)
         for (int i = 0; i < 20; i++) {
-            double airSpeed = v + (windSpeed != null ? windSpeed : 0.0);
-            double resistancePower = CRR * mass * GRAVITY * v
-                    + 0.5 * CDA * AIR_DENSITY * airSpeed * airSpeed * v
+            double airSpeed = v + windSpeed;
+            double resistancePower = crr * mass * GRAVITY * v
+                    + 0.5 * cda * rho * airSpeed * airSpeed * v
                     + mass * GRAVITY * gradient * v;
-            double derivative = CRR * mass * GRAVITY
-                    + 0.5 * CDA * AIR_DENSITY * (3.0 * airSpeed * airSpeed)
+            // Correct derivative: d/dv[(v+w)^2*v] = (v+w)^2 + 2*v*(v+w)
+            double derivative = crr * mass * GRAVITY
+                    + 0.5 * cda * rho * (airSpeed * airSpeed + 2.0 * v * airSpeed)
                     + mass * GRAVITY * gradient;
 
             double error = resistancePower - effectivePower;
@@ -134,23 +315,22 @@ public class PacingService {
             v = Math.max(v, 1.0);
         }
 
-        return v;
+        return Math.min(v, 22.0); // Cap at ~80 km/h for descents (braking)
     }
 
     // ---- RUN PACING ----
 
     private List<PacingSegment> generateRunSegments(List<CourseSegment> course, AthleteProfile profile, double startFatigue) {
-        List<PacingSegment> result = new ArrayList<>();
-        int thresholdPace = profile.thresholdPaceSec(); // sec per km
-        double fatigue = startFatigue;
-        double cumulativeTime = 0.0;
-        int lastNutritionMinute = 0;
+        // Target pace already computed (smart default or user override) in effectiveProfile
+        double targetPace = profile.targetPaceSecPerKm();
 
-        // Race pace is typically slightly slower than threshold
-        double basePaceSecPerKm = thresholdPace * 1.05;
+        // Phase B — Raw slope-adjusted paces
+        double[] segPaces = new double[course.size()];
+        double temp = profile.temperature() != null ? profile.temperature() : 20.0;
 
-        for (CourseSegment seg : course) {
-            double adjustedPace = basePaceSecPerKm;
+        for (int i = 0; i < course.size(); i++) {
+            CourseSegment seg = course.get(i);
+            double adjustedPace = targetPace;
 
             // Gradient adjustment
             if (seg.averageGradient() > 0) {
@@ -162,19 +342,41 @@ public class PacingService {
             }
 
             // Heat adjustment
-            double temp = profile.temperature() != null ? profile.temperature() : 20.0;
             if (temp > 20.0) {
                 adjustedPace *= (1.0 + (temp - 20.0) * HEAT_FACTOR);
             }
 
-            // Fatigue adjustment
-            double fatigueReduction = fatigue * (1.0 - profile.fatigueResistance());
-            adjustedPace *= (1.0 + fatigueReduction * 0.5);
+            segPaces[i] = adjustedPace;
+        }
+
+        // Phase C — Distance-weighted normalization
+        double weightedSum = 0.0;
+        double totalDist = 0.0;
+        for (int i = 0; i < course.size(); i++) {
+            double distKm = course.get(i).length() / 1000.0;
+            weightedSum += segPaces[i] * distKm;
+            totalDist += distKm;
+        }
+        double scale = targetPace / (weightedSum / totalDist);
+        for (int i = 0; i < course.size(); i++) {
+            segPaces[i] *= scale;
+        }
+
+        // Phase D — Build segments with normalized paces
+        List<PacingSegment> result = new ArrayList<>();
+        double fatigue = startFatigue;
+        double cumulativeTime = 0.0;
+        int lastNutritionMinute = 0;
+
+        for (int i = 0; i < course.size(); i++) {
+            CourseSegment seg = course.get(i);
+            double adjustedPace = segPaces[i];
 
             double segmentLengthKm = seg.length() / 1000.0;
             double segmentTime = adjustedPace * segmentLengthKm;
 
             // Accumulate running fatigue
+            // TODO: Scale fatigue rate by profile.fatigueResistance()
             fatigue += (segmentTime / 3600.0) * 0.15;
 
             cumulativeTime += segmentTime;
@@ -194,7 +396,7 @@ public class PacingService {
 
             result.add(new PacingSegment(
                     seg.startDistance(), seg.endDistance(), "RUN",
-                    null, paceStr,
+                    null, paceStr, null,
                     Math.round(segmentTime * 10.0) / 10.0,
                     Math.round(fatigue * 1000.0) / 1000.0,
                     nutrition, seg.averageGradient(), seg.startElevation()
@@ -206,50 +408,98 @@ public class PacingService {
 
     // ---- SUMMARIES ----
 
-    private PacingSummary buildBikeSummary(List<PacingSegment> segments, AthleteProfile profile) {
+    private PacingSummary buildBikeSummary(List<PacingSegment> segments, AthleteProfile profile,
+                                           String targetBasis, Integer computedTarget) {
         double totalDist = segments.stream().mapToDouble(s -> s.endDistance() - s.startDistance()).sum();
         double totalTime = segments.stream().mapToDouble(PacingSegment::estimatedSegmentTime).sum();
-        double avgPower = segments.stream().mapToInt(PacingSegment::targetPower).average().orElse(0);
+
+        // Time-weighted average power
+        double weightedPowerSum = 0.0;
+        for (PacingSegment s : segments) {
+            weightedPowerSum += s.targetPower() * s.estimatedSegmentTime();
+        }
+        double avgPower = totalTime > 0 ? weightedPowerSum / totalTime : 0;
 
         int totalMinutes = (int) (totalTime / 60.0);
-        int carbsNeeded = (totalMinutes / 20) * 75; // ~75g per 20 min
+        int carbsNeeded = (int) Math.round(totalTime / 3600.0 * 80); // ~80g/hr
         int calories = (int) (totalTime / 3600.0 * avgPower * 3.6); // rough kcal estimate
 
         return new PacingSummary(
-                Math.round(totalDist) / 1.0,
+                Math.round(totalDist),
                 Math.round(totalTime * 10.0) / 10.0,
                 (int) Math.round(avgPower), null,
                 calories,
-                carbsNeeded + "g carbs over " + totalMinutes + " min"
+                carbsNeeded + "g carbs over " + totalMinutes + " min (~80g/hr)",
+                targetBasis,
+                computedTarget
         );
     }
 
-    private PacingSummary buildRunSummary(List<PacingSegment> segments, AthleteProfile profile) {
+    private PacingSummary buildRunSummary(List<PacingSegment> segments, AthleteProfile profile,
+                                          String targetBasis, Integer computedTarget) {
         double totalDist = segments.stream().mapToDouble(s -> s.endDistance() - s.startDistance()).sum();
         double totalTime = segments.stream().mapToDouble(PacingSegment::estimatedSegmentTime).sum();
 
-        // Parse average pace from segment paces
-        double totalPaceSec = 0;
-        for (PacingSegment s : segments) {
-            String paceStr = s.targetPace().replace(" /km", "");
-            String[] parts = paceStr.split(":");
-            totalPaceSec += Integer.parseInt(parts[0]) * 60 + Integer.parseInt(parts[1]);
-        }
-        double avgPaceSec = totalPaceSec / segments.size();
+        // Distance-weighted average pace: totalTime / (totalDist in km)
+        double totalDistKm = totalDist / 1000.0;
+        double avgPaceSec = totalDistKm > 0 ? totalTime / totalDistKm : 0;
         int avgMin = (int) (avgPaceSec / 60);
         int avgSec = (int) (avgPaceSec % 60);
 
         int totalMinutes = (int) (totalTime / 60.0);
-        int carbsNeeded = (totalMinutes / 30) * 45;
+        int carbsNeeded = (int) Math.round(totalTime / 3600.0 * 50); // ~50g/hr
         int calories = (int) (totalTime / 3600.0 * 600); // ~600 kcal/hr running
 
         return new PacingSummary(
-                Math.round(totalDist) / 1.0,
+                Math.round(totalDist),
                 Math.round(totalTime * 10.0) / 10.0,
                 null,
                 avgMin + ":" + String.format("%02d", avgSec) + " /km",
                 calories,
-                carbsNeeded + "g carbs + electrolytes over " + totalMinutes + " min"
+                carbsNeeded + "g carbs + electrolytes over " + totalMinutes + " min (~50g/hr)",
+                targetBasis,
+                computedTarget
+        );
+    }
+
+    private PacingSummary buildSwimSummary(AthleteProfile profile) {
+        if (profile.swimDistanceM() == null || profile.swimDistanceM() <= 0
+                || profile.swimCssSec() == null || profile.swimCssSec() <= 0) {
+            return null;
+        }
+
+        int swimDist = profile.swimDistanceM();
+        int cssPer100m = profile.swimCssSec();
+
+        int targetPace;
+        String targetBasis;
+        Integer computedTarget;
+
+        if (profile.targetSwimPaceSecPer100m() != null && profile.targetSwimPaceSecPer100m() > 0) {
+            targetPace = profile.targetSwimPaceSecPer100m();
+            targetBasis = null;
+            computedTarget = null;
+        } else {
+            targetPace = computeSwimTarget(swimDist, cssPer100m);
+            computedTarget = targetPace;
+            int paceMin = targetPace / 60;
+            int paceSec = targetPace % 60;
+            targetBasis = paceMin + ":" + String.format("%02d", paceSec) + "/100m for " + swimDist + "m swim";
+        }
+
+        double estimatedTime = (swimDist / 100.0) * targetPace;
+        int paceMin = targetPace / 60;
+        int paceSec = targetPace % 60;
+
+        return new PacingSummary(
+                swimDist,
+                Math.round(estimatedTime * 10.0) / 10.0,
+                null,
+                paceMin + ":" + String.format("%02d", paceSec) + " /100m",
+                0,
+                "Hydrate well before start",
+                targetBasis,
+                computedTarget
         );
     }
 
@@ -257,19 +507,29 @@ public class PacingService {
 
     private String bikeFuelSuggestion(String preference) {
         return switch (preference) {
-            case "GELS" -> "Take 1 energy gel (25g carbs) + 500ml water";
-            case "DRINK" -> "Drink 500ml carb drink (60g carbs)";
-            case "SOLID" -> "Eat 1 energy bar (40g carbs) + 250ml water";
-            default -> "60-90g carbs: gel, bar, or drink mix + water";
+            case "GELS" -> "Take 1 energy gel (25g carbs) + 200ml water";
+            case "DRINK" -> "Drink 300ml carb drink (25-30g carbs)";
+            case "SOLID" -> "Eat half energy bar (20-25g carbs) + 200ml water";
+            default -> "25-30g carbs: gel, bar piece, or drink mix + water";
         };
     }
 
     private String runFuelSuggestion(String preference) {
         return switch (preference) {
             case "GELS" -> "Take 1 gel (25g carbs) + water at aid station";
-            case "DRINK" -> "250ml sports drink (30g carbs) + electrolytes";
-            case "SOLID" -> "Small piece of banana or energy chew + water";
-            default -> "30-60g carbs: gel or sports drink + electrolytes";
+            case "DRINK" -> "200ml sports drink (20-25g carbs) + water";
+            case "SOLID" -> "2-3 energy chews (15-20g carbs) + water";
+            default -> "20-25g carbs: gel or sports drink + water";
         };
+    }
+
+    // ---- HELPERS ----
+
+    private String formatDistKm(double meters) {
+        double km = meters / 1000.0;
+        if (km >= 10) {
+            return (int) Math.round(km) + "km";
+        }
+        return String.format("%.1fkm", km);
     }
 }

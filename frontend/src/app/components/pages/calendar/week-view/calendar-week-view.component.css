@@ -226,13 +226,20 @@
 
 .inline-actions button {
   border: none;
-  padding: 0.2rem 0.45rem;
-  border-radius: 4px;
   cursor: pointer;
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
   transition: all 0.2s;
+}
+
+.btn-complete,
+.btn-skip {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
 }
 
 .btn-complete {

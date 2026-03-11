@@ -6,5 +6,7 @@ public record PacingSummary(
         Integer averagePower,
         String averagePace,
         int totalCalories,
-        String nutritionPlan
+        String nutritionPlan,
+        String targetBasis,
+        Integer computedTarget
 ) {}

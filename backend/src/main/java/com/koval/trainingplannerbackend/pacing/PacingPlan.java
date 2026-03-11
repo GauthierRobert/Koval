@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend.pacing;
 import com.koval.trainingplannerbackend.pacing.dto.AthleteProfile;
 import com.koval.trainingplannerbackend.pacing.dto.PacingSegment;
 import com.koval.trainingplannerbackend.pacing.dto.PacingSummary;
+import com.koval.trainingplannerbackend.pacing.dto.RouteCoordinate;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
@@ -31,4 +32,6 @@ public class PacingPlan {
     private List<PacingSegment> runSegments;
     private PacingSummary bikeSummary;
     private PacingSummary runSummary;
+    private PacingSummary swimSummary;
+    private List<RouteCoordinate> routeCoordinates;
 }

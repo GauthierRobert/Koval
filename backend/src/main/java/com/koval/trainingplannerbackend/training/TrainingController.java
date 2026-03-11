@@ -5,6 +5,7 @@ import com.koval.trainingplannerbackend.auth.UserService;
 import com.koval.trainingplannerbackend.coach.CoachService;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.model.TrainingType;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -20,8 +21,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.Map;
@@ -91,13 +90,17 @@ public class TrainingController {
     @GetMapping
     public ResponseEntity<List<Training>> listTrainings() {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(trainingService.listTrainingsByUser(userId));
+        List<Training> trainings = trainingService.listTrainingsByUser(userId);
+        trainings.forEach(t -> trainingService.enrichTrainingForUser(t, userId));
+        return ResponseEntity.ok(trainings);
     }
 
     @GetMapping(params = "page")
     public ResponseEntity<Page<Training>> listTrainings(Pageable pageable) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(trainingService.listTrainingsByUser(userId, pageable));
+        Page<Training> page = trainingService.listTrainingsByUser(userId, pageable);
+        page.getContent().forEach(t -> trainingService.enrichTrainingForUser(t, userId));
+        return ResponseEntity.ok(page);
     }
 
     @GetMapping("/search")

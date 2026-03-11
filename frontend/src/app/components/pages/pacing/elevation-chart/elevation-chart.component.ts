@@ -1,14 +1,17 @@
 import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
   Component,
+  ElementRef,
+  EventEmitter,
   Input,
   OnChanges,
-  ElementRef,
+  Output,
+  SimpleChanges,
   ViewChild,
-  ChangeDetectionStrategy,
-  AfterViewInit,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { PacingSegment } from '../../../../services/pacing.service';
+import {CommonModule} from '@angular/common';
+import {PacingSegment, SegmentRange} from '../../../../services/pacing.service';
 
 @Component({
   selector: 'app-elevation-chart',
@@ -43,6 +46,10 @@ import { PacingSegment } from '../../../../services/pacing.service';
           <span class="tooltip-label">Power:</span>
           <span>{{ tooltipData.power }}</span>
         </div>
+        <div class="tooltip-line" *ngIf="tooltipData.speed">
+          <span class="tooltip-label">Speed:</span>
+          <span>{{ tooltipData.speed }}</span>
+        </div>
         <div class="tooltip-line" *ngIf="tooltipData.pace">
           <span class="tooltip-label">Pace:</span>
           <span>{{ tooltipData.pace }}</span>
@@ -56,10 +63,14 @@ import { PacingSegment } from '../../../../services/pacing.service';
   `,
   styles: [
     `
+      :host {
+        display: block;
+        width: 100%;
+      }
       .chart-wrapper {
         position: relative;
         width: 100%;
-        height: 300px;
+        height: 100%;
         background: var(--surface-color, #1a1a2e);
         border-radius: 12px;
         overflow: hidden;
@@ -95,6 +106,8 @@ import { PacingSegment } from '../../../../services/pacing.service';
 })
 export class ElevationChartComponent implements OnChanges, AfterViewInit {
   @Input() segments: PacingSegment[] = [];
+  @Input() highlightedRange: SegmentRange | null = null;
+  @Output() segmentHovered = new EventEmitter<number | null>();
   @ViewChild('chartCanvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
 
   tooltipVisible = false;
@@ -116,7 +129,7 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
     this.render();
   }
 
-  ngOnChanges(): void {
+  ngOnChanges(changes: SimpleChanges): void {
     if (this.ctx) {
       this.render();
     }
@@ -140,6 +153,13 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
     const plotW = w - p.left - p.right;
     const plotH = h - p.top - p.bottom;
 
+    // Split into two vertical zones
+    const dataZoneH = plotH * 0.40;   // top 40%: power/pace
+    const gapH = plotH * 0.08;        // 8% gap
+    const elevZoneH = plotH * 0.52;   // bottom 52%: elevation
+    const dataTop = p.top;
+    const elevTop = p.top + dataZoneH + gapH;
+
     // Clear
     this.ctx.clearRect(0, 0, w, h);
 
@@ -150,49 +170,45 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
     const maxElev = Math.max(...elevations) + 20;
 
     const xScale = (d: number) => p.left + (d / maxDist) * plotW;
-    const yElevScale = (e: number) => p.top + plotH - ((e - minElev) / (maxElev - minElev)) * plotH;
+    const yElevScale = (e: number) =>
+      elevTop + elevZoneH - ((e - minElev) / (maxElev - minElev)) * elevZoneH;
 
-    // Draw elevation fill
-    this.ctx.beginPath();
-    this.ctx.moveTo(xScale(this.segments[0].startDistance), yElevScale(this.segments[0].elevation));
-    for (const seg of this.segments) {
-      this.ctx.lineTo(xScale(seg.endDistance), yElevScale(seg.elevation));
-    }
-    this.ctx.lineTo(xScale(maxDist), p.top + plotH);
-    this.ctx.lineTo(p.left, p.top + plotH);
-    this.ctx.closePath();
-
-    // Gradient fill colored by gradient severity
-    const grad = this.ctx.createLinearGradient(0, p.top, 0, p.top + plotH);
-    grad.addColorStop(0, 'rgba(255, 157, 0, 0.4)');
-    grad.addColorStop(0.5, 'rgba(255, 157, 0, 0.15)');
-    grad.addColorStop(1, 'rgba(255, 157, 0, 0.05)');
-    this.ctx.fillStyle = grad;
-    this.ctx.fill();
-
-    // Elevation line
-    this.ctx.beginPath();
-    this.ctx.moveTo(xScale(this.segments[0].startDistance), yElevScale(this.segments[0].elevation));
-    for (const seg of this.segments) {
-      this.ctx.lineTo(xScale(seg.endDistance), yElevScale(seg.elevation));
-    }
-    this.ctx.strokeStyle = '#ff9d00';
-    this.ctx.lineWidth = 2;
-    this.ctx.stroke();
-
-    // Draw gradient color bands behind elevation
-    for (const seg of this.segments) {
+    // Per-segment elevation fill and line, colored by slope
+    const baseY = elevTop + elevZoneH;
+    for (let i = 0; i < this.segments.length; i++) {
+      const seg = this.segments[i];
+      const prevSeg = i > 0 ? this.segments[i - 1] : null;
       const x1 = xScale(seg.startDistance);
       const x2 = xScale(seg.endDistance);
-      const g = Math.abs(seg.gradient);
-      let color = 'rgba(52, 211, 153, 0.15)'; // green: flat
-      if (g > 6) color = 'rgba(239, 68, 68, 0.2)'; // red: steep
-      else if (g > 3) color = 'rgba(255, 157, 0, 0.2)'; // orange: moderate
-      this.ctx.fillStyle = color;
-      this.ctx.fillRect(x1, p.top, x2 - x1, plotH);
+      const y1 = prevSeg ? yElevScale(prevSeg.elevation) : yElevScale(seg.elevation);
+      const y2 = yElevScale(seg.elevation);
+
+      const slopeColor = this.getSlopeColor(seg.gradient);
+      const slopeFill = this.getSlopeFill(seg.gradient);
+
+      // Fill area under this segment
+      this.ctx.beginPath();
+      this.ctx.moveTo(x1, y1);
+      this.ctx.lineTo(x2, y2);
+      this.ctx.lineTo(x2, baseY);
+      this.ctx.lineTo(x1, baseY);
+      this.ctx.closePath();
+      const grad = this.ctx.createLinearGradient(0, Math.min(y1, y2), 0, baseY);
+      grad.addColorStop(0, slopeFill);
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0.02)');
+      this.ctx.fillStyle = grad;
+      this.ctx.fill();
+
+      // Elevation line for this segment
+      this.ctx.beginPath();
+      this.ctx.moveTo(x1, y1);
+      this.ctx.lineTo(x2, y2);
+      this.ctx.strokeStyle = slopeColor;
+      this.ctx.lineWidth = 2.5;
+      this.ctx.stroke();
     }
 
-    // Overlay power line (bike) or pace line (run) on secondary axis
+    // Overlay power line (bike) or pace line (run) in top data zone
     const hasPower = this.segments.some((s) => s.targetPower != null);
     const hasPace = this.segments.some((s) => s.targetPace != null);
 
@@ -200,7 +216,8 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
       const powers = this.segments.filter((s) => s.targetPower != null).map((s) => s.targetPower!);
       const minP = Math.min(...powers) * 0.9;
       const maxP = Math.max(...powers) * 1.1;
-      const yPowerScale = (pw: number) => p.top + plotH - ((pw - minP) / (maxP - minP)) * plotH;
+      const yPowerScale = (pw: number) =>
+        dataTop + dataZoneH - ((pw - minP) / (maxP - minP)) * dataZoneH;
 
       this.ctx.beginPath();
       let started = false;
@@ -219,12 +236,12 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
       this.ctx.lineWidth = 2;
       this.ctx.stroke();
 
-      // Power axis labels (right side)
+      // Power axis labels (right side, data zone)
       this.ctx.fillStyle = '#60a5fa';
       this.ctx.font = '11px monospace';
       this.ctx.textAlign = 'left';
-      this.ctx.fillText(`${Math.round(maxP)}W`, w - p.right + 8, p.top + 12);
-      this.ctx.fillText(`${Math.round(minP)}W`, w - p.right + 8, p.top + plotH);
+      this.ctx.fillText(`${Math.round(maxP)}W`, w - p.right + 8, dataTop + 12);
+      this.ctx.fillText(`${Math.round(minP)}W`, w - p.right + 8, dataTop + dataZoneH);
     }
 
     if (hasPace) {
@@ -234,7 +251,8 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
       const minPace = Math.min(...paces) * 0.9;
       const maxPace = Math.max(...paces) * 1.1;
       // Pace: lower is faster, so invert Y
-      const yPaceScale = (pc: number) => p.top + ((pc - minPace) / (maxPace - minPace)) * plotH;
+      const yPaceScale = (pc: number) =>
+        dataTop + ((pc - minPace) / (maxPace - minPace)) * dataZoneH;
 
       this.ctx.beginPath();
       let started = false;
@@ -253,7 +271,7 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
       this.ctx.lineWidth = 2;
       this.ctx.stroke();
 
-      // Pace axis labels (right side)
+      // Pace axis labels (right side, data zone)
       this.ctx.fillStyle = '#34d399';
       this.ctx.font = '11px monospace';
       this.ctx.textAlign = 'left';
@@ -262,16 +280,24 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
       this.ctx.fillText(
         `${Math.floor(fastPace / 60)}:${String(fastPace % 60).padStart(2, '0')}`,
         w - p.right + 8,
-        p.top + 12,
+        dataTop + 12,
       );
       this.ctx.fillText(
         `${Math.floor(slowPace / 60)}:${String(slowPace % 60).padStart(2, '0')}`,
         w - p.right + 8,
-        p.top + plotH,
+        dataTop + dataZoneH,
       );
     }
 
-    // Fatigue overlay (increasing red tint from left to right)
+    // Separator line between data zone and elevation zone
+    this.ctx.beginPath();
+    this.ctx.moveTo(p.left, dataTop + dataZoneH + gapH / 2);
+    this.ctx.lineTo(w - p.right, dataTop + dataZoneH + gapH / 2);
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    this.ctx.lineWidth = 1;
+    this.ctx.stroke();
+
+    // Fatigue overlay (only on elevation zone)
     if (this.segments.length > 1) {
       const maxFatigue = Math.max(...this.segments.map((s) => s.cumulativeFatigue));
       if (maxFatigue > 0) {
@@ -280,23 +306,38 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
           const x2 = xScale(seg.endDistance);
           const alpha = Math.min((seg.cumulativeFatigue / maxFatigue) * 0.15, 0.15);
           this.ctx.fillStyle = `rgba(239, 68, 68, ${alpha})`;
-          this.ctx.fillRect(x1, p.top, x2 - x1, plotH);
+          this.ctx.fillRect(x1, elevTop, x2 - x1, elevZoneH);
         }
       }
     }
 
-    // Nutrition markers
+    // Highlighted segment range overlay (spans full plotH)
+    if (this.highlightedRange != null) {
+      const startSeg = this.segments[this.highlightedRange.start];
+      const endSeg = this.segments[Math.min(this.highlightedRange.end, this.segments.length - 1)];
+      if (startSeg && endSeg) {
+        const hx1 = xScale(startSeg.startDistance);
+        const hx2 = xScale(endSeg.endDistance);
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+        this.ctx.fillRect(hx1, p.top, hx2 - hx1, plotH);
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(hx1, p.top, hx2 - hx1, plotH);
+      }
+    }
+
+    // Nutrition markers (in data zone)
     for (const seg of this.segments) {
       if (seg.nutritionSuggestion) {
         const x = xScale((seg.startDistance + seg.endDistance) / 2);
         this.ctx.fillStyle = '#fbbf24';
         this.ctx.beginPath();
-        this.ctx.arc(x, p.top + 12, 5, 0, Math.PI * 2);
+        this.ctx.arc(x, dataTop + 12, 5, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.fillStyle = '#000';
         this.ctx.font = 'bold 8px monospace';
         this.ctx.textAlign = 'center';
-        this.ctx.fillText('N', x, p.top + 15);
+        this.ctx.fillText('N', x, dataTop + 15);
       }
     }
 
@@ -313,19 +354,30 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
       this.ctx.fillText(label, x, h - p.bottom + 20);
     }
 
-    // Y-axis labels (elevation, left side)
-    this.ctx.fillStyle = '#ff9d00';
+    // Y-axis labels (elevation, left side — in elevation zone)
+    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
     this.ctx.textAlign = 'right';
-    this.ctx.fillText(`${Math.round(maxElev)}m`, p.left - 8, p.top + 12);
-    this.ctx.fillText(`${Math.round(minElev)}m`, p.left - 8, p.top + plotH);
+    this.ctx.fillText(`${Math.round(maxElev)}m`, p.left - 8, elevTop + 12);
+    this.ctx.fillText(`${Math.round(minElev)}m`, p.left - 8, elevTop + elevZoneH);
 
-    // Legend
+    // Legend — slope colors
     this.ctx.font = '10px monospace';
     this.ctx.textAlign = 'left';
     let legendX = p.left;
-    this.ctx.fillStyle = '#ff9d00';
-    this.ctx.fillText('— Elevation', legendX, p.top - 10);
-    legendX += 90;
+    const slopeLegend: Array<{ label: string; color: string }> = [
+      { label: 'Steep ▲', color: '#dc2626' },
+      { label: 'Climb', color: '#f97316' },
+      { label: 'Flat', color: '#a0a0a0' },
+      { label: 'Descent', color: '#22c55e' },
+      { label: 'Steep ▼', color: '#2563eb' },
+    ];
+    for (const item of slopeLegend) {
+      this.ctx.fillStyle = item.color;
+      this.ctx.fillRect(legendX, p.top - 16, 12, 4);
+      this.ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      this.ctx.fillText(item.label, legendX + 16, p.top - 10);
+      legendX += this.ctx.measureText(item.label).width + 28;
+    }
     if (hasPower) {
       this.ctx.fillStyle = '#60a5fa';
       this.ctx.fillText('— Power', legendX, p.top - 10);
@@ -348,11 +400,15 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
     const maxDist = Math.max(...this.segments.map((s) => s.endDistance));
     const dist = ((x - p.left) / plotW) * maxDist;
 
-    const seg = this.segments.find((s) => dist >= s.startDistance && dist <= s.endDistance);
+    const segIndex = this.segments.findIndex((s) => dist >= s.startDistance && dist <= s.endDistance);
+    const seg = segIndex >= 0 ? this.segments[segIndex] : null;
     if (!seg) {
       this.tooltipVisible = false;
+      this.segmentHovered.emit(null);
       return;
     }
+
+    this.segmentHovered.emit(segIndex);
 
     this.tooltipVisible = true;
     this.tooltipX = Math.min(x + 15, rect.width - 180);
@@ -362,6 +418,7 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
       elevation: Math.round(seg.elevation) + ' m',
       gradient: seg.gradient.toFixed(1) + '%',
       power: seg.targetPower ? seg.targetPower + ' W' : null,
+      speed: seg.estimatedSpeedKmh ? seg.estimatedSpeedKmh.toFixed(1) + ' km/h' : null,
       pace: seg.targetPace || null,
       fatigue: (seg.cumulativeFatigue * 100).toFixed(0) + '%',
     };
@@ -369,6 +426,35 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
 
   onMouseLeave(): void {
     this.tooltipVisible = false;
+    this.segmentHovered.emit(null);
+  }
+
+  private getSlopeColor(gradient: number): string {
+    const g = gradient;
+    if (g > 12) return '#7c3aed';       // extreme climb — deep purple
+    if (g > 8) return '#c026d3';        // very steep climb — red-purple
+    if (g > 6) return '#dc2626';        // steep climb — red
+    if (g > 3) return '#ea580c';        // moderate climb — red-orange
+    if (g > 1) return '#f97316';        // slight climb — orange
+    if (g >= -1) return '#a0a0a0';      // flat — grey
+    if (g >= -3) return '#22c55e';      // slight descent — green
+    if (g >= -6) return '#0d9488';      // moderate descent — teal
+    if (g >= -10) return '#2563eb';     // steep descent — blue
+    return '#1e3a5f';                   // very steep descent — dark blue
+  }
+
+  private getSlopeFill(gradient: number): string {
+    const g = gradient;
+    if (g > 12) return 'rgba(124, 58, 237, 0.35)';
+    if (g > 8) return 'rgba(192, 38, 211, 0.3)';
+    if (g > 6) return 'rgba(220, 38, 38, 0.3)';
+    if (g > 3) return 'rgba(234, 88, 12, 0.25)';
+    if (g > 1) return 'rgba(249, 115, 22, 0.2)';
+    if (g >= -1) return 'rgba(160, 160, 160, 0.15)';
+    if (g >= -3) return 'rgba(34, 197, 94, 0.2)';
+    if (g >= -6) return 'rgba(13, 148, 136, 0.2)';
+    if (g >= -10) return 'rgba(37, 99, 235, 0.25)';
+    return 'rgba(30, 58, 95, 0.3)';
   }
 
   private parsePace(paceStr: string): number {

@@ -32,13 +32,14 @@
   <!-- Main Chat Area -->
   <div class="chat-main">
     <div class="chat-header-main glass">
-      <div class="coach-meta">
-        <div class="avatar-technical">K</div>
-        <div class="coach-info">
-          <span class="coach-name">KOVAL <span class="dim">TECHNICAL ASSISTANT</span></span>
+      <div class="header-left">
+        <div class="header-avatar">K</div>
+        <div class="header-info">
+          <span class="header-title">KOVAL <span class="dim">ASSISTANT</span></span>
+          <span class="header-subtitle">AI-powered training guidance</span>
         </div>
       </div>
-
+      <div class="header-right"></div>
     </div>
 
     @let messages = chatService.chatMessages$ | async;

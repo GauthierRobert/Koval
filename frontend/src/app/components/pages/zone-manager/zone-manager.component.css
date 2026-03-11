@@ -389,6 +389,22 @@
   border-color: var(--accent-color);
 }
 
+.config-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-color);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.config-input:focus {
+  border-color: var(--accent-color);
+}
+
 .editor-actions {
   display: flex;
   gap: 6px;

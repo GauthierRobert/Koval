@@ -8,10 +8,15 @@ public record AthleteProfile(
         Integer weightKg,
         Integer thresholdPaceSec,
         Integer swimCssSec,
-        Double fatigueResistance,
+        Double fatigueResistance, // TODO: Not yet used in calculations — UI hidden
         String nutritionPreference,
         Double temperature,
-        Double windSpeed
+        Double windSpeed,
+        Integer targetPowerWatts,
+        Integer targetPaceSecPerKm,
+        Integer swimDistanceM,
+        Integer targetSwimPaceSecPer100m,
+        String bikeType
 ) {
     /**
      * Merge user defaults into this profile, filling any null fields.
@@ -26,7 +31,12 @@ public record AthleteProfile(
                 fatigueResistance != null ? fatigueResistance : 0.5,
                 nutritionPreference != null ? nutritionPreference : "MIXED",
                 temperature != null ? temperature : 20.0,
-                windSpeed != null ? windSpeed : 0.0
+                windSpeed != null ? windSpeed : 0.0,
+                targetPowerWatts,
+                targetPaceSecPerKm,
+                swimDistanceM,
+                targetSwimPaceSecPer100m,
+                bikeType != null ? bikeType : "ROAD_AERO"
         );
     }
 }

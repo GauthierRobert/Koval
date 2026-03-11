@@ -1,9 +1,17 @@
 import {
-    AfterViewInit, Component, ElementRef, EventEmitter, Input,
-    OnChanges, OnDestroy, Output, SimpleChanges, ViewChild,
+  AfterViewInit,
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnDestroy,
+  Output,
+  SimpleChanges,
+  ViewChild,
 } from '@angular/core';
 import {PmcDataPoint} from '../../../services/metrics.service';
-import {RaceGoal, PRIORITY_COLORS} from '../../../services/race-goal.service';
+import {PRIORITY_COLORS, RaceGoal} from '../../../services/race-goal.service';
 
 const SPORT_COLORS: Record<string, string> = {
     CYCLING: '#FF9D00',
@@ -540,21 +548,46 @@ export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
             const order: Record<string, number> = { C: 0, B: 1, A: 2 };
             return (order[a.priority] ?? 0) - (order[b.priority] ?? 0);
         });
-        const usedLabelYs: number[] = [];
+        const usedLabelBoxes: Array<{ x: number; y: number; w: number; h: number }> = [];
+
+        const roundRect = (c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) => {
+            c.beginPath();
+            c.moveTo(x + r, y);
+            c.lineTo(x + w - r, y);
+            c.arcTo(x + w, y, x + w, y + r, r);
+            c.lineTo(x + w, y + h - r);
+            c.arcTo(x + w, y + h, x + w - r, y + h, r);
+            c.lineTo(x + r, y + h);
+            c.arcTo(x, y + h, x, y + h - r, r);
+            c.lineTo(x, y + r);
+            c.arcTo(x, y, x + r, y, r);
+            c.closePath();
+        };
 
         for (const goal of sortedGoals) {
             const gx = xOf(goal.raceDate);
             const color = PRIORITY_COLORS[goal.priority] ?? '#9CA3AF';
             const isA = goal.priority === 'A';
 
+            // A-priority glow
             if (isA) {
                 ctx.save();
+                for (const [w, a] of [[6, 0.03], [4, 0.05], [2, 0.08]] as [number, number][]) {
+                    ctx.strokeStyle = color;
+                    ctx.globalAlpha = a;
+                    ctx.lineWidth = w;
+                    ctx.setLineDash([]);
+                    ctx.beginPath();
+                    ctx.moveTo(gx, mT); ctx.lineTo(gx, H - mB);
+                    ctx.stroke();
+                }
                 ctx.fillStyle = color;
                 ctx.globalAlpha = 0.06;
                 ctx.fillRect(gx - 8, mT, 16, cH);
                 ctx.restore();
             }
 
+            // Vertical line
             ctx.save();
             ctx.strokeStyle = color;
             ctx.lineWidth = isA ? 2 : 1.5;
@@ -564,46 +597,65 @@ export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
             ctx.moveTo(gx, mT); ctx.lineTo(gx, H - mB);
             ctx.stroke();
 
-            ctx.fillStyle = color;
-            ctx.globalAlpha = 0.9;
-            ctx.beginPath();
-            if (isA) {
-                ctx.moveTo(gx, mT + 2);
-                ctx.lineTo(gx + 14, mT + 9);
-                ctx.lineTo(gx, mT + 16);
-            } else {
-                ctx.moveTo(gx, mT + 2);
-                ctx.lineTo(gx + 10, mT + 7);
-                ctx.lineTo(gx, mT + 12);
-            }
-            ctx.closePath();
-            ctx.fill();
-
+            // Priority badge (rounded rect with letter)
+            const badgeW = isA ? 18 : 16;
+            const badgeH = isA ? 16 : 14;
+            const badgeX = gx - badgeW / 2;
+            const badgeY = mT - badgeH - 4;
             ctx.globalAlpha = 1;
             ctx.fillStyle = color;
-            ctx.font = isA ? `bold ${FONT}` : `bold ${FONT_XS}`;
+            roundRect(ctx, badgeX, badgeY, badgeW, badgeH, 4);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.font = `bold ${isA ? FONT_SM : FONT_XS}`;
             ctx.textAlign = 'center';
-            ctx.fillText(goal.priority, gx - 5, mT - 2);
+            ctx.textBaseline = 'middle';
+            ctx.fillText(goal.priority, gx, badgeY + badgeH / 2);
+            ctx.textBaseline = 'alphabetic';
+
+            // Label positioning with bounding box overlap detection
+            const title = goal.title.length > 21 ? goal.title.substring(0, 20) + '\u2026' : goal.title;
+            ctx.font = isA ? `bold ${FONT_SM}` : FONT_XS;
+            const titleWidth = ctx.measureText(title).width;
+            const dateLabel = new Date(goal.raceDate + 'T12:00:00')
+                .toLocaleDateString('en', { month: 'short', day: 'numeric' });
+            ctx.font = FONT_XS;
+            const dateWidth = ctx.measureText(dateLabel).width;
+            const labelW = Math.max(titleWidth, dateWidth) + 8;
+            const labelH = (goal as any).distance ? 40 : 28;
 
             let labelY = mT + (isA ? 26 : 22);
-            for (const usedY of usedLabelYs) {
-                if (Math.abs(gx - usedY) < 60) {
-                    labelY += 22;
+            for (const box of usedLabelBoxes) {
+                if (gx + 3 < box.x + box.w && gx + 3 + labelW > box.x &&
+                    labelY - 12 < box.y + box.h && labelY - 12 + labelH > box.y) {
+                    labelY = box.y + box.h + 4;
                 }
             }
-            usedLabelYs.push(gx);
+            usedLabelBoxes.push({ x: gx + 3, y: labelY - 12, w: labelW, h: labelH });
 
-            const title = goal.title.length > 14 ? goal.title.substring(0, 13) + '\u2026' : goal.title;
+            // Label background
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = 'rgba(15, 15, 17, 0.88)';
+            roundRect(ctx, gx - 1, labelY - 12, labelW + 4, labelH, 4);
+            ctx.fill();
+
+            // Title text
             ctx.fillStyle = isA ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.7)';
             ctx.font = isA ? `bold ${FONT_SM}` : FONT_XS;
             ctx.textAlign = 'left';
             ctx.fillText(title, gx + 3, labelY);
 
-            const dateLabel = new Date(goal.raceDate + 'T12:00:00')
-                .toLocaleDateString('en', { month: 'short', day: 'numeric' });
+            // Date text
             ctx.fillStyle = 'rgba(255,255,255,0.4)';
             ctx.font = FONT_XS;
             ctx.fillText(dateLabel, gx + 3, labelY + 12);
+
+            // Distance/location in dimmer color if available
+            if ((goal as any).distance) {
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.font = FONT_XS;
+                ctx.fillText((goal as any).distance, gx + 3, labelY + 24);
+            }
             ctx.restore();
         }
 

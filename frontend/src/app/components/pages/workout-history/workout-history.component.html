@@ -76,6 +76,16 @@
 
   <!-- Right panel: analysis or empty state -->
   <main class="history-main">
+    <div class="header glass">
+      <div class="header-left">
+        <div class="header-avatar">A</div>
+        <div class="header-info">
+          <span class="header-title">ACTIVITY <span class="dim">HISTORY</span></span>
+          <span class="header-subtitle">Past sessions &amp; analytics</span>
+        </div>
+      </div>
+      <div class="header-right"></div>
+    </div>
     <ng-container *ngIf="historyService.selectedSession$ | async as session; else noSelection">
       <app-session-analysis [session]="session"></app-session-analysis>
     </ng-container>

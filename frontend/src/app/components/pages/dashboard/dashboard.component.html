@@ -1,6 +1,19 @@
 <ng-container *ngIf="vm$ | async as vm">
   <div class="dashboard-layout">
 
+    <div class="header glass">
+      <div class="header-left">
+        <div class="header-avatar">D</div>
+        <div class="header-info">
+          <span class="header-title">ATHLETE <span class="dim">DASHBOARD</span></span>
+          <span class="header-subtitle">Weekly summary &amp; performance overview</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <a routerLink="/pmc" class="stat-pmc-link">FULL PMC →</a>
+      </div>
+    </div>
+
     <!-- Status strip: CTL / ATL / TSB / FTP — sourced from live PMC API -->
     <div class="status-strip glass" *ngIf="vm.form.ctl != null || vm.form.ftp">
       <div class="stat-item" *ngIf="vm.form.ctl != null">
@@ -31,8 +44,6 @@
         <span class="stat-value ftp">{{ vm.form.ftp }}W</span>
         <span class="stat-sublabel">threshold</span>
       </div>
-      <div class="stat-spacer"></div>
-      <a routerLink="/pmc" class="stat-pmc-link">FULL PMC →</a>
     </div>
 
     <div class="dashboard-body">

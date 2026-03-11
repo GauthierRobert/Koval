@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.pacing.gpx;
 
+import com.koval.trainingplannerbackend.pacing.dto.RouteCoordinate;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -15,7 +16,8 @@ import java.util.List;
 public class GpxParser {
 
     private static final double EARTH_RADIUS_M = 6_371_000.0;
-    private static final double SEGMENT_LENGTH_M = 500.0;
+    private static final double DEFAULT_SEGMENT_LENGTH_M = 100.0;
+    public static final double RUN_SEGMENT_LENGTH_M = 100.0;
 
     /**
      * Parse a GPX input stream into a list of course segments (~500m each).
@@ -25,7 +27,51 @@ public class GpxParser {
         if (trackPoints.size() < 2) {
             throw new IllegalArgumentException("GPX file must contain at least 2 trackpoints");
         }
-        return buildSegments(trackPoints);
+        return buildSegments(trackPoints, DEFAULT_SEGMENT_LENGTH_M);
+    }
+
+    /**
+     * Parse a GPX input stream into course segments and downsampled route coordinates for map display.
+     * Uses the default segment length (~500m).
+     */
+    public GpxParseResult parseWithCoordinates(InputStream gpxStream) {
+        return parseWithCoordinates(gpxStream, DEFAULT_SEGMENT_LENGTH_M);
+    }
+
+    /**
+     * Parse a GPX input stream into course segments with a custom segment length, plus downsampled route coordinates.
+     */
+    public GpxParseResult parseWithCoordinates(InputStream gpxStream, double segmentLengthM) {
+        List<GpxTrackPoint> trackPoints = parseTrackPoints(gpxStream);
+        if (trackPoints.size() < 2) {
+            throw new IllegalArgumentException("GPX file must contain at least 2 trackpoints");
+        }
+        List<CourseSegment> segments = buildSegments(trackPoints, segmentLengthM);
+        List<RouteCoordinate> coordinates = downsampleCoordinates(trackPoints);
+        return new GpxParseResult(segments, coordinates);
+    }
+
+    /**
+     * Downsample track points to ~1 point per 50m for map display.
+     */
+    private List<RouteCoordinate> downsampleCoordinates(List<GpxTrackPoint> points) {
+        List<RouteCoordinate> result = new ArrayList<>();
+        double lastDistance = -50.0; // ensure first point is included
+
+        for (GpxTrackPoint pt : points) {
+            if (pt.cumulativeDistance() - lastDistance >= 50.0) {
+                result.add(new RouteCoordinate(pt.lat(), pt.lon(), pt.elevation(), pt.cumulativeDistance()));
+                lastDistance = pt.cumulativeDistance();
+            }
+        }
+
+        // Always include the last point
+        GpxTrackPoint last = points.get(points.size() - 1);
+        if (result.isEmpty() || result.get(result.size() - 1).distance() != last.cumulativeDistance()) {
+            result.add(new RouteCoordinate(last.lat(), last.lon(), last.elevation(), last.cumulativeDistance()));
+        }
+
+        return result;
     }
 
     private List<GpxTrackPoint> parseTrackPoints(InputStream gpxStream) {
@@ -73,7 +119,7 @@ public class GpxParser {
         }
     }
 
-    private List<CourseSegment> buildSegments(List<GpxTrackPoint> points) {
+    private List<CourseSegment> buildSegments(List<GpxTrackPoint> points, double segmentLengthM) {
         List<CourseSegment> segments = new ArrayList<>();
         double totalDistance = points.get(points.size() - 1).cumulativeDistance();
 
@@ -81,7 +127,7 @@ public class GpxParser {
         int pointIndex = 0;
 
         while (segStart < totalDistance) {
-            double segEnd = Math.min(segStart + SEGMENT_LENGTH_M, totalDistance);
+            double segEnd = Math.min(segStart + segmentLengthM, totalDistance);
 
             // Find the trackpoints bracketing this segment
             double elevationGain = 0.0;

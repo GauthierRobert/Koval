@@ -38,8 +38,17 @@
                   [style.border-color]="getTypeColor(entry.scheduled.trainingType) + '40'">{{ getTypeLabel(entry.scheduled.trainingType) }}</span>
                 <div class="inline-actions" *ngIf="entry.scheduled.status === 'PENDING'">
                   <button class="btn-complete" [disabled]="isFutureDate(entry.scheduled.scheduledDate)"
-                    (click)="complete.emit(entry.scheduled); $event.stopPropagation()">COMPLETE</button>
-                  <button class="btn-skip" (click)="skip.emit(entry.scheduled); $event.stopPropagation()">SKIP</button>
+                    (click)="complete.emit(entry.scheduled); $event.stopPropagation()" title="Mark Complete">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  </button>
+                  <button class="btn-skip" (click)="skip.emit(entry.scheduled); $event.stopPropagation()" title="Skip">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                      <polygon points="5 4 15 12 5 20"/>
+                      <rect x="17" y="4" width="3" height="16"/>
+                    </svg>
+                  </button>
                 </div>
               </div>
               <div class="technical-metrics">

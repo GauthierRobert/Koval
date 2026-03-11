@@ -2,13 +2,13 @@ package com.koval.trainingplannerbackend.training;
 
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
+import com.koval.trainingplannerbackend.training.group.Group;
+import com.koval.trainingplannerbackend.training.group.GroupService;
 import com.koval.trainingplannerbackend.training.model.BlockType;
 import com.koval.trainingplannerbackend.training.model.SportType;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.model.TrainingType;
 import com.koval.trainingplannerbackend.training.model.WorkoutBlock;
-import com.koval.trainingplannerbackend.training.group.Group;
-import com.koval.trainingplannerbackend.training.group.GroupService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -187,10 +187,7 @@ public class TrainingService {
         if (training.getBlocks() == null || training.getBlocks().isEmpty()) {
             return;
         }
-        // Only recalculate if the requesting user is different from the creator
-        if (userId != null && !userId.equals(training.getCreatedBy())) {
-            calculateTrainingMetrics(training, userId);
-        }
+        calculateTrainingMetrics(training, userId);
     }
 
     /**

@@ -1,78 +1,192 @@
-<div class="pacing-page">
+<div class="pacing-page" [class.results-active]="pacingPlan$ | async">
   <div class="page-header">
     <h1>Race Pacing</h1>
     <p class="subtitle">Upload a GPX course file and generate an elevation-aware pacing plan</p>
   </div>
 
-  <div class="content-grid" [class.has-results]="(pacingPlan$ | async) !== null">
-    <!-- Left: Input Form -->
-    <div class="form-panel glass">
-      <h2 class="section-title">Course & Profile</h2>
+  <!-- Initial Form (no results yet) -->
+  <div class="form-panel-wide glass" *ngIf="!(pacingPlan$ | async)">
 
-      <!-- GPX Upload -->
-      <div
-        class="gpx-dropzone"
-        [class.dragging]="isDragging"
-        [class.has-file]="gpxFile"
-        (dragover)="onDragOver($event)"
-        (dragleave)="onDragLeave()"
-        (drop)="onDrop($event)"
-        (click)="fileInput.click()"
-      >
-        <input #fileInput type="file" accept=".gpx" hidden (change)="onFileSelected($event)" />
-        <svg *ngIf="!gpxFile" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-          <polyline points="17 8 12 3 7 8" />
-          <line x1="12" y1="3" x2="12" y2="15" />
-        </svg>
-        <span *ngIf="!gpxFile">Drop GPX file here or click to browse</span>
-        <span *ngIf="gpxFile" class="file-name">{{ gpxFileName }}</span>
-      </div>
-
-      <!-- Discipline Selector -->
+    <!-- Row 1: Discipline (left) + Bike Type (right) -->
+    <div class="form-row-2col">
       <div class="field-group">
         <label class="field-label">Discipline</label>
         <div class="pill-group">
+          <button class="pill" [class.active]="discipline === 'SWIM'" (click)="discipline = 'SWIM'">Swim</button>
           <button class="pill" [class.active]="discipline === 'BIKE'" (click)="discipline = 'BIKE'">Bike</button>
           <button class="pill" [class.active]="discipline === 'RUN'" (click)="discipline = 'RUN'">Run</button>
-          <button class="pill" [class.active]="discipline === 'BOTH'" (click)="discipline = 'BOTH'">Both</button>
+          <button class="pill" [class.active]="discipline === 'TRIATHLON'" (click)="discipline = 'TRIATHLON'">Triathlon</button>
+        </div>
+      </div>
+      <div class="field-group" *ngIf="needsBike()">
+        <label class="field-label">Bike Type</label>
+        <div class="pill-group">
+          <button class="pill" [class.active]="profile.bikeType === 'TT'" (click)="profile.bikeType = 'TT'">TT</button>
+          <button class="pill" [class.active]="profile.bikeType === 'ROAD_AERO'" (click)="profile.bikeType = 'ROAD_AERO'">Road + Aero</button>
+          <button class="pill" [class.active]="profile.bikeType === 'ROAD'" (click)="profile.bikeType = 'ROAD'">Road</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: GPX Upload — Bike left, Run right -->
+    <div class="gpx-row" *ngIf="needsBike() || needsRun()">
+      <!-- Bike GPX (single-discipline BIKE or TRIATHLON) -->
+      <div class="gpx-col" *ngIf="needsBike()">
+        <div class="gpx-with-loops">
+          <div class="gpx-dropzone-labeled">
+            <span class="dropzone-label">Bike Course GPX</span>
+            <div
+              class="gpx-dropzone"
+              [class.dragging]="discipline === 'BIKE' ? isDragging : isDraggingBike"
+              [class.has-file]="discipline === 'BIKE' ? gpxFile : bikeGpxFile"
+              (dragover)="onDragOver($event, discipline === 'BIKE' ? 'gpx' : 'bike')"
+              (dragleave)="onDragLeave(discipline === 'BIKE' ? 'gpx' : 'bike')"
+              (drop)="onDrop($event, discipline === 'BIKE' ? 'gpx' : 'bike')"
+              (click)="bikeFileInput.click()"
+            >
+              <input #bikeFileInput type="file" accept=".gpx" hidden
+                (change)="onFileSelected($event, discipline === 'BIKE' ? 'gpx' : 'bike')" />
+              <svg *ngIf="!(discipline === 'BIKE' ? gpxFile : bikeGpxFile)" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              <span *ngIf="!(discipline === 'BIKE' ? gpxFile : bikeGpxFile)">Drop bike GPX</span>
+              <span *ngIf="discipline === 'BIKE' ? gpxFile : bikeGpxFile" class="file-name">
+                {{ discipline === 'BIKE' ? gpxFileName : bikeGpxFileName }}
+              </span>
+            </div>
+          </div>
+          <div class="loop-input">
+            <label>Loops</label>
+            <input type="number" [(ngModel)]="bikeLoops" min="1" max="50" />
+          </div>
         </div>
       </div>
 
-      <!-- Athlete Metrics -->
-      <h3 class="subsection-title">Athlete Metrics</h3>
+      <!-- Run GPX (single-discipline RUN or TRIATHLON) -->
+      <div class="gpx-col" *ngIf="needsRun()">
+        <div class="gpx-with-loops">
+          <div class="gpx-dropzone-labeled">
+            <span class="dropzone-label">Run Course GPX</span>
+            <div
+              class="gpx-dropzone"
+              [class.dragging]="discipline === 'RUN' ? isDragging : isDraggingRun"
+              [class.has-file]="discipline === 'RUN' ? gpxFile : runGpxFile"
+              (dragover)="onDragOver($event, discipline === 'RUN' ? 'gpx' : 'run')"
+              (dragleave)="onDragLeave(discipline === 'RUN' ? 'gpx' : 'run')"
+              (drop)="onDrop($event, discipline === 'RUN' ? 'gpx' : 'run')"
+              (click)="runFileInput.click()"
+            >
+              <input #runFileInput type="file" accept=".gpx" hidden
+                (change)="onFileSelected($event, discipline === 'RUN' ? 'gpx' : 'run')" />
+              <svg *ngIf="!(discipline === 'RUN' ? gpxFile : runGpxFile)" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              <span *ngIf="!(discipline === 'RUN' ? gpxFile : runGpxFile)">Drop run GPX</span>
+              <span *ngIf="discipline === 'RUN' ? gpxFile : runGpxFile" class="file-name">
+                {{ discipline === 'RUN' ? gpxFileName : runGpxFileName }}
+              </span>
+            </div>
+          </div>
+          <div class="loop-input">
+            <label>Loops</label>
+            <input type="number" [(ngModel)]="runLoops" min="1" max="50" />
+          </div>
+        </div>
+      </div>
+    </div>
 
-      <div class="field-row">
-        <div class="field">
+    <!-- Row 3: Athlete Metrics -->
+    <div class="form-section">
+      <h3 class="subsection-title">Athlete Metrics</h3>
+      <div class="form-fields-row">
+        <div class="field" *ngIf="needsBike()">
           <label>FTP (W)</label>
           <input type="number" [(ngModel)]="profile.ftp" placeholder="250" min="50" max="500" />
         </div>
-        <div class="field">
+        <div class="field" *ngIf="needsBike()">
           <label>Weight (kg)</label>
           <input type="number" [(ngModel)]="profile.weightKg" placeholder="75" min="30" max="200" />
         </div>
-      </div>
-
-      <div class="field-row">
-        <div class="field">
+        <div class="field" *ngIf="needsRun()">
           <label>Threshold Pace (s/km)</label>
           <input type="number" [(ngModel)]="profile.thresholdPaceSec" placeholder="270" min="120" max="600" />
         </div>
-        <div class="field">
+        <div class="field" *ngIf="needsSwim()">
           <label>Swim CSS (s/100m)</label>
           <input type="number" [(ngModel)]="profile.swimCssSec" placeholder="95" min="40" max="200" />
         </div>
       </div>
+    </div>
 
-      <div class="field-row">
-        <div class="field">
-          <label>Fatigue Resistance</label>
-          <input type="range" [(ngModel)]="profile.fatigueResistance" min="0" max="1" step="0.05" />
-          <span class="range-value">{{ (profile.fatigueResistance || 0) | number: '1.0-2' }}</span>
+    <!-- Row 4: Race Targets -->
+    <div class="form-section">
+      <div class="label-with-tooltip">
+        <h3 class="subsection-title">Race Targets</h3>
+        <span class="tooltip-trigger" *ngIf="discipline === 'TRIATHLON'">?
+          <span class="tooltip-text tooltip-wide">
+            <strong>Triathlon Power Targets (%FTP)</strong>
+            <table class="tooltip-table">
+              <tr><th>Distance</th><th>Beginner</th><th>Interm.</th><th>Elite</th></tr>
+              <tr><td>Sprint (20km)</td><td>80–85%</td><td>90–95%</td><td>95–105%</td></tr>
+              <tr><td>Olympic (40km)</td><td>70–80%</td><td>82–88%</td><td>90–95%</td></tr>
+              <tr><td>70.3 (90km)</td><td>65–75%</td><td>78–84%</td><td>85–90%</td></tr>
+              <tr><td>Ironman (180km)</td><td>60–70%</td><td>70–78%</td><td>78–85%</td></tr>
+            </table>
+          </span>
+        </span>
+      </div>
+      <div class="form-fields-row">
+        <div class="field" *ngIf="needsBike()">
+          <label>Target Power (%FTP)</label>
+          <input type="number" [ngModel]="targetPowerPct" (ngModelChange)="onTargetPowerPctChange($event)" placeholder="Auto" min="30" max="120" />
+          <span class="field-hint computed" *ngIf="computedPowerWatts() as w">= {{ w }}W</span>
+          <span class="field-hint" *ngIf="!targetPowerPct">Auto</span>
         </div>
+        <div class="field" *ngIf="needsRun()">
+          <label>Target Pace (%Threshold)</label>
+          <input type="number" [ngModel]="targetPacePct" (ngModelChange)="onTargetPacePctChange($event)" placeholder="Auto" min="80" max="150" />
+          <span class="field-hint computed" *ngIf="computedPaceDisplay() as p">= {{ p }}</span>
+          <span class="field-hint" *ngIf="!targetPacePct">Auto</span>
+        </div>
+        <div class="field" *ngIf="needsSwim()">
+          <label>Swim Distance (m)</label>
+          <input type="number" [(ngModel)]="profile.swimDistanceM" placeholder="1900" min="100" max="10000" />
+        </div>
+        <div class="field" *ngIf="needsSwim() && profile.swimDistanceM">
+          <label>Swim Pace (s/100m)</label>
+          <input type="number" [(ngModel)]="profile.targetSwimPaceSecPer100m" min="40" max="300" />
+          <span class="field-hint" *ngIf="!profile.targetSwimPaceSecPer100m">Auto</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 5: Environment -->
+    <div class="form-section" *ngIf="needsBike() || needsRun()">
+      <h3 class="subsection-title">Environment</h3>
+      <div class="form-fields-row">
         <div class="field">
-          <label>Nutrition</label>
+          <label>Temperature (°C)</label>
+          <input type="number" [(ngModel)]="profile.temperature" placeholder="20" min="-10" max="50" />
+        </div>
+        <div class="field" *ngIf="needsBike()">
+          <label>Wind Speed (m/s)</label>
+          <input type="number" [(ngModel)]="profile.windSpeed" placeholder="0" min="0" max="30" step="0.5" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 6: Nutrition -->
+    <div class="form-section">
+      <h3 class="subsection-title">Nutrition</h3>
+      <div class="form-fields-row">
+        <div class="field">
+          <label>Preference</label>
           <select [(ngModel)]="profile.nutritionPreference">
             <option value="MIXED">Mixed</option>
             <option value="GELS">Gels</option>
@@ -81,39 +195,80 @@
           </select>
         </div>
       </div>
+    </div>
 
-      <!-- Environment -->
-      <h3 class="subsection-title">Environment</h3>
-      <div class="field-row">
-        <div class="field">
-          <label>Temperature (°C)</label>
-          <input type="number" [(ngModel)]="profile.temperature" placeholder="20" min="-10" max="50" />
-        </div>
-        <div class="field">
-          <label>Wind Speed (m/s)</label>
-          <input type="number" [(ngModel)]="profile.windSpeed" placeholder="0" min="0" max="30" step="0.5" />
-        </div>
+    <!-- Error + Actions -->
+    <div class="error-msg" *ngIf="localError$ | async as err">{{ err }}</div>
+    <div class="form-actions">
+      <button class="generate-btn" (click)="generate()" [disabled]="(loading$ | async) || !canGenerate()">
+        <span *ngIf="!(loading$ | async)">GENERATE PLAN</span>
+        <span *ngIf="loading$ | async">GENERATING...</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Results View -->
+  <div class="results-view" *ngIf="pacingPlan$ | async as plan">
+    <!-- Compact Parameter Bar -->
+    <div class="param-bar glass">
+      <div class="param-chips">
+        <span class="param-chip" *ngIf="gpxFileName">{{ gpxFileName }}</span>
+        <span class="param-chip" *ngIf="bikeGpxFileName">Bike: {{ bikeGpxFileName }}</span>
+        <span class="param-chip" *ngIf="runGpxFileName">Run: {{ runGpxFileName }}</span>
+        <span class="param-chip" *ngIf="bikeLoops > 1 && needsBike()">{{ bikeLoops }} bike loops</span>
+        <span class="param-chip" *ngIf="runLoops > 1 && needsRun()">{{ runLoops }} run loops</span>
+        <span class="param-chip">{{ discipline }}</span>
+        <span class="param-chip" *ngIf="needsBike() && profile.ftp">FTP {{ profile.ftp }}W</span>
+        <span class="param-chip" *ngIf="needsBike() && profile.weightKg">{{ profile.weightKg }}kg</span>
+        <span class="param-chip" *ngIf="needsBike() && targetPowerPct">Target {{ targetPowerPct }}% FTP ({{ computedPowerWatts() }}W)</span>
+        <span class="param-chip" *ngIf="needsRun() && targetPacePct">Pace {{ targetPacePct }}% ({{ computedPaceDisplay() }})</span>
+        <span class="param-chip" *ngIf="needsSwim() && profile.swimCssSec">CSS {{ profile.swimCssSec }}s/100m</span>
+        <span class="param-chip" *ngIf="needsBike() && profile.bikeType">{{ profile.bikeType }}</span>
+        <span class="param-chip" *ngIf="(needsBike() || needsRun()) && profile.temperature != null">{{ profile.temperature }}°C</span>
+        <span class="param-chip" *ngIf="needsBike() && profile.windSpeed">Wind {{ profile.windSpeed }}m/s</span>
       </div>
-
-      <!-- Error display -->
-      <div class="error-msg" *ngIf="localError$ | async as err">{{ err }}</div>
-
-      <!-- Actions -->
-      <div class="form-actions">
-        <button class="generate-btn" (click)="generate()" [disabled]="(loading$ | async) || !gpxFile">
-          <span *ngIf="!(loading$ | async)">GENERATE PLAN</span>
-          <span *ngIf="loading$ | async">GENERATING...</span>
-        </button>
-        <button class="clear-btn" *ngIf="pacingPlan$ | async" (click)="clearPlan()">CLEAR</button>
+      <div class="param-bar-right">
+        <div class="tab-row" *ngIf="getAvailableTabs(plan).length > 1">
+          <button class="tab-btn" *ngIf="plan.swimSummary"
+            [class.active]="activeTab === 'SWIM'" (click)="activeTab = 'SWIM'">Swim</button>
+          <button class="tab-btn" *ngIf="plan.bikeSegments"
+            [class.active]="activeTab === 'BIKE'" (click)="activeTab = 'BIKE'">Bike</button>
+          <button class="tab-btn" *ngIf="plan.runSegments"
+            [class.active]="activeTab === 'RUN'" (click)="activeTab = 'RUN'">Run</button>
+        </div>
+        <div class="param-bar-actions">
+          <button class="modify-btn" (click)="showSettingsModal = true">Modify</button>
+          <button class="clear-btn" (click)="clearPlan()">Clear</button>
+        </div>
       </div>
     </div>
 
-    <!-- Right: Results -->
-    <div class="results-panel" *ngIf="pacingPlan$ | async as plan">
-      <!-- Summary Cards -->
-      <div class="summary-row">
-        <div class="summary-card glass" *ngIf="plan.bikeSummary as bs">
-          <span class="summary-label">BIKE</span>
+    <!-- Summary Cards -->
+    <div class="summary-row">
+      <div class="summary-card glass" *ngIf="plan.swimSummary as ss">
+        <span class="summary-label swim">SWIM</span>
+        <div class="summary-body">
+          <div class="summary-stats">
+            <div class="stat">
+              <span class="stat-value">{{ formatDistance(ss.totalDistance) }}</span>
+              <span class="stat-label">Distance</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value">{{ formatTime(ss.estimatedTotalTime) }}</span>
+              <span class="stat-label">Est. Time</span>
+            </div>
+            <div class="stat" *ngIf="ss.averagePace">
+              <span class="stat-value">{{ ss.averagePace }}</span>
+              <span class="stat-label">Pace /100m</span>
+            </div>
+          </div>
+          <div class="target-basis" *ngIf="ss.targetBasis">{{ ss.targetBasis }}</div>
+        </div>
+      </div>
+
+      <div class="summary-card glass" *ngIf="plan.bikeSummary as bs">
+        <span class="summary-label">BIKE</span>
+        <div class="summary-body">
           <div class="summary-stats">
             <div class="stat">
               <span class="stat-value">{{ formatDistance(bs.totalDistance) }}</span>
@@ -132,11 +287,14 @@
               <span class="stat-label">Calories</span>
             </div>
           </div>
-          <div class="nutrition-plan">{{ bs.nutritionPlan }}</div>
+          <div class="nutrition-plan" *ngIf="bs.nutritionPlan">{{ bs.nutritionPlan }}</div>
+          <div class="target-basis" *ngIf="bs.targetBasis">{{ bs.targetBasis }}</div>
         </div>
+      </div>
 
-        <div class="summary-card glass" *ngIf="plan.runSummary as rs">
-          <span class="summary-label run">RUN</span>
+      <div class="summary-card glass" *ngIf="plan.runSummary as rs">
+        <span class="summary-label run">RUN</span>
+        <div class="summary-body">
           <div class="summary-stats">
             <div class="stat">
               <span class="stat-value">{{ formatDistance(rs.totalDistance) }}</span>
@@ -155,60 +313,307 @@
               <span class="stat-label">Calories</span>
             </div>
           </div>
-          <div class="nutrition-plan">{{ rs.nutritionPlan }}</div>
+          <div class="nutrition-plan" *ngIf="rs.nutritionPlan">{{ rs.nutritionPlan }}</div>
+          <div class="target-basis" *ngIf="rs.targetBasis">{{ rs.targetBasis }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main content: two-column for BIKE/RUN -->
+    <div class="main-panel" *ngIf="activeTab !== 'SWIM'">
+      <div class="map-column glass">
+        <app-route-map
+          *ngIf="getActiveRouteCoordinates(plan)?.length"
+          [routeCoordinates]="getActiveRouteCoordinates(plan)!"
+          [segments]="getActiveSegments(plan)"
+          [highlightedRange]="highlightedRange$ | async"
+          (segmentHovered)="onSegmentHover($event)">
+        </app-route-map>
+      </div>
+      <div class="detail-column">
+        <app-elevation-chart
+          [segments]="getActiveSegments(plan)"
+          [highlightedRange]="highlightedRange$ | async"
+          (segmentHovered)="onSegmentHover($event)">
+        </app-elevation-chart>
+        <div class="race-plan glass">
+          <h3 class="race-plan-title">Race Plan</h3>
+          <div class="race-plan-list">
+            <div *ngFor="let group of getGroupedPlan(getActiveSegments(plan)); let i = index"
+                 class="race-plan-item"
+                 [class.climb]="group.meanGradient > 1"
+                 [class.descent]="group.meanGradient < -1"
+                 [class.highlighted]="highlightedGroup === i"
+                 (mouseenter)="onGroupHover(group, i)"
+                 (mouseleave)="onGroupHover(null, null)">
+
+              <!-- Group header -->
+              <div class="rp-header">
+                <span class="rp-number">{{ group.index }}</span>
+                <span class="rp-terrain">{{ group.terrainLabel }}</span>
+                <span class="rp-target" *ngIf="group.targetPower">{{ group.targetPower }}W</span>
+                <span class="rp-target pace" *ngIf="group.targetPace">{{ group.targetPace }}</span>
+              </div>
+
+              <!-- Group stats -->
+              <div class="rp-stats">
+                <div class="rp-stat">
+                  <span class="rp-stat-label">Distance</span>
+                  <span class="rp-stat-value">{{ formatDistance(group.startDistance) }} → {{ formatDistance(group.endDistance) }}</span>
+                </div>
+                <div class="rp-stat">
+                  <span class="rp-stat-label">Length</span>
+                  <span class="rp-stat-value">{{ formatDistance(group.endDistance - group.startDistance) }}</span>
+                </div>
+                <div class="rp-stat">
+                  <span class="rp-stat-label">Slope</span>
+                  <span class="rp-stat-value" [class.positive]="group.meanGradient > 0" [class.negative]="group.meanGradient < 0">
+                    {{ group.meanGradient > 0 ? '+' : '' }}{{ group.meanGradient.toFixed(1) }}%
+                  </span>
+                </div>
+                <div class="rp-stat">
+                  <span class="rp-stat-label">Elev.</span>
+                  <span class="rp-stat-value">{{ group.elevationChange > 0 ? '+' : '' }}{{ group.elevationChange }}m</span>
+                </div>
+                <div class="rp-stat">
+                  <span class="rp-stat-label">Time</span>
+                  <span class="rp-stat-value">{{ formatTime(group.totalTime) }}</span>
+                </div>
+                <div class="rp-stat" *ngIf="group.meanSpeed">
+                  <span class="rp-stat-label">Speed</span>
+                  <span class="rp-stat-value">{{ group.meanSpeed.toFixed(1) }} km/h</span>
+                </div>
+              </div>
+
+              <!-- Nutrition events -->
+              <div class="rp-nutrition" *ngFor="let n of group.nutritionEvents">
+                <span class="rp-nutrition-icon">N</span>
+                <span class="rp-nutrition-text">
+                  {{ n.suggestion }} (at {{ formatDistance(n.distance) }})
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Swim panel (no map/chart for swim) -->
+    <div class="swim-panel glass" *ngIf="activeTab === 'SWIM'">
+      <h3>Swim Pacing</h3>
+      <p>No route data for swim — see swim summary above for pacing details.</p>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" *ngIf="showSettingsModal" (click)="closeSettingsModal()">
+    <div class="modal-content glass" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="section-title">Modify Settings</h2>
+        <button class="modal-close" (click)="closeSettingsModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- GPX Upload: Single dropzone for BIKE or RUN -->
+        <ng-container *ngIf="discipline === 'BIKE' || discipline === 'RUN'">
+          <div class="gpx-with-loops">
+            <div
+              class="gpx-dropzone"
+              [class.dragging]="isDragging"
+              [class.has-file]="gpxFile"
+              (dragover)="onDragOver($event)"
+              (dragleave)="onDragLeave()"
+              (drop)="onDrop($event)"
+              (click)="modalFileInput.click()"
+            >
+              <input #modalFileInput type="file" accept=".gpx" hidden (change)="onFileSelected($event)" />
+              <span *ngIf="!gpxFile">Drop GPX file here or click to browse</span>
+              <span *ngIf="gpxFile" class="file-name">{{ gpxFileName }}</span>
+            </div>
+            <div class="loop-input">
+              <label>Loops</label>
+              <input *ngIf="discipline === 'RUN'" type="number" [(ngModel)]="runLoops" min="1" max="50" />
+              <input *ngIf="discipline === 'BIKE'" type="number" [(ngModel)]="bikeLoops" min="1" max="50" />
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- GPX Upload: Dual dropzones for TRIATHLON -->
+        <ng-container *ngIf="discipline === 'TRIATHLON'">
+          <div class="gpx-dual">
+            <div class="gpx-with-loops">
+              <div class="gpx-dropzone-labeled">
+                <span class="dropzone-label">Bike Course GPX</span>
+                <div
+                  class="gpx-dropzone"
+                  [class.dragging]="isDraggingBike"
+                  [class.has-file]="bikeGpxFile"
+                  (dragover)="onDragOver($event, 'bike')"
+                  (dragleave)="onDragLeave('bike')"
+                  (drop)="onDrop($event, 'bike')"
+                  (click)="modalBikeFileInput.click()"
+                >
+                  <input #modalBikeFileInput type="file" accept=".gpx" hidden (change)="onFileSelected($event, 'bike')" />
+                  <span *ngIf="!bikeGpxFile">Drop bike GPX</span>
+                  <span *ngIf="bikeGpxFile" class="file-name">{{ bikeGpxFileName }}</span>
+                </div>
+              </div>
+              <div class="loop-input">
+                <label>Loops</label>
+                <input type="number" [(ngModel)]="bikeLoops" min="1" max="50" />
+              </div>
+            </div>
+            <div class="gpx-with-loops">
+              <div class="gpx-dropzone-labeled">
+                <span class="dropzone-label">Run Course GPX</span>
+                <div
+                  class="gpx-dropzone"
+                  [class.dragging]="isDraggingRun"
+                  [class.has-file]="runGpxFile"
+                  (dragover)="onDragOver($event, 'run')"
+                  (dragleave)="onDragLeave('run')"
+                  (drop)="onDrop($event, 'run')"
+                  (click)="modalRunFileInput.click()"
+                >
+                  <input #modalRunFileInput type="file" accept=".gpx" hidden (change)="onFileSelected($event, 'run')" />
+                  <span *ngIf="!runGpxFile">Drop run GPX</span>
+                  <span *ngIf="runGpxFile" class="file-name">{{ runGpxFileName }}</span>
+                </div>
+              </div>
+              <div class="loop-input">
+                <label>Loops</label>
+                <input type="number" [(ngModel)]="runLoops" min="1" max="50" />
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- No dropzone for SWIM -->
+
+        <div class="modal-grid">
+          <div class="form-col">
+            <div class="field-group">
+              <label class="field-label">Discipline</label>
+              <div class="pill-group">
+                <button class="pill" [class.active]="discipline === 'SWIM'" (click)="discipline = 'SWIM'">Swim</button>
+                <button class="pill" [class.active]="discipline === 'BIKE'" (click)="discipline = 'BIKE'">Bike</button>
+                <button class="pill" [class.active]="discipline === 'RUN'" (click)="discipline = 'RUN'">Run</button>
+                <button class="pill" [class.active]="discipline === 'TRIATHLON'" (click)="discipline = 'TRIATHLON'">Triathlon</button>
+              </div>
+            </div>
+            <div class="field-group" *ngIf="needsBike()">
+              <label class="field-label">Bike Type</label>
+              <div class="pill-group">
+                <button class="pill" [class.active]="profile.bikeType === 'TT'" (click)="profile.bikeType = 'TT'">TT</button>
+                <button class="pill" [class.active]="profile.bikeType === 'ROAD_AERO'" (click)="profile.bikeType = 'ROAD_AERO'">Road + Aero</button>
+                <button class="pill" [class.active]="profile.bikeType === 'ROAD'" (click)="profile.bikeType = 'ROAD'">Road</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-col">
+            <h3 class="subsection-title">Athlete Metrics</h3>
+            <div class="field-row" *ngIf="needsBike()">
+              <div class="field">
+                <label>FTP (W)</label>
+                <input type="number" [(ngModel)]="profile.ftp" placeholder="250" min="50" max="500" />
+              </div>
+              <div class="field">
+                <label>Weight (kg)</label>
+                <input type="number" [(ngModel)]="profile.weightKg" placeholder="75" min="30" max="200" />
+              </div>
+            </div>
+            <div class="field-row" *ngIf="needsRun()">
+              <div class="field">
+                <label>Threshold Pace (s/km)</label>
+                <input type="number" [(ngModel)]="profile.thresholdPaceSec" placeholder="270" min="120" max="600" />
+              </div>
+            </div>
+            <div class="field-row" *ngIf="needsSwim()">
+              <div class="field">
+                <label>Swim CSS (s/100m)</label>
+                <input type="number" [(ngModel)]="profile.swimCssSec" placeholder="95" min="40" max="200" />
+              </div>
+            </div>
+            <!-- TODO: Re-enable fatigue resistance once backend integrates it -->
+            <div class="field-row">
+              <div class="field">
+                <label>Nutrition</label>
+                <select [(ngModel)]="profile.nutritionPreference">
+                  <option value="MIXED">Mixed</option>
+                  <option value="GELS">Gels</option>
+                  <option value="DRINK">Drink</option>
+                  <option value="SOLID">Solid</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-col">
+            <div class="label-with-tooltip">
+              <h3 class="subsection-title">Race Targets</h3>
+              <span class="tooltip-trigger" *ngIf="discipline === 'TRIATHLON'">?
+                <span class="tooltip-text tooltip-wide">
+                  <strong>Triathlon Power Targets (%FTP)</strong>
+                  <table class="tooltip-table">
+                    <tr><th>Distance</th><th>Beginner</th><th>Interm.</th><th>Elite</th></tr>
+                    <tr><td>Sprint (20km)</td><td>80–85%</td><td>90–95%</td><td>95–105%</td></tr>
+                    <tr><td>Olympic (40km)</td><td>70–80%</td><td>82–88%</td><td>90–95%</td></tr>
+                    <tr><td>70.3 (90km)</td><td>65–75%</td><td>78–84%</td><td>85–90%</td></tr>
+                    <tr><td>Ironman (180km)</td><td>60–70%</td><td>70–78%</td><td>78–85%</td></tr>
+                  </table>
+                </span>
+              </span>
+            </div>
+            <div class="field-row">
+              <div class="field" *ngIf="needsBike()">
+                <label>Target Power (%FTP)</label>
+                <input type="number" [ngModel]="targetPowerPct" (ngModelChange)="onTargetPowerPctChange($event)" placeholder="Auto" min="30" max="120" />
+                <span class="field-hint computed" *ngIf="computedPowerWatts() as w">= {{ w }}W</span>
+                <span class="field-hint" *ngIf="!targetPowerPct">Auto</span>
+              </div>
+              <div class="field" *ngIf="needsRun()">
+                <label>Target Pace (%Threshold)</label>
+                <input type="number" [ngModel]="targetPacePct" (ngModelChange)="onTargetPacePctChange($event)" placeholder="Auto" min="80" max="150" />
+                <span class="field-hint computed" *ngIf="computedPaceDisplay() as p">= {{ p }}</span>
+                <span class="field-hint" *ngIf="!targetPacePct">Auto</span>
+              </div>
+            </div>
+            <div class="field-row" *ngIf="needsSwim()">
+              <div class="field">
+                <label>Swim Distance (m)</label>
+                <input type="number" [(ngModel)]="profile.swimDistanceM" placeholder="1900" min="100" max="10000" />
+              </div>
+              <div class="field" *ngIf="profile.swimDistanceM">
+                <label>Swim Pace (s/100m)</label>
+                <input type="number" [(ngModel)]="profile.targetSwimPaceSecPer100m" min="40" max="300" />
+                <span class="field-hint" *ngIf="!profile.targetSwimPaceSecPer100m">Auto</span>
+              </div>
+            </div>
+
+            <h3 class="subsection-title" *ngIf="needsBike() || needsRun()">Environment</h3>
+            <div class="field-row" *ngIf="needsBike() || needsRun()">
+              <div class="field">
+                <label>Temperature (°C)</label>
+                <input type="number" [(ngModel)]="profile.temperature" placeholder="20" min="-10" max="50" />
+              </div>
+              <div class="field" *ngIf="needsBike()">
+                <label>Wind Speed (m/s)</label>
+                <input type="number" [(ngModel)]="profile.windSpeed" placeholder="0" min="0" max="30" step="0.5" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Tab switcher -->
-      <div class="tab-row" *ngIf="plan.bikeSegments && plan.runSegments">
-        <button class="tab-btn" [class.active]="activeTab === 'BIKE'" (click)="activeTab = 'BIKE'">Bike</button>
-        <button class="tab-btn" [class.active]="activeTab === 'RUN'" (click)="activeTab = 'RUN'">Run</button>
-      </div>
+      <div class="error-msg" *ngIf="localError$ | async as err">{{ err }}</div>
 
-      <!-- Elevation Chart -->
-      <app-elevation-chart [segments]="getActiveSegments(plan)"></app-elevation-chart>
-
-      <!-- Segment Table -->
-      <div class="table-wrapper glass">
-        <table class="segment-table">
-          <thead>
-            <tr>
-              <th>From</th>
-              <th>To</th>
-              <th>Gradient</th>
-              <th>Elevation</th>
-              <th *ngIf="activeTab === 'BIKE'">Power</th>
-              <th *ngIf="activeTab === 'RUN'">Pace</th>
-              <th>Time</th>
-              <th>Fatigue</th>
-              <th>Nutrition</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let seg of getActiveSegments(plan)" [class.climb]="seg.gradient > 3"
-              [class.descent]="seg.gradient < -3">
-              <td>{{ formatDistance(seg.startDistance) }}</td>
-              <td>{{ formatDistance(seg.endDistance) }}</td>
-              <td [class.positive]="seg.gradient > 0" [class.negative]="seg.gradient < 0">
-                {{ seg.gradient > 0 ? '+' : '' }}{{ seg.gradient.toFixed(1) }}%
-              </td>
-              <td>{{ seg.elevation | number: '1.0-0' }}m</td>
-              <td *ngIf="activeTab === 'BIKE'">{{ seg.targetPower }}W</td>
-              <td *ngIf="activeTab === 'RUN'">{{ seg.targetPace }}</td>
-              <td>{{ formatTime(seg.estimatedSegmentTime) }}</td>
-              <td>
-                <div class="fatigue-bar">
-                  <div class="fatigue-fill" [style.width.%]="seg.cumulativeFatigue * 100"></div>
-                </div>
-              </td>
-              <td class="nutrition-cell">
-                <span class="nutrition-badge" *ngIf="seg.nutritionSuggestion" [title]="seg.nutritionSuggestion">
-                  N
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="modal-footer">
+        <button class="clear-btn" (click)="closeSettingsModal()">Cancel</button>
+        <button class="generate-btn" (click)="regenerate()" [disabled]="(loading$ | async) || !canGenerate()">
+          <span *ngIf="!(loading$ | async)">REGENERATE PLAN</span>
+          <span *ngIf="loading$ | async">GENERATING...</span>
+        </button>
       </div>
     </div>
   </div>

@@ -9,6 +9,7 @@ public record PacingSegment(
         String discipline,
         Integer targetPower,
         String targetPace,
+        Double estimatedSpeedKmh,
         double estimatedSegmentTime,
         double cumulativeFatigue,
         String nutritionSuggestion,
