@@ -26,7 +26,7 @@ public class ZoneSystem {
     private ZoneReferenceType referenceType;
     private String referenceName;
     private List<Zone> zones = new ArrayList<>();
-    private boolean defaultForSport = false;
+    private Boolean defaultForSport = false;
     private String annotations;
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();

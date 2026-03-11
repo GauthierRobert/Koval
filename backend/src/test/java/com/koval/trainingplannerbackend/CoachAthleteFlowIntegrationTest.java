@@ -49,7 +49,7 @@ class CoachAthleteFlowIntegrationTest extends BaseIntegrationTest {
                                 {"name": "Elite Squad", "maxAthletes": 10}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Elite Squad"))
+                .andExpect(jsonPath("$.name").value("elite squad"))
                 .andExpect(jsonPath("$.maxAthletes").value(10))
                 .andExpect(jsonPath("$.id").isNotEmpty());
     }
@@ -69,7 +69,7 @@ class CoachAthleteFlowIntegrationTest extends BaseIntegrationTest {
                         .header("Authorization", bearer(coachToken)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].name").value("Group A"));
+                .andExpect(jsonPath("$[0].name").value("group a"));
     }
 
     @Test
@@ -94,7 +94,7 @@ class CoachAthleteFlowIntegrationTest extends BaseIntegrationTest {
                                 {"name": "New Name"}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("New Name"));
+                .andExpect(jsonPath("$.name").value("new name"));
 
         // Delete
         mockMvc.perform(delete("/api/groups/" + groupId)

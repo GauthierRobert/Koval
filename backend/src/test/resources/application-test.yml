@@ -1,6 +1,8 @@
 spring:
   application:
     name: training-planner-backend-test
+  main:
+    allow-bean-definition-overriding: true
   ai:
     anthropic:
       api-key: test-key-not-used

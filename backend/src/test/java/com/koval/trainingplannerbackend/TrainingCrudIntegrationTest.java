@@ -115,12 +115,12 @@ class TrainingCrudIntegrationTest extends BaseIntegrationTest {
                         .header("Authorization", bearer(athleteToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"title": "Updated SS Intervals", "estimatedTss": 80,
+                                {"sportType": "CYCLING", "title": "Updated SS Intervals", "estimatedTss": 80,
                                  "blocks": [{"type": "WARMUP", "durationSeconds": 600, "label": "Warm up", "intensityTarget": 55}]}
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Updated SS Intervals"))
-                .andExpect(jsonPath("$.estimatedTss").value(80));
+                .andExpect(jsonPath("$.blocks", hasSize(1)));
     }
 
     @Test

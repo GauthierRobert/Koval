@@ -36,7 +36,7 @@ public class ZoneSystemService {
         existing.setSportType(updates.getSportType());
         existing.setReferenceType(updates.getReferenceType());
         existing.setZones(new ArrayList<>(updates.getZones()));
-        existing.setDefaultForSport(updates.isDefaultForSport());
+        existing.setDefaultForSport(updates.getDefaultForSport());
         existing.setAnnotations(updates.getAnnotations());
         existing.setUpdatedAt(LocalDateTime.now());
 
