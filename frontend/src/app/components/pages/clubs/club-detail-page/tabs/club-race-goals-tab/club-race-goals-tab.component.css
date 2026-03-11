@@ -1,16 +1,126 @@
-.race-goals-tab { padding: 1rem 0; }
-.section-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); margin: 0 0 0.75rem; font-weight: 600; }
-.past-header { margin-top: 2rem; }
-.goals-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
-.goal-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 10px; }
-.goal-row.past { opacity: 0.6; }
-.goal-priority-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.goal-info { flex: 1; min-width: 0; }
-.goal-title { display: block; font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; }
-.goal-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; font-size: 0.75rem; color: var(--text-secondary); }
-.days-badge { padding: 0.1rem 0.4rem; border-radius: 4px; background: rgba(255,255,255,0.08); }
-.days-badge.soon { background: rgba(239, 68, 68, 0.15); color: #f87171; }
-.session-indicator { font-size: 1rem; flex-shrink: 0; }
-.priority-badge { font-size: 0.75rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; border: 1px solid; flex-shrink: 0; }
-.empty-tab { text-align: center; padding: 3rem; color: var(--text-secondary); }
-.empty-tab span { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; }
+.race-goals-tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.section-title {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.7;
+  margin: 0;
+}
+
+.past-header {
+  margin-top: var(--space-sm);
+}
+
+.goals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.goal-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.goal-row:hover {
+  border-color: var(--accent-color);
+  transform: translateY(-1px);
+}
+
+.goal-row.past {
+  opacity: 0.45;
+}
+
+.goal-row.past:hover {
+  opacity: 0.65;
+}
+
+.goal-priority-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.goal-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.goal-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.goal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.days-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-subtle);
+  color: var(--accent-color);
+}
+
+.days-badge.soon {
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+}
+
+.session-indicator {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.priority-badge {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+  flex-shrink: 0;
+  letter-spacing: 0.06em;
+}
+
+.empty-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 24px;
+  color: var(--text-muted);
+}
+
+.empty-tab span {
+  font-size: 28px;
+  opacity: 0.6;
+}
+
+.empty-tab p {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0;
+}

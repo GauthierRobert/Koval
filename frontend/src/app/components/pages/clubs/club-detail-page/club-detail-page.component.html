@@ -1,35 +1,36 @@
-<div class="detail-page">
+<div class="page-layout">
   <ng-container *ngIf="selectedClub$ | async as club; else loading">
-    <!-- Header -->
-    <div class="club-header glass">
-      <button class="back-btn" (click)="goBack()">← CLUBS</button>
-      <div class="club-logo">
-        <img *ngIf="club.logoUrl" [src]="club.logoUrl" alt="Club logo" />
-        <div class="club-initials" *ngIf="!club.logoUrl">{{ club.name.charAt(0).toUpperCase() }}</div>
-      </div>
-      <div class="club-meta-info">
-        <h1 class="club-name">{{ club.name }}</h1>
-        <p class="club-desc" *ngIf="club.description">{{ club.description }}</p>
-        <div class="club-badges">
-          <span class="meta-badge">{{ club.memberCount }} members</span>
-          <span class="meta-badge" *ngIf="club.location">📍 {{ club.location }}</span>
-          <span class="meta-badge visibility-badge" [class.private]="club.visibility === 'PRIVATE'">
-            {{ club.visibility }}
-          </span>
-          <span class="meta-badge role-badge" *ngIf="club.currentMembershipStatus">
-            {{ getMembershipLabel(club.currentMembershipStatus) }}
-            <span *ngIf="club.currentMemberRole"> — {{ club.currentMemberRole }}</span>
-          </span>
+
+    <!-- Header bar -->
+    <div class="header glass">
+      <div class="header-left">
+        <button class="back-btn" (click)="goBack()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="club-avatar" *ngIf="!club.logoUrl">{{ club.name.charAt(0).toUpperCase() }}</div>
+        <img class="club-avatar-img" *ngIf="club.logoUrl" [src]="club.logoUrl" alt="Club logo" />
+        <div class="header-info">
+          <span class="header-title">{{ club.name | uppercase }}</span>
+          <span class="header-subtitle" *ngIf="club.description">{{ club.description }}</span>
         </div>
       </div>
+      <div class="header-badges">
+        <span class="h-badge">{{ club.memberCount }} members</span>
+        <span class="h-badge" *ngIf="club.location">{{ club.location }}</span>
+        <span class="h-badge" [class.h-badge--private]="club.visibility === 'PRIVATE'">{{ club.visibility }}</span>
+        <span class="h-badge h-badge--role" *ngIf="club.currentMembershipStatus">
+          {{ getMembershipLabel(club.currentMembershipStatus) }}
+          <span *ngIf="club.currentMemberRole"> · {{ club.currentMemberRole }}</span>
+        </span>
+      </div>
       <div class="header-actions">
-        <button class="btn-primary" *ngIf="!club.currentMembershipStatus" (click)="join(club)">JOIN</button>
-        <button class="btn-ghost" *ngIf="club.currentMembershipStatus && club.currentMemberRole !== 'OWNER'" (click)="leave(club)">LEAVE</button>
+        <button class="btn-join" *ngIf="!club.currentMembershipStatus" (click)="join(club)">JOIN</button>
+        <button class="btn-leave" *ngIf="club.currentMembershipStatus && club.currentMemberRole !== 'OWNER'" (click)="leave(club)">LEAVE</button>
       </div>
     </div>
 
-    <!-- Tab Bar -->
-    <div class="tab-bar glass">
+    <!-- Tab bar -->
+    <div class="tab-strip glass">
       <button
         *ngFor="let tab of tabs"
         class="tab-btn"
@@ -39,14 +40,14 @@
       </button>
       <button
         *ngIf="activeTab === 'sessions' && club.currentMembershipStatus"
-        class="tab-btn ai-btn"
+        class="tab-btn tab-btn--ai"
         (click)="openAiModal(club)">
-        ✨ CREATE WITH AI
+        CREATE WITH AI
       </button>
     </div>
 
-    <!-- Tab Content -->
-    <div class="tab-content">
+    <!-- Tab content -->
+    <div class="tab-body">
       <app-club-feed-tab *ngIf="activeTab === 'feed'"></app-club-feed-tab>
       <app-club-sessions-tab *ngIf="activeTab === 'sessions'" [club]="club"></app-club-sessions-tab>
       <app-club-members-tab *ngIf="activeTab === 'members'" [club]="club"></app-club-members-tab>
@@ -64,11 +65,13 @@
       (closed)="showAiModal = false"
       (created)="onAiCreated($event)">
     </app-create-with-ai-modal>
+
   </ng-container>
 
   <ng-template #loading>
     <div class="loading-state">
-      <p>Loading club...</p>
+      <div class="loading-spinner"></div>
+      <span>Loading club...</span>
     </div>
   </ng-template>
 </div>
