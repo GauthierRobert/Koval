@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -29,4 +30,15 @@ public class ClubTrainingSession {
     private String linkedTrainingId;
     private List<String> participantIds = new ArrayList<>();
     private LocalDateTime createdAt;
+    private String recurringTemplateId;
+    private Integer maxParticipants;
+    private List<WaitingListEntry> waitingList = new ArrayList<>();
+
+    public boolean isFull() {
+        return maxParticipants != null && participantIds.size() >= maxParticipants;
+    }
+
+    public boolean isOnWaitingList(String userId) {
+        return waitingList.stream().anyMatch(e -> Objects.equals(e.userId(), userId));
+    }
 }

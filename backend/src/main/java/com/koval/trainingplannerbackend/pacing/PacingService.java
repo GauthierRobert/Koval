@@ -28,13 +28,12 @@ public class PacingService {
         };
     }
 
-    // Slope-based power distribution (bike) — more watts on climbs, fewer on descents
-    private static final double STEEP_CLIMB_FACTOR = 1.15;      // gradient > 6%
-    private static final double MODERATE_CLIMB_FACTOR = 1.08;   // gradient 3–6%
-    private static final double SLIGHT_CLIMB_FACTOR = 1.03;     // gradient 1–3%
-    private static final double FLAT_FACTOR = 1.0;              // gradient -1 to 1%
-    private static final double MODERATE_DESCENT_FACTOR = 0.88; // gradient -1 to -6%
-    private static final double STEEP_DESCENT_FACTOR = 0.75;    // gradient < -6%
+    // Physics-based power variability constants
+    private static final double K_SHORT = 1.5;           // Sprint/Olympic (<=40km)
+    private static final double K_LONG = 1.0;            // Half/Full Ironman (>40km)
+    private static final double UPHILL_CAP = 1.15;       // Max: target × 1.15
+    private static final double DOWNHILL_FLOOR = 0.75;   // Min: target × 0.75
+    private static final double COASTING_GRADIENT = -6.0; // Below this: 0W
     private static final int NORMALIZATION_ITERATIONS = 3;
 
     // Run adjustment factors
@@ -45,7 +44,7 @@ public class PacingService {
 
     // Smart target reference points: distance (m) → % FTP
     private static final double[] BIKE_DIST_POINTS = {20_000, 40_000, 90_000, 180_000};
-    private static final double[] BIKE_FTP_PCTS    = {0.875,  0.825,  0.755,  0.705};
+    private static final double[] BIKE_FTP_PCTS    = {0.95,  0.90,  0.82,   0.72};
 
     // Smart target reference points: distance (m) → pace multiplier of threshold
     private static final double[] RUN_DIST_POINTS  = {5_000, 10_000, 21_097, 42_195};
@@ -164,13 +163,13 @@ public class PacingService {
     private int computeBikeTarget(double totalDistM, double elevGainM, int ftp) {
         double basePct = interpolate(totalDistM, BIKE_DIST_POINTS, BIKE_FTP_PCTS);
 
-        // Elevation penalty: -0.5% FTP per 10 m/km above 5 m/km baseline, capped at 3%
+        // Elevation penalty: -1.5% FTP per 10 m/km above 5 m/km baseline, capped at 5%
         double distKm = totalDistM / 1000.0;
         double gainPerKm = distKm > 0 ? elevGainM / distKm : 0;
         double elevPenalty = 0;
         if (gainPerKm > 5.0) {
-            elevPenalty = ((gainPerKm - 5.0) / 10.0) * 0.005;
-            elevPenalty = Math.min(elevPenalty, 0.03);
+            elevPenalty = ((gainPerKm - 5.0) / 10.0) * 0.015;
+            elevPenalty = Math.min(elevPenalty, 0.05);
         }
 
         return (int) Math.round(ftp * (basePct - elevPenalty));
@@ -198,13 +197,15 @@ public class PacingService {
 
     // ---- BIKE PACING ----
 
-    private double bikeSlopeAdjustment(double gradientPercent) {
-        if (gradientPercent > 6.0) return STEEP_CLIMB_FACTOR;
-        if (gradientPercent > 3.0) return MODERATE_CLIMB_FACTOR;
-        if (gradientPercent > 1.0) return SLIGHT_CLIMB_FACTOR;
-        if (gradientPercent >= -1.0) return FLAT_FACTOR;
-        if (gradientPercent >= -6.0) return MODERATE_DESCENT_FACTOR;
-        return STEEP_DESCENT_FACTOR;
+    private double computeSegmentPower(double gradientPercent, double targetAvgPower, double k) {
+        if (gradientPercent < COASTING_GRADIENT) return 0.0;
+        double gradientDecimal = gradientPercent / 100.0;
+        double power = targetAvgPower * (1.0 + gradientDecimal * k);
+        return Math.max(targetAvgPower * DOWNHILL_FLOOR, Math.min(power, targetAvgPower * UPHILL_CAP));
+    }
+
+    private double getVariabilityK(double totalDistanceM) {
+        return totalDistanceM <= 40_000 ? K_SHORT : K_LONG;
     }
 
     private List<PacingSegment> generateBikeSegments(List<CourseSegment> course, AthleteProfile profile, double startFatigue) {
@@ -213,17 +214,23 @@ public class PacingService {
         BikeAero aero = getBikeAero(profile.bikeType());
 
         double targetPower = profile.targetPowerWatts();
+        double totalDistanceM = course.stream().mapToDouble(CourseSegment::length).sum();
+        double k = getVariabilityK(totalDistanceM);
 
-        // Phase A — Raw slope-adjusted powers
+        // Phase A — Compute initial powers and identify coasting segments
         double[] segPowers = new double[course.size()];
+        boolean[] isCoasting = new boolean[course.size()];
         for (int i = 0; i < course.size(); i++) {
-            segPowers[i] = targetPower * bikeSlopeAdjustment(course.get(i).averageGradient());
+            double gradient = course.get(i).averageGradient();
+            isCoasting[i] = gradient < COASTING_GRADIENT;
+            segPowers[i] = computeSegmentPower(gradient, targetPower, k);
         }
 
-        // Phase B — Iterative normalization (power→speed→time feedback)
+        // Phase B — Iterative normalization (scale only non-coasting segments)
         for (int iter = 0; iter < NORMALIZATION_ITERATIONS; iter++) {
-            double weightedPowerSum = 0.0;
             double totalTime = 0.0;
+            double nonCoastingTime = 0.0;
+            double nonCoastingPowerTimeSum = 0.0;
 
             for (int i = 0; i < course.size(); i++) {
                 CourseSegment seg = course.get(i);
@@ -232,14 +239,24 @@ public class PacingService {
                 speed = Math.max(speed, 2.0);
                 double segTime = seg.length() / speed;
 
-                weightedPowerSum += segPowers[i] * segTime;
                 totalTime += segTime;
+                if (!isCoasting[i]) {
+                    nonCoastingTime += segTime;
+                    nonCoastingPowerTimeSum += segPowers[i] * segTime;
+                }
             }
 
-            double computedAvg = weightedPowerSum / totalTime;
-            double scale = targetPower / computedAvg;
-            for (int i = 0; i < course.size(); i++) {
-                segPowers[i] *= scale;
+            if (nonCoastingTime > 0) {
+                double desiredNonCoastingAvg = targetPower * totalTime / nonCoastingTime;
+                double currentNonCoastingAvg = nonCoastingPowerTimeSum / nonCoastingTime;
+                double scale = desiredNonCoastingAvg / currentNonCoastingAvg;
+                for (int i = 0; i < course.size(); i++) {
+                    if (!isCoasting[i]) {
+                        segPowers[i] *= scale;
+                        // Re-apply safety clamps
+                        segPowers[i] = Math.max(targetPower * DOWNHILL_FLOOR, Math.min(segPowers[i], targetPower * UPHILL_CAP));
+                    }
+                }
             }
         }
 

@@ -49,6 +49,7 @@ public class AIActionToolService {
             @ToolParam(description = "Title for the club session") String sessionTitle,
             @ToolParam(description = "Description for the club session") String sessionDescription,
             @ToolParam(description = "Location for the club session") String location,
+            @ToolParam(description = "Max participants") Integer maxParticipants,
             @ToolParam(description = "Scheduled datetime ISO-8601 (e.g. 2025-06-10T19:00:00), null if unscheduled") String scheduledAt,
             @ToolParam(description = "Club ID from system context — pass null if not in club context") String clubId,
             @ToolParam(description = "Club group ID from system context — pass null if not applicable") String clubGroupId,
@@ -92,7 +93,8 @@ public class AIActionToolService {
                     scheduledDateTime,
                     location,
                     sessionDescription,
-                    saved.getId());
+                    saved.getId(),
+                    maxParticipants);
 
             var session = clubService.createSession(userId, resolvedClubId, sessionReq);
             sessionId = session.getId();

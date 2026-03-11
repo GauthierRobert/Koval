@@ -1,45 +1,133 @@
 <div class="sessions-tab">
   <div class="tab-header">
-    <h3>Upcoming Sessions</h3>
-    <button class="btn-primary" *ngIf="canCreate" (click)="openForm()">+ CREATE SESSION</button>
+    <h3>Sessions</h3>
+    <div class="tab-header-actions">
+      <div class="view-toggle">
+        <button [class.active]="viewMode === 'LIST'" (click)="setViewMode('LIST')">List</button>
+        <button [class.active]="viewMode === 'CALENDAR'" (click)="setViewMode('CALENDAR')">Calendar</button>
+      </div>
+      <button class="btn-primary" *ngIf="canCreate" (click)="openForm()">+ SESSION</button>
+    </div>
   </div>
 
   <ng-container *ngIf="sessions$ | async as sessions">
-    <div class="sessions-list" *ngIf="sessions.length > 0; else emptySessions">
-      <div *ngFor="let session of sessions" class="session-card glass">
-        <div class="session-header">
-          <span class="session-sport-badge">{{ session.sport || 'GENERAL' }}</span>
-          <h4 class="session-title">{{ session.title }}</h4>
-        </div>
-        <div class="session-meta">
-          <span *ngIf="session.scheduledAt">📅 {{ formatDateTime(session.scheduledAt) }}</span>
-          <span *ngIf="session.location">📍 {{ session.location }}</span>
-          <span>👥 {{ session.participantIds.length }} participants</span>
-        </div>
-        <p class="session-desc" *ngIf="session.description">{{ session.description }}</p>
-        <div class="session-actions">
-          <button
-            class="btn-primary"
-            *ngIf="!isParticipant(session)"
-            (click)="joinSession(session, $event)">
-            JOIN
-          </button>
-          <button
-            class="btn-ghost"
-            *ngIf="isParticipant(session)"
-            (click)="cancelSession(session, $event)">
-            CANCEL
-          </button>
+
+    <!-- LIST VIEW -->
+    <ng-container *ngIf="viewMode === 'LIST'">
+      <div class="sessions-list" *ngIf="sessions.length > 0; else emptySessions">
+        <div *ngFor="let session of sessions" class="session-card glass">
+          <div class="session-header">
+            <span class="session-sport-badge">{{ session.sport || 'GENERAL' }}</span>
+            <span class="recurring-badge" *ngIf="session.recurringTemplateId">&#x1f501;</span>
+            <h4 class="session-title">{{ session.title }}</h4>
+          </div>
+          <div class="session-meta">
+            <span *ngIf="session.scheduledAt">&#x1f4c5; {{ formatDateTime(session.scheduledAt) }}</span>
+            <span *ngIf="session.location">&#x1f4cd; {{ session.location }}</span>
+            <span [class.capacity-full]="isFull(session)">
+              &#x1f465; {{ getCapacityText(session) }}
+              <span *ngIf="isFull(session)" class="full-badge">FULL</span>
+            </span>
+            <span *ngIf="session.linkedTrainingId" class="linked-badge">&#x1f3cb; Linked Training</span>
+          </div>
+          <p class="session-desc" *ngIf="session.description">{{ session.description }}</p>
+
+          <!-- Waiting list position -->
+          <div class="waiting-list-info" *ngIf="isOnWaitingList(session)">
+            You're #{{ getWaitingListPosition(session) }} on the waiting list
+          </div>
+
+          <div class="session-actions">
+            <ng-container *ngIf="!isParticipant(session) && !isOnWaitingList(session)">
+              <button class="btn-primary" (click)="joinSession(session, $event)">
+                {{ isFull(session) ? 'JOIN WAITING LIST' : 'JOIN' }}
+              </button>
+            </ng-container>
+            <button class="btn-ghost" *ngIf="isParticipant(session)" (click)="cancelSession(session, $event)">
+              CANCEL
+            </button>
+            <button class="btn-ghost" *ngIf="isOnWaitingList(session)" (click)="cancelSession(session, $event)">
+              LEAVE WAITING LIST
+            </button>
+          </div>
         </div>
       </div>
+      <ng-template #emptySessions>
+        <div class="empty-tab">
+          <span>&#x1f4c5;</span>
+          <p>No sessions scheduled yet.</p>
+          <button class="btn-primary" *ngIf="canCreate" (click)="openForm()">SCHEDULE SESSION</button>
+        </div>
+      </ng-template>
+    </ng-container>
+
+    <!-- CALENDAR VIEW -->
+    <ng-container *ngIf="viewMode === 'CALENDAR'">
+      <div class="calendar-nav">
+        <button class="btn-secondary" (click)="prevWeek()">&larr; Prev</button>
+        <button class="btn-secondary" (click)="goToday()">Today</button>
+        <span class="calendar-range">{{ formatWeekRange() }}</span>
+        <button class="btn-secondary" (click)="nextWeek()">Next &rarr;</button>
+      </div>
+      <div class="calendar-grid">
+        <div *ngFor="let day of calendarDays" class="calendar-day" [class.today]="isToday(day)">
+          <div class="calendar-day-header">{{ formatDayHeader(day) }}</div>
+          <div class="calendar-day-sessions">
+            <div *ngFor="let session of getSessionsForDay(sessions, day)" class="calendar-session-card glass">
+              <div class="cal-session-top">
+                <span class="session-sport-badge small">{{ session.sport || 'GEN' }}</span>
+                <span class="recurring-badge small" *ngIf="session.recurringTemplateId">&#x1f501;</span>
+              </div>
+              <div class="cal-session-title">{{ session.title }}</div>
+              <div class="cal-session-time">{{ formatTime(session.scheduledAt) }}</div>
+              <div class="cal-session-capacity" [class.capacity-full]="isFull(session)">
+                &#x1f465; {{ getCapacityText(session) }}
+              </div>
+              <div class="cal-session-actions">
+                <ng-container *ngIf="!isParticipant(session) && !isOnWaitingList(session)">
+                  <button class="btn-primary small" (click)="joinSession(session, $event)">
+                    {{ isFull(session) ? 'WAIT' : 'JOIN' }}
+                  </button>
+                </ng-container>
+                <button class="btn-ghost small" *ngIf="isParticipant(session)" (click)="cancelSession(session, $event)">
+                  CANCEL
+                </button>
+                <button class="btn-ghost small" *ngIf="isOnWaitingList(session)" (click)="cancelSession(session, $event)">
+                  LEAVE
+                </button>
+              </div>
+            </div>
+            <div *ngIf="getSessionsForDay(sessions, day).length === 0" class="calendar-empty-day">&mdash;</div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+  </ng-container>
+
+  <!-- Recurring Templates Section -->
+  <ng-container *ngIf="canCreate">
+    <div class="recurring-section">
+      <div class="recurring-header">
+        <h4>Recurring Sessions</h4>
+        <button class="btn-primary" (click)="openRecurringForm()">+ RECURRING</button>
+      </div>
+      <ng-container *ngIf="recurringTemplates$ | async as templates">
+        <div *ngIf="templates.length > 0" class="recurring-list">
+          <div *ngFor="let t of templates" class="recurring-card glass" [class.inactive]="!t.active">
+            <div class="recurring-info">
+              <span class="session-sport-badge">{{ t.sport || 'GENERAL' }}</span>
+              <strong>{{ t.title }}</strong>
+              <span class="recurring-schedule">{{ formatTemplateDay(t.dayOfWeek) }} at {{ t.timeOfDay }}</span>
+              <span *ngIf="t.maxParticipants" class="recurring-cap">Max {{ t.maxParticipants }}</span>
+              <span *ngIf="!t.active" class="inactive-badge">PAUSED</span>
+            </div>
+            <button class="btn-ghost" *ngIf="t.active" (click)="deactivateTemplate(t, $event)">DEACTIVATE</button>
+          </div>
+        </div>
+        <p *ngIf="templates.length === 0" class="empty-recurring">No recurring sessions configured.</p>
+      </ng-container>
     </div>
-    <ng-template #emptySessions>
-      <div class="empty-tab">
-        <span>📅</span>
-        <p>No sessions scheduled yet.</p>
-        <button class="btn-primary" *ngIf="canCreate" (click)="openForm()">SCHEDULE SESSION</button>
-      </div>
-    </ng-template>
   </ng-container>
 </div>
 
@@ -48,7 +136,7 @@
   <div class="modal glass" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>Create Session</h3>
-      <button class="close-btn" (click)="closeForm()">×</button>
+      <button class="close-btn" (click)="closeForm()">&times;</button>
     </div>
     <div class="modal-body">
       <div class="form-row">
@@ -66,6 +154,10 @@
         <input type="datetime-local" [(ngModel)]="form.scheduledAt" class="form-input" />
       </div>
       <div class="form-row">
+        <label>Max Participants</label>
+        <input type="number" [(ngModel)]="form.maxParticipants" placeholder="Leave empty for unlimited" class="form-input" min="1" />
+      </div>
+      <div class="form-row">
         <label>Location</label>
         <input [(ngModel)]="form.location" placeholder="Meeting point" class="form-input" />
       </div>
@@ -77,6 +169,54 @@
     <div class="modal-footer">
       <button class="btn-secondary" (click)="closeForm()">CANCEL</button>
       <button class="btn-primary" (click)="save()" [disabled]="!form.title">CREATE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Recurring Session Form Modal -->
+<div class="modal-backdrop" *ngIf="isRecurringFormOpen" (click)="closeRecurringForm()">
+  <div class="modal glass" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Create Recurring Session</h3>
+      <button class="close-btn" (click)="closeRecurringForm()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Title *</label>
+        <input [(ngModel)]="recurringForm.title" placeholder="e.g. Tuesday Group Ride" class="form-input" />
+      </div>
+      <div class="form-row">
+        <label>Sport</label>
+        <select [(ngModel)]="recurringForm.sport" class="form-input">
+          <option *ngFor="let s of sports" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Day of Week *</label>
+        <select [(ngModel)]="recurringForm.dayOfWeek" class="form-input">
+          <option *ngFor="let d of daysOfWeek" [value]="d">{{ d }}</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Time *</label>
+        <input type="time" [(ngModel)]="recurringForm.timeOfDay" class="form-input" />
+      </div>
+      <div class="form-row">
+        <label>Max Participants</label>
+        <input type="number" [(ngModel)]="recurringForm.maxParticipants" placeholder="Leave empty for unlimited" class="form-input" min="1" />
+      </div>
+      <div class="form-row">
+        <label>Location</label>
+        <input [(ngModel)]="recurringForm.location" placeholder="Meeting point" class="form-input" />
+      </div>
+      <div class="form-row">
+        <label>Description</label>
+        <textarea [(ngModel)]="recurringForm.description" placeholder="Details..." class="form-input" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeRecurringForm()">CANCEL</button>
+      <button class="btn-primary" (click)="saveRecurring()" [disabled]="!recurringForm.title || !recurringForm.dayOfWeek || !recurringForm.timeOfDay">CREATE</button>
     </div>
   </div>
 </div>

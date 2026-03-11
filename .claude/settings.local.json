@@ -26,7 +26,8 @@
       "Bash(do echo:*)",
       "Read(//c/Users/GAR/Documents/POC/Koval/UsersGARAppDataLocalTempclaudeC--Users-GAR-Documents-POC-Kovaltasks/**)",
       "Bash(java -version 2>&1)",
-      "Bash(find /c/Users/GAR/Documents/POC/Koval/backend -name \"*pacing*\" -o -name \"*gpx*\" -o -name \"*GpxParser*\" 2>/dev/null | head -20)"
+      "Bash(find /c/Users/GAR/Documents/POC/Koval/backend -name \"*pacing*\" -o -name \"*gpx*\" -o -name \"*GpxParser*\" 2>/dev/null | head -20)",
+      "Bash(find /c/Users/GAR/Documents/POC/Koval/frontend/src -name \"*notification*\" -type f 2>/dev/null | head -10)"
     ]
   }
 }

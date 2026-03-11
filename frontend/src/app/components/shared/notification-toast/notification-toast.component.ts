@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { NotificationService } from '../../../services/notification.service';
+import { ClubService } from '../../../services/club.service';
 import { MessagePayload } from 'firebase/messaging';
 
 @Component({
@@ -16,6 +17,9 @@ import { MessagePayload } from 'firebase/messaging';
         <div class="toast-content">
           <strong>{{ title }}</strong>
           <span>{{ body }}</span>
+          <div class="toast-actions" *ngIf="data['type'] === 'WAITING_LIST_PROMOTED'">
+            <button class="toast-refuse-btn" (click)="onRefuse($event)">REFUSE SPOT</button>
+          </div>
         </div>
         <button class="toast-close" (click)="dismiss($event)">&times;</button>
       </div>
@@ -67,6 +71,23 @@ import { MessagePayload } from 'firebase/messaging';
         padding: 0 4px;
         line-height: 1;
       }
+      .toast-actions {
+        margin-top: 8px;
+      }
+      .toast-refuse-btn {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 6px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .toast-refuse-btn:hover {
+        background: rgba(239, 68, 68, 0.25);
+      }
       @keyframes slideIn {
         from {
           transform: translateX(100%);
@@ -82,6 +103,7 @@ import { MessagePayload } from 'firebase/messaging';
 })
 export class NotificationToastComponent implements OnInit, OnDestroy {
   private readonly notificationService = inject(NotificationService);
+  private readonly clubService = inject(ClubService);
   private readonly router = inject(Router);
   private sub: Subscription | null = null;
   private dismissTimer: ReturnType<typeof setTimeout> | null = null;
@@ -89,7 +111,7 @@ export class NotificationToastComponent implements OnInit, OnDestroy {
   visible = false;
   title = '';
   body = '';
-  private data: Record<string, string> = {};
+  data: Record<string, string> = {};
 
   ngOnInit(): void {
     this.sub = this.notificationService.foregroundNotification$
@@ -101,7 +123,8 @@ export class NotificationToastComponent implements OnInit, OnDestroy {
         this.visible = true;
 
         if (this.dismissTimer) clearTimeout(this.dismissTimer);
-        this.dismissTimer = setTimeout(() => (this.visible = false), 5000);
+        const timeout = this.data['type'] === 'WAITING_LIST_PROMOTED' ? 15000 : 5000;
+        this.dismissTimer = setTimeout(() => (this.visible = false), timeout);
       });
   }
 
@@ -110,12 +133,22 @@ export class NotificationToastComponent implements OnInit, OnDestroy {
     const type = this.data['type'];
     if (type === 'TRAINING_ASSIGNED') {
       this.router.navigate(['/calendar']);
-    } else if (type === 'SESSION_CREATED') {
+    } else if (type === 'SESSION_CREATED' || type === 'WAITING_LIST_PROMOTED') {
       const clubId = this.data['clubId'];
       if (clubId) {
         this.router.navigate(['/clubs', clubId]);
       }
     }
+  }
+
+  onRefuse(event: Event): void {
+    event.stopPropagation();
+    const clubId = this.data['clubId'];
+    const sessionId = this.data['sessionId'];
+    if (clubId && sessionId) {
+      this.clubService.cancelSession(clubId, sessionId).subscribe({ error: () => {} });
+    }
+    this.visible = false;
   }
 
   dismiss(event: Event): void {

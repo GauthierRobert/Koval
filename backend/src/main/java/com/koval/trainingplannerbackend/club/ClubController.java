@@ -2,10 +2,13 @@ package com.koval.trainingplannerbackend.club;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @RestController
@@ -13,9 +16,11 @@ import java.util.List;
 public class ClubController {
 
     private final ClubService clubService;
+    private final RecurringSessionService recurringSessionService;
 
-    public ClubController(ClubService clubService) {
+    public ClubController(ClubService clubService, RecurringSessionService recurringSessionService) {
         this.clubService = clubService;
+        this.recurringSessionService = recurringSessionService;
     }
 
     // DTOs
@@ -23,7 +28,14 @@ public class ClubController {
                                     String logoUrl, ClubVisibility visibility) {}
 
     public record CreateSessionRequest(String title, String sport, LocalDateTime scheduledAt,
-                                       String location, String description, String linkedTrainingId) {}
+                                       String location, String description, String linkedTrainingId,
+                                       Integer maxParticipants) {}
+
+    public record CreateRecurringSessionRequest(String title, String sport, DayOfWeek dayOfWeek,
+                                                 LocalTime timeOfDay, String location, String description,
+                                                 String linkedTrainingId, Integer maxParticipants) {}
+
+    public record LinkTrainingRequest(String trainingId) {}
 
     public record CreateGroupRequest(String name) {}
 
@@ -185,7 +197,13 @@ public class ClubController {
     }
 
     @GetMapping("/{id}/sessions")
-    public ResponseEntity<List<ClubTrainingSession>> listSessions(@PathVariable String id) {
+    public ResponseEntity<List<ClubTrainingSession>> listSessions(
+            @PathVariable String id,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
+        if (from != null && to != null) {
+            return ResponseEntity.ok(clubService.listSessions(id, from, to));
+        }
         return ResponseEntity.ok(clubService.listSessions(id));
     }
 
@@ -216,5 +234,45 @@ public class ClubController {
     @GetMapping("/{id}/race-goals")
     public ResponseEntity<List<ClubRaceGoalResponse>> getRaceGoals(@PathVariable String id) {
         return ResponseEntity.ok(clubService.getRaceGoals(id));
+    }
+
+    // --- Recurring Sessions ---
+
+    @PostMapping("/{id}/recurring-sessions")
+    public ResponseEntity<RecurringSessionTemplate> createRecurringSession(
+            @PathVariable String id, @RequestBody CreateRecurringSessionRequest req) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(recurringSessionService.createTemplate(userId, id, req));
+    }
+
+    @GetMapping("/{id}/recurring-sessions")
+    public ResponseEntity<List<RecurringSessionTemplate>> listRecurringSessions(@PathVariable String id) {
+        return ResponseEntity.ok(recurringSessionService.listTemplates(id));
+    }
+
+    @PutMapping("/{id}/recurring-sessions/{templateId}")
+    public ResponseEntity<RecurringSessionTemplate> updateRecurringSession(
+            @PathVariable String id, @PathVariable String templateId,
+            @RequestBody CreateRecurringSessionRequest req) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(recurringSessionService.updateTemplate(userId, templateId, req));
+    }
+
+    @DeleteMapping("/{id}/recurring-sessions/{templateId}")
+    public ResponseEntity<Void> deactivateRecurringSession(
+            @PathVariable String id, @PathVariable String templateId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        recurringSessionService.deactivateTemplate(userId, templateId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // --- Link Training ---
+
+    @PutMapping("/{id}/sessions/{sessionId}/link-training")
+    public ResponseEntity<ClubTrainingSession> linkTrainingToSession(
+            @PathVariable String id, @PathVariable String sessionId,
+            @RequestBody LinkTrainingRequest req) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(clubService.linkTrainingToSession(userId, id, sessionId, req.trainingId()));
     }
 }

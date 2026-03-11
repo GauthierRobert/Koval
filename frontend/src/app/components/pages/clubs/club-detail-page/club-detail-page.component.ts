@@ -96,6 +96,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
         break;
       case 'sessions':
         this.clubService.loadSessions(this.clubId);
+        this.clubService.loadRecurringTemplates(this.clubId);
         break;
       case 'members':
         this.clubService.loadMembers(this.clubId);

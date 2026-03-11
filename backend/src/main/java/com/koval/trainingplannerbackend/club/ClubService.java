@@ -331,6 +331,7 @@ public class ClubService {
         session.setLocation(req.location());
         session.setDescription(req.description());
         session.setLinkedTrainingId(req.linkedTrainingId());
+        session.setMaxParticipants(req.maxParticipants());
         session.setCreatedAt(LocalDateTime.now());
         session = sessionRepository.save(session);
 
@@ -342,13 +343,27 @@ public class ClubService {
         return sessionRepository.findByClubIdOrderByScheduledAtDesc(clubId);
     }
 
+    public List<ClubTrainingSession> listSessions(String clubId, LocalDateTime from, LocalDateTime to) {
+        return sessionRepository.findByClubIdAndScheduledAtBetween(clubId, from, to);
+    }
+
     public ClubTrainingSession joinSession(String userId, String sessionId) {
         ClubTrainingSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
-        if (!session.getParticipantIds().contains(userId)) {
+        if (session.getParticipantIds().contains(userId)) {
+            return session;
+        }
+        if (session.isOnWaitingList(userId)) {
+            return session;
+        }
+        if (!session.isFull()) {
             session.getParticipantIds().add(userId);
             sessionRepository.save(session);
             emitActivity(session.getClubId(), ClubActivityType.SESSION_JOINED, userId, sessionId, session.getTitle());
+        } else {
+            session.getWaitingList().add(new WaitingListEntry(userId, LocalDateTime.now()));
+            sessionRepository.save(session);
+            emitActivity(session.getClubId(), ClubActivityType.WAITING_LIST_JOINED, userId, sessionId, session.getTitle());
         }
         return session;
     }
@@ -356,7 +371,35 @@ public class ClubService {
     public ClubTrainingSession cancelSessionParticipation(String userId, String sessionId) {
         ClubTrainingSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
-        session.getParticipantIds().remove(userId);
+        if (session.getParticipantIds().remove(userId)) {
+            if (session.getMaxParticipants() != null && !session.getWaitingList().isEmpty()) {
+                promoteNextFromWaitingList(session);
+            }
+        } else {
+            session.getWaitingList().removeIf(e -> e.userId().equals(userId));
+        }
+        return sessionRepository.save(session);
+    }
+
+    private void promoteNextFromWaitingList(ClubTrainingSession session) {
+        if (session.getWaitingList().isEmpty()) return;
+        WaitingListEntry promoted = session.getWaitingList().remove(0);
+        session.getParticipantIds().add(promoted.userId());
+
+        notificationService.sendToUsers(
+                List.of(promoted.userId()),
+                "You're In!",
+                "A spot opened in " + session.getTitle() + ". You've been automatically added.",
+                Map.of("type", "WAITING_LIST_PROMOTED",
+                       "clubId", session.getClubId(),
+                       "sessionId", session.getId()));
+    }
+
+    public ClubTrainingSession linkTrainingToSession(String userId, String clubId, String sessionId, String trainingId) {
+        validateAdminOrCoach(userId, clubId);
+        ClubTrainingSession session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        session.setLinkedTrainingId(trainingId);
         return sessionRepository.save(session);
     }
 
@@ -470,6 +513,10 @@ public class ClubService {
         if (m.getRole() != ClubMemberRole.OWNER && m.getRole() != ClubMemberRole.ADMIN) {
             throw new IllegalStateException("Admin or owner role required");
         }
+    }
+
+    public void validateAdminOrCoachAccess(String userId, String clubId) {
+        validateAdminOrCoach(userId, clubId);
     }
 
     private void validateAdminOrCoach(String userId, String clubId) {
