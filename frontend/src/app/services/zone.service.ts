@@ -35,4 +35,9 @@ export class ZoneService {
     getZoneSystemById(id: string): Observable<ZoneSystem> {
         return this.http.get<ZoneSystem>(`${this.apiUrl}/${id}`);
     }
+
+    /** PUT /api/zones/coach/{id}/default — set or unset a zone system as default for its sport */
+    setDefaultForSport(id: string, value: boolean): Observable<ZoneSystem> {
+        return this.http.put<ZoneSystem>(`${this.apiUrl}/coach/${id}/default?value=${value}`, {});
+    }
 }

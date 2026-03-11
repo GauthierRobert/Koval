@@ -675,3 +675,108 @@
   line-height: 1.6;
   margin: 0;
 }
+
+/* ── Default badge on system card ── */
+
+.default-badge {
+  font-size: 8px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  letter-spacing: 0.5px;
+}
+
+/* ── Default toggle checkbox ── */
+
+.config-default {
+  justify-content: flex-end;
+}
+
+.default-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.default-toggle input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.default-toggle input[type="checkbox"]:checked {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: #22c55e;
+}
+
+.default-toggle input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 4px;
+  width: 4px;
+  height: 8px;
+  border: solid #22c55e;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* ── Annotations section ── */
+
+.annotations-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.annotations-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.annotations-input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-color);
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.annotations-input:focus {
+  border-color: var(--accent-color);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.annotations-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.annotations-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+  opacity: 0.6;
+}

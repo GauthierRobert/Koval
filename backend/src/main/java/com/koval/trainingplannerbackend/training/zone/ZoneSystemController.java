@@ -82,6 +82,17 @@ public class ZoneSystemController {
         return ResponseEntity.ok(zoneSystemService.getZoneSystemsForCoach(userId, name));
     }
 
+    @PutMapping("/coach/{id}/default")
+    public ResponseEntity<ZoneSystem> setDefaultForSport(@PathVariable String id,
+                                                          @RequestParam boolean value) {
+        String userId = SecurityUtils.getCurrentUserId();
+        try {
+            return ResponseEntity.ok(zoneSystemService.setDefaultForSport(id, userId, value));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ZoneSystem> getZoneSystem(@PathVariable String id) {
         // Allow any authenticated user to read a zone system if they have the ID (for
