@@ -48,4 +48,14 @@ public class ZoneToolService {
             @ToolParam(description = "The coach's user ID") String coachId) {
         return zoneSystemService.getZoneSystemsForCoach(coachId);
     }
+
+    @Tool(description = """
+            Get the coach's default zone system for a given sport. \
+            Returns the zone system with all zone definitions and annotations, or null if no default is set. \
+            Use this to resolve which zone system to attach when creating trainings.""")
+    public ZoneSystem getDefaultZoneSystem(
+            @ToolParam(description = "The coach's user ID") String coachId,
+            @ToolParam(description = "Sport type: CYCLING, RUNNING, or SWIMMING") SportType sportType) {
+        return zoneSystemService.getDefaultZoneSystem(coachId, sportType).orElse(null);
+    }
 }

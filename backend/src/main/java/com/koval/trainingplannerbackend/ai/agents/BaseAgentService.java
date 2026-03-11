@@ -3,6 +3,9 @@ package com.koval.trainingplannerbackend.ai.agents;
 import com.koval.trainingplannerbackend.ai.AIService.ChatMessageResponse;
 import com.koval.trainingplannerbackend.ai.AIService.StreamResponse;
 import com.koval.trainingplannerbackend.ai.UserContextResolver.UserContext;
+import com.koval.trainingplannerbackend.training.zone.Zone;
+import com.koval.trainingplannerbackend.training.zone.ZoneSystem;
+import com.koval.trainingplannerbackend.training.zone.ZoneSystemService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.SystemMessage;
@@ -18,8 +21,10 @@ import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.TextStyle;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Shared logic for all specialist agents: prompt building, streaming, error handling.
@@ -27,9 +32,11 @@ import java.util.Map;
 public abstract class BaseAgentService implements TrainingAgent {
 
     private final ChatClient chatClient;
+    private final ZoneSystemService zoneSystemService;
 
-    protected BaseAgentService(ChatClient chatClient) {
+    protected BaseAgentService(ChatClient chatClient, ZoneSystemService zoneSystemService) {
         this.chatClient = chatClient;
+        this.zoneSystemService = zoneSystemService;
     }
 
     @Override
@@ -89,7 +96,7 @@ public abstract class BaseAgentService implements TrainingAgent {
         LocalDate weekStart = today.with(DayOfWeek.MONDAY);
         LocalDate weekEnd = today.with(DayOfWeek.SUNDAY);
 
-        return """
+        String base = """
                 The current user is: %s
                 The user's role is: %s
                 The user's FTP is: %sW
@@ -97,6 +104,31 @@ public abstract class BaseAgentService implements TrainingAgent {
                 ctx.userId(), ctx.role(), ctx.ftp(),
                 today, dow.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
                 weekStart, weekEnd);
+
+        String zoneContext = buildDefaultZoneContext(ctx);
+        return zoneContext.isEmpty() ? base : base + "\n" + zoneContext;
+    }
+
+    private String buildDefaultZoneContext(UserContext ctx) {
+        if (!"COACH".equals(ctx.role())) return "";
+        List<ZoneSystem> defaults = zoneSystemService.getDefaultZoneSystems(ctx.userId());
+        if (defaults.isEmpty()) return "";
+
+        StringBuilder sb = new StringBuilder("\nDefault Zone Systems:");
+        for (ZoneSystem zs : defaults) {
+            sb.append("\n- ").append(zs.getSportType())
+              .append(": \"").append(zs.getName()).append("\" (id=").append(zs.getId())
+              .append(", ref=").append(zs.getReferenceType()).append(") — ");
+            String zones = zs.getZones().stream()
+                    .map(z -> z.label() + ": " + z.low() + "-" + z.high() + "%" +
+                            (z.description() != null ? " (" + z.description() + ")" : ""))
+                    .collect(Collectors.joining(", "));
+            sb.append(zones);
+            if (zs.getAnnotations() != null && !zs.getAnnotations().isBlank()) {
+                sb.append("\n  Annotations: ").append(zs.getAnnotations());
+            }
+        }
+        return sb.toString();
     }
 
     private Flux<ServerSentEvent<String>> mapChatResponseToEvents(ChatResponse response) {

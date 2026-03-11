@@ -162,21 +162,34 @@ export class ZoneManagerComponent implements OnInit {
     this.saving = true;
     this.saved = false;
 
+    const defaultChanged = this.editingSystem.defaultForSport !== this.selectedSystem?.defaultForSport;
+
     this.zoneService.updateZoneSystem(this.editingSystem.id, this.editingSystem).subscribe({
       next: (updated) => {
-        const systems = this.zoneSystemsSubject.value;
-        const index = systems.findIndex((s) => s.id === updated.id);
-        if (index !== -1) {
-          const next = [...systems];
-          next[index] = updated;
-          this.zoneSystemsSubject.next(next);
+        const finalize = (final: ZoneSystem) => {
+          const systems = this.zoneSystemsSubject.value;
+          const index = systems.findIndex((s) => s.id === final.id);
+          if (index !== -1) {
+            const next = [...systems];
+            next[index] = final;
+            this.zoneSystemsSubject.next(next);
+          }
+          this.selectedSystem = final;
+          this.editingSystem = { ...final, zones: final.zones.map((z) => ({ ...z })) };
+          this.saving = false;
+          this.saved = true;
+          this.loadZoneSystems();
+          setTimeout(() => (this.saved = false), 2500);
+        };
+
+        if (defaultChanged && updated.id) {
+          this.zoneService.setDefaultForSport(updated.id, !!updated.defaultForSport).subscribe({
+            next: (defaultUpdated) => finalize(defaultUpdated),
+            error: () => finalize(updated),
+          });
+        } else {
+          finalize(updated);
         }
-        this.selectedSystem = updated;
-        this.editingSystem = { ...updated, zones: updated.zones.map((z) => ({ ...z })) };
-        this.saving = false;
-        this.saved = true;
-        this.loadZoneSystems();
-        setTimeout(() => (this.saved = false), 2500);
       },
       error: (err) => {
         console.error('Failed to save zone system', err);

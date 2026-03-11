@@ -39,6 +39,7 @@
           <div class="system-card-meta">
             <span class="meta-badge">{{ system.referenceType }}</span>
             <span class="meta-count">{{ system.zones.length }} zones</span>
+            <span class="default-badge" *ngIf="system.defaultForSport">DEFAULT</span>
           </div>
           <div class="zone-bar-preview">
             <div *ngFor="let zone of system.zones; let i = index" class="bar-segment"
@@ -76,6 +77,12 @@
             <div class="config-item" *ngIf="editingSystem.referenceType === 'CUSTOM'">
               <label>REFERENCE NAME</label>
               <input class="config-input" [(ngModel)]="editingSystem.referenceName" placeholder="e.g., Lactate Threshold" />
+            </div>
+            <div class="config-item config-default">
+              <label class="default-toggle">
+                <input type="checkbox" [(ngModel)]="editingSystem.defaultForSport" />
+                DEFAULT FOR {{ getSportLabel(editingSystem.sportType) }}
+              </label>
             </div>
           </div>
         </div>
@@ -130,6 +137,18 @@
           </span>
         </div>
         <button class="add-zone-row" (click)="addZone()">+ Add Zone</button>
+      </div>
+
+      <!-- AI Annotations -->
+      <div class="annotations-section">
+        <label class="annotations-label">AI NOTES</label>
+        <textarea
+          class="annotations-input"
+          [(ngModel)]="editingSystem.annotations"
+          placeholder="Describe your zone conventions for the AI (e.g., 'Z2 = conversational pace, Z4 intervals use 1:1 rest')"
+          rows="3">
+        </textarea>
+        <span class="annotations-hint">These notes help the AI understand your coaching conventions when creating workouts.</span>
       </div>
     </div>
 
