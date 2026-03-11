@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: training-planner-backend-test
+  ai:
+    anthropic:
+      api-key: test-key-not-used
+      enabled: false
+    chat:
+      memory:
+        repository:
+          mongo:
+            create-indices: false
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.autoconfigure.anthropic.AnthropicAutoConfiguration
+      - org.springframework.ai.autoconfigure.chat.memory.ChatMemoryAutoConfiguration
+
+jwt:
+  secret: test-secret-key-must-be-at-least-32-characters-long-for-testing
+  expiration: 86400000
+
+strava:
+  client-id: test-strava-client-id
+  client-secret: test-strava-client-secret
+  redirect-uri: http://localhost:8080/api/auth/strava/callback
+
+google:
+  client-id: test-google-client-id
+  client-secret: test-google-client-secret
+  redirect-uri: http://localhost:4200/auth/google/callback
+
+cors:
+  allowed-origins: http://localhost:4200
+
+firebase:
+  service-account-path: ""
+
+app:
+  ai:
+    debug-calls: false
+
+logging:
+  level:
+    org.springframework.ai: OFF
+    com.koval.trainingplannerbackend: INFO
