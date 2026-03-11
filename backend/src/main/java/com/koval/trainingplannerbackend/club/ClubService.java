@@ -4,6 +4,7 @@ import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserService;
 import com.koval.trainingplannerbackend.goal.RaceGoal;
 import com.koval.trainingplannerbackend.goal.RaceGoalRepository;
+import com.koval.trainingplannerbackend.notification.NotificationService;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +28,7 @@ public class ClubService {
     private final RaceGoalRepository raceGoalRepository;
     private final UserService userService;
     private final ClubGroupRepository clubGroupRepository;
+    private final NotificationService notificationService;
 
     public ClubService(ClubRepository clubRepository,
                        ClubMembershipRepository membershipRepository,
@@ -35,7 +37,8 @@ public class ClubService {
                        CompletedSessionRepository completedSessionRepository,
                        RaceGoalRepository raceGoalRepository,
                        UserService userService,
-                       ClubGroupRepository clubGroupRepository) {
+                       ClubGroupRepository clubGroupRepository,
+                       NotificationService notificationService) {
         this.clubRepository = clubRepository;
         this.membershipRepository = membershipRepository;
         this.sessionRepository = sessionRepository;
@@ -44,6 +47,7 @@ public class ClubService {
         this.raceGoalRepository = raceGoalRepository;
         this.userService = userService;
         this.clubGroupRepository = clubGroupRepository;
+        this.notificationService = notificationService;
     }
 
     // --- Club CRUD ---
@@ -494,5 +498,21 @@ public class ClubService {
         activity.setTargetTitle(targetTitle);
         activity.setOccurredAt(LocalDateTime.now());
         activityRepository.save(activity);
+
+        if (type == ClubActivityType.SESSION_CREATED) {
+            List<String> memberIds = getActiveMemberIds(clubId);
+            memberIds.remove(actorId);
+            if (!memberIds.isEmpty()) {
+                User actor = userService.findById(actorId).orElse(null);
+                String actorName = actor != null ? actor.getDisplayName() : "Someone";
+                notificationService.sendToUsers(
+                        memberIds,
+                        "New Group Session",
+                        actorName + " created a training session: " + targetTitle,
+                        Map.of("type", "SESSION_CREATED",
+                               "clubId", clubId,
+                               "sessionId", targetId != null ? targetId : ""));
+            }
+        }
     }
 }

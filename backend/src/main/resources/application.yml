@@ -51,6 +51,10 @@ jwt:
 cors:
   allowed-origins: ${ALLOWED_ORIGINS:http://localhost:4200,http://localhost:3000}
 
+# Firebase Cloud Messaging
+firebase:
+  service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}
+
 # AI debug flag — set to true to log every raw Anthropic HTTP request/response
 app:
   ai:

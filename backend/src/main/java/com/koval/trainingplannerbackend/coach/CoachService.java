@@ -4,6 +4,7 @@ import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.auth.UserRole;
 import com.koval.trainingplannerbackend.auth.UserService;
+import com.koval.trainingplannerbackend.notification.NotificationService;
 import com.koval.trainingplannerbackend.training.group.Group;
 import com.koval.trainingplannerbackend.training.group.GroupService;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service for Coach-specific operations.
@@ -32,17 +34,20 @@ public class CoachService {
     private final ScheduledWorkoutRepository scheduledWorkoutRepository;
     private final InviteCodeRepository inviteCodeRepository;
     private final GroupService groupService;
+    private final NotificationService notificationService;
 
     public CoachService(UserRepository userRepository,
             UserService userService,
             ScheduledWorkoutRepository scheduledWorkoutRepository,
             InviteCodeRepository inviteCodeRepository,
-            GroupService groupService) {
+            GroupService groupService,
+            NotificationService notificationService) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
         this.inviteCodeRepository = inviteCodeRepository;
         this.groupService = groupService;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -81,6 +86,14 @@ public class CoachService {
 
             assignments.add(scheduledWorkoutRepository.save(workout));
         }
+
+        notificationService.sendToUsers(
+                athleteIds,
+                "New Training Assigned",
+                coach.getDisplayName() + " assigned you a workout for " + scheduledDate,
+                Map.of("type", "TRAINING_ASSIGNED",
+                       "trainingId", trainingId,
+                       "scheduledDate", scheduledDate.toString()));
 
         return assignments;
     }

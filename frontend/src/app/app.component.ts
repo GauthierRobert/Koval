@@ -10,6 +10,7 @@ import { DeviceManagerComponent } from './components/shared/device-manager/devic
 import { SettingsComponent } from './components/layout/settings/settings.component';
 import { BluetoothService } from './services/bluetooth.service';
 import { AuthService } from './services/auth.service';
+import { NotificationToastComponent } from './components/shared/notification-toast/notification-toast.component';
 
 @Component({
   selector: 'app-root',
@@ -20,7 +21,8 @@ import { AuthService } from './services/auth.service';
     LiveDashboardComponent,
     TopBarComponent,
     DeviceManagerComponent,
-    SettingsComponent
+    SettingsComponent,
+    NotificationToastComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',

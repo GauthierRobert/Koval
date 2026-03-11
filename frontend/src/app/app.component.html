@@ -12,4 +12,7 @@
 
       <!-- Live Workout Overlay -->
       <app-live-dashboard *ngIf="(executionState$ | async)?.isActive || (executionState$ | async)?.finalSummary"></app-live-dashboard>
+
+      <!-- Push Notification Toasts -->
+      <app-notification-toast></app-notification-toast>
     </div>

@@ -4,6 +4,7 @@ import {BehaviorSubject, Observable} from 'rxjs';
 import {tap} from 'rxjs/operators';
 import {Router} from '@angular/router';
 import {environment} from '../../environments/environment';
+import {NotificationService} from './notification.service';
 
 export interface User {
     id: string;
@@ -47,6 +48,7 @@ export class AuthService {
 
     private readonly http = inject(HttpClient);
     private readonly router = inject(Router);
+    private readonly notificationService = inject(NotificationService);
 
     constructor() {
         this.loadUserFromToken();
@@ -58,7 +60,10 @@ export class AuthService {
             this.http.get<User>(`${this.apiUrl}/me`, {
                 headers: { Authorization: `Bearer ${token}` }
             }).subscribe({
-                next: (user) => this.userSubject.next(user),
+                next: (user) => {
+                    this.userSubject.next(user);
+                    this.notificationService.requestPermissionAndRegisterToken();
+                },
                 error: () => {
                     localStorage.removeItem('token');
                     this.router.navigate(['/login']);
@@ -121,6 +126,7 @@ export class AuthService {
     // --- Session management ---
 
     logout() {
+        this.notificationService.unregisterToken();
         localStorage.removeItem('token');
         localStorage.removeItem(this.UI_MODE_KEY);
         window.location.href = '/login';

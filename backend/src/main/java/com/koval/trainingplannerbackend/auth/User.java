@@ -7,6 +7,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Setter
 @Getter
@@ -57,6 +59,8 @@ public class User {
     private Integer vo2maxPace;    // Seconds per km (VO2MAX_PACE reference)
 
     private boolean needsOnboarding = false;
+
+    private List<String> fcmTokens = new ArrayList<>();
 
     // Helper methods
     public boolean isCoach() {
