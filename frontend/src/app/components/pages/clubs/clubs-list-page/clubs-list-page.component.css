@@ -1,268 +1,425 @@
-.clubs-page {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
+:host {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
 }
 
-.page-header {
+.page-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ─── Header bar ─────────────────────────────────────────── */
+.header {
+  padding: var(--space-sm) var(--page-padding);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.header-left {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2rem;
+  gap: 12px;
 }
 
-.page-header h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
+.header-avatar {
+  width: 34px;
+  height: 34px;
+  background: var(--accent-subtle);
+  border-radius: var(--space-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 12px;
+  color: var(--accent-color);
 }
 
-.accent {
-  color: var(--accent);
+.header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
+.header-title {
+  font-size: var(--text-sm);
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--text-color);
+}
+
+.header-subtitle {
+  font-size: var(--text-xs);
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.dim {
+  opacity: 0.4;
+  font-weight: 400;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ─── Body ─────────────────────────────────────────────── */
+.page-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--page-padding);
+  overflow-y: auto;
+}
+
+/* ─── Section label ──────────────────────────────────────── */
+.section-label {
+  display: block;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.7;
+  margin-bottom: var(--space-sm);
+}
+
+/* ─── Grid ───────────────────────────────────────────────── */
 .clubs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 12px;
 }
 
+/* ─── Club card ──────────────────────────────────────────── */
 .club-card {
   display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 1.25rem;
-  border-radius: 12px;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--card-padding, 16px);
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  position: relative;
+  transition: border-color 0.2s, transform 0.15s;
 }
 
 .club-card:hover {
+  border-color: var(--accent-color);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 .club-card--private {
-  border-left: 3px solid var(--accent);
+  border-left: 3px solid var(--accent-color);
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .club-logo img {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .club-initials {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-color);
+  color: #000;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
-  font-weight: 700;
+  font-size: 1.1rem;
+  font-weight: 800;
   flex-shrink: 0;
 }
 
 .club-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .club-name {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 0.25rem;
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .club-desc {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin: 0 0 0.5rem;
+  font-size: var(--text-xs);
+  color: var(--text-dim);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.club-meta {
+.card-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 6px;
 }
 
-.meta-badge {
-  font-size: 0.7rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-secondary);
+/* ─── Meta chips ──────────────────────────────────────────── */
+.meta-chip {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.06em;
 }
 
-.visibility-badge.private {
-  background: rgba(239, 68, 68, 0.15);
+.meta-chip--private {
+  background: rgba(248, 113, 113, 0.1);
   color: #f87171;
 }
 
-.role-badge {
-  background: rgba(99, 102, 241, 0.15);
-  color: #a5b4fc;
+.meta-chip--role {
+  background: var(--accent-subtle);
+  color: var(--accent-color);
 }
 
-.join-btn,
+/* ─── Buttons ─────────────────────────────────────────────── */
+.create-btn {
+  background: var(--accent-color);
+  color: #000;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 16px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.create-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.join-btn {
+  background: var(--accent-color);
+  color: #000;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 5px 14px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+
+.join-btn:hover {
+  opacity: 0.85;
+}
+
 .leave-btn {
-  align-self: center;
-  margin-left: auto;
-  white-space: nowrap;
+  background: none;
+  color: var(--text-muted);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: all 0.15s;
+}
+
+.club-card:hover .leave-btn {
+  opacity: 1;
+}
+
+.leave-btn:hover {
+  background: rgba(248, 113, 113, 0.12);
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+/* ─── Empty state ─────────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-xl, 32px) 0;
+}
+
+.empty-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: var(--card-padding, 16px) 24px;
+  border-radius: var(--radius-lg);
+  max-width: 520px;
+  width: 100%;
+}
+
+.empty-icon-wrap {
+  color: var(--accent-color);
+  opacity: 0.7;
   flex-shrink: 0;
 }
 
-.leave-btn {
-  font-size: 0.7rem;
-  padding: 0.3rem 0.6rem;
+.empty-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
 }
 
-.browse-section {
-  margin-top: 2.5rem;
+.empty-text strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-color);
 }
 
-.browse-section h2 {
-  font-size: 1.4rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  color: var(--text-primary);
+.empty-text span {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.7;
 }
 
-.browse-card {
-  border-left: none;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 3rem 2rem;
-  border-radius: 12px;
-  margin-bottom: 2rem;
-}
-
-.empty-icon {
-  font-size: 3rem;
-  display: block;
-  margin-bottom: 1rem;
-}
-
-.empty-state p {
-  color: var(--text-secondary);
-  margin-bottom: 1.5rem;
-}
-
-/* Modal */
+/* ─── Modal ───────────────────────────────────────────────── */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
 }
 
-.modal {
+.modal-card {
   width: 100%;
-  max-width: 480px;
-  border-radius: 16px;
-  padding: 0;
+  max-width: 500px;
+  border-radius: 20px;
   overflow: hidden;
+  animation: modalIn 0.25s ease-out;
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .modal-header h3 {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
 }
 
-.close-btn {
+.modal-close {
   background: none;
   border: none;
-  color: var(--text-secondary);
-  font-size: 1.4rem;
+  color: var(--text-muted);
   cursor: pointer;
-  padding: 0 0.25rem;
-  line-height: 1;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.modal-close:hover {
+  background: var(--surface-hover);
 }
 
 .modal-body {
-  padding: 1.25rem 1.5rem;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 16px;
 }
 
-.form-row {
+.form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 6px;
 }
 
-.form-row label {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.form-group label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  opacity: 0.7;
 }
 
 .form-input {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  padding: 0.6rem 0.8rem;
-  color: var(--text-primary);
-  font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  color: var(--text-color);
+  font-size: 13px;
   width: 100%;
   box-sizing: border-box;
+  transition: border-color 0.15s;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: var(--accent);
+  border-color: var(--accent-color);
+}
+
+.form-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+select.form-input {
+  cursor: pointer;
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 8px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--glass-border);
 }
 
 .btn-primary {
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-color);
+  color: #000;
   border: none;
-  border-radius: 8px;
-  padding: 0.6rem 1.2rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  border-radius: var(--radius-sm);
+  padding: 8px 20px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
   cursor: pointer;
   transition: opacity 0.15s;
 }
@@ -272,42 +429,44 @@
 }
 
 .btn-primary:disabled {
-  opacity: 0.4;
+  opacity: 0.3;
   cursor: not-allowed;
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-primary);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  padding: 0.6rem 1.2rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-color);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   cursor: pointer;
   transition: background 0.15s;
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.btn-ghost {
-  background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  padding: 0.3rem 0.7rem;
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.btn-ghost:hover {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-  border-color: rgba(239, 68, 68, 0.3);
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ─── Responsive ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .clubs-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-body {
+    padding: var(--space-md);
+  }
 }
