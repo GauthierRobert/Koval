@@ -4,6 +4,20 @@
     <p class="subtitle">Upload a GPX course file and generate an elevation-aware pacing plan</p>
   </div>
 
+  <!-- Race Banner (when linked from goals page) -->
+  <div class="race-banner glass" *ngIf="linkedRace && !(pacingPlan$ | async)">
+    <div class="race-banner-content">
+      <span class="race-banner-label">Using race course</span>
+      <strong class="race-banner-title">{{ linkedRace.title }}</strong>
+      <span class="race-banner-meta" *ngIf="linkedRace.location">{{ linkedRace.location }}</span>
+    </div>
+    <div class="race-banner-gpx">
+      <span *ngIf="linkedRace.hasSwimGpx" class="gpx-indicator swim">Swim GPX</span>
+      <span *ngIf="linkedRace.hasBikeGpx" class="gpx-indicator bike">Bike GPX</span>
+      <span *ngIf="linkedRace.hasRunGpx" class="gpx-indicator run">Run GPX</span>
+    </div>
+  </div>
+
   <!-- Initial Form (no results yet) -->
   <div class="form-panel-wide glass" *ngIf="!(pacingPlan$ | async)">
 
@@ -28,8 +42,8 @@
       </div>
     </div>
 
-    <!-- Row 2: GPX Upload — Bike left, Run right -->
-    <div class="gpx-row" *ngIf="needsBike() || needsRun()">
+    <!-- Row 2: GPX Upload — Bike left, Run right (hidden when race is linked) -->
+    <div class="gpx-row" *ngIf="(needsBike() || needsRun()) && !linkedRace">
       <!-- Bike GPX (single-discipline BIKE or TRIATHLON) -->
       <div class="gpx-col" *ngIf="needsBike()">
         <div class="gpx-with-loops">

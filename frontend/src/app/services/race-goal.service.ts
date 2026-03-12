@@ -18,6 +18,7 @@ export interface RaceGoal {
   notes?: string;
   targetTime?: string;
   createdAt?: string;
+  raceId?: string; // optional reference to Race catalog entry
 }
 
 export const PRIORITY_COLORS: Record<string, string> = {
@@ -90,6 +91,22 @@ export class RaceGoalService {
     this.http.delete(`${this.apiUrl}/${id}`).subscribe({
       next: () => this.ngZone.run(() => this.goalsSubject.next(this.goalsSubject.value.filter((g) => g.id !== id))),
       error: () => {},
+    });
+  }
+
+  linkToRace(goalId: string, raceId: string): Observable<RaceGoal> {
+    return new Observable((observer) => {
+      this.http.post<RaceGoal>(`${this.apiUrl}/${goalId}/link-race/${raceId}`, {}).subscribe({
+        next: (updated) => {
+          this.ngZone.run(() => {
+            const list = this.goalsSubject.value.map((g) => (g.id === goalId ? updated : g));
+            this.goalsSubject.next(list);
+            observer.next(updated);
+            observer.complete();
+          });
+        },
+        error: (err) => observer.error(err),
+      });
     });
   }
 

@@ -8,9 +8,11 @@
     <div class="goals-grid" *ngIf="goals.length > 0; else empty">
       <div *ngFor="let goal of goals" class="goal-card glass"
         [class.goal-card--a]="goal.priority === 'A'"
-        [class.goal-card--past]="!isUpcoming(goal)">
+        [class.goal-card--past]="!isUpcoming(goal)"
+        [class.goal-card--expanded]="expandedGoalId === goal.id">
         <div class="goal-priority-bar" [style.background-color]="getPriorityColor(goal.priority)"></div>
         <div class="goal-body">
+          <!-- Header Row -->
           <div class="goal-header-row">
             <span class="priority-badge" [style.background-color]="getPriorityColor(goal.priority) + '22'"
               [style.color]="getPriorityColor(goal.priority)" [style.border-color]="getPriorityColor(goal.priority) + '55'">
@@ -19,12 +21,16 @@
             <app-sport-icon [sport]="$any(goal.sport)" [size]="16"></app-sport-icon>
             <span class="goal-sport">{{ goal.sport }}</span>
             <div class="goal-actions">
-              <button class="icon-btn" (click)="openEdit(goal)" title="Edit">✏️</button>
-              <button class="icon-btn delete" (click)="delete(goal)" title="Delete">🗑</button>
+              <button class="icon-btn" (click)="openEdit(goal); $event.stopPropagation()" title="Edit">&#9998;</button>
+              <button class="icon-btn delete" (click)="delete(goal); $event.stopPropagation()" title="Delete">&#128465;</button>
             </div>
           </div>
-          <h2 class="goal-title">{{ goal.title }}</h2>
-          <div class="goal-date">
+
+          <!-- Title (clickable to expand) -->
+          <h2 class="goal-title" (click)="toggleExpand(goal)">{{ goal.title }}</h2>
+
+          <!-- Date + Countdown -->
+          <div class="goal-date" *ngIf="goal.raceDate">
             <span>{{ formatDate(goal.raceDate) }}</span>
             <span class="days-badge" [class.past]="daysUntil(goal.raceDate) < 0"
               [class.soon]="daysUntil(goal.raceDate) >= 0 && daysUntil(goal.raceDate) <= 30">
@@ -32,30 +38,116 @@
             </span>
           </div>
 
-          <!-- Weeks until race -->
-          <div class="weeks-display" *ngIf="isUpcoming(goal)">
+          <!-- Weeks + Progress -->
+          <div class="weeks-display" *ngIf="goal.raceDate && isUpcoming(goal)">
             <span class="weeks-number">{{ weeksUntil(goal.raceDate) }}</span>
             <span class="weeks-label">weeks to go</span>
           </div>
-
-          <!-- Progress bar -->
-          <div class="progress-track" *ngIf="isUpcoming(goal)">
+          <div class="progress-track" *ngIf="goal.raceDate && isUpcoming(goal)">
             <div class="progress-fill" [style.width.%]="getProgressPercent(goal)"
               [style.background-color]="getPriorityColor(goal.priority)"></div>
           </div>
 
+          <!-- Race Info: Discipline distances -->
+          <ng-container *ngIf="goal.raceId && getRace(goal.raceId) as race">
+            <div class="discipline-distances">
+              <span class="discipline-badge swim" *ngIf="race.swimDistanceM">
+                S: {{ formatDistance(race.swimDistanceM) }}
+              </span>
+              <span class="discipline-badge bike" *ngIf="race.bikeDistanceM">
+                B: {{ formatDistance(race.bikeDistanceM) }}
+              </span>
+              <span class="discipline-badge run" *ngIf="race.runDistanceM">
+                R: {{ formatDistance(race.runDistanceM) }}
+              </span>
+              <span class="discipline-badge elevation" *ngIf="race.elevationGainM">
+                &#9650; {{ race.elevationGainM }}m
+              </span>
+            </div>
+          </ng-container>
+
+          <!-- Basic meta -->
           <div class="goal-meta">
-            <span *ngIf="goal.distance" class="meta-item">{{ goal.distance }}</span>
             <span *ngIf="goal.location" class="meta-item">{{ goal.location }}</span>
-            <span *ngIf="goal.targetTime" class="meta-item">{{ goal.targetTime }}</span>
+            <span *ngIf="goal.distance && !(goal.raceId && getRace(goal.raceId))" class="meta-item">{{ goal.distance }}</span>
+            <span *ngIf="goal.targetTime" class="meta-item target-time">{{ goal.targetTime }}</span>
           </div>
-          <p class="goal-notes" *ngIf="goal.notes">{{ goal.notes }}</p>
+
+          <!-- Notes (compact) -->
+          <p class="goal-notes" *ngIf="goal.notes && expandedGoalId !== goal.id">{{ goal.notes }}</p>
+
+          <!-- Expanded section -->
+          <div class="expanded-content" *ngIf="expandedGoalId === goal.id">
+            <ng-container *ngIf="goal.raceId && getRace(goal.raceId) as race">
+              <!-- Race description -->
+              <p class="race-description" *ngIf="race.description">{{ race.description }}</p>
+
+              <!-- Website link -->
+              <a *ngIf="race.website" class="race-website" [href]="race.website" target="_blank" rel="noopener">
+                {{ race.website }}
+              </a>
+
+              <!-- Route Map Preview -->
+              <div class="route-map-preview" *ngIf="getRouteCoords(race).length > 0">
+                <app-route-map
+                  [routeCoordinates]="getRouteCoords(race)"
+                  [segments]="[]"
+                  [highlightedRange]="null">
+                </app-route-map>
+              </div>
+
+              <!-- GPX Upload Section -->
+              <div class="gpx-section">
+                <h4 class="section-label">GPX Files</h4>
+                <div class="gpx-grid">
+                  <div *ngFor="let disc of getGpxDisciplines(race)" class="gpx-item">
+                    <span class="gpx-disc-label">{{ disc | uppercase }}</span>
+                    <span class="gpx-status uploaded" *ngIf="hasGpxForDiscipline(race, disc)">Uploaded</span>
+                    <label *ngIf="!hasGpxForDiscipline(race, disc)" class="gpx-upload-btn">
+                      <span *ngIf="!isGpxUploading(race.id, disc)">Upload .gpx</span>
+                      <span *ngIf="isGpxUploading(race.id, disc)">Uploading...</span>
+                      <input type="file" accept=".gpx" hidden
+                        (change)="onGpxFileSelected($event, race.id, disc)">
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- Notes (full) -->
+            <p class="goal-notes" *ngIf="goal.notes">{{ goal.notes }}</p>
+
+            <!-- Simulate Button -->
+            <div class="simulation-section" *ngIf="goal.raceId">
+              <button class="btn-simulate" (click)="simulateRace(goal)">Simulate Race</button>
+
+              <!-- Past simulations -->
+              <div class="sim-history" *ngIf="getSimRequests(goal.id).length > 0">
+                <h4 class="section-label">Past Simulations</h4>
+                <div *ngFor="let req of getSimRequests(goal.id)" class="sim-request-item">
+                  <div class="sim-info">
+                    <span class="sim-label">{{ formatSimLabel(req) }}</span>
+                    <span class="sim-date">{{ formatSimDate(req.createdAt) }}</span>
+                  </div>
+                  <div class="sim-actions">
+                    <button class="btn-sm" (click)="rerunSimulation(req)">Re-run</button>
+                    <button class="btn-sm delete" (click)="deleteSimRequest(req)">&#215;</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Expand/collapse toggle -->
+          <button class="expand-toggle" (click)="toggleExpand(goal)">
+            {{ expandedGoalId === goal.id ? 'Show less' : 'Show more' }}
+          </button>
         </div>
       </div>
     </div>
     <ng-template #empty>
       <div class="empty-state glass">
-        <span class="empty-icon">🏁</span>
+        <span class="empty-icon">&#127937;</span>
         <p>No race goals yet. Add your first goal to start planning!</p>
         <button class="btn-primary" (click)="openCreate()">ADD GOAL</button>
       </div>
@@ -67,30 +159,91 @@
 <div class="modal-backdrop" *ngIf="isFormOpen" (click)="closeForm()">
   <div class="modal glass" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>{{ editingGoal ? 'Edit Goal' : 'New Race Goal' }}</h3>
-      <button class="close-btn" (click)="closeForm()">×</button>
+      <h3>{{ editingGoal ? 'Edit Goal' : (formStep === 'search' ? 'Find or Create Race' : 'Goal Details') }}</h3>
+      <button class="close-btn" (click)="closeForm()">&times;</button>
     </div>
-    <div class="modal-body">
+
+    <!-- Step 1: Race Search -->
+    <div class="modal-body" *ngIf="formStep === 'search' && !editingGoal">
+      <div class="form-row">
+        <label>Search existing races</label>
+        <input [(ngModel)]="raceSearchQuery" (ngModelChange)="onSearchChange($event)"
+          placeholder="e.g. Ironman, Paris-Roubaix..." class="form-input" />
+      </div>
+
+      <!-- Search results -->
+      <div class="search-results" *ngIf="searchResults$ | async as results">
+        <div *ngFor="let race of results" class="search-result-item" (click)="selectRace(race)">
+          <div class="result-title">{{ race.title }}</div>
+          <div class="result-meta">
+            <span *ngIf="race.sport">{{ race.sport }}</span>
+            <span *ngIf="race.location">{{ race.location }}</span>
+            <span *ngIf="race.distance">{{ race.distance }}</span>
+          </div>
+        </div>
+        <div *ngIf="results.length === 0 && raceSearchQuery.length >= 2" class="no-results">
+          No races found for "{{ raceSearchQuery }}"
+        </div>
+      </div>
+
+      <!-- Create new race -->
+      <div class="create-race-section">
+        <div class="divider-text"><span>or</span></div>
+
+        <div *ngIf="!isCreatingRace">
+          <button class="btn-secondary full-width" (click)="startCreateRace()">Create New Race</button>
+        </div>
+
+        <div *ngIf="isCreatingRace" class="create-race-form">
+          <div class="form-row">
+            <label>Race Title</label>
+            <input [(ngModel)]="newRaceTitle" placeholder="e.g. Ironman Nice 2026" class="form-input" />
+          </div>
+          <button class="btn-primary full-width" (click)="createAndCompleteRace()"
+            [disabled]="!newRaceTitle.trim() || isAiCompleting">
+            <span *ngIf="!isAiCompleting">Create &amp; Auto-Complete with AI</span>
+            <span *ngIf="isAiCompleting" class="ai-loading">AI is completing race details...</span>
+          </button>
+        </div>
+
+        <div class="divider-text"><span>or</span></div>
+        <button class="btn-secondary full-width" (click)="skipRaceSelection()">Skip &mdash; Manual Entry</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Goal Details -->
+    <div class="modal-body" *ngIf="formStep === 'details'">
+      <!-- Selected race banner -->
+      <div class="selected-race-banner" *ngIf="selectedRace">
+        <div class="banner-title">{{ selectedRace.title }}</div>
+        <div class="banner-meta">
+          <span *ngIf="selectedRace.sport">{{ selectedRace.sport }}</span>
+          <span *ngIf="selectedRace.location">{{ selectedRace.location }}</span>
+          <span *ngIf="selectedRace.distance">{{ selectedRace.distance }}</span>
+        </div>
+        <button class="btn-change" (click)="backToSearch()" *ngIf="!editingGoal">Change</button>
+      </div>
+
       <div class="form-row">
         <label>Race Name *</label>
         <input [(ngModel)]="form.title" placeholder="e.g. Paris-Roubaix 2026" class="form-input" />
       </div>
       <div class="form-row two-col">
         <div>
-          <label>Sport *</label>
+          <label>Sport</label>
           <select [(ngModel)]="form.sport" class="form-input">
             <option *ngFor="let s of sports" [value]="s">{{ s }}</option>
           </select>
         </div>
         <div>
-          <label>Priority *</label>
+          <label>Priority</label>
           <select [(ngModel)]="form.priority" class="form-input">
             <option *ngFor="let p of priorities" [value]="p.value">{{ p.label }}</option>
           </select>
         </div>
       </div>
       <div class="form-row">
-        <label>Race Date *</label>
+        <label>Race Date</label>
         <input type="date" [(ngModel)]="form.raceDate" class="form-input" />
       </div>
       <div class="form-row two-col">
@@ -112,10 +265,10 @@
         <textarea [(ngModel)]="form.notes" placeholder="Goals, strategy, context..." class="form-input" rows="3"></textarea>
       </div>
     </div>
-    <div class="modal-footer">
+
+    <div class="modal-footer" *ngIf="formStep === 'details'">
       <button class="btn-secondary" (click)="closeForm()">CANCEL</button>
-      <button class="btn-primary" (click)="save()"
-        [disabled]="!form.title || !form.raceDate || !form.sport || !form.priority">SAVE</button>
+      <button class="btn-primary" (click)="save()" [disabled]="!form.title">SAVE</button>
     </div>
   </div>
 </div>

@@ -983,3 +983,55 @@
     padding: 16px;
   }
 }
+
+/* Race Banner */
+.race-banner {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid rgba(255, 157, 0, 0.2);
+  background: rgba(255, 157, 0, 0.05);
+}
+
+.race-banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.race-banner-label {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.race-banner-title {
+  font-size: 1rem;
+  color: var(--accent-color, #ff9d00);
+}
+
+.race-banner-meta {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.race-banner-gpx {
+  display: flex;
+  gap: 6px;
+}
+
+.gpx-indicator {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.gpx-indicator.swim { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+.gpx-indicator.bike { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+.gpx-indicator.run { background: rgba(251, 146, 60, 0.15); color: #fb923c; }
