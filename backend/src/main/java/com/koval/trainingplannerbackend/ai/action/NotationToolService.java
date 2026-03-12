@@ -44,21 +44,18 @@ public class NotationToolService {
         this.clubService = clubService;
     }
 
-    @Tool(description = """
-            Parse compact workout notation and create a Training, plus an optional club session.
-            Call exactly ONCE. Read userId from system context.
-            Pass clubId/clubGroupId from system context when in club context; otherwise pass "null".
-            Pass zoneSystemId as "null" to use the sport default.""")
+    @Tool(description = "Parse compact notation → create Training + optional club session. Call ONCE.")
     public String createTrainingFromNotation(
-            @ToolParam(description = "User ID — pass exactly from system context") String userId,
-            @ToolParam(description = "Compact notation string, e.g. 400mWARM + 5x300mFC/R:200mE4 + 200mCOOL") String notation,
-            @ToolParam(description = "Sport type: CYCLING|RUNNING|SWIMMING|BRICK") String sport,
-            @ToolParam(description = "Training title") String title,
-            @ToolParam(description = "Training type: VO2MAX|THRESHOLD|SWEET_SPOT|ENDURANCE|SPRINT|RECOVERY|MIXED|TEST") String type,
-            @ToolParam(description = "Zone system ID to resolve intensities, or \"null\" for sport default") String zoneSystemId,
-            @ToolParam(description = "Club ID from system context — pass \"null\" if not in club context") String clubId,
-            @ToolParam(description = "Club group ID from system context — pass \"null\" if not applicable") String clubGroupId,
-            @ToolParam(description = "Scheduled datetime ISO-8601 (e.g. 2025-06-10T19:00:00) for the club session, or \"null\"") String scheduledAt) {
+            @ToolParam(description = "from context") String userId,
+            @ToolParam(description = "e.g. 10minWARM + 5x300m85%/R:200m60% + 5minCOOL") String notation,
+            @ToolParam(description = "CYCLING|RUNNING|SWIMMING|BRICK") String sport,
+            String title,
+            @ToolParam(description = "VO2MAX|THRESHOLD|SWEET_SPOT|ENDURANCE|SPRINT|RECOVERY|MIXED|TEST") String type,
+            @ToolParam(description = "zone ID or \"null\"") String zoneSystemId,
+            @ToolParam(description = "from context or \"null\"") String clubId,
+            @ToolParam(description = "from context or \"null\"") String clubGroupId,
+            @ToolParam(description = "ISO-8601 or \"null\"") String scheduledAt,
+            @ToolParam(description = "from context or \"null\"") String sessionId) {
 
         // 1. Parse notation → raw blocks
         List<WorkoutBlock> rawBlocks = CompactNotationParser.parse(notation);
@@ -95,7 +92,16 @@ public class NotationToolService {
         // 5. Persist
         Training saved = trainingService.createTraining(training, userId);
 
-        // 6. Optionally create a linked club session
+        // 6. Link to existing session or create a new club session
+        if (isPresent(sessionId) && resolvedClubId != null) {
+            try {
+                clubService.linkTrainingToSession(userId, resolvedClubId, sessionId, saved.getId());
+                return "Created '" + saved.getTitle() + "' and linked to existing session [" + sessionId + "]";
+            } catch (Exception e) {
+                return "Created '" + saved.getTitle() + "' [" + saved.getId() + "] (linking failed: " + e.getMessage() + ")";
+            }
+        }
+
         if (resolvedClubId != null) {
             LocalDateTime scheduledDateTime = null;
             if (isPresent(scheduledAt)) {
@@ -104,7 +110,7 @@ public class NotationToolService {
                 } catch (Exception ignored) {}
             }
             ClubController.CreateSessionRequest sessionReq = new ClubController.CreateSessionRequest(
-                    title, sport, scheduledDateTime, null, null, saved.getId(), null);
+                    title, sport, scheduledDateTime, null, null, saved.getId(), null, null);
             try {
                 var session = clubService.createSession(userId, resolvedClubId, sessionReq);
                 return "Created '" + saved.getTitle() + "' with club session [" + session.getId() + "]";

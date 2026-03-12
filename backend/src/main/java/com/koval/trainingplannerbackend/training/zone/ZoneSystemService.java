@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.training.zone;
 
+import com.koval.trainingplannerbackend.training.group.GroupService;
 import com.koval.trainingplannerbackend.training.model.SportType;
 import org.springframework.stereotype.Service;
 
@@ -12,9 +13,11 @@ import java.util.Optional;
 public class ZoneSystemService {
 
     private final ZoneSystemRepository zoneSystemRepository;
+    private final GroupService groupService;
 
-    public ZoneSystemService(ZoneSystemRepository zoneSystemRepository) {
+    public ZoneSystemService(ZoneSystemRepository zoneSystemRepository, GroupService groupService) {
         this.zoneSystemRepository = zoneSystemRepository;
+        this.groupService = groupService;
     }
 
     public ZoneSystem createZoneSystem(ZoneSystem zoneSystem) {
@@ -99,5 +102,11 @@ public class ZoneSystemService {
 
     public List<ZoneSystem> getDefaultZoneSystems(String coachId) {
         return zoneSystemRepository.findByCoachIdAndDefaultForSportTrue(coachId);
+    }
+
+    public List<ZoneSystem> getZoneSystemsForAthlete(String athleteId) {
+        List<String> coachIds = groupService.getCoachIdsForAthlete(athleteId);
+        if (coachIds.isEmpty()) return List.of();
+        return zoneSystemRepository.findByCoachIdIn(coachIds);
     }
 }

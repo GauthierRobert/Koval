@@ -11,6 +11,22 @@
     <div class="modal-body">
       <p class="hint">Describe what you want to create in natural language.</p>
 
+      <div class="form-group" *ngIf="showSportSelector">
+        <label class="field-label">Sport *</label>
+        <select class="field-select" [(ngModel)]="selectedSport" (ngModelChange)="onSportChange()" [disabled]="loading">
+          <option value="" disabled>Select a sport</option>
+          <option *ngFor="let s of sports" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+
+      <div class="form-group" *ngIf="showSportSelector && filteredZoneSystems.length > 0">
+        <label class="field-label">Zone System (optional)</label>
+        <select class="field-select" [(ngModel)]="selectedZoneSystemId" [disabled]="loading">
+          <option value="">— Sport default —</option>
+          <option *ngFor="let z of filteredZoneSystems" [value]="z.id">{{ z.name }}</option>
+        </select>
+      </div>
+
       <div class="form-group" *ngIf="showTagSelector && availableGroups.length > 0">
         <label class="field-label">Club Group (optional)</label>
         <select class="field-select" [(ngModel)]="selectedGroupId">
@@ -39,7 +55,7 @@
       <button
         class="btn-primary"
         (click)="submit()"
-        [disabled]="!prompt.trim() || loading">
+        [disabled]="!prompt.trim() || loading || (showSportSelector && !selectedSport)">
         <span *ngIf="!loading">Generate</span>
         <span *ngIf="loading" class="spinner">Generating...</span>
       </button>

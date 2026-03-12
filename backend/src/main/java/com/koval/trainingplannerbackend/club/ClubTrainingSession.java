@@ -32,6 +32,9 @@ public class ClubTrainingSession {
     private LocalDateTime createdAt;
     private String recurringTemplateId;
     private Integer maxParticipants;
+    private Integer durationMinutes;
+    private String linkedTrainingTitle;
+    private String linkedTrainingDescription;
     private List<WaitingListEntry> waitingList = new ArrayList<>();
 
     public boolean isFull() {

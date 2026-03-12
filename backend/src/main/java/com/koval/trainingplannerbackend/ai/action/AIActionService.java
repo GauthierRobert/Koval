@@ -19,7 +19,8 @@ public class AIActionService {
     private final ChatClient actionNotationTrainingClient;
     private final UserContextResolver userContextResolver;
 
-    public record ActionContext(String clubId, String clubGroupId, String coachGroupId) {}
+    public record ActionContext(String clubId, String clubGroupId, String coachGroupId, String sessionId,
+                                String sport, String zoneSystemId) {}
     public record ActionResult(String content, boolean success) {}
 
     public AIActionService(@Qualifier("actionZoneClient") ChatClient actionZoneClient,
@@ -60,6 +61,9 @@ public class AIActionService {
                 + "userRole = " + ctx.role() + "\n"
                 + "clubId = " + (context.clubId() != null ? context.clubId() : "null") + "\n"
                 + "clubGroupId = " + (context.clubGroupId() != null ? context.clubGroupId() : "null") + "\n"
-                + "coachGroupId = " + (context.coachGroupId() != null ? context.coachGroupId() : "null");
+                + "coachGroupId = " + (context.coachGroupId() != null ? context.coachGroupId() : "null") + "\n"
+                + "sessionId = " + (context.sessionId() != null ? context.sessionId() : "null") + "\n"
+                + "sport = " + (context.sport() != null ? context.sport() : "null") + "\n"
+                + "zoneSystemId = " + (context.zoneSystemId() != null ? context.zoneSystemId() : "null");
     }
 }

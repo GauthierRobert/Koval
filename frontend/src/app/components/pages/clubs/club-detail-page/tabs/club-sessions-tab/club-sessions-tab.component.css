@@ -57,7 +57,7 @@
   background: rgba(255, 255, 255, 0.04);
 }
 
-/* ─── Session cards ───────────────────────────────────────── */
+/* ─── Session cards (list view) ──────────────────────────── */
 .sessions-list {
   display: flex;
   flex-direction: column;
@@ -128,6 +128,77 @@
   gap: 6px;
 }
 
+/* ─── Linked training info (list view) ───────────────────── */
+.linked-training-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 6px 0;
+  padding: 8px 10px;
+  background: rgba(52, 211, 153, 0.06);
+  border: 1px solid rgba(52, 211, 153, 0.15);
+  border-radius: var(--radius-sm);
+}
+
+.linked-badge {
+  color: #34d399 !important;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.linked-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.linked-view-link {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-color);
+  text-decoration: none;
+  margin-left: auto;
+}
+
+.linked-view-link:hover {
+  text-decoration: underline;
+}
+
+/* ─── AI Create button ───────────────────────────────────── */
+.ai-create-inline {
+  margin: 6px 0;
+}
+
+.btn-ai-create {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(168, 85, 247, 0.1);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-ai-create:hover {
+  background: rgba(168, 85, 247, 0.18);
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+.btn-ai-create.small {
+  padding: 3px 8px;
+  font-size: 9px;
+}
+
+.btn-ai-create svg {
+  stroke: #c084fc;
+}
+
 /* ─── Capacity & status badges ────────────────────────────── */
 .capacity-full {
   color: #f87171 !important;
@@ -156,10 +227,6 @@
   margin-top: 6px;
 }
 
-.linked-badge {
-  color: #34d399 !important;
-}
-
 .recurring-badge {
   font-size: 14px;
 }
@@ -168,7 +235,7 @@
   font-size: 11px;
 }
 
-/* ─── Calendar view ───────────────────────────────────────── */
+/* ─── Calendar nav ───────────────────────────────────────── */
 .calendar-nav {
   display: flex;
   align-items: center;
@@ -183,55 +250,144 @@
   letter-spacing: 0.02em;
 }
 
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-}
-
-.calendar-day {
-  min-height: 120px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.02);
+/* ─── Time-Grid Calendar ─────────────────────────────────── */
+.time-grid-container {
   border: 1px solid var(--glass-border);
-  padding: 8px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.01);
 }
 
-.calendar-day.today {
-  border-color: var(--accent-color);
-  background: var(--accent-subtle);
+.time-grid-header {
+  display: grid;
+  grid-template-columns: 56px repeat(7, 1fr);
+  border-bottom: 1px solid var(--glass-border);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: rgba(20, 20, 30, 0.95);
+  backdrop-filter: blur(8px);
 }
 
-.calendar-day-header {
+.time-gutter-header {
+  border-right: 1px solid var(--glass-border);
+}
+
+.day-header {
   font-size: 9px;
   font-weight: 800;
   color: var(--text-muted);
-  margin-bottom: 6px;
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  padding: 8px 4px;
+  border-right: 1px solid var(--glass-border);
 }
 
-.calendar-day-sessions {
+.day-header:last-child {
+  border-right: none;
+}
+
+.day-header.today {
+  color: var(--accent-color);
+  background: var(--accent-subtle);
+}
+
+.time-grid-body {
+  display: grid;
+  grid-template-columns: 56px repeat(7, 1fr);
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.time-gutter {
+  border-right: 1px solid var(--glass-border);
+}
+
+.time-gutter-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+  opacity: 0.6;
+  text-align: right;
+  padding: 0 6px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 0;
+  position: relative;
+  top: -5px;
+}
+
+.day-column {
+  position: relative;
+  border-right: 1px solid var(--glass-border);
+  height: calc(16 * 60px); /* HOUR_END - HOUR_START = 16 hours * 60px */
+}
+
+.day-column:last-child {
+  border-right: none;
+}
+
+.day-column.today {
+  background: rgba(var(--accent-rgb, 99, 102, 241), 0.03);
+}
+
+.hour-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px solid var(--glass-border);
+  opacity: 0.4;
+}
+
+/* ─── Time-Grid Session Cards ────────────────────────────── */
+.time-grid-session {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+  overflow: hidden;
+  font-size: 10px;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 1px;
+  transition: box-shadow 0.15s;
+  cursor: default;
 }
 
-.calendar-session-card {
-  padding: 6px 8px;
-  border-radius: var(--radius-sm);
-  font-size: 11px;
+.time-grid-session:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  z-index: 2;
 }
 
-.cal-session-top {
+.time-grid-session.has-training {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.time-grid-session.no-training {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+}
+
+.tg-session-top {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-bottom: 2px;
 }
 
-.cal-session-title {
+.tg-session-time {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.tg-session-title {
   font-weight: 700;
   font-size: 11px;
   white-space: nowrap;
@@ -240,27 +396,32 @@
   color: var(--text-color);
 }
 
-.cal-session-time {
-  color: var(--text-muted);
-  font-size: 9px;
-  font-weight: 600;
-}
-
-.cal-session-capacity {
+.tg-session-desc {
   font-size: 9px;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.cal-session-actions {
-  margin-top: 4px;
+.tg-view-link {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent-color);
+  text-decoration: none;
 }
 
-.calendar-empty-day {
-  text-align: center;
+.tg-view-link:hover {
+  text-decoration: underline;
+}
+
+.tg-session-capacity {
+  font-size: 9px;
   color: var(--text-muted);
-  font-size: 11px;
-  padding: 12px 0;
-  opacity: 0.4;
+}
+
+.tg-session-actions {
+  margin-top: 2px;
 }
 
 /* ─── Recurring section ───────────────────────────────────── */
@@ -437,6 +598,15 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.form-row.two-col {
+  flex-direction: row;
+  gap: 12px;
+}
+
+.form-row.two-col > .form-row {
+  flex: 1;
 }
 
 .form-row label {

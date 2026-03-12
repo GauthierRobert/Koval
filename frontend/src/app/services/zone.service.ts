@@ -31,6 +31,11 @@ export class ZoneService {
         return this.http.delete<void>(`${this.apiUrl}/coach/${id}`);
     }
 
+    /** GET /api/zones/my-zones — list zone systems visible to the current user (own + coach's) */
+    getMyZoneSystems(): Observable<ZoneSystem[]> {
+        return this.http.get<ZoneSystem[]>(`${this.apiUrl}/my-zones`);
+    }
+
     /** GET /api/zones/{id} — get a single zone system by ID (JWT auth) */
     getZoneSystemById(id: string): Observable<ZoneSystem> {
         return this.http.get<ZoneSystem>(`${this.apiUrl}/${id}`);

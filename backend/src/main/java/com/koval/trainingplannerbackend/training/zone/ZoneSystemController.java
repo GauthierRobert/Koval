@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.training.zone;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
+import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRole;
 import com.koval.trainingplannerbackend.auth.UserService;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +16,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/zones")
@@ -91,6 +95,26 @@ public class ZoneSystemController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/my-zones")
+    public ResponseEntity<List<ZoneSystem>> getMyZoneSystems() {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userService.getUserById(userId);
+
+        List<ZoneSystem> result = new ArrayList<>();
+
+        if (user.getRole() == UserRole.COACH) {
+            result.addAll(zoneSystemService.getZoneSystemsForCoach(userId));
+        }
+
+        List<ZoneSystem> coachZones = zoneSystemService.getZoneSystemsForAthlete(userId);
+        Set<String> existingIds = result.stream().map(ZoneSystem::getId).collect(Collectors.toSet());
+        for (ZoneSystem z : coachZones) {
+            if (!existingIds.contains(z.getId())) result.add(z);
+        }
+
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{id}")

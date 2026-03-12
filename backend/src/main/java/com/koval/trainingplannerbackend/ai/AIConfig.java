@@ -184,41 +184,36 @@ public class AIConfig {
             Create exactly one training + optional club session based on the user's description.
             Call createTrainingWithClubSession exactly ONCE.
             Fixed context — read from system context and pass these values exactly as-is to the tool:
-              userId, clubId, clubGroupId, coachGroupId
+              userId, clubId, clubGroupId, coachGroupId, sport, zoneSystemId
+            sport from context is REQUIRED — always use it as the sport parameter.
+            zoneSystemId from context should be passed directly (use "null" if absent — the tool resolves the sport default).
             No preamble. After the tool call: one-line confirmation only.""";
 
     private static final String ACTION_NOTATION_PROMPT = """
-            You are a workout encoder for endurance sports.
-            Convert the user's training description into compact notation, then call createTrainingFromNotation ONCE.
+            Expert endurance coach. Convert user's request into compact notation → call createTrainingFromNotation ONCE.
 
-            ## COMPACT NOTATION FORMAT
-            Sections separated by ` + `
-            Outer set: Nx(inner)/r:time  — N=set count, /r:=passive PAUSE after each outer repetition
-            Inner reps: Mx work/R:rest   — M=rep count, /R:=active rest block
-            Single block: [dist][code]   — e.g., 300mFC or 10minWARM
+            RULES:
+            - ALWAYS add WARM + COOL unless user says "no warm-up/cool-down".
+              Defaults — cycling: 10min/5min, swimming: 400m/200m, running: 10min/5min.
+            - Intensity as % of reference (FTP/ThresholdPace/CSS). Convert absolute values via user profile.
+              Use zone labels only when zone system exists in context.
+            - Add 50-60% recovery between hard intervals.
 
-            ## DISTANCE / TIME
-            300m · 1km · 45s · 10min · 1h
+            NOTATION: sections joined by ` + `
+            Nx(inner)/r:time — outer sets, /r:=PAUSE | Mx work/R:rest — inner reps, /R:=active rest
+            Units: 300m · 1km · 45s · 10min · 1h | Rest: 2'30 · 2' · 30"
+            Intensity: direct % (300m85%) or zone label (300mFC). WARM/COOL for bookends.
 
-            ## TIME (rest format)
-            2'30 = 2 min 30 sec  ·  2' = 2 min  ·  30" = 30 sec
+            EXAMPLES:
+            "5x100m fast/100m easy" → 400mWARM + 5x100m95%/R:100m60% + 200mCOOL
+            "2 sets 4x300m fast + 2min rest" → 10minWARM + 2x(4x300m95%/R:200m60%)/r:2' + 5minCOOL
+            With zones: "5x100m fast" → 400mWARM + 5x100mFC/R:100mE3 + 200mCOOL
 
-            ## INTENSITY CODES
-            Two options (zone label OR direct %):
-            - Zone label: use zone names exactly as defined in the zone system (e.g., FC, E4, SC, Z3)
-            - Direct %: append a percentage of the sport's reference value (e.g., 300m80%, 10min75%)
-          
-            Always use WARM for warmup and COOL for cooldown.
-            Prefer zone labels when a zone system exists; use % for precision or when zones are unknown.
-
-            ## EXAMPLES
-            "5x100m fast / 100m easy recovery" → 5x100mFC/R:100mE3
-            "2 sets of 4x300m fast + 2min rest" → 2x(4x300mFC)/r:2'
-            "Warmup + 3x500m threshold + cooldown" → 400mWARM + 3x500mSC + 200mCOOL
-
-            Read userId from system context. Pass zoneSystemId as "null" unless user specifies one.
-            When clubId/clubGroupId are present in system context, pass them to link the training to the club.
-            Pass scheduledAt as ISO-8601 if user mentions a date/time, otherwise "null".""";
+            Pass userId, clubId, clubGroupId, sessionId, sport, zoneSystemId from context ("null" if absent).
+            sport from context is REQUIRED — always use it as the sport parameter.
+            zoneSystemId from context should be passed directly (use "null" if absent — the tool resolves the sport default).
+            When sessionId is present (not "null"), the tool links the training to the existing session instead of creating a new one.
+            scheduledAt ISO-8601 or "null".""";
 
     private static final String GENERAL_PROMPT = """
             Role: Friendly Triathlon & Cycling Assistant.
@@ -339,7 +334,7 @@ public class AIConfig {
                                                    NotationToolService notationToolService) {
         return ChatClient.builder(chatModel)
                 .defaultSystem(ACTION_NOTATION_PROMPT)
-                .defaultOptions(haikuActionOptions())
+                .defaultOptions(haikuCachedActionOptions())
                 .defaultTools(notationToolService)
                 .build();
     }
@@ -423,6 +418,15 @@ public class AIConfig {
                 .model(HAIKU)
                 .temperature(0.3)
                 .maxTokens(2048)
+                .build();
+    }
+
+    private AnthropicChatOptions haikuCachedActionOptions() {
+        return AnthropicChatOptions.builder()
+                .model(HAIKU)
+                .temperature(0.3)
+                .maxTokens(2048)
+                .cacheOptions(cacheOptions())
                 .build();
     }
 

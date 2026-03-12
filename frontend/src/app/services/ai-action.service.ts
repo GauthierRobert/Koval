@@ -9,6 +9,9 @@ export interface ActionContext {
   clubId?: string;
   clubGroupId?: string;
   coachGroupId?: string;
+  sessionId?: string;
+  sport?: string;
+  zoneSystemId?: string;
 }
 
 export interface ActionResult {

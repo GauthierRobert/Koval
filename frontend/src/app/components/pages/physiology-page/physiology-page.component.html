@@ -63,13 +63,13 @@
 
   <!-- Sport tab selector -->
   <div class="sport-tabs">
-    <button class="tab-btn" [class.active]="activeSport === 'CYCLING'" (click)="activeSport = 'CYCLING'">
+    <button class="tab-btn" [class.active]="(activeSport) === 'CYCLING'" (click)="activeSport = 'CYCLING'">
       CYCLING
     </button>
-    <button class="tab-btn" [class.active]="activeSport === 'RUNNING'" (click)="activeSport = 'RUNNING'">
+    <button class="tab-btn" [class.active]="(activeSport) === 'RUNNING'" (click)="activeSport = 'RUNNING'">
       RUNNING
     </button>
-    <button class="tab-btn" [class.active]="activeSport === 'SWIMMING'" (click)="activeSport = 'SWIMMING'">
+    <button class="tab-btn" [class.active]="(activeSport) === 'SWIMMING'" (click)="activeSport = 'SWIMMING'">
       SWIMMING
     </button>
   </div>
@@ -122,4 +122,36 @@
       <span class="zone-actual" style="opacity:0.25">—</span>
     </div>
   </div>
+
+  <!-- Coach / custom zone systems -->
+  <ng-container *ngIf="coachZonesForSport$ | async as coachZones">
+    <div *ngFor="let sys of coachZones" class="coach-zone-section">
+      <div class="section-header">
+        <span class="section-title">{{ sys.name }}</span>
+        <span class="ref-badge">{{ sys.referenceType }}</span>
+      </div>
+
+      <!-- Zone bar -->
+      <div class="zone-bar">
+        <div
+          *ngFor="let z of sys.zones; let i = index"
+          class="zone-segment"
+          [style.flex]="getZoneBarFlex(z)"
+          [style.background]="getZoneColor(i)"
+        >
+          <span class="seg-label">{{ z.label }}</span>
+        </div>
+      </div>
+
+      <!-- Zone table -->
+      <div class="zones-table">
+        <div *ngFor="let z of sys.zones; let i = index" class="zone-row">
+          <span class="zone-dot" [style.background]="getZoneColor(i)"></span>
+          <span class="zone-label">{{ z.label }}</span>
+          <span class="zone-name">{{ z.description }}</span>
+          <span class="zone-pct">{{ z.low }}–{{ z.high }}%</span>
+        </div>
+      </div>
+    </div>
+  </ng-container>
 </div>

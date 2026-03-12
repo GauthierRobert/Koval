@@ -29,6 +29,7 @@ public class RecurringSessionTemplate {
     private String description;
     private String linkedTrainingId;
     private Integer maxParticipants;
+    private Integer durationMinutes;
     private boolean active = true;
     private LocalDateTime createdAt;
 }

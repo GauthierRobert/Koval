@@ -5,8 +5,10 @@ import com.koval.trainingplannerbackend.auth.UserService;
 import com.koval.trainingplannerbackend.goal.RaceGoal;
 import com.koval.trainingplannerbackend.goal.RaceGoalRepository;
 import com.koval.trainingplannerbackend.notification.NotificationService;
+import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
+import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,7 @@ public class ClubService {
     private final UserService userService;
     private final ClubGroupRepository clubGroupRepository;
     private final NotificationService notificationService;
+    private final TrainingService trainingService;
 
     public ClubService(ClubRepository clubRepository,
                        ClubMembershipRepository membershipRepository,
@@ -38,7 +41,8 @@ public class ClubService {
                        RaceGoalRepository raceGoalRepository,
                        UserService userService,
                        ClubGroupRepository clubGroupRepository,
-                       NotificationService notificationService) {
+                       NotificationService notificationService,
+                       TrainingService trainingService) {
         this.clubRepository = clubRepository;
         this.membershipRepository = membershipRepository;
         this.sessionRepository = sessionRepository;
@@ -48,6 +52,7 @@ public class ClubService {
         this.userService = userService;
         this.clubGroupRepository = clubGroupRepository;
         this.notificationService = notificationService;
+        this.trainingService = trainingService;
     }
 
     // --- Club CRUD ---
@@ -332,7 +337,9 @@ public class ClubService {
         session.setDescription(req.description());
         session.setLinkedTrainingId(req.linkedTrainingId());
         session.setMaxParticipants(req.maxParticipants());
+        session.setDurationMinutes(req.durationMinutes());
         session.setCreatedAt(LocalDateTime.now());
+        enrichFromLinkedTraining(session);
         session = sessionRepository.save(session);
 
         emitActivity(clubId, ClubActivityType.SESSION_CREATED, userId, session.getId(), session.getTitle());
@@ -400,6 +407,7 @@ public class ClubService {
         ClubTrainingSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
         session.setLinkedTrainingId(trainingId);
+        enrichFromLinkedTraining(session);
         return sessionRepository.save(session);
     }
 
@@ -490,6 +498,20 @@ public class ClubService {
     }
 
     // --- Helpers ---
+
+    private void enrichFromLinkedTraining(ClubTrainingSession session) {
+        if (session.getLinkedTrainingId() == null) return;
+        try {
+            Training t = trainingService.getTrainingById(session.getLinkedTrainingId());
+            session.setLinkedTrainingTitle(t.getTitle());
+            session.setLinkedTrainingDescription(t.getDescription());
+            if (session.getDurationMinutes() == null && t.getEstimatedDurationSeconds() != null) {
+                session.setDurationMinutes(t.getEstimatedDurationSeconds() / 60);
+            }
+        } catch (Exception ignored) {
+            // Training may have been deleted
+        }
+    }
 
     private void validateAdminRole(String userId, String clubId) {
         ClubMembership m = membershipRepository.findByClubIdAndUserId(clubId, userId)

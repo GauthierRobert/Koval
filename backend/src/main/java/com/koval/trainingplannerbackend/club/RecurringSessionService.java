@@ -38,6 +38,7 @@ public class RecurringSessionService {
         template.setDescription(req.description());
         template.setLinkedTrainingId(req.linkedTrainingId());
         template.setMaxParticipants(req.maxParticipants());
+        template.setDurationMinutes(req.durationMinutes());
         template.setCreatedAt(LocalDateTime.now());
         template = templateRepository.save(template);
 
@@ -59,6 +60,7 @@ public class RecurringSessionService {
         template.setDescription(req.description());
         template.setLinkedTrainingId(req.linkedTrainingId());
         template.setMaxParticipants(req.maxParticipants());
+        template.setDurationMinutes(req.durationMinutes());
         return templateRepository.save(template);
     }
 
@@ -106,6 +108,7 @@ public class RecurringSessionService {
             session.setDescription(template.getDescription());
             session.setLinkedTrainingId(template.getLinkedTrainingId());
             session.setMaxParticipants(template.getMaxParticipants());
+            session.setDurationMinutes(template.getDurationMinutes());
             session.setRecurringTemplateId(template.getId());
             session.setCreatedAt(LocalDateTime.now());
             sessionRepository.save(session);

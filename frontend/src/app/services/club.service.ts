@@ -81,6 +81,9 @@ export interface ClubTrainingSession {
   createdAt: string;
   recurringTemplateId?: string;
   maxParticipants?: number;
+  durationMinutes?: number;
+  linkedTrainingTitle?: string;
+  linkedTrainingDescription?: string;
   waitingList?: WaitingListEntry[];
 }
 
@@ -159,6 +162,7 @@ export interface CreateSessionData {
   description?: string;
   linkedTrainingId?: string;
   maxParticipants?: number;
+  durationMinutes?: number;
 }
 
 export interface CreateRecurringSessionData {

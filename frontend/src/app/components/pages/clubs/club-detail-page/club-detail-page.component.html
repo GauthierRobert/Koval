@@ -49,7 +49,7 @@
     <!-- Tab content -->
     <div class="tab-body">
       <app-club-feed-tab *ngIf="activeTab === 'feed'"></app-club-feed-tab>
-      <app-club-sessions-tab *ngIf="activeTab === 'sessions'" [club]="club"></app-club-sessions-tab>
+      <app-club-sessions-tab *ngIf="activeTab === 'sessions'" [club]="club" (createAiForSession)="openAiModalForSession($event)"></app-club-sessions-tab>
       <app-club-members-tab *ngIf="activeTab === 'members'" [club]="club"></app-club-members-tab>
       <app-club-stats-tab *ngIf="activeTab === 'stats'"></app-club-stats-tab>
       <app-club-leaderboard-tab *ngIf="activeTab === 'leaderboard'"></app-club-leaderboard-tab>

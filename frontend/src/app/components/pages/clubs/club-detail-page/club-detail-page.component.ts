@@ -11,6 +11,7 @@ import { ClubLeaderboardTabComponent } from './tabs/club-leaderboard-tab/club-le
 import { ClubRaceGoalsTabComponent } from './tabs/club-race-goals-tab/club-race-goals-tab.component';
 import { CreateWithAiModalComponent } from '../../../shared/create-with-ai-modal/create-with-ai-modal.component';
 import { ActionContext, ActionResult } from '../../../../services/ai-action.service';
+import { ClubTrainingSession } from '../../../../services/club.service';
 import { Subscription } from 'rxjs';
 
 type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals';
@@ -134,6 +135,12 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
 
   openAiModal(club: ClubDetail): void {
     this.aiContext = { clubId: club.id };
+    this.showAiModal = true;
+    this.cdr.markForCheck();
+  }
+
+  openAiModalForSession(session: ClubTrainingSession): void {
+    this.aiContext = { clubId: this.clubId, sessionId: session.id };
     this.showAiModal = true;
     this.cdr.markForCheck();
   }

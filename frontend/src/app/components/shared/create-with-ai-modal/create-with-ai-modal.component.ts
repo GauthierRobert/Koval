@@ -12,6 +12,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AIActionService, AIActionType, ActionContext, ActionResult } from '../../../services/ai-action.service';
 import { ClubService, ClubGroup } from '../../../services/club.service';
+import { ZoneService } from '../../../services/zone.service';
+import { ZoneSystem } from '../../../services/zone';
 
 @Component({
   selector: 'app-create-with-ai-modal',
@@ -31,6 +33,7 @@ export class CreateWithAiModalComponent implements OnChanges {
 
   private aiActionService = inject(AIActionService);
   private clubService = inject(ClubService);
+  private zoneService = inject(ZoneService);
   private ngZone = inject(NgZone);
 
   prompt = '';
@@ -40,6 +43,16 @@ export class CreateWithAiModalComponent implements OnChanges {
 
   availableGroups: ClubGroup[] = [];
   selectedGroupId = '';
+
+  selectedSport = '';
+  selectedZoneSystemId = '';
+  allZoneSystems: ZoneSystem[] = [];
+  filteredZoneSystems: ZoneSystem[] = [];
+  readonly sports = ['CYCLING', 'RUNNING', 'SWIMMING'];
+
+  get showSportSelector(): boolean {
+    return this.actionType === 'TRAINING_FROM_NOTATION' || this.actionType === 'TRAINING_WITH_SESSION';
+  }
 
   get showTagSelector(): boolean {
     return (this.actionType === 'TRAINING_WITH_SESSION' || this.actionType === 'TRAINING_FROM_NOTATION')
@@ -55,7 +68,28 @@ export class CreateWithAiModalComponent implements OnChanges {
           this.ngZone.run(() => (this.availableGroups = groups));
         });
       }
+      if (this.showSportSelector) {
+        this.zoneService.getMyZoneSystems().subscribe({
+          next: (systems) => {
+            this.ngZone.run(() => {
+              this.allZoneSystems = systems;
+              this.selectedSport = 'CYCLING';
+              this.onSportChange();
+            });
+          },
+          error: () => {
+            this.allZoneSystems = [];
+            this.selectedSport = 'CYCLING';
+          },
+        });
+      }
     }
+  }
+
+  onSportChange(): void {
+    this.filteredZoneSystems = this.allZoneSystems.filter((z) => z.sportType === this.selectedSport);
+    const defaultSystem = this.filteredZoneSystems.find((z) => z.defaultForSport);
+    this.selectedZoneSystemId = defaultSystem?.id ?? '';
   }
 
   submit(): void {
@@ -68,6 +102,8 @@ export class CreateWithAiModalComponent implements OnChanges {
     const ctx: ActionContext = {
       ...this.context,
       clubGroupId: this.selectedGroupId || this.context.clubGroupId,
+      sport: this.selectedSport || undefined,
+      zoneSystemId: this.selectedZoneSystemId || undefined,
     };
 
     this.aiActionService.executeAction(this.prompt.trim(), this.actionType, ctx).subscribe({
@@ -103,5 +139,9 @@ export class CreateWithAiModalComponent implements OnChanges {
     this.successMessage = '';
     this.selectedGroupId = '';
     this.availableGroups = [];
+    this.selectedSport = '';
+    this.selectedZoneSystemId = '';
+    this.allZoneSystems = [];
+    this.filteredZoneSystems = [];
   }
 }

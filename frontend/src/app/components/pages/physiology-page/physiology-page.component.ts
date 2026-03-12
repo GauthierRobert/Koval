@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, combineLatest, map, Observable } from 'rxjs';
 import { AuthService, User } from '../../../services/auth.service';
-import { Zone } from '../../../services/zone';
+import { Zone, ZoneSystem } from '../../../services/zone';
+import { ZoneService } from '../../../services/zone.service';
 import { formatPace as sharedFormatPace } from '../../shared/format/format.utils';
 
 type Sport = 'CYCLING' | 'RUNNING' | 'SWIMMING';
@@ -15,9 +16,25 @@ type Sport = 'CYCLING' | 'RUNNING' | 'SWIMMING';
   styleUrl: './physiology-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PhysiologyPageComponent {
+export class PhysiologyPageComponent implements OnInit {
   user$: Observable<User | null>;
-  activeSport: Sport = 'CYCLING';
+
+  private activeSport$ = new BehaviorSubject<Sport>('CYCLING');
+  private zoneSystems$ = new BehaviorSubject<ZoneSystem[]>([]);
+
+  coachZonesForSport$: Observable<ZoneSystem[]> = combineLatest([
+    this.zoneSystems$,
+    this.activeSport$,
+  ]).pipe(
+    map(([systems, sport]) => systems.filter((s) => s.sportType === sport)),
+  );
+
+  get activeSport(): Sport {
+    return this.activeSport$.value;
+  }
+  set activeSport(value: Sport) {
+    this.activeSport$.next(value);
+  }
 
   readonly zones: Record<Sport, Zone[]> = {
     CYCLING: [
@@ -49,8 +66,18 @@ export class PhysiologyPageComponent {
     '#6366f1', '#3b82f6', '#22c55e', '#eab308', '#f97316', '#ef4444', '#dc2626',
   ];
 
-  constructor(private authService: AuthService) {
+  constructor(
+    private authService: AuthService,
+    private zoneService: ZoneService,
+  ) {
     this.user$ = this.authService.user$;
+  }
+
+  ngOnInit(): void {
+    this.zoneService.getMyZoneSystems().subscribe({
+      next: (systems) => this.zoneSystems$.next(systems),
+      error: () => this.zoneSystems$.next([]),
+    });
   }
 
   getZoneColor(i: number): string {

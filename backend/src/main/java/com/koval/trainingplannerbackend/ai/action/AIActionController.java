@@ -31,7 +31,7 @@ public class AIActionController {
         String userId = SecurityUtils.getCurrentUserId();
         AIActionService.ActionContext ctx = request.context() != null
                 ? request.context()
-                : new AIActionService.ActionContext(null, null, null);
+                : new AIActionService.ActionContext(null, null, null, null, null, null);
 
         AIActionService.ActionResult result = aiActionService.execute(request.message(), request.actionType(), ctx, userId);
         return ResponseEntity.ok(result);

@@ -259,3 +259,13 @@
   font-style: italic;
   padding: 0.75rem 0;
 }
+
+.coach-zone-section {
+  margin-top: 1.5rem;
+}
+
+.coach-zone-section + .coach-zone-section {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--glass-border);
+}

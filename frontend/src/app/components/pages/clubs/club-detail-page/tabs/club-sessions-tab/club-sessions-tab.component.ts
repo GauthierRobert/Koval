@@ -1,6 +1,19 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, Input, OnInit } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  EventEmitter,
+  inject,
+  Input,
+  OnInit,
+  Output,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import {
   ClubDetail,
   ClubService,
@@ -16,13 +29,15 @@ type ViewMode = 'LIST' | 'CALENDAR';
 @Component({
   selector: 'app-club-sessions-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './club-sessions-tab.component.html',
   styleUrl: './club-sessions-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ClubSessionsTabComponent implements OnInit {
+export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   @Input() club!: ClubDetail;
+  @Output() createAiForSession = new EventEmitter<ClubTrainingSession>();
+  @ViewChild('timeGridBody') timeGridBody?: ElementRef<HTMLElement>;
 
   private clubService = inject(ClubService);
   private authService = inject(AuthService);
@@ -46,6 +61,14 @@ export class ClubSessionsTabComponent implements OnInit {
   readonly sports = ['CYCLING', 'RUNNING', 'SWIMMING', 'TRIATHLON', 'OTHER'];
   readonly daysOfWeek = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
 
+  // Time-grid constants
+  readonly HOUR_START = 6;
+  readonly HOUR_END = 22;
+  readonly HOUR_HEIGHT_PX = 60;
+  readonly hours = Array.from({ length: 16 }, (_, i) => i + 6);
+
+  private scrolledToCurrentHour = false;
+
   ngOnInit(): void {
     this.authService.user$.subscribe((u) => {
       this.currentUserId = u?.id ?? null;
@@ -55,6 +78,10 @@ export class ClubSessionsTabComponent implements OnInit {
     if (this.club) {
       this.clubService.loadRecurringTemplates(this.club.id);
     }
+  }
+
+  ngAfterViewInit(): void {
+    this.scrollToCurrentHour();
   }
 
   get canCreate(): boolean {
@@ -68,6 +95,8 @@ export class ClubSessionsTabComponent implements OnInit {
     this.viewMode = mode;
     if (mode === 'CALENDAR') {
       this.loadCalendarSessions();
+      this.scrolledToCurrentHour = false;
+      setTimeout(() => this.scrollToCurrentHour(), 50);
     }
   }
 
@@ -89,6 +118,8 @@ export class ClubSessionsTabComponent implements OnInit {
     this.calendarWeekStart = ClubSessionsTabComponent.getMonday(new Date());
     this.buildCalendarDays();
     this.loadCalendarSessions();
+    this.scrolledToCurrentHour = false;
+    setTimeout(() => this.scrollToCurrentHour(), 50);
   }
 
   private buildCalendarDays(): void {
@@ -127,6 +158,36 @@ export class ClubSessionsTabComponent implements OnInit {
     return `${this.calendarWeekStart.toLocaleDateString('en-US', opts)} - ${end.toLocaleDateString('en-US', opts)}`;
   }
 
+  // --- Time-grid helpers ---
+
+  getSessionTopPx(session: ClubTrainingSession): number {
+    if (!session.scheduledAt) return 0;
+    const d = new Date(session.scheduledAt);
+    const hours = d.getHours();
+    const minutes = d.getMinutes();
+    return (Math.max(hours, this.HOUR_START) - this.HOUR_START) * this.HOUR_HEIGHT_PX + (hours >= this.HOUR_START ? minutes : 0);
+  }
+
+  getSessionHeightPx(session: ClubTrainingSession): number {
+    const dur = session.durationMinutes ?? 60;
+    return Math.max((dur / 60) * this.HOUR_HEIGHT_PX, 28);
+  }
+
+  formatHourLabel(hour: number): string {
+    if (hour === 0) return '12 AM';
+    if (hour < 12) return `${hour} AM`;
+    if (hour === 12) return '12 PM';
+    return `${hour - 12} PM`;
+  }
+
+  private scrollToCurrentHour(): void {
+    if (this.scrolledToCurrentHour || !this.timeGridBody?.nativeElement) return;
+    const now = new Date();
+    const scrollTo = (Math.max(now.getHours() - 1, this.HOUR_START) - this.HOUR_START) * this.HOUR_HEIGHT_PX;
+    this.timeGridBody.nativeElement.scrollTop = scrollTo;
+    this.scrolledToCurrentHour = true;
+  }
+
   // --- Session form ---
 
   openForm(): void {
@@ -144,6 +205,7 @@ export class ClubSessionsTabComponent implements OnInit {
     const data: CreateSessionData = {
       ...this.form,
       maxParticipants: this.form.maxParticipants || undefined,
+      durationMinutes: this.form.durationMinutes || undefined,
     } as CreateSessionData;
     this.clubService.createSession(this.club.id, data).subscribe({
       next: () => {
@@ -193,6 +255,13 @@ export class ClubSessionsTabComponent implements OnInit {
     this.clubService.cancelSession(this.club.id, session.id).subscribe({ error: () => {} });
   }
 
+  // --- AI Create for session ---
+
+  onAiCreateForSession(session: ClubTrainingSession, event: Event): void {
+    event.stopPropagation();
+    this.createAiForSession.emit(session);
+  }
+
   // --- Status helpers ---
 
   isParticipant(session: ClubTrainingSession): boolean {
@@ -236,6 +305,11 @@ export class ClubSessionsTabComponent implements OnInit {
 
   formatTemplateDay(dayOfWeek: string): string {
     return dayOfWeek.charAt(0) + dayOfWeek.slice(1).toLowerCase();
+  }
+
+  truncate(text: string | undefined, maxLen: number): string {
+    if (!text) return '';
+    return text.length > maxLen ? text.substring(0, maxLen) + '...' : text;
   }
 
   private static getMonday(d: Date): Date {

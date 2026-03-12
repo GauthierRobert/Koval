@@ -19,4 +19,6 @@ public interface ZoneSystemRepository extends MongoRepository<ZoneSystem, String
     Optional<ZoneSystem> findByCoachIdAndSportTypeAndDefaultForSportTrue(String coachId, SportType sportType);
 
     List<ZoneSystem> findByCoachIdAndDefaultForSportTrue(String coachId);
+
+    List<ZoneSystem> findByCoachIdIn(List<String> coachIds);
 }
