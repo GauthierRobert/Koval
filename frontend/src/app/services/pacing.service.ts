@@ -112,6 +112,30 @@ export class PacingService {
     return this.http.get<AthleteProfile>(`${this.apiUrl}/defaults`);
   }
 
+  generateFromRace(
+    raceId: string,
+    profile: AthleteProfile,
+    discipline: string,
+    bikeLoops: number,
+    runLoops: number,
+  ): Observable<PacingPlanResponse> {
+    this.loadingSubject.next(true);
+    this.errorSubject.next(null);
+
+    return this.http
+      .post<PacingPlanResponse>(`${this.apiUrl}/generate-from-race`, {
+        raceId,
+        profile,
+        discipline,
+        bikeLoops,
+        runLoops,
+      })
+      .pipe(
+        tap((plan) => this.pacingPlanSubject.next(plan)),
+        finalize(() => this.loadingSubject.next(false)),
+      );
+  }
+
   clearPlan(): void {
     this.pacingPlanSubject.next(null);
     this.errorSubject.next(null);

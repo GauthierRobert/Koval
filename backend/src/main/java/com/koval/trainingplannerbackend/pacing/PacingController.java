@@ -8,6 +8,8 @@ import com.koval.trainingplannerbackend.pacing.dto.AthleteProfile;
 import com.koval.trainingplannerbackend.pacing.dto.PacingPlanResponse;
 import com.koval.trainingplannerbackend.pacing.gpx.GpxParseResult;
 import com.koval.trainingplannerbackend.pacing.gpx.GpxParser;
+import com.koval.trainingplannerbackend.race.RaceService;
+import com.koval.trainingplannerbackend.race.Race;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,7 +21,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/pacing")
@@ -30,14 +34,20 @@ public class PacingController {
     private final UserService userService;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final PacingPlanRepository pacingPlanRepository;
+    private final SimulationRequestRepository simulationRequestRepository;
+    private final RaceService raceService;
 
     public PacingController(GpxParser gpxParser, PacingService pacingService,
                             UserService userService,
-                            PacingPlanRepository pacingPlanRepository) {
+                            PacingPlanRepository pacingPlanRepository,
+                            SimulationRequestRepository simulationRequestRepository,
+                            RaceService raceService) {
         this.gpxParser = gpxParser;
         this.pacingService = pacingService;
         this.userService = userService;
         this.pacingPlanRepository = pacingPlanRepository;
+        this.simulationRequestRepository = simulationRequestRepository;
+        this.raceService = raceService;
     }
 
     /**
@@ -225,11 +235,110 @@ public class PacingController {
     public ResponseEntity<Void> deletePlan(@PathVariable String id) {
         String userId = SecurityUtils.getCurrentUserId();
         PacingPlan plan = pacingPlanRepository.findById(id)
-                .orElseThrow(() -> new java.util.NoSuchElementException("Pacing plan not found"));
+                .orElseThrow(() -> new NoSuchElementException("Pacing plan not found"));
         if (!userId.equals(plan.getUserId())) {
             throw new org.springframework.security.access.AccessDeniedException("Not your pacing plan");
         }
         pacingPlanRepository.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // ── Simulation Requests ─────────────────────────────────────────────
+
+    @PostMapping("/simulation-requests")
+    public ResponseEntity<SimulationRequest> saveSimulationRequest(@RequestBody SimulationRequest request) {
+        String userId = SecurityUtils.getCurrentUserId();
+        request.setUserId(userId);
+        request.setCreatedAt(LocalDateTime.now());
+        return ResponseEntity.ok(simulationRequestRepository.save(request));
+    }
+
+    @GetMapping("/simulation-requests")
+    public ResponseEntity<List<SimulationRequest>> listSimulationRequests(
+            @RequestParam(value = "goalId", required = false) String goalId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        if (goalId != null && !goalId.isBlank()) {
+            return ResponseEntity.ok(simulationRequestRepository.findByGoalIdOrderByCreatedAtDesc(goalId));
+        }
+        return ResponseEntity.ok(simulationRequestRepository.findByUserIdOrderByCreatedAtDesc(userId));
+    }
+
+    @DeleteMapping("/simulation-requests/{id}")
+    public ResponseEntity<Void> deleteSimulationRequest(@PathVariable String id) {
+        String userId = SecurityUtils.getCurrentUserId();
+        SimulationRequest req = simulationRequestRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Simulation request not found"));
+        if (!userId.equals(req.getUserId())) {
+            throw new org.springframework.security.access.AccessDeniedException("Not your simulation request");
+        }
+        simulationRequestRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // ── Generate from Race ──────────────────────────────────────────────
+
+    @PostMapping("/generate-from-race")
+    public ResponseEntity<PacingPlanResponse> generateFromRace(@RequestBody GenerateFromRaceRequest request) {
+        String disc = request.discipline().toUpperCase();
+        if (!List.of("SWIM", "BIKE", "RUN", "TRIATHLON").contains(disc)) {
+            throw new IllegalArgumentException("Discipline must be SWIM, BIKE, RUN, or TRIATHLON");
+        }
+
+        boolean needsBike = "BIKE".equals(disc) || "TRIATHLON".equals(disc);
+        boolean needsRun = "RUN".equals(disc) || "TRIATHLON".equals(disc);
+        boolean needsSwim = "SWIM".equals(disc) || "TRIATHLON".equals(disc);
+
+        Race race = raceService.getRaceById(request.raceId());
+
+        GpxParseResult bikeResult = null;
+        GpxParseResult runResult = null;
+
+        if (needsBike && race.getBikeGpx() != null) {
+            bikeResult = applyLoops(raceService.parseGpx(request.raceId(), "bike"), request.bikeLoops());
+        }
+        if (needsRun && race.getRunGpx() != null) {
+            runResult = applyLoops(raceService.parseGpx(request.raceId(), "run"), request.runLoops());
+        }
+
+        AthleteProfile profile = request.profile();
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userService.getUserById(userId);
+        profile = profile.withDefaults(
+                user.getFtp(), user.getWeightKg(),
+                user.getFunctionalThresholdPace(), user.getCriticalSwimSpeed()
+        );
+
+        if (needsBike) {
+            if (profile.ftp() == null || profile.ftp() <= 0)
+                throw new IllegalArgumentException("FTP is required for bike pacing");
+            if (profile.weightKg() == null || profile.weightKg() <= 0)
+                throw new IllegalArgumentException("Weight is required for bike pacing");
+        }
+        if (needsRun && profile.thresholdPaceSec() == null)
+            throw new IllegalArgumentException("Threshold pace is required for run pacing");
+        if (needsSwim && profile.swimCssSec() == null)
+            throw new IllegalArgumentException("Swim CSS is required for swim pacing");
+
+        PacingPlanResponse plan = pacingService.generatePlan(
+                bikeResult != null ? bikeResult.segments() : null,
+                runResult != null ? runResult.segments() : null,
+                profile, disc,
+                bikeResult != null ? bikeResult.routeCoordinates() : null,
+                runResult != null ? runResult.routeCoordinates() : null);
+
+        return ResponseEntity.ok(plan);
+    }
+
+    public record GenerateFromRaceRequest(
+            String raceId,
+            AthleteProfile profile,
+            String discipline,
+            int bikeLoops,
+            int runLoops
+    ) {
+        public GenerateFromRaceRequest {
+            if (bikeLoops <= 0) bikeLoops = 1;
+            if (runLoops <= 0) runLoops = 1;
+        }
     }
 }

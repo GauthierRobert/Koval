@@ -4,6 +4,7 @@ import com.koval.trainingplannerbackend.ai.action.AIActionToolService;
 import com.koval.trainingplannerbackend.ai.action.NotationToolService;
 import com.koval.trainingplannerbackend.coach.tools.CoachToolService;
 import com.koval.trainingplannerbackend.goal.GoalToolService;
+import com.koval.trainingplannerbackend.race.RaceToolService;
 import com.koval.trainingplannerbackend.training.history.HistoryToolService;
 import com.koval.trainingplannerbackend.training.tools.TrainingToolService;
 import com.koval.trainingplannerbackend.training.zone.ZoneToolService;
@@ -115,10 +116,14 @@ public class AIConfig {
 
             ### Goal Tools
             - `listGoals(userId)` — list athlete's race goals with days-until countdown.
-            - `createGoal(userId, title, sport, raceDate, priority, distance, location, targetTime, notes)` — add a new race goal.
+            - `createGoal(userId, title, sport, raceDate, priority, distance, location, targetTime, notes, raceId)` — add a new race goal. Optionally link to a race catalog entry via raceId.
             - `updateGoal(goalId, userId, ...)` — update fields of an existing goal.
             - `deleteGoal(goalId, userId)` — remove a goal.
             - Priority: A = goal race, B = target race, C = training race.
+
+            ### Race Catalog Tools
+            - `searchRaces(query, sport)` — search the global race catalog by title/sport.
+            - `createRace(userId, title)` — create a new race in the catalog (title only, AI can complete details).
 
             When scheduling, consider the athlete's A-priority race date to guide training load.""" + COMMON_RULES;
 
@@ -257,12 +262,13 @@ public class AIConfig {
                                        ContextToolService contextToolService,
                                        TrainingToolService trainingToolService,
                                        CoachToolService coachToolService,
-                                       GoalToolService goalToolService) {
+                                       GoalToolService goalToolService,
+                                       RaceToolService raceToolService) {
         return ChatClient.builder(chatModel)
                 .defaultSystem(SCHEDULING_PROMPT)
                 .defaultOptions(sonnetOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultTools(contextToolService, trainingToolService, coachToolService, goalToolService)
+                .defaultTools(contextToolService, trainingToolService, coachToolService, goalToolService, raceToolService)
                 .build();
     }
 
@@ -335,6 +341,30 @@ public class AIConfig {
                 .defaultSystem(ACTION_NOTATION_PROMPT)
                 .defaultOptions(haikuActionOptions())
                 .defaultTools(notationToolService)
+                .build();
+    }
+
+    @Bean
+    public ChatClient raceCompletionClient(AnthropicChatModel chatModel) {
+        return ChatClient.builder(chatModel)
+                .defaultSystem("""
+                        You are a race information assistant. Given a race title, return a JSON object with these fields:
+                        sport (CYCLING | RUNNING | SWIMMING | TRIATHLON | OTHER),
+                        location (city, country), country, region (state/province),
+                        distance (display string like "140.6 miles" or "42.195 km"),
+                        swimDistanceM (meters, null if not applicable),
+                        bikeDistanceM (meters, null if not applicable),
+                        runDistanceM (meters, null if not applicable),
+                        elevationGainM (total elevation gain in meters, null if unknown),
+                        description (1-2 sentence description of the race),
+                        website (official website URL, null if unknown),
+                        typicalMonth (integer 1-12 for when the race typically occurs, null if unknown).
+                        Return ONLY valid JSON. No markdown, no explanation.""")
+                .defaultOptions(AnthropicChatOptions.builder()
+                        .model(SONNET)
+                        .temperature(0.3)
+                        .maxTokens(1024)
+                        .build())
                 .build();
     }
 

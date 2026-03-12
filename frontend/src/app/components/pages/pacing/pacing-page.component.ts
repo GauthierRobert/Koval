@@ -1,8 +1,10 @@
-import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {ActivatedRoute} from '@angular/router';
 import {AthleteProfile, PacingPlanResponse, PacingSegment, PacingService, RouteCoordinate, SegmentRange,} from '../../../services/pacing.service';
 import {AuthService} from '../../../services/auth.service';
+import {Race, RaceService, SimulationRequest} from '../../../services/race.service';
 import {ElevationChartComponent} from './elevation-chart/elevation-chart.component';
 import {RouteMapComponent} from './route-map/route-map.component';
 import {BehaviorSubject} from 'rxjs';
@@ -41,11 +43,18 @@ interface RacePlanGroup {
 export class PacingPageComponent implements OnInit {
   private pacingService = inject(PacingService);
   private authService = inject(AuthService);
+  private raceService = inject(RaceService);
+  private route = inject(ActivatedRoute);
+  private cdr = inject(ChangeDetectorRef);
 
   pacingPlan$ = this.pacingService.pacingPlan$;
   loading$ = this.pacingService.loading$;
   error$ = this.pacingService.error$;
   user$ = this.authService.user$;
+
+  // Race pre-fill from query params
+  linkedRace: Race | null = null;
+  linkedGoalId: string | null = null;
 
   // Form state — single GPX (for BIKE or RUN single discipline)
   gpxFile: File | null = null;
@@ -187,10 +196,33 @@ export class PacingPageComponent implements OnInit {
     this.pacingService.getDefaults().subscribe({
       next: (defaults) => {
         this.profile = { ...this.profile, ...defaults };
+        this.cdr.markForCheck();
       },
       error: () => {
         // Defaults not available; user fills manually
       },
+    });
+
+    // Check for race pre-fill from query params
+    this.route.queryParams.subscribe((params) => {
+      const raceId = params['raceId'];
+      const goalId = params['goalId'];
+      if (raceId) {
+        this.linkedGoalId = goalId ?? null;
+        this.raceService.getRace(raceId).subscribe({
+          next: (race) => {
+            this.linkedRace = race;
+            // Pre-fill discipline from race sport
+            if (race.sport === 'TRIATHLON') this.discipline = 'TRIATHLON';
+            else if (race.sport === 'CYCLING') this.discipline = 'BIKE';
+            else if (race.sport === 'RUNNING') this.discipline = 'RUN';
+            else if (race.sport === 'SWIMMING') this.discipline = 'SWIM';
+            // Pre-fill swim distance
+            if (race.swimDistanceM) this.profile.swimDistanceM = race.swimDistanceM;
+            this.cdr.markForCheck();
+          },
+        });
+      }
     });
   }
 
@@ -243,6 +275,13 @@ export class PacingPageComponent implements OnInit {
   }
 
   canGenerate(): boolean {
+    // When linked to a race with GPX, no file upload needed
+    if (this.linkedRace) {
+      if (this.discipline === 'SWIM') return true;
+      if (this.discipline === 'TRIATHLON') return !!(this.linkedRace.hasBikeGpx && this.linkedRace.hasRunGpx);
+      if (this.discipline === 'BIKE') return !!this.linkedRace.hasBikeGpx;
+      if (this.discipline === 'RUN') return !!this.linkedRace.hasRunGpx;
+    }
     if (this.discipline === 'SWIM') return true;
     if (this.discipline === 'TRIATHLON') return !!(this.bikeGpxFile && this.runGpxFile);
     // BIKE or RUN — single GPX
@@ -255,6 +294,29 @@ export class PacingPageComponent implements OnInit {
       return;
     }
     this.errorSubject.next(null);
+
+    // Use race-based generation if linked to a race
+    if (this.linkedRace) {
+      this.pacingService
+        .generateFromRace(
+          this.linkedRace.id,
+          this.profile,
+          this.discipline,
+          this.bikeLoops,
+          this.runLoops,
+        )
+        .subscribe({
+          next: (plan) => {
+            this.setDefaultTab(plan);
+            this.saveSimulationRequest();
+          },
+          error: (err) => {
+            const msg = err.error?.error || err.message || 'Failed to generate pacing plan';
+            this.errorSubject.next(msg);
+          },
+        });
+      return;
+    }
 
     this.pacingService
       .generatePacingPlan(
@@ -275,6 +337,20 @@ export class PacingPageComponent implements OnInit {
           this.errorSubject.next(msg);
         },
       });
+  }
+
+  private saveSimulationRequest(): void {
+    if (!this.linkedRace) return;
+    const req: SimulationRequest = {
+      raceId: this.linkedRace.id,
+      goalId: this.linkedGoalId ?? undefined,
+      discipline: this.discipline,
+      athleteProfile: this.profile,
+      bikeLoops: this.bikeLoops,
+      runLoops: this.runLoops,
+      label: `${this.discipline} - ${this.linkedRace.title}`,
+    };
+    this.raceService.saveSimulationRequest(req).subscribe();
   }
 
   needsSwim(): boolean {
@@ -377,6 +453,27 @@ export class PacingPageComponent implements OnInit {
     }
     this.errorSubject.next(null);
     this.showSettingsModal = false;
+
+    if (this.linkedRace) {
+      this.pacingService
+        .generateFromRace(
+          this.linkedRace.id,
+          this.profile,
+          this.discipline,
+          this.bikeLoops,
+          this.runLoops,
+        )
+        .subscribe({
+          next: (plan) => {
+            this.setDefaultTab(plan);
+          },
+          error: (err) => {
+            const msg = err.error?.error || err.message || 'Failed to generate pacing plan';
+            this.errorSubject.next(msg);
+          },
+        });
+      return;
+    }
 
     this.pacingService
       .generatePacingPlan(

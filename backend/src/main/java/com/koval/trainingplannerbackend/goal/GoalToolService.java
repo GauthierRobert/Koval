@@ -29,7 +29,7 @@ public class GoalToolService {
                 .toList();
     }
 
-    @Tool(description = "Create a new race goal for a user. Priority: A=goal race, B=target race, C=training race. Sport: CYCLING, RUNNING, SWIMMING, TRIATHLON, OTHER.")
+    @Tool(description = "Create a new race goal for a user. Priority: A=goal race, B=target race, C=training race. Sport: CYCLING, RUNNING, SWIMMING, TRIATHLON, OTHER. Optionally link to a race catalog entry via raceId.")
     public GoalSummary createGoal(
             @ToolParam(description = "Athlete user ID") String userId,
             @ToolParam(description = "Race title (e.g. 'Paris-Roubaix 2026')") String title,
@@ -39,7 +39,8 @@ public class GoalToolService {
             @ToolParam(description = "Distance (optional, e.g. '100km')") String distance,
             @ToolParam(description = "Location (optional, e.g. 'Paris, France')") String location,
             @ToolParam(description = "Target finish time (optional, e.g. '3:30:00')") String targetTime,
-            @ToolParam(description = "Notes or strategy (optional)") String notes) {
+            @ToolParam(description = "Notes or strategy (optional)") String notes,
+            @ToolParam(description = "Race catalog ID to link (optional)") String raceId) {
 
         RaceGoal goal = new RaceGoal();
         goal.setTitle(title);
@@ -50,6 +51,7 @@ public class GoalToolService {
         goal.setLocation(location);
         goal.setTargetTime(targetTime);
         goal.setNotes(notes);
+        goal.setRaceId(raceId);
 
         return GoalSummary.from(raceGoalService.createGoal(userId, goal));
     }
@@ -99,15 +101,16 @@ public class GoalToolService {
             String location,
             String targetTime,
             String notes,
-            long daysUntil
+            long daysUntil,
+            String raceId
     ) {
         static GoalSummary from(RaceGoal g) {
-            long days = LocalDate.now().until(g.getRaceDate()).getDays();
+            long days = g.getRaceDate() != null ? LocalDate.now().until(g.getRaceDate()).getDays() : -1;
             return new GoalSummary(
                     g.getId(), g.getTitle(), g.getSport(),
-                    g.getRaceDate().toString(), g.getPriority(),
+                    g.getRaceDate() != null ? g.getRaceDate().toString() : null, g.getPriority(),
                     g.getDistance(), g.getLocation(), g.getTargetTime(), g.getNotes(),
-                    days);
+                    days, g.getRaceId());
         }
     }
 }
