@@ -40,12 +40,7 @@ export class WorkoutVisualizationComponent {
   user$ = this.authService.user$;
   isExportDropdownOpen = false;
   isScheduleModalOpen = false;
-  showBlockDetails = false;
   displayUnit: 'PERCENT' | 'ABSOLUTE' = 'PERCENT'; // Default to %
-
-  toggleDetails() {
-    this.showBlockDetails = !this.showBlockDetails;
-  }
 
   toggleUnits() {
     this.displayUnit = this.displayUnit === 'PERCENT' ? 'ABSOLUTE' : 'PERCENT';
@@ -307,4 +302,129 @@ export class WorkoutVisualizationComponent {
   }
 
   private exportService = inject(ExportService);
+
+  getBlockZoneName(block: WorkoutBlock): string {
+    if (block.zoneTarget) return block.zoneTarget.toUpperCase();
+
+    const intensity =
+      block.type === 'RAMP'
+        ? ((block.intensityStart || 0) + (block.intensityEnd || 0)) / 2
+        : block.intensityTarget || 0;
+
+    if (this.currentZoneSystem) {
+      const zone = this.currentZoneSystem.zones.find(
+        (z) => intensity >= z.low && intensity <= z.high,
+      );
+      if (zone) return zone.label.toUpperCase();
+    }
+
+    // Hardcoded fallback
+    if (intensity < 55) return 'Z1';
+    if (intensity < 75) return 'Z2';
+    if (intensity < 90) return 'Z3';
+    if (intensity < 105) return 'Z4';
+    if (intensity < 120) return 'Z5';
+    return 'Z6';
+  }
+
+  private readonly ZONE_COLORS: Record<string, string> = {
+    Z1: '#b2bec3',
+    Z2: '#3498db',
+    Z3: '#2ecc71',
+    Z4: '#f1c40f',
+    Z5: '#e67e22',
+    Z6: '#e74c3c',
+  };
+
+  getZoneRepartition(): { label: string; color: string; seconds: number; percentage: number }[] {
+    if (!this.training?.blocks) return [];
+
+    const zoneMap = new Map<string, number>();
+    let totalSeconds = 0;
+
+    for (const block of this.training.blocks) {
+      if (block.type === 'PAUSE') continue;
+      const dur = this.getEstimatedBlockDuration(block);
+      if (dur <= 0) continue;
+      const zone = this.getBlockZoneName(block);
+      zoneMap.set(zone, (zoneMap.get(zone) || 0) + dur);
+      totalSeconds += dur;
+    }
+
+    if (totalSeconds === 0) return [];
+
+    // Sort by zone label
+    const sorted = [...zoneMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+
+    return sorted.map(([label, seconds]) => ({
+      label,
+      color: this.ZONE_COLORS[label] || '#636e72',
+      seconds,
+      percentage: Math.round((seconds / totalSeconds) * 100),
+    }));
+  }
+
+  getEstimatedBlockDistance(block: WorkoutBlock): number {
+    if (!this.training) return 0;
+    return this.durationService.estimateDistance(block, this.training, this.currentZoneSystem);
+  }
+
+  formatBlockEstimates(block: WorkoutBlock): { duration: string; durationEstimated: boolean; distance: string; distanceEstimated: boolean } {
+    const hasDuration = (block.durationSeconds ?? 0) > 0;
+    const hasDistance = (block.distanceMeters ?? 0) > 0;
+
+    let duration: string;
+    let durationEstimated: boolean;
+    if (hasDuration) {
+      duration = this.formatDuration(block.durationSeconds);
+      durationEstimated = false;
+    } else {
+      const est = this.getEstimatedBlockDuration(block);
+      duration = est > 0 ? this.formatDuration(est) : '-';
+      durationEstimated = est > 0;
+    }
+
+    let distance: string;
+    let distanceEstimated: boolean;
+    if (hasDistance) {
+      const km = block.distanceMeters! / 1000;
+      distance = km >= 1 ? `${km.toFixed(1)}km` : `${block.distanceMeters}m`;
+      distanceEstimated = false;
+    } else {
+      const est = this.getEstimatedBlockDistance(block);
+      if (est > 0) {
+        const km = est / 1000;
+        distance = km >= 1 ? `${km.toFixed(1)}km` : `${est}m`;
+      } else {
+        distance = '-';
+      }
+      distanceEstimated = est > 0;
+    }
+
+    return { duration, durationEstimated, distance, distanceEstimated };
+  }
+
+  getBlockTypeColor(type: string): string {
+    switch (type) {
+      case 'WARMUP': return '#0984e3';
+      case 'COOLDOWN': return '#6c5ce7';
+      case 'INTERVAL': return '#e74c3c';
+      case 'STEADY': return '#2ecc71';
+      case 'RAMP': return '#f39c12';
+      case 'FREE': return '#636e72';
+      case 'PAUSE': return '#95a5a6';
+      default: return '#636e72';
+    }
+  }
+
+  getBlockIntensityDisplay(block: WorkoutBlock): string {
+    if (block.zoneLabel) return block.zoneLabel;
+    if (block.zoneTarget) return block.zoneTarget;
+    if (block.type === 'PAUSE') return 'Pause';
+    if (block.type === 'FREE') return 'Free';
+    if (block.type === 'RAMP') {
+      return `${block.intensityStart || 0}% → ${block.intensityEnd || 0}%`;
+    }
+    return block.intensityTarget ? `${block.intensityTarget}%` : '-';
+  }
 }

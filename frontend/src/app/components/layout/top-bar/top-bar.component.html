@@ -94,6 +94,16 @@
 
   <div class="right-section">
     <div class="topbar-controls">
+      <button class="device-btn" (click)="toggleMemberships()" title="My Memberships">
+        <svg class="bt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      </button>
+
       <button class="device-btn" (click)="toggleSettings()" title="Reference Values">
         <svg class="bt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
@@ -143,3 +153,5 @@
 <!-- Overlays to close dropdowns when clicking outside -->
 <div class="popup-overlay" *ngIf="isTrainingOpen"  (click)="closeTraining()"></div>
 <div class="popup-overlay" *ngIf="isAnalyticsOpen" (click)="closeAnalytics()"></div>
+
+<app-memberships-modal *ngIf="showMemberships" (closed)="showMemberships = false"></app-memberships-modal>

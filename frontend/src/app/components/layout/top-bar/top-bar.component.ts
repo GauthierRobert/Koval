@@ -4,11 +4,12 @@ import {Router, RouterModule} from '@angular/router';
 import {BluetoothService} from '../../../services/bluetooth.service';
 import {AuthService} from '../../../services/auth.service';
 import {combineLatest, map} from 'rxjs';
+import {MembershipsModalComponent} from '../../shared/memberships-modal/memberships-modal.component';
 
 @Component({
   selector: 'app-top-bar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, MembershipsModalComponent],
   templateUrl: './top-bar.component.html',
   styleUrl: './top-bar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,6 +21,7 @@ export class TopBarComponent {
 
   isAnalyticsOpen = false;
   isTrainingOpen = false;
+  showMemberships = false;
 
   user$ = this.authService.user$;
   isCoach$ = this.authService.user$.pipe(map(u => u?.role === 'COACH'));
@@ -46,6 +48,10 @@ export class TopBarComponent {
 
   toggleSettings() {
     this.authService.toggleSettings();
+  }
+
+  toggleMemberships() {
+    this.showMemberships = !this.showMemberships;
   }
 
   toggleDevices() {

@@ -33,11 +33,25 @@ public record WorkoutBlock(
 
         // --- CADENCE ---
         @JsonPropertyDescription("Target RPM (Bike/Run) or SPM (Swim).")
-        Integer cadenceTarget
+        Integer cadenceTarget,
+
+        // --- ZONE-BASED TARGETING ---
+        @JsonPropertyDescription("Zone label (e.g. 'Z3'). Use instead of intensityTarget for zone-based targeting.")
+        String zoneTarget,
+
+        @JsonPropertyDescription("Resolved display label (e.g. 'Z3 - Tempo (75-90%)'). Filled during enrichment, null on save.")
+        String zoneLabel
 ) {
 
     public WorkoutBlock updateType(BlockType type) {
-        return new WorkoutBlock(type, this.durationSeconds(), this.distanceMeters(), this.label(), this.intensityTarget(), this.intensityStart(), this.intensityEnd(), this.cadenceTarget());
+        return new WorkoutBlock(type, this.durationSeconds(), this.distanceMeters(), this.label(),
+                this.intensityTarget(), this.intensityStart(), this.intensityEnd(), this.cadenceTarget(),
+                this.zoneTarget(), this.zoneLabel());
+    }
+
+    public WorkoutBlock withResolvedIntensity(Integer resolvedIntensity, String resolvedZoneLabel) {
+        return new WorkoutBlock(type, durationSeconds, distanceMeters, label,
+                resolvedIntensity, intensityStart, intensityEnd, cadenceTarget, zoneTarget, resolvedZoneLabel);
     }
 
 }

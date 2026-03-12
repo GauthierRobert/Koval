@@ -161,8 +161,7 @@ public class NotationToolService {
         if (intensity == null) intensity = hardcodedFallback(upperLabel);
         if (intensity == null) return block;
 
-        return new WorkoutBlock(block.type(), block.durationSeconds(), block.distanceMeters(),
-                block.label(), intensity, block.intensityStart(), block.intensityEnd(), block.cadenceTarget());
+        return block.withResolvedIntensity(intensity, null);
     }
 
     private static Integer hardcodedFallback(String upperLabel) {

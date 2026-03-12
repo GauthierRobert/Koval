@@ -1,0 +1,81 @@
+<div class="modal-backdrop" (click)="onBackdropClick()">
+  <div class="modal glass" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>MY MEMBERSHIPS</h3>
+      <button class="close-btn" (click)="closed.emit()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Invite code section -->
+      <div class="section">
+        <div class="section-label">JOIN WITH INVITE CODE</div>
+        <div class="invite-row">
+          <input
+            class="form-input"
+            [(ngModel)]="inviteCode"
+            placeholder="Enter invite code..."
+            (keydown.enter)="redeemCode()" />
+          <button class="btn-primary" (click)="redeemCode()" [disabled]="!inviteCode.trim()">JOIN</button>
+        </div>
+        <div
+          class="message"
+          *ngIf="message$ | async as msg"
+          [class.success]="(messageType$ | async) === 'success'"
+          [class.error]="(messageType$ | async) === 'error'">
+          {{ msg }}
+        </div>
+      </div>
+
+      <!-- Clubs section -->
+      <div class="section">
+        <div class="section-label">CLUBS</div>
+        <ng-container *ngIf="clubsWithGroups$ | async as clubsWithGroups">
+          <div class="membership-list" *ngIf="clubsWithGroups.length > 0; else noClubs">
+            <div class="membership-group" *ngFor="let cwg of clubsWithGroups">
+              <div class="membership-item">
+                <div class="item-info">
+                  <span class="item-name">{{ cwg.club.name }}</span>
+                  <span class="role-badge">{{ getRoleBadge(cwg.club) }}</span>
+                </div>
+                <button
+                  class="btn-leave"
+                  *ngIf="!isOwner(cwg.club)"
+                  (click)="leaveClub(cwg.club.id)">
+                  LEAVE
+                </button>
+              </div>
+              <div class="sub-item" *ngFor="let group of cwg.groups">
+                <div class="item-info">
+                  <span class="sub-indent"></span>
+                  <span class="item-name sub">{{ group.name }}</span>
+                </div>
+                <button class="btn-leave" (click)="leaveClubGroup(cwg.club.id, group.id)">LEAVE</button>
+              </div>
+            </div>
+          </div>
+          <ng-template #noClubs>
+            <div class="empty-state">No clubs yet</div>
+          </ng-template>
+        </ng-container>
+      </div>
+
+      <!-- Training groups section -->
+      <div class="section">
+        <div class="section-label">TRAINING GROUPS</div>
+        <ng-container *ngIf="coachGroups$ | async as groups">
+          <div class="membership-list" *ngIf="groups.length > 0; else noGroups">
+            <div class="membership-item" *ngFor="let group of groups">
+              <div class="item-info">
+                <span class="item-name">{{ group.name }}</span>
+              </div>
+              <button class="btn-leave" (click)="leaveCoachGroup(group.id)">LEAVE</button>
+            </div>
+          </div>
+          <ng-template #noGroups>
+            <div class="empty-state">No training groups yet</div>
+          </ng-template>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>

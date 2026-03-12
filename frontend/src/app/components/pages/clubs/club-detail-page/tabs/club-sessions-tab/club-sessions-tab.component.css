@@ -4,7 +4,7 @@
   gap: var(--space-md);
 }
 
-/* ─── Tab header ──────────────────────────────────────────── */
+/* --- Tab header --- */
 .tab-header {
   display: flex;
   align-items: center;
@@ -27,7 +27,7 @@
   gap: 8px;
 }
 
-/* ─── View toggle ─────────────────────────────────────────── */
+/* --- View toggle --- */
 .view-toggle {
   display: flex;
   border: 1px solid var(--glass-border);
@@ -57,14 +57,51 @@
   background: rgba(255, 255, 255, 0.04);
 }
 
-/* ─── Session cards (list view) ──────────────────────────── */
+/* --- Session cards (list view) --- */
 .sessions-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
+}
+
+/* --- Day groups (list view) --- */
+.day-group {
+  margin-bottom: 4px;
+}
+
+.day-group-header {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.7;
+  padding: 10px 0 6px;
+  border-bottom: 1px solid var(--glass-border);
+  margin-bottom: 6px;
+}
+
+.day-group-header.today {
+  color: var(--accent-color);
+  opacity: 1;
+  border-bottom-color: var(--accent-color);
+}
+
+.day-sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.session-time-inline {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-left: auto;
 }
 
 .session-card {
+  position: relative;
   padding: 14px 16px;
   border-radius: var(--radius-md);
   transition: border-color 0.15s, transform 0.15s;
@@ -122,13 +159,71 @@
   line-height: 1.5;
 }
 
-.session-actions {
-  margin-top: 8px;
-  display: flex;
-  gap: 6px;
+.group-badge {
+  font-size: 9px;
+  font-weight: 700;
+  color: #c084fc;
+  background: rgba(168, 85, 247, 0.1);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
 }
 
-/* ─── Linked training info (list view) ───────────────────── */
+/* --- AI button (top-left corner of card) --- */
+.ai-btn-corner {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  background: rgba(168, 85, 247, 0.1);
+  color: #c084fc;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  transition: all 0.15s;
+  z-index: 2;
+}
+
+.ai-btn-corner:hover {
+  background: rgba(168, 85, 247, 0.25);
+  border-color: rgba(168, 85, 247, 0.5);
+}
+
+.ai-btn-corner svg {
+  stroke: #c084fc;
+  flex-shrink: 0;
+}
+
+.ai-btn-corner.small {
+  top: 3px;
+  left: 3px;
+  padding: 2px 5px;
+  font-size: 8px;
+  gap: 2px;
+}
+
+/* Offset card content when AI button is present */
+.session-card:has(.ai-btn-corner) .session-header {
+  padding-top: 20px;
+}
+
+/* --- Capacity + Join inline row --- */
+.capacity-join-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* --- Linked training info --- */
 .linked-training-info {
   display: flex;
   align-items: center;
@@ -164,42 +259,7 @@
   text-decoration: underline;
 }
 
-/* ─── AI Create button ───────────────────────────────────── */
-.ai-create-inline {
-  margin: 6px 0;
-}
-
-.btn-ai-create {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: rgba(168, 85, 247, 0.1);
-  color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.25);
-  border-radius: var(--radius-sm);
-  padding: 5px 12px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btn-ai-create:hover {
-  background: rgba(168, 85, 247, 0.18);
-  border-color: rgba(168, 85, 247, 0.4);
-}
-
-.btn-ai-create.small {
-  padding: 3px 8px;
-  font-size: 9px;
-}
-
-.btn-ai-create svg {
-  stroke: #c084fc;
-}
-
-/* ─── Capacity & status badges ────────────────────────────── */
+/* --- Capacity & status badges --- */
 .capacity-full {
   color: #f87171 !important;
 }
@@ -235,7 +295,59 @@
   font-size: 11px;
 }
 
-/* ─── Calendar nav ───────────────────────────────────────── */
+/* --- Recurring toggle --- */
+.recurring-toggle-row {
+  flex-direction: row !important;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.toggle-input {
+  display: none;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.toggle-input:checked + .toggle-switch {
+  background: var(--accent-subtle);
+  border-color: var(--accent-color);
+}
+
+.toggle-input:checked + .toggle-switch::after {
+  left: 18px;
+  background: var(--accent-color);
+}
+
+/* --- Calendar nav --- */
 .calendar-nav {
   display: flex;
   align-items: center;
@@ -250,7 +362,7 @@
   letter-spacing: 0.02em;
 }
 
-/* ─── Time-Grid Calendar ─────────────────────────────────── */
+/* --- Time-Grid Calendar --- */
 .time-grid-container {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
@@ -323,7 +435,7 @@
 .day-column {
   position: relative;
   border-right: 1px solid var(--glass-border);
-  height: calc(16 * 60px); /* HOUR_END - HOUR_START = 16 hours * 60px */
+  height: calc(16 * 60px);
 }
 
 .day-column:last-child {
@@ -343,7 +455,7 @@
   opacity: 0.4;
 }
 
-/* ─── Time-Grid Session Cards ────────────────────────────── */
+/* --- Time-Grid Session Cards --- */
 .time-grid-session {
   position: absolute;
   left: 2px;
@@ -420,102 +532,14 @@
   color: var(--text-muted);
 }
 
-.tg-session-actions {
+.tg-capacity-join-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   margin-top: 2px;
 }
 
-/* ─── Recurring section ───────────────────────────────────── */
-.recurring-section {
-  margin-top: var(--space-lg);
-  padding-top: var(--space-lg);
-  border-top: 1px solid var(--glass-border);
-}
-
-.recurring-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-sm);
-}
-
-.recurring-header h4 {
-  margin: 0;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  opacity: 0.7;
-}
-
-.recurring-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.recurring-card {
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  transition: border-color 0.15s;
-}
-
-.recurring-card:hover {
-  border-color: var(--accent-color);
-}
-
-.recurring-card.inactive {
-  opacity: 0.4;
-}
-
-.recurring-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-color);
-}
-
-.recurring-schedule {
-  color: var(--text-muted);
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.recurring-cap {
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--accent-color);
-  background: var(--accent-subtle);
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-}
-
-.inactive-badge {
-  font-size: 8px;
-  font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.empty-recurring {
-  font-size: 12px;
-  color: var(--text-muted);
-  text-align: center;
-  padding: var(--space-md);
-}
-
-/* ─── Empty tab ───────────────────────────────────────────── */
+/* --- Empty tab --- */
 .empty-tab {
   display: flex;
   flex-direction: column;
@@ -536,7 +560,7 @@
   margin: 0 0 8px;
 }
 
-/* ─── Modal ───────────────────────────────────────────────── */
+/* --- Modal --- */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -643,7 +667,7 @@
   border-top: 1px solid var(--glass-border);
 }
 
-/* ─── Buttons ─────────────────────────────────────────────── */
+/* --- Buttons --- */
 .btn-primary {
   background: var(--accent-color);
   color: #000;

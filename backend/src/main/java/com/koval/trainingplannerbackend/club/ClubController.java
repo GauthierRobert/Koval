@@ -29,12 +29,13 @@ public class ClubController {
 
     public record CreateSessionRequest(String title, String sport, LocalDateTime scheduledAt,
                                        String location, String description, String linkedTrainingId,
-                                       Integer maxParticipants, Integer durationMinutes) {}
+                                       Integer maxParticipants, Integer durationMinutes,
+                                       String clubGroupId) {}
 
     public record CreateRecurringSessionRequest(String title, String sport, DayOfWeek dayOfWeek,
                                                  LocalTime timeOfDay, String location, String description,
                                                  String linkedTrainingId, Integer maxParticipants,
-                                                 Integer durationMinutes) {}
+                                                 Integer durationMinutes, String clubGroupId) {}
 
     public record LinkTrainingRequest(String trainingId) {}
 

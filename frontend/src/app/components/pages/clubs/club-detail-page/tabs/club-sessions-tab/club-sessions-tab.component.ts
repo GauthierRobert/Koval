@@ -16,10 +16,10 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import {
   ClubDetail,
+  ClubGroup,
   ClubService,
   ClubTrainingSession,
   CreateSessionData,
-  RecurringSessionTemplate,
   CreateRecurringSessionData,
 } from '../../../../../../services/club.service';
 import { AuthService } from '../../../../../../services/auth.service';
@@ -44,19 +44,17 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   private cdr = inject(ChangeDetectorRef);
 
   sessions$ = this.clubService.sessions$;
-  recurringTemplates$ = this.clubService.recurringTemplates$;
   currentUserId: string | null = null;
 
   viewMode: ViewMode = 'LIST';
   calendarWeekStart: Date = ClubSessionsTabComponent.getMonday(new Date());
   calendarDays: Date[] = [];
 
+  // Unified form state
   isFormOpen = false;
   isRecurring = false;
-  form: Partial<CreateSessionData> = {};
-  recurringForm: Partial<CreateRecurringSessionData> = {};
-
-  isRecurringFormOpen = false;
+  form: Record<string, any> = {};
+  clubGroups: ClubGroup[] = [];
 
   readonly sports = ['CYCLING', 'RUNNING', 'SWIMMING', 'TRIATHLON', 'OTHER'];
   readonly daysOfWeek = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
@@ -76,7 +74,13 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
     });
     this.buildCalendarDays();
     if (this.club) {
-      this.clubService.loadRecurringTemplates(this.club.id);
+      this.clubService.loadRecurringTemplates(this.club.id); // keep for form
+      this.loadCalendarSessions();
+      this.clubService.loadGroups(this.club.id);
+      this.clubService.groups$.subscribe((groups) => {
+        this.clubGroups = groups;
+        this.cdr.markForCheck();
+      });
     }
   }
 
@@ -89,12 +93,28 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
     return role === 'OWNER' || role === 'ADMIN' || role === 'COACH';
   }
 
+  get isCoach(): boolean {
+    const role = this.club?.currentMemberRole;
+    return role === 'OWNER' || role === 'COACH';
+  }
+
+  // --- List view helpers ---
+
+  getListDaysWithSessions(sessions: ClubTrainingSession[]): Date[] {
+    return this.calendarDays.filter((day) => this.getSessionsForDay(sessions, day).length > 0);
+  }
+
+  getGroupName(groupId: string | undefined): string {
+    if (!groupId) return '';
+    const group = this.clubGroups.find((g) => g.id === groupId);
+    return group?.name ?? '';
+  }
+
   // --- View toggle ---
 
   setViewMode(mode: ViewMode): void {
     this.viewMode = mode;
     if (mode === 'CALENDAR') {
-      this.loadCalendarSessions();
       this.scrolledToCurrentHour = false;
       setTimeout(() => this.scrollToCurrentHour(), 50);
     }
@@ -136,11 +156,13 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   }
 
   getSessionsForDay(sessions: ClubTrainingSession[], day: Date): ClubTrainingSession[] {
-    return sessions.filter((s) => {
-      if (!s.scheduledAt) return false;
-      const d = new Date(s.scheduledAt);
-      return d.getFullYear() === day.getFullYear() && d.getMonth() === day.getMonth() && d.getDate() === day.getDate();
-    });
+    return sessions
+      .filter((s) => {
+        if (!s.scheduledAt) return false;
+        const d = new Date(s.scheduledAt);
+        return d.getFullYear() === day.getFullYear() && d.getMonth() === day.getMonth() && d.getDate() === day.getDate();
+      })
+      .sort((a, b) => (a.scheduledAt ?? '').localeCompare(b.scheduledAt ?? ''));
   }
 
   formatDayHeader(day: Date): string {
@@ -188,10 +210,10 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
     this.scrolledToCurrentHour = true;
   }
 
-  // --- Session form ---
+  // --- Unified session form ---
 
   openForm(): void {
-    this.form = { sport: 'CYCLING' };
+    this.form = { sport: 'CYCLING', title: '', clubGroupId: '' };
     this.isRecurring = false;
     this.isFormOpen = true;
   }
@@ -200,47 +222,52 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
     this.isFormOpen = false;
   }
 
+  get isFormValid(): boolean {
+    if (!this.form['title'] || !this.form['sport']) return false;
+    if (this.isRecurring && (!this.form['dayOfWeek'] || !this.form['timeOfDay'])) return false;
+    return true;
+  }
+
   save(): void {
-    if (!this.form.title) return;
-    const data: CreateSessionData = {
-      ...this.form,
-      maxParticipants: this.form.maxParticipants || undefined,
-      durationMinutes: this.form.durationMinutes || undefined,
-    } as CreateSessionData;
-    this.clubService.createSession(this.club.id, data).subscribe({
-      next: () => {
-        this.isFormOpen = false;
-        this.cdr.markForCheck();
-      },
-      error: () => {},
-    });
-  }
+    if (!this.isFormValid) return;
 
-  // --- Recurring form ---
-
-  openRecurringForm(): void {
-    this.recurringForm = { sport: 'CYCLING', dayOfWeek: 'TUESDAY', timeOfDay: '18:30' };
-    this.isRecurringFormOpen = true;
-  }
-
-  closeRecurringForm(): void {
-    this.isRecurringFormOpen = false;
-  }
-
-  saveRecurring(): void {
-    if (!this.recurringForm.title || !this.recurringForm.dayOfWeek || !this.recurringForm.timeOfDay) return;
-    this.clubService.createRecurringTemplate(this.club.id, this.recurringForm as CreateRecurringSessionData).subscribe({
-      next: () => {
-        this.isRecurringFormOpen = false;
-        this.cdr.markForCheck();
-      },
-      error: () => {},
-    });
-  }
-
-  deactivateTemplate(template: RecurringSessionTemplate, event: Event): void {
-    event.stopPropagation();
-    this.clubService.deleteRecurringTemplate(this.club.id, template.id).subscribe({ error: () => {} });
+    if (this.isRecurring) {
+      const data: CreateRecurringSessionData = {
+        title: this.form['title'],
+        sport: this.form['sport'],
+        dayOfWeek: this.form['dayOfWeek'],
+        timeOfDay: this.form['timeOfDay'],
+        location: this.form['location'] || undefined,
+        description: this.form['description'] || undefined,
+        maxParticipants: this.form['maxParticipants'] || undefined,
+        clubGroupId: this.form['clubGroupId'] || undefined,
+      };
+      this.clubService.createRecurringTemplate(this.club.id, data).subscribe({
+        next: () => {
+          this.isFormOpen = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {},
+      });
+    } else {
+      const data: CreateSessionData = {
+        title: this.form['title'],
+        sport: this.form['sport'],
+        scheduledAt: this.form['scheduledAt'] || undefined,
+        location: this.form['location'] || undefined,
+        description: this.form['description'] || undefined,
+        maxParticipants: this.form['maxParticipants'] || undefined,
+        durationMinutes: this.form['durationMinutes'] || undefined,
+        clubGroupId: this.form['clubGroupId'] || undefined,
+      };
+      this.clubService.createSession(this.club.id, data).subscribe({
+        next: () => {
+          this.isFormOpen = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {},
+      });
+    }
   }
 
   // --- Join / Cancel ---
@@ -301,10 +328,6 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   formatTime(dateStr: string | undefined): string {
     if (!dateStr) return '';
     return new Date(dateStr).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-  }
-
-  formatTemplateDay(dayOfWeek: string): string {
-    return dayOfWeek.charAt(0) + dayOfWeek.slice(1).toLowerCase();
   }
 
   truncate(text: string | undefined, maxLen: number): string {

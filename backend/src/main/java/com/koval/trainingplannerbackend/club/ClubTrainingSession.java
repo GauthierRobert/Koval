@@ -31,6 +31,7 @@ public class ClubTrainingSession {
     private List<String> participantIds = new ArrayList<>();
     private LocalDateTime createdAt;
     private String recurringTemplateId;
+    private String clubGroupId;
     private Integer maxParticipants;
     private Integer durationMinutes;
     private String linkedTrainingTitle;

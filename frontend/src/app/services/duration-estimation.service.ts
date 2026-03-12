@@ -49,8 +49,19 @@ export class DurationEstimationService {
         return 0;
     }
 
+    private getIntensityPercent(block: WorkoutBlock, zoneSystem: ZoneSystem | null): number {
+        if (block.intensityTarget) return block.intensityTarget;
+        if (block.zoneTarget && zoneSystem) {
+            const zone = zoneSystem.zones.find(
+                (z) => z.label.toUpperCase() === block.zoneTarget!.toUpperCase(),
+            );
+            if (zone) return (zone.low + zone.high) / 2;
+        }
+        return 50;
+    }
+
     private getEstimatedSpeed(block: WorkoutBlock, training: Training, user: User, zoneSystem: ZoneSystem | null): number {
-        const intensity = block.intensityTarget || 50; // Default 50% if missing
+        const intensity = this.getIntensityPercent(block, zoneSystem);
 
         // --- CYCLING ---
         if (training.sportType === 'CYCLING') {

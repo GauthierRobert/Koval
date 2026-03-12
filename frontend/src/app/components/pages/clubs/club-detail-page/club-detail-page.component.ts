@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { ClubDetail, ClubService } from '../../../../services/club.service';
+import { ClubDetail, ClubGroup, ClubService } from '../../../../services/club.service';
 import { AuthService } from '../../../../services/auth.service';
 import { ClubFeedTabComponent } from './tabs/club-feed-tab/club-feed-tab.component';
 import { ClubSessionsTabComponent } from './tabs/club-sessions-tab/club-sessions-tab.component';
@@ -50,6 +50,8 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   clubId = '';
   showAiModal = false;
   aiContext: ActionContext = {};
+  aiSessionInfo: { scheduledAt?: string; sport?: string; clubGroupName?: string } | null = null;
+  private clubGroups: ClubGroup[] = [];
   private subs = new Subscription();
 
   readonly tabs: Array<{ id: TabId; label: string }> = [
@@ -79,6 +81,12 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
         this.activateTab('feed');
       })
     );
+
+    this.subs.add(
+      this.clubService.groups$.subscribe((groups) => {
+        this.clubGroups = groups;
+      })
+    );
   }
 
   ngOnDestroy(): void {
@@ -96,7 +104,6 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
         this.clubService.loadFeed(this.clubId);
         break;
       case 'sessions':
-        this.clubService.loadSessions(this.clubId);
         this.clubService.loadRecurringTemplates(this.clubId);
         break;
       case 'members':
@@ -133,20 +140,31 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
     return tab === 'members';
   }
 
-  openAiModal(club: ClubDetail): void {
-    this.aiContext = { clubId: club.id };
-    this.showAiModal = true;
-    this.cdr.markForCheck();
-  }
-
   openAiModalForSession(session: ClubTrainingSession): void {
     this.aiContext = { clubId: this.clubId, sessionId: session.id };
+    const groupName = session.clubGroupId
+      ? this.clubGroups.find((g) => g.id === session.clubGroupId)?.name
+      : undefined;
+    this.aiSessionInfo = {
+      scheduledAt: session.scheduledAt
+        ? new Date(session.scheduledAt).toLocaleString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : undefined,
+      sport: session.sport,
+      clubGroupName: groupName,
+    };
     this.showAiModal = true;
     this.cdr.markForCheck();
   }
 
   onAiCreated(_result: ActionResult): void {
     this.showAiModal = false;
+    this.aiSessionInfo = null;
     this.loadedTabs.delete('sessions');
     this.activateTab('sessions');
     this.cdr.markForCheck();

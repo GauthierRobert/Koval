@@ -38,12 +38,6 @@
         (click)="activateTab(tab.id)">
         {{ tab.label }}
       </button>
-      <button
-        *ngIf="activeTab === 'sessions' && club.currentMembershipStatus"
-        class="tab-btn tab-btn--ai"
-        (click)="openAiModal(club)">
-        CREATE WITH AI
-      </button>
     </div>
 
     <!-- Tab content -->
@@ -61,8 +55,9 @@
       [isOpen]="showAiModal"
       actionType="TRAINING_FROM_NOTATION"
       [context]="aiContext"
+      [sessionInfo]="aiSessionInfo"
       label="Create Session with AI"
-      (closed)="showAiModal = false"
+      (closed)="showAiModal = false; aiSessionInfo = null"
       (created)="onAiCreated($event)">
     </app-create-with-ai-modal>
 

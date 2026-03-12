@@ -39,7 +39,8 @@
       "Bash(cd \"C:/Users/gauth/Documents/Dev Projects/training-planner-ai/training-planner-ai/backend\" && mvn test -Dtest=\"ClubFlowIntegrationTest#createPublicClub\" 2>&1 | grep -E \"Error\\\\b|Exception\\\\b|expected|but was|Caused by\" | head -15)",
       "Bash(cd \"C:/Users/gauth/Documents/Dev Projects/training-planner-ai/training-planner-ai/backend\" && mvn test -Dtest=\"ClubFlowIntegrationTest#createPublicClub\" 2>&1 | tail -30)",
       "Bash(cd \"C:/Users/gauth/Documents/Dev Projects/training-planner-ai/training-planner-ai/backend\" && mvn test -Dtest=\"ClubFlowIntegrationTest\" 2>&1 | grep -E \"Tests run:|BUILD\" | tail -5)",
-      "Bash(cd \"C:/Users/gauth/Documents/Dev Projects/training-planner-ai/training-planner-ai/backend\" && mvn test -Dtest=\"ClubFlowIntegrationTest\" 2>&1 | grep -A 3 \"<<< ERROR\")"
+      "Bash(cd \"C:/Users/gauth/Documents/Dev Projects/training-planner-ai/training-planner-ai/backend\" && mvn test -Dtest=\"ClubFlowIntegrationTest\" 2>&1 | grep -A 3 \"<<< ERROR\")",
+      "Bash(find \"C:/Users/GAR/Documents/POC/Koval/backend/src/main/java/com/koval/trainingplannerbackend/training\" -name \"*.java\" -type f 2>/dev/null | sort)"
     ]
   }
 }

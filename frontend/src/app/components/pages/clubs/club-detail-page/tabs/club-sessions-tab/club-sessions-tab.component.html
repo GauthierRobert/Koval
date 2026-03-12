@@ -11,66 +11,83 @@
   </div>
 
   <ng-container *ngIf="sessions$ | async as sessions">
+    <!-- Shared week navigation -->
+    <div class="calendar-nav">
+      <button class="btn-secondary" (click)="prevWeek()">&larr; Prev</button>
+      <button class="btn-secondary" (click)="goToday()">Today</button>
+      <span class="calendar-range">{{ formatWeekRange() }}</span>
+      <button class="btn-secondary" (click)="nextWeek()">Next &rarr;</button>
+    </div>
 
     <!-- LIST VIEW -->
     <ng-container *ngIf="viewMode === 'LIST'">
-      <div class="sessions-list" *ngIf="sessions.length > 0; else emptySessions">
-        <div *ngFor="let session of sessions" class="session-card glass">
-          <div class="session-header">
-            <span class="session-sport-badge">{{ session.sport || 'GENERAL' }}</span>
-            <span class="recurring-badge" *ngIf="session.recurringTemplateId">&#x1f501;</span>
-            <h4 class="session-title">{{ session.title }}</h4>
-          </div>
-          <div class="session-meta">
-            <span *ngIf="session.scheduledAt">&#x1f4c5; {{ formatDateTime(session.scheduledAt) }}</span>
-            <span *ngIf="session.location">&#x1f4cd; {{ session.location }}</span>
-            <span [class.capacity-full]="isFull(session)">
-              &#x1f465; {{ getCapacityText(session) }}
-              <span *ngIf="isFull(session)" class="full-badge">FULL</span>
-            </span>
-          </div>
+      <ng-container *ngIf="getListDaysWithSessions(sessions) as days">
+        <div class="sessions-list" *ngIf="days.length > 0; else emptySessions">
+          <div class="day-group" *ngFor="let day of days">
+            <div class="day-group-header" [class.today]="isToday(day)">{{ formatDayHeader(day) }}</div>
+            <div class="day-sessions">
+              <div *ngFor="let session of getSessionsForDay(sessions, day)" class="session-card glass">
+                <!-- AI button: top-left corner, coaches only, unlinked sessions only -->
+                <button
+                  class="ai-btn-corner"
+                  *ngIf="isCoach && !session.linkedTrainingId"
+                  (click)="onAiCreateForSession(session, $event)"
+                  title="Create training with AI">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16.4l-6.4 4.8L8 14l-6-4.8h7.6z"/></svg>
+                  <span>+ training</span>
+                </button>
 
-          <!-- Linked training info -->
-          <div class="linked-training-info" *ngIf="session.linkedTrainingId">
-            <span class="linked-badge">&#x1f3cb; {{ session.linkedTrainingTitle || 'Linked Training' }}</span>
-            <span class="linked-desc" *ngIf="session.linkedTrainingDescription">{{ truncate(session.linkedTrainingDescription, 80) }}</span>
-            <a class="linked-view-link" [routerLink]="['/dashboard']" [queryParams]="{trainingId: session.linkedTrainingId}">View &rarr;</a>
-          </div>
+                <div class="session-header">
+                  <span class="session-sport-badge">{{ session.sport || 'GENERAL' }}</span>
+                  <span class="recurring-badge" *ngIf="session.recurringTemplateId">&#x1f501;</span>
+                  <h4 class="session-title">{{ session.title }}</h4>
+                  <span class="session-time-inline" *ngIf="session.scheduledAt">{{ formatTime(session.scheduledAt) }}</span>
+                </div>
+                <div class="session-meta">
+                  <span *ngIf="session.location">&#x1f4cd; {{ session.location }}</span>
+                </div>
 
-          <!-- AI Create button for unlinked sessions -->
-          <div class="ai-create-inline" *ngIf="!session.linkedTrainingId && canCreate">
-            <button class="btn-ai-create" (click)="onAiCreateForSession(session, $event)">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16.4l-6.4 4.8L8 14l-6-4.8h7.6z"/></svg>
-              Create with AI
-            </button>
-          </div>
+                <!-- Linked training info -->
+                <div class="linked-training-info" *ngIf="session.linkedTrainingId">
+                  <span class="linked-badge">&#x1f3cb; {{ session.linkedTrainingTitle || 'Linked Training' }}</span>
+                  <span class="linked-desc" *ngIf="session.linkedTrainingDescription">{{ truncate(session.linkedTrainingDescription, 80) }}</span>
+                  <a class="linked-view-link" [routerLink]="['/dashboard']" [queryParams]="{trainingId: session.linkedTrainingId}">View &rarr;</a>
+                </div>
 
-          <p class="session-desc" *ngIf="session.description && !session.linkedTrainingId">{{ session.description }}</p>
+                <p class="session-desc" *ngIf="session.description && !session.linkedTrainingId && !session.recurringTemplateId">{{ session.description }}</p>
 
-          <!-- Waiting list position -->
-          <div class="waiting-list-info" *ngIf="isOnWaitingList(session)">
-            You're #{{ getWaitingListPosition(session) }} on the waiting list
-          </div>
+                <!-- Waiting list position -->
+                <div class="waiting-list-info" *ngIf="isOnWaitingList(session)">
+                  You're #{{ getWaitingListPosition(session) }} on the waiting list
+                </div>
 
-          <div class="session-actions">
-            <ng-container *ngIf="!isParticipant(session) && !isOnWaitingList(session)">
-              <button class="btn-primary" (click)="joinSession(session, $event)">
-                {{ isFull(session) ? 'JOIN WAITING LIST' : 'JOIN' }}
-              </button>
-            </ng-container>
-            <button class="btn-ghost" *ngIf="isParticipant(session)" (click)="cancelSession(session, $event)">
-              CANCEL
-            </button>
-            <button class="btn-ghost" *ngIf="isOnWaitingList(session)" (click)="cancelSession(session, $event)">
-              LEAVE WAITING LIST
-            </button>
+                <!-- Capacity + Join inline row -->
+                <div class="capacity-join-row">
+                  <span [class.capacity-full]="isFull(session)">
+                    &#x1f465; {{ getCapacityText(session) }}
+                    <span *ngIf="isFull(session)" class="full-badge">FULL</span>
+                  </span>
+                  <ng-container *ngIf="!isParticipant(session) && !isOnWaitingList(session)">
+                    <button class="btn-primary small" (click)="joinSession(session, $event)">
+                      {{ isFull(session) ? 'JOIN WAITING LIST' : 'JOIN' }}
+                    </button>
+                  </ng-container>
+                  <button class="btn-ghost small" *ngIf="isParticipant(session)" (click)="cancelSession(session, $event)">
+                    CANCEL
+                  </button>
+                  <button class="btn-ghost small" *ngIf="isOnWaitingList(session)" (click)="cancelSession(session, $event)">
+                    LEAVE WAITING LIST
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </ng-container>
       <ng-template #emptySessions>
         <div class="empty-tab">
           <span>&#x1f4c5;</span>
-          <p>No sessions scheduled yet.</p>
+          <p>No sessions this week.</p>
           <button class="btn-primary" *ngIf="canCreate" (click)="openForm()">SCHEDULE SESSION</button>
         </div>
       </ng-template>
@@ -78,13 +95,6 @@
 
     <!-- CALENDAR VIEW (Time-Grid) -->
     <ng-container *ngIf="viewMode === 'CALENDAR'">
-      <div class="calendar-nav">
-        <button class="btn-secondary" (click)="prevWeek()">&larr; Prev</button>
-        <button class="btn-secondary" (click)="goToday()">Today</button>
-        <span class="calendar-range">{{ formatWeekRange() }}</span>
-        <button class="btn-secondary" (click)="nextWeek()">Next &rarr;</button>
-      </div>
-
       <div class="time-grid-container">
         <!-- Sticky header row -->
         <div class="time-grid-header">
@@ -117,6 +127,16 @@
               [style.top.px]="getSessionTopPx(session)"
               [style.height.px]="getSessionHeightPx(session)">
 
+              <!-- AI button in calendar card -->
+              <button
+                *ngIf="isCoach && !session.linkedTrainingId"
+                class="ai-btn-corner small"
+                (click)="onAiCreateForSession(session, $event)"
+                title="Create training with AI">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16.4l-6.4 4.8L8 14l-6-4.8h7.6z"/></svg>
+                <span>+ training</span>
+              </button>
+
               <div class="tg-session-top">
                 <span class="session-sport-badge small">{{ session.sport || 'GEN' }}</span>
                 <span class="tg-session-time">{{ formatTime(session.scheduledAt) }}</span>
@@ -130,19 +150,10 @@
                 <a class="tg-view-link" [routerLink]="['/dashboard']" [queryParams]="{trainingId: session.linkedTrainingId}">View &rarr;</a>
               </ng-container>
 
-              <!-- AI Create button -->
-              <button
-                *ngIf="!session.linkedTrainingId && canCreate"
-                class="btn-ai-create small"
-                (click)="onAiCreateForSession(session, $event)">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16.4l-6.4 4.8L8 14l-6-4.8h7.6z"/></svg>
-                AI Create
-              </button>
-
-              <div class="tg-session-capacity" [class.capacity-full]="isFull(session)">
-                &#x1f465; {{ getCapacityText(session) }}
-              </div>
-              <div class="tg-session-actions">
+              <div class="tg-capacity-join-row">
+                <span class="tg-session-capacity" [class.capacity-full]="isFull(session)">
+                  &#x1f465; {{ getCapacityText(session) }}
+                </span>
                 <ng-container *ngIf="!isParticipant(session) && !isOnWaitingList(session)">
                   <button class="btn-primary small" (click)="joinSession(session, $event)">
                     {{ isFull(session) ? 'WAIT' : 'JOIN' }}
@@ -162,34 +173,9 @@
     </ng-container>
 
   </ng-container>
-
-  <!-- Recurring Templates Section -->
-  <ng-container *ngIf="canCreate">
-    <div class="recurring-section">
-      <div class="recurring-header">
-        <h4>Recurring Sessions</h4>
-        <button class="btn-primary" (click)="openRecurringForm()">+ RECURRING</button>
-      </div>
-      <ng-container *ngIf="recurringTemplates$ | async as templates">
-        <div *ngIf="templates.length > 0" class="recurring-list">
-          <div *ngFor="let t of templates" class="recurring-card glass" [class.inactive]="!t.active">
-            <div class="recurring-info">
-              <span class="session-sport-badge">{{ t.sport || 'GENERAL' }}</span>
-              <strong>{{ t.title }}</strong>
-              <span class="recurring-schedule">{{ formatTemplateDay(t.dayOfWeek) }} at {{ t.timeOfDay }}</span>
-              <span *ngIf="t.maxParticipants" class="recurring-cap">Max {{ t.maxParticipants }}</span>
-              <span *ngIf="!t.active" class="inactive-badge">PAUSED</span>
-            </div>
-            <button class="btn-ghost" *ngIf="t.active" (click)="deactivateTemplate(t, $event)">DEACTIVATE</button>
-          </div>
-        </div>
-        <p *ngIf="templates.length === 0" class="empty-recurring">No recurring sessions configured.</p>
-      </ng-container>
-    </div>
-  </ng-container>
 </div>
 
-<!-- Session Form Modal -->
+<!-- Unified Session Form Modal -->
 <div class="modal-backdrop" *ngIf="isFormOpen" (click)="closeForm()">
   <div class="modal glass" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -199,88 +185,79 @@
     <div class="modal-body">
       <div class="form-row">
         <label>Title *</label>
-        <input [(ngModel)]="form.title" placeholder="e.g. Saturday Group Ride" class="form-input" />
+        <input [(ngModel)]="form['title']" placeholder="e.g. Saturday Group Ride" class="form-input" />
       </div>
       <div class="form-row">
-        <label>Sport</label>
-        <select [(ngModel)]="form.sport" class="form-input">
+        <label>Sport *</label>
+        <select [(ngModel)]="form['sport']" class="form-input">
           <option *ngFor="let s of sports" [value]="s">{{ s }}</option>
         </select>
       </div>
-      <div class="form-row">
-        <label>Date & Time</label>
-        <input type="datetime-local" [(ngModel)]="form.scheduledAt" class="form-input" />
+
+      <!-- Club Group selector -->
+      <div class="form-row" *ngIf="clubGroups.length > 0">
+        <label>Group (visible to all if empty)</label>
+        <select [(ngModel)]="form['clubGroupId']" class="form-input">
+          <option value="">All members</option>
+          <option *ngFor="let g of clubGroups" [value]="g.id">{{ g.name }}</option>
+        </select>
       </div>
+
+      <!-- Recurring toggle -->
+      <div class="form-row recurring-toggle-row">
+        <label class="toggle-label">
+          <input type="checkbox" [(ngModel)]="isRecurring" class="toggle-input" />
+          <span class="toggle-switch"></span>
+          <span>Recurring session</span>
+        </label>
+      </div>
+
+      <!-- Single session fields -->
+      <ng-container *ngIf="!isRecurring">
+        <div class="form-row">
+          <label>Date & Time</label>
+          <input type="datetime-local" [(ngModel)]="form['scheduledAt']" class="form-input" />
+        </div>
+      </ng-container>
+
+      <!-- Recurring fields -->
+      <ng-container *ngIf="isRecurring">
+        <div class="form-row">
+          <label>Day of Week *</label>
+          <select [(ngModel)]="form['dayOfWeek']" class="form-input">
+            <option value="" disabled>Select day</option>
+            <option *ngFor="let d of daysOfWeek" [value]="d">{{ d }}</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Time *</label>
+          <input type="time" [(ngModel)]="form['timeOfDay']" class="form-input" />
+        </div>
+      </ng-container>
+
+      <!-- Shared fields -->
       <div class="form-row two-col">
         <div class="form-row">
           <label>Max Participants</label>
-          <input type="number" [(ngModel)]="form.maxParticipants" placeholder="Unlimited" class="form-input" min="1" />
+          <input type="number" [(ngModel)]="form['maxParticipants']" placeholder="Unlimited" class="form-input" min="1" />
         </div>
         <div class="form-row">
           <label>Duration (minutes)</label>
-          <input type="number" [(ngModel)]="form.durationMinutes" placeholder="60" class="form-input" min="15" step="15" />
+          <input type="number" [(ngModel)]="form['durationMinutes']" placeholder="60" class="form-input" min="15" step="15" />
         </div>
       </div>
       <div class="form-row">
         <label>Location</label>
-        <input [(ngModel)]="form.location" placeholder="Meeting point" class="form-input" />
+        <input [(ngModel)]="form['location']" placeholder="Meeting point" class="form-input" />
       </div>
       <div class="form-row">
         <label>Description</label>
-        <textarea [(ngModel)]="form.description" placeholder="Details..." class="form-input" rows="2"></textarea>
+        <textarea [(ngModel)]="form['description']" placeholder="Details..." class="form-input" rows="2"></textarea>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" (click)="closeForm()">CANCEL</button>
-      <button class="btn-primary" (click)="save()" [disabled]="!form.title">CREATE</button>
-    </div>
-  </div>
-</div>
-
-<!-- Recurring Session Form Modal -->
-<div class="modal-backdrop" *ngIf="isRecurringFormOpen" (click)="closeRecurringForm()">
-  <div class="modal glass" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>Create Recurring Session</h3>
-      <button class="close-btn" (click)="closeRecurringForm()">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <label>Title *</label>
-        <input [(ngModel)]="recurringForm.title" placeholder="e.g. Tuesday Group Ride" class="form-input" />
-      </div>
-      <div class="form-row">
-        <label>Sport</label>
-        <select [(ngModel)]="recurringForm.sport" class="form-input">
-          <option *ngFor="let s of sports" [value]="s">{{ s }}</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <label>Day of Week *</label>
-        <select [(ngModel)]="recurringForm.dayOfWeek" class="form-input">
-          <option *ngFor="let d of daysOfWeek" [value]="d">{{ d }}</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <label>Time *</label>
-        <input type="time" [(ngModel)]="recurringForm.timeOfDay" class="form-input" />
-      </div>
-      <div class="form-row">
-        <label>Max Participants</label>
-        <input type="number" [(ngModel)]="recurringForm.maxParticipants" placeholder="Leave empty for unlimited" class="form-input" min="1" />
-      </div>
-      <div class="form-row">
-        <label>Location</label>
-        <input [(ngModel)]="recurringForm.location" placeholder="Meeting point" class="form-input" />
-      </div>
-      <div class="form-row">
-        <label>Description</label>
-        <textarea [(ngModel)]="recurringForm.description" placeholder="Details..." class="form-input" rows="2"></textarea>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="closeRecurringForm()">CANCEL</button>
-      <button class="btn-primary" (click)="saveRecurring()" [disabled]="!recurringForm.title || !recurringForm.dayOfWeek || !recurringForm.timeOfDay">CREATE</button>
+      <button class="btn-primary" (click)="save()" [disabled]="!isFormValid">CREATE</button>
     </div>
   </div>
 </div>

@@ -67,6 +67,17 @@ public class GroupController {
         }
     }
 
+    @DeleteMapping("/{id}/leave")
+    public ResponseEntity<Void> leaveGroup(@PathVariable String id) {
+        String userId = SecurityUtils.getCurrentUserId();
+        try {
+            groupService.removeAthleteFromGroup(id, userId);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteGroup(@PathVariable String id) {
         String userId = SecurityUtils.getCurrentUserId();

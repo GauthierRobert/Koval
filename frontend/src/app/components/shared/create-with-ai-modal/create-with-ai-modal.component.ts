@@ -27,6 +27,7 @@ export class CreateWithAiModalComponent implements OnChanges {
   @Input() actionType: AIActionType = 'TRAINING_WITH_SESSION';
   @Input() context: ActionContext = {};
   @Input() label = 'Create with AI';
+  @Input() sessionInfo: { scheduledAt?: string; sport?: string; clubGroupName?: string } | null = null;
 
   @Output() closed = new EventEmitter<void>();
   @Output() created = new EventEmitter<ActionResult>();

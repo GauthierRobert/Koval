@@ -80,6 +80,7 @@ export interface ClubTrainingSession {
   participantIds: string[];
   createdAt: string;
   recurringTemplateId?: string;
+  clubGroupId?: string;
   maxParticipants?: number;
   durationMinutes?: number;
   linkedTrainingTitle?: string;
@@ -99,6 +100,7 @@ export interface RecurringSessionTemplate {
   description?: string;
   linkedTrainingId?: string;
   maxParticipants?: number;
+  clubGroupId?: string;
   active: boolean;
   createdAt: string;
 }
@@ -163,6 +165,7 @@ export interface CreateSessionData {
   linkedTrainingId?: string;
   maxParticipants?: number;
   durationMinutes?: number;
+  clubGroupId?: string;
 }
 
 export interface CreateRecurringSessionData {
@@ -174,6 +177,7 @@ export interface CreateRecurringSessionData {
   description?: string;
   linkedTrainingId?: string;
   maxParticipants?: number;
+  clubGroupId?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -410,6 +414,12 @@ export class ClubService {
       .get<ClubRaceGoalResponse[]>(`${this.apiUrl}/${id}/race-goals`)
       .pipe(catchError(() => of([] as ClubRaceGoalResponse[])))
       .subscribe((goals) => this.ngZone.run(() => this.raceGoalsSubject.next(goals)));
+  }
+
+  getClubGroups(clubId: string): Observable<ClubGroup[]> {
+    return this.http
+      .get<ClubGroup[]>(`${this.apiUrl}/${clubId}/groups`)
+      .pipe(catchError(() => of([] as ClubGroup[])));
   }
 
   loadGroups(clubId: string): void {

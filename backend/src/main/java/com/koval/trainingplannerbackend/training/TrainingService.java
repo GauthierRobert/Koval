@@ -9,6 +9,8 @@ import com.koval.trainingplannerbackend.training.model.SportType;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.model.TrainingType;
 import com.koval.trainingplannerbackend.training.model.WorkoutBlock;
+import com.koval.trainingplannerbackend.training.zone.ZoneSystem;
+import com.koval.trainingplannerbackend.training.zone.ZoneSystemService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service for Training CRUD operations.
@@ -30,13 +33,16 @@ public class TrainingService {
     private final TrainingRepository trainingRepository;
     private final GroupService groupService;
     private final UserRepository userRepository;
+    private final ZoneSystemService zoneSystemService;
 
     public TrainingService(TrainingRepository trainingRepository,
                            GroupService groupService,
-                           UserRepository userRepository) {
+                           UserRepository userRepository,
+                           ZoneSystemService zoneSystemService) {
         this.trainingRepository = trainingRepository;
         this.groupService = groupService;
         this.userRepository = userRepository;
+        this.zoneSystemService = zoneSystemService;
     }
 
     /**
@@ -57,6 +63,11 @@ public class TrainingService {
         if ((workoutBlock.intensityEnd() != null && workoutBlock.intensityEnd() > 0) &&
             (workoutBlock.intensityStart() != null && workoutBlock.intensityStart() > 0)) {
             return workoutBlock.updateType(BlockType.RAMP);
+        }
+
+        // Don't reclassify zone-targeted blocks as PAUSE — they may have no intensity before enrichment
+        if (workoutBlock.zoneTarget() != null && !workoutBlock.zoneTarget().isBlank()) {
+            return workoutBlock;
         }
 
         if ((workoutBlock.intensityEnd() == null || workoutBlock.intensityEnd() == 0) &&
@@ -187,7 +198,70 @@ public class TrainingService {
         if (training.getBlocks() == null || training.getBlocks().isEmpty()) {
             return;
         }
+        resolveZoneTargets(training, userId);
         calculateTrainingMetrics(training, userId);
+    }
+
+    /**
+     * Resolves zone-targeted blocks to concrete intensity values using the zone system.
+     */
+    private void resolveZoneTargets(Training training, String userId) {
+        boolean hasZoneTargets = training.getBlocks().stream()
+                .anyMatch(b -> b.zoneTarget() != null && !b.zoneTarget().isBlank());
+        if (!hasZoneTargets) return;
+
+        ZoneSystem zoneSystem = resolveZoneSystem(training, userId);
+        if (zoneSystem == null || zoneSystem.getZones() == null || zoneSystem.getZones().isEmpty()) return;
+
+        Map<String, ZoneResolution> zoneMap = zoneSystem.getZones().stream()
+                .filter(z -> z.label() != null)
+                .collect(Collectors.toMap(
+                        z -> z.label().toUpperCase(),
+                        z -> new ZoneResolution((z.low() + z.high()) / 2,
+                                z.label() + " - " + (z.description() != null ? z.description() : "") + " (" + z.low() + "-" + z.high() + "%)"),
+                        (a, b) -> a));
+
+        List<WorkoutBlock> resolvedBlocks = training.getBlocks().stream()
+                .map(block -> {
+                    if (block.zoneTarget() != null && !block.zoneTarget().isBlank()
+                            && (block.intensityTarget() == null || block.intensityTarget() == 0)) {
+                        ZoneResolution resolution = zoneMap.get(block.zoneTarget().toUpperCase());
+                        if (resolution != null) {
+                            return block.withResolvedIntensity(resolution.midpoint(), resolution.displayLabel());
+                        }
+                    }
+                    return block;
+                })
+                .toList();
+
+        training.setBlocks(resolvedBlocks);
+    }
+
+    private record ZoneResolution(int midpoint, String displayLabel) {}
+
+    private ZoneSystem resolveZoneSystem(Training training, String userId) {
+        // 1. Try training's explicit zone system
+        if (training.getZoneSystemId() != null && !training.getZoneSystemId().isBlank()) {
+            try {
+                return zoneSystemService.getZoneSystem(training.getZoneSystemId());
+            } catch (Exception ignored) {}
+        }
+
+        SportType sport = training.getSportType() != null ? training.getSportType() : SportType.CYCLING;
+
+        // 2. Try default zone system for the training creator
+        String createdBy = training.getCreatedBy() != null ? training.getCreatedBy() : userId;
+        Optional<ZoneSystem> defaultZs = zoneSystemService.getDefaultZoneSystem(createdBy, sport);
+        if (defaultZs.isPresent()) return defaultZs.get();
+
+        // 3. Try coach's default via group membership
+        List<String> coachIds = groupService.getCoachIdsForAthlete(userId);
+        for (String coachId : coachIds) {
+            Optional<ZoneSystem> coachZs = zoneSystemService.getDefaultZoneSystem(coachId, sport);
+            if (coachZs.isPresent()) return coachZs.get();
+        }
+
+        return null;
     }
 
     /**

@@ -32,5 +32,8 @@ public record WorkoutBlockRequest(
         Integer pctTo,
 
         @JsonPropertyDescription("RPM/SPM")
-        Integer cad
+        Integer cad,
+
+        @JsonPropertyDescription("Zone label (e.g. 'Z3'). Use instead of pct for zone-based targeting.")
+        String zone
 ) {}

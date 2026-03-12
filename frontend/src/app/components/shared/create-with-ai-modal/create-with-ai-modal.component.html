@@ -9,6 +9,16 @@
     </div>
 
     <div class="modal-body">
+      <!-- Session context banner -->
+      <div class="session-context" *ngIf="sessionInfo">
+        <div class="context-label">Generating training for:</div>
+        <div class="context-details">
+          <span *ngIf="sessionInfo.sport" class="context-badge">{{ sessionInfo.sport }}</span>
+          <span *ngIf="sessionInfo.scheduledAt" class="context-item">&#x1f4c5; {{ sessionInfo.scheduledAt }}</span>
+          <span *ngIf="sessionInfo.clubGroupName" class="context-item">&#x1f465; {{ sessionInfo.clubGroupName }}</span>
+        </div>
+      </div>
+
       <p class="hint">Describe what you want to create in natural language.</p>
 
       <div class="form-group" *ngIf="showSportSelector">

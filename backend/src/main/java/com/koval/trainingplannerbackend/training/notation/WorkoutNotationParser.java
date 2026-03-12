@@ -339,7 +339,7 @@ public class WorkoutNotationParser {
                                Integer intensityStart, Integer intensityEnd,
                                Integer cadence, String label) {
         return new WorkoutBlock(type, durationSec, distanceMeters, label,
-                                intensityTarget, intensityStart, intensityEnd, cadence);
+                                intensityTarget, intensityStart, intensityEnd, cadence, null, null);
     }
 
     private String pctSuffix(Integer pct) {

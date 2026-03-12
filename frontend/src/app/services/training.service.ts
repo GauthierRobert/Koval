@@ -68,6 +68,7 @@ export interface WorkoutBlock {
     intensityStart?: number;
     intensityEnd?: number;
     cadenceTarget?: number;
+    zoneTarget?: string;
     zoneSystemId?: string;
     label: string;
     zoneLabel?: string;

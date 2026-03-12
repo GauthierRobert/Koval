@@ -260,8 +260,9 @@ public final class CompactNotationParser {
 
         BlockType type = resolveBlockType(ctx, descLabel, intensityPct);
         String label = descLabel != null ? descLabel : (intensityPct != null ? intensityPct + "%" : null);
+        String zoneTarget = (intensityPct == null && descLabel != null) ? descLabel : null;
 
-        return new WorkoutBlock(type, durationSeconds, distanceMeters, label, intensityPct, null, null, null);
+        return new WorkoutBlock(type, durationSeconds, distanceMeters, label, intensityPct, null, null, null, zoneTarget, null);
     }
 
     /** Resolve BlockType from context and descriptor. */
@@ -391,6 +392,6 @@ public final class CompactNotationParser {
     // ─────────────────────────────────────────────────────────────────────────
 
     private static WorkoutBlock pauseBlock(int seconds) {
-        return new WorkoutBlock(BlockType.PAUSE, seconds, null, "P", null, null, null, null);
+        return new WorkoutBlock(BlockType.PAUSE, seconds, null, "P", null, null, null, null, null, null);
     }
 }
