@@ -31,6 +31,7 @@ public class RecurringSessionTemplate {
     private Integer maxParticipants;
     private Integer durationMinutes;
     private String clubGroupId;
+    private String responsibleCoachId;
     private boolean active = true;
     private LocalDateTime createdAt;
 }

@@ -23,6 +23,7 @@ export interface User {
     vo2maxPower?: number;
     vo2maxPace?: number;
     groups?: string[];
+    clubs?: string[];
     ctl?: number;
     atl?: number;
     tsb?: number;

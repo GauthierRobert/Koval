@@ -81,6 +81,7 @@ export interface ClubTrainingSession {
   createdAt: string;
   recurringTemplateId?: string;
   clubGroupId?: string;
+  responsibleCoachId?: string;
   maxParticipants?: number;
   durationMinutes?: number;
   linkedTrainingTitle?: string;
@@ -101,6 +102,7 @@ export interface RecurringSessionTemplate {
   linkedTrainingId?: string;
   maxParticipants?: number;
   clubGroupId?: string;
+  responsibleCoachId?: string;
   active: boolean;
   createdAt: string;
 }
@@ -180,6 +182,7 @@ export interface CreateSessionData {
   maxParticipants?: number;
   durationMinutes?: number;
   clubGroupId?: string;
+  responsibleCoachId?: string;
 }
 
 export interface CreateRecurringSessionData {
@@ -192,6 +195,7 @@ export interface CreateRecurringSessionData {
   linkedTrainingId?: string;
   maxParticipants?: number;
   clubGroupId?: string;
+  responsibleCoachId?: string;
 }
 
 @Injectable({ providedIn: 'root' })

@@ -32,6 +32,7 @@ public class ClubTrainingSession {
     private LocalDateTime createdAt;
     private String recurringTemplateId;
     private String clubGroupId;
+    private String responsibleCoachId;
     private Integer maxParticipants;
     private Integer durationMinutes;
     private String linkedTrainingTitle;

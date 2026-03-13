@@ -7,10 +7,23 @@
 
     <ng-container *ngIf="allTags$ | async as tags">
       <div class="tag-filters" *ngIf="tags.length > 0">
-        <span class="tag-filter-chip" [class.active]="!activeTagFilter" (click)="setTagFilter(null)">All ({{
+        <span class="tag-filter-chip" [class.active]="!activeTagFilter && !activeClubFilter" (click)="setTagFilter(null); setClubFilter(null)">All ({{
           (athletes$ | async)?.length || 0 }})</span>
         <span *ngFor="let tag of tags; trackBy: trackTagByName" class="tag-filter-chip" [class.active]="activeTagFilter === tag.name"
           (click)="toggleTagFilter(tag.name)">{{ tag.name }} ({{ getTagCount(tag.name) }})</span>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="clubRoles$ | async as clubRoles">
+      <div class="club-filters" *ngIf="clubRoles.length > 0">
+        <div class="filter-section-label">CLUBS</div>
+        <div class="tag-filters">
+          <span *ngFor="let entry of clubRoles" class="tag-filter-chip"
+            [class.active]="activeClubFilter === entry.clubName"
+            (click)="toggleClubFilter(entry.clubName)">
+            {{ entry.clubName }} ({{ getClubCount(entry.clubName) }})
+          </span>
+        </div>
       </div>
     </ng-container>
 
@@ -21,8 +34,9 @@
           <div class="avatar-sm">{{ athlete.displayName[0].toUpperCase() }}</div>
           <div class="info">
             <span class="name">{{ athlete.displayName }}</span>
-            <div class="tag-chips" *ngIf="athlete.groups && athlete.groups.length > 0">
-              <span *ngFor="let tag of athlete.groups; trackBy: trackByValue" class="chip tag">{{ tag }}</span>
+            <div class="tag-chips" *ngIf="(athlete.groups && athlete.groups.length > 0) || (athlete.clubs && athlete.clubs.length > 0)">
+              <span *ngFor="let tag of athlete.groups || []; trackBy: trackByValue" class="chip tag">{{ tag }}</span>
+              <span *ngFor="let club of athlete.clubs || []; trackBy: trackByValue" class="chip club">{{ club }}</span>
             </div>
             <!-- Task 7: Real mini-metrics from athlete PMC data or dashes -->
             <ng-container *ngIf="selectedAthlete?.id === athlete.id && (athleteMetrics$ | async) as m; else dashMetrics">
@@ -53,6 +67,16 @@
 
   <!-- Right area: always visible, contains header + tabs -->
   <div class="main-area">
+    <div class="session-reminders" *ngIf="(sessionReminders$ | async) as reminders">
+      <div class="reminder-card glass" *ngFor="let r of reminders">
+        <span class="reminder-icon">&#9888;</span>
+        <div class="reminder-info">
+          <span class="reminder-title">{{ r.title }}</span>
+          <span class="reminder-meta">{{ r.scheduledAt | date:'EEE, MMM d · HH:mm' }} — No training linked</span>
+        </div>
+        <button class="reminder-action" (click)="navigateToLinkTraining(r)">LINK TRAINING</button>
+      </div>
+    </div>
     <div class="header glass">
       <div class="header-left">
         <div class="header-avatar">C</div>

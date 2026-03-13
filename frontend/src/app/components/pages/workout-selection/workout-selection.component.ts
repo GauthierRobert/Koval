@@ -4,6 +4,7 @@ import {
   TrainingService,
   Training,
   TrainingType,
+  TrainingSource,
   TRAINING_TYPES,
   TRAINING_TYPE_COLORS,
   TRAINING_TYPE_LABELS,
@@ -37,6 +38,17 @@ export class WorkoutSelectionComponent {
 
   showAiModal = false;
 
+  readonly sourceOptions: FilterPillOption[] = [
+    { label: 'My Trainings', value: 'mine' },
+    { label: 'Club', value: 'club' },
+  ];
+
+  clubGroupOptions$: Observable<FilterPillOption[]> = this.trainingService.clubGroupMap$.pipe(
+    map((groupMap) =>
+      Array.from(groupMap.entries()).map(([id, name]) => ({ label: name, value: id })),
+    ),
+  );
+
   readonly sportOptions: FilterPillOption[] = SPORT_OPTIONS.map((o) => ({
     label: o.label,
     value: o.value,
@@ -67,6 +79,14 @@ export class WorkoutSelectionComponent {
 
   setTagFilter(value: string | null): void {
     this.trainingService.setTagFilter(value as string);
+  }
+
+  onSourceChange(value: string | null): void {
+    if (value) this.trainingService.setSource(value as TrainingSource);
+  }
+
+  onClubGroupChange(value: string | null): void {
+    this.trainingService.setClubGroupFilter(value);
   }
 
   onAiCreated(_result: ActionResult): void {

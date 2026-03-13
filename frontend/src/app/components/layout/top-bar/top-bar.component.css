@@ -174,34 +174,55 @@
       opacity: 0.6;
     }
 
-    .mode-toggle {
-      display: flex;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--glass-border);
-      border-radius: 8px;
-      overflow: hidden;
+    /* ─── Club dropdown specifics ────────────────────────────────── */
+    .club-dropdown {
+      min-width: 240px;
     }
 
-    .mode-toggle button {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      padding: 6px 12px;
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
+    .club-dropdown-empty {
+      padding: 14px;
+      font-size: 11px;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    .club-dropdown-item {
       cursor: pointer;
-      transition: all 0.2s;
-      font-family: inherit;
     }
 
-    .mode-toggle button.active {
-      background: rgba(255, 157, 0, 0.15);
+    .club-dropdown-sep {
+      height: 1px;
+      background: var(--glass-border);
+      margin: 4px 8px;
+    }
+
+    .club-dropdown-create .dropdown-label {
       color: var(--accent-color);
     }
 
-    .mode-toggle button:hover:not(.active) {
-      color: var(--text-color);
+    /* ─── Coach-only nav links (secondary color) ────────────────── */
+    .nav-link--coach {
+      color: rgba(0, 160, 233, 0.55);
+    }
+
+    .nav-link--coach:hover {
+      color: var(--secondary-color);
+    }
+
+    .nav-link--coach.active {
+      color: var(--secondary-color);
+    }
+
+    .nav-link--coach.active::after {
+      background: var(--secondary-color);
+      box-shadow: 0 -2px 10px rgba(0, 160, 233, 0.3);
+    }
+
+    .nav-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--glass-border);
+      flex-shrink: 0;
     }
 
     .right-section {

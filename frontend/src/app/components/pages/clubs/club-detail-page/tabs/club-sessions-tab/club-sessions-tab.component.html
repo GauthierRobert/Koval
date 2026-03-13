@@ -234,6 +234,15 @@
         </select>
       </div>
 
+      <!-- Responsible Coach -->
+      <div class="form-row" *ngIf="coachMembers.length > 0">
+        <label>Responsible Coach</label>
+        <select [(ngModel)]="form['responsibleCoachId']" class="form-input">
+          <option value="">— None —</option>
+          <option *ngFor="let m of coachMembers" [value]="m.userId">{{ m.displayName }}</option>
+        </select>
+      </div>
+
       <!-- Recurring toggle -->
       <div class="form-row recurring-toggle-row">
         <label class="toggle-label">

@@ -138,6 +138,12 @@ export class CoachService {
         );
     }
 
+    getSessionReminders(): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/session-reminders`).pipe(
+            catchError(() => of([] as any[]))
+        );
+    }
+
     getAthleteSessions(athleteId: string): Observable<any[]> {
         return this.http
             .get<any[]>(`${this.apiUrl}/athletes/${athleteId}/sessions`)

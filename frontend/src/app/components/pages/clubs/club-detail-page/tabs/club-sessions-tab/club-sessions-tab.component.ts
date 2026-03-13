@@ -17,6 +17,7 @@ import { RouterModule } from '@angular/router';
 import {
   ClubDetail,
   ClubGroup,
+  ClubMember,
   ClubService,
   ClubTrainingSession,
   CreateSessionData,
@@ -60,6 +61,8 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   form: Record<string, any> = {};
   clubGroups: ClubGroup[] = [];
 
+  coachMembers: ClubMember[] = [];
+
   readonly sports = ['CYCLING', 'RUNNING', 'SWIMMING', 'TRIATHLON', 'OTHER'];
   readonly daysOfWeek = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
 
@@ -89,6 +92,12 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
       this.clubService.loadGroups(this.club.id);
       this.clubService.groups$.subscribe((groups) => {
         this.clubGroups = groups;
+        this.cdr.markForCheck();
+      });
+      this.clubService.members$.subscribe((members) => {
+        this.coachMembers = members.filter(
+          (m) => m.role === 'COACH' || m.role === 'ADMIN' || m.role === 'OWNER',
+        );
         this.cdr.markForCheck();
       });
     }
@@ -284,6 +293,7 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
         description: this.form['description'] || undefined,
         maxParticipants: this.form['maxParticipants'] || undefined,
         clubGroupId: this.form['clubGroupId'] || undefined,
+        responsibleCoachId: this.form['responsibleCoachId'] || undefined,
       };
       this.clubService.createRecurringTemplate(this.club.id, data).subscribe({
         next: () => {
@@ -302,6 +312,7 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
         maxParticipants: this.form['maxParticipants'] || undefined,
         durationMinutes: this.form['durationMinutes'] || undefined,
         clubGroupId: this.form['clubGroupId'] || undefined,
+        responsibleCoachId: this.form['responsibleCoachId'] || undefined,
       };
       this.clubService.createSession(this.club.id, data).subscribe({
         next: () => {

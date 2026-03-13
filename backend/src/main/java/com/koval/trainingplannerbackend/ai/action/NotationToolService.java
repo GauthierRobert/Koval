@@ -111,7 +111,7 @@ public class NotationToolService {
                 } catch (Exception ignored) {}
             }
             ClubController.CreateSessionRequest sessionReq = new ClubController.CreateSessionRequest(
-                    description, sport, scheduledDateTime, null, null, saved.getId(), null, null, null);
+                    description, sport, scheduledDateTime, null, null, saved.getId(), null, null, null, null);
             try {
                 var session = clubService.createSession(userId, resolvedClubId, sessionReq);
                 return "Created '" + saved.getTitle() + "' with club session [" + session.getId() + "]";

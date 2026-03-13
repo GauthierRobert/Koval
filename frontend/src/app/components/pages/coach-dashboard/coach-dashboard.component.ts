@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { BehaviorSubject, combineLatest, Observable, of, map } from 'rxjs';
 import { CoachService, ScheduledWorkout } from '../../../services/coach.service';
 import { AuthService, User } from '../../../services/auth.service';
+import { ClubService, MyClubRoleEntry } from '../../../services/club.service';
 import { RaceGoal, RaceGoalService } from '../../../services/race-goal.service';
 import { Group } from '../../../services/group.service';
 import { ZoneService } from '../../../services/zone.service';
@@ -57,11 +58,26 @@ export class CoachDashboardComponent implements OnInit {
 
   private tagFilterSubject = new BehaviorSubject<string | null>(null);
 
+  private clubFilterSubject = new BehaviorSubject<string | null>(null);
+  activeClubFilter: string | null = null;
+
+  private clubRolesSubject = new BehaviorSubject<MyClubRoleEntry[]>([]);
+  clubRoles$ = this.clubRolesSubject.asObservable();
+
+  private sessionRemindersSubject = new BehaviorSubject<any[]>([]);
+  sessionReminders$ = this.sessionRemindersSubject.asObservable();
+
   filteredAthletes$: Observable<User[]> = combineLatest([
     this.athletes$,
     this.tagFilterSubject,
+    this.clubFilterSubject,
   ]).pipe(
-    map(([athletes, filter]) => filter ? athletes.filter(a => a.groups?.includes(filter)) : athletes)
+    map(([athletes, tagFilter, clubFilter]) => {
+      let result = athletes;
+      if (tagFilter) result = result.filter(a => a.groups?.includes(tagFilter));
+      if (clubFilter) result = result.filter(a => a.clubs?.includes(clubFilter));
+      return result;
+    })
   );
 
   private scheduleSubject = new BehaviorSubject<ScheduledWorkout[]>([]);
@@ -110,6 +126,7 @@ export class CoachDashboardComponent implements OnInit {
 
   private readonly coachService = inject(CoachService);
   private readonly authService = inject(AuthService);
+  private readonly clubService = inject(ClubService);
   private readonly metricsService = inject(MetricsService);
   private readonly trainingService = inject(TrainingService);
   private readonly zoneService = inject(ZoneService);
@@ -129,6 +146,14 @@ export class CoachDashboardComponent implements OnInit {
           next: (systems) => this.ngZone.run(() => this.coachZoneSystemsSubject.next(systems)),
           error: () => {}
         });
+        this.coachService.getSessionReminders().subscribe({
+          next: (reminders) => this.ngZone.run(() => this.sessionRemindersSubject.next(reminders)),
+          error: () => {},
+        });
+        this.clubService.loadMyClubRoles();
+        this.clubService.myClubRoles$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
+          roles => this.clubRolesSubject.next(roles.filter(r => r.role !== 'MEMBER'))
+        );
       }
     });
     this.coachTrainings$ = this.trainingService.trainings$;
@@ -196,6 +221,23 @@ export class CoachDashboardComponent implements OnInit {
 
   toggleTagFilter(tag: string) {
     this.setTagFilter(this.activeTagFilter === tag ? null : tag);
+  }
+
+  setClubFilter(clubName: string | null): void {
+    this.activeClubFilter = clubName;
+    this.clubFilterSubject.next(clubName);
+  }
+
+  toggleClubFilter(clubName: string): void {
+    this.setClubFilter(this.activeClubFilter === clubName ? null : clubName);
+  }
+
+  getClubCount(clubName: string): number {
+    return this.athletesSubject.value.filter(a => a.clubs?.includes(clubName)).length;
+  }
+
+  navigateToLinkTraining(session: any): void {
+    this.router.navigate(['/clubs', session.clubId]);
   }
 
   selectAthlete(athlete: User) {

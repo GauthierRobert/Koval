@@ -405,6 +405,8 @@ public class ClubService {
         session.setLinkedTrainingId(req.linkedTrainingId());
         session.setMaxParticipants(req.maxParticipants());
         session.setDurationMinutes(req.durationMinutes());
+        session.setClubGroupId(req.clubGroupId());
+        session.setResponsibleCoachId(req.responsibleCoachId());
         session.setCreatedAt(LocalDateTime.now());
         enrichFromLinkedTraining(session);
         session = sessionRepository.save(session);
