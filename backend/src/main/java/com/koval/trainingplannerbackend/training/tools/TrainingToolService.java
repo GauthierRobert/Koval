@@ -25,10 +25,16 @@ public class TrainingToolService {
         this.trainingMapper = trainingMapper;
     }
 
-    @Tool(description = "List all training plans created by a specific user. Returns summaries.")
+    @Tool(description = "List training plans created by a specific user. Returns summaries. Use limit/offset for pagination (default: 15 most recent).")
     public List<TrainingSummary> listTrainingsByUser(
-            @ToolParam(description = "The user ID") String userId) {
+            @ToolParam(description = "The user ID") String userId,
+            @ToolParam(description = "Max number of trainings to return (default 15)", required = false) Integer limit,
+            @ToolParam(description = "Number of trainings to skip (default 0)", required = false) Integer offset) {
+        int effectiveLimit = (limit != null && limit > 0) ? limit : 15;
+        int effectiveOffset = (offset != null && offset >= 0) ? offset : 0;
         return trainingManagementService.listTrainingsByUser(userId).stream()
+                .skip(effectiveOffset)
+                .limit(effectiveLimit)
                 .map(TrainingSummary::from).toList();
     }
 

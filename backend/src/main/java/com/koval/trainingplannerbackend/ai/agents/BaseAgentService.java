@@ -149,19 +149,15 @@ public abstract class BaseAgentService implements TrainingAgent {
         List<ZoneSystem> defaults = zoneSystemService.getDefaultZoneSystems(ctx.userId());
         if (defaults.isEmpty()) return "";
 
-        StringBuilder sb = new StringBuilder("\nDefault Zone Systems:");
+        StringBuilder sb = new StringBuilder("\nDefault Zones:");
         for (ZoneSystem zs : defaults) {
             sb.append("\n- ").append(zs.getSportType())
-              .append(": \"").append(zs.getName()).append("\" (id=").append(zs.getId())
-              .append(", ref=").append(zs.getReferenceType()).append(") — ");
+              .append(" \"").append(zs.getName()).append("\" (id=").append(zs.getId())
+              .append(",").append(zs.getReferenceType()).append("): ");
             String zones = zs.getZones().stream()
-                    .map(z -> z.label() + ": " + z.low() + "-" + z.high() + "%" +
-                            (z.description() != null ? " (" + z.description() + ")" : ""))
-                    .collect(Collectors.joining(", "));
+                    .map(z -> z.label() + ":" + z.low() + "-" + z.high())
+                    .collect(Collectors.joining(" "));
             sb.append(zones);
-            if (zs.getAnnotations() != null && !zs.getAnnotations().isBlank()) {
-                sb.append("\n  Annotations: ").append(zs.getAnnotations());
-            }
         }
         return sb.toString();
     }

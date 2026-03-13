@@ -177,6 +177,7 @@ public class AIConfig {
                         .model(HAIKU)
                         .temperature(0.0)
                         .maxTokens(20)
+                        .cacheOptions(cacheOptions())
                         .build())
                 .build();
     }
@@ -223,7 +224,7 @@ public class AIConfig {
         return AnthropicChatOptions.builder()
                 .model(HAIKU)
                 .temperature(0.7)
-                .maxTokens(2048)
+                .maxTokens(512)
                 .cacheOptions(cacheOptions())
                 .build();
     }
@@ -232,7 +233,8 @@ public class AIConfig {
         return AnthropicChatOptions.builder()
                 .model(HAIKU)
                 .temperature(0.3)
-                .maxTokens(2048)
+                .maxTokens(512)
+                .cacheOptions(cacheOptions())
                 .build();
     }
 

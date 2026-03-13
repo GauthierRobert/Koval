@@ -43,10 +43,11 @@ public class ZoneToolService {
         return zoneSystemService.createZoneSystem(zoneSystem);
     }
 
-    @Tool(description = "List all zone systems owned by the coach. Returns full zone definitions.")
-    public List<ZoneSystem> listZoneSystems(
+    @Tool(description = "List all zone systems owned by the coach. Returns summaries (id, name, sport, reference, zone count). Use getDefaultZoneSystem for full zone details.")
+    public List<ZoneSystemSummary> listZoneSystems(
             @ToolParam(description = "The coach's user ID") String coachId) {
-        return zoneSystemService.getZoneSystemsForCoach(coachId);
+        return zoneSystemService.getZoneSystemsForCoach(coachId).stream()
+                .map(ZoneSystemSummary::from).toList();
     }
 
     @Tool(description = """
