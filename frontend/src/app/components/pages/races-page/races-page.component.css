@@ -1,0 +1,425 @@
+.races-page {
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: var(--page-padding);
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.accent { color: var(--accent-color, #ff9d00); }
+
+/* Create race panel */
+.create-race-panel {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255, 157, 0, 0.2);
+}
+
+.create-race-panel .form-row {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.create-race-panel .form-row label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+}
+
+/* Breadcrumb */
+.browse-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.82rem;
+}
+
+.breadcrumb-link {
+  background: none;
+  border: none;
+  color: var(--accent-color, #ff9d00);
+  cursor: pointer;
+  font-size: 0.82rem;
+  padding: 0;
+  font-weight: 600;
+}
+
+.breadcrumb-link:hover { text-decoration: underline; }
+
+.breadcrumb-sep { color: rgba(255, 255, 255, 0.3); }
+
+.breadcrumb-current {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+}
+
+/* Facet grids */
+.facet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.facet-grid--countries {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+
+.facet-card {
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+}
+
+.facet-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-color, #ff9d00);
+  box-shadow: 0 4px 20px rgba(255, 157, 0, 0.1);
+}
+
+.facet-card--country { padding: 1rem; }
+
+.facet-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.facet-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.35rem;
+}
+
+.facet-counts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.facet-card--country .facet-counts {
+  flex-direction: row;
+  justify-content: center;
+}
+
+/* Race list */
+.browse-race-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.browse-race-item {
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.browse-race-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.browse-race-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.browse-race-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fff;
+  flex: 1;
+}
+
+.browse-race-verified {
+  font-size: 0.75rem;
+  color: #34d399;
+  font-weight: 700;
+}
+
+.btn-add-goal {
+  background: rgba(255, 157, 0, 0.12);
+  border: 1px solid rgba(255, 157, 0, 0.3);
+  color: var(--accent-color, #ff9d00);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-add-goal:hover {
+  background: rgba(255, 157, 0, 0.22);
+  border-color: var(--accent-color, #ff9d00);
+}
+
+.btn-add-goal--added {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: rgba(52, 211, 153, 0.4);
+  color: #34d399;
+  cursor: default;
+}
+
+.btn-add-goal--added:hover {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+.browse-race-meta {
+  display: flex;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 0.25rem;
+  padding-left: 1.6rem;
+}
+
+.browse-race-item .discipline-distances {
+  margin-top: 0.2rem;
+  margin-bottom: 0;
+  padding-left: 1.6rem;
+}
+
+/* Discipline badges */
+.discipline-distances {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.discipline-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+}
+
+.discipline-badge.swim { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+.discipline-badge.bike { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+.discipline-badge.run  { background: rgba(251, 146, 60, 0.15);  color: #fb923c; }
+
+/* Pagination */
+.browse-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.page-info {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+}
+
+/* States */
+.browse-loading {
+  text-align: center;
+  padding: 2rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.88rem;
+}
+
+.browse-empty {
+  text-align: center;
+  padding: 2rem;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.85rem;
+  grid-column: 1 / -1;
+}
+
+/* Buttons */
+.btn-primary {
+  background: var(--accent-color, #ff9d00);
+  color: #000;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+
+.btn-primary:hover { opacity: 0.85; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-secondary:hover { background: rgba(255, 255, 255, 0.13); }
+
+.form-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-sm);
+  color: #fff;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.88rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--accent-color, #ff9d00);
+}
+
+.ai-loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Expand toggle */
+.expand-toggle {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  font-size: 0.72rem;
+  padding: 0 0.15rem;
+  line-height: 1;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+
+.expand-toggle:hover,
+.expand-toggle--open {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Expanded section */
+.race-expanded {
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 0.5rem;
+}
+
+.race-desc {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0 0 0.4rem;
+  line-height: 1.5;
+}
+
+.race-website {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--accent-color, #ff9d00);
+  text-decoration: none;
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.race-website:hover { text-decoration: underline; }
+
+/* GPX section */
+.gpx-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gpx-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.gpx-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.gpx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+}
+
+.gpx-chip--done {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.25);
+}
+
+.gpx-chip--upload {
+  background: rgba(255, 157, 0, 0.1);
+  color: var(--accent-color, #ff9d00);
+  border: 1px dashed rgba(255, 157, 0, 0.4);
+}
+
+.gpx-chip--upload:hover {
+  background: rgba(255, 157, 0, 0.18);
+}
+
+.gpx-reupload {
+  cursor: pointer;
+  opacity: 0.6;
+  font-size: 0.7rem;
+  transition: opacity 0.15s;
+}
+
+.gpx-reupload:hover { opacity: 1; }

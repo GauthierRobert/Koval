@@ -1,0 +1,129 @@
+<div class="races-page">
+  <div class="page-header">
+    <h1><span class="accent">Races</span></h1>
+    <button class="btn-primary" (click)="toggleCreateRace()">
+      {{ isCreatingRace ? 'CANCEL' : '+ CREATE RACE' }}
+    </button>
+  </div>
+
+  <!-- Create Race inline form -->
+  <div class="create-race-panel glass" *ngIf="isCreatingRace">
+    <div class="form-row">
+      <label>Race Title</label>
+      <input [(ngModel)]="newRaceTitle" placeholder="e.g. Ironman Nice 2026" class="form-input" />
+    </div>
+    <button class="btn-primary" (click)="createAndCompleteRace()"
+      [disabled]="!newRaceTitle.trim() || isAiCompleting">
+      <span *ngIf="!isAiCompleting">Create &amp; Auto-Complete with AI</span>
+      <span *ngIf="isAiCompleting" class="ai-loading">AI is completing race details...</span>
+    </button>
+  </div>
+
+  <!-- Breadcrumb navigation -->
+  <div class="browse-breadcrumb" *ngIf="selectedBrowseSport">
+    <button class="breadcrumb-link" (click)="backToSports()">All Sports</button>
+    <span class="breadcrumb-sep">/</span>
+    <span class="breadcrumb-current" *ngIf="!selectedBrowseCountry">{{ selectedBrowseSport }}</span>
+    <ng-container *ngIf="selectedBrowseCountry">
+      <button class="breadcrumb-link" (click)="backToCountries()">{{ selectedBrowseSport }}</button>
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-current">{{ selectedBrowseCountry }}</span>
+    </ng-container>
+  </div>
+
+  <!-- Level 0: Sport Cards -->
+  <div class="facet-grid" *ngIf="!selectedBrowseSport">
+    <div *ngFor="let facet of sportFacets" class="facet-card glass" (click)="selectBrowseSport(facet.sport)">
+      <div class="facet-name">{{ facet.sport }}</div>
+      <div class="facet-counts">
+        <span>{{ facet.raceCount }} races</span>
+        <span>{{ facet.countryCount }} countries</span>
+      </div>
+    </div>
+    <div *ngIf="sportFacets.length === 0 && !browseLoading" class="browse-empty">
+      No races in the catalog yet. Be the first to create one!
+    </div>
+  </div>
+
+  <!-- Level 1: Country Cards -->
+  <div class="facet-grid facet-grid--countries"
+    *ngIf="selectedBrowseSport && !selectedBrowseCountry && !browseLoading">
+    <div *ngFor="let facet of countryFacets" class="facet-card facet-card--country glass"
+      (click)="selectBrowseCountry(facet.country)">
+      <div class="facet-name">{{ facet.country || 'Unknown' }}</div>
+      <div class="facet-counts"><span>{{ facet.raceCount }} races</span></div>
+    </div>
+    <div *ngIf="countryFacets.length === 0" class="browse-empty">
+      No races found for {{ selectedBrowseSport }}.
+    </div>
+  </div>
+
+  <!-- Level 2: Race List -->
+  <div class="browse-race-list" *ngIf="selectedBrowseCountry && browseResults && !browseLoading">
+    <div *ngFor="let race of browseResults.content" class="browse-race-item glass">
+      <div class="browse-race-header">
+        <app-sport-icon [sport]="$any(race.sport)" [size]="14"></app-sport-icon>
+        <span class="browse-race-title">{{ race.title }}</span>
+        <span class="browse-race-verified" *ngIf="race.verified" title="Verified">&#10003;</span>
+        <button class="btn-add-goal" [class.btn-add-goal--added]="addedRaceIds.has(race.id)"
+          (click)="addToMyGoals(race)">
+          {{ addedRaceIds.has(race.id) ? '✓ ADDED' : '+ ADD TO MY GOALS' }}
+        </button>
+        <button class="expand-toggle" (click)="toggleExpand(race)" [class.expand-toggle--open]="expandedRaceId === race.id" title="More info">
+          {{ expandedRaceId === race.id ? '▾' : '▸' }}
+        </button>
+      </div>
+      <div class="browse-race-meta">
+        <span *ngIf="race.location">{{ race.location }}</span>
+        <span *ngIf="race.distance">· {{ race.distance }}</span>
+        <span *ngIf="race.typicalMonth">· {{ monthNames[race.typicalMonth || 0] }}</span>
+        <span *ngIf="race.elevationGainM">· {{ race.elevationGainM }}m elev</span>
+      </div>
+      <div class="discipline-distances" *ngIf="race.swimDistanceM || race.bikeDistanceM || race.runDistanceM">
+        <span class="discipline-badge swim" *ngIf="race.swimDistanceM">S: {{ formatDistance(race.swimDistanceM) }}</span>
+        <span class="discipline-badge bike" *ngIf="race.bikeDistanceM">B: {{ formatDistance(race.bikeDistanceM) }}</span>
+        <span class="discipline-badge run" *ngIf="race.runDistanceM">R: {{ formatDistance(race.runDistanceM) }}</span>
+      </div>
+
+      <!-- Expanded section -->
+      <div class="race-expanded" *ngIf="expandedRaceId === race.id">
+        <p class="race-desc" *ngIf="race.description">{{ race.description }}</p>
+        <a class="race-website" *ngIf="race.website" [href]="race.website" target="_blank" rel="noopener">
+          {{ race.website }}
+        </a>
+        <div class="gpx-section">
+          <span class="gpx-label">GPX</span>
+          <div class="gpx-chips">
+            <ng-container *ngFor="let disc of getGpxDisciplines(getCachedRace(race))">
+              <span class="gpx-chip gpx-chip--done" *ngIf="hasGpxForDiscipline(getCachedRace(race), disc)">
+                {{ disc | uppercase }} ✓
+                <label class="gpx-reupload" title="Replace GPX">
+                  ↑<input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race, disc)">
+                </label>
+              </span>
+              <label class="gpx-chip gpx-chip--upload" *ngIf="!hasGpxForDiscipline(getCachedRace(race), disc)">
+                <span *ngIf="!isGpxUploading(race.id, disc)">{{ disc | uppercase }} Upload</span>
+                <span *ngIf="isGpxUploading(race.id, disc)">{{ disc | uppercase }} ...</span>
+                <input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race, disc)">
+              </label>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="browseResults.content.length === 0" class="browse-empty">
+      No races found.
+    </div>
+
+    <!-- Pagination -->
+    <div class="browse-pagination" *ngIf="browseResults.totalPages > 1">
+      <button class="btn-secondary" (click)="browsePrevPage()" [disabled]="browsePage === 0">Prev</button>
+      <span class="page-info">{{ browsePage + 1 }} / {{ browseResults.totalPages }}</span>
+      <button class="btn-secondary" (click)="browseNextPage()"
+        [disabled]="browsePage >= browseResults.totalPages - 1">Next</button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="browse-loading" *ngIf="browseLoading">Loading...</div>
+</div>
