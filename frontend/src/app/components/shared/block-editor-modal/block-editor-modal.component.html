@@ -1,0 +1,73 @@
+<div class="modal-backdrop" *ngIf="isOpen" (click)="close()">
+  <div class="modal-card glass" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isCreateMode ? 'ADD' : 'EDIT' }} <span class="highlight">BLOCK</span></h2>
+      <button class="close-btn" (click)="close()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="field">
+        <label>Type</label>
+        <div class="type-pills">
+          <button
+            *ngFor="let t of BLOCK_TYPES"
+            class="type-pill"
+            [class.active]="type === t"
+            (click)="type = t"
+          >
+            {{ t }}
+          </button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Label</label>
+        <input type="text" [(ngModel)]="label" placeholder="e.g. Z2 Endurance" />
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Duration</label>
+          <div class="duration-inputs">
+            <input type="number" [(ngModel)]="durationMinutes" min="0" placeholder="min" />
+            <span class="duration-sep">:</span>
+            <input type="number" [(ngModel)]="durationSeconds" min="0" max="59" placeholder="sec" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Distance <span class="optional">(m)</span></label>
+          <input type="number" [(ngModel)]="distanceMeters" min="0" placeholder="meters" />
+        </div>
+      </div>
+
+      <div class="field" *ngIf="!hideIntensity && !isRamp">
+        <label>Intensity <span class="optional">(%)</span></label>
+        <input type="number" [(ngModel)]="intensityTarget" min="0" max="300" placeholder="e.g. 75" />
+      </div>
+
+      <div class="field-row" *ngIf="isRamp">
+        <div class="field">
+          <label>Intensity Start <span class="optional">(%)</span></label>
+          <input type="number" [(ngModel)]="intensityStart" min="0" max="300" placeholder="e.g. 60" />
+        </div>
+        <div class="field">
+          <label>Intensity End <span class="optional">(%)</span></label>
+          <input type="number" [(ngModel)]="intensityEnd" min="0" max="300" placeholder="e.g. 100" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Cadence <span class="optional">(RPM, optional)</span></label>
+        <input type="number" [(ngModel)]="cadenceTarget" min="0" max="200" placeholder="e.g. 90" />
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="cancel-btn" (click)="close()">CANCEL</button>
+      <button class="submit-btn" (click)="save()" [disabled]="!canSave()">
+        {{ isCreateMode ? 'ADD' : 'SAVE' }}
+      </button>
+    </div>
+  </div>
+</div>

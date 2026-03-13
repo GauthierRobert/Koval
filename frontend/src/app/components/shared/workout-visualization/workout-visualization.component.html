@@ -19,6 +19,10 @@
       <button class="unit-toggle-btn" (click)="toggleUnits()">
         {{ displayUnit === 'PERCENT' ? '%' : getSportUnit() }}
       </button>
+      <button class="edit-blocks-btn" *ngIf="isOwner()" [class.active]="isEditMode" (click)="toggleEditMode()">
+        {{ isEditMode ? 'DONE' : 'EDIT BLOCKS' }}
+      </button>
+      <span class="saving-indicator" *ngIf="isSaving">Saving...</span>
       <button class="schedule-btn" (click)="openScheduleModal()">SCHEDULE</button>
       <button class="start-btn" (click)="startWorkout()" *ngIf="training.sportType === 'CYCLING'">
         <span class="play-icon">&#x25B6;</span> START WORKOUT
@@ -45,9 +49,24 @@
             <ng-container *ngIf="block.type !== 'RAMP'">{{ calculateIntensityValue(getEffectiveIntensity(block, 'TARGET')) }}</ng-container>
             <ng-container *ngIf="block.type === 'RAMP'">{{ calculateIntensityValue(getEffectiveIntensity(block, 'START')) }}&rarr;{{ calculateIntensityValue(getEffectiveIntensity(block, 'END')) }}</ng-container>
           </span>
+          <div class="step-actions" *ngIf="isEditMode">
+            <button class="step-action-btn" title="Move up" (click)="moveBlock(i, 'up'); $event.stopPropagation()" [disabled]="i === 0">&#x25B2;</button>
+            <button class="step-action-btn" title="Move down" (click)="moveBlock(i, 'down'); $event.stopPropagation()" [disabled]="i === (training.blocks?.length || 0) - 1">&#x25BC;</button>
+            <button class="step-action-btn edit" title="Edit block" (click)="openEditBlock(i); $event.stopPropagation()">&#x270E;</button>
+            <button class="step-action-btn delete" title="Remove block" (click)="removeBlock(i); $event.stopPropagation()">&times;</button>
+          </div>
         </div>
       </div>
+      <button class="add-block-btn" *ngIf="isEditMode" (click)="openAddBlock()">+ ADD BLOCK</button>
     </div>
+
+    <app-block-editor-modal
+      [isOpen]="isBlockEditorOpen"
+      [block]="editingBlock"
+      [sportType]="training.sportType"
+      (closed)="closeBlockEditor()"
+      (saved)="onBlockSaved($event)">
+    </app-block-editor-modal>
 
     <!-- RIGHT PANEL: Chart + Metrics + Zone distribution -->
     <div class="right-panel">
