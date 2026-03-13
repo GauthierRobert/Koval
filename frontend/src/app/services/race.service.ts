@@ -47,6 +47,25 @@ export interface RouteCoordinate {
   distance: number;
 }
 
+export interface SportFacet {
+  sport: string;
+  raceCount: number;
+  countryCount: number;
+}
+
+export interface CountryFacet {
+  country: string;
+  raceCount: number;
+}
+
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class RaceService {
   private http = inject(HttpClient);
@@ -93,6 +112,22 @@ export class RaceService {
 
   getRouteCoordinates(raceId: string, discipline: string): Observable<RouteCoordinate[]> {
     return this.http.get<RouteCoordinate[]>(`${this.apiUrl}/${raceId}/route/${discipline}`);
+  }
+
+  getSportFacets(): Observable<SportFacet[]> {
+    return this.http.get<SportFacet[]>(`${this.apiUrl}/facets/sports`);
+  }
+
+  getCountryFacets(sport: string): Observable<CountryFacet[]> {
+    return this.http.get<CountryFacet[]>(`${this.apiUrl}/facets/countries`, {
+      params: { sport },
+    });
+  }
+
+  browseRaces(sport: string, country: string, page = 0, size = 20): Observable<PageResponse<Race>> {
+    return this.http.get<PageResponse<Race>>(`${this.apiUrl}/browse`, {
+      params: { sport, country, page: page.toString(), size: size.toString() },
+    });
   }
 
   // Simulation requests

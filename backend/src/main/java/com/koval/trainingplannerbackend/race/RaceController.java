@@ -2,6 +2,8 @@ package com.koval.trainingplannerbackend.race;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.pacing.dto.RouteCoordinate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -114,6 +116,28 @@ public class RaceController {
         }
     }
 
+    @GetMapping("/facets/sports")
+    public ResponseEntity<List<SportFacet>> getSportFacets() {
+        return ResponseEntity.ok(raceService.getSportFacets());
+    }
+
+    @GetMapping("/facets/countries")
+    public ResponseEntity<List<CountryFacet>> getCountryFacets(
+            @RequestParam("sport") String sport) {
+        return ResponseEntity.ok(raceService.getCountryFacets(sport));
+    }
+
+    @GetMapping("/browse")
+    public ResponseEntity<Page<RaceSummary>> browseRaces(
+            @RequestParam("sport") String sport,
+            @RequestParam("country") String country,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size) {
+        Page<RaceSummary> summaries = raceService.browse(sport, country, PageRequest.of(page, size))
+                .map(RaceSummary::from);
+        return ResponseEntity.ok(summaries);
+    }
+
     @PostMapping("/{id}/ai-complete")
     public ResponseEntity<RaceSummary> aiComplete(@PathVariable String id) {
         try {
@@ -123,6 +147,9 @@ public class RaceController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    public record SportFacet(String sport, long raceCount, int countryCount) {}
+    public record CountryFacet(String country, long raceCount) {}
 
     /**
      * Summary DTO that excludes raw GPX bytes from responses.

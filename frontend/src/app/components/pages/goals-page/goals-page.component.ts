@@ -5,7 +5,15 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { RaceGoal, RaceGoalService } from '../../../services/race-goal.service';
-import { Race, RaceService, SimulationRequest, RouteCoordinate } from '../../../services/race.service';
+import {
+  Race,
+  RaceService,
+  SimulationRequest,
+  RouteCoordinate,
+  SportFacet,
+  CountryFacet,
+  PageResponse,
+} from '../../../services/race.service';
 import { SportIconComponent } from '../../shared/sport-icon/sport-icon.component';
 import { RouteMapComponent } from '../pacing/route-map/route-map.component';
 import { daysUntil as sharedDaysUntil, weeksUntil as sharedWeeksUntil } from '../../shared/format/format.utils';
@@ -58,6 +66,15 @@ export class GoalsPageComponent implements OnInit {
   // Simulation requests per goal
   simRequestsCache: Record<string, SimulationRequest[]> = {};
 
+  // Browse public races state
+  sportFacets: SportFacet[] = [];
+  countryFacets: CountryFacet[] = [];
+  browseResults: PageResponse<Race> | null = null;
+  selectedBrowseSport: string | null = null;
+  selectedBrowseCountry: string | null = null;
+  browsePage = 0;
+  browseLoading = false;
+
   readonly sports = ['CYCLING', 'RUNNING', 'SWIMMING', 'TRIATHLON', 'OTHER'];
   readonly priorities: Array<{ value: 'A' | 'B' | 'C'; label: string }> = [
     { value: 'A', label: 'A \u2014 Goal Race' },
@@ -72,6 +89,7 @@ export class GoalsPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.raceGoalService.loadGoals();
+    this.loadSportFacets();
   }
 
   getPriorityColor(priority: string): string {
@@ -382,6 +400,106 @@ export class GoalsPageComponent implements OnInit {
       case 'bike': return !!race.hasBikeGpx;
       case 'run': return !!race.hasRunGpx;
       default: return false;
+    }
+  }
+
+  // ── Browse Public Races ──────────────────────────────────────────
+
+  loadSportFacets(): void {
+    this.raceService.getSportFacets().subscribe({
+      next: (facets) => {
+        this.sportFacets = facets;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  selectBrowseSport(sport: string): void {
+    this.selectedBrowseSport = sport;
+    this.selectedBrowseCountry = null;
+    this.browseResults = null;
+    this.browsePage = 0;
+    this.browseLoading = true;
+    this.cdr.markForCheck();
+
+    this.raceService.getCountryFacets(sport).subscribe({
+      next: (facets) => {
+        this.countryFacets = facets;
+        this.browseLoading = false;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  selectBrowseCountry(country: string): void {
+    this.selectedBrowseCountry = country;
+    this.browsePage = 0;
+    this.loadBrowsePage();
+  }
+
+  loadBrowsePage(): void {
+    if (!this.selectedBrowseSport || !this.selectedBrowseCountry) return;
+    this.browseLoading = true;
+    this.cdr.markForCheck();
+
+    this.raceService
+      .browseRaces(this.selectedBrowseSport, this.selectedBrowseCountry, this.browsePage)
+      .subscribe({
+        next: (page) => {
+          this.browseResults = page;
+          this.browseLoading = false;
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  browsePrevPage(): void {
+    if (this.browsePage > 0) {
+      this.browsePage--;
+      this.loadBrowsePage();
+    }
+  }
+
+  browseNextPage(): void {
+    if (this.browseResults && this.browsePage < this.browseResults.totalPages - 1) {
+      this.browsePage++;
+      this.loadBrowsePage();
+    }
+  }
+
+  backToSports(): void {
+    this.selectedBrowseSport = null;
+    this.selectedBrowseCountry = null;
+    this.countryFacets = [];
+    this.browseResults = null;
+    this.browsePage = 0;
+    this.cdr.markForCheck();
+  }
+
+  backToCountries(): void {
+    this.selectedBrowseCountry = null;
+    this.browseResults = null;
+    this.browsePage = 0;
+    this.cdr.markForCheck();
+  }
+
+  selectBrowseRace(race: Race): void {
+    this.selectRace(race);
+    this.openCreate();
+    this.formStep = 'details';
+  }
+
+  getLinkedGoals(goals: RaceGoal[]): RaceGoal[] {
+    return goals.filter((g) => g.raceId && this.isUpcoming(g));
+  }
+
+  getSportIcon(sport: string): string {
+    switch (sport?.toUpperCase()) {
+      case 'CYCLING': return '&#128690;';
+      case 'RUNNING': return '&#127939;';
+      case 'SWIMMING': return '&#127946;';
+      case 'TRIATHLON': return '&#127941;';
+      default: return '&#127937;';
     }
   }
 

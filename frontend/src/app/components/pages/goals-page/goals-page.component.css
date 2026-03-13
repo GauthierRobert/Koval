@@ -732,3 +732,237 @@ input[type='date'].form-input::-webkit-calendar-picker-indicator {
 }
 
 .btn-change:hover { color: #fff; }
+
+/* ── My Races Chips ──────────────────────────────────────────────── */
+.my-races-section {
+  margin-top: 2rem;
+}
+
+.section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+
+.my-races-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.race-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  font-size: 0.82rem;
+}
+
+.race-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+.chip-title {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chip-days {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.chip-days.soon {
+  background: rgba(245, 158, 11, 0.2);
+  color: #F59E0B;
+}
+
+/* ── Browse Public Races ─────────────────────────────────────────── */
+.browse-section {
+  margin-top: 2.5rem;
+}
+
+.browse-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  font-size: 0.82rem;
+}
+
+.breadcrumb-link {
+  background: none;
+  border: none;
+  color: var(--accent-color, #ff9d00);
+  cursor: pointer;
+  font-size: 0.82rem;
+  padding: 0;
+  font-weight: 600;
+}
+
+.breadcrumb-link:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb-sep {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.breadcrumb-current {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+}
+
+.facet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.facet-grid--countries {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+
+.facet-card {
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+}
+
+.facet-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-color, #ff9d00);
+  box-shadow: 0 4px 20px rgba(255, 157, 0, 0.1);
+}
+
+.facet-card--country {
+  padding: 1rem;
+}
+
+.facet-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.facet-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.35rem;
+}
+
+.facet-counts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.facet-card--country .facet-counts {
+  flex-direction: row;
+  justify-content: center;
+}
+
+/* Race list (level 2) */
+.browse-race-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.browse-race-item {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.browse-race-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--accent-color, #ff9d00);
+}
+
+.browse-race-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.browse-race-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #fff;
+  flex: 1;
+}
+
+.browse-race-verified {
+  font-size: 0.75rem;
+  color: #34d399;
+  font-weight: 700;
+}
+
+.browse-race-meta {
+  display: flex;
+  gap: 0.6rem;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 0.25rem;
+  padding-left: 1.6rem;
+}
+
+.browse-race-item .discipline-distances {
+  margin-top: 0.35rem;
+  margin-bottom: 0;
+  padding-left: 1.6rem;
+}
+
+/* Pagination */
+.browse-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.page-info {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+}
+
+/* Loading & empty states */
+.browse-loading {
+  text-align: center;
+  padding: 2rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.88rem;
+}
+
+.browse-empty {
+  text-align: center;
+  padding: 2rem;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.85rem;
+  grid-column: 1 / -1;
+}
