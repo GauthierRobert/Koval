@@ -131,8 +131,8 @@ export class CoachService {
         return this.http.delete<void>(`${this.apiUrl}/invite-codes/${codeId}`);
     }
 
-    redeemInviteCode(code: string): Observable<User> {
-        return this.http.post<User>(
+    redeemInviteCode(code: string): Observable<any> {
+        return this.http.post<any>(
             `${this.apiUrl}/redeem-invite`,
             { code }
         );

@@ -150,6 +150,17 @@
 
 .mini-card--fused { background: var(--success-subtle); border-color: var(--success-border); }
 .mini-card--session { background: var(--session-subtle); border-color: var(--session-border); }
+.mini-card--club-session { background: rgba(167, 139, 250, 0.06); border-color: rgba(167, 139, 250, 0.3); }
+.mini-card--club-session.not-joined { opacity: 0.5; }
+
+.mini-club-name {
+  font-weight: 800;
+  color: #a78bfa;
+  font-size: 8px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
 
 .goal-pill {
   display: flex;

@@ -24,6 +24,7 @@ public class InviteCode {
     private LocalDateTime expiresAt; // nullable = never expires
     private boolean active = true;
     private LocalDateTime createdAt;
+    private String type = "GROUP";
 
     public InviteCode() {
         this.createdAt = LocalDateTime.now();
@@ -56,4 +57,7 @@ public class InviteCode {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
 }

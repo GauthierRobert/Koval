@@ -23,6 +23,8 @@ import {
   CreateRecurringSessionData,
 } from '../../../../../../services/club.service';
 import { AuthService } from '../../../../../../services/auth.service';
+import { TrainingService } from '../../../../../../services/training.service';
+import { Router } from '@angular/router';
 
 type ViewMode = 'LIST' | 'CALENDAR';
 
@@ -41,6 +43,8 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
 
   private clubService = inject(ClubService);
   private authService = inject(AuthService);
+  private trainingService = inject(TrainingService);
+  private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
   sessions$ = this.clubService.sessions$;
@@ -62,15 +66,21 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   // Time-grid constants
   readonly HOUR_START = 6;
   readonly HOUR_END = 22;
-  readonly HOUR_HEIGHT_PX = 60;
+  readonly HOUR_HEIGHT_PX = 120;
   readonly hours = Array.from({ length: 16 }, (_, i) => i + 6);
 
   private scrolledToCurrentHour = false;
+  private allSessions: ClubTrainingSession[] = [];
+  sessionsAboveCount = 0;
+  sessionsBelowCount = 0;
 
   ngOnInit(): void {
     this.authService.user$.subscribe((u) => {
       this.currentUserId = u?.id ?? null;
       this.cdr.markForCheck();
+    });
+    this.sessions$.subscribe((sessions) => {
+      this.allSessions = sessions;
     });
     this.buildCalendarDays();
     if (this.club) {
@@ -208,6 +218,39 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
     const scrollTo = (Math.max(now.getHours() - 1, this.HOUR_START) - this.HOUR_START) * this.HOUR_HEIGHT_PX;
     this.timeGridBody.nativeElement.scrollTop = scrollTo;
     this.scrolledToCurrentHour = true;
+    setTimeout(() => this.onTimeGridScroll(), 0);
+  }
+
+  getCurrentTimeTopPx(): number {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    if (hours < this.HOUR_START) return 0;
+    return (hours - this.HOUR_START) * this.HOUR_HEIGHT_PX + (minutes / 60) * this.HOUR_HEIGHT_PX;
+  }
+
+  onTimeGridScroll(): void {
+    const el = this.timeGridBody?.nativeElement;
+    if (!el) return;
+
+    const scrollTop = el.scrollTop;
+    const viewportBottom = scrollTop + el.clientHeight;
+
+    let above = 0;
+    let below = 0;
+
+    for (const session of this.allSessions) {
+      const top = this.getSessionTopPx(session);
+      const height = this.getSessionHeightPx(session);
+      if (top + height < scrollTop) above++;
+      else if (top > viewportBottom) below++;
+    }
+
+    if (this.sessionsAboveCount !== above || this.sessionsBelowCount !== below) {
+      this.sessionsAboveCount = above;
+      this.sessionsBelowCount = below;
+      this.cdr.markForCheck();
+    }
   }
 
   // --- Unified session form ---
@@ -287,6 +330,14 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   onAiCreateForSession(session: ClubTrainingSession, event: Event): void {
     event.stopPropagation();
     this.createAiForSession.emit(session);
+  }
+
+  navigateToTraining(trainingId: string, event: Event): void {
+    event.stopPropagation();
+    this.trainingService.getTrainingById(trainingId).subscribe((training) => {
+      this.trainingService.selectTraining(training);
+      this.router.navigate(['/trainings']);
+    });
   }
 
   // --- Status helpers ---

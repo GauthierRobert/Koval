@@ -8,6 +8,7 @@ import { TRAINING_TYPE_COLORS, TrainingType } from '../../../../services/trainin
 import { SportIconComponent } from '../../../shared/sport-icon/sport-icon.component';
 import { CalendarDay, CalendarEntry, EntriesByDay, GoalsByDay } from '../calendar.component';
 import { RaceGoalService } from '../../../../services/race-goal.service';
+import { CalendarClubSession } from '../../../../services/calendar.service';
 import { inject } from '@angular/core';
 
 @Component({
@@ -36,6 +37,8 @@ export class CalendarMonthViewComponent {
   @Output() workoutSelected = new EventEmitter<ScheduledWorkout>();
   @Output() sessionSelected = new EventEmitter<SavedSession>();
   @Output() dropped = new EventEmitter<{ drop: CdkDragDrop<CalendarEntry[]>; day: CalendarDay }>();
+  @Output() joinClubSession = new EventEmitter<CalendarClubSession>();
+  @Output() cancelClubSession = new EventEmitter<CalendarClubSession>();
 
   getTypeColor(type: string): string {
     return TRAINING_TYPE_COLORS[type as TrainingType] || '#888';
@@ -46,6 +49,7 @@ export class CalendarMonthViewComponent {
   trackByEntry(_: number, e: CalendarEntry): string {
     if (e.kind === 'fused') return 'fused-' + e.scheduled.id;
     if (e.kind === 'scheduled') return 'sw-' + e.scheduled.id;
+    if (e.kind === 'club-session') return 'club-' + e.clubSession.id;
     return 'sess-' + e.session.id;
   }
 }

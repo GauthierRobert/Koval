@@ -31,4 +31,5 @@ public class ClubInviteCode {
     private LocalDateTime expiresAt; // null = never expires
     private boolean active = true;
     private LocalDateTime createdAt;
+    private String type = "CLUB";
 }

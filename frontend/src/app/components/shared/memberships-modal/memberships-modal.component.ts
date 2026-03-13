@@ -8,9 +8,14 @@ import { GroupService, Group } from '../../../services/group.service';
 import { CoachService } from '../../../services/coach.service';
 import { AuthService } from '../../../services/auth.service';
 
+interface ClubGroupWithMembership {
+  group: ClubGroup;
+  isMember: boolean;
+}
+
 interface ClubWithGroups {
   club: ClubSummary;
-  groups: ClubGroup[];
+  groups: ClubGroupWithMembership[];
 }
 
 @Component({
@@ -71,9 +76,10 @@ export class MembershipsModalComponent implements OnInit {
       forkJoin(groupRequests).subscribe((allGroups) => {
         const result: ClubWithGroups[] = clubs.map((club, i) => ({
           club,
-          groups: allGroups[i].filter(
-            (g) => g.memberIds && g.memberIds.includes(this.currentUserId)
-          ),
+          groups: allGroups[i].map((g) => ({
+            group: g,
+            isMember: !!(g.memberIds && g.memberIds.includes(this.currentUserId)),
+          })),
         }));
         this.clubsWithGroupsSubject.next(result);
         this.loadingSubject.next(false);
@@ -96,8 +102,7 @@ export class MembershipsModalComponent implements OnInit {
         this.messageTypeSubject.next('success');
         this.inviteCode = '';
         this.authService.refreshUser();
-        this.loadCoachGroups();
-        this.clubService.loadUserClubs();
+        this.loadAll();
       },
       error: () => {
         this.messageSubject.next('Invalid or expired invite code.');
@@ -112,18 +117,29 @@ export class MembershipsModalComponent implements OnInit {
     });
   }
 
+  joinClubGroup(clubId: string, groupId: string): void {
+    this.clubService.joinGroupSelf(clubId, groupId).subscribe(() => this.reloadClubGroups(clubId));
+  }
+
   leaveClubGroup(clubId: string, groupId: string): void {
-    this.clubService.removeMemberFromGroup(clubId, groupId, this.currentUserId).subscribe(() => {
-      // Reload club groups
-      this.clubService.getClubGroups(clubId).pipe(catchError(() => of([] as ClubGroup[]))).subscribe((groups) => {
-        const current = this.clubsWithGroupsSubject.value;
-        const updated = current.map((cwg) =>
-          cwg.club.id === clubId
-            ? { ...cwg, groups: groups.filter((g) => g.memberIds?.includes(this.currentUserId)) }
-            : cwg
-        );
-        this.clubsWithGroupsSubject.next(updated);
-      });
+    this.clubService.leaveGroupSelf(clubId, groupId).subscribe(() => this.reloadClubGroups(clubId));
+  }
+
+  private reloadClubGroups(clubId: string): void {
+    this.clubService.getClubGroups(clubId).pipe(catchError(() => of([] as ClubGroup[]))).subscribe((groups) => {
+      const current = this.clubsWithGroupsSubject.value;
+      const updated = current.map((cwg) =>
+        cwg.club.id === clubId
+          ? {
+              ...cwg,
+              groups: groups.map((g) => ({
+                group: g,
+                isMember: !!(g.memberIds && g.memberIds.includes(this.currentUserId)),
+              })),
+            }
+          : cwg
+      );
+      this.clubsWithGroupsSubject.next(updated);
     });
   }
 

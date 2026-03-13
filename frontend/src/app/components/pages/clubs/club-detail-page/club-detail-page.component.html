@@ -23,6 +23,14 @@
           <span *ngIf="club.currentMemberRole"> · {{ club.currentMemberRole }}</span>
         </span>
       </div>
+      <!-- Invite code (admin/owner/coach) -->
+      <div class="header-invite" *ngIf="canManageInvites(club) && (clubInviteCode$ | async) as code">
+        <span class="invite-code-chip" (click)="copyClubCode(code.code, code.id)">{{ code.code }}</span>
+        <button class="btn-copy" (click)="copyClubCode(code.code, code.id)"
+          [class.btn-copied]="copiedClubCodeId === code.id">
+          {{ copiedClubCodeId === code.id ? 'COPIED' : 'COPY' }}
+        </button>
+      </div>
       <div class="header-actions">
         <button class="btn-join" *ngIf="!club.currentMembershipStatus" (click)="join(club)">JOIN</button>
         <button class="btn-leave" *ngIf="club.currentMembershipStatus && club.currentMemberRole !== 'OWNER'" (click)="leave(club)">LEAVE</button>

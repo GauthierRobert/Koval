@@ -36,9 +36,9 @@
         <div class="step-card" *ngFor="let block of training.blocks; let i = index"
           [style.border-left-color]="getBlockColor(block)">
           <span class="step-number">#{{ i + 1 }}</span>
-          <span class="step-duration" [class.estimated]="formatBlockEstimates(block).durationEstimated">{{ formatBlockEstimates(block).durationEstimated ? '~' : '' }}{{ formatBlockEstimates(block).duration }}</span>
+          <span class="step-duration" *ngIf="!(formatBlockEstimates(block).durationEstimated && block.type ==='PAUSE')" [class.estimated]="formatBlockEstimates(block).durationEstimated">{{ formatBlockEstimates(block).durationEstimated ? '~' : '' }}{{ formatBlockEstimates(block).duration }}</span>
           <span class="step-separator">|</span>
-          <span class="step-distance" [class.estimated]="formatBlockEstimates(block).distanceEstimated">{{ formatBlockEstimates(block).distanceEstimated ? '~' : '' }}{{ formatBlockEstimates(block).distance }}</span>
+          <span class="step-distance" *ngIf="!(formatBlockEstimates(block).distanceEstimated && block.type ==='PAUSE')" [class.estimated]="formatBlockEstimates(block).distanceEstimated">{{ formatBlockEstimates(block).distanceEstimated ? '~' : '' }}{{ formatBlockEstimates(block).distance }}</span>
           <span class="step-spacer"></span>
           <span class="step-intensity">{{ getBlockIntensityDisplay(block) }}</span>
           <span class="step-absolute" *ngIf="block.type !== 'FREE' && block.type !== 'PAUSE'">
@@ -62,7 +62,7 @@
               <div class="block-bar" [style.background]="getBlockColor(block)"
                 [style.clip-path]="getBlockClipPath(block)" [attr.data-type]="block.type"></div>
 
-              <div class="block-tooltip glass">
+              <div class="block-tooltip glass" [class.tooltip-below]="block.type === 'PAUSE'">
                 <span class="tooltip-label">{{ block.label }}</span>
                 <span class="tooltip-type">{{ block.type }}</span>
                 <ng-container *ngIf="block.type !== 'FREE' && block.type !== 'PAUSE'">

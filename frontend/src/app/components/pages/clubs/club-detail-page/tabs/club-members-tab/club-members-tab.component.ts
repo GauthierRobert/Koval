@@ -33,6 +33,7 @@ export class ClubMembersTabComponent implements OnInit {
   newInviteGroupId = '';
   newInviteMaxUses = 0;
   copiedCodeId: string | null = null;
+  copiedGroupCodeId: string | null = null;
 
   get isAdmin(): boolean {
     const role = this.club?.currentMemberRole;
@@ -137,6 +138,17 @@ export class ClubMembersTabComponent implements OnInit {
     navigator.clipboard.writeText(code).then(() => {
       this.copiedCodeId = codeId;
       setTimeout(() => (this.copiedCodeId = null), 2000);
+    });
+  }
+
+  getGroupInviteCode(groupId: string, codes: ClubInviteCode[]): ClubInviteCode | null {
+    return codes.find((c) => c.active && c.clubGroupId === groupId) ?? null;
+  }
+
+  copyGroupCode(code: string, codeId: string): void {
+    navigator.clipboard.writeText(code).then(() => {
+      this.copiedGroupCodeId = codeId;
+      setTimeout(() => (this.copiedGroupCodeId = null), 2000);
     });
   }
 

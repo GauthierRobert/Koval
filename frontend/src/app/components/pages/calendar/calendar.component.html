@@ -2,6 +2,31 @@
   <div class="header">
     <h1>Training <span class="highlight">Calendar</span></h1>
     <div class="header-right">
+      <div class="prefs-wrapper">
+        <button class="prefs-btn" (click)="togglePrefsDropdown()" title="Filter club sessions">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+          </svg>
+        </button>
+        <div class="prefs-dropdown" *ngIf="showPrefsDropdown">
+          <div class="prefs-header">Club Sessions Filter</div>
+          <div *ngIf="!myClubRoles.length" class="prefs-empty">No clubs joined</div>
+          <div *ngFor="let role of myClubRoles" class="prefs-club-row">
+            <label class="prefs-toggle">
+              <input type="checkbox" [checked]="isClubVisible(role.clubId)" (change)="toggleClub(role.clubId)">
+              <span class="prefs-club-name">{{ role.clubName }}</span>
+            </label>
+            <div *ngIf="clubGroupsMap.get(role.clubId)?.length" class="prefs-groups">
+              <div *ngFor="let group of clubGroupsMap.get(role.clubId)" class="prefs-group-row">
+                <label class="prefs-toggle">
+                  <input type="checkbox" [checked]="isGroupVisible(group.id)" (change)="toggleGroup(group.id)">
+                  <span class="prefs-group-name">{{ group.name }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 <div class="view-selector">
         <button [class.active]="viewMode === 'week'" (click)="setViewMode('week')">Week</button>
         <button [class.active]="viewMode === 'month'" (click)="setViewMode('month')">Month</button>
@@ -29,7 +54,9 @@
       (skip)="markSkipped($event)"
       (workoutDeleted)="deleteWorkout($event)"
       (dropped)="onDrop($event.drop, $event.day)"
-      (linked)="reload$.next()">
+      (linked)="reload$.next()"
+      (joinClubSession)="joinClubSession($event)"
+      (cancelClubSession)="cancelClubSession($event)">
     </app-calendar-week-view>
 
     <app-calendar-month-view *ngIf="viewMode === 'month'"
@@ -40,7 +67,9 @@
       (addDay)="openScheduleModal($event)"
       (workoutSelected)="selectWorkout($event)"
       (sessionSelected)="selectSession($event)"
-      (dropped)="onDrop($event.drop, $event.day)">
+      (dropped)="onDrop($event.drop, $event.day)"
+      (joinClubSession)="joinClubSession($event)"
+      (cancelClubSession)="cancelClubSession($event)">
     </app-calendar-month-view>
   </ng-container>
 </div>

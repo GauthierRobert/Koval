@@ -60,19 +60,31 @@
     <!-- Tag Management Panel (admin/owner only) -->
     <ng-container *ngIf="isAdmin">
       <div class="section-header">
-        <h4 class="section-title">Tags</h4>
+        <h4 class="section-title">Groups</h4>
         <button class="btn-ghost" (click)="tagPanelOpen = !tagPanelOpen">{{ tagPanelOpen ? 'Hide' : 'Manage' }}</button>
       </div>
       <div class="tag-panel" *ngIf="tagPanelOpen">
-        <div class="tag-list-row">
-          <span class="club-tag" *ngFor="let tag of allTags">
-            {{ tag.name }}
-            <button class="tag-delete" (click)="deleteTag(tag.id)" title="Delete tag">×</button>
-          </span>
-          <span class="no-tags" *ngIf="allTags.length === 0">No tags yet.</span>
-        </div>
+        <ng-container *ngIf="inviteCodes$ | async as codes">
+          <div class="group-cards" *ngIf="allTags.length > 0">
+            <div class="group-card" *ngFor="let tag of allTags">
+              <div class="group-card-header">
+                <span class="group-card-name">{{ tag.name }}</span>
+                <span class="group-card-count">{{ tag.memberIds.length }} members</span>
+                <button class="tag-delete" *ngIf="isAdmin" (click)="deleteTag(tag.id)">×</button>
+              </div>
+              <div class="group-card-invite" *ngIf="getGroupInviteCode(tag.id, codes) as code">
+                <span class="invite-code-chip" (click)="copyGroupCode(code.code, code.id)">{{ code.code }}</span>
+                <button class="btn-copy-sm" (click)="copyGroupCode(code.code, code.id)"
+                  [class.btn-copied]="copiedGroupCodeId === code.id">
+                  {{ copiedGroupCodeId === code.id ? 'COPIED' : 'COPY' }}
+                </button>
+              </div>
+            </div>
+          </div>
+          <span class="no-tags" *ngIf="allTags.length === 0">No groups yet.</span>
+        </ng-container>
         <div class="tag-create-row">
-          <input class="tag-input" [(ngModel)]="newTagName" placeholder="Tag name…" (keyup.enter)="createTag()" />
+          <input class="tag-input" [(ngModel)]="newTagName" placeholder="Group name…" (keyup.enter)="createTag()" />
           <button class="btn-small" (click)="createTag()">Add</button>
         </div>
       </div>

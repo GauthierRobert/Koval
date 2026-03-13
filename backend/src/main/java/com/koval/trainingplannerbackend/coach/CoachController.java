@@ -2,6 +2,9 @@ package com.koval.trainingplannerbackend.coach;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.User;
+import com.koval.trainingplannerbackend.club.ClubInviteCode;
+import com.koval.trainingplannerbackend.club.ClubInviteCodeRepository;
+import com.koval.trainingplannerbackend.club.ClubService;
 import com.koval.trainingplannerbackend.goal.RaceGoal;
 import com.koval.trainingplannerbackend.goal.RaceGoalService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
@@ -30,6 +33,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/coach")
@@ -42,16 +46,24 @@ public class CoachController {
     private final CompletedSessionRepository sessionRepository;
     private final AnalyticsService analyticsService;
     private final RaceGoalService raceGoalService;
+    private final ClubService clubService;
+    private final InviteCodeRepository inviteCodeRepository;
+    private final ClubInviteCodeRepository clubInviteCodeRepository;
 
     public CoachController(CoachService coachService, ScheduleService scheduleService,
                            GroupService groupService, CompletedSessionRepository sessionRepository,
-                           AnalyticsService analyticsService, RaceGoalService raceGoalService) {
+                           AnalyticsService analyticsService, RaceGoalService raceGoalService,
+                           ClubService clubService, InviteCodeRepository inviteCodeRepository,
+                           ClubInviteCodeRepository clubInviteCodeRepository) {
         this.coachService = coachService;
         this.scheduleService = scheduleService;
         this.groupService = groupService;
         this.sessionRepository = sessionRepository;
         this.analyticsService = analyticsService;
         this.raceGoalService = raceGoalService;
+        this.clubService = clubService;
+        this.inviteCodeRepository = inviteCodeRepository;
+        this.clubInviteCodeRepository = clubInviteCodeRepository;
     }
 
     public record AssignmentRequest(
@@ -273,6 +285,8 @@ public class CoachController {
 
     public record RedeemRequest(String code) {}
 
+    public record RedeemResponse(String type, String message) {}
+
     @PostMapping("/invite-codes")
     public ResponseEntity<InviteCode> generateInviteCode(
             @RequestBody InviteCodeRequest request) {
@@ -306,13 +320,32 @@ public class CoachController {
     }
 
     @PostMapping("/redeem-invite")
-    public ResponseEntity<User> redeemInviteCode(@RequestBody RedeemRequest request) {
+    public ResponseEntity<?> redeemInviteCode(@RequestBody RedeemRequest request) {
         String userId = SecurityUtils.getCurrentUserId();
-        try {
-            User updated = coachService.redeemInviteCode(userId, request.code());
-            return ResponseEntity.ok(updated);
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
+        String normalizedCode = request.code().toUpperCase().trim();
+
+        // Look up in coach invite codes
+        Optional<InviteCode> coachCode = inviteCodeRepository.findByCode(normalizedCode);
+        if (coachCode.isPresent()) {
+            try {
+                coachService.redeemInviteCode(userId, normalizedCode);
+                return ResponseEntity.ok(new RedeemResponse("GROUP", "Joined training group"));
+            } catch (IllegalStateException e) {
+                return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            }
         }
+
+        // Look up in club invite codes
+        Optional<ClubInviteCode> clubCode = clubInviteCodeRepository.findByCode(normalizedCode);
+        if (clubCode.isPresent()) {
+            try {
+                clubService.redeemClubInviteCode(userId, normalizedCode);
+                return ResponseEntity.ok(new RedeemResponse("CLUB", "Joined club successfully"));
+            } catch (IllegalStateException e) {
+                return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            }
+        }
+
+        return ResponseEntity.badRequest().body(Map.of("error", "Invalid invite code"));
     }
 }

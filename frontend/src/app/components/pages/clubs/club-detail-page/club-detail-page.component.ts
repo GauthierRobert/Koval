@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { ClubDetail, ClubGroup, ClubService } from '../../../../services/club.service';
+import { ClubDetail, ClubGroup, ClubInviteCode, ClubService } from '../../../../services/club.service';
 import { AuthService } from '../../../../services/auth.service';
 import { ClubFeedTabComponent } from './tabs/club-feed-tab/club-feed-tab.component';
 import { ClubSessionsTabComponent } from './tabs/club-sessions-tab/club-sessions-tab.component';
@@ -12,7 +12,7 @@ import { ClubRaceGoalsTabComponent } from './tabs/club-race-goals-tab/club-race-
 import { CreateWithAiModalComponent } from '../../../shared/create-with-ai-modal/create-with-ai-modal.component';
 import { ActionContext, ActionResult } from '../../../../services/ai-action.service';
 import { ClubTrainingSession } from '../../../../services/club.service';
-import { Subscription } from 'rxjs';
+import { map, Observable, Subscription } from 'rxjs';
 
 type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals';
 
@@ -51,8 +51,14 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   showAiModal = false;
   aiContext: ActionContext = {};
   aiSessionInfo: { scheduledAt?: string; sport?: string; clubGroupName?: string } | null = null;
+  private aiSessionDate: string | undefined;
   private clubGroups: ClubGroup[] = [];
   private subs = new Subscription();
+
+  copiedClubCodeId: string | null = null;
+  clubInviteCode$: Observable<ClubInviteCode | null> = this.clubService.inviteCodes$.pipe(
+    map((codes) => codes.find((c) => c.active && !c.clubGroupId) ?? null),
+  );
 
   readonly tabs: Array<{ id: TabId; label: string }> = [
     { id: 'feed', label: 'FEED' },
@@ -79,6 +85,15 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
         this.clubService.resetDetail();
         this.clubService.loadClubDetail(this.clubId);
         this.activateTab('feed');
+      })
+    );
+
+    // Load invite codes early for header display (gated by role in template)
+    this.subs.add(
+      this.selectedClub$.subscribe((club) => {
+        if (club && this.canManageInvites(club)) {
+          this.clubService.loadInviteCodes(club.id);
+        }
       })
     );
 
@@ -158,6 +173,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
       sport: session.sport,
       clubGroupName: groupName,
     };
+    this.aiSessionDate = session.scheduledAt;
     this.showAiModal = true;
     this.cdr.markForCheck();
   }
@@ -165,9 +181,23 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   onAiCreated(_result: ActionResult): void {
     this.showAiModal = false;
     this.aiSessionInfo = null;
-    this.loadedTabs.delete('sessions');
-    this.activateTab('sessions');
+    // Reload sessions for the week containing the session so the card reflects the new training
+    const refDate = this.aiSessionDate ? new Date(this.aiSessionDate) : new Date();
+    const monday = this.getMonday(refDate);
+    const from = monday.toISOString();
+    const to = new Date(monday.getTime() + 7 * 86400000).toISOString();
+    this.clubService.loadSessionsForRange(this.clubId, from, to);
+    this.aiSessionDate = undefined;
     this.cdr.markForCheck();
+  }
+
+  private getMonday(d: Date): Date {
+    const date = new Date(d);
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    date.setDate(diff);
+    date.setHours(0, 0, 0, 0);
+    return date;
   }
 
   getMembershipLabel(status: string | undefined): string {
@@ -175,5 +205,21 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
     if (status === 'ACTIVE') return 'MEMBER';
     if (status === 'PENDING') return 'PENDING';
     return status;
+  }
+
+  canManageInvites(club: ClubDetail): boolean {
+    const role = club?.currentMemberRole;
+    return role === 'OWNER' || role === 'ADMIN' || role === 'COACH';
+  }
+
+  copyClubCode(code: string, codeId: string): void {
+    navigator.clipboard.writeText(code).then(() => {
+      this.copiedClubCodeId = codeId;
+      this.cdr.markForCheck();
+      setTimeout(() => {
+        this.copiedClubCodeId = null;
+        this.cdr.markForCheck();
+      }, 2000);
+    });
   }
 }

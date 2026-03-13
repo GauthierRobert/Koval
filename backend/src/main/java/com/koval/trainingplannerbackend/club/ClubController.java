@@ -176,6 +176,19 @@ public class ClubController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{id}/groups/{groupId}/join")
+    public ResponseEntity<ClubGroup> joinGroup(@PathVariable String id, @PathVariable String groupId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(clubService.joinGroupSelf(userId, id, groupId));
+    }
+
+    @DeleteMapping("/{id}/groups/{groupId}/leave")
+    public ResponseEntity<Void> leaveGroup(@PathVariable String id, @PathVariable String groupId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        clubService.leaveGroupSelf(userId, id, groupId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/{id}/groups/{groupId}/members/{targetUserId}")
     public ResponseEntity<ClubGroup> addMemberToGroup(@PathVariable String id,
                                                        @PathVariable String groupId,

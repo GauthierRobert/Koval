@@ -203,12 +203,12 @@ export class WorkoutVisualizationComponent {
     if (seconds === undefined && block) {
       seconds = this.getEstimatedBlockDuration(block);
     }
-    if (seconds === undefined) return '0m';
+    if (seconds === undefined) return '0min';
 
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
-    if (s === 0) return `${m}m`;
-    return `${m}m ${s}s`;
+    if (s === 0) return `${m}min`;
+    return `${m}m ${s}sec`;
   }
 
   /**
@@ -402,19 +402,6 @@ export class WorkoutVisualizationComponent {
     }
 
     return { duration, durationEstimated, distance, distanceEstimated };
-  }
-
-  getBlockTypeColor(type: string): string {
-    switch (type) {
-      case 'WARMUP': return '#0984e3';
-      case 'COOLDOWN': return '#6c5ce7';
-      case 'INTERVAL': return '#e74c3c';
-      case 'STEADY': return '#2ecc71';
-      case 'RAMP': return '#f39c12';
-      case 'FREE': return '#636e72';
-      case 'PAUSE': return '#95a5a6';
-      default: return '#636e72';
-    }
   }
 
   getBlockIntensityDisplay(block: WorkoutBlock): string {

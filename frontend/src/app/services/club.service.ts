@@ -654,6 +654,14 @@ export class ClubService {
     });
   }
 
+  joinGroupSelf(clubId: string, groupId: string): Observable<ClubGroup> {
+    return this.http.post<ClubGroup>(`${this.apiUrl}/${clubId}/groups/${groupId}/join`, {});
+  }
+
+  leaveGroupSelf(clubId: string, groupId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${clubId}/groups/${groupId}/leave`);
+  }
+
   redeemClubInviteCode(code: string): Observable<void> {
     return new Observable((observer) => {
       this.http.post<void>(`${this.apiUrl}/redeem-invite`, { code }).subscribe({
