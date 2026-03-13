@@ -151,11 +151,11 @@ export class PmcPageComponent implements OnInit {
 
     loadScheduledWorkouts(): void {
         const future = this.addDays(new Date(), 120);
-        this.calendarService.getMySchedule(this.today(), future).subscribe({
+        this.calendarService.getMySchedule(this.today(), future, true).subscribe({
             next: (workouts) => {
                 const map = new Map<string, number>();
                 for (const w of workouts) {
-                    if (w.status === 'PENDING' && w.tss) {
+                    if (w.status === 'PENDING' && w.tss && w.sportType !== 'SWIMMING') {
                         map.set(w.scheduledDate, (map.get(w.scheduledDate) ?? 0) + w.tss);
                     }
                 }

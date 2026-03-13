@@ -221,8 +221,10 @@ public class AnalyticsService {
         for (CompletedSession s : sessions) {
             if (s.getTss() == null || s.getCompletedAt() == null)
                 continue;
-            LocalDate date = s.getCompletedAt().toLocalDate();
             String sport = s.getSportType() != null ? s.getSportType() : "CYCLING";
+            if ("SWIMMING".equals(sport))
+                continue;
+            LocalDate date = s.getCompletedAt().toLocalDate();
 
             map.computeIfAbsent(date, k -> new HashMap<>())
                     .merge(sport, s.getTss(), Double::sum);

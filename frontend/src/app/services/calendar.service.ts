@@ -38,12 +38,12 @@ export class CalendarService {
 
     constructor(private http: HttpClient) { }
 
-    getMySchedule(start: string, end: string): Observable<ScheduledWorkout[]> {
+    getMySchedule(start: string, end: string, includeClubSessions = false): Observable<ScheduledWorkout[]> {
         this.errorSubject.next(null);
+        const params: Record<string, string> = { start, end };
+        if (includeClubSessions) params['includeClubSessions'] = 'true';
         return this.http
-            .get<ScheduledWorkout[]>(this.apiUrl, {
-                params: { start, end },
-            })
+            .get<ScheduledWorkout[]>(this.apiUrl, { params })
             .pipe(catchError(() => {
                 this.errorSubject.next('Failed to load schedule');
                 return of([] as ScheduledWorkout[]);
