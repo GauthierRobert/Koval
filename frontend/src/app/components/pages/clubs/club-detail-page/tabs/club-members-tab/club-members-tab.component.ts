@@ -1,7 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ClubDetail, ClubMemberRole, ClubService, ClubGroup } from '../../../../../../services/club.service';
+import {
+  ClubDetail,
+  ClubMemberRole,
+  ClubService,
+  ClubGroup,
+  ClubInviteCode,
+} from '../../../../../../services/club.service';
 
 @Component({
   selector: 'app-club-members-tab',
@@ -18,10 +24,15 @@ export class ClubMembersTabComponent implements OnInit {
   members$ = this.clubService.members$;
   pending$ = this.clubService.pending$;
   tags$ = this.clubService.groups$;
+  inviteCodes$ = this.clubService.inviteCodes$;
 
   newTagName = '';
   tagPanelOpen = false;
+  invitePanelOpen = false;
   roleChangeInProgress = new Set<string>();
+  newInviteGroupId = '';
+  newInviteMaxUses = 0;
+  copiedCodeId: string | null = null;
 
   get isAdmin(): boolean {
     const role = this.club?.currentMemberRole;
@@ -32,9 +43,17 @@ export class ClubMembersTabComponent implements OnInit {
     return this.club?.currentMemberRole === 'OWNER';
   }
 
+  get canManageInvites(): boolean {
+    const role = this.club?.currentMemberRole;
+    return role === 'OWNER' || role === 'ADMIN' || role === 'COACH';
+  }
+
   ngOnInit(): void {
     if (this.isAdmin) {
       this.clubService.loadPendingRequests(this.club.id);
+    }
+    if (this.canManageInvites) {
+      this.clubService.loadInviteCodes(this.club.id);
     }
   }
 
@@ -80,6 +99,50 @@ export class ClubMembersTabComponent implements OnInit {
       next: () => this.roleChangeInProgress.delete(membershipId),
       error: () => this.roleChangeInProgress.delete(membershipId),
     });
+  }
+
+  canChangeRole(memberRole: string): boolean {
+    if (memberRole === 'OWNER') return false;
+    if (this.isOwner) return true;
+    if (this.isAdmin && memberRole !== 'ADMIN') return true;
+    return false;
+  }
+
+  getAvailableRoles(): string[] {
+    if (this.isOwner) return ['ADMIN', 'COACH', 'MEMBER'];
+    return ['COACH', 'MEMBER'];
+  }
+
+  generateInviteCode(): void {
+    this.clubService
+      .generateInviteCode(
+        this.club.id,
+        this.newInviteGroupId || undefined,
+        this.newInviteMaxUses,
+      )
+      .subscribe({
+        next: () => {
+          this.newInviteGroupId = '';
+          this.newInviteMaxUses = 0;
+        },
+        error: () => {},
+      });
+  }
+
+  deactivateInviteCode(codeId: string): void {
+    this.clubService.deactivateInviteCode(this.club.id, codeId).subscribe({ error: () => {} });
+  }
+
+  copyInviteCode(code: string, codeId: string): void {
+    navigator.clipboard.writeText(code).then(() => {
+      this.copiedCodeId = codeId;
+      setTimeout(() => (this.copiedCodeId = null), 2000);
+    });
+  }
+
+  isExpired(expiresAt: string | undefined): boolean {
+    if (!expiresAt) return false;
+    return new Date(expiresAt) < new Date();
   }
 
   getAvailableTags(member: { userId: string }, allGroups: ClubGroup[]): ClubGroup[] {

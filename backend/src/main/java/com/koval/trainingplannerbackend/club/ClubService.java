@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -22,6 +23,10 @@ import java.util.stream.Collectors;
 @Service
 public class ClubService {
 
+    private static final String CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    private static final int CODE_LENGTH = 8;
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     private final ClubRepository clubRepository;
     private final ClubMembershipRepository membershipRepository;
     private final ClubTrainingSessionRepository sessionRepository;
@@ -30,6 +35,7 @@ public class ClubService {
     private final RaceGoalRepository raceGoalRepository;
     private final UserService userService;
     private final ClubGroupRepository clubGroupRepository;
+    private final ClubInviteCodeRepository clubInviteCodeRepository;
     private final NotificationService notificationService;
     private final TrainingService trainingService;
 
@@ -41,6 +47,7 @@ public class ClubService {
                        RaceGoalRepository raceGoalRepository,
                        UserService userService,
                        ClubGroupRepository clubGroupRepository,
+                       ClubInviteCodeRepository clubInviteCodeRepository,
                        NotificationService notificationService,
                        TrainingService trainingService) {
         this.clubRepository = clubRepository;
@@ -51,6 +58,7 @@ public class ClubService {
         this.raceGoalRepository = raceGoalRepository;
         this.userService = userService;
         this.clubGroupRepository = clubGroupRepository;
+        this.clubInviteCodeRepository = clubInviteCodeRepository;
         this.notificationService = notificationService;
         this.trainingService = trainingService;
     }
@@ -224,20 +232,28 @@ public class ClubService {
 
     // --- Role management ---
 
-    public ClubMembership updateMemberRole(String ownerId, String clubId, String membershipId, ClubMemberRole newRole) {
-        ClubMembership caller = membershipRepository.findByClubIdAndUserId(clubId, ownerId)
+    public ClubMembership updateMemberRole(String callerId, String clubId, String membershipId, ClubMemberRole newRole) {
+        ClubMembership caller = membershipRepository.findByClubIdAndUserId(clubId, callerId)
                 .orElseThrow(() -> new IllegalStateException("Not a member"));
-        if (caller.getRole() != ClubMemberRole.OWNER) {
-            throw new IllegalStateException("Only the owner can change member roles");
+        if (caller.getRole() != ClubMemberRole.OWNER && caller.getRole() != ClubMemberRole.ADMIN) {
+            throw new IllegalStateException("Only owner or admin can change member roles");
         }
         if (newRole == ClubMemberRole.OWNER) {
             throw new IllegalStateException("Cannot promote a member to OWNER");
+        }
+        // Only the owner can promote to ADMIN
+        if (newRole == ClubMemberRole.ADMIN && caller.getRole() != ClubMemberRole.OWNER) {
+            throw new IllegalStateException("Only the owner can promote members to ADMIN");
         }
 
         ClubMembership target = membershipRepository.findById(membershipId)
                 .orElseThrow(() -> new IllegalArgumentException("Membership not found"));
         if (target.getRole() == ClubMemberRole.OWNER) {
             throw new IllegalStateException("Cannot change the owner's role");
+        }
+        // Admin cannot change another admin's role
+        if (target.getRole() == ClubMemberRole.ADMIN && caller.getRole() != ClubMemberRole.OWNER) {
+            throw new IllegalStateException("Only the owner can change an admin's role");
         }
         target.setRole(newRole);
         return membershipRepository.save(target);
@@ -495,6 +511,129 @@ public class ClubService {
                     s.getScheduledAt().toLocalDate().isBefore(g.getRaceDate().plusDays(1)));
             return new ClubController.ClubRaceGoalResponse(g, hasSession);
         }).collect(Collectors.toList());
+    }
+
+    // --- Invite Codes ---
+
+    public ClubInviteCode generateInviteCode(String userId, String clubId, String clubGroupId,
+                                              int maxUses, LocalDateTime expiresAt) {
+        validateAdminOrCoach(userId, clubId);
+
+        // If a group is specified, validate it belongs to this club
+        if (clubGroupId != null && !clubGroupId.isBlank()) {
+            ClubGroup group = clubGroupRepository.findById(clubGroupId)
+                    .orElseThrow(() -> new IllegalArgumentException("Club group not found"));
+            if (!group.getClubId().equals(clubId)) {
+                throw new IllegalArgumentException("Group does not belong to this club");
+            }
+        }
+
+        ClubInviteCode inviteCode = new ClubInviteCode();
+        inviteCode.setCode(generateUniqueClubCode());
+        inviteCode.setClubId(clubId);
+        inviteCode.setCreatedBy(userId);
+        inviteCode.setClubGroupId(clubGroupId != null && !clubGroupId.isBlank() ? clubGroupId : null);
+        inviteCode.setMaxUses(maxUses);
+        inviteCode.setExpiresAt(expiresAt);
+        inviteCode.setCreatedAt(LocalDateTime.now());
+
+        return clubInviteCodeRepository.save(inviteCode);
+    }
+
+    public ClubMembership redeemClubInviteCode(String userId, String code) {
+        ClubInviteCode inviteCode = clubInviteCodeRepository.findByCode(code.toUpperCase().trim())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid invite code"));
+
+        if (!inviteCode.isActive()) {
+            throw new IllegalStateException("Invite code is no longer active");
+        }
+        if (inviteCode.getExpiresAt() != null && LocalDateTime.now().isAfter(inviteCode.getExpiresAt())) {
+            throw new IllegalStateException("Invite code has expired");
+        }
+        if (inviteCode.getMaxUses() > 0 && inviteCode.getCurrentUses() >= inviteCode.getMaxUses()) {
+            throw new IllegalStateException("Invite code has reached maximum uses");
+        }
+
+        String clubId = inviteCode.getClubId();
+
+        // Join the club if not already a member
+        Optional<ClubMembership> existing = membershipRepository.findByClubIdAndUserId(clubId, userId);
+        ClubMembership membership;
+        if (existing.isPresent()) {
+            membership = existing.get();
+            // If pending, approve automatically
+            if (membership.getStatus() == ClubMemberStatus.PENDING) {
+                membership.setStatus(ClubMemberStatus.ACTIVE);
+                membership.setJoinedAt(LocalDateTime.now());
+                membershipRepository.save(membership);
+                Club club = clubRepository.findById(clubId)
+                        .orElseThrow(() -> new IllegalArgumentException("Club not found"));
+                club.setMemberCount(club.getMemberCount() + 1);
+                clubRepository.save(club);
+                emitActivity(clubId, ClubActivityType.MEMBER_JOINED, userId, null, null);
+            }
+        } else {
+            // Create new active membership
+            membership = new ClubMembership();
+            membership.setClubId(clubId);
+            membership.setUserId(userId);
+            membership.setRole(ClubMemberRole.MEMBER);
+            membership.setStatus(ClubMemberStatus.ACTIVE);
+            membership.setJoinedAt(LocalDateTime.now());
+            membership.setRequestedAt(LocalDateTime.now());
+            membership = membershipRepository.save(membership);
+
+            Club club = clubRepository.findById(clubId)
+                    .orElseThrow(() -> new IllegalArgumentException("Club not found"));
+            club.setMemberCount(club.getMemberCount() + 1);
+            clubRepository.save(club);
+            emitActivity(clubId, ClubActivityType.MEMBER_JOINED, userId, null, null);
+        }
+
+        // If the invite code targets a club group, add the user to it
+        if (inviteCode.getClubGroupId() != null) {
+            ClubGroup group = clubGroupRepository.findById(inviteCode.getClubGroupId()).orElse(null);
+            if (group != null && !group.getMemberIds().contains(userId)) {
+                group.getMemberIds().add(userId);
+                clubGroupRepository.save(group);
+            }
+        }
+
+        // Increment usage
+        inviteCode.setCurrentUses(inviteCode.getCurrentUses() + 1);
+        clubInviteCodeRepository.save(inviteCode);
+
+        return membership;
+    }
+
+    public List<ClubInviteCode> getClubInviteCodes(String userId, String clubId) {
+        validateAdminOrCoach(userId, clubId);
+        return clubInviteCodeRepository.findByClubId(clubId);
+    }
+
+    public void deactivateClubInviteCode(String userId, String clubId, String codeId) {
+        validateAdminOrCoach(userId, clubId);
+        ClubInviteCode inviteCode = clubInviteCodeRepository.findById(codeId)
+                .orElseThrow(() -> new IllegalArgumentException("Invite code not found"));
+        if (!inviteCode.getClubId().equals(clubId)) {
+            throw new IllegalArgumentException("Invite code does not belong to this club");
+        }
+        inviteCode.setActive(false);
+        clubInviteCodeRepository.save(inviteCode);
+    }
+
+    private String generateUniqueClubCode() {
+        for (int attempt = 0; attempt < 10; attempt++) {
+            StringBuilder sb = new StringBuilder(CODE_LENGTH);
+            for (int i = 0; i < CODE_LENGTH; i++) {
+                sb.append(CODE_CHARS.charAt(RANDOM.nextInt(CODE_CHARS.length())));
+            }
+            String code = sb.toString();
+            if (clubInviteCodeRepository.findByCode(code).isEmpty()) {
+                return code;
+            }
+        }
+        throw new IllegalStateException("Unable to generate unique invite code after 10 attempts");
     }
 
     // --- Helpers ---
