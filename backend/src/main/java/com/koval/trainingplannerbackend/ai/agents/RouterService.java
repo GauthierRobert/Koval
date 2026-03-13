@@ -37,24 +37,39 @@ public class RouterService {
 
             Reply with ONLY the category label, nothing else.""";
 
+    // Follow-up indicators in English and French
     private static final Set<String> FOLLOW_UP_INDICATORS = Set.of(
+            // English
             "it", "that", "this", "them", "those", "the same",
             "also", "now", "then", "next", "again", "too",
             "yes", "no", "ok", "sure", "exactly", "perfect",
             "but", "instead", "actually", "rather",
-            "change", "modify", "update", "delete", "remove", "add more"
+            "change", "modify", "update", "delete", "remove", "add more",
+            // French
+            "le", "la", "les", "ça", "cela", "celui", "celle",
+            "aussi", "maintenant", "ensuite", "encore", "puis",
+            "oui", "non", "d'accord", "exactement", "parfait",
+            "mais", "plutôt", "en fait", "finalement",
+            "change", "modifie", "supprime", "ajoute", "pareil", "le même", "la même"
     );
 
+    // Keyword patterns supporting English and French
     private static final Map<Pattern, AgentType> KEYWORD_PATTERNS = Map.of(
-            Pattern.compile("(?i)\\b(create|design|build|make|generate)\\b.*(workout|training|session|plan)"),
+            // Training creation — EN + FR
+            Pattern.compile("(?i)\\b(create|design|build|make|generate|créer?|crée|construi[rs]|génère|fabrique|fais)\\b.*(workout|training|session|plan|entraînement|séance|exercice)"),
             AgentType.TRAINING_CREATION,
-            Pattern.compile("(?i)\\b(schedule|assign|calendar|plan for|set for)\\b"),
+            Pattern.compile("(?i)\\b(créer?|crée|fais|génère)\\b.*(entraînement|séance|workout|exercice|plan)"),
+            AgentType.TRAINING_CREATION,
+            // Scheduling — EN + FR
+            Pattern.compile("(?i)\\b(schedule|assign|calendar|plan for|set for|planifie|programme|calendrier|assigne|prévois)\\b"),
             AgentType.SCHEDULING,
-            Pattern.compile("(?i)\\b(race goal|add goal|my goals)\\b"),
+            Pattern.compile("(?i)\\b(race goal|add goal|my goals|objectif|course|mes objectifs|ajoute.*objectif)\\b"),
             AgentType.SCHEDULING,
-            Pattern.compile("(?i)\\b(analy[sz]e|review|performance|CTL|ATL|TSB|PMC|fitness|fatigue|form)\\b"),
+            // Analysis — EN + FR
+            Pattern.compile("(?i)\\b(analy[sz]e|review|performance|CTL|ATL|TSB|PMC|fitness|fatigue|form|bilan|progression|forme)\\b"),
             AgentType.ANALYSIS,
-            Pattern.compile("(?i)\\b(athletes?|zone system|manage.*group|coaching)\\b"),
+            // Coach management — EN + FR
+            Pattern.compile("(?i)\\b(athletes?|athlètes?|zone system|système.*zones?|manage.*group|gestion.*groupe|coaching)\\b"),
             AgentType.COACH_MANAGEMENT
     );
 
