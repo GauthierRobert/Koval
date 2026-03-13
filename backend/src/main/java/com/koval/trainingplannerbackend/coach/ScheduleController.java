@@ -90,11 +90,15 @@ public class ScheduleController {
     @GetMapping
     public ResponseEntity<List<ScheduledWorkoutResponse>> getMySchedule(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end,
+            @RequestParam(defaultValue = "false") boolean includeClubSessions) {
         String userId = SecurityUtils.getCurrentUserId();
 
         List<ScheduledWorkout> workouts = scheduledWorkoutRepository
                 .findByAthleteIdAndScheduledDateBetween(userId, start.minusDays(1), end.plusDays(1));
+        if (includeClubSessions) {
+            return ResponseEntity.ok(scheduleService.getUnifiedSchedule(workouts, userId, start, end));
+        }
         return ResponseEntity.ok(scheduleService.enrichList(workouts));
     }
 
