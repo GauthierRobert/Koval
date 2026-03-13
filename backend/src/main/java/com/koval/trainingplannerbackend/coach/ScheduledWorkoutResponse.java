@@ -1,6 +1,8 @@
 package com.koval.trainingplannerbackend.coach;
 
+import com.koval.trainingplannerbackend.club.ClubTrainingSession;
 import com.koval.trainingplannerbackend.training.model.SportType;
+import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.model.TrainingType;
 
 import java.time.LocalDate;
@@ -26,7 +28,10 @@ public record ScheduledWorkoutResponse(
         TrainingType trainingType,
         Integer totalDurationSeconds,
         SportType sportType,
-        String sessionId) {
+        String sessionId,
+        boolean isClubSession,
+        String clubName,
+        String clubGroupName) {
 
     public static ScheduledWorkoutResponse from(ScheduledWorkout sw, String trainingTitle, TrainingType trainingType,
             Integer totalDurationSeconds, SportType sportType, Integer estimatedTss, Double estimatedIf) {
@@ -46,6 +51,59 @@ public record ScheduledWorkoutResponse(
                 trainingType,
                 totalDurationSeconds,
                 sportType,
-                sw.getSessionId());
+                sw.getSessionId(),
+                false, null, null);
+    }
+
+    public static ScheduledWorkoutResponse fromClubSession(
+            ClubTrainingSession session, String clubName, String clubGroupName,
+            Training linkedTraining) {
+        String title;
+        Integer tss = null;
+        Double intensityFactor = null;
+        Integer duration;
+        SportType sport;
+        TrainingType trainingType = null;
+
+        if (linkedTraining != null) {
+            title = linkedTraining.getTitle();
+            tss = linkedTraining.getEstimatedTss();
+            intensityFactor = linkedTraining.getEstimatedIf();
+            duration = linkedTraining.getEstimatedDurationSeconds();
+            sport = linkedTraining.getSportType();
+            trainingType = linkedTraining.getTrainingType();
+        } else {
+            title = session.getTitle();
+            duration = session.getDurationMinutes() != null ? session.getDurationMinutes() * 60 : null;
+            sport = parseSportType(session.getSport());
+        }
+
+        return new ScheduledWorkoutResponse(
+                session.getId(),
+                session.getLinkedTrainingId(),
+                null,
+                session.getResponsibleCoachId(),
+                session.getScheduledAt() != null ? session.getScheduledAt().toLocalDate() : null,
+                ScheduleStatus.PENDING,
+                session.getDescription(),
+                tss,
+                intensityFactor,
+                null,
+                session.getCreatedAt(),
+                title,
+                trainingType,
+                duration,
+                sport,
+                null,
+                true, clubName, clubGroupName);
+    }
+
+    private static SportType parseSportType(String sport) {
+        if (sport == null) return null;
+        try {
+            return SportType.valueOf(sport.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

@@ -217,16 +217,6 @@
   color: var(--accent-color);
 }
 
-.tab-btn--ai {
-  margin-left: auto;
-  color: var(--accent-color);
-  border: 1px solid var(--accent-border, rgba(255, 157, 0, 0.25));
-}
-
-.tab-btn--ai:hover {
-  background: var(--accent-subtle);
-}
-
 /* ─── Tab body ───────────────────────────────────────────── */
 .tab-body {
   flex: 1;

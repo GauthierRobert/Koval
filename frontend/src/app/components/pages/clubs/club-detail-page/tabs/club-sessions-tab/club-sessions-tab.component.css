@@ -283,7 +283,8 @@
 }
 
 .recurring-badge {
-  font-size: 14px;
+  margin-left: 4px;
+  margin-right: 4px;
 }
 
 .recurring-badge.small {

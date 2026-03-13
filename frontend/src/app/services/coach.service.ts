@@ -39,6 +39,9 @@ export interface ScheduledWorkout {
     if?: number;
     sportType: 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK' | 'GYM';
     sessionId?: string;
+    isClubSession?: boolean;
+    clubName?: string;
+    clubGroupName?: string;
 }
 
 @Injectable({

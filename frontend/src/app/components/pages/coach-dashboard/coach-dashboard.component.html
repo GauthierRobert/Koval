@@ -31,13 +31,15 @@
       <div class="athletes" *ngIf="filtered.length > 0">
         <div *ngFor="let athlete of filtered; trackBy: trackAthleteById" class="athlete-row"
           [class.selected]="selectedAthlete?.id === athlete.id" (click)="selectAthlete(athlete)">
-          <div class="avatar-sm">{{ athlete.displayName[0].toUpperCase() }}</div>
           <div class="info">
-            <span class="name">{{ athlete.displayName }}</span>
-            <div class="tag-chips" *ngIf="(athlete.groups && athlete.groups.length > 0) || (athlete.clubs && athlete.clubs.length > 0)">
-              <span *ngFor="let tag of athlete.groups || []; trackBy: trackByValue" class="chip tag">{{ tag }}</span>
-              <span *ngFor="let club of athlete.clubs || []; trackBy: trackByValue" class="chip club">{{ club }}</span>
+            <div class="info-header">
+              <span class="name">{{ athlete.displayName }}</span>
+              <div class="tag-chips" *ngIf="(athlete.groups && athlete.groups.length > 0) || (athlete.clubs && athlete.clubs.length > 0)">
+                <span *ngFor="let tag of athlete.groups || []; trackBy: trackByValue" class="chip tag">{{ tag }}</span>
+                <span *ngFor="let club of athlete.clubs || []; trackBy: trackByValue" class="chip club">{{ club }}</span>
+              </div>
             </div>
+
             <!-- Task 7: Real mini-metrics from athlete PMC data or dashes -->
             <ng-container *ngIf="selectedAthlete?.id === athlete.id && (athleteMetrics$ | async) as m; else dashMetrics">
               <div class="mini-metrics">
@@ -206,9 +208,15 @@
                 <span>STATUS</span>
               </div>
               <ng-container *ngIf="athleteSchedule$ | async as schedule">
-                <div *ngFor="let workout of schedule; trackBy: trackScheduleById" class="table-row">
+                <div *ngFor="let workout of schedule; trackBy: trackScheduleById" class="table-row"
+                  [class.club-session-row]="workout.isClubSession">
                   <span class="t-date">{{ workout.scheduledDate | date:'MMM d, EEE' }}</span>
-                  <span class="t-title">{{ getWorkoutTitle(workout) }}</span>
+                  <span class="t-title">
+                    {{ getWorkoutTitle(workout) }}
+                    <span *ngIf="workout.isClubSession" class="club-badge">
+                      {{ workout.clubName }}<span *ngIf="workout.clubGroupName"> · {{ workout.clubGroupName }}</span>
+                    </span>
+                  </span>
                   <span class="t-type">
                     <span *ngIf="workout.trainingType" class="schedule-type-badge"
                       [style.background]="getTypeColor(workout.trainingType) + '20'"
@@ -220,7 +228,11 @@
                   <span class="t-dur">{{ getWorkoutDuration(workout) }}</span>
                   <span class="t-if">{{ workout.intensityFactor || workout.if || '-' }}</span>
                   <span class="t-tss">{{ workout.tss || '-' }}</span>
-                  <span class="t-status" [class.pending]="workout.status === 'PENDING'">{{ workout.status }}</span>
+                  <span class="t-status"
+                    [class.pending]="workout.status === 'PENDING' && !workout.isClubSession"
+                    [class.club]="workout.isClubSession">
+                    {{ workout.isClubSession ? 'CLUB' : workout.status }}
+                  </span>
                 </div>
                 <div *ngIf="schedule.length === 0" class="table-row empty-row">
                   <span class="t-empty">No scheduled workouts for this period</span>

@@ -204,7 +204,11 @@ public class CoachController {
         List<ScheduledWorkout> workouts = (start != null && end != null)
                 ? coachService.getAthleteSchedule(athleteId, start, end)
                 : coachService.getAthleteSchedule(athleteId);
-        return ResponseEntity.ok(scheduleService.enrichList(workouts));
+        if (start != null && end != null) {
+            return ResponseEntity.ok(scheduleService.getUnifiedSchedule(workouts, athleteId, start, end));
+        } else {
+            return ResponseEntity.ok(scheduleService.enrichList(workouts));
+        }
     }
 
     public record CompletionRequest(Integer tss, Double intensityFactor) {}

@@ -29,19 +29,16 @@
               <div *ngFor="let session of getSessionsForDay(sessions, day)" class="session-card glass">
                 <div class="session-header">
                   <span class="session-sport-badge">{{ session.sport || 'GENERAL' }}</span>
-                  <span class="recurring-badge" *ngIf="session.recurringTemplateId">&#x1f501;</span>
+                  <span class="recurring-badge" *ngIf="session.recurringTemplateId"><svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="#FFFFFF"><path d="M314-115q-104-48-169-145T80-479q0-26 2.5-51t8.5-49l-46 27-40-69 191-110 110 190-70 40-54-94q-11 27-16.5 56t-5.5 60q0 97 53 176.5T354-185l-40 70Zm306-485v-80h109q-46-57-111-88.5T480-800q-55 0-104 17t-90 48l-40-70q50-35 109-55t125-20q79 0 151 29.5T760-765v-55h80v220H620ZM594 0 403-110l110-190 69 40-57 98q118-17 196.5-107T800-480q0-11-.5-20.5T797-520h81q1 10 1.5 19.5t.5 20.5q0 135-80.5 241.5T590-95l44 26-40 69Z"/></svg></span>
+
+                  <h4 class="session-title">{{ session.title }}</h4>
                   <button
                     class="ai-btn-corner"
                     *ngIf="isCoach && !session.linkedTrainingId"
                     (click)="onAiCreateForSession(session, $event)"
                     title="Create training with AI">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="2.5">
-                      <path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16.4l-6.4 4.8L8 14l-6-4.8h7.6z"/>
-                    </svg>
-                    <span>+ training</span>
+                    <span>✨ training</span>
                   </button>
-                  <h4 class="session-title">{{ session.title }}</h4>
                   <span class="session-time-inline"
                         *ngIf="session.scheduledAt">{{ formatTime(session.scheduledAt) }}</span>
                 </div>
@@ -144,7 +141,7 @@
                 <div class="tg-session-top">
                   <span class="session-sport-badge small">{{ session.sport || 'GEN' }}</span>
                   <span class="tg-session-time">{{ formatTime(session.scheduledAt) }}</span>
-                  <span class="recurring-badge small" *ngIf="session.recurringTemplateId">&#x1f501;</span>
+                  <span class="recurring-badge" *ngIf="session.recurringTemplateId"><svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="#FFFFFF"><path d="M314-115q-104-48-169-145T80-479q0-26 2.5-51t8.5-49l-46 27-40-69 191-110 110 190-70 40-54-94q-11 27-16.5 56t-5.5 60q0 97 53 176.5T354-185l-40 70Zm306-485v-80h109q-46-57-111-88.5T480-800q-55 0-104 17t-90 48l-40-70q50-35 109-55t125-20q79 0 151 29.5T760-765v-55h80v220H620ZM594 0 403-110l110-190 69 40-57 98q118-17 196.5-107T800-480q0-11-.5-20.5T797-520h81q1 10 1.5 19.5t.5 20.5q0 135-80.5 241.5T590-95l44 26-40 69Z"/></svg></span>
                 </div>
                 @if (!session.linkedTrainingId) {
                   @if (isCoach) {
