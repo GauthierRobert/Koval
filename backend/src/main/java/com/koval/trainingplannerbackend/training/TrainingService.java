@@ -2,6 +2,9 @@ package com.koval.trainingplannerbackend.training;
 
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
+import com.koval.trainingplannerbackend.club.ClubMembership;
+import com.koval.trainingplannerbackend.club.ClubMemberStatus;
+import com.koval.trainingplannerbackend.club.ClubMembershipRepository;
 import com.koval.trainingplannerbackend.training.group.Group;
 import com.koval.trainingplannerbackend.training.group.GroupService;
 import com.koval.trainingplannerbackend.training.model.BlockType;
@@ -34,15 +37,18 @@ public class TrainingService {
     private final GroupService groupService;
     private final UserRepository userRepository;
     private final ZoneSystemService zoneSystemService;
+    private final ClubMembershipRepository membershipRepository;
 
     public TrainingService(TrainingRepository trainingRepository,
                            GroupService groupService,
                            UserRepository userRepository,
-                           ZoneSystemService zoneSystemService) {
+                           ZoneSystemService zoneSystemService,
+                           ClubMembershipRepository membershipRepository) {
         this.trainingRepository = trainingRepository;
         this.groupService = groupService;
         this.userRepository = userRepository;
         this.zoneSystemService = zoneSystemService;
+        this.membershipRepository = membershipRepository;
     }
 
     /**
@@ -189,6 +195,29 @@ public class TrainingService {
         return folders;
     }
 
+
+    /**
+     * Discover trainings from clubs the user is an active member of.
+     */
+    public List<Training> discoverClubTrainings(String userId) {
+        List<ClubMembership> memberships = membershipRepository.findByUserId(userId);
+        List<String> clubIds = memberships.stream()
+                .filter(m -> m.getStatus() == ClubMemberStatus.ACTIVE)
+                .map(ClubMembership::getClubId)
+                .toList();
+        if (clubIds.isEmpty()) return List.of();
+        return trainingRepository.findByClubIdIn(clubIds);
+    }
+
+    /**
+     * Check if a user is an active member of a club.
+     */
+    public boolean isUserActiveClubMember(String userId, String clubId) {
+        if (clubId == null) return false;
+        return membershipRepository.findByClubIdAndUserId(clubId, userId)
+                .map(m -> m.getStatus() == ClubMemberStatus.ACTIVE)
+                .orElse(false);
+    }
 
     /**
      * Re-calculates estimation metrics (duration, distance, TSS, IF) using the

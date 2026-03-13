@@ -30,6 +30,7 @@ export class TrainingHistoryComponent implements OnInit {
 
     selectedTraining$ = this.trainingService.selectedTraining$;
     filteredTrainings$ = this.trainingService.filteredTrainings$;
+    activeSource$ = this.trainingService.activeSource$;
 
     // Tag folders
     folders: Record<string, Training[]> = {};

@@ -1,6 +1,6 @@
 <div class="history-container">
   <!-- Tag folders from coach -->
-  <div class="tag-folders" *ngIf="folderNames.length">
+  <div class="tag-folders" *ngIf="folderNames.length && (activeSource$ | async) === 'mine'">
     <!-- Collapsed view -->
     <ng-container *ngIf="!expandedFolder">
       <h3 class="section-title">Coach Trainings</h3>
@@ -66,7 +66,7 @@
           <span *ngFor="let tag of training.groupIds" class="tag-chip">{{ tag }}</span>
         </div>
       </div>
-      <button class="delete-btn" title="Delete training" (click)="onDelete($event, training)">&times;</button>
+      <button *ngIf="(activeSource$ | async) === 'mine'" class="delete-btn" title="Delete training" (click)="onDelete($event, training)">&times;</button>
     </div>
   </div>
 </div>
