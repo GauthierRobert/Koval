@@ -6,6 +6,25 @@ import {ScheduledWorkout} from './coach.service';
 import {SavedSession} from './history.service';
 import {environment} from '../../environments/environment';
 
+export interface CalendarClubSession {
+    id: string;
+    clubId: string;
+    clubName: string;
+    title: string;
+    sport?: string;
+    scheduledAt: string;
+    location?: string;
+    description?: string;
+    durationMinutes?: number;
+    participantIds: string[];
+    maxParticipants?: number;
+    clubGroupId?: string;
+    clubGroupName?: string;
+    joined: boolean;
+    onWaitingList: boolean;
+    waitingListPosition: number;
+}
+
 const BASE = environment.apiUrl;
 
 @Injectable({
@@ -97,5 +116,13 @@ export class CalendarService {
 
     linkSessionToSchedule(sessionId: string, scheduledWorkoutId: string): Observable<any> {
         return this.http.post(`${BASE}/api/sessions/${sessionId}/link/${scheduledWorkoutId}`, {});
+    }
+
+    getClubSessionsForCalendar(start: string, end: string): Observable<CalendarClubSession[]> {
+        return this.http
+            .get<CalendarClubSession[]>(`${this.apiUrl}/club-sessions`, {
+                params: { start, end },
+            })
+            .pipe(catchError(() => of([] as CalendarClubSession[])));
     }
 }

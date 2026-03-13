@@ -11,7 +11,6 @@ import { ScheduledWorkout } from '../../../services/coach.service';
 import { RaceGoal, RaceGoalService } from '../../../services/race-goal.service';
 import { SportIconComponent } from '../../shared/sport-icon/sport-icon.component';
 import { WorkoutDetailModalComponent } from '../../shared/workout-detail-modal/workout-detail-modal.component';
-import { PmcChartComponent } from '../../shared/pmc-chart/pmc-chart.component';
 import { formatTrainingDuration, daysUntil } from '../../shared/format/format.utils';
 
 function toDateKey(d: Date): string {
@@ -78,7 +77,7 @@ function computeWeekMetrics(sessions: SavedSession[]): WeekMetrics {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, SportIconComponent, WorkoutDetailModalComponent, PmcChartComponent],
+  imports: [CommonModule, RouterModule, SportIconComponent, WorkoutDetailModalComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -137,33 +136,6 @@ export class DashboardComponent {
     shareReplay(1),
   );
 
-  private projectionTssMap$ = this.authService.user$.pipe(
-    filter((u) => !!u),
-    switchMap(() => {
-      const today = toDateKey(new Date());
-      const future = toDateKey(subDays(new Date(), -30));
-      return this.calendarService.getMySchedule(today, future);
-    }),
-    map((workouts) => {
-      const m = new Map<string, number>();
-      for (const w of workouts) {
-        if (w.status === 'PENDING' && w.tss) {
-          m.set(w.scheduledDate, (m.get(w.scheduledDate) ?? 0) + w.tss);
-        }
-      }
-      return m;
-    }),
-    startWith(new Map<string, number>()),
-    shareReplay(1),
-  );
-
-  fullPmcData$ = combineLatest([this.pmcData$, this.projectionTssMap$]).pipe(
-    map(([real, tssMap]) => [
-      ...real,
-      ...this.metricsService.projectPmcFromSchedule(real, tssMap, 30),
-    ]),
-  );
-
   // Derive CTL/ATL/TSB from the live PMC data — same source as the PMC page
   formStats$ = combineLatest([this.pmcData$, this.authService.user$]).pipe(
     map(([pmcData, user]) => {
@@ -185,7 +157,6 @@ export class DashboardComponent {
     weekMetrics: this.weekMetrics$,
     latestFit: this.latestFit$,
     form: this.formStats$,
-    pmcData: this.fullPmcData$,
     nextGoal: this.raceGoalService.nextGoal$,
   });
 

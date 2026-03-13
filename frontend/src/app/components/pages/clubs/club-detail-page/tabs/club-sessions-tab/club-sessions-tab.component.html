@@ -27,34 +27,36 @@
             <div class="day-group-header" [class.today]="isToday(day)">{{ formatDayHeader(day) }}</div>
             <div class="day-sessions">
               <div *ngFor="let session of getSessionsForDay(sessions, day)" class="session-card glass">
-                <!-- AI button: top-left corner, coaches only, unlinked sessions only -->
-                <button
-                  class="ai-btn-corner"
-                  *ngIf="isCoach && !session.linkedTrainingId"
-                  (click)="onAiCreateForSession(session, $event)"
-                  title="Create training with AI">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16.4l-6.4 4.8L8 14l-6-4.8h7.6z"/></svg>
-                  <span>+ training</span>
-                </button>
-
                 <div class="session-header">
                   <span class="session-sport-badge">{{ session.sport || 'GENERAL' }}</span>
-                  <span class="recurring-badge" *ngIf="session.recurringTemplateId">&#x1f501;</span>
+                  <span class="recurring-badge" *ngIf="session.recurringTemplateId"><svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="#FFFFFF"><path d="M314-115q-104-48-169-145T80-479q0-26 2.5-51t8.5-49l-46 27-40-69 191-110 110 190-70 40-54-94q-11 27-16.5 56t-5.5 60q0 97 53 176.5T354-185l-40 70Zm306-485v-80h109q-46-57-111-88.5T480-800q-55 0-104 17t-90 48l-40-70q50-35 109-55t125-20q79 0 151 29.5T760-765v-55h80v220H620ZM594 0 403-110l110-190 69 40-57 98q118-17 196.5-107T800-480q0-11-.5-20.5T797-520h81q1 10 1.5 19.5t.5 20.5q0 135-80.5 241.5T590-95l44 26-40 69Z"/></svg></span>
+
                   <h4 class="session-title">{{ session.title }}</h4>
-                  <span class="session-time-inline" *ngIf="session.scheduledAt">{{ formatTime(session.scheduledAt) }}</span>
+                  <button
+                    class="ai-btn-corner"
+                    *ngIf="isCoach && !session.linkedTrainingId"
+                    (click)="onAiCreateForSession(session, $event)"
+                    title="Create training with AI">
+                    <span>✨ training</span>
+                  </button>
+                  <span class="session-time-inline"
+                        *ngIf="session.scheduledAt">{{ formatTime(session.scheduledAt) }}</span>
                 </div>
                 <div class="session-meta">
-                  <span *ngIf="session.location">&#x1f4cd; {{ session.location }}</span>
+                  <span *ngIf="session.location">{{ session.location }}</span>
                 </div>
 
                 <!-- Linked training info -->
-                <div class="linked-training-info" *ngIf="session.linkedTrainingId">
-                  <span class="linked-badge">&#x1f3cb; {{ session.linkedTrainingTitle || 'Linked Training' }}</span>
-                  <span class="linked-desc" *ngIf="session.linkedTrainingDescription">{{ truncate(session.linkedTrainingDescription, 80) }}</span>
-                  <a class="linked-view-link" [routerLink]="['/dashboard']" [queryParams]="{trainingId: session.linkedTrainingId}">View &rarr;</a>
-                </div>
+                <button class="linked-training-btn" *ngIf="session.linkedTrainingId"
+                        (click)="navigateToTraining(session.linkedTrainingId!, $event)">
+                  <span class="linked-badge">{{ session.linkedTrainingTitle || 'Linked Training' }}</span>
+                  <span class="linked-desc"
+                        *ngIf="session.linkedTrainingDescription">{{ truncate(session.linkedTrainingDescription, 80) }}</span>
+                  <span class="linked-view-arrow">View &rarr;</span>
+                </button>
 
-                <p class="session-desc" *ngIf="session.description && !session.linkedTrainingId && !session.recurringTemplateId">{{ session.description }}</p>
+                <p class="session-desc"
+                   *ngIf="session.description && !session.linkedTrainingId && !session.recurringTemplateId">{{ session.description }}</p>
 
                 <!-- Waiting list position -->
                 <div class="waiting-list-info" *ngIf="isOnWaitingList(session)">
@@ -72,10 +74,12 @@
                       {{ isFull(session) ? 'JOIN WAITING LIST' : 'JOIN' }}
                     </button>
                   </ng-container>
-                  <button class="btn-ghost small" *ngIf="isParticipant(session)" (click)="cancelSession(session, $event)">
+                  <button class="btn-ghost small" *ngIf="isParticipant(session)"
+                          (click)="cancelSession(session, $event)">
                     CANCEL
                   </button>
-                  <button class="btn-ghost small" *ngIf="isOnWaitingList(session)" (click)="cancelSession(session, $event)">
+                  <button class="btn-ghost small" *ngIf="isOnWaitingList(session)"
+                          (click)="cancelSession(session, $event)">
                     LEAVE WAITING LIST
                   </button>
                 </div>
@@ -105,7 +109,7 @@
         </div>
 
         <!-- Scrollable body -->
-        <div class="time-grid-body" #timeGridBody>
+        <div class="time-grid-body" #timeGridBody (scroll)="onTimeGridScroll()">
           <!-- Time gutter -->
           <div class="time-gutter">
             <div *ngFor="let hour of hours" class="time-gutter-label" [style.height.px]="HOUR_HEIGHT_PX">
@@ -116,7 +120,12 @@
           <!-- Day columns -->
           <div *ngFor="let day of calendarDays" class="day-column" [class.today]="isToday(day)">
             <!-- Hour grid lines -->
-            <div *ngFor="let hour of hours" class="hour-line" [style.top.px]="(hour - HOUR_START) * HOUR_HEIGHT_PX"></div>
+            <div *ngFor="let hour of hours" class="hour-line"
+                 [style.top.px]="(hour - HOUR_START) * HOUR_HEIGHT_PX"></div>
+
+            <!-- Current time line -->
+            <div class="current-time-line" *ngIf="isToday(day)"
+                 [style.top.px]="getCurrentTimeTopPx()"></div>
 
             <!-- Sessions -->
             <div
@@ -128,28 +137,34 @@
               [style.height.px]="getSessionHeightPx(session)">
 
               <!-- AI button in calendar card -->
-              <button
-                *ngIf="isCoach && !session.linkedTrainingId"
-                class="ai-btn-corner small"
-                (click)="onAiCreateForSession(session, $event)"
-                title="Create training with AI">
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16.4l-6.4 4.8L8 14l-6-4.8h7.6z"/></svg>
-                <span>+ training</span>
-              </button>
+              <div class="tg-session-header">
+                <div class="tg-session-top">
+                  <span class="session-sport-badge small">{{ session.sport || 'GEN' }}</span>
+                  <span class="tg-session-time">{{ formatTime(session.scheduledAt) }}</span>
+                  <span class="recurring-badge" *ngIf="session.recurringTemplateId"><svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="#FFFFFF"><path d="M314-115q-104-48-169-145T80-479q0-26 2.5-51t8.5-49l-46 27-40-69 191-110 110 190-70 40-54-94q-11 27-16.5 56t-5.5 60q0 97 53 176.5T354-185l-40 70Zm306-485v-80h109q-46-57-111-88.5T480-800q-55 0-104 17t-90 48l-40-70q50-35 109-55t125-20q79 0 151 29.5T760-765v-55h80v220H620ZM594 0 403-110l110-190 69 40-57 98q118-17 196.5-107T800-480q0-11-.5-20.5T797-520h81q1 10 1.5 19.5t.5 20.5q0 135-80.5 241.5T590-95l44 26-40 69Z"/></svg></span>
+                </div>
+                @if (!session.linkedTrainingId) {
+                  @if (isCoach) {
+                    <button
+                      class="ai-btn-corner small"
+                      (click)="onAiCreateForSession(session, $event)"
+                      title="Create training with AI">
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2.5">
+                        <path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16.4l-6.4 4.8L8 14l-6-4.8h7.6z"/>
+                      </svg>
+                      <span>+ training</span>
+                    </button>
+                  }
+                } @else {
+                  <button class="tg-view-link" (click)="navigateToTraining(session.linkedTrainingId!, $event)">View &rarr;</button>
+                }
 
-              <div class="tg-session-top">
-                <span class="session-sport-badge small">{{ session.sport || 'GEN' }}</span>
-                <span class="tg-session-time">{{ formatTime(session.scheduledAt) }}</span>
-                <span class="recurring-badge small" *ngIf="session.recurringTemplateId">&#x1f501;</span>
               </div>
               <div class="tg-session-title">{{ session.title }}</div>
-
-              <!-- Linked training info -->
-              <ng-container *ngIf="session.linkedTrainingId">
-                <div class="tg-session-desc" *ngIf="session.linkedTrainingDescription">{{ truncate(session.linkedTrainingDescription, 40) }}</div>
-                <a class="tg-view-link" [routerLink]="['/dashboard']" [queryParams]="{trainingId: session.linkedTrainingId}">View &rarr;</a>
-              </ng-container>
-
+              <div class="tg-session-desc"
+                   *ngIf="session.linkedTrainingDescription && session.linkedTrainingId">{{ truncate(session.linkedTrainingDescription, 40) }}
+              </div>
               <div class="tg-capacity-join-row">
                 <span class="tg-session-capacity" [class.capacity-full]="isFull(session)">
                   &#x1f465; {{ getCapacityText(session) }}
@@ -162,13 +177,26 @@
                 <button class="btn-ghost small" *ngIf="isParticipant(session)" (click)="cancelSession(session, $event)">
                   CANCEL
                 </button>
-                <button class="btn-ghost small" *ngIf="isOnWaitingList(session)" (click)="cancelSession(session, $event)">
+                <button class="btn-ghost small" *ngIf="isOnWaitingList(session)"
+                        (click)="cancelSession(session, $event)">
                   LEAVE
                 </button>
               </div>
             </div>
           </div>
         </div>
+
+        <!-- Off-screen session indicators -->
+        @if (sessionsAboveCount > 0) {
+          <div class="sessions-indicator above">
+            &uarr; {{ sessionsAboveCount }} session{{ sessionsAboveCount > 1 ? 's' : '' }} earlier
+          </div>
+        }
+        @if (sessionsBelowCount > 0) {
+          <div class="sessions-indicator below">
+            &darr; {{ sessionsBelowCount }} session{{ sessionsBelowCount > 1 ? 's' : '' }} later
+          </div>
+        }
       </div>
     </ng-container>
 
@@ -185,7 +213,7 @@
     <div class="modal-body">
       <div class="form-row">
         <label>Title *</label>
-        <input [(ngModel)]="form['title']" placeholder="e.g. Saturday Group Ride" class="form-input" />
+        <input [(ngModel)]="form['title']" placeholder="e.g. Saturday Group Ride" class="form-input"/>
       </div>
       <div class="form-row">
         <label>Sport *</label>
@@ -203,10 +231,19 @@
         </select>
       </div>
 
+      <!-- Responsible Coach -->
+      <div class="form-row" *ngIf="coachMembers.length > 0">
+        <label>Responsible Coach</label>
+        <select [(ngModel)]="form['responsibleCoachId']" class="form-input">
+          <option value="">— None —</option>
+          <option *ngFor="let m of coachMembers" [value]="m.userId">{{ m.displayName }}</option>
+        </select>
+      </div>
+
       <!-- Recurring toggle -->
       <div class="form-row recurring-toggle-row">
         <label class="toggle-label">
-          <input type="checkbox" [(ngModel)]="isRecurring" class="toggle-input" />
+          <input type="checkbox" [(ngModel)]="isRecurring" class="toggle-input"/>
           <span class="toggle-switch"></span>
           <span>Recurring session</span>
         </label>
@@ -216,7 +253,7 @@
       <ng-container *ngIf="!isRecurring">
         <div class="form-row">
           <label>Date & Time</label>
-          <input type="datetime-local" [(ngModel)]="form['scheduledAt']" class="form-input" />
+          <input type="datetime-local" [(ngModel)]="form['scheduledAt']" class="form-input"/>
         </div>
       </ng-container>
 
@@ -231,7 +268,7 @@
         </div>
         <div class="form-row">
           <label>Time *</label>
-          <input type="time" [(ngModel)]="form['timeOfDay']" class="form-input" />
+          <input type="time" [(ngModel)]="form['timeOfDay']" class="form-input"/>
         </div>
       </ng-container>
 
@@ -239,16 +276,18 @@
       <div class="form-row two-col">
         <div class="form-row">
           <label>Max Participants</label>
-          <input type="number" [(ngModel)]="form['maxParticipants']" placeholder="Unlimited" class="form-input" min="1" />
+          <input type="number" [(ngModel)]="form['maxParticipants']" placeholder="Unlimited" class="form-input"
+                 min="1"/>
         </div>
         <div class="form-row">
           <label>Duration (minutes)</label>
-          <input type="number" [(ngModel)]="form['durationMinutes']" placeholder="60" class="form-input" min="15" step="15" />
+          <input type="number" [(ngModel)]="form['durationMinutes']" placeholder="60" class="form-input" min="15"
+                 step="15"/>
         </div>
       </div>
       <div class="form-row">
         <label>Location</label>
-        <input [(ngModel)]="form['location']" placeholder="Meeting point" class="form-input" />
+        <input [(ngModel)]="form['location']" placeholder="Meeting point" class="form-input"/>
       </div>
       <div class="form-row">
         <label>Description</label>

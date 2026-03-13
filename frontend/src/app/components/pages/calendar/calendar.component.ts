@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
-import { filter, map, shareReplay, switchMap, tap } from 'rxjs/operators';
+import { filter, map, shareReplay, startWith, switchMap, tap } from 'rxjs/operators';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { Router } from '@angular/router';
 
-import { CalendarService } from '../../../services/calendar.service';
+import { CalendarClubSession, CalendarService } from '../../../services/calendar.service';
 import { AuthService } from '../../../services/auth.service';
 import { ScheduledWorkout } from '../../../services/coach.service';
 import { ScheduleModalComponent } from '../../shared/schedule-modal/schedule-modal.component';
@@ -14,6 +14,7 @@ import { HistoryService, SavedSession } from '../../../services/history.service'
 import { CalendarWeekViewComponent } from './week-view/calendar-week-view.component';
 import { CalendarMonthViewComponent } from './month-view/calendar-month-view.component';
 import { RaceGoal, RaceGoalService } from '../../../services/race-goal.service';
+import { ClubService, ClubGroup, MyClubRoleEntry } from '../../../services/club.service';
 
 export interface CalendarDay {
   date: Date;
@@ -24,7 +25,13 @@ export interface CalendarDay {
 export interface ScheduledEntry { kind: 'scheduled'; scheduled: ScheduledWorkout; }
 export interface FusedEntry      { kind: 'fused'; scheduled: ScheduledWorkout; session: SavedSession; }
 export interface StandaloneEntry { kind: 'standalone'; session: SavedSession; }
-export type CalendarEntry = ScheduledEntry | FusedEntry | StandaloneEntry;
+export interface ClubSessionEntry { kind: 'club-session'; clubSession: CalendarClubSession; }
+export type CalendarEntry = ScheduledEntry | FusedEntry | StandaloneEntry | ClubSessionEntry;
+
+export interface ClubCalendarPreferences {
+  hiddenClubIds: string[];
+  hiddenGroupIds: string[];
+}
 export type EntriesByDay = Map<string, CalendarEntry[]>;
 export type WorkoutsByDay = Map<string, ScheduledWorkout[]>;
 export type GoalsByDay = Map<string, RaceGoal[]>;
@@ -61,7 +68,7 @@ function groupByDay(schedule: ScheduledWorkout[]): WorkoutsByDay {
   return byDay;
 }
 
-function buildEntriesByDay(scheduled: ScheduledWorkout[], sessions: SavedSession[]): EntriesByDay {
+function buildEntriesByDay(scheduled: ScheduledWorkout[], sessions: SavedSession[], clubSessions: CalendarClubSession[] = []): EntriesByDay {
   const byDay: EntriesByDay = new Map();
   const sessionById = new Map(sessions.map(s => [s.id, s]));
   const consumed = new Set<string>();
@@ -82,6 +89,14 @@ function buildEntriesByDay(scheduled: ScheduledWorkout[], sessions: SavedSession
     if (!byDay.has(key)) byDay.set(key, []);
     byDay.get(key)!.push({ kind: 'standalone', session: sess });
   }
+
+  for (const cs of clubSessions) {
+    if (!cs.scheduledAt) continue;
+    const key = cs.scheduledAt.split('T')[0];
+    if (!byDay.has(key)) byDay.set(key, []);
+    byDay.get(key)!.push({ kind: 'club-session', clubSession: cs });
+  }
+
   return byDay;
 }
 
@@ -117,12 +132,19 @@ export class CalendarComponent implements OnInit {
   selectedDate: string | null = null;
   selectedWorkout: ScheduledWorkout | null = null;
 
+  // Club session preferences
+  showPrefsDropdown = false;
+  clubPrefs: ClubCalendarPreferences = { hiddenClubIds: [], hiddenGroupIds: [] };
+  myClubRoles: MyClubRoleEntry[] = [];
+  clubGroupsMap: Map<string, ClubGroup[]> = new Map();
+
   readonly reload$ = new BehaviorSubject<void>(undefined);
 
   private readonly calendarService = inject(CalendarService);
   private readonly authService = inject(AuthService);
   private readonly historyService = inject(HistoryService);
   private readonly raceGoalService = inject(RaceGoalService);
+  private readonly clubService = inject(ClubService);
   private readonly router = inject(Router);
 
   private userId = '';
@@ -131,6 +153,7 @@ export class CalendarComponent implements OnInit {
 
   ngOnInit(): void {
     this.setWeek(new Date());
+    this.loadPreferences();
 
     const user$ = this.authService.user$.pipe(
       filter((u) => !!u),
@@ -149,10 +172,17 @@ export class CalendarComponent implements OnInit {
       shareReplay(1)
     );
 
+    const clubSessions$ = trigger$.pipe(
+      switchMap(() => this.calendarService.getClubSessionsForCalendar(this.startDateKey(), this.endDateKey())),
+      map(sessions => this.filterByPreferences(sessions)),
+      startWith([] as CalendarClubSession[]),
+      shareReplay(1)
+    );
+
     this.scheduleByDay$ = schedule$.pipe(map(groupByDay));
 
-    this.entriesByDay$ = combineLatest([schedule$, sessions$]).pipe(
-      map(([sched, sess]) => buildEntriesByDay(sched, sess))
+    this.entriesByDay$ = combineLatest([schedule$, sessions$, clubSessions$]).pipe(
+      map(([sched, sess, clubSess]) => buildEntriesByDay(sched, sess, clubSess))
     );
 
     this.goalsByDay$ = this.raceGoalService.goals$.pipe(
@@ -166,7 +196,7 @@ export class CalendarComponent implements OnInit {
       })
     );
     this.raceGoalService.loadGoals();
-
+    this.loadClubPrefsData();
   }
 
   goToToday(): void {
@@ -238,6 +268,85 @@ export class CalendarComponent implements OnInit {
   onDetailClosed(): void { this.selectedWorkout = null; }
   onDetailStarted(): void { this.selectedWorkout = null; }
   onDetailStatusChanged(): void { this.selectedWorkout = null; this.reload$.next(); }
+
+  // --- Club session handlers ---
+
+  joinClubSession(session: CalendarClubSession): void {
+    this.clubService.joinSession(session.clubId, session.id).subscribe(() => this.reload$.next());
+  }
+
+  cancelClubSession(session: CalendarClubSession): void {
+    this.clubService.cancelSession(session.clubId, session.id).subscribe(() => this.reload$.next());
+  }
+
+  // --- Preferences ---
+
+  togglePrefsDropdown(): void {
+    this.showPrefsDropdown = !this.showPrefsDropdown;
+  }
+
+  isClubVisible(clubId: string): boolean {
+    return !this.clubPrefs.hiddenClubIds.includes(clubId);
+  }
+
+  toggleClub(clubId: string): void {
+    const idx = this.clubPrefs.hiddenClubIds.indexOf(clubId);
+    if (idx >= 0) {
+      this.clubPrefs.hiddenClubIds.splice(idx, 1);
+    } else {
+      this.clubPrefs.hiddenClubIds.push(clubId);
+    }
+    this.savePreferences();
+    this.reload$.next();
+  }
+
+  isGroupVisible(groupId: string): boolean {
+    return !this.clubPrefs.hiddenGroupIds.includes(groupId);
+  }
+
+  toggleGroup(groupId: string): void {
+    const idx = this.clubPrefs.hiddenGroupIds.indexOf(groupId);
+    if (idx >= 0) {
+      this.clubPrefs.hiddenGroupIds.splice(idx, 1);
+    } else {
+      this.clubPrefs.hiddenGroupIds.push(groupId);
+    }
+    this.savePreferences();
+    this.reload$.next();
+  }
+
+  private filterByPreferences(sessions: CalendarClubSession[]): CalendarClubSession[] {
+    return sessions.filter(s => {
+      if (this.clubPrefs.hiddenClubIds.includes(s.clubId)) return false;
+      if (s.clubGroupId && this.clubPrefs.hiddenGroupIds.includes(s.clubGroupId)) return false;
+      return true;
+    });
+  }
+
+  private loadPreferences(): void {
+    try {
+      const stored = localStorage.getItem('calendarClubPrefs');
+      if (stored) {
+        this.clubPrefs = JSON.parse(stored);
+      }
+    } catch { /* use defaults */ }
+  }
+
+  private savePreferences(): void {
+    localStorage.setItem('calendarClubPrefs', JSON.stringify(this.clubPrefs));
+  }
+
+  private loadClubPrefsData(): void {
+    this.clubService.myClubRoles$.subscribe(roles => {
+      this.myClubRoles = roles;
+      for (const r of roles) {
+        this.clubService.getClubGroups(r.clubId).subscribe(groups => {
+          this.clubGroupsMap.set(r.clubId, groups);
+        });
+      }
+    });
+    this.clubService.loadMyClubRoles();
+  }
 
   private startDateKey(): string {
     return this.viewMode === 'week' ? this.weekDays[0].key : this.monthDays[0].key;

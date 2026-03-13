@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.coach;
 
+import com.koval.trainingplannerbackend.club.*;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
@@ -7,9 +8,9 @@ import com.koval.trainingplannerbackend.training.history.CompletedSessionReposit
 import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -26,17 +27,29 @@ public class ScheduleService {
     private final CoachService coachService;
     private final CompletedSessionRepository completedSessionRepository;
     private final AnalyticsService analyticsService;
+    private final ClubMembershipRepository clubMembershipRepository;
+    private final ClubTrainingSessionRepository clubTrainingSessionRepository;
+    private final ClubRepository clubRepository;
+    private final ClubGroupRepository clubGroupRepository;
 
     public ScheduleService(ScheduledWorkoutRepository scheduledWorkoutRepository,
             TrainingRepository trainingRepository,
             CoachService coachService,
             CompletedSessionRepository completedSessionRepository,
-            AnalyticsService analyticsService) {
+            AnalyticsService analyticsService,
+            ClubMembershipRepository clubMembershipRepository,
+            ClubTrainingSessionRepository clubTrainingSessionRepository,
+            ClubRepository clubRepository,
+            ClubGroupRepository clubGroupRepository) {
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
         this.trainingRepository = trainingRepository;
         this.coachService = coachService;
         this.completedSessionRepository = completedSessionRepository;
         this.analyticsService = analyticsService;
+        this.clubMembershipRepository = clubMembershipRepository;
+        this.clubTrainingSessionRepository = clubTrainingSessionRepository;
+        this.clubRepository = clubRepository;
+        this.clubGroupRepository = clubGroupRepository;
     }
 
     /**
@@ -135,5 +148,91 @@ public class ScheduleService {
                 .map(t -> ScheduledWorkoutResponse.from(sw, t.getTitle(), t.getTrainingType(),
                         t.getEstimatedDurationSeconds(), t.getSportType(), t.getEstimatedTss(), t.getEstimatedIf()))
                 .orElse(ScheduledWorkoutResponse.from(sw, null, null, null, null, null, null));
+    }
+
+    /**
+     * Build a unified schedule merging regular assigned workouts with club training
+     * sessions where the athlete is a participant.
+     */
+    public List<ScheduledWorkoutResponse> getUnifiedSchedule(
+            List<ScheduledWorkout> workouts, String athleteId,
+            LocalDate start, LocalDate end) {
+
+        // 1. Enrich regular workouts
+        List<ScheduledWorkoutResponse> result = new ArrayList<>(enrichList(workouts));
+
+        // 2. Find athlete's active club memberships
+        List<ClubMembership> memberships = clubMembershipRepository.findByUserId(athleteId).stream()
+                .filter(m -> m.getStatus() == ClubMemberStatus.ACTIVE)
+                .toList();
+        if (memberships.isEmpty()) {
+            result.sort(Comparator.comparing(ScheduledWorkoutResponse::scheduledDate,
+                    Comparator.nullsLast(Comparator.naturalOrder())));
+            return result;
+        }
+
+        // 3. Batch-fetch clubs for name resolution
+        List<String> clubIds = memberships.stream().map(ClubMembership::getClubId).toList();
+        Map<String, Club> clubMap = clubRepository.findAllById(clubIds).stream()
+                .collect(Collectors.toMap(Club::getId, Function.identity()));
+
+        // 4. Query club sessions in date range
+        List<ClubTrainingSession> sessions = clubTrainingSessionRepository
+                .findByClubIdInAndScheduledAtBetween(clubIds, start.atStartOfDay(), end.plusDays(1).atStartOfDay());
+
+        // 5. Pre-fetch groups the athlete belongs to
+        Set<String> athleteGroupIds = new HashSet<>();
+        for (String clubId : clubIds) {
+            clubGroupRepository.findByClubIdAndMemberIdsContaining(clubId, athleteId)
+                    .forEach(g -> athleteGroupIds.add(g.getId()));
+        }
+
+        // 6. Filter to sessions where athlete is a participant
+        List<ClubTrainingSession> relevantSessions = sessions.stream()
+                .filter(s -> s.getParticipantIds().contains(athleteId))
+                .filter(s -> {
+                    // For group-scoped sessions, verify athlete is in that group
+                    if (s.getClubGroupId() != null && !s.getClubGroupId().isBlank()) {
+                        return athleteGroupIds.contains(s.getClubGroupId());
+                    }
+                    return true;
+                })
+                .toList();
+
+        if (relevantSessions.isEmpty()) {
+            result.sort(Comparator.comparing(ScheduledWorkoutResponse::scheduledDate,
+                    Comparator.nullsLast(Comparator.naturalOrder())));
+            return result;
+        }
+
+        // 7. Batch-fetch linked trainings
+        List<String> linkedTrainingIds = relevantSessions.stream()
+                .map(ClubTrainingSession::getLinkedTrainingId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        Map<String, Training> linkedTrainings = linkedTrainingIds.isEmpty() ? Map.of()
+                : trainingRepository.findAllById(linkedTrainingIds).stream()
+                        .collect(Collectors.toMap(Training::getId, Function.identity()));
+
+        // 8. Build clubGroupId → name map
+        Map<String, String> groupNameMap = new HashMap<>();
+        clubIds.forEach(clubId -> clubGroupRepository.findByClubId(clubId)
+                .forEach(g -> groupNameMap.put(g.getId(), g.getName())));
+
+        // 9. Map each qualifying session to a response
+        for (ClubTrainingSession s : relevantSessions) {
+            Club club = clubMap.get(s.getClubId());
+            String clubName = club != null ? club.getName() : null;
+            String clubGroupName = s.getClubGroupId() != null ? groupNameMap.get(s.getClubGroupId()) : null;
+            Training linked = s.getLinkedTrainingId() != null ? linkedTrainings.get(s.getLinkedTrainingId()) : null;
+            result.add(ScheduledWorkoutResponse.fromClubSession(s, clubName, clubGroupName, linked));
+        }
+
+        // 10. Sort by scheduledDate
+        result.sort(Comparator.comparing(ScheduledWorkoutResponse::scheduledDate,
+                Comparator.nullsLast(Comparator.naturalOrder())));
+
+        return result;
     }
 }

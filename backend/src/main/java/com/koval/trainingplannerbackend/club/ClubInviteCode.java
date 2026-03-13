@@ -6,32 +6,30 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.DayOfWeek;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 @Getter
 @Setter
-@Document(collection = "recurring_session_templates")
-public class RecurringSessionTemplate {
+@Document(collection = "club_invite_codes")
+public class ClubInviteCode {
     @Id
     private String id;
+
+    @Indexed(unique = true)
+    private String code;
 
     @Indexed
     private String clubId;
 
     private String createdBy;
-    private String title;
-    private String sport;
-    private DayOfWeek dayOfWeek;
-    private LocalTime timeOfDay;
-    private String location;
-    private String description;
-    private String linkedTrainingId;
-    private Integer maxParticipants;
-    private Integer durationMinutes;
+
+    /** Optional: if set, joining via this code also adds the user to this club group */
     private String clubGroupId;
-    private String responsibleCoachId;
+
+    private int maxUses; // 0 = unlimited
+    private int currentUses;
+    private LocalDateTime expiresAt; // null = never expires
     private boolean active = true;
     private LocalDateTime createdAt;
+    private String type = "CLUB";
 }

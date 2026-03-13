@@ -12,18 +12,38 @@
         </div>
       </div>
       <div class="header-right">
-        <button class="tab-btn tab-btn--ai" (click)="showAiModal = true">CREATE WITH AI</button>
+        <button class="tab-btn tab-btn--ai tab-btn--ai-background" (click)="showAiModal = true">✨ CREATE WITH AI</button>
       </div>
     </div>
 
     <!-- Sticky filter bar -->
     <div class="filter-bar">
-      <!-- Tag filter -->
-      <div class="filter-group" *ngIf="(trainingService.availableTags$ | async)?.length">
+      <!-- Source selector -->
+      <div class="filter-group">
+        <app-filter-pills
+          [options]="sourceOptions"
+          [selected]="(trainingService.activeSource$ | async) ?? 'mine'"
+          (selectionChange)="onSourceChange($event)">
+        </app-filter-pills>
+        <div class="filter-sep"></div>
+      </div>
+
+      <!-- Tag filter (mine source only) -->
+      <div class="filter-group" *ngIf="(trainingService.activeSource$ | async) === 'mine' && (trainingService.availableTags$ | async)?.length">
         <app-filter-pills
           [options]="(tagOptions$ | async) ?? []"
           [selected]="(trainingService.activeTagFilter$ | async) ?? null"
           (selectionChange)="setTagFilter($event)">
+        </app-filter-pills>
+        <div class="filter-sep"></div>
+      </div>
+
+      <!-- Club Group filter (club source only) -->
+      <div class="filter-group" *ngIf="(trainingService.activeSource$ | async) === 'club' && (clubGroupOptions$ | async)?.length">
+        <app-filter-pills
+          [options]="(clubGroupOptions$ | async) ?? []"
+          [selected]="(trainingService.activeClubGroupFilter$ | async) ?? null"
+          (selectionChange)="onClubGroupChange($event)">
         </app-filter-pills>
         <div class="filter-sep"></div>
       </div>

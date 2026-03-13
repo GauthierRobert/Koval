@@ -81,6 +81,7 @@ export interface ClubTrainingSession {
   createdAt: string;
   recurringTemplateId?: string;
   clubGroupId?: string;
+  responsibleCoachId?: string;
   maxParticipants?: number;
   durationMinutes?: number;
   linkedTrainingTitle?: string;
@@ -101,6 +102,7 @@ export interface RecurringSessionTemplate {
   linkedTrainingId?: string;
   maxParticipants?: number;
   clubGroupId?: string;
+  responsibleCoachId?: string;
   active: boolean;
   createdAt: string;
 }
@@ -148,6 +150,20 @@ export interface ClubRaceGoalResponse {
   hasUpcomingClubSession: boolean;
 }
 
+export interface ClubInviteCode {
+  id: string;
+  code: string;
+  clubId: string;
+  createdBy: string;
+  clubGroupId?: string;
+  clubGroupName?: string;
+  maxUses: number;
+  currentUses: number;
+  expiresAt?: string;
+  active: boolean;
+  createdAt: string;
+}
+
 export interface CreateClubData {
   name: string;
   description?: string;
@@ -166,6 +182,7 @@ export interface CreateSessionData {
   maxParticipants?: number;
   durationMinutes?: number;
   clubGroupId?: string;
+  responsibleCoachId?: string;
 }
 
 export interface CreateRecurringSessionData {
@@ -178,6 +195,7 @@ export interface CreateRecurringSessionData {
   linkedTrainingId?: string;
   maxParticipants?: number;
   clubGroupId?: string;
+  responsibleCoachId?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -221,6 +239,9 @@ export class ClubService {
 
   private recurringTemplatesSubject = new BehaviorSubject<RecurringSessionTemplate[]>([]);
   recurringTemplates$ = this.recurringTemplatesSubject.asObservable();
+
+  private inviteCodesSubject = new BehaviorSubject<ClubInviteCode[]>([]);
+  inviteCodes$ = this.inviteCodesSubject.asObservable();
 
   loadUserClubs(): void {
     this.http
@@ -589,6 +610,77 @@ export class ClubService {
     });
   }
 
+  loadInviteCodes(clubId: string): void {
+    this.http
+      .get<ClubInviteCode[]>(`${this.apiUrl}/${clubId}/invite-codes`)
+      .pipe(catchError(() => of([] as ClubInviteCode[])))
+      .subscribe((codes) => this.ngZone.run(() => this.inviteCodesSubject.next(codes)));
+  }
+
+  generateInviteCode(
+    clubId: string,
+    clubGroupId?: string,
+    maxUses = 0,
+    expiresAt?: string,
+  ): Observable<ClubInviteCode> {
+    return new Observable((observer) => {
+      this.http
+        .post<ClubInviteCode>(`${this.apiUrl}/${clubId}/invite-codes`, {
+          clubGroupId: clubGroupId || null,
+          maxUses,
+          expiresAt: expiresAt || null,
+        })
+        .subscribe({
+          next: (code) => {
+            this.ngZone.run(() => {
+              this.loadInviteCodes(clubId);
+              observer.next(code);
+              observer.complete();
+            });
+          },
+          error: (err) => observer.error(err),
+        });
+    });
+  }
+
+  deactivateInviteCode(clubId: string, codeId: string): Observable<void> {
+    return new Observable((observer) => {
+      this.http.delete<void>(`${this.apiUrl}/${clubId}/invite-codes/${codeId}`).subscribe({
+        next: () => {
+          this.ngZone.run(() => {
+            this.loadInviteCodes(clubId);
+            observer.next();
+            observer.complete();
+          });
+        },
+        error: (err) => observer.error(err),
+      });
+    });
+  }
+
+  joinGroupSelf(clubId: string, groupId: string): Observable<ClubGroup> {
+    return this.http.post<ClubGroup>(`${this.apiUrl}/${clubId}/groups/${groupId}/join`, {});
+  }
+
+  leaveGroupSelf(clubId: string, groupId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${clubId}/groups/${groupId}/leave`);
+  }
+
+  redeemClubInviteCode(code: string): Observable<void> {
+    return new Observable((observer) => {
+      this.http.post<void>(`${this.apiUrl}/redeem-invite`, { code }).subscribe({
+        next: () => {
+          this.ngZone.run(() => {
+            this.loadUserClubs();
+            observer.next();
+            observer.complete();
+          });
+        },
+        error: (err) => observer.error(err),
+      });
+    });
+  }
+
   resetDetail(): void {
     this.selectedClubSubject.next(null);
     this.membersSubject.next([]);
@@ -600,5 +692,6 @@ export class ClubService {
     this.raceGoalsSubject.next([]);
     this.groupsSubject.next([]);
     this.recurringTemplatesSubject.next([]);
+    this.inviteCodesSubject.next([]);
   }
 }

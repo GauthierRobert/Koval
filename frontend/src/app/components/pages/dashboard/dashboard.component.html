@@ -10,7 +10,6 @@
         </div>
       </div>
       <div class="header-right">
-        <a routerLink="/pmc" class="stat-pmc-link">FULL PMC →</a>
       </div>
     </div>
 
@@ -175,15 +174,6 @@
           </div>
           <button class="view-btn" (click)="openAnalysis(fit)">VIEW ANALYSIS →</button>
         </div>
-      </div>
-
-      <!-- Mini PMC chart -->
-      <div class="mini-pmc glass" *ngIf="vm.pmcData.length > 1">
-        <div class="mini-pmc-header">
-          <span class="mini-pmc-label">PERFORMANCE MANAGEMENT</span>
-          <a routerLink="/pmc" class="view-link">FULL VIEW →</a>
-        </div>
-        <app-pmc-chart [data]="vm.pmcData"></app-pmc-chart>
       </div>
 
       <!-- Empty state CTAs -->

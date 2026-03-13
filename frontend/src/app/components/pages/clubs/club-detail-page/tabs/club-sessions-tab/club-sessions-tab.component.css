@@ -170,9 +170,6 @@
 
 /* --- AI button (top-left corner of card) --- */
 .ai-btn-corner {
-  position: absolute;
-  top: 6px;
-  left: 6px;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(168, 85, 247, 0.3);
   background: rgba(168, 85, 247, 0.1);
@@ -200,16 +197,9 @@
 }
 
 .ai-btn-corner.small {
-  top: 3px;
-  left: 3px;
   padding: 2px 5px;
   font-size: 8px;
   gap: 2px;
-}
-
-/* Offset card content when AI button is present */
-.session-card:has(.ai-btn-corner) .session-header {
-  padding-top: 20px;
 }
 
 /* --- Capacity + Join inline row --- */
@@ -223,8 +213,8 @@
   font-weight: 500;
 }
 
-/* --- Linked training info --- */
-.linked-training-info {
+/* --- Linked training button --- */
+.linked-training-btn {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -234,10 +224,20 @@
   background: rgba(52, 211, 153, 0.06);
   border: 1px solid rgba(52, 211, 153, 0.15);
   border-radius: var(--radius-sm);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.linked-training-btn:hover {
+  background: rgba(52, 211, 153, 0.12);
+  border-color: rgba(52, 211, 153, 0.3);
 }
 
 .linked-badge {
-  color: #34d399 !important;
+  color: white;
   font-size: 11px;
   font-weight: 700;
 }
@@ -247,16 +247,11 @@
   color: var(--text-muted);
 }
 
-.linked-view-link {
+.linked-view-arrow {
   font-size: 10px;
   font-weight: 700;
   color: var(--accent-color);
-  text-decoration: none;
   margin-left: auto;
-}
-
-.linked-view-link:hover {
-  text-decoration: underline;
 }
 
 /* --- Capacity & status badges --- */
@@ -288,7 +283,8 @@
 }
 
 .recurring-badge {
-  font-size: 14px;
+  margin-left: 4px;
+  margin-right: 4px;
 }
 
 .recurring-badge.small {
@@ -364,6 +360,7 @@
 
 /* --- Time-Grid Calendar --- */
 .time-grid-container {
+  position: relative;
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -435,7 +432,7 @@
 .day-column {
   position: relative;
   border-right: 1px solid var(--glass-border);
-  height: calc(16 * 60px);
+  height: calc(16 * 120px);
 }
 
 .day-column:last-child {
@@ -453,6 +450,56 @@
   height: 0;
   border-top: 1px solid var(--glass-border);
   opacity: 0.4;
+}
+
+/* --- Current time line --- */
+.current-time-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #f87171;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.current-time-line::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f87171;
+}
+
+/* --- Off-screen session indicators --- */
+.sessions-indicator {
+  position: absolute;
+  left: 56px;
+  right: 0;
+  z-index: 5;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 5px 12px;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+
+.sessions-indicator.above {
+  top: 33px;
+  background: linear-gradient(to bottom, rgba(20, 20, 30, 0.92), transparent);
+  color: var(--accent-color);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.sessions-indicator.below {
+  bottom: 0;
+  background: linear-gradient(to top, rgba(20, 20, 30, 0.92), transparent);
+  color: var(--accent-color);
+  border-top: 1px solid rgba(99, 102, 241, 0.2);
 }
 
 /* --- Time-Grid Session Cards --- */
@@ -486,7 +533,11 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--glass-border);
 }
-
+.tg-session-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 .tg-session-top {
   display: flex;
   align-items: center;
@@ -520,7 +571,11 @@
   font-size: 9px;
   font-weight: 700;
   color: var(--accent-color);
-  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 .tg-view-link:hover {
@@ -691,8 +746,8 @@
 }
 
 .btn-primary.small {
-  padding: 3px 8px;
-  font-size: 9px;
+  padding: 1px 10px;
+  font-size: 8px;
 }
 
 .btn-secondary {

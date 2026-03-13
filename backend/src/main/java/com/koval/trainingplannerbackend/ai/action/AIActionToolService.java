@@ -95,6 +95,8 @@ public class AIActionToolService {
                     sessionDescription,
                     saved.getId(),
                     maxParticipants,
+                    null,
+                    null,
                     null);
 
             var session = clubService.createSession(userId, resolvedClubId, sessionReq);

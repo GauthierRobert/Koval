@@ -2,6 +2,8 @@ package com.koval.trainingplannerbackend.coach;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.User;
+import com.koval.trainingplannerbackend.auth.UserRepository;
+import com.koval.trainingplannerbackend.club.*;
 import com.koval.trainingplannerbackend.goal.RaceGoal;
 import com.koval.trainingplannerbackend.goal.RaceGoalService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
@@ -27,9 +29,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/coach")
@@ -42,16 +43,36 @@ public class CoachController {
     private final CompletedSessionRepository sessionRepository;
     private final AnalyticsService analyticsService;
     private final RaceGoalService raceGoalService;
+    private final ClubService clubService;
+    private final InviteCodeRepository inviteCodeRepository;
+    private final ClubInviteCodeRepository clubInviteCodeRepository;
+    private final ClubTrainingSessionRepository clubSessionRepository;
+    private final ClubMembershipRepository clubMembershipRepository;
+    private final ClubRepository clubRepository;
+    private final UserRepository userRepository;
 
     public CoachController(CoachService coachService, ScheduleService scheduleService,
                            GroupService groupService, CompletedSessionRepository sessionRepository,
-                           AnalyticsService analyticsService, RaceGoalService raceGoalService) {
+                           AnalyticsService analyticsService, RaceGoalService raceGoalService,
+                           ClubService clubService, InviteCodeRepository inviteCodeRepository,
+                           ClubInviteCodeRepository clubInviteCodeRepository,
+                           ClubTrainingSessionRepository clubSessionRepository,
+                           ClubMembershipRepository clubMembershipRepository,
+                           ClubRepository clubRepository,
+                           UserRepository userRepository) {
         this.coachService = coachService;
         this.scheduleService = scheduleService;
         this.groupService = groupService;
         this.sessionRepository = sessionRepository;
         this.analyticsService = analyticsService;
         this.raceGoalService = raceGoalService;
+        this.clubService = clubService;
+        this.inviteCodeRepository = inviteCodeRepository;
+        this.clubInviteCodeRepository = clubInviteCodeRepository;
+        this.clubSessionRepository = clubSessionRepository;
+        this.clubMembershipRepository = clubMembershipRepository;
+        this.clubRepository = clubRepository;
+        this.userRepository = userRepository;
     }
 
     public record AssignmentRequest(
@@ -93,10 +114,35 @@ public class CoachController {
     @GetMapping("/athletes")
     public ResponseEntity<List<Map<String, Object>>> getAthletes() {
         String coachId = SecurityUtils.getCurrentUserId();
-        List<User> athletes = coachService.getCoachAthletes(coachId);
+        List<User> groupAthletes = coachService.getCoachAthletes(coachId);
         List<Group> coachGroups = groupService.getGroupsForCoach(coachId);
 
-        List<Map<String, Object>> enriched = athletes.stream().map(athlete -> {
+        // Build club membership map: userId → list of club names
+        List<ClubController.MyClubRoleEntry> myRoles = clubService.getMyClubRoles(coachId);
+        List<ClubController.MyClubRoleEntry> coachRoles = myRoles.stream()
+                .filter(r -> r.role() == ClubMemberRole.COACH || r.role() == ClubMemberRole.ADMIN || r.role() == ClubMemberRole.OWNER)
+                .toList();
+
+        Set<String> groupAthleteIds = groupAthletes.stream().map(User::getId).collect(Collectors.toSet());
+        Map<String, List<String>> userClubNames = new HashMap<>();
+
+        for (var role : coachRoles) {
+            List<ClubMembership> members = clubMembershipRepository.findByClubIdAndStatus(role.clubId(), ClubMemberStatus.ACTIVE);
+            for (ClubMembership m : members) {
+                if (!m.getUserId().equals(coachId)) {
+                    userClubNames.computeIfAbsent(m.getUserId(), k -> new ArrayList<>()).add(role.clubName());
+                }
+            }
+        }
+
+        // Fetch club-only users (not already in group athletes)
+        Set<String> clubOnlyIds = new HashSet<>(userClubNames.keySet());
+        clubOnlyIds.removeAll(groupAthleteIds);
+        List<User> clubOnlyUsers = clubOnlyIds.isEmpty() ? List.of() : userRepository.findByIdIn(new ArrayList<>(clubOnlyIds));
+
+        // Enrich group athletes
+        List<Map<String, Object>> enriched = new ArrayList<>();
+        for (User athlete : groupAthletes) {
             Map<String, Object> map = new HashMap<>();
             map.put("id", athlete.getId());
             map.put("displayName", athlete.getDisplayName());
@@ -108,34 +154,33 @@ public class CoachController {
                     .map(Group::getName)
                     .toList();
             map.put("groups", athleteGroupNames);
+            map.put("clubs", userClubNames.getOrDefault(athlete.getId(), List.of()));
             map.put("hasCoach", true);
-            return map;
-        }).toList();
+            enriched.add(map);
+        }
+
+        // Add club-only athletes
+        for (User athlete : clubOnlyUsers) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", athlete.getId());
+            map.put("displayName", athlete.getDisplayName());
+            map.put("profilePicture", athlete.getProfilePicture());
+            map.put("role", athlete.getRole().name());
+            map.put("ftp", athlete.getFtp());
+            map.put("groups", List.of());
+            map.put("clubs", userClubNames.getOrDefault(athlete.getId(), List.of()));
+            map.put("hasCoach", false);
+            enriched.add(map);
+        }
 
         return ResponseEntity.ok(enriched);
     }
 
     @GetMapping(value = "/athletes", params = "page")
     public ResponseEntity<Page<Map<String, Object>>> getAthletes(Pageable pageable) {
-        String coachId = SecurityUtils.getCurrentUserId();
-        List<User> athletes = coachService.getCoachAthletes(coachId);
-        List<Group> coachGroups = groupService.getGroupsForCoach(coachId);
-
-        List<Map<String, Object>> enriched = athletes.stream().map(athlete -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", athlete.getId());
-            map.put("displayName", athlete.getDisplayName());
-            map.put("profilePicture", athlete.getProfilePicture());
-            map.put("role", athlete.getRole().name());
-            map.put("ftp", athlete.getFtp());
-            List<String> athleteGroupNames = coachGroups.stream()
-                    .filter(group -> group.getAthleteIds().contains(athlete.getId()))
-                    .map(Group::getName)
-                    .toList();
-            map.put("groups", athleteGroupNames);
-            map.put("hasCoach", true);
-            return map;
-        }).toList();
+        // Reuse the non-paginated logic, then paginate
+        List<Map<String, Object>> enriched = getAthletes().getBody();
+        if (enriched == null) enriched = List.of();
 
         int start = (int) pageable.getOffset();
         int end = Math.min(start + pageable.getPageSize(), enriched.size());
@@ -159,7 +204,11 @@ public class CoachController {
         List<ScheduledWorkout> workouts = (start != null && end != null)
                 ? coachService.getAthleteSchedule(athleteId, start, end)
                 : coachService.getAthleteSchedule(athleteId);
-        return ResponseEntity.ok(scheduleService.enrichList(workouts));
+        if (start != null && end != null) {
+            return ResponseEntity.ok(scheduleService.getUnifiedSchedule(workouts, athleteId, start, end));
+        } else {
+            return ResponseEntity.ok(scheduleService.enrichList(workouts));
+        }
     }
 
     public record CompletionRequest(Integer tss, Double intensityFactor) {}
@@ -267,11 +316,25 @@ public class CoachController {
         return ResponseEntity.ok(raceGoalService.getGoalsForAthlete(athleteId));
     }
 
+    // --- Session Reminders ---
+
+    @GetMapping("/session-reminders")
+    public ResponseEntity<List<ClubTrainingSession>> getSessionReminders() {
+        String userId = SecurityUtils.getCurrentUserId();
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime threeDaysLater = now.plusDays(3);
+        List<ClubTrainingSession> sessions = clubSessionRepository
+                .findByResponsibleCoachIdAndLinkedTrainingIdIsNullAndScheduledAtBetween(userId, now, threeDaysLater);
+        return ResponseEntity.ok(sessions);
+    }
+
     // --- Invite Code endpoints ---
 
     public record InviteCodeRequest(List<String> groups, int maxUses, LocalDateTime expiresAt, String code) {}
 
     public record RedeemRequest(String code) {}
+
+    public record RedeemResponse(String type, String message) {}
 
     @PostMapping("/invite-codes")
     public ResponseEntity<InviteCode> generateInviteCode(
@@ -306,13 +369,32 @@ public class CoachController {
     }
 
     @PostMapping("/redeem-invite")
-    public ResponseEntity<User> redeemInviteCode(@RequestBody RedeemRequest request) {
+    public ResponseEntity<?> redeemInviteCode(@RequestBody RedeemRequest request) {
         String userId = SecurityUtils.getCurrentUserId();
-        try {
-            User updated = coachService.redeemInviteCode(userId, request.code());
-            return ResponseEntity.ok(updated);
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
+        String normalizedCode = request.code().toUpperCase().trim();
+
+        // Look up in coach invite codes
+        Optional<InviteCode> coachCode = inviteCodeRepository.findByCode(normalizedCode);
+        if (coachCode.isPresent()) {
+            try {
+                coachService.redeemInviteCode(userId, normalizedCode);
+                return ResponseEntity.ok(new RedeemResponse("GROUP", "Joined training group"));
+            } catch (IllegalStateException e) {
+                return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            }
         }
+
+        // Look up in club invite codes
+        Optional<ClubInviteCode> clubCode = clubInviteCodeRepository.findByCode(normalizedCode);
+        if (clubCode.isPresent()) {
+            try {
+                clubService.redeemClubInviteCode(userId, normalizedCode);
+                return ResponseEntity.ok(new RedeemResponse("CLUB", "Joined club successfully"));
+            } catch (IllegalStateException e) {
+                return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            }
+        }
+
+        return ResponseEntity.badRequest().body(Map.of("error", "Invalid invite code"));
     }
 }

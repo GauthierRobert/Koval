@@ -153,6 +153,35 @@
           </div>
         </ng-container>
 
+        <!-- CLUB SESSION card -->
+        <ng-container *ngIf="entry.kind === 'club-session'">
+          <div class="workout-card workout-card--club-session"
+            [class.not-joined]="!entry.clubSession.joined && !entry.clubSession.onWaitingList">
+            <div class="card-top">
+              <span class="club-session-badge">{{ entry.clubSession.clubName }}</span>
+              <span class="club-session-time">{{ formatClubSessionTime(entry.clubSession.scheduledAt) }}</span>
+            </div>
+            <div class="workout-info">
+              <div class="title-row">
+                <app-sport-icon [sport]="$any(entry.clubSession.sport)" [size]="14"></app-sport-icon>
+                <span class="workout-title">{{ entry.clubSession.title }}</span>
+              </div>
+              <div class="club-session-meta">
+                <span *ngIf="entry.clubSession.location" class="club-session-location">{{ entry.clubSession.location }}</span>
+                <span class="club-session-count">{{ entry.clubSession.participantIds.length }}{{ entry.clubSession.maxParticipants ? '/' + entry.clubSession.maxParticipants : '' }}</span>
+              </div>
+              <div class="club-session-actions">
+                <button *ngIf="!entry.clubSession.joined && !entry.clubSession.onWaitingList"
+                  class="btn-join" (click)="joinClubSession.emit(entry.clubSession)">JOIN</button>
+                <button *ngIf="entry.clubSession.joined || entry.clubSession.onWaitingList"
+                  class="btn-cancel-club" (click)="cancelClubSession.emit(entry.clubSession)">
+                  {{ entry.clubSession.onWaitingList ? 'LEAVE WAITLIST' : 'CANCEL' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
       </ng-container>
 
       <!-- Goal pills -->

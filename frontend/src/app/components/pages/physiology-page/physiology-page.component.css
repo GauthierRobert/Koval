@@ -226,7 +226,7 @@
   font-size: var(--text-sm);
   font-weight: 800;
   color: var(--text-color);
-  min-width: 24px;
+  min-width: 32px;
 }
 
 .zone-name {

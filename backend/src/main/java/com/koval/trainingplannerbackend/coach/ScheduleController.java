@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.coach;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
+import com.koval.trainingplannerbackend.club.ClubService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,13 +28,16 @@ public class ScheduleController {
     private final ScheduledWorkoutRepository scheduledWorkoutRepository;
     private final CoachService coachService;
     private final ScheduleService scheduleService;
+    private final ClubService clubService;
 
     public ScheduleController(ScheduledWorkoutRepository scheduledWorkoutRepository,
             CoachService coachService,
-            ScheduleService scheduleService) {
+            ScheduleService scheduleService,
+            ClubService clubService) {
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
         this.coachService = coachService;
         this.scheduleService = scheduleService;
+        this.clubService = clubService;
     }
 
     public static class ScheduleRequest {
@@ -151,5 +155,13 @@ public class ScheduleController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/club-sessions")
+    public ResponseEntity<List<ClubService.CalendarClubSessionResponse>> getMyClubSessions(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(clubService.getMyClubSessionsForCalendar(userId, start, end));
     }
 }

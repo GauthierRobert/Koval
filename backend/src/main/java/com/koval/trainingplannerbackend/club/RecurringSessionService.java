@@ -39,6 +39,8 @@ public class RecurringSessionService {
         template.setLinkedTrainingId(req.linkedTrainingId());
         template.setMaxParticipants(req.maxParticipants());
         template.setDurationMinutes(req.durationMinutes());
+        template.setClubGroupId(req.clubGroupId());
+        template.setResponsibleCoachId(req.responsibleCoachId());
         template.setCreatedAt(LocalDateTime.now());
         template = templateRepository.save(template);
 
@@ -61,6 +63,8 @@ public class RecurringSessionService {
         template.setLinkedTrainingId(req.linkedTrainingId());
         template.setMaxParticipants(req.maxParticipants());
         template.setDurationMinutes(req.durationMinutes());
+        template.setClubGroupId(req.clubGroupId());
+        template.setResponsibleCoachId(req.responsibleCoachId());
         return templateRepository.save(template);
     }
 
@@ -110,6 +114,8 @@ public class RecurringSessionService {
             session.setMaxParticipants(template.getMaxParticipants());
             session.setDurationMinutes(template.getDurationMinutes());
             session.setRecurringTemplateId(template.getId());
+            session.setClubGroupId(template.getClubGroupId());
+            session.setResponsibleCoachId(template.getResponsibleCoachId());
             session.setCreatedAt(LocalDateTime.now());
             sessionRepository.save(session);
         }

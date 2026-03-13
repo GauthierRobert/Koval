@@ -305,6 +305,7 @@ public class CoachService {
         inviteCode.setGroupIds(groupIds != null ? groupIds : new ArrayList<>());
         inviteCode.setMaxUses(maxUses);
         inviteCode.setExpiresAt(expiresAt);
+        inviteCode.setType("GROUP");
 
         return inviteCodeRepository.save(inviteCode);
     }

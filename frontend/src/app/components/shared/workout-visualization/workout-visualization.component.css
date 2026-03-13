@@ -320,6 +320,15 @@
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
 
+    .block-tooltip.tooltip-below {
+      bottom: auto;
+      top: 20%;
+    }
+
+    .bar-container:hover .block-tooltip.tooltip-below {
+      transform: translateX(-50%) translateY(10px);
+    }
+
     .tooltip-label {
       font-size: 12px;
       text-transform: uppercase;
@@ -472,7 +481,7 @@
       font-size: 11px;
       font-weight: 700;
       color: var(--color-white);
-      min-width: 28px;
+      min-width: 36px;
     }
 
     .bar-track {

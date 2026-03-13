@@ -2,6 +2,8 @@ package com.koval.trainingplannerbackend.ai.action;
 
 import com.koval.trainingplannerbackend.ai.UserContextResolver;
 import com.koval.trainingplannerbackend.ai.UserContextResolver.UserContext;
+import com.koval.trainingplannerbackend.training.zone.ZoneSystem;
+import com.koval.trainingplannerbackend.training.zone.ZoneSystemService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -18,6 +20,7 @@ public class AIActionService {
     private final ChatClient actionTrainingSessionClient;
     private final ChatClient actionNotationTrainingClient;
     private final UserContextResolver userContextResolver;
+    private final ZoneSystemService zoneSystemService;
 
     public record ActionContext(String clubId, String clubGroupId, String coachGroupId, String sessionId,
                                 String sport, String zoneSystemId) {}
@@ -26,11 +29,13 @@ public class AIActionService {
     public AIActionService(@Qualifier("actionZoneClient") ChatClient actionZoneClient,
                            @Qualifier("actionTrainingSessionClient") ChatClient actionTrainingSessionClient,
                            @Qualifier("actionNotationTrainingClient") ChatClient actionNotationTrainingClient,
-                           UserContextResolver userContextResolver) {
+                           UserContextResolver userContextResolver,
+                           ZoneSystemService zoneSystemService) {
         this.actionZoneClient = actionZoneClient;
         this.actionTrainingSessionClient = actionTrainingSessionClient;
         this.actionNotationTrainingClient = actionNotationTrainingClient;
         this.userContextResolver = userContextResolver;
+        this.zoneSystemService = zoneSystemService;
     }
 
     public ActionResult execute(String userMessage, AIActionType actionType, ActionContext context, String userId) {
@@ -57,13 +62,37 @@ public class AIActionService {
     }
 
     private String buildSystemContext(UserContext ctx, ActionContext context) {
-        return "userId = " + ctx.userId() + "\n"
-                + "userRole = " + ctx.role() + "\n"
-                + "clubId = " + (context.clubId() != null ? context.clubId() : "null") + "\n"
-                + "clubGroupId = " + (context.clubGroupId() != null ? context.clubGroupId() : "null") + "\n"
-                + "coachGroupId = " + (context.coachGroupId() != null ? context.coachGroupId() : "null") + "\n"
-                + "sessionId = " + (context.sessionId() != null ? context.sessionId() : "null") + "\n"
-                + "sport = " + (context.sport() != null ? context.sport() : "null") + "\n"
-                + "zoneSystemId = " + (context.zoneSystemId() != null ? context.zoneSystemId() : "null");
+        StringBuilder sb = new StringBuilder();
+        sb.append("userId = ").append(ctx.userId()).append("\n");
+        sb.append("userRole = ").append(ctx.role()).append("\n");
+        sb.append("ftp = ").append(ctx.ftp()).append("\n");
+        sb.append("clubId = ").append(context.clubId() != null ? context.clubId() : "null").append("\n");
+        sb.append("clubGroupId = ").append(context.clubGroupId() != null ? context.clubGroupId() : "null").append("\n");
+        sb.append("coachGroupId = ").append(context.coachGroupId() != null ? context.coachGroupId() : "null").append("\n");
+        sb.append("sessionId = ").append(context.sessionId() != null ? context.sessionId() : "null").append("\n");
+        sb.append("sport = ").append(context.sport() != null ? context.sport() : "null").append("\n");
+        sb.append("zoneSystemId = ").append(context.zoneSystemId() != null ? context.zoneSystemId() : "null");
+
+        // Append zone system details when available
+        String zsId = context.zoneSystemId();
+        if (zsId != null && !zsId.isBlank() && !"null".equalsIgnoreCase(zsId)) {
+            try {
+                ZoneSystem zs = zoneSystemService.getZoneSystem(zsId);
+                sb.append("\n\nZone System: ").append(zs.getName())
+                  .append(" (").append(zs.getReferenceType()).append(")");
+                if (zs.getZones() != null) {
+                    sb.append("\nZones:");
+                    for (var z : zs.getZones()) {
+                        sb.append("\n  ").append(z.label()).append(": ")
+                          .append(z.low()).append("-").append(z.high()).append("%");
+                        if (z.description() != null) sb.append(" (").append(z.description()).append(")");
+                    }
+                }
+                if (zs.getAnnotations() != null && !zs.getAnnotations().isBlank()) {
+                    sb.append("\nAnnotations: ").append(zs.getAnnotations());
+                }
+            } catch (Exception ignored) {}
+        }
+        return sb.toString();
     }
 }

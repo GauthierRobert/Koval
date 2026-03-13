@@ -30,18 +30,28 @@ public class ClubController {
     public record CreateSessionRequest(String title, String sport, LocalDateTime scheduledAt,
                                        String location, String description, String linkedTrainingId,
                                        Integer maxParticipants, Integer durationMinutes,
-                                       String clubGroupId) {}
+                                       String clubGroupId, String responsibleCoachId) {}
 
     public record CreateRecurringSessionRequest(String title, String sport, DayOfWeek dayOfWeek,
                                                  LocalTime timeOfDay, String location, String description,
                                                  String linkedTrainingId, Integer maxParticipants,
-                                                 Integer durationMinutes, String clubGroupId) {}
+                                                 Integer durationMinutes, String clubGroupId,
+                                                 String responsibleCoachId) {}
 
     public record LinkTrainingRequest(String trainingId) {}
 
     public record CreateGroupRequest(String name) {}
 
     public record UpdateMemberRoleRequest(ClubMemberRole role) {}
+
+    public record CreateInviteCodeRequest(String clubGroupId, int maxUses, String expiresAt) {}
+
+    public record ClubInviteCodeResponse(String id, String code, String clubId, String createdBy,
+                                          String clubGroupId, String clubGroupName,
+                                          int maxUses, int currentUses,
+                                          String expiresAt, boolean active, String createdAt) {}
+
+    public record RedeemInviteCodeRequest(String code) {}
 
     public record ClubSummaryResponse(String id, String name, String description, String logoUrl,
                                       ClubVisibility visibility, int memberCount, String membershipStatus) {}
@@ -167,6 +177,19 @@ public class ClubController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{id}/groups/{groupId}/join")
+    public ResponseEntity<ClubGroup> joinGroup(@PathVariable String id, @PathVariable String groupId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(clubService.joinGroupSelf(userId, id, groupId));
+    }
+
+    @DeleteMapping("/{id}/groups/{groupId}/leave")
+    public ResponseEntity<Void> leaveGroup(@PathVariable String id, @PathVariable String groupId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        clubService.leaveGroupSelf(userId, id, groupId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/{id}/groups/{groupId}/members/{targetUserId}")
     public ResponseEntity<ClubGroup> addMemberToGroup(@PathVariable String id,
                                                        @PathVariable String groupId,
@@ -181,6 +204,58 @@ public class ClubController {
                                                             @PathVariable String targetUserId) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(clubService.removeMemberFromGroup(userId, id, groupId, targetUserId));
+    }
+
+    // --- Invite Codes ---
+
+    @PostMapping("/{id}/invite-codes")
+    public ResponseEntity<ClubInviteCodeResponse> generateInviteCode(@PathVariable String id,
+                                                                      @RequestBody CreateInviteCodeRequest req) {
+        String userId = SecurityUtils.getCurrentUserId();
+        LocalDateTime expiresAt = req.expiresAt() != null ? LocalDateTime.parse(req.expiresAt()) : null;
+        ClubInviteCode code = clubService.generateInviteCode(userId, id, req.clubGroupId(), req.maxUses(), expiresAt);
+        return ResponseEntity.ok(toInviteCodeResponse(code));
+    }
+
+    @GetMapping("/{id}/invite-codes")
+    public ResponseEntity<List<ClubInviteCodeResponse>> getInviteCodes(@PathVariable String id) {
+        String userId = SecurityUtils.getCurrentUserId();
+        List<ClubInviteCode> codes = clubService.getClubInviteCodes(userId, id);
+        List<ClubInviteCodeResponse> responses = codes.stream().map(this::toInviteCodeResponse).toList();
+        return ResponseEntity.ok(responses);
+    }
+
+    @DeleteMapping("/{id}/invite-codes/{codeId}")
+    public ResponseEntity<Void> deactivateInviteCode(@PathVariable String id,
+                                                       @PathVariable String codeId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        clubService.deactivateClubInviteCode(userId, id, codeId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/redeem-invite")
+    public ResponseEntity<ClubMembership> redeemInviteCode(@RequestBody RedeemInviteCodeRequest req) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(clubService.redeemClubInviteCode(userId, req.code()));
+    }
+
+    private ClubInviteCodeResponse toInviteCodeResponse(ClubInviteCode code) {
+        String groupName = null;
+        if (code.getClubGroupId() != null) {
+            try {
+                groupName = clubService.listGroups(code.getClubId()).stream()
+                        .filter(g -> g.getId().equals(code.getClubGroupId()))
+                        .map(ClubGroup::getName)
+                        .findFirst().orElse(null);
+            } catch (Exception ignored) {}
+        }
+        return new ClubInviteCodeResponse(
+                code.getId(), code.getCode(), code.getClubId(), code.getCreatedBy(),
+                code.getClubGroupId(), groupName,
+                code.getMaxUses(), code.getCurrentUses(),
+                code.getExpiresAt() != null ? code.getExpiresAt().toString() : null,
+                code.isActive(),
+                code.getCreatedAt() != null ? code.getCreatedAt().toString() : null);
     }
 
     @GetMapping("/{id}/feed")

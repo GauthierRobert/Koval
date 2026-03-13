@@ -244,6 +244,102 @@
   opacity: 0.6;
 }
 
+/* ─── Group cards ─────────────────────────────────────────── */
+.group-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.group-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.15s;
+}
+
+.group-card:hover {
+  border-color: var(--accent-color);
+}
+
+.group-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.group-card-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-color);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-card-count {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.group-card-invite {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.invite-code-chip {
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--accent-color);
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border, rgba(255, 157, 0, 0.25));
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+  user-select: all;
+}
+
+.invite-code-chip:hover {
+  background: rgba(255, 157, 0, 0.15);
+}
+
+.btn-copy-sm {
+  background: none;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn-copy-sm:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-color);
+}
+
+.btn-copy-sm.btn-copied {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.25);
+}
+
 /* ─── Selects ─────────────────────────────────────────────── */
 .role-select,
 .tag-select {
@@ -331,6 +427,102 @@
 
 .btn-reject:hover {
   background: rgba(248, 113, 113, 0.15);
+}
+
+/* ─── Invite panel ────────────────────────────────────────── */
+.invite-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.invite-create-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.invite-select,
+.invite-input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 11px;
+  color: var(--text-color);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.invite-select:focus,
+.invite-input:focus {
+  border-color: var(--accent-color);
+}
+
+.invite-select {
+  flex: 1;
+  min-width: 140px;
+}
+
+.invite-input {
+  width: 100px;
+}
+
+.invite-code-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.invite-code-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  gap: 10px;
+}
+
+.invite-inactive {
+  opacity: 0.45;
+}
+
+.invite-code-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.invite-code-value {
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--accent-color);
+  letter-spacing: 0.08em;
+}
+
+.invite-code-detail {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.invite-code-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn-copied {
+  color: #34d399 !important;
+  border-color: rgba(52, 211, 153, 0.25) !important;
 }
 
 /* ─── Empty state ─────────────────────────────────────────── */

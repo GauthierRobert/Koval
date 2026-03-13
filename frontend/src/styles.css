@@ -335,3 +335,25 @@ select option {
     padding: var(--page-padding);
   }
 }
+
+.tab-btn--ai-background{
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: #fff;
+}
+
+.tab-btn--ai:hover {
+  filter: brightness(1.15);
+}
+
+.tab-btn--ai {
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+
+

@@ -95,6 +95,14 @@ public class TrainingController {
         return ResponseEntity.ok(trainings);
     }
 
+    @GetMapping("/club-trainings")
+    public ResponseEntity<List<Training>> listClubTrainings() {
+        String userId = SecurityUtils.getCurrentUserId();
+        List<Training> trainings = trainingService.discoverClubTrainings(userId);
+        trainings.forEach(t -> trainingService.enrichTrainingForUser(t, userId));
+        return ResponseEntity.ok(trainings);
+    }
+
     @GetMapping(params = "page")
     public ResponseEntity<Page<Training>> listTrainings(Pageable pageable) {
         String userId = SecurityUtils.getCurrentUserId();
@@ -134,6 +142,9 @@ public class TrainingController {
             return;
         }
         if (coachService.isCoachOfAthlete(currentUserId, training.getCreatedBy())) {
+            return;
+        }
+        if (training.getClubId() != null && trainingService.isUserActiveClubMember(currentUserId, training.getClubId())) {
             return;
         }
         throw new AccessDeniedException("You do not have access to this training");

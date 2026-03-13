@@ -13,6 +13,7 @@ import { SportIconComponent } from '../../../shared/sport-icon/sport-icon.compon
 import { TrainingLoadChartComponent } from '../../../layout/training-load-chart/training-load-chart.component';
 import { CalendarDay, CalendarEntry, EntriesByDay, GoalsByDay, toDateKey } from '../calendar.component';
 import { WorkoutsByDay } from '../calendar.component';
+import { CalendarClubSession } from '../../../../services/calendar.service';
 import { RaceGoalService } from '../../../../services/race-goal.service';
 import { formatTimeHMS } from '../../../shared/format/format.utils';
 
@@ -41,6 +42,8 @@ export class CalendarWeekViewComponent {
   @Output() workoutDeleted = new EventEmitter<ScheduledWorkout>();
   @Output() dropped = new EventEmitter<{ drop: CdkDragDrop<CalendarEntry[]>; day: CalendarDay }>();
   @Output() linked = new EventEmitter<void>();
+  @Output() joinClubSession = new EventEmitter<CalendarClubSession>();
+  @Output() cancelClubSession = new EventEmitter<CalendarClubSession>();
 
   linkPickerState: { sessionId: string } | null = null;
   linkSession: SavedSession | null = null;
@@ -99,6 +102,16 @@ export class CalendarWeekViewComponent {
   trackByEntry(_: number, e: CalendarEntry): string {
     if (e.kind === 'fused') return 'fused-' + e.scheduled.id;
     if (e.kind === 'scheduled') return 'sw-' + e.scheduled.id;
+    if (e.kind === 'club-session') return 'club-' + e.clubSession.id;
     return 'sess-' + e.session.id;
+  }
+
+  formatClubSessionTime(scheduledAt: string): string {
+    const d = new Date(scheduledAt);
+    const h = d.getHours();
+    const m = String(d.getMinutes()).padStart(2, '0');
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hour = h % 12 || 12;
+    return `${hour}:${m} ${ampm}`;
   }
 }

@@ -44,12 +44,13 @@
                   LEAVE
                 </button>
               </div>
-              <div class="sub-item" *ngFor="let group of cwg.groups">
+              <div class="sub-item" *ngFor="let gm of cwg.groups">
                 <div class="item-info">
                   <span class="sub-indent"></span>
-                  <span class="item-name sub">{{ group.name }}</span>
+                  <span class="item-name sub" [class.not-member]="!gm.isMember">{{ gm.group.name }}</span>
                 </div>
-                <button class="btn-leave" (click)="leaveClubGroup(cwg.club.id, group.id)">LEAVE</button>
+                <button *ngIf="gm.isMember" class="btn-leave" (click)="leaveClubGroup(cwg.club.id, gm.group.id)">LEAVE</button>
+                <button *ngIf="!gm.isMember" class="btn-join-group" (click)="joinClubGroup(cwg.club.id, gm.group.id)">JOIN</button>
               </div>
             </div>
           </div>

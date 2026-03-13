@@ -13,14 +13,20 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 @Service
 public class ClubService {
+
+    private static final String CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    private static final int CODE_LENGTH = 8;
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     private final ClubRepository clubRepository;
     private final ClubMembershipRepository membershipRepository;
@@ -30,6 +36,7 @@ public class ClubService {
     private final RaceGoalRepository raceGoalRepository;
     private final UserService userService;
     private final ClubGroupRepository clubGroupRepository;
+    private final ClubInviteCodeRepository clubInviteCodeRepository;
     private final NotificationService notificationService;
     private final TrainingService trainingService;
 
@@ -41,6 +48,7 @@ public class ClubService {
                        RaceGoalRepository raceGoalRepository,
                        UserService userService,
                        ClubGroupRepository clubGroupRepository,
+                       ClubInviteCodeRepository clubInviteCodeRepository,
                        NotificationService notificationService,
                        TrainingService trainingService) {
         this.clubRepository = clubRepository;
@@ -51,6 +59,7 @@ public class ClubService {
         this.raceGoalRepository = raceGoalRepository;
         this.userService = userService;
         this.clubGroupRepository = clubGroupRepository;
+        this.clubInviteCodeRepository = clubInviteCodeRepository;
         this.notificationService = notificationService;
         this.trainingService = trainingService;
     }
@@ -79,6 +88,17 @@ public class ClubService {
         membershipRepository.save(membership);
 
         emitActivity(club.getId(), ClubActivityType.MEMBER_JOINED, userId, null, null);
+
+        // Auto-generate default invite code for the club
+        ClubInviteCode autoCode = new ClubInviteCode();
+        autoCode.setCode(generateUniqueClubCode());
+        autoCode.setClubId(club.getId());
+        autoCode.setCreatedBy(userId);
+        autoCode.setMaxUses(0);
+        autoCode.setType("CLUB");
+        autoCode.setCreatedAt(LocalDateTime.now());
+        clubInviteCodeRepository.save(autoCode);
+
         return club;
     }
 
@@ -224,20 +244,28 @@ public class ClubService {
 
     // --- Role management ---
 
-    public ClubMembership updateMemberRole(String ownerId, String clubId, String membershipId, ClubMemberRole newRole) {
-        ClubMembership caller = membershipRepository.findByClubIdAndUserId(clubId, ownerId)
+    public ClubMembership updateMemberRole(String callerId, String clubId, String membershipId, ClubMemberRole newRole) {
+        ClubMembership caller = membershipRepository.findByClubIdAndUserId(clubId, callerId)
                 .orElseThrow(() -> new IllegalStateException("Not a member"));
-        if (caller.getRole() != ClubMemberRole.OWNER) {
-            throw new IllegalStateException("Only the owner can change member roles");
+        if (caller.getRole() != ClubMemberRole.OWNER && caller.getRole() != ClubMemberRole.ADMIN) {
+            throw new IllegalStateException("Only owner or admin can change member roles");
         }
         if (newRole == ClubMemberRole.OWNER) {
             throw new IllegalStateException("Cannot promote a member to OWNER");
+        }
+        // Only the owner can promote to ADMIN
+        if (newRole == ClubMemberRole.ADMIN && caller.getRole() != ClubMemberRole.OWNER) {
+            throw new IllegalStateException("Only the owner can promote members to ADMIN");
         }
 
         ClubMembership target = membershipRepository.findById(membershipId)
                 .orElseThrow(() -> new IllegalArgumentException("Membership not found"));
         if (target.getRole() == ClubMemberRole.OWNER) {
             throw new IllegalStateException("Cannot change the owner's role");
+        }
+        // Admin cannot change another admin's role
+        if (target.getRole() == ClubMemberRole.ADMIN && caller.getRole() != ClubMemberRole.OWNER) {
+            throw new IllegalStateException("Only the owner can change an admin's role");
         }
         target.setRole(newRole);
         return membershipRepository.save(target);
@@ -273,7 +301,20 @@ public class ClubService {
         group.setClubId(clubId);
         group.setName(name);
         group.setCreatedAt(LocalDateTime.now());
-        return clubGroupRepository.save(group);
+        group = clubGroupRepository.save(group);
+
+        // Auto-generate invite code for the group
+        ClubInviteCode autoCode = new ClubInviteCode();
+        autoCode.setCode(generateUniqueClubCode());
+        autoCode.setClubId(clubId);
+        autoCode.setCreatedBy(adminId);
+        autoCode.setClubGroupId(group.getId());
+        autoCode.setMaxUses(0);
+        autoCode.setType("CLUB");
+        autoCode.setCreatedAt(LocalDateTime.now());
+        clubInviteCodeRepository.save(autoCode);
+
+        return group;
     }
 
     public List<ClubGroup> listGroups(String clubId) {
@@ -321,6 +362,32 @@ public class ClubService {
         return clubGroupRepository.save(group);
     }
 
+    // --- Self-service group join/leave ---
+
+    public ClubGroup joinGroupSelf(String userId, String clubId, String groupId) {
+        validateActiveMember(userId, clubId);
+        ClubGroup group = clubGroupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
+        if (!group.getClubId().equals(clubId)) {
+            throw new IllegalArgumentException("Group does not belong to this club");
+        }
+        if (!group.getMemberIds().contains(userId)) {
+            group.getMemberIds().add(userId);
+            clubGroupRepository.save(group);
+        }
+        return group;
+    }
+
+    public ClubGroup leaveGroupSelf(String userId, String clubId, String groupId) {
+        ClubGroup group = clubGroupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
+        if (!group.getClubId().equals(clubId)) {
+            throw new IllegalArgumentException("Group does not belong to this club");
+        }
+        group.getMemberIds().remove(userId);
+        return clubGroupRepository.save(group);
+    }
+
     // --- Sessions ---
 
     public ClubTrainingSession createSession(String userId, String clubId, ClubController.CreateSessionRequest req) {
@@ -338,6 +405,8 @@ public class ClubService {
         session.setLinkedTrainingId(req.linkedTrainingId());
         session.setMaxParticipants(req.maxParticipants());
         session.setDurationMinutes(req.durationMinutes());
+        session.setClubGroupId(req.clubGroupId());
+        session.setResponsibleCoachId(req.responsibleCoachId());
         session.setCreatedAt(LocalDateTime.now());
         enrichFromLinkedTraining(session);
         session = sessionRepository.save(session);
@@ -496,6 +565,198 @@ public class ClubService {
             return new ClubController.ClubRaceGoalResponse(g, hasSession);
         }).collect(Collectors.toList());
     }
+
+    // --- Invite Codes ---
+
+    public ClubInviteCode generateInviteCode(String userId, String clubId, String clubGroupId,
+                                              int maxUses, LocalDateTime expiresAt) {
+        validateAdminOrCoach(userId, clubId);
+
+        // If a group is specified, validate it belongs to this club
+        if (clubGroupId != null && !clubGroupId.isBlank()) {
+            ClubGroup group = clubGroupRepository.findById(clubGroupId)
+                    .orElseThrow(() -> new IllegalArgumentException("Club group not found"));
+            if (!group.getClubId().equals(clubId)) {
+                throw new IllegalArgumentException("Group does not belong to this club");
+            }
+        }
+
+        ClubInviteCode inviteCode = new ClubInviteCode();
+        inviteCode.setCode(generateUniqueClubCode());
+        inviteCode.setClubId(clubId);
+        inviteCode.setCreatedBy(userId);
+        inviteCode.setClubGroupId(clubGroupId != null && !clubGroupId.isBlank() ? clubGroupId : null);
+        inviteCode.setMaxUses(maxUses);
+        inviteCode.setExpiresAt(expiresAt);
+        inviteCode.setType("CLUB");
+        inviteCode.setCreatedAt(LocalDateTime.now());
+
+        return clubInviteCodeRepository.save(inviteCode);
+    }
+
+    public ClubMembership redeemClubInviteCode(String userId, String code) {
+        ClubInviteCode inviteCode = clubInviteCodeRepository.findByCode(code.toUpperCase().trim())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid invite code"));
+
+        if (!inviteCode.isActive()) {
+            throw new IllegalStateException("Invite code is no longer active");
+        }
+        if (inviteCode.getExpiresAt() != null && LocalDateTime.now().isAfter(inviteCode.getExpiresAt())) {
+            throw new IllegalStateException("Invite code has expired");
+        }
+        if (inviteCode.getMaxUses() > 0 && inviteCode.getCurrentUses() >= inviteCode.getMaxUses()) {
+            throw new IllegalStateException("Invite code has reached maximum uses");
+        }
+
+        String clubId = inviteCode.getClubId();
+
+        // Join the club if not already a member
+        Optional<ClubMembership> existing = membershipRepository.findByClubIdAndUserId(clubId, userId);
+        ClubMembership membership;
+        if (existing.isPresent()) {
+            membership = existing.get();
+            // If pending, approve automatically
+            if (membership.getStatus() == ClubMemberStatus.PENDING) {
+                membership.setStatus(ClubMemberStatus.ACTIVE);
+                membership.setJoinedAt(LocalDateTime.now());
+                membershipRepository.save(membership);
+                Club club = clubRepository.findById(clubId)
+                        .orElseThrow(() -> new IllegalArgumentException("Club not found"));
+                club.setMemberCount(club.getMemberCount() + 1);
+                clubRepository.save(club);
+                emitActivity(clubId, ClubActivityType.MEMBER_JOINED, userId, null, null);
+            }
+        } else {
+            // Create new active membership
+            membership = new ClubMembership();
+            membership.setClubId(clubId);
+            membership.setUserId(userId);
+            membership.setRole(ClubMemberRole.MEMBER);
+            membership.setStatus(ClubMemberStatus.ACTIVE);
+            membership.setJoinedAt(LocalDateTime.now());
+            membership.setRequestedAt(LocalDateTime.now());
+            membership = membershipRepository.save(membership);
+
+            Club club = clubRepository.findById(clubId)
+                    .orElseThrow(() -> new IllegalArgumentException("Club not found"));
+            club.setMemberCount(club.getMemberCount() + 1);
+            clubRepository.save(club);
+            emitActivity(clubId, ClubActivityType.MEMBER_JOINED, userId, null, null);
+        }
+
+        // If the invite code targets a club group, add the user to it
+        if (inviteCode.getClubGroupId() != null) {
+            ClubGroup group = clubGroupRepository.findById(inviteCode.getClubGroupId()).orElse(null);
+            if (group != null && !group.getMemberIds().contains(userId)) {
+                group.getMemberIds().add(userId);
+                clubGroupRepository.save(group);
+            }
+        }
+
+        // Increment usage
+        inviteCode.setCurrentUses(inviteCode.getCurrentUses() + 1);
+        clubInviteCodeRepository.save(inviteCode);
+
+        return membership;
+    }
+
+    public List<ClubInviteCode> getClubInviteCodes(String userId, String clubId) {
+        validateAdminOrCoach(userId, clubId);
+        return clubInviteCodeRepository.findByClubId(clubId);
+    }
+
+    public void deactivateClubInviteCode(String userId, String clubId, String codeId) {
+        validateAdminOrCoach(userId, clubId);
+        ClubInviteCode inviteCode = clubInviteCodeRepository.findById(codeId)
+                .orElseThrow(() -> new IllegalArgumentException("Invite code not found"));
+        if (!inviteCode.getClubId().equals(clubId)) {
+            throw new IllegalArgumentException("Invite code does not belong to this club");
+        }
+        inviteCode.setActive(false);
+        clubInviteCodeRepository.save(inviteCode);
+    }
+
+    private String generateUniqueClubCode() {
+        for (int attempt = 0; attempt < 10; attempt++) {
+            StringBuilder sb = new StringBuilder(CODE_LENGTH);
+            for (int i = 0; i < CODE_LENGTH; i++) {
+                sb.append(CODE_CHARS.charAt(RANDOM.nextInt(CODE_CHARS.length())));
+            }
+            String code = sb.toString();
+            if (clubInviteCodeRepository.findByCode(code).isEmpty()) {
+                return code;
+            }
+        }
+        throw new IllegalStateException("Unable to generate unique invite code after 10 attempts");
+    }
+
+    // --- Calendar aggregation ---
+
+    public List<CalendarClubSessionResponse> getMyClubSessionsForCalendar(String userId, LocalDate start, LocalDate end) {
+        List<ClubMembership> memberships = membershipRepository.findByUserId(userId).stream()
+                .filter(m -> m.getStatus() == ClubMemberStatus.ACTIVE)
+                .toList();
+        if (memberships.isEmpty()) return List.of();
+
+        List<String> clubIds = memberships.stream().map(ClubMembership::getClubId).toList();
+        Map<String, Club> clubMap = clubRepository.findAllById(clubIds).stream()
+                .collect(Collectors.toMap(Club::getId, c -> c));
+
+        List<ClubTrainingSession> sessions = sessionRepository.findByClubIdInAndScheduledAtBetween(
+                clubIds, start.atStartOfDay(), end.plusDays(1).atStartOfDay());
+
+        // Pre-fetch groups the user belongs to, keyed by clubId
+        Set<String> userGroupIds = new HashSet<>();
+        for (String clubId : clubIds) {
+            clubGroupRepository.findByClubIdAndMemberIdsContaining(clubId, userId)
+                    .forEach(g -> userGroupIds.add(g.getId()));
+        }
+
+        // Map groupId -> group name
+        Map<String, String> groupNameMap = new HashMap<>();
+        clubIds.forEach(clubId -> clubGroupRepository.findByClubId(clubId)
+                .forEach(g -> groupNameMap.put(g.getId(), g.getName())));
+
+        List<CalendarClubSessionResponse> result = new ArrayList<>();
+        for (ClubTrainingSession s : sessions) {
+            // If session is scoped to a group, check if user is a member
+            if (s.getClubGroupId() != null && !s.getClubGroupId().isBlank()) {
+                if (!userGroupIds.contains(s.getClubGroupId())) continue;
+            }
+
+            Club club = clubMap.get(s.getClubId());
+            if (club == null) continue;
+
+            boolean joined = s.getParticipantIds().contains(userId);
+            boolean onWaitingList = s.isOnWaitingList(userId);
+            int waitingListPosition = 0;
+            if (onWaitingList) {
+                for (int i = 0; i < s.getWaitingList().size(); i++) {
+                    if (s.getWaitingList().get(i).userId().equals(userId)) {
+                        waitingListPosition = i + 1;
+                        break;
+                    }
+                }
+            }
+
+            result.add(new CalendarClubSessionResponse(
+                    s.getId(), s.getClubId(), club.getName(), s.getTitle(), s.getSport(),
+                    s.getScheduledAt(), s.getLocation(), s.getDescription(),
+                    s.getDurationMinutes(), s.getParticipantIds(),
+                    s.getMaxParticipants(), s.getClubGroupId(),
+                    groupNameMap.get(s.getClubGroupId()),
+                    joined, onWaitingList, waitingListPosition));
+        }
+        return result;
+    }
+
+    public record CalendarClubSessionResponse(
+            String id, String clubId, String clubName, String title, String sport,
+            LocalDateTime scheduledAt, String location, String description,
+            Integer durationMinutes, List<String> participantIds,
+            Integer maxParticipants, String clubGroupId, String clubGroupName,
+            boolean joined, boolean onWaitingList, int waitingListPosition
+    ) {}
 
     // --- Helpers ---
 

@@ -49,7 +49,7 @@ public class NotationToolService {
             @ToolParam(description = "from context") String userId,
             @ToolParam(description = "e.g. 10minWARM + 5x300m85%/R:200m60% + 5minCOOL") String notation,
             @ToolParam(description = "CYCLING|RUNNING|SWIMMING|BRICK") String sport,
-            String title,
+            String description,
             @ToolParam(description = "VO2MAX|THRESHOLD|SWEET_SPOT|ENDURANCE|SPRINT|RECOVERY|MIXED|TEST") String type,
             @ToolParam(description = "zone ID or \"null\"") String zoneSystemId,
             @ToolParam(description = "from context or \"null\"") String clubId,
@@ -73,7 +73,8 @@ public class NotationToolService {
         String resolvedClubId = isPresent(clubId) ? clubId : null;
 
         Training training = createTrainingInstance(sport);
-        training.setTitle(title);
+        training.setTitle(notation);
+        training.setDescription(description);
         training.setTrainingType(parseTrainingType(type));
         training.setBlocks(resolvedBlocks);
         training.setGroupIds(new ArrayList<>());
@@ -110,7 +111,7 @@ public class NotationToolService {
                 } catch (Exception ignored) {}
             }
             ClubController.CreateSessionRequest sessionReq = new ClubController.CreateSessionRequest(
-                    title, sport, scheduledDateTime, null, null, saved.getId(), null, null);
+                    description, sport, scheduledDateTime, null, null, saved.getId(), null, null, null, null);
             try {
                 var session = clubService.createSession(userId, resolvedClubId, sessionReq);
                 return "Created '" + saved.getTitle() + "' with club session [" + session.getId() + "]";
@@ -149,7 +150,7 @@ public class NotationToolService {
                 .collect(Collectors.toMap(
                         z -> z.label().toUpperCase(),
                         z -> (z.low() + z.high()) / 2,
-                        (a, _) -> a));
+                        (a, b) -> a));
     }
 
     private WorkoutBlock resolveBlockIntensity(WorkoutBlock block, Map<String, Integer> zoneMidpoints) {

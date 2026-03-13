@@ -39,6 +39,9 @@ export interface ScheduledWorkout {
     if?: number;
     sportType: 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK' | 'GYM';
     sessionId?: string;
+    isClubSession?: boolean;
+    clubName?: string;
+    clubGroupName?: string;
 }
 
 @Injectable({
@@ -131,10 +134,16 @@ export class CoachService {
         return this.http.delete<void>(`${this.apiUrl}/invite-codes/${codeId}`);
     }
 
-    redeemInviteCode(code: string): Observable<User> {
-        return this.http.post<User>(
+    redeemInviteCode(code: string): Observable<any> {
+        return this.http.post<any>(
             `${this.apiUrl}/redeem-invite`,
             { code }
+        );
+    }
+
+    getSessionReminders(): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/session-reminders`).pipe(
+            catchError(() => of([] as any[]))
         );
     }
 
