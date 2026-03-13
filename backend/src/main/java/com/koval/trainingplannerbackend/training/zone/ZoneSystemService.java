@@ -7,13 +7,25 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class ZoneSystemService {
 
+    private static final long CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
     private final ZoneSystemRepository zoneSystemRepository;
     private final GroupService groupService;
+
+    private record CacheEntry(List<ZoneSystem> value, long timestamp) {
+        boolean isExpired() {
+            return System.currentTimeMillis() - timestamp > CACHE_TTL_MS;
+        }
+    }
+
+    private final Map<String, CacheEntry> defaultZoneCache = new ConcurrentHashMap<>();
 
     public ZoneSystemService(ZoneSystemRepository zoneSystemRepository, GroupService groupService) {
         this.zoneSystemRepository = zoneSystemRepository;
@@ -23,8 +35,9 @@ public class ZoneSystemService {
     public ZoneSystem createZoneSystem(ZoneSystem zoneSystem) {
         zoneSystem.setCreatedAt(LocalDateTime.now());
         zoneSystem.setUpdatedAt(LocalDateTime.now());
-
-        return zoneSystemRepository.save(zoneSystem);
+        ZoneSystem saved = zoneSystemRepository.save(zoneSystem);
+        defaultZoneCache.remove(zoneSystem.getCoachId());
+        return saved;
     }
 
     public ZoneSystem updateZoneSystem(String id, ZoneSystem updates) {
@@ -42,8 +55,9 @@ public class ZoneSystemService {
         existing.setDefaultForSport(updates.getDefaultForSport());
         existing.setAnnotations(updates.getAnnotations());
         existing.setUpdatedAt(LocalDateTime.now());
-
-        return zoneSystemRepository.save(existing);
+        ZoneSystem saved = zoneSystemRepository.save(existing);
+        defaultZoneCache.remove(existing.getCoachId());
+        return saved;
     }
 
     public void deleteZoneSystem(String id, String coachId) {
@@ -55,6 +69,7 @@ public class ZoneSystemService {
         }
 
         zoneSystemRepository.deleteById(id);
+        defaultZoneCache.remove(coachId);
     }
 
     public List<ZoneSystem> getZoneSystemsForCoach(String coachId) {
@@ -93,7 +108,9 @@ public class ZoneSystemService {
 
         target.setDefaultForSport(isDefault);
         target.setUpdatedAt(LocalDateTime.now());
-        return zoneSystemRepository.save(target);
+        ZoneSystem saved = zoneSystemRepository.save(target);
+        defaultZoneCache.remove(coachId);
+        return saved;
     }
 
     public Optional<ZoneSystem> getDefaultZoneSystem(String coachId, SportType sportType) {
@@ -101,7 +118,13 @@ public class ZoneSystemService {
     }
 
     public List<ZoneSystem> getDefaultZoneSystems(String coachId) {
-        return zoneSystemRepository.findByCoachIdAndDefaultForSportTrue(coachId);
+        CacheEntry entry = defaultZoneCache.get(coachId);
+        if (entry != null && !entry.isExpired()) {
+            return entry.value();
+        }
+        List<ZoneSystem> result = zoneSystemRepository.findByCoachIdAndDefaultForSportTrue(coachId);
+        defaultZoneCache.put(coachId, new CacheEntry(result, System.currentTimeMillis()));
+        return result;
     }
 
     public List<ZoneSystem> getZoneSystemsForAthlete(String athleteId) {

@@ -33,10 +33,15 @@ public class TrainingToolService {
     }
 
     @Tool(description = "Create a new training workout plan. Returns a summary with the new ID.")
-    public TrainingSummary createTraining(
+    public Object createTraining(
             @ToolParam(description = "The training object to create") TrainingRequest create,
             @ToolParam(description = "The user ID of the creator") String userId,
             ToolContext context) {
+        String validationError = validateTrainingRequest(create);
+        if (validationError != null) {
+            ToolEventEmitter.emitToolResult(context, "createTraining", "Validation failed", false);
+            return validationError;
+        }
         ToolEventEmitter.emitToolCall(context, "createTraining", "Creating: " + create.title());
         Training training = trainingMapper.mapToEntity(create);
         TrainingSummary result = TrainingSummary.from(trainingManagementService.createTraining(training, userId));
@@ -45,15 +50,51 @@ public class TrainingToolService {
     }
 
     @Tool(description = "Update an existing training plan by its ID. Returns updated summary.")
-    public TrainingSummary updateTraining(
+    public Object updateTraining(
             @ToolParam(description = "The training ID to update") String trainingId,
             @ToolParam(description = "The training fields to update") TrainingRequest updates,
             ToolContext context) {
+        String validationError = validateTrainingRequest(updates);
+        if (validationError != null) {
+            ToolEventEmitter.emitToolResult(context, "updateTraining", "Validation failed", false);
+            return validationError;
+        }
         ToolEventEmitter.emitToolCall(context, "updateTraining", "Updating: " + updates.title());
         Training training = trainingMapper.mapToEntity(updates);
         TrainingSummary result = TrainingSummary.from(trainingManagementService.updateTraining(trainingId, training));
         ToolEventEmitter.emitToolResult(context, "updateTraining", result.title(), true);
         return result;
+    }
+
+    private String validateTrainingRequest(TrainingRequest request) {
+        if (request.title() == null || request.title().isBlank()) {
+            return "Error: title is required and cannot be blank.";
+        }
+        if (request.blocks() == null || request.blocks().isEmpty()) {
+            return "Error: blocks list is required and cannot be empty.";
+        }
+        for (int i = 0; i < request.blocks().size(); i++) {
+            WorkoutBlockRequest b = request.blocks().get(i);
+            if (b.type() == null) {
+                return "Error: block[" + i + "] is missing required field 'type'.";
+            }
+            if (b.pct() != null && (b.pct() < 0 || b.pct() > 250)) {
+                return "Error: block[" + i + "] has out-of-range intensity pct=" + b.pct() + " (expected 0-250).";
+            }
+            if (b.pctFrom() != null && (b.pctFrom() < 0 || b.pctFrom() > 250)) {
+                return "Error: block[" + i + "] has out-of-range pctFrom=" + b.pctFrom() + " (expected 0-250).";
+            }
+            if (b.pctTo() != null && (b.pctTo() < 0 || b.pctTo() > 250)) {
+                return "Error: block[" + i + "] has out-of-range pctTo=" + b.pctTo() + " (expected 0-250).";
+            }
+            if (b.dur() != null && b.dur() <= 0) {
+                return "Error: block[" + i + "] has invalid duration=" + b.dur() + " (must be > 0).";
+            }
+            if (b.dist() != null && b.dist() <= 0) {
+                return "Error: block[" + i + "] has invalid distance=" + b.dist() + " (must be > 0).";
+            }
+        }
+        return null;
     }
 
     @Tool(description = "Delete a training plan by its ID. Only the creator can delete their own training.")
