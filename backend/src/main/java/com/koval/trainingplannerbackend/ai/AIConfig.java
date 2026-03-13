@@ -434,7 +434,7 @@ public class AIConfig {
         return AnthropicCacheOptions.builder()
                 .strategy(AnthropicCacheStrategy.SYSTEM_AND_TOOLS)
                 .messageTypeTtl(Stream.of(MessageType.values())
-                        .collect(Collectors.toMap(mt -> mt, _ -> AnthropicCacheTtl.ONE_HOUR, (m1, _) -> m1, HashMap::new)))
+                        .collect(Collectors.toMap(mt -> mt, ignored -> AnthropicCacheTtl.ONE_HOUR, (m1, m2) -> m1, HashMap::new)))
                 .build();
     }
 }
