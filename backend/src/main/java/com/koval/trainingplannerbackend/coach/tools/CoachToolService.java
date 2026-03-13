@@ -32,13 +32,25 @@ public class CoachToolService {
     }
 
     @Tool(description = "Assign a training to one or more athletes on a date.")
-    public List<ScheduleSummary> assignTraining(
+    public Object assignTraining(
             @ToolParam(description = "Coach ID") String coachId,
             @ToolParam(description = "Training ID") String trainingId,
             @ToolParam(description = "Athlete IDs") List<String> athleteIds,
             @ToolParam(description = "Date (YYYY-MM-DD)") LocalDate scheduledDate,
             @ToolParam(description = "Notes (optional)") String notes,
             ToolContext context) {
+        if (trainingId == null || trainingId.isBlank()) {
+            ToolEventEmitter.emitToolResult(context, "assignTraining", "Validation failed", false);
+            return "Error: trainingId is required.";
+        }
+        if (athleteIds == null || athleteIds.isEmpty()) {
+            ToolEventEmitter.emitToolResult(context, "assignTraining", "Validation failed", false);
+            return "Error: athleteIds list is required and cannot be empty.";
+        }
+        if (scheduledDate == null) {
+            ToolEventEmitter.emitToolResult(context, "assignTraining", "Validation failed", false);
+            return "Error: scheduledDate is required.";
+        }
         ToolEventEmitter.emitToolCall(context, "assignTraining", "Scheduling for " + athleteIds.size() + " athlete(s)...");
         List<ScheduledWorkout> workouts = coachService.assignTraining(coachId, trainingId, athleteIds, scheduledDate, notes);
         String title = resolveTrainingTitle(trainingId);

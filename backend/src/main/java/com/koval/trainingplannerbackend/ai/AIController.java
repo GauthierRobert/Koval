@@ -15,7 +15,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ai")
-@CrossOrigin(origins = "*", exposedHeaders = "X-Chat-History-Id")
 public class AIController {
 
     /** Hard limit on user message length to stay within TPM budget. */
@@ -97,7 +96,8 @@ public class AIController {
     @GetMapping("/history/{chatHistoryId}")
     public ResponseEntity<ChatHistoryDetail> getChatHistory(@PathVariable String chatHistoryId) {
         try {
-            ChatHistory metadata = chatHistoryService.findById(chatHistoryId);
+            String userId = SecurityUtils.getCurrentUserId();
+            ChatHistory metadata = chatHistoryService.findByIdForUser(chatHistoryId, userId);
             List<Message> messages = chatHistoryService.getMessages(chatHistoryId);
 
             List<ConversationMessage> conversationMessages = messages.stream()
@@ -114,7 +114,8 @@ public class AIController {
 
     @DeleteMapping("/history/{chatHistoryId}")
     public ResponseEntity<Void> deleteChatHistory(@PathVariable String chatHistoryId) {
-        chatHistoryService.delete(chatHistoryId);
+        String userId = SecurityUtils.getCurrentUserId();
+        chatHistoryService.deleteForUser(chatHistoryId, userId);
         return ResponseEntity.noContent().build();
     }
 

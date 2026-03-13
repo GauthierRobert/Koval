@@ -2,8 +2,10 @@ package com.koval.trainingplannerbackend.ai.agents;
 
 import com.koval.trainingplannerbackend.ai.AIService.ChatMessageResponse;
 import com.koval.trainingplannerbackend.ai.AIService.StreamResponse;
+import com.koval.trainingplannerbackend.ai.ConversationSummarizer;
+import com.koval.trainingplannerbackend.ai.UsageTracker;
+import com.koval.trainingplannerbackend.ai.UsageTracker.UsageSnapshot;
 import com.koval.trainingplannerbackend.ai.UserContextResolver.UserContext;
-import com.koval.trainingplannerbackend.training.zone.Zone;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystem;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystemService;
 import org.springframework.ai.chat.client.ChatClient;
@@ -24,6 +26,7 @@ import java.time.format.TextStyle;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
@@ -33,10 +36,15 @@ public abstract class BaseAgentService implements TrainingAgent {
 
     private final ChatClient chatClient;
     private final ZoneSystemService zoneSystemService;
+    private final UsageTracker usageTracker;
+    private final ConversationSummarizer conversationSummarizer;
 
-    protected BaseAgentService(ChatClient chatClient, ZoneSystemService zoneSystemService) {
+    protected BaseAgentService(ChatClient chatClient, ZoneSystemService zoneSystemService,
+                                UsageTracker usageTracker, ConversationSummarizer conversationSummarizer) {
         this.chatClient = chatClient;
         this.zoneSystemService = zoneSystemService;
+        this.usageTracker = usageTracker;
+        this.conversationSummarizer = conversationSummarizer;
     }
 
     @Override
@@ -45,7 +53,10 @@ public abstract class BaseAgentService implements TrainingAgent {
                 .user(userMessage)
                 .call()
                 .chatResponse();
-        return new ChatMessageResponse(conversationId, response.getResult().getOutput(), getAgentType());
+        UsageSnapshot usage = usageTracker.extractUsage(response);
+        usageTracker.logUsage(getAgentType().name(), conversationId, usage);
+        conversationSummarizer.summarizeIfNeeded(conversationId);
+        return new ChatMessageResponse(conversationId, response.getResult().getOutput(), getAgentType(), usage);
     }
 
     @Override
@@ -56,10 +67,14 @@ public abstract class BaseAgentService implements TrainingAgent {
         var statusStart = Flux.just(sse("status", "in_progress"));
         var agentEvent = Flux.just(sse("agent", getAgentType().name()));
 
+        AtomicLong totalInput = new AtomicLong(0);
+        AtomicLong totalOutput = new AtomicLong(0);
+
         var responseFlux = buildPrompt(ctx, conversationId, toolSink)
                 .user(userMessage)
                 .stream()
                 .chatResponse()
+                .doOnNext(response -> accumulateUsage(response, totalInput, totalOutput))
                 .flatMap(this::mapChatResponseToEvents)
                 .retryWhen(Retry.backoff(2, Duration.ofSeconds(2))
                         .jitter(0.5)
@@ -67,9 +82,16 @@ public abstract class BaseAgentService implements TrainingAgent {
                 .onErrorResume(ex -> Flux.just(sse("error", streamErrorMessage(ex))))
                 .doOnTerminate(toolSink::tryEmitComplete);
 
-        var postStream = Flux.just(
-                sse("status", "complete"),
-                sse("conversation_id", conversationId));
+        var postStream = Flux.defer(() -> {
+            String usageJson = "{\"inputTokens\":" + totalInput.get() + ",\"outputTokens\":" + totalOutput.get() + "}";
+            usageTracker.logUsage(getAgentType().name(), conversationId,
+                    new UsageSnapshot(totalInput.get(), totalOutput.get(), totalInput.get() + totalOutput.get()));
+            conversationSummarizer.summarizeIfNeeded(conversationId);
+            return Flux.just(
+                    sse("usage", usageJson),
+                    sse("status", "complete"),
+                    sse("conversation_id", conversationId));
+        });
 
         var merged = Flux.merge(
                 Flux.concat(statusStart, agentEvent, responseFlux),
@@ -78,9 +100,22 @@ public abstract class BaseAgentService implements TrainingAgent {
         return new StreamResponse(conversationId, Flux.concat(merged, postStream));
     }
 
+    private void accumulateUsage(ChatResponse response, AtomicLong totalInput, AtomicLong totalOutput) {
+        if (response != null && response.getMetadata() != null && response.getMetadata().getUsage() != null) {
+            var usage = response.getMetadata().getUsage();
+            if (usage.getPromptTokens() > 0) totalInput.set(usage.getPromptTokens());
+            if (usage.getCompletionTokens() > 0) totalOutput.addAndGet(usage.getCompletionTokens());
+        }
+    }
+
     private ChatClient.ChatClientRequestSpec buildPrompt(UserContext ctx, String conversationId) {
+        String context = systemContext(ctx);
+        String summary = conversationSummarizer.getSummaryIfNeeded(conversationId);
+        if (summary != null) {
+            context = context + "\n\nPrevious conversation summary: " + summary;
+        }
         return chatClient.prompt()
-                .messages(new SystemMessage(systemContext(ctx)))
+                .messages(new SystemMessage(context))
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId));
     }
 
@@ -114,19 +149,15 @@ public abstract class BaseAgentService implements TrainingAgent {
         List<ZoneSystem> defaults = zoneSystemService.getDefaultZoneSystems(ctx.userId());
         if (defaults.isEmpty()) return "";
 
-        StringBuilder sb = new StringBuilder("\nDefault Zone Systems:");
+        StringBuilder sb = new StringBuilder("\nDefault Zones:");
         for (ZoneSystem zs : defaults) {
             sb.append("\n- ").append(zs.getSportType())
-              .append(": \"").append(zs.getName()).append("\" (id=").append(zs.getId())
-              .append(", ref=").append(zs.getReferenceType()).append(") — ");
+              .append(" \"").append(zs.getName()).append("\" (id=").append(zs.getId())
+              .append(",").append(zs.getReferenceType()).append("): ");
             String zones = zs.getZones().stream()
-                    .map(z -> z.label() + ": " + z.low() + "-" + z.high() + "%" +
-                            (z.description() != null ? " (" + z.description() + ")" : ""))
-                    .collect(Collectors.joining(", "));
+                    .map(z -> z.label() + ":" + z.low() + "-" + z.high())
+                    .collect(Collectors.joining(" "));
             sb.append(zones);
-            if (zs.getAnnotations() != null && !zs.getAnnotations().isBlank()) {
-                sb.append("\n  Annotations: ").append(zs.getAnnotations());
-            }
         }
         return sb.toString();
     }
@@ -156,11 +187,11 @@ public abstract class BaseAgentService implements TrainingAgent {
     private String streamErrorMessage(Throwable ex) {
         String msg = ex.getMessage() != null ? ex.getMessage() : "";
         if (msg.contains("429") || msg.contains("rate_limit")) {
-            return "Rate limit exceeded. Please shorten your message or wait a moment and try again.";
+            return "{\"code\":\"rate_limit_exceeded\",\"message\":\"Rate limit exceeded. Please shorten your message or wait a moment and try again.\",\"retryable\":true}";
         }
         if (isTransientNetworkError(ex) || msg.contains("Connection reset") || msg.contains("Connection refused")) {
-            return "Connection to the AI service was interrupted. Please try again.";
+            return "{\"code\":\"network_error\",\"message\":\"Connection to the AI service was interrupted. Please try again.\",\"retryable\":true}";
         }
-        return "An unexpected error occurred. Please try again.";
+        return "{\"code\":\"internal_error\",\"message\":\"An unexpected error occurred. Please try again.\",\"retryable\":false}";
     }
 }

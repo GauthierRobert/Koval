@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.ai;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.koval.trainingplannerbackend.ai.UsageTracker;
 import com.koval.trainingplannerbackend.ai.UserContextResolver.UserContext;
 import com.koval.trainingplannerbackend.ai.agents.AgentType;
 import com.koval.trainingplannerbackend.ai.agents.RouterService;
@@ -12,6 +13,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -25,6 +29,7 @@ import java.util.stream.Collectors;
 @Service
 public class AIService {
 
+    private static final Logger log = LoggerFactory.getLogger(AIService.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final Map<AgentType, TrainingAgent> agents;
@@ -60,7 +65,8 @@ public class AIService {
         return response;
     }
 
-    public record ChatMessageResponse(String chatHistoryId, AssistantMessage message, AgentType agentType) {
+    public record ChatMessageResponse(String chatHistoryId, AssistantMessage message, AgentType agentType,
+                                          UsageTracker.UsageSnapshot usage) {
     }
 
     // ── Streaming chat ──────────────────────────────────────────────────
@@ -97,10 +103,14 @@ public class AIService {
             if (cleaned.startsWith("```")) {
                 cleaned = cleaned.replaceAll("(?s)^```[a-z]*\\n?", "").replaceAll("```$", "").trim();
             }
-            return OBJECT_MAPPER.readValue(cleaned, new TypeReference<List<PlanTask>>() {});
+            List<PlanTask> tasks = OBJECT_MAPPER.readValue(cleaned, new TypeReference<List<PlanTask>>() {});
+            log.debug("Plan decomposed into {} task(s) for message: '{}'", tasks.size(),
+                    userMessage.length() > 80 ? userMessage.substring(0, 80) + "..." : userMessage);
+            return tasks;
         } catch (Exception e) {
-            // Fall back to GENERAL instead of TRAINING_CREATION to avoid sending arbitrary text
-            // through the most capable agent (#7)
+            log.warn("Plan decomposition failed for message '{}': {}",
+                    userMessage.length() > 80 ? userMessage.substring(0, 80) + "..." : userMessage,
+                    e.getMessage());
             return List.of(new PlanTask(userMessage, "GENERAL"));
         }
     }
@@ -109,12 +119,17 @@ public class AIService {
 
     private AgentType resolveAgent(AgentType explicit, String userMessage, String userRole, String lastAgentType) {
         if (explicit != null) {
-            // Prevent ATHLETE from using COACH_MANAGEMENT
             if (explicit == AgentType.COACH_MANAGEMENT && !"COACH".equals(userRole)) {
+                log.debug("Downgrading COACH_MANAGEMENT to GENERAL for non-coach user (role={})", userRole);
                 return AgentType.GENERAL;
             }
             return explicit;
         }
-        return routerService.classify(userMessage, userRole, lastAgentType);
+        AgentType classified = routerService.classify(userMessage, userRole, lastAgentType);
+        if (classified == AgentType.COACH_MANAGEMENT && !"COACH".equals(userRole)) {
+            log.debug("Router classified as COACH_MANAGEMENT but user role is {}, falling back to GENERAL", userRole);
+            return AgentType.GENERAL;
+        }
+        return classified;
     }
 }

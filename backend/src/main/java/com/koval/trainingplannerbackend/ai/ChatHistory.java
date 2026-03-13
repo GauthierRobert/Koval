@@ -22,6 +22,7 @@ public class ChatHistory {
     private LocalDateTime startedAt;
     private LocalDateTime lastUpdatedAt;
     private String lastAgentType;
+    private String conversationSummary;
 
     public ChatHistory() {
     }

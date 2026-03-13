@@ -5,6 +5,8 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.stereotype.Service;
 
+import org.springframework.security.access.AccessDeniedException;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -27,6 +29,10 @@ public class ChatHistoryService {
     public ChatHistory findOrCreate(String userId, String chatHistoryId) {
         if (chatHistoryId != null && !chatHistoryId.isEmpty()) {
             return chatHistoryRepository.findById(chatHistoryId)
+                    .map(history -> {
+                        verifyOwnership(history, userId);
+                        return history;
+                    })
                     .orElseGet(() -> create(userId));
         }
         return create(userId);
@@ -61,6 +67,12 @@ public class ChatHistoryService {
                 .orElseThrow(() -> new IllegalArgumentException("Chat history not found: " + chatHistoryId));
     }
 
+    public ChatHistory findByIdForUser(String chatHistoryId, String userId) {
+        ChatHistory history = findById(chatHistoryId);
+        verifyOwnership(history, userId);
+        return history;
+    }
+
     public List<Message> getMessages(String conversationId) {
         return chatMemory.get(conversationId);
     }
@@ -68,6 +80,19 @@ public class ChatHistoryService {
     public void delete(String chatHistoryId) {
         chatMemory.clear(chatHistoryId);
         chatHistoryRepository.deleteById(chatHistoryId);
+    }
+
+    public void deleteForUser(String chatHistoryId, String userId) {
+        ChatHistory history = findById(chatHistoryId);
+        verifyOwnership(history, userId);
+        chatMemory.clear(chatHistoryId);
+        chatHistoryRepository.deleteById(chatHistoryId);
+    }
+
+    private void verifyOwnership(ChatHistory history, String userId) {
+        if (!history.getUserId().equals(userId)) {
+            throw new AccessDeniedException("Chat history does not belong to user");
+        }
     }
 
     private String truncate(String text, int maxLength) {
