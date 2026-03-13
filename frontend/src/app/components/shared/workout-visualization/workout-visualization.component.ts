@@ -4,6 +4,7 @@ import { Training, WorkoutBlock, TrainingService, hasDurationEstimate } from '..
 import { WorkoutExecutionService } from '../../../services/workout-execution.service';
 import { ExportService } from '../../../services/export.service';
 import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.component';
+import { BlockEditorModalComponent } from '../block-editor-modal/block-editor-modal.component';
 import { AuthService } from '../../../services/auth.service';
 import { DurationEstimationService } from '../../../services/duration-estimation.service';
 import { ZoneService } from '../../../services/zone.service';
@@ -13,7 +14,7 @@ import { formatPace as sharedFormatPace } from '../format/format.utils';
 @Component({
   selector: 'app-workout-visualization',
   standalone: true,
-  imports: [CommonModule, ScheduleModalComponent],
+  imports: [CommonModule, ScheduleModalComponent, BlockEditorModalComponent],
   templateUrl: './workout-visualization.component.html',
   styleUrl: './workout-visualization.component.css'
 })
@@ -36,11 +37,95 @@ export class WorkoutVisualizationComponent {
     } else {
       this.currentZoneSystem = null;
     }
+    // Exit edit mode when training changes
+    this.isEditMode = false;
+    this.closeBlockEditor();
   }
   user$ = this.authService.user$;
   isExportDropdownOpen = false;
   isScheduleModalOpen = false;
   displayUnit: 'PERCENT' | 'ABSOLUTE' = 'PERCENT'; // Default to %
+
+  // Block editing state
+  isEditMode = false;
+  editingBlockIndex: number | null = null;
+  isAddingBlock = false;
+  isSaving = false;
+
+  isOwner(): boolean {
+    const user = this.authService.currentUser;
+    return !!user && !!this.training && this.training.createdBy === user.id;
+  }
+
+  toggleEditMode(): void {
+    this.isEditMode = !this.isEditMode;
+    if (!this.isEditMode) {
+      this.closeBlockEditor();
+    }
+  }
+
+  openEditBlock(index: number): void {
+    this.isAddingBlock = false;
+    this.editingBlockIndex = index;
+  }
+
+  openAddBlock(): void {
+    this.editingBlockIndex = null;
+    this.isAddingBlock = true;
+  }
+
+  closeBlockEditor(): void {
+    this.editingBlockIndex = null;
+    this.isAddingBlock = false;
+  }
+
+  get isBlockEditorOpen(): boolean {
+    return this.editingBlockIndex !== null || this.isAddingBlock;
+  }
+
+  get editingBlock(): WorkoutBlock | null {
+    if (this.editingBlockIndex !== null && this.training?.blocks) {
+      return this.training.blocks[this.editingBlockIndex] ?? null;
+    }
+    return null;
+  }
+
+  onBlockSaved(block: WorkoutBlock): void {
+    if (!this.training) return;
+    const blocks = [...(this.training.blocks || [])];
+    if (this.isAddingBlock) {
+      blocks.push(block);
+    } else if (this.editingBlockIndex !== null) {
+      blocks[this.editingBlockIndex] = block;
+    }
+    this.closeBlockEditor();
+    this.saveBlocks(blocks);
+  }
+
+  removeBlock(index: number): void {
+    if (!this.training) return;
+    const blocks = [...(this.training.blocks || [])];
+    blocks.splice(index, 1);
+    this.saveBlocks(blocks);
+  }
+
+  moveBlock(index: number, direction: 'up' | 'down'): void {
+    if (!this.training) return;
+    const blocks = [...(this.training.blocks || [])];
+    const toIndex = direction === 'up' ? index - 1 : index + 1;
+    if (toIndex < 0 || toIndex >= blocks.length) return;
+    [blocks[index], blocks[toIndex]] = [blocks[toIndex], blocks[index]];
+    this.saveBlocks(blocks);
+  }
+
+  private saveBlocks(blocks: WorkoutBlock[]): void {
+    if (!this.training) return;
+    this.isSaving = true;
+    this.trainingService.updateTraining(this.training.id, { blocks }).subscribe({
+      next: () => this.isSaving = false,
+      error: () => this.isSaving = false,
+    });
+  }
 
   toggleUnits() {
     this.displayUnit = this.displayUnit === 'PERCENT' ? 'ABSOLUTE' : 'PERCENT';

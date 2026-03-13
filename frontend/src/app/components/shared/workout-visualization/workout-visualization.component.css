@@ -514,6 +514,103 @@
       text-align: right;
     }
 
+    /* ── Edit mode controls ─────────────────────────────────── */
+
+    .edit-blocks-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--accent-color);
+      border: 1px solid var(--accent-color);
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .edit-blocks-btn:hover {
+      background: rgba(255, 157, 0, 0.15);
+    }
+
+    .edit-blocks-btn.active {
+      background: rgba(255, 157, 0, 0.25);
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .saving-indicator {
+      font-size: 12px;
+      color: var(--accent-color);
+      font-weight: 600;
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .step-actions {
+      display: flex;
+      gap: 2px;
+      margin-left: 4px;
+      flex-shrink: 0;
+    }
+
+    .step-action-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-size: 11px;
+      cursor: pointer;
+      padding: 2px 5px;
+      border-radius: 4px;
+      transition: all 0.15s;
+      line-height: 1;
+    }
+
+    .step-action-btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--color-white);
+    }
+
+    .step-action-btn:disabled {
+      opacity: 0.2;
+      cursor: not-allowed;
+    }
+
+    .step-action-btn.edit:hover {
+      color: #3498db;
+    }
+
+    .step-action-btn.delete {
+      font-size: 14px;
+    }
+
+    .step-action-btn.delete:hover {
+      color: #e74c3c;
+    }
+
+    .add-block-btn {
+      background: transparent;
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      color: var(--text-muted);
+      padding: 8px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 4px;
+    }
+
+    .add-block-btn:hover {
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+      background: rgba(255, 157, 0, 0.08);
+    }
+
     /* ── Responsive ────────────────────────────────────────── */
 
     @media (max-width: 900px) {
