@@ -97,6 +97,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'races',
+    loadComponent: () =>
+      import('./components/pages/races-page/races-page.component').then((m) => m.RacesPageComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'pacing',
     loadComponent: () =>
       import('./components/pages/pacing/pacing-page.component').then((m) => m.PacingPageComponent),

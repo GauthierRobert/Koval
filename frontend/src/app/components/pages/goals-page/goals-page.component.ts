@@ -1,19 +1,11 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { BehaviorSubject, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, take } from 'rxjs/operators';
 import { RaceGoal, RaceGoalService } from '../../../services/race-goal.service';
-import {
-  Race,
-  RaceService,
-  SimulationRequest,
-  RouteCoordinate,
-  SportFacet,
-  CountryFacet,
-  PageResponse,
-} from '../../../services/race.service';
+import { Race, RaceService, SimulationRequest, RouteCoordinate } from '../../../services/race.service';
 import { SportIconComponent } from '../../shared/sport-icon/sport-icon.component';
 import { RouteMapComponent } from '../pacing/route-map/route-map.component';
 import { daysUntil as sharedDaysUntil, weeksUntil as sharedWeeksUntil } from '../../shared/format/format.utils';
@@ -21,7 +13,7 @@ import { daysUntil as sharedDaysUntil, weeksUntil as sharedWeeksUntil } from '..
 @Component({
   selector: 'app-goals-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, SportIconComponent, RouteMapComponent],
+  imports: [CommonModule, FormsModule, RouterLink, SportIconComponent, RouteMapComponent],
   templateUrl: './goals-page.component.html',
   styleUrl: './goals-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,9 +22,13 @@ export class GoalsPageComponent implements OnInit {
   private raceGoalService = inject(RaceGoalService);
   private raceService = inject(RaceService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
 
-  goals$ = this.raceGoalService.goals$.pipe(map((goals) => this.sortGoals(goals)));
+  allGoals$ = this.raceGoalService.goals$.pipe(map((goals) => this.sortGoals(goals)));
+
+  // Selected goal (sidebar selection)
+  selectedGoalId: string | null = null;
 
   // Modal state
   isFormOpen = false;
@@ -49,15 +45,9 @@ export class GoalsPageComponent implements OnInit {
     switchMap((q) => (q.length >= 2 ? this.raceService.searchRaces(q) : of([]))),
   );
   selectedRace: Race | null = null;
-  isCreatingRace = false;
-  isAiCompleting = false;
-  newRaceTitle = '';
 
   // GPX upload
   gpxUploading: Record<string, boolean> = {};
-
-  // Expanded goal card (for showing details, GPX, simulation)
-  expandedGoalId: string | null = null;
 
   // Race details cache per goal
   raceCache: Record<string, Race> = {};
@@ -66,15 +56,6 @@ export class GoalsPageComponent implements OnInit {
   // Simulation requests per goal
   simRequestsCache: Record<string, SimulationRequest[]> = {};
 
-  // Browse public races state
-  sportFacets: SportFacet[] = [];
-  countryFacets: CountryFacet[] = [];
-  browseResults: PageResponse<Race> | null = null;
-  selectedBrowseSport: string | null = null;
-  selectedBrowseCountry: string | null = null;
-  browsePage = 0;
-  browseLoading = false;
-
   readonly sports = ['CYCLING', 'RUNNING', 'SWIMMING', 'TRIATHLON', 'OTHER'];
   readonly priorities: Array<{ value: 'A' | 'B' | 'C'; label: string }> = [
     { value: 'A', label: 'A \u2014 Goal Race' },
@@ -82,14 +63,29 @@ export class GoalsPageComponent implements OnInit {
     { value: 'C', label: 'C \u2014 Training Race' },
   ];
 
-  readonly monthNames = [
-    '', 'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
-  ];
-
   ngOnInit(): void {
     this.raceGoalService.loadGoals();
-    this.loadSportFacets();
+
+    // Auto-select nearest upcoming goal on first load
+    this.allGoals$.pipe(take(1)).subscribe((goals) => {
+      const upcoming = goals.filter((g) => this.isUpcoming(g));
+      const toSelect = upcoming.length > 0 ? upcoming[0] : goals[0] ?? null;
+      if (toSelect) this.selectGoal(toSelect);
+    });
+
+    // Handle raceId query param from /races page "ADD TO MY GOALS"
+    this.route.queryParams.subscribe((params) => {
+      const raceId = params['raceId'];
+      if (raceId) {
+        this.raceService.getRace(raceId).subscribe({
+          next: (race) => {
+            this.openCreate();
+            this.selectRace(race);
+            this.router.navigate([], { replaceUrl: true });
+          },
+        });
+      }
+    });
   }
 
   getPriorityColor(priority: string): string {
@@ -127,6 +123,23 @@ export class GoalsPageComponent implements OnInit {
     return Math.round(((now - created) / (race - created)) * 100);
   }
 
+  // ── Sidebar selection ─────────────────────────────────────────────
+
+  selectGoal(goal: RaceGoal): void {
+    this.selectedGoalId = goal.id;
+    if (goal.raceId && !this.raceCache[goal.raceId]) {
+      this.loadRaceForGoal(goal);
+    }
+    if (goal.id && !this.simRequestsCache[goal.id]) {
+      this.loadSimulationRequests(goal);
+    }
+    this.cdr.markForCheck();
+  }
+
+  getSelectedGoal(goals: RaceGoal[]): RaceGoal | null {
+    return goals.find((g) => g.id === this.selectedGoalId) ?? null;
+  }
+
   // ── Modal: Create / Edit ──────────────────────────────────────────
 
   openCreate(): void {
@@ -135,8 +148,6 @@ export class GoalsPageComponent implements OnInit {
     this.formStep = 'search';
     this.selectedRace = null;
     this.raceSearchQuery = '';
-    this.newRaceTitle = '';
-    this.isCreatingRace = false;
     this.isFormOpen = true;
   }
 
@@ -150,7 +161,6 @@ export class GoalsPageComponent implements OnInit {
 
   closeForm(): void {
     this.isFormOpen = false;
-    this.isAiCompleting = false;
   }
 
   onSearchChange(query: string): void {
@@ -164,48 +174,6 @@ export class GoalsPageComponent implements OnInit {
     this.form.sport = race.sport as RaceGoal['sport'];
     if (race.location) this.form.location = race.location;
     if (race.distance) this.form.distance = race.distance;
-    this.formStep = 'details';
-    this.cdr.markForCheck();
-  }
-
-  startCreateRace(): void {
-    this.isCreatingRace = true;
-    this.cdr.markForCheck();
-  }
-
-  createAndCompleteRace(): void {
-    if (!this.newRaceTitle.trim()) return;
-    this.isAiCompleting = true;
-    this.cdr.markForCheck();
-
-    this.raceService.createRace(this.newRaceTitle.trim()).subscribe({
-      next: (race) => {
-        this.raceService.aiComplete(race.id).subscribe({
-          next: (completed) => {
-            this.selectRace(completed);
-            this.isAiCompleting = false;
-            this.isCreatingRace = false;
-            this.cdr.markForCheck();
-          },
-          error: () => {
-            // AI completion failed, still use the basic race
-            this.selectRace(race);
-            this.isAiCompleting = false;
-            this.isCreatingRace = false;
-            this.cdr.markForCheck();
-          },
-        });
-      },
-      error: () => {
-        this.isAiCompleting = false;
-        this.cdr.markForCheck();
-      },
-    });
-  }
-
-  skipRaceSelection(): void {
-    this.selectedRace = null;
-    this.form.raceId = undefined;
     this.formStep = 'details';
     this.cdr.markForCheck();
   }
@@ -237,43 +205,22 @@ export class GoalsPageComponent implements OnInit {
     }
   }
 
-  // ── Goal Card Expansion ───────────────────────────────────────────
-
-  toggleExpand(goal: RaceGoal): void {
-    if (this.expandedGoalId === goal.id) {
-      this.expandedGoalId = null;
-    } else {
-      this.expandedGoalId = goal.id;
-      if (goal.raceId && !this.raceCache[goal.raceId]) {
-        this.loadRaceForGoal(goal);
-      }
-      if (goal.id && !this.simRequestsCache[goal.id]) {
-        this.loadSimulationRequests(goal);
-      }
-    }
-    this.cdr.markForCheck();
-  }
+  // ── Race / Route Loading ──────────────────────────────────────────
 
   loadRaceForGoal(goal: RaceGoal): void {
     if (!goal.raceId) return;
     this.raceService.getRace(goal.raceId).subscribe({
       next: (race) => {
         this.raceCache[goal.raceId!] = race;
-        // Load route coordinates for map preview
-        if (race.hasBikeGpx) {
-          this.raceService.getRouteCoordinates(race.id, 'bike').subscribe({
-            next: (coords) => {
-              this.routeCache[race.id + '_bike'] = coords;
-              this.cdr.markForCheck();
-            },
-          });
-        } else if (race.hasRunGpx) {
-          this.raceService.getRouteCoordinates(race.id, 'run').subscribe({
-            next: (coords) => {
-              this.routeCache[race.id + '_run'] = coords;
-              this.cdr.markForCheck();
-            },
-          });
+        for (const disc of ['swim', 'bike', 'run']) {
+          if (this.hasGpxForDiscipline(race, disc)) {
+            this.raceService.getRouteCoordinates(race.id, disc).subscribe({
+              next: (coords) => {
+                this.routeCache[race.id + '_' + disc] = coords;
+                this.cdr.markForCheck();
+              },
+            });
+          }
         }
         this.cdr.markForCheck();
       },
@@ -294,8 +241,8 @@ export class GoalsPageComponent implements OnInit {
     return this.raceCache[raceId] ?? null;
   }
 
-  getRouteCoords(race: Race): RouteCoordinate[] {
-    return this.routeCache[race.id + '_bike'] ?? this.routeCache[race.id + '_run'] ?? [];
+  getRouteCoordsForDiscipline(race: Race, disc: string): RouteCoordinate[] {
+    return this.routeCache[race.id + '_' + disc] ?? [];
   }
 
   getSimRequests(goalId: string): SimulationRequest[] {
@@ -320,10 +267,16 @@ export class GoalsPageComponent implements OnInit {
     this.raceService.uploadGpx(raceId, discipline, file).subscribe({
       next: () => {
         this.gpxUploading[key] = false;
-        // Refresh race data
         this.raceService.getRace(raceId).subscribe({
           next: (race) => {
             this.raceCache[raceId] = race;
+            // Reload route coords for the newly uploaded discipline
+            this.raceService.getRouteCoordinates(raceId, discipline).subscribe({
+              next: (coords) => {
+                this.routeCache[raceId + '_' + discipline] = coords;
+                this.cdr.markForCheck();
+              },
+            });
             this.cdr.markForCheck();
           },
         });
@@ -378,7 +331,7 @@ export class GoalsPageComponent implements OnInit {
     return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
-  // ── Discipline badges ─────────────────────────────────────────────
+  // ── Discipline helpers ────────────────────────────────────────────
 
   formatDistance(meters?: number): string {
     if (!meters) return '';
@@ -400,106 +353,6 @@ export class GoalsPageComponent implements OnInit {
       case 'bike': return !!race.hasBikeGpx;
       case 'run': return !!race.hasRunGpx;
       default: return false;
-    }
-  }
-
-  // ── Browse Public Races ──────────────────────────────────────────
-
-  loadSportFacets(): void {
-    this.raceService.getSportFacets().subscribe({
-      next: (facets) => {
-        this.sportFacets = facets;
-        this.cdr.markForCheck();
-      },
-    });
-  }
-
-  selectBrowseSport(sport: string): void {
-    this.selectedBrowseSport = sport;
-    this.selectedBrowseCountry = null;
-    this.browseResults = null;
-    this.browsePage = 0;
-    this.browseLoading = true;
-    this.cdr.markForCheck();
-
-    this.raceService.getCountryFacets(sport).subscribe({
-      next: (facets) => {
-        this.countryFacets = facets;
-        this.browseLoading = false;
-        this.cdr.markForCheck();
-      },
-    });
-  }
-
-  selectBrowseCountry(country: string): void {
-    this.selectedBrowseCountry = country;
-    this.browsePage = 0;
-    this.loadBrowsePage();
-  }
-
-  loadBrowsePage(): void {
-    if (!this.selectedBrowseSport || !this.selectedBrowseCountry) return;
-    this.browseLoading = true;
-    this.cdr.markForCheck();
-
-    this.raceService
-      .browseRaces(this.selectedBrowseSport, this.selectedBrowseCountry, this.browsePage)
-      .subscribe({
-        next: (page) => {
-          this.browseResults = page;
-          this.browseLoading = false;
-          this.cdr.markForCheck();
-        },
-      });
-  }
-
-  browsePrevPage(): void {
-    if (this.browsePage > 0) {
-      this.browsePage--;
-      this.loadBrowsePage();
-    }
-  }
-
-  browseNextPage(): void {
-    if (this.browseResults && this.browsePage < this.browseResults.totalPages - 1) {
-      this.browsePage++;
-      this.loadBrowsePage();
-    }
-  }
-
-  backToSports(): void {
-    this.selectedBrowseSport = null;
-    this.selectedBrowseCountry = null;
-    this.countryFacets = [];
-    this.browseResults = null;
-    this.browsePage = 0;
-    this.cdr.markForCheck();
-  }
-
-  backToCountries(): void {
-    this.selectedBrowseCountry = null;
-    this.browseResults = null;
-    this.browsePage = 0;
-    this.cdr.markForCheck();
-  }
-
-  selectBrowseRace(race: Race): void {
-    this.selectRace(race);
-    this.openCreate();
-    this.formStep = 'details';
-  }
-
-  getLinkedGoals(goals: RaceGoal[]): RaceGoal[] {
-    return goals.filter((g) => g.raceId && this.isUpcoming(g));
-  }
-
-  getSportIcon(sport: string): string {
-    switch (sport?.toUpperCase()) {
-      case 'CYCLING': return '&#128690;';
-      case 'RUNNING': return '&#127939;';
-      case 'SWIMMING': return '&#127946;';
-      case 'TRIATHLON': return '&#127941;';
-      default: return '&#127937;';
     }
   }
 

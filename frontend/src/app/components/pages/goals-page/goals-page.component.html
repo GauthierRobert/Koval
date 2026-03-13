@@ -1,256 +1,192 @@
 <div class="goals-page">
-  <div class="page-header">
-    <h1>Race <span class="accent">Goals</span></h1>
-    <button class="btn-primary" (click)="openCreate()">+ ADD GOAL</button>
-  </div>
+  <div class="goals-layout" *ngIf="allGoals$ | async as allGoals">
+    <!-- Sidebar -->
+    <div class="goals-sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">Goals</span>
+        <button class="btn-icon-sm" (click)="openCreate()" title="Add goal">+</button>
+      </div>
 
-  <ng-container *ngIf="goals$ | async as goals">
-    <div class="goals-grid" *ngIf="goals.length > 0; else empty">
-      <div *ngFor="let goal of goals" class="goal-card glass"
-        [class.goal-card--a]="goal.priority === 'A'"
-        [class.goal-card--past]="!isUpcoming(goal)"
-        [class.goal-card--expanded]="expandedGoalId === goal.id">
-        <div class="goal-priority-bar" [style.background-color]="getPriorityColor(goal.priority)"></div>
-        <div class="goal-body">
-          <!-- Header Row -->
-          <div class="goal-header-row">
-            <span class="priority-badge" [style.background-color]="getPriorityColor(goal.priority) + '22'"
-              [style.color]="getPriorityColor(goal.priority)" [style.border-color]="getPriorityColor(goal.priority) + '55'">
-              {{ goal.priority }}
-            </span>
-            <app-sport-icon [sport]="$any(goal.sport)" [size]="16"></app-sport-icon>
-            <span class="goal-sport">{{ goal.sport }}</span>
-            <div class="goal-actions">
-              <button class="icon-btn" (click)="openEdit(goal); $event.stopPropagation()" title="Edit">&#9998;</button>
-              <button class="icon-btn delete" (click)="delete(goal); $event.stopPropagation()" title="Delete">&#128465;</button>
-            </div>
+      <ng-container *ngIf="allGoals.length > 0; else sidebarEmpty">
+        <div class="sidebar-section-label" *ngIf="isUpcoming(allGoals[0])">UPCOMING</div>
+        <ng-container *ngFor="let goal of allGoals; let i = index">
+          <!-- PAST section label before first past goal -->
+          <div class="sidebar-section-label sidebar-section-label--past"
+            *ngIf="!isUpcoming(goal) && (i === 0 || isUpcoming(allGoals[i - 1]))">
+            PAST
           </div>
-
-          <!-- Title (clickable to expand) -->
-          <h2 class="goal-title" (click)="toggleExpand(goal)">{{ goal.title }}</h2>
-
-          <!-- Date + Countdown -->
-          <div class="goal-date" *ngIf="goal.raceDate">
-            <span>{{ formatDate(goal.raceDate) }}</span>
-            <span class="days-badge" [class.past]="daysUntil(goal.raceDate) < 0"
-              [class.soon]="daysUntil(goal.raceDate) >= 0 && daysUntil(goal.raceDate) <= 30">
-              {{ daysUntil(goal.raceDate) < 0 ? (daysUntil(goal.raceDate) * -1) + 'd ago' : daysUntil(goal.raceDate) + 'd' }}
-            </span>
-          </div>
-
-          <!-- Weeks + Progress -->
-          <div class="weeks-display" *ngIf="goal.raceDate && isUpcoming(goal)">
-            <span class="weeks-number">{{ weeksUntil(goal.raceDate) }}</span>
-            <span class="weeks-label">weeks to go</span>
-          </div>
-          <div class="progress-track" *ngIf="goal.raceDate && isUpcoming(goal)">
-            <div class="progress-fill" [style.width.%]="getProgressPercent(goal)"
-              [style.background-color]="getPriorityColor(goal.priority)"></div>
-          </div>
-
-          <!-- Race Info: Discipline distances -->
-          <ng-container *ngIf="goal.raceId && getRace(goal.raceId) as race">
-            <div class="discipline-distances">
-              <span class="discipline-badge swim" *ngIf="race.swimDistanceM">
-                S: {{ formatDistance(race.swimDistanceM) }}
-              </span>
-              <span class="discipline-badge bike" *ngIf="race.bikeDistanceM">
-                B: {{ formatDistance(race.bikeDistanceM) }}
-              </span>
-              <span class="discipline-badge run" *ngIf="race.runDistanceM">
-                R: {{ formatDistance(race.runDistanceM) }}
-              </span>
-              <span class="discipline-badge elevation" *ngIf="race.elevationGainM">
-                &#9650; {{ race.elevationGainM }}m
-              </span>
-            </div>
-          </ng-container>
-
-          <!-- Basic meta -->
-          <div class="goal-meta">
-            <span *ngIf="goal.location" class="meta-item">{{ goal.location }}</span>
-            <span *ngIf="goal.distance && !(goal.raceId && getRace(goal.raceId))" class="meta-item">{{ goal.distance }}</span>
-            <span *ngIf="goal.targetTime" class="meta-item target-time">{{ goal.targetTime }}</span>
-          </div>
-
-          <!-- Notes (compact) -->
-          <p class="goal-notes" *ngIf="goal.notes && expandedGoalId !== goal.id">{{ goal.notes }}</p>
-
-          <!-- Expanded section -->
-          <div class="expanded-content" *ngIf="expandedGoalId === goal.id">
-            <ng-container *ngIf="goal.raceId && getRace(goal.raceId) as race">
-              <!-- Race description -->
-              <p class="race-description" *ngIf="race.description">{{ race.description }}</p>
-
-              <!-- Website link -->
-              <a *ngIf="race.website" class="race-website" [href]="race.website" target="_blank" rel="noopener">
-                {{ race.website }}
-              </a>
-
-              <!-- Route Map Preview -->
-              <div class="route-map-preview" *ngIf="getRouteCoords(race).length > 0">
-                <app-route-map
-                  [routeCoordinates]="getRouteCoords(race)"
-                  [segments]="[]"
-                  [highlightedRange]="null">
-                </app-route-map>
+          <div class="sidebar-goal-item"
+               [class.sidebar-goal-item--selected]="selectedGoalId === goal.id"
+               [class.sidebar-goal-item--past]="!isUpcoming(goal)"
+               (click)="selectGoal(goal)">
+            <div class="sidebar-priority-bar" [style.background]="getPriorityColor(goal.priority)"></div>
+            <div class="sidebar-goal-body">
+              <div class="sidebar-goal-row1">
+                <app-sport-icon [sport]="$any(goal.sport)" [size]="12"></app-sport-icon>
+                <span class="sidebar-goal-title">{{ goal.title }}</span>
               </div>
+              <div class="sidebar-goal-row2">
+                <span class="sidebar-goal-date" *ngIf="goal.raceDate">{{ formatDate(goal.raceDate) }}</span>
+                <span class="sidebar-goal-countdown" *ngIf="isUpcoming(goal) && goal.raceDate">
+                  {{ daysUntil(goal.raceDate) }}d
+                </span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </ng-container>
 
-              <!-- GPX Upload Section -->
-              <div class="gpx-section">
-                <h4 class="section-label">GPX Files</h4>
-                <div class="gpx-grid">
-                  <div *ngFor="let disc of getGpxDisciplines(race)" class="gpx-item">
-                    <span class="gpx-disc-label">{{ disc | uppercase }}</span>
-                    <span class="gpx-status uploaded" *ngIf="hasGpxForDiscipline(race, disc)">Uploaded</span>
-                    <label *ngIf="!hasGpxForDiscipline(race, disc)" class="gpx-upload-btn">
-                      <span *ngIf="!isGpxUploading(race.id, disc)">Upload .gpx</span>
-                      <span *ngIf="isGpxUploading(race.id, disc)">Uploading...</span>
+      <ng-template #sidebarEmpty>
+        <div class="sidebar-empty">No goals yet</div>
+      </ng-template>
+    </div>
+
+    <!-- Detail panel -->
+    <div class="goals-detail">
+      <ng-container *ngIf="getSelectedGoal(allGoals) as goal; else noSelection">
+
+        <!-- Header -->
+        <div class="detail-header">
+          <div class="detail-title-row">
+            <div class="detail-priority-badge" [style.background]="getPriorityColor(goal.priority)">
+              {{ goal.priority }}
+            </div>
+            <app-sport-icon [sport]="$any(goal.sport)" [size]="20"></app-sport-icon>
+            <h2 class="detail-title">{{ goal.title }}</h2>
+            <div class="detail-actions">
+              <button class="btn-icon" (click)="openEdit(goal)" title="Edit">&#9998;</button>
+              <button class="btn-icon btn-icon--danger" (click)="delete(goal)" title="Delete">&#10005;</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Meta grid -->
+        <div class="detail-meta-grid">
+          <div class="detail-meta-item" *ngIf="goal.raceDate">
+            <span class="detail-meta-label">DATE</span>
+            <span class="detail-meta-value">{{ formatDate(goal.raceDate) }}</span>
+          </div>
+          <div class="detail-meta-item" *ngIf="goal.raceDate && isUpcoming(goal)">
+            <span class="detail-meta-label">COUNTDOWN</span>
+            <span class="detail-meta-value accent">{{ daysUntil(goal.raceDate) }} days · {{ weeksUntil(goal.raceDate) }} weeks</span>
+          </div>
+          <div class="detail-meta-item" *ngIf="goal.location">
+            <span class="detail-meta-label">LOCATION</span>
+            <span class="detail-meta-value">{{ goal.location }}</span>
+          </div>
+          <div class="detail-meta-item" *ngIf="goal.distance">
+            <span class="detail-meta-label">DISTANCE</span>
+            <span class="detail-meta-value">{{ goal.distance }}</span>
+          </div>
+          <div class="detail-meta-item" *ngIf="goal.targetTime">
+            <span class="detail-meta-label">TARGET TIME</span>
+            <span class="detail-meta-value accent">{{ goal.targetTime }}</span>
+          </div>
+          <div class="detail-meta-item" *ngIf="goal.sport">
+            <span class="detail-meta-label">SPORT</span>
+            <span class="detail-meta-value">{{ goal.sport }}</span>
+          </div>
+        </div>
+
+        <!-- Progress bar (upcoming only) -->
+        <div class="detail-progress" *ngIf="isUpcoming(goal) && goal.createdAt && goal.raceDate">
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" [style.width.%]="getProgressPercent(goal)"></div>
+          </div>
+          <span class="progress-label">{{ getProgressPercent(goal) }}% of training window elapsed</span>
+        </div>
+
+        <!-- Notes -->
+        <div class="detail-notes" *ngIf="goal.notes">
+          <span class="detail-section-label">NOTES</span>
+          <p class="detail-notes-text">{{ goal.notes }}</p>
+        </div>
+
+        <!-- Race info (if linked race loaded) -->
+        <ng-container *ngIf="goal.raceId && getRace(goal.raceId) as race">
+          <div class="detail-race-info">
+            <span class="detail-section-label">RACE INFO</span>
+            <div class="detail-race-distances" *ngIf="race.swimDistanceM || race.bikeDistanceM || race.runDistanceM || race.elevationGainM">
+              <span class="discipline-badge swim" *ngIf="race.swimDistanceM">S {{ formatDistance(race.swimDistanceM) }}</span>
+              <span class="discipline-badge bike" *ngIf="race.bikeDistanceM">B {{ formatDistance(race.bikeDistanceM) }}</span>
+              <span class="discipline-badge run" *ngIf="race.runDistanceM">R {{ formatDistance(race.runDistanceM) }}</span>
+              <span class="discipline-badge elevation" *ngIf="race.elevationGainM">&#9650; {{ race.elevationGainM }}m</span>
+            </div>
+            <p class="detail-race-desc" *ngIf="race.description">{{ race.description }}</p>
+            <a class="detail-race-website" *ngIf="race.website" [href]="race.website" target="_blank" rel="noopener">
+              {{ race.website }}
+            </a>
+          </div>
+
+          <!-- GPX per discipline -->
+          <div class="detail-gpx-section">
+            <span class="detail-section-label">GPX ROUTES</span>
+            <div *ngFor="let disc of getGpxDisciplines(race)" class="detail-gpx-discipline">
+              <div class="gpx-discipline-header">
+                <span class="gpx-disc-label" [class.gpx-disc-swim]="disc === 'swim'" [class.gpx-disc-bike]="disc === 'bike'" [class.gpx-disc-run]="disc === 'run'">
+                  {{ disc | uppercase }}
+                </span>
+                <!-- Has GPX: green chip + re-upload -->
+                <ng-container *ngIf="hasGpxForDiscipline(race, disc)">
+                  <span class="gpx-chip gpx-chip--done">
+                    &#10003; Uploaded
+                    <label class="gpx-reupload" title="Replace GPX">
+                      &#8593;
                       <input type="file" accept=".gpx" hidden
                         (change)="onGpxFileSelected($event, race.id, disc)">
                     </label>
-                  </div>
-                </div>
+                  </span>
+                </ng-container>
+                <!-- No GPX: upload chip -->
+                <label class="gpx-chip gpx-chip--upload" *ngIf="!hasGpxForDiscipline(race, disc)">
+                  <span *ngIf="!isGpxUploading(race.id, disc)">&#8593; Upload GPX</span>
+                  <span *ngIf="isGpxUploading(race.id, disc)">Uploading...</span>
+                  <input type="file" accept=".gpx" hidden
+                    (change)="onGpxFileSelected($event, race.id, disc)">
+                </label>
               </div>
-            </ng-container>
-
-            <!-- Notes (full) -->
-            <p class="goal-notes" *ngIf="goal.notes">{{ goal.notes }}</p>
-
-            <!-- Simulate Button -->
-            <div class="simulation-section" *ngIf="goal.raceId">
-              <button class="btn-simulate" (click)="simulateRace(goal)">Simulate Race</button>
-
-              <!-- Past simulations -->
-              <div class="sim-history" *ngIf="getSimRequests(goal.id).length > 0">
-                <h4 class="section-label">Past Simulations</h4>
-                <div *ngFor="let req of getSimRequests(goal.id)" class="sim-request-item">
-                  <div class="sim-info">
-                    <span class="sim-label">{{ formatSimLabel(req) }}</span>
-                    <span class="sim-date">{{ formatSimDate(req.createdAt) }}</span>
-                  </div>
-                  <div class="sim-actions">
-                    <button class="btn-sm" (click)="rerunSimulation(req)">Re-run</button>
-                    <button class="btn-sm delete" (click)="deleteSimRequest(req)">&#215;</button>
-                  </div>
-                </div>
+              <!-- Map (shown when coords available) -->
+              <div class="detail-map-container" *ngIf="getRouteCoordsForDiscipline(race, disc).length > 0">
+                <app-route-map
+                  [routeCoordinates]="getRouteCoordsForDiscipline(race, disc)"
+                  [segments]="[]">
+                </app-route-map>
+              </div>
+              <div class="detail-map-loading" *ngIf="hasGpxForDiscipline(race, disc) && getRouteCoordsForDiscipline(race, disc).length === 0">
+                Loading route...
               </div>
             </div>
           </div>
+        </ng-container>
 
-          <!-- Expand/collapse toggle -->
-          <button class="expand-toggle" (click)="toggleExpand(goal)">
-            {{ expandedGoalId === goal.id ? 'Show less' : 'Show more' }}
-          </button>
+        <!-- Simulation section -->
+        <div class="detail-simulate" *ngIf="goal.raceId">
+          <button class="btn-simulate" (click)="simulateRace(goal)">&#9889; SIMULATE RACE</button>
+          <div class="sim-history" *ngIf="getSimRequests(goal.id).length > 0">
+            <span class="detail-section-label">PAST SIMULATIONS</span>
+            <div *ngFor="let req of getSimRequests(goal.id)" class="sim-request-item">
+              <div class="sim-info">
+                <span class="sim-label">{{ formatSimLabel(req) }}</span>
+                <span class="sim-date">{{ formatSimDate(req.createdAt) }}</span>
+              </div>
+              <div class="sim-actions">
+                <button class="btn-sm" (click)="rerunSimulation(req)">Re-run</button>
+                <button class="btn-sm delete" (click)="deleteSimRequest(req)">&#215;</button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-    <ng-template #empty>
-      <div class="empty-state glass">
-        <span class="empty-icon">&#127937;</span>
-        <p>No race goals yet. Add your first goal to start planning!</p>
-        <button class="btn-primary" (click)="openCreate()">ADD GOAL</button>
-      </div>
-    </ng-template>
-  </ng-container>
 
-  <!-- My Races (goals linked to public races) -->
-  <ng-container *ngIf="goals$ | async as allGoals">
-    <div class="my-races-section" *ngIf="getLinkedGoals(allGoals).length > 0">
-      <h3 class="section-title">My <span class="accent">Races</span></h3>
-      <div class="my-races-chips">
-        <div *ngFor="let goal of getLinkedGoals(allGoals)" class="race-chip glass"
-          [style.border-color]="getPriorityColor(goal.priority) + '55'"
-          (click)="toggleExpand(goal)">
-          <app-sport-icon [sport]="$any(goal.sport)" [size]="14"></app-sport-icon>
-          <span class="chip-title">{{ goal.title }}</span>
-          <span class="chip-days" *ngIf="goal.raceDate"
-            [class.soon]="daysUntil(goal.raceDate) >= 0 && daysUntil(goal.raceDate) <= 30">
-            {{ daysUntil(goal.raceDate) }}d
-          </span>
-        </div>
-      </div>
-    </div>
-  </ng-container>
-
-  <!-- Browse Public Races -->
-  <div class="browse-section">
-    <h3 class="section-title">Browse <span class="accent">Public Races</span></h3>
-
-    <!-- Breadcrumb navigation -->
-    <div class="browse-breadcrumb" *ngIf="selectedBrowseSport">
-      <button class="breadcrumb-link" (click)="backToSports()">All Sports</button>
-      <span class="breadcrumb-sep">/</span>
-      <span class="breadcrumb-current" *ngIf="!selectedBrowseCountry">{{ selectedBrowseSport }}</span>
-      <ng-container *ngIf="selectedBrowseCountry">
-        <button class="breadcrumb-link" (click)="backToCountries()">{{ selectedBrowseSport }}</button>
-        <span class="breadcrumb-sep">/</span>
-        <span class="breadcrumb-current">{{ selectedBrowseCountry }}</span>
       </ng-container>
-    </div>
 
-    <!-- Level 0: Sport Cards -->
-    <div class="facet-grid" *ngIf="!selectedBrowseSport">
-      <div *ngFor="let facet of sportFacets" class="facet-card glass" (click)="selectBrowseSport(facet.sport)">
-        <div class="facet-icon" [innerHTML]="getSportIcon(facet.sport)"></div>
-        <div class="facet-name">{{ facet.sport }}</div>
-        <div class="facet-counts">
-          <span>{{ facet.raceCount }} races</span>
-          <span>{{ facet.countryCount }} countries</span>
+      <ng-template #noSelection>
+        <div class="detail-empty">
+          <span class="detail-empty-icon">&#127937;</span>
+          <p>Select a goal to see details</p>
+          <button class="btn-primary" (click)="openCreate()">+ ADD GOAL</button>
         </div>
-      </div>
-      <div *ngIf="sportFacets.length === 0 && !browseLoading" class="browse-empty">
-        No races in the catalog yet.
-      </div>
+      </ng-template>
     </div>
-
-    <!-- Level 1: Country Cards -->
-    <div class="facet-grid facet-grid--countries" *ngIf="selectedBrowseSport && !selectedBrowseCountry && !browseLoading">
-      <div *ngFor="let facet of countryFacets" class="facet-card facet-card--country glass"
-        (click)="selectBrowseCountry(facet.country)">
-        <div class="facet-name">{{ facet.country || 'Unknown' }}</div>
-        <div class="facet-counts"><span>{{ facet.raceCount }} races</span></div>
-      </div>
-      <div *ngIf="countryFacets.length === 0" class="browse-empty">
-        No races found for {{ selectedBrowseSport }}.
-      </div>
-    </div>
-
-    <!-- Level 2: Race List -->
-    <div class="browse-race-list" *ngIf="selectedBrowseCountry && browseResults && !browseLoading">
-      <div *ngFor="let race of browseResults.content" class="browse-race-item glass"
-        (click)="selectBrowseRace(race)">
-        <div class="browse-race-header">
-          <app-sport-icon [sport]="$any(race.sport)" [size]="16"></app-sport-icon>
-          <span class="browse-race-title">{{ race.title }}</span>
-          <span class="browse-race-verified" *ngIf="race.verified" title="Verified">&#10003;</span>
-        </div>
-        <div class="browse-race-meta">
-          <span *ngIf="race.location">{{ race.location }}</span>
-          <span *ngIf="race.distance">{{ race.distance }}</span>
-          <span *ngIf="race.typicalMonth">{{ monthNames[race.typicalMonth || 0] }}</span>
-        </div>
-        <div class="discipline-distances" *ngIf="race.swimDistanceM || race.bikeDistanceM || race.runDistanceM">
-          <span class="discipline-badge swim" *ngIf="race.swimDistanceM">S: {{ formatDistance(race.swimDistanceM) }}</span>
-          <span class="discipline-badge bike" *ngIf="race.bikeDistanceM">B: {{ formatDistance(race.bikeDistanceM) }}</span>
-          <span class="discipline-badge run" *ngIf="race.runDistanceM">R: {{ formatDistance(race.runDistanceM) }}</span>
-        </div>
-      </div>
-      <div *ngIf="browseResults.content.length === 0" class="browse-empty">
-        No races found.
-      </div>
-
-      <!-- Pagination -->
-      <div class="browse-pagination" *ngIf="browseResults.totalPages > 1">
-        <button class="btn-secondary" (click)="browsePrevPage()" [disabled]="browsePage === 0">Prev</button>
-        <span class="page-info">{{ browsePage + 1 }} / {{ browseResults.totalPages }}</span>
-        <button class="btn-secondary" (click)="browseNextPage()"
-          [disabled]="browsePage >= browseResults.totalPages - 1">Next</button>
-      </div>
-    </div>
-
-    <!-- Loading -->
-    <div class="browse-loading" *ngIf="browseLoading">Loading...</div>
   </div>
 </div>
 
@@ -258,19 +194,18 @@
 <div class="modal-backdrop" *ngIf="isFormOpen" (click)="closeForm()">
   <div class="modal glass" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>{{ editingGoal ? 'Edit Goal' : (formStep === 'search' ? 'Find or Create Race' : 'Goal Details') }}</h3>
+      <h3>{{ editingGoal ? 'Edit Goal' : (formStep === 'search' ? 'Find a Race' : 'Goal Details') }}</h3>
       <button class="close-btn" (click)="closeForm()">&times;</button>
     </div>
 
     <!-- Step 1: Race Search -->
     <div class="modal-body" *ngIf="formStep === 'search' && !editingGoal">
       <div class="form-row">
-        <label>Search existing races</label>
+        <label>Search public races</label>
         <input [(ngModel)]="raceSearchQuery" (ngModelChange)="onSearchChange($event)"
           placeholder="e.g. Ironman, Paris-Roubaix..." class="form-input" />
       </div>
 
-      <!-- Search results -->
       <div class="search-results" *ngIf="searchResults$ | async as results">
         <div *ngFor="let race of results" class="search-result-item" (click)="selectRace(race)">
           <div class="result-title">{{ race.title }}</div>
@@ -281,38 +216,14 @@
           </div>
         </div>
         <div *ngIf="results.length === 0 && raceSearchQuery.length >= 2" class="no-results">
-          No races found for "{{ raceSearchQuery }}"
+          No races found for "{{ raceSearchQuery }}" —
+          <a class="browse-link" routerLink="/races">browse the race catalog</a>
         </div>
-      </div>
-
-      <!-- Create new race -->
-      <div class="create-race-section">
-        <div class="divider-text"><span>or</span></div>
-
-        <div *ngIf="!isCreatingRace">
-          <button class="btn-secondary full-width" (click)="startCreateRace()">Create New Race</button>
-        </div>
-
-        <div *ngIf="isCreatingRace" class="create-race-form">
-          <div class="form-row">
-            <label>Race Title</label>
-            <input [(ngModel)]="newRaceTitle" placeholder="e.g. Ironman Nice 2026" class="form-input" />
-          </div>
-          <button class="btn-primary full-width" (click)="createAndCompleteRace()"
-            [disabled]="!newRaceTitle.trim() || isAiCompleting">
-            <span *ngIf="!isAiCompleting">Create &amp; Auto-Complete with AI</span>
-            <span *ngIf="isAiCompleting" class="ai-loading">AI is completing race details...</span>
-          </button>
-        </div>
-
-        <div class="divider-text"><span>or</span></div>
-        <button class="btn-secondary full-width" (click)="skipRaceSelection()">Skip &mdash; Manual Entry</button>
       </div>
     </div>
 
     <!-- Step 2: Goal Details -->
     <div class="modal-body" *ngIf="formStep === 'details'">
-      <!-- Selected race banner -->
       <div class="selected-race-banner" *ngIf="selectedRace">
         <div class="banner-title">{{ selectedRace.title }}</div>
         <div class="banner-meta">

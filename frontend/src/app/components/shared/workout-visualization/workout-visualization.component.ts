@@ -39,6 +39,7 @@ export class WorkoutVisualizationComponent {
     }
     // Exit edit mode when training changes
     this.isEditMode = false;
+    this.pendingBlocks = null;
     this.closeBlockEditor();
   }
   user$ = this.authService.user$;
@@ -51,17 +52,30 @@ export class WorkoutVisualizationComponent {
   editingBlockIndex: number | null = null;
   isAddingBlock = false;
   isSaving = false;
+  pendingBlocks: WorkoutBlock[] | null = null;
+
+  get displayBlocks(): WorkoutBlock[] {
+    return this.pendingBlocks ?? this.training?.blocks ?? [];
+  }
 
   isOwner(): boolean {
     const user = this.authService.currentUser;
     return !!user && !!this.training && this.training.createdBy === user.id;
   }
 
-  toggleEditMode(): void {
-    this.isEditMode = !this.isEditMode;
-    if (!this.isEditMode) {
-      this.closeBlockEditor();
-    }
+  enterEditMode(): void {
+    this.isEditMode = true;
+    this.pendingBlocks = [...(this.training?.blocks || [])];
+  }
+
+  cancelEdits(): void {
+    this.isEditMode = false;
+    this.pendingBlocks = null;
+    this.closeBlockEditor();
+  }
+
+  saveEdits(): void {
+    if (this.pendingBlocks) this.saveBlocks(this.pendingBlocks);
   }
 
   openEditBlock(index: number): void {
@@ -84,45 +98,48 @@ export class WorkoutVisualizationComponent {
   }
 
   get editingBlock(): WorkoutBlock | null {
-    if (this.editingBlockIndex !== null && this.training?.blocks) {
-      return this.training.blocks[this.editingBlockIndex] ?? null;
+    if (this.editingBlockIndex !== null) {
+      return this.displayBlocks[this.editingBlockIndex] ?? null;
     }
     return null;
   }
 
   onBlockSaved(block: WorkoutBlock): void {
     if (!this.training) return;
-    const blocks = [...(this.training.blocks || [])];
+    const blocks = [...this.displayBlocks];
     if (this.isAddingBlock) {
       blocks.push(block);
     } else if (this.editingBlockIndex !== null) {
       blocks[this.editingBlockIndex] = block;
     }
+    this.pendingBlocks = blocks;
     this.closeBlockEditor();
-    this.saveBlocks(blocks);
   }
 
   removeBlock(index: number): void {
-    if (!this.training) return;
-    const blocks = [...(this.training.blocks || [])];
+    const blocks = [...this.displayBlocks];
     blocks.splice(index, 1);
-    this.saveBlocks(blocks);
+    this.pendingBlocks = blocks;
   }
 
   moveBlock(index: number, direction: 'up' | 'down'): void {
-    if (!this.training) return;
-    const blocks = [...(this.training.blocks || [])];
+    const blocks = [...this.displayBlocks];
     const toIndex = direction === 'up' ? index - 1 : index + 1;
     if (toIndex < 0 || toIndex >= blocks.length) return;
     [blocks[index], blocks[toIndex]] = [blocks[toIndex], blocks[index]];
-    this.saveBlocks(blocks);
+    this.pendingBlocks = blocks;
   }
 
   private saveBlocks(blocks: WorkoutBlock[]): void {
     if (!this.training) return;
     this.isSaving = true;
     this.trainingService.updateTraining(this.training.id, { blocks }).subscribe({
-      next: () => this.isSaving = false,
+      next: () => {
+        this.isSaving = false;
+        this.isEditMode = false;
+        this.pendingBlocks = null;
+        this.closeBlockEditor();
+      },
       error: () => this.isSaving = false,
     });
   }
@@ -236,10 +253,10 @@ export class WorkoutVisualizationComponent {
   }
 
   getMaxIntensity(): number {
-    if (!this.training || !this.training.blocks) return 150;
+    if (!this.training) return 150;
 
     // Scan all blocks for max effective intensity
-    const intensities = this.training.blocks.flatMap(b => [
+    const intensities = this.displayBlocks.flatMap(b => [
       this.getEffectiveIntensity(b, 'TARGET'),
       this.getEffectiveIntensity(b, 'START'),
       this.getEffectiveIntensity(b, 'END')
@@ -261,9 +278,8 @@ export class WorkoutVisualizationComponent {
 
   getNumericalTotalDuration(): number {
     if (!this.training) return 0;
-    if (this.training.estimatedDurationSeconds) return this.training.estimatedDurationSeconds;
-    if (!this.training.blocks) return 0;
-    return this.training.blocks.reduce((acc, b) => acc + (this.getEstimatedBlockDuration(b)), 0);
+    if (!this.pendingBlocks && this.training.estimatedDurationSeconds) return this.training.estimatedDurationSeconds;
+    return this.displayBlocks.reduce((acc, b) => acc + this.getEstimatedBlockDuration(b), 0);
   }
 
   // Helper to centralize estimation
@@ -422,12 +438,12 @@ export class WorkoutVisualizationComponent {
   };
 
   getZoneRepartition(): { label: string; color: string; seconds: number; percentage: number }[] {
-    if (!this.training?.blocks) return [];
+    if (!this.training) return [];
 
     const zoneMap = new Map<string, number>();
     let totalSeconds = 0;
 
-    for (const block of this.training.blocks) {
+    for (const block of this.displayBlocks) {
       if (block.type === 'PAUSE') continue;
       const dur = this.getEstimatedBlockDuration(block);
       if (dur <= 0) continue;

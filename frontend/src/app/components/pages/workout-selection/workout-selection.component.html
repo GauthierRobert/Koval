@@ -18,32 +18,22 @@
 
     <!-- Sticky filter bar -->
     <div class="filter-bar">
-      <!-- Source selector -->
+      <!-- Source selector: My Trainings | Clubs | Groups -->
       <div class="filter-group">
         <app-filter-pills
-          [options]="sourceOptions"
-          [selected]="(trainingService.activeSource$ | async) ?? 'mine'"
-          (selectionChange)="onSourceChange($event)">
+          [options]="(sourceOptions$ | async) ?? []"
+          [selected]="(trainingService.activeContext$ | async) ?? 'mine'"
+          (selectionChange)="onContextChange($event)">
         </app-filter-pills>
         <div class="filter-sep"></div>
       </div>
 
-      <!-- Tag filter (mine source only) -->
-      <div class="filter-group" *ngIf="(trainingService.activeSource$ | async) === 'mine' && (trainingService.availableTags$ | async)?.length">
+      <!-- Tag filter (mine context only) -->
+      <div class="filter-group" *ngIf="(trainingService.activeContext$ | async) === 'mine' && (trainingService.availableTags$ | async)?.length">
         <app-filter-pills
           [options]="(tagOptions$ | async) ?? []"
           [selected]="(trainingService.activeTagFilter$ | async) ?? null"
           (selectionChange)="setTagFilter($event)">
-        </app-filter-pills>
-        <div class="filter-sep"></div>
-      </div>
-
-      <!-- Club Group filter (club source only) -->
-      <div class="filter-group" *ngIf="(trainingService.activeSource$ | async) === 'club' && (clubGroupOptions$ | async)?.length">
-        <app-filter-pills
-          [options]="(clubGroupOptions$ | async) ?? []"
-          [selected]="(trainingService.activeClubGroupFilter$ | async) ?? null"
-          (selectionChange)="onClubGroupChange($event)">
         </app-filter-pills>
         <div class="filter-sep"></div>
       </div>

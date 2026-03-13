@@ -72,8 +72,7 @@ export class TopBarComponent {
 
   selectClub(club: ClubSummary) {
     this.isClubsOpen = false;
-    this.trainingService.setSource('club');
-    this.trainingService.setSelectedClubId(club.id);
+    this.trainingService.setContext(`club:${club.id}`);
     this.router.navigate(['/clubs', club.id]);
   }
 

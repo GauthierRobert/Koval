@@ -19,10 +19,13 @@
       <button class="unit-toggle-btn" (click)="toggleUnits()">
         {{ displayUnit === 'PERCENT' ? '%' : getSportUnit() }}
       </button>
-      <button class="edit-blocks-btn" *ngIf="isOwner()" [class.active]="isEditMode" (click)="toggleEditMode()">
-        {{ isEditMode ? 'DONE' : 'EDIT BLOCKS' }}
-      </button>
-      <span class="saving-indicator" *ngIf="isSaving">Saving...</span>
+      <ng-container *ngIf="isOwner()">
+        <button *ngIf="!isEditMode" class="edit-blocks-btn" (click)="enterEditMode()">EDIT BLOCKS</button>
+        <button *ngIf="isEditMode" class="edit-blocks-btn" (click)="cancelEdits()">CANCEL</button>
+        <button *ngIf="isEditMode" class="edit-blocks-btn active" [disabled]="isSaving" (click)="saveEdits()">
+          {{ isSaving ? 'Saving...' : 'DONE' }}
+        </button>
+      </ng-container>
       <button class="schedule-btn" (click)="openScheduleModal()">SCHEDULE</button>
       <button class="start-btn" (click)="startWorkout()" *ngIf="training.sportType === 'CYCLING'">
         <span class="play-icon">&#x25B6;</span> START WORKOUT
@@ -37,7 +40,7 @@
     <!-- LEFT PANEL: Block steps list -->
     <div class="left-panel">
       <div class="block-steps-list">
-        <div class="step-card" *ngFor="let block of training.blocks; let i = index"
+        <div class="step-card" *ngFor="let block of displayBlocks; let i = index"
           [style.border-left-color]="getBlockColor(block)">
           <span class="step-number">#{{ i + 1 }}</span>
           <span class="step-duration" *ngIf="!(formatBlockEstimates(block).durationEstimated && block.type ==='PAUSE')" [class.estimated]="formatBlockEstimates(block).durationEstimated">{{ formatBlockEstimates(block).durationEstimated ? '~' : '' }}{{ formatBlockEstimates(block).duration }}</span>
@@ -51,7 +54,7 @@
           </span>
           <div class="step-actions" *ngIf="isEditMode">
             <button class="step-action-btn" title="Move up" (click)="moveBlock(i, 'up'); $event.stopPropagation()" [disabled]="i === 0">&#x25B2;</button>
-            <button class="step-action-btn" title="Move down" (click)="moveBlock(i, 'down'); $event.stopPropagation()" [disabled]="i === (training.blocks?.length || 0) - 1">&#x25BC;</button>
+            <button class="step-action-btn" title="Move down" (click)="moveBlock(i, 'down'); $event.stopPropagation()" [disabled]="i === displayBlocks.length - 1">&#x25BC;</button>
             <button class="step-action-btn edit" title="Edit block" (click)="openEditBlock(i); $event.stopPropagation()">&#x270E;</button>
             <button class="step-action-btn delete" title="Remove block" (click)="removeBlock(i); $event.stopPropagation()">&times;</button>
           </div>
@@ -75,7 +78,7 @@
           <span *ngFor="let label of getYAxisLabels()">{{ label }}%</span>
         </div>
         <div class="chart-area">
-          <div *ngFor="let block of training.blocks; let i = index" class="block-bar-wrapper"
+          <div *ngFor="let block of displayBlocks; let i = index" class="block-bar-wrapper"
             [style.width.%]="getBlockWidth(block)">
             <div class="bar-container" [style.height.%]="getBlockHeight(block)">
               <div class="block-bar" [style.background]="getBlockColor(block)"
@@ -124,7 +127,7 @@
         </div>
         <div class="stat">
           <span class="label">Blocks</span>
-          <span class="value">{{ (training.blocks || []).length }}</span>
+          <span class="value">{{ displayBlocks.length }}</span>
         </div>
       </div>
 

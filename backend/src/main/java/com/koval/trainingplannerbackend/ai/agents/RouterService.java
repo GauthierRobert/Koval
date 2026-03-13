@@ -44,7 +44,7 @@ public class RouterService {
             "also", "now", "then", "next", "again", "too",
             "yes", "no", "ok", "sure", "exactly", "perfect",
             "but", "instead", "actually", "rather",
-            "change", "modify", "update", "delete", "remove", "add more",
+            "modify", "update", "delete", "remove", "add more",
             // French
             "le", "la", "les", "ça", "cela", "celui", "celle",
             "aussi", "maintenant", "ensuite", "encore", "puis",

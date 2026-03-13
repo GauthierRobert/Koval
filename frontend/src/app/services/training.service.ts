@@ -1,13 +1,10 @@
 import {DestroyRef, inject, Injectable} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, combineLatest, forkJoin, Observable, of} from 'rxjs';
+import {BehaviorSubject, combineLatest, Observable, of} from 'rxjs';
 import {filter, map, tap} from 'rxjs/operators';
 import {environment} from '../../environments/environment';
 import {AuthService} from './auth.service';
-import {ClubService} from './club.service';
-
-export type TrainingSource = 'mine' | 'club';
 
 export type SportFilter = 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK' | null;
 
@@ -120,21 +117,12 @@ export class TrainingService {
     private errorSubject = new BehaviorSubject<string | null>(null);
     error$ = this.errorSubject.asObservable();
 
-    // ── Source toggle (mine vs club) ─────────────────────────────────────
-    private sourceSubject = new BehaviorSubject<TrainingSource>('mine');
-    activeSource$ = this.sourceSubject.asObservable();
-
     private clubTrainingsSubject = new BehaviorSubject<Training[]>([]);
     clubTrainings$ = this.clubTrainingsSubject.asObservable();
 
-    private clubGroupFilterSubject = new BehaviorSubject<string | null>(null);
-    activeClubGroupFilter$ = this.clubGroupFilterSubject.asObservable();
-
-    private clubGroupMapSubject = new BehaviorSubject<Map<string, string>>(new Map());
-    clubGroupMap$ = this.clubGroupMapSubject.asObservable();
-
-    private selectedClubIdSubject = new BehaviorSubject<string | null>(null);
-    activeClubId$ = this.selectedClubIdSubject.asObservable();
+    // Active context: 'mine' | 'club:{clubId}' | 'group:{groupId}'
+    private activeContextSubject = new BehaviorSubject<string>('mine');
+    activeContext$ = this.activeContextSubject.asObservable();
 
     // ── Filter state (shared across sidebar list + filter bar) ──────────
     private tagFilterSubject = new BehaviorSubject<string | null>(null);
@@ -154,26 +142,25 @@ export class TrainingService {
     );
 
     filteredTrainings$ = combineLatest([
-        this.trainings$,
-        this.clubTrainings$,
-        this.sourceSubject,
+        this.trainingsSubject,
+        this.clubTrainingsSubject,
+        this.activeContextSubject,
         this.tagFilterSubject,
         this.sportFilterSubject,
         this.typeFilterSubject,
-        this.clubGroupFilterSubject,
-        this.selectedClubIdSubject,
     ]).pipe(
-        map(([mine, club, source, tag, sport, type, clubGroup, selectedClubId]) => {
-            let result = source === 'mine' ? mine : club;
-            if (source === 'mine') {
+        map(([mine, club, context, tag, sport, type]) => {
+            let result: Training[];
+            if (context.startsWith('club:')) {
+                const clubId = context.slice(5);
+                result = club.filter((t) => t.clubId === clubId);
+            } else if (context.startsWith('group:')) {
+                const groupId = context.slice(6);
+                result = mine.filter((t) => t.groupIds?.includes(groupId));
+            } else {
+                result = mine;
                 if (tag === '__mine__') result = result.filter((t) => !t.groupIds?.length);
                 else if (tag) result = result.filter((t) => t.groupIds?.includes(tag));
-            }
-            if (source === 'club' && selectedClubId) {
-                result = result.filter((t) => t.clubId === selectedClubId);
-            }
-            if (source === 'club' && clubGroup) {
-                result = result.filter((t) => t.clubGroupIds?.includes(clubGroup));
             }
             if (sport) result = result.filter((t) => t.sportType === sport);
             if (type) result = result.filter((t) => t.trainingType === type);
@@ -197,52 +184,20 @@ export class TrainingService {
         this.typeFilterSubject.next(this.typeFilterSubject.value === value ? null : value);
     }
 
-    setSource(source: TrainingSource): void {
-        this.sourceSubject.next(source);
-        if (source === 'club') {
+    setContext(context: string): void {
+        this.activeContextSubject.next(context);
+        if (context.startsWith('club:') && this.clubTrainingsSubject.value.length === 0) {
+            this.loadClubTrainings();
+        }
+        if (!context.startsWith('mine')) {
             this.tagFilterSubject.next(null);
-            if (this.clubTrainingsSubject.value.length === 0) {
-                this.loadClubTrainings();
-            }
-        } else {
-            this.clubGroupFilterSubject.next(null);
-            this.selectedClubIdSubject.next(null);
         }
     }
 
     loadClubTrainings(): void {
         this.http.get<Training[]>(`${this.apiUrl}/club-trainings`).subscribe({
-            next: (trainings) => {
-                this.clubTrainingsSubject.next(trainings);
-                this.buildClubGroupMap(trainings);
-            },
+            next: (trainings) => this.clubTrainingsSubject.next(trainings),
             error: () => this.clubTrainingsSubject.next([]),
-        });
-    }
-
-    setSelectedClubId(clubId: string | null): void {
-        this.selectedClubIdSubject.next(clubId);
-    }
-
-    setClubGroupFilter(value: string | null): void {
-        this.clubGroupFilterSubject.next(
-            this.clubGroupFilterSubject.value === value ? null : value,
-        );
-    }
-
-    private buildClubGroupMap(trainings: Training[]): void {
-        const clubIds = [...new Set(trainings.map((t) => t.clubId).filter((id): id is string => !!id))];
-        if (clubIds.length === 0) {
-            this.clubGroupMapSubject.next(new Map());
-            return;
-        }
-        forkJoin(clubIds.map((id) => this.clubService.getClubGroups(id))).subscribe({
-            next: (results) => {
-                const groupMap = new Map<string, string>();
-                results.flat().forEach((g) => groupMap.set(g.id, g.name));
-                this.clubGroupMapSubject.next(groupMap);
-            },
-            error: () => this.clubGroupMapSubject.next(new Map()),
         });
     }
 
@@ -252,7 +207,6 @@ export class TrainingService {
     ftp$ = this.ftpSubject.asObservable();
 
     private authService = inject(AuthService);
-    private clubService = inject(ClubService);
     private destroyRef = inject(DestroyRef);
 
     constructor() {

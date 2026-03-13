@@ -62,7 +62,7 @@ public class TrainingController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Training> updateTraining(@PathVariable String id,
-                                                   @Valid @RequestBody Training updates) {
+                                                   @RequestBody Training updates) {
         try {
             Training existing = trainingService.getTrainingById(id);
             String userId = SecurityUtils.getCurrentUserId();

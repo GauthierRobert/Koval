@@ -181,7 +181,6 @@
       flex-direction: column;
       gap: 2px;
       overflow-y: auto;
-      flex: 1;
       min-height: 0;
     }
 
@@ -602,7 +601,7 @@
       letter-spacing: 0.5px;
       cursor: pointer;
       transition: all 0.2s;
-      margin-top: 4px;
+      margin-top: 16px;
     }
 
     .add-block-btn:hover {
