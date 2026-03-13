@@ -3,6 +3,12 @@ package com.koval.trainingplannerbackend.race;
 import com.koval.trainingplannerbackend.pacing.dto.RouteCoordinate;
 import com.koval.trainingplannerbackend.pacing.gpx.GpxParser;
 import com.koval.trainingplannerbackend.pacing.gpx.GpxParseResult;
+import org.bson.Document;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
@@ -15,10 +21,12 @@ public class RaceService {
 
     private final RaceRepository repository;
     private final GpxParser gpxParser;
+    private final MongoTemplate mongoTemplate;
 
-    public RaceService(RaceRepository repository, GpxParser gpxParser) {
+    public RaceService(RaceRepository repository, GpxParser gpxParser, MongoTemplate mongoTemplate) {
         this.repository = repository;
         this.gpxParser = gpxParser;
+        this.mongoTemplate = mongoTemplate;
     }
 
     public List<Race> searchRaces(String query, String sport, String region) {
@@ -113,5 +121,47 @@ public class RaceService {
         byte[] gpxBytes = getGpxBytes(raceId, discipline);
         double segmentLength = "run".equalsIgnoreCase(discipline) ? GpxParser.RUN_SEGMENT_LENGTH_M : 500.0;
         return gpxParser.parseWithCoordinates(new ByteArrayInputStream(gpxBytes), segmentLength);
+    }
+
+    public List<RaceController.SportFacet> getSportFacets() {
+        Aggregation agg = Aggregation.newAggregation(
+                Aggregation.group("sport")
+                        .count().as("raceCount")
+                        .addToSet("country").as("countries"),
+                Aggregation.project("raceCount")
+                        .and("_id").as("sport")
+                        .and("countries").size().as("countryCount"),
+                Aggregation.sort(org.springframework.data.domain.Sort.Direction.DESC, "raceCount")
+        );
+        AggregationResults<Document> results = mongoTemplate.aggregate(agg, "races", Document.class);
+        return results.getMappedResults().stream()
+                .map(doc -> new RaceController.SportFacet(
+                        doc.getString("sport"),
+                        doc.getInteger("raceCount", 0),
+                        doc.getInteger("countryCount", 0)
+                ))
+                .toList();
+    }
+
+    public List<RaceController.CountryFacet> getCountryFacets(String sport) {
+        Aggregation agg = Aggregation.newAggregation(
+                Aggregation.match(org.springframework.data.mongodb.core.query.Criteria.where("sport").regex("^" + sport + "$", "i")),
+                Aggregation.group("country")
+                        .count().as("raceCount"),
+                Aggregation.project("raceCount")
+                        .and("_id").as("country"),
+                Aggregation.sort(org.springframework.data.domain.Sort.Direction.DESC, "raceCount")
+        );
+        AggregationResults<Document> results = mongoTemplate.aggregate(agg, "races", Document.class);
+        return results.getMappedResults().stream()
+                .map(doc -> new RaceController.CountryFacet(
+                        doc.getString("country"),
+                        doc.getInteger("raceCount", 0)
+                ))
+                .toList();
+    }
+
+    public Page<Race> browse(String sport, String country, Pageable pageable) {
+        return repository.findBySportIgnoreCaseAndCountryIgnoreCase(sport, country, pageable);
     }
 }

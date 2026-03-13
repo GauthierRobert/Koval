@@ -153,6 +153,105 @@
       </div>
     </ng-template>
   </ng-container>
+
+  <!-- My Races (goals linked to public races) -->
+  <ng-container *ngIf="goals$ | async as allGoals">
+    <div class="my-races-section" *ngIf="getLinkedGoals(allGoals).length > 0">
+      <h3 class="section-title">My <span class="accent">Races</span></h3>
+      <div class="my-races-chips">
+        <div *ngFor="let goal of getLinkedGoals(allGoals)" class="race-chip glass"
+          [style.border-color]="getPriorityColor(goal.priority) + '55'"
+          (click)="toggleExpand(goal)">
+          <app-sport-icon [sport]="$any(goal.sport)" [size]="14"></app-sport-icon>
+          <span class="chip-title">{{ goal.title }}</span>
+          <span class="chip-days" *ngIf="goal.raceDate"
+            [class.soon]="daysUntil(goal.raceDate) >= 0 && daysUntil(goal.raceDate) <= 30">
+            {{ daysUntil(goal.raceDate) }}d
+          </span>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Browse Public Races -->
+  <div class="browse-section">
+    <h3 class="section-title">Browse <span class="accent">Public Races</span></h3>
+
+    <!-- Breadcrumb navigation -->
+    <div class="browse-breadcrumb" *ngIf="selectedBrowseSport">
+      <button class="breadcrumb-link" (click)="backToSports()">All Sports</button>
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-current" *ngIf="!selectedBrowseCountry">{{ selectedBrowseSport }}</span>
+      <ng-container *ngIf="selectedBrowseCountry">
+        <button class="breadcrumb-link" (click)="backToCountries()">{{ selectedBrowseSport }}</button>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">{{ selectedBrowseCountry }}</span>
+      </ng-container>
+    </div>
+
+    <!-- Level 0: Sport Cards -->
+    <div class="facet-grid" *ngIf="!selectedBrowseSport">
+      <div *ngFor="let facet of sportFacets" class="facet-card glass" (click)="selectBrowseSport(facet.sport)">
+        <div class="facet-icon" [innerHTML]="getSportIcon(facet.sport)"></div>
+        <div class="facet-name">{{ facet.sport }}</div>
+        <div class="facet-counts">
+          <span>{{ facet.raceCount }} races</span>
+          <span>{{ facet.countryCount }} countries</span>
+        </div>
+      </div>
+      <div *ngIf="sportFacets.length === 0 && !browseLoading" class="browse-empty">
+        No races in the catalog yet.
+      </div>
+    </div>
+
+    <!-- Level 1: Country Cards -->
+    <div class="facet-grid facet-grid--countries" *ngIf="selectedBrowseSport && !selectedBrowseCountry && !browseLoading">
+      <div *ngFor="let facet of countryFacets" class="facet-card facet-card--country glass"
+        (click)="selectBrowseCountry(facet.country)">
+        <div class="facet-name">{{ facet.country || 'Unknown' }}</div>
+        <div class="facet-counts"><span>{{ facet.raceCount }} races</span></div>
+      </div>
+      <div *ngIf="countryFacets.length === 0" class="browse-empty">
+        No races found for {{ selectedBrowseSport }}.
+      </div>
+    </div>
+
+    <!-- Level 2: Race List -->
+    <div class="browse-race-list" *ngIf="selectedBrowseCountry && browseResults && !browseLoading">
+      <div *ngFor="let race of browseResults.content" class="browse-race-item glass"
+        (click)="selectBrowseRace(race)">
+        <div class="browse-race-header">
+          <app-sport-icon [sport]="$any(race.sport)" [size]="16"></app-sport-icon>
+          <span class="browse-race-title">{{ race.title }}</span>
+          <span class="browse-race-verified" *ngIf="race.verified" title="Verified">&#10003;</span>
+        </div>
+        <div class="browse-race-meta">
+          <span *ngIf="race.location">{{ race.location }}</span>
+          <span *ngIf="race.distance">{{ race.distance }}</span>
+          <span *ngIf="race.typicalMonth">{{ monthNames[race.typicalMonth || 0] }}</span>
+        </div>
+        <div class="discipline-distances" *ngIf="race.swimDistanceM || race.bikeDistanceM || race.runDistanceM">
+          <span class="discipline-badge swim" *ngIf="race.swimDistanceM">S: {{ formatDistance(race.swimDistanceM) }}</span>
+          <span class="discipline-badge bike" *ngIf="race.bikeDistanceM">B: {{ formatDistance(race.bikeDistanceM) }}</span>
+          <span class="discipline-badge run" *ngIf="race.runDistanceM">R: {{ formatDistance(race.runDistanceM) }}</span>
+        </div>
+      </div>
+      <div *ngIf="browseResults.content.length === 0" class="browse-empty">
+        No races found.
+      </div>
+
+      <!-- Pagination -->
+      <div class="browse-pagination" *ngIf="browseResults.totalPages > 1">
+        <button class="btn-secondary" (click)="browsePrevPage()" [disabled]="browsePage === 0">Prev</button>
+        <span class="page-info">{{ browsePage + 1 }} / {{ browseResults.totalPages }}</span>
+        <button class="btn-secondary" (click)="browseNextPage()"
+          [disabled]="browsePage >= browseResults.totalPages - 1">Next</button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="browse-loading" *ngIf="browseLoading">Loading...</div>
+  </div>
 </div>
 
 <!-- Goal Form Modal -->
