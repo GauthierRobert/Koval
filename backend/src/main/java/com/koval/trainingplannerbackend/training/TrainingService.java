@@ -20,8 +20,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -178,37 +176,6 @@ public class TrainingService {
         List<String> groupIds = athleteGroups.stream().map(Group::getId).toList();
         return trainingRepository.findByGroupIdsIn(groupIds);
     }
-
-    /**
-     * Get training folders for an athlete grouped by group name.
-     * Batch-loads all trainings in a single query to avoid N+1 queries per group.
-     */
-    public Map<String, List<Training>> getTrainingFolders(String athleteId) {
-        List<Group> athleteGroups = groupService.getGroupsForAthlete(athleteId);
-        if (athleteGroups.isEmpty()) {
-            return Map.of();
-        }
-
-        List<String> groupIds = athleteGroups.stream().map(Group::getId).toList();
-        List<Training> allTrainings = trainingRepository.findByGroupIdsIn(groupIds);
-
-        Map<String, String> groupIdToName = athleteGroups.stream()
-                .collect(Collectors.toMap(Group::getId, Group::getName, (a, b) -> a));
-
-        Map<String, List<Training>> folders = new HashMap<>();
-        for (Training t : allTrainings) {
-            if (t.getGroupIds() == null) continue;
-            for (String gid : t.getGroupIds()) {
-                String name = groupIdToName.get(gid);
-                if (name != null) {
-                    folders.computeIfAbsent(name, k -> new ArrayList<>()).add(t);
-                }
-            }
-        }
-
-        return folders;
-    }
-
 
     /**
      * Discover trainings from clubs the user is an active member of.
