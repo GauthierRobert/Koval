@@ -130,11 +130,7 @@ public class TrainingController {
     @GetMapping("/folders")
     public ResponseEntity<Map<String, List<Training>>> getTrainingFolders() {
         String userId = SecurityUtils.getCurrentUserId();
-        try {
-            return ResponseEntity.ok(trainingService.getTrainingFolders(userId));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.ok(Map.of());
-        }
+        return ResponseEntity.ok(trainingService.getTrainingFolders(userId));
     }
 
     private void verifyAccessToTraining(String currentUserId, Training training) {

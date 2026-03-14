@@ -7,6 +7,7 @@ import com.koval.trainingplannerbackend.club.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.ClubMembershipRepository;
 import com.koval.trainingplannerbackend.training.group.Group;
 import com.koval.trainingplannerbackend.training.group.GroupService;
+import com.koval.trainingplannerbackend.training.metrics.TssCalculator;
 import com.koval.trainingplannerbackend.training.model.BlockType;
 import com.koval.trainingplannerbackend.training.model.SportType;
 import com.koval.trainingplannerbackend.training.model.Training;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,6 +110,8 @@ public class TrainingService {
             training.setClubId(updates.getClubId());
         if (updates.getClubGroupIds() != null)
             training.setClubGroupIds(updates.getClubGroupIds());
+        if (updates.getZoneSystemId() != null)
+            training.setZoneSystemId(updates.getZoneSystemId());
 
         calculateTrainingMetrics(training, existing.get().getCreatedBy());
         return trainingRepository.save(training);
@@ -177,8 +181,7 @@ public class TrainingService {
 
     /**
      * Get training folders for an athlete grouped by group name.
-     * Uses GroupService to find athlete's groups, then finds trainings with those group
-     * IDs.
+     * Batch-loads all trainings in a single query to avoid N+1 queries per group.
      */
     public Map<String, List<Training>> getTrainingFolders(String athleteId) {
         List<Group> athleteGroups = groupService.getGroupsForAthlete(athleteId);
@@ -186,10 +189,21 @@ public class TrainingService {
             return Map.of();
         }
 
+        List<String> groupIds = athleteGroups.stream().map(Group::getId).toList();
+        List<Training> allTrainings = trainingRepository.findByGroupIdsIn(groupIds);
+
+        Map<String, String> groupIdToName = athleteGroups.stream()
+                .collect(Collectors.toMap(Group::getId, Group::getName, (a, b) -> a));
+
         Map<String, List<Training>> folders = new HashMap<>();
-        for (Group group : athleteGroups) {
-            List<Training> trainings = trainingRepository.findByGroupIdsContaining(group.getId());
-            folders.put(group.getName(), trainings);
+        for (Training t : allTrainings) {
+            if (t.getGroupIds() == null) continue;
+            for (String gid : t.getGroupIds()) {
+                String name = groupIdToName.get(gid);
+                if (name != null) {
+                    folders.computeIfAbsent(name, k -> new ArrayList<>()).add(t);
+                }
+            }
         }
 
         return folders;
@@ -317,8 +331,7 @@ public class TrainingService {
         training.setEstimatedTss((int) Math.round(result.totalTss()));
 
         if (result.totalDurationSeconds() > 0) {
-            double durationHours = result.totalDurationSeconds() / 3600.0;
-            double estimatedIf = Math.sqrt(result.totalTss() / (durationHours * 100.0));
+            double estimatedIf = TssCalculator.computeIf(result.totalTss(), result.totalDurationSeconds());
             training.setEstimatedIf(Math.round(estimatedIf * 100.0) / 100.0);
             training.setEstimatedDurationSeconds(result.totalDurationSeconds());
             training.setEstimatedDistance(result.totalDistance());
@@ -356,7 +369,7 @@ public class TrainingService {
             totalDurationSeconds += blockDuration;
             totalDistance += blockDistance;
             if (intensity > 0) {
-                totalTss += (blockDuration / 3600.0) * Math.pow(intensity / 100.0, 2) * 100.0;
+                totalTss += TssCalculator.computeTss(blockDuration, intensity / 100.0);
             }
         }
 
@@ -371,25 +384,25 @@ public class TrainingService {
         return block.intensityTarget() != null && block.intensityTarget() > 0 ? block.intensityTarget() : 50.0;
     }
 
+    private double estimateSpeed(SportType sport, double intensity, int ftpPaceSecPerKm, int cssSecPer100m) {
+        return switch (sport) {
+            case RUNNING -> (1000.0 / ftpPaceSecPerKm) * (intensity / 100.0);
+            case SWIMMING -> (100.0 / cssSecPer100m) * (intensity / 100.0);
+            case CYCLING, BRICK -> sport.getTypicalSpeedMps() * Math.sqrt(intensity / 100.0);
+        };
+    }
+
     private int estimateDuration(int distanceMeters, double intensity, SportType sport,
                                   int ftpPaceSecPerKm, int cssSecPer100m) {
         if (intensity <= 0) return 0;
-        double speedMps = switch (sport) {
-            case RUNNING -> (1000.0 / ftpPaceSecPerKm) * (intensity / 100.0);
-            case SWIMMING -> (100.0 / cssSecPer100m) * (intensity / 100.0);
-            case CYCLING, BRICK -> 8.33 * Math.sqrt(intensity / 100.0);
-        };
+        double speedMps = estimateSpeed(sport, intensity, ftpPaceSecPerKm, cssSecPer100m);
         return speedMps > 0 ? (int) Math.round(distanceMeters / speedMps) : 0;
     }
 
     private int estimateDistance(int durationSeconds, double intensity, SportType sport,
                                   int ftpPaceSecPerKm, int cssSecPer100m) {
         if (intensity <= 0) return 0;
-        double speedMps = switch (sport) {
-            case RUNNING -> (1000.0 / ftpPaceSecPerKm) * (intensity / 100.0);
-            case SWIMMING -> (100.0 / cssSecPer100m) * (intensity / 100.0);
-            case CYCLING, BRICK -> 8.33 * Math.sqrt(intensity / 100.0);
-        };
+        double speedMps = estimateSpeed(sport, intensity, ftpPaceSecPerKm, cssSecPer100m);
         return (int) Math.round(durationSeconds * speedMps);
     }
 }

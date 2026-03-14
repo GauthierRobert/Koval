@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend.training.tools;
 import com.koval.trainingplannerbackend.training.model.BrickTraining;
 import com.koval.trainingplannerbackend.training.model.CyclingTraining;
 import com.koval.trainingplannerbackend.training.model.RunningTraining;
+import com.koval.trainingplannerbackend.training.model.SportType;
 import com.koval.trainingplannerbackend.training.model.SwimmingTraining;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.model.TrainingType;
@@ -81,11 +82,8 @@ public class TrainingMapper {
         boolean hasDur = dur != null && dur > 0;
         boolean hasDist = dist != null && dist > 0;
 
-        double metersPerSecond = switch (sport) {
-            case "RUNNING" -> 3.33;
-            case "SWIMMING" -> 1.00;
-            default -> 8.33; // CYCLING / BRICK
-        };
+        SportType sportType = parseSportType(sport);
+        double metersPerSecond = sportType.getTypicalSpeedMps();
 
         if (hasDur && hasDist) {
             // Both set — keep the primary dimension per sport, extrapolate the other.
@@ -108,15 +106,21 @@ public class TrainingMapper {
      * Creates the sport-specific Training subclass based on the sport type string.
      */
     private Training createInstance(String sportType) {
-        if (sportType == null) {
-            return new CyclingTraining(); // Default
-        }
-        return switch (sportType.trim().toUpperCase()) {
-            case "RUNNING" -> new RunningTraining();
-            case "SWIMMING" -> new SwimmingTraining();
-            case "BRICK" -> new BrickTraining();
-            default -> new CyclingTraining();
+        return switch (parseSportType(sportType)) {
+            case RUNNING -> new RunningTraining();
+            case SWIMMING -> new SwimmingTraining();
+            case BRICK -> new BrickTraining();
+            case CYCLING -> new CyclingTraining();
         };
+    }
+
+    private SportType parseSportType(String sportType) {
+        if (sportType == null) return SportType.CYCLING;
+        try {
+            return SportType.valueOf(sportType.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return SportType.CYCLING;
+        }
     }
 
 }
