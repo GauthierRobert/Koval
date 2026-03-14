@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/trainings")
@@ -125,12 +124,6 @@ public class TrainingController {
     public ResponseEntity<List<Training>> discoverTrainings() {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(trainingService.discoverTrainingsByUserGroups(userId));
-    }
-
-    @GetMapping("/folders")
-    public ResponseEntity<Map<String, List<Training>>> getTrainingFolders() {
-        String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(trainingService.getTrainingFolders(userId));
     }
 
     private void verifyAccessToTraining(String currentUserId, Training training) {

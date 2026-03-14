@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Integration tests for training CRUD operations:
  * - Create, read, update, delete trainings
- * - List, search, discover, folders
+ * - List, search, discover
  * - User isolation (user can only see own trainings)
  */
 class TrainingCrudIntegrationTest extends BaseIntegrationTest {
@@ -213,18 +213,4 @@ class TrainingCrudIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.blocks[1].distanceMeters").value(5000));
     }
 
-    @Test
-    @DisplayName("Get training folders")
-    void getTrainingFolders() throws Exception {
-        mockMvc.perform(post("/api/trainings")
-                        .header("Authorization", bearer(athleteToken))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(CYCLING_TRAINING))
-                .andExpect(status().isCreated());
-
-        mockMvc.perform(get("/api/trainings/folders")
-                        .header("Authorization", bearer(athleteToken)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isMap());
-    }
 }

@@ -324,7 +324,4 @@ export class TrainingService {
         return this.http.put<Training>(`${this.apiUrl}/${trainingId}`, { groupIds });
     }
 
-    getTrainingFolders(): Observable<Record<string, Training[]>> {
-        return this.http.get<Record<string, Training[]>>(`${this.apiUrl}/folders`);
-    }
 }
