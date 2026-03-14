@@ -3,7 +3,7 @@ import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Subscription} from 'rxjs';
 import {AgentType, ChatService, PlanTask} from '../../../services/chat.service';
-import {Training} from '../../../services/training.service';
+import {Training} from '../../../models/training.model';
 import {ScheduleModalComponent} from '../../shared/schedule-modal/schedule-modal.component';
 
 interface AgentOption {

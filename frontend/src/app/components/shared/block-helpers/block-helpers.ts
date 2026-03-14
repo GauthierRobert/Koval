@@ -1,4 +1,4 @@
-import { Training, WorkoutBlock } from '../../../services/training.service';
+import { Training, WorkoutBlock } from '../../../models/training.model';
 
 /**
  * Pure utility functions for computing workout block visual properties.

@@ -1,6 +1,7 @@
 import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Training, WorkoutBlock, TrainingService, hasDurationEstimate } from '../../../services/training.service';
+import { TrainingService } from '../../../services/training.service';
+import { Training, WorkoutBlock, hasDurationEstimate } from '../../../models/training.model';
 import { WorkoutExecutionService } from '../../../services/workout-execution.service';
 import { ExportService } from '../../../services/export.service';
 import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.component';

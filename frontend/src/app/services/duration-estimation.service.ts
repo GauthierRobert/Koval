@@ -1,6 +1,6 @@
 import {inject, Injectable} from '@angular/core';
 import {AuthService, User} from './auth.service';
-import {Training, WorkoutBlock} from './training.service';
+import {Training, WorkoutBlock} from '../models/training.model';
 import {ZoneSystem} from './zone';
 
 @Injectable({

@@ -1,9 +1,7 @@
 package com.koval.trainingplannerbackend.training.history;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
-import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.coach.CoachService;
-import com.mongodb.client.gridfs.model.GridFSFile;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,11 +16,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.koval.trainingplannerbackend.training.metrics.TssCalculator;
+import com.mongodb.client.gridfs.model.GridFSFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -31,69 +28,28 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class SessionController {
 
+    private final SessionService sessionService;
     private final CompletedSessionRepository repository;
     private final AnalyticsService analyticsService;
-    private final UserRepository userRepository;
     private final CoachService coachService;
     private final GridFsOperations gridFsOperations;
-    private final SessionAssociationService associationService;
 
-    public SessionController(CompletedSessionRepository repository,
-            AnalyticsService analyticsService,
-            UserRepository userRepository,
-            CoachService coachService,
-            GridFsOperations gridFsOperations,
-            SessionAssociationService associationService) {
+    public SessionController(SessionService sessionService,
+                             CompletedSessionRepository repository,
+                             AnalyticsService analyticsService,
+                             CoachService coachService,
+                             GridFsOperations gridFsOperations) {
+        this.sessionService = sessionService;
         this.repository = repository;
         this.analyticsService = analyticsService;
-        this.userRepository = userRepository;
         this.coachService = coachService;
         this.gridFsOperations = gridFsOperations;
-        this.associationService = associationService;
     }
 
     @PostMapping
     public ResponseEntity<CompletedSession> save(@RequestBody CompletedSession session) {
         String userId = SecurityUtils.getCurrentUserId();
-        session.setUserId(userId);
-        if (session.getCompletedAt() == null) {
-            session.setCompletedAt(LocalDateTime.now());
-        }
-
-        // Compute TSS / IF before saving (sport-type-aware)
-        userRepository.findById(userId).ifPresent(user -> analyticsService.computeAndAttachMetrics(session, user));
-
-        // Estimate per-block distance when not provided
-        analyticsService.computeBlockDistances(session);
-
-        // Auto-associate to a scheduled workout if none provided
-        if (session.getScheduledWorkoutId() == null) {
-            associationService.tryAutoAssociate(session, userId);
-        }
-
-        // Delete any synthetic session linked to this scheduled workout before saving real one
-        if (session.getScheduledWorkoutId() != null) {
-            associationService.deleteSyntheticSessionForSchedule(session.getScheduledWorkoutId());
-        }
-
-        CompletedSession saved = repository.save(session);
-
-        // Update CTL/ATL/TSB on the user document
-        analyticsService.recomputeAndSaveUserLoad(userId);
-
-        // Link to scheduled workout if provided or auto-associated
-        if (saved.getScheduledWorkoutId() != null) {
-            try {
-                coachService.markCompleted(saved.getScheduledWorkoutId(),
-                        saved.getTss() != null ? saved.getTss().intValue() : null,
-                        saved.getIntensityFactor(),
-                        saved.getId());
-            } catch (Exception ignored) {
-                // Non-fatal if linking fails
-            }
-        }
-
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(sessionService.saveSession(session, userId));
     }
 
     @GetMapping
@@ -139,79 +95,24 @@ public class SessionController {
             @PathVariable String sessionId,
             @PathVariable String scheduledWorkoutId) {
         String userId = SecurityUtils.getCurrentUserId();
-
-        CompletedSession session = repository.findById(sessionId)
-                .filter(s -> userId.equals(s.getUserId()))
-                .orElse(null);
-        if (session == null) return ResponseEntity.notFound().build();
-
-        // Clear old link if session was previously linked to a different scheduled workout
-        String oldSwId = session.getScheduledWorkoutId();
-        if (oldSwId != null && !oldSwId.equals(scheduledWorkoutId)) {
-            associationService.clearScheduledWorkoutLink(oldSwId);
-        }
-
-        // Delete any synthetic session already linked to the target scheduled workout
-        associationService.deleteSyntheticSessionForSchedule(scheduledWorkoutId);
-
-        session.setScheduledWorkoutId(scheduledWorkoutId);
-        CompletedSession saved = repository.save(session);
-
-        try {
-            coachService.markCompleted(scheduledWorkoutId,
-                    saved.getTss() != null ? saved.getTss().intValue() : null,
-                    saved.getIntensityFactor(),
-                    saved.getId());
-        } catch (Exception ignored) {
-            // Non-fatal
-        }
-
-        return ResponseEntity.ok(saved);
+        CompletedSession result = sessionService.linkSessionToSchedule(sessionId, scheduledWorkoutId, userId);
+        return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<CompletedSession> patch(@PathVariable String id,
             @RequestBody Map<String, Object> body) {
         String userId = SecurityUtils.getCurrentUserId();
-        CompletedSession session = repository.findById(id)
-                .filter(s -> userId.equals(s.getUserId()))
-                .orElse(null);
-        if (session == null) return ResponseEntity.notFound().build();
-
-        if (body.containsKey("rpe")) {
-            int rpe = ((Number) body.get("rpe")).intValue();
-            session.setRpe(rpe);
-            if (session.getTss() == null) {
-                double intensityFactor = rpe / 10.0;
-                session.setTss(TssCalculator.computeTss(session.getTotalDurationSeconds(), intensityFactor));
-                session.setIntensityFactor(intensityFactor);
-            }
-        }
-
-        CompletedSession saved = repository.save(session);
-        analyticsService.recomputeAndSaveUserLoad(userId);
-        return ResponseEntity.ok(saved);
+        CompletedSession result = sessionService.patchSession(id, body, userId);
+        return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable String id) {
         String userId = SecurityUtils.getCurrentUserId();
-        return repository.findById(id)
-                .filter(s -> userId.equals(s.getUserId()))
-                .map(s -> {
-                    // Delete associated FIT file if present
-                    if (s.getFitFileId() != null) {
-                        try {
-                            gridFsOperations.delete(
-                                    Query.query(
-                                            Criteria.where("_id").is(new ObjectId(s.getFitFileId()))));
-                        } catch (Exception ignored) {
-                        }
-                    }
-                    repository.delete(s);
-                    return ResponseEntity.noContent().build();
-                })
-                .orElse(ResponseEntity.notFound().build());
+        return sessionService.deleteSession(id, userId)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
     }
 
     // ── PMC endpoint ─────────────────────────────────────────────────────────

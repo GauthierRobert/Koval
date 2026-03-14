@@ -4,7 +4,7 @@ import { CdkDrag, CdkDragDrop, CdkDropList, CdkDropListGroup } from '@angular/cd
 
 import { ScheduledWorkout } from '../../../../services/coach.service';
 import { SavedSession } from '../../../../services/history.service';
-import { TRAINING_TYPE_COLORS, TrainingType } from '../../../../services/training.service';
+import { TRAINING_TYPE_COLORS, TrainingType } from '../../../../models/training.model';
 import { SportIconComponent } from '../../../shared/sport-icon/sport-icon.component';
 import { CalendarDay, CalendarEntry, EntriesByDay, GoalsByDay } from '../calendar.component';
 import { RaceGoalService } from '../../../../services/race-goal.service';

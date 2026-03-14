@@ -14,7 +14,8 @@ import { MetricsService, PmcDataPoint } from '../../../services/metrics.service'
 import { ScheduleModalComponent } from '../../shared/schedule-modal/schedule-modal.component';
 import { InviteCodeModalComponent } from '../../shared/invite-code-modal/invite-code-modal.component';
 import { ShareTrainingModalComponent } from '../../shared/share-training-modal/share-training-modal.component';
-import { Training, TrainingService, TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../../services/training.service';
+import { TrainingService } from '../../../services/training.service';
+import { Training, TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../../models/training.model';
 import { SportIconComponent } from '../../shared/sport-icon/sport-icon.component';
 import { PmcChartComponent } from '../../shared/pmc-chart/pmc-chart.component';
 import { formatPaceWithUnit, formatTimeHMS, daysUntil as sharedDaysUntil } from '../../shared/format/format.utils';
