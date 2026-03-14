@@ -22,17 +22,17 @@
       <div class="filter-group">
         <app-filter-pills
           [options]="(sourceOptions$ | async) ?? []"
-          [selected]="(trainingService.activeContext$ | async) ?? 'mine'"
+          [selected]="(filterService.activeContext$ | async) ?? 'mine'"
           (selectionChange)="onContextChange($event)">
         </app-filter-pills>
         <div class="filter-sep"></div>
       </div>
 
       <!-- Tag filter (mine context only) -->
-      <div class="filter-group" *ngIf="(trainingService.activeContext$ | async) === 'mine' && (trainingService.availableTags$ | async)?.length">
+      <div class="filter-group" *ngIf="(filterService.activeContext$ | async) === 'mine' && (filterService.availableTags$ | async)?.length">
         <app-filter-pills
           [options]="(tagOptions$ | async) ?? []"
-          [selected]="(trainingService.activeTagFilter$ | async) ?? null"
+          [selected]="(filterService.activeTagFilter$ | async) ?? null"
           (selectionChange)="setTagFilter($event)">
         </app-filter-pills>
         <div class="filter-sep"></div>
@@ -42,7 +42,7 @@
       <div class="filter-group">
         <app-filter-pills
           [options]="sportOptions"
-          [selected]="(trainingService.activeSportFilter$ | async) ?? null"
+          [selected]="(filterService.activeSportFilter$ | async) ?? null"
           (selectionChange)="onSportChange($event)">
         </app-filter-pills>
       </div>
@@ -53,7 +53,7 @@
       <div class="filter-group">
         <app-filter-pills
           [options]="typeOptions"
-          [selected]="(trainingService.activeTypeFilter$ | async) ?? null"
+          [selected]="(filterService.activeTypeFilter$ | async) ?? null"
           (selectionChange)="onTypeChange($event)">
         </app-filter-pills>
       </div>

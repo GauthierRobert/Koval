@@ -2,14 +2,15 @@ import { Component, inject } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
 import { SportIconComponent } from '../../shared/sport-icon/sport-icon.component';
+import { TrainingService } from '../../../services/training.service';
+import { TrainingFilterService } from '../../../services/training-filter.service';
 import {
-    TrainingService,
     Training,
     TrainingType,
     TRAINING_TYPE_COLORS,
     TRAINING_TYPE_LABELS,
     hasDurationEstimate,
-} from '../../../services/training.service';
+} from '../../../models/training.model';
 import { DurationEstimationService } from '../../../services/duration-estimation.service';
 import { HistoryService } from '../../../services/history.service';
 
@@ -22,12 +23,13 @@ import { HistoryService } from '../../../services/history.service';
 })
 export class TrainingHistoryComponent {
     private trainingService = inject(TrainingService);
+    private filterService = inject(TrainingFilterService);
     private historyService = inject(HistoryService);
     private durationService = inject(DurationEstimationService);
 
     selectedTraining$ = this.trainingService.selectedTraining$;
-    filteredTrainings$ = this.trainingService.filteredTrainings$;
-    activeContext$ = this.trainingService.activeContext$;
+    filteredTrainings$ = this.filterService.filteredTrainings$;
+    activeContext$ = this.filterService.activeContext$;
 
     onSelect(training: Training): void {
         this.historyService.selectSession(null);

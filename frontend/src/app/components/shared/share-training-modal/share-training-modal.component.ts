@@ -1,7 +1,8 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Training, TrainingService } from '../../../services/training.service';
+import { TrainingService } from '../../../services/training.service';
+import { Training } from '../../../models/training.model';
 import { Group } from '../../../services/group.service';
 
 @Component({

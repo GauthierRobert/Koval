@@ -1,6 +1,6 @@
 import {inject, Injectable} from '@angular/core';
 import {BehaviorSubject, interval, Subscription} from 'rxjs';
-import {Training, WorkoutBlock} from './training.service';
+import {Training, WorkoutBlock} from '../models/training.model';
 import {BluetoothService, LiveMetrics} from './bluetooth.service';
 
 export type { LiveMetrics } from './bluetooth.service';

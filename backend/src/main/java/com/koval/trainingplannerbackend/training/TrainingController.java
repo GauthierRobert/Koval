@@ -1,8 +1,8 @@
 package com.koval.trainingplannerbackend.training;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
-import com.koval.trainingplannerbackend.auth.UserService;
 import com.koval.trainingplannerbackend.coach.CoachService;
+import com.koval.trainingplannerbackend.training.metrics.TrainingMetricsService;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.model.TrainingType;
 import jakarta.validation.Valid;
@@ -30,12 +30,14 @@ import java.util.List;
 public class TrainingController {
 
     private final TrainingService trainingService;
-    private final UserService userService;
+    private final TrainingMetricsService metricsService;
     private final CoachService coachService;
 
-    public TrainingController(TrainingService trainingService, UserService userService, CoachService coachService) {
+    public TrainingController(TrainingService trainingService,
+                              TrainingMetricsService metricsService,
+                              CoachService coachService) {
         this.trainingService = trainingService;
-        this.userService = userService;
+        this.metricsService = metricsService;
         this.coachService = coachService;
     }
 
@@ -52,7 +54,7 @@ public class TrainingController {
             Training training = trainingService.getTrainingById(id);
             String userId = SecurityUtils.getCurrentUserId();
             verifyAccessToTraining(userId, training);
-            trainingService.enrichTrainingForUser(training, userId);
+            metricsService.enrichTrainingForUser(training, userId);
             return ResponseEntity.ok(training);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
@@ -90,7 +92,7 @@ public class TrainingController {
     public ResponseEntity<List<Training>> listTrainings() {
         String userId = SecurityUtils.getCurrentUserId();
         List<Training> trainings = trainingService.listTrainingsByUser(userId);
-        trainings.forEach(t -> trainingService.enrichTrainingForUser(t, userId));
+        trainings.forEach(t -> metricsService.enrichTrainingForUser(t, userId));
         return ResponseEntity.ok(trainings);
     }
 
@@ -98,7 +100,7 @@ public class TrainingController {
     public ResponseEntity<List<Training>> listClubTrainings() {
         String userId = SecurityUtils.getCurrentUserId();
         List<Training> trainings = trainingService.discoverClubTrainings(userId);
-        trainings.forEach(t -> trainingService.enrichTrainingForUser(t, userId));
+        trainings.forEach(t -> metricsService.enrichTrainingForUser(t, userId));
         return ResponseEntity.ok(trainings);
     }
 
@@ -106,7 +108,7 @@ public class TrainingController {
     public ResponseEntity<Page<Training>> listTrainings(Pageable pageable) {
         String userId = SecurityUtils.getCurrentUserId();
         Page<Training> page = trainingService.listTrainingsByUser(userId, pageable);
-        page.getContent().forEach(t -> trainingService.enrichTrainingForUser(t, userId));
+        page.getContent().forEach(t -> metricsService.enrichTrainingForUser(t, userId));
         return ResponseEntity.ok(page);
     }
 

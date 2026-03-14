@@ -8,7 +8,7 @@ import { RouterModule } from '@angular/router';
 import { CalendarService } from '../../../../services/calendar.service';
 import { ScheduledWorkout } from '../../../../services/coach.service';
 import { SavedSession } from '../../../../services/history.service';
-import { TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS, TrainingType } from '../../../../services/training.service';
+import { TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS, TrainingType } from '../../../../models/training.model';
 import { SportIconComponent } from '../../../shared/sport-icon/sport-icon.component';
 import { TrainingLoadChartComponent } from '../../../layout/training-load-chart/training-load-chart.component';
 import { CalendarDay, CalendarEntry, EntriesByDay, GoalsByDay, toDateKey } from '../calendar.component';

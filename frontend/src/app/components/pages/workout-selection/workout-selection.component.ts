@@ -1,7 +1,8 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TrainingService } from '../../../services/training.service';
+import { TrainingFilterService } from '../../../services/training-filter.service';
 import {
-  TrainingService,
   Training,
   TrainingType,
   TRAINING_TYPES,
@@ -9,7 +10,7 @@ import {
   TRAINING_TYPE_LABELS,
   SPORT_OPTIONS,
   SportFilter,
-} from '../../../services/training.service';
+} from '../../../models/training.model';
 import { combineLatest, Observable, of } from 'rxjs';
 import { catchError, map, startWith } from 'rxjs/operators';
 import { RouterModule } from '@angular/router';
@@ -36,7 +37,8 @@ import { GroupService, Group } from '../../../services/group.service';
   styleUrl: './workout-selection.component.css',
 })
 export class WorkoutSelectionComponent implements OnInit {
-  trainingService = inject(TrainingService);
+  private trainingService = inject(TrainingService);
+  filterService = inject(TrainingFilterService);
   private clubService = inject(ClubService);
   private groupService = inject(GroupService);
 
@@ -67,7 +69,7 @@ export class WorkoutSelectionComponent implements OnInit {
     color: TRAINING_TYPE_COLORS[t] || '#888',
   }));
 
-  tagOptions$: Observable<FilterPillOption[]> = this.trainingService.availableTags$.pipe(
+  tagOptions$: Observable<FilterPillOption[]> = this.filterService.availableTags$.pipe(
     map((tags) => [
       { label: 'My Workouts', value: '__mine__' } as FilterPillOption,
       ...tags.map((tag) => ({ label: tag, value: tag }) as FilterPillOption),
@@ -81,19 +83,19 @@ export class WorkoutSelectionComponent implements OnInit {
   }
 
   onContextChange(value: string | null): void {
-    if (value) this.trainingService.setContext(value);
+    if (value) this.filterService.setContext(value);
   }
 
   onSportChange(value: string | null): void {
-    this.trainingService.setSportFilter(value as SportFilter);
+    this.filterService.setSportFilter(value as SportFilter);
   }
 
   onTypeChange(value: string | null): void {
-    this.trainingService.setTypeFilter(value as TrainingType);
+    this.filterService.setTypeFilter(value as TrainingType);
   }
 
   setTagFilter(value: string | null): void {
-    this.trainingService.setTagFilter(value as string);
+    this.filterService.setTagFilter(value as string);
   }
 
   onAiCreated(_result: ActionResult): void {
