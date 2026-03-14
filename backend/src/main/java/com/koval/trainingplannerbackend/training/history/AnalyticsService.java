@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.training.history;
 
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
+import com.koval.trainingplannerbackend.training.metrics.TssCalculator;
 import com.koval.trainingplannerbackend.training.model.SportType;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,9 @@ import java.util.Map;
 
 @Service
 public class AnalyticsService {
+
+    private static final int CTL_TIME_CONSTANT = 42;
+    private static final int ATL_TIME_CONSTANT = 7;
 
     private final CompletedSessionRepository sessionRepository;
     private final UserRepository userRepository;
@@ -81,13 +85,13 @@ public class AnalyticsService {
             // RPE fallback — use heuristic when no sensor data available
             if (session.getRpe() != null && session.getRpe() > 0) {
                 double intensity = session.getRpe() / 10.0;
-                double tss = durationHours * intensity * intensity * 100.0;
+                double tss = TssCalculator.computeTss(session.getTotalDurationSeconds(), intensity);
                 session.setIntensityFactor(Math.round(intensity * 1000.0) / 1000.0);
                 session.setTss(Math.round(tss * 10.0) / 10.0);
             }
             return;
         }
-        double tss = durationHours * intensityFactor * intensityFactor * 100.0;
+        double tss = TssCalculator.computeTss(session.getTotalDurationSeconds(), intensityFactor);
         session.setIntensityFactor(Math.round(intensityFactor * 1000.0) / 1000.0);
         session.setTss(Math.round(tss * 10.0) / 10.0);
     }
@@ -144,8 +148,8 @@ public class AnalyticsService {
 
             double ctl = 0.0;
             double atl = 0.0;
-            double kCTL = 1.0 - Math.exp(-1.0 / 42.0);
-            double kATL = 1.0 - Math.exp(-1.0 / 7.0);
+            double kCTL = 1.0 - Math.exp(-1.0 / CTL_TIME_CONSTANT);
+            double kATL = 1.0 - Math.exp(-1.0 / ATL_TIME_CONSTANT);
 
             LocalDate cursor = firstDate;
             while (!cursor.isAfter(today)) {
@@ -180,8 +184,8 @@ public class AnalyticsService {
 
         double ctl = 0.0;
         double atl = 0.0;
-        double kCTL = 1.0 - Math.exp(-1.0 / 42.0);
-        double kATL = 1.0 - Math.exp(-1.0 / 7.0);
+        double kCTL = 1.0 - Math.exp(-1.0 / CTL_TIME_CONSTANT);
+        double kATL = 1.0 - Math.exp(-1.0 / ATL_TIME_CONSTANT);
 
         // Warm up EMA from startDate to the day before 'from'
         LocalDate cursor = startDate;
@@ -222,6 +226,8 @@ public class AnalyticsService {
             if (s.getTss() == null || s.getCompletedAt() == null)
                 continue;
             String sport = s.getSportType() != null ? s.getSportType() : "CYCLING";
+            // Swimming excluded from PMC: CSS-based TSS is not directly comparable to
+            // cycling/running TSS and would distort CTL/ATL/TSB load tracking.
             if ("SWIMMING".equals(sport))
                 continue;
             LocalDate date = s.getCompletedAt().toLocalDate();
