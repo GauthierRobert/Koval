@@ -130,6 +130,32 @@ public class RecurringSessionService {
         }
     }
 
+    public void updateFutureInstances(String templateId) {
+        RecurringSessionTemplate template = templateRepository.findById(templateId)
+                .orElseThrow(() -> new IllegalArgumentException("Template not found"));
+        List<ClubTrainingSession> futureInstances = sessionRepository
+                .findByRecurringTemplateIdAndScheduledAtAfter(templateId, LocalDateTime.now());
+        for (ClubTrainingSession session : futureInstances) {
+            session.setTitle(template.getTitle());
+            session.setSport(template.getSport());
+            session.setLocation(template.getLocation());
+            session.setDescription(template.getDescription());
+            session.setLinkedTrainingId(template.getLinkedTrainingId());
+            session.setMaxParticipants(template.getMaxParticipants());
+            session.setDurationMinutes(template.getDurationMinutes());
+            session.setClubGroupId(template.getClubGroupId());
+            session.setOpenToAll(template.isOpenToAll());
+            session.setOpenToAllDelayValue(template.getOpenToAllDelayValue());
+            session.setOpenToAllDelayUnit(template.getOpenToAllDelayUnit());
+            session.setResponsibleCoachId(template.getResponsibleCoachId());
+            // Update time if timeOfDay changed
+            if (template.getTimeOfDay() != null && session.getScheduledAt() != null) {
+                session.setScheduledAt(session.getScheduledAt().toLocalDate().atTime(template.getTimeOfDay()));
+            }
+            sessionRepository.save(session);
+        }
+    }
+
     public void generateAllRecurring() {
         List<RecurringSessionTemplate> templates = templateRepository.findByActiveTrue();
         for (RecurringSessionTemplate template : templates) {

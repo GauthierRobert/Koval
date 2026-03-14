@@ -12,4 +12,5 @@ public interface ClubTrainingSessionRepository extends MongoRepository<ClubTrain
     List<ClubTrainingSession> findByClubIdInAndScheduledAtBetween(List<String> clubIds, LocalDateTime start, LocalDateTime end);
     List<ClubTrainingSession> findByResponsibleCoachIdAndLinkedTrainingIdIsNullAndScheduledAtBetween(
             String responsibleCoachId, LocalDateTime from, LocalDateTime to);
+    List<ClubTrainingSession> findByRecurringTemplateIdAndScheduledAtAfter(String recurringTemplateId, LocalDateTime after);
 }

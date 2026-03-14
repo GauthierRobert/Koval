@@ -288,6 +288,14 @@ public class ClubController {
         return ResponseEntity.ok(clubService.listSessions(id));
     }
 
+    @PutMapping("/{id}/sessions/{sessionId}")
+    public ResponseEntity<ClubTrainingSession> updateSession(@PathVariable String id,
+                                                              @PathVariable String sessionId,
+                                                              @RequestBody CreateSessionRequest req) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(clubService.updateSession(userId, id, sessionId, req));
+    }
+
     @PostMapping("/{id}/sessions/{sessionId}/join")
     public ResponseEntity<ClubTrainingSession> joinSession(@PathVariable String id,
                                                             @PathVariable String sessionId) {
@@ -337,6 +345,16 @@ public class ClubController {
             @RequestBody CreateRecurringSessionRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(recurringSessionService.updateTemplate(userId, templateId, req));
+    }
+
+    @PutMapping("/{id}/recurring-sessions/{templateId}/with-instances")
+    public ResponseEntity<RecurringSessionTemplate> updateRecurringSessionWithInstances(
+            @PathVariable String id, @PathVariable String templateId,
+            @RequestBody CreateRecurringSessionRequest req) {
+        String userId = SecurityUtils.getCurrentUserId();
+        RecurringSessionTemplate template = recurringSessionService.updateTemplate(userId, templateId, req);
+        recurringSessionService.updateFutureInstances(templateId);
+        return ResponseEntity.ok(template);
     }
 
     @DeleteMapping("/{id}/recurring-sessions/{templateId}")

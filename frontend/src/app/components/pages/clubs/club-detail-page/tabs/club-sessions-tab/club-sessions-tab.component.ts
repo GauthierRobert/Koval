@@ -61,6 +61,12 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   form: Record<string, any> = {};
   clubGroups: ClubGroup[] = [];
 
+  // Edit state
+  editingSession: ClubTrainingSession | null = null;
+  editAllFutureMode = false;
+  showRecurringEditChoice = false;
+  pendingEditSession: ClubTrainingSession | null = null;
+
   coachMembers: ClubMember[] = [];
 
   readonly sports = ['CYCLING', 'RUNNING', 'SWIMMING', 'TRIATHLON', 'OTHER'];
@@ -265,6 +271,8 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   // --- Unified session form ---
 
   openForm(): void {
+    this.editingSession = null;
+    this.editAllFutureMode = false;
     this.form = { sport: 'CYCLING', title: '', clubGroupId: '', openToAll: false, openToAllDelayValue: 2, openToAllDelayUnit: 'DAYS' };
     this.isRecurring = false;
     this.isFormOpen = true;
@@ -272,6 +280,61 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
 
   closeForm(): void {
     this.isFormOpen = false;
+    this.editingSession = null;
+    this.editAllFutureMode = false;
+  }
+
+  openEditForm(session: ClubTrainingSession, event: Event): void {
+    event.stopPropagation();
+    if (session.recurringTemplateId) {
+      this.pendingEditSession = session;
+      this.showRecurringEditChoice = true;
+      this.cdr.markForCheck();
+    } else {
+      this.startEditing(session, false);
+    }
+  }
+
+  editThisOnly(): void {
+    if (!this.pendingEditSession) return;
+    this.showRecurringEditChoice = false;
+    this.startEditing(this.pendingEditSession, false);
+    this.pendingEditSession = null;
+  }
+
+  editAllFuture(): void {
+    if (!this.pendingEditSession) return;
+    this.showRecurringEditChoice = false;
+    this.startEditing(this.pendingEditSession, true);
+    this.pendingEditSession = null;
+  }
+
+  private startEditing(session: ClubTrainingSession, allFuture: boolean): void {
+    this.editingSession = session;
+    this.editAllFutureMode = allFuture;
+    this.isRecurring = false;
+    this.form = {
+      title: session.title,
+      sport: session.sport || 'CYCLING',
+      scheduledAt: session.scheduledAt ? this.toDatetimeLocal(session.scheduledAt) : '',
+      location: session.location || '',
+      description: session.description || '',
+      maxParticipants: session.maxParticipants || '',
+      durationMinutes: session.durationMinutes || '',
+      clubGroupId: session.clubGroupId || '',
+      responsibleCoachId: session.responsibleCoachId || '',
+      openToAll: session.openToAll || false,
+      openToAllDelayValue: session.openToAllDelayValue || 2,
+      openToAllDelayUnit: session.openToAllDelayUnit || 'DAYS',
+    };
+    this.isFormOpen = true;
+    this.cdr.markForCheck();
+  }
+
+  private toDatetimeLocal(isoStr: string): string {
+    const d = new Date(isoStr);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
   get isFormValid(): boolean {
@@ -282,6 +345,61 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
 
   save(): void {
     if (!this.isFormValid) return;
+
+    if (this.editingSession) {
+      if (this.editAllFutureMode && this.editingSession.recurringTemplateId) {
+        const data: CreateRecurringSessionData = {
+          title: this.form['title'],
+          sport: this.form['sport'],
+          dayOfWeek: undefined as any,
+          timeOfDay: this.form['scheduledAt'] ? new Date(this.form['scheduledAt']).toTimeString().slice(0, 5) : undefined as any,
+          location: this.form['location'] || undefined,
+          description: this.form['description'] || undefined,
+          maxParticipants: this.form['maxParticipants'] || undefined,
+          clubGroupId: this.form['clubGroupId'] || undefined,
+          responsibleCoachId: this.form['responsibleCoachId'] || undefined,
+          openToAll: this.form['clubGroupId'] ? this.form['openToAll'] : undefined,
+          openToAllDelayValue: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
+          openToAllDelayUnit: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
+        };
+        this.clubService.updateRecurringTemplateWithInstances(this.club.id, this.editingSession.recurringTemplateId, data).subscribe({
+          next: () => {
+            this.isFormOpen = false;
+            this.editingSession = null;
+            this.editAllFutureMode = false;
+            this.loadCalendarSessions();
+            this.cdr.markForCheck();
+          },
+          error: () => {},
+        });
+      } else {
+        const data: CreateSessionData = {
+          title: this.form['title'],
+          sport: this.form['sport'],
+          scheduledAt: this.form['scheduledAt'] || undefined,
+          location: this.form['location'] || undefined,
+          description: this.form['description'] || undefined,
+          maxParticipants: this.form['maxParticipants'] || undefined,
+          durationMinutes: this.form['durationMinutes'] || undefined,
+          clubGroupId: this.form['clubGroupId'] || undefined,
+          responsibleCoachId: this.form['responsibleCoachId'] || undefined,
+          openToAll: this.form['clubGroupId'] ? this.form['openToAll'] : undefined,
+          openToAllDelayValue: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
+          openToAllDelayUnit: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
+        };
+        this.clubService.updateSession(this.club.id, this.editingSession.id, data).subscribe({
+          next: () => {
+            this.isFormOpen = false;
+            this.editingSession = null;
+            this.editAllFutureMode = false;
+            this.loadCalendarSessions();
+            this.cdr.markForCheck();
+          },
+          error: () => {},
+        });
+      }
+      return;
+    }
 
     if (this.isRecurring) {
       const data: CreateRecurringSessionData = {

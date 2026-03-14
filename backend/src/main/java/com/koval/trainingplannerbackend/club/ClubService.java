@@ -483,6 +483,33 @@ public class ClubService {
         return sessionRepository.save(session);
     }
 
+    public ClubTrainingSession updateSession(String userId, String clubId, String sessionId,
+                                              ClubController.CreateSessionRequest req) {
+        validateAdminOrCoach(userId, clubId);
+        ClubTrainingSession session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        if (!session.getClubId().equals(clubId)) {
+            throw new IllegalArgumentException("Session does not belong to this club");
+        }
+        session.setTitle(req.title());
+        session.setSport(req.sport());
+        session.setScheduledAt(req.scheduledAt());
+        session.setLocation(req.location());
+        session.setDescription(req.description());
+        session.setMaxParticipants(req.maxParticipants());
+        session.setDurationMinutes(req.durationMinutes());
+        session.setClubGroupId(req.clubGroupId());
+        session.setResponsibleCoachId(req.responsibleCoachId());
+        session.setOpenToAll(req.openToAll());
+        session.setOpenToAllDelayValue(req.openToAllDelayValue());
+        session.setOpenToAllDelayUnit(req.openToAllDelayUnit());
+        if (req.linkedTrainingId() != null && !req.linkedTrainingId().equals(session.getLinkedTrainingId())) {
+            session.setLinkedTrainingId(req.linkedTrainingId());
+            enrichFromLinkedTraining(session);
+        }
+        return sessionRepository.save(session);
+    }
+
     // --- Feed ---
 
     public List<ClubController.ClubActivityResponse> getActivityFeed(String clubId, Pageable pageable) {
