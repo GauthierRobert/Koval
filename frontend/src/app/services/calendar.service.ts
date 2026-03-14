@@ -23,6 +23,7 @@ export interface CalendarClubSession {
     joined: boolean;
     onWaitingList: boolean;
     waitingListPosition: number;
+    openToAllFrom?: string;
 }
 
 const BASE = environment.apiUrl;

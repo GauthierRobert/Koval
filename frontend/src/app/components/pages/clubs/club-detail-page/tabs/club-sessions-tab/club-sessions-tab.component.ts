@@ -265,7 +265,7 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   // --- Unified session form ---
 
   openForm(): void {
-    this.form = { sport: 'CYCLING', title: '', clubGroupId: '' };
+    this.form = { sport: 'CYCLING', title: '', clubGroupId: '', openToAll: false, openToAllDelayValue: 2, openToAllDelayUnit: 'DAYS' };
     this.isRecurring = false;
     this.isFormOpen = true;
   }
@@ -294,6 +294,9 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
         maxParticipants: this.form['maxParticipants'] || undefined,
         clubGroupId: this.form['clubGroupId'] || undefined,
         responsibleCoachId: this.form['responsibleCoachId'] || undefined,
+        openToAll: this.form['clubGroupId'] ? this.form['openToAll'] : undefined,
+        openToAllDelayValue: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
+        openToAllDelayUnit: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
       };
       this.clubService.createRecurringTemplate(this.club.id, data).subscribe({
         next: () => {
@@ -313,6 +316,9 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
         durationMinutes: this.form['durationMinutes'] || undefined,
         clubGroupId: this.form['clubGroupId'] || undefined,
         responsibleCoachId: this.form['responsibleCoachId'] || undefined,
+        openToAll: this.form['clubGroupId'] ? this.form['openToAll'] : undefined,
+        openToAllDelayValue: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
+        openToAllDelayUnit: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
       };
       this.clubService.createSession(this.club.id, data).subscribe({
         next: () => {

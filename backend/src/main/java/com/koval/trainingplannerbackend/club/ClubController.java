@@ -30,13 +30,17 @@ public class ClubController {
     public record CreateSessionRequest(String title, String sport, LocalDateTime scheduledAt,
                                        String location, String description, String linkedTrainingId,
                                        Integer maxParticipants, Integer durationMinutes,
-                                       String clubGroupId, String responsibleCoachId) {}
+                                       String clubGroupId, String responsibleCoachId,
+                                       boolean openToAll, Integer openToAllDelayValue,
+                                       OpenToAllDelayUnit openToAllDelayUnit) {}
 
     public record CreateRecurringSessionRequest(String title, String sport, DayOfWeek dayOfWeek,
                                                  LocalTime timeOfDay, String location, String description,
                                                  String linkedTrainingId, Integer maxParticipants,
                                                  Integer durationMinutes, String clubGroupId,
-                                                 String responsibleCoachId) {}
+                                                 String responsibleCoachId,
+                                                 boolean openToAll, Integer openToAllDelayValue,
+                                                 OpenToAllDelayUnit openToAllDelayUnit) {}
 
     public record LinkTrainingRequest(String trainingId) {}
 

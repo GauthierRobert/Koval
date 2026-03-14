@@ -32,12 +32,25 @@ public class ClubTrainingSession {
     private LocalDateTime createdAt;
     private String recurringTemplateId;
     private String clubGroupId;
+    private boolean openToAll;
+    private Integer openToAllDelayValue;
+    private OpenToAllDelayUnit openToAllDelayUnit;
     private String responsibleCoachId;
     private Integer maxParticipants;
     private Integer durationMinutes;
     private String linkedTrainingTitle;
     private String linkedTrainingDescription;
     private List<WaitingListEntry> waitingList = new ArrayList<>();
+
+    public LocalDateTime computeOpenToAllFrom() {
+        if (!openToAll || scheduledAt == null) return null;
+        int delay = openToAllDelayValue != null ? openToAllDelayValue : 2;
+        OpenToAllDelayUnit unit = openToAllDelayUnit != null ? openToAllDelayUnit : OpenToAllDelayUnit.DAYS;
+        return switch (unit) {
+            case HOURS -> scheduledAt.minusHours(delay);
+            case DAYS -> scheduledAt.minusDays(delay);
+        };
+    }
 
     public boolean isFull() {
         return maxParticipants != null && participantIds.size() >= maxParticipants;

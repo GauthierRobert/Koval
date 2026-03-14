@@ -406,6 +406,9 @@ public class ClubService {
         session.setMaxParticipants(req.maxParticipants());
         session.setDurationMinutes(req.durationMinutes());
         session.setClubGroupId(req.clubGroupId());
+        session.setOpenToAll(req.openToAll());
+        session.setOpenToAllDelayValue(req.openToAllDelayValue());
+        session.setOpenToAllDelayUnit(req.openToAllDelayUnit());
         session.setResponsibleCoachId(req.responsibleCoachId());
         session.setCreatedAt(LocalDateTime.now());
         enrichFromLinkedTraining(session);
@@ -720,8 +723,12 @@ public class ClubService {
         List<CalendarClubSessionResponse> result = new ArrayList<>();
         for (ClubTrainingSession s : sessions) {
             // If session is scoped to a group, check if user is a member
+            // or if the "Open to All" window is active
             if (s.getClubGroupId() != null && !s.getClubGroupId().isBlank()) {
-                if (!userGroupIds.contains(s.getClubGroupId())) continue;
+                if (!userGroupIds.contains(s.getClubGroupId())) {
+                    LocalDateTime openFrom = s.computeOpenToAllFrom();
+                    if (openFrom == null || LocalDateTime.now().isBefore(openFrom)) continue;
+                }
             }
 
             Club club = clubMap.get(s.getClubId());
@@ -745,7 +752,8 @@ public class ClubService {
                     s.getDurationMinutes(), s.getParticipantIds(),
                     s.getMaxParticipants(), s.getClubGroupId(),
                     groupNameMap.get(s.getClubGroupId()),
-                    joined, onWaitingList, waitingListPosition));
+                    joined, onWaitingList, waitingListPosition,
+                    s.computeOpenToAllFrom()));
         }
         return result;
     }
@@ -755,7 +763,8 @@ public class ClubService {
             LocalDateTime scheduledAt, String location, String description,
             Integer durationMinutes, List<String> participantIds,
             Integer maxParticipants, String clubGroupId, String clubGroupName,
-            boolean joined, boolean onWaitingList, int waitingListPosition
+            boolean joined, boolean onWaitingList, int waitingListPosition,
+            LocalDateTime openToAllFrom
     ) {}
 
     // --- Helpers ---
