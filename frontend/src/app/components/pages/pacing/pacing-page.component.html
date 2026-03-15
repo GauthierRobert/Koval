@@ -218,6 +218,7 @@
         <span *ngIf="!(loading$ | async)">GENERATE PLAN</span>
         <span *ngIf="loading$ | async">GENERATING...</span>
       </button>
+      <span class="generate-hint" *ngIf="getGenerateBlockedReason() as reason">{{ reason }}</span>
     </div>
   </div>
 

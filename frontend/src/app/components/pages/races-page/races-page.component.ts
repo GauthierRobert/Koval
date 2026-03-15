@@ -53,6 +53,12 @@ export class RacesPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadSportFacets();
+    this.raceGoalService.goals$.subscribe((goals) => {
+      for (const g of goals) {
+        if (g.raceId) this.addedRaceIds.add(g.raceId);
+      }
+      this.cdr.markForCheck();
+    });
   }
 
   loadSportFacets(): void {
@@ -148,10 +154,6 @@ export class RacesPageComponent implements OnInit {
         next: () => {
           this.addedRaceIds.add(race.id);
           this.cdr.markForCheck();
-          setTimeout(() => {
-            this.addedRaceIds.delete(race.id);
-            this.cdr.markForCheck();
-          }, 2000);
         },
       });
   }

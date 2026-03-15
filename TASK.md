@@ -60,15 +60,27 @@
 - ~~Feed in club must be more compact, with simple line event, without Icon, but you can do color for event type~~ ✅
 - ~~After Creating a tag, the redeem code is the name of the group but it should be a random CODE. The copied box is hidden when clik on code~~ ✅
 - ~~The custom zone into the Physiology page do not show athlete value, even if he has the value of the reference value~~ ✅
+- In Coach dashboard, athlete training scheduled list the last day of the week is dipslayed on the next wek. for example if I want to see monday 1 to sunday 7, I see sunday 31 to Saturday 6 and sunday 7 is display on 8 - 15 week. Fix tht
+- Custom reference value name are not saved in ZONE DASHBOARD when clicking on save button. Athlete do not see the new box to set the new reference value in settings for the zones system of his coach. Remove the input to set the value in the physiology custom zone part
+- In training library, the CLub are well displayed, the groups are duplicated (for owner). And athlete cannot see trainings of their groups o Clubs if they are not the owner
 
 
 ## TODO
 
-- In Coach dashboard, athlete training scheduled list the last day of the week is dipslayed on the next wek. for example if I want to see monday 1 to sunday 7, I see sunday 31 to Saturday 6 and sunday 7 is display on 8 - 15 week. Fix tht
-- Custom reference value name are not saved in ZONE DASHBOARD when clicking on save button. Athlete do not see the new bow to set the new reference value for the zones system of his coach
-- The athlete must see the Custom zones of his coaches (Coaches from Clubs and coaches from Group). Distinct zone only. If zones are duplicate because I have same coach in clu and group, display only one. Zone is disable (same way as other zone) if reference value is not set (custom or already existing)
+- I must be able to modify GPX of race clicking on already added gpx on race Button is only limited to small Icon 
+- Change getRaceGoals. It must retrieve all the future goals of the members with all the participants in the clubs
+- A button simulate must be present in public race as well (disabled with explication if gpx are not present (Bike/RUN for triathlon))
+- Cancelling a session (single event only even for recurrent session) should be possible for coach/Admin/owner. An explication can be added on the reason. This trigger a notificatio  to all club members
+- When add a training of a session, the possibility to add an already existing training (of my own) should be possible. In that case, the club id is added into the club ids of the training. A training could then have multiple Clubs/group link
 - Modify the IA chat example to more reflect the actual TOOL and combination of TOOLS in the app. Make 5 examples
-- In training library, tthe CLub are well displayed, the groups are duplicated (for owner). And athlete cannot see trainings of there groups o Clubs if they are not the owner
+- Sessions linked to Club group, should only be visible to club group member, unless the condition open to all is activated and respected
+
+_ Training assign should be more clear, on training dashboard do not change, just me it clear that is it self assignment
+    On Coach manement page, where I see single athlete, I must be able to assign a training to only one athlete. In that case, the athlete see it in its library
+    On group management, I should have a button to assign a training. A modal open to generate a training, or use an already existing training in my library. As a coach, I must be able to choice the assignment date, the participant, the complet group or jsut some.
+    On club management, as a Coach from the club, I should be able to add 
+    All training, assign to someone, though the coach management, group management, or club management, should be visible in the training libraray of the convern althete.
+    To simplify the behavior, athlete should have in another table, the list of training id not created by himself but send by other, with the orign, Coach name, group name, club name; 
 
 ## Nice too have
 - **Retrieve FIT files from Strava** — Implement an endpoint + service to fetch FIT activity files from Strava for the authenticated user. Requires the user to have granted all metric scopes (`activity:read_all`). Parse the FIT data and ingest relevant metrics (power, HR, cadence, TSS) into the session/history store.

@@ -1,89 +1,21 @@
 <div class="members-tab">
   <ng-container *ngIf="tags$ | async as allTags">
 
-    <!-- Invite Links Panel (admin/owner/coach) -->
-    <ng-container *ngIf="canManageInvites">
-      <div class="section-header">
-        <h4 class="section-title">Invite Links</h4>
-        <button class="btn-ghost" (click)="invitePanelOpen = !invitePanelOpen">{{ invitePanelOpen ? 'Hide' : 'Manage' }}</button>
-      </div>
-      <div class="invite-panel" *ngIf="invitePanelOpen">
-        <div class="invite-create-row">
-          <select class="invite-select" [(ngModel)]="newInviteGroupId">
-            <option value="">Club only (no group)</option>
-            <option *ngFor="let tag of allTags" [value]="tag.id">Club + {{ tag.name }}</option>
-          </select>
-          <input
-            class="invite-input"
-            type="number"
-            [(ngModel)]="newInviteMaxUses"
-            placeholder="Max uses (0 = unlimited)"
-            min="0"
-          />
-          <button class="btn-small" (click)="generateInviteCode()">Generate</button>
+    <!-- Group Management (coach/admin/owner) -->
+    <ng-container *ngIf="canManageGroups">
+      <h4 class="section-title">Groups</h4>
+      <div class="tag-panel">
+        <div class="group-cards" *ngIf="allTags.length > 0">
+          <div class="group-card" *ngFor="let tag of allTags">
+            <div class="group-card-header">
+              <span class="group-card-name">{{ tag.name }}</span>
+              <span class="group-card-count">{{ tag.memberIds.length }} members</span>
+              <button class="tag-delete" *ngIf="isAdmin" (click)="deleteTag(tag.id)">×</button>
+            </div>
+          </div>
         </div>
-        <ng-container *ngIf="inviteCodes$ | async as codes">
-          <div class="invite-code-list" *ngIf="codes.length > 0">
-            <div
-              *ngFor="let c of codes"
-              class="invite-code-row glass"
-              [class.invite-inactive]="!c.active || isExpired(c.expiresAt)"
-            >
-              <div class="invite-code-info">
-                <span class="invite-code-value">{{ c.code }}</span>
-                <span class="invite-code-detail" *ngIf="c.clubGroupName">{{ c.clubGroupName }}</span>
-                <span class="invite-code-detail">
-                  {{ c.currentUses }}{{ c.maxUses > 0 ? '/' + c.maxUses : '' }} uses
-                </span>
-              </div>
-              <div class="invite-code-actions">
-                <button
-                  class="btn-ghost"
-                  (click)="copyInviteCode(c.code, c.id)"
-                  [class.btn-copied]="copiedCodeId === c.id"
-                >
-                  {{ copiedCodeId === c.id ? 'Copied' : 'Copy' }}
-                </button>
-                <button
-                  class="btn-reject"
-                  *ngIf="c.active"
-                  (click)="deactivateInviteCode(c.id)"
-                >Revoke</button>
-              </div>
-            </div>
-          </div>
-          <div class="no-tags" *ngIf="codes.length === 0">No invite codes yet.</div>
-        </ng-container>
-      </div>
-    </ng-container>
-
-    <!-- Tag Management Panel (admin/owner only) -->
-    <ng-container *ngIf="isAdmin">
-      <div class="section-header">
-        <h4 class="section-title">Groups</h4>
-        <button class="btn-ghost" (click)="tagPanelOpen = !tagPanelOpen">{{ tagPanelOpen ? 'Hide' : 'Manage' }}</button>
-      </div>
-      <div class="tag-panel" *ngIf="tagPanelOpen">
-        <ng-container *ngIf="inviteCodes$ | async as codes">
-          <div class="group-cards" *ngIf="allTags.length > 0">
-            <div class="group-card" *ngFor="let tag of allTags">
-              <div class="group-card-header">
-                <span class="group-card-name">{{ tag.name }}</span>
-                <span class="group-card-count">{{ tag.memberIds.length }} members</span>
-                <button class="tag-delete" *ngIf="isAdmin" (click)="deleteTag(tag.id)">×</button>
-              </div>
-              <div class="group-card-invite" *ngIf="getGroupInviteCode(tag.id, codes) as code">
-                <span class="invite-code-chip" (click)="copyGroupCode(code.code, code.id)">{{ code.code }}</span>
-                <button class="btn-copy-sm" (click)="copyGroupCode(code.code, code.id)"
-                  [class.btn-copied]="copiedGroupCodeId === code.id">
-                  {{ copiedGroupCodeId === code.id ? 'COPIED' : 'COPY' }}
-                </button>
-              </div>
-            </div>
-          </div>
-          <span class="no-tags" *ngIf="allTags.length === 0">No groups yet.</span>
-        </ng-container>
-        <div class="tag-create-row">
+        <span class="no-tags" *ngIf="allTags.length === 0">No groups yet.</span>
+        <div class="tag-create-row" *ngIf="isAdmin">
           <input class="tag-input" [(ngModel)]="newTagName" placeholder="Group name…" (keyup.enter)="createTag()" />
           <button class="btn-small" (click)="createTag()">Add</button>
         </div>

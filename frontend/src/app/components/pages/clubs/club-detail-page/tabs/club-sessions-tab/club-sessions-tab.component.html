@@ -26,7 +26,12 @@
           <div class="day-group" *ngFor="let day of days">
             <div class="day-group-header" [class.today]="isToday(day)">{{ formatDayHeader(day) }}</div>
             <div class="day-sessions">
-              <div *ngFor="let session of getSessionsForDay(sessions, day)" class="session-card glass">
+              <div *ngFor="let session of getSessionsForDay(sessions, day)"
+                   class="session-card glass"
+                   [class.attending]="isParticipant(session)"
+                   [class.waiting]="isOnWaitingList(session)"
+                   [class.expanded]="expandedSessionId === session.id"
+                   (click)="toggleSessionDetail(session)">
                 <div class="session-header">
                   <span class="session-sport-badge">{{ session.sport || 'GENERAL' }}</span>
                   <span class="open-to-all-badge" *ngIf="session.openToAll">Open to All</span>
@@ -73,6 +78,7 @@
 
                 <!-- Capacity + Join inline row -->
                 <div class="capacity-join-row">
+                  <span class="attending-badge" *ngIf="isParticipant(session)">ATTENDING</span>
                   <span [class.capacity-full]="isFull(session)">
                     &#x1f465; {{ getCapacityText(session) }}
                     <span *ngIf="isFull(session)" class="full-badge">FULL</span>
@@ -84,12 +90,36 @@
                   </ng-container>
                   <button class="btn-ghost small" *ngIf="isParticipant(session)"
                           (click)="cancelSession(session, $event)">
-                    CANCEL
+                    REMOVE MY PARTICIPATION
                   </button>
                   <button class="btn-ghost small" *ngIf="isOnWaitingList(session)"
                           (click)="cancelSession(session, $event)">
                     LEAVE WAITING LIST
                   </button>
+                </div>
+
+                <!-- Expandable attendee detail -->
+                <div class="session-detail-panel" *ngIf="expandedSessionId === session.id">
+                  <div class="detail-section">
+                    <div class="detail-section-title">Attending ({{ session.participantIds.length }})</div>
+                    <div class="attendee-list" *ngIf="session.participantIds.length > 0">
+                      <div class="attendee-row" *ngFor="let p of getParticipantNames(session)">
+                        <div class="attendee-avatar">{{ p.initial }}</div>
+                        <span class="attendee-name">{{ p.name }}</span>
+                      </div>
+                    </div>
+                    <span class="no-attendees" *ngIf="session.participantIds.length === 0">No one yet</span>
+                  </div>
+                  <div class="detail-section" *ngIf="(session.waitingList?.length || 0) > 0">
+                    <div class="detail-section-title">Waiting List ({{ session.waitingList!.length }})</div>
+                    <div class="attendee-list">
+                      <div class="attendee-row" *ngFor="let w of getWaitingListNames(session)">
+                        <span class="waiting-position">#{{ w.position }}</span>
+                        <div class="attendee-avatar waiting">{{ w.initial }}</div>
+                        <span class="attendee-name">{{ w.name }}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

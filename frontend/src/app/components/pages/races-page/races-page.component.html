@@ -83,6 +83,7 @@
           </ng-container>
         </div>
         <button class="btn-add-goal" [class.btn-add-goal--added]="addedRaceIds.has(race.id)"
+          [disabled]="addedRaceIds.has(race.id)"
           (click)="addToMyGoals(race); $event.stopPropagation()">
           {{ addedRaceIds.has(race.id) ? '✓ ADDED' : '+ ADD TO MY GOALS' }}
         </button>

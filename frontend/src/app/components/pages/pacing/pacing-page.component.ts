@@ -315,17 +315,29 @@ export class PacingPageComponent implements OnInit {
   }
 
   canGenerate(): boolean {
-    // When linked to a race with GPX, no file upload needed
+    return !this.getGenerateBlockedReason();
+  }
+
+  getGenerateBlockedReason(): string | null {
     if (this.linkedRace) {
-      if (this.discipline === 'SWIM') return true;
-      if (this.discipline === 'TRIATHLON') return !!(this.linkedRace.hasBikeGpx && this.linkedRace.hasRunGpx);
-      if (this.discipline === 'BIKE') return !!this.linkedRace.hasBikeGpx;
-      if (this.discipline === 'RUN') return !!this.linkedRace.hasRunGpx;
+      if (this.discipline === 'SWIM') return null;
+      if (this.discipline === 'TRIATHLON') {
+        const missing: string[] = [];
+        if (!this.linkedRace.hasBikeGpx) missing.push('Bike GPX');
+        if (!this.linkedRace.hasRunGpx) missing.push('Run GPX');
+        return missing.length ? `Race is missing ${missing.join(' and ')}` : null;
+      }
+      if (this.discipline === 'BIKE') return this.linkedRace.hasBikeGpx ? null : 'Race is missing Bike GPX';
+      if (this.discipline === 'RUN') return this.linkedRace.hasRunGpx ? null : 'Race is missing Run GPX';
     }
-    if (this.discipline === 'SWIM') return true;
-    if (this.discipline === 'TRIATHLON') return !!(this.bikeGpxFile && this.runGpxFile);
-    // BIKE or RUN — single GPX
-    return !!this.gpxFile;
+    if (this.discipline === 'SWIM') return null;
+    if (this.discipline === 'TRIATHLON') {
+      const missing: string[] = [];
+      if (!this.bikeGpxFile) missing.push('Bike GPX');
+      if (!this.runGpxFile) missing.push('Run GPX');
+      return missing.length ? `Upload ${missing.join(' and ')}` : null;
+    }
+    return this.gpxFile ? null : 'Upload a GPX file';
   }
 
   generate(): void {

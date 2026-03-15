@@ -6,7 +6,6 @@ import {
   ClubMemberRole,
   ClubService,
   ClubGroup,
-  ClubInviteCode,
 } from '../../../../../../services/club.service';
 
 @Component({
@@ -24,16 +23,9 @@ export class ClubMembersTabComponent implements OnInit {
   members$ = this.clubService.members$;
   pending$ = this.clubService.pending$;
   tags$ = this.clubService.groups$;
-  inviteCodes$ = this.clubService.inviteCodes$;
 
   newTagName = '';
-  tagPanelOpen = false;
-  invitePanelOpen = false;
   roleChangeInProgress = new Set<string>();
-  newInviteGroupId = '';
-  newInviteMaxUses = 0;
-  copiedCodeId: string | null = null;
-  copiedGroupCodeId: string | null = null;
 
   get isAdmin(): boolean {
     const role = this.club?.currentMemberRole;
@@ -44,7 +36,7 @@ export class ClubMembersTabComponent implements OnInit {
     return this.club?.currentMemberRole === 'OWNER';
   }
 
-  get canManageInvites(): boolean {
+  get canManageGroups(): boolean {
     const role = this.club?.currentMemberRole;
     return role === 'OWNER' || role === 'ADMIN' || role === 'COACH';
   }
@@ -52,9 +44,6 @@ export class ClubMembersTabComponent implements OnInit {
   ngOnInit(): void {
     if (this.isAdmin) {
       this.clubService.loadPendingRequests(this.club.id);
-    }
-    if (this.canManageInvites) {
-      this.clubService.loadInviteCodes(this.club.id);
     }
   }
 
@@ -114,48 +103,6 @@ export class ClubMembersTabComponent implements OnInit {
     return ['COACH', 'MEMBER'];
   }
 
-  generateInviteCode(): void {
-    this.clubService
-      .generateInviteCode(
-        this.club.id,
-        this.newInviteGroupId || undefined,
-        this.newInviteMaxUses,
-      )
-      .subscribe({
-        next: () => {
-          this.newInviteGroupId = '';
-          this.newInviteMaxUses = 0;
-        },
-        error: () => {},
-      });
-  }
-
-  deactivateInviteCode(codeId: string): void {
-    this.clubService.deactivateInviteCode(this.club.id, codeId).subscribe({ error: () => {} });
-  }
-
-  copyInviteCode(code: string, codeId: string): void {
-    navigator.clipboard.writeText(code).then(() => {
-      this.copiedCodeId = codeId;
-      setTimeout(() => (this.copiedCodeId = null), 2000);
-    });
-  }
-
-  getGroupInviteCode(groupId: string, codes: ClubInviteCode[]): ClubInviteCode | null {
-    return codes.find((c) => c.active && c.clubGroupId === groupId) ?? null;
-  }
-
-  copyGroupCode(code: string, codeId: string): void {
-    navigator.clipboard.writeText(code).then(() => {
-      this.copiedGroupCodeId = codeId;
-      setTimeout(() => (this.copiedGroupCodeId = null), 2000);
-    });
-  }
-
-  isExpired(expiresAt: string | undefined): boolean {
-    if (!expiresAt) return false;
-    return new Date(expiresAt) < new Date();
-  }
 
   getAvailableTags(member: { userId: string }, allGroups: ClubGroup[]): ClubGroup[] {
     return allGroups.filter((g) => !g.memberIds.includes(member.userId));

@@ -114,4 +114,38 @@ export class CalendarWeekViewComponent {
     const hour = h % 12 || 12;
     return `${hour}:${m} ${ampm}`;
   }
+
+  /** Group consecutive club-session entries that share the same hour into rows */
+  groupEntries(entries: CalendarEntry[]): Array<{ type: 'single'; entry: CalendarEntry } | { type: 'club-row'; entries: CalendarEntry[] }> {
+    const result: Array<{ type: 'single'; entry: CalendarEntry } | { type: 'club-row'; entries: CalendarEntry[] }> = [];
+    let i = 0;
+    while (i < entries.length) {
+      const entry = entries[i];
+      if (entry.kind === 'club-session') {
+        const timeKey = entry.clubSession.scheduledAt?.substring(0, 13) ?? '';
+        const group: CalendarEntry[] = [entry];
+        let j = i + 1;
+        while (j < entries.length && entries[j].kind === 'club-session') {
+          const next = entries[j] as CalendarEntry & { kind: 'club-session'; clubSession: any };
+          const nextKey = next.clubSession.scheduledAt?.substring(0, 13) ?? '';
+          if (nextKey === timeKey) {
+            group.push(entries[j]);
+            j++;
+          } else {
+            break;
+          }
+        }
+        if (group.length > 1) {
+          result.push({ type: 'club-row', entries: group });
+        } else {
+          result.push({ type: 'single', entry });
+        }
+        i = j;
+      } else {
+        result.push({ type: 'single', entry });
+        i++;
+      }
+    }
+    return result;
+  }
 }

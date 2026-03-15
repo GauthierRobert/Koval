@@ -404,9 +404,16 @@
 /* Actions */
 .form-actions {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 8px;
   margin-top: 16px;
-  justify-content: center;
+}
+
+.generate-hint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
 }
 
 .generate-btn {

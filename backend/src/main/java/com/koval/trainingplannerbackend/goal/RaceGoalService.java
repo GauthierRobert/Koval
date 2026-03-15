@@ -19,6 +19,9 @@ public class RaceGoalService {
     }
 
     public RaceGoal createGoal(String athleteId, RaceGoal goal) {
+        if (goal.getRaceId() != null && repository.existsByAthleteIdAndRaceId(athleteId, goal.getRaceId())) {
+            throw new IllegalStateException("This race is already in your goals");
+        }
         goal.setAthleteId(athleteId);
         goal.setCreatedAt(LocalDateTime.now());
         return repository.save(goal);

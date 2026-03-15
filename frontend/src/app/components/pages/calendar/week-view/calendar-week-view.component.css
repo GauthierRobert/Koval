@@ -273,12 +273,11 @@
   border: 1px dashed rgba(255, 255, 255, 0.12);
   border-radius: 6px;
   color: var(--text-muted);
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 1px;
-  padding: 6px;
+  padding: 4px;
   cursor: pointer;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s;
 }
 
@@ -580,6 +579,21 @@
 
 .btn-cancel-club:hover {
   background: rgba(248, 113, 113, 0.2);
+}
+
+/* Club session row — side by side for same-time sessions */
+.club-session-row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.club-session-row .workout-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.workout-card--compact .club-session-meta {
+  display: none;
 }
 
 .goal-pill {

@@ -105,6 +105,15 @@
   padding: 14px 16px;
   border-radius: var(--radius-md);
   transition: border-color 0.15s, transform 0.15s;
+  cursor: pointer;
+}
+
+.session-card.attending {
+  border-left: 3px solid var(--accent-color);
+}
+
+.session-card.waiting {
+  border-left: 3px solid #fbbf24;
 }
 
 .session-card:hover {
@@ -216,6 +225,87 @@
   padding: 2px 5px;
   font-size: 8px;
   gap: 2px;
+}
+
+.attending-badge {
+  font-size: 8px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--accent-subtle);
+  color: var(--accent-color);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* --- Expandable detail panel --- */
+.session-detail-panel {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-section-title {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.7;
+  margin-bottom: 6px;
+}
+
+.attendee-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.attendee-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.attendee-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent-subtle);
+  color: var(--accent-color);
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.attendee-avatar.waiting {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+}
+
+.attendee-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.waiting-position {
+  font-size: 9px;
+  font-weight: 700;
+  color: #fbbf24;
+  min-width: 18px;
+}
+
+.no-attendees {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 /* --- Capacity + Join inline row --- */

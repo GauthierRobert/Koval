@@ -313,13 +313,20 @@ export class CoachDashboardComponent implements OnInit {
   }
 
   loadAthleteSchedule(athleteId: string) {
-    const start = this.scheduleWeekStart.toISOString().split('T')[0];
-    const end = this.scheduleWeekEnd.toISOString().split('T')[0];
+    const start = this.toDateKey(this.scheduleWeekStart);
+    const end = this.toDateKey(this.scheduleWeekEnd);
 
     this.coachService.getAthleteSchedule(athleteId, start, end).subscribe({
       next: (data) => this.ngZone.run(() => this.scheduleSubject.next(data)),
       error: (err) => console.error('Error loading schedule', err)
     });
+  }
+
+  private toDateKey(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   }
 
   getWorkoutTitle(workout: ScheduledWorkout): string {

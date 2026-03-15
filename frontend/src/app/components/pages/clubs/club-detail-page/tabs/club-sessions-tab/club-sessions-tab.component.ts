@@ -68,6 +68,8 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   pendingEditSession: ClubTrainingSession | null = null;
 
   coachMembers: ClubMember[] = [];
+  expandedSessionId: string | null = null;
+  private allMembers: ClubMember[] = [];
 
   readonly sports = ['CYCLING', 'RUNNING', 'SWIMMING', 'TRIATHLON', 'OTHER'];
   readonly daysOfWeek = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
@@ -104,6 +106,7 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
         this.coachMembers = members.filter(
           (m) => m.role === 'COACH' || m.role === 'ADMIN' || m.role === 'OWNER',
         );
+        this.allMembers = members;
         this.cdr.markForCheck();
       });
     }
@@ -519,6 +522,26 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   truncate(text: string | undefined, maxLen: number): string {
     if (!text) return '';
     return text.length > maxLen ? text.substring(0, maxLen) + '...' : text;
+  }
+
+  toggleSessionDetail(session: ClubTrainingSession): void {
+    this.expandedSessionId = this.expandedSessionId === session.id ? null : session.id;
+  }
+
+  getParticipantNames(session: ClubTrainingSession): { name: string; initial: string }[] {
+    return session.participantIds.map((id) => {
+      const member = this.allMembers.find((m) => m.userId === id);
+      const name = member?.displayName || id.substring(0, 8);
+      return { name, initial: name.charAt(0).toUpperCase() };
+    });
+  }
+
+  getWaitingListNames(session: ClubTrainingSession): { name: string; initial: string; position: number }[] {
+    return (session.waitingList || []).map((entry, i) => {
+      const member = this.allMembers.find((m) => m.userId === entry.userId);
+      const name = member?.displayName || entry.userId.substring(0, 8);
+      return { name, initial: name.charAt(0).toUpperCase(), position: i + 1 };
+    });
   }
 
   private static getMonday(d: Date): Date {

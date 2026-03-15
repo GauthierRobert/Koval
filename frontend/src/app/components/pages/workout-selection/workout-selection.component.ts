@@ -21,6 +21,7 @@ import { CreateWithAiModalComponent } from '../../shared/create-with-ai-modal/cr
 import { ActionResult } from '../../../services/ai-action.service';
 import { ClubService } from '../../../services/club.service';
 import { GroupService, Group } from '../../../services/group.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-workout-selection',
@@ -41,21 +42,30 @@ export class WorkoutSelectionComponent implements OnInit {
   filterService = inject(TrainingFilterService);
   private clubService = inject(ClubService);
   private groupService = inject(GroupService);
+  private authService = inject(AuthService);
 
   showAiModal = false;
 
   sourceOptions$: Observable<FilterPillOption[]> = combineLatest([
     this.clubService.userClubs$,
+    this.authService.user$,
     this.groupService.getGroups().pipe(
       startWith([] as Group[]),
       catchError(() => of([] as Group[])),
     ),
   ]).pipe(
-    map(([clubs, groups]) => [
-      { label: 'My Trainings', value: 'mine' },
-      ...clubs.map((c) => ({ label: c.name, value: `club:${c.id}` })),
-      ...groups.map((g) => ({ label: g.name, value: `group:${g.id}` })),
-    ]),
+    map(([clubs, user, groups]) => {
+      const options: FilterPillOption[] = [
+        { label: 'My Trainings', value: 'mine' },
+        ...clubs.map((c) => ({ label: c.name, value: `club:${c.id}` })),
+      ];
+      // Athletes need group pills to discover coach-assigned trainings
+      // Coaches already have the tag sub-filter for groups within "mine"
+      if (user?.role !== 'COACH') {
+        options.push(...groups.map((g) => ({ label: g.name, value: `group:${g.id}` })));
+      }
+      return options;
+    }),
   );
 
   readonly sportOptions: FilterPillOption[] = SPORT_OPTIONS.map((o) => ({

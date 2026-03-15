@@ -21,6 +21,8 @@ export class TrainingFilterService {
     private clubTrainingsSubject = new BehaviorSubject<Training[]>([]);
     clubTrainings$ = this.clubTrainingsSubject.asObservable();
 
+    private groupTrainingsSubject = new BehaviorSubject<Training[]>([]);
+
     // Active context: 'mine' | 'club:{clubId}' | 'group:{groupId}'
     private activeContextSubject = new BehaviorSubject<string>('mine');
     activeContext$ = this.activeContextSubject.asObservable();
@@ -45,19 +47,28 @@ export class TrainingFilterService {
     filteredTrainings$ = combineLatest([
         this.trainingService.trainings$,
         this.clubTrainingsSubject,
+        this.groupTrainingsSubject,
         this.activeContextSubject,
         this.tagFilterSubject,
         this.sportFilterSubject,
         this.typeFilterSubject,
     ]).pipe(
-        map(([mine, club, context, tag, sport, type]) => {
+        map(([mine, club, groupDiscover, context, tag, sport, type]) => {
             let result: Training[];
             if (context.startsWith('club:')) {
                 const clubId = context.slice(5);
                 result = club.filter((t) => t.clubId === clubId);
             } else if (context.startsWith('group:')) {
                 const groupId = context.slice(6);
-                result = mine.filter((t) => t.groupIds?.includes(groupId));
+                // Merge personal trainings (coaches) + discovered trainings (athletes)
+                const combined = [...mine, ...groupDiscover];
+                const seen = new Set<string>();
+                result = combined.filter((t) => {
+                    if (!t.groupIds?.includes(groupId)) return false;
+                    if (seen.has(t.id!)) return false;
+                    seen.add(t.id!);
+                    return true;
+                });
             } else {
                 result = mine;
                 if (tag === '__mine__') result = result.filter((t) => !t.groupIds?.length);
@@ -90,6 +101,9 @@ export class TrainingFilterService {
         if (context.startsWith('club:') && this.clubTrainingsSubject.value.length === 0) {
             this.loadClubTrainings();
         }
+        if (context.startsWith('group:') && this.groupTrainingsSubject.value.length === 0) {
+            this.loadGroupTrainings();
+        }
         if (!context.startsWith('mine')) {
             this.tagFilterSubject.next(null);
         }
@@ -99,6 +113,13 @@ export class TrainingFilterService {
         this.http.get<Training[]>(`${this.apiUrl}/club-trainings`).subscribe({
             next: (trainings) => this.clubTrainingsSubject.next(trainings),
             error: () => this.clubTrainingsSubject.next([]),
+        });
+    }
+
+    loadGroupTrainings(): void {
+        this.http.get<Training[]>(`${this.apiUrl}/discover`).subscribe({
+            next: (trainings) => this.groupTrainingsSubject.next(trainings),
+            error: () => this.groupTrainingsSubject.next([]),
         });
     }
 }
