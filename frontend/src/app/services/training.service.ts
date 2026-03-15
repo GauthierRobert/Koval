@@ -5,7 +5,7 @@ import {BehaviorSubject, Observable, of} from 'rxjs';
 import {filter, tap} from 'rxjs/operators';
 import {environment} from '../../environments/environment';
 import {AuthService} from './auth.service';
-import {Training, TrainingType} from '../models/training.model';
+import {ReceivedTraining, Training} from '../models/training.model';
 
 // Re-export all model types so existing imports from this file continue to work.
 export * from '../models/training.model';
@@ -22,6 +22,9 @@ export class TrainingService {
 
     private selectedTrainingSubject = new BehaviorSubject<Training | null>(null);
     selectedTraining$ = this.selectedTrainingSubject.asObservable();
+
+    private receivedTrainingsSubject = new BehaviorSubject<ReceivedTraining[]>([]);
+    receivedTrainings$ = this.receivedTrainingsSubject.asObservable();
 
     private errorSubject = new BehaviorSubject<string | null>(null);
     error$ = this.errorSubject.asObservable();
@@ -129,19 +132,10 @@ export class TrainingService {
         }
     }
 
-    discoverTrainings(): Observable<Training[]> {
-        return this.http.get<Training[]>(`${this.apiUrl}/discover`);
-    }
-
-    searchByType(type: TrainingType): Observable<Training[]> {
-        return this.http.get<Training[]>(`${this.apiUrl}/search/type`, {
-            params: { type },
-        });
-    }
-
-    searchByGroup(group: string): Observable<Training[]> {
-        return this.http.get<Training[]>(`${this.apiUrl}/search`, {
-            params: { group },
+    loadReceivedTrainings(): void {
+        this.http.get<ReceivedTraining[]>(`${this.apiUrl}/received`).subscribe({
+            next: (received) => this.receivedTrainingsSubject.next(received),
+            error: () => this.receivedTrainingsSubject.next([]),
         });
     }
 

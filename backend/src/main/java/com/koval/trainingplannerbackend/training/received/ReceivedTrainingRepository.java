@@ -1,0 +1,12 @@
+package com.koval.trainingplannerbackend.training.received;
+
+import org.springframework.data.mongodb.repository.MongoRepository;
+
+import java.util.List;
+
+public interface ReceivedTrainingRepository extends MongoRepository<ReceivedTraining, String> {
+
+    List<ReceivedTraining> findByAthleteId(String athleteId);
+
+    boolean existsByAthleteIdAndTrainingId(String athleteId, String trainingId);
+}

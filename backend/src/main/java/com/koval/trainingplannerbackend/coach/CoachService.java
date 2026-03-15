@@ -4,9 +4,15 @@ import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.auth.UserRole;
 import com.koval.trainingplannerbackend.auth.UserService;
+import com.koval.trainingplannerbackend.club.Club;
+import com.koval.trainingplannerbackend.club.ClubMemberRole;
+import com.koval.trainingplannerbackend.club.ClubMembershipService;
+import com.koval.trainingplannerbackend.club.ClubRepository;
 import com.koval.trainingplannerbackend.notification.NotificationService;
 import com.koval.trainingplannerbackend.training.group.Group;
 import com.koval.trainingplannerbackend.training.group.GroupService;
+import com.koval.trainingplannerbackend.training.received.ReceivedTrainingOrigin;
+import com.koval.trainingplannerbackend.training.received.ReceivedTrainingService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +22,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Service for Coach-specific operations.
@@ -35,19 +43,28 @@ public class CoachService {
     private final InviteCodeRepository inviteCodeRepository;
     private final GroupService groupService;
     private final NotificationService notificationService;
+    private final ReceivedTrainingService receivedTrainingService;
+    private final ClubMembershipService clubMembershipService;
+    private final ClubRepository clubRepository;
 
     public CoachService(UserRepository userRepository,
             UserService userService,
             ScheduledWorkoutRepository scheduledWorkoutRepository,
             InviteCodeRepository inviteCodeRepository,
             GroupService groupService,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            ReceivedTrainingService receivedTrainingService,
+            ClubMembershipService clubMembershipService,
+            ClubRepository clubRepository) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
         this.inviteCodeRepository = inviteCodeRepository;
         this.groupService = groupService;
         this.notificationService = notificationService;
+        this.receivedTrainingService = receivedTrainingService;
+        this.clubMembershipService = clubMembershipService;
+        this.clubRepository = clubRepository;
     }
 
     /**
@@ -59,7 +76,8 @@ public class CoachService {
             String trainingId,
             List<String> athleteIds,
             LocalDate scheduledDate,
-            String notes) {
+            String notes,
+            String groupId) {
         User coach = userRepository.findById(coachId)
                 .orElseThrow(() -> new IllegalArgumentException("Coach not found: " + coachId));
 
@@ -86,6 +104,96 @@ public class CoachService {
 
             assignments.add(scheduledWorkoutRepository.save(workout));
         }
+
+        // Create ReceivedTraining entries
+        String originId = groupId;
+        String originName = null;
+        if (groupId != null && !groupId.isBlank()) {
+            try {
+                Group group = groupService.getGroupById(groupId);
+                originName = group.getName();
+            } catch (Exception ignored) {}
+        }
+        if (originName == null) {
+            // Infer from the first matching group
+            List<Group> coachGroups = groupService.getGroupsForCoach(coachId);
+            Set<String> athleteIdSet = Set.copyOf(athleteIds);
+            for (Group g : coachGroups) {
+                if (g.getAthleteIds().stream().anyMatch(athleteIdSet::contains)) {
+                    originId = g.getId();
+                    originName = g.getName();
+                    break;
+                }
+            }
+        }
+        receivedTrainingService.createReceivedTrainings(
+                trainingId, athleteIds, coachId,
+                ReceivedTrainingOrigin.COACH_GROUP,
+                originId, originName);
+
+        notificationService.sendToUsers(
+                athleteIds,
+                "New Training Assigned",
+                coach.getDisplayName() + " assigned you a workout for " + scheduledDate,
+                Map.of("type", "TRAINING_ASSIGNED",
+                       "trainingId", trainingId,
+                       "scheduledDate", scheduledDate.toString()));
+
+        return assignments;
+    }
+
+    /**
+     * Assign a training to athletes from a club context.
+     */
+    @Transactional
+    public List<ScheduledWorkout> assignTrainingFromClub(
+            String coachId,
+            String trainingId,
+            List<String> athleteIds,
+            LocalDate scheduledDate,
+            String notes,
+            String clubId) {
+
+        // Validate coach has COACH/ADMIN/OWNER role in club
+        var roles = clubMembershipService.getMyClubRoles(coachId);
+        boolean hasClubRole = roles.stream()
+                .filter(r -> r.clubId().equals(clubId))
+                .anyMatch(r -> r.role() == ClubMemberRole.COACH
+                        || r.role() == ClubMemberRole.ADMIN
+                        || r.role() == ClubMemberRole.OWNER);
+        if (!hasClubRole) {
+            throw new IllegalStateException("User does not have coach/admin/owner role in club: " + clubId);
+        }
+
+        // Validate all athletes are active club members
+        List<String> activeMemberIds = clubMembershipService.getActiveMemberIds(clubId);
+        for (String athleteId : athleteIds) {
+            if (!activeMemberIds.contains(athleteId)) {
+                throw new IllegalStateException("Athlete " + athleteId + " is not an active member of club " + clubId);
+            }
+        }
+
+        User coach = userRepository.findById(coachId)
+                .orElseThrow(() -> new IllegalArgumentException("Coach not found: " + coachId));
+
+        List<ScheduledWorkout> assignments = new ArrayList<>();
+        for (String athleteId : athleteIds) {
+            ScheduledWorkout workout = new ScheduledWorkout();
+            workout.setTrainingId(trainingId);
+            workout.setAthleteId(athleteId);
+            workout.setAssignedBy(coachId);
+            workout.setScheduledDate(scheduledDate);
+            workout.setNotes(notes);
+            workout.setStatus(ScheduleStatus.PENDING);
+            assignments.add(scheduledWorkoutRepository.save(workout));
+        }
+
+        // Create ReceivedTraining entries with CLUB origin
+        String clubName = clubRepository.findById(clubId).map(Club::getName).orElse("Unknown Club");
+        receivedTrainingService.createReceivedTrainings(
+                trainingId, athleteIds, coachId,
+                ReceivedTrainingOrigin.CLUB,
+                clubId, clubName);
 
         notificationService.sendToUsers(
                 athleteIds,

@@ -7,11 +7,12 @@ import {Group, GroupService} from '../../../services/group.service';
 import {CoachService, InviteCode} from '../../../services/coach.service';
 import {User} from '../../../services/auth.service';
 import {Router} from '@angular/router';
+import {ScheduleModalComponent} from '../../shared/schedule-modal/schedule-modal.component';
 
 @Component({
   selector: 'app-group-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ScheduleModalComponent],
   templateUrl: './group-management.component.html',
   styleUrl: './group-management.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,6 +39,11 @@ export class GroupManagementComponent implements OnInit {
   newGroupMaxAthletes = 0;
 
   copiedCodeId: string | null = null;
+
+  isScheduleModalOpen = false;
+  assigningGroupId: string | null = null;
+  assigningGroupName: string | null = null;
+  assigningGroupAthletes: User[] = [];
 
   constructor(
     private groupService: GroupService,
@@ -128,6 +134,20 @@ export class GroupManagementComponent implements OnInit {
       this.copiedCodeId = tag.id;
       setTimeout(() => (this.copiedCodeId = null), 2000);
     }
+  }
+
+  assignToGroup(tag: { id: string; name: string; groupAthletes: User[] }): void {
+    this.assigningGroupId = tag.id;
+    this.assigningGroupName = tag.name;
+    this.assigningGroupAthletes = tag.groupAthletes;
+    this.isScheduleModalOpen = true;
+  }
+
+  onScheduled(): void {
+    this.isScheduleModalOpen = false;
+    this.assigningGroupId = null;
+    this.assigningGroupName = null;
+    this.assigningGroupAthletes = [];
   }
 
   navigateToCoach(athleteId: string): void {

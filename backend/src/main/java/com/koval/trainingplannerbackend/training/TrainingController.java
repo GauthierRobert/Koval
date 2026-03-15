@@ -5,6 +5,8 @@ import com.koval.trainingplannerbackend.coach.CoachService;
 import com.koval.trainingplannerbackend.training.metrics.TrainingMetricsService;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.model.TrainingType;
+import com.koval.trainingplannerbackend.training.received.ReceivedTrainingResponse;
+import com.koval.trainingplannerbackend.training.received.ReceivedTrainingService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,13 +34,16 @@ public class TrainingController {
     private final TrainingService trainingService;
     private final TrainingMetricsService metricsService;
     private final CoachService coachService;
+    private final ReceivedTrainingService receivedTrainingService;
 
     public TrainingController(TrainingService trainingService,
                               TrainingMetricsService metricsService,
-                              CoachService coachService) {
+                              CoachService coachService,
+                              ReceivedTrainingService receivedTrainingService) {
         this.trainingService = trainingService;
         this.metricsService = metricsService;
         this.coachService = coachService;
+        this.receivedTrainingService = receivedTrainingService;
     }
 
     @PostMapping
@@ -96,6 +101,12 @@ public class TrainingController {
         return ResponseEntity.ok(trainings);
     }
 
+    @GetMapping("/received")
+    public ResponseEntity<List<ReceivedTrainingResponse>> getReceivedTrainings() {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(receivedTrainingService.getReceivedTrainings(userId));
+    }
+
     @GetMapping("/club-trainings")
     public ResponseEntity<List<Training>> listClubTrainings() {
         String userId = SecurityUtils.getCurrentUserId();
@@ -136,6 +147,9 @@ public class TrainingController {
             return;
         }
         if (training.getClubId() != null && trainingService.isUserActiveClubMember(currentUserId, training.getClubId())) {
+            return;
+        }
+        if (receivedTrainingService.hasReceived(currentUserId, training.getId())) {
             return;
         }
         throw new AccessDeniedException("You do not have access to this training");

@@ -1,17 +1,32 @@
     <div class="modal-backdrop" *ngIf="isOpen" (click)="close()">
       <div class="modal-card glass" (click)="$event.stopPropagation()">
         <div class="modal-header">
-          <h2>{{ mode === 'coach' ? 'ASSIGN' : 'SCHEDULE' }} <span class="highlight">WORKOUT</span></h2>
+          <h2>{{ mode === 'coach' ? 'ASSIGN' : 'SCHEDULE' }} <span class="highlight">{{ mode === 'coach' ? 'WORKOUT' : 'YOUR WORKOUT' }}</span></h2>
           <button class="close-btn" (click)="close()">&times;</button>
         </div>
 
         <div class="modal-body">
           <div class="field">
             <label>Training</label>
-            <select [(ngModel)]="selectedTrainingId">
-              <option value="" disabled>Select a training...</option>
-              <option *ngFor="let t of trainings" [value]="t.id">{{ t.title }}</option>
-            </select>
+            <div class="toggle-row">
+              <button class="toggle-btn" [class.active]="!showAiGenerate" (click)="showAiGenerate = false">Pick Existing</button>
+              <button class="toggle-btn" [class.active]="showAiGenerate" (click)="showAiGenerate = true">Generate with AI</button>
+            </div>
+            <ng-container *ngIf="!showAiGenerate">
+              <select [(ngModel)]="selectedTrainingId">
+                <option value="" disabled>Select a training...</option>
+                <option *ngFor="let t of trainings" [value]="t.id">{{ t.title }}</option>
+              </select>
+            </ng-container>
+            <ng-container *ngIf="showAiGenerate">
+              <select [(ngModel)]="aiSport" class="sport-select">
+                <option *ngFor="let s of sportOptions" [ngValue]="s.value">{{ s.label }}</option>
+              </select>
+              <textarea [(ngModel)]="aiPrompt" placeholder="Describe the workout (e.g. '1h sweet spot with 3x10min intervals')" rows="3"></textarea>
+              <button class="ai-generate-btn" (click)="generateWithAi()" [disabled]="aiLoading || !aiPrompt.trim()">
+                {{ aiLoading ? 'GENERATING...' : 'GENERATE' }}
+              </button>
+            </ng-container>
           </div>
 
           <div class="field">
@@ -44,7 +59,7 @@
         <div class="modal-footer">
           <button class="cancel-btn" (click)="close()">CANCEL</button>
           <button class="submit-btn" (click)="submit()" [disabled]="!canSubmit()">
-            {{ mode === 'coach' ? 'ASSIGN' : 'SCHEDULE' }}
+            {{ mode === 'coach' ? 'ASSIGN' : 'SCHEDULE FOR ME' }}
           </button>
         </div>
       </div>

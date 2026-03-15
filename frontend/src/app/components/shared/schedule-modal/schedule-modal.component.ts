@@ -2,10 +2,12 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TrainingService } from '../../../services/training.service';
-import { Training } from '../../../models/training.model';
+import { Training, SPORT_OPTIONS, SportFilter } from '../../../models/training.model';
 import { CalendarService } from '../../../services/calendar.service';
 import { CoachService } from '../../../services/coach.service';
 import { AuthService, User } from '../../../services/auth.service';
+import { ClubService } from '../../../services/club.service';
+import { AIActionService, AIActionType, ActionContext } from '../../../services/ai-action.service';
 
 @Component({
   selector: 'app-schedule-modal',
@@ -20,6 +22,9 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
   @Input() preselectedDate: string | null = null;
   @Input() preselectedAthletes: User[] | null = null;
   @Input() mode: 'athlete' | 'coach' = 'athlete';
+  @Input() groupId: string | null = null;
+  @Input() clubId: string | null = null;
+  @Input() preselectedGroupName: string | null = null;
 
   @Output() closed = new EventEmitter<void>();
   @Output() scheduled = new EventEmitter<void>();
@@ -33,6 +38,12 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
   selectedAthleteIds: string[] = [];
   notes = '';
 
+  showAiGenerate = false;
+  aiPrompt = '';
+  aiSport: SportFilter = 'CYCLING';
+  aiLoading = false;
+  readonly sportOptions = SPORT_OPTIONS;
+
   private userId = '';
 
   constructor(
@@ -40,6 +51,8 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
     private calendarService: CalendarService,
     private coachService: CoachService,
     private authService: AuthService,
+    private clubService: ClubService,
+    private aiActionService: AIActionService,
     private ngZone: NgZone
   ) {}
 
@@ -65,20 +78,48 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
       }
 
       if (this.mode === 'coach' && this.userId) {
-        this.coachService.getAthletes().subscribe(athletes => {
-          this.ngZone.run(() => {
-            this.availableAthletes = athletes;
-            // Re-apply preselection after athletes load
-            if (this.preselectedAthletes && this.preselectedAthletes.length > 0) {
-              this.selectedAthleteIds = this.preselectedAthletes.map(a => a.id);
-            }
+        if (this.clubId) {
+          // Load club members instead of coach athletes
+          this.clubService.loadMembers(this.clubId);
+          this.clubService.members$.subscribe(members => {
+            this.ngZone.run(() => {
+              this.availableAthletes = members.map(m => ({
+                id: m.userId,
+                displayName: m.displayName || m.userId,
+                profilePicture: m.profilePicture,
+              } as User)).sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { sensitivity: 'base' }));
+              if (this.preselectedAthletes && this.preselectedAthletes.length > 0) {
+                this.selectedAthleteIds = this.preselectedAthletes.map(a => a.id);
+              }
+            });
           });
-        });
-        this.coachService.getAllGroups().subscribe(groups => {
-          this.ngZone.run(() => {
-            this.availableTags = groups.map(g => g.name);
+          this.clubService.loadGroups(this.clubId);
+          this.clubService.groups$.subscribe(groups => {
+            this.ngZone.run(() => {
+              this.availableTags = groups.map(g => g.name);
+              if (this.preselectedGroupName && this.availableTags.includes(this.preselectedGroupName)) {
+                this.toggleTag(this.preselectedGroupName);
+              }
+            });
           });
-        });
+        } else {
+          this.coachService.getAthletes().subscribe(athletes => {
+            this.ngZone.run(() => {
+              this.availableAthletes = athletes.sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { sensitivity: 'base' }));
+              if (this.preselectedAthletes && this.preselectedAthletes.length > 0) {
+                this.selectedAthleteIds = this.preselectedAthletes.map(a => a.id);
+              }
+            });
+          });
+          this.coachService.getAllGroups().subscribe(groups => {
+            this.ngZone.run(() => {
+              this.availableTags = groups.map(g => g.name);
+              if (this.preselectedGroupName && this.availableTags.includes(this.preselectedGroupName)) {
+                this.toggleTag(this.preselectedGroupName);
+              }
+            });
+          });
+        }
       }
     }
   }
@@ -123,6 +164,7 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
   }
 
   canSubmit(): boolean {
+    if (this.showAiGenerate) return false;
     if (!this.selectedTrainingId || !this.selectedDate) return false;
     if (this.mode === 'coach' && this.selectedAthleteIds.length === 0) return false;
     return true;
@@ -133,7 +175,7 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
 
     if (this.mode === 'coach') {
       this.coachService
-        .assignTraining(this.selectedTrainingId, this.selectedAthleteIds, this.selectedDate, this.notes || undefined)
+        .assignTraining(this.selectedTrainingId, this.selectedAthleteIds, this.selectedDate, this.notes || undefined, this.clubId ?? undefined, this.groupId ?? undefined)
         .subscribe({
           next: () => {
             this.ngZone.run(() => {
@@ -162,6 +204,30 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
     this.closed.emit();
   }
 
+  generateWithAi(): void {
+    if (!this.aiPrompt.trim() || this.aiLoading) return;
+    this.aiLoading = true;
+    const context: ActionContext = {
+      sport: this.aiSport ?? undefined,
+      clubId: this.clubId ?? undefined,
+      coachGroupId: this.groupId ?? undefined,
+    };
+    this.aiActionService.executeAction(this.aiPrompt, 'TRAINING_FROM_NOTATION' as AIActionType, context).subscribe({
+      next: () => {
+        this.ngZone.run(() => {
+          this.aiLoading = false;
+          this.aiPrompt = '';
+          this.showAiGenerate = false;
+          // Reload trainings so new one appears in dropdown
+          this.trainingService.loadTrainings();
+        });
+      },
+      error: () => {
+        this.ngZone.run(() => { this.aiLoading = false; });
+      },
+    });
+  }
+
   private resetForm(): void {
     this.selectedTrainingId = '';
     this.selectedDate = '';
@@ -170,5 +236,8 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
     this.availableAthletes = [];
     this.availableTags = [];
     this.activeTags = new Set();
+    this.showAiGenerate = false;
+    this.aiPrompt = '';
+    this.aiLoading = false;
   }
 }

@@ -49,11 +49,12 @@
             <span class="invite-code" [class.copied]="copiedCodeId === tag.id" *ngIf="tag.inviteCode" (click)="copyCode(tag); $event.stopPropagation()" title="Click to copy">
               {{ copiedCodeId === tag.id ? '✓ COPIED' : tag.inviteCode }}
             </span>
+
             <button class="delete-btn" (click)="deleteGroup(tag)" title="Delete group">DELETE</button>
           </div>
 
           <div class="athletes-section">
-            <div class="athletes-label">ATHLETES ({{ tag.groupAthletes.length }})</div>
+            <div class="athletes-label">ATHLETES ({{ tag.groupAthletes.length }}) <button class="assign-btn" (click)="assignToGroup(tag)" title="Assign training to group">ASSIGN TRAINING</button></div>
             <div *ngIf="tag.groupAthletes.length === 0" class="no-athletes">No athletes in this group</div>
             <div *ngFor="let athlete of tag.groupAthletes" class="athlete-row"
               style="cursor: pointer"
@@ -68,4 +69,14 @@
       </div>
     </ng-container>
   </div>
+
+  <app-schedule-modal
+    [isOpen]="isScheduleModalOpen"
+    [preselectedAthletes]="assigningGroupAthletes"
+    [groupId]="assigningGroupId"
+    [preselectedGroupName]="assigningGroupName"
+    mode="coach"
+    (closed)="isScheduleModalOpen = false"
+    (scheduled)="onScheduled()">
+  </app-schedule-modal>
 </div>

@@ -10,6 +10,7 @@
             <div class="group-card-header">
               <span class="group-card-name">{{ tag.name }}</span>
               <span class="group-card-count">{{ tag.memberIds.length }} members</span>
+              <button class="assign-training-btn" *ngIf="canAssign" (click)="assignToClubGroup(tag)">ASSIGN TRAINING</button>
               <button class="tag-delete" *ngIf="isAdmin" (click)="deleteTag(tag.id)">×</button>
             </div>
           </div>
@@ -46,8 +47,11 @@
     </ng-container>
 
     <!-- Active Members -->
-    <h4 class="section-title">Members</h4>
     <ng-container *ngIf="members$ | async as members">
+      <div class="members-header-row">
+        <h4 class="section-title">Members</h4>
+        <button class="assign-all-btn" *ngIf="canAssign && members.length > 0" (click)="assignToAllMembers(members)">ASSIGN TO ALL</button>
+      </div>
       <div class="member-list" *ngIf="members.length > 0; else emptyMembers">
         <div *ngFor="let m of members" class="member-row glass">
           <img class="avatar" *ngIf="m.profilePicture" [src]="m.profilePicture" alt="avatar" />
@@ -108,4 +112,13 @@
     </ng-container>
 
   </ng-container>
+
+  <app-schedule-modal
+    [isOpen]="isScheduleModalOpen"
+    [preselectedAthletes]="assigningAthletes"
+    [clubId]="club.id"
+    mode="coach"
+    (closed)="isScheduleModalOpen = false"
+    (scheduled)="onScheduled()">
+  </app-schedule-modal>
 </div>

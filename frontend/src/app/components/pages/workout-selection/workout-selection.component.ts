@@ -11,17 +11,14 @@ import {
   SPORT_OPTIONS,
   SportFilter,
 } from '../../../models/training.model';
-import { combineLatest, Observable, of } from 'rxjs';
-import { catchError, map, startWith } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { RouterModule } from '@angular/router';
 import { WorkoutVisualizationComponent } from '../../shared/workout-visualization/workout-visualization.component';
 import { SidebarComponent } from '../../layout/sidebar/sidebar.component';
 import { FilterPillsComponent, FilterPillOption } from '../../shared/filter-pills/filter-pills.component';
 import { CreateWithAiModalComponent } from '../../shared/create-with-ai-modal/create-with-ai-modal.component';
 import { ActionResult } from '../../../services/ai-action.service';
-import { ClubService } from '../../../services/club.service';
-import { GroupService, Group } from '../../../services/group.service';
-import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-workout-selection',
@@ -40,30 +37,17 @@ import { AuthService } from '../../../services/auth.service';
 export class WorkoutSelectionComponent implements OnInit {
   private trainingService = inject(TrainingService);
   filterService = inject(TrainingFilterService);
-  private clubService = inject(ClubService);
-  private groupService = inject(GroupService);
-  private authService = inject(AuthService);
 
   showAiModal = false;
 
-  sourceOptions$: Observable<FilterPillOption[]> = combineLatest([
-    this.clubService.userClubs$,
-    this.authService.user$,
-    this.groupService.getGroups().pipe(
-      startWith([] as Group[]),
-      catchError(() => of([] as Group[])),
-    ),
-  ]).pipe(
-    map(([clubs, user, groups]) => {
-      const options: FilterPillOption[] = [
-        { label: 'My Trainings', value: 'mine' },
-        ...clubs.map((c) => ({ label: c.name, value: `club:${c.id}` })),
-      ];
-      // Athletes need group pills to discover coach-assigned trainings
-      // Coaches already have the tag sub-filter for groups within "mine"
-      if (user?.role !== 'COACH') {
-        options.push(...groups.map((g) => ({ label: g.name, value: `group:${g.id}` })));
-      }
+  sourceOptions$: Observable<FilterPillOption[]> = this.trainingService.receivedTrainings$.pipe(
+    map((received) => {
+      const options: FilterPillOption[] = [{ label: 'My Trainings', value: 'mine' }];
+      const origins = new Set<string>();
+      received.forEach((r) => {
+        if (r.originName) origins.add(r.originName);
+      });
+      origins.forEach((name) => options.push({ label: name, value: name }));
       return options;
     }),
   );
@@ -89,7 +73,7 @@ export class WorkoutSelectionComponent implements OnInit {
   selectedTraining$: Observable<Training | null> = this.trainingService.selectedTraining$;
 
   ngOnInit(): void {
-    this.clubService.loadUserClubs();
+    this.trainingService.loadReceivedTrainings();
   }
 
   onContextChange(value: string | null): void {

@@ -84,6 +84,27 @@ export interface Training {
     createdAt?: string;
     clubId?: string;
     clubGroupIds?: string[];
+    _receivedMeta?: {
+        assignedByName?: string;
+        origin: 'COACH_GROUP' | 'CLUB';
+        originName?: string;
+    };
+}
+
+export interface ReceivedTraining {
+    id: string;
+    trainingId: string;
+    title: string;
+    description?: string;
+    sportType?: 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK';
+    trainingType?: TrainingType;
+    estimatedTss?: number;
+    estimatedIf?: number;
+    estimatedDurationSeconds?: number;
+    assignedByName?: string;
+    origin: 'COACH_GROUP' | 'CLUB';
+    originName?: string;
+    receivedAt: string;
 }
 
 /** Returns true when at least one block is distance-based (no explicit durationSeconds). */

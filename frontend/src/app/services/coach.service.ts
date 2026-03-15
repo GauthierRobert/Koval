@@ -85,11 +85,13 @@ export class CoachService {
         trainingId: string,
         athleteIds: string[],
         date: string,
-        notes?: string
+        notes?: string,
+        clubId?: string,
+        groupId?: string
     ): Observable<ScheduledWorkout[]> {
         return this.http.post<ScheduledWorkout[]>(
             `${this.apiUrl}/assign`,
-            { trainingId, athleteIds, scheduledDate: date, notes }
+            { trainingId, athleteIds, scheduledDate: date, notes, clubId, groupId }
         );
     }
 

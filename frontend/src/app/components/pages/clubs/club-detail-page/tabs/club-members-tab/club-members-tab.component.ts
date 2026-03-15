@@ -3,15 +3,18 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   ClubDetail,
+  ClubMember,
   ClubMemberRole,
   ClubService,
   ClubGroup,
 } from '../../../../../../services/club.service';
+import { User } from '../../../../../../services/auth.service';
+import { ScheduleModalComponent } from '../../../../../shared/schedule-modal/schedule-modal.component';
 
 @Component({
   selector: 'app-club-members-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ScheduleModalComponent],
   templateUrl: './club-members-tab.component.html',
   styleUrl: './club-members-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,6 +29,14 @@ export class ClubMembersTabComponent implements OnInit {
 
   newTagName = '';
   roleChangeInProgress = new Set<string>();
+
+  isScheduleModalOpen = false;
+  assigningAthletes: User[] = [];
+
+  get canAssign(): boolean {
+    const role = this.club?.currentMemberRole;
+    return role === 'OWNER' || role === 'ADMIN' || role === 'COACH';
+  }
 
   get isAdmin(): boolean {
     const role = this.club?.currentMemberRole;
@@ -103,6 +114,24 @@ export class ClubMembersTabComponent implements OnInit {
     return ['COACH', 'MEMBER'];
   }
 
+
+  assignToClubGroup(tag: ClubGroup): void {
+    this.assigningAthletes = tag.memberIds.map(id => ({ id, displayName: id } as User));
+    this.isScheduleModalOpen = true;
+  }
+
+  assignToAllMembers(members: ClubMember[]): void {
+    this.assigningAthletes = members.map(m => ({
+      id: m.userId,
+      displayName: m.displayName || m.userId,
+    } as User));
+    this.isScheduleModalOpen = true;
+  }
+
+  onScheduled(): void {
+    this.isScheduleModalOpen = false;
+    this.assigningAthletes = [];
+  }
 
   getAvailableTags(member: { userId: string }, allGroups: ClubGroup[]): ClubGroup[] {
     return allGroups.filter((g) => !g.memberIds.includes(member.userId));

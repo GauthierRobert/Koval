@@ -18,7 +18,10 @@
           <span [style.font-style]="isDurationEstimated(training) ? 'italic' : ''">{{ getDuration(training) }}</span>
           &bull; {{ (training.blocks || []).length }} blocks
         </span>
-        <div class="item-tags" *ngIf="training.groupIds?.length">
+        <span class="received-meta" *ngIf="training._receivedMeta">
+          from {{ training._receivedMeta.assignedByName }}<ng-container *ngIf="training._receivedMeta.originName"> via {{ training._receivedMeta.originName }}</ng-container>
+        </span>
+        <div class="item-tags" *ngIf="training.groupIds?.length && !training._receivedMeta">
           <span *ngFor="let tag of training.groupIds" class="tag-chip">{{ tag }}</span>
         </div>
       </div>

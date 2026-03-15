@@ -86,7 +86,9 @@ public class CoachController {
             LocalDate scheduledDate,
             String notes,
             Integer tss,
-            Double intensityFactor
+            Double intensityFactor,
+            String clubId,
+            String groupId
     ) {}
 
     @PostMapping("/assign")
@@ -94,12 +96,24 @@ public class CoachController {
             @RequestBody AssignmentRequest request) {
         String coachId = SecurityUtils.getCurrentUserId();
         try {
-            List<ScheduledWorkout> assignments = coachService.assignTraining(
-                    coachId,
-                    request.trainingId(),
-                    request.athleteIds(),
-                    request.scheduledDate(),
-                    request.notes());
+            List<ScheduledWorkout> assignments;
+            if (request.clubId() != null && !request.clubId().isBlank()) {
+                assignments = coachService.assignTrainingFromClub(
+                        coachId,
+                        request.trainingId(),
+                        request.athleteIds(),
+                        request.scheduledDate(),
+                        request.notes(),
+                        request.clubId());
+            } else {
+                assignments = coachService.assignTraining(
+                        coachId,
+                        request.trainingId(),
+                        request.athleteIds(),
+                        request.scheduledDate(),
+                        request.notes(),
+                        request.groupId());
+            }
             return ResponseEntity.ok(assignments);
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().build();

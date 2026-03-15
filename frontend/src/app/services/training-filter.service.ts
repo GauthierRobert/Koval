@@ -1,29 +1,20 @@
-import {inject, Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
+import {Injectable, inject} from '@angular/core';
 import {BehaviorSubject, combineLatest} from 'rxjs';
 import {map} from 'rxjs/operators';
-import {environment} from '../../environments/environment';
-import {SportFilter, Training, TrainingType} from '../models/training.model';
+import {ReceivedTraining, SportFilter, Training, TrainingType} from '../models/training.model';
 import {TrainingService} from './training.service';
 
 /**
- * Manages training list filtering, context switching, and club training loading.
- * Extracted from TrainingService to separate filter/view concerns from CRUD.
+ * Manages training list filtering and context switching.
+ * Contexts: 'mine' for personal trainings, or an originName (e.g. 'BTC') for received trainings.
  */
 @Injectable({
     providedIn: 'root',
 })
 export class TrainingFilterService {
-    private apiUrl = `${environment.apiUrl}/api/trainings`;
-    private http = inject(HttpClient);
     private trainingService = inject(TrainingService);
 
-    private clubTrainingsSubject = new BehaviorSubject<Training[]>([]);
-    clubTrainings$ = this.clubTrainingsSubject.asObservable();
-
-    private groupTrainingsSubject = new BehaviorSubject<Training[]>([]);
-
-    // Active context: 'mine' | 'club:{clubId}' | 'group:{groupId}'
+    // Active context: 'mine' | originName (e.g. 'BTC', 'T3')
     private activeContextSubject = new BehaviorSubject<string>('mine');
     activeContext$ = this.activeContextSubject.asObservable();
 
@@ -44,35 +35,26 @@ export class TrainingFilterService {
         }),
     );
 
+    receivedTrainings$ = this.trainingService.receivedTrainings$;
+
     filteredTrainings$ = combineLatest([
         this.trainingService.trainings$,
-        this.clubTrainingsSubject,
-        this.groupTrainingsSubject,
+        this.trainingService.receivedTrainings$,
         this.activeContextSubject,
         this.tagFilterSubject,
         this.sportFilterSubject,
         this.typeFilterSubject,
     ]).pipe(
-        map(([mine, club, groupDiscover, context, tag, sport, type]) => {
+        map(([mine, received, context, tag, sport, type]) => {
             let result: Training[];
-            if (context.startsWith('club:')) {
-                const clubId = context.slice(5);
-                result = club.filter((t) => t.clubId === clubId);
-            } else if (context.startsWith('group:')) {
-                const groupId = context.slice(6);
-                // Merge personal trainings (coaches) + discovered trainings (athletes)
-                const combined = [...mine, ...groupDiscover];
-                const seen = new Set<string>();
-                result = combined.filter((t) => {
-                    if (!t.groupIds?.includes(groupId)) return false;
-                    if (seen.has(t.id!)) return false;
-                    seen.add(t.id!);
-                    return true;
-                });
-            } else {
+            if (context === 'mine') {
                 result = mine;
                 if (tag === '__mine__') result = result.filter((t) => !t.groupIds?.length);
                 else if (tag) result = result.filter((t) => t.groupIds?.includes(tag));
+            } else {
+                result = received
+                    .filter((r: ReceivedTraining) => r.originName === context)
+                    .map((r: ReceivedTraining) => this.receivedToTraining(r));
             }
             if (sport) result = result.filter((t) => t.sportType === sport);
             if (type) result = result.filter((t) => t.trainingType === type);
@@ -98,28 +80,28 @@ export class TrainingFilterService {
 
     setContext(context: string): void {
         this.activeContextSubject.next(context);
-        if (context.startsWith('club:') && this.clubTrainingsSubject.value.length === 0) {
-            this.loadClubTrainings();
-        }
-        if (context.startsWith('group:') && this.groupTrainingsSubject.value.length === 0) {
-            this.loadGroupTrainings();
-        }
-        if (!context.startsWith('mine')) {
+        if (context !== 'mine') {
+            this.trainingService.loadReceivedTrainings();
             this.tagFilterSubject.next(null);
         }
     }
 
-    loadClubTrainings(): void {
-        this.http.get<Training[]>(`${this.apiUrl}/club-trainings`).subscribe({
-            next: (trainings) => this.clubTrainingsSubject.next(trainings),
-            error: () => this.clubTrainingsSubject.next([]),
-        });
-    }
-
-    loadGroupTrainings(): void {
-        this.http.get<Training[]>(`${this.apiUrl}/discover`).subscribe({
-            next: (trainings) => this.groupTrainingsSubject.next(trainings),
-            error: () => this.groupTrainingsSubject.next([]),
-        });
+    private receivedToTraining(r: ReceivedTraining): Training {
+        return {
+            id: r.trainingId,
+            title: r.title,
+            description: r.description ?? '',
+            sportType: r.sportType ?? 'CYCLING',
+            trainingType: r.trainingType,
+            estimatedTss: r.estimatedTss,
+            estimatedIf: r.estimatedIf,
+            estimatedDurationSeconds: r.estimatedDurationSeconds,
+            createdAt: r.receivedAt,
+            _receivedMeta: {
+                assignedByName: r.assignedByName,
+                origin: r.origin,
+                originName: r.originName,
+            },
+        } as Training;
     }
 }

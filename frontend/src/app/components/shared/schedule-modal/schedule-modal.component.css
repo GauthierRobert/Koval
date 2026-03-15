@@ -99,7 +99,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      max-height: 140px;
+      max-height: 280px;
       overflow-y: auto;
       padding: 8px;
       background: rgba(255, 255, 255, 0.02);
@@ -182,6 +182,50 @@
 
     .submit-btn:hover:not(:disabled) { filter: brightness(1.2); }
     .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .toggle-row {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+
+    .toggle-btn {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .toggle-btn.active {
+      background: rgba(255, 157, 0, 0.15);
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .sport-select {
+      margin-bottom: 4px;
+    }
+
+    .ai-generate-btn {
+      background: var(--accent-color);
+      border: none;
+      color: var(--color-black);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: filter 0.2s;
+    }
+
+    .ai-generate-btn:hover:not(:disabled) { filter: brightness(1.2); }
+    .ai-generate-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
