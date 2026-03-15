@@ -76,12 +76,16 @@ export class TrainingService {
         });
     }
 
+    private receivedTrainingCache = new Map<string, Training>();
+
     getTrainingById(id: string): Observable<Training> {
         const cached = this.trainingsSubject.value.find((t) => t.id === id);
-        if (cached) {
-            return of(cached);
-        }
-        return this.http.get<Training>(`${this.apiUrl}/${id}`);
+        if (cached) return of(cached);
+        const receivedCached = this.receivedTrainingCache.get(id);
+        if (receivedCached) return of(receivedCached);
+        return this.http.get<Training>(`${this.apiUrl}/${id}`).pipe(
+            tap((t) => this.receivedTrainingCache.set(t.id, t)),
+        );
     }
 
     createTraining(training: Partial<Training>): Observable<Training> {

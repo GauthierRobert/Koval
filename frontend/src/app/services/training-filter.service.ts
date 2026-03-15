@@ -1,7 +1,7 @@
 import {Injectable, inject} from '@angular/core';
-import {BehaviorSubject, combineLatest} from 'rxjs';
-import {map} from 'rxjs/operators';
-import {ReceivedTraining, SportFilter, Training, TrainingType} from '../models/training.model';
+import {BehaviorSubject, combineLatest, forkJoin, of} from 'rxjs';
+import {catchError, map, switchMap} from 'rxjs/operators';
+import {SportFilter, Training, TrainingType} from '../models/training.model';
 import {TrainingService} from './training.service';
 
 /**
@@ -45,24 +45,54 @@ export class TrainingFilterService {
         this.sportFilterSubject,
         this.typeFilterSubject,
     ]).pipe(
-        map(([mine, received, context, tag, sport, type]) => {
-            let result: Training[];
+        switchMap(([mine, received, context, tag, sport, type]) => {
             if (context === 'mine') {
-                result = mine;
+                let result = mine;
                 if (tag === '__mine__') result = result.filter((t) => !t.groupIds?.length);
                 else if (tag) result = result.filter((t) => t.groupIds?.includes(tag));
-            } else {
-                result = received
-                    .filter((r: ReceivedTraining) => r.originName === context)
-                    .map((r: ReceivedTraining) => this.receivedToTraining(r));
+                if (sport) result = result.filter((t) => t.sportType === sport);
+                if (type) result = result.filter((t) => t.trainingType === type);
+                return of(
+                    [...result].sort((a, b) => {
+                        const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                        const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                        return db - da;
+                    }),
+                );
             }
-            if (sport) result = result.filter((t) => t.sportType === sport);
-            if (type) result = result.filter((t) => t.trainingType === type);
-            return [...result].sort((a, b) => {
-                const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-                const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-                return db - da;
-            });
+
+            const filtered = received.filter((r) => r.originName === context);
+            if (filtered.length === 0) return of([]);
+
+            return forkJoin(
+                filtered.map((r) =>
+                    this.trainingService.getTrainingById(r.trainingId).pipe(
+                        map(
+                            (t) =>
+                                ({
+                                    ...t,
+                                    _receivedMeta: {
+                                        assignedByName: r.assignedByName,
+                                        origin: r.origin,
+                                        originName: r.originName,
+                                    },
+                                }) as Training,
+                        ),
+                        catchError(() => of(null)),
+                    ),
+                ),
+            ).pipe(
+                map((trainings) => {
+                    let result = trainings.filter((t): t is Training => t !== null);
+                    if (sport) result = result.filter((t) => t.sportType === sport);
+                    if (type) result = result.filter((t) => t.trainingType === type);
+                    return [...result].sort((a, b) => {
+                        const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                        const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                        return db - da;
+                    });
+                }),
+            );
         }),
     );
 
@@ -84,24 +114,5 @@ export class TrainingFilterService {
             this.trainingService.loadReceivedTrainings();
             this.tagFilterSubject.next(null);
         }
-    }
-
-    private receivedToTraining(r: ReceivedTraining): Training {
-        return {
-            id: r.trainingId,
-            title: r.title,
-            description: r.description ?? '',
-            sportType: r.sportType ?? 'CYCLING',
-            trainingType: r.trainingType,
-            estimatedTss: r.estimatedTss,
-            estimatedIf: r.estimatedIf,
-            estimatedDurationSeconds: r.estimatedDurationSeconds,
-            createdAt: r.receivedAt,
-            _receivedMeta: {
-                assignedByName: r.assignedByName,
-                origin: r.origin,
-                originName: r.originName,
-            },
-        } as Training;
     }
 }
