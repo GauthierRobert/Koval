@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.club;
 
+import com.koval.trainingplannerbackend.club.dto.CreateRecurringSessionRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -13,19 +14,19 @@ public class RecurringSessionService {
 
     private final RecurringSessionTemplateRepository templateRepository;
     private final ClubTrainingSessionRepository sessionRepository;
-    private final ClubService clubService;
+    private final ClubAuthorizationService authorizationService;
 
     public RecurringSessionService(RecurringSessionTemplateRepository templateRepository,
                                    ClubTrainingSessionRepository sessionRepository,
-                                   ClubService clubService) {
+                                   ClubAuthorizationService authorizationService) {
         this.templateRepository = templateRepository;
         this.sessionRepository = sessionRepository;
-        this.clubService = clubService;
+        this.authorizationService = authorizationService;
     }
 
     public RecurringSessionTemplate createTemplate(String userId, String clubId,
-                                                    ClubController.CreateRecurringSessionRequest req) {
-        clubService.validateAdminOrCoachAccess(userId, clubId);
+                                                    CreateRecurringSessionRequest req) {
+        authorizationService.requireAdminOrCoach(userId, clubId);
 
         RecurringSessionTemplate template = new RecurringSessionTemplate();
         template.setClubId(clubId);
@@ -40,7 +41,7 @@ public class RecurringSessionService {
         template.setMaxParticipants(req.maxParticipants());
         template.setDurationMinutes(req.durationMinutes());
         template.setClubGroupId(req.clubGroupId());
-        template.setOpenToAll(req.openToAll());
+        template.setOpenToAll(req.openToAll() == null || req.openToAll());
         template.setOpenToAllDelayValue(req.openToAllDelayValue());
         template.setOpenToAllDelayUnit(req.openToAllDelayUnit());
         template.setResponsibleCoachId(req.responsibleCoachId());
@@ -52,10 +53,10 @@ public class RecurringSessionService {
     }
 
     public RecurringSessionTemplate updateTemplate(String userId, String templateId,
-                                                    ClubController.CreateRecurringSessionRequest req) {
+                                                    CreateRecurringSessionRequest req) {
         RecurringSessionTemplate template = templateRepository.findById(templateId)
                 .orElseThrow(() -> new IllegalArgumentException("Template not found"));
-        clubService.validateAdminOrCoachAccess(userId, template.getClubId());
+        authorizationService.requireAdminOrCoach(userId, template.getClubId());
 
         template.setTitle(req.title());
         template.setSport(req.sport());
@@ -67,7 +68,7 @@ public class RecurringSessionService {
         template.setMaxParticipants(req.maxParticipants());
         template.setDurationMinutes(req.durationMinutes());
         template.setClubGroupId(req.clubGroupId());
-        template.setOpenToAll(req.openToAll());
+        template.setOpenToAll(req.openToAll() ==null || req.openToAll());
         template.setOpenToAllDelayValue(req.openToAllDelayValue());
         template.setOpenToAllDelayUnit(req.openToAllDelayUnit());
         template.setResponsibleCoachId(req.responsibleCoachId());
@@ -77,7 +78,7 @@ public class RecurringSessionService {
     public void deactivateTemplate(String userId, String templateId) {
         RecurringSessionTemplate template = templateRepository.findById(templateId)
                 .orElseThrow(() -> new IllegalArgumentException("Template not found"));
-        clubService.validateAdminOrCoachAccess(userId, template.getClubId());
+        authorizationService.requireAdminOrCoach(userId, template.getClubId());
         template.setActive(false);
         templateRepository.save(template);
     }
@@ -111,21 +112,10 @@ public class RecurringSessionService {
             ClubTrainingSession session = new ClubTrainingSession();
             session.setClubId(template.getClubId());
             session.setCreatedBy(template.getCreatedBy());
-            session.setTitle(template.getTitle());
-            session.setSport(template.getSport());
             session.setScheduledAt(scheduledAt);
-            session.setLocation(template.getLocation());
-            session.setDescription(template.getDescription());
-            session.setLinkedTrainingId(template.getLinkedTrainingId());
-            session.setMaxParticipants(template.getMaxParticipants());
-            session.setDurationMinutes(template.getDurationMinutes());
             session.setRecurringTemplateId(template.getId());
-            session.setClubGroupId(template.getClubGroupId());
-            session.setOpenToAll(template.isOpenToAll());
-            session.setOpenToAllDelayValue(template.getOpenToAllDelayValue());
-            session.setOpenToAllDelayUnit(template.getOpenToAllDelayUnit());
-            session.setResponsibleCoachId(template.getResponsibleCoachId());
             session.setCreatedAt(LocalDateTime.now());
+            SessionPropertyMapper.applyTemplate(template, session);
             sessionRepository.save(session);
         }
     }
@@ -136,18 +126,7 @@ public class RecurringSessionService {
         List<ClubTrainingSession> futureInstances = sessionRepository
                 .findByRecurringTemplateIdAndScheduledAtAfter(templateId, LocalDateTime.now());
         for (ClubTrainingSession session : futureInstances) {
-            session.setTitle(template.getTitle());
-            session.setSport(template.getSport());
-            session.setLocation(template.getLocation());
-            session.setDescription(template.getDescription());
-            session.setLinkedTrainingId(template.getLinkedTrainingId());
-            session.setMaxParticipants(template.getMaxParticipants());
-            session.setDurationMinutes(template.getDurationMinutes());
-            session.setClubGroupId(template.getClubGroupId());
-            session.setOpenToAll(template.isOpenToAll());
-            session.setOpenToAllDelayValue(template.getOpenToAllDelayValue());
-            session.setOpenToAllDelayUnit(template.getOpenToAllDelayUnit());
-            session.setResponsibleCoachId(template.getResponsibleCoachId());
+            SessionPropertyMapper.applyTemplate(template, session);
             // Update time if timeOfDay changed
             if (template.getTimeOfDay() != null && session.getScheduledAt() != null) {
                 session.setScheduledAt(session.getScheduledAt().toLocalDate().atTime(template.getTimeOfDay()));

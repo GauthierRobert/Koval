@@ -10,6 +10,7 @@ import com.koval.trainingplannerbackend.training.tools.TrainingToolService;
 import com.koval.trainingplannerbackend.training.zone.ZoneToolService;
 import org.springframework.ai.anthropic.AnthropicChatModel;
 import org.springframework.ai.anthropic.AnthropicChatOptions;
+import org.springframework.ai.anthropic.api.AnthropicApi;
 import org.springframework.ai.anthropic.api.AnthropicCacheOptions;
 import org.springframework.ai.anthropic.api.AnthropicCacheStrategy;
 import org.springframework.ai.anthropic.api.AnthropicCacheTtl;
@@ -19,9 +20,12 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.messages.MessageType;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -159,14 +163,29 @@ public class AIConfig {
     }
 
     @Bean
-    public ChatClient raceCompletionClient(AnthropicChatModel chatModel) {
-        return ChatClient.builder(chatModel)
-                .defaultSystem(loadPrompt("race-completion"))
+    public ChatClient raceCompletionClient(
+            @Value("${spring.ai.anthropic.api-key}") String apiKey,
+            RestClient.Builder restClientBuilder,
+            WebClient.Builder webClientBuilder) {
+
+        AnthropicApi webSearchApi = AnthropicApi.builder()
+                .apiKey(apiKey)
+                .restClientBuilder(restClientBuilder.requestInterceptor(new WebSearchToolInjector()))
+                .webClientBuilder(webClientBuilder)
+                .anthropicBetaFeatures("web-search-2025-03-05")
+                .build();
+
+        AnthropicChatModel webSearchModel = AnthropicChatModel.builder()
+                .anthropicApi(webSearchApi)
                 .defaultOptions(AnthropicChatOptions.builder()
                         .model(SONNET)
                         .temperature(0.3)
-                        .maxTokens(1024)
+                        .maxTokens(2048)
                         .build())
+                .build();
+
+        return ChatClient.builder(webSearchModel)
+                .defaultSystem(loadPrompt("race-completion"))
                 .build();
     }
 

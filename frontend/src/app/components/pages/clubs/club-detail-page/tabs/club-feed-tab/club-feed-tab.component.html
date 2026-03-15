@@ -1,12 +1,10 @@
 <div class="feed-tab">
   <ng-container *ngIf="feed$ | async as feed">
     <div class="feed-list" *ngIf="feed.length > 0; else emptyFeed">
-      <div *ngFor="let activity of feed" class="feed-item glass">
-        <span class="feed-icon">{{ getActivityIcon(activity.type) }}</span>
-        <div class="feed-content">
-          <p class="feed-text">{{ getActivityText(activity.type, activity.actorName || activity.actorId, activity.targetTitle) }}</p>
-          <span class="feed-time">{{ formatDate(activity.occurredAt) }}</span>
-        </div>
+      <div *ngFor="let activity of feed" class="feed-item">
+        <span class="feed-dot" [style.background]="getActivityColor(activity.type)"></span>
+        <span class="feed-text">{{ getActivityText(activity.type, activity.actorName || activity.actorId, activity.targetTitle) }}</span>
+        <span class="feed-time">{{ formatDate(activity.occurredAt) }}</span>
       </div>
     </div>
     <ng-template #emptyFeed>

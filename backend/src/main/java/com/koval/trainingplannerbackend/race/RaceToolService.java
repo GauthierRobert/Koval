@@ -10,9 +10,10 @@ import java.util.List;
 public class RaceToolService {
 
     private final RaceService raceService;
-
-    public RaceToolService(RaceService raceService) {
+    private final RaceCompletionService completionService;
+    public RaceToolService(RaceService raceService, RaceCompletionService completionService) {
         this.raceService = raceService;
+        this.completionService = completionService;
     }
 
     @Tool(description = "Search the global race catalog by title and/or sport. Returns matching races with their details.")
@@ -31,7 +32,8 @@ public class RaceToolService {
             @ToolParam(description = "Race title (e.g. 'Ironman Nice', 'Paris-Roubaix')") String title) {
         Race race = new Race();
         race.setTitle(title);
-        return RaceSummary.from(raceService.createRace(userId, race));
+        Race savedRace = raceService.createRace(userId, race);
+        return RaceSummary.from(completionService.completeRaceDetails(savedRace.getId()));
     }
 
     public record RaceSummary(

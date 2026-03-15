@@ -14,15 +14,15 @@ export class ClubFeedTabComponent {
   private clubService = inject(ClubService);
   feed$ = this.clubService.feed$;
 
-  getActivityIcon(type: string): string {
+  getActivityColor(type: string): string {
     switch (type) {
-      case 'MEMBER_JOINED': return '👤';
-      case 'MEMBER_LEFT': return '🚪';
-      case 'SESSION_CREATED': return '📅';
-      case 'SESSION_JOINED': return '✅';
-      case 'TRAINING_CREATED': return '💪';
-      case 'RACE_GOAL_ADDED': return '🏁';
-      default: return '📌';
+      case 'MEMBER_JOINED':    return '#22c55e';
+      case 'SESSION_JOINED':   return '#22c55e';
+      case 'MEMBER_LEFT':      return '#6b7280';
+      case 'SESSION_CREATED':  return '#3b82f6';
+      case 'TRAINING_CREATED': return '#ff9d00';
+      case 'RACE_GOAL_ADDED':  return '#f59e0b';
+      default:                 return '#8e8ea0';
     }
   }
 

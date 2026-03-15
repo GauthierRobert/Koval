@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -240,6 +241,26 @@ public class AuthController {
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
+    }
+
+    public record ZoneReferenceRequest(String zoneSystemId, int value) {}
+
+    @PatchMapping("/me/zone-reference")
+    public ResponseEntity<Void> setZoneReference(
+            @RequestBody ZoneReferenceRequest request,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            String userId = parseJwtToken(authHeader.substring(7));
+            userService.setCustomZoneReference(userId, request.zoneSystemId(), request.value());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     public record OnboardingRequest(UserRole role, Integer ftp, Integer weightKg, Integer criticalSwimSpeed,

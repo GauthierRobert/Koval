@@ -46,9 +46,8 @@
               </ng-container>
             </div>
             <span class="tag-athlete-count">{{ tag.groupAthletes.length }}{{ tag.maxAthletes > 0 ? ' / ' + tag.maxAthletes : '' }}</span>
-            <span class="invite-code" *ngIf="tag.inviteCode" (click)="copyCode(tag); $event.stopPropagation()" title="Click to copy">
-              {{ tag.inviteCode }}
-              <span class="copy-feedback" *ngIf="copiedCodeId === tag.id">COPIED!</span>
+            <span class="invite-code" [class.copied]="copiedCodeId === tag.id" *ngIf="tag.inviteCode" (click)="copyCode(tag); $event.stopPropagation()" title="Click to copy">
+              {{ copiedCodeId === tag.id ? '✓ COPIED' : tag.inviteCode }}
             </span>
             <button class="delete-btn" (click)="deleteGroup(tag)" title="Delete group">DELETE</button>
           </div>

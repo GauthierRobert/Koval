@@ -60,18 +60,33 @@
 
   <!-- Level 2: Race List -->
   <div class="browse-race-list" *ngIf="selectedBrowseCountry && browseResults && !browseLoading">
-    <div *ngFor="let race of browseResults.content" class="browse-race-item glass">
+    <div *ngFor="let race of browseResults.content" class="browse-race-item glass"
+      [class.browse-race-item--open]="expandedRaceId === race.id"
+      (click)="toggleExpand(race)">
       <div class="browse-race-header">
         <app-sport-icon [sport]="$any(race.sport)" [size]="14"></app-sport-icon>
         <span class="browse-race-title">{{ race.title }}</span>
         <span class="browse-race-verified" *ngIf="race.verified" title="Verified">&#10003;</span>
+        <div class="gpx-chips" (click)="$event.stopPropagation()">
+          <ng-container *ngFor="let disc of getGpxDisciplines(getCachedRace(race))">
+            <span class="gpx-chip gpx-chip--done" *ngIf="hasGpxForDiscipline(getCachedRace(race), disc)">
+              {{ disc | uppercase }} ✓
+              <label class="gpx-reupload" title="Replace GPX">
+                ↑<input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race, disc)">
+              </label>
+            </span>
+            <label class="gpx-chip gpx-chip--upload" *ngIf="!hasGpxForDiscipline(getCachedRace(race), disc)">
+              <span *ngIf="!isGpxUploading(race.id, disc)">{{ disc | uppercase }} ↑</span>
+              <span *ngIf="isGpxUploading(race.id, disc)">{{ disc | uppercase }} …</span>
+              <input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race, disc)">
+            </label>
+          </ng-container>
+        </div>
         <button class="btn-add-goal" [class.btn-add-goal--added]="addedRaceIds.has(race.id)"
-          (click)="addToMyGoals(race)">
+          (click)="addToMyGoals(race); $event.stopPropagation()">
           {{ addedRaceIds.has(race.id) ? '✓ ADDED' : '+ ADD TO MY GOALS' }}
         </button>
-        <button class="expand-toggle" (click)="toggleExpand(race)" [class.expand-toggle--open]="expandedRaceId === race.id" title="More info">
-          {{ expandedRaceId === race.id ? '▾' : '▸' }}
-        </button>
+        <span class="expand-caret">{{ expandedRaceId === race.id ? '▾' : '▸' }}</span>
       </div>
       <div class="browse-race-meta">
         <span *ngIf="race.location">{{ race.location }}</span>
@@ -85,30 +100,13 @@
         <span class="discipline-badge run" *ngIf="race.runDistanceM">R: {{ formatDistance(race.runDistanceM) }}</span>
       </div>
 
-      <!-- Expanded section -->
+      <!-- Expanded section: description + website -->
       <div class="race-expanded" *ngIf="expandedRaceId === race.id">
         <p class="race-desc" *ngIf="race.description">{{ race.description }}</p>
-        <a class="race-website" *ngIf="race.website" [href]="race.website" target="_blank" rel="noopener">
+        <a class="race-website" *ngIf="race.website" [href]="race.website" target="_blank" rel="noopener"
+          (click)="$event.stopPropagation()">
           {{ race.website }}
         </a>
-        <div class="gpx-section">
-          <span class="gpx-label">GPX</span>
-          <div class="gpx-chips">
-            <ng-container *ngFor="let disc of getGpxDisciplines(getCachedRace(race))">
-              <span class="gpx-chip gpx-chip--done" *ngIf="hasGpxForDiscipline(getCachedRace(race), disc)">
-                {{ disc | uppercase }} ✓
-                <label class="gpx-reupload" title="Replace GPX">
-                  ↑<input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race, disc)">
-                </label>
-              </span>
-              <label class="gpx-chip gpx-chip--upload" *ngIf="!hasGpxForDiscipline(getCachedRace(race), disc)">
-                <span *ngIf="!isGpxUploading(race.id, disc)">{{ disc | uppercase }} Upload</span>
-                <span *ngIf="isGpxUploading(race.id, disc)">{{ disc | uppercase }} ...</span>
-                <input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race, disc)">
-              </label>
-            </ng-container>
-          </div>
-        </div>
       </div>
     </div>
     <div *ngIf="browseResults.content.length === 0" class="browse-empty">

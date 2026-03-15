@@ -104,9 +104,8 @@ export class GroupManagementComponent implements OnInit {
       next: (created) => {
         this.newGroupName = '';
         this.newGroupMaxAthletes = 0;
-        // Auto-generate invite code for the new group
-        const code = name.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 12);
-        this.coachService.generateInviteCode([created.id], maxAthletes || 0, code).subscribe({
+        // Auto-generate random invite code for the new group
+        this.coachService.generateInviteCode([created.id], maxAthletes || 0).subscribe({
           next: () => this.loadGroups(),
           error: () => this.loadGroups(),
         });

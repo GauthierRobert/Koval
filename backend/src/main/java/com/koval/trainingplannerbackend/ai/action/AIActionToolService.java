@@ -1,7 +1,7 @@
 package com.koval.trainingplannerbackend.ai.action;
 
-import com.koval.trainingplannerbackend.club.ClubController;
-import com.koval.trainingplannerbackend.club.ClubService;
+import com.koval.trainingplannerbackend.club.ClubSessionService;
+import com.koval.trainingplannerbackend.club.dto.CreateSessionRequest;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.tools.TrainingMapper;
@@ -23,17 +23,18 @@ public class AIActionToolService {
 
     private final TrainingMapper trainingMapper;
     private final TrainingService trainingService;
-    private final ClubService clubService;
+    private final ClubSessionService clubSessionService;
 
     public AIActionToolService(TrainingMapper trainingMapper,
-                                TrainingService trainingService,
-                                ClubService clubService) {
+                               TrainingService trainingService,
+                               ClubSessionService clubSessionService) {
         this.trainingMapper = trainingMapper;
         this.trainingService = trainingService;
-        this.clubService = clubService;
+        this.clubSessionService = clubSessionService;
     }
 
-    public record ActionResult(String trainingId, String trainingTitle, String sessionId, String message) {}
+    public record ActionResult(String trainingId, String trainingTitle, String sessionId, String message) {
+    }
 
     @Tool(description = """
             Create a new training plan and optionally a linked club training session in a single atomic action.
@@ -87,7 +88,7 @@ public class AIActionToolService {
                     // leave as null if unparseable
                 }
             }
-            ClubController.CreateSessionRequest sessionReq = new ClubController.CreateSessionRequest(
+            CreateSessionRequest sessionReq = new CreateSessionRequest(
                     sessionTitle != null ? sessionTitle : title,
                     sportType,
                     scheduledDateTime,
@@ -97,9 +98,12 @@ public class AIActionToolService {
                     maxParticipants,
                     null,
                     null,
+                    null,
+                    false,
+                    null,
                     null);
 
-            var session = clubService.createSession(userId, resolvedClubId, sessionReq);
+            var session = clubSessionService.createSession(userId, resolvedClubId, sessionReq);
             sessionId = session.getId();
         }
 

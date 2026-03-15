@@ -83,6 +83,11 @@ public class UserService {
         return userRepository.findById(userId);
     }
 
+    public List<User> findAllById(List<String> userIds) {
+        if (userIds == null || userIds.isEmpty()) return List.of();
+        return userRepository.findAllById(userIds);
+    }
+
     public Optional<User> findByStravaId(String stravaId) {
         return userRepository.findByStravaId(stravaId);
     }
@@ -105,6 +110,12 @@ public class UserService {
             user.setDisplayName(displayName);
         if (email != null)
             user.setEmail(email);
+        return userRepository.save(user);
+    }
+
+    public User setCustomZoneReference(String userId, String zoneSystemId, int value) {
+        User user = getUserById(userId);
+        user.getCustomZoneReferenceValues().put(zoneSystemId, value);
         return userRepository.save(user);
     }
 
@@ -152,6 +163,7 @@ public class UserService {
         List<Group> userGroups = groupService.getGroupsForAthlete(user.getId());
         map.put("groups", userGroups.stream().map(Group::getName).toList());
 
+        map.put("customZoneReferenceValues", user.getCustomZoneReferenceValues());
         map.put("needsOnboarding", user.isNeedsOnboarding());
 
         if (user.isCoach()) {

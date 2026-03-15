@@ -8,7 +8,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Setter
 @Getter
@@ -59,6 +61,8 @@ public class User {
     private Integer vo2maxPace;    // Seconds per km (VO2MAX_PACE reference)
 
     private boolean needsOnboarding = false;
+
+    private Map<String, Integer> customZoneReferenceValues = new HashMap<>();
 
     private List<String> fcmTokens = new ArrayList<>();
 

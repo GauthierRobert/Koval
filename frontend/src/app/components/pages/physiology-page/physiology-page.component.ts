@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { BehaviorSubject, combineLatest, map, Observable } from 'rxjs';
 import { AuthService, User } from '../../../services/auth.service';
 import { Zone, ZoneSystem } from '../../../services/zone';
@@ -11,7 +12,7 @@ type Sport = 'CYCLING' | 'RUNNING' | 'SWIMMING';
 @Component({
   selector: 'app-physiology-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './physiology-page.component.html',
   styleUrl: './physiology-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -66,6 +67,8 @@ export class PhysiologyPageComponent implements OnInit {
     '#6366f1', '#3b82f6', '#22c55e', '#eab308', '#f97316', '#ef4444', '#dc2626',
   ];
 
+  customRefInputs: Record<string, number | null> = {};
+
   constructor(
     private authService: AuthService,
     private zoneService: ZoneService,
@@ -113,6 +116,47 @@ export class PhysiologyPageComponent implements OnInit {
 
   formatPace(totalSeconds: number): string {
     return sharedFormatPace(totalSeconds);
+  }
+
+  getActualRangeForSystem(zone: Zone, user: User, sys: ZoneSystem): string | null {
+    switch (sys.referenceType) {
+      case 'FTP':               return this.computeWatts(zone, user.ftp);
+      case 'VO2MAX_POWER':      return this.computeWatts(zone, user.vo2maxPower);
+      case 'THRESHOLD_PACE':    return this.computePace(zone, user.functionalThresholdPace);
+      case 'CSS':               return this.computePace(zone, user.criticalSwimSpeed);
+      case 'PACE_5K':           return this.computePace(zone, user.pace5k);
+      case 'PACE_10K':          return this.computePace(zone, user.pace10k);
+      case 'PACE_HALF_MARATHON':return this.computePace(zone, user.paceHalfMarathon);
+      case 'PACE_MARATHON':     return this.computePace(zone, user.paceMarathon);
+      case 'CUSTOM': {
+        const val = user.customZoneReferenceValues?.[sys.id!];
+        return val ? this.computeWatts(zone, val) : null;
+      }
+      default: return null;
+    }
+  }
+
+  private computeWatts(zone: Zone, ref: number | undefined): string | null {
+    if (!ref) return null;
+    const lo = Math.round(ref * zone.low / 100);
+    const hi = Math.round(ref * zone.high / 100);
+    return zone.high >= 200 ? `${lo}W+` : zone.low === 0 ? `0–${hi}W` : `${lo}–${hi}W`;
+  }
+
+  private computePace(zone: Zone, ref: number | undefined): string | null {
+    if (!ref) return null;
+    const slow = zone.low === 0 ? null : ref / (zone.low / 100);
+    const fast = ref / (zone.high / 100);
+    return slow === null ? `< ${this.formatPace(fast)}` : `${this.formatPace(slow)}–${this.formatPace(fast)}`;
+  }
+
+  saveCustomRef(sys: ZoneSystem, user: User): void {
+    const val = this.customRefInputs[sys.id!];
+    if (val == null) return;
+    this.authService.setCustomZoneReference(sys.id!, val).subscribe({
+      next: () => this.authService.refreshUser(),
+      error: () => {},
+    });
   }
 
   getSectionTitle(): string {

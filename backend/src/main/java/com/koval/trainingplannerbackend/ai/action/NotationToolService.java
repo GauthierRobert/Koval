@@ -1,7 +1,7 @@
 package com.koval.trainingplannerbackend.ai.action;
 
-import com.koval.trainingplannerbackend.club.ClubController;
-import com.koval.trainingplannerbackend.club.ClubService;
+import com.koval.trainingplannerbackend.club.ClubSessionService;
+import com.koval.trainingplannerbackend.club.dto.CreateSessionRequest;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.model.BrickTraining;
 import com.koval.trainingplannerbackend.training.model.CyclingTraining;
@@ -34,14 +34,14 @@ public class NotationToolService {
 
     private final ZoneSystemService zoneSystemService;
     private final TrainingService trainingService;
-    private final ClubService clubService;
+    private final ClubSessionService clubSessionService;
 
     public NotationToolService(ZoneSystemService zoneSystemService,
                                TrainingService trainingService,
-                               ClubService clubService) {
+                               ClubSessionService clubSessionService) {
         this.zoneSystemService = zoneSystemService;
         this.trainingService = trainingService;
-        this.clubService = clubService;
+        this.clubSessionService = clubSessionService;
     }
 
     @Tool(description = "Parse compact notation → create Training + optional club session. Call ONCE.")
@@ -96,7 +96,7 @@ public class NotationToolService {
         // 6. Link to existing session or create a new club session
         if (isPresent(sessionId) && resolvedClubId != null) {
             try {
-                clubService.linkTrainingToSession(userId, resolvedClubId, sessionId, saved.getId());
+                clubSessionService.linkTrainingToSession(userId, resolvedClubId, sessionId, saved.getId());
                 return "Created '" + saved.getTitle() + "' and linked to existing session [" + sessionId + "]";
             } catch (Exception e) {
                 return "Created '" + saved.getTitle() + "' [" + saved.getId() + "] (linking failed: " + e.getMessage() + ")";
@@ -110,10 +110,10 @@ public class NotationToolService {
                     scheduledDateTime = LocalDateTime.parse(scheduledAt);
                 } catch (Exception ignored) {}
             }
-            ClubController.CreateSessionRequest sessionReq = new ClubController.CreateSessionRequest(
-                    description, sport, scheduledDateTime, null, null, saved.getId(), null, null, null, null);
+            CreateSessionRequest sessionReq = new CreateSessionRequest(
+                    description, sport, scheduledDateTime, null, null, saved.getId(), null, null, null, null, false, null, null);
             try {
-                var session = clubService.createSession(userId, resolvedClubId, sessionReq);
+                var session = clubSessionService.createSession(userId, resolvedClubId, sessionReq);
                 return "Created '" + saved.getTitle() + "' with club session [" + session.getId() + "]";
             } catch (Exception e) {
                 // Session creation failed (e.g. permission) — training still saved

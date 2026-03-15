@@ -4,6 +4,7 @@ import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.club.*;
+import com.koval.trainingplannerbackend.club.dto.MyClubRoleEntry;
 import com.koval.trainingplannerbackend.goal.RaceGoal;
 import com.koval.trainingplannerbackend.goal.RaceGoalService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
@@ -43,7 +44,8 @@ public class CoachController {
     private final CompletedSessionRepository sessionRepository;
     private final AnalyticsService analyticsService;
     private final RaceGoalService raceGoalService;
-    private final ClubService clubService;
+    private final ClubMembershipService clubMembershipService;
+    private final ClubInviteCodeService clubInviteCodeService;
     private final InviteCodeRepository inviteCodeRepository;
     private final ClubInviteCodeRepository clubInviteCodeRepository;
     private final ClubTrainingSessionRepository clubSessionRepository;
@@ -54,7 +56,9 @@ public class CoachController {
     public CoachController(CoachService coachService, ScheduleService scheduleService,
                            GroupService groupService, CompletedSessionRepository sessionRepository,
                            AnalyticsService analyticsService, RaceGoalService raceGoalService,
-                           ClubService clubService, InviteCodeRepository inviteCodeRepository,
+                           ClubMembershipService clubMembershipService,
+                           ClubInviteCodeService clubInviteCodeService,
+                           InviteCodeRepository inviteCodeRepository,
                            ClubInviteCodeRepository clubInviteCodeRepository,
                            ClubTrainingSessionRepository clubSessionRepository,
                            ClubMembershipRepository clubMembershipRepository,
@@ -66,7 +70,8 @@ public class CoachController {
         this.sessionRepository = sessionRepository;
         this.analyticsService = analyticsService;
         this.raceGoalService = raceGoalService;
-        this.clubService = clubService;
+        this.clubMembershipService = clubMembershipService;
+        this.clubInviteCodeService = clubInviteCodeService;
         this.inviteCodeRepository = inviteCodeRepository;
         this.clubInviteCodeRepository = clubInviteCodeRepository;
         this.clubSessionRepository = clubSessionRepository;
@@ -118,8 +123,8 @@ public class CoachController {
         List<Group> coachGroups = groupService.getGroupsForCoach(coachId);
 
         // Build club membership map: userId → list of club names
-        List<ClubController.MyClubRoleEntry> myRoles = clubService.getMyClubRoles(coachId);
-        List<ClubController.MyClubRoleEntry> coachRoles = myRoles.stream()
+        List<MyClubRoleEntry> myRoles = clubMembershipService.getMyClubRoles(coachId);
+        List<MyClubRoleEntry> coachRoles = myRoles.stream()
                 .filter(r -> r.role() == ClubMemberRole.COACH || r.role() == ClubMemberRole.ADMIN || r.role() == ClubMemberRole.OWNER)
                 .toList();
 
@@ -388,7 +393,7 @@ public class CoachController {
         Optional<ClubInviteCode> clubCode = clubInviteCodeRepository.findByCode(normalizedCode);
         if (clubCode.isPresent()) {
             try {
-                clubService.redeemClubInviteCode(userId, normalizedCode);
+                clubInviteCodeService.redeemClubInviteCode(userId, normalizedCode);
                 return ResponseEntity.ok(new RedeemResponse("CLUB", "Joined club successfully"));
             } catch (IllegalStateException e) {
                 return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

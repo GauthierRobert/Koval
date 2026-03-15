@@ -294,15 +294,10 @@
   background: rgba(255, 157, 0, 0.16);
 }
 
-.copy-feedback {
-  position: absolute;
-  top: -18px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 8px;
-  font-weight: 800;
+.invite-code.copied {
   color: var(--success-color);
-  white-space: nowrap;
+  border-color: var(--success-color);
+  background: rgba(34, 197, 94, 0.1);
 }
 
 /* Task 6: Athlete row hover for navigation */

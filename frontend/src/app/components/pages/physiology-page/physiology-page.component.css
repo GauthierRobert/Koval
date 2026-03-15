@@ -3,6 +3,8 @@
   max-width: var(--page-max-width);
   margin: 0 auto;
   color: var(--text-color);
+  height: 100%;
+  overflow-y: auto;
 }
 
 .page-header h2 {
@@ -268,4 +270,50 @@
   margin-top: 2rem;
   padding-top: 1rem;
   border-top: 1px solid var(--glass-border);
+}
+
+.custom-ref-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.custom-ref-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.custom-ref-input {
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-color);
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  outline: none;
+  width: 120px;
+}
+
+.custom-ref-input:focus {
+  border-color: var(--accent-color);
+}
+
+.custom-ref-save {
+  background: rgba(255, 157, 0, 0.1);
+  border: 1px solid rgba(255, 157, 0, 0.3);
+  color: var(--accent-color);
+  border-radius: var(--radius-sm);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.custom-ref-save:hover {
+  background: rgba(255, 157, 0, 0.2);
 }

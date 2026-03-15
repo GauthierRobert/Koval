@@ -24,6 +24,7 @@ export interface User {
     vo2maxPace?: number;
     groups?: string[];
     clubs?: string[];
+    customZoneReferenceValues?: Record<string, number>;
     ctl?: number;
     atl?: number;
     tsb?: number;
@@ -155,6 +156,10 @@ export class AuthService {
 
     updateUser(user: User): void {
         this.userSubject.next(user);
+    }
+
+    setCustomZoneReference(zoneSystemId: string, value: number): Observable<void> {
+        return this.http.patch<void>(`${this.apiUrl}/me/zone-reference`, { zoneSystemId, value });
     }
 
     updateSettings(settings: Partial<User>): Observable<any> {

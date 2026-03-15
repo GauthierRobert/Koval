@@ -57,14 +57,16 @@
 - ~~When custom reference, an input should appear to insert the name of the reference. The reference can be read only (It mean that the value is only setted by the coach) and athlete that have this zone will have new physiology (based on reference value). If~~ ✅
 - ~~When creating a tag, the input must have tooltip and description. The tag creation must in the same time create the code.  The tag card must display the CODE and remove the GENERATE Invite as the CODE will be generated. TAg and code must be related~~ ✅
 - ~~After Tag refactoring into group, Tag page (that need to be changed to group page) need to work again. In this page, as a coach, I want to see all group, and club group that I created with the invite code. The code need to be generated at group creation.~~ ✅
+- ~~Feed in club must be more compact, with simple line event, without Icon, but you can do color for event type~~ ✅
+- ~~After Creating a tag, the redeem code is the name of the group but it should be a random CODE. The copied box is hidden when clik on code~~ ✅
+- ~~The custom zone into the Physiology page do not show athlete value, even if he has the value of the reference value~~ ✅
+
 
 ## TODO
 
-- After Creating a tag, the redeem code is the name of the group but it should be a random CODE. The copied box is hidden when clik on code
-- The physiology page is not scrollable for the athlete
-- The custom zone into the Physiology page do not show athlete value, even if he has the value of the reference value
-- Custom reference value name are nt saved when clicking on save button. Athlete do not see the new bow to set the new reference value for the zones system of his coach
-- Feed in club must be more compact, with simple line event, without Icon, but you can do color for event type 
+- In Coach dashboard, athlete training scheduled list the last day of the week is dipslayed on the next wek. for example if I want to see monday 1 to sunday 7, I see sunday 31 to Saturday 6 and sunday 7 is display on 8 - 15 week. Fix tht
+- Custom reference value name are not saved in ZONE DASHBOARD when clicking on save button. Athlete do not see the new bow to set the new reference value for the zones system of his coach
+- The athlete must see the Custom zones of his coaches (Coaches from Clubs and coaches from Group). Distinct zone only. If zones are duplicate because I have same coach in clu and group, display only one. Zone is disable (same way as other zone) if reference value is not set (custom or already existing)
 
 ## Nice too have
 - **Retrieve FIT files from Strava** — Implement an endpoint + service to fetch FIT activity files from Strava for the authenticated user. Requires the user to have granted all metric scopes (`activity:read_all`). Parse the FIT data and ingest relevant metrics (power, HR, cadence, TSS) into the session/history store.

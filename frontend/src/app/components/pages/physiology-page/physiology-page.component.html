@@ -128,7 +128,7 @@
     <div *ngFor="let sys of coachZones" class="coach-zone-section">
       <div class="section-header">
         <span class="section-title">{{ sys.name }}</span>
-        <span class="ref-badge">{{ sys.referenceType }}</span>
+        <span class="ref-badge">{{ sys.referenceName || sys.referenceType }}</span>
       </div>
 
       <!-- Zone bar -->
@@ -150,7 +150,18 @@
           <span class="zone-label">{{ z.label }}</span>
           <span class="zone-name">{{ z.description }}</span>
           <span class="zone-pct">{{ z.low }}–{{ z.high }}%</span>
+          <span class="zone-actual" *ngIf="getActualRangeForSystem(z, user, sys) as actual">{{ actual }}</span>
         </div>
+      </div>
+
+      <!-- Custom reference input for CUSTOM type -->
+      <div class="custom-ref-row" *ngIf="sys.referenceType === 'CUSTOM'">
+        <label class="custom-ref-label">{{ sys.referenceName || 'Custom reference' }} value</label>
+        <input type="number" class="custom-ref-input"
+          [value]="user.customZoneReferenceValues?.[sys.id!] ?? null"
+          placeholder="Enter your value"
+          (input)="customRefInputs[sys.id!] = +$any($event.target).value" />
+        <button class="custom-ref-save" (click)="saveCustomRef(sys, user)">SAVE</button>
       </div>
     </div>
   </ng-container>
