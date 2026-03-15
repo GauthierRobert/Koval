@@ -36,7 +36,10 @@ class BikeSpeedService {
         double crr = env.aero().crr();
         double windSpeed = env.windSpeed();
 
-        double v = INITIAL_SPEED_GUESS_MS;
+        // On downhill, start from max speed so the aero v^2 term keeps derivative positive.
+        // Starting low (8 m/s) with low CdA causes the gravity term to dominate the derivative,
+        // making it negative and causing Newton to diverge to the 1.0 m/s floor.
+        double v = gradient < -0.01 ? MAX_SPEED_MS : INITIAL_SPEED_GUESS_MS;
         for (int i = 0; i < NEWTON_ITERATIONS; i++) {
             double airSpeed = v + windSpeed;
             double resistancePower = crr * mass * GRAVITY * v

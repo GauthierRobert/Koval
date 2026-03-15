@@ -115,7 +115,9 @@ export class PacingPageComponent implements OnInit {
   }
 
   getGroupedPlan(segments: PacingSegment[]): RacePlanGroup[] {
-    const key = segments.length + ':' + (segments[0]?.startDistance ?? '') + ':' + (segments[segments.length - 1]?.endDistance ?? '') + ':' + this.groupBandW;
+    const first = segments[0];
+    const last = segments[segments.length - 1];
+    const key = segments.length + ':' + (first?.startDistance ?? '') + ':' + (last?.endDistance ?? '') + ':' + this.groupBandW + ':' + (first?.targetPower ?? first?.targetPace ?? '') + ':' + (last?.targetPower ?? last?.targetPace ?? '');
     if (this.groupedPlanCache?.key === key) {
       return this.groupedPlanCache.result;
     }

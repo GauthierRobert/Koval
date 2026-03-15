@@ -395,7 +395,7 @@
               <div class="rp-header">
                 <span class="rp-number">{{ group.index }}</span>
                 <span class="rp-terrain">{{ group.terrainLabel }}</span>
-                <span class="rp-target" *ngIf="group.powerLower != null && !(bikeShowSpeed && activeTab === 'BIKE')">{{ group.powerLower }}–{{ group.powerUpper }}W</span>
+                <span class="rp-target" *ngIf="group.powerLower != null && !(bikeShowSpeed && activeTab === 'BIKE')"><span class="rp-avg-inline" *ngIf="group.targetPower != null">{{ group.targetPower }}W</span> {{ group.powerLower }}–{{ group.powerUpper }}W </span>
                 <span class="rp-target speed" *ngIf="group.meanSpeed && bikeShowSpeed && activeTab === 'BIKE'">{{ group.meanSpeed.toFixed(1) }} km/h</span>
                 <span class="rp-target pace" *ngIf="group.targetPace">{{ group.targetPace }}</span>
               </div>
@@ -427,10 +427,6 @@
                 <div class="rp-stat" *ngIf="group.meanSpeed">
                   <span class="rp-stat-label">Speed</span>
                   <span class="rp-stat-value">{{ group.meanSpeed.toFixed(1) }} km/h</span>
-                </div>
-                <div class="rp-stat" *ngIf="group.targetPower != null">
-                  <span class="rp-stat-label">Avg Power</span>
-                  <span class="rp-stat-value rp-avg-power">{{ group.targetPower }}W</span>
                 </div>
               </div>
 

@@ -913,9 +913,12 @@
   color: rgba(255, 255, 255, 0.75);
 }
 
-.rp-avg-power {
-  color: #fff;
-  font-weight: 700;
+.rp-avg-inline {
+  font-weight: 500;
+  opacity: 0.7;
+  font-size: 12px;
+  margin-right: 24px;
+  color:white;
 }
 
 .positive {

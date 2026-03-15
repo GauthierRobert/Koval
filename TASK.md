@@ -81,7 +81,9 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 - Modify the IA chat example to more reflect the actual TOOL and combination of TOOLS in the app. Make 5 examples
 - Sessions linked to Club group, should only be visible to club group member, unless the condition open to all is activated and respected
 - The set Custom value should belong the the updateSettings api, as well at the set of the value should be displayed in the setting page where athlete set all the other reference. Hide 5k/10/semi/mararthon reference in running, a toggle can be there to show other reference value. Customs must be displayed in any case.  
-- Session reminder in coach dashboard lust be in main dashboard instead (but only for coach) 
+- Session reminder in coach dashboard lust be in main dashboard instead (but only for coach)
+- The leaflet map are empty in Race details were we should see the GPX map of the race
+
 ## Nice too have
 - **Retrieve FIT files from Strava** — Implement an endpoint + service to fetch FIT activity files from Strava for the authenticated user. Requires the user to have granted all metric scopes (`activity:read_all`). Parse the FIT data and ingest relevant metrics (power, HR, cadence, TSS) into the session/history store.
 
