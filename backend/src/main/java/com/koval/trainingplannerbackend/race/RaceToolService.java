@@ -35,20 +35,4 @@ public class RaceToolService {
         Race savedRace = raceService.createRace(userId, race);
         return RaceSummary.from(completionService.completeRaceDetails(savedRace.getId()));
     }
-
-    public record RaceSummary(
-            String id, String title, String sport,
-            String location, String country, String distance,
-            Double swimDistanceM, Double bikeDistanceM, Double runDistanceM,
-            Integer elevationGainM, String website
-    ) {
-        static RaceSummary from(Race r) {
-            return new RaceSummary(
-                    r.getId(), r.getTitle(), r.getSport(),
-                    r.getLocation(), r.getCountry(), r.getDistance(),
-                    r.getSwimDistanceM(), r.getBikeDistanceM(), r.getRunDistanceM(),
-                    r.getElevationGainM(), r.getWebsite()
-            );
-        }
-    }
 }

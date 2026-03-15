@@ -163,28 +163,13 @@ public class AIConfig {
     }
 
     @Bean
-    public ChatClient raceCompletionClient(
-            @Value("${spring.ai.anthropic.api-key}") String apiKey,
-            RestClient.Builder restClientBuilder,
-            WebClient.Builder webClientBuilder) {
-
-        AnthropicApi webSearchApi = AnthropicApi.builder()
-                .apiKey(apiKey)
-                .restClientBuilder(restClientBuilder.requestInterceptor(new WebSearchToolInjector()))
-                .webClientBuilder(webClientBuilder)
-                .anthropicBetaFeatures("web-search-2025-03-05")
-                .build();
-
-        AnthropicChatModel webSearchModel = AnthropicChatModel.builder()
-                .anthropicApi(webSearchApi)
+    public ChatClient raceCompletionClient(AnthropicChatModel chatModel) {
+        return ChatClient.builder(chatModel)
                 .defaultOptions(AnthropicChatOptions.builder()
                         .model(SONNET)
                         .temperature(0.3)
                         .maxTokens(2048)
                         .build())
-                .build();
-
-        return ChatClient.builder(webSearchModel)
                 .defaultSystem(loadPrompt("race-completion"))
                 .build();
     }

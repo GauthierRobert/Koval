@@ -15,40 +15,36 @@ import java.util.List;
 @Component
 public class GpxParser {
 
-    private static final double EARTH_RADIUS_M = 6_371_000.0;
-    private static final double DEFAULT_SEGMENT_LENGTH_M = 100.0;
-    public static final double RUN_SEGMENT_LENGTH_M = 100.0;
+    // Elevation smoothing: Gaussian kernel with this radius (in meters).
+    // ~50m smooths GPS jitter while preserving real terrain features.
+    private static final double SMOOTHING_RADIUS_M = 200.0;
 
     /**
-     * Parse a GPX input stream into a list of course segments (~500m each).
+     * Parse a GPX input stream into point-to-point course segments (one per GPX track point pair).
      */
     public List<CourseSegment> parse(InputStream gpxStream) {
-        List<GpxTrackPoint> trackPoints = parseTrackPoints(gpxStream);
-        if (trackPoints.size() < 2) {
-            throw new IllegalArgumentException("GPX file must contain at least 2 trackpoints");
-        }
-        return buildSegments(trackPoints, DEFAULT_SEGMENT_LENGTH_M);
+        return parseAndSmooth(gpxStream).segments();
     }
 
     /**
-     * Parse a GPX input stream into course segments and downsampled route coordinates for map display.
-     * Uses the default segment length (~500m).
+     * Parse a GPX input stream into point-to-point course segments, plus downsampled route coordinates for map display.
      */
     public GpxParseResult parseWithCoordinates(InputStream gpxStream) {
-        return parseWithCoordinates(gpxStream, DEFAULT_SEGMENT_LENGTH_M);
+        ParsedTrack parsed = parseAndSmooth(gpxStream);
+        List<RouteCoordinate> coordinates = downsampleCoordinates(parsed.points());
+        return new GpxParseResult(parsed.segments(), coordinates);
     }
 
-    /**
-     * Parse a GPX input stream into course segments with a custom segment length, plus downsampled route coordinates.
-     */
-    public GpxParseResult parseWithCoordinates(InputStream gpxStream, double segmentLengthM) {
+    private record ParsedTrack(List<GpxTrackPoint> points, List<CourseSegment> segments) {}
+
+    private ParsedTrack parseAndSmooth(InputStream gpxStream) {
         List<GpxTrackPoint> trackPoints = parseTrackPoints(gpxStream);
         if (trackPoints.size() < 2) {
             throw new IllegalArgumentException("GPX file must contain at least 2 trackpoints");
         }
-        List<CourseSegment> segments = buildSegments(trackPoints, segmentLengthM);
-        List<RouteCoordinate> coordinates = downsampleCoordinates(trackPoints);
-        return new GpxParseResult(segments, coordinates);
+        trackPoints = smoothElevation(trackPoints);
+        List<CourseSegment> segments = buildPointToPointSegments(trackPoints);
+        return new ParsedTrack(trackPoints, segments);
     }
 
     /**
@@ -66,8 +62,8 @@ public class GpxParser {
         }
 
         // Always include the last point
-        GpxTrackPoint last = points.get(points.size() - 1);
-        if (result.isEmpty() || result.get(result.size() - 1).distance() != last.cumulativeDistance()) {
+        GpxTrackPoint last = points.getLast();
+        if (result.isEmpty() || result.getLast().distance() != last.cumulativeDistance()) {
             result.add(new RouteCoordinate(last.lat(), last.lon(), last.elevation(), last.cumulativeDistance()));
         }
 
@@ -105,7 +101,7 @@ public class GpxParser {
 
                 if (i > 0) {
                     GpxTrackPoint prev = points.get(i - 1);
-                    cumulativeDistance += haversineDistance(prev.lat(), prev.lon(), lat, lon);
+                    cumulativeDistance += GeoUtils.haversineDistance(prev.lat(), prev.lon(), lat, lon);
                 }
 
                 points.add(new GpxTrackPoint(lat, lon, elevation, cumulativeDistance));
@@ -119,76 +115,133 @@ public class GpxParser {
         }
     }
 
-    private List<CourseSegment> buildSegments(List<GpxTrackPoint> points, double segmentLengthM) {
-        List<CourseSegment> segments = new ArrayList<>();
-        double totalDistance = points.get(points.size() - 1).cumulativeDistance();
+    /**
+     * Smooth elevation using a distance-based Gaussian weighted average.
+     * Removes GPS elevation noise/spikes while preserving real terrain shape.
+     * Complexity: O(n*k) where k = avg points within 200m radius (~20-40 for typical GPS), effectively linear.
+     */
+    private List<GpxTrackPoint> smoothElevation(List<GpxTrackPoint> points) {
+        int n = points.size();
+        double sigma = SMOOTHING_RADIUS_M / 2.0; // sigma so that ~95% weight is within the radius
+        double[] smoothed = new double[n];
 
-        double segStart = 0.0;
-        int pointIndex = 0;
+        for (int i = 0; i < n; i++) {
+            double dist_i = points.get(i).cumulativeDistance();
+            double weightSum = 0.0;
+            double elevSum = 0.0;
 
-        while (segStart < totalDistance) {
-            double segEnd = Math.min(segStart + segmentLengthM, totalDistance);
-
-            // Find the trackpoints bracketing this segment
-            double elevationGain = 0.0;
-            double elevationLoss = 0.0;
-            double startElevation = interpolateElevation(points, segStart, pointIndex);
-            double endElevation = interpolateElevation(points, segEnd, pointIndex);
-
-            // Walk through points within this segment to accumulate gain/loss
-            while (pointIndex < points.size() - 1 && points.get(pointIndex + 1).cumulativeDistance() <= segEnd) {
-                double elevDiff = points.get(pointIndex + 1).elevation() - points.get(pointIndex).elevation();
-                if (elevDiff > 0) elevationGain += elevDiff;
-                else elevationLoss += Math.abs(elevDiff);
-                pointIndex++;
+            // Scan backward and forward within the radius
+            for (int j = i; j >= 0 && dist_i - points.get(j).cumulativeDistance() <= SMOOTHING_RADIUS_M; j--) {
+                double d = dist_i - points.get(j).cumulativeDistance();
+                double w = Math.exp(-(d * d) / (2.0 * sigma * sigma));
+                weightSum += w;
+                elevSum += w * points.get(j).elevation();
+            }
+            for (int j = i + 1; j < n && points.get(j).cumulativeDistance() - dist_i <= SMOOTHING_RADIUS_M; j++) {
+                double d = points.get(j).cumulativeDistance() - dist_i;
+                double w = Math.exp(-(d * d) / (2.0 * sigma * sigma));
+                weightSum += w;
+                elevSum += w * points.get(j).elevation();
             }
 
-            double length = segEnd - segStart;
-            double elevChange = endElevation - startElevation;
-            double gradient = length > 0 ? (elevChange / length) * 100.0 : 0.0;
+            smoothed[i] = elevSum / weightSum;
+        }
+
+        List<GpxTrackPoint> result = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            GpxTrackPoint pt = points.get(i);
+            result.add(new GpxTrackPoint(pt.lat(), pt.lon(), smoothed[i], pt.cumulativeDistance()));
+        }
+        return result;
+    }
+
+    /**
+     * Build one segment per consecutive pair of GPX track points (no aggregation).
+     */
+    private List<CourseSegment> buildPointToPointSegments(List<GpxTrackPoint> points) {
+        List<CourseSegment> segments = new ArrayList<>();
+
+        for (int i = 1; i < points.size(); i++) {
+            GpxTrackPoint prev = points.get(i - 1);
+            GpxTrackPoint curr = points.get(i);
+            double length = curr.cumulativeDistance() - prev.cumulativeDistance();
+            if (length <= 0) continue;
+
+            double elevChange = curr.elevation() - prev.elevation();
+            double gradient = (elevChange / length) * 100.0;
+            double elevGain = elevChange > 0 ? elevChange : 0.0;
+            double elevLoss = elevChange < 0 ? Math.abs(elevChange) : 0.0;
 
             segments.add(new CourseSegment(
-                    Math.round(segStart * 10.0) / 10.0,
-                    Math.round(segEnd * 10.0) / 10.0,
+                    Math.round(prev.cumulativeDistance() * 10.0) / 10.0,
+                    Math.round(curr.cumulativeDistance() * 10.0) / 10.0,
                     Math.round(gradient * 100.0) / 100.0,
-                    Math.round(elevationGain * 10.0) / 10.0,
-                    Math.round(elevationLoss * 10.0) / 10.0,
-                    Math.round(startElevation * 10.0) / 10.0,
-                    Math.round(endElevation * 10.0) / 10.0
+                    Math.round(elevGain * 10.0) / 10.0,
+                    Math.round(elevLoss * 10.0) / 10.0,
+                    Math.round(prev.elevation() * 10.0) / 10.0,
+                    Math.round(curr.elevation() * 10.0) / 10.0
             ));
-
-            segStart = segEnd;
-            // Reset pointIndex to search from a valid position for next segment
-            if (pointIndex > 0) pointIndex--;
         }
 
         return segments;
     }
 
-    private double interpolateElevation(List<GpxTrackPoint> points, double distance, int startIdx) {
-        for (int i = Math.max(0, startIdx); i < points.size() - 1; i++) {
-            GpxTrackPoint a = points.get(i);
-            GpxTrackPoint b = points.get(i + 1);
-            if (distance >= a.cumulativeDistance() && distance <= b.cumulativeDistance()) {
-                double segLength = b.cumulativeDistance() - a.cumulativeDistance();
-                if (segLength == 0) return a.elevation();
-                double ratio = (distance - a.cumulativeDistance()) / segLength;
-                return a.elevation() + ratio * (b.elevation() - a.elevation());
-            }
+    /**
+     * Resample course segments into fixed-distance segments by interpolating elevation
+     * from the original track points at regular intervals.
+     *
+     * @param segmentLengthM target segment length in meters (e.g. 200 for bike, 50 for run)
+     */
+    public List<CourseSegment> resampleToFixedDistance(List<CourseSegment> segments, double segmentLengthM) {
+        if (segments.isEmpty()) return segments;
+
+        double totalDistance = segments.getLast().endDistance();
+        if (totalDistance <= 0) return segments;
+
+        List<CourseSegment> result = new ArrayList<>();
+        double cursor = segments.getFirst().startDistance();
+
+        while (cursor < totalDistance) {
+            double segEnd = Math.min(cursor + segmentLengthM, totalDistance);
+            double startElev = elevationAt(segments, cursor);
+            double endElev = elevationAt(segments, segEnd);
+            double length = segEnd - cursor;
+
+            double elevChange = endElev - startElev;
+            double gradient = length > 0 ? (elevChange / length) * 100.0 : 0.0;
+            double elevGain = elevChange > 0 ? elevChange : 0.0;
+            double elevLoss = elevChange < 0 ? Math.abs(elevChange) : 0.0;
+
+            result.add(new CourseSegment(
+                    Math.round(cursor * 10.0) / 10.0,
+                    Math.round(segEnd * 10.0) / 10.0,
+                    Math.round(gradient * 100.0) / 100.0,
+                    Math.round(elevGain * 10.0) / 10.0,
+                    Math.round(elevLoss * 10.0) / 10.0,
+                    Math.round(startElev * 10.0) / 10.0,
+                    Math.round(endElev * 10.0) / 10.0
+            ));
+
+            cursor = segEnd;
         }
-        return points.get(points.size() - 1).elevation();
+
+        return result;
     }
 
     /**
-     * Haversine distance between two lat/lon points in meters.
+     * Interpolate elevation at a given distance along the course.
      */
-    private double haversineDistance(double lat1, double lon1, double lat2, double lon2) {
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLon = Math.toRadians(lon2 - lon1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return EARTH_RADIUS_M * c;
+    private double elevationAt(List<CourseSegment> segments, double distance) {
+        for (CourseSegment seg : segments) {
+            if (distance <= seg.endDistance()) {
+                double segLength = seg.endDistance() - seg.startDistance();
+                if (segLength <= 0) return seg.startElevation();
+                double fraction = (distance - seg.startDistance()) / segLength;
+                fraction = Math.max(0, Math.min(1, fraction));
+                return seg.startElevation() + fraction * (seg.endElevation() - seg.startElevation());
+            }
+        }
+        return segments.getLast().endElevation();
     }
+
 }

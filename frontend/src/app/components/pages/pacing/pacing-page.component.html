@@ -292,17 +292,37 @@
               <span class="stat-value">{{ formatTime(bs.estimatedTotalTime) }}</span>
               <span class="stat-label">Est. Time</span>
             </div>
-            <div class="stat" *ngIf="bs.averagePower">
+            <div class="stat" *ngIf="!bikeShowSpeed && bs.averagePower">
               <span class="stat-value">{{ bs.averagePower }}W</span>
               <span class="stat-label">Avg Power</span>
+            </div>
+            <div class="stat" *ngIf="bikeShowSpeed && bs.estimatedTotalTime > 0">
+              <span class="stat-value">{{ (bs.totalDistance / bs.estimatedTotalTime * 3.6).toFixed(1) }} km/h</span>
+              <span class="stat-label">Avg Speed</span>
             </div>
             <div class="stat">
               <span class="stat-value">{{ bs.totalCalories }}</span>
               <span class="stat-label">Calories</span>
             </div>
           </div>
-          <div class="nutrition-plan" *ngIf="bs.nutritionPlan">{{ bs.nutritionPlan }}</div>
-          <div class="target-basis" *ngIf="bs.targetBasis">{{ bs.targetBasis }}</div>
+          <div class="summary-footer">
+            <div class="summary-texts">
+              <div class="nutrition-plan" *ngIf="bs.nutritionPlan">{{ bs.nutritionPlan }}</div>
+              <div class="target-basis" *ngIf="bs.targetBasis">{{ bs.targetBasis }}</div>
+            </div>
+            <button class="metric-toggle" *ngIf="!bikeShowSpeed" (click)="showGroupMean = !showGroupMean"
+              [title]="showGroupMean ? 'Show per-segment power' : 'Show group mean power'">
+              <span class="metric-toggle-label" [class.active]="!showGroupMean">Seg</span>
+              <span class="metric-toggle-divider">/</span>
+              <span class="metric-toggle-label" [class.active]="showGroupMean">Group</span>
+            </button>
+            <button class="metric-toggle" (click)="bikeShowSpeed = !bikeShowSpeed"
+              [title]="bikeShowSpeed ? 'Switch to Power' : 'Switch to Speed'">
+              <span class="metric-toggle-label" [class.active]="!bikeShowSpeed">W</span>
+              <span class="metric-toggle-divider">/</span>
+              <span class="metric-toggle-label" [class.active]="bikeShowSpeed">km/h</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -341,6 +361,7 @@
           [routeCoordinates]="getActiveRouteCoordinates(plan)!"
           [segments]="getActiveSegments(plan)"
           [highlightedRange]="highlightedRange$ | async"
+          [showSpeed]="bikeShowSpeed && activeTab === 'BIKE'"
           (segmentHovered)="onSegmentHover($event)">
         </app-route-map>
       </div>
@@ -348,10 +369,18 @@
         <app-elevation-chart
           [segments]="getActiveSegments(plan)"
           [highlightedRange]="highlightedRange$ | async"
+          [showSpeed]="bikeShowSpeed && activeTab === 'BIKE'"
+          [groupMeanPowers]="showGroupMean && activeTab === 'BIKE' ? getGroupMeanPowers(getActiveSegments(plan)) : null"
           (segmentHovered)="onSegmentHover($event)">
         </app-elevation-chart>
         <div class="race-plan glass">
-          <h3 class="race-plan-title">Race Plan</h3>
+          <div class="race-plan-header">
+            <h3 class="race-plan-title">Race Plan</h3>
+            <div class="race-plan-controls" *ngIf="activeTab === 'BIKE'">
+              <label class="band-slider-label">&plusmn; {{ groupBandW }}W</label>
+              <input type="range" class="band-slider" [(ngModel)]="groupBandW" [attr.min]="1" [attr.max]="20" [attr.step]="1" />
+            </div>
+          </div>
           <div class="race-plan-list">
             <div *ngFor="let group of getGroupedPlan(getActiveSegments(plan)); let i = index"
                  class="race-plan-item"
@@ -365,7 +394,8 @@
               <div class="rp-header">
                 <span class="rp-number">{{ group.index }}</span>
                 <span class="rp-terrain">{{ group.terrainLabel }}</span>
-                <span class="rp-target" *ngIf="group.targetPower">{{ group.targetPower }}W</span>
+                <span class="rp-target" *ngIf="group.powerLower != null && !(bikeShowSpeed && activeTab === 'BIKE')">{{ group.powerLower }}–{{ group.powerUpper }}W</span>
+                <span class="rp-target speed" *ngIf="group.meanSpeed && bikeShowSpeed && activeTab === 'BIKE'">{{ group.meanSpeed.toFixed(1) }} km/h</span>
                 <span class="rp-target pace" *ngIf="group.targetPace">{{ group.targetPace }}</span>
               </div>
 
@@ -396,6 +426,10 @@
                 <div class="rp-stat" *ngIf="group.meanSpeed">
                   <span class="rp-stat-label">Speed</span>
                   <span class="rp-stat-value">{{ group.meanSpeed.toFixed(1) }} km/h</span>
+                </div>
+                <div class="rp-stat" *ngIf="group.targetPower != null">
+                  <span class="rp-stat-label">Avg Power</span>
+                  <span class="rp-stat-value rp-avg-power">{{ group.targetPower }}W</span>
                 </div>
               </div>
 

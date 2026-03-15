@@ -8,7 +8,8 @@ public record AthleteProfile(
         Integer weightKg,
         Integer thresholdPaceSec,
         Integer swimCssSec,
-        Double fatigueResistance, // TODO: Not yet used in calculations — UI hidden
+        /** Fatigue resistance factor (0.0–1.0). Used in RunPacingService to scale fatigue degradation. Default: 0.5. */
+        Double fatigueResistance,
         String nutritionPreference,
         Double temperature,
         Double windSpeed,

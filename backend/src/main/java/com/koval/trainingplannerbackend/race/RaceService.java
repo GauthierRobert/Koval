@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+
 @Service
 public class RaceService {
 
@@ -58,20 +59,24 @@ public class RaceService {
 
     public Race updateRace(String id, Race updates) {
         Race existing = getRaceById(id);
-        if (updates.getTitle() != null) existing.setTitle(updates.getTitle());
-        if (updates.getSport() != null) existing.setSport(updates.getSport());
-        if (updates.getLocation() != null) existing.setLocation(updates.getLocation());
-        if (updates.getCountry() != null) existing.setCountry(updates.getCountry());
-        if (updates.getRegion() != null) existing.setRegion(updates.getRegion());
-        if (updates.getDistance() != null) existing.setDistance(updates.getDistance());
-        if (updates.getSwimDistanceM() != null) existing.setSwimDistanceM(updates.getSwimDistanceM());
-        if (updates.getBikeDistanceM() != null) existing.setBikeDistanceM(updates.getBikeDistanceM());
-        if (updates.getRunDistanceM() != null) existing.setRunDistanceM(updates.getRunDistanceM());
-        if (updates.getElevationGainM() != null) existing.setElevationGainM(updates.getElevationGainM());
-        if (updates.getDescription() != null) existing.setDescription(updates.getDescription());
-        if (updates.getWebsite() != null) existing.setWebsite(updates.getWebsite());
-        if (updates.getTypicalMonth() != null) existing.setTypicalMonth(updates.getTypicalMonth());
+        mergeIfPresent(updates.getTitle(), existing::setTitle);
+        mergeIfPresent(updates.getSport(), existing::setSport);
+        mergeIfPresent(updates.getLocation(), existing::setLocation);
+        mergeIfPresent(updates.getCountry(), existing::setCountry);
+        mergeIfPresent(updates.getRegion(), existing::setRegion);
+        mergeIfPresent(updates.getDistance(), existing::setDistance);
+        mergeIfPresent(updates.getSwimDistanceM(), existing::setSwimDistanceM);
+        mergeIfPresent(updates.getBikeDistanceM(), existing::setBikeDistanceM);
+        mergeIfPresent(updates.getRunDistanceM(), existing::setRunDistanceM);
+        mergeIfPresent(updates.getElevationGainM(), existing::setElevationGainM);
+        mergeIfPresent(updates.getDescription(), existing::setDescription);
+        mergeIfPresent(updates.getWebsite(), existing::setWebsite);
+        mergeIfPresent(updates.getTypicalMonth(), existing::setTypicalMonth);
         return repository.save(existing);
+    }
+
+    private <T> void mergeIfPresent(T value, java.util.function.Consumer<T> setter) {
+        if (value != null) setter.accept(value);
     }
 
     public void uploadGpx(String raceId, String discipline, byte[] gpxBytes) {
@@ -112,15 +117,13 @@ public class RaceService {
 
     public List<RouteCoordinate> getRouteCoordinates(String raceId, String discipline) {
         byte[] gpxBytes = getGpxBytes(raceId, discipline);
-        double segmentLength = "run".equalsIgnoreCase(discipline) ? GpxParser.RUN_SEGMENT_LENGTH_M : 500.0;
-        GpxParseResult result = gpxParser.parseWithCoordinates(new ByteArrayInputStream(gpxBytes), segmentLength);
+        GpxParseResult result = gpxParser.parseWithCoordinates(new ByteArrayInputStream(gpxBytes));
         return result.routeCoordinates();
     }
 
     public GpxParseResult parseGpx(String raceId, String discipline) {
         byte[] gpxBytes = getGpxBytes(raceId, discipline);
-        double segmentLength = "run".equalsIgnoreCase(discipline) ? GpxParser.RUN_SEGMENT_LENGTH_M : 500.0;
-        return gpxParser.parseWithCoordinates(new ByteArrayInputStream(gpxBytes), segmentLength);
+        return gpxParser.parseWithCoordinates(new ByteArrayInputStream(gpxBytes));
     }
 
     public List<RaceController.SportFacet> getSportFacets() {

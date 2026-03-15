@@ -67,6 +67,8 @@
 - In Coach dashboard, athlete training scheduled list the last day of the week is dipslayed on the next wek. for example if I want to see monday 1 to sunday 7, I see sunday 31 to Saturday 6 and sunday 7 is display on 8 - 15 week. Fix tht
 - Custom reference value name are not saved in ZONE DASHBOARD when clicking on save button. Athlete do not see the new bow to set the new reference value for the zones system of his coach
 - The athlete must see the Custom zones of his coaches (Coaches from Clubs and coaches from Group). Distinct zone only. If zones are duplicate because I have same coach in clu and group, display only one. Zone is disable (same way as other zone) if reference value is not set (custom or already existing)
+- Modify the IA chat example to more reflect the actual TOOL and combination of TOOLS in the app. Make 5 examples
+- In training library, tthe CLub are well displayed, the groups are duplicated (for owner). And athlete cannot see trainings of there groups o Clubs if they are not the owner
 
 ## Nice too have
 - **Retrieve FIT files from Strava** — Implement an endpoint + service to fetch FIT activity files from Strava for the authenticated user. Requires the user to have granted all metric scopes (`activity:read_all`). Parse the FIT data and ingest relevant metrics (power, HR, cadence, TSS) into the session/history store.

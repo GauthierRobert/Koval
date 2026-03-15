@@ -609,6 +609,60 @@
   text-overflow: ellipsis;
 }
 
+.summary-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.summary-texts {
+  min-width: 0;
+  flex: 1;
+}
+
+.summary-footer .nutrition-plan,
+.summary-footer .target-basis {
+  margin-top: 4px;
+}
+
+.metric-toggle {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.metric-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.metric-toggle-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.35);
+  transition: color 0.15s;
+}
+
+.metric-toggle-label.active {
+  color: var(--primary-color, #ff9d00);
+}
+
+.metric-toggle-divider {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.rp-target.speed {
+  color: #34d399;
+}
+
 /* Tab Row */
 .tab-row {
   display: flex;
@@ -702,13 +756,42 @@
   padding: 16px;
 }
 
+.race-plan-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
 .race-plan-title {
   font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: rgba(255, 255, 255, 0.8);
-  margin: 0 0 12px;
+  margin: 0;
+}
+
+.race-plan-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.band-slider-label {
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--primary-color, #ff9d00);
+  white-space: nowrap;
+  min-width: 42px;
+  text-align: right;
+}
+
+.band-slider {
+  width: 80px;
+  height: 4px;
+  accent-color: var(--primary-color, #ff9d00);
+  cursor: pointer;
 }
 
 .race-plan-list {
@@ -821,6 +904,11 @@
 .rp-stat-value {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.75);
+}
+
+.rp-avg-power {
+  color: #fff;
+  font-weight: 700;
 }
 
 .positive {

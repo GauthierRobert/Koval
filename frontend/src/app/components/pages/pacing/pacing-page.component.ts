@@ -21,6 +21,8 @@ interface RacePlanGroup {
   startDistance: number;
   endDistance: number;
   targetPower?: number;
+  powerLower?: number;
+  powerUpper?: number;
   targetPace?: string;
   meanGradient: number;
   elevationChange: number;
@@ -90,6 +92,9 @@ export class PacingPageComponent implements OnInit {
   targetPacePct: number | null = null;
 
   activeTab = 'BIKE';
+  bikeShowSpeed = false;
+  showGroupMean = false;
+  groupBandW = 5;
   highlightedGroup: number | null = null;
   showSettingsModal = false;
   private errorSubject = new BehaviorSubject<string | null>(null);
@@ -110,7 +115,7 @@ export class PacingPageComponent implements OnInit {
   }
 
   getGroupedPlan(segments: PacingSegment[]): RacePlanGroup[] {
-    const key = segments.length + ':' + (segments[0]?.startDistance ?? '') + ':' + (segments[segments.length - 1]?.endDistance ?? '');
+    const key = segments.length + ':' + (segments[0]?.startDistance ?? '') + ':' + (segments[segments.length - 1]?.endDistance ?? '') + ':' + this.groupBandW;
     if (this.groupedPlanCache?.key === key) {
       return this.groupedPlanCache.result;
     }
@@ -119,14 +124,34 @@ export class PacingPageComponent implements OnInit {
     if (!segments.length) return groups;
 
     let groupStart = 0;
+    // Track time-weighted mean power for the current group (bike 10W band merging)
+    const firstSeg = segments[0];
+    let groupWeightedPower = (firstSeg.targetPower ?? 0) * firstSeg.estimatedSegmentTime;
+    let groupTotalTime = firstSeg.estimatedSegmentTime;
 
     for (let i = 1; i <= segments.length; i++) {
       const prev = segments[i - 1];
       const curr = i < segments.length ? segments[i] : null;
 
-      const changed = !curr ||
-        (prev.targetPower != null && curr.targetPower !== prev.targetPower) ||
-        (prev.targetPace != null && curr.targetPace !== prev.targetPace);
+      let changed: boolean;
+      if (!curr) {
+        changed = true;
+      } else if (prev.targetPace != null) {
+        // Run segments: exact pace match
+        changed = curr.targetPace !== prev.targetPace;
+      } else if (prev.targetPower != null && curr.targetPower != null) {
+        // Bike segments: check 10W band (mean ± 5W)
+        const currentMean = groupTotalTime > 0 ? groupWeightedPower / groupTotalTime : prev.targetPower;
+        changed = Math.abs(curr.targetPower - currentMean) > this.groupBandW;
+      } else {
+        changed = true;
+      }
+
+      if (!changed) {
+        // Accumulate time-weighted power for the growing group
+        groupWeightedPower += (curr!.targetPower ?? 0) * curr!.estimatedSegmentTime;
+        groupTotalTime += curr!.estimatedSegmentTime;
+      }
 
       if (changed) {
         const groupSegments = segments.slice(groupStart, i);
@@ -156,13 +181,20 @@ export class PacingPageComponent implements OnInit {
         const elevationChange = Math.round(last.elevation - first.elevation);
         const meanSpeed = totalTime > 0 ? (totalDist / 1000) / (totalTime / 3600) : undefined;
 
+        // Compute time-weighted mean power for the finalized group
+        const groupMeanPower = first.targetPower != null && groupTotalTime > 0
+          ? Math.round(groupWeightedPower / groupTotalTime)
+          : first.targetPower;
+
         groups.push({
           index: groups.length + 1,
           segmentStart: groupStart,
           segmentEnd: i - 1,
           startDistance: first.startDistance,
           endDistance: last.endDistance,
-          targetPower: first.targetPower,
+          targetPower: groupMeanPower,
+          powerLower: groupMeanPower != null ? groupMeanPower - this.groupBandW : undefined,
+          powerUpper: groupMeanPower != null ? groupMeanPower + this.groupBandW : undefined,
           targetPace: first.targetPace,
           meanGradient,
           elevationChange,
@@ -174,7 +206,15 @@ export class PacingPageComponent implements OnInit {
           terrainLabel: this.getTerrainLabel(meanGradient),
         });
 
+        // Reset tracking for next group
         groupStart = i;
+        if (curr) {
+          groupWeightedPower = curr.targetPower != null ? curr.targetPower * curr.estimatedSegmentTime : 0;
+          groupTotalTime = curr.estimatedSegmentTime;
+        } else {
+          groupWeightedPower = 0;
+          groupTotalTime = 0;
+        }
       }
     }
 
@@ -506,6 +546,18 @@ export class PacingPageComponent implements OnInit {
     this.runGpxFileName = '';
     this.bikeLoops = 1;
     this.runLoops = 1;
+  }
+
+  getGroupMeanPowers(segments: PacingSegment[]): number[] | null {
+    if (!this.showGroupMean) return null;
+    const groups = this.getGroupedPlan(segments);
+    const result = new Array<number>(segments.length);
+    for (const group of groups) {
+      for (let i = group.segmentStart; i <= group.segmentEnd; i++) {
+        result[i] = group.targetPower ?? 0;
+      }
+    }
+    return result;
   }
 
   private setDefaultTab(plan: PacingPlanResponse): void {

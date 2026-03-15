@@ -22,30 +22,55 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.IntStream;
 
 @RestController
 @RequestMapping("/api/pacing")
 public class PacingController {
 
+    private static final double BIKE_SEGMENT_LENGTH_M = 200.0;
+    private static final double RUN_SEGMENT_LENGTH_M = 50.0;
+
+    enum Discipline {
+        SWIM(false, false, true),
+        BIKE(true, false, false),
+        RUN(false, true, false),
+        TRIATHLON(true, true, true);
+
+        final boolean needsBike, needsRun, needsSwim;
+
+        Discipline(boolean needsBike, boolean needsRun, boolean needsSwim) {
+            this.needsBike = needsBike;
+            this.needsRun = needsRun;
+            this.needsSwim = needsSwim;
+        }
+
+        static Discipline parse(String s) {
+            try {
+                return valueOf(s.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Discipline must be SWIM, BIKE, RUN, or TRIATHLON");
+            }
+        }
+    }
+
     private final GpxParser gpxParser;
     private final PacingService pacingService;
     private final UserService userService;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private final PacingPlanRepository pacingPlanRepository;
     private final SimulationRequestRepository simulationRequestRepository;
     private final RaceService raceService;
 
     public PacingController(GpxParser gpxParser, PacingService pacingService,
                             UserService userService,
-                            PacingPlanRepository pacingPlanRepository,
                             SimulationRequestRepository simulationRequestRepository,
                             RaceService raceService) {
         this.gpxParser = gpxParser;
         this.pacingService = pacingService;
         this.userService = userService;
-        this.pacingPlanRepository = pacingPlanRepository;
         this.simulationRequestRepository = simulationRequestRepository;
         this.raceService = raceService;
     }
@@ -68,21 +93,13 @@ public class PacingController {
             @RequestParam(value = "bikeLoops", defaultValue = "1") int bikeLoops,
             @RequestParam(value = "runLoops", defaultValue = "1") int runLoops) throws Exception {
 
-        if (!List.of("SWIM", "BIKE", "RUN", "TRIATHLON").contains(discipline.toUpperCase())) {
-            throw new IllegalArgumentException("Discipline must be SWIM, BIKE, RUN, or TRIATHLON");
-        }
-
-        String disc = discipline.toUpperCase();
-        boolean needsBike = "BIKE".equals(disc) || "TRIATHLON".equals(disc);
-        boolean needsRun = "RUN".equals(disc) || "TRIATHLON".equals(disc);
-        boolean needsSwim = "SWIM".equals(disc) || "TRIATHLON".equals(disc);
+        Discipline disc = Discipline.parse(discipline);
 
         // Resolve GPX files per discipline
         GpxParseResult bikeResult = null;
         GpxParseResult runResult = null;
 
-        if ("TRIATHLON".equals(disc)) {
-            // Triathlon requires separate bike + run GPX
+        if (disc == Discipline.TRIATHLON) {
             if (bikeGpxFile == null || bikeGpxFile.isEmpty()) {
                 throw new IllegalArgumentException("Bike GPX file is required for triathlon pacing");
             }
@@ -92,60 +109,33 @@ public class PacingController {
             validateGpxFile(bikeGpxFile);
             validateGpxFile(runGpxFile);
             bikeResult = applyLoops(gpxParser.parseWithCoordinates(bikeGpxFile.getInputStream()), bikeLoops);
-            runResult = applyLoops(gpxParser.parseWithCoordinates(runGpxFile.getInputStream(), GpxParser.RUN_SEGMENT_LENGTH_M), runLoops);
-        } else if (needsBike) {
+            runResult = applyLoops(gpxParser.parseWithCoordinates(runGpxFile.getInputStream()), runLoops);
+        } else if (disc.needsBike) {
             MultipartFile file = bikeGpxFile != null && !bikeGpxFile.isEmpty() ? bikeGpxFile : gpxFile;
             if (file == null || file.isEmpty()) {
                 throw new IllegalArgumentException("GPX file is required for bike pacing");
             }
             validateGpxFile(file);
             bikeResult = applyLoops(gpxParser.parseWithCoordinates(file.getInputStream()), bikeLoops);
-        } else if (needsRun) {
+        } else if (disc.needsRun) {
             MultipartFile file = runGpxFile != null && !runGpxFile.isEmpty() ? runGpxFile : gpxFile;
             if (file == null || file.isEmpty()) {
                 throw new IllegalArgumentException("GPX file is required for run pacing");
             }
             validateGpxFile(file);
-            runResult = applyLoops(gpxParser.parseWithCoordinates(file.getInputStream(), GpxParser.RUN_SEGMENT_LENGTH_M), runLoops);
+            runResult = applyLoops(gpxParser.parseWithCoordinates(file.getInputStream()), runLoops);
         }
-        // SWIM: no GPX needed
 
-        // Parse athlete profile from JSON
+        bikeResult = resampleIfPresent(bikeResult, BIKE_SEGMENT_LENGTH_M);
+        runResult = resampleIfPresent(runResult, RUN_SEGMENT_LENGTH_M);
+
         AthleteProfile profile = OBJECT_MAPPER.readValue(profileJson, AthleteProfile.class);
+        profile = mergeProfileAndValidate(profile, disc);
 
-        // Merge with user defaults
-        String userId = SecurityUtils.getCurrentUserId();
-        User user = userService.getUserById(userId);
-        profile = profile.withDefaults(
-                user.getFtp(), user.getWeightKg(),
-                user.getFunctionalThresholdPace(), user.getCriticalSwimSpeed()
-        );
-
-        // Validate required fields after merging defaults
-        if (needsBike) {
-            if (profile.ftp() == null || profile.ftp() <= 0) {
-                throw new IllegalArgumentException("FTP is required for bike pacing");
-            }
-            if (profile.weightKg() == null || profile.weightKg() <= 0) {
-                throw new IllegalArgumentException("Weight is required for bike pacing");
-            }
-        }
-        if (needsRun) {
-            if (profile.thresholdPaceSec() == null || profile.thresholdPaceSec() <= 0) {
-                throw new IllegalArgumentException("Threshold pace is required for run pacing");
-            }
-        }
-        if (needsSwim) {
-            if (profile.swimCssSec() == null || profile.swimCssSec() <= 0) {
-                throw new IllegalArgumentException("Swim CSS is required for swim pacing");
-            }
-        }
-
-        // Generate plan with separate bike/run data
         PacingPlanResponse plan = pacingService.generatePlan(
                 bikeResult != null ? bikeResult.segments() : null,
                 runResult != null ? runResult.segments() : null,
-                profile, disc,
+                profile, disc.name(),
                 bikeResult != null ? bikeResult.routeCoordinates() : null,
                 runResult != null ? runResult.routeCoordinates() : null);
 
@@ -163,6 +153,35 @@ public class PacingController {
         }
     }
 
+    private GpxParseResult resampleIfPresent(GpxParseResult result, double segmentLength) {
+        if (result == null) return null;
+        return new GpxParseResult(
+                gpxParser.resampleToFixedDistance(result.segments(), segmentLength),
+                result.routeCoordinates());
+    }
+
+    private AthleteProfile mergeProfileAndValidate(AthleteProfile profile, Discipline disc) {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userService.getUserById(userId);
+        profile = profile.withDefaults(
+                user.getFtp(), user.getWeightKg(),
+                user.getFunctionalThresholdPace(), user.getCriticalSwimSpeed()
+        );
+
+        if (disc.needsBike) {
+            if (profile.ftp() == null || profile.ftp() <= 0)
+                throw new IllegalArgumentException("FTP is required for bike pacing");
+            if (profile.weightKg() == null || profile.weightKg() <= 0)
+                throw new IllegalArgumentException("Weight is required for bike pacing");
+        }
+        if (disc.needsRun && (profile.thresholdPaceSec() == null || profile.thresholdPaceSec() <= 0))
+            throw new IllegalArgumentException("Threshold pace is required for run pacing");
+        if (disc.needsSwim && (profile.swimCssSec() == null || profile.swimCssSec() <= 0))
+            throw new IllegalArgumentException("Swim CSS is required for swim pacing");
+
+        return profile;
+    }
+
     private GpxParseResult applyLoops(GpxParseResult result, int loops) {
         if (loops <= 1) return result;
 
@@ -170,24 +189,27 @@ public class PacingController {
         var baseCoords = result.routeCoordinates();
         if (baseSegments.isEmpty()) return result;
 
-        double baseDistance = baseSegments.get(baseSegments.size() - 1).endDistance();
+        double baseDistance = baseSegments.getLast().endDistance();
 
-        var loopedSegments = new java.util.ArrayList<>(baseSegments);
-        var loopedCoords = new java.util.ArrayList<>(baseCoords);
+        List<com.koval.trainingplannerbackend.pacing.gpx.CourseSegment> loopedSegments = IntStream.range(0, loops)
+                .mapToObj(lap -> {
+                    double offset = lap * baseDistance;
+                    return baseSegments.stream().map(seg -> new com.koval.trainingplannerbackend.pacing.gpx.CourseSegment(
+                            seg.startDistance() + offset, seg.endDistance() + offset,
+                            seg.averageGradient(), seg.elevationGain(), seg.elevationLoss(),
+                            seg.startElevation(), seg.endElevation()));
+                })
+                .flatMap(s -> s)
+                .toList();
 
-        for (int lap = 1; lap < loops; lap++) {
-            double offset = lap * baseDistance;
-            for (var seg : baseSegments) {
-                loopedSegments.add(new com.koval.trainingplannerbackend.pacing.gpx.CourseSegment(
-                        seg.startDistance() + offset, seg.endDistance() + offset,
-                        seg.averageGradient(), seg.elevationGain(), seg.elevationLoss(),
-                        seg.startElevation(), seg.endElevation()));
-            }
-            for (var coord : baseCoords) {
-                loopedCoords.add(new com.koval.trainingplannerbackend.pacing.dto.RouteCoordinate(
-                        coord.lat(), coord.lon(), coord.elevation(), coord.distance() + offset));
-            }
-        }
+        List<com.koval.trainingplannerbackend.pacing.dto.RouteCoordinate> loopedCoords = IntStream.range(0, loops)
+                .mapToObj(lap -> {
+                    double offset = lap * baseDistance;
+                    return baseCoords.stream().map(coord -> new com.koval.trainingplannerbackend.pacing.dto.RouteCoordinate(
+                            coord.lat(), coord.lon(), coord.elevation(), coord.distance() + offset));
+                })
+                .flatMap(s -> s)
+                .toList();
 
         return new GpxParseResult(loopedSegments, loopedCoords);
     }
@@ -207,40 +229,6 @@ public class PacingController {
         );
 
         return ResponseEntity.ok(defaults);
-    }
-
-    /**
-     * Save a generated pacing plan for later reference.
-     */
-    @PostMapping("/save")
-    public ResponseEntity<PacingPlan> savePlan(@RequestBody PacingPlan plan) {
-        String userId = SecurityUtils.getCurrentUserId();
-        plan.setUserId(userId);
-        return ResponseEntity.ok(pacingPlanRepository.save(plan));
-    }
-
-    /**
-     * List saved pacing plans for the current user.
-     */
-    @GetMapping("/plans")
-    public ResponseEntity<List<PacingPlan>> listPlans() {
-        String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(pacingPlanRepository.findByUserId(userId));
-    }
-
-    /**
-     * Delete a saved pacing plan.
-     */
-    @DeleteMapping("/plans/{id}")
-    public ResponseEntity<Void> deletePlan(@PathVariable String id) {
-        String userId = SecurityUtils.getCurrentUserId();
-        PacingPlan plan = pacingPlanRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Pacing plan not found"));
-        if (!userId.equals(plan.getUserId())) {
-            throw new org.springframework.security.access.AccessDeniedException("Not your pacing plan");
-        }
-        pacingPlanRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
     }
 
     // ── Simulation Requests ─────────────────────────────────────────────
@@ -279,50 +267,28 @@ public class PacingController {
 
     @PostMapping("/generate-from-race")
     public ResponseEntity<PacingPlanResponse> generateFromRace(@RequestBody GenerateFromRaceRequest request) {
-        String disc = request.discipline().toUpperCase();
-        if (!List.of("SWIM", "BIKE", "RUN", "TRIATHLON").contains(disc)) {
-            throw new IllegalArgumentException("Discipline must be SWIM, BIKE, RUN, or TRIATHLON");
-        }
-
-        boolean needsBike = "BIKE".equals(disc) || "TRIATHLON".equals(disc);
-        boolean needsRun = "RUN".equals(disc) || "TRIATHLON".equals(disc);
-        boolean needsSwim = "SWIM".equals(disc) || "TRIATHLON".equals(disc);
-
+        Discipline disc = Discipline.parse(request.discipline());
         Race race = raceService.getRaceById(request.raceId());
 
         GpxParseResult bikeResult = null;
         GpxParseResult runResult = null;
 
-        if (needsBike && race.getBikeGpx() != null) {
+        if (disc.needsBike && race.getBikeGpx() != null) {
             bikeResult = applyLoops(raceService.parseGpx(request.raceId(), "bike"), request.bikeLoops());
         }
-        if (needsRun && race.getRunGpx() != null) {
+        if (disc.needsRun && race.getRunGpx() != null) {
             runResult = applyLoops(raceService.parseGpx(request.raceId(), "run"), request.runLoops());
         }
 
-        AthleteProfile profile = request.profile();
-        String userId = SecurityUtils.getCurrentUserId();
-        User user = userService.getUserById(userId);
-        profile = profile.withDefaults(
-                user.getFtp(), user.getWeightKg(),
-                user.getFunctionalThresholdPace(), user.getCriticalSwimSpeed()
-        );
+        bikeResult = resampleIfPresent(bikeResult, BIKE_SEGMENT_LENGTH_M);
+        runResult = resampleIfPresent(runResult, RUN_SEGMENT_LENGTH_M);
 
-        if (needsBike) {
-            if (profile.ftp() == null || profile.ftp() <= 0)
-                throw new IllegalArgumentException("FTP is required for bike pacing");
-            if (profile.weightKg() == null || profile.weightKg() <= 0)
-                throw new IllegalArgumentException("Weight is required for bike pacing");
-        }
-        if (needsRun && profile.thresholdPaceSec() == null)
-            throw new IllegalArgumentException("Threshold pace is required for run pacing");
-        if (needsSwim && profile.swimCssSec() == null)
-            throw new IllegalArgumentException("Swim CSS is required for swim pacing");
+        AthleteProfile profile = mergeProfileAndValidate(request.profile(), disc);
 
         PacingPlanResponse plan = pacingService.generatePlan(
                 bikeResult != null ? bikeResult.segments() : null,
                 runResult != null ? runResult.segments() : null,
-                profile, disc,
+                profile, disc.name(),
                 bikeResult != null ? bikeResult.routeCoordinates() : null,
                 runResult != null ? runResult.routeCoordinates() : null);
 

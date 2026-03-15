@@ -107,6 +107,8 @@ import {PacingSegment, SegmentRange} from '../../../../services/pacing.service';
 export class ElevationChartComponent implements OnChanges, AfterViewInit {
   @Input() segments: PacingSegment[] = [];
   @Input() highlightedRange: SegmentRange | null = null;
+  @Input() showSpeed = false;
+  @Input() groupMeanPowers: number[] | null = null;
   @Output() segmentHovered = new EventEmitter<number | null>();
   @ViewChild('chartCanvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
 
@@ -212,29 +214,60 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
     const hasPower = this.segments.some((s) => s.targetPower != null);
     const hasPace = this.segments.some((s) => s.targetPace != null);
 
-    if (hasPower) {
-      const powers = this.segments.filter((s) => s.targetPower != null).map((s) => s.targetPower!);
-      const minP = Math.min(...powers) * 0.9;
-      const maxP = Math.max(...powers) * 1.1;
+    const hasSpeed = this.segments.some((s) => s.estimatedSpeedKmh != null && s.estimatedSpeedKmh > 0);
+
+    if (hasPower && !this.showSpeed) {
+      // Determine which power values to use for scaling
+      const useGroupMean = this.groupMeanPowers != null && this.groupMeanPowers.length === this.segments.length;
+      const powerValues = useGroupMean
+        ? this.groupMeanPowers!.filter((p) => p > 0)
+        : this.segments.filter((s) => s.targetPower != null).map((s) => s.targetPower!);
+      const minP = Math.min(...powerValues) * 0.9;
+      const maxP = Math.max(...powerValues) * 1.1;
       const yPowerScale = (pw: number) =>
         dataTop + dataZoneH - ((pw - minP) / (maxP - minP)) * dataZoneH;
 
-      this.ctx.beginPath();
-      let started = false;
-      for (const seg of this.segments) {
-        if (seg.targetPower == null) continue;
-        const x = xScale((seg.startDistance + seg.endDistance) / 2);
-        const y = yPowerScale(seg.targetPower);
-        if (!started) {
-          this.ctx.moveTo(x, y);
-          started = true;
-        } else {
-          this.ctx.lineTo(x, y);
+      if (useGroupMean) {
+        // Draw stepped horizontal line per group
+        this.ctx.beginPath();
+        let started = false;
+        for (let i = 0; i < this.segments.length; i++) {
+          const seg = this.segments[i];
+          const gp = this.groupMeanPowers![i];
+          if (gp <= 0) continue;
+          const x1 = xScale(seg.startDistance);
+          const x2 = xScale(seg.endDistance);
+          const y = yPowerScale(gp);
+          if (!started) {
+            this.ctx.moveTo(x1, y);
+            started = true;
+          } else {
+            this.ctx.lineTo(x1, y);
+          }
+          this.ctx.lineTo(x2, y);
         }
+        this.ctx.strokeStyle = '#60a5fa';
+        this.ctx.lineWidth = 2.5;
+        this.ctx.stroke();
+      } else {
+        // Per-segment power line
+        this.ctx.beginPath();
+        let started = false;
+        for (const seg of this.segments) {
+          if (seg.targetPower == null) continue;
+          const x = xScale((seg.startDistance + seg.endDistance) / 2);
+          const y = yPowerScale(seg.targetPower);
+          if (!started) {
+            this.ctx.moveTo(x, y);
+            started = true;
+          } else {
+            this.ctx.lineTo(x, y);
+          }
+        }
+        this.ctx.strokeStyle = '#60a5fa';
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
       }
-      this.ctx.strokeStyle = '#60a5fa';
-      this.ctx.lineWidth = 2;
-      this.ctx.stroke();
 
       // Power axis labels (right side, data zone)
       this.ctx.fillStyle = '#60a5fa';
@@ -242,6 +275,40 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
       this.ctx.textAlign = 'left';
       this.ctx.fillText(`${Math.round(maxP)}W`, w - p.right + 8, dataTop + 12);
       this.ctx.fillText(`${Math.round(minP)}W`, w - p.right + 8, dataTop + dataZoneH);
+    }
+
+    if (this.showSpeed && hasSpeed) {
+      const speeds = this.segments
+        .filter((s) => s.estimatedSpeedKmh != null && s.estimatedSpeedKmh > 0)
+        .map((s) => s.estimatedSpeedKmh!);
+      const minS = Math.min(...speeds) * 0.9;
+      const maxS = Math.max(...speeds) * 1.1;
+      const ySpeedScale = (sp: number) =>
+        dataTop + dataZoneH - ((sp - minS) / (maxS - minS)) * dataZoneH;
+
+      this.ctx.beginPath();
+      let started = false;
+      for (const seg of this.segments) {
+        if (seg.estimatedSpeedKmh == null || seg.estimatedSpeedKmh <= 0) continue;
+        const x = xScale((seg.startDistance + seg.endDistance) / 2);
+        const y = ySpeedScale(seg.estimatedSpeedKmh);
+        if (!started) {
+          this.ctx.moveTo(x, y);
+          started = true;
+        } else {
+          this.ctx.lineTo(x, y);
+        }
+      }
+      this.ctx.strokeStyle = '#34d399';
+      this.ctx.lineWidth = 2;
+      this.ctx.stroke();
+
+      // Speed axis labels (right side, data zone)
+      this.ctx.fillStyle = '#34d399';
+      this.ctx.font = '11px monospace';
+      this.ctx.textAlign = 'left';
+      this.ctx.fillText(`${maxS.toFixed(0)} km/h`, w - p.right + 8, dataTop + 12);
+      this.ctx.fillText(`${minS.toFixed(0)} km/h`, w - p.right + 8, dataTop + dataZoneH);
     }
 
     if (hasPace) {
@@ -378,10 +445,15 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
       this.ctx.fillText(item.label, legendX + 16, p.top - 10);
       legendX += this.ctx.measureText(item.label).width + 28;
     }
-    if (hasPower) {
-      this.ctx.fillStyle = '#60a5fa';
-      this.ctx.fillText('— Power', legendX, p.top - 10);
+    if (this.showSpeed && hasSpeed) {
+      this.ctx.fillStyle = '#34d399';
+      this.ctx.fillText('— Speed', legendX, p.top - 10);
       legendX += 70;
+    } else if (hasPower) {
+      this.ctx.fillStyle = '#60a5fa';
+      const powerLabel = this.groupMeanPowers != null ? '-- Group W' : '— Power';
+      this.ctx.fillText(powerLabel, legendX, p.top - 10);
+      legendX += this.ctx.measureText(powerLabel).width + 12;
     }
     if (hasPace) {
       this.ctx.fillStyle = '#34d399';

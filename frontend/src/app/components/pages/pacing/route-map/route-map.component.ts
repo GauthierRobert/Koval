@@ -49,6 +49,7 @@ export class RouteMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() routeCoordinates: RouteCoordinate[] = [];
   @Input() segments: PacingSegment[] = [];
   @Input() highlightedRange: SegmentRange | null = null;
+  @Input() showSpeed = false;
   @Output() segmentHovered = new EventEmitter<number | null>();
 
   @ViewChild('mapContainer', { static: true }) mapContainer!: ElementRef<HTMLDivElement>;
@@ -72,7 +73,7 @@ export class RouteMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   ngOnChanges(changes: SimpleChanges): void {
     if (!this.map) return;
 
-    if (changes['routeCoordinates'] || changes['segments']) {
+    if (changes['routeCoordinates'] || changes['segments'] || changes['showSpeed']) {
       this.renderRoute();
     }
     if (changes['highlightedRange']) {
@@ -132,7 +133,9 @@ export class RouteMapComponent implements AfterViewInit, OnChanges, OnDestroy {
       if (segCoords.length < 2) continue;
 
       const latLngs: L.LatLngExpression[] = segCoords.map((c) => [c.lat, c.lon] as L.LatLngTuple);
-      const color = this.gradientColor(seg.gradient);
+      const color = this.showSpeed && seg.estimatedSpeedKmh
+        ? this.speedColor(seg.estimatedSpeedKmh)
+        : this.gradientColor(seg.gradient);
 
       const polyline = L.polyline(latLngs, {
         color,
@@ -230,11 +233,29 @@ export class RouteMapComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.highlightPolyline.bringToBack();
   }
 
-  private gradientColor(gradient: number): string {
-    const absGrad = Math.abs(gradient);
-    if (absGrad >= 5) return '#ef4444'; // red: steep
-    if (absGrad >= 2) return '#ff9d00'; // orange: moderate
-    return '#a0a0a0'; // grey: flat
+ private gradientColor(gradient: number): string {
+    const g = gradient;
+    if (g > 12) return '#7c3aed';       // extreme climb — deep purple
+    if (g > 8) return '#c026d3';        // very steep climb — red-purple
+    if (g > 6) return '#dc2626';        // steep climb — red
+    if (g > 3) return '#ea580c';        // moderate climb — red-orange
+    if (g > 1) return '#f97316';        // slight climb — orange
+    if (g >= -1) return '#a0a0a0';      // flat — grey
+    if (g >= -3) return '#22c55e';      // slight descent — green
+    if (g >= -6) return '#0d9488';      // moderate descent — teal
+    if (g >= -10) return '#2563eb';     // steep descent — blue
+    return '#1e3a5f';                   // very steep descent — dark blue
+  }
+
+  private speedColor(speedKmh: number): string {
+    if (speedKmh > 45) return '#7c3aed';    // very fast — purple
+    if (speedKmh > 38) return '#2563eb';    // fast — blue
+    if (speedKmh > 32) return '#0d9488';    // brisk — teal
+    if (speedKmh > 26) return '#34d399';    // moderate-fast — green
+    if (speedKmh > 20) return '#a0a0a0';    // moderate — grey
+    if (speedKmh > 15) return '#f97316';    // moderate-slow — orange
+    if (speedKmh > 10) return '#ea580c';    // slow — red-orange
+    return '#dc2626';                        // very slow — red
   }
 
   private clearLayers(): void {
