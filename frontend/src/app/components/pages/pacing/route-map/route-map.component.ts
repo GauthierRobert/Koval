@@ -117,17 +117,22 @@ export class RouteMapComponent implements AfterViewInit, OnChanges, OnDestroy {
       const segments = this.segments;
       for (let i = 0; i < segments.length; i++) {
         const seg = segments[i];
-        const segCoords = coords.filter(
-          (c) => c.distance >= seg.startDistance && c.distance <= seg.endDistance,
-        );
+        const segCoords: RouteCoordinate[] = [];
 
-        if (segCoords.length < 2) {
-          // If not enough coords in this segment, try to include boundary points
-          const before = coords.filter((c) => c.distance <= seg.startDistance);
-          const after = coords.filter((c) => c.distance >= seg.endDistance);
-          if (before.length) segCoords.unshift(before[before.length - 1]);
-          if (after.length) segCoords.push(after[0]);
+        // Always include the last coord at or before the segment start (connection point)
+        const beforeStart = coords.filter((c) => c.distance <= seg.startDistance);
+        if (beforeStart.length) segCoords.push(beforeStart[beforeStart.length - 1]);
+
+        // Add coords strictly inside the segment (avoid duplicating boundary points)
+        for (const c of coords) {
+          if (c.distance > seg.startDistance && c.distance < seg.endDistance) {
+            segCoords.push(c);
+          }
         }
+
+        // Always include the first coord at or after the segment end (connection point)
+        const afterEnd = coords.filter((c) => c.distance >= seg.endDistance);
+        if (afterEnd.length) segCoords.push(afterEnd[0]);
 
         if (segCoords.length < 2) continue;
 
@@ -144,7 +149,8 @@ export class RouteMapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
         // Hover interaction
         polyline.on('mouseover', () => {
-          polyline.setStyle({ weight: 7, opacity: 1 });
+          polyline.setStyle({ weight: 6, opacity: 1 });
+          polyline.bringToFront();
           this.segmentHovered.emit(i);
         });
         polyline.on('mouseout', () => {

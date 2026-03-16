@@ -79,10 +79,10 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 - The set Custom value should belong the the updateSettings api, as well at the set of the value should be displayed in the setting page where athlete set all the other reference. Hide 5k/10/semi/mararthon reference in running, a toggle can be there to show other reference value. Customs must be displayed in any case.
 - Session reminder in coach dashboard must be in main dashboard instead (but only for coach)
 - The leaflet map are empty in Race details were we should see the GPX map of the race
+- In the simulation result, in the leaflet issue, the segment have void before and after and seems to overlap when hover. It is strange, try to fix that.
 
 ## TODO
 
-- In the simulation result, in the leaflet issue, the segment have void before and after and seems to overlap when hover. It is strange, try to fix that.
 - When add a training of a session, the chance to add an already existing training (of my own) should be possible. In that case, the club id is added into the club ids of the training. A training could then have multiple Clubs/group link
 - Cancelling a session (single event only even for recurrent session) should be possible for coach/Admin/owner. An explication can be added on the reason. This trigger a notificatio  to all club members
 
