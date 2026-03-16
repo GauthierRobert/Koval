@@ -154,15 +154,6 @@
         </div>
       </div>
 
-      <!-- Custom reference input for CUSTOM type -->
-      <div class="custom-ref-row" *ngIf="sys.referenceType === 'CUSTOM'">
-        <label class="custom-ref-label">{{ sys.referenceName || 'Custom reference' }} value</label>
-        <input type="number" class="custom-ref-input"
-          [value]="user.customZoneReferenceValues?.[sys.id!] ?? null"
-          placeholder="Enter your value"
-          (input)="customRefInputs[sys.id!] = +$any($event.target).value" />
-        <button class="custom-ref-save" (click)="saveCustomRef(sys, user)">SAVE</button>
-      </div>
     </div>
   </ng-container>
 </div>

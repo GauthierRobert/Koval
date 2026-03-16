@@ -32,6 +32,12 @@ public class ClubAuthorizationService {
         return m;
     }
 
+    public boolean isAdminOrCoach(String userId, String clubId) {
+        return membershipRepository.findByClubIdAndUserId(clubId, userId)
+                .map(m -> m.getStatus() == ClubMemberStatus.ACTIVE && m.getRole() != ClubMemberRole.MEMBER)
+                .orElse(false);
+    }
+
     public ClubMembership requireAdminOrCoach(String userId, String clubId) {
         ClubMembership m = requireMembership(userId, clubId);
         if (m.getRole() == ClubMemberRole.MEMBER) {

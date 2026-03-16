@@ -238,10 +238,11 @@ public class ClubController {
             @PathVariable String id,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
+        String userId = SecurityUtils.getCurrentUserId();
         if (from != null && to != null) {
-            return ResponseEntity.ok(clubSessionService.listSessions(id, from, to));
+            return ResponseEntity.ok(clubSessionService.listSessions(userId, id, from, to));
         }
-        return ResponseEntity.ok(clubSessionService.listSessions(id));
+        return ResponseEntity.ok(clubSessionService.listSessions(userId, id));
     }
 
     @PutMapping("/{id}/sessions/{sessionId}")

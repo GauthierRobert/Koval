@@ -7,7 +7,7 @@ import { AuthService } from '../../../services/auth.service';
 import { CalendarService } from '../../../services/calendar.service';
 import { HistoryService, SavedSession } from '../../../services/history.service';
 import { MetricsService, PmcDataPoint } from '../../../services/metrics.service';
-import { ScheduledWorkout } from '../../../services/coach.service';
+import { CoachService, ScheduledWorkout } from '../../../services/coach.service';
 import { RaceGoal, RaceGoalService } from '../../../services/race-goal.service';
 import { SportIconComponent } from '../../shared/sport-icon/sport-icon.component';
 import { WorkoutDetailModalComponent } from '../../shared/workout-detail-modal/workout-detail-modal.component';
@@ -88,6 +88,7 @@ export class DashboardComponent {
   private historyService = inject(HistoryService);
   private metricsService = inject(MetricsService);
   private raceGoalService = inject(RaceGoalService);
+  private coachService = inject(CoachService);
   private router = inject(Router);
 
   private readonly todayKey = toDateKey(new Date());
@@ -136,6 +137,12 @@ export class DashboardComponent {
     shareReplay(1),
   );
 
+  sessionReminders$ = this.authService.user$.pipe(
+    filter(u => !!u && u.role === 'COACH'),
+    switchMap(() => this.coachService.getSessionReminders()),
+    startWith([] as any[]),
+  );
+
   // Derive CTL/ATL/TSB from the live PMC data — same source as the PMC page
   formStats$ = combineLatest([this.pmcData$, this.authService.user$]).pipe(
     map(([pmcData, user]) => {
@@ -158,6 +165,8 @@ export class DashboardComponent {
     latestFit: this.latestFit$,
     form: this.formStats$,
     nextGoal: this.raceGoalService.nextGoal$,
+    reminders: this.sessionReminders$,
+    user: this.authService.user$,
   });
 
   selectedScheduledWorkout: ScheduledWorkout | null = null;
@@ -185,6 +194,10 @@ export class DashboardComponent {
     if (trend === '▲') return 'trend-up';
     if (trend === '▼') return 'trend-down';
     return '';
+  }
+
+  navigateToLinkTraining(session: any): void {
+    this.router.navigate(['/clubs', session.clubId]);
   }
 
   openAnalysis(session: SavedSession): void {

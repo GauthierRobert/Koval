@@ -64,7 +64,8 @@
                 <h2>Running</h2>
             </div>
             <div class="card-body">
-                <div class="field-row" *ngFor="let field of runFields">
+                <!-- Primary run fields (always visible) -->
+                <div class="field-row" *ngFor="let field of primaryRunFields">
                     <div class="field-info">
                         <label>{{ field.label }}</label>
                         <span class="hint">{{ field.hint }}</span>
@@ -78,6 +79,30 @@
                         <span class="unit">/km</span>
                     </div>
                 </div>
+
+                <!-- Toggle for secondary run fields -->
+                <div class="toggle-row" (click)="showSecondaryRunning = !showSecondaryRunning">
+                    <span class="toggle-label">Race paces</span>
+                    <span class="toggle-arrow">{{ showSecondaryRunning ? '▾' : '▸' }}</span>
+                </div>
+
+                <!-- Secondary run fields (behind toggle) -->
+                <ng-container *ngIf="showSecondaryRunning">
+                    <div class="field-row" *ngFor="let field of secondaryRunFields">
+                        <div class="field-info">
+                            <label>{{ field.label }}</label>
+                            <span class="hint">{{ field.hint }}</span>
+                        </div>
+                        <div class="field-input pace-input-group">
+                            <input type="number" [(ngModel)]="field.minutes" min="0" max="15"
+                                class="value-input pace-part" placeholder="—" />
+                            <span class="pace-sep">:</span>
+                            <input type="number" [(ngModel)]="field.seconds" min="0" max="59"
+                                class="value-input pace-part" placeholder="00" />
+                            <span class="unit">/km</span>
+                        </div>
+                    </div>
+                </ng-container>
             </div>
         </section>
 
@@ -100,6 +125,28 @@
                         <input type="number" [(ngModel)]="field.seconds" min="0" max="59"
                             class="value-input pace-part" placeholder="00" />
                         <span class="unit">/100m</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Custom Zones Section -->
+        <section class="settings-card" *ngIf="customZoneSystems.length > 0">
+            <div class="card-header">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 20v-6M6 20V10M18 20V4"/>
+                </svg>
+                <h2>Custom Zones</h2>
+            </div>
+            <div class="card-body">
+                <div class="field-row" *ngFor="let sys of customZoneSystems">
+                    <div class="field-info">
+                        <label>{{ sys.referenceName || sys.name }}</label>
+                        <span class="hint">{{ sys.name }}</span>
+                    </div>
+                    <div class="field-input ftp-input-group">
+                        <input type="number" [(ngModel)]="customRefValues[sys.id!]"
+                            min="0" class="value-input numeric" placeholder="—" />
                     </div>
                 </div>
             </div>

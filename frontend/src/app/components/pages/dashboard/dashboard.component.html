@@ -13,6 +13,18 @@
       </div>
     </div>
 
+    <!-- Session reminders (coach only) -->
+    <div class="session-reminders" *ngIf="vm.user?.role === 'COACH' && vm.reminders.length > 0">
+      <div class="reminder-card glass" *ngFor="let r of vm.reminders">
+        <span class="reminder-icon">&#9888;</span>
+        <div class="reminder-info">
+          <span class="reminder-title">{{ r.title }}</span>
+          <span class="reminder-meta">{{ r.scheduledAt | date:'EEE, MMM d · HH:mm' }} — No training linked</span>
+        </div>
+        <button class="reminder-action" (click)="navigateToLinkTraining(r)">LINK TRAINING</button>
+      </div>
+    </div>
+
     <!-- Status strip: CTL / ATL / TSB / FTP — sourced from live PMC API -->
     <div class="status-strip glass" *ngIf="vm.form.ctl != null || vm.form.ftp">
       <div class="stat-item" *ngIf="vm.form.ctl != null">

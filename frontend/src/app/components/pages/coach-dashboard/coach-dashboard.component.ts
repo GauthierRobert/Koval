@@ -65,9 +65,6 @@ export class CoachDashboardComponent implements OnInit {
   private clubRolesSubject = new BehaviorSubject<MyClubRoleEntry[]>([]);
   clubRoles$ = this.clubRolesSubject.asObservable();
 
-  private sessionRemindersSubject = new BehaviorSubject<any[]>([]);
-  sessionReminders$ = this.sessionRemindersSubject.asObservable();
-
   filteredAthletes$: Observable<User[]> = combineLatest([
     this.athletes$,
     this.tagFilterSubject,
@@ -146,10 +143,6 @@ export class CoachDashboardComponent implements OnInit {
         this.zoneService.getCoachZoneSystems().subscribe({
           next: (systems) => this.ngZone.run(() => this.coachZoneSystemsSubject.next(systems)),
           error: () => {}
-        });
-        this.coachService.getSessionReminders().subscribe({
-          next: (reminders) => this.ngZone.run(() => this.sessionRemindersSubject.next(reminders)),
-          error: () => {},
         });
         this.clubService.loadMyClubRoles();
         this.clubService.myClubRoles$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
@@ -235,10 +228,6 @@ export class CoachDashboardComponent implements OnInit {
 
   getClubCount(clubName: string): number {
     return this.athletesSubject.value.filter(a => a.clubs?.includes(clubName)).length;
-  }
-
-  navigateToLinkTraining(session: any): void {
-    this.router.navigate(['/clubs', session.clubId]);
   }
 
   selectAthlete(athlete: User) {

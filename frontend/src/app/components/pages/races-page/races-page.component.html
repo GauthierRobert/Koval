@@ -69,12 +69,11 @@
         <span class="browse-race-verified" *ngIf="race.verified" title="Verified">&#10003;</span>
         <div class="gpx-chips" (click)="$event.stopPropagation()">
           <ng-container *ngFor="let disc of getGpxDisciplines(getCachedRace(race))">
-            <span class="gpx-chip gpx-chip--done" *ngIf="hasGpxForDiscipline(getCachedRace(race), disc)">
+            <label class="gpx-chip gpx-chip--done" *ngIf="hasGpxForDiscipline(getCachedRace(race), disc)"
+              title="Click to replace GPX">
               {{ disc | uppercase }} ✓
-              <label class="gpx-reupload" title="Replace GPX">
-                ↑<input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race, disc)">
-              </label>
-            </span>
+              <input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race, disc)">
+            </label>
             <label class="gpx-chip gpx-chip--upload" *ngIf="!hasGpxForDiscipline(getCachedRace(race), disc)">
               <span *ngIf="!isGpxUploading(race.id, disc)">{{ disc | uppercase }} ↑</span>
               <span *ngIf="isGpxUploading(race.id, disc)">{{ disc | uppercase }} …</span>
@@ -82,6 +81,12 @@
             </label>
           </ng-container>
         </div>
+        <button class="btn-simulate"
+          [disabled]="!canSimulate(getCachedRace(race))"
+          [title]="canSimulate(getCachedRace(race)) ? 'Simulate this race' : getSimulateDisabledReason(getCachedRace(race))"
+          (click)="simulateRace(race); $event.stopPropagation()">
+          ⚡ SIMULATE
+        </button>
         <button class="btn-add-goal" [class.btn-add-goal--added]="addedRaceIds.has(race.id)"
           [disabled]="addedRaceIds.has(race.id)"
           (click)="addToMyGoals(race); $event.stopPropagation()">

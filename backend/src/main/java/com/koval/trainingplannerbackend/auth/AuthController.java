@@ -194,7 +194,8 @@ public class AuthController {
     public record SettingsRequest(Integer ftp, Integer weightKg, Integer functionalThresholdPace,
             Integer criticalSwimSpeed, Integer pace5k, Integer pace10k,
             Integer paceHalfMarathon, Integer paceMarathon,
-            Integer vo2maxPower, Integer vo2maxPace) {
+            Integer vo2maxPower, Integer vo2maxPace,
+            Map<String, Integer> customZoneReferenceValues) {
     }
 
     @PutMapping("/settings")
@@ -212,7 +213,8 @@ public class AuthController {
                     request.ftp(), request.weightKg(), request.functionalThresholdPace(),
                     request.criticalSwimSpeed(), request.pace5k(), request.pace10k(),
                     request.paceHalfMarathon(), request.paceMarathon(),
-                    request.vo2maxPower(), request.vo2maxPace());
+                    request.vo2maxPower(), request.vo2maxPace(),
+                    request.customZoneReferenceValues());
             return ResponseEntity.ok(userService.userToMap(user));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

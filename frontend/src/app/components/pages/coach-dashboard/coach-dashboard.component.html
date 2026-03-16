@@ -69,16 +69,6 @@
 
   <!-- Right area: always visible, contains header + tabs -->
   <div class="main-area">
-    <div class="session-reminders" *ngIf="(sessionReminders$ | async) as reminders">
-      <div class="reminder-card glass" *ngFor="let r of reminders">
-        <span class="reminder-icon">&#9888;</span>
-        <div class="reminder-info">
-          <span class="reminder-title">{{ r.title }}</span>
-          <span class="reminder-meta">{{ r.scheduledAt | date:'EEE, MMM d · HH:mm' }} — No training linked</span>
-        </div>
-        <button class="reminder-action" (click)="navigateToLinkTraining(r)">LINK TRAINING</button>
-      </div>
-    </div>
     <div class="header glass">
       <div class="header-left">
         <div class="header-avatar">C</div>

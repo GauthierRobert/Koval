@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import {
   Race,
   RaceService,
@@ -23,6 +24,7 @@ export class RacesPageComponent implements OnInit {
   private raceService = inject(RaceService);
   private raceGoalService = inject(RaceGoalService);
   private cdr = inject(ChangeDetectorRef);
+  private router = inject(Router);
 
   // Browse state
   sportFacets: SportFacet[] = [];
@@ -263,6 +265,34 @@ export class RacesPageComponent implements OnInit {
         this.cdr.markForCheck();
       },
     });
+  }
+
+  canSimulate(race: Race): boolean {
+    switch (race.sport?.toUpperCase()) {
+      case 'CYCLING': return !!race.hasBikeGpx;
+      case 'RUNNING': return !!race.hasRunGpx;
+      case 'TRIATHLON': return !!race.hasBikeGpx && !!race.hasRunGpx;
+      case 'SWIMMING': return true;
+      default: return !!race.hasBikeGpx;
+    }
+  }
+
+  getSimulateDisabledReason(race: Race): string {
+    const missing: string[] = [];
+    const sport = race.sport?.toUpperCase();
+    if (sport === 'CYCLING' || sport === 'TRIATHLON' || (!sport || !['RUNNING', 'SWIMMING'].includes(sport))) {
+      if (!race.hasBikeGpx) missing.push('Bike');
+    }
+    if (sport === 'RUNNING' || sport === 'TRIATHLON') {
+      if (!race.hasRunGpx) missing.push('Run');
+    }
+    if (missing.length === 0) return '';
+    return 'Upload ' + missing.join(' and ') + ' GPX to simulate';
+  }
+
+  simulateRace(race: Race): void {
+    if (!this.canSimulate(this.getCachedRace(race))) return;
+    this.router.navigate(['/pacing'], { queryParams: { raceId: race.id } });
   }
 
   formatDistance(meters?: number): string {

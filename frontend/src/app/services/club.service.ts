@@ -154,6 +154,7 @@ export interface ClubRaceGoalResponse {
     athleteId: string;
   };
   hasUpcomingClubSession: boolean;
+  participants: { userId: string; displayName: string; profilePicture: string | null }[];
 }
 
 export interface ClubInviteCode {

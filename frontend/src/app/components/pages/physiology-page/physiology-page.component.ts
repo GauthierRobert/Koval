@@ -67,8 +67,6 @@ export class PhysiologyPageComponent implements OnInit {
     '#6366f1', '#3b82f6', '#22c55e', '#eab308', '#f97316', '#ef4444', '#dc2626',
   ];
 
-  customRefInputs: Record<string, number | null> = {};
-
   constructor(
     private authService: AuthService,
     private zoneService: ZoneService,
@@ -148,15 +146,6 @@ export class PhysiologyPageComponent implements OnInit {
     const slow = zone.low === 0 ? null : ref / (zone.low / 100);
     const fast = ref / (zone.high / 100);
     return slow === null ? `< ${this.formatPace(fast)}` : `${this.formatPace(slow)}–${this.formatPace(fast)}`;
-  }
-
-  saveCustomRef(sys: ZoneSystem, user: User): void {
-    const val = this.customRefInputs[sys.id!];
-    if (val == null) return;
-    this.authService.setCustomZoneReference(sys.id!, val).subscribe({
-      next: () => this.authService.refreshUser(),
-      error: () => {},
-    });
   }
 
   getSectionTitle(): string {

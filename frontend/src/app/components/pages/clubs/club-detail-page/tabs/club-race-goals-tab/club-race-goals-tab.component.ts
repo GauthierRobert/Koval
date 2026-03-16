@@ -14,10 +14,6 @@ export class ClubRaceGoalsTabComponent {
   private clubService = inject(ClubService);
   raceGoals$ = this.clubService.raceGoals$;
 
-  isUpcoming(raceDate: string): boolean {
-    return new Date(raceDate + 'T00:00:00') >= new Date(new Date().toDateString());
-  }
-
   formatDate(dateStr: string): string {
     return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
       weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',

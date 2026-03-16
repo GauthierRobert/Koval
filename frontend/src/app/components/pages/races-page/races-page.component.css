@@ -172,6 +172,30 @@
   font-weight: 700;
 }
 
+.btn-simulate {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-simulate:hover:not(:disabled) {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: #38bdf8;
+}
+
+.btn-simulate:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .btn-add-goal {
   background: rgba(255, 157, 0, 0.12);
   border: 1px solid rgba(255, 157, 0, 0.3);
@@ -385,6 +409,12 @@
   background: rgba(52, 211, 153, 0.15);
   color: #34d399;
   border: 1px solid rgba(52, 211, 153, 0.25);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.gpx-chip--done:hover {
+  background: rgba(52, 211, 153, 0.25);
+  border-color: rgba(52, 211, 153, 0.5);
 }
 
 .gpx-chip--upload {
@@ -397,11 +427,3 @@
   background: rgba(255, 157, 0, 0.18);
 }
 
-.gpx-reupload {
-  cursor: pointer;
-  opacity: 0.6;
-  font-size: 0.7rem;
-  transition: opacity 0.15s;
-}
-
-.gpx-reupload:hover { opacity: 1; }

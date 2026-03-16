@@ -102,15 +102,42 @@ public class ClubStatsService {
 
     public List<ClubRaceGoalResponse> getRaceGoals(String clubId) {
         List<String> memberIds = getActiveMemberIds(clubId);
-        List<RaceGoal> goals = raceGoalRepository.findByAthleteIdInOrderByRaceDateAsc(memberIds);
+        List<RaceGoal> goals = raceGoalRepository.findByAthleteIdInAndRaceDateGreaterThanEqualOrderByRaceDateAsc(
+                memberIds, LocalDate.now());
         List<ClubTrainingSession> sessions = sessionRepository.findByClubIdOrderByScheduledAtDesc(clubId);
+
+        // Group goals by race key: raceId if present, else title+date
+        Map<String, List<RaceGoal>> goalsByRace = goals.stream()
+                .collect(Collectors.groupingBy(g ->
+                        g.getRaceId() != null ? g.getRaceId()
+                                : g.getTitle().toLowerCase().trim() + "|" + g.getRaceDate()));
+
+        // Batch-fetch users for participant info
+        List<String> athleteIds = goals.stream().map(RaceGoal::getAthleteId).distinct().toList();
+        Map<String, User> userMap = userService.findAllById(athleteIds).stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
 
         return goals.stream().map(g -> {
             boolean hasSession = sessions.stream().anyMatch(s ->
                     s.getScheduledAt() != null &&
                     s.getScheduledAt().toLocalDate().isAfter(LocalDate.now()) &&
                     s.getScheduledAt().toLocalDate().isBefore(g.getRaceDate().plusDays(1)));
-            return new ClubRaceGoalResponse(g, hasSession);
+
+            String raceKey = g.getRaceId() != null ? g.getRaceId()
+                    : g.getTitle().toLowerCase().trim() + "|" + g.getRaceDate();
+            List<ClubRaceGoalResponse.RaceParticipant> participants = goalsByRace
+                    .getOrDefault(raceKey, List.of()).stream()
+                    .filter(other -> !other.getAthleteId().equals(g.getAthleteId()))
+                    .map(other -> {
+                        User u = userMap.get(other.getAthleteId());
+                        return new ClubRaceGoalResponse.RaceParticipant(
+                                other.getAthleteId(),
+                                u != null ? u.getDisplayName() : other.getAthleteId(),
+                                u != null ? u.getProfilePicture() : null);
+                    })
+                    .toList();
+
+            return new ClubRaceGoalResponse(g, hasSession, participants);
         }).collect(Collectors.toList());
     }
 

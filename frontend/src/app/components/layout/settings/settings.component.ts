@@ -3,6 +3,8 @@ import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {AuthService, User} from '../../../services/auth.service';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
+import {ZoneService} from '../../../services/zone.service';
+import {ZoneSystem} from '../../../services/zone';
 
 interface PaceField {
     key: string;
@@ -21,6 +23,7 @@ interface PaceField {
 })
 export class SettingsComponent implements OnInit {
     private authService = inject(AuthService);
+    private zoneService = inject(ZoneService);
 
     ftp: number | null = null;
     weightKg: number | null = null;
@@ -28,14 +31,25 @@ export class SettingsComponent implements OnInit {
     saving = false;
     saved = false;
 
-    runFields: PaceField[] = [
+    showSecondaryRunning = false;
+    customZoneSystems: ZoneSystem[] = [];
+    customRefValues: Record<string, number | null> = {};
+
+    primaryRunFields: PaceField[] = [
         { key: 'functionalThresholdPace', label: 'Threshold Pace', hint: 'Lactate threshold pace', minutes: null, seconds: null },
         { key: 'vo2maxPace', label: 'VO2max Pace', hint: 'VO2max intensity pace', minutes: null, seconds: null },
+    ];
+
+    secondaryRunFields: PaceField[] = [
         { key: 'pace5k', label: '5K Pace', hint: 'Current 5K race pace', minutes: null, seconds: null },
         { key: 'pace10k', label: '10K Pace', hint: 'Current 10K race pace', minutes: null, seconds: null },
         { key: 'paceHalfMarathon', label: 'Half Marathon Pace', hint: 'Current half marathon race pace', minutes: null, seconds: null },
         { key: 'paceMarathon', label: 'Marathon Pace', hint: 'Current marathon race pace', minutes: null, seconds: null },
     ];
+
+    get allRunFields(): PaceField[] {
+        return [...this.primaryRunFields, ...this.secondaryRunFields];
+    }
 
     swimFields: PaceField[] = [
         { key: 'criticalSwimSpeed', label: 'Critical Swim Speed', hint: 'Threshold pace per 100m', minutes: null, seconds: null },
@@ -45,6 +59,13 @@ export class SettingsComponent implements OnInit {
         this.authService.user$.subscribe(user => {
             if (user) this.loadFromUser(user);
         });
+
+        this.zoneService.getMyZoneSystems().subscribe({
+            next: (systems) => {
+                this.customZoneSystems = systems.filter(s => s.referenceType === 'CUSTOM');
+            },
+            error: () => this.customZoneSystems = [],
+        });
     }
 
     private loadFromUser(user: User) {
@@ -52,7 +73,7 @@ export class SettingsComponent implements OnInit {
         this.weightKg = user.weightKg ?? null;
         this.vo2maxPower = user.vo2maxPower ?? null;
 
-        for (const field of [...this.runFields, ...this.swimFields]) {
+        for (const field of [...this.allRunFields, ...this.swimFields]) {
             const val = (user as any)[field.key] as number | undefined;
             if (val) {
                 field.minutes = Math.floor(val / 60);
@@ -60,6 +81,12 @@ export class SettingsComponent implements OnInit {
             } else {
                 field.minutes = null;
                 field.seconds = null;
+            }
+        }
+
+        if (user.customZoneReferenceValues) {
+            for (const [key, value] of Object.entries(user.customZoneReferenceValues)) {
+                this.customRefValues[key] = value ?? null;
             }
         }
     }
@@ -93,9 +120,20 @@ export class SettingsComponent implements OnInit {
             weightKg: this.weightKg ?? null,
             vo2maxPower: this.vo2maxPower ?? null,
         };
-        for (const field of [...this.runFields, ...this.swimFields]) {
+        for (const field of [...this.allRunFields, ...this.swimFields]) {
             const val = this.paceToSeconds(field);
             settings[field.key] = val ?? null;
+        }
+
+        // Build custom zone reference values map (only non-null entries)
+        const customZoneReferenceValues: Record<string, number> = {};
+        for (const [key, value] of Object.entries(this.customRefValues)) {
+            if (value != null) {
+                customZoneReferenceValues[key] = value;
+            }
+        }
+        if (Object.keys(customZoneReferenceValues).length > 0) {
+            settings.customZoneReferenceValues = customZoneReferenceValues;
         }
 
         this.authService.updateSettings(settings).subscribe({

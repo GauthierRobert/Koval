@@ -122,7 +122,8 @@ public class UserService {
     public User updateSettings(String userId, Integer ftp, Integer weightKg, Integer functionalThresholdPace,
             Integer criticalSwimSpeed, Integer pace5k, Integer pace10k,
             Integer paceHalfMarathon, Integer paceMarathon,
-            Integer vo2maxPower, Integer vo2maxPace) {
+            Integer vo2maxPower, Integer vo2maxPace,
+            Map<String, Integer> customZoneReferenceValues) {
         User user = getUserById(userId);
         // Always set all fields — null means "clear this value"
         user.setFtp(ftp);
@@ -135,6 +136,9 @@ public class UserService {
         user.setPaceMarathon(paceMarathon);
         user.setVo2maxPower(vo2maxPower);
         user.setVo2maxPace(vo2maxPace);
+        if (customZoneReferenceValues != null) {
+            user.getCustomZoneReferenceValues().putAll(customZoneReferenceValues);
+        }
         return userRepository.save(user);
     }
 

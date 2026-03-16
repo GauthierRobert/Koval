@@ -105,54 +105,63 @@ export class RouteMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   private renderRoute(): void {
-    if (!this.map || !this.routeCoordinates?.length || !this.segments?.length) return;
+    if (!this.map || !this.routeCoordinates?.length) return;
 
     // Clear previous layers
     this.clearLayers();
 
-    // Build a lookup: for each coordinate, find which segment it belongs to
-    // and color by that segment's gradient
     const coords = this.routeCoordinates;
-    const segments = this.segments;
 
-    // Draw per-segment polylines colored by gradient
-    for (let i = 0; i < segments.length; i++) {
-      const seg = segments[i];
-      const segCoords = coords.filter(
-        (c) => c.distance >= seg.startDistance && c.distance <= seg.endDistance,
-      );
+    if (this.segments?.length) {
+      // Draw per-segment polylines colored by gradient/speed
+      const segments = this.segments;
+      for (let i = 0; i < segments.length; i++) {
+        const seg = segments[i];
+        const segCoords = coords.filter(
+          (c) => c.distance >= seg.startDistance && c.distance <= seg.endDistance,
+        );
 
-      if (segCoords.length < 2) {
-        // If not enough coords in this segment, try to include boundary points
-        const before = coords.filter((c) => c.distance <= seg.startDistance);
-        const after = coords.filter((c) => c.distance >= seg.endDistance);
-        if (before.length) segCoords.unshift(before[before.length - 1]);
-        if (after.length) segCoords.push(after[0]);
+        if (segCoords.length < 2) {
+          // If not enough coords in this segment, try to include boundary points
+          const before = coords.filter((c) => c.distance <= seg.startDistance);
+          const after = coords.filter((c) => c.distance >= seg.endDistance);
+          if (before.length) segCoords.unshift(before[before.length - 1]);
+          if (after.length) segCoords.push(after[0]);
+        }
+
+        if (segCoords.length < 2) continue;
+
+        const latLngs: L.LatLngExpression[] = segCoords.map((c) => [c.lat, c.lon] as L.LatLngTuple);
+        const color = this.showSpeed && seg.estimatedSpeedKmh
+          ? this.speedColor(seg.estimatedSpeedKmh)
+          : this.gradientColor(seg.gradient);
+
+        const polyline = L.polyline(latLngs, {
+          color,
+          weight: 4,
+          opacity: 0.85,
+        }).addTo(this.map!);
+
+        // Hover interaction
+        polyline.on('mouseover', () => {
+          polyline.setStyle({ weight: 7, opacity: 1 });
+          this.segmentHovered.emit(i);
+        });
+        polyline.on('mouseout', () => {
+          polyline.setStyle({ weight: 4, opacity: 0.85 });
+          this.segmentHovered.emit(null);
+        });
+
+        this.segmentPolylines.push(polyline);
       }
-
-      if (segCoords.length < 2) continue;
-
-      const latLngs: L.LatLngExpression[] = segCoords.map((c) => [c.lat, c.lon] as L.LatLngTuple);
-      const color = this.showSpeed && seg.estimatedSpeedKmh
-        ? this.speedColor(seg.estimatedSpeedKmh)
-        : this.gradientColor(seg.gradient);
-
+    } else {
+      // No segments — draw entire route as a single polyline
+      const latLngs: L.LatLngExpression[] = coords.map((c) => [c.lat, c.lon] as L.LatLngTuple);
       const polyline = L.polyline(latLngs, {
-        color,
+        color: '#6366f1',
         weight: 4,
         opacity: 0.85,
       }).addTo(this.map!);
-
-      // Hover interaction
-      polyline.on('mouseover', () => {
-        polyline.setStyle({ weight: 7, opacity: 1 });
-        this.segmentHovered.emit(i);
-      });
-      polyline.on('mouseout', () => {
-        polyline.setStyle({ weight: 4, opacity: 0.85 });
-        this.segmentHovered.emit(null);
-      });
-
       this.segmentPolylines.push(polyline);
     }
 

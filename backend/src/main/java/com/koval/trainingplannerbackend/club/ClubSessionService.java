@@ -61,17 +61,29 @@ public class ClubSessionService {
         return session;
     }
 
-    public List<ClubTrainingSession> listSessions(String clubId) {
-        return sessionRepository.findByClubIdOrderByScheduledAtDesc(clubId);
+    public List<ClubTrainingSession> listSessions(String userId, String clubId) {
+        List<ClubTrainingSession> all = sessionRepository.findByClubIdOrderByScheduledAtDesc(clubId);
+        return filterByGroupVisibility(userId, clubId, all);
     }
 
-    public List<ClubTrainingSession> listSessions(String clubId, LocalDateTime from, LocalDateTime to) {
-        return sessionRepository.findByClubIdAndScheduledAtBetween(clubId, from, to);
+    public List<ClubTrainingSession> listSessions(String userId, String clubId, LocalDateTime from, LocalDateTime to) {
+        List<ClubTrainingSession> all = sessionRepository.findByClubIdAndScheduledAtBetween(clubId, from, to);
+        return filterByGroupVisibility(userId, clubId, all);
     }
 
     public ClubTrainingSession joinSession(String userId, String sessionId) {
         ClubTrainingSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        if (session.getClubGroupId() != null && !session.getClubGroupId().isBlank()) {
+            boolean inGroup = clubGroupRepository.findByClubIdAndMemberIdsContaining(session.getClubId(), userId)
+                    .stream().anyMatch(g -> g.getId().equals(session.getClubGroupId()));
+            if (!inGroup) {
+                LocalDateTime openFrom = session.computeOpenToAllFrom();
+                if (openFrom == null || LocalDateTime.now().isBefore(openFrom)) {
+                    throw new IllegalStateException("This session is restricted to group members");
+                }
+            }
+        }
         if (session.getParticipantIds().contains(userId)) {
             return session;
         }
@@ -199,6 +211,21 @@ public class ClubSessionService {
                     s.computeOpenToAllFrom()));
         }
         return result;
+    }
+
+    private List<ClubTrainingSession> filterByGroupVisibility(String userId, String clubId,
+                                                               List<ClubTrainingSession> sessions) {
+        if (authorizationService.isAdminOrCoach(userId, clubId)) {
+            return sessions;
+        }
+        Set<String> userGroupIds = clubGroupRepository.findByClubIdAndMemberIdsContaining(clubId, userId)
+                .stream().map(ClubGroup::getId).collect(Collectors.toSet());
+        return sessions.stream().filter(s -> {
+            if (s.getClubGroupId() == null || s.getClubGroupId().isBlank()) return true;
+            if (userGroupIds.contains(s.getClubGroupId())) return true;
+            LocalDateTime openFrom = s.computeOpenToAllFrom();
+            return openFrom != null && !LocalDateTime.now().isBefore(openFrom);
+        }).toList();
     }
 
     void enrichFromLinkedTraining(ClubTrainingSession session) {

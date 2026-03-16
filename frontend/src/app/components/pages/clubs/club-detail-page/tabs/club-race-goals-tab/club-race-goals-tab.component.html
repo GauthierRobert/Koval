@@ -3,50 +3,37 @@
     <div *ngIf="raceGoals.length > 0; else emptyGoals">
       <h4 class="section-title">Upcoming Races</h4>
       <div class="goals-list">
-        <ng-container *ngFor="let item of raceGoals">
-          <div class="goal-row glass" *ngIf="isUpcoming(item.goal.raceDate)">
-            <div class="goal-priority-dot" [style.background-color]="getPriorityColor(item.goal.priority)"></div>
-            <div class="goal-info">
-              <span class="goal-title">{{ item.goal.title }}</span>
-              <div class="goal-meta">
-                <span>{{ item.goal.sport }}</span>
-                <span>{{ formatDate(item.goal.raceDate) }}</span>
-                <span *ngIf="item.goal.distance">{{ item.goal.distance }}</span>
-                <span class="days-badge" [class.soon]="daysUntil(item.goal.raceDate) <= 30">
-                  {{ daysUntil(item.goal.raceDate) }}d to go
-                </span>
-              </div>
+        <div class="goal-row glass" *ngFor="let item of raceGoals">
+          <div class="goal-priority-dot" [style.background-color]="getPriorityColor(item.goal.priority)"></div>
+          <div class="goal-info">
+            <span class="goal-title">{{ item.goal.title }}</span>
+            <div class="goal-meta">
+              <span>{{ item.goal.sport }}</span>
+              <span>{{ formatDate(item.goal.raceDate) }}</span>
+              <span *ngIf="item.goal.distance">{{ item.goal.distance }}</span>
+              <span class="days-badge" [class.soon]="daysUntil(item.goal.raceDate) <= 30">
+                {{ daysUntil(item.goal.raceDate) }}d to go
+              </span>
             </div>
-            <span class="session-indicator" *ngIf="item.hasUpcomingClubSession" title="Club session near this race">📅</span>
-            <span class="priority-badge"
-              [style.color]="getPriorityColor(item.goal.priority)"
-              [style.border-color]="getPriorityColor(item.goal.priority) + '44'">
-              {{ item.goal.priority }}
-            </span>
-          </div>
-        </ng-container>
-      </div>
-
-      <h4 class="section-title past-header">Past Races</h4>
-      <div class="goals-list">
-        <ng-container *ngFor="let item of raceGoals">
-          <div class="goal-row glass past" *ngIf="!isUpcoming(item.goal.raceDate)">
-            <div class="goal-priority-dot" [style.background-color]="getPriorityColor(item.goal.priority)"></div>
-            <div class="goal-info">
-              <span class="goal-title">{{ item.goal.title }}</span>
-              <div class="goal-meta">
-                <span>{{ item.goal.sport }}</span>
-                <span>{{ formatDate(item.goal.raceDate) }}</span>
-                <span *ngIf="item.goal.distance">{{ item.goal.distance }}</span>
+            <div class="participants-row" *ngIf="item.participants.length > 0">
+              <div class="participant-avatars">
+                <ng-container *ngFor="let p of item.participants">
+                  <img *ngIf="p.profilePicture" [src]="p.profilePicture" [title]="p.displayName" class="participant-avatar" />
+                  <span *ngIf="!p.profilePicture" class="participant-avatar-placeholder" [title]="p.displayName">
+                    {{ p.displayName.charAt(0) }}
+                  </span>
+                </ng-container>
               </div>
+              <span class="participants-label">{{ item.participants.length }} also racing</span>
             </div>
-            <span class="priority-badge"
-              [style.color]="getPriorityColor(item.goal.priority)"
-              [style.border-color]="getPriorityColor(item.goal.priority) + '44'">
-              {{ item.goal.priority }}
-            </span>
           </div>
-        </ng-container>
+          <span class="session-indicator" *ngIf="item.hasUpcomingClubSession" title="Club session near this race">📅</span>
+          <span class="priority-badge"
+            [style.color]="getPriorityColor(item.goal.priority)"
+            [style.border-color]="getPriorityColor(item.goal.priority) + '44'">
+            {{ item.goal.priority }}
+          </span>
+        </div>
       </div>
     </div>
     <ng-template #emptyGoals>
