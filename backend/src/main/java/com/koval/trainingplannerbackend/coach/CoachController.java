@@ -95,39 +95,31 @@ public class CoachController {
     public ResponseEntity<List<ScheduledWorkout>> assignTraining(
             @RequestBody AssignmentRequest request) {
         String coachId = SecurityUtils.getCurrentUserId();
-        try {
-            List<ScheduledWorkout> assignments;
-            if (request.clubId() != null && !request.clubId().isBlank()) {
-                assignments = coachService.assignTrainingFromClub(
-                        coachId,
-                        request.trainingId(),
-                        request.athleteIds(),
-                        request.scheduledDate(),
-                        request.notes(),
-                        request.clubId());
-            } else {
-                assignments = coachService.assignTraining(
-                        coachId,
-                        request.trainingId(),
-                        request.athleteIds(),
-                        request.scheduledDate(),
-                        request.notes(),
-                        request.groupId());
-            }
-            return ResponseEntity.ok(assignments);
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
+        List<ScheduledWorkout> assignments;
+        if (request.clubId() != null && !request.clubId().isBlank()) {
+            assignments = coachService.assignTrainingFromClub(
+                    coachId,
+                    request.trainingId(),
+                    request.athleteIds(),
+                    request.scheduledDate(),
+                    request.notes(),
+                    request.clubId());
+        } else {
+            assignments = coachService.assignTraining(
+                    coachId,
+                    request.trainingId(),
+                    request.athleteIds(),
+                    request.scheduledDate(),
+                    request.notes(),
+                    request.groupId());
         }
+        return ResponseEntity.ok(assignments);
     }
 
     @DeleteMapping("/assign/{id}")
     public ResponseEntity<Void> unassignTraining(@PathVariable String id) {
-        try {
-            coachService.unassignTraining(id);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+        coachService.unassignTraining(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/athletes")
@@ -236,22 +228,14 @@ public class CoachController {
     public ResponseEntity<ScheduledWorkout> markCompleted(
             @PathVariable String id,
             @RequestBody(required = false) CompletionRequest request) {
-        try {
-            Integer tss = request != null ? request.tss() : null;
-            Double intensityFactor = request != null ? request.intensityFactor() : null;
-            return ResponseEntity.ok(coachService.markCompleted(id, tss, intensityFactor));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+        Integer tss = request != null ? request.tss() : null;
+        Double intensityFactor = request != null ? request.intensityFactor() : null;
+        return ResponseEntity.ok(coachService.markCompleted(id, tss, intensityFactor));
     }
 
     @PostMapping("/schedule/{id}/skip")
     public ResponseEntity<ScheduledWorkout> markSkipped(@PathVariable String id) {
-        try {
-            return ResponseEntity.ok(coachService.markSkipped(id));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(coachService.markSkipped(id));
     }
 
     // --- Group management endpoints ---
@@ -261,13 +245,9 @@ public class CoachController {
             @PathVariable String athleteId,
             @RequestBody Map<String, List<String>> body) {
         String coachId = SecurityUtils.getCurrentUserId();
-        try {
-            List<String> groupIds = body.get("groups");
-            if (groupIds == null) groupIds = List.of();
-            return ResponseEntity.ok(coachService.setAthleteGroups(coachId, athleteId, groupIds));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        List<String> groupIds = body.get("groups");
+        if (groupIds == null) groupIds = List.of();
+        return ResponseEntity.ok(coachService.setAthleteGroups(coachId, athleteId, groupIds));
     }
 
     @PostMapping("/athletes/{athleteId}/groups")
@@ -275,13 +255,11 @@ public class CoachController {
             @PathVariable String athleteId,
             @RequestBody Map<String, String> body) {
         String coachId = SecurityUtils.getCurrentUserId();
-        try {
-            String groupName = body.get("group");
-            if (groupName == null || groupName.isBlank()) return ResponseEntity.badRequest().build();
-            return ResponseEntity.ok(coachService.addGroupToAthlete(coachId, athleteId, groupName));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
+        String groupName = body.get("group");
+        if (groupName == null || groupName.isBlank()) {
+            throw new com.koval.trainingplannerbackend.config.exceptions.ValidationException("Group name is required");
         }
+        return ResponseEntity.ok(coachService.addGroupToAthlete(coachId, athleteId, groupName));
     }
 
     @DeleteMapping("/athletes/{athleteId}/groups/{groupName}")
@@ -289,11 +267,7 @@ public class CoachController {
             @PathVariable String athleteId,
             @PathVariable String groupName) {
         String coachId = SecurityUtils.getCurrentUserId();
-        try {
-            return ResponseEntity.ok(coachService.removeGroupFromAthlete(coachId, athleteId, groupName));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        return ResponseEntity.ok(coachService.removeGroupFromAthlete(coachId, athleteId, groupName));
     }
 
     @GetMapping("/athletes/groups")
@@ -359,13 +333,9 @@ public class CoachController {
     public ResponseEntity<InviteCode> generateInviteCode(
             @RequestBody InviteCodeRequest request) {
         String coachId = SecurityUtils.getCurrentUserId();
-        try {
-            InviteCode code = coachService.generateInviteCode(
-                    coachId, request.groups(), request.maxUses(), request.expiresAt(), request.code());
-            return ResponseEntity.ok(code);
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        InviteCode code = coachService.generateInviteCode(
+                coachId, request.groups(), request.maxUses(), request.expiresAt(), request.code());
+        return ResponseEntity.ok(code);
     }
 
     @GetMapping("/invite-codes")
@@ -377,14 +347,8 @@ public class CoachController {
     @DeleteMapping("/invite-codes/{id}")
     public ResponseEntity<Void> deactivateInviteCode(@PathVariable String id) {
         String coachId = SecurityUtils.getCurrentUserId();
-        try {
-            coachService.deactivateInviteCode(coachId, id);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        coachService.deactivateInviteCode(coachId, id);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/redeem-invite")
@@ -395,25 +359,17 @@ public class CoachController {
         // Look up in coach invite codes
         Optional<InviteCode> coachCode = inviteCodeRepository.findByCode(normalizedCode);
         if (coachCode.isPresent()) {
-            try {
-                coachService.redeemInviteCode(userId, normalizedCode);
-                return ResponseEntity.ok(new RedeemResponse("GROUP", "Joined training group"));
-            } catch (IllegalStateException e) {
-                return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-            }
+            coachService.redeemInviteCode(userId, normalizedCode);
+            return ResponseEntity.ok(new RedeemResponse("GROUP", "Joined training group"));
         }
 
         // Look up in club invite codes
         Optional<ClubInviteCode> clubCode = clubInviteCodeRepository.findByCode(normalizedCode);
         if (clubCode.isPresent()) {
-            try {
-                clubInviteCodeService.redeemClubInviteCode(userId, normalizedCode);
-                return ResponseEntity.ok(new RedeemResponse("CLUB", "Joined club successfully"));
-            } catch (IllegalStateException e) {
-                return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-            }
+            clubInviteCodeService.redeemClubInviteCode(userId, normalizedCode);
+            return ResponseEntity.ok(new RedeemResponse("CLUB", "Joined club successfully"));
         }
 
-        return ResponseEntity.badRequest().body(Map.of("error", "Invalid invite code"));
+        throw new com.koval.trainingplannerbackend.config.exceptions.ValidationException("Invalid invite code");
     }
 }

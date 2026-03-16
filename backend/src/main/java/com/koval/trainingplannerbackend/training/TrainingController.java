@@ -55,42 +55,30 @@ public class TrainingController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Training> getTraining(@PathVariable String id) {
-        try {
-            Training training = trainingService.getTrainingById(id);
-            String userId = SecurityUtils.getCurrentUserId();
-            verifyAccessToTraining(userId, training);
-            metricsService.enrichTrainingForUser(training, userId);
-            return ResponseEntity.ok(training);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+        Training training = trainingService.getTrainingById(id);
+        String userId = SecurityUtils.getCurrentUserId();
+        verifyAccessToTraining(userId, training);
+        metricsService.enrichTrainingForUser(training, userId);
+        return ResponseEntity.ok(training);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Training> updateTraining(@PathVariable String id,
                                                    @RequestBody Training updates) {
-        try {
-            Training existing = trainingService.getTrainingById(id);
-            String userId = SecurityUtils.getCurrentUserId();
-            verifyAccessToTraining(userId, existing);
-            Training updated = trainingService.updateTraining(id, updates);
-            return ResponseEntity.ok(updated);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+        Training existing = trainingService.getTrainingById(id);
+        String userId = SecurityUtils.getCurrentUserId();
+        verifyAccessToTraining(userId, existing);
+        Training updated = trainingService.updateTraining(id, updates);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTraining(@PathVariable String id) {
-        try {
-            Training existing = trainingService.getTrainingById(id);
-            String userId = SecurityUtils.getCurrentUserId();
-            verifyAccessToTraining(userId, existing);
-            trainingService.deleteTraining(id);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+        Training existing = trainingService.getTrainingById(id);
+        String userId = SecurityUtils.getCurrentUserId();
+        verifyAccessToTraining(userId, existing);
+        trainingService.deleteTraining(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping

@@ -1,5 +1,7 @@
 package com.koval.trainingplannerbackend.training.group;
 
+import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,7 +59,7 @@ public class GroupService {
      */
     public Group addAthleteToGroup(String groupId, String athleteId) {
         Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group not found: " + groupId));
+                .orElseThrow(() -> new ResourceNotFoundException("Group", + groupId));
         if (!group.getAthleteIds().contains(athleteId)) {
             group.getAthleteIds().add(athleteId);
             groupRepository.save(group);
@@ -70,7 +72,7 @@ public class GroupService {
      */
     public Group removeAthleteFromGroup(String groupId, String athleteId) {
         Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group not found: " + groupId));
+                .orElseThrow(() -> new ResourceNotFoundException("Group", + groupId));
         group.getAthleteIds().remove(athleteId);
         return groupRepository.save(group);
     }
@@ -127,9 +129,9 @@ public class GroupService {
      */
     public Group renameGroup(String groupId, String newName, String coachId) {
         Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group not found: " + groupId));
+                .orElseThrow(() -> new ResourceNotFoundException("Group", + groupId));
         if (!coachId.equals(group.getCoachId())) {
-            throw new IllegalArgumentException("Only the group owner can rename this group");
+            throw new ForbiddenOperationException("Only the group owner can rename this group");
         }
         group.setName(newName.toLowerCase().trim());
         return groupRepository.save(group);
@@ -140,9 +142,9 @@ public class GroupService {
      */
     public void deleteGroup(String groupId, String coachId) {
         Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group not found: " + groupId));
+                .orElseThrow(() -> new ResourceNotFoundException("Group", + groupId));
         if (!coachId.equals(group.getCoachId())) {
-            throw new IllegalArgumentException("Only the group owner can delete this group");
+            throw new ForbiddenOperationException("Only the group owner can delete this group");
         }
         groupRepository.deleteById(groupId);
     }
@@ -152,7 +154,7 @@ public class GroupService {
      */
     public Group getGroupById(String groupId) {
         return groupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group not found: " + groupId));
+                .orElseThrow(() -> new ResourceNotFoundException("Group", + groupId));
     }
 
     /**
@@ -160,7 +162,7 @@ public class GroupService {
      */
     public Group getGroupByNameAndCoach(String name, String coachId) {
         return groupRepository.findByCoachIdAndName(coachId, name.toLowerCase().trim())
-                .orElseThrow(() -> new IllegalArgumentException("Group not found: " + name));
+                .orElseThrow(() -> new ResourceNotFoundException("Group", + name));
     }
 
     /**

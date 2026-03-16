@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.ai;
 
 import com.koval.trainingplannerbackend.ai.agents.AgentType;
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.stereotype.Service;
@@ -64,7 +65,7 @@ public class ChatHistoryService {
 
     public ChatHistory findById(String chatHistoryId) {
         return chatHistoryRepository.findById(chatHistoryId)
-                .orElseThrow(() -> new IllegalArgumentException("Chat history not found: " + chatHistoryId));
+                .orElseThrow(() -> new ResourceNotFoundException("Chat history", chatHistoryId));
     }
 
     public ChatHistory findByIdForUser(String chatHistoryId, String userId) {

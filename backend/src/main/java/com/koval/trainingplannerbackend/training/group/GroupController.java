@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend.training.group;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
+import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -58,24 +59,18 @@ public class GroupController {
     public ResponseEntity<Group> renameGroup(@PathVariable String id, @RequestBody RenameGroupRequest request) {
         String userId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findById(userId).orElse(null);
-        if (user == null || !user.isCoach()) return ResponseEntity.status(403).build();
-        try {
-            Group group = groupService.renameGroup(id, request.name(), userId);
-            return ResponseEntity.ok(group);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(403).build();
+        if (user == null || !user.isCoach()) {
+            throw new ForbiddenOperationException("Only coaches can rename groups");
         }
+        Group group = groupService.renameGroup(id, request.name(), userId);
+        return ResponseEntity.ok(group);
     }
 
     @DeleteMapping("/{id}/leave")
     public ResponseEntity<Void> leaveGroup(@PathVariable String id) {
         String userId = SecurityUtils.getCurrentUserId();
-        try {
-            groupService.removeAthleteFromGroup(id, userId);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+        groupService.removeAthleteFromGroup(id, userId);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
@@ -83,14 +78,10 @@ public class GroupController {
         String userId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findById(userId).orElse(null);
         if (user == null || !user.isCoach()) {
-            return ResponseEntity.status(403).build();
+            throw new ForbiddenOperationException("Only coaches can delete groups");
         }
-        try {
-            groupService.deleteGroup(id, userId);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(403).build();
-        }
+        groupService.deleteGroup(id, userId);
+        return ResponseEntity.noContent().build();
     }
 
     record CreateGroupRequest(String name, int maxAthletes) {}

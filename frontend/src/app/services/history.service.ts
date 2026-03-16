@@ -38,9 +38,6 @@ export class HistoryService {
     private selectedSessionSubject = new BehaviorSubject<SavedSession | null>(null);
     selectedSession$ = this.selectedSessionSubject.asObservable();
 
-    private errorSubject = new BehaviorSubject<string | null>(null);
-    error$ = this.errorSubject.asObservable();
-
     constructor() {
         this.authService.user$.pipe(
             filter((u) => !!u),
@@ -49,7 +46,6 @@ export class HistoryService {
     }
 
     private loadSessions(): void {
-        this.errorSubject.next(null);
         this.http.get<any[]>(this.apiUrl).subscribe({
             next: (sessions) => {
                 const parsed: SavedSession[] = sessions.map((s) => ({
@@ -76,7 +72,7 @@ export class HistoryService {
                 this.sessionsSubject.next(parsed);
             },
             error: () => {
-                this.errorSubject.next('Failed to load sessions');
+                // Error toast shown by interceptor
             },
         });
     }

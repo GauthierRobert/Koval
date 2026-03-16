@@ -12,6 +12,7 @@ import { SettingsComponent } from './components/layout/settings/settings.compone
 import { BluetoothService } from './services/bluetooth.service';
 import { AuthService } from './services/auth.service';
 import { NotificationToastComponent } from './components/shared/notification-toast/notification-toast.component';
+import { ErrorToastComponent } from './components/shared/error-toast/error-toast.component';
 
 @Component({
   selector: 'app-root',
@@ -23,7 +24,8 @@ import { NotificationToastComponent } from './components/shared/notification-toa
     TopBarComponent,
     DeviceManagerComponent,
     SettingsComponent,
-    NotificationToastComponent
+    NotificationToastComponent,
+    ErrorToastComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',

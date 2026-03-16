@@ -4,6 +4,9 @@ import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.auth.UserRole;
 import com.koval.trainingplannerbackend.auth.UserService;
+import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
+import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import com.koval.trainingplannerbackend.club.Club;
 import com.koval.trainingplannerbackend.club.ClubMemberRole;
 import com.koval.trainingplannerbackend.club.ClubMembershipService;
@@ -79,10 +82,10 @@ public class CoachService {
             String notes,
             String groupId) {
         User coach = userRepository.findById(coachId)
-                .orElseThrow(() -> new IllegalArgumentException("Coach not found: " + coachId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", coachId));
 
         if (coach.getRole() != UserRole.COACH) {
-            throw new IllegalStateException("User is not a coach: " + coachId);
+            throw new ForbiddenOperationException("User is not a coach: " + coachId);
         }
 
         // Verify all athletes belong to this coach via groups
@@ -91,7 +94,7 @@ public class CoachService {
         List<ScheduledWorkout> assignments = new ArrayList<>();
         for (String athleteId : athleteIds) {
             if (!coachAthleteIds.contains(athleteId)) {
-                throw new IllegalStateException("Athlete " + athleteId + " is not assigned to coach " + coachId);
+                throw new ValidationException("Athlete " + athleteId + " is not assigned to coach " + coachId);
             }
 
             ScheduledWorkout workout = new ScheduledWorkout();
@@ -162,19 +165,19 @@ public class CoachService {
                         || r.role() == ClubMemberRole.ADMIN
                         || r.role() == ClubMemberRole.OWNER);
         if (!hasClubRole) {
-            throw new IllegalStateException("User does not have coach/admin/owner role in club: " + clubId);
+            throw new ForbiddenOperationException("User does not have coach/admin/owner role in club: " + clubId);
         }
 
         // Validate all athletes are active club members
         List<String> activeMemberIds = clubMembershipService.getActiveMemberIds(clubId);
         for (String athleteId : athleteIds) {
             if (!activeMemberIds.contains(athleteId)) {
-                throw new IllegalStateException("Athlete " + athleteId + " is not an active member of club " + clubId);
+                throw new ValidationException("Athlete " + athleteId + " is not an active member of club " + clubId);
             }
         }
 
         User coach = userRepository.findById(coachId)
-                .orElseThrow(() -> new IllegalArgumentException("Coach not found: " + coachId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", coachId));
 
         List<ScheduledWorkout> assignments = new ArrayList<>();
         for (String athleteId : athleteIds) {
@@ -215,7 +218,7 @@ public class CoachService {
             LocalDate scheduledDate,
             String notes) {
         userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
 
         ScheduledWorkout workout = new ScheduledWorkout();
         workout.setTrainingId(trainingId);
@@ -233,7 +236,7 @@ public class CoachService {
      */
     public void unassignTraining(String scheduledWorkoutId) {
         if (!scheduledWorkoutRepository.existsById(scheduledWorkoutId)) {
-            throw new IllegalArgumentException("Scheduled workout not found: " + scheduledWorkoutId);
+            throw new ResourceNotFoundException("Scheduled workout", scheduledWorkoutId);
         }
         scheduledWorkoutRepository.deleteById(scheduledWorkoutId);
     }
@@ -284,7 +287,7 @@ public class CoachService {
     public ScheduledWorkout markCompleted(String scheduledWorkoutId, Integer tss, Double intensityFactor,
             String sessionId) {
         ScheduledWorkout workout = scheduledWorkoutRepository.findById(scheduledWorkoutId)
-                .orElseThrow(() -> new IllegalArgumentException("Scheduled workout not found: " + scheduledWorkoutId));
+                .orElseThrow(() -> new ResourceNotFoundException("Scheduled workout", scheduledWorkoutId));
 
         workout.setStatus(ScheduleStatus.COMPLETED);
         workout.setCompletedAt(LocalDateTime.now());
@@ -307,7 +310,7 @@ public class CoachService {
      */
     public ScheduledWorkout markSkipped(String scheduledWorkoutId) {
         ScheduledWorkout workout = scheduledWorkoutRepository.findById(scheduledWorkoutId)
-                .orElseThrow(() -> new IllegalArgumentException("Scheduled workout not found: " + scheduledWorkoutId));
+                .orElseThrow(() -> new ResourceNotFoundException("Scheduled workout", scheduledWorkoutId));
 
         workout.setStatus(ScheduleStatus.SKIPPED);
         return scheduledWorkoutRepository.save(workout);
@@ -319,7 +322,7 @@ public class CoachService {
     public List<User> getAthletesByGroup(String coachId, String groupId) {
         Group group = groupService.getGroupById(groupId);
         if (!coachId.equals(group.getCoachId())) {
-            throw new IllegalStateException("Group does not belong to this coach");
+            throw new ForbiddenOperationException("Group does not belong to this coach");
         }
         if (group.getAthleteIds().isEmpty())
             return List.of();
@@ -339,14 +342,14 @@ public class CoachService {
      */
     public Group addGroupToAthlete(String coachId, String athleteId, String groupName) {
         User coach = userRepository.findById(coachId)
-                .orElseThrow(() -> new IllegalArgumentException("Coach not found: " + coachId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", coachId));
         if (coach.getRole() != UserRole.COACH) {
-            throw new IllegalStateException("Only coaches can assign groups to athletes");
+            throw new ForbiddenOperationException("Only coaches can assign groups to athletes");
         }
 
         // Verify athlete exists
         userRepository.findById(athleteId)
-                .orElseThrow(() -> new IllegalArgumentException("Athlete not found: " + athleteId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", athleteId));
 
         Group group = groupService.getOrCreateGroup(groupName, coachId, 0);
         return groupService.addAthleteToGroup(group.getId(), athleteId);
@@ -357,9 +360,9 @@ public class CoachService {
      */
     public Group removeGroupFromAthlete(String coachId, String athleteId, String groupName) {
         User coach = userRepository.findById(coachId)
-                .orElseThrow(() -> new IllegalArgumentException("Coach not found: " + coachId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", coachId));
         if (coach.getRole() != UserRole.COACH) {
-            throw new IllegalStateException("Only coaches can modify athlete groups");
+            throw new ForbiddenOperationException("Only coaches can modify athlete groups");
         }
 
         Group group = groupService.getGroupByNameAndCoach(groupName, coachId);
@@ -372,9 +375,9 @@ public class CoachService {
      */
     public List<Group> setAthleteGroups(String coachId, String athleteId, List<String> groupIds) {
         User coach = userRepository.findById(coachId)
-                .orElseThrow(() -> new IllegalArgumentException("Coach not found: " + coachId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", coachId));
         if (coach.getRole() != UserRole.COACH) {
-            throw new IllegalStateException("Only coaches can modify athlete groups");
+            throw new ForbiddenOperationException("Only coaches can modify athlete groups");
         }
 
         // Remove from all current coach groups
@@ -385,7 +388,7 @@ public class CoachService {
         for (String groupId : groupIds) {
             Group group = groupService.getGroupById(groupId);
             if (!coachId.equals(group.getCoachId())) {
-                throw new IllegalStateException("Group " + groupId + " does not belong to this coach");
+                throw new ForbiddenOperationException("Group " + groupId + " does not belong to this coach");
             }
             result.add(groupService.addAthleteToGroup(groupId, athleteId));
         }
@@ -399,10 +402,10 @@ public class CoachService {
      */
     public InviteCode generateInviteCode(String coachId, List<String> groupIds, int maxUses, LocalDateTime expiresAt, String customCode) {
         User coach = userRepository.findById(coachId)
-                .orElseThrow(() -> new IllegalArgumentException("Coach not found: " + coachId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", coachId));
 
         if (coach.getRole() != UserRole.COACH) {
-            throw new IllegalStateException("User is not a coach: " + coachId);
+            throw new ForbiddenOperationException("User is not a coach: " + coachId);
         }
 
         InviteCode inviteCode = new InviteCode();
@@ -427,18 +430,18 @@ public class CoachService {
         User athlete = userService.getUserById(athleteId);
 
         InviteCode inviteCode = inviteCodeRepository.findByCode(code.toUpperCase().trim())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid invite code"));
+                .orElseThrow(() -> new ResourceNotFoundException("Invalid invite code"));
 
         if (!inviteCode.isActive()) {
-            throw new IllegalStateException("Invite code is no longer active");
+            throw new ValidationException("Invite code is no longer active");
         }
 
         if (inviteCode.getExpiresAt() != null && LocalDateTime.now().isAfter(inviteCode.getExpiresAt())) {
-            throw new IllegalStateException("Invite code has expired");
+            throw new ValidationException("Invite code has expired");
         }
 
         if (inviteCode.getMaxUses() > 0 && inviteCode.getCurrentUses() >= inviteCode.getMaxUses()) {
-            throw new IllegalStateException("Invite code has reached maximum uses");
+            throw new ValidationException("Invite code has reached maximum uses");
         }
 
         // Add athlete to each Group referenced by the invite code
@@ -465,10 +468,10 @@ public class CoachService {
      */
     public void deactivateInviteCode(String coachId, String inviteCodeId) {
         InviteCode inviteCode = inviteCodeRepository.findById(inviteCodeId)
-                .orElseThrow(() -> new IllegalArgumentException("Invite code not found: " + inviteCodeId));
+                .orElseThrow(() -> new ResourceNotFoundException("Invite code", inviteCodeId));
 
         if (!coachId.equals(inviteCode.getCoachId())) {
-            throw new IllegalStateException("Invite code does not belong to this coach");
+            throw new ForbiddenOperationException("Invite code does not belong to this coach");
         }
 
         inviteCode.setActive(false);
@@ -486,6 +489,6 @@ public class CoachService {
                 return code;
             }
         }
-        throw new IllegalStateException("Unable to generate unique invite code after 10 attempts");
+        throw new ValidationException("Unable to generate unique invite code after 10 attempts");
     }
 }
