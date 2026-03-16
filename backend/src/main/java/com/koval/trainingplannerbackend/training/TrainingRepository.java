@@ -22,5 +22,5 @@ public interface TrainingRepository extends MongoRepository<Training, String> {
 
     List<Training> findByGroupIdsIn(List<String> groupIds);
 
-    List<Training> findByClubIdIn(List<String> clubIds);
+    List<Training> findByClubIdsIn(List<String> clubIds);
 }

@@ -92,8 +92,8 @@ public class TrainingService {
             training.setGroupIds(updates.getGroupIds());
         if (updates.getTrainingType() != null)
             training.setTrainingType(updates.getTrainingType());
-        if (updates.getClubId() != null)
-            training.setClubId(updates.getClubId());
+        if (updates.getClubIds() != null)
+            training.setClubIds(updates.getClubIds());
         if (updates.getClubGroupIds() != null)
             training.setClubGroupIds(updates.getClubGroupIds());
         if (updates.getZoneSystemId() != null)
@@ -172,7 +172,16 @@ public class TrainingService {
                 .map(ClubMembership::getClubId)
                 .toList();
         if (clubIds.isEmpty()) return List.of();
-        return trainingRepository.findByClubIdIn(clubIds);
+        return trainingRepository.findByClubIdsIn(clubIds);
+    }
+
+    /**
+     * Add a club ID to a training's clubIds list (idempotent).
+     */
+    public Training addClubIdToTraining(String trainingId, String clubId) {
+        Training training = getTrainingById(trainingId);
+        training.addClubId(clubId);
+        return trainingRepository.save(training);
     }
 
     /**

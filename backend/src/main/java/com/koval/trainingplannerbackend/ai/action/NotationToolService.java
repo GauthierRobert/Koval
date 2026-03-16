@@ -78,7 +78,7 @@ public class NotationToolService {
         training.setTrainingType(parseTrainingType(type));
         training.setBlocks(resolvedBlocks);
         training.setGroupIds(new ArrayList<>());
-        training.setClubId(resolvedClubId);
+        training.addClubId(resolvedClubId);
 
         List<String> clubGroupIds = new ArrayList<>();
         if (isPresent(clubGroupId)) clubGroupIds.add(clubGroupId);

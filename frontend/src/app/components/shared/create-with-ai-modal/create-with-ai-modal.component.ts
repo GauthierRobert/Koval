@@ -14,6 +14,8 @@ import { AIActionService, AIActionType, ActionContext, ActionResult } from '../.
 import { ClubService, ClubGroup } from '../../../services/club.service';
 import { ZoneService } from '../../../services/zone.service';
 import { ZoneSystem } from '../../../services/zone';
+import { TrainingService } from '../../../services/training.service';
+import { Training } from '../../../models/training.model';
 
 @Component({
   selector: 'app-create-with-ai-modal',
@@ -35,6 +37,7 @@ export class CreateWithAiModalComponent implements OnChanges {
   private aiActionService = inject(AIActionService);
   private clubService = inject(ClubService);
   private zoneService = inject(ZoneService);
+  private trainingService = inject(TrainingService);
   private ngZone = inject(NgZone);
 
   prompt = '';
@@ -51,6 +54,12 @@ export class CreateWithAiModalComponent implements OnChanges {
   filteredZoneSystems: ZoneSystem[] = [];
   readonly sports = ['CYCLING', 'RUNNING', 'SWIMMING'];
 
+  // Select existing training tab
+  mode: 'ai' | 'select' = 'ai';
+  availableTrainings: Training[] = [];
+  selectedTrainingId: string | null = null;
+  searchQuery = '';
+
   get showSportSelector(): boolean {
     return this.actionType === 'TRAINING_FROM_NOTATION' || this.actionType === 'TRAINING_WITH_SESSION';
   }
@@ -58,6 +67,20 @@ export class CreateWithAiModalComponent implements OnChanges {
   get showTagSelector(): boolean {
     return (this.actionType === 'TRAINING_WITH_SESSION' || this.actionType === 'TRAINING_FROM_NOTATION')
         && !!this.context.clubId;
+  }
+
+  get showSelectTab(): boolean {
+    return !!this.context.sessionId && !!this.context.clubId;
+  }
+
+  get filteredTrainings(): Training[] {
+    if (!this.searchQuery.trim()) return this.availableTrainings;
+    const q = this.searchQuery.toLowerCase();
+    return this.availableTrainings.filter(
+      (t) =>
+        t.title?.toLowerCase().includes(q) ||
+        t.description?.toLowerCase().includes(q)
+    );
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -84,6 +107,12 @@ export class CreateWithAiModalComponent implements OnChanges {
           },
         });
       }
+      if (this.showSelectTab) {
+        this.trainingService.trainings$.subscribe((trainings) => {
+          this.ngZone.run(() => (this.availableTrainings = trainings));
+        });
+        this.trainingService.loadTrainings();
+      }
     }
   }
 
@@ -91,6 +120,42 @@ export class CreateWithAiModalComponent implements OnChanges {
     this.filteredZoneSystems = this.allZoneSystems.filter((z) => z.sportType === this.selectedSport);
     const defaultSystem = this.filteredZoneSystems.find((z) => z.defaultForSport);
     this.selectedZoneSystemId = defaultSystem?.id ?? '';
+  }
+
+  setMode(mode: 'ai' | 'select'): void {
+    this.mode = mode;
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  selectTraining(t: Training): void {
+    this.selectedTrainingId = this.selectedTrainingId === t.id ? null : t.id;
+  }
+
+  confirmSelection(): void {
+    if (!this.selectedTrainingId || this.loading || !this.context.clubId || !this.context.sessionId) return;
+
+    this.loading = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.clubService
+      .linkTrainingToSession(this.context.clubId, this.context.sessionId, this.selectedTrainingId)
+      .subscribe({
+        next: () => {
+          this.ngZone.run(() => {
+            this.loading = false;
+            this.successMessage = 'Training linked to session successfully.';
+            this.created.emit({ success: true, content: 'Training linked.' });
+          });
+        },
+        error: (err) => {
+          this.ngZone.run(() => {
+            this.loading = false;
+            this.errorMessage = err?.error?.message ?? 'Failed to link training.';
+          });
+        },
+      });
   }
 
   submit(): void {
@@ -144,5 +209,9 @@ export class CreateWithAiModalComponent implements OnChanges {
     this.selectedZoneSystemId = '';
     this.allZoneSystems = [];
     this.filteredZoneSystems = [];
+    this.mode = 'ai';
+    this.availableTrainings = [];
+    this.selectedTrainingId = null;
+    this.searchQuery = '';
   }
 }

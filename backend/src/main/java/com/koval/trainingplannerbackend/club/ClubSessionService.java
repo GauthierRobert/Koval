@@ -135,6 +135,7 @@ public class ClubSessionService {
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
         session.setLinkedTrainingId(trainingId);
         enrichFromLinkedTraining(session);
+        trainingService.addClubIdToTraining(trainingId, clubId);
         return sessionRepository.save(session);
     }
 

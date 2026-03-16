@@ -146,8 +146,10 @@ public class TrainingController {
         if (coachService.isCoachOfAthlete(currentUserId, training.getCreatedBy())) {
             return;
         }
-        if (training.getClubId() != null && trainingService.isUserActiveClubMember(currentUserId, training.getClubId())) {
-            return;
+        if (training.getClubIds() != null) {
+            for (String cid : training.getClubIds()) {
+                if (trainingService.isUserActiveClubMember(currentUserId, cid)) return;
+            }
         }
         if (receivedTrainingService.hasReceived(currentUserId, training.getId())) {
             return;

@@ -49,9 +49,15 @@ public abstract class Training {
     private String createdBy; // User ID of creator
     private List<String> groupIds = new ArrayList<>(); // ID list of coach Group IDs
 
-    // Club linking
+    // Club linking — a training can belong to multiple clubs
     @Indexed
-    private String clubId;                                 // Optional: club this training belongs to
-    private List<String> clubGroupIds = new ArrayList<>(); // Optional: club groups within that club
+    private List<String> clubIds = new ArrayList<>();
+    private List<String> clubGroupIds = new ArrayList<>(); // Optional: club groups within clubs
+
+    public void addClubId(String clubId) {
+        if (clubId != null && !this.clubIds.contains(clubId)) {
+            this.clubIds.add(clubId);
+        }
+    }
 
 }

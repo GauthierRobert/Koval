@@ -72,7 +72,7 @@ public class AIActionToolService {
                 estimatedTss, null, blocks, groupIds);
 
         Training training = trainingMapper.mapToEntity(request);
-        training.setClubId(resolvedClubId);
+        training.addClubId(resolvedClubId);
         training.setClubGroupIds(clubGroupIds);
 
         Training saved = trainingService.createTraining(training, userId);

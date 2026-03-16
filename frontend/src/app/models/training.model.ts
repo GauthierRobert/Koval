@@ -82,7 +82,7 @@ export interface Training {
     estimatedDistance?: number;
     zoneSystemId?: string;
     createdAt?: string;
-    clubId?: string;
+    clubIds?: string[];
     clubGroupIds?: string[];
     _receivedMeta?: {
         assignedByName?: string;
