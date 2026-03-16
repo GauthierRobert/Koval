@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, Observable, of} from 'rxjs';
+import {Observable, of} from 'rxjs';
 import {catchError} from 'rxjs/operators';
 import {User} from './auth.service';
 import {Group} from './group.service';
@@ -50,18 +50,11 @@ export interface ScheduledWorkout {
 export class CoachService {
     private apiUrl = `${environment.apiUrl}/api/coach`;
 
-    private errorSubject = new BehaviorSubject<string | null>(null);
-    error$ = this.errorSubject.asObservable();
-
     constructor(private http: HttpClient) { }
 
     getAthletes(): Observable<User[]> {
-        this.errorSubject.next(null);
         return this.http.get<User[]>(`${this.apiUrl}/athletes`).pipe(
-            catchError(() => {
-                this.errorSubject.next('Failed to load athletes');
-                return of([] as User[]);
-            })
+            catchError(() => of([] as User[]))
         );
     }
 
@@ -70,15 +63,11 @@ export class CoachService {
         start: string,
         end: string
     ): Observable<ScheduledWorkout[]> {
-        this.errorSubject.next(null);
         return this.http
             .get<ScheduledWorkout[]>(`${this.apiUrl}/schedule/${athleteId}`, {
                 params: { start, end },
             })
-            .pipe(catchError(() => {
-                this.errorSubject.next('Failed to load athlete schedule');
-                return of([] as ScheduledWorkout[]);
-            }));
+            .pipe(catchError(() => of([] as ScheduledWorkout[])));
     }
 
     assignTraining(
@@ -110,10 +99,7 @@ export class CoachService {
     getAllGroups(): Observable<Group[]> {
         return this.http
             .get<Group[]>(`${this.apiUrl}/athletes/groups`)
-            .pipe(catchError(() => {
-                this.errorSubject.next('Failed to load groups');
-                return of([] as Group[]);
-            }));
+            .pipe(catchError(() => of([] as Group[])));
     }
 
     generateInviteCode(groupIds: string[], maxUses: number, code?: string): Observable<InviteCode> {
@@ -126,10 +112,7 @@ export class CoachService {
     getInviteCodes(): Observable<InviteCode[]> {
         return this.http
             .get<InviteCode[]>(`${this.apiUrl}/invite-codes`)
-            .pipe(catchError(() => {
-                this.errorSubject.next('Failed to load invite codes');
-                return of([] as InviteCode[]);
-            }));
+            .pipe(catchError(() => of([] as InviteCode[])));
     }
 
     deactivateInviteCode(codeId: string): Observable<void> {
@@ -152,12 +135,7 @@ export class CoachService {
     getAthleteSessions(athleteId: string): Observable<any[]> {
         return this.http
             .get<any[]>(`${this.apiUrl}/athletes/${athleteId}/sessions`)
-            .pipe(
-                catchError(() => {
-                    this.errorSubject.next('Failed to load athlete sessions');
-                    return of([] as any[]);
-                }),
-            );
+            .pipe(catchError(() => of([] as any[])));
     }
 
     getAthletePmc(athleteId: string, from: string, to: string): Observable<PmcDataPoint[]> {
@@ -165,9 +143,6 @@ export class CoachService {
             .get<PmcDataPoint[]>(`${this.apiUrl}/athletes/${athleteId}/pmc`, {
                 params: { from, to },
             })
-            .pipe(catchError(() => {
-                this.errorSubject.next('Failed to load athlete PMC data');
-                return of([] as PmcDataPoint[]);
-            }));
+            .pipe(catchError(() => of([] as PmcDataPoint[])));
     }
 }

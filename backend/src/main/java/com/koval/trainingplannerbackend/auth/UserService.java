@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.auth;
 
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.training.group.Group;
 import com.koval.trainingplannerbackend.training.group.GroupService;
 import org.springframework.stereotype.Service;
@@ -76,7 +77,7 @@ public class UserService {
 
     public User getUserById(String userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
     }
 
     public Optional<User> findById(String userId) {

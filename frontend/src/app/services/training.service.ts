@@ -26,9 +26,6 @@ export class TrainingService {
     private receivedTrainingsSubject = new BehaviorSubject<ReceivedTraining[]>([]);
     receivedTrainings$ = this.receivedTrainingsSubject.asObservable();
 
-    private errorSubject = new BehaviorSubject<string | null>(null);
-    error$ = this.errorSubject.asObservable();
-
     private static readonly FTP_STORAGE_KEY = 'koval_ftp';
 
     private ftpSubject = new BehaviorSubject<number | null>(this.loadFtp());
@@ -61,7 +58,6 @@ export class TrainingService {
     }
 
     loadTrainings(): void {
-        this.errorSubject.next(null);
         this.http.get<Training[]>(this.apiUrl).subscribe({
             next: (trainings) => {
                 this.trainingsSubject.next(trainings);
@@ -70,7 +66,6 @@ export class TrainingService {
                 }
             },
             error: () => {
-                this.errorSubject.next('Failed to load trainings');
                 this.trainingsSubject.next([]);
             },
         });

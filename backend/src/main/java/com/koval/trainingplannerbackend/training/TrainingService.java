@@ -14,6 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -78,7 +80,7 @@ public class TrainingService {
     public Training updateTraining(String trainingId, Training updates) {
         Optional<Training> existing = trainingRepository.findById(trainingId);
         if (existing.isEmpty()) {
-            throw new IllegalArgumentException("Training not found: " + trainingId);
+            throw new ResourceNotFoundException("Training", trainingId);
         }
 
         Training training = existing.get();
@@ -108,7 +110,7 @@ public class TrainingService {
      */
     public void deleteTraining(String trainingId) {
         if (!trainingRepository.existsById(trainingId)) {
-            throw new IllegalArgumentException("Training not found: " + trainingId);
+            throw new ResourceNotFoundException("Training", trainingId);
         }
         trainingRepository.deleteById(trainingId);
     }
@@ -118,7 +120,7 @@ public class TrainingService {
      */
     public Training getTrainingById(String trainingId) {
         return trainingRepository.findById(trainingId)
-                .orElseThrow(() -> new IllegalArgumentException("Training not found: " + trainingId));
+                .orElseThrow(() -> new ResourceNotFoundException("Training", trainingId));
     }
 
     /**

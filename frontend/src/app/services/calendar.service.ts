@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, Observable, of} from 'rxjs';
+import {Observable, of} from 'rxjs';
 import {catchError, map} from 'rxjs/operators';
 import {ScheduledWorkout} from './coach.service';
 import {SavedSession} from './history.service';
@@ -34,21 +34,14 @@ const BASE = environment.apiUrl;
 export class CalendarService {
     private apiUrl = `${BASE}/api/schedule`;
 
-    private errorSubject = new BehaviorSubject<string | null>(null);
-    error$ = this.errorSubject.asObservable();
-
     constructor(private http: HttpClient) { }
 
     getMySchedule(start: string, end: string, includeClubSessions = false): Observable<ScheduledWorkout[]> {
-        this.errorSubject.next(null);
         const params: Record<string, string> = { start, end };
         if (includeClubSessions) params['includeClubSessions'] = 'true';
         return this.http
             .get<ScheduledWorkout[]>(this.apiUrl, { params })
-            .pipe(catchError(() => {
-                this.errorSubject.next('Failed to load schedule');
-                return of([] as ScheduledWorkout[]);
-            }));
+            .pipe(catchError(() => of([] as ScheduledWorkout[])));
     }
 
     scheduleWorkout(
@@ -108,10 +101,7 @@ export class CalendarService {
                 fitFileId: s.fitFileId ?? undefined,
                 scheduledWorkoutId: s.scheduledWorkoutId ?? undefined,
             } as SavedSession))),
-            catchError(() => {
-                this.errorSubject.next('Failed to load calendar sessions');
-                return of([] as SavedSession[]);
-            })
+            catchError(() => of([] as SavedSession[]))
         );
     }
 

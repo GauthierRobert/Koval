@@ -2,6 +2,8 @@ package com.koval.trainingplannerbackend.ai;
 
 import com.koval.trainingplannerbackend.ai.agents.AgentType;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
+import com.koval.trainingplannerbackend.config.exceptions.RateLimitException;
+import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.http.MediaType;
@@ -11,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ai")
@@ -32,22 +33,15 @@ public class AIController {
 
     @PostMapping("/chat")
     public ResponseEntity<?> chat(@RequestBody ChatRequest request) {
-        String msg = request.message();
-        if (msg == null || msg.isBlank()) {
-            return ResponseEntity.badRequest().body(error("empty_message", "Message cannot be empty."));
-        }
-        if (msg.length() > MAX_MESSAGE_CHARS) {
-            return ResponseEntity.badRequest().body(error("message_too_long",
-                    "Your message is too long (" + msg.length() + " chars). Please keep it under "
-                            + MAX_MESSAGE_CHARS + " characters and try again."));
-        }
+        validateMessage(request.message());
+        String userId = SecurityUtils.getCurrentUserId();
+        AgentType agentType = parseAgentType(request.agentType());
         try {
-            String userId = SecurityUtils.getCurrentUserId();
-            AgentType agentType = parseAgentType(request.agentType());
-            var response = aiService.chat(msg, userId, request.chatHistoryId(), agentType);
+            var response = aiService.chat(request.message(), userId, request.chatHistoryId(), agentType);
             return ResponseEntity.ok(response);
         } catch (RuntimeException ex) {
-            return handleAiException(ex);
+            handleAiException(ex);
+            throw ex; // unreachable if handleAiException throws, but satisfies compiler
         }
     }
 
@@ -73,15 +67,13 @@ public class AIController {
 
     @PostMapping("/plan")
     public ResponseEntity<?> plan(@RequestBody ChatRequest request) {
-        String msg = request.message();
-        if (msg == null || msg.isBlank()) {
-            return ResponseEntity.badRequest().body(error("empty_message", "Message cannot be empty."));
-        }
+        validateMessage(request.message());
+        SecurityUtils.getCurrentUserId(); // audit: ensure authenticated
         try {
-            SecurityUtils.getCurrentUserId(); // audit: ensure authenticated
-            return ResponseEntity.ok(aiService.plan(msg));
+            return ResponseEntity.ok(aiService.plan(request.message()));
         } catch (RuntimeException ex) {
-            return handleAiException(ex);
+            handleAiException(ex);
+            throw ex;
         }
     }
 
@@ -95,21 +87,17 @@ public class AIController {
 
     @GetMapping("/history/{chatHistoryId}")
     public ResponseEntity<ChatHistoryDetail> getChatHistory(@PathVariable String chatHistoryId) {
-        try {
-            String userId = SecurityUtils.getCurrentUserId();
-            ChatHistory metadata = chatHistoryService.findByIdForUser(chatHistoryId, userId);
-            List<Message> messages = chatHistoryService.getMessages(chatHistoryId);
+        String userId = SecurityUtils.getCurrentUserId();
+        ChatHistory metadata = chatHistoryService.findByIdForUser(chatHistoryId, userId);
+        List<Message> messages = chatHistoryService.getMessages(chatHistoryId);
 
-            List<ConversationMessage> conversationMessages = messages.stream()
-                    .map(m -> new ConversationMessage(
-                            m.getMessageType().name().toLowerCase(),
-                            m.getText()))
-                    .toList();
+        List<ConversationMessage> conversationMessages = messages.stream()
+                .map(m -> new ConversationMessage(
+                        m.getMessageType().name().toLowerCase(),
+                        m.getText()))
+                .toList();
 
-            return ResponseEntity.ok(new ChatHistoryDetail(metadata, conversationMessages));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(new ChatHistoryDetail(metadata, conversationMessages));
     }
 
     @DeleteMapping("/history/{chatHistoryId}")
@@ -127,6 +115,18 @@ public class AIController {
 
     // ── Helpers ─────────────────────────────────────────────────────────
 
+    private void validateMessage(String msg) {
+        if (msg == null || msg.isBlank()) {
+            throw new ValidationException("Message cannot be empty.", "EMPTY_MESSAGE");
+        }
+        if (msg.length() > MAX_MESSAGE_CHARS) {
+            throw new ValidationException(
+                    "Your message is too long (" + msg.length() + " chars). Please keep it under "
+                            + MAX_MESSAGE_CHARS + " characters and try again.",
+                    "MESSAGE_TOO_LONG");
+        }
+    }
+
     private AgentType parseAgentType(String agentType) {
         if (agentType == null || agentType.isBlank()) {
             return null; // router will classify
@@ -138,17 +138,12 @@ public class AIController {
         }
     }
 
-    private ResponseEntity<Map<String, String>> handleAiException(RuntimeException ex) {
+    private void handleAiException(RuntimeException ex) {
         String msg = ex.getMessage() != null ? ex.getMessage() : "";
         if (msg.contains("429") || msg.contains("rate_limit")) {
-            return ResponseEntity.status(429).body(error("rate_limit_exceeded",
+            throw new RateLimitException(
                     "Your request was too large or you've sent too many requests this minute. "
-                            + "Please shorten your message or wait a moment and try again."));
+                            + "Please shorten your message or wait a moment and try again.");
         }
-        throw ex;
-    }
-
-    private Map<String, String> error(String code, String message) {
-        return Map.of("error", code, "message", message);
     }
 }
