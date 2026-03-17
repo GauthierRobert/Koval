@@ -24,13 +24,13 @@
                   {{ daysUntil(item.raceDate) }}d to go
                 </span>
               </div>
-              <div class="participants-row">
+              <div class="participants-row tooltip-anchor">
                 <div class="participant-avatars">
                   @for (p of item.participants; track p.userId) {
                     @if (p.profilePicture) {
-                      <img [src]="p.profilePicture" [title]="p.displayName" class="participant-avatar" />
+                      <img [src]="p.profilePicture" class="participant-avatar" />
                     } @else {
-                      <span class="participant-avatar-placeholder" [title]="p.displayName">
+                      <span class="participant-avatar-placeholder">
                         {{ p.displayName.charAt(0) }}
                       </span>
                     }
@@ -39,6 +39,22 @@
                 <span class="participants-label">
                   {{ item.participants.length }} {{ item.participants.length === 1 ? 'member' : 'members' }} racing
                 </span>
+                <div class="participants-tooltip">
+                  @for (p of item.participants; track p.userId) {
+                    <div class="tooltip-participant">
+                      @if (p.profilePicture) {
+                        <img [src]="p.profilePicture" class="tooltip-avatar" />
+                      } @else {
+                        <span class="tooltip-avatar-placeholder">{{ p.displayName.charAt(0) }}</span>
+                      }
+                      <span class="tooltip-name">{{ p.displayName }}</span>
+                      <span class="tooltip-priority" [style.color]="getPriorityColor(p.priority)">{{ p.priority }}</span>
+                      @if (p.targetTime) {
+                        <span class="tooltip-target">{{ p.targetTime }}</span>
+                      }
+                    </div>
+                  }
+                </div>
               </div>
             </div>
             @if (item.hasUpcomingClubSession) {

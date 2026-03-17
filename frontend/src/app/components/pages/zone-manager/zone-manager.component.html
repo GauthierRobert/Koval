@@ -98,6 +98,15 @@
                 <label>REFERENCE NAME</label>
                 <input class="config-input" [(ngModel)]="editingSystem.referenceName" placeholder="e.g., Lactate Threshold" />
               </div>
+              <div class="config-item">
+                <label>UNIT</label>
+                <input class="config-input" [(ngModel)]="editingSystem.referenceUnit" placeholder="e.g., W, bpm, sec/km" />
+              </div>
+            } @else {
+              <div class="config-item">
+                <label>UNIT</label>
+                <span class="config-readonly">{{ getDefaultUnit(editingSystem.referenceType) }}</span>
+              </div>
             }
             <div class="config-item config-default">
               <label class="default-toggle">

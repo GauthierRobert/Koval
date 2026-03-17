@@ -26,6 +26,7 @@ export interface ZoneSystem {
   sportType: SportType;
   referenceType: ZoneReferenceType;
   referenceName?: string;
+  referenceUnit?: string;
   zones: Zone[];
   defaultForSport?: boolean;
   annotations?: string;

@@ -52,8 +52,7 @@
           <h1>Technical Assistance.</h1>
           <p>Define objectives or request physiological analysis.</p>
           <div class="suggestion-grid">
-            <button (click)="quickSend('Create a 1h sweet spot cycling workout and schedule it for Saturday')">SWEET SPOT + SCHEDULE</button>
-            <button (click)="quickSend('Search for Ironman Nice in the race catalog and add it as my A-priority goal')">FIND RACE + SET GOAL</button>
+            <button (click)="quickSend('Create a 1h over/under sweet spot cycling workout and schedule it for Saturday')">SWEET SPOT + SCHEDULE</button>
             <button (click)="quickSend('How is my fitness trending this month and what do I have planned next week?')">FITNESS CHECK</button>
             <button (click)="quickSend('Create a VO2max bike session for my group this Wednesday at 6pm')">GROUP VO2MAX SESSION</button>
             <button (click)="quickSend('Organize a 2h endurance club ride for Saturday morning at 9am')">ENDURANCE CLUB RIDE</button>
@@ -113,21 +112,18 @@
 
         @if (msg.role === 'assistant' && msg.createdTraining) {
           <div class="message-wrapper ai">
-            <div class="created-training-card glass">
-              <div class="ct-body">
+            <div class="created-training-viz glass">
+              <div class="ct-header">
                 <span class="ct-sport-icon">
                   {{ msg.createdTraining.sportType === 'RUNNING' ? '🏃' : msg.createdTraining.sportType === 'SWIMMING' ? '🏊' : '🚴' }}
                 </span>
-                <div class="ct-info">
-                  <span class="ct-title">{{ msg.createdTraining.title }}</span>
-                  @if (msg.createdTraining.estimatedDurationSeconds) {
-                    <span class="ct-duration">{{ (msg.createdTraining.estimatedDurationSeconds / 60) | number:'1.0-0' }} min</span>
-                  }
-                </div>
+                <span class="ct-title">{{ msg.createdTraining.title }}</span>
               </div>
-              <button class="schedule-btn" (click)="openScheduleModal(msg.createdTraining!)">
-                Add to Calendar
-              </button>
+              @if (fetchedTrainings[msg.createdTraining.id]; as fullTraining) {
+                <app-workout-visualization [training]="fullTraining" [compact]="true"></app-workout-visualization>
+              } @else {
+                <div class="ct-loading">Loading workout...</div>
+              }
             </div>
           </div>
         }
@@ -172,11 +168,3 @@
     </div>
   </div>
 </div>
-
-<app-schedule-modal
-  [isOpen]="showScheduleModal"
-  [preselectedTraining]="selectedTrainingForSchedule"
-  mode="athlete"
-  (closed)="onScheduleModalClose()"
-  (scheduled)="onScheduleModalClose()"
-></app-schedule-modal>

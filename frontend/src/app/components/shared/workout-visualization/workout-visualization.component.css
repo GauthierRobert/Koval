@@ -610,6 +610,60 @@
       background: rgba(255, 157, 0, 0.08);
     }
 
+    /* ── Compact mode ─────────────────────────────────────── */
+
+    .viz-container.compact {
+      padding: 0;
+      height: auto;
+      overflow: visible;
+    }
+
+    .compact-panels {
+      flex-direction: column;
+    }
+
+    .compact-panels .right-panel {
+      overflow: visible;
+    }
+
+    .viz-container.compact .chart-wrapper {
+      width: 480px;
+      padding: 12px;
+    }
+
+    .viz-container.compact .metrics-bar {
+      padding: 10px 12px;
+      gap: 16px;
+    }
+
+    .viz-container.compact .stat .value {
+      font-size: 15px;
+    }
+
+    .viz-container.compact .stat .label {
+      font-size: 10px;
+    }
+
+    .viz-container.compact .zone-repartition {
+      padding: 8px 12px;
+    }
+
+    .viz-container.compact .bar-track {
+      height: 12px;
+    }
+
+    .viz-container.compact .block-label .label-intensity {
+      font-size: 10px;
+    }
+
+    .viz-container.compact .block-label .label-duration {
+      font-size: 9px;
+    }
+
+    .viz-container.compact .block-tooltip {
+      display: none;
+    }
+
     /* ── Responsive ────────────────────────────────────────── */
 
     @media (max-width: 900px) {

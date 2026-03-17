@@ -380,24 +380,20 @@ textarea::placeholder {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 2px; }
 
-.created-training-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 14px;
+.created-training-viz {
   border: 1px solid var(--glass-border, rgba(255,255,255,0.1));
   border-left: 3px solid var(--accent-color, #00d4ff);
   border-radius: var(--radius-sm);
-  max-width: 420px;
+  max-width: 600px;
   margin-top: 4px;
+  overflow: hidden;
 }
 
-.ct-body {
+.ct-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-width: 0;
+  padding: 10px 14px 0;
 }
 
 .ct-sport-icon {
@@ -405,45 +401,21 @@ textarea::placeholder {
   flex-shrink: 0;
 }
 
-.ct-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
 .ct-title {
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.04em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.ct-duration {
-  font-size: var(--text-xs);
-  color: var(--text-muted, #888);
-  letter-spacing: 0.06em;
-}
-
-.schedule-btn {
-  flex-shrink: 0;
-  padding: 6px 12px;
-  background: var(--accent-color, #00d4ff);
-  color: var(--color-black);
-  border: none;
-  border-radius: 4px;
+.ct-loading {
+  padding: 20px 14px;
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  text-transform: uppercase;
-  transition: opacity 0.15s;
-}
-
-.schedule-btn:hover {
-  opacity: 0.85;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 /* ── Action feed ─────────────────────────────────────────────────── */

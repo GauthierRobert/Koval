@@ -247,6 +247,25 @@ export class ZoneManagerComponent implements OnInit {
     return sport.charAt(0) + sport.slice(1).toLowerCase();
   }
 
+  getDefaultUnit(referenceType: ZoneReferenceType): string {
+    switch (referenceType) {
+      case 'FTP':
+      case 'VO2MAX_POWER':
+        return 'W (watts)';
+      case 'THRESHOLD_PACE':
+      case 'VO2MAX_PACE':
+      case 'PACE_5K':
+      case 'PACE_10K':
+      case 'PACE_HALF_MARATHON':
+      case 'PACE_MARATHON':
+        return 'min/km';
+      case 'CSS':
+        return 'min/100m';
+      default:
+        return '';
+    }
+  }
+
   onAiZoneCreated(_result: ActionResult): void {
     this.showAiModal = false;
     this.loadZoneSystems();

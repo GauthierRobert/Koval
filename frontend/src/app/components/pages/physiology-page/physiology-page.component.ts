@@ -128,7 +128,12 @@ export class PhysiologyPageComponent implements OnInit {
       case 'PACE_MARATHON':     return this.computePace(zone, user.paceMarathon);
       case 'CUSTOM': {
         const val = user.customZoneReferenceValues?.[sys.id!];
-        return val ? this.computeWatts(zone, val) : null;
+        if (!val) return null;
+        const unit = sys.referenceUnit || '';
+        if (this.isPaceUnit(unit)) {
+          return this.computePaceWithUnit(zone, val, this.getPaceSuffix(unit));
+        }
+        return this.computeCustom(zone, val, unit);
       }
       default: return null;
     }
@@ -139,6 +144,37 @@ export class PhysiologyPageComponent implements OnInit {
     const lo = Math.round(ref * zone.low / 100);
     const hi = Math.round(ref * zone.high / 100);
     return zone.high >= 200 ? `${lo}W+` : zone.low === 0 ? `0–${hi}W` : `${lo}–${hi}W`;
+  }
+
+  private computeCustom(zone: Zone, ref: number, unit: string): string {
+    const lo = Math.round(ref * zone.low / 100);
+    const hi = Math.round(ref * zone.high / 100);
+    const u = unit ? ` ${unit}` : '';
+    if (zone.high >= 200) return `${lo}${u}+`;
+    if (zone.low === 0) return `0–${hi}${u}`;
+    return `${lo}–${hi}${u}`;
+  }
+
+  private isPaceUnit(unit: string): boolean {
+    const lower = unit.toLowerCase();
+    return lower.includes('/km') || lower.includes('/100m') || lower.includes('/mi')
+      || lower === 'sec/km' || lower === 'sec/100m' || lower === 'min/km' || lower === 'min/100m';
+  }
+
+  private getPaceSuffix(unit: string): string {
+    const lower = unit.toLowerCase();
+    if (lower.includes('/100m')) return '/100m';
+    if (lower.includes('/km')) return '/km';
+    if (lower.includes('/mi')) return '/mi';
+    return '';
+  }
+
+  private computePaceWithUnit(zone: Zone, ref: number, suffix: string): string | null {
+    if (!ref) return null;
+    const slow = zone.low === 0 ? null : ref / (zone.low / 100);
+    const fast = ref / (zone.high / 100);
+    if (slow === null) return `< ${this.formatPace(fast)}${suffix}`;
+    return `${this.formatPace(slow)}–${this.formatPace(fast)}${suffix}`;
   }
 
   private computePace(zone: Zone, ref: number | undefined): string | null {

@@ -157,7 +157,7 @@
         <div class="coach-zone-section">
           <div class="section-header">
             <span class="section-title">{{ sys.name }}</span>
-            <span class="ref-badge">{{ sys.referenceName || sys.referenceType }}</span>
+            <span class="ref-badge">{{ sys.referenceName || sys.referenceType }}@if (sys.referenceUnit) { ({{ sys.referenceUnit }}) }</span>
           </div>
 
           <!-- Zone bar -->

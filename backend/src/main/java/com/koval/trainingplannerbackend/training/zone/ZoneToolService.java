@@ -30,6 +30,7 @@ public class ZoneToolService {
             @ToolParam(description = "Sport type: CYCLING, RUNNING, SWIMMING, or BRICK") SportType sportType,
             @ToolParam(description = "Reference metric: FTP, VO2MAX_POWER, THRESHOLD_PACE, VO2MAX_PACE, CSS, PACE_5K, PACE_10K, PACE_HALF_MARATHON, PACE_MARATHON, or CUSTOM") ZoneReferenceType referenceType,
             @ToolParam(description = "Human-readable reference name (e.g., 'FTP', 'Threshold Pace', 'CSS')") String referenceName,
+            @ToolParam(description = "Unit of measurement for the reference value (e.g., 'W', 'bpm', 'sec/km', 'sec/100m', 'kg'). Required for CUSTOM reference type, ignored for standard types.") String referenceUnit,
             @ToolParam(description = "List of zones, each with label (e.g., 'Z1'), low (% lower bound), high (% upper bound), and description") List<Zone> zones) {
 
         ZoneSystem zoneSystem = new ZoneSystem();
@@ -38,6 +39,7 @@ public class ZoneToolService {
         zoneSystem.setSportType(sportType);
         zoneSystem.setReferenceType(referenceType);
         zoneSystem.setReferenceName(referenceName);
+        zoneSystem.setReferenceUnit(referenceUnit);
         zoneSystem.setZones(zones);
 
         return zoneSystemService.createZoneSystem(zoneSystem);

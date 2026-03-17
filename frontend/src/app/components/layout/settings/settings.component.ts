@@ -1,6 +1,7 @@
-import {Component, inject, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {BehaviorSubject} from 'rxjs';
 import {AuthService, User} from '../../../services/auth.service';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {ZoneService} from '../../../services/zone.service';
@@ -19,7 +20,8 @@ interface PaceField {
     standalone: true,
     imports: [CommonModule, FormsModule, SportIconComponent],
     templateUrl: './settings.component.html',
-    styleUrls: ['./settings.component.css']
+    styleUrls: ['./settings.component.css'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsComponent implements OnInit {
     private authService = inject(AuthService);
@@ -32,7 +34,8 @@ export class SettingsComponent implements OnInit {
     saved = false;
 
     showSecondaryRunning = false;
-    customZoneSystems: ZoneSystem[] = [];
+    private customZoneSystemsSubject = new BehaviorSubject<ZoneSystem[]>([]);
+    customZoneSystems$ = this.customZoneSystemsSubject.asObservable();
     customRefValues: Record<string, number | null> = {};
 
     primaryRunFields: PaceField[] = [
@@ -62,9 +65,9 @@ export class SettingsComponent implements OnInit {
 
         this.zoneService.getMyZoneSystems().subscribe({
             next: (systems) => {
-                this.customZoneSystems = systems.filter(s => s.referenceType === 'CUSTOM');
+                this.customZoneSystemsSubject.next(systems.filter(s => s.referenceType === 'CUSTOM'));
             },
-            error: () => this.customZoneSystems = [],
+            error: () => this.customZoneSystemsSubject.next([]),
         });
     }
 

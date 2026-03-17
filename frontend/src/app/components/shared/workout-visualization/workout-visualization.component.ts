@@ -21,6 +21,7 @@ import {formatPace as sharedFormatPace} from '../format/format.utils';
 })
 export class WorkoutVisualizationComponent {
   @Input() training: Training | null = null;
+  @Input() compact = false;
   private trainingService = inject(TrainingService);
   private executionService = inject(WorkoutExecutionService);
   private authService = inject(AuthService);

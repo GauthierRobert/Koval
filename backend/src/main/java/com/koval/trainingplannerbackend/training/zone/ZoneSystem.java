@@ -25,6 +25,7 @@ public class ZoneSystem {
     private SportType sportType = SportType.CYCLING;
     private ZoneReferenceType referenceType;
     private String referenceName;
+    private String referenceUnit;
     private List<Zone> zones = new ArrayList<>();
     private Boolean defaultForSport = false;
     private String annotations;

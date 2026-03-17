@@ -137,29 +137,34 @@
         </section>
 
         <!-- Custom Zones Section -->
-        @if (customZoneSystems.length > 0) {
-          <section class="settings-card">
-            <div class="card-header">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M12 20v-6M6 20V10M18 20V4"/>
-                </svg>
-                <h2>Custom Zones</h2>
-            </div>
-            <div class="card-body">
-                @for (sys of customZoneSystems; track sys.id) {
-                  <div class="field-row">
-                    <div class="field-info">
-                        <label>{{ sys.referenceName || sys.name }}</label>
-                        <span class="hint">{{ sys.name }}</span>
+        @if (customZoneSystems$ | async; as customZoneSystems) {
+          @if (customZoneSystems.length > 0) {
+            <section class="settings-card">
+              <div class="card-header">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M12 20v-6M6 20V10M18 20V4"/>
+                  </svg>
+                  <h2>Custom Zones</h2>
+              </div>
+              <div class="card-body">
+                  @for (sys of customZoneSystems; track sys.id) {
+                    <div class="field-row">
+                      <div class="field-info">
+                          <label>{{ sys.referenceName || sys.name }}</label>
+                          <span class="hint">{{ sys.name }}@if (sys.referenceUnit) { — unit: {{ sys.referenceUnit }} }</span>
+                      </div>
+                      <div class="field-input ftp-input-group">
+                          <input type="number" [(ngModel)]="customRefValues[sys.id!]"
+                              min="0" class="value-input numeric" placeholder="—" />
+                          @if (sys.referenceUnit) {
+                            <span class="unit">{{ sys.referenceUnit }}</span>
+                          }
+                      </div>
                     </div>
-                    <div class="field-input ftp-input-group">
-                        <input type="number" [(ngModel)]="customRefValues[sys.id!]"
-                            min="0" class="value-input numeric" placeholder="—" />
-                    </div>
-                  </div>
-                }
-            </div>
-          </section>
+                  }
+              </div>
+            </section>
+          }
         }
     </div>
 

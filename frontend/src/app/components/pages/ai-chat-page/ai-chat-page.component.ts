@@ -4,7 +4,8 @@ import {FormsModule} from '@angular/forms';
 import {Subscription} from 'rxjs';
 import {AgentType, ChatService, PlanTask} from '../../../services/chat.service';
 import {Training} from '../../../models/training.model';
-import {ScheduleModalComponent} from '../../shared/schedule-modal/schedule-modal.component';
+import {TrainingService} from '../../../services/training.service';
+import {WorkoutVisualizationComponent} from '../../shared/workout-visualization/workout-visualization.component';
 
 interface AgentOption {
   label: string;
@@ -14,7 +15,7 @@ interface AgentOption {
 @Component({
   selector: 'app-ai-chat-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ScheduleModalComponent],
+  imports: [CommonModule, FormsModule, WorkoutVisualizationComponent],
   templateUrl: './ai-chat-page.component.html',
   styleUrl: './ai-chat-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -23,9 +24,9 @@ export class AIChatPageComponent implements OnInit, OnDestroy {
   @ViewChild('scrollMe') private scrollContainer!: ElementRef;
 
   chatService = inject(ChatService);
+  private trainingService = inject(TrainingService);
   userInput = '';
-  selectedTrainingForSchedule: Training | null = null;
-  showScheduleModal = false;
+  fetchedTrainings: Record<string, Training> = {};
   private nearBottom = true;
   private subscription!: Subscription;
 
@@ -42,9 +43,17 @@ export class AIChatPageComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.chatService.loadHistories();
 
-    this.subscription = this.chatService.chatMessages$.subscribe(() => {
+    this.subscription = this.chatService.chatMessages$.subscribe((messages) => {
       if (this.nearBottom) {
         requestAnimationFrame(() => this.scrollToBottom());
+      }
+      // Fetch full training data for any created trainings not yet loaded
+      for (const msg of messages) {
+        if (msg.createdTraining?.id && !this.fetchedTrainings[msg.createdTraining.id]) {
+          this.trainingService.getTrainingById(msg.createdTraining.id).subscribe({
+            next: (training) => this.fetchedTrainings[training.id] = training,
+          });
+        }
       }
     });
   }
@@ -108,16 +117,6 @@ export class AIChatPageComponent implements OnInit, OnDestroy {
     this.userInput = '';
     this.nearBottom = true;
     this.chatService.sendMessage(text);
-  }
-
-  openScheduleModal(training: { id: string; title: string; sportType: string; estimatedDurationSeconds?: number }): void {
-    this.selectedTrainingForSchedule = training as Training;
-    this.showScheduleModal = true;
-  }
-
-  onScheduleModalClose(): void {
-    this.showScheduleModal = false;
-    this.selectedTrainingForSchedule = null;
   }
 
   executePlan(tasks: PlanTask[]): void {

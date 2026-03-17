@@ -1,54 +1,57 @@
 @if (training) {
-  <div class="viz-container">
-    <div class="header">
-      <div class="title-section">
-        <h1>{{ training.title }}</h1>
-        <p class="description">{{ training.description }}</p>
-      </div>
-      <div class="action-buttons">
-        <div class="export-dropdown">
-          <button class="export-btn" (click)="toggleExportDropdown($event)">
-            EXPORT
-            <span class="dropdown-caret">&#x25BC;</span>
-          </button>
-          @if (isExportDropdownOpen) {
-            <div class="dropdown-menu glass">
-              @if (training.sportType === 'CYCLING') {
-                <button class="dropdown-item" (click)="exportToZwift()">Zwift
-                  (.zwo)</button>
-              }
-              <button class="dropdown-item" (click)="exportToJSON()">JSON</button>
-            </div>
-          }
+  <div class="viz-container" [class.compact]="compact">
+    @if (!compact) {
+      <div class="header">
+        <div class="title-section">
+          <h1>{{ training.title }}</h1>
+          <p class="description">{{ training.description }}</p>
         </div>
-        <button class="unit-toggle-btn" (click)="toggleUnits()">
-          {{ displayUnit === 'PERCENT' ? '%' : getSportUnit() }}
-        </button>
-        @if (isOwner()) {
-          @if (!isEditMode) {
-            <button class="edit-blocks-btn" (click)="enterEditMode()">EDIT BLOCKS</button>
+        <div class="action-buttons">
+          <div class="export-dropdown">
+            <button class="export-btn" (click)="toggleExportDropdown($event)">
+              EXPORT
+              <span class="dropdown-caret">&#x25BC;</span>
+            </button>
+            @if (isExportDropdownOpen) {
+              <div class="dropdown-menu glass">
+                @if (training.sportType === 'CYCLING') {
+                  <button class="dropdown-item" (click)="exportToZwift()">Zwift
+                    (.zwo)</button>
+                }
+                <button class="dropdown-item" (click)="exportToJSON()">JSON</button>
+              </div>
+            }
+          </div>
+          <button class="unit-toggle-btn" (click)="toggleUnits()">
+            {{ displayUnit === 'PERCENT' ? '%' : getSportUnit() }}
+          </button>
+          @if (isOwner()) {
+            @if (!isEditMode) {
+              <button class="edit-blocks-btn" (click)="enterEditMode()">EDIT BLOCKS</button>
+            }
+            @if (isEditMode) {
+              <button class="edit-blocks-btn" (click)="cancelEdits()">CANCEL</button>
+              <button class="edit-blocks-btn active" [disabled]="isSaving" (click)="saveEdits()">
+                {{ isSaving ? 'Saving...' : 'DONE' }}
+              </button>
+            }
           }
-          @if (isEditMode) {
-            <button class="edit-blocks-btn" (click)="cancelEdits()">CANCEL</button>
-            <button class="edit-blocks-btn active" [disabled]="isSaving" (click)="saveEdits()">
-              {{ isSaving ? 'Saving...' : 'DONE' }}
+          <button class="schedule-btn" (click)="openScheduleModal()">SCHEDULE</button>
+          @if (training.sportType === 'CYCLING') {
+            <button class="start-btn" (click)="startWorkout()">
+              <span class="play-icon">&#x25B6;</span> START WORKOUT
             </button>
           }
-        }
-        <button class="schedule-btn" (click)="openScheduleModal()">SCHEDULE</button>
-        @if (training.sportType === 'CYCLING') {
-          <button class="start-btn" (click)="startWorkout()">
-            <span class="play-icon">&#x25B6;</span> START WORKOUT
-          </button>
-        }
+        </div>
       </div>
-    </div>
 
-  <app-schedule-modal [isOpen]="isScheduleModalOpen" [preselectedTraining]="training" mode="athlete"
-    (closed)="isScheduleModalOpen = false" (scheduled)="isScheduleModalOpen = false"></app-schedule-modal>
+      <app-schedule-modal [isOpen]="isScheduleModalOpen" [preselectedTraining]="training" mode="athlete"
+        (closed)="isScheduleModalOpen = false" (scheduled)="isScheduleModalOpen = false"></app-schedule-modal>
+    }
 
-  <div class="dashboard-panels">
+  <div class="dashboard-panels" [class.compact-panels]="compact">
     <!-- LEFT PANEL: Block steps list -->
+    @if (!compact) {
     <div class="left-panel">
       <div class="block-steps-list">
         @for (block of displayBlocks; let i = $index; track block) {
@@ -97,6 +100,7 @@
       (closed)="closeBlockEditor()"
       (saved)="onBlockSaved($event)">
     </app-block-editor-modal>
+    }
 
     <!-- RIGHT PANEL: Chart + Metrics + Zone distribution -->
     <div class="right-panel">
