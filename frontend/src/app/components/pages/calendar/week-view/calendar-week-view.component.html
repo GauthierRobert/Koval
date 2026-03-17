@@ -20,13 +20,15 @@
                   [class.completed]="$any(group.entry).scheduled.status === 'COMPLETED'"
                   [class.skipped]="$any(group.entry).scheduled.status === 'SKIPPED'"
                   (click)="workoutSelected.emit($any(group.entry).scheduled)">
-              <div class="card-top">
-                <span class="workout-time">08:00 AM</span>
-                <div class="card-top-right">
-                  <span class="status-badge" *ngIf="$any(group.entry).scheduled.status !== 'PENDING'">{{ $any(group.entry).scheduled.status }}</span>
-                  <button class="delete-btn" (click)="workoutDeleted.emit($any(group.entry).scheduled); $event.stopPropagation()" title="Remove">&times;</button>
+                <div class="card-top">
+                  <span class="workout-time">08:00 AM</span>
+                  <div class="card-top-right">
+                    @if ($any(group.entry).scheduled.status !== 'PENDING') {
+                      <span class="status-badge">{{ $any(group.entry).scheduled.status }}</span>
+                    }
+                    <button class="delete-btn" (click)="workoutDeleted.emit($any(group.entry).scheduled); $event.stopPropagation()" title="Remove">&times;</button>
+                  </div>
                 </div>
-              </div>
               <div class="workout-info">
                 <div class="title-row">
                   <app-sport-icon [sport]="$any(group.entry).scheduled.sportType" [size]="18"></app-sport-icon>
@@ -35,11 +37,14 @@
                   </span>
                 </div>
                 <div class="badge-actions-row">
-                  <span *ngIf="$any(group.entry).scheduled.trainingType" class="type-badge"
-                    [style.background]="getTypeColor($any(group.entry).scheduled.trainingType) + '20'"
-                    [style.color]="getTypeColor($any(group.entry).scheduled.trainingType)"
-                    [style.border-color]="getTypeColor($any(group.entry).scheduled.trainingType) + '40'">{{ getTypeLabel($any(group.entry).scheduled.trainingType) }}</span>
-                  <div class="inline-actions" *ngIf="$any(group.entry).scheduled.status === 'PENDING'">
+                  @if ($any(group.entry).scheduled.trainingType) {
+                    <span class="type-badge"
+                      [style.background]="getTypeColor($any(group.entry).scheduled.trainingType) + '20'"
+                      [style.color]="getTypeColor($any(group.entry).scheduled.trainingType)"
+                      [style.border-color]="getTypeColor($any(group.entry).scheduled.trainingType) + '40'">{{ getTypeLabel($any(group.entry).scheduled.trainingType) }}</span>
+                  }
+                  @if ($any(group.entry).scheduled.status === 'PENDING') {
+                    <div class="inline-actions">
                     <button class="btn-complete" [disabled]="isFutureDate($any(group.entry).scheduled.scheduledDate)"
                       (click)="complete.emit($any(group.entry).scheduled); $event.stopPropagation()" title="Mark Complete">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -52,7 +57,7 @@
                         <rect x="17" y="4" width="3" height="16"/>
                       </svg>
                     </button>
-                  </div>
+                  }
                 </div>
                 <div class="technical-metrics">
                   <div class="m-item">
@@ -69,10 +74,11 @@
                   </div>
                 </div>
               </div>
-            </div>
+              }
+            }
 
-            <!-- FUSED card -->
-            <div *ngSwitchCase="'fused'" class="workout-card workout-card--fused clickable"
+            @case ('fused') {
+              <div class="workout-card workout-card--fused clickable"
               cdkDrag [cdkDragData]="$any(group.entry).scheduled"
               (click)="workoutSelected.emit($any(group.entry).scheduled)">
               <div class="card-top">
@@ -121,10 +127,11 @@
                   </div>
                 </div>
               </div>
-            </div>
+              }
+            }
 
-            <!-- STANDALONE session card -->
-            <div *ngSwitchCase="'standalone'" class="workout-card workout-card--session clickable" (click)="sessionSelected.emit($any(group.entry).session)">
+            @case ('standalone') {
+              <div class="workout-card workout-card--session clickable" (click)="sessionSelected.emit($any(group.entry).session)">
               <div class="card-top">
                 <span class="session-badge">RECORDED</span>
               </div>
@@ -150,9 +157,10 @@
               </div>
               <button class="btn-link-session" (click)="$event.stopPropagation(); openLinkPicker($any(group.entry).session)">LINK TO PLAN</button>
             </div>
+            }
 
-            <!-- Single CLUB SESSION card -->
-            <div *ngSwitchCase="'club-session'" class="workout-card workout-card--club-session"
+            @case ('club-session') {
+              <div class="workout-card workout-card--club-session"
               [class.not-joined]="!$any(group.entry).clubSession.joined && !$any(group.entry).clubSession.onWaitingList">
               <div class="card-top">
                 <span class="club-session-badge">{{ $any(group.entry).clubSession.clubName }}</span>
@@ -164,26 +172,30 @@
                   <span class="workout-title">{{ $any(group.entry).clubSession.title }}</span>
                 </div>
                 <div class="club-session-meta">
-                  <span *ngIf="$any(group.entry).clubSession.location" class="club-session-location">{{ $any(group.entry).clubSession.location }}</span>
+                  @if ($any(group.entry).clubSession.location) {
+                    <span class="club-session-location">{{ $any(group.entry).clubSession.location }}</span>
+                  }
                   <span class="club-session-count">{{ $any(group.entry).clubSession.participantIds.length }}{{ $any(group.entry).clubSession.maxParticipants ? '/' + $any(group.entry).clubSession.maxParticipants : '' }}</span>
                 </div>
                 <div class="club-session-actions">
-                  <button *ngIf="!$any(group.entry).clubSession.joined && !$any(group.entry).clubSession.onWaitingList"
-                    class="btn-join" (click)="joinClubSession.emit($any(group.entry).clubSession)">JOIN</button>
-                  <button *ngIf="$any(group.entry).clubSession.joined || $any(group.entry).clubSession.onWaitingList"
-                    class="btn-cancel-club" (click)="cancelClubSession.emit($any(group.entry).clubSession)">
-                    {{ $any(group.entry).clubSession.onWaitingList ? 'LEAVE WAITLIST' : 'CANCEL' }}
-                  </button>
+                  @if (!$any(group.entry).clubSession.joined && !$any(group.entry).clubSession.onWaitingList) {
+                    <button class="btn-join" (click)="joinClubSession.emit($any(group.entry).clubSession)">JOIN</button>
+                  }
+                  @if ($any(group.entry).clubSession.joined || $any(group.entry).clubSession.onWaitingList) {
+                    <button class="btn-cancel-club" (click)="cancelClubSession.emit($any(group.entry).clubSession)">
+                      {{ $any(group.entry).clubSession.onWaitingList ? 'LEAVE WAITLIST' : 'CANCEL' }}
+                    </button>
+                  }
                 </div>
               </div>
             </div>
+            }
+          }
 
-          </ng-container>
-        </ng-container>
-
-        <!-- Grouped club sessions (same time) — side by side -->
-        <div *ngIf="group.type === 'club-row'" class="club-session-row">
-          <div *ngFor="let entry of group.entries" class="workout-card workout-card--club-session workout-card--compact"
+          @if (group.type === 'club-row') {
+            <div class="club-session-row">
+              @for (entry of group.entries; track entry) {
+                <div class="workout-card workout-card--club-session workout-card--compact"
             [class.not-joined]="!$any(entry).clubSession.joined && !$any(entry).clubSession.onWaitingList">
             <div class="card-top">
               <span class="club-session-badge">{{ $any(entry).clubSession.clubName }}</span>
@@ -195,62 +207,74 @@
                 <span class="workout-title">{{ $any(entry).clubSession.title }}</span>
               </div>
               <div class="club-session-actions">
-                <button *ngIf="!$any(entry).clubSession.joined && !$any(entry).clubSession.onWaitingList"
-                  class="btn-join" (click)="joinClubSession.emit($any(entry).clubSession)">JOIN</button>
-                <button *ngIf="$any(entry).clubSession.joined || $any(entry).clubSession.onWaitingList"
-                  class="btn-cancel-club" (click)="cancelClubSession.emit($any(entry).clubSession)">
-                  {{ $any(entry).clubSession.onWaitingList ? 'LEAVE WAITLIST' : 'CANCEL' }}
-                </button>
+                @if (!$any(entry).clubSession.joined && !$any(entry).clubSession.onWaitingList) {
+                  <button class="btn-join" (click)="joinClubSession.emit($any(entry).clubSession)">JOIN</button>
+                }
+                @if ($any(entry).clubSession.joined || $any(entry).clubSession.onWaitingList) {
+                  <button class="btn-cancel-club" (click)="cancelClubSession.emit($any(entry).clubSession)">
+                    {{ $any(entry).clubSession.onWaitingList ? 'LEAVE WAITLIST' : 'CANCEL' }}
+                  </button>
+                }
               </div>
             </div>
+              }
+            </div>
+          }
+
+        }
+
+        @for (goal of goalsByDay.get(day.key) || []; track goal) {
+          <div class="goal-pill" [style.background-color]="getPriorityColor(goal.priority) + '22'"
+            [style.border-color]="getPriorityColor(goal.priority) + '66'"
+            [title]="goal.title">
+            <app-sport-icon [sport]="$any(goal.sport)" [size]="14"></app-sport-icon>
+            <span class="goal-pill-title">{{ goal.title }}</span>
+            <span class="goal-pill-priority" [style.color]="getPriorityColor(goal.priority)">{{ goal.priority }}</span>
           </div>
-        </div>
+        }
 
-      </ng-container>
-
-      <!-- Goal pills -->
-      <ng-container *ngFor="let goal of goalsByDay.get(day.key) || []">
-        <div class="goal-pill" [style.background-color]="getPriorityColor(goal.priority) + '22'"
-          [style.border-color]="getPriorityColor(goal.priority) + '66'"
-          [title]="goal.title">
-          <app-sport-icon [sport]="$any(goal.sport)" [size]="14"></app-sport-icon>
-          <span class="goal-pill-title">{{ goal.title }}</span>
-          <span class="goal-pill-priority" [style.color]="getPriorityColor(goal.priority)">{{ goal.priority }}</span>
-        </div>
-      </ng-container>
-
-      <button class="add-btn" (click)="addDay.emit(day)" title="Add training">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-      </button>
-      <div *ngIf="!(entriesByDay.get(day.key) || EMPTY).length && !(goalsByDay.get(day.key) || []).length" class="rest-day">REST DAY</div>
-    </div>
-  </div>
+        <button class="add-btn" (click)="addDay.emit(day)" title="Add training">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+        @if (!(entriesByDay.get(day.key) || EMPTY).length && !(goalsByDay.get(day.key) || []).length) {
+          <div class="rest-day">REST DAY</div>
+        }
+      </div>
+    }
+  }
 </div>
 
 <app-training-load-chart [workoutsByDay]="workoutsByDay" [days]="days"></app-training-load-chart>
 
-<!-- Task 4: Link session modal overlay -->
-<div class="link-modal-overlay" *ngIf="linkPickerState !== null" (click)="linkPickerState = null; linkSession = null">
-  <div class="link-modal" (click)="$event.stopPropagation()">
-    <div class="link-modal-header">
-      <span class="link-modal-title">Link Session to Planned Workout</span>
-      <span class="link-modal-session" *ngIf="linkSession">
-        <strong>{{ linkSession.title }}</strong> &mdash; {{ linkSession.date | date:'MMM d, yyyy' }}
-      </span>
-    </div>
-    <div class="link-modal-list">
-      <ng-container *ngIf="nearbyScheduled$ | async as nearby">
-        <div *ngIf="!nearby.length" class="link-picker-empty">No nearby pending workouts found within ±3 days</div>
-        <div *ngFor="let sw of nearby" class="link-picker-item" (click)="confirmLink(sw.id)">
-          <span>{{ sw.trainingTitle || 'Workout' }}</span>
-          <span style="color: var(--text-muted); font-size: 0.7rem; margin-left: auto;">{{ sw.scheduledDate | date:'MMM d' }}</span>
-        </div>
-      </ng-container>
-    </div>
-    <div class="link-modal-footer">
-      <button class="link-picker-cancel" (click)="linkPickerState = null; linkSession = null">Cancel</button>
+@if (linkPickerState !== null) {
+  <div class="link-modal-overlay" (click)="linkPickerState = null; linkSession = null">
+    <div class="link-modal" (click)="$event.stopPropagation()">
+      <div class="link-modal-header">
+        <span class="link-modal-title">Link Session to Planned Workout</span>
+        @if (linkSession) {
+          <span class="link-modal-session">
+            <strong>{{ linkSession.title }}</strong> &mdash; {{ linkSession.date | date:'MMM d, yyyy' }}
+          </span>
+        }
+      </div>
+      <div class="link-modal-list">
+        @if (nearbyScheduled$ | async; as nearby) {
+          @if (!nearby.length) {
+            <div class="link-picker-empty">No nearby pending workouts found within ±3 days</div>
+          }
+          @for (sw of nearby; track sw.id) {
+            <div class="link-picker-item" (click)="confirmLink(sw.id)">
+              <span>{{ sw.trainingTitle || 'Workout' }}</span>
+              <span style="color: var(--text-muted); font-size: 0.7rem; margin-left: auto;">{{ sw.scheduledDate | date:'MMM d' }}</span>
+            </div>
+          }
+        }
+      </div>
+      <div class="link-modal-footer">
+        <button class="link-picker-cancel" (click)="linkPickerState = null; linkSession = null">Cancel</button>
+      </div>
     </div>
   </div>
-</div>
+}

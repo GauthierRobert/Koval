@@ -16,9 +16,11 @@
       <input #fitInput type="file" accept=".fit" class="fit-input" (change)="onFileSelected($event)" />
     </div>
 
-    <div class="import-error" *ngIf="importError">
-      Could not parse FIT file. Make sure it contains a valid session.
-    </div>
+    @if (importError) {
+      <div class="import-error">
+        Could not parse FIT file. Make sure it contains a valid session.
+      </div>
+    }
 
     <!-- Sport filter pills -->
     <div class="filter-bar">
@@ -37,18 +39,21 @@
       <input type="date" class="date-input" [ngModel]="dateTo" (ngModelChange)="onDateToChange($event)" />
     </div>
 
-    <ng-container *ngIf="ftp$ | async as ftp">
-      <div class="session-list" *ngIf="filteredSessions$ | async as sessions">
-        <div class="empty-state" *ngIf="sessions.length === 0">
-          <p>No activities yet</p>
-          <p class="empty-hint">Upload a .FIT file to get started</p>
-        </div>
+    @if (ftp$ | async as ftp) {
+      @if (filteredSessions$ | async as sessions) {
+        <div class="session-list">
+          @if (sessions.length === 0) {
+            <div class="empty-state">
+              <p>No activities yet</p>
+              <p class="empty-hint">Upload a .FIT file to get started</p>
+            </div>
+          }
 
-        <div
-          class="session-item"
-          *ngFor="let session of sessions; trackBy: trackSessionById"
-          [class.active]="(historyService.selectedSession$ | async)?.id === session.id"
-          (click)="onSelect(session)">
+          @for (let session of sessions; track trackSessionById(session)) {
+            <div
+              class="session-item"
+              [class.active]="(historyService.selectedSession$ | async)?.id === session.id"
+              (click)="onSelect(session)">
           <div class="item-sport">
             <app-sport-icon [sport]="session.sportType" [size]="18"></app-sport-icon>
           </div>
@@ -69,9 +74,11 @@
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
           </button>
+            </div>
+          }
         </div>
-      </div>
-    </ng-container>
+      }
+    }
   </aside>
 
   <!-- Right panel: analysis or empty state -->
@@ -86,10 +93,9 @@
       </div>
       <div class="header-right"></div>
     </div>
-    <ng-container *ngIf="historyService.selectedSession$ | async as session; else noSelection">
+    @if (historyService.selectedSession$ | async as session) {
       <app-session-analysis [session]="session"></app-session-analysis>
-    </ng-container>
-    <ng-template #noSelection>
+    } @else {
       <div class="empty-main">
         <div class="empty-card glass">
           <h2>Activity Analysis</h2>
@@ -105,6 +111,6 @@
           </button>
         </div>
       </div>
-    </ng-template>
+    }
   </main>
 </div>

@@ -3,32 +3,34 @@
     <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
   </div>
   <div class="month-body" cdkDropListGroup>
-    <div *ngFor="let day of days; trackBy: trackByDay" class="month-cell glass" [class.today]="day.isToday"
-      [class.other-month]="day.date.getMonth() !== startDate.getMonth()">
-      <div class="cell-header">
-        <span class="cell-day">{{ day.date | date : 'd' }}</span>
-        <button class="cell-add-bar" (click)="addDay.emit(day)" title="Add training">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-        </button>
-      </div>
-      <div class="cell-workouts" cdkDropList [cdkDropListData]="entriesByDay.get(day.key) || EMPTY"
-        (cdkDropListDropped)="dropped.emit({ drop: $event, day: day })">
-        <ng-container *ngFor="let entry of entriesByDay.get(day.key) || EMPTY; trackBy: trackByEntry">
+    @for (day of days; track trackByDay(day)) {
+      <div class="month-cell glass" [class.today]="day.isToday"
+        [class.other-month]="day.date.getMonth() !== startDate.getMonth()">
+        <div class="cell-header">
+          <span class="cell-day">{{ day.date | date : 'd' }}</span>
+          <button class="cell-add-bar" (click)="addDay.emit(day)" title="Add training">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="cell-workouts" cdkDropList [cdkDropListData]="entriesByDay.get(day.key) || EMPTY"
+          (cdkDropListDropped)="dropped.emit({ drop: $event, day: day })">
+          @for (entry of entriesByDay.get(day.key) || EMPTY; track trackByEntry(entry)) {
 
-          <!-- Scheduled mini-card -->
-          <div *ngIf="entry.kind === 'scheduled'" class="mini-card" cdkDrag
+            @if (entry.kind === 'scheduled') {
+              <div class="mini-card" cdkDrag
             [cdkDragData]="entry.scheduled"
             (click)="workoutSelected.emit(entry.scheduled)"
             [style.border-left]="'2px solid ' + (entry.scheduled.trainingType ? getTypeColor(entry.scheduled.trainingType) : 'var(--accent-color)')">
             <app-sport-icon [sport]="entry.scheduled.sportType" [size]="10"></app-sport-icon>
             <span class="mini-title">{{ entry.scheduled.trainingTitle || entry.scheduled.title || 'Workout' }}</span>
-            <span class="mini-tss">{{ entry.scheduled.tss || 0 }}</span>
-          </div>
+              <span class="mini-tss">{{ entry.scheduled.tss || 0 }}</span>
+            </div>
+            }
 
-          <!-- Fused mini-card -->
-          <div *ngIf="entry.kind === 'fused'" class="mini-card mini-card--fused" cdkDrag
+            @if (entry.kind === 'fused') {
+              <div class="mini-card mini-card--fused" cdkDrag
             [cdkDragData]="entry.scheduled"
             (click)="workoutSelected.emit(entry.scheduled)"
             [style.border-left]="'2px solid #34d399'">
