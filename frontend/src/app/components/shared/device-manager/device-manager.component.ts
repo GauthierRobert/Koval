@@ -1,6 +1,6 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { BluetoothService } from '../../../services/bluetooth.service';
+import {Component, inject} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {BluetoothService} from '../../../services/bluetooth.service';
 
 @Component({
   selector: 'app-device-manager',

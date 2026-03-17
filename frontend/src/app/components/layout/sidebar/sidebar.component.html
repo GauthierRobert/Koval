@@ -13,7 +13,7 @@
       </label>
       <span class="toggle-label">Simulate Trainer</span>
     </div>
-    @if (user$ | async as user) {
+    @if (user$ | async; as user) {
       @if (user.role === 'ATHLETE') {
         <div class="join-section">
           <span class="join-title">JOIN A TEAM</span>

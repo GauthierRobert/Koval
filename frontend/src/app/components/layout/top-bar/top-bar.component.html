@@ -25,17 +25,17 @@
       </button>
       @if (isClubsOpen) {
         <div class="nav-dropdown club-dropdown glass" (click)="$event.stopPropagation()">
-          @if (clubService.userClubs$ | async as clubs) {
+          @if (clubService.userClubs$ | async; as clubs) {
             @if (clubs.length === 0) {
               <div class="club-dropdown-empty">No clubs yet</div>
             }
-            @for (let club of clubs; track club.id) {
+            @for (club of clubs; track club.id) {
               <a class="dropdown-item club-dropdown-item"
                  (click)="selectClub(club)">
                 <span class="dropdown-label">{{ club.name }}</span>
                 <span class="dropdown-desc">
                   {{ club.memberCount }} {{ club.memberCount === 1 ? 'member' : 'members' }}
-                  @if (getMembershipLabel(club.membershipStatus) as role) {
+                  @if (getMembershipLabel(club.membershipStatus); as role) {
                     · {{ role }}
                   }
                 </span>
@@ -170,7 +170,7 @@
       </button>
     </div>
 
-    @if (user$ | async as u) {
+    @if (user$ | async; as u) {
       <div class="user-profile">
         @if (u.profilePicture) {
           <img class="avatar-img" [src]="u.profilePicture" alt="Profile" />

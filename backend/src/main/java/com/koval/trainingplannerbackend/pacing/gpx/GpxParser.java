@@ -16,8 +16,8 @@ import java.util.List;
 public class GpxParser {
 
     // Elevation smoothing: Gaussian kernel with this radius (in meters).
-    // ~50m smooths GPS jitter while preserving real terrain features.
-    private static final double SMOOTHING_RADIUS_M = 200.0;
+    // ~100m smooths GPS jitter while preserving real terrain features.
+    private static final double SMOOTHING_RADIUS_M = 100.0;
 
     /**
      * Parse a GPX input stream into point-to-point course segments (one per GPX track point pair).

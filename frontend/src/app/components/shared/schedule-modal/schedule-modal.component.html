@@ -16,14 +16,14 @@
               @if (!showAiGenerate) {
                 <select [(ngModel)]="selectedTrainingId">
                   <option value="" disabled>Select a training...</option>
-                  @for (let t of trainings; track t.id) {
+                  @for (t of trainings; track t.id) {
                     <option [value]="t.id">{{ t.title }}</option>
                   }
                 </select>
               }
               @if (showAiGenerate) {
                 <select [(ngModel)]="aiSport" class="sport-select">
-                  @for (let s of sportOptions; track s.value) {
+                  @for (s of sportOptions; track s.value) {
                     <option [ngValue]="s.value">{{ s.label }}</option>
                   }
                 </select>
@@ -44,7 +44,7 @@
                 <label>Athletes</label>
                 @if (availableTags.length > 0) {
                   <div class="tag-filter-row">
-                    @for (let tag of availableTags; track tag) {
+                    @for (tag of availableTags; track tag) {
                       <span class="modal-tag-chip"
                             [class.active]="isTagActive(tag)"
                             (click)="toggleTag(tag)">{{ tag }}</span>
@@ -52,7 +52,7 @@
                   </div>
                 }
                 <div class="athlete-checkboxes">
-                  @for (let a of availableAthletes; track a.id) {
+                  @for (a of availableAthletes; track a.id) {
                     <label class="checkbox-label">
                       <input type="checkbox" [checked]="isAthleteSelected(a.id)" (change)="toggleAthlete(a.id)" />
                       <span>{{ a.displayName }}</span>

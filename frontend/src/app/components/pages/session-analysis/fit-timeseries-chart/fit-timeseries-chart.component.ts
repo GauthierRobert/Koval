@@ -1,14 +1,7 @@
-import {
-    Component,
-    Input,
-    OnChanges,
-    AfterViewInit,
-    ViewChild,
-    ElementRef,
-} from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FitRecord } from '../../../../services/metrics.service';
-import { BlockSummary } from '../../../../services/workout-execution.service';
+import {AfterViewInit, Component, ElementRef, Input, OnChanges, ViewChild,} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FitRecord} from '../../../../services/metrics.service';
+import {BlockSummary} from '../../../../services/workout-execution.service';
 
 @Component({
     selector: 'app-fit-timeseries-chart',

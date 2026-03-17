@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, interval, Subscription} from 'rxjs';
-import { BluetoothDevice, BluetoothCharacteristic, CharacteristicValueChangedEvent } from '../models/bluetooth-types.model';
+import {BluetoothDevice, CharacteristicValueChangedEvent} from '../models/bluetooth-types.model';
 
 export interface LiveMetrics {
     power: number;
@@ -73,7 +73,7 @@ export class BluetoothService {
 
             await characteristic.startNotifications();
             characteristic.addEventListener('characteristicvaluechanged', (event: Event) => {
-                const changeEvent = event as CharacteristicValueChangedEvent;
+                const changeEvent = event as unknown as CharacteristicValueChangedEvent;
                 this.handleTrainerData(changeEvent.target.value);
             });
 
@@ -107,7 +107,7 @@ export class BluetoothService {
 
             await characteristic.startNotifications();
             characteristic.addEventListener('characteristicvaluechanged', (event: Event) => {
-                const changeEvent = event as CharacteristicValueChangedEvent;
+                const changeEvent = event as unknown as CharacteristicValueChangedEvent;
                 this.handleHRData(changeEvent.target.value);
             });
 
@@ -141,7 +141,7 @@ export class BluetoothService {
 
             await characteristic.startNotifications();
             characteristic.addEventListener('characteristicvaluechanged', (event: Event) => {
-                const changeEvent = event as CharacteristicValueChangedEvent;
+                const changeEvent = event as unknown as CharacteristicValueChangedEvent;
                 this.handlePowerMeterData(changeEvent.target.value);
             });
 
@@ -174,7 +174,7 @@ export class BluetoothService {
 
             await characteristic.startNotifications();
             characteristic.addEventListener('characteristicvaluechanged', (event: Event) => {
-                const changeEvent = event as CharacteristicValueChangedEvent;
+                const changeEvent = event as unknown as CharacteristicValueChangedEvent;
                 this.handleCadenceData(changeEvent.target.value);
             });
 

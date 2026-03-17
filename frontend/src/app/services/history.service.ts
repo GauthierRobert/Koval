@@ -1,7 +1,7 @@
 import {DestroyRef, inject, Injectable} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {BehaviorSubject, Observable, of} from 'rxjs';
-import {catchError, filter, tap} from 'rxjs/operators';
+import {BehaviorSubject, Observable} from 'rxjs';
+import {filter, tap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
 import {SessionSummary} from './workout-execution.service';
 import {AuthService} from './auth.service';

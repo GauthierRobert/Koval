@@ -2,7 +2,7 @@
   @if (feed$ | async; as feed) {
     @if (feed.length > 0) {
       <div class="feed-list">
-        @for (let activity of feed; track activity) {
+        @for (activity of feed; track activity) {
           <div class="feed-item">
             <span class="feed-dot" [style.background]="getActivityColor(activity.type)"></span>
             <span class="feed-text">{{ getActivityText(activity.type, activity.actorName || activity.actorId, activity.targetTitle) }}</span>

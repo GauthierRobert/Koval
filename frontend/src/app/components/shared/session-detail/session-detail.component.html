@@ -63,7 +63,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (let block of session.blockSummaries; track block) {
+          @for (block of session.blockSummaries; track block) {
             <tr>
               <td>
                 <span class="block-type" [class]="block.type.toLowerCase()">{{ block.label }}</span>

@@ -6,11 +6,16 @@
 export interface SessionData {
   id: string;
   sportType: string;
+  title?: string;
+  completedAt?: string;
   duration: number;
+  totalDurationSeconds: number;
   distance?: number;
   avgPower?: number;
   avgHeartRate?: number;
   avgCadence?: number;
+  tss?: number;
+  intensityFactor?: number;
   timestamp: string;
 }
 

@@ -41,6 +41,9 @@ public class ClubTrainingSession {
     private String linkedTrainingTitle;
     private String linkedTrainingDescription;
     private List<WaitingListEntry> waitingList = new ArrayList<>();
+    private boolean cancelled;
+    private String cancellationReason;
+    private LocalDateTime cancelledAt;
 
     public LocalDateTime computeOpenToAllFrom() {
         if (!openToAll || scheduledAt == null) return null;

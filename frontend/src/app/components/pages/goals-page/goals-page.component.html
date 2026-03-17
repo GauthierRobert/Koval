@@ -1,5 +1,5 @@
 <div class="goals-page">
-  @if (allGoals$ | async as allGoals) {
+  @if (allGoals$ | async; as allGoals) {
     <div class="goals-layout">
     <!-- Sidebar -->
     <div class="goals-sidebar">
@@ -49,7 +49,7 @@
 
     <!-- Detail panel -->
     <div class="goals-detail">
-      @if (getSelectedGoal(allGoals) as goal) {
+      @if (getSelectedGoal(allGoals); as goal) {
 
         <!-- Header -->
         <div class="detail-header">
@@ -125,7 +125,7 @@
         }
 
         <!-- Race info (if linked race loaded) -->
-        @if (goal.raceId && getRace(goal.raceId) as race) {
+        @if (goal.raceId && getRace(goal.raceId); as race) {
           <div class="detail-race-info">
             <span class="detail-section-label">RACE INFO</span>
             @if (race.swimDistanceM || race.bikeDistanceM || race.runDistanceM || race.elevationGainM) {
@@ -236,6 +236,7 @@
       }
     </div>
   </div>
+  }
 </div>
 
 <!-- Goal Form Modal -->
@@ -256,7 +257,7 @@
           placeholder="e.g. Ironman, Paris-Roubaix..." class="form-input" />
       </div>
 
-      @if (searchResults$ | async as results) {
+      @if (searchResults$ | async; as results) {
         <div class="search-results">
           @for (race of results; track race.id) {
             <div class="search-result-item" (click)="selectRace(race)">
@@ -360,5 +361,5 @@
     </div>
     }
   </div>
-}
+  </div>
 }

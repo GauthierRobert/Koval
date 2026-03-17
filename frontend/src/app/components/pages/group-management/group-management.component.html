@@ -26,7 +26,7 @@
   </div>
 
   <div class="tags-body">
-    @if (groupData$ | async as tags) {
+    @if (groupData$ | async; as tags) {
       @if (tags.length === 0) {
         <div class="empty-state">
           No groups yet. Use the form above to create your first group.

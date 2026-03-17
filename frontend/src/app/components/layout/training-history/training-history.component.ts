@@ -1,18 +1,18 @@
-import { Component, inject } from '@angular/core';
+import {Component, inject} from '@angular/core';
 
-import { CommonModule } from '@angular/common';
-import { SportIconComponent } from '../../shared/sport-icon/sport-icon.component';
-import { TrainingService } from '../../../services/training.service';
-import { TrainingFilterService } from '../../../services/training-filter.service';
+import {CommonModule} from '@angular/common';
+import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
+import {TrainingService} from '../../../services/training.service';
+import {TrainingFilterService} from '../../../services/training-filter.service';
 import {
-    Training,
-    TrainingType,
-    TRAINING_TYPE_COLORS,
-    TRAINING_TYPE_LABELS,
-    hasDurationEstimate,
+  hasDurationEstimate,
+  Training,
+  TRAINING_TYPE_COLORS,
+  TRAINING_TYPE_LABELS,
+  TrainingType,
 } from '../../../models/training.model';
-import { DurationEstimationService } from '../../../services/duration-estimation.service';
-import { HistoryService } from '../../../services/history.service';
+import {DurationEstimationService} from '../../../services/duration-estimation.service';
+import {HistoryService} from '../../../services/history.service';
 
 @Component({
     selector: 'app-training-history',

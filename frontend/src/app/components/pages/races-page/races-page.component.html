@@ -44,7 +44,7 @@
   <!-- Level 0: Sport Cards -->
   @if (!selectedBrowseSport) {
     <div class="facet-grid">
-      @for (let facet of sportFacets; track facet) {
+      @for (facet of sportFacets; track facet) {
         <div class="facet-card glass" (click)="selectBrowseSport(facet.sport)">
           <div class="facet-name">{{ facet.sport }}</div>
           <div class="facet-counts">
@@ -64,7 +64,7 @@
   <!-- Level 1: Country Cards -->
   @if (selectedBrowseSport && !selectedBrowseCountry && !browseLoading) {
     <div class="facet-grid facet-grid--countries">
-      @for (let facet of countryFacets; track facet) {
+      @for (facet of countryFacets; track facet) {
         <div class="facet-card facet-card--country glass"
           (click)="selectBrowseCountry(facet.country)">
           <div class="facet-name">{{ facet.country || 'Unknown' }}</div>
@@ -82,7 +82,7 @@
   <!-- Level 2: Race List -->
   @if (selectedBrowseCountry && browseResults && !browseLoading) {
     <div class="browse-race-list">
-      @for (let race of browseResults.content; track race.id) {
+      @for (race of browseResults.content; track race.id) {
         <div class="browse-race-item glass"
           [class.browse-race-item--open]="expandedRaceId === race.id"
           (click)="toggleExpand(race)">
@@ -93,7 +93,7 @@
               <span class="browse-race-verified" title="Verified">&#10003;</span>
             }
             <div class="gpx-chips" (click)="$event.stopPropagation()">
-              @for (let disc of getGpxDisciplines(getCachedRace(race)); track disc) {
+              @for (disc of getGpxDisciplines(getCachedRace(race)); track disc) {
                 @if (hasGpxForDiscipline(getCachedRace(race), disc)) {
                   <label class="gpx-chip gpx-chip--done" title="Click to replace GPX">
                     {{ disc | uppercase }} ✓

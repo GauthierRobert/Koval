@@ -1,27 +1,27 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, NgZone, OnInit } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { BehaviorSubject, combineLatest, Observable, of, map } from 'rxjs';
-import { CoachService, ScheduledWorkout } from '../../../services/coach.service';
-import { AuthService, User } from '../../../services/auth.service';
-import { ClubService, MyClubRoleEntry } from '../../../services/club.service';
-import { RaceGoal, RaceGoalService } from '../../../services/race-goal.service';
-import { Group } from '../../../services/group.service';
-import { ZoneService } from '../../../services/zone.service';
-import { ZoneSystem } from '../../../services/zone';
-import { MetricsService, PmcDataPoint } from '../../../services/metrics.service';
-import { ScheduleModalComponent } from '../../shared/schedule-modal/schedule-modal.component';
-import { InviteCodeModalComponent } from '../../shared/invite-code-modal/invite-code-modal.component';
-import { ShareTrainingModalComponent } from '../../shared/share-training-modal/share-training-modal.component';
-import { TrainingService } from '../../../services/training.service';
-import { Training, TrainingType, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS } from '../../../models/training.model';
-import { SportIconComponent } from '../../shared/sport-icon/sport-icon.component';
-import { PmcChartComponent } from '../../shared/pmc-chart/pmc-chart.component';
-import { formatPaceWithUnit, formatTimeHMS, daysUntil as sharedDaysUntil } from '../../shared/format/format.utils';
+import {ChangeDetectionStrategy, Component, DestroyRef, inject, NgZone, OnInit} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {BehaviorSubject, combineLatest, map, Observable, of} from 'rxjs';
+import {CoachService, ScheduledWorkout} from '../../../services/coach.service';
+import {AuthService, User} from '../../../services/auth.service';
+import {ClubService, MyClubRoleEntry} from '../../../services/club.service';
+import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
+import {Group} from '../../../services/group.service';
+import {ZoneService} from '../../../services/zone.service';
+import {ZoneSystem} from '../../../services/zone';
+import {MetricsService, PmcDataPoint} from '../../../services/metrics.service';
+import {ScheduleModalComponent} from '../../shared/schedule-modal/schedule-modal.component';
+import {InviteCodeModalComponent} from '../../shared/invite-code-modal/invite-code-modal.component';
+import {ShareTrainingModalComponent} from '../../shared/share-training-modal/share-training-modal.component';
+import {TrainingService} from '../../../services/training.service';
+import {Training, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS, TrainingType} from '../../../models/training.model';
+import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
+import {PmcChartComponent} from '../../shared/pmc-chart/pmc-chart.component';
+import {daysUntil as sharedDaysUntil, formatPaceWithUnit, formatTimeHMS} from '../../shared/format/format.utils';
 
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { SessionData, AthleteSessions, SessionSummary } from '../../../models/session-types.model';
+import {ActivatedRoute, Router, RouterModule} from '@angular/router';
+import {SessionData, SessionSummary} from '../../../models/session-types.model';
 
 @Component({
   selector: 'app-coach-dashboard',
@@ -490,14 +490,14 @@ export class CoachDashboardComponent implements OnInit {
     return 'NEUTRAL';
   }
 
-  trackTagByName(_index: number, group: Group): string { return group.name; }
-  trackAthleteById(_index: number, athlete: User): string { return athlete.id; }
-  trackByValue(_index: number, value: string): string { return value; }
-  trackScheduleById(_index: number, workout: ScheduledWorkout): string { return workout.id; }
-  trackSessionById(_index: number, s: SessionData): string { return s.id; }
-  trackZoneByName(_index: number, z: { name: string }): string { return z.name; }
-  trackZoneByLabel(_index: number, z: { label: string }): string { return z.label; }
-  trackDistBySport(_index: number, d: { sport: string }): string { return d.sport; }
-  trackSystemByName(_index: number, sys: { name: string }): string { return sys.name; }
-  trackGoalById(_index: number, goal: RaceGoal): string { return goal.id; }
+  trackTagByName(group: Group): string { return group.name; }
+  trackAthleteById(athlete: User): string { return athlete.id; }
+  trackByValue(value: string): string { return value; }
+  trackScheduleById(workout: ScheduledWorkout): string { return workout.id; }
+  trackSessionById(s: SessionData): string { return s.id; }
+  trackZoneByName(z: { name: string }): string { return z.name; }
+  trackZoneByLabel(z: { label: string }): string { return z.label; }
+  trackDistBySport(d: { sport: string }): string { return d.sport; }
+  trackSystemByName(sys: { name: string }): string { return sys.name; }
+  trackGoalById(goal: RaceGoal): string { return goal.id; }
 }

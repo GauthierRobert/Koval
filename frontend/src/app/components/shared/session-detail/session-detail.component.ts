@@ -1,16 +1,8 @@
-import {
-    Component,
-    Input,
-    ViewChild,
-    ElementRef,
-    AfterViewInit,
-    OnChanges,
-    SimpleChanges,
-} from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SavedSession } from '../../../services/history.service';
-import { formatTimeHMS } from '../format/format.utils';
-import { BlockSummary, LiveMetrics } from '../../../services/workout-execution.service';
+import {AfterViewInit, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild,} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {SavedSession} from '../../../services/history.service';
+import {formatTimeHMS} from '../format/format.utils';
+import {BlockSummary, LiveMetrics} from '../../../services/workout-execution.service';
 
 @Component({
     selector: 'app-session-detail',

@@ -1,18 +1,18 @@
-import { ChangeDetectionStrategy, Component, inject, ViewChild, ElementRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { BehaviorSubject, combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { SportIconComponent } from '../../shared/sport-icon/sport-icon.component';
-import { SessionAnalysisComponent } from '../session-analysis/session-analysis.component';
-import { FilterPillsComponent } from '../../shared/filter-pills/filter-pills.component';
-import { HistoryService, SavedSession } from '../../../services/history.service';
-import { formatTimeText } from '../../shared/format/format.utils';
+import {ChangeDetectionStrategy, Component, ElementRef, inject, ViewChild} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {BehaviorSubject, combineLatest} from 'rxjs';
+import {map} from 'rxjs/operators';
+import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
+import {SessionAnalysisComponent} from '../session-analysis/session-analysis.component';
+import {FilterPillsComponent} from '../../shared/filter-pills/filter-pills.component';
+import {HistoryService, SavedSession} from '../../../services/history.service';
+import {formatTimeText} from '../../shared/format/format.utils';
 
-import { SessionSummary, BlockSummary } from '../../../services/workout-execution.service';
-import { FitExportService } from '../../../services/fit-export.service';
-import { AuthService } from '../../../services/auth.service';
-import { MetricsService } from '../../../services/metrics.service';
+import {BlockSummary, SessionSummary} from '../../../services/workout-execution.service';
+import {FitExportService} from '../../../services/fit-export.service';
+import {AuthService} from '../../../services/auth.service';
+import {MetricsService} from '../../../services/metrics.service';
 
 // @ts-ignore
 import FitParser from 'fit-file-parser';
@@ -219,7 +219,7 @@ export class WorkoutHistoryComponent {
         return 'W';
     }
 
-    trackSessionById(_index: number, session: SavedSession): string {
+    trackSessionById(session: SavedSession): string {
         return session.id;
     }
 }

@@ -1,15 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, Input, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import {
-  ClubDetail,
-  ClubMember,
-  ClubMemberRole,
-  ClubService,
-  ClubGroup,
-} from '../../../../../../services/club.service';
-import { User } from '../../../../../../services/auth.service';
-import { ScheduleModalComponent } from '../../../../../shared/schedule-modal/schedule-modal.component';
+import {ChangeDetectionStrategy, Component, inject, Input, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {ClubDetail, ClubGroup, ClubMember, ClubMemberRole, ClubService,} from '../../../../../../services/club.service';
+import {User} from '../../../../../../services/auth.service';
+import {ScheduleModalComponent} from '../../../../../shared/schedule-modal/schedule-modal.component';
 
 @Component({
   selector: 'app-club-members-tab',

@@ -11,7 +11,7 @@
               <label>Training</label>
               <select [(ngModel)]="selectedTrainingId" (ngModelChange)="onTrainingSelected()">
                 <option value="" disabled>Select a training...</option>
-                @for (let t of allTrainings; track t.id) {
+                @for (t of allTrainings; track t.id) {
                   <option [value]="t.id">{{ t.title }}</option>
                 }
               </select>
@@ -21,7 +21,7 @@
               <div class="field">
                 <label>Share with tag groups</label>
                 <div class="tag-selector">
-                  @for (let tag of availableTags; track tag.id) {
+                  @for (tag of availableTags; track tag.id) {
                     <span
                       class="tag-chip"
                       [class.selected]="selectedTagIds.includes(tag.id)"

@@ -2,7 +2,14 @@ import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit} f
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {ActivatedRoute} from '@angular/router';
-import {AthleteProfile, PacingPlanResponse, PacingSegment, PacingService, RouteCoordinate, SegmentRange,} from '../../../services/pacing.service';
+import {
+  AthleteProfile,
+  PacingPlanResponse,
+  PacingSegment,
+  PacingService,
+  RouteCoordinate,
+  SegmentRange,
+} from '../../../services/pacing.service';
 import {AuthService} from '../../../services/auth.service';
 import {Race, RaceService, SimulationRequest} from '../../../services/race.service';
 import {ElevationChartComponent} from './elevation-chart/elevation-chart.component';

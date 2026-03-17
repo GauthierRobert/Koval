@@ -1,6 +1,6 @@
 <div class="history-container">
   <div class="history-list">
-    @for (let training of filteredTrainings$ | async; track training.id) {
+    @for (training of filteredTrainings$ | async; track training.id) {
       <div class="history-item"
         [class.selected]="(selectedTraining$ | async)?.id === training.id" (click)="onSelect(training)">
         <div class="item-icon">
@@ -31,7 +31,7 @@
           }
           @if (training.groupIds?.length && !training._receivedMeta) {
             <div class="item-tags">
-              @for (let tag of training.groupIds; track tag) {
+              @for (tag of training.groupIds; track tag) {
                 <span class="tag-chip">{{ tag }}</span>
               }
             </div>

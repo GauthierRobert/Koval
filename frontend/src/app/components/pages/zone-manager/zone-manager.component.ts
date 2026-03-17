@@ -1,15 +1,15 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { BehaviorSubject, combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { Router } from '@angular/router';
-import { ZoneService } from '../../../services/zone.service';
-import { AuthService } from '../../../services/auth.service';
-import { SportType, ZoneReferenceType, ZoneSystem, Zone } from '../../../services/zone';
-import { SportIconComponent } from '../../shared/sport-icon/sport-icon.component';
-import { CreateWithAiModalComponent } from '../../shared/create-with-ai-modal/create-with-ai-modal.component';
-import { ActionResult } from '../../../services/ai-action.service';
+import {ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnInit, Output} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {BehaviorSubject, combineLatest} from 'rxjs';
+import {map} from 'rxjs/operators';
+import {Router} from '@angular/router';
+import {ZoneService} from '../../../services/zone.service';
+import {AuthService} from '../../../services/auth.service';
+import {SportType, Zone, ZoneReferenceType, ZoneSystem} from '../../../services/zone';
+import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
+import {CreateWithAiModalComponent} from '../../shared/create-with-ai-modal/create-with-ai-modal.component';
+import {ActionResult} from '../../../services/ai-action.service';
 
 @Component({
   selector: 'app-zone-manager',

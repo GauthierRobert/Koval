@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ClubService } from '../../../../../../services/club.service';
-import { AuthService } from '../../../../../../services/auth.service';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {ClubService} from '../../../../../../services/club.service';
+import {AuthService} from '../../../../../../services/auth.service';
 
 @Component({
   selector: 'app-club-leaderboard-tab',

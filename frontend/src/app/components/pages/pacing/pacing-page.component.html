@@ -201,7 +201,7 @@
           <div class="field">
             <label>Target Power (%FTP)</label>
             <input type="number" [ngModel]="targetPowerPct" (ngModelChange)="onTargetPowerPctChange($event)" placeholder="Auto" min="30" max="120" />
-            @if (computedPowerWatts() as w) {
+            @if (computedPowerWatts(); as w) {
               <span class="field-hint computed">= {{ w }}W</span>
             }
             @if (!targetPowerPct) {
@@ -213,7 +213,7 @@
           <div class="field">
             <label>Target Pace (%Threshold)</label>
             <input type="number" [ngModel]="targetPacePct" (ngModelChange)="onTargetPacePctChange($event)" placeholder="Auto" min="80" max="150" />
-            @if (computedPaceDisplay() as p) {
+            @if (computedPaceDisplay(); as p) {
               <span class="field-hint computed">= {{ p }}</span>
             }
             @if (!targetPacePct) {
@@ -287,11 +287,12 @@
           <span>GENERATING...</span>
         }
       </button>
-      @if (getGenerateBlockedReason() as reason) {
+      @if (getGenerateBlockedReason(); as reason) {
         <span class="generate-hint">{{ reason }}</span>
       }
     </div>
   </div>
+  }
 
   <!-- Results View -->
   @if (pacingPlan$ | async; as plan) {
@@ -363,7 +364,7 @@
 
     <!-- Summary Cards -->
     <div class="summary-row">
-      @if (plan.swimSummary as ss) {
+      @if (plan.swimSummary; as ss) {
         <div class="summary-card glass">
           <span class="summary-label swim">SWIM</span>
           <div class="summary-body">
@@ -390,7 +391,7 @@
         </div>
       }
 
-      @if (plan.bikeSummary as bs) {
+      @if (plan.bikeSummary; as bs) {
         <div class="summary-card glass">
           <span class="summary-label">BIKE</span>
           <div class="summary-body">
@@ -448,7 +449,7 @@
         </div>
       }
 
-      @if (plan.runSummary as rs) {
+      @if (plan.runSummary; as rs) {
         <div class="summary-card glass">
           <span class="summary-label run">RUN</span>
           <div class="summary-body">
@@ -513,8 +514,8 @@
               <label class="band-slider-label">&plusmn; {{ groupBandW }}W</label>
               <input type="range" class="band-slider" [(ngModel)]="groupBandW" [attr.min]="1" [attr.max]="20" [attr.step]="1" />
             </div>
+            }
           </div>
-          }
           <div class="race-plan-list">
             @for (group of getGroupedPlan(getActiveSegments(plan)); let i = $index; track i) {
               <div class="race-plan-item"
@@ -591,6 +592,7 @@
         </div>
       </div>
     </div>
+    }
 
     <!-- Swim panel (no map/chart for swim) -->
     @if (activeTab === 'SWIM') {
@@ -600,6 +602,7 @@
       </div>
     }
   </div>
+  }
 
   <!-- Settings Modal -->
   @if (showSettingsModal) {
@@ -793,7 +796,7 @@
                 <div class="field">
                   <label>Target Power (%FTP)</label>
                   <input type="number" [ngModel]="targetPowerPct" (ngModelChange)="onTargetPowerPctChange($event)" placeholder="Auto" min="30" max="120" />
-                  @if (computedPowerWatts() as w) {
+                  @if (computedPowerWatts(); as w) {
                     <span class="field-hint computed">= {{ w }}W</span>
                   }
                   @if (!targetPowerPct) {
@@ -805,7 +808,7 @@
                 <div class="field">
                   <label>Target Pace (%Threshold)</label>
                   <input type="number" [ngModel]="targetPacePct" (ngModelChange)="onTargetPacePctChange($event)" placeholder="Auto" min="80" max="150" />
-                  @if (computedPaceDisplay() as p) {
+                  @if (computedPaceDisplay(); as p) {
                     <span class="field-hint computed">= {{ p }}</span>
                   }
                   @if (!targetPacePct) {
@@ -851,7 +854,7 @@
         </div>
       </div>
 
-      @if (localError$ | async as err) {
+      @if (localError$ | async; as err) {
         <div class="error-msg">{{ err }}</div>
       }
 

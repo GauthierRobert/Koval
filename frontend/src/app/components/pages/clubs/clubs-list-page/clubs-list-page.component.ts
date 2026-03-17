@@ -1,13 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import {
-  ClubService,
-  ClubSummary,
-  ClubVisibility,
-  CreateClubData,
-} from '../../../../services/club.service';
+import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {Router} from '@angular/router';
+import {ClubService, ClubSummary, ClubVisibility, CreateClubData,} from '../../../../services/club.service';
 
 @Component({
   selector: 'app-clubs-list-page',

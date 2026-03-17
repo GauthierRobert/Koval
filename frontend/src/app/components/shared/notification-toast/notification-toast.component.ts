@@ -1,11 +1,11 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
-import { filter } from 'rxjs/operators';
-import { NotificationService } from '../../../services/notification.service';
-import { ClubService } from '../../../services/club.service';
-import { MessagePayload } from 'firebase/messaging';
+import {Component, inject, OnDestroy, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {Router} from '@angular/router';
+import {Subscription} from 'rxjs';
+import {filter} from 'rxjs/operators';
+import {NotificationService} from '../../../services/notification.service';
+import {ClubService} from '../../../services/club.service';
+import {MessagePayload} from 'firebase/messaging';
 
 @Component({
   selector: 'app-notification-toast',
@@ -13,7 +13,7 @@ import { MessagePayload } from 'firebase/messaging';
   imports: [CommonModule],
   template: `
     <div class="toast-container" *ngIf="visible" (click)="onToastClick()">
-      <div class="toast">
+      <div class="toast" [class.toast-cancelled]="data['type'] === 'SESSION_CANCELLED'">
         <div class="toast-content">
           <strong>{{ title }}</strong>
           <span>{{ body }}</span>
@@ -88,6 +88,9 @@ import { MessagePayload } from 'firebase/messaging';
       .toast-refuse-btn:hover {
         background: rgba(239, 68, 68, 0.25);
       }
+      .toast-cancelled {
+        border-left-color: #ef4444;
+      }
       @keyframes slideIn {
         from {
           transform: translateX(100%);
@@ -133,7 +136,7 @@ export class NotificationToastComponent implements OnInit, OnDestroy {
     const type = this.data['type'];
     if (type === 'TRAINING_ASSIGNED') {
       this.router.navigate(['/calendar']);
-    } else if (type === 'SESSION_CREATED' || type === 'WAITING_LIST_PROMOTED') {
+    } else if (type === 'SESSION_CREATED' || type === 'WAITING_LIST_PROMOTED' || type === 'SESSION_CANCELLED') {
       const clubId = this.data['clubId'];
       if (clubId) {
         this.router.navigate(['/clubs', clubId]);

@@ -3,7 +3,7 @@
   @if (leaderboard$ | async; as entries) {
     @if (entries.length > 0) {
       <div class="leaderboard-list">
-        @for (let entry of entries; track entry) {
+        @for (entry of entries; track entry) {
           <div class="leaderboard-row glass"
             [class.current-user]="entry.userId === currentUserId">
             <div class="rank">{{ getRankIcon(entry.rank) }}</div>

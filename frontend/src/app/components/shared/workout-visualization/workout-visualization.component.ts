@@ -1,16 +1,16 @@
-import { Component, Input, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { TrainingService } from '../../../services/training.service';
-import { Training, WorkoutBlock, hasDurationEstimate } from '../../../models/training.model';
-import { WorkoutExecutionService } from '../../../services/workout-execution.service';
-import { ExportService } from '../../../services/export.service';
-import { ScheduleModalComponent } from '../schedule-modal/schedule-modal.component';
-import { BlockEditorModalComponent } from '../block-editor-modal/block-editor-modal.component';
-import { AuthService } from '../../../services/auth.service';
-import { DurationEstimationService } from '../../../services/duration-estimation.service';
-import { ZoneService } from '../../../services/zone.service';
-import { ZoneSystem } from '../../../services/zone';
-import { formatPace as sharedFormatPace } from '../format/format.utils';
+import {Component, inject, Input} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {TrainingService} from '../../../services/training.service';
+import {hasDurationEstimate, Training, WorkoutBlock} from '../../../models/training.model';
+import {WorkoutExecutionService} from '../../../services/workout-execution.service';
+import {ExportService} from '../../../services/export.service';
+import {ScheduleModalComponent} from '../schedule-modal/schedule-modal.component';
+import {BlockEditorModalComponent} from '../block-editor-modal/block-editor-modal.component';
+import {AuthService} from '../../../services/auth.service';
+import {DurationEstimationService} from '../../../services/duration-estimation.service';
+import {ZoneService} from '../../../services/zone.service';
+import {ZoneSystem} from '../../../services/zone';
+import {formatPace as sharedFormatPace} from '../format/format.utils';
 
 @Component({
   selector: 'app-workout-visualization',

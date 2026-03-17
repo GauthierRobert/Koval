@@ -14,7 +14,7 @@
             <div class="field">
               <label>Tags (athletes will receive these)</label>
               <div class="tag-selector">
-                @for (let tag of unassignedTags; track tag.id) {
+                @for (tag of unassignedTags; track tag.id) {
                   <span
                     class="tag-chip"
                     [class.selected]="selectedTagId === tag.id"
@@ -67,7 +67,7 @@
                 }
               </div>
               <div class="code-list">
-                @for (let code of displayedCodes$ | async; track code.code) {
+                @for (code of displayedCodes$ | async; track code.code) {
                   <div class="code-row" [class.inactive]="!code.active">
                     <div class="code-left">
                       <span class="code-mono">{{ code.code }}</span>
@@ -75,7 +75,7 @@
                     </div>
                     <div class="code-meta">
                       <div class="code-tags">
-                        @for (let groupId of code.groupIds; track groupId) {
+                        @for (groupId of code.groupIds; track groupId) {
                           <span class="mini-tag">{{ resolveTagName(groupId) }}</span>
                         }
                         @if (code.groupIds.length === 0) {
@@ -101,5 +101,5 @@
           }
         </div>
       </div>
-    }
     </div>
+    }

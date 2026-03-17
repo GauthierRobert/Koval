@@ -1,13 +1,13 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, inject, OnInit, Output, DestroyRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { BehaviorSubject, forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ClubService, ClubGroup, ClubSummary } from '../../../services/club.service';
-import { GroupService, Group } from '../../../services/group.service';
-import { CoachService } from '../../../services/coach.service';
-import { AuthService } from '../../../services/auth.service';
+import {ChangeDetectionStrategy, Component, DestroyRef, EventEmitter, inject, OnInit, Output} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {BehaviorSubject, forkJoin, of} from 'rxjs';
+import {catchError} from 'rxjs/operators';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {ClubGroup, ClubService, ClubSummary} from '../../../services/club.service';
+import {Group, GroupService} from '../../../services/group.service';
+import {CoachService} from '../../../services/coach.service';
+import {AuthService} from '../../../services/auth.service';
 
 interface ClubGroupWithMembership {
   group: ClubGroup;

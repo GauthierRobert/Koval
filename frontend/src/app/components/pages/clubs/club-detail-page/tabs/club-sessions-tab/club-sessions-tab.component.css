@@ -947,6 +947,85 @@
   font-size: 11px;
 }
 
+/* --- Cancelled session styles --- */
+.session-card.cancelled {
+  opacity: 0.6;
+  border-left: 3px solid #ef4444;
+}
+
+.time-grid-session.cancelled {
+  opacity: 0.5;
+  background: rgba(239, 68, 68, 0.08) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+.cancelled-badge {
+  font-size: 8px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cancelled-badge.small {
+  font-size: 7px;
+  padding: 1px 4px;
+}
+
+.title-cancelled {
+  text-decoration: line-through;
+}
+
+.cancellation-reason {
+  font-size: 11px;
+  font-style: italic;
+  color: #f87171;
+  padding: 6px 10px;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: var(--radius-sm);
+  margin: 4px 0;
+}
+
+.btn-cancel {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-cancel:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+.btn-cancel.small {
+  padding: 3px 8px;
+  font-size: 9px;
+}
+
+.cancel-warning {
+  font-size: 11px;
+  color: #fbbf24;
+  font-weight: 600;
+  margin: 0;
+}
+
+.cancel-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

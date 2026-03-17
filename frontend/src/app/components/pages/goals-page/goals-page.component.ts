@@ -1,14 +1,14 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { BehaviorSubject, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
-import { map, take } from 'rxjs/operators';
-import { RaceGoal, RaceGoalService } from '../../../services/race-goal.service';
-import { Race, RaceService, SimulationRequest, RouteCoordinate } from '../../../services/race.service';
-import { SportIconComponent } from '../../shared/sport-icon/sport-icon.component';
-import { RouteMapComponent } from '../pacing/route-map/route-map.component';
-import { daysUntil as sharedDaysUntil, weeksUntil as sharedWeeksUntil } from '../../shared/format/format.utils';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {BehaviorSubject, debounceTime, distinctUntilChanged, of, switchMap} from 'rxjs';
+import {map, take} from 'rxjs/operators';
+import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
+import {Race, RaceService, RouteCoordinate, SimulationRequest} from '../../../services/race.service';
+import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
+import {RouteMapComponent} from '../pacing/route-map/route-map.component';
+import {daysUntil as sharedDaysUntil, weeksUntil as sharedWeeksUntil} from '../../shared/format/format.utils';
 
 @Component({
   selector: 'app-goals-page',

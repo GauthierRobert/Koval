@@ -7,7 +7,7 @@
     </div>
     <div class="header-right">
       <div class="sport-filters">
-        @for (let sport of sportTypes; track sport) {
+        @for (sport of sportTypes; track sport) {
           <button class="sport-filter-btn"
             [class.active]="activeSportFilter === sport" (click)="setSportFilter(sport)">
             <app-sport-icon [sport]="sport" [size]="12"></app-sport-icon>
@@ -20,7 +20,7 @@
         <button class="create-btn" (click)="showCreateMenu = !showCreateMenu">+ NEW</button>
         @if (showCreateMenu) {
           <div class="create-menu">
-            @for (let sport of sportTypes; track sport) {
+            @for (sport of sportTypes; track sport) {
               <button class="create-option" (click)="createNewSystem(sport)">
                 <app-sport-icon [sport]="sport" [size]="14"></app-sport-icon>
                 {{ getSportLabel(sport) }} Zones
@@ -35,8 +35,8 @@
   <div class="zone-content">
     <!-- Systems list (left) -->
     <div class="systems-list">
-      @if (filteredSystems$ | async as systems) {
-        @for (let system of systems; track system.id) {
+      @if (filteredSystems$ | async; as systems) {
+        @for (system of systems; track system.id) {
           <div class="system-card"
             [class.selected]="selectedSystem?.id === system.id" (click)="selectSystem(system)">
             <div class="system-card-top">
@@ -51,7 +51,7 @@
               }
             </div>
             <div class="zone-bar-preview">
-              @for (let zone of system.zones; let i = $index; track i) {
+              @for (zone of system.zones; let i = $index; track i) {
                 <div class="bar-segment"
                   [style.flex]="zone.high - zone.low" [style.background]="getZoneColor(i)">
                 </div>
@@ -80,7 +80,7 @@
             <div class="config-item">
               <label>SPORT</label>
               <select [(ngModel)]="editingSystem.sportType">
-                @for (let s of sportTypes; track s) {
+                @for (s of sportTypes; track s) {
                   <option [value]="s">{{ getSportLabel(s) }}</option>
                 }
               </select>
@@ -88,7 +88,7 @@
             <div class="config-item">
               <label>REFERENCE</label>
               <select [(ngModel)]="editingSystem.referenceType">
-                @for (let r of availableReferenceTypes; track r.value) {
+                @for (r of availableReferenceTypes; track r.value) {
                   <option [value]="r.value">{{ r.label }}</option>
                 }
               </select>
@@ -126,7 +126,7 @@
       <!-- Zone visualization bar -->
       <div class="zone-vis">
         <div class="zone-vis-bar">
-          @for (let zone of editingSystem.zones; let i = $index; track i) {
+          @for (zone of editingSystem.zones; let i = $index; track i) {
             <div class="vis-segment"
               [style.flex]="zone.high - zone.low" [style.background]="getZoneColor(i)"
               [title]="zone.label + ': ' + zone.low + '–' + zone.high + '%'">
@@ -147,7 +147,7 @@
           <span class="col-desc">DESCRIPTION</span>
           <span class="col-actions"></span>
         </div>
-        @for (let zone of editingSystem.zones; let i = $index; track i) {
+        @for (zone of editingSystem.zones; let i = $index; track i) {
           <div class="zone-row">
           <span class="col-color">
             <span class="color-dot" [style.background]="getZoneColor(i)"></span>

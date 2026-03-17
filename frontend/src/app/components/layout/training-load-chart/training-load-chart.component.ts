@@ -1,12 +1,5 @@
-import {
-    Component,
-    Input,
-    OnChanges,
-    AfterViewInit,
-    ViewChild,
-    ElementRef,
-} from '@angular/core';
-import { ScheduledWorkout } from '../../../services/coach.service';
+import {AfterViewInit, Component, ElementRef, Input, OnChanges, ViewChild,} from '@angular/core';
+import {ScheduledWorkout} from '../../../services/coach.service';
 
 interface DayInfo {
     date: Date;

@@ -1,10 +1,10 @@
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { BehaviorSubject, combineLatest, map, Observable } from 'rxjs';
-import { CoachService, InviteCode } from '../../../services/coach.service';
-import { AuthService } from '../../../services/auth.service';
-import { Group, GroupService } from '../../../services/group.service';
+import {Component, EventEmitter, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {BehaviorSubject, combineLatest, map, Observable} from 'rxjs';
+import {CoachService, InviteCode} from '../../../services/coach.service';
+import {AuthService} from '../../../services/auth.service';
+import {Group, GroupService} from '../../../services/group.service';
 
 @Component({
   selector: 'app-invite-code-modal',

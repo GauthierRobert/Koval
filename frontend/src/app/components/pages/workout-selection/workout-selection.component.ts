@@ -1,24 +1,24 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { TrainingService } from '../../../services/training.service';
-import { TrainingFilterService } from '../../../services/training-filter.service';
+import {Component, inject, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {TrainingService} from '../../../services/training.service';
+import {TrainingFilterService} from '../../../services/training-filter.service';
 import {
-  Training,
-  TrainingType,
-  TRAINING_TYPES,
-  TRAINING_TYPE_COLORS,
-  TRAINING_TYPE_LABELS,
   SPORT_OPTIONS,
   SportFilter,
+  Training,
+  TRAINING_TYPE_COLORS,
+  TRAINING_TYPE_LABELS,
+  TRAINING_TYPES,
+  TrainingType,
 } from '../../../models/training.model';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { RouterModule } from '@angular/router';
-import { WorkoutVisualizationComponent } from '../../shared/workout-visualization/workout-visualization.component';
-import { SidebarComponent } from '../../layout/sidebar/sidebar.component';
-import { FilterPillsComponent, FilterPillOption } from '../../shared/filter-pills/filter-pills.component';
-import { CreateWithAiModalComponent } from '../../shared/create-with-ai-modal/create-with-ai-modal.component';
-import { ActionResult } from '../../../services/ai-action.service';
+import {Observable} from 'rxjs';
+import {map} from 'rxjs/operators';
+import {RouterModule} from '@angular/router';
+import {WorkoutVisualizationComponent} from '../../shared/workout-visualization/workout-visualization.component';
+import {SidebarComponent} from '../../layout/sidebar/sidebar.component';
+import {FilterPillOption, FilterPillsComponent} from '../../shared/filter-pills/filter-pills.component';
+import {CreateWithAiModalComponent} from '../../shared/create-with-ai-modal/create-with-ai-modal.component';
+import {ActionResult} from '../../../services/ai-action.service';
 
 @Component({
   selector: 'app-workout-selection',

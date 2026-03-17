@@ -1,4 +1,4 @@
-@if (state$ | async as state) {
+@if (state$ | async; as state) {
   <div class="live-container">
   <div class="top-bar">
     <div class="workout-title">{{ state.training?.title }}</div>
@@ -101,7 +101,7 @@
           <div class="block-label">{{ state.training?.blocks?.[state.currentBlockIndex]?.label }}</div>
         </div>
         <div class="timer">{{ formatTime(state.remainingBlockSeconds) }}</div>
-        @if (state.training?.blocks?.[state.currentBlockIndex + 1] as next) {
+        @if (state.training?.blocks?.[state.currentBlockIndex + 1]; as next) {
         <div class="next-block">
           <div class="block-tag">UP NEXT</div>
           <div class="block-label">{{ next.label }} ({{ formatTime(next.durationSeconds) }})</div>
@@ -119,7 +119,7 @@
     <!-- Live Graph or Game -->
     <div class="graph-area">
       <canvas #canvas [hidden]="showGame"></canvas>
-      @if (showGame && (metrics$ | async) as metrics) {
+      @if (showGame && (metrics$ | async); as metrics) {
         <app-zombie-game [targetPower]="getTargetPower(state)"
           [currentPower]="metrics.power" (gameEnded)="showGame = false">
         </app-zombie-game>
@@ -160,5 +160,4 @@
     </app-session-summary>
   }
   </div>
-}
 }

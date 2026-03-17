@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ErrorToastService, Toast } from '../../../services/error-toast.service';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {ErrorToastService} from '../../../services/error-toast.service';
 
 @Component({
   selector: 'app-error-toast',

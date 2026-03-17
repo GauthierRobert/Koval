@@ -1,21 +1,12 @@
-import {
-  Component,
-  Input,
-  Output,
-  EventEmitter,
-  OnChanges,
-  SimpleChanges,
-  inject,
-  NgZone,
-} from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { AIActionService, AIActionType, ActionContext, ActionResult } from '../../../services/ai-action.service';
-import { ClubService, ClubGroup } from '../../../services/club.service';
-import { ZoneService } from '../../../services/zone.service';
-import { ZoneSystem } from '../../../services/zone';
-import { TrainingService } from '../../../services/training.service';
-import { Training } from '../../../models/training.model';
+import {Component, EventEmitter, inject, Input, NgZone, OnChanges, Output, SimpleChanges,} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {ActionContext, ActionResult, AIActionService, AIActionType} from '../../../services/ai-action.service';
+import {ClubGroup, ClubService} from '../../../services/club.service';
+import {ZoneService} from '../../../services/zone.service';
+import {ZoneSystem} from '../../../services/zone';
+import {TrainingService} from '../../../services/training.service';
+import {Training} from '../../../models/training.model';
 
 @Component({
   selector: 'app-create-with-ai-modal',

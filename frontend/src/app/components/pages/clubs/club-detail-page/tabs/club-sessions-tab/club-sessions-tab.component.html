@@ -12,7 +12,7 @@
     </div>
   </div>
 
-  @if (sessions$ | async as sessions) {
+  @if (sessions$ | async; as sessions) {
     <!-- Shared week navigation -->
     <div class="calendar-nav">
       <button class="btn-secondary" (click)="prevWeek()">&larr; Prev</button>
@@ -23,7 +23,7 @@
 
     <!-- LIST VIEW -->
     @if (viewMode === 'LIST') {
-      @if (getListDaysWithSessions(sessions) as days) {
+      @if (getListDaysWithSessions(sessions); as days) {
         @if (days.length > 0) {
           <div class="sessions-list">
           @for (day of days; track day) {
@@ -36,17 +36,21 @@
                     [class.attending]="isParticipant(session)"
                     [class.waiting]="isOnWaitingList(session)"
                     [class.expanded]="expandedSessionId === session.id"
+                    [class.cancelled]="isCancelled(session)"
                     (click)="toggleSessionDetail(session)">
                 <div class="session-header">
                   <span class="session-sport-badge">{{ session.sport || 'GENERAL' }}</span>
-                  @if (session.openToAll) {
+                  @if (isCancelled(session)) {
+                    <span class="cancelled-badge">CANCELLED</span>
+                  }
+                  @if (session.openToAll && !isCancelled(session)) {
                     <span class="open-to-all-badge">Open to All</span>
                   }
                   @if (session.recurringTemplateId) {
                     <span class="recurring-badge"><svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="#FFFFFF"><path d="M314-115q-104-48-169-145T80-479q0-26 2.5-51t8.5-49l-46 27-40-69 191-110 110 190-70 40-54-94q-11 27-16.5 56t-5.5 60q0 97 53 176.5T354-185l-40 70Zm306-485v-80h109q-46-57-111-88.5T480-800q-55 0-104 17t-90 48l-40-70q50-35 109-55t125-20q79 0 151 29.5T760-765v-55h80v220H620ZM594 0 403-110l110-190 69 40-57 98q118-17 196.5-107T800-480q0-11-.5-20.5T797-520h81q1 10 1.5 19.5t.5 20.5q0 135-80.5 241.5T590-95l44 26-40 69Z"/></svg></span>
                   }
 
-                  <h4 class="session-title">{{ session.title }}</h4>
+                  <h4 class="session-title" [class.title-cancelled]="isCancelled(session)">{{ session.title }}</h4>
                   @if (canCreate) {
                     <button
                       class="edit-btn-corner"
@@ -72,6 +76,9 @@
                     <span>{{ session.location }}</span>
                   }
                 </div>
+                @if (isCancelled(session) && session.cancellationReason) {
+                  <div class="cancellation-reason">{{ session.cancellationReason }}</div>
+                }
 
                 <!-- Linked training info -->
                 @if (session.linkedTrainingId) {
@@ -98,31 +105,39 @@
 
                 <!-- Capacity + Join inline row -->
                 <div class="capacity-join-row">
-                  @if (isParticipant(session)) {
+                  @if (isParticipant(session) && !isCancelled(session)) {
                     <span class="attending-badge">ATTENDING</span>
                   }
                   <span [class.capacity-full]="isFull(session)">
                     &#x1f465; {{ getCapacityText(session) }}
-                    @if (isFull(session)) {
+                    @if (isFull(session) && !isCancelled(session)) {
                       <span class="full-badge">FULL</span>
                     }
                   </span>
-                  @if (!isParticipant(session) && !isOnWaitingList(session)) {
-                    <button class="btn-primary small" (click)="joinSession(session, $event)">
-                      {{ isFull(session) ? 'JOIN WAITING LIST' : 'JOIN' }}
-                    </button>
-                  }
-                  @if (isParticipant(session)) {
-                    <button class="btn-ghost small"
-                            (click)="cancelSession(session, $event)">
-                      REMOVE MY PARTICIPATION
-                    </button>
-                  }
-                  @if (isOnWaitingList(session)) {
-                    <button class="btn-ghost small"
-                            (click)="cancelSession(session, $event)">
-                      LEAVE WAITING LIST
-                    </button>
+                  @if (!isCancelled(session)) {
+                    @if (!isParticipant(session) && !isOnWaitingList(session)) {
+                      <button class="btn-primary small" (click)="joinSession(session, $event)">
+                        {{ isFull(session) ? 'JOIN WAITING LIST' : 'JOIN' }}
+                      </button>
+                    }
+                    @if (isParticipant(session)) {
+                      <button class="btn-ghost small"
+                              (click)="cancelSession(session, $event)">
+                        REMOVE MY PARTICIPATION
+                      </button>
+                    }
+                    @if (isOnWaitingList(session)) {
+                      <button class="btn-ghost small"
+                              (click)="cancelSession(session, $event)">
+                        LEAVE WAITING LIST
+                      </button>
+                    }
+                    @if (canCreate) {
+                      <button class="btn-cancel small"
+                              (click)="openCancelSessionModal(session, $event)">
+                        CANCEL SESSION
+                      </button>
+                    }
                   }
                 </div>
 
@@ -163,7 +178,9 @@
                 </div>
               }
             </div>
+          </div>
           }
+          </div>
         }
       } @else {
         <div class="empty-tab">
@@ -221,6 +238,7 @@
                   class="time-grid-session"
                   [class.has-training]="!!session.linkedTrainingId"
                   [class.no-training]="!session.linkedTrainingId"
+                  [class.cancelled]="isCancelled(session)"
                   [style.top.px]="getSessionTopPx(session)"
                   [style.height.px]="getSessionHeightPx(session)">
 
@@ -260,7 +278,10 @@
                 }
 
               </div>
-              <div class="tg-session-title">{{ session.title }}</div>
+              @if (isCancelled(session)) {
+                <span class="cancelled-badge small">CANCELLED</span>
+              }
+              <div class="tg-session-title" [class.title-cancelled]="isCancelled(session)">{{ session.title }}</div>
               @if (session.linkedTrainingDescription && session.linkedTrainingId) {
                 <div class="tg-session-desc">{{ truncate(session.linkedTrainingDescription, 40) }}</div>
               }
@@ -268,24 +289,28 @@
                 <span class="tg-session-capacity" [class.capacity-full]="isFull(session)">
                   &#x1f465; {{ getCapacityText(session) }}
                 </span>
-                @if (!isParticipant(session) && !isOnWaitingList(session)) {
-                  <button class="btn-primary small" (click)="joinSession(session, $event)">
-                    {{ isFull(session) ? 'WAIT' : 'JOIN' }}
-                  </button>
-                }
-                @if (isParticipant(session)) {
-                  <button class="btn-ghost small" (click)="cancelSession(session, $event)">
-                    CANCEL
-                  </button>
-                }
-                @if (isOnWaitingList(session)) {
-                  <button class="btn-ghost small" (click)="cancelSession(session, $event)">
-                    LEAVE
-                  </button>
+                @if (!isCancelled(session)) {
+                  @if (!isParticipant(session) && !isOnWaitingList(session)) {
+                    <button class="btn-primary small" (click)="joinSession(session, $event)">
+                      {{ isFull(session) ? 'WAIT' : 'JOIN' }}
+                    </button>
+                  }
+                  @if (isParticipant(session)) {
+                    <button class="btn-ghost small" (click)="cancelSession(session, $event)">
+                      CANCEL
+                    </button>
+                  }
+                  @if (isOnWaitingList(session)) {
+                    <button class="btn-ghost small" (click)="cancelSession(session, $event)">
+                      LEAVE
+                    </button>
+                  }
                 }
               </div>
             </div>
+          }
           </div>
+        }
         </div>
 
         <!-- Off-screen session indicators -->
@@ -302,6 +327,7 @@
       </div>
 
   }
+}
 </div>
 
 <!-- Unified Session Form Modal -->
@@ -441,6 +467,7 @@
       <button class="btn-primary" (click)="save()" [disabled]="!isFormValid">{{ editingSession ? 'SAVE' : 'CREATE' }}</button>
     </div>
   </div>
+  </div>
 }
 
 <!-- Recurring Edit Choice Dialog -->
@@ -459,5 +486,32 @@
         <button class="btn-ghost" (click)="showRecurringEditChoice = false">Cancel</button>
       </div>
     </div>
+  </div>
+  </div>
+}
+
+<!-- Cancel Session Confirmation Modal -->
+@if (showCancelConfirm && cancelTargetSession) {
+  <div class="modal-backdrop" (click)="closeCancelSessionModal()">
+  <div class="modal glass small-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Cancel Session</h3>
+      <button class="close-btn" (click)="closeCancelSessionModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="recurring-choice-text">
+        Are you sure you want to cancel <strong>{{ cancelTargetSession.title }}</strong>?
+      </p>
+      <p class="cancel-warning">All participants will be notified.</p>
+      <div class="form-row">
+        <label>Reason (optional)</label>
+        <textarea [(ngModel)]="cancelReason" placeholder="e.g. Bad weather, coach unavailable..." class="form-input" rows="2"></textarea>
+      </div>
+      <div class="cancel-confirm-actions">
+        <button class="btn-secondary" (click)="closeCancelSessionModal()">GO BACK</button>
+        <button class="btn-cancel" (click)="confirmCancelSession()">CANCEL SESSION</button>
+      </div>
+    </div>
+  </div>
   </div>
 }

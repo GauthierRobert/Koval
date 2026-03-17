@@ -1,4 +1,4 @@
-import {Injectable, inject} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {BehaviorSubject, combineLatest, forkJoin, of} from 'rxjs';
 import {catchError, map, switchMap} from 'rxjs/operators';
 import {SportFilter, Training, TrainingType} from '../models/training.model';

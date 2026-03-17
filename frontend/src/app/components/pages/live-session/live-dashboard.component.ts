@@ -1,16 +1,15 @@
-import { Component, DestroyRef, inject, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
-import { WorkoutExecutionService } from '../../../services/workout-execution.service';
-import { BluetoothService } from '../../../services/bluetooth.service';
-import { TrainingService } from '../../../services/training.service';
-import { ZombieGameComponent } from './zombie-game/zombie-game.component';
-import { SessionSummaryComponent } from './session-summary/session-summary.component';
-import { PipService } from '../../../services/pip.service';
-import { HistoryService } from '../../../services/history.service';
-import { AuthService } from '../../../services/auth.service';
-import { formatTimeMS, formatPace } from '../../shared/format/format.utils';
-import { map } from 'rxjs';
+import {AfterViewInit, Component, DestroyRef, ElementRef, inject, OnDestroy, ViewChild} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {CommonModule} from '@angular/common';
+import {WorkoutExecutionService} from '../../../services/workout-execution.service';
+import {BluetoothService} from '../../../services/bluetooth.service';
+import {TrainingService} from '../../../services/training.service';
+import {ZombieGameComponent} from './zombie-game/zombie-game.component';
+import {SessionSummaryComponent} from './session-summary/session-summary.component';
+import {PipService} from '../../../services/pip.service';
+import {HistoryService} from '../../../services/history.service';
+import {AuthService} from '../../../services/auth.service';
+import {formatPace, formatTimeMS} from '../../shared/format/format.utils';
 
 @Component({
   selector: 'app-live-dashboard',

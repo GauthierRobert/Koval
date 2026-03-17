@@ -7,7 +7,7 @@
       <div class="tag-panel">
         @if (allTags.length > 0) {
           <div class="group-cards">
-            @for (let tag of allTags; track tag.id) {
+            @for (tag of allTags; track tag.id) {
               <div class="group-card">
                 <div class="group-card-header">
                   <span class="group-card-name">{{ tag.name }}</span>
@@ -42,7 +42,7 @@
           <div class="pending-section">
             <h4 class="section-title">Pending Requests <span class="badge-count">{{ pending.length }}</span></h4>
             <div class="member-list">
-              @for (let m of pending; track m.membershipId) {
+              @for (m of pending; track m.membershipId) {
                 <div class="member-row glass">
                   @if (m.profilePicture) {
                     <img class="avatar" [src]="m.profilePicture" alt="avatar" />
@@ -76,7 +76,7 @@
       </div>
       @if (members.length > 0) {
         <div class="member-list">
-          @for (let m of members; track m.userId) {
+          @for (m of members; track m.userId) {
             <div class="member-row glass">
               @if (m.profilePicture) {
                 <img class="avatar" [src]="m.profilePicture" alt="avatar" />
@@ -91,7 +91,7 @@
                 <!-- Tag badges -->
                 @if ((m.tags || []).length > 0) {
                   <div class="member-tags">
-                    @for (let tagName of (m.tags || []); track tagName) {
+                    @for (tagName of (m.tags || []); track tagName) {
                       <span class="club-tag small">
                         {{ tagName }}
                         @if (isAdmin) {
@@ -115,7 +115,7 @@
                     [value]="m.role"
                     (change)="changeRole(m.membershipId, $any($event.target).value)"
                   >
-                    @for (let r of getAvailableRoles(); track r) {
+                    @for (r of getAvailableRoles(); track r) {
                       <option [value]="r">{{ r }}</option>
                     }
                   </select>
@@ -131,7 +131,7 @@
                       (change)="addToTag($any($event.target).value, m.userId); $any($event.target).value = ''"
                     >
                       <option value="">+ Tag</option>
-                      @for (let tag of getAvailableTags(m, allTags); track tag.id) {
+                      @for (tag of getAvailableTags(m, allTags); track tag.id) {
                         <option [value]="tag.id">{{ tag.name }}</option>
                       }
                     </select>
@@ -150,7 +150,6 @@
     }
 
   }
-</div>
 
   <app-schedule-modal
     [isOpen]="isScheduleModalOpen"

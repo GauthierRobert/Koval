@@ -57,6 +57,7 @@
                         <rect x="17" y="4" width="3" height="16"/>
                       </svg>
                     </button>
+                    </div>
                   }
                 </div>
                 <div class="technical-metrics">
@@ -74,8 +75,8 @@
                   </div>
                 </div>
               </div>
+              </div>
               }
-            }
 
             @case ('fused') {
               <div class="workout-card workout-card--fused clickable"
@@ -127,8 +128,8 @@
                   </div>
                 </div>
               </div>
+              </div>
               }
-            }
 
             @case ('standalone') {
               <div class="workout-card workout-card--session clickable" (click)="sessionSelected.emit($any(group.entry).session)">
@@ -191,6 +192,7 @@
             </div>
             }
           }
+          }
 
           @if (group.type === 'club-row') {
             <div class="club-session-row">
@@ -217,6 +219,7 @@
                 }
               </div>
             </div>
+            </div>
               }
             </div>
           }
@@ -242,7 +245,7 @@
           <div class="rest-day">REST DAY</div>
         }
       </div>
-    }
+    </div>
   }
 </div>
 

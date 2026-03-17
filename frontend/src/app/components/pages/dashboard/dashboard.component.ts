@@ -1,17 +1,17 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
-import { BehaviorSubject, combineLatest } from 'rxjs';
-import { filter, switchMap, map, shareReplay, startWith } from 'rxjs/operators';
-import { AuthService } from '../../../services/auth.service';
-import { CalendarService } from '../../../services/calendar.service';
-import { HistoryService, SavedSession } from '../../../services/history.service';
-import { MetricsService, PmcDataPoint } from '../../../services/metrics.service';
-import { CoachService, ScheduledWorkout } from '../../../services/coach.service';
-import { RaceGoal, RaceGoalService } from '../../../services/race-goal.service';
-import { SportIconComponent } from '../../shared/sport-icon/sport-icon.component';
-import { WorkoutDetailModalComponent } from '../../shared/workout-detail-modal/workout-detail-modal.component';
-import { formatTrainingDuration, daysUntil } from '../../shared/format/format.utils';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {Router, RouterModule} from '@angular/router';
+import {BehaviorSubject, combineLatest} from 'rxjs';
+import {filter, map, shareReplay, startWith, switchMap} from 'rxjs/operators';
+import {AuthService} from '../../../services/auth.service';
+import {CalendarService} from '../../../services/calendar.service';
+import {HistoryService, SavedSession} from '../../../services/history.service';
+import {MetricsService, PmcDataPoint} from '../../../services/metrics.service';
+import {CoachService, ScheduledWorkout} from '../../../services/coach.service';
+import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
+import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
+import {WorkoutDetailModalComponent} from '../../shared/workout-detail-modal/workout-detail-modal.component';
+import {daysUntil, formatTrainingDuration} from '../../shared/format/format.utils';
 
 function toDateKey(d: Date): string {
   const y = d.getFullYear();
@@ -259,11 +259,11 @@ export class DashboardComponent {
     return this.raceGoalService.getPriorityColor(priority);
   }
 
-  trackWorkoutById(_index: number, workout: ScheduledWorkout): string {
+  trackWorkoutById(workout: ScheduledWorkout): string {
     return workout.id;
   }
 
-  trackBySport(_index: number, stat: SportStats): string {
+  trackBySport(stat: SportStats): string {
     return stat.sport;
   }
 }

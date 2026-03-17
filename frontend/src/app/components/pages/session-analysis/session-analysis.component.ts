@@ -1,14 +1,14 @@
-import { Component, inject, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { BehaviorSubject, from, Observable, of, Subject } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
-import { HistoryService, SavedSession } from '../../../services/history.service';
-import { AuthService } from '../../../services/auth.service';
-import { MetricsService, FitRecord } from '../../../services/metrics.service';
-import { BlockSummary } from '../../../services/workout-execution.service';
-import { SportIconComponent } from '../../shared/sport-icon/sport-icon.component';
-import { formatTimeHMS } from '../../shared/format/format.utils';
-import { FitTimeseriesChartComponent } from './fit-timeseries-chart/fit-timeseries-chart.component';
+import {Component, inject, Input, OnDestroy} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {BehaviorSubject, from, Observable, of, Subject} from 'rxjs';
+import {catchError, debounceTime, distinctUntilChanged, map, startWith, switchMap} from 'rxjs/operators';
+import {HistoryService, SavedSession} from '../../../services/history.service';
+import {AuthService} from '../../../services/auth.service';
+import {FitRecord, MetricsService} from '../../../services/metrics.service';
+import {BlockSummary} from '../../../services/workout-execution.service';
+import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
+import {formatTimeHMS} from '../../shared/format/format.utils';
+import {FitTimeseriesChartComponent} from './fit-timeseries-chart/fit-timeseries-chart.component';
 
 interface FitState {
     loading: boolean;

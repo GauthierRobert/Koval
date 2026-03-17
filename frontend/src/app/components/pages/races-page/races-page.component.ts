@@ -1,17 +1,11 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit, DestroyRef } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import {
-  Race,
-  RaceService,
-  SportFacet,
-  CountryFacet,
-  PageResponse,
-} from '../../../services/race.service';
-import { RaceGoalService } from '../../../services/race-goal.service';
-import { SportIconComponent } from '../../shared/sport-icon/sport-icon.component';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject, OnInit} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {Router} from '@angular/router';
+import {CountryFacet, PageResponse, Race, RaceService, SportFacet,} from '../../../services/race.service';
+import {RaceGoalService} from '../../../services/race-goal.service';
+import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 
 @Component({
   selector: 'app-races-page',

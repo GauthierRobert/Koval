@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { parseNotation, WorkoutNotationError } from './workout-notation-parser';
+import {describe, expect, it} from 'vitest';
+import {parseNotation, WorkoutNotationError} from './workout-notation-parser';
 
 describe('WorkoutNotationParser', () => {
 

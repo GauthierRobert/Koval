@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { BehaviorSubject, combineLatest, map, Observable } from 'rxjs';
-import { AuthService, User } from '../../../services/auth.service';
-import { Zone, ZoneSystem } from '../../../services/zone';
-import { ZoneService } from '../../../services/zone.service';
-import { formatPace as sharedFormatPace } from '../../shared/format/format.utils';
+import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {BehaviorSubject, combineLatest, map, Observable} from 'rxjs';
+import {AuthService, User} from '../../../services/auth.service';
+import {Zone, ZoneSystem} from '../../../services/zone';
+import {ZoneService} from '../../../services/zone.service';
+import {formatPace as sharedFormatPace} from '../../shared/format/format.utils';
 
 type Sport = 'CYCLING' | 'RUNNING' | 'SWIMMING';
 

@@ -1,21 +1,19 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { CdkDrag, CdkDragDrop, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
-import { RouterModule } from '@angular/router';
+import {ChangeDetectionStrategy, Component, EventEmitter, inject, Input, Output} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {Observable, of} from 'rxjs';
+import {map} from 'rxjs/operators';
+import {CdkDrag, CdkDragDrop, CdkDropList, CdkDropListGroup} from '@angular/cdk/drag-drop';
+import {RouterModule} from '@angular/router';
 
-import { CalendarService } from '../../../../services/calendar.service';
-import { ScheduledWorkout } from '../../../../services/coach.service';
-import { SavedSession } from '../../../../services/history.service';
-import { TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS, TrainingType } from '../../../../models/training.model';
-import { SportIconComponent } from '../../../shared/sport-icon/sport-icon.component';
-import { TrainingLoadChartComponent } from '../../../layout/training-load-chart/training-load-chart.component';
-import { CalendarDay, CalendarEntry, EntriesByDay, GoalsByDay, toDateKey } from '../calendar.component';
-import { WorkoutsByDay } from '../calendar.component';
-import { CalendarClubSession } from '../../../../services/calendar.service';
-import { RaceGoalService } from '../../../../services/race-goal.service';
-import { formatTimeHMS } from '../../../shared/format/format.utils';
+import {CalendarClubSession, CalendarService} from '../../../../services/calendar.service';
+import {ScheduledWorkout} from '../../../../services/coach.service';
+import {SavedSession} from '../../../../services/history.service';
+import {TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS, TrainingType} from '../../../../models/training.model';
+import {SportIconComponent} from '../../../shared/sport-icon/sport-icon.component';
+import {TrainingLoadChartComponent} from '../../../layout/training-load-chart/training-load-chart.component';
+import {CalendarDay, CalendarEntry, EntriesByDay, GoalsByDay, toDateKey, WorkoutsByDay} from '../calendar.component';
+import {RaceGoalService} from '../../../../services/race-goal.service';
+import {formatTimeHMS} from '../../../shared/format/format.utils';
 
 @Component({
   selector: 'app-calendar-week-view',
@@ -97,9 +95,9 @@ export class CalendarWeekViewComponent {
     return TRAINING_TYPE_LABELS[type as TrainingType] || type;
   }
 
-  trackByDay(_: number, day: CalendarDay): string { return day.key; }
+  trackByDay(day: CalendarDay): string { return day.key; }
 
-  trackByEntry(_: number, e: CalendarEntry): string {
+  trackByEntry(e: CalendarEntry): string {
     if (e.kind === 'fused') return 'fused-' + e.scheduled.id;
     if (e.kind === 'scheduled') return 'sw-' + e.scheduled.id;
     if (e.kind === 'club-session') return 'club-' + e.clubSession.id;

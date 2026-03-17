@@ -1,8 +1,8 @@
-import { inject, Injectable, NgZone } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import { environment } from '../../environments/environment';
+import {inject, Injectable, NgZone} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {BehaviorSubject, Observable, of} from 'rxjs';
+import {catchError} from 'rxjs/operators';
+import {environment} from '../../environments/environment';
 
 export type ClubVisibility = 'PUBLIC' | 'PRIVATE';
 export type ClubMemberRole = 'OWNER' | 'ADMIN' | 'COACH' | 'MEMBER';
@@ -11,6 +11,7 @@ export type ClubActivityType =
   | 'MEMBER_LEFT'
   | 'SESSION_CREATED'
   | 'SESSION_JOINED'
+  | 'SESSION_CANCELLED'
   | 'TRAINING_CREATED'
   | 'RACE_GOAL_ADDED'
   | 'WAITING_LIST_JOINED';
@@ -90,6 +91,9 @@ export interface ClubTrainingSession {
   openToAll?: boolean;
   openToAllDelayValue?: number;
   openToAllDelayUnit?: 'HOURS' | 'DAYS';
+  cancelled?: boolean;
+  cancellationReason?: string;
+  cancelledAt?: string;
 }
 
 export interface RecurringSessionTemplate {
@@ -432,6 +436,21 @@ export class ClubService {
   cancelSession(clubId: string, sessionId: string): Observable<void> {
     return new Observable((observer) => {
       this.http.delete<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/join`).subscribe({
+        next: () => {
+          this.ngZone.run(() => {
+            this.loadSessions(clubId);
+            observer.next();
+            observer.complete();
+          });
+        },
+        error: (err) => observer.error(err),
+      });
+    });
+  }
+
+  cancelEntireSession(clubId: string, sessionId: string, reason?: string): Observable<void> {
+    return new Observable((observer) => {
+      this.http.put<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/cancel`, { reason: reason || null }).subscribe({
         next: () => {
           this.ngZone.run(() => {
             this.loadSessions(clubId);

@@ -1,20 +1,20 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
-import { filter, map, shareReplay, startWith, switchMap, tap } from 'rxjs/operators';
-import { CdkDragDrop } from '@angular/cdk/drag-drop';
-import { Router } from '@angular/router';
+import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {BehaviorSubject, combineLatest, Observable} from 'rxjs';
+import {filter, map, shareReplay, startWith, switchMap, tap} from 'rxjs/operators';
+import {CdkDragDrop} from '@angular/cdk/drag-drop';
+import {Router} from '@angular/router';
 
-import { CalendarClubSession, CalendarService } from '../../../services/calendar.service';
-import { AuthService } from '../../../services/auth.service';
-import { ScheduledWorkout } from '../../../services/coach.service';
-import { ScheduleModalComponent } from '../../shared/schedule-modal/schedule-modal.component';
-import { WorkoutDetailModalComponent } from '../../shared/workout-detail-modal/workout-detail-modal.component';
-import { HistoryService, SavedSession } from '../../../services/history.service';
-import { CalendarWeekViewComponent } from './week-view/calendar-week-view.component';
-import { CalendarMonthViewComponent } from './month-view/calendar-month-view.component';
-import { RaceGoal, RaceGoalService } from '../../../services/race-goal.service';
-import { ClubService, ClubGroup, MyClubRoleEntry } from '../../../services/club.service';
+import {CalendarClubSession, CalendarService} from '../../../services/calendar.service';
+import {AuthService} from '../../../services/auth.service';
+import {ScheduledWorkout} from '../../../services/coach.service';
+import {ScheduleModalComponent} from '../../shared/schedule-modal/schedule-modal.component';
+import {WorkoutDetailModalComponent} from '../../shared/workout-detail-modal/workout-detail-modal.component';
+import {HistoryService, SavedSession} from '../../../services/history.service';
+import {CalendarWeekViewComponent} from './week-view/calendar-week-view.component';
+import {CalendarMonthViewComponent} from './month-view/calendar-month-view.component';
+import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
+import {ClubGroup, ClubService, MyClubRoleEntry} from '../../../services/club.service';
 
 export interface CalendarDay {
   date: Date;

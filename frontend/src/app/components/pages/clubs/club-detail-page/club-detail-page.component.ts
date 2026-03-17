@@ -1,18 +1,23 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnDestroy, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { ClubDetail, ClubGroup, ClubInviteCode, ClubService } from '../../../../services/club.service';
-import { AuthService } from '../../../../services/auth.service';
-import { ClubFeedTabComponent } from './tabs/club-feed-tab/club-feed-tab.component';
-import { ClubSessionsTabComponent } from './tabs/club-sessions-tab/club-sessions-tab.component';
-import { ClubMembersTabComponent } from './tabs/club-members-tab/club-members-tab.component';
-import { ClubStatsTabComponent } from './tabs/club-stats-tab/club-stats-tab.component';
-import { ClubLeaderboardTabComponent } from './tabs/club-leaderboard-tab/club-leaderboard-tab.component';
-import { ClubRaceGoalsTabComponent } from './tabs/club-race-goals-tab/club-race-goals-tab.component';
-import { CreateWithAiModalComponent } from '../../../shared/create-with-ai-modal/create-with-ai-modal.component';
-import { ActionContext, ActionResult } from '../../../../services/ai-action.service';
-import { ClubTrainingSession } from '../../../../services/club.service';
-import { map, Observable, Subscription } from 'rxjs';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnDestroy, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {ActivatedRoute, Router, RouterModule} from '@angular/router';
+import {
+  ClubDetail,
+  ClubGroup,
+  ClubInviteCode,
+  ClubService,
+  ClubTrainingSession
+} from '../../../../services/club.service';
+import {AuthService} from '../../../../services/auth.service';
+import {ClubFeedTabComponent} from './tabs/club-feed-tab/club-feed-tab.component';
+import {ClubSessionsTabComponent} from './tabs/club-sessions-tab/club-sessions-tab.component';
+import {ClubMembersTabComponent} from './tabs/club-members-tab/club-members-tab.component';
+import {ClubStatsTabComponent} from './tabs/club-stats-tab/club-stats-tab.component';
+import {ClubLeaderboardTabComponent} from './tabs/club-leaderboard-tab/club-leaderboard-tab.component';
+import {ClubRaceGoalsTabComponent} from './tabs/club-race-goals-tab/club-race-goals-tab.component';
+import {CreateWithAiModalComponent} from '../../../shared/create-with-ai-modal/create-with-ai-modal.component';
+import {ActionContext, ActionResult} from '../../../../services/ai-action.service';
+import {map, Observable, Subscription} from 'rxjs';
 
 type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals';
 

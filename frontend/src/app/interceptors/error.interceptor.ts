@@ -1,8 +1,8 @@
-import { HttpInterceptorFn } from '@angular/common/http';
-import { inject } from '@angular/core';
-import { catchError, throwError } from 'rxjs';
-import { ErrorToastService, ToastSeverity } from '../services/error-toast.service';
-import { ErrorResponse } from '../models/error-response.model';
+import {HttpInterceptorFn} from '@angular/common/http';
+import {inject} from '@angular/core';
+import {catchError, throwError} from 'rxjs';
+import {ErrorToastService, ToastSeverity} from '../services/error-toast.service';
+import {ErrorResponse} from '../models/error-response.model';
 
 const FALLBACK_MESSAGES: Record<number, string> = {
   0: 'Unable to reach the server. Please check your connection.',

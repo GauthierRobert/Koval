@@ -3,7 +3,7 @@
     @if (raceGoals.length > 0) {
       <h4 class="section-title">Upcoming Races</h4>
       <div class="goals-list">
-        @for (let item of raceGoals; track item) {
+        @for (item of raceGoals; track item) {
           <div class="goal-row glass">
             <div class="goal-priority-dot" [style.background-color]="getPriorityColor(item.goal.priority)"></div>
             <div class="goal-info">
@@ -21,7 +21,7 @@
               @if (item.participants.length > 0) {
                 <div class="participants-row">
                   <div class="participant-avatars">
-                    @for (let p of item.participants; track p) {
+                    @for (p of item.participants; track p) {
                       @if (p.profilePicture) {
                         <img [src]="p.profilePicture" [title]="p.displayName" class="participant-avatar" />
                       }

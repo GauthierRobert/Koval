@@ -33,7 +33,7 @@
         @if (clubsWithGroups$ | async; as clubsWithGroups) {
           @if (clubsWithGroups.length > 0) {
             <div class="membership-list">
-              @for (let cwg of clubsWithGroups; track cwg.club.id) {
+              @for (cwg of clubsWithGroups; track cwg.club.id) {
                 <div class="membership-group">
                   <div class="membership-item">
                     <div class="item-info">
@@ -48,7 +48,7 @@
                       </button>
                     }
                   </div>
-                  @for (let gm of cwg.groups; track gm.group.id) {
+                  @for (gm of cwg.groups; track gm.group.id) {
                     <div class="sub-item">
                       <div class="item-info">
                         <span class="sub-indent"></span>
@@ -77,7 +77,7 @@
         @if (coachGroups$ | async; as groups) {
           @if (groups.length > 0) {
             <div class="membership-list">
-              @for (let group of groups; track group.id) {
+              @for (group of groups; track group.id) {
                 <div class="membership-item">
                   <div class="item-info">
                     <span class="item-name">{{ group.name }}</span>

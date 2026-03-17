@@ -1,10 +1,9 @@
-import { inject, Injectable, NgZone } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { AuthService } from './auth.service';
-import { filter } from 'rxjs/operators';
-import { environment } from '../../environments/environment';
+import {inject, Injectable, NgZone} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {BehaviorSubject, Observable} from 'rxjs';
+import {filter, map} from 'rxjs/operators';
+import {AuthService} from './auth.service';
+import {environment} from '../../environments/environment';
 
 export interface RaceGoal {
   id: string;

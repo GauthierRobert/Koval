@@ -1,15 +1,14 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { CdkDrag, CdkDragDrop, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
+import {ChangeDetectionStrategy, Component, EventEmitter, inject, Input, Output} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {CdkDrag, CdkDragDrop, CdkDropList, CdkDropListGroup} from '@angular/cdk/drag-drop';
 
-import { ScheduledWorkout } from '../../../../services/coach.service';
-import { SavedSession } from '../../../../services/history.service';
-import { TRAINING_TYPE_COLORS, TrainingType } from '../../../../models/training.model';
-import { SportIconComponent } from '../../../shared/sport-icon/sport-icon.component';
-import { CalendarDay, CalendarEntry, EntriesByDay, GoalsByDay } from '../calendar.component';
-import { RaceGoalService } from '../../../../services/race-goal.service';
-import { CalendarClubSession } from '../../../../services/calendar.service';
-import { inject } from '@angular/core';
+import {ScheduledWorkout} from '../../../../services/coach.service';
+import {SavedSession} from '../../../../services/history.service';
+import {TRAINING_TYPE_COLORS, TrainingType} from '../../../../models/training.model';
+import {SportIconComponent} from '../../../shared/sport-icon/sport-icon.component';
+import {CalendarDay, CalendarEntry, EntriesByDay, GoalsByDay} from '../calendar.component';
+import {RaceGoalService} from '../../../../services/race-goal.service';
+import {CalendarClubSession} from '../../../../services/calendar.service';
 
 @Component({
   selector: 'app-calendar-month-view',
@@ -44,9 +43,9 @@ export class CalendarMonthViewComponent {
     return TRAINING_TYPE_COLORS[type as TrainingType] || '#888';
   }
 
-  trackByDay(_: number, day: CalendarDay): string { return day.key; }
+  trackByDay(day: CalendarDay): string { return day.key; }
 
-  trackByEntry(_: number, e: CalendarEntry): string {
+  trackByEntry(e: CalendarEntry): string {
     if (e.kind === 'fused') return 'fused-' + e.scheduled.id;
     if (e.kind === 'scheduled') return 'sw-' + e.scheduled.id;
     if (e.kind === 'club-session') return 'club-' + e.clubSession.id;

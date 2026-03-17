@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ClubService } from '../../../../../../services/club.service';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {ClubService} from '../../../../../../services/club.service';
 
 @Component({
   selector: 'app-club-race-goals-tab',

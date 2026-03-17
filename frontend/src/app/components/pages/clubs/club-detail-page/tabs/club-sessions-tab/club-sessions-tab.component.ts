@@ -11,21 +11,20 @@ import {
   Output,
   ViewChild,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {Router, RouterModule} from '@angular/router';
 import {
   ClubDetail,
   ClubGroup,
   ClubMember,
   ClubService,
   ClubTrainingSession,
-  CreateSessionData,
   CreateRecurringSessionData,
+  CreateSessionData,
 } from '../../../../../../services/club.service';
-import { AuthService } from '../../../../../../services/auth.service';
-import { TrainingService } from '../../../../../../services/training.service';
-import { Router } from '@angular/router';
+import {AuthService} from '../../../../../../services/auth.service';
+import {TrainingService} from '../../../../../../services/training.service';
 
 type ViewMode = 'LIST' | 'CALENDAR';
 
@@ -66,6 +65,11 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   editAllFutureMode = false;
   showRecurringEditChoice = false;
   pendingEditSession: ClubTrainingSession | null = null;
+
+  // Cancel session state
+  showCancelConfirm = false;
+  cancelTargetSession: ClubTrainingSession | null = null;
+  cancelReason = '';
 
   coachMembers: ClubMember[] = [];
   expandedSessionId: string | null = null;
@@ -476,6 +480,38 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
       this.trainingService.selectTraining(training);
       this.router.navigate(['/trainings']);
     });
+  }
+
+  // --- Cancel entire session ---
+
+  openCancelSessionModal(session: ClubTrainingSession, event: Event): void {
+    event.stopPropagation();
+    this.cancelTargetSession = session;
+    this.cancelReason = '';
+    this.showCancelConfirm = true;
+    this.cdr.markForCheck();
+  }
+
+  closeCancelSessionModal(): void {
+    this.showCancelConfirm = false;
+    this.cancelTargetSession = null;
+    this.cancelReason = '';
+  }
+
+  confirmCancelSession(): void {
+    if (!this.cancelTargetSession) return;
+    this.clubService.cancelEntireSession(this.club.id, this.cancelTargetSession.id, this.cancelReason || undefined).subscribe({
+      next: () => {
+        this.closeCancelSessionModal();
+        this.loadCalendarSessions();
+        this.cdr.markForCheck();
+      },
+      error: () => {},
+    });
+  }
+
+  isCancelled(session: ClubTrainingSession): boolean {
+    return !!session.cancelled;
   }
 
   // --- Status helpers ---

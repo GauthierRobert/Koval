@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ClubService } from '../../../../../../services/club.service';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {ClubService} from '../../../../../../services/club.service';
 
 @Component({
   selector: 'app-club-feed-tab',
@@ -20,6 +20,7 @@ export class ClubFeedTabComponent {
       case 'SESSION_JOINED':   return '#22c55e';
       case 'MEMBER_LEFT':      return '#6b7280';
       case 'SESSION_CREATED':  return '#3b82f6';
+      case 'SESSION_CANCELLED': return '#ef4444';
       case 'TRAINING_CREATED': return '#ff9d00';
       case 'RACE_GOAL_ADDED':  return '#f59e0b';
       default:                 return '#8e8ea0';
@@ -32,6 +33,7 @@ export class ClubFeedTabComponent {
       case 'MEMBER_LEFT': return `${actorName} left the club`;
       case 'SESSION_CREATED': return `${actorName} created session: ${targetTitle ?? ''}`;
       case 'SESSION_JOINED': return `${actorName} joined session: ${targetTitle ?? ''}`;
+      case 'SESSION_CANCELLED': return `${actorName} cancelled session: ${targetTitle ?? ''}`;
       case 'TRAINING_CREATED': return `${actorName} created a training`;
       case 'RACE_GOAL_ADDED': return `${actorName} added a race goal`;
       default: return `${actorName} did something`;

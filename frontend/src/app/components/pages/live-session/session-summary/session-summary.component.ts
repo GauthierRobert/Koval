@@ -1,9 +1,9 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SessionSummary, BlockSummary } from '../../../../services/workout-execution.service';
-import { AuthService } from '../../../../services/auth.service';
-import { FitExportService } from '../../../../services/fit-export.service';
-import { formatTimeMS } from '../../../shared/format/format.utils';
+import {Component, EventEmitter, inject, Input, Output} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {BlockSummary, SessionSummary} from '../../../../services/workout-execution.service';
+import {AuthService} from '../../../../services/auth.service';
+import {FitExportService} from '../../../../services/fit-export.service';
+import {formatTimeMS} from '../../../shared/format/format.utils';
 
 @Component({
     selector: 'app-session-summary',

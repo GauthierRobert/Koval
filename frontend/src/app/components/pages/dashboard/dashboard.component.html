@@ -1,4 +1,4 @@
-@if (vm$ | async as vm) {
+@if (vm$ | async; as vm) {
   <div class="dashboard-layout">
 
     <div class="header glass">
@@ -16,7 +16,7 @@
     <!-- Session reminders (coach only) -->
     @if (vm.user?.role === 'COACH' && vm.reminders.length > 0) {
       <div class="session-reminders">
-        @for (let r of vm.reminders; track $index) {
+        @for (r of vm.reminders; track $index) {
           <div class="reminder-card glass">
         <span class="reminder-icon">&#9888;</span>
         <div class="reminder-info">
@@ -79,7 +79,7 @@
           <div class="schedule-panel overdue-panel">
             <span class="panel-label overdue-label">OVERDUE</span>
             <div class="chips-row">
-              @for (let w of vm.overdue; track trackWorkoutById(w)) {
+              @for (w of vm.overdue; track trackWorkoutById(w)) {
                 <div class="workout-chip overdue" (click)="openDetail(w)">
                   <app-sport-icon [sport]="w.sportType" [size]="12"></app-sport-icon>
                   <span class="chip-date">{{ formatScheduleDate(w.scheduledDate) }}</span>
@@ -97,7 +97,7 @@
           <span class="panel-label week-label">THIS WEEK</span>
           @if (vm.upcoming.length > 0) {
             <div class="chips-row">
-              @for (let w of vm.upcoming; track trackWorkoutById(w)) {
+              @for (w of vm.upcoming; track trackWorkoutById(w)) {
                 <div class="workout-chip" (click)="openDetail(w)">
                   <app-sport-icon [sport]="w.sportType" [size]="12"></app-sport-icon>
                   <span class="chip-date">{{ formatScheduleDate(w.scheduledDate) }}</span>
@@ -116,7 +116,7 @@
       </div>
 
       <!-- Next Race Goal -->
-      @if (vm.nextGoal as goal) {
+      @if (vm.nextGoal; as goal) {
         <div class="next-goal-card glass" [routerLink]="['/goals']"
           [style.border-left-color]="getGoalPriorityColor(goal.priority)">
         <div class="next-goal-label">NEXT RACE GOAL</div>
@@ -155,7 +155,7 @@
 
       <!-- Sport cards -->
       <div class="sport-cards">
-        @for (let stat of vm.weekMetrics.current; track trackBySport(stat)) {
+        @for (stat of vm.weekMetrics.current; track trackBySport(stat)) {
           <div
             class="sport-card glass"
             [class.dim-card]="stat.sessionCount === 0">
@@ -204,7 +204,7 @@
             </div>
           }
 
-          @if (vm.latestFit as fit) {
+          @if (vm.latestFit; as fit) {
             <div class="latest-fit glass">
               <div class="fit-header">
                 <span class="fit-label">LATEST ACTIVITY</span>

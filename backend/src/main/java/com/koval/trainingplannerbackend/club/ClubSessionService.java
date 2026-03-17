@@ -71,9 +71,30 @@ public class ClubSessionService {
         return filterByGroupVisibility(userId, clubId, all);
     }
 
+    public ClubTrainingSession cancelEntireSession(String userId, String clubId, String sessionId, String reason) {
+        authorizationService.requireAdminOrCoach(userId, clubId);
+        ClubTrainingSession session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        if (!session.getClubId().equals(clubId)) {
+            throw new IllegalArgumentException("Session does not belong to this club");
+        }
+        if (session.isCancelled()) {
+            throw new IllegalStateException("Session is already cancelled");
+        }
+        session.setCancelled(true);
+        session.setCancellationReason(reason);
+        session.setCancelledAt(LocalDateTime.now());
+        sessionRepository.save(session);
+        activityService.emitActivity(clubId, ClubActivityType.SESSION_CANCELLED, userId, sessionId, session.getTitle());
+        return session;
+    }
+
     public ClubTrainingSession joinSession(String userId, String sessionId) {
         ClubTrainingSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        if (session.isCancelled()) {
+            throw new IllegalStateException("Cannot join a cancelled session");
+        }
         if (session.getClubGroupId() != null && !session.getClubGroupId().isBlank()) {
             boolean inGroup = clubGroupRepository.findByClubIdAndMemberIdsContaining(session.getClubId(), userId)
                     .stream().anyMatch(g -> g.getId().equals(session.getClubGroupId()));
@@ -133,6 +154,9 @@ public class ClubSessionService {
         authorizationService.requireAdminOrCoach(userId, clubId);
         ClubTrainingSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        if (session.isCancelled()) {
+            throw new IllegalStateException("Cannot link training to a cancelled session");
+        }
         session.setLinkedTrainingId(trainingId);
         enrichFromLinkedTraining(session);
         trainingService.addClubIdToTraining(trainingId, clubId);
@@ -146,6 +170,9 @@ public class ClubSessionService {
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
         if (!session.getClubId().equals(clubId)) {
             throw new IllegalArgumentException("Session does not belong to this club");
+        }
+        if (session.isCancelled()) {
+            throw new IllegalStateException("Cannot update a cancelled session");
         }
         String previousLinkedTrainingId = session.getLinkedTrainingId();
         SessionPropertyMapper.applyRequest(req, session);
@@ -209,7 +236,8 @@ public class ClubSessionService {
                     s.getMaxParticipants(), s.getClubGroupId(),
                     groupNameMap.get(s.getClubGroupId()),
                     joined, onWaitingList, waitingListPosition,
-                    s.computeOpenToAllFrom()));
+                    s.computeOpenToAllFrom(),
+                    s.isCancelled(), s.getCancellationReason()));
         }
         return result;
     }

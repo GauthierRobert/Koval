@@ -1,14 +1,25 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, NgZone, DestroyRef, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { TrainingService } from '../../../services/training.service';
-import { Training, SPORT_OPTIONS, SportFilter } from '../../../models/training.model';
-import { CalendarService } from '../../../services/calendar.service';
-import { CoachService } from '../../../services/coach.service';
-import { AuthService, User } from '../../../services/auth.service';
-import { ClubService } from '../../../services/club.service';
-import { AIActionService, AIActionType, ActionContext } from '../../../services/ai-action.service';
+import {
+  Component,
+  DestroyRef,
+  EventEmitter,
+  inject,
+  Input,
+  NgZone,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges
+} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {TrainingService} from '../../../services/training.service';
+import {SPORT_OPTIONS, SportFilter, Training} from '../../../models/training.model';
+import {CalendarService} from '../../../services/calendar.service';
+import {CoachService} from '../../../services/coach.service';
+import {AuthService, User} from '../../../services/auth.service';
+import {ClubService} from '../../../services/club.service';
+import {ActionContext, AIActionService, AIActionType} from '../../../services/ai-action.service';
 
 @Component({
   selector: 'app-schedule-modal',

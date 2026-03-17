@@ -1,22 +1,27 @@
 /**
  * TypeScript interfaces for Web Bluetooth API
- * Replaces scattered 'any' types with proper type definitions
+ * Self-contained types (no dependency on global Web Bluetooth type definitions)
  */
 
-export interface BluetoothDevice extends globalThis.BluetoothDevice {
+export interface BluetoothDevice {
   id: string;
   name?: string;
-  connected: boolean;
+  gatt: {
+    connect(): Promise<any>;
+    disconnect(): void;
+    connected: boolean;
+  };
+  addEventListener(type: string, listener: (event: Event) => void): void;
 }
 
-export interface BluetoothCharacteristic extends globalThis.BluetoothRemoteGATTCharacteristic {
+export interface BluetoothCharacteristic {
   uuid: string;
   value?: DataView;
-  properties: BluetoothCharacteristicProperties;
+  properties: Record<string, boolean>;
 }
 
-export interface CharacteristicValueChangedEvent extends Event {
-  target: BluetoothCharacteristic;
+export interface CharacteristicValueChangedEvent {
+  target: { value: DataView };
 }
 
 export interface TrainerData {

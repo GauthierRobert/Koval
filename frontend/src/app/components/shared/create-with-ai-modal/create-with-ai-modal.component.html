@@ -45,7 +45,7 @@
               <label class="field-label">Sport *</label>
               <select class="field-select" [(ngModel)]="selectedSport" (ngModelChange)="onSportChange()" [disabled]="loading">
                 <option value="" disabled>Select a sport</option>
-                @for (let s of sports; track s) {
+                @for (s of sports; track s) {
                   <option [value]="s">{{ s }}</option>
                 }
               </select>
@@ -57,7 +57,7 @@
               <label class="field-label">Zone System (optional)</label>
               <select class="field-select" [(ngModel)]="selectedZoneSystemId" [disabled]="loading">
                 <option value="">— Sport default —</option>
-                @for (let z of filteredZoneSystems; track z.id) {
+                @for (z of filteredZoneSystems; track z.id) {
                   <option [value]="z.id">{{ z.name }}</option>
                 }
               </select>
@@ -69,7 +69,7 @@
               <label class="field-label">Club Group (optional)</label>
               <select class="field-select" [(ngModel)]="selectedGroupId">
                 <option value="">— No group —</option>
-                @for (let group of availableGroups; track group.id) {
+                @for (group of availableGroups; track group.id) {
                   <option [value]="group.id">{{ group.name }}</option>
                 }
               </select>
@@ -104,7 +104,7 @@
 
           @if (filteredTrainings.length > 0) {
             <div class="training-list">
-              @for (let t of filteredTrainings; track t.id) {
+              @for (t of filteredTrainings; track t.id) {
                 <div
                   class="training-item"
                   [class.selected]="selectedTrainingId === t.id"

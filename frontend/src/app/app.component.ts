@@ -1,18 +1,18 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
-import { WorkoutExecutionService } from './services/workout-execution.service';
-import { LiveDashboardComponent } from './components/pages/live-session/live-dashboard.component';
-import { TopBarComponent } from './components/layout/top-bar/top-bar.component';
-import { TrainingService } from './services/training.service';
-import { Training } from './models/training.model';
-import { Observable } from 'rxjs';
-import { DeviceManagerComponent } from './components/shared/device-manager/device-manager.component';
-import { SettingsComponent } from './components/layout/settings/settings.component';
-import { BluetoothService } from './services/bluetooth.service';
-import { AuthService } from './services/auth.service';
-import { NotificationToastComponent } from './components/shared/notification-toast/notification-toast.component';
-import { ErrorToastComponent } from './components/shared/error-toast/error-toast.component';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {RouterOutlet} from '@angular/router';
+import {WorkoutExecutionService} from './services/workout-execution.service';
+import {LiveDashboardComponent} from './components/pages/live-session/live-dashboard.component';
+import {TopBarComponent} from './components/layout/top-bar/top-bar.component';
+import {TrainingService} from './services/training.service';
+import {Training} from './models/training.model';
+import {Observable} from 'rxjs';
+import {DeviceManagerComponent} from './components/shared/device-manager/device-manager.component';
+import {SettingsComponent} from './components/layout/settings/settings.component';
+import {BluetoothService} from './services/bluetooth.service';
+import {AuthService} from './services/auth.service';
+import {NotificationToastComponent} from './components/shared/notification-toast/notification-toast.component';
+import {ErrorToastComponent} from './components/shared/error-toast/error-toast.component';
 
 @Component({
   selector: 'app-root',

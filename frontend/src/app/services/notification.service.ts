@@ -1,9 +1,9 @@
-import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject } from 'rxjs';
-import { environment } from '../../environments/environment';
-import { initializeApp, FirebaseApp } from 'firebase/app';
-import { getMessaging, getToken, onMessage, Messaging, MessagePayload } from 'firebase/messaging';
+import {inject, Injectable} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {BehaviorSubject} from 'rxjs';
+import {environment} from '../../environments/environment';
+import {FirebaseApp, initializeApp} from 'firebase/app';
+import {getMessaging, getToken, MessagePayload, Messaging, onMessage} from 'firebase/messaging';
 
 @Injectable({
   providedIn: 'root',

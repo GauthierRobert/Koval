@@ -253,6 +253,14 @@ public class ClubController {
         return ResponseEntity.ok(clubSessionService.updateSession(userId, id, sessionId, req));
     }
 
+    @PutMapping("/{id}/sessions/{sessionId}/cancel")
+    public ResponseEntity<ClubTrainingSession> cancelEntireSession(@PathVariable String id,
+                                                                     @PathVariable String sessionId,
+                                                                     @RequestBody CancelSessionRequest req) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(clubSessionService.cancelEntireSession(userId, id, sessionId, req.reason()));
+    }
+
     @PostMapping("/{id}/sessions/{sessionId}/join")
     public ResponseEntity<ClubTrainingSession> joinSession(@PathVariable String id,
                                                             @PathVariable String sessionId) {

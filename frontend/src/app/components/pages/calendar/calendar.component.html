@@ -55,7 +55,7 @@
     </div>
   </div>
 
-  @if (entriesByDay$ | async as ebd) {
+  @if (entriesByDay$ | async; as ebd) {
     @if (viewMode === 'week') {
       <app-calendar-week-view
         [days]="weekDays"

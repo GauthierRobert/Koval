@@ -29,7 +29,7 @@
                 [value]="session.rpe ?? 5"
                 (change)="selectRpe(session, +$any($event.target).value)" />
               <div class="rpe-scale">
-                @for (let n of rpeValues; track n) {
+                @for (n of rpeValues; track n) {
                   <span class="rpe-tick"
                     [class.active]="session.rpe === n">{{ n }}</span>
                 }
@@ -105,7 +105,7 @@
               <span>HR</span>
               <span>Cad</span>
             </div>
-            @for (let block of session.blockSummaries; track block) {
+            @for (block of session.blockSummaries; track block) {
               <div class="blocks-row">
                 <span class="b-label">{{ block.label }}</span>
                 <span class="b-type">{{ block.type }}</span>
