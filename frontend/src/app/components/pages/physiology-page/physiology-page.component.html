@@ -1,159 +1,195 @@
-<div class="physiology-page" *ngIf="user$ | async as user">
-  <div class="page-header">
-    <h2>PHYSIOLOGY</h2>
-    <p class="subtitle">Your physiological profile and training zones</p>
-  </div>
-
-  <div class="phys-stats">
-    <div class="phys-stat" *ngIf="user.ftp; else noFtp">
-      <span class="phys-label">FTP</span>
-      <span class="phys-value">{{ user.ftp }}<span class="phys-unit">W</span></span>
+@if (user$ | async; as user) {
+  <div class="physiology-page">
+    <div class="page-header">
+      <h2>PHYSIOLOGY</h2>
+      <p class="subtitle">Your physiological profile and training zones</p>
     </div>
-    <ng-template #noFtp>
-      <div class="phys-stat phys-stat-unset">
-        <span class="phys-label">FTP</span>
-        <span class="phys-unset">not set</span>
+
+    <div class="phys-stats">
+      @if (user.ftp) {
+        <div class="phys-stat">
+          <span class="phys-label">FTP</span>
+          <span class="phys-value">{{ user.ftp }}<span class="phys-unit">W</span></span>
+        </div>
+      } @else {
+        <div class="phys-stat phys-stat-unset">
+          <span class="phys-label">FTP</span>
+          <span class="phys-unset">not set</span>
+        </div>
+      }
+
+      @if (user.ftp) {
+        <div class="phys-stat">
+          <span class="phys-label">VO2MAX (est.)</span>
+          <span class="phys-value">{{ getEstimatedVo2Max(user) }} <span class="phys-unit">ml/kg/min</span></span>
+          @if (!user.weightKg) {
+            <span class="phys-note">using 70 kg</span>
+          }
+        </div>
+      }
+
+      @if (user.ftp) {
+        <div class="phys-stat">
+          <span class="phys-label">W/kg</span>
+          <span class="phys-value" [class.phys-unset-val]="!user.weightKg">{{ getWkg(user) }}</span>
+        </div>
+      }
+
+      @if (user.weightKg) {
+        <div class="phys-stat">
+          <span class="phys-label">WEIGHT</span>
+          <span class="phys-value">{{ user.weightKg }}<span class="phys-unit">kg</span></span>
+        </div>
+      } @else {
+        <div class="phys-stat phys-stat-unset">
+          <span class="phys-label">WEIGHT</span>
+          <span class="phys-unset">not set</span>
+        </div>
+      }
+
+      @if (user.functionalThresholdPace) {
+        <div class="phys-stat">
+          <span class="phys-label">THRESHOLD PACE</span>
+          <span class="phys-value">{{ formatPace(user.functionalThresholdPace) }}<span class="phys-unit">/km</span></span>
+        </div>
+      } @else {
+        <div class="phys-stat phys-stat-unset">
+          <span class="phys-label">THRESHOLD PACE</span>
+          <span class="phys-unset">not set</span>
+        </div>
+      }
+
+      @if (user.criticalSwimSpeed) {
+        <div class="phys-stat">
+          <span class="phys-label">CSS</span>
+          <span class="phys-value">{{ formatPace(user.criticalSwimSpeed) }}<span class="phys-unit">/100m</span></span>
+        </div>
+      } @else {
+        <div class="phys-stat phys-stat-unset">
+          <span class="phys-label">CSS</span>
+          <span class="phys-unset">not set</span>
+        </div>
+      }
+    </div>
+
+    <!-- Sport tab selector -->
+    <div class="sport-tabs">
+      <button class="tab-btn" [class.active]="(activeSport) === 'CYCLING'" (click)="activeSport = 'CYCLING'">
+        CYCLING
+      </button>
+      <button class="tab-btn" [class.active]="(activeSport) === 'RUNNING'" (click)="activeSport = 'RUNNING'">
+        RUNNING
+      </button>
+      <button class="tab-btn" [class.active]="(activeSport) === 'SWIMMING'" (click)="activeSport = 'SWIMMING'">
+        SWIMMING
+      </button>
+    </div>
+
+    <!-- Section header -->
+    <div class="section-header">
+      <span class="section-title">{{ getSectionTitle() }}</span>
+      @if (getRefBadge(user) as badge) {
+        <span class="ref-badge">{{ badge }}</span>
+      }
+    </div>
+
+    <!-- No reference value banner -->
+    @if (!hasRef(user)) {
+      <div class="no-ref-banner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        {{ getEmptyNote() }}
+        <span class="ref-cta">Set it in <strong>Settings</strong> to unlock zones.</span>
       </div>
-    </ng-template>
+    }
 
-    <div class="phys-stat" *ngIf="user.ftp">
-      <span class="phys-label">VO2MAX (est.)</span>
-      <span class="phys-value">{{ getEstimatedVo2Max(user) }} <span class="phys-unit">ml/kg/min</span></span>
-      <span class="phys-note" *ngIf="!user.weightKg">using 70 kg</span>
-    </div>
-
-    <div class="phys-stat" *ngIf="user.ftp">
-      <span class="phys-label">W/kg</span>
-      <span class="phys-value" [class.phys-unset-val]="!user.weightKg">{{ getWkg(user) }}</span>
-    </div>
-
-    <div class="phys-stat" *ngIf="user.weightKg; else noWeight">
-      <span class="phys-label">WEIGHT</span>
-      <span class="phys-value">{{ user.weightKg }}<span class="phys-unit">kg</span></span>
-    </div>
-    <ng-template #noWeight>
-      <div class="phys-stat phys-stat-unset">
-        <span class="phys-label">WEIGHT</span>
-        <span class="phys-unset">not set</span>
-      </div>
-    </ng-template>
-
-    <div class="phys-stat" *ngIf="user.functionalThresholdPace; else noRunPace">
-      <span class="phys-label">THRESHOLD PACE</span>
-      <span class="phys-value">{{ formatPace(user.functionalThresholdPace) }}<span class="phys-unit">/km</span></span>
-    </div>
-    <ng-template #noRunPace>
-      <div class="phys-stat phys-stat-unset">
-        <span class="phys-label">THRESHOLD PACE</span>
-        <span class="phys-unset">not set</span>
-      </div>
-    </ng-template>
-
-    <div class="phys-stat" *ngIf="user.criticalSwimSpeed; else noCss">
-      <span class="phys-label">CSS</span>
-      <span class="phys-value">{{ formatPace(user.criticalSwimSpeed) }}<span class="phys-unit">/100m</span></span>
-    </div>
-    <ng-template #noCss>
-      <div class="phys-stat phys-stat-unset">
-        <span class="phys-label">CSS</span>
-        <span class="phys-unset">not set</span>
-      </div>
-    </ng-template>
-  </div>
-
-  <!-- Sport tab selector -->
-  <div class="sport-tabs">
-    <button class="tab-btn" [class.active]="(activeSport) === 'CYCLING'" (click)="activeSport = 'CYCLING'">
-      CYCLING
-    </button>
-    <button class="tab-btn" [class.active]="(activeSport) === 'RUNNING'" (click)="activeSport = 'RUNNING'">
-      RUNNING
-    </button>
-    <button class="tab-btn" [class.active]="(activeSport) === 'SWIMMING'" (click)="activeSport = 'SWIMMING'">
-      SWIMMING
-    </button>
-  </div>
-
-  <!-- Section header -->
-  <div class="section-header">
-    <span class="section-title">{{ getSectionTitle() }}</span>
-    <span class="ref-badge" *ngIf="getRefBadge(user) as badge">{{ badge }}</span>
-  </div>
-
-  <!-- No reference value banner -->
-  <div class="no-ref-banner" *ngIf="!hasRef(user)">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-    </svg>
-    {{ getEmptyNote() }}
-    <span class="ref-cta">Set it in <strong>Settings</strong> to unlock zones.</span>
-  </div>
-
-  <!-- Visual zone bar -->
-  <div class="zone-bar" *ngIf="hasRef(user)">
-    <div
-      *ngFor="let z of zones[activeSport]; let i = index"
-      class="zone-segment"
-      [style.flex]="getZoneBarFlex(z)"
-      [style.background]="getZoneColor(i)"
-    >
-      <span class="seg-label">{{ z.label }}</span>
-    </div>
-  </div>
-
-  <!-- Zone table -->
-  <div class="zones-table" *ngIf="hasRef(user)">
-    <div *ngFor="let z of zones[activeSport]; let i = index" class="zone-row">
-      <span class="zone-dot" [style.background]="getZoneColor(i)"></span>
-      <span class="zone-label">{{ z.label }}</span>
-      <span class="zone-name">{{ z.description }}</span>
-      <span class="zone-pct">{{ z.low }}–{{ z.high }}%</span>
-      <span class="zone-actual" *ngIf="getActualRange(z, user, activeSport) as actual">{{ actual }}</span>
-    </div>
-  </div>
-
-  <!-- Greyed-out zone table preview when no ref value -->
-  <div class="zones-table zones-table-preview" *ngIf="!hasRef(user)">
-    <div *ngFor="let z of zones[activeSport]; let i = index" class="zone-row zone-row-dim">
-      <span class="zone-dot" [style.background]="getZoneColor(i)" style="opacity:0.3"></span>
-      <span class="zone-label" style="opacity:0.4">{{ z.label }}</span>
-      <span class="zone-name" style="opacity:0.4">{{ z.description }}</span>
-      <span class="zone-pct" style="opacity:0.4">{{ z.low }}–{{ z.high }}%</span>
-      <span class="zone-actual" style="opacity:0.25">—</span>
-    </div>
-  </div>
-
-  <!-- Coach / custom zone systems -->
-  <ng-container *ngIf="coachZonesForSport$ | async as coachZones">
-    <div *ngFor="let sys of coachZones" class="coach-zone-section">
-      <div class="section-header">
-        <span class="section-title">{{ sys.name }}</span>
-        <span class="ref-badge">{{ sys.referenceName || sys.referenceType }}</span>
-      </div>
-
-      <!-- Zone bar -->
+    <!-- Visual zone bar -->
+    @if (hasRef(user)) {
       <div class="zone-bar">
-        <div
-          *ngFor="let z of sys.zones; let i = index"
-          class="zone-segment"
-          [style.flex]="getZoneBarFlex(z)"
-          [style.background]="getZoneColor(i)"
-        >
-          <span class="seg-label">{{ z.label }}</span>
-        </div>
+        @for (let z of zones[activeSport]; let i = index; track i) {
+          <div
+            class="zone-segment"
+            [style.flex]="getZoneBarFlex(z)"
+            [style.background]="getZoneColor(i)"
+          >
+            <span class="seg-label">{{ z.label }}</span>
+          </div>
+        }
       </div>
+    }
 
-      <!-- Zone table -->
+    <!-- Zone table -->
+    @if (hasRef(user)) {
       <div class="zones-table">
-        <div *ngFor="let z of sys.zones; let i = index" class="zone-row">
-          <span class="zone-dot" [style.background]="getZoneColor(i)"></span>
-          <span class="zone-label">{{ z.label }}</span>
-          <span class="zone-name">{{ z.description }}</span>
-          <span class="zone-pct">{{ z.low }}–{{ z.high }}%</span>
-          <span class="zone-actual" *ngIf="getActualRangeForSystem(z, user, sys) as actual">{{ actual }}</span>
-        </div>
+        @for (let z of zones[activeSport]; let i = index; track i) {
+          <div class="zone-row">
+            <span class="zone-dot" [style.background]="getZoneColor(i)"></span>
+            <span class="zone-label">{{ z.label }}</span>
+            <span class="zone-name">{{ z.description }}</span>
+            <span class="zone-pct">{{ z.low }}–{{ z.high }}%</span>
+            @if (getActualRange(z, user, activeSport) as actual) {
+              <span class="zone-actual">{{ actual }}</span>
+            }
+          </div>
+        }
       </div>
+    }
 
-    </div>
-  </ng-container>
-</div>
+    <!-- Greyed-out zone table preview when no ref value -->
+    @if (!hasRef(user)) {
+      <div class="zones-table zones-table-preview">
+        @for (let z of zones[activeSport]; let i = index; track i) {
+          <div class="zone-row zone-row-dim">
+            <span class="zone-dot" [style.background]="getZoneColor(i)" style="opacity:0.3"></span>
+            <span class="zone-label" style="opacity:0.4">{{ z.label }}</span>
+            <span class="zone-name" style="opacity:0.4">{{ z.description }}</span>
+            <span class="zone-pct" style="opacity:0.4">{{ z.low }}–{{ z.high }}%</span>
+            <span class="zone-actual" style="opacity:0.25">—</span>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Coach / custom zone systems -->
+    @if (coachZonesForSport$ | async; as coachZones) {
+      @for (let sys of coachZones; track sys) {
+        <div class="coach-zone-section">
+          <div class="section-header">
+            <span class="section-title">{{ sys.name }}</span>
+            <span class="ref-badge">{{ sys.referenceName || sys.referenceType }}</span>
+          </div>
+
+          <!-- Zone bar -->
+          <div class="zone-bar">
+            @for (let z of sys.zones; let i = index; track i) {
+              <div
+                class="zone-segment"
+                [style.flex]="getZoneBarFlex(z)"
+                [style.background]="getZoneColor(i)"
+              >
+                <span class="seg-label">{{ z.label }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- Zone table -->
+          <div class="zones-table">
+            @for (let z of sys.zones; let i = index; track i) {
+              <div class="zone-row">
+                <span class="zone-dot" [style.background]="getZoneColor(i)"></span>
+                <span class="zone-label">{{ z.label }}</span>
+                <span class="zone-name">{{ z.description }}</span>
+                <span class="zone-pct">{{ z.low }}–{{ z.high }}%</span>
+                @if (getActualRangeForSystem(z, user, sys) as actual) {
+                  <span class="zone-actual">{{ actual }}</span>
+                }
+              </div>
+            }
+          </div>
+
+        </div>
+      }
+    }
+  </div>
+}
