@@ -284,66 +284,80 @@
           }
         }
 
-        <!-- PHYSIOLOGY tab — Task 1: 3-column layout (CYCLING | RUNNING | SWIMMING) -->
-        <div class="physiology-panel" *ngIf="activeTab === 'physiology'">
-          <div class="phys-stats">
-            <div class="phys-stat">
-              <span class="phys-label">FTP</span>
-              <span class="phys-value">{{ selectedAthlete.ftp || '—' }}W</span>
+        @if (activeTab === 'physiology') {
+          <div class="physiology-panel">
+            <div class="phys-stats">
+              <div class="phys-stat">
+                <span class="phys-label">FTP</span>
+                <span class="phys-value">{{ selectedAthlete.ftp || '—' }}W</span>
+              </div>
+              <div class="phys-stat">
+                <span class="phys-label">VO2MAX (est.)</span>
+                <span class="phys-value">{{ getEstimatedVo2Max(selectedAthlete.ftp) }} ml/kg/min</span>
+              </div>
+              @if (selectedAthlete.functionalThresholdPace) {
+                <div class="phys-stat">
+                  <span class="phys-label">THRESHOLD PACE</span>
+                  <span class="phys-value">{{ formatPace(selectedAthlete.functionalThresholdPace) }}</span>
+                </div>
+              }
+              @if (selectedAthlete.criticalSwimSpeed) {
+                <div class="phys-stat">
+                  <span class="phys-label">CSS</span>
+                  <span class="phys-value">{{ formatSwimPace(selectedAthlete.criticalSwimSpeed) }}</span>
+                </div>
+              }
             </div>
-            <div class="phys-stat">
-              <span class="phys-label">VO2MAX (est.)</span>
-              <span class="phys-value">{{ getEstimatedVo2Max(selectedAthlete.ftp) }} ml/kg/min</span>
-            </div>
-            <div class="phys-stat" *ngIf="selectedAthlete.functionalThresholdPace">
-              <span class="phys-label">THRESHOLD PACE</span>
-              <span class="phys-value">{{ formatPace(selectedAthlete.functionalThresholdPace) }}</span>
-            </div>
-            <div class="phys-stat" *ngIf="selectedAthlete.criticalSwimSpeed">
-              <span class="phys-label">CSS</span>
-              <span class="phys-value">{{ formatSwimPace(selectedAthlete.criticalSwimSpeed) }}</span>
-            </div>
-          </div>
 
           <!-- 3-column zones grid -->
           <div class="zones-3col">
-            <!-- CYCLING -->
             <div class="zone-col">
               <div class="zone-col-header">
                 <span class="zone-col-title">CYCLING</span>
-                <span class="zone-col-ref" *ngIf="selectedAthlete.ftp">{{ selectedAthlete.ftp }}W FTP</span>
+                @if (selectedAthlete.ftp) {
+                  <span class="zone-col-ref">{{ selectedAthlete.ftp }}W FTP</span>
+                }
               </div>
-              <div class="zones-table" *ngIf="selectedAthlete.ftp; else noFtp">
-                <div *ngFor="let z of getPowerZones(selectedAthlete.ftp); trackBy: trackZoneByName" class="zone-row">
-                  <span class="zone-dot" [style.background]="z.color"></span>
-                  <span class="zone-name">{{ z.name }}</span>
-                  <span class="zone-range">{{ z.low }}–{{ z.high !== null ? z.high + 'W' : '∞' }}</span>
+              @if (selectedAthlete.ftp) {
+                <div class="zones-table">
+                  @for (z of getPowerZones(selectedAthlete.ftp); track trackZoneByName(z)) {
+                    <div class="zone-row">
+                      <span class="zone-dot" [style.background]="z.color"></span>
+                      <span class="zone-name">{{ z.name }}</span>
+                      <span class="zone-range">{{ z.low }}–{{ z.high !== null ? z.high + 'W' : '∞' }}</span>
+                    </div>
+                  }
                 </div>
-              </div>
-              <ng-template #noFtp>
+              } @else {
                 <div class="zone-no-data">No FTP set</div>
-              </ng-template>
+              }
             </div>
 
-            <!-- RUNNING -->
             <div class="zone-col">
               <div class="zone-col-header">
                 <span class="zone-col-title">RUNNING</span>
-                <span class="zone-col-ref" *ngIf="selectedAthlete.functionalThresholdPace">{{ formatPace(selectedAthlete.functionalThresholdPace) }} FTP</span>
+                @if (selectedAthlete.functionalThresholdPace) {
+                  <span class="zone-col-ref">{{ formatPace(selectedAthlete.functionalThresholdPace) }} FTP</span>
+                }
               </div>
-              <div class="zones-table" *ngIf="selectedAthlete.functionalThresholdPace; else noFtPace">
-                <div *ngFor="let z of getRunZones(selectedAthlete.ftp, selectedAthlete.functionalThresholdPace); trackBy: trackZoneByName" class="zone-row">
-                  <span class="zone-dot" [style.background]="z.color"></span>
-                  <span class="zone-name">{{ z.name }}</span>
-                  <span class="zone-range">
-                    {{ z.low !== null ? formatPace(z.low) : '∞' }}
-                    <ng-container *ngIf="z.high !== null">– {{ formatPace(z.high) }}</ng-container>
-                  </span>
+              @if (selectedAthlete.functionalThresholdPace) {
+                <div class="zones-table">
+                  @for (z of getRunZones(selectedAthlete.ftp, selectedAthlete.functionalThresholdPace); track trackZoneByName(z)) {
+                    <div class="zone-row">
+                      <span class="zone-dot" [style.background]="z.color"></span>
+                      <span class="zone-name">{{ z.name }}</span>
+                      <span class="zone-range">
+                        {{ z.low !== null ? formatPace(z.low) : '∞' }}
+                        @if (z.high !== null) {
+                          – {{ formatPace(z.high) }}
+                        }
+                      </span>
+                    </div>
+                  }
                 </div>
-              </div>
-              <ng-template #noFtPace>
+              } @else {
                 <div class="zone-no-data">No threshold pace set</div>
-              </ng-template>
+              }
             </div>
 
             <!-- SWIMMING -->
