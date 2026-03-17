@@ -514,6 +514,7 @@
               <input type="range" class="band-slider" [(ngModel)]="groupBandW" [attr.min]="1" [attr.max]="20" [attr.step]="1" />
             </div>
           </div>
+          }
           <div class="race-plan-list">
             @for (group of getGroupedPlan(getActiveSegments(plan)); let i = $index; track i) {
               <div class="race-plan-item"
@@ -528,7 +529,12 @@
                 <span class="rp-number">{{ group.index }}</span>
                 <span class="rp-terrain">{{ group.terrainLabel }}</span>
                 @if (group.powerLower != null && !(bikeShowSpeed && activeTab === 'BIKE')) {
-                  <span class="rp-target"><span class="rp-avg-inline" *ngIf="group.targetPower != null">{{ group.targetPower }}W</span> {{ group.powerLower }}–{{ group.powerUpper }}W </span>
+                  <span class="rp-target">
+                    @if (group.targetPower != null) {
+                      <span class="rp-avg-inline">{{ group.targetPower }}W</span>
+                    }
+                    {{ group.powerLower }}–{{ group.powerUpper }}W
+                  </span>
                 }
                 @if (group.meanSpeed && bikeShowSpeed && activeTab === 'BIKE') {
                   <span class="rp-target speed">{{ group.meanSpeed.toFixed(1) }} km/h</span>
@@ -767,7 +773,8 @@
           <div class="form-col">
             <div class="label-with-tooltip">
               <h3 class="subsection-title">Race Targets</h3>
-              <span class="tooltip-trigger" *ngIf="discipline === 'TRIATHLON'">?
+              @if (discipline === 'TRIATHLON') {
+                <span class="tooltip-trigger">?
                 <span class="tooltip-text tooltip-wide">
                   <strong>Triathlon Power Targets (%FTP)</strong>
                   <table class="tooltip-table">
@@ -778,7 +785,8 @@
                     <tr><td>Ironman (180km)</td><td>60–70%</td><td>70–78%</td><td>78–85%</td></tr>
                   </table>
                 </span>
-              </span>
+                </span>
+              }
             </div>
             <div class="field-row">
               @if (needsBike()) {
