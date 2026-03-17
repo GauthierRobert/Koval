@@ -17,133 +17,150 @@
   <!-- Body -->
   <div class="page-body">
 
-    <!-- My Clubs -->
-    <ng-container *ngIf="userClubs$ | async as userClubs">
-      <section *ngIf="userClubs.length > 0">
-        <span class="section-label">YOUR CLUBS</span>
-        <div class="clubs-grid">
-          <div
-            *ngFor="let club of userClubs"
-            class="club-card glass"
-            (click)="openDetail(club.id)"
-            [class.club-card--private]="club.visibility === 'PRIVATE'">
-            <div class="card-top">
-              <div class="club-logo" *ngIf="club.logoUrl; else initials">
-                <img [src]="club.logoUrl" alt="Club logo" />
+    @if (userClubs$ | async; as userClubs) {
+      @if (userClubs.length > 0) {
+        <section>
+          <span class="section-label">YOUR CLUBS</span>
+          <div class="clubs-grid">
+            @for (club of userClubs; track club.id) {
+              <div
+                class="club-card glass"
+                (click)="openDetail(club.id)"
+                [class.club-card--private]="club.visibility === 'PRIVATE'">
+                <div class="card-top">
+                  @if (club.logoUrl) {
+                    <div class="club-logo">
+                      <img [src]="club.logoUrl" alt="Club logo" />
+                    </div>
+                  } @else {
+                    <div class="club-initials">{{ club.name.charAt(0).toUpperCase() }}</div>
+                  }
+                  <div class="club-info">
+                    <span class="club-name">{{ club.name }}</span>
+                    @if (club.description) {
+                      <span class="club-desc">{{ club.description }}</span>
+                    }
+                  </div>
+                  @if (getMembershipLabel(club.membershipStatus) !== 'OWNER') {
+                    <button class="leave-btn" (click)="leave(club.id, $event)">
+                      LEAVE
+                    </button>
+                  }
+                </div>
+                <div class="card-meta">
+                  <span class="meta-chip">{{ club.memberCount }} members</span>
+                  <span class="meta-chip" [class.meta-chip--private]="club.visibility === 'PRIVATE'">
+                    {{ club.visibility }}
+                  </span>
+                  <span class="meta-chip meta-chip--role">{{ getMembershipLabel(club.membershipStatus) }}</span>
+                </div>
               </div>
-              <ng-template #initials>
-                <div class="club-initials">{{ club.name.charAt(0).toUpperCase() }}</div>
-              </ng-template>
-              <div class="club-info">
-                <span class="club-name">{{ club.name }}</span>
-                <span class="club-desc" *ngIf="club.description">{{ club.description }}</span>
-              </div>
-              <button class="leave-btn" (click)="leave(club.id, $event)"
-                *ngIf="getMembershipLabel(club.membershipStatus) !== 'OWNER'">
-                LEAVE
-              </button>
-            </div>
-            <div class="card-meta">
-              <span class="meta-chip">{{ club.memberCount }} members</span>
-              <span class="meta-chip" [class.meta-chip--private]="club.visibility === 'PRIVATE'">
-                {{ club.visibility }}
-              </span>
-              <span class="meta-chip meta-chip--role">{{ getMembershipLabel(club.membershipStatus) }}</span>
-            </div>
+            }
           </div>
+        </section>
+      }
+
+      @if (userClubs.length === 0) {
+        <div class="empty-state">
+          <div class="empty-card glass">
+            <div class="empty-icon-wrap">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <div class="empty-text">
+              <strong>No clubs yet</strong>
+              <span>Create or join a club to start training with others</span>
+            </div>
+            <button class="create-btn" (click)="openCreate()">CREATE YOUR FIRST CLUB</button>
+          </div>
+        </div>
+      }
+    }
+
+    @if (publicClubs.length > 0) {
+      <section>
+        <span class="section-label">BROWSE PUBLIC CLUBS</span>
+        <div class="clubs-grid">
+          @for (club of publicClubs; track club.id) {
+            <div
+              class="club-card glass"
+              (click)="openDetail(club.id)">
+              <div class="card-top">
+                <div class="club-initials">{{ club.name.charAt(0).toUpperCase() }}</div>
+                <div class="club-info">
+                  <span class="club-name">{{ club.name }}</span>
+                  @if (club.description) {
+                    <span class="club-desc">{{ club.description }}</span>
+                  }
+                </div>
+                @if (!club.membershipStatus) {
+                  <button
+                    class="join-btn"
+                    (click)="join(club.id, $event)">
+                    JOIN
+                  </button>
+                }
+                @if (club.membershipStatus) {
+                  <span class="meta-chip meta-chip--role">
+                    {{ getMembershipLabel(club.membershipStatus) }}
+                  </span>
+                }
+              </div>
+              <div class="card-meta">
+                <span class="meta-chip">{{ club.memberCount }} members</span>
+              </div>
+            </div>
+          }
         </div>
       </section>
-
-      <!-- Empty state -->
-      <div class="empty-state" *ngIf="userClubs.length === 0">
-        <div class="empty-card glass">
-          <div class="empty-icon-wrap">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-          </div>
-          <div class="empty-text">
-            <strong>No clubs yet</strong>
-            <span>Create or join a club to start training with others</span>
-          </div>
-          <button class="create-btn" (click)="openCreate()">CREATE YOUR FIRST CLUB</button>
-        </div>
-      </div>
-    </ng-container>
-
-    <!-- Browse Public Clubs -->
-    <section *ngIf="publicClubs.length > 0">
-      <span class="section-label">BROWSE PUBLIC CLUBS</span>
-      <div class="clubs-grid">
-        <div
-          *ngFor="let club of publicClubs"
-          class="club-card glass"
-          (click)="openDetail(club.id)">
-          <div class="card-top">
-            <div class="club-initials">{{ club.name.charAt(0).toUpperCase() }}</div>
-            <div class="club-info">
-              <span class="club-name">{{ club.name }}</span>
-              <span class="club-desc" *ngIf="club.description">{{ club.description }}</span>
-            </div>
-            <button
-              class="join-btn"
-              (click)="join(club.id, $event)"
-              *ngIf="!club.membershipStatus">
-              JOIN
-            </button>
-            <span class="meta-chip meta-chip--role" *ngIf="club.membershipStatus">
-              {{ getMembershipLabel(club.membershipStatus) }}
-            </span>
-          </div>
-          <div class="card-meta">
-            <span class="meta-chip">{{ club.memberCount }} members</span>
-          </div>
-        </div>
-      </div>
-    </section>
+    }
 
   </div>
 </div>
 
-<!-- Create Club Modal -->
-<div class="modal-backdrop" *ngIf="isFormOpen" (click)="closeForm()">
-  <div class="modal-card glass" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>Create New Club</h3>
-      <button class="modal-close" (click)="closeForm()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>CLUB NAME</label>
-        <input [(ngModel)]="form.name" placeholder="e.g. Morning Riders" class="form-input" />
+@if (isFormOpen) {
+  <div class="modal-backdrop" (click)="closeForm()">
+    <div class="modal-card glass" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Create New Club</h3>
+        <button class="modal-close" (click)="closeForm()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
-      <div class="form-group">
-        <label>DESCRIPTION</label>
-        <textarea
-          [(ngModel)]="form.description"
-          placeholder="What's this club about?"
-          class="form-input"
-          rows="3"></textarea>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>CLUB NAME</label>
+          <input [(ngModel)]="form.name" placeholder="e.g. Morning Riders" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label>DESCRIPTION</label>
+          <textarea
+            [(ngModel)]="form.description"
+            placeholder="What's this club about?"
+            class="form-input"
+            rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label>LOCATION</label>
+          <input [(ngModel)]="form.location" placeholder="e.g. Paris, France" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label>VISIBILITY</label>
+          <select [(ngModel)]="form.visibility" class="form-input">
+            @for (v of visibilityOptions; track v.value) {
+              <option [value]="v.value">{{ v.label }}</option>
+            }
+          </select>
+        </div>
       </div>
-      <div class="form-group">
-        <label>LOCATION</label>
-        <input [(ngModel)]="form.location" placeholder="e.g. Paris, France" class="form-input" />
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeForm()">CANCEL</button>
+        <button class="btn-primary" (click)="save()" [disabled]="!form.name">CREATE</button>
       </div>
-      <div class="form-group">
-        <label>VISIBILITY</label>
-        <select [(ngModel)]="form.visibility" class="form-input">
-          <option *ngFor="let v of visibilityOptions" [value]="v.value">{{ v.label }}</option>
-        </select>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="closeForm()">CANCEL</button>
-      <button class="btn-primary" (click)="save()" [disabled]="!form.name">CREATE</button>
     </div>
   </div>
-</div>
+}
