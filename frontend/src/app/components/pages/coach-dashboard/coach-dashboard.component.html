@@ -471,74 +471,80 @@
           }
         }
 
-        <!-- Task 2: PMC tab (separate from performance) -->
-        <ng-container *ngIf="activeTab === 'pmc'">
-          <ng-container *ngIf="fullAthletePmc$ | async as pmcData">
-            <div class="coach-pmc-panel" *ngIf="pmcData.length > 0">
-              <div class="coach-pmc-header">
-                <div class="section-title">PMC — 90 DAYS</div>
-                <button class="view-pmc-btn" (click)="viewAthletePmc(selectedAthlete!.id)">VIEW FULL PMC →</button>
+        @if (activeTab === 'pmc') {
+          @if (fullAthletePmc$ | async; as pmcData) {
+            @if (pmcData.length > 0) {
+              <div class="coach-pmc-panel">
+                <div class="coach-pmc-header">
+                  <div class="section-title">PMC — 90 DAYS</div>
+                  <button class="view-pmc-btn" (click)="viewAthletePmc(selectedAthlete!.id)">VIEW FULL PMC →</button>
+                </div>
+                <app-pmc-chart [data]="pmcData" [goals]="athleteGoals$ | async"></app-pmc-chart>
               </div>
-              <app-pmc-chart [data]="pmcData" [goals]="athleteGoals$ | async"></app-pmc-chart>
-            </div>
-            <div *ngIf="pmcData.length === 0" class="empty-tab">No PMC data available.</div>
-          </ng-container>
-        </ng-container>
+            }
+            @if (pmcData.length === 0) {
+              <div class="empty-tab">No PMC data available.</div>
+            }
+          }
+        }
 
-        <!-- GOALS tab -->
-        <ng-container *ngIf="activeTab === 'goals'">
-          <ng-container *ngIf="athleteGoals$ | async as goals">
-            <div class="goals-tab-panel" *ngIf="goals.length > 0; else noGoals">
-              <div class="section-title">RACE GOALS</div>
-              <table class="goals-table">
-                <thead>
-                  <tr>
-                    <th>Priority</th>
-                    <th>Race</th>
-                    <th>Sport</th>
-                    <th>Date</th>
-                    <th>Days</th>
-                    <th>Distance</th>
-                    <th>Target Time</th>
-                    <th>Location</th>
-                    <th>Notes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let goal of goals; trackBy: trackGoalById">
-                    <td>
-                      <span class="goal-priority-dot"
-                        [style.background-color]="getPriorityColor(goal.priority)"
-                        [title]="goal.priority === 'A' ? 'Goal Race' : goal.priority === 'B' ? 'Target Race' : 'Training Race'">
-                        {{ goal.priority }}
-                      </span>
-                    </td>
-                    <td class="goal-title-cell">{{ goal.title }}</td>
-                    <td>{{ goal.sport }}</td>
-                    <td>{{ goal.raceDate | date:'MMM d, y' }}</td>
-                    <td>
-                      <span class="days-badge-coach" [class.past]="daysUntil(goal.raceDate) < 0">
-                        {{ daysUntil(goal.raceDate) < 0 ? (daysUntil(goal.raceDate) * -1) + 'd ago' : daysUntil(goal.raceDate) + 'd' }}
-                      </span>
-                    </td>
-                    <td>{{ goal.distance || '—' }}</td>
-                    <td>{{ goal.targetTime || '—' }}</td>
-                    <td>{{ goal.location || '—' }}</td>
-                    <td class="notes-cell">{{ goal.notes || '—' }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <ng-template #noGoals>
+        @if (activeTab === 'goals') {
+          @if (athleteGoals$ | async; as goals) {
+            @if (goals.length > 0) {
+              <div class="goals-tab-panel">
+                <div class="section-title">RACE GOALS</div>
+                <table class="goals-table">
+                  <thead>
+                    <tr>
+                      <th>Priority</th>
+                      <th>Race</th>
+                      <th>Sport</th>
+                      <th>Date</th>
+                      <th>Days</th>
+                      <th>Distance</th>
+                      <th>Target Time</th>
+                      <th>Location</th>
+                      <th>Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (goal of goals; track trackGoalById(goal)) {
+                      <tr>
+                        <td>
+                          <span class="goal-priority-dot"
+                            [style.background-color]="getPriorityColor(goal.priority)"
+                            [title]="goal.priority === 'A' ? 'Goal Race' : goal.priority === 'B' ? 'Target Race' : 'Training Race'">
+                            {{ goal.priority }}
+                          </span>
+                        </td>
+                        <td class="goal-title-cell">{{ goal.title }}</td>
+                        <td>{{ goal.sport }}</td>
+                        <td>{{ goal.raceDate | date:'MMM d, y' }}</td>
+                        <td>
+                          <span class="days-badge-coach" [class.past]="daysUntil(goal.raceDate) < 0">
+                            {{ daysUntil(goal.raceDate) < 0 ? (daysUntil(goal.raceDate) * -1) + 'd ago' : daysUntil(goal.raceDate) + 'd' }}
+                          </span>
+                        </td>
+                        <td>{{ goal.distance || '—' }}</td>
+                        <td>{{ goal.targetTime || '—' }}</td>
+                        <td>{{ goal.location || '—' }}</td>
+                        <td class="notes-cell">{{ goal.notes || '—' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
               <div class="empty-tab">No race goals for this athlete.</div>
-            </ng-template>
-          </ng-container>
-        </ng-container>
+            }
+          }
+        }
 
       </div>
 
-      <div class="placeholder-detail" *ngIf="!selectedAthlete">
-        <div class="empty-detail">
+      @if (!selectedAthlete) {
+        <div class="placeholder-detail">
+          <div class="empty-detail">
           <div class="empty-icon-ring">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -546,10 +552,11 @@
             </svg>
           </div>
           <h3>Select an Athlete</h3>
-          <p>Choose an athlete from the roster to view performance metrics, manage training loads, and track progression.</p>
+            <p>Choose an athlete from the roster to view performance metrics, manage training loads, and track progression.</p>
+          </div>
         </div>
-      </div>
-    </ng-container>
+      }
+    }
   </div>
 </div>
 

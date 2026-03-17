@@ -36,8 +36,9 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let block of summary.blockSummaries">
-            <td>
+          @for (block of summary.blockSummaries; track block) {
+            <tr>
+              <td>
               <span class="block-type" [class]="block.type.toLowerCase()">{{ block.label }}</span>
             </td>
             <td>{{ formatTime(block.durationSeconds) }}</td>
@@ -48,7 +49,8 @@
                 {{ getDelta(block) > 0 ? '+' : '' }}{{ getDelta(block) }}%
               </span>
             </td>
-          </tr>
+            </tr>
+          }
         </tbody>
       </table>
     </div>
