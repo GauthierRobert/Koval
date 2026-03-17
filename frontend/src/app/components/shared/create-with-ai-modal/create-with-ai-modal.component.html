@@ -1,135 +1,186 @@
-<div class="modal-backdrop" *ngIf="isOpen" (click)="close()">
-  <div class="modal-panel" (click)="$event.stopPropagation()">
+@if (isOpen) {
+  <div class="modal-backdrop" (click)="close()">
+    <div class="modal-panel" (click)="$event.stopPropagation()">
 
-    <div class="modal-header">
-      <h2 class="modal-title">
-        <span class="ai-icon">✨</span> {{ label }}
-      </h2>
-      <button class="close-btn" (click)="close()" [disabled]="loading">&times;</button>
-    </div>
-
-    <!-- Tab strip (only when linking to a session is possible) -->
-    <div class="mode-tabs" *ngIf="showSelectTab">
-      <button class="mode-tab" [class.active]="mode === 'ai'" (click)="setMode('ai')">Create with AI</button>
-      <button class="mode-tab" [class.active]="mode === 'select'" (click)="setMode('select')">Select existing</button>
-    </div>
-
-    <div class="modal-body">
-      <!-- Session context banner -->
-      <div class="session-context" *ngIf="sessionInfo">
-        <div class="context-label">Generating training for:</div>
-        <div class="context-details">
-          <span *ngIf="sessionInfo.sport" class="context-badge">{{ sessionInfo.sport }}</span>
-          <span *ngIf="sessionInfo.scheduledAt" class="context-item">&#x1f4c5; {{ sessionInfo.scheduledAt }}</span>
-          <span *ngIf="sessionInfo.clubGroupName" class="context-item">&#x1f465; {{ sessionInfo.clubGroupName }}</span>
-        </div>
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <span class="ai-icon">✨</span> {{ label }}
+        </h2>
+        <button class="close-btn" (click)="close()" [disabled]="loading">&times;</button>
       </div>
 
-      <!-- ===== AI MODE ===== -->
-      <ng-container *ngIf="mode === 'ai'">
-        <p class="hint">Describe what you want to create in natural language.</p>
-
-        <div class="form-group" *ngIf="showSportSelector">
-          <label class="field-label">Sport *</label>
-          <select class="field-select" [(ngModel)]="selectedSport" (ngModelChange)="onSportChange()" [disabled]="loading">
-            <option value="" disabled>Select a sport</option>
-            <option *ngFor="let s of sports" [value]="s">{{ s }}</option>
-          </select>
+      <!-- Tab strip (only when linking to a session is possible) -->
+      @if (showSelectTab) {
+        <div class="mode-tabs">
+          <button class="mode-tab" [class.active]="mode === 'ai'" (click)="setMode('ai')">Create with AI</button>
+          <button class="mode-tab" [class.active]="mode === 'select'" (click)="setMode('select')">Select existing</button>
         </div>
+      }
 
-        <div class="form-group" *ngIf="showSportSelector && filteredZoneSystems.length > 0">
-          <label class="field-label">Zone System (optional)</label>
-          <select class="field-select" [(ngModel)]="selectedZoneSystemId" [disabled]="loading">
-            <option value="">— Sport default —</option>
-            <option *ngFor="let z of filteredZoneSystems" [value]="z.id">{{ z.name }}</option>
-          </select>
-        </div>
-
-        <div class="form-group" *ngIf="showTagSelector && availableGroups.length > 0">
-          <label class="field-label">Club Group (optional)</label>
-          <select class="field-select" [(ngModel)]="selectedGroupId">
-            <option value="">— No group —</option>
-            <option *ngFor="let group of availableGroups" [value]="group.id">{{ group.name }}</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="field-label">Prompt</label>
-          <textarea
-            class="prompt-textarea"
-            [(ngModel)]="prompt"
-            placeholder="e.g. Create a 60-min sweet-spot group ride for Tuesday evening at 7pm"
-            rows="4"
-            [disabled]="loading"
-          ></textarea>
-        </div>
-      </ng-container>
-
-      <!-- ===== SELECT EXISTING MODE ===== -->
-      <ng-container *ngIf="mode === 'select'">
-        <p class="hint">Pick one of your trainings to link to this session.</p>
-
-        <div class="form-group">
-          <input
-            type="text"
-            class="search-input"
-            [(ngModel)]="searchQuery"
-            placeholder="Search by title or description..."
-            [disabled]="loading"
-          />
-        </div>
-
-        <div class="training-list" *ngIf="filteredTrainings.length > 0">
-          <div
-            class="training-item"
-            *ngFor="let t of filteredTrainings"
-            [class.selected]="selectedTrainingId === t.id"
-            (click)="selectTraining(t)"
-          >
-            <div class="training-item-header">
-              <span class="training-title">{{ t.title }}</span>
-              <div class="training-badges">
-                <span class="badge sport-badge" *ngIf="t.sportType">{{ t.sportType }}</span>
-                <span class="badge type-badge" *ngIf="t.trainingType">{{ t.trainingType }}</span>
-              </div>
+      <div class="modal-body">
+        <!-- Session context banner -->
+        @if (sessionInfo) {
+          <div class="session-context">
+            <div class="context-label">Generating training for:</div>
+            <div class="context-details">
+              @if (sessionInfo.sport) {
+                <span class="context-badge">{{ sessionInfo.sport }}</span>
+              }
+              @if (sessionInfo.scheduledAt) {
+                <span class="context-item">&#x1f4c5; {{ sessionInfo.scheduledAt }}</span>
+              }
+              @if (sessionInfo.clubGroupName) {
+                <span class="context-item">&#x1f465; {{ sessionInfo.clubGroupName }}</span>
+              }
             </div>
-            <div class="training-description" *ngIf="t.description">{{ t.description }}</div>
           </div>
-        </div>
+        }
 
-        <div class="empty-state" *ngIf="filteredTrainings.length === 0 && availableTrainings.length > 0">
-          No trainings match your search.
-        </div>
-        <div class="empty-state" *ngIf="availableTrainings.length === 0">
-          You don't have any trainings yet.
-        </div>
-      </ng-container>
+        <!-- ===== AI MODE ===== -->
+        @if (mode === 'ai') {
+          <p class="hint">Describe what you want to create in natural language.</p>
 
-      <div class="status-message error" *ngIf="errorMessage">{{ errorMessage }}</div>
-      <div class="status-message success" *ngIf="successMessage">{{ successMessage }}</div>
+          @if (showSportSelector) {
+            <div class="form-group">
+              <label class="field-label">Sport *</label>
+              <select class="field-select" [(ngModel)]="selectedSport" (ngModelChange)="onSportChange()" [disabled]="loading">
+                <option value="" disabled>Select a sport</option>
+                @for (let s of sports; track s) {
+                  <option [value]="s">{{ s }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          @if (showSportSelector && filteredZoneSystems.length > 0) {
+            <div class="form-group">
+              <label class="field-label">Zone System (optional)</label>
+              <select class="field-select" [(ngModel)]="selectedZoneSystemId" [disabled]="loading">
+                <option value="">— Sport default —</option>
+                @for (let z of filteredZoneSystems; track z.id) {
+                  <option [value]="z.id">{{ z.name }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          @if (showTagSelector && availableGroups.length > 0) {
+            <div class="form-group">
+              <label class="field-label">Club Group (optional)</label>
+              <select class="field-select" [(ngModel)]="selectedGroupId">
+                <option value="">— No group —</option>
+                @for (let group of availableGroups; track group.id) {
+                  <option [value]="group.id">{{ group.name }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          <div class="form-group">
+            <label class="field-label">Prompt</label>
+            <textarea
+              class="prompt-textarea"
+              [(ngModel)]="prompt"
+              placeholder="e.g. Create a 60-min sweet-spot group ride for Tuesday evening at 7pm"
+              rows="4"
+              [disabled]="loading"
+            ></textarea>
+          </div>
+        }
+
+        <!-- ===== SELECT EXISTING MODE ===== -->
+        @if (mode === 'select') {
+          <p class="hint">Pick one of your trainings to link to this session.</p>
+
+          <div class="form-group">
+            <input
+              type="text"
+              class="search-input"
+              [(ngModel)]="searchQuery"
+              placeholder="Search by title or description..."
+              [disabled]="loading"
+            />
+          </div>
+
+          @if (filteredTrainings.length > 0) {
+            <div class="training-list">
+              @for (let t of filteredTrainings; track t.id) {
+                <div
+                  class="training-item"
+                  [class.selected]="selectedTrainingId === t.id"
+                  (click)="selectTraining(t)"
+                >
+                  <div class="training-item-header">
+                    <span class="training-title">{{ t.title }}</span>
+                    <div class="training-badges">
+                      @if (t.sportType) {
+                        <span class="badge sport-badge">{{ t.sportType }}</span>
+                      }
+                      @if (t.trainingType) {
+                        <span class="badge type-badge">{{ t.trainingType }}</span>
+                      }
+                    </div>
+                  </div>
+                  @if (t.description) {
+                    <div class="training-description">{{ t.description }}</div>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          @if (filteredTrainings.length === 0 && availableTrainings.length > 0) {
+            <div class="empty-state">
+              No trainings match your search.
+            </div>
+          }
+          @if (availableTrainings.length === 0) {
+            <div class="empty-state">
+              You don't have any trainings yet.
+            </div>
+          }
+        }
+
+        @if (errorMessage) {
+          <div class="status-message error">{{ errorMessage }}</div>
+        }
+        @if (successMessage) {
+          <div class="status-message success">{{ successMessage }}</div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-ghost" (click)="close()" [disabled]="loading">Cancel</button>
+
+        @if (mode === 'ai') {
+          <button
+            class="btn-primary"
+            (click)="submit()"
+            [disabled]="!prompt.trim() || loading || (showSportSelector && !selectedSport)">
+            @if (!loading) {
+              <span>Generate</span>
+            }
+            @if (loading) {
+              <span class="spinner">Generating...</span>
+            }
+          </button>
+        }
+
+        @if (mode === 'select') {
+          <button
+            class="btn-primary"
+            (click)="confirmSelection()"
+            [disabled]="!selectedTrainingId || loading">
+            @if (!loading) {
+              <span>Link Training</span>
+            }
+            @if (loading) {
+              <span class="spinner">Linking...</span>
+            }
+          </button>
+        }
+      </div>
+
     </div>
-
-    <div class="modal-footer">
-      <button class="btn-ghost" (click)="close()" [disabled]="loading">Cancel</button>
-
-      <button
-        *ngIf="mode === 'ai'"
-        class="btn-primary"
-        (click)="submit()"
-        [disabled]="!prompt.trim() || loading || (showSportSelector && !selectedSport)">
-        <span *ngIf="!loading">Generate</span>
-        <span *ngIf="loading" class="spinner">Generating...</span>
-      </button>
-
-      <button
-        *ngIf="mode === 'select'"
-        class="btn-primary"
-        (click)="confirmSelection()"
-        [disabled]="!selectedTrainingId || loading">
-        <span *ngIf="!loading">Link Training</span>
-        <span *ngIf="loading" class="spinner">Linking...</span>
-      </button>
-    </div>
-
   </div>
-</div>
+}

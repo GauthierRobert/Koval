@@ -5,21 +5,32 @@
   </div>
 
   <!-- Race Banner (when linked from goals page) -->
-  <div class="race-banner glass" *ngIf="linkedRace && !(pacingPlan$ | async)">
-    <div class="race-banner-content">
-      <span class="race-banner-label">Using race course</span>
-      <strong class="race-banner-title">{{ linkedRace.title }}</strong>
-      <span class="race-banner-meta" *ngIf="linkedRace.location">{{ linkedRace.location }}</span>
+  @if (linkedRace && !(pacingPlan$ | async)) {
+    <div class="race-banner glass">
+      <div class="race-banner-content">
+        <span class="race-banner-label">Using race course</span>
+        <strong class="race-banner-title">{{ linkedRace.title }}</strong>
+        @if (linkedRace.location) {
+          <span class="race-banner-meta">{{ linkedRace.location }}</span>
+        }
+      </div>
+      <div class="race-banner-gpx">
+        @if (linkedRace.hasSwimGpx) {
+          <span class="gpx-indicator swim">Swim GPX</span>
+        }
+        @if (linkedRace.hasBikeGpx) {
+          <span class="gpx-indicator bike">Bike GPX</span>
+        }
+        @if (linkedRace.hasRunGpx) {
+          <span class="gpx-indicator run">Run GPX</span>
+        }
+      </div>
     </div>
-    <div class="race-banner-gpx">
-      <span *ngIf="linkedRace.hasSwimGpx" class="gpx-indicator swim">Swim GPX</span>
-      <span *ngIf="linkedRace.hasBikeGpx" class="gpx-indicator bike">Bike GPX</span>
-      <span *ngIf="linkedRace.hasRunGpx" class="gpx-indicator run">Run GPX</span>
-    </div>
-  </div>
+  }
 
   <!-- Initial Form (no results yet) -->
-  <div class="form-panel-wide glass" *ngIf="!(pacingPlan$ | async)">
+  @if (!(pacingPlan$ | async)) {
+    <div class="form-panel-wide glass">
 
     <!-- Row 1: Discipline (left) + Bike Type (right) -->
     <div class="form-row-2col">
@@ -43,98 +54,124 @@
     </div>
 
     <!-- Row 2: GPX Upload — Bike left, Run right (hidden when race is linked) -->
-    <div class="gpx-row" *ngIf="(needsBike() || needsRun()) && !linkedRace">
-      <!-- Bike GPX (single-discipline BIKE or TRIATHLON) -->
-      <div class="gpx-col" *ngIf="needsBike()">
-        <div class="gpx-with-loops">
-          <div class="gpx-dropzone-labeled">
-            <span class="dropzone-label">Bike Course GPX</span>
-            <div
-              class="gpx-dropzone"
-              [class.dragging]="discipline === 'BIKE' ? isDragging : isDraggingBike"
-              [class.has-file]="discipline === 'BIKE' ? gpxFile : bikeGpxFile"
-              (dragover)="onDragOver($event, discipline === 'BIKE' ? 'gpx' : 'bike')"
-              (dragleave)="onDragLeave(discipline === 'BIKE' ? 'gpx' : 'bike')"
-              (drop)="onDrop($event, discipline === 'BIKE' ? 'gpx' : 'bike')"
-              (click)="bikeFileInput.click()"
-            >
-              <input #bikeFileInput type="file" accept=".gpx" hidden
-                (change)="onFileSelected($event, discipline === 'BIKE' ? 'gpx' : 'bike')" />
-              <svg *ngIf="!(discipline === 'BIKE' ? gpxFile : bikeGpxFile)" width="24" height="24" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
-              </svg>
-              <span *ngIf="!(discipline === 'BIKE' ? gpxFile : bikeGpxFile)">Drop bike GPX</span>
-              <span *ngIf="discipline === 'BIKE' ? gpxFile : bikeGpxFile" class="file-name">
-                {{ discipline === 'BIKE' ? gpxFileName : bikeGpxFileName }}
-              </span>
+    @if ((needsBike() || needsRun()) && !linkedRace) {
+      <div class="gpx-row">
+        <!-- Bike GPX (single-discipline BIKE or TRIATHLON) -->
+        @if (needsBike()) {
+          <div class="gpx-col">
+            <div class="gpx-with-loops">
+              <div class="gpx-dropzone-labeled">
+                <span class="dropzone-label">Bike Course GPX</span>
+                <div
+                  class="gpx-dropzone"
+                  [class.dragging]="discipline === 'BIKE' ? isDragging : isDraggingBike"
+                  [class.has-file]="discipline === 'BIKE' ? gpxFile : bikeGpxFile"
+                  (dragover)="onDragOver($event, discipline === 'BIKE' ? 'gpx' : 'bike')"
+                  (dragleave)="onDragLeave(discipline === 'BIKE' ? 'gpx' : 'bike')"
+                  (drop)="onDrop($event, discipline === 'BIKE' ? 'gpx' : 'bike')"
+                  (click)="bikeFileInput.click()"
+                >
+                  <input #bikeFileInput type="file" accept=".gpx" hidden
+                    (change)="onFileSelected($event, discipline === 'BIKE' ? 'gpx' : 'bike')" />
+                  @if (!(discipline === 'BIKE' ? gpxFile : bikeGpxFile)) {
+                    <svg width="24" height="24" viewBox="0 0 24 24"
+                      fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                  }
+                  @if (!(discipline === 'BIKE' ? gpxFile : bikeGpxFile)) {
+                    <span>Drop bike GPX</span>
+                  }
+                  @if (discipline === 'BIKE' ? gpxFile : bikeGpxFile) {
+                    <span class="file-name">
+                      {{ discipline === 'BIKE' ? gpxFileName : bikeGpxFileName }}
+                    </span>
+                  }
+                </div>
+              </div>
+              <div class="loop-input">
+                <label>Loops</label>
+                <input type="number" [(ngModel)]="bikeLoops" min="1" max="50" />
+              </div>
             </div>
           </div>
-          <div class="loop-input">
-            <label>Loops</label>
-            <input type="number" [(ngModel)]="bikeLoops" min="1" max="50" />
-          </div>
-        </div>
-      </div>
+        }
 
-      <!-- Run GPX (single-discipline RUN or TRIATHLON) -->
-      <div class="gpx-col" *ngIf="needsRun()">
-        <div class="gpx-with-loops">
-          <div class="gpx-dropzone-labeled">
-            <span class="dropzone-label">Run Course GPX</span>
-            <div
-              class="gpx-dropzone"
-              [class.dragging]="discipline === 'RUN' ? isDragging : isDraggingRun"
-              [class.has-file]="discipline === 'RUN' ? gpxFile : runGpxFile"
-              (dragover)="onDragOver($event, discipline === 'RUN' ? 'gpx' : 'run')"
-              (dragleave)="onDragLeave(discipline === 'RUN' ? 'gpx' : 'run')"
-              (drop)="onDrop($event, discipline === 'RUN' ? 'gpx' : 'run')"
-              (click)="runFileInput.click()"
-            >
-              <input #runFileInput type="file" accept=".gpx" hidden
-                (change)="onFileSelected($event, discipline === 'RUN' ? 'gpx' : 'run')" />
-              <svg *ngIf="!(discipline === 'RUN' ? gpxFile : runGpxFile)" width="24" height="24" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
-              </svg>
-              <span *ngIf="!(discipline === 'RUN' ? gpxFile : runGpxFile)">Drop run GPX</span>
-              <span *ngIf="discipline === 'RUN' ? gpxFile : runGpxFile" class="file-name">
-                {{ discipline === 'RUN' ? gpxFileName : runGpxFileName }}
-              </span>
+        <!-- Run GPX (single-discipline RUN or TRIATHLON) -->
+        @if (needsRun()) {
+          <div class="gpx-col">
+            <div class="gpx-with-loops">
+              <div class="gpx-dropzone-labeled">
+                <span class="dropzone-label">Run Course GPX</span>
+                <div
+                  class="gpx-dropzone"
+                  [class.dragging]="discipline === 'RUN' ? isDragging : isDraggingRun"
+                  [class.has-file]="discipline === 'RUN' ? gpxFile : runGpxFile"
+                  (dragover)="onDragOver($event, discipline === 'RUN' ? 'gpx' : 'run')"
+                  (dragleave)="onDragLeave(discipline === 'RUN' ? 'gpx' : 'run')"
+                  (drop)="onDrop($event, discipline === 'RUN' ? 'gpx' : 'run')"
+                  (click)="runFileInput.click()"
+                >
+                  <input #runFileInput type="file" accept=".gpx" hidden
+                    (change)="onFileSelected($event, discipline === 'RUN' ? 'gpx' : 'run')" />
+                  @if (!(discipline === 'RUN' ? gpxFile : runGpxFile)) {
+                    <svg width="24" height="24" viewBox="0 0 24 24"
+                      fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                  }
+                  @if (!(discipline === 'RUN' ? gpxFile : runGpxFile)) {
+                    <span>Drop run GPX</span>
+                  }
+                  @if (discipline === 'RUN' ? gpxFile : runGpxFile) {
+                    <span class="file-name">
+                      {{ discipline === 'RUN' ? gpxFileName : runGpxFileName }}
+                    </span>
+                  }
+                </div>
+              </div>
+              <div class="loop-input">
+                <label>Loops</label>
+                <input type="number" [(ngModel)]="runLoops" min="1" max="50" />
+              </div>
             </div>
           </div>
-          <div class="loop-input">
-            <label>Loops</label>
-            <input type="number" [(ngModel)]="runLoops" min="1" max="50" />
-          </div>
-        </div>
+        }
       </div>
-    </div>
+    }
 
     <!-- Row 3: Athlete Metrics -->
     <div class="form-section">
       <h3 class="subsection-title">Athlete Metrics</h3>
       <div class="form-fields-row">
-        <div class="field" *ngIf="needsBike()">
-          <label>FTP (W)</label>
-          <input type="number" [(ngModel)]="profile.ftp" placeholder="250" min="50" max="500" />
-        </div>
-        <div class="field" *ngIf="needsBike()">
-          <label>Weight (kg)</label>
-          <input type="number" [(ngModel)]="profile.weightKg" placeholder="75" min="30" max="200" />
-        </div>
-        <div class="field" *ngIf="needsRun()">
-          <label>Threshold Pace (s/km)</label>
-          <input type="number" [(ngModel)]="profile.thresholdPaceSec" placeholder="270" min="120" max="600" />
-        </div>
-        <div class="field" *ngIf="needsSwim()">
-          <label>Swim CSS (s/100m)</label>
-          <input type="number" [(ngModel)]="profile.swimCssSec" placeholder="95" min="40" max="200" />
-        </div>
+        @if (needsBike()) {
+          <div class="field">
+            <label>FTP (W)</label>
+            <input type="number" [(ngModel)]="profile.ftp" placeholder="250" min="50" max="500" />
+          </div>
+        }
+        @if (needsBike()) {
+          <div class="field">
+            <label>Weight (kg)</label>
+            <input type="number" [(ngModel)]="profile.weightKg" placeholder="75" min="30" max="200" />
+          </div>
+        }
+        @if (needsRun()) {
+          <div class="field">
+            <label>Threshold Pace (s/km)</label>
+            <input type="number" [(ngModel)]="profile.thresholdPaceSec" placeholder="270" min="120" max="600" />
+          </div>
+        }
+        @if (needsSwim()) {
+          <div class="field">
+            <label>Swim CSS (s/100m)</label>
+            <input type="number" [(ngModel)]="profile.swimCssSec" placeholder="95" min="40" max="200" />
+          </div>
+        }
       </div>
     </div>
 
@@ -142,58 +179,82 @@
     <div class="form-section">
       <div class="label-with-tooltip">
         <h3 class="subsection-title">Race Targets</h3>
-        <span class="tooltip-trigger" *ngIf="discipline === 'TRIATHLON'">?
-          <span class="tooltip-text tooltip-wide">
-            <strong>Triathlon Power Targets (%FTP)</strong>
-            <table class="tooltip-table">
-              <tr><th>Distance</th><th>Beginner</th><th>Interm.</th><th>Elite</th></tr>
-              <tr><td>Sprint (20km)</td><td>80–85%</td><td>90–95%</td><td>95–105%</td></tr>
-              <tr><td>Olympic (40km)</td><td>70–80%</td><td>82–88%</td><td>90–95%</td></tr>
-              <tr><td>70.3 (90km)</td><td>65–75%</td><td>78–84%</td><td>85–90%</td></tr>
-              <tr><td>Ironman (180km)</td><td>60–70%</td><td>70–78%</td><td>78–85%</td></tr>
-            </table>
+        @if (discipline === 'TRIATHLON') {
+          <span class="tooltip-trigger">?
+            <span class="tooltip-text tooltip-wide">
+              <strong>Triathlon Power Targets (%FTP)</strong>
+              <table class="tooltip-table">
+                <tr><th>Distance</th><th>Beginner</th><th>Interm.</th><th>Elite</th></tr>
+                <tr><td>Sprint (20km)</td><td>80–85%</td><td>90–95%</td><td>95–105%</td></tr>
+                <tr><td>Olympic (40km)</td><td>70–80%</td><td>82–88%</td><td>90–95%</td></tr>
+                <tr><td>70.3 (90km)</td><td>65–75%</td><td>78–84%</td><td>85–90%</td></tr>
+                <tr><td>Ironman (180km)</td><td>60–70%</td><td>70–78%</td><td>78–85%</td></tr>
+              </table>
+            </span>
           </span>
-        </span>
+        }
       </div>
       <div class="form-fields-row">
-        <div class="field" *ngIf="needsBike()">
-          <label>Target Power (%FTP)</label>
-          <input type="number" [ngModel]="targetPowerPct" (ngModelChange)="onTargetPowerPctChange($event)" placeholder="Auto" min="30" max="120" />
-          <span class="field-hint computed" *ngIf="computedPowerWatts() as w">= {{ w }}W</span>
-          <span class="field-hint" *ngIf="!targetPowerPct">Auto</span>
-        </div>
-        <div class="field" *ngIf="needsRun()">
-          <label>Target Pace (%Threshold)</label>
-          <input type="number" [ngModel]="targetPacePct" (ngModelChange)="onTargetPacePctChange($event)" placeholder="Auto" min="80" max="150" />
-          <span class="field-hint computed" *ngIf="computedPaceDisplay() as p">= {{ p }}</span>
-          <span class="field-hint" *ngIf="!targetPacePct">Auto</span>
-        </div>
-        <div class="field" *ngIf="needsSwim()">
-          <label>Swim Distance (m)</label>
-          <input type="number" [(ngModel)]="profile.swimDistanceM" placeholder="1900" min="100" max="10000" />
-        </div>
-        <div class="field" *ngIf="needsSwim() && (discipline === 'TRIATHLON' || profile.swimDistanceM)">
-          <label>Swim Pace (s/100m)</label>
-          <input type="number" [(ngModel)]="profile.targetSwimPaceSecPer100m" min="40" max="300" />
-          <span class="field-hint" *ngIf="!profile.targetSwimPaceSecPer100m">Auto</span>
-        </div>
+        @if (needsBike()) {
+          <div class="field">
+            <label>Target Power (%FTP)</label>
+            <input type="number" [ngModel]="targetPowerPct" (ngModelChange)="onTargetPowerPctChange($event)" placeholder="Auto" min="30" max="120" />
+            @if (computedPowerWatts() as w) {
+              <span class="field-hint computed">= {{ w }}W</span>
+            }
+            @if (!targetPowerPct) {
+              <span class="field-hint">Auto</span>
+            }
+          </div>
+        }
+        @if (needsRun()) {
+          <div class="field">
+            <label>Target Pace (%Threshold)</label>
+            <input type="number" [ngModel]="targetPacePct" (ngModelChange)="onTargetPacePctChange($event)" placeholder="Auto" min="80" max="150" />
+            @if (computedPaceDisplay() as p) {
+              <span class="field-hint computed">= {{ p }}</span>
+            }
+            @if (!targetPacePct) {
+              <span class="field-hint">Auto</span>
+            }
+          </div>
+        }
+        @if (needsSwim()) {
+          <div class="field">
+            <label>Swim Distance (m)</label>
+            <input type="number" [(ngModel)]="profile.swimDistanceM" placeholder="1900" min="100" max="10000" />
+          </div>
+        }
+        @if (needsSwim() && (discipline === 'TRIATHLON' || profile.swimDistanceM)) {
+          <div class="field">
+            <label>Swim Pace (s/100m)</label>
+            <input type="number" [(ngModel)]="profile.targetSwimPaceSecPer100m" min="40" max="300" />
+            @if (!profile.targetSwimPaceSecPer100m) {
+              <span class="field-hint">Auto</span>
+            }
+          </div>
+        }
       </div>
     </div>
 
     <!-- Row 5: Environment -->
-    <div class="form-section" *ngIf="needsBike() || needsRun()">
-      <h3 class="subsection-title">Environment</h3>
-      <div class="form-fields-row">
-        <div class="field">
-          <label>Temperature (°C)</label>
-          <input type="number" [(ngModel)]="profile.temperature" placeholder="20" min="-10" max="50" />
-        </div>
-        <div class="field" *ngIf="needsBike()">
-          <label>Wind Speed (m/s)</label>
-          <input type="number" [(ngModel)]="profile.windSpeed" placeholder="0" min="0" max="30" step="0.5" />
+    @if (needsBike() || needsRun()) {
+      <div class="form-section">
+        <h3 class="subsection-title">Environment</h3>
+        <div class="form-fields-row">
+          <div class="field">
+            <label>Temperature (°C)</label>
+            <input type="number" [(ngModel)]="profile.temperature" placeholder="20" min="-10" max="50" />
+          </div>
+          @if (needsBike()) {
+            <div class="field">
+              <label>Wind Speed (m/s)</label>
+              <input type="number" [(ngModel)]="profile.windSpeed" placeholder="0" min="0" max="30" step="0.5" />
+            </div>
+          }
         </div>
       </div>
-    </div>
+    }
 
     <!-- Row 6: Nutrition -->
     <div class="form-section">
@@ -212,45 +273,85 @@
     </div>
 
     <!-- Error + Actions -->
-    <div class="error-msg" *ngIf="localError$ | async as err">{{ err }}</div>
+    @if (localError$ | async; as err) {
+      <div class="error-msg">{{ err }}</div>
+    }
     <div class="form-actions">
       <button class="generate-btn" (click)="generate()" [disabled]="(loading$ | async) || !canGenerate()">
-        <span *ngIf="!(loading$ | async)">GENERATE PLAN</span>
-        <span *ngIf="loading$ | async">GENERATING...</span>
+        @if (!(loading$ | async)) {
+          <span>GENERATE PLAN</span>
+        }
+        @if (loading$ | async) {
+          <span>GENERATING...</span>
+        }
       </button>
-      <span class="generate-hint" *ngIf="getGenerateBlockedReason() as reason">{{ reason }}</span>
+      @if (getGenerateBlockedReason() as reason) {
+        <span class="generate-hint">{{ reason }}</span>
+      }
     </div>
   </div>
 
   <!-- Results View -->
-  <div class="results-view" *ngIf="pacingPlan$ | async as plan">
+  @if (pacingPlan$ | async; as plan) {
+    <div class="results-view">
     <!-- Compact Parameter Bar -->
     <div class="param-bar glass">
       <div class="param-chips">
-        <span class="param-chip" *ngIf="gpxFileName">{{ gpxFileName }}</span>
-        <span class="param-chip" *ngIf="bikeGpxFileName">Bike: {{ bikeGpxFileName }}</span>
-        <span class="param-chip" *ngIf="runGpxFileName">Run: {{ runGpxFileName }}</span>
-        <span class="param-chip" *ngIf="bikeLoops > 1 && needsBike()">{{ bikeLoops }} bike loops</span>
-        <span class="param-chip" *ngIf="runLoops > 1 && needsRun()">{{ runLoops }} run loops</span>
+        @if (gpxFileName) {
+          <span class="param-chip">{{ gpxFileName }}</span>
+        }
+        @if (bikeGpxFileName) {
+          <span class="param-chip">Bike: {{ bikeGpxFileName }}</span>
+        }
+        @if (runGpxFileName) {
+          <span class="param-chip">Run: {{ runGpxFileName }}</span>
+        }
+        @if (bikeLoops > 1 && needsBike()) {
+          <span class="param-chip">{{ bikeLoops }} bike loops</span>
+        }
+        @if (runLoops > 1 && needsRun()) {
+          <span class="param-chip">{{ runLoops }} run loops</span>
+        }
         <span class="param-chip">{{ discipline }}</span>
-        <span class="param-chip" *ngIf="needsBike() && profile.ftp">FTP {{ profile.ftp }}W</span>
-        <span class="param-chip" *ngIf="needsBike() && profile.weightKg">{{ profile.weightKg }}kg</span>
-        <span class="param-chip" *ngIf="needsBike() && targetPowerPct">Target {{ targetPowerPct }}% FTP ({{ computedPowerWatts() }}W)</span>
-        <span class="param-chip" *ngIf="needsRun() && targetPacePct">Pace {{ targetPacePct }}% ({{ computedPaceDisplay() }})</span>
-        <span class="param-chip" *ngIf="needsSwim() && profile.swimCssSec">CSS {{ profile.swimCssSec }}s/100m</span>
-        <span class="param-chip" *ngIf="needsBike() && profile.bikeType">{{ profile.bikeType }}</span>
-        <span class="param-chip" *ngIf="(needsBike() || needsRun()) && profile.temperature != null">{{ profile.temperature }}°C</span>
-        <span class="param-chip" *ngIf="needsBike() && profile.windSpeed">Wind {{ profile.windSpeed }}m/s</span>
+        @if (needsBike() && profile.ftp) {
+          <span class="param-chip">FTP {{ profile.ftp }}W</span>
+        }
+        @if (needsBike() && profile.weightKg) {
+          <span class="param-chip">{{ profile.weightKg }}kg</span>
+        }
+        @if (needsBike() && targetPowerPct) {
+          <span class="param-chip">Target {{ targetPowerPct }}% FTP ({{ computedPowerWatts() }}W)</span>
+        }
+        @if (needsRun() && targetPacePct) {
+          <span class="param-chip">Pace {{ targetPacePct }}% ({{ computedPaceDisplay() }})</span>
+        }
+        @if (needsSwim() && profile.swimCssSec) {
+          <span class="param-chip">CSS {{ profile.swimCssSec }}s/100m</span>
+        }
+        @if (needsBike() && profile.bikeType) {
+          <span class="param-chip">{{ profile.bikeType }}</span>
+        }
+        @if ((needsBike() || needsRun()) && profile.temperature != null) {
+          <span class="param-chip">{{ profile.temperature }}°C</span>
+        }
+        @if (needsBike() && profile.windSpeed) {
+          <span class="param-chip">Wind {{ profile.windSpeed }}m/s</span>
+        }
       </div>
       <div class="param-bar-right">
-        <div class="tab-row" *ngIf="getAvailableTabs(plan).length > 1">
-          <button class="tab-btn" *ngIf="plan.swimSummary"
-            [class.active]="activeTab === 'SWIM'" (click)="activeTab = 'SWIM'">Swim</button>
-          <button class="tab-btn" *ngIf="plan.bikeSegments"
-            [class.active]="activeTab === 'BIKE'" (click)="activeTab = 'BIKE'">Bike</button>
-          <button class="tab-btn" *ngIf="plan.runSegments"
-            [class.active]="activeTab === 'RUN'" (click)="activeTab = 'RUN'">Run</button>
-        </div>
+        @if (getAvailableTabs(plan).length > 1) {
+          <div class="tab-row">
+            @if (plan.swimSummary) {
+              <button class="tab-btn" [class.active]="activeTab === 'SWIM'" (click)="activeTab = 'SWIM'">Swim</button>
+            }
+            @if (plan.bikeSegments) {
+              <button class="tab-btn" [class.active]="activeTab === 'BIKE'" (click)="activeTab = 'BIKE'">Bike</button>
+            }
+            @if (plan.runSegments) {
+              <button class="tab-btn" [class.active]="activeTab === 'RUN'" (click)="activeTab = 'RUN'">Run</button>
+            }
+          </div>
+        }
         <div class="param-bar-actions">
           <button class="modify-btn" (click)="showSettingsModal = true">Modify</button>
           <button class="clear-btn" (click)="clearPlan()">Clear</button>
@@ -260,102 +361,129 @@
 
     <!-- Summary Cards -->
     <div class="summary-row">
-      <div class="summary-card glass" *ngIf="plan.swimSummary as ss">
-        <span class="summary-label swim">SWIM</span>
-        <div class="summary-body">
-          <div class="summary-stats">
-            <div class="stat">
-              <span class="stat-value">{{ formatDistance(ss.totalDistance) }}</span>
-              <span class="stat-label">Distance</span>
+      @if (plan.swimSummary as ss) {
+        <div class="summary-card glass">
+          <span class="summary-label swim">SWIM</span>
+          <div class="summary-body">
+            <div class="summary-stats">
+              <div class="stat">
+                <span class="stat-value">{{ formatDistance(ss.totalDistance) }}</span>
+                <span class="stat-label">Distance</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value">{{ formatTime(ss.estimatedTotalTime) }}</span>
+                <span class="stat-label">Est. Time</span>
+              </div>
+              @if (ss.averagePace) {
+                <div class="stat">
+                  <span class="stat-value">{{ ss.averagePace }}</span>
+                  <span class="stat-label">Pace /100m</span>
+                </div>
+              }
             </div>
-            <div class="stat">
-              <span class="stat-value">{{ formatTime(ss.estimatedTotalTime) }}</span>
-              <span class="stat-label">Est. Time</span>
-            </div>
-            <div class="stat" *ngIf="ss.averagePace">
-              <span class="stat-value">{{ ss.averagePace }}</span>
-              <span class="stat-label">Pace /100m</span>
-            </div>
+            @if (ss.targetBasis) {
+              <div class="target-basis">{{ ss.targetBasis }}</div>
+            }
           </div>
-          <div class="target-basis" *ngIf="ss.targetBasis">{{ ss.targetBasis }}</div>
         </div>
-      </div>
+      }
 
-      <div class="summary-card glass" *ngIf="plan.bikeSummary as bs">
-        <span class="summary-label">BIKE</span>
-        <div class="summary-body">
-          <div class="summary-stats">
-            <div class="stat">
-              <span class="stat-value">{{ formatDistance(bs.totalDistance) }}</span>
-              <span class="stat-label">Distance</span>
+      @if (plan.bikeSummary as bs) {
+        <div class="summary-card glass">
+          <span class="summary-label">BIKE</span>
+          <div class="summary-body">
+            <div class="summary-stats">
+              <div class="stat">
+                <span class="stat-value">{{ formatDistance(bs.totalDistance) }}</span>
+                <span class="stat-label">Distance</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value">{{ formatTime(bs.estimatedTotalTime) }}</span>
+                <span class="stat-label">Est. Time</span>
+              </div>
+              @if (!bikeShowSpeed && bs.averagePower) {
+                <div class="stat">
+                  <span class="stat-value">{{ bs.averagePower }}W</span>
+                  <span class="stat-label">Avg Power</span>
+                </div>
+              }
+              @if (bikeShowSpeed && bs.estimatedTotalTime > 0) {
+                <div class="stat">
+                  <span class="stat-value">{{ (bs.totalDistance / bs.estimatedTotalTime * 3.6).toFixed(1) }} km/h</span>
+                  <span class="stat-label">Avg Speed</span>
+                </div>
+              }
+              <div class="stat">
+                <span class="stat-value">{{ bs.totalCalories }}</span>
+                <span class="stat-label">Calories</span>
+              </div>
             </div>
-            <div class="stat">
-              <span class="stat-value">{{ formatTime(bs.estimatedTotalTime) }}</span>
-              <span class="stat-label">Est. Time</span>
+            <div class="summary-footer">
+              <div class="summary-texts">
+                @if (bs.nutritionPlan) {
+                  <div class="nutrition-plan">{{ bs.nutritionPlan }}</div>
+                }
+                @if (bs.targetBasis) {
+                  <div class="target-basis">{{ bs.targetBasis }}</div>
+                }
+              </div>
+              @if (!bikeShowSpeed) {
+                <button class="metric-toggle" (click)="showGroupMean = !showGroupMean"
+                  [title]="showGroupMean ? 'Show per-segment power' : 'Show group mean power'">
+                  <span class="metric-toggle-label" [class.active]="!showGroupMean">Seg</span>
+                  <span class="metric-toggle-divider">/</span>
+                  <span class="metric-toggle-label" [class.active]="showGroupMean">Group</span>
+                </button>
+              }
+              <button class="metric-toggle" (click)="bikeShowSpeed = !bikeShowSpeed"
+                [title]="bikeShowSpeed ? 'Switch to Power' : 'Switch to Speed'">
+                <span class="metric-toggle-label" [class.active]="!bikeShowSpeed">W</span>
+                <span class="metric-toggle-divider">/</span>
+                <span class="metric-toggle-label" [class.active]="bikeShowSpeed">km/h</span>
+              </button>
             </div>
-            <div class="stat" *ngIf="!bikeShowSpeed && bs.averagePower">
-              <span class="stat-value">{{ bs.averagePower }}W</span>
-              <span class="stat-label">Avg Power</span>
-            </div>
-            <div class="stat" *ngIf="bikeShowSpeed && bs.estimatedTotalTime > 0">
-              <span class="stat-value">{{ (bs.totalDistance / bs.estimatedTotalTime * 3.6).toFixed(1) }} km/h</span>
-              <span class="stat-label">Avg Speed</span>
-            </div>
-            <div class="stat">
-              <span class="stat-value">{{ bs.totalCalories }}</span>
-              <span class="stat-label">Calories</span>
-            </div>
-          </div>
-          <div class="summary-footer">
-            <div class="summary-texts">
-              <div class="nutrition-plan" *ngIf="bs.nutritionPlan">{{ bs.nutritionPlan }}</div>
-              <div class="target-basis" *ngIf="bs.targetBasis">{{ bs.targetBasis }}</div>
-            </div>
-            <button class="metric-toggle" *ngIf="!bikeShowSpeed" (click)="showGroupMean = !showGroupMean"
-              [title]="showGroupMean ? 'Show per-segment power' : 'Show group mean power'">
-              <span class="metric-toggle-label" [class.active]="!showGroupMean">Seg</span>
-              <span class="metric-toggle-divider">/</span>
-              <span class="metric-toggle-label" [class.active]="showGroupMean">Group</span>
-            </button>
-            <button class="metric-toggle" (click)="bikeShowSpeed = !bikeShowSpeed"
-              [title]="bikeShowSpeed ? 'Switch to Power' : 'Switch to Speed'">
-              <span class="metric-toggle-label" [class.active]="!bikeShowSpeed">W</span>
-              <span class="metric-toggle-divider">/</span>
-              <span class="metric-toggle-label" [class.active]="bikeShowSpeed">km/h</span>
-            </button>
           </div>
         </div>
-      </div>
+      }
 
-      <div class="summary-card glass" *ngIf="plan.runSummary as rs">
-        <span class="summary-label run">RUN</span>
-        <div class="summary-body">
-          <div class="summary-stats">
-            <div class="stat">
-              <span class="stat-value">{{ formatDistance(rs.totalDistance) }}</span>
-              <span class="stat-label">Distance</span>
+      @if (plan.runSummary as rs) {
+        <div class="summary-card glass">
+          <span class="summary-label run">RUN</span>
+          <div class="summary-body">
+            <div class="summary-stats">
+              <div class="stat">
+                <span class="stat-value">{{ formatDistance(rs.totalDistance) }}</span>
+                <span class="stat-label">Distance</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value">{{ formatTime(rs.estimatedTotalTime) }}</span>
+                <span class="stat-label">Est. Time</span>
+              </div>
+              @if (rs.averagePace) {
+                <div class="stat">
+                  <span class="stat-value">{{ rs.averagePace }}</span>
+                  <span class="stat-label">Avg Pace</span>
+                </div>
+              }
+              <div class="stat">
+                <span class="stat-value">{{ rs.totalCalories }}</span>
+                <span class="stat-label">Calories</span>
+              </div>
             </div>
-            <div class="stat">
-              <span class="stat-value">{{ formatTime(rs.estimatedTotalTime) }}</span>
-              <span class="stat-label">Est. Time</span>
-            </div>
-            <div class="stat" *ngIf="rs.averagePace">
-              <span class="stat-value">{{ rs.averagePace }}</span>
-              <span class="stat-label">Avg Pace</span>
-            </div>
-            <div class="stat">
-              <span class="stat-value">{{ rs.totalCalories }}</span>
-              <span class="stat-label">Calories</span>
-            </div>
+            @if (rs.nutritionPlan) {
+              <div class="nutrition-plan">{{ rs.nutritionPlan }}</div>
+            }
+            @if (rs.targetBasis) {
+              <div class="target-basis">{{ rs.targetBasis }}</div>
+            }
           </div>
-          <div class="nutrition-plan" *ngIf="rs.nutritionPlan">{{ rs.nutritionPlan }}</div>
-          <div class="target-basis" *ngIf="rs.targetBasis">{{ rs.targetBasis }}</div>
         </div>
-      </div>
+      }
     </div>
 
     <!-- Main content: two-column for BIKE/RUN -->
-    <div class="main-panel" *ngIf="activeTab !== 'SWIM'">
+    @if (activeTab !== 'SWIM') {
+      <div class="main-panel">
       <div class="map-column glass">
         <app-route-map
           *ngIf="getActiveRouteCoordinates(plan)?.length"
