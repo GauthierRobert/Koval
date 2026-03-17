@@ -5,66 +5,85 @@
       <h3>ATHLETES</h3>
     </div>
 
-    <ng-container *ngIf="allTags$ | async as tags">
-      <div class="tag-filters" *ngIf="tags.length > 0">
-        <span class="tag-filter-chip" [class.active]="!activeTagFilter && !activeClubFilter" (click)="setTagFilter(null); setClubFilter(null)">All ({{
-          (athletes$ | async)?.length || 0 }})</span>
-        <span *ngFor="let tag of tags; trackBy: trackTagByName" class="tag-filter-chip" [class.active]="activeTagFilter === tag.name"
-          (click)="toggleTagFilter(tag.name)">{{ tag.name }} ({{ getTagCount(tag.name) }})</span>
-      </div>
-    </ng-container>
-
-    <ng-container *ngIf="clubRoles$ | async as clubRoles">
-      <div class="club-filters" *ngIf="clubRoles.length > 0">
-        <div class="filter-section-label">CLUBS</div>
+    @if (allTags$ | async; as tags) {
+      @if (tags.length > 0) {
         <div class="tag-filters">
-          <span *ngFor="let entry of clubRoles" class="tag-filter-chip"
-            [class.active]="activeClubFilter === entry.clubName"
-            (click)="toggleClubFilter(entry.clubName)">
-            {{ entry.clubName }} ({{ getClubCount(entry.clubName) }})
-          </span>
+          <span class="tag-filter-chip" [class.active]="!activeTagFilter && !activeClubFilter" (click)="setTagFilter(null); setClubFilter(null)">All ({{
+            (athletes$ | async)?.length || 0 }})</span>
+          @for (tag of tags; track trackTagByName(tag)) {
+            <span class="tag-filter-chip" [class.active]="activeTagFilter === tag.name"
+              (click)="toggleTagFilter(tag.name)">{{ tag.name }} ({{ getTagCount(tag.name) }})</span>
+          }
         </div>
-      </div>
-    </ng-container>
+      }
+    }
 
-    <ng-container *ngIf="filteredAthletes$ | async as filtered">
-      <div class="athletes" *ngIf="filtered.length > 0">
-        <div *ngFor="let athlete of filtered; trackBy: trackAthleteById" class="athlete-row"
-          [class.selected]="selectedAthlete?.id === athlete.id" (click)="selectAthlete(athlete)">
-          <div class="info">
-            <div class="info-header">
-              <span class="name">{{ athlete.displayName }}</span>
-              <div class="tag-chips" *ngIf="(athlete.groups && athlete.groups.length > 0) || (athlete.clubs && athlete.clubs.length > 0)">
-                <span *ngFor="let tag of athlete.groups || []; trackBy: trackByValue" class="chip tag">{{ tag }}</span>
-                <span *ngFor="let club of athlete.clubs || []; trackBy: trackByValue" class="chip club">{{ club }}</span>
-              </div>
-            </div>
-
-            <!-- Task 7: Real mini-metrics from athlete PMC data or dashes -->
-            <ng-container *ngIf="selectedAthlete?.id === athlete.id && (athleteMetrics$ | async) as m; else dashMetrics">
-              <div class="mini-metrics">
-                <span class="chip fitness">C: {{ m.ctl | number:'1.0-0' }}</span>
-                <span class="chip fatigue">A: {{ m.atl | number:'1.0-0' }}</span>
-                <span class="chip form" [class.positive]="m.tsb > 0">F: {{ m.tsb > 0 ? '+' : '' }}{{ m.tsb | number:'1.0-0' }}</span>
-              </div>
-            </ng-container>
-            <ng-template #dashMetrics>
-              <div class="mini-metrics">
-                <span class="chip fitness">C: —</span>
-                <span class="chip fatigue">A: —</span>
-                <span class="chip form">F: —</span>
-              </div>
-            </ng-template>
+    @if (clubRoles$ | async; as clubRoles) {
+      @if (clubRoles.length > 0) {
+        <div class="club-filters">
+          <div class="filter-section-label">CLUBS</div>
+          <div class="tag-filters">
+            @for (entry of clubRoles; track entry) {
+              <span class="tag-filter-chip"
+                [class.active]="activeClubFilter === entry.clubName"
+                (click)="toggleClubFilter(entry.clubName)">
+                {{ entry.clubName }} ({{ getClubCount(entry.clubName) }})
+              </span>
+            }
           </div>
         </div>
-      </div>
-      <div class="empty-athletes" *ngIf="filtered.length === 0 && activeTagFilter">
-        No athletes with tag "{{ activeTagFilter }}"
-      </div>
-      <div class="empty-athletes" *ngIf="filtered.length === 0 && !activeTagFilter && (allTags$ | async)?.length">
-        No athletes registered yet
-      </div>
-    </ng-container>
+      }
+    }
+
+    @if (filteredAthletes$ | async; as filtered) {
+      @if (filtered.length > 0) {
+        <div class="athletes">
+          @for (athlete of filtered; track trackAthleteById(athlete)) {
+            <div class="athlete-row"
+          [class.selected]="selectedAthlete?.id === athlete.id" (click)="selectAthlete(athlete)">
+          <div class="info">
+              <div class="info-header">
+                <span class="name">{{ athlete.displayName }}</span>
+                @if ((athlete.groups && athlete.groups.length > 0) || (athlete.clubs && athlete.clubs.length > 0)) {
+                  <div class="tag-chips">
+                    @for (tag of athlete.groups || []; track trackByValue(tag)) {
+                      <span class="chip tag">{{ tag }}</span>
+                    }
+                    @for (club of athlete.clubs || []; track trackByValue(club)) {
+                      <span class="chip club">{{ club }}</span>
+                    }
+                  </div>
+                }
+              </div>
+
+              @if (selectedAthlete?.id === athlete.id && (athleteMetrics$ | async); as m) {
+                <div class="mini-metrics">
+                  <span class="chip fitness">C: {{ m.ctl | number:'1.0-0' }}</span>
+                  <span class="chip fatigue">A: {{ m.atl | number:'1.0-0' }}</span>
+                  <span class="chip form" [class.positive]="m.tsb > 0">F: {{ m.tsb > 0 ? '+' : '' }}{{ m.tsb | number:'1.0-0' }}</span>
+                </div>
+              } @else {
+                <div class="mini-metrics">
+                  <span class="chip fitness">C: —</span>
+                  <span class="chip fatigue">A: —</span>
+                  <span class="chip form">F: —</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+      @if (filtered.length === 0 && activeTagFilter) {
+        <div class="empty-athletes">
+          No athletes with tag "{{ activeTagFilter }}"
+        </div>
+      }
+      @if (filtered.length === 0 && !activeTagFilter && (allTags$ | async)?.length) {
+        <div class="empty-athletes">
+          No athletes registered yet
+        </div>
+      }
+    }
   </div>
 
   <!-- Right area: always visible, contains header + tabs -->

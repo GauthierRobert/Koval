@@ -87,7 +87,9 @@
         Values left empty will show as "not set" — zones and metrics requiring them won't be displayed until you add them in Settings.
       </div>
 
-      <div class="error-msg" *ngIf="error">{{ error }}</div>
+      @if (error) {
+        <div class="error-msg">{{ error }}</div>
+      }
 
       <button type="submit" class="submit-btn" [disabled]="saving">
         {{ saving ? 'SAVING...' : 'GET STARTED' }}

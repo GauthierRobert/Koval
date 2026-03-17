@@ -36,40 +36,43 @@
             [style.border-left]="'2px solid #34d399'">
             <app-sport-icon [sport]="entry.scheduled.sportType" [size]="10"></app-sport-icon>
             <span class="mini-title">{{ entry.scheduled.trainingTitle || 'Workout' }}</span>
-            <span class="mini-tss">{{ entry.session.tss || 0 }}</span>
-          </div>
+              <span class="mini-tss">{{ entry.session.tss || 0 }}</span>
+            </div>
+            }
 
-          <!-- Standalone session mini-card -->
-          <div *ngIf="entry.kind === 'standalone'" class="mini-card mini-card--session"
+            @if (entry.kind === 'standalone') {
+              <div class="mini-card mini-card--session"
             (click)="sessionSelected.emit(entry.session)"
             style="border-left: 2px solid #0891b2">
             <app-sport-icon [sport]="entry.session.sportType" [size]="10"></app-sport-icon>
             <span class="mini-title">{{ entry.session.title }}</span>
-            <span class="mini-tss">{{ entry.session.tss || 0 }}</span>
-          </div>
+              <span class="mini-tss">{{ entry.session.tss || 0 }}</span>
+            </div>
+            }
 
-          <!-- Club session mini-card -->
-          <div *ngIf="entry.kind === 'club-session'" class="mini-card mini-card--club-session"
+            @if (entry.kind === 'club-session') {
+              <div class="mini-card mini-card--club-session"
             [class.not-joined]="!entry.clubSession.joined && !entry.clubSession.onWaitingList"
             style="border-left: 2px solid #a78bfa">
             <app-sport-icon [sport]="$any(entry.clubSession.sport)" [size]="10"></app-sport-icon>
             <span class="mini-title">{{ entry.clubSession.title }}</span>
-            <span class="mini-club-name">{{ entry.clubSession.clubName }}</span>
-          </div>
+              <span class="mini-club-name">{{ entry.clubSession.clubName }}</span>
+            </div>
+            }
 
-        </ng-container>
+          }
 
-        <!-- Goal pills -->
-        <ng-container *ngFor="let goal of goalsByDay.get(day.key) || []">
-          <div class="goal-pill" [style.background-color]="getPriorityColor(goal.priority) + '22'"
-            [style.border-color]="getPriorityColor(goal.priority) + '66'"
-            [title]="goal.title">
-            <app-sport-icon [sport]="$any(goal.sport)" [size]="12"></app-sport-icon>
-            <span class="goal-pill-title">{{ goal.title }}</span>
-            <span class="goal-pill-priority" [style.color]="getPriorityColor(goal.priority)">{{ goal.priority }}</span>
-          </div>
-        </ng-container>
+          @for (goal of goalsByDay.get(day.key) || []; track goal) {
+            <div class="goal-pill" [style.background-color]="getPriorityColor(goal.priority) + '22'"
+              [style.border-color]="getPriorityColor(goal.priority) + '66'"
+              [title]="goal.title">
+              <app-sport-icon [sport]="$any(goal.sport)" [size]="12"></app-sport-icon>
+              <span class="goal-pill-title">{{ goal.title }}</span>
+              <span class="goal-pill-priority" [style.color]="getPriorityColor(goal.priority)">{{ goal.priority }}</span>
+            </div>
+          }
+        </div>
       </div>
-    </div>
+    }
   </div>
 </div>
