@@ -1,17 +1,20 @@
 <div class="feed-tab">
-  <ng-container *ngIf="feed$ | async as feed">
-    <div class="feed-list" *ngIf="feed.length > 0; else emptyFeed">
-      <div *ngFor="let activity of feed" class="feed-item">
-        <span class="feed-dot" [style.background]="getActivityColor(activity.type)"></span>
-        <span class="feed-text">{{ getActivityText(activity.type, activity.actorName || activity.actorId, activity.targetTitle) }}</span>
-        <span class="feed-time">{{ formatDate(activity.occurredAt) }}</span>
+  @if (feed$ | async; as feed) {
+    @if (feed.length > 0) {
+      <div class="feed-list">
+        @for (let activity of feed; track activity) {
+          <div class="feed-item">
+            <span class="feed-dot" [style.background]="getActivityColor(activity.type)"></span>
+            <span class="feed-text">{{ getActivityText(activity.type, activity.actorName || activity.actorId, activity.targetTitle) }}</span>
+            <span class="feed-time">{{ formatDate(activity.occurredAt) }}</span>
+          </div>
+        }
       </div>
-    </div>
-    <ng-template #emptyFeed>
+    } @else {
       <div class="empty-tab">
         <span>📭</span>
         <p>No activity yet. Be the first to do something!</p>
       </div>
-    </ng-template>
-  </ng-container>
+    }
+  }
 </div>

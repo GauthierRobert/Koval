@@ -1,117 +1,156 @@
 <div class="members-tab">
-  <ng-container *ngIf="tags$ | async as allTags">
+  @if (tags$ | async; as allTags) {
 
     <!-- Group Management (coach/admin/owner) -->
-    <ng-container *ngIf="canManageGroups">
+    @if (canManageGroups) {
       <h4 class="section-title">Groups</h4>
       <div class="tag-panel">
-        <div class="group-cards" *ngIf="allTags.length > 0">
-          <div class="group-card" *ngFor="let tag of allTags">
-            <div class="group-card-header">
-              <span class="group-card-name">{{ tag.name }}</span>
-              <span class="group-card-count">{{ tag.memberIds.length }} members</span>
-              <button class="assign-training-btn" *ngIf="canAssign" (click)="assignToClubGroup(tag)">ASSIGN TRAINING</button>
-              <button class="tag-delete" *ngIf="isAdmin" (click)="deleteTag(tag.id)">×</button>
-            </div>
+        @if (allTags.length > 0) {
+          <div class="group-cards">
+            @for (let tag of allTags; track tag.id) {
+              <div class="group-card">
+                <div class="group-card-header">
+                  <span class="group-card-name">{{ tag.name }}</span>
+                  <span class="group-card-count">{{ tag.memberIds.length }} members</span>
+                  @if (canAssign) {
+                    <button class="assign-training-btn" (click)="assignToClubGroup(tag)">ASSIGN TRAINING</button>
+                  }
+                  @if (isAdmin) {
+                    <button class="tag-delete" (click)="deleteTag(tag.id)">×</button>
+                  }
+                </div>
+              </div>
+            }
           </div>
-        </div>
-        <span class="no-tags" *ngIf="allTags.length === 0">No groups yet.</span>
-        <div class="tag-create-row" *ngIf="isAdmin">
-          <input class="tag-input" [(ngModel)]="newTagName" placeholder="Group name…" (keyup.enter)="createTag()" />
-          <button class="btn-small" (click)="createTag()">Add</button>
-        </div>
+        }
+        @if (allTags.length === 0) {
+          <span class="no-tags">No groups yet.</span>
+        }
+        @if (isAdmin) {
+          <div class="tag-create-row">
+            <input class="tag-input" [(ngModel)]="newTagName" placeholder="Group name…" (keyup.enter)="createTag()" />
+            <button class="btn-small" (click)="createTag()">Add</button>
+          </div>
+        }
       </div>
-    </ng-container>
+    }
 
     <!-- Pending Requests (admin/owner only) -->
-    <ng-container *ngIf="isAdmin">
-      <ng-container *ngIf="pending$ | async as pending">
-        <div class="pending-section" *ngIf="pending.length > 0">
-          <h4 class="section-title">Pending Requests <span class="badge-count">{{ pending.length }}</span></h4>
-          <div class="member-list">
-            <div *ngFor="let m of pending" class="member-row glass">
-              <img class="avatar" *ngIf="m.profilePicture" [src]="m.profilePicture" alt="avatar" />
-              <div class="avatar-placeholder" *ngIf="!m.profilePicture">{{ (m.displayName || '?').charAt(0).toUpperCase() }}</div>
-              <div class="member-info">
-                <span class="member-name">{{ m.displayName || m.userId }}</span>
-                <span class="member-date">Requested {{ formatDate(m.joinedAt) }}</span>
-              </div>
-              <div class="member-actions">
-                <button class="btn-approve" (click)="approve(m.membershipId)">APPROVE</button>
-                <button class="btn-reject" (click)="reject(m.membershipId)">REJECT</button>
-              </div>
+    @if (isAdmin) {
+      @if (pending$ | async; as pending) {
+        @if (pending.length > 0) {
+          <div class="pending-section">
+            <h4 class="section-title">Pending Requests <span class="badge-count">{{ pending.length }}</span></h4>
+            <div class="member-list">
+              @for (let m of pending; track m.membershipId) {
+                <div class="member-row glass">
+                  @if (m.profilePicture) {
+                    <img class="avatar" [src]="m.profilePicture" alt="avatar" />
+                  }
+                  @if (!m.profilePicture) {
+                    <div class="avatar-placeholder">{{ (m.displayName || '?').charAt(0).toUpperCase() }}</div>
+                  }
+                  <div class="member-info">
+                    <span class="member-name">{{ m.displayName || m.userId }}</span>
+                    <span class="member-date">Requested {{ formatDate(m.joinedAt) }}</span>
+                  </div>
+                  <div class="member-actions">
+                    <button class="btn-approve" (click)="approve(m.membershipId)">APPROVE</button>
+                    <button class="btn-reject" (click)="reject(m.membershipId)">REJECT</button>
+                  </div>
+                </div>
+              }
             </div>
           </div>
-        </div>
-      </ng-container>
-    </ng-container>
+        }
+      }
+    }
 
     <!-- Active Members -->
-    <ng-container *ngIf="members$ | async as members">
+    @if (members$ | async; as members) {
       <div class="members-header-row">
         <h4 class="section-title">Members</h4>
-        <button class="assign-all-btn" *ngIf="canAssign && members.length > 0" (click)="assignToAllMembers(members)">ASSIGN TO ALL</button>
+        @if (canAssign && members.length > 0) {
+          <button class="assign-all-btn" (click)="assignToAllMembers(members)">ASSIGN TO ALL</button>
+        }
       </div>
-      <div class="member-list" *ngIf="members.length > 0; else emptyMembers">
-        <div *ngFor="let m of members" class="member-row glass">
-          <img class="avatar" *ngIf="m.profilePicture" [src]="m.profilePicture" alt="avatar" />
-          <div class="avatar-placeholder" *ngIf="!m.profilePicture">{{ (m.displayName || '?').charAt(0).toUpperCase() }}</div>
+      @if (members.length > 0) {
+        <div class="member-list">
+          @for (let m of members; track m.userId) {
+            <div class="member-row glass">
+              @if (m.profilePicture) {
+                <img class="avatar" [src]="m.profilePicture" alt="avatar" />
+              }
+              @if (!m.profilePicture) {
+                <div class="avatar-placeholder">{{ (m.displayName || '?').charAt(0).toUpperCase() }}</div>
+              }
 
-          <div class="member-info">
-            <span class="member-name">{{ m.displayName || m.userId }}</span>
-            <span class="member-date">Joined {{ formatDate(m.joinedAt) }}</span>
-            <!-- Tag badges -->
-            <div class="member-tags" *ngIf="(m.tags || []).length > 0">
-              <span class="club-tag small" *ngFor="let tagName of (m.tags || [])">
-                {{ tagName }}
-                <button
-                  class="tag-remove-tiny"
-                  *ngIf="isAdmin"
-                  (click)="removeFromTag(getTagIdByName(tagName, allTags), m.userId)"
-                  title="Remove tag"
-                >×</button>
-              </span>
+              <div class="member-info">
+                <span class="member-name">{{ m.displayName || m.userId }}</span>
+                <span class="member-date">Joined {{ formatDate(m.joinedAt) }}</span>
+                <!-- Tag badges -->
+                @if ((m.tags || []).length > 0) {
+                  <div class="member-tags">
+                    @for (let tagName of (m.tags || []); track tagName) {
+                      <span class="club-tag small">
+                        {{ tagName }}
+                        @if (isAdmin) {
+                          <button
+                            class="tag-remove-tiny"
+                            (click)="removeFromTag(getTagIdByName(tagName, allTags), m.userId)"
+                            title="Remove tag"
+                          >×</button>
+                        }
+                      </span>
+                    }
+                  </div>
+                }
+              </div>
+
+              <div class="member-right">
+                <!-- Role select (owner or admin for non-owner/non-admin members) or badge -->
+                @if (canChangeRole(m.role)) {
+                  <select
+                    class="role-select"
+                    [value]="m.role"
+                    (change)="changeRole(m.membershipId, $any($event.target).value)"
+                  >
+                    @for (let r of getAvailableRoles(); track r) {
+                      <option [value]="r">{{ r }}</option>
+                    }
+                  </select>
+                } @else {
+                  <span class="role-badge" [class]="getRoleBadgeClass(m.role)">{{ m.role }}</span>
+                }
+
+                <!-- Tag assignment dropdown (admin/owner only) -->
+                @if (isAdmin) {
+                  @if (getAvailableTags(m, allTags).length > 0) {
+                    <select
+                      class="tag-select"
+                      (change)="addToTag($any($event.target).value, m.userId); $any($event.target).value = ''"
+                    >
+                      <option value="">+ Tag</option>
+                      @for (let tag of getAvailableTags(m, allTags); track tag.id) {
+                        <option [value]="tag.id">{{ tag.name }}</option>
+                      }
+                    </select>
+                  }
+                }
+              </div>
             </div>
-          </div>
-
-          <div class="member-right">
-            <!-- Role select (owner or admin for non-owner/non-admin members) or badge -->
-            <ng-container *ngIf="canChangeRole(m.role); else roleBadgeOnly">
-              <select
-                class="role-select"
-                [value]="m.role"
-                (change)="changeRole(m.membershipId, $any($event.target).value)"
-              >
-                <option *ngFor="let r of getAvailableRoles()" [value]="r">{{ r }}</option>
-              </select>
-            </ng-container>
-            <ng-template #roleBadgeOnly>
-              <span class="role-badge" [class]="getRoleBadgeClass(m.role)">{{ m.role }}</span>
-            </ng-template>
-
-            <!-- Tag assignment dropdown (admin/owner only) -->
-            <ng-container *ngIf="isAdmin">
-              <select
-                class="tag-select"
-                *ngIf="getAvailableTags(m, allTags).length > 0"
-                (change)="addToTag($any($event.target).value, m.userId); $any($event.target).value = ''"
-              >
-                <option value="">+ Tag</option>
-                <option *ngFor="let tag of getAvailableTags(m, allTags)" [value]="tag.id">{{ tag.name }}</option>
-              </select>
-            </ng-container>
-          </div>
+          }
         </div>
-      </div>
-      <ng-template #emptyMembers>
+      } @else {
         <div class="empty-tab">
           <span>👥</span>
           <p>No members yet.</p>
         </div>
-      </ng-template>
-    </ng-container>
+      }
+    }
 
-  </ng-container>
+  }
+</div>
 
   <app-schedule-modal
     [isOpen]="isScheduleModalOpen"

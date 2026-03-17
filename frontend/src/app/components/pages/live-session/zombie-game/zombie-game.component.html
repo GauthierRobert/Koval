@@ -25,9 +25,11 @@
         </div>
       </div>
 
-      <div class="game-overlay" *ngIf="lives === 0">
-        <h2>GAME OVER</h2>
-        <p>Stay focused on the workout!</p>
-        <button (click)="closeGame()">RETURN TO DASHBOARD</button>
-      </div>
+      @if (lives === 0) {
+        <div class="game-overlay">
+          <h2>GAME OVER</h2>
+          <p>Stay focused on the workout!</p>
+          <button (click)="closeGame()">RETURN TO DASHBOARD</button>
+        </div>
+      }
     </div>

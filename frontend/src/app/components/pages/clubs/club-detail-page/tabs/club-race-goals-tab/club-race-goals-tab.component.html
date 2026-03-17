@@ -1,46 +1,57 @@
 <div class="race-goals-tab">
-  <ng-container *ngIf="raceGoals$ | async as raceGoals">
-    <div *ngIf="raceGoals.length > 0; else emptyGoals">
+  @if (raceGoals$ | async; as raceGoals) {
+    @if (raceGoals.length > 0) {
       <h4 class="section-title">Upcoming Races</h4>
       <div class="goals-list">
-        <div class="goal-row glass" *ngFor="let item of raceGoals">
-          <div class="goal-priority-dot" [style.background-color]="getPriorityColor(item.goal.priority)"></div>
-          <div class="goal-info">
-            <span class="goal-title">{{ item.goal.title }}</span>
-            <div class="goal-meta">
-              <span>{{ item.goal.sport }}</span>
-              <span>{{ formatDate(item.goal.raceDate) }}</span>
-              <span *ngIf="item.goal.distance">{{ item.goal.distance }}</span>
-              <span class="days-badge" [class.soon]="daysUntil(item.goal.raceDate) <= 30">
-                {{ daysUntil(item.goal.raceDate) }}d to go
-              </span>
-            </div>
-            <div class="participants-row" *ngIf="item.participants.length > 0">
-              <div class="participant-avatars">
-                <ng-container *ngFor="let p of item.participants">
-                  <img *ngIf="p.profilePicture" [src]="p.profilePicture" [title]="p.displayName" class="participant-avatar" />
-                  <span *ngIf="!p.profilePicture" class="participant-avatar-placeholder" [title]="p.displayName">
-                    {{ p.displayName.charAt(0) }}
-                  </span>
-                </ng-container>
+        @for (let item of raceGoals; track item) {
+          <div class="goal-row glass">
+            <div class="goal-priority-dot" [style.background-color]="getPriorityColor(item.goal.priority)"></div>
+            <div class="goal-info">
+              <span class="goal-title">{{ item.goal.title }}</span>
+              <div class="goal-meta">
+                <span>{{ item.goal.sport }}</span>
+                <span>{{ formatDate(item.goal.raceDate) }}</span>
+                @if (item.goal.distance) {
+                  <span>{{ item.goal.distance }}</span>
+                }
+                <span class="days-badge" [class.soon]="daysUntil(item.goal.raceDate) <= 30">
+                  {{ daysUntil(item.goal.raceDate) }}d to go
+                </span>
               </div>
-              <span class="participants-label">{{ item.participants.length }} also racing</span>
+              @if (item.participants.length > 0) {
+                <div class="participants-row">
+                  <div class="participant-avatars">
+                    @for (let p of item.participants; track p) {
+                      @if (p.profilePicture) {
+                        <img [src]="p.profilePicture" [title]="p.displayName" class="participant-avatar" />
+                      }
+                      @if (!p.profilePicture) {
+                        <span class="participant-avatar-placeholder" [title]="p.displayName">
+                          {{ p.displayName.charAt(0) }}
+                        </span>
+                      }
+                    }
+                  </div>
+                  <span class="participants-label">{{ item.participants.length }} also racing</span>
+                </div>
+              }
             </div>
+            @if (item.hasUpcomingClubSession) {
+              <span class="session-indicator" title="Club session near this race">📅</span>
+            }
+            <span class="priority-badge"
+              [style.color]="getPriorityColor(item.goal.priority)"
+              [style.border-color]="getPriorityColor(item.goal.priority) + '44'">
+              {{ item.goal.priority }}
+            </span>
           </div>
-          <span class="session-indicator" *ngIf="item.hasUpcomingClubSession" title="Club session near this race">📅</span>
-          <span class="priority-badge"
-            [style.color]="getPriorityColor(item.goal.priority)"
-            [style.border-color]="getPriorityColor(item.goal.priority) + '44'">
-            {{ item.goal.priority }}
-          </span>
-        </div>
+        }
       </div>
-    </div>
-    <ng-template #emptyGoals>
+    } @else {
       <div class="empty-tab">
         <span>🏁</span>
         <p>No race goals from club members yet.</p>
       </div>
-    </ng-template>
-  </ng-container>
+    }
+  }
 </div>

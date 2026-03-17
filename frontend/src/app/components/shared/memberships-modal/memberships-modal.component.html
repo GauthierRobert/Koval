@@ -17,13 +17,14 @@
             (keydown.enter)="redeemCode()" />
           <button class="btn-primary" (click)="redeemCode()" [disabled]="!inviteCode.trim()">JOIN</button>
         </div>
-        <div
-          class="message"
-          *ngIf="message$ | async as msg"
-          [class.success]="(messageType$ | async) === 'success'"
-          [class.error]="(messageType$ | async) === 'error'">
-          {{ msg }}
-        </div>
+        @if (message$ | async; as msg) {
+          <div
+            class="message"
+            [class.success]="(messageType$ | async) === 'success'"
+            [class.error]="(messageType$ | async) === 'error'">
+            {{ msg }}
+          </div>
+        }
       </div>
 
       <!-- Clubs section -->

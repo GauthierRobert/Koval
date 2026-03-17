@@ -43,14 +43,16 @@
           <button class="pill" [class.active]="discipline === 'TRIATHLON'" (click)="discipline = 'TRIATHLON'">Triathlon</button>
         </div>
       </div>
-      <div class="field-group" *ngIf="needsBike()">
-        <label class="field-label">Bike Type</label>
-        <div class="pill-group">
-          <button class="pill" [class.active]="profile.bikeType === 'TT'" (click)="profile.bikeType = 'TT'">TT</button>
-          <button class="pill" [class.active]="profile.bikeType === 'ROAD_AERO'" (click)="profile.bikeType = 'ROAD_AERO'">Road + Aero</button>
-          <button class="pill" [class.active]="profile.bikeType === 'ROAD'" (click)="profile.bikeType = 'ROAD'">Road</button>
+      @if (needsBike()) {
+        <div class="field-group">
+          <label class="field-label">Bike Type</label>
+          <div class="pill-group">
+            <button class="pill" [class.active]="profile.bikeType === 'TT'" (click)="profile.bikeType = 'TT'">TT</button>
+            <button class="pill" [class.active]="profile.bikeType === 'ROAD_AERO'" (click)="profile.bikeType = 'ROAD_AERO'">Road + Aero</button>
+            <button class="pill" [class.active]="profile.bikeType === 'ROAD'" (click)="profile.bikeType = 'ROAD'">Road</button>
+          </div>
         </div>
-      </div>
+      }
     </div>
 
     <!-- Row 2: GPX Upload — Bike left, Run right (hidden when race is linked) -->
@@ -588,7 +590,7 @@
 
       <div class="modal-body">
         <!-- GPX Upload: Single dropzone for BIKE or RUN -->
-        <ng-container *ngIf="discipline === 'BIKE' || discipline === 'RUN'">
+        @if (discipline === 'BIKE' || discipline === 'RUN') {
           <div class="gpx-with-loops">
             <div
               class="gpx-dropzone"
@@ -600,19 +602,27 @@
               (click)="modalFileInput.click()"
             >
               <input #modalFileInput type="file" accept=".gpx" hidden (change)="onFileSelected($event)" />
-              <span *ngIf="!gpxFile">Drop GPX file here or click to browse</span>
-              <span *ngIf="gpxFile" class="file-name">{{ gpxFileName }}</span>
+              @if (!gpxFile) {
+                <span>Drop GPX file here or click to browse</span>
+              }
+              @if (gpxFile) {
+                <span class="file-name">{{ gpxFileName }}</span>
+              }
             </div>
             <div class="loop-input">
               <label>Loops</label>
-              <input *ngIf="discipline === 'RUN'" type="number" [(ngModel)]="runLoops" min="1" max="50" />
-              <input *ngIf="discipline === 'BIKE'" type="number" [(ngModel)]="bikeLoops" min="1" max="50" />
+              @if (discipline === 'RUN') {
+                <input type="number" [(ngModel)]="runLoops" min="1" max="50" />
+              }
+              @if (discipline === 'BIKE') {
+                <input type="number" [(ngModel)]="bikeLoops" min="1" max="50" />
+              }
             </div>
           </div>
-        </ng-container>
+        }
 
         <!-- GPX Upload: Dual dropzones for TRIATHLON -->
-        <ng-container *ngIf="discipline === 'TRIATHLON'">
+        @if (discipline === 'TRIATHLON') {
           <div class="gpx-dual">
             <div class="gpx-with-loops">
               <div class="gpx-dropzone-labeled">
@@ -627,8 +637,12 @@
                   (click)="modalBikeFileInput.click()"
                 >
                   <input #modalBikeFileInput type="file" accept=".gpx" hidden (change)="onFileSelected($event, 'bike')" />
-                  <span *ngIf="!bikeGpxFile">Drop bike GPX</span>
-                  <span *ngIf="bikeGpxFile" class="file-name">{{ bikeGpxFileName }}</span>
+                  @if (!bikeGpxFile) {
+                    <span>Drop bike GPX</span>
+                  }
+                  @if (bikeGpxFile) {
+                    <span class="file-name">{{ bikeGpxFileName }}</span>
+                  }
                 </div>
               </div>
               <div class="loop-input">
@@ -649,8 +663,12 @@
                   (click)="modalRunFileInput.click()"
                 >
                   <input #modalRunFileInput type="file" accept=".gpx" hidden (change)="onFileSelected($event, 'run')" />
-                  <span *ngIf="!runGpxFile">Drop run GPX</span>
-                  <span *ngIf="runGpxFile" class="file-name">{{ runGpxFileName }}</span>
+                  @if (!runGpxFile) {
+                    <span>Drop run GPX</span>
+                  }
+                  @if (runGpxFile) {
+                    <span class="file-name">{{ runGpxFileName }}</span>
+                  }
                 </div>
               </div>
               <div class="loop-input">
@@ -659,7 +677,7 @@
               </div>
             </div>
           </div>
-        </ng-container>
+        }
 
         <!-- No dropzone for SWIM -->
 
@@ -674,14 +692,16 @@
                 <button class="pill" [class.active]="discipline === 'TRIATHLON'" (click)="discipline = 'TRIATHLON'">Triathlon</button>
               </div>
             </div>
-            <div class="field-group" *ngIf="needsBike()">
-              <label class="field-label">Bike Type</label>
-              <div class="pill-group">
-                <button class="pill" [class.active]="profile.bikeType === 'TT'" (click)="profile.bikeType = 'TT'">TT</button>
-                <button class="pill" [class.active]="profile.bikeType === 'ROAD_AERO'" (click)="profile.bikeType = 'ROAD_AERO'">Road + Aero</button>
-                <button class="pill" [class.active]="profile.bikeType === 'ROAD'" (click)="profile.bikeType = 'ROAD'">Road</button>
+            @if (needsBike()) {
+              <div class="field-group">
+                <label class="field-label">Bike Type</label>
+                <div class="pill-group">
+                  <button class="pill" [class.active]="profile.bikeType === 'TT'" (click)="profile.bikeType = 'TT'">TT</button>
+                  <button class="pill" [class.active]="profile.bikeType === 'ROAD_AERO'" (click)="profile.bikeType = 'ROAD_AERO'">Road + Aero</button>
+                  <button class="pill" [class.active]="profile.bikeType === 'ROAD'" (click)="profile.bikeType = 'ROAD'">Road</button>
+                </div>
               </div>
-            </div>
+            }
           </div>
 
           <div class="form-col">

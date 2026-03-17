@@ -1,5 +1,5 @@
-<ng-container *ngIf="session$ | async as session">
-  <ng-container *ngIf="ftp$ | async as ftp">
+@if (session$ | async; as session) {
+  @if (ftp$ | async; as ftp) {
     <div class="analysis-page">
 
       <!-- Header with inline key metrics -->
@@ -20,20 +20,24 @@
             <span class="session-date">{{ formatDate(session.date) }}</span>
           </div>
         </div>
-        <div class="rpe-block" *ngIf="!session.tss">
-          <span class="rpe-label">RPE</span>
-          <div class="rpe-slider-wrap">
-            <input type="range" min="1" max="10" step="1"
-              class="rpe-slider"
-              [value]="session.rpe ?? 5"
-              (change)="selectRpe(session, +$any($event.target).value)" />
-            <div class="rpe-scale">
-              <span *ngFor="let n of rpeValues" class="rpe-tick"
-                [class.active]="session.rpe === n">{{ n }}</span>
+        @if (!session.tss) {
+          <div class="rpe-block">
+            <span class="rpe-label">RPE</span>
+            <div class="rpe-slider-wrap">
+              <input type="range" min="1" max="10" step="1"
+                class="rpe-slider"
+                [value]="session.rpe ?? 5"
+                (change)="selectRpe(session, +$any($event.target).value)" />
+              <div class="rpe-scale">
+                @for (let n of rpeValues; track n) {
+                  <span class="rpe-tick"
+                    [class.active]="session.rpe === n">{{ n }}</span>
+                }
+              </div>
             </div>
+            <span class="rpe-value" [class.set]="session.rpe">{{ session.rpe ?? '—' }}</span>
           </div>
-          <span class="rpe-value" [class.set]="session.rpe">{{ session.rpe ?? '—' }}</span>
-        </div>
+        }
       </div>
 
       <!-- Secondary stat cards -->
@@ -55,59 +59,71 @@
       <!-- FIT timeseries chart -->
       <div class="chart-section glass">
         <div class="section-label">FIT TIME-SERIES</div>
-        <ng-container *ngIf="fitState$ | async as fit">
-          <app-fit-timeseries-chart *ngIf="!fit.loading && !fit.error && fit.records.length > 0" [records]="fit.records"
-            [ftp]="ftp" [sportType]="session.sportType" [blockSummaries]="session.blockSummaries">
-          </app-fit-timeseries-chart>
-          <div class="no-fit-msg" *ngIf="!fit.loading && !fit.error && fit.records.length === 0">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-              opacity="0.4">
-              <path d="M3 3l18 18M10.5 10.677A2 2 0 0 0 10 12a2 2 0 0 0 4 0 2 2 0 0 0-.5-1.323" />
-              <path d="M3 10l3 2 2-4 2 7 2-5 2 2h5" />
-            </svg>
-            <p>No FIT data stored for this session</p>
-            <p class="hint">Start a live session to auto-record time-series data, or import a .FIT file</p>
-          </div>
-          <div class="no-fit-msg" *ngIf="fit.loading">
-            <div class="loading-dots"><span></span><span></span><span></span></div>
-            <p>Loading FIT data...</p>
-          </div>
-          <div class="no-fit-msg error" *ngIf="fit.error">
-            Could not load or parse the FIT file.
-          </div>
-        </ng-container>
+        @if (fitState$ | async; as fit) {
+          @if (!fit.loading && !fit.error && fit.records.length > 0) {
+            <app-fit-timeseries-chart [records]="fit.records"
+              [ftp]="ftp" [sportType]="session.sportType" [blockSummaries]="session.blockSummaries">
+            </app-fit-timeseries-chart>
+          }
+          @if (!fit.loading && !fit.error && fit.records.length === 0) {
+            <div class="no-fit-msg">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                opacity="0.4">
+                <path d="M3 3l18 18M10.5 10.677A2 2 0 0 0 10 12a2 2 0 0 0 4 0 2 2 0 0 0-.5-1.323" />
+                <path d="M3 10l3 2 2-4 2 7 2-5 2 2h5" />
+              </svg>
+              <p>No FIT data stored for this session</p>
+              <p class="hint">Start a live session to auto-record time-series data, or import a .FIT file</p>
+            </div>
+          }
+          @if (fit.loading) {
+            <div class="no-fit-msg">
+              <div class="loading-dots"><span></span><span></span><span></span></div>
+              <p>Loading FIT data...</p>
+            </div>
+          }
+          @if (fit.error) {
+            <div class="no-fit-msg error">
+              Could not load or parse the FIT file.
+            </div>
+          }
+        }
       </div>
 
       <!-- Block breakdown -->
-      <div class="blocks-section glass" *ngIf="session.blockSummaries.length">
-        <div class="section-label">BLOCK BREAKDOWN</div>
-        <div class="blocks-table">
-          <div class="blocks-header">
-            <span>Block</span>
-            <span>Type</span>
-            <span>Duration</span>
-            <span>Distance</span>
-            <span>Target</span>
-            <span>Actual Pwr</span>
-            <span>HR</span>
-            <span>Cad</span>
-          </div>
-          <div *ngFor="let block of session.blockSummaries" class="blocks-row">
-            <span class="b-label">{{ block.label }}</span>
-            <span class="b-type">{{ block.type }}</span>
-            <span class="b-dur">{{ formatTime(block.durationSeconds) }}</span>
-            <span class="b-dist">{{ formatDistance(block) }}</span>
-            <span class="b-target">{{ block.targetPower ? (block.targetPower + 'W') : '—' }}</span>
-            <span class="b-actual" [class.above]="block.actualPower > block.targetPower * 1.05"
-              [class.below]="block.targetPower > 0 && block.actualPower < block.targetPower * 0.95">
-              {{ block.actualPower | number:'1.0-0' }}W
-            </span>
-            <span class="b-hr">{{ block.actualHR | number:'1.0-0' }}</span>
-            <span class="b-cad">{{ block.actualCadence | number:'1.0-0' }}</span>
+      @if (session.blockSummaries.length) {
+        <div class="blocks-section glass">
+          <div class="section-label">BLOCK BREAKDOWN</div>
+          <div class="blocks-table">
+            <div class="blocks-header">
+              <span>Block</span>
+              <span>Type</span>
+              <span>Duration</span>
+              <span>Distance</span>
+              <span>Target</span>
+              <span>Actual Pwr</span>
+              <span>HR</span>
+              <span>Cad</span>
+            </div>
+            @for (let block of session.blockSummaries; track block) {
+              <div class="blocks-row">
+                <span class="b-label">{{ block.label }}</span>
+                <span class="b-type">{{ block.type }}</span>
+                <span class="b-dur">{{ formatTime(block.durationSeconds) }}</span>
+                <span class="b-dist">{{ formatDistance(block) }}</span>
+                <span class="b-target">{{ block.targetPower ? (block.targetPower + 'W') : '—' }}</span>
+                <span class="b-actual" [class.above]="block.actualPower > block.targetPower * 1.05"
+                  [class.below]="block.targetPower > 0 && block.actualPower < block.targetPower * 0.95">
+                  {{ block.actualPower | number:'1.0-0' }}W
+                </span>
+                <span class="b-hr">{{ block.actualHR | number:'1.0-0' }}</span>
+                <span class="b-cad">{{ block.actualCadence | number:'1.0-0' }}</span>
+              </div>
+            }
           </div>
         </div>
-      </div>
+      }
 
     </div>
-  </ng-container>
-</ng-container>
+  }
+}

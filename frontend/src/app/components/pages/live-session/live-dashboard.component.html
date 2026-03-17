@@ -140,17 +140,19 @@
   </ng-container>
 
   <!-- Exit Confirmation Overlay -->
-  <div class="summary-overlay top-center" *ngIf="showExitConfirm">
-    <div class="summary-card confirmation-card">
-      <h2>STOP WORKOUT?</h2>
-      <p>The workout is now paused. Choose how to proceed:</p>
-      <div class="confirm-actions">
-        <button class="control-btn secondary" (click)="cancelExit()">RESUME</button>
-        <button class="control-btn primary" (click)="saveAndSync()">SAVE & SYNC</button>
-        <button class="control-btn danger" (click)="discardSession()">DISCARD</button>
+  @if (showExitConfirm) {
+    <div class="summary-overlay top-center">
+      <div class="summary-card confirmation-card">
+        <h2>STOP WORKOUT?</h2>
+        <p>The workout is now paused. Choose how to proceed:</p>
+        <div class="confirm-actions">
+          <button class="control-btn secondary" (click)="cancelExit()">RESUME</button>
+          <button class="control-btn primary" (click)="saveAndSync()">SAVE & SYNC</button>
+          <button class="control-btn danger" (click)="discardSession()">DISCARD</button>
+        </div>
       </div>
     </div>
-  </div>
+  }
 
   <!-- Session Summary Overlay -->
   @if (state.finalSummary) {

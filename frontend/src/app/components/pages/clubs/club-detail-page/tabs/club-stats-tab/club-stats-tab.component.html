@@ -1,5 +1,5 @@
 <div class="stats-tab">
-  <ng-container *ngIf="weeklyStats$ | async as stats; else loadingStats">
+  @if (weeklyStats$ | async; as stats) {
     <h4 class="section-title">This Week</h4>
     <div class="stats-grid">
       <div class="stat-card glass">
@@ -24,11 +24,10 @@
       </div>
     </div>
     <p class="stat-note">{{ stats.memberCount }} active members tracked this week</p>
-  </ng-container>
-  <ng-template #loadingStats>
+  } @else {
     <div class="empty-tab">
       <span>📊</span>
       <p>Loading weekly stats...</p>
     </div>
-  </ng-template>
+  }
 </div>
