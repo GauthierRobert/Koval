@@ -26,48 +26,60 @@
   </div>
 
   <div class="tags-body">
-    <ng-container *ngIf="groupData$ | async as tags">
-      <div *ngIf="tags.length === 0" class="empty-state">
-        No groups yet. Use the form above to create your first group.
-      </div>
-
-      <div class="tags-list" *ngIf="tags.length > 0">
-        <div *ngFor="let tag of tags" class="tag-card">
-          <div class="tag-card-header">
-            <div class="tag-name-row">
-              <ng-container *ngIf="editingGrouId !== tag.id">
-                <span class="tag-name" (click)="startEdit(tag)" title="Click to rename">{{ tag.name }}</span>
-                <button class="icon-btn edit-btn" (click)="startEdit(tag)" title="Rename">✎</button>
-              </ng-container>
-              <ng-container *ngIf="editingGrouId === tag.id">
-                <input class="rename-input" [(ngModel)]="editingName"
-                  (keydown.enter)="saveEdit(tag)" (keydown.escape)="cancelEdit()"
-                  (blur)="saveEdit(tag)" autofocus />
-              </ng-container>
-            </div>
-            <span class="tag-athlete-count">{{ tag.groupAthletes.length }}{{ tag.maxAthletes > 0 ? ' / ' + tag.maxAthletes : '' }}</span>
-            <span class="invite-code" [class.copied]="copiedCodeId === tag.id" *ngIf="tag.inviteCode" (click)="copyCode(tag); $event.stopPropagation()" title="Click to copy">
-              {{ copiedCodeId === tag.id ? '✓ COPIED' : tag.inviteCode }}
-            </span>
-
-            <button class="delete-btn" (click)="deleteGroup(tag)" title="Delete group">DELETE</button>
-          </div>
-
-          <div class="athletes-section">
-            <div class="athletes-label">ATHLETES ({{ tag.groupAthletes.length }}) <button class="assign-btn" (click)="assignToGroup(tag)" title="Assign training to group">ASSIGN TRAINING</button></div>
-            <div *ngIf="tag.groupAthletes.length === 0" class="no-athletes">No athletes in this group</div>
-            <div *ngFor="let athlete of tag.groupAthletes" class="athlete-row"
-              style="cursor: pointer"
-              (click)="navigateToCoach(athlete.id)"
-              title="View in coach dashboard">
-              <div class="avatar-sm">{{ athlete.displayName[0].toUpperCase() }}</div>
-              <span class="athlete-name">{{ athlete.displayName }}</span>
-              <button class="remove-btn" (click)="$event.stopPropagation(); removeAthleteFromTag(athlete, tag)" title="Remove from group">&times;</button>
-            </div>
-          </div>
+    @if (groupData$ | async as tags) {
+      @if (tags.length === 0) {
+        <div class="empty-state">
+          No groups yet. Use the form above to create your first group.
         </div>
-      </div>
-    </ng-container>
+      }
+
+      @if (tags.length > 0) {
+        <div class="tags-list">
+          @for (let tag of tags; track tag.id) {
+            <div class="tag-card">
+              <div class="tag-card-header">
+                <div class="tag-name-row">
+                  @if (editingGrouId !== tag.id) {
+                    <span class="tag-name" (click)="startEdit(tag)" title="Click to rename">{{ tag.name }}</span>
+                    <button class="icon-btn edit-btn" (click)="startEdit(tag)" title="Rename">✎</button>
+                  }
+                  @if (editingGrouId === tag.id) {
+                    <input class="rename-input" [(ngModel)]="editingName"
+                      (keydown.enter)="saveEdit(tag)" (keydown.escape)="cancelEdit()"
+                      (blur)="saveEdit(tag)" autofocus />
+                  }
+                </div>
+                <span class="tag-athlete-count">{{ tag.groupAthletes.length }}{{ tag.maxAthletes > 0 ? ' / ' + tag.maxAthletes : '' }}</span>
+                @if (tag.inviteCode) {
+                  <span class="invite-code" [class.copied]="copiedCodeId === tag.id" (click)="copyCode(tag); $event.stopPropagation()" title="Click to copy">
+                    {{ copiedCodeId === tag.id ? '✓ COPIED' : tag.inviteCode }}
+                  </span>
+                }
+
+                <button class="delete-btn" (click)="deleteGroup(tag)" title="Delete group">DELETE</button>
+              </div>
+
+              <div class="athletes-section">
+                <div class="athletes-label">ATHLETES ({{ tag.groupAthletes.length }}) <button class="assign-btn" (click)="assignToGroup(tag)" title="Assign training to group">ASSIGN TRAINING</button></div>
+                @if (tag.groupAthletes.length === 0) {
+                  <div class="no-athletes">No athletes in this group</div>
+                }
+                @for (let athlete of tag.groupAthletes; track athlete.id) {
+                  <div class="athlete-row"
+                    style="cursor: pointer"
+                    (click)="navigateToCoach(athlete.id)"
+                    title="View in coach dashboard">
+                    <div class="avatar-sm">{{ athlete.displayName[0].toUpperCase() }}</div>
+                    <span class="athlete-name">{{ athlete.displayName }}</span>
+                    <button class="remove-btn" (click)="$event.stopPropagation(); removeAthleteFromTag(athlete, tag)" title="Remove from group">&times;</button>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
   </div>
 
   <app-schedule-modal

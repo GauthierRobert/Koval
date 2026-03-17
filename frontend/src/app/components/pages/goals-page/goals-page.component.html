@@ -49,7 +49,7 @@
 
     <!-- Detail panel -->
     <div class="goals-detail">
-      <ng-container *ngIf="getSelectedGoal(allGoals) as goal; else noSelection">
+      @if (getSelectedGoal(allGoals) as goal) {
 
         <!-- Header -->
         <div class="detail-header">
