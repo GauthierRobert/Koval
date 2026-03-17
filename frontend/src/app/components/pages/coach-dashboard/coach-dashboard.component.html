@@ -109,8 +109,8 @@
     </div>
 
     <!-- Athlete detail -->
-    <ng-container>
-      <div class="athlete-detail" *ngIf="selectedAthlete">
+    @if (selectedAthlete) {
+      <div class="athlete-detail">
         <div class="detail-header">
           <div class="profile-banner">
             <div class="profile-left">
@@ -118,10 +118,12 @@
               <div class="profile-identity">
                 <h2>{{ selectedAthlete.displayName }}</h2>
                 <div class="detail-tags-row">
-                  <span *ngFor="let tag of selectedAthlete.groups || []; trackBy: trackByValue" class="editable-tag">
-                    {{ tag }}
-                    <button class="tag-remove" (click)="removeTag(selectedAthlete, tag)">&times;</button>
-                  </span>
+                  @for (tag of selectedAthlete.groups || []; track trackByValue(tag)) {
+                    <span class="editable-tag">
+                      {{ tag }}
+                      <button class="tag-remove" (click)="removeTag(selectedAthlete, tag)">&times;</button>
+                    </span>
+                  }
                 </div>
               </div>
             </div>
@@ -541,21 +543,19 @@
         }
 
       </div>
-
-      @if (!selectedAthlete) {
-        <div class="placeholder-detail">
-          <div class="empty-detail">
-          <div class="empty-icon-ring">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-          </div>
-          <h3>Select an Athlete</h3>
-            <p>Choose an athlete from the roster to view performance metrics, manage training loads, and track progression.</p>
-          </div>
+    } @else {
+      <div class="placeholder-detail">
+        <div class="empty-detail">
+        <div class="empty-icon-ring">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
         </div>
-      }
+        <h3>Select an Athlete</h3>
+          <p>Choose an athlete from the roster to view performance metrics, manage training loads, and track progression.</p>
+        </div>
+      </div>
     }
   </div>
 </div>

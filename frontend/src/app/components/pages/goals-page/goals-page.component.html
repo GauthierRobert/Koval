@@ -1,5 +1,6 @@
 <div class="goals-page">
-  <div class="goals-layout" *ngIf="allGoals$ | async as allGoals">
+  @if (allGoals$ | async as allGoals) {
+    <div class="goals-layout">
     <!-- Sidebar -->
     <div class="goals-sidebar">
       <div class="sidebar-header">
@@ -7,14 +8,17 @@
         <button class="btn-icon-sm" (click)="openCreate()" title="Add goal">+</button>
       </div>
 
-      <ng-container *ngIf="allGoals.length > 0; else sidebarEmpty">
-        <div class="sidebar-section-label" *ngIf="isUpcoming(allGoals[0])">UPCOMING</div>
-        <ng-container *ngFor="let goal of allGoals; let i = index">
+      @if (allGoals.length > 0) {
+        @if (isUpcoming(allGoals[0])) {
+          <div class="sidebar-section-label">UPCOMING</div>
+        }
+        @for (goal of allGoals; let i = $index; track goal.id) {
           <!-- PAST section label before first past goal -->
-          <div class="sidebar-section-label sidebar-section-label--past"
-            *ngIf="!isUpcoming(goal) && (i === 0 || isUpcoming(allGoals[i - 1]))">
-            PAST
-          </div>
+          @if (!isUpcoming(goal) && (i === 0 || isUpcoming(allGoals[i - 1]))) {
+            <div class="sidebar-section-label sidebar-section-label--past">
+              PAST
+            </div>
+          }
           <div class="sidebar-goal-item"
                [class.sidebar-goal-item--selected]="selectedGoalId === goal.id"
                [class.sidebar-goal-item--past]="!isUpcoming(goal)"
@@ -26,19 +30,21 @@
                 <span class="sidebar-goal-title">{{ goal.title }}</span>
               </div>
               <div class="sidebar-goal-row2">
-                <span class="sidebar-goal-date" *ngIf="goal.raceDate">{{ formatDate(goal.raceDate) }}</span>
-                <span class="sidebar-goal-countdown" *ngIf="isUpcoming(goal) && goal.raceDate">
-                  {{ daysUntil(goal.raceDate) }}d
-                </span>
+                @if (goal.raceDate) {
+                  <span class="sidebar-goal-date">{{ formatDate(goal.raceDate) }}</span>
+                }
+                @if (isUpcoming(goal) && goal.raceDate) {
+                  <span class="sidebar-goal-countdown">
+                    {{ daysUntil(goal.raceDate) }}d
+                  </span>
+                }
               </div>
             </div>
           </div>
-        </ng-container>
-      </ng-container>
-
-      <ng-template #sidebarEmpty>
+        }
+      } @else {
         <div class="sidebar-empty">No goals yet</div>
-      </ng-template>
+      }
     </div>
 
     <!-- Detail panel -->

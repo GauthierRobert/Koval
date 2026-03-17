@@ -4,15 +4,18 @@
       <!-- HUD -->
       <div class="game-hud">
         <div class="lives">
-          <span *ngFor="let life of [1,2,3]; let i = index"
-                class="heart"
-                [class.lost]="i >= lives">❤️</span>
+          @for (life of [1,2,3]; let i = $index; track life) {
+            <span class="heart"
+                  [class.lost]="i >= lives">❤️</span>
+          }
         </div>
         <div class="power-meter">
           <div class="label">TARGET: {{ targetPower }}W</div>
           <div class="current-power" [style.color]="getPowerColor()">{{ currentPower }}W</div>
         </div>
-        <div class="warning" *ngIf="isTooFast">TOO FAST! RELAX!</div>
+        @if (isTooFast) {
+          <div class="warning">TOO FAST! RELAX!</div>
+        }
       </div>
 
       <!-- Entities -->

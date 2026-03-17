@@ -103,10 +103,12 @@
           <div class="block-label">{{ state.training?.blocks?.[state.currentBlockIndex]?.label }}</div>
         </div>
         <div class="timer">{{ formatTime(state.remainingBlockSeconds) }}</div>
-        <div class="next-block" *ngIf="state.training?.blocks?.[state.currentBlockIndex + 1] as next">
+        @if (state.training?.blocks?.[state.currentBlockIndex + 1] as next) {
+        <div class="next-block">
           <div class="block-tag">UP NEXT</div>
           <div class="block-label">{{ next.label }} ({{ formatTime(next.durationSeconds) }})</div>
         </div>
+      }
       </div>
       <div class="progress-bar-container">
         <div class="progress-bar" [style.width.%]="getBlockProgress(state)"></div>
@@ -119,9 +121,11 @@
     <!-- Live Graph or Game -->
     <div class="graph-area">
       <canvas #canvas [hidden]="showGame"></canvas>
-      <app-zombie-game *ngIf="showGame && (metrics$ | async) as metrics" [targetPower]="getTargetPower(state)"
-        [currentPower]="metrics.power" (gameEnded)="showGame = false">
-      </app-zombie-game>
+      @if (showGame && (metrics$ | async) as metrics) {
+        <app-zombie-game [targetPower]="getTargetPower(state)"
+          [currentPower]="metrics.power" (gameEnded)="showGame = false">
+        </app-zombie-game>
+      }
     </div>
 
     <!-- Controls -->
@@ -137,8 +141,6 @@
         {{ state.isPaused ? (state.elapsedTotalSeconds === 0 ? 'START WORKOUT' : 'RESUME') : 'PAUSE' }}
       </button>
     </div>
-  </ng-container>
-
   <!-- Exit Confirmation Overlay -->
   @if (showExitConfirm) {
     <div class="summary-overlay top-center">

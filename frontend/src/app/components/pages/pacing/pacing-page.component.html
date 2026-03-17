@@ -487,14 +487,15 @@
     @if (activeTab !== 'SWIM') {
       <div class="main-panel">
       <div class="map-column glass">
-        <app-route-map
-          *ngIf="getActiveRouteCoordinates(plan)?.length"
-          [routeCoordinates]="getActiveRouteCoordinates(plan)!"
-          [segments]="getActiveSegments(plan)"
-          [highlightedRange]="highlightedRange$ | async"
-          [showSpeed]="bikeShowSpeed && activeTab === 'BIKE'"
-          (segmentHovered)="onSegmentHover($event)">
-        </app-route-map>
+        @if (getActiveRouteCoordinates(plan)?.length) {
+          <app-route-map
+            [routeCoordinates]="getActiveRouteCoordinates(plan)!"
+            [segments]="getActiveSegments(plan)"
+            [highlightedRange]="highlightedRange$ | async"
+            [showSpeed]="bikeShowSpeed && activeTab === 'BIKE'"
+            (segmentHovered)="onSegmentHover($event)">
+          </app-route-map>
+        }
       </div>
       <div class="detail-column">
         <app-elevation-chart
@@ -507,27 +508,34 @@
         <div class="race-plan glass">
           <div class="race-plan-header">
             <h3 class="race-plan-title">Race Plan</h3>
-            <div class="race-plan-controls" *ngIf="activeTab === 'BIKE'">
+            @if (activeTab === 'BIKE') {
+            <div class="race-plan-controls">
               <label class="band-slider-label">&plusmn; {{ groupBandW }}W</label>
               <input type="range" class="band-slider" [(ngModel)]="groupBandW" [attr.min]="1" [attr.max]="20" [attr.step]="1" />
             </div>
           </div>
           <div class="race-plan-list">
-            <div *ngFor="let group of getGroupedPlan(getActiveSegments(plan)); let i = index"
-                 class="race-plan-item"
-                 [class.climb]="group.meanGradient > 1"
-                 [class.descent]="group.meanGradient < -1"
-                 [class.highlighted]="highlightedGroup === i"
-                 (mouseenter)="onGroupHover(group, i)"
-                 (mouseleave)="onGroupHover(null, null)">
+            @for (group of getGroupedPlan(getActiveSegments(plan)); let i = $index; track i) {
+              <div class="race-plan-item"
+                   [class.climb]="group.meanGradient > 1"
+                   [class.descent]="group.meanGradient < -1"
+                   [class.highlighted]="highlightedGroup === i"
+                   (mouseenter)="onGroupHover(group, i)"
+                   (mouseleave)="onGroupHover(null, null)">
 
               <!-- Group header -->
               <div class="rp-header">
                 <span class="rp-number">{{ group.index }}</span>
                 <span class="rp-terrain">{{ group.terrainLabel }}</span>
-                <span class="rp-target" *ngIf="group.powerLower != null && !(bikeShowSpeed && activeTab === 'BIKE')"><span class="rp-avg-inline" *ngIf="group.targetPower != null">{{ group.targetPower }}W</span> {{ group.powerLower }}–{{ group.powerUpper }}W </span>
-                <span class="rp-target speed" *ngIf="group.meanSpeed && bikeShowSpeed && activeTab === 'BIKE'">{{ group.meanSpeed.toFixed(1) }} km/h</span>
-                <span class="rp-target pace" *ngIf="group.targetPace">{{ group.targetPace }}</span>
+                @if (group.powerLower != null && !(bikeShowSpeed && activeTab === 'BIKE')) {
+                  <span class="rp-target"><span class="rp-avg-inline" *ngIf="group.targetPower != null">{{ group.targetPower }}W</span> {{ group.powerLower }}–{{ group.powerUpper }}W </span>
+                }
+                @if (group.meanSpeed && bikeShowSpeed && activeTab === 'BIKE') {
+                  <span class="rp-target speed">{{ group.meanSpeed.toFixed(1) }} km/h</span>
+                }
+                @if (group.targetPace) {
+                  <span class="rp-target pace">{{ group.targetPace }}</span>
+                }
               </div>
 
               <!-- Group stats -->
@@ -554,35 +562,43 @@
                   <span class="rp-stat-label">Time</span>
                   <span class="rp-stat-value">{{ formatTime(group.totalTime) }}</span>
                 </div>
-                <div class="rp-stat" *ngIf="group.meanSpeed">
-                  <span class="rp-stat-label">Speed</span>
-                  <span class="rp-stat-value">{{ group.meanSpeed.toFixed(1) }} km/h</span>
-                </div>
+                @if (group.meanSpeed) {
+                  <div class="rp-stat">
+                    <span class="rp-stat-label">Speed</span>
+                    <span class="rp-stat-value">{{ group.meanSpeed.toFixed(1) }} km/h</span>
+                  </div>
+                }
               </div>
 
               <!-- Nutrition events -->
-              <div class="rp-nutrition" *ngFor="let n of group.nutritionEvents">
-                <span class="rp-nutrition-icon">N</span>
-                <span class="rp-nutrition-text">
-                  {{ n.suggestion }} (at {{ formatDistance(n.distance) }})
-                </span>
+              @for (n of group.nutritionEvents; track n.distance) {
+                <div class="rp-nutrition">
+                  <span class="rp-nutrition-icon">N</span>
+                  <span class="rp-nutrition-text">
+                    {{ n.suggestion }} (at {{ formatDistance(n.distance) }})
+                  </span>
+                </div>
+              }
               </div>
-            </div>
+            }
           </div>
         </div>
       </div>
     </div>
 
     <!-- Swim panel (no map/chart for swim) -->
-    <div class="swim-panel glass" *ngIf="activeTab === 'SWIM'">
-      <h3>Swim Pacing</h3>
-      <p>No route data for swim — see swim summary above for pacing details.</p>
-    </div>
+    @if (activeTab === 'SWIM') {
+      <div class="swim-panel glass">
+        <h3>Swim Pacing</h3>
+        <p>No route data for swim — see swim summary above for pacing details.</p>
+      </div>
+    }
   </div>
 
   <!-- Settings Modal -->
-  <div class="modal-overlay" *ngIf="showSettingsModal" (click)="closeSettingsModal()">
-    <div class="modal-content glass" (click)="$event.stopPropagation()">
+  @if (showSettingsModal) {
+    <div class="modal-overlay" (click)="closeSettingsModal()">
+      <div class="modal-content glass" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2 class="section-title">Modify Settings</h2>
         <button class="modal-close" (click)="closeSettingsModal()">&times;</button>
@@ -706,28 +722,34 @@
 
           <div class="form-col">
             <h3 class="subsection-title">Athlete Metrics</h3>
-            <div class="field-row" *ngIf="needsBike()">
-              <div class="field">
-                <label>FTP (W)</label>
-                <input type="number" [(ngModel)]="profile.ftp" placeholder="250" min="50" max="500" />
+            @if (needsBike()) {
+              <div class="field-row">
+                <div class="field">
+                  <label>FTP (W)</label>
+                  <input type="number" [(ngModel)]="profile.ftp" placeholder="250" min="50" max="500" />
+                </div>
+                <div class="field">
+                  <label>Weight (kg)</label>
+                  <input type="number" [(ngModel)]="profile.weightKg" placeholder="75" min="30" max="200" />
+                </div>
               </div>
-              <div class="field">
-                <label>Weight (kg)</label>
-                <input type="number" [(ngModel)]="profile.weightKg" placeholder="75" min="30" max="200" />
+            }
+            @if (needsRun()) {
+              <div class="field-row">
+                <div class="field">
+                  <label>Threshold Pace (s/km)</label>
+                  <input type="number" [(ngModel)]="profile.thresholdPaceSec" placeholder="270" min="120" max="600" />
+                </div>
               </div>
-            </div>
-            <div class="field-row" *ngIf="needsRun()">
-              <div class="field">
-                <label>Threshold Pace (s/km)</label>
-                <input type="number" [(ngModel)]="profile.thresholdPaceSec" placeholder="270" min="120" max="600" />
+            }
+            @if (needsSwim()) {
+              <div class="field-row">
+                <div class="field">
+                  <label>Swim CSS (s/100m)</label>
+                  <input type="number" [(ngModel)]="profile.swimCssSec" placeholder="95" min="40" max="200" />
+                </div>
               </div>
-            </div>
-            <div class="field-row" *ngIf="needsSwim()">
-              <div class="field">
-                <label>Swim CSS (s/100m)</label>
-                <input type="number" [(ngModel)]="profile.swimCssSec" placeholder="95" min="40" max="200" />
-              </div>
-            </div>
+            }
             <!-- TODO: Re-enable fatigue resistance once backend integrates it -->
             <div class="field-row">
               <div class="field">
@@ -759,55 +781,84 @@
               </span>
             </div>
             <div class="field-row">
-              <div class="field" *ngIf="needsBike()">
-                <label>Target Power (%FTP)</label>
-                <input type="number" [ngModel]="targetPowerPct" (ngModelChange)="onTargetPowerPctChange($event)" placeholder="Auto" min="30" max="120" />
-                <span class="field-hint computed" *ngIf="computedPowerWatts() as w">= {{ w }}W</span>
-                <span class="field-hint" *ngIf="!targetPowerPct">Auto</span>
-              </div>
-              <div class="field" *ngIf="needsRun()">
-                <label>Target Pace (%Threshold)</label>
-                <input type="number" [ngModel]="targetPacePct" (ngModelChange)="onTargetPacePctChange($event)" placeholder="Auto" min="80" max="150" />
-                <span class="field-hint computed" *ngIf="computedPaceDisplay() as p">= {{ p }}</span>
-                <span class="field-hint" *ngIf="!targetPacePct">Auto</span>
-              </div>
+              @if (needsBike()) {
+                <div class="field">
+                  <label>Target Power (%FTP)</label>
+                  <input type="number" [ngModel]="targetPowerPct" (ngModelChange)="onTargetPowerPctChange($event)" placeholder="Auto" min="30" max="120" />
+                  @if (computedPowerWatts() as w) {
+                    <span class="field-hint computed">= {{ w }}W</span>
+                  }
+                  @if (!targetPowerPct) {
+                    <span class="field-hint">Auto</span>
+                  }
+                </div>
+              }
+              @if (needsRun()) {
+                <div class="field">
+                  <label>Target Pace (%Threshold)</label>
+                  <input type="number" [ngModel]="targetPacePct" (ngModelChange)="onTargetPacePctChange($event)" placeholder="Auto" min="80" max="150" />
+                  @if (computedPaceDisplay() as p) {
+                    <span class="field-hint computed">= {{ p }}</span>
+                  }
+                  @if (!targetPacePct) {
+                    <span class="field-hint">Auto</span>
+                  }
+                </div>
+              }
             </div>
-            <div class="field-row" *ngIf="needsSwim()">
-              <div class="field">
-                <label>Swim Distance (m)</label>
-                <input type="number" [(ngModel)]="profile.swimDistanceM" placeholder="1900" min="100" max="10000" />
+            @if (needsSwim()) {
+              <div class="field-row">
+                <div class="field">
+                  <label>Swim Distance (m)</label>
+                  <input type="number" [(ngModel)]="profile.swimDistanceM" placeholder="1900" min="100" max="10000" />
+                </div>
+                @if (discipline === 'TRIATHLON' || profile.swimDistanceM) {
+                  <div class="field">
+                    <label>Swim Pace (s/100m)</label>
+                    <input type="number" [(ngModel)]="profile.targetSwimPaceSecPer100m" min="40" max="300" />
+                    @if (!profile.targetSwimPaceSecPer100m) {
+                      <span class="field-hint">Auto</span>
+                    }
+                  </div>
+                }
               </div>
-              <div class="field" *ngIf="discipline === 'TRIATHLON' || profile.swimDistanceM">
-                <label>Swim Pace (s/100m)</label>
-                <input type="number" [(ngModel)]="profile.targetSwimPaceSecPer100m" min="40" max="300" />
-                <span class="field-hint" *ngIf="!profile.targetSwimPaceSecPer100m">Auto</span>
-              </div>
-            </div>
+            }
 
-            <h3 class="subsection-title" *ngIf="needsBike() || needsRun()">Environment</h3>
-            <div class="field-row" *ngIf="needsBike() || needsRun()">
-              <div class="field">
-                <label>Temperature (°C)</label>
-                <input type="number" [(ngModel)]="profile.temperature" placeholder="20" min="-10" max="50" />
+            @if (needsBike() || needsRun()) {
+              <h3 class="subsection-title">Environment</h3>
+              <div class="field-row">
+                <div class="field">
+                  <label>Temperature (°C)</label>
+                  <input type="number" [(ngModel)]="profile.temperature" placeholder="20" min="-10" max="50" />
+                </div>
+                @if (needsBike()) {
+                  <div class="field">
+                    <label>Wind Speed (m/s)</label>
+                    <input type="number" [(ngModel)]="profile.windSpeed" placeholder="0" min="0" max="30" step="0.5" />
+                  </div>
+                }
               </div>
-              <div class="field" *ngIf="needsBike()">
-                <label>Wind Speed (m/s)</label>
-                <input type="number" [(ngModel)]="profile.windSpeed" placeholder="0" min="0" max="30" step="0.5" />
-              </div>
-            </div>
+            }
           </div>
         </div>
       </div>
 
-      <div class="error-msg" *ngIf="localError$ | async as err">{{ err }}</div>
+      @if (localError$ | async as err) {
+        <div class="error-msg">{{ err }}</div>
+      }
 
       <div class="modal-footer">
         <button class="clear-btn" (click)="closeSettingsModal()">Cancel</button>
         <button class="generate-btn" (click)="regenerate()" [disabled]="(loading$ | async) || !canGenerate()">
-          <span *ngIf="!(loading$ | async)">REGENERATE PLAN</span>
-          <span *ngIf="loading$ | async">GENERATING...</span>
+          @if (!(loading$ | async)) {
+            <span>REGENERATE PLAN</span>
+          }
+          @if (loading$ | async) {
+            <span>GENERATING...</span>
+          }
         </button>
       </div>
+      </div>
     </div>
-  </div>
+  }
 </div>
