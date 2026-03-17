@@ -141,10 +141,8 @@
           </div>
         </div>
 
-        <!-- PERFORMANCE tab -->
-        <ng-container *ngIf="activeTab === 'performance'">
-          <!-- Task 7: Real metrics from athleteMetrics$ -->
-          <ng-container *ngIf="athleteMetrics$ | async as metrics; else noMetrics">
+        @if (activeTab === 'performance') {
+          @if (athleteMetrics$ | async; as metrics) {
             <div class="metrics-dashboard">
               <div class="m-card">
                 <span class="m-label">FITNESS (CTL)</span>
@@ -174,8 +172,7 @@
                 <span class="m-meta">{{ selectedAthlete.ftp ? (selectedAthlete.ftp / 70 | number:'1.1-1') + ' W/kg' : '—' }}</span>
               </div>
             </div>
-          </ng-container>
-          <ng-template #noMetrics>
+          } @else {
             <div class="metrics-dashboard">
               <div class="m-card">
                 <span class="m-label">FITNESS (CTL)</span>
@@ -195,7 +192,7 @@
                 <span class="m-meta">{{ selectedAthlete.ftp ? (selectedAthlete.ftp / 70 | number:'1.1-1') + ' W/kg' : '—' }}</span>
               </div>
             </div>
-          </ng-template>
+          }
 
           <div class="technical-schedule">
             <div class="section-title">
@@ -216,61 +213,76 @@
                 <span>TSS</span>
                 <span>STATUS</span>
               </div>
-              <ng-container *ngIf="athleteSchedule$ | async as schedule">
-                <div *ngFor="let workout of schedule; trackBy: trackScheduleById" class="table-row"
-                  [class.club-session-row]="workout.isClubSession">
-                  <span class="t-date">{{ workout.scheduledDate | date:'MMM d, EEE' }}</span>
-                  <span class="t-title">
-                    {{ getWorkoutTitle(workout) }}
-                    <span *ngIf="workout.isClubSession" class="club-badge">
-                      {{ workout.clubName }}<span *ngIf="workout.clubGroupName"> · {{ workout.clubGroupName }}</span>
+              @if (athleteSchedule$ | async; as schedule) {
+                @for (workout of schedule; track trackScheduleById(workout)) {
+                  <div class="table-row"
+                    [class.club-session-row]="workout.isClubSession">
+                    <span class="t-date">{{ workout.scheduledDate | date:'MMM d, EEE' }}</span>
+                    <span class="t-title">
+                      {{ getWorkoutTitle(workout) }}
+                      @if (workout.isClubSession) {
+                        <span class="club-badge">
+                          {{ workout.clubName }}
+                          @if (workout.clubGroupName) {
+                            <span> · {{ workout.clubGroupName }}</span>
+                          }
+                        </span>
+                      }
                     </span>
-                  </span>
-                  <span class="t-type">
-                    <span *ngIf="workout.trainingType" class="schedule-type-badge"
-                      [style.background]="getTypeColor(workout.trainingType) + '20'"
-                      [style.color]="getTypeColor(workout.trainingType)"
-                      [style.border-color]="getTypeColor(workout.trainingType) + '40'">{{ getTypeLabel(workout.trainingType)
-                      }}</span>
-                    <span *ngIf="!workout.trainingType">-</span>
-                  </span>
-                  <span class="t-dur">{{ getWorkoutDuration(workout) }}</span>
-                  <span class="t-if">{{ workout.intensityFactor || workout.if || '-' }}</span>
-                  <span class="t-tss">{{ workout.tss || '-' }}</span>
-                  <span class="t-status"
-                    [class.pending]="workout.status === 'PENDING' && !workout.isClubSession"
-                    [class.club]="workout.isClubSession">
-                    {{ workout.isClubSession ? 'CLUB' : workout.status }}
-                  </span>
-                </div>
-                <div *ngIf="schedule.length === 0" class="table-row empty-row">
-                  <span class="t-empty">No scheduled workouts for this period</span>
-                </div>
-              </ng-container>
+                    <span class="t-type">
+                      @if (workout.trainingType) {
+                        <span class="schedule-type-badge"
+                          [style.background]="getTypeColor(workout.trainingType) + '20'"
+                          [style.color]="getTypeColor(workout.trainingType)"
+                          [style.border-color]="getTypeColor(workout.trainingType) + '40'">{{ getTypeLabel(workout.trainingType)
+                          }}</span>
+                      } @else {
+                        <span>-</span>
+                      }
+                    </span>
+                    <span class="t-dur">{{ getWorkoutDuration(workout) }}</span>
+                    <span class="t-if">{{ workout.intensityFactor || workout.if || '-' }}</span>
+                    <span class="t-tss">{{ workout.tss || '-' }}</span>
+                    <span class="t-status"
+                      [class.pending]="workout.status === 'PENDING' && !workout.isClubSession"
+                      [class.club]="workout.isClubSession">
+                      {{ workout.isClubSession ? 'CLUB' : workout.status }}
+                    </span>
+                  </div>
+                }
+                @if (schedule.length === 0) {
+                  <div class="table-row empty-row">
+                    <span class="t-empty">No scheduled workouts for this period</span>
+                  </div>
+                }
+              }
             </div>
           </div>
 
-          <!-- Recent sessions -->
-          <ng-container *ngIf="athleteSessions$ | async as sessions">
-            <div class="coach-sessions-panel" *ngIf="sessions.length > 0">
-              <div class="section-title">RECENT SESSIONS</div>
-              <div class="sessions-mini-table">
-                <div class="sm-header">
-                  <span>Sport</span>
-                  <span>Session</span>
-                  <span>TSS</span>
-                  <span>IF</span>
-                </div>
-                <div *ngFor="let s of sessions.slice(0, 5); trackBy: trackSessionById" class="sm-row">
-                  <span class="sm-sport"><app-sport-icon [sport]="$any(s.sportType)" [size]="12"></app-sport-icon></span>
-                  <span class="sm-title">{{ s.title }}</span>
-                  <span class="sm-badge tss">{{ s.tss | number:'1.0-0' }}</span>
-                  <span class="sm-badge if">{{ s.intensityFactor | number:'1.2-2' }}</span>
+          @if (athleteSessions$ | async; as sessions) {
+            @if (sessions.length > 0) {
+              <div class="coach-sessions-panel">
+                <div class="section-title">RECENT SESSIONS</div>
+                <div class="sessions-mini-table">
+                  <div class="sm-header">
+                    <span>Sport</span>
+                    <span>Session</span>
+                    <span>TSS</span>
+                    <span>IF</span>
+                  </div>
+                  @for (s of sessions.slice(0, 5); track trackSessionById(s)) {
+                    <div class="sm-row">
+                      <span class="sm-sport"><app-sport-icon [sport]="$any(s.sportType)" [size]="12"></app-sport-icon></span>
+                      <span class="sm-title">{{ s.title }}</span>
+                      <span class="sm-badge tss">{{ s.tss | number:'1.0-0' }}</span>
+                      <span class="sm-badge if">{{ s.intensityFactor | number:'1.2-2' }}</span>
+                    </div>
+                  }
                 </div>
               </div>
-            </div>
-          </ng-container>
-        </ng-container>
+            }
+          }
+        }
 
         <!-- PHYSIOLOGY tab — Task 1: 3-column layout (CYCLING | RUNNING | SWIMMING) -->
         <div class="physiology-panel" *ngIf="activeTab === 'physiology'">
