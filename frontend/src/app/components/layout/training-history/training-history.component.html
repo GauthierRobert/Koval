@@ -1,31 +1,46 @@
 <div class="history-container">
   <div class="history-list">
-    <div *ngFor="let training of filteredTrainings$ | async" class="history-item"
-      [class.selected]="(selectedTraining$ | async)?.id === training.id" (click)="onSelect(training)">
-      <div class="item-icon">
-        <app-sport-icon [sport]="training.sportType" [size]="20"></app-sport-icon>
-      </div>
-      <div class="item-details">
-        <div class="item-title-row">
-          <span class="item-title">{{ training.title }}</span>
-          <span *ngIf="training.trainingType" class="type-badge"
-            [style.background]="getTypeColor(training.trainingType) + '20'"
-            [style.color]="getTypeColor(training.trainingType)"
-            [style.border-color]="getTypeColor(training.trainingType) + '40'">{{ getTypeLabel(training.trainingType)
-            }}</span>
+    @for (let training of filteredTrainings$ | async; track training.id) {
+      <div class="history-item"
+        [class.selected]="(selectedTraining$ | async)?.id === training.id" (click)="onSelect(training)">
+        <div class="item-icon">
+          <app-sport-icon [sport]="training.sportType" [size]="20"></app-sport-icon>
         </div>
-        <span class="item-meta">
-          <span [style.font-style]="isDurationEstimated(training) ? 'italic' : ''">{{ getDuration(training) }}</span>
-          &bull; {{ (training.blocks || []).length }} blocks
-        </span>
-        <span class="received-meta" *ngIf="training._receivedMeta">
-          from {{ training._receivedMeta.assignedByName }}<ng-container *ngIf="training._receivedMeta.originName"> via {{ training._receivedMeta.originName }}</ng-container>
-        </span>
-        <div class="item-tags" *ngIf="training.groupIds?.length && !training._receivedMeta">
-          <span *ngFor="let tag of training.groupIds" class="tag-chip">{{ tag }}</span>
+        <div class="item-details">
+          <div class="item-title-row">
+            <span class="item-title">{{ training.title }}</span>
+            @if (training.trainingType) {
+              <span class="type-badge"
+                [style.background]="getTypeColor(training.trainingType) + '20'"
+                [style.color]="getTypeColor(training.trainingType)"
+                [style.border-color]="getTypeColor(training.trainingType) + '40'">{{ getTypeLabel(training.trainingType)
+                }}</span>
+            }
+          </div>
+          <span class="item-meta">
+            <span [style.font-style]="isDurationEstimated(training) ? 'italic' : ''">{{ getDuration(training) }}</span>
+            &bull; {{ (training.blocks || []).length }} blocks
+          </span>
+          @if (training._receivedMeta) {
+            <span class="received-meta">
+              from {{ training._receivedMeta.assignedByName }}
+              @if (training._receivedMeta.originName) {
+                via {{ training._receivedMeta.originName }}
+              }
+            </span>
+          }
+          @if (training.groupIds?.length && !training._receivedMeta) {
+            <div class="item-tags">
+              @for (let tag of training.groupIds; track tag) {
+                <span class="tag-chip">{{ tag }}</span>
+              }
+            </div>
+          }
         </div>
+        @if ((activeContext$ | async) === 'mine') {
+          <button class="delete-btn" title="Delete training" (click)="onDelete($event, training)">&times;</button>
+        }
       </div>
-      <button *ngIf="(activeContext$ | async) === 'mine'" class="delete-btn" title="Delete training" (click)="onDelete($event, training)">&times;</button>
-    </div>
+    }
   </div>
 </div>

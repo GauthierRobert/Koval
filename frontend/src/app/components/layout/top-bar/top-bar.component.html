@@ -23,24 +23,32 @@
             stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
-      <div class="nav-dropdown club-dropdown glass" *ngIf="isClubsOpen" (click)="$event.stopPropagation()">
-        <ng-container *ngIf="clubService.userClubs$ | async as clubs">
-          <div *ngIf="clubs.length === 0" class="club-dropdown-empty">No clubs yet</div>
-          <a *ngFor="let club of clubs"
-             class="dropdown-item club-dropdown-item"
-             (click)="selectClub(club)">
-            <span class="dropdown-label">{{ club.name }}</span>
-            <span class="dropdown-desc">
-              {{ club.memberCount }} {{ club.memberCount === 1 ? 'member' : 'members' }}<ng-container *ngIf="getMembershipLabel(club.membershipStatus) as role"> · {{ role }}</ng-container>
-            </span>
+      @if (isClubsOpen) {
+        <div class="nav-dropdown club-dropdown glass" (click)="$event.stopPropagation()">
+          @if (clubService.userClubs$ | async as clubs) {
+            @if (clubs.length === 0) {
+              <div class="club-dropdown-empty">No clubs yet</div>
+            }
+            @for (let club of clubs; track club.id) {
+              <a class="dropdown-item club-dropdown-item"
+                 (click)="selectClub(club)">
+                <span class="dropdown-label">{{ club.name }}</span>
+                <span class="dropdown-desc">
+                  {{ club.memberCount }} {{ club.memberCount === 1 ? 'member' : 'members' }}
+                  @if (getMembershipLabel(club.membershipStatus) as role) {
+                    · {{ role }}
+                  }
+                </span>
+              </a>
+            }
+          }
+          <div class="club-dropdown-sep"></div>
+          <a class="dropdown-item club-dropdown-create" routerLink="/clubs" (click)="closeClubs()">
+            <span class="dropdown-label">+ CREATE CLUB</span>
+            <span class="dropdown-desc">Start a new club</span>
           </a>
-        </ng-container>
-        <div class="club-dropdown-sep"></div>
-        <a class="dropdown-item club-dropdown-create" routerLink="/clubs" (click)="closeClubs()">
-          <span class="dropdown-label">+ CREATE CLUB</span>
-          <span class="dropdown-desc">Start a new club</span>
-        </a>
-      </div>
+        </div>
+      }
     </div>
 
     <!-- Training dropdown -->
@@ -56,7 +64,8 @@
             stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
-      <div class="nav-dropdown glass" *ngIf="isTrainingOpen" (click)="$event.stopPropagation()">
+      @if (isTrainingOpen) {
+        <div class="nav-dropdown glass" (click)="$event.stopPropagation()">
         <a routerLink="/trainings" routerLinkActive="active" class="dropdown-item"
           (click)="closeTraining()">
           <span class="dropdown-label">TRAININGS</span>
@@ -87,7 +96,8 @@
           <span class="dropdown-label">PACING</span>
           <span class="dropdown-desc">Race pacing from GPX</span>
         </a>
-      </div>
+        </div>
+      }
     </div>
 
     <!-- Analytics dropdown -->
@@ -103,7 +113,8 @@
             stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
-      <div class="nav-dropdown glass" *ngIf="isAnalyticsOpen" (click)="$event.stopPropagation()">
+      @if (isAnalyticsOpen) {
+        <div class="nav-dropdown glass" (click)="$event.stopPropagation()">
         <a routerLink="/pmc"        routerLinkActive="active" class="dropdown-item"
           (click)="closeAnalytics()">
           <span class="dropdown-label">PMC</span>
@@ -114,16 +125,17 @@
           <span class="dropdown-label">PHYSIOLOGY</span>
           <span class="dropdown-desc">Zones &amp; physiological data</span>
         </a>
-      </div>
+        </div>
+      }
     </div>
 
     <!-- Coach-only tabs -->
-    <ng-container *ngIf="isCoach$ | async">
+    @if (isCoach$ | async) {
       <div class="nav-sep"></div>
       <a routerLink="/coach"  routerLinkActive="active" class="nav-link nav-link--coach">COACHING</a>
       <a routerLink="/groups" routerLinkActive="active" class="nav-link nav-link--coach">GROUPS</a>
       <a routerLink="/zones"  routerLinkActive="active" class="nav-link nav-link--coach">ZONES</a>
-    </ng-container>
+    }
   </nav>
 
   <div class="right-section">
@@ -152,13 +164,17 @@
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M6.5 6.5l11 11L12 23V1l5.5 5.5-11 11" />
         </svg>
-        <span class="device-badge" *ngIf="(connectedCount$ | async)! > 0">{{ connectedCount$ | async }}</span>
+        @if ((connectedCount$ | async)! > 0) {
+          <span class="device-badge">{{ connectedCount$ | async }}</span>
+        }
       </button>
     </div>
 
-    <ng-container *ngIf="user$ | async as u">
+    @if (user$ | async as u) {
       <div class="user-profile">
-        <img class="avatar-img" *ngIf="u.profilePicture" [src]="u.profilePicture" alt="Profile" />
+        @if (u.profilePicture) {
+          <img class="avatar-img" [src]="u.profilePicture" alt="Profile" />
+        }
         <div class="user-info">
           <span class="name">{{ u.displayName }}</span>
           <span class="status">{{ u.role }}</span>
@@ -172,13 +188,21 @@
           </svg>
         </button>
       </div>
-    </ng-container>
+    }
   </div>
 </header>
 
 <!-- Overlays to close dropdowns when clicking outside -->
-<div class="popup-overlay" *ngIf="isClubsOpen"     (click)="closeClubs()"></div>
-<div class="popup-overlay" *ngIf="isTrainingOpen"   (click)="closeTraining()"></div>
-<div class="popup-overlay" *ngIf="isAnalyticsOpen"  (click)="closeAnalytics()"></div>
+@if (isClubsOpen) {
+  <div class="popup-overlay" (click)="closeClubs()"></div>
+}
+@if (isTrainingOpen) {
+  <div class="popup-overlay" (click)="closeTraining()"></div>
+}
+@if (isAnalyticsOpen) {
+  <div class="popup-overlay" (click)="closeAnalytics()"></div>
+}
 
-<app-memberships-modal *ngIf="showMemberships" (closed)="showMemberships = false"></app-memberships-modal>
+@if (showMemberships) {
+  <app-memberships-modal (closed)="showMemberships = false"></app-memberships-modal>
+}

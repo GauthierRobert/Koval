@@ -1,25 +1,25 @@
 <div class="calendar-grid" cdkDropListGroup>
-  <div *ngFor="let day of days; trackBy: trackByDay" class="day-column glass" [class.today]="day.isToday">
-    <div class="day-header">
-      <span class="weekday">{{ day.date | date : 'EEE' }}</span>
-      <span class="day-number">{{ day.date | date : 'd' }}</span>
-    </div>
+  @for (day of days; track trackByDay(day)) {
+    <div class="day-column glass" [class.today]="day.isToday">
+      <div class="day-header">
+        <span class="weekday">{{ day.date | date : 'EEE' }}</span>
+        <span class="day-number">{{ day.date | date : 'd' }}</span>
+      </div>
 
-    <div class="workout-slot" cdkDropList [cdkDropListData]="entriesByDay.get(day.key) || EMPTY"
-      (cdkDropListDropped)="dropped.emit({ drop: $event, day: day })">
+      <div class="workout-slot" cdkDropList [cdkDropListData]="entriesByDay.get(day.key) || EMPTY"
+        (cdkDropListDropped)="dropped.emit({ drop: $event, day: day })">
 
-      <ng-container *ngFor="let group of groupEntries(entriesByDay.get(day.key) || EMPTY)">
+        @for (group of groupEntries(entriesByDay.get(day.key) || EMPTY); track group) {
 
-        <!-- Single entry -->
-        <ng-container *ngIf="group.type === 'single'">
-          <ng-container [ngSwitch]="group.entry?.kind">
+          @if (group.type === 'single') {
+            @switch (group.entry?.kind) {
 
-            <!-- SCHEDULED card -->
-            <div *ngSwitchCase="'scheduled'" class="workout-card clickable"
-              cdkDrag [cdkDragData]="$any(group.entry).scheduled"
-              [class.completed]="$any(group.entry).scheduled.status === 'COMPLETED'"
-              [class.skipped]="$any(group.entry).scheduled.status === 'SKIPPED'"
-              (click)="workoutSelected.emit($any(group.entry).scheduled)">
+              @case ('scheduled') {
+                <div class="workout-card clickable"
+                  cdkDrag [cdkDragData]="$any(group.entry).scheduled"
+                  [class.completed]="$any(group.entry).scheduled.status === 'COMPLETED'"
+                  [class.skipped]="$any(group.entry).scheduled.status === 'SKIPPED'"
+                  (click)="workoutSelected.emit($any(group.entry).scheduled)">
               <div class="card-top">
                 <span class="workout-time">08:00 AM</span>
                 <div class="card-top-right">

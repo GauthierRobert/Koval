@@ -1,4 +1,5 @@
-<div class="live-container" *ngIf="state$ | async as state">
+@if (state$ | async as state) {
+  <div class="live-container">
   <div class="top-bar">
     <div class="workout-title">{{ state.training?.title }}</div>
     <div class="top-controls">
@@ -152,6 +153,9 @@
   </div>
 
   <!-- Session Summary Overlay -->
-  <app-session-summary *ngIf="state.finalSummary" [summary]="state.finalSummary" (close)="closeSummary()">
-  </app-session-summary>
-</div>
+  @if (state.finalSummary) {
+    <app-session-summary [summary]="state.finalSummary" (close)="closeSummary()">
+    </app-session-summary>
+  }
+  </div>
+}

@@ -13,18 +13,22 @@
       </label>
       <span class="toggle-label">Simulate Trainer</span>
     </div>
-    <ng-container *ngIf="user$ | async as user">
-      <div class="join-section" *ngIf="user.role === 'ATHLETE'">
-        <span class="join-title">JOIN A TEAM</span>
-        <div class="join-row">
-          <input class="join-input" [(ngModel)]="inviteCode" (keydown.enter)="redeemCode()" placeholder="CODE"
-            maxlength="8" />
-          <button class="join-btn" (click)="redeemCode()" [disabled]="(joining$ | async) || !inviteCode.trim()">
-            {{ (joining$ | async) ? '...' : 'JOIN' }}
-          </button>
+    @if (user$ | async as user) {
+      @if (user.role === 'ATHLETE') {
+        <div class="join-section">
+          <span class="join-title">JOIN A TEAM</span>
+          <div class="join-row">
+            <input class="join-input" [(ngModel)]="inviteCode" (keydown.enter)="redeemCode()" placeholder="CODE"
+              maxlength="8" />
+            <button class="join-btn" (click)="redeemCode()" [disabled]="(joining$ | async) || !inviteCode.trim()">
+              {{ (joining$ | async) ? '...' : 'JOIN' }}
+            </button>
+          </div>
+          @if (joinError) {
+            <span class="join-error">{{ joinError }}</span>
+          }
         </div>
-        <span class="join-error" *ngIf="joinError">{{ joinError }}</span>
-      </div>
-    </ng-container>
+      }
+    }
   </div>
 </aside>
