@@ -21,6 +21,7 @@ import { PmcChartComponent } from '../../shared/pmc-chart/pmc-chart.component';
 import { formatPaceWithUnit, formatTimeHMS, daysUntil as sharedDaysUntil } from '../../shared/format/format.utils';
 
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { SessionData, AthleteSessions, SessionSummary } from '../../../models/session-types.model';
 
 @Component({
   selector: 'app-coach-dashboard',
@@ -81,7 +82,7 @@ export class CoachDashboardComponent implements OnInit {
   private scheduleSubject = new BehaviorSubject<ScheduledWorkout[]>([]);
   athleteSchedule$ = this.scheduleSubject.asObservable();
 
-  private athleteSessionsSubject = new BehaviorSubject<any[]>([]);
+  private athleteSessionsSubject = new BehaviorSubject<SessionData[]>([]);
   athleteSessions$ = this.athleteSessionsSubject.asObservable();
 
   private athleteSessionsErrorSubject = new BehaviorSubject<boolean>(false);
@@ -242,18 +243,30 @@ export class CoachDashboardComponent implements OnInit {
     this.loadAthleteProjectionSchedule(athlete.id);
   }
 
-  loadAthleteGoals(athleteId: string): void {
-    this.raceGoalService.getAthleteGoals(athleteId).subscribe({
-      next: (goals) => this.ngZone.run(() => this.athleteGoalsSubject.next(goals)),
-      error: () => this.ngZone.run(() => this.athleteGoalsSubject.next([])),
+  private loadAthleteData<T>(
+    loader: Observable<T>,
+    subject: BehaviorSubject<T>,
+    defaultValue: T
+  ): void {
+    loader.subscribe({
+      next: (data) => this.ngZone.run(() => subject.next(data)),
+      error: () => this.ngZone.run(() => subject.next(defaultValue)),
     });
+  }
+
+  loadAthleteGoals(athleteId: string): void {
+    this.loadAthleteData(
+      this.raceGoalService.getAthleteGoals(athleteId),
+      this.athleteGoalsSubject,
+      []
+    );
   }
 
   // Task 3: Wrap athleteSessionsSubject.next() in ngZone.run()
   loadAthleteSessions(athleteId: string): void {
     this.athleteSessionsErrorSubject.next(false);
     this.coachService.getAthleteSessions(athleteId).subscribe({
-      next: (sessions: any[]) => this.ngZone.run(() => {
+      next: (sessions: SessionData[]) => this.ngZone.run(() => {
         this.athleteSessionsSubject.next(sessions);
         this.athleteSessionsErrorSubject.next(false);
       }),
@@ -268,14 +281,15 @@ export class CoachDashboardComponent implements OnInit {
     const now = new Date();
     const from = new Date(now); from.setDate(from.getDate() - 90);
     const to = new Date(now); to.setDate(to.getDate() + 30);
-    this.coachService.getAthletePmc(
-      athleteId,
-      from.toISOString().split('T')[0],
-      to.toISOString().split('T')[0]
-    ).subscribe({
-      next: (data) => this.ngZone.run(() => this.athletePmcSubject.next(data)),
-      error: () => this.ngZone.run(() => this.athletePmcSubject.next([])),
-    });
+    this.loadAthleteData(
+      this.coachService.getAthletePmc(
+        athleteId,
+        from.toISOString().split('T')[0],
+        to.toISOString().split('T')[0]
+      ),
+      this.athletePmcSubject,
+      []
+    );
   }
 
   private loadAthleteProjectionSchedule(athleteId: string): void {
@@ -449,7 +463,7 @@ export class CoachDashboardComponent implements OnInit {
     return ((ftp / 0.757) * (10.8 / 70)).toFixed(1);
   }
 
-  getSportDistribution(sessions: any[]): { sport: string; count: number; pct: number }[] {
+  getSportDistribution(sessions: SessionData[]): SessionSummary[] {
     const map = new Map<string, number>();
     for (const s of sessions) map.set(s.sportType, (map.get(s.sportType) ?? 0) + 1);
     return Array.from(map.entries())
@@ -480,7 +494,7 @@ export class CoachDashboardComponent implements OnInit {
   trackAthleteById(_index: number, athlete: User): string { return athlete.id; }
   trackByValue(_index: number, value: string): string { return value; }
   trackScheduleById(_index: number, workout: ScheduledWorkout): string { return workout.id; }
-  trackSessionById(_index: number, s: any): string { return s.id; }
+  trackSessionById(_index: number, s: SessionData): string { return s.id; }
   trackZoneByName(_index: number, z: { name: string }): string { return z.name; }
   trackZoneByLabel(_index: number, z: { label: string }): string { return z.label; }
   trackDistBySport(_index: number, d: { sport: string }): string { return d.sport; }

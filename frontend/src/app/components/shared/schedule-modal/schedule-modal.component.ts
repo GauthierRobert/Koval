@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, NgZone } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, NgZone, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TrainingService } from '../../../services/training.service';
 import { Training, SPORT_OPTIONS, SportFilter } from '../../../models/training.model';
 import { CalendarService } from '../../../services/calendar.service';
@@ -45,6 +46,7 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
   readonly sportOptions = SPORT_OPTIONS;
 
   private userId = '';
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor(
     private trainingService: TrainingService,
@@ -57,8 +59,8 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
   ) {}
 
   ngOnInit(): void {
-    this.trainingService.trainings$.subscribe(t => (this.trainings = t));
-    this.authService.user$.subscribe(u => {
+    this.trainingService.trainings$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(t => (this.trainings = t));
+    this.authService.user$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(u => {
       if (u) this.userId = u.id;
     });
   }
@@ -81,7 +83,7 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
         if (this.clubId) {
           // Load club members instead of coach athletes
           this.clubService.loadMembers(this.clubId);
-          this.clubService.members$.subscribe(members => {
+          this.clubService.members$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(members => {
             this.ngZone.run(() => {
               this.availableAthletes = members.map(m => ({
                 id: m.userId,
@@ -94,7 +96,7 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
             });
           });
           this.clubService.loadGroups(this.clubId);
-          this.clubService.groups$.subscribe(groups => {
+          this.clubService.groups$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(groups => {
             this.ngZone.run(() => {
               this.availableTags = groups.map(g => g.name);
               if (this.preselectedGroupName && this.availableTags.includes(this.preselectedGroupName)) {
@@ -103,7 +105,7 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
             });
           });
         } else {
-          this.coachService.getAthletes().subscribe(athletes => {
+          this.coachService.getAthletes().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(athletes => {
             this.ngZone.run(() => {
               this.availableAthletes = athletes.sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { sensitivity: 'base' }));
               if (this.preselectedAthletes && this.preselectedAthletes.length > 0) {
@@ -111,7 +113,7 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
               }
             });
           });
-          this.coachService.getAllGroups().subscribe(groups => {
+          this.coachService.getAllGroups().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(groups => {
             this.ngZone.run(() => {
               this.availableTags = groups.map(g => g.name);
               if (this.preselectedGroupName && this.availableTags.includes(this.preselectedGroupName)) {
@@ -176,6 +178,7 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
     if (this.mode === 'coach') {
       this.coachService
         .assignTraining(this.selectedTrainingId, this.selectedAthleteIds, this.selectedDate, this.notes || undefined, this.clubId ?? undefined, this.groupId ?? undefined)
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: () => {
             this.ngZone.run(() => {
@@ -188,6 +191,7 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
     } else {
       this.calendarService
         .scheduleWorkout(this.selectedTrainingId, this.selectedDate, this.notes || undefined)
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: () => {
             this.ngZone.run(() => {
@@ -212,7 +216,7 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
       clubId: this.clubId ?? undefined,
       coachGroupId: this.groupId ?? undefined,
     };
-    this.aiActionService.executeAction(this.aiPrompt, 'TRAINING_FROM_NOTATION' as AIActionType, context).subscribe({
+    this.aiActionService.executeAction(this.aiPrompt, 'TRAINING_FROM_NOTATION' as AIActionType, context).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.ngZone.run(() => {
           this.aiLoading = false;

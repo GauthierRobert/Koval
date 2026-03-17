@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, inject, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, inject, OnInit, Output, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BehaviorSubject, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ClubService, ClubGroup, ClubSummary } from '../../../services/club.service';
 import { GroupService, Group } from '../../../services/group.service';
 import { CoachService } from '../../../services/coach.service';
@@ -33,6 +34,7 @@ export class MembershipsModalComponent implements OnInit {
   private groupService = inject(GroupService);
   private coachService = inject(CoachService);
   private authService = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
 
   inviteCode = '';
   private messageSubject = new BehaviorSubject<string>('');
@@ -64,7 +66,7 @@ export class MembershipsModalComponent implements OnInit {
     this.clubService.loadUserClubs();
     this.loadCoachGroups();
 
-    this.clubService.userClubs$.subscribe((clubs) => {
+    this.clubService.userClubs$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clubs) => {
       if (clubs.length === 0) {
         this.clubsWithGroupsSubject.next([]);
         this.loadingSubject.next(false);
@@ -73,7 +75,7 @@ export class MembershipsModalComponent implements OnInit {
       const groupRequests = clubs.map((club) =>
         this.clubService.getClubGroups(club.id).pipe(catchError(() => of([] as ClubGroup[])))
       );
-      forkJoin(groupRequests).subscribe((allGroups) => {
+      forkJoin(groupRequests).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((allGroups) => {
         const result: ClubWithGroups[] = clubs.map((club, i) => ({
           club,
           groups: allGroups[i].map((g) => ({
@@ -88,7 +90,7 @@ export class MembershipsModalComponent implements OnInit {
   }
 
   private loadCoachGroups(): void {
-    this.groupService.getGroups().subscribe((groups) => {
+    this.groupService.getGroups().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((groups) => {
       this.coachGroupsSubject.next(groups);
     });
   }
@@ -96,7 +98,7 @@ export class MembershipsModalComponent implements OnInit {
   redeemCode(): void {
     const code = this.inviteCode.trim();
     if (!code) return;
-    this.coachService.redeemInviteCode(code).subscribe({
+    this.coachService.redeemInviteCode(code).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.messageSubject.next('Joined successfully!');
         this.messageTypeSubject.next('success');
@@ -112,21 +114,24 @@ export class MembershipsModalComponent implements OnInit {
   }
 
   leaveClub(clubId: string): void {
-    this.clubService.leaveClub(clubId).subscribe(() => {
+    this.clubService.leaveClub(clubId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.clubService.loadUserClubs();
     });
   }
 
   joinClubGroup(clubId: string, groupId: string): void {
-    this.clubService.joinGroupSelf(clubId, groupId).subscribe(() => this.reloadClubGroups(clubId));
+    this.clubService.joinGroupSelf(clubId, groupId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.reloadClubGroups(clubId));
   }
 
   leaveClubGroup(clubId: string, groupId: string): void {
-    this.clubService.leaveGroupSelf(clubId, groupId).subscribe(() => this.reloadClubGroups(clubId));
+    this.clubService.leaveGroupSelf(clubId, groupId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.reloadClubGroups(clubId));
   }
 
   private reloadClubGroups(clubId: string): void {
-    this.clubService.getClubGroups(clubId).pipe(catchError(() => of([] as ClubGroup[]))).subscribe((groups) => {
+    this.clubService.getClubGroups(clubId).pipe(
+      catchError(() => of([] as ClubGroup[])),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((groups) => {
       const current = this.clubsWithGroupsSubject.value;
       const updated = current.map((cwg) =>
         cwg.club.id === clubId
@@ -144,7 +149,7 @@ export class MembershipsModalComponent implements OnInit {
   }
 
   leaveCoachGroup(groupId: string): void {
-    this.groupService.leaveGroup(groupId).subscribe(() => {
+    this.groupService.leaveGroup(groupId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.loadCoachGroups();
       this.authService.refreshUser();
     });

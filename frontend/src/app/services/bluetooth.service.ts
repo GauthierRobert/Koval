@@ -1,5 +1,6 @@
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, interval, Subscription} from 'rxjs';
+import { BluetoothDevice, BluetoothCharacteristic, CharacteristicValueChangedEvent } from '../models/bluetooth-types.model';
 
 export interface LiveMetrics {
     power: number;
@@ -24,10 +25,10 @@ export class BluetoothService {
     private isConnectedSubject = new BehaviorSubject<boolean>(false);
     isConnected$ = this.isConnectedSubject.asObservable();
 
-    private trainerDevice: any = null;
-    private heartRateDevice: any = null;
-    private powerMeterDevice: any = null;
-    private cadenceDevice: any = null;
+    private trainerDevice: BluetoothDevice | null = null;
+    private heartRateDevice: BluetoothDevice | null = null;
+    private powerMeterDevice: BluetoothDevice | null = null;
+    private cadenceDevice: BluetoothDevice | null = null;
 
     private trainerStatusSubject = new BehaviorSubject<string>('Disconnected');
     trainerStatus$ = this.trainerStatusSubject.asObservable();
@@ -71,8 +72,9 @@ export class BluetoothService {
             const characteristic = await service.getCharacteristic('indoor_bike_data');
 
             await characteristic.startNotifications();
-            characteristic.addEventListener('characteristicvaluechanged', (event: any) => {
-                this.handleTrainerData(event.target.value);
+            characteristic.addEventListener('characteristicvaluechanged', (event: Event) => {
+                const changeEvent = event as CharacteristicValueChangedEvent;
+                this.handleTrainerData(changeEvent.target.value);
             });
 
             this.trainerStatusSubject.next('Connected');
@@ -104,8 +106,9 @@ export class BluetoothService {
             const characteristic = await service.getCharacteristic('heart_rate_measurement');
 
             await characteristic.startNotifications();
-            characteristic.addEventListener('characteristicvaluechanged', (event: any) => {
-                this.handleHRData(event.target.value);
+            characteristic.addEventListener('characteristicvaluechanged', (event: Event) => {
+                const changeEvent = event as CharacteristicValueChangedEvent;
+                this.handleHRData(changeEvent.target.value);
             });
 
             this.hrStatusSubject.next('Connected');
@@ -137,8 +140,9 @@ export class BluetoothService {
             const characteristic = await service.getCharacteristic('cycling_power_measurement');
 
             await characteristic.startNotifications();
-            characteristic.addEventListener('characteristicvaluechanged', (event: any) => {
-                this.handlePowerMeterData(event.target.value);
+            characteristic.addEventListener('characteristicvaluechanged', (event: Event) => {
+                const changeEvent = event as CharacteristicValueChangedEvent;
+                this.handlePowerMeterData(changeEvent.target.value);
             });
 
             this.pmStatusSubject.next('Connected');
@@ -169,8 +173,9 @@ export class BluetoothService {
             const characteristic = await service.getCharacteristic('csc_measurement');
 
             await characteristic.startNotifications();
-            characteristic.addEventListener('characteristicvaluechanged', (event: any) => {
-                this.handleCadenceData(event.target.value);
+            characteristic.addEventListener('characteristicvaluechanged', (event: Event) => {
+                const changeEvent = event as CharacteristicValueChangedEvent;
+                this.handleCadenceData(changeEvent.target.value);
             });
 
             this.cadenceStatusSubject.next('Connected');

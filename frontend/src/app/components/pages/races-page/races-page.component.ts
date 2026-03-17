@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -25,6 +26,7 @@ export class RacesPageComponent implements OnInit {
   private raceGoalService = inject(RaceGoalService);
   private cdr = inject(ChangeDetectorRef);
   private router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   // Browse state
   sportFacets: SportFacet[] = [];
@@ -55,7 +57,7 @@ export class RacesPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadSportFacets();
-    this.raceGoalService.goals$.subscribe((goals) => {
+    this.raceGoalService.goals$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((goals) => {
       for (const g of goals) {
         if (g.raceId) this.addedRaceIds.add(g.raceId);
       }
@@ -64,7 +66,7 @@ export class RacesPageComponent implements OnInit {
   }
 
   loadSportFacets(): void {
-    this.raceService.getSportFacets().subscribe({
+    this.raceService.getSportFacets().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (facets) => {
         this.sportFacets = facets;
         this.cdr.markForCheck();
@@ -80,7 +82,7 @@ export class RacesPageComponent implements OnInit {
     this.browseLoading = true;
     this.cdr.markForCheck();
 
-    this.raceService.getCountryFacets(sport).subscribe({
+    this.raceService.getCountryFacets(sport).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (facets) => {
         this.countryFacets = facets;
         this.browseLoading = false;
@@ -102,6 +104,7 @@ export class RacesPageComponent implements OnInit {
 
     this.raceService
       .browseRaces(this.selectedBrowseSport, this.selectedBrowseCountry, this.browsePage)
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (page) => {
           this.browseResults = page;
@@ -152,6 +155,7 @@ export class RacesPageComponent implements OnInit {
         distance: race.distance,
         priority: 'A',
       })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.addedRaceIds.add(race.id);
@@ -173,9 +177,9 @@ export class RacesPageComponent implements OnInit {
     this.isAiCompleting = true;
     this.cdr.markForCheck();
 
-    this.raceService.createRace(this.newRaceTitle.trim()).subscribe({
+    this.raceService.createRace(this.newRaceTitle.trim()).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (race) => {
-        this.raceService.aiComplete(race.id).subscribe({
+        this.raceService.aiComplete(race.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: () => {
             this.isAiCompleting = false;
             this.isCreatingRace = false;
