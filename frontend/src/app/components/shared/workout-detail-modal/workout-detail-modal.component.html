@@ -1,23 +1,24 @@
-<ng-container *ngIf="workout$ | async as workout">
+@if (workout$ | async; as workout) {
   <div class="modal-backdrop" (click)="onBackdropClick($event)">
     <div class="modal-card glass">
       <button class="close-btn" (click)="close()">&times;</button>
 
-      <ng-container *ngIf="trainingState$ | async as state">
-        <!-- Loading -->
-        <div class="loading-state" *ngIf="state.loading">
-          <div class="spinner"></div>
-          <span>Loading workout...</span>
-        </div>
+      @if (trainingState$ | async; as state) {
+        @if (state.loading) {
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <span>Loading workout...</span>
+          </div>
+        }
 
-        <!-- Error -->
-        <div class="error-state" *ngIf="state.error">
-          <span>{{ state.error }}</span>
-          <button class="retry-btn" (click)="close()">Close</button>
-        </div>
+        @if (state.error) {
+          <div class="error-state">
+            <span>{{ state.error }}</span>
+            <button class="retry-btn" (click)="close()">Close</button>
+          </div>
+        }
 
-        <!-- Content -->
-        <ng-container *ngIf="state.training as training">
+        @if (state.training; as training) {
           <div class="modal-header">
             <h2>{{ training.title }}</h2>
             <div class="meta-row">
@@ -27,53 +28,67 @@
                 {{ workout.status }}
               </span>
             </div>
-            <p class="description" *ngIf="training.description">{{ training.description }}</p>
-            <p class="notes" *ngIf="workout.notes">
-              <span class="notes-label">Notes:</span> {{ workout.notes }}
-            </p>
-            <p class="assigned-by" *ngIf="workout.assignedBy">
-              Assigned by <strong>{{ workout.assignedBy }}</strong>
-            </p>
+            @if (training.description) {
+              <p class="description">{{ training.description }}</p>
+            }
+            @if (workout.notes) {
+              <p class="notes">
+                <span class="notes-label">Notes:</span> {{ workout.notes }}
+              </p>
+            }
+            @if (workout.assignedBy) {
+              <p class="assigned-by">
+                Assigned by <strong>{{ workout.assignedBy }}</strong>
+              </p>
+            }
           </div>
 
-          <!-- Mini chart -->
           <div class="chart-wrapper">
             <div class="chart-area">
-              <div *ngFor="let block of training.blocks" class="block-bar-wrapper"
-                [style.width.%]="getBlockWidth(block, training)">
-                <div class="bar-container" [style.height.%]="getBlockHeight(block, training)">
-                  <div class="block-bar" [style.background]="getBlockColor(block)"
-                    [style.clip-path]="getBlockClipPath(block, training)" [attr.data-type]="block.type"></div>
+              @for (block of training.blocks; track block) {
+                <div class="block-bar-wrapper"
+                  [style.width.%]="getBlockWidth(block, training)">
+                  <div class="bar-container" [style.height.%]="getBlockHeight(block, training)">
+                    <div class="block-bar" [style.background]="getBlockColor(block)"
+                      [style.clip-path]="getBlockClipPath(block, training)" [attr.data-type]="block.type"></div>
+                  </div>
                 </div>
-              </div>
+              }
             </div>
           </div>
 
-          <!-- Block list (collapsible) -->
-          <div class="blocks-section" *ngIf="training.blocks && training.blocks.length">
-            <button class="toggle-details-btn" (click)="toggleBlockDetails()">
-              <span class="toggle-arrow" [class.open]="showBlockDetails">&#9660;</span>
-              {{ showBlockDetails ? 'HIDE DETAILS' : 'SHOW DETAILS' }} ({{ training.blocks.length }} blocks)
-            </button>
-            <div class="blocks-list" *ngIf="showBlockDetails">
-              <div *ngFor="let block of training.blocks; let i = index" class="block-item">
-                <span class="block-index">{{ i + 1 }}</span>
-                <span class="block-label">{{ block.label || block.type }}</span>
-                <span class="block-intensity">{{ calculateIntensityValue(getBlockIntensityPercent(block), training) }}</span>
-                <span class="block-duration" [class.estimated]="!block.durationSeconds"
-                  *ngIf="isEstimationRelevant(training) || block.durationSeconds">
-                  {{ formatBlockDuration(block, training) }}
-                </span>
-                <span class="block-distance" [class.estimated]="!block.distanceMeters"
-                  *ngIf="isEstimationRelevant(training) || block.distanceMeters">
-                  {{ formatBlockDistance(block, training) }}
-                </span>
-              </div>
-              <button class="library-link-inline" (click)="viewInLibrary(training)">
-                Open in Training Library &rarr;
+          @if (training.blocks && training.blocks.length) {
+            <div class="blocks-section">
+              <button class="toggle-details-btn" (click)="toggleBlockDetails()">
+                <span class="toggle-arrow" [class.open]="showBlockDetails">&#9660;</span>
+                {{ showBlockDetails ? 'HIDE DETAILS' : 'SHOW DETAILS' }} ({{ training.blocks.length }} blocks)
               </button>
+              @if (showBlockDetails) {
+                <div class="blocks-list">
+                  @for (block of training.blocks; let i = $index; track block) {
+                    <div class="block-item">
+                      <span class="block-index">{{ i + 1 }}</span>
+                      <span class="block-label">{{ block.label || block.type }}</span>
+                      <span class="block-intensity">{{ calculateIntensityValue(getBlockIntensityPercent(block), training) }}</span>
+                      @if (isEstimationRelevant(training) || block.durationSeconds) {
+                        <span class="block-duration" [class.estimated]="!block.durationSeconds">
+                          {{ formatBlockDuration(block, training) }}
+                        </span>
+                      }
+                      @if (isEstimationRelevant(training) || block.distanceMeters) {
+                        <span class="block-distance" [class.estimated]="!block.distanceMeters">
+                          {{ formatBlockDistance(block, training) }}
+                        </span>
+                      }
+                    </div>
+                  }
+                  <button class="library-link-inline" (click)="viewInLibrary(training)">
+                    Open in Training Library &rarr;
+                  </button>
+                </div>
+              }
             </div>
-          </div>
+          }
 
           <!-- Stats -->
           <div class="stats-row">
@@ -86,30 +101,35 @@
               <span class="stat-value">{{ (training.blocks || []).length }}</span>
               <span class="stat-label">Blocks</span>
             </div>
-            <div class="stat" *ngIf="workout.tss">
-              <span class="stat-value">{{ workout.tss }}</span>
-              <span class="stat-label">TSS</span>
-            </div>
-            <div class="stat" *ngIf="workout.intensityFactor || workout.if">
-              <span class="stat-value">{{ workout.intensityFactor || workout.if }}</span>
-              <span class="stat-label">IF</span>
-            </div>
+            @if (workout.tss) {
+              <div class="stat">
+                <span class="stat-value">{{ workout.tss }}</span>
+                <span class="stat-label">TSS</span>
+              </div>
+            }
+            @if (workout.intensityFactor || workout.if) {
+              <div class="stat">
+                <span class="stat-value">{{ workout.intensityFactor || workout.if }}</span>
+                <span class="stat-label">IF</span>
+              </div>
+            }
           </div>
 
-          <!-- Actions -->
           <div class="modal-actions">
-            <button class="start-btn" *ngIf="training.sportType === 'CYCLING'" (click)="startTraining(training)">
-              <span class="play-icon">&#9654;</span> Start Training
-            </button>
-            <ng-container *ngIf="workout.status === 'PENDING'">
+            @if (training.sportType === 'CYCLING') {
+              <button class="start-btn" (click)="startTraining(training)">
+                <span class="play-icon">&#9654;</span> Start Training
+              </button>
+            }
+            @if (workout.status === 'PENDING') {
               <button class="complete-btn" [disabled]="isFutureDate(workout.scheduledDate)"
                 (click)="markComplete()">Mark Complete</button>
               <button class="skip-btn" (click)="markSkipped()">Skip</button>
-            </ng-container>
+            }
             <button class="library-link-btn" (click)="viewInLibrary(training)">View in Training Library</button>
           </div>
-        </ng-container>
-      </ng-container>
+        }
+      }
     </div>
   </div>
-</ng-container>
+}

@@ -1,64 +1,90 @@
 <div class="page-layout">
-  <ng-container *ngIf="selectedClub$ | async as club; else loading">
+  @if (selectedClub$ | async; as club) {
 
-    <!-- Header bar -->
     <div class="header glass">
       <div class="header-left">
         <button class="back-btn" (click)="goBack()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <div class="club-avatar" *ngIf="!club.logoUrl">{{ club.name.charAt(0).toUpperCase() }}</div>
-        <img class="club-avatar-img" *ngIf="club.logoUrl" [src]="club.logoUrl" alt="Club logo" />
+        @if (!club.logoUrl) {
+          <div class="club-avatar">{{ club.name.charAt(0).toUpperCase() }}</div>
+        }
+        @if (club.logoUrl) {
+          <img class="club-avatar-img" [src]="club.logoUrl" alt="Club logo" />
+        }
         <div class="header-info">
           <span class="header-title">{{ club.name | uppercase }}</span>
-          <span class="header-subtitle" *ngIf="club.description">{{ club.description }}</span>
+          @if (club.description) {
+            <span class="header-subtitle">{{ club.description }}</span>
+          }
         </div>
       </div>
       <div class="header-badges">
         <span class="h-badge">{{ club.memberCount }} members</span>
-        <span class="h-badge" *ngIf="club.location">{{ club.location }}</span>
+        @if (club.location) {
+          <span class="h-badge">{{ club.location }}</span>
+        }
         <span class="h-badge" [class.h-badge--private]="club.visibility === 'PRIVATE'">{{ club.visibility }}</span>
-        <span class="h-badge h-badge--role" *ngIf="club.currentMembershipStatus">
-          {{ getMembershipLabel(club.currentMembershipStatus) }}
-          <span *ngIf="club.currentMemberRole"> · {{ club.currentMemberRole }}</span>
-        </span>
+        @if (club.currentMembershipStatus) {
+          <span class="h-badge h-badge--role">
+            {{ getMembershipLabel(club.currentMembershipStatus) }}
+            @if (club.currentMemberRole) {
+              <span> · {{ club.currentMemberRole }}</span>
+            }
+          </span>
+        }
       </div>
-      <!-- Invite code (admin/owner/coach) -->
-      <div class="header-invite" *ngIf="canManageInvites(club) && (clubInviteCode$ | async) as code">
-        <span class="invite-code-chip" (click)="copyClubCode(code.code, code.id)">{{ code.code }}</span>
-        <button class="btn-copy" (click)="copyClubCode(code.code, code.id)"
-          [class.btn-copied]="copiedClubCodeId === code.id">
-          {{ copiedClubCodeId === code.id ? 'COPIED' : 'COPY' }}
-        </button>
-      </div>
+      @if (canManageInvites(club) && (clubInviteCode$ | async); as code) {
+        <div class="header-invite">
+          <span class="invite-code-chip" (click)="copyClubCode(code.code, code.id)">{{ code.code }}</span>
+          <button class="btn-copy" (click)="copyClubCode(code.code, code.id)"
+            [class.btn-copied]="copiedClubCodeId === code.id">
+            {{ copiedClubCodeId === code.id ? 'COPIED' : 'COPY' }}
+          </button>
+        </div>
+      }
       <div class="header-actions">
-        <button class="btn-join" *ngIf="!club.currentMembershipStatus" (click)="join(club)">JOIN</button>
-        <button class="btn-leave" *ngIf="club.currentMembershipStatus && club.currentMemberRole !== 'OWNER'" (click)="leave(club)">LEAVE</button>
+        @if (!club.currentMembershipStatus) {
+          <button class="btn-join" (click)="join(club)">JOIN</button>
+        }
+        @if (club.currentMembershipStatus && club.currentMemberRole !== 'OWNER') {
+          <button class="btn-leave" (click)="leave(club)">LEAVE</button>
+        }
       </div>
     </div>
 
-    <!-- Tab bar -->
     <div class="tab-strip glass">
-      <button
-        *ngFor="let tab of tabs"
-        class="tab-btn"
-        [class.active]="activeTab === tab.id"
-        (click)="activateTab(tab.id)">
-        {{ tab.label }}
-      </button>
+      @for (tab of tabs; track tab.id) {
+        <button
+          class="tab-btn"
+          [class.active]="activeTab === tab.id"
+          (click)="activateTab(tab.id)">
+          {{ tab.label }}
+        </button>
+      }
     </div>
 
-    <!-- Tab content -->
     <div class="tab-body">
-      <app-club-feed-tab *ngIf="activeTab === 'feed'"></app-club-feed-tab>
-      <app-club-sessions-tab *ngIf="activeTab === 'sessions'" [club]="club" (createAiForSession)="openAiModalForSession($event)"></app-club-sessions-tab>
-      <app-club-members-tab *ngIf="activeTab === 'members'" [club]="club"></app-club-members-tab>
-      <app-club-stats-tab *ngIf="activeTab === 'stats'"></app-club-stats-tab>
-      <app-club-leaderboard-tab *ngIf="activeTab === 'leaderboard'"></app-club-leaderboard-tab>
-      <app-club-race-goals-tab *ngIf="activeTab === 'race-goals'"></app-club-race-goals-tab>
+      @if (activeTab === 'feed') {
+        <app-club-feed-tab></app-club-feed-tab>
+      }
+      @if (activeTab === 'sessions') {
+        <app-club-sessions-tab [club]="club" (createAiForSession)="openAiModalForSession($event)"></app-club-sessions-tab>
+      }
+      @if (activeTab === 'members') {
+        <app-club-members-tab [club]="club"></app-club-members-tab>
+      }
+      @if (activeTab === 'stats') {
+        <app-club-stats-tab></app-club-stats-tab>
+      }
+      @if (activeTab === 'leaderboard') {
+        <app-club-leaderboard-tab></app-club-leaderboard-tab>
+      }
+      @if (activeTab === 'race-goals') {
+        <app-club-race-goals-tab></app-club-race-goals-tab>
+      }
     </div>
 
-    <!-- AI Modal -->
     <app-create-with-ai-modal
       [isOpen]="showAiModal"
       actionType="TRAINING_FROM_NOTATION"
@@ -69,12 +95,10 @@
       (created)="onAiCreated($event)">
     </app-create-with-ai-modal>
 
-  </ng-container>
-
-  <ng-template #loading>
+  } @else {
     <div class="loading-state">
       <div class="loading-spinner"></div>
       <span>Loading club...</span>
     </div>
-  </ng-template>
+  }
 </div>

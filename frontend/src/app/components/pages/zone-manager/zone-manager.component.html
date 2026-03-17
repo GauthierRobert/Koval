@@ -7,21 +7,27 @@
     </div>
     <div class="header-right">
       <div class="sport-filters">
-        <button *ngFor="let sport of sportTypes" class="sport-filter-btn"
-          [class.active]="activeSportFilter === sport" (click)="setSportFilter(sport)">
-          <app-sport-icon [sport]="sport" [size]="12"></app-sport-icon>
-          {{ getSportLabel(sport) }}
-        </button>
+        @for (let sport of sportTypes; track sport) {
+          <button class="sport-filter-btn"
+            [class.active]="activeSportFilter === sport" (click)="setSportFilter(sport)">
+            <app-sport-icon [sport]="sport" [size]="12"></app-sport-icon>
+            {{ getSportLabel(sport) }}
+          </button>
+        }
       </div>
       <button class="ai-btn" (click)="showAiModal = true">✨ CREATE WITH AI</button>
       <div class="create-dropdown">
         <button class="create-btn" (click)="showCreateMenu = !showCreateMenu">+ NEW</button>
-        <div class="create-menu" *ngIf="showCreateMenu">
-          <button *ngFor="let sport of sportTypes" class="create-option" (click)="createNewSystem(sport)">
-            <app-sport-icon [sport]="sport" [size]="14"></app-sport-icon>
-            {{ getSportLabel(sport) }} Zones
-          </button>
-        </div>
+        @if (showCreateMenu) {
+          <div class="create-menu">
+            @for (let sport of sportTypes; track sport) {
+              <button class="create-option" (click)="createNewSystem(sport)">
+                <app-sport-icon [sport]="sport" [size]="14"></app-sport-icon>
+                {{ getSportLabel(sport) }} Zones
+              </button>
+            }
+          </div>
+        }
       </div>
     </div>
   </div>
@@ -29,34 +35,43 @@
   <div class="zone-content">
     <!-- Systems list (left) -->
     <div class="systems-list">
-      <ng-container *ngIf="filteredSystems$ | async as systems">
-        <div *ngFor="let system of systems" class="system-card"
-          [class.selected]="selectedSystem?.id === system.id" (click)="selectSystem(system)">
-          <div class="system-card-top">
-            <app-sport-icon [sport]="system.sportType" [size]="14"></app-sport-icon>
-            <span class="system-name">{{ system.name }}</span>
-          </div>
-          <div class="system-card-meta">
-            <span class="meta-badge">{{ system.referenceType }}</span>
-            <span class="meta-count">{{ system.zones.length }} zones</span>
-            <span class="default-badge" *ngIf="system.defaultForSport">DEFAULT</span>
-          </div>
-          <div class="zone-bar-preview">
-            <div *ngFor="let zone of system.zones; let i = index" class="bar-segment"
-              [style.flex]="zone.high - zone.low" [style.background]="getZoneColor(i)">
+      @if (filteredSystems$ | async as systems) {
+        @for (let system of systems; track system.id) {
+          <div class="system-card"
+            [class.selected]="selectedSystem?.id === system.id" (click)="selectSystem(system)">
+            <div class="system-card-top">
+              <app-sport-icon [sport]="system.sportType" [size]="14"></app-sport-icon>
+              <span class="system-name">{{ system.name }}</span>
+            </div>
+            <div class="system-card-meta">
+              <span class="meta-badge">{{ system.referenceType }}</span>
+              <span class="meta-count">{{ system.zones.length }} zones</span>
+              @if (system.defaultForSport) {
+                <span class="default-badge">DEFAULT</span>
+              }
+            </div>
+            <div class="zone-bar-preview">
+              @for (let zone of system.zones; let i = $index; track i) {
+                <div class="bar-segment"
+                  [style.flex]="zone.high - zone.low" [style.background]="getZoneColor(i)">
+                </div>
+              }
             </div>
           </div>
-        </div>
+        }
 
-        <div *ngIf="systems.length === 0" class="empty-systems">
-          <p>No zone systems</p>
-          <p class="hint">Click <strong>+ NEW</strong> to create one</p>
-        </div>
-      </ng-container>
+        @if (systems.length === 0) {
+          <div class="empty-systems">
+            <p>No zone systems</p>
+            <p class="hint">Click <strong>+ NEW</strong> to create one</p>
+          </div>
+        }
+      }
     </div>
 
     <!-- Editor (right) -->
-    <div class="editor" *ngIf="editingSystem; else noSelection">
+    @if (editingSystem) {
+      <div class="editor">
       <!-- Editor header -->
       <div class="editor-header">
         <div class="editor-title">
@@ -65,19 +80,25 @@
             <div class="config-item">
               <label>SPORT</label>
               <select [(ngModel)]="editingSystem.sportType">
-                <option *ngFor="let s of sportTypes" [value]="s">{{ getSportLabel(s) }}</option>
+                @for (let s of sportTypes; track s) {
+                  <option [value]="s">{{ getSportLabel(s) }}</option>
+                }
               </select>
             </div>
             <div class="config-item">
               <label>REFERENCE</label>
               <select [(ngModel)]="editingSystem.referenceType">
-                <option *ngFor="let r of availableReferenceTypes" [value]="r.value">{{ r.label }}</option>
+                @for (let r of availableReferenceTypes; track r.value) {
+                  <option [value]="r.value">{{ r.label }}</option>
+                }
               </select>
             </div>
-            <div class="config-item" *ngIf="editingSystem.referenceType === 'CUSTOM'">
-              <label>REFERENCE NAME</label>
-              <input class="config-input" [(ngModel)]="editingSystem.referenceName" placeholder="e.g., Lactate Threshold" />
-            </div>
+            @if (editingSystem.referenceType === 'CUSTOM') {
+              <div class="config-item">
+                <label>REFERENCE NAME</label>
+                <input class="config-input" [(ngModel)]="editingSystem.referenceName" placeholder="e.g., Lactate Threshold" />
+              </div>
+            }
             <div class="config-item config-default">
               <label class="default-toggle">
                 <input type="checkbox" [(ngModel)]="editingSystem.defaultForSport" />
@@ -88,9 +109,15 @@
         </div>
         <div class="editor-actions">
           <button class="save-btn" [class.saved]="saved" (click)="saveSystem()" [disabled]="saving || saved">
-            <span *ngIf="!saving && !saved">SAVE</span>
-            <span *ngIf="saving">SAVING...</span>
-            <span *ngIf="saved">✓ SAVED</span>
+            @if (!saving && !saved) {
+              <span>SAVE</span>
+            }
+            @if (saving) {
+              <span>SAVING...</span>
+            }
+            @if (saved) {
+              <span>✓ SAVED</span>
+            }
           </button>
           <button class="delete-btn" (click)="deleteSystem()" [disabled]="deleting">DELETE</button>
         </div>
@@ -99,11 +126,15 @@
       <!-- Zone visualization bar -->
       <div class="zone-vis">
         <div class="zone-vis-bar">
-          <div *ngFor="let zone of editingSystem.zones; let i = index" class="vis-segment"
-            [style.flex]="zone.high - zone.low" [style.background]="getZoneColor(i)"
-            [title]="zone.label + ': ' + zone.low + '–' + zone.high + '%'">
-            <span class="vis-label" *ngIf="(zone.high - zone.low) > 15">{{ zone.label }}</span>
-          </div>
+          @for (let zone of editingSystem.zones; let i = $index; track i) {
+            <div class="vis-segment"
+              [style.flex]="zone.high - zone.low" [style.background]="getZoneColor(i)"
+              [title]="zone.label + ': ' + zone.low + '–' + zone.high + '%'">
+              @if ((zone.high - zone.low) > 15) {
+                <span class="vis-label">{{ zone.label }}</span>
+              }
+            </div>
+          }
         </div>
       </div>
 
@@ -116,7 +147,8 @@
           <span class="col-desc">DESCRIPTION</span>
           <span class="col-actions"></span>
         </div>
-        <div *ngFor="let zone of editingSystem.zones; let i = index; trackBy: trackByIndex" class="zone-row">
+        @for (let zone of editingSystem.zones; let i = $index; track i) {
+          <div class="zone-row">
           <span class="col-color">
             <span class="color-dot" [style.background]="getZoneColor(i)"></span>
           </span>
@@ -135,7 +167,8 @@
           <span class="col-actions">
             <button class="row-action danger" (click)="removeZone(i)" title="Remove zone">&times;</button>
           </span>
-        </div>
+          </div>
+        }
         <button class="add-zone-row" (click)="addZone()">+ Add Zone</button>
       </div>
 
@@ -150,9 +183,8 @@
         </textarea>
         <span class="annotations-hint">These notes help the AI understand your coaching conventions when creating workouts.</span>
       </div>
-    </div>
-
-    <ng-template #noSelection>
+      </div>
+    } @else {
       <div class="empty-editor">
         <div class="empty-content">
           <div class="empty-icon">
@@ -168,7 +200,7 @@
           <p>Choose from the list or create a new zone system to configure training intensity ranges.</p>
         </div>
       </div>
-    </ng-template>
+    }
   </div>
 
   <app-create-with-ai-modal
