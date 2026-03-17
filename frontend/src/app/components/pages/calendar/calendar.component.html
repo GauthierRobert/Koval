@@ -14,7 +14,7 @@
             @if (!myClubRoles.length) {
               <div class="prefs-empty">No clubs joined</div>
             }
-            @for (let role of myClubRoles; track role.clubId) {
+            @for (role of myClubRoles; track role.clubId) {
               <div class="prefs-club-row">
                 <label class="prefs-toggle">
                   <input type="checkbox" [checked]="isClubVisible(role.clubId)" (change)="toggleClub(role.clubId)">
@@ -22,7 +22,7 @@
                 </label>
                 @if (clubGroupsMap.get(role.clubId)?.length) {
                   <div class="prefs-groups">
-                    @for (let group of clubGroupsMap.get(role.clubId); track group.id) {
+                    @for (group of clubGroupsMap.get(role.clubId); track group.id) {
                       <div class="prefs-group-row">
                         <label class="prefs-toggle">
                           <input type="checkbox" [checked]="isGroupVisible(group.id)" (change)="toggleGroup(group.id)">

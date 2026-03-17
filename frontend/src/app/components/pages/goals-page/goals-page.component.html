@@ -68,136 +68,179 @@
 
         <!-- Meta grid -->
         <div class="detail-meta-grid">
-          <div class="detail-meta-item" *ngIf="goal.raceDate">
-            <span class="detail-meta-label">DATE</span>
-            <span class="detail-meta-value">{{ formatDate(goal.raceDate) }}</span>
-          </div>
-          <div class="detail-meta-item" *ngIf="goal.raceDate && isUpcoming(goal)">
-            <span class="detail-meta-label">COUNTDOWN</span>
-            <span class="detail-meta-value accent">{{ daysUntil(goal.raceDate) }} days · {{ weeksUntil(goal.raceDate) }} weeks</span>
-          </div>
-          <div class="detail-meta-item" *ngIf="goal.location">
-            <span class="detail-meta-label">LOCATION</span>
-            <span class="detail-meta-value">{{ goal.location }}</span>
-          </div>
-          <div class="detail-meta-item" *ngIf="goal.distance">
-            <span class="detail-meta-label">DISTANCE</span>
-            <span class="detail-meta-value">{{ goal.distance }}</span>
-          </div>
-          <div class="detail-meta-item" *ngIf="goal.targetTime">
-            <span class="detail-meta-label">TARGET TIME</span>
-            <span class="detail-meta-value accent">{{ goal.targetTime }}</span>
-          </div>
-          <div class="detail-meta-item" *ngIf="goal.sport">
-            <span class="detail-meta-label">SPORT</span>
-            <span class="detail-meta-value">{{ goal.sport }}</span>
-          </div>
+          @if (goal.raceDate) {
+            <div class="detail-meta-item">
+              <span class="detail-meta-label">DATE</span>
+              <span class="detail-meta-value">{{ formatDate(goal.raceDate) }}</span>
+            </div>
+          }
+          @if (goal.raceDate && isUpcoming(goal)) {
+            <div class="detail-meta-item">
+              <span class="detail-meta-label">COUNTDOWN</span>
+              <span class="detail-meta-value accent">{{ daysUntil(goal.raceDate) }} days · {{ weeksUntil(goal.raceDate) }} weeks</span>
+            </div>
+          }
+          @if (goal.location) {
+            <div class="detail-meta-item">
+              <span class="detail-meta-label">LOCATION</span>
+              <span class="detail-meta-value">{{ goal.location }}</span>
+            </div>
+          }
+          @if (goal.distance) {
+            <div class="detail-meta-item">
+              <span class="detail-meta-label">DISTANCE</span>
+              <span class="detail-meta-value">{{ goal.distance }}</span>
+            </div>
+          }
+          @if (goal.targetTime) {
+            <div class="detail-meta-item">
+              <span class="detail-meta-label">TARGET TIME</span>
+              <span class="detail-meta-value accent">{{ goal.targetTime }}</span>
+            </div>
+          }
+          @if (goal.sport) {
+            <div class="detail-meta-item">
+              <span class="detail-meta-label">SPORT</span>
+              <span class="detail-meta-value">{{ goal.sport }}</span>
+            </div>
+          }
         </div>
 
         <!-- Progress bar (upcoming only) -->
-        <div class="detail-progress" *ngIf="isUpcoming(goal) && goal.createdAt && goal.raceDate">
-          <div class="progress-bar-track">
-            <div class="progress-bar-fill" [style.width.%]="getProgressPercent(goal)"></div>
+        @if (isUpcoming(goal) && goal.createdAt && goal.raceDate) {
+          <div class="detail-progress">
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" [style.width.%]="getProgressPercent(goal)"></div>
+            </div>
+            <span class="progress-label">{{ getProgressPercent(goal) }}% of training window elapsed</span>
           </div>
-          <span class="progress-label">{{ getProgressPercent(goal) }}% of training window elapsed</span>
-        </div>
+        }
 
         <!-- Notes -->
-        <div class="detail-notes" *ngIf="goal.notes">
-          <span class="detail-section-label">NOTES</span>
-          <p class="detail-notes-text">{{ goal.notes }}</p>
-        </div>
+        @if (goal.notes) {
+          <div class="detail-notes">
+            <span class="detail-section-label">NOTES</span>
+            <p class="detail-notes-text">{{ goal.notes }}</p>
+          </div>
+        }
 
         <!-- Race info (if linked race loaded) -->
-        <ng-container *ngIf="goal.raceId && getRace(goal.raceId) as race">
+        @if (goal.raceId && getRace(goal.raceId) as race) {
           <div class="detail-race-info">
             <span class="detail-section-label">RACE INFO</span>
-            <div class="detail-race-distances" *ngIf="race.swimDistanceM || race.bikeDistanceM || race.runDistanceM || race.elevationGainM">
-              <span class="discipline-badge swim" *ngIf="race.swimDistanceM">S {{ formatDistance(race.swimDistanceM) }}</span>
-              <span class="discipline-badge bike" *ngIf="race.bikeDistanceM">B {{ formatDistance(race.bikeDistanceM) }}</span>
-              <span class="discipline-badge run" *ngIf="race.runDistanceM">R {{ formatDistance(race.runDistanceM) }}</span>
-              <span class="discipline-badge elevation" *ngIf="race.elevationGainM">&#9650; {{ race.elevationGainM }}m</span>
-            </div>
-            <p class="detail-race-desc" *ngIf="race.description">{{ race.description }}</p>
-            <a class="detail-race-website" *ngIf="race.website" [href]="race.website" target="_blank" rel="noopener">
-              {{ race.website }}
-            </a>
+            @if (race.swimDistanceM || race.bikeDistanceM || race.runDistanceM || race.elevationGainM) {
+              <div class="detail-race-distances">
+                @if (race.swimDistanceM) {
+                  <span class="discipline-badge swim">S {{ formatDistance(race.swimDistanceM) }}</span>
+                }
+                @if (race.bikeDistanceM) {
+                  <span class="discipline-badge bike">B {{ formatDistance(race.bikeDistanceM) }}</span>
+                }
+                @if (race.runDistanceM) {
+                  <span class="discipline-badge run">R {{ formatDistance(race.runDistanceM) }}</span>
+                }
+                @if (race.elevationGainM) {
+                  <span class="discipline-badge elevation">&#9650; {{ race.elevationGainM }}m</span>
+                }
+              </div>
+            }
+            @if (race.description) {
+              <p class="detail-race-desc">{{ race.description }}</p>
+            }
+            @if (race.website) {
+              <a class="detail-race-website" [href]="race.website" target="_blank" rel="noopener">
+                {{ race.website }}
+              </a>
+            }
           </div>
 
           <!-- GPX per discipline -->
           <div class="detail-gpx-section">
             <span class="detail-section-label">GPX ROUTES</span>
-            <div *ngFor="let disc of getGpxDisciplines(race)" class="detail-gpx-discipline">
-              <div class="gpx-discipline-header">
-                <span class="gpx-disc-label" [class.gpx-disc-swim]="disc === 'swim'" [class.gpx-disc-bike]="disc === 'bike'" [class.gpx-disc-run]="disc === 'run'">
-                  {{ disc | uppercase }}
-                </span>
-                <!-- Has GPX: green chip + re-upload -->
-                <ng-container *ngIf="hasGpxForDiscipline(race, disc)">
-                  <span class="gpx-chip gpx-chip--done">
-                    &#10003; Uploaded
-                    <label class="gpx-reupload" title="Replace GPX">
-                      &#8593;
-                      <input type="file" accept=".gpx" hidden
-                        (change)="onGpxFileSelected($event, race.id, disc)">
-                    </label>
+            @for (disc of getGpxDisciplines(race); track disc) {
+              <div class="detail-gpx-discipline">
+                <div class="gpx-discipline-header">
+                  <span class="gpx-disc-label" [class.gpx-disc-swim]="disc === 'swim'" [class.gpx-disc-bike]="disc === 'bike'" [class.gpx-disc-run]="disc === 'run'">
+                    {{ disc | uppercase }}
                   </span>
-                </ng-container>
-                <!-- No GPX: upload chip -->
-                <label class="gpx-chip gpx-chip--upload" *ngIf="!hasGpxForDiscipline(race, disc)">
-                  <span *ngIf="!isGpxUploading(race.id, disc)">&#8593; Upload GPX</span>
-                  <span *ngIf="isGpxUploading(race.id, disc)">Uploading...</span>
-                  <input type="file" accept=".gpx" hidden
-                    (change)="onGpxFileSelected($event, race.id, disc)">
-                </label>
+                  <!-- Has GPX: green chip + re-upload -->
+                  @if (hasGpxForDiscipline(race, disc)) {
+                    <span class="gpx-chip gpx-chip--done">
+                      &#10003; Uploaded
+                      <label class="gpx-reupload" title="Replace GPX">
+                        &#8593;
+                        <input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race.id, disc)">
+                      </label>
+                    </span>
+                  }
+                  <!-- No GPX: upload chip -->
+                  @if (!hasGpxForDiscipline(race, disc)) {
+                    <label class="gpx-chip gpx-chip--upload">
+                      @if (!isGpxUploading(race.id, disc)) {
+                        <span>&#8593; Upload GPX</span>
+                      }
+                      @if (isGpxUploading(race.id, disc)) {
+                        <span>Uploading...</span>
+                      }
+                      <input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race.id, disc)">
+                    </label>
+                  }
+                </div>
+                <!-- Map (shown when coords available) -->
+                @if (getRouteCoordsForDiscipline(race, disc).length > 0) {
+                  <div class="detail-map-container">
+                    <app-route-map
+                      [routeCoordinates]="getRouteCoordsForDiscipline(race, disc)"
+                      [segments]="[]">
+                    </app-route-map>
+                  </div>
+                }
+                @if (hasGpxForDiscipline(race, disc) && getRouteCoordsForDiscipline(race, disc).length === 0) {
+                  <div class="detail-map-loading">Loading route...</div>
+                }
               </div>
-              <!-- Map (shown when coords available) -->
-              <div class="detail-map-container" *ngIf="getRouteCoordsForDiscipline(race, disc).length > 0">
-                <app-route-map
-                  [routeCoordinates]="getRouteCoordsForDiscipline(race, disc)"
-                  [segments]="[]">
-                </app-route-map>
-              </div>
-              <div class="detail-map-loading" *ngIf="hasGpxForDiscipline(race, disc) && getRouteCoordsForDiscipline(race, disc).length === 0">
-                Loading route...
-              </div>
-            </div>
+            }
           </div>
-        </ng-container>
+        }
 
         <!-- Simulation section -->
-        <div class="detail-simulate" *ngIf="goal.raceId">
-          <button class="btn-simulate" (click)="simulateRace(goal)">&#9889; SIMULATE RACE</button>
-          <div class="sim-history" *ngIf="getSimRequests(goal.id).length > 0">
-            <span class="detail-section-label">PAST SIMULATIONS</span>
-            <div *ngFor="let req of getSimRequests(goal.id)" class="sim-request-item">
-              <div class="sim-info">
-                <span class="sim-label">{{ formatSimLabel(req) }}</span>
-                <span class="sim-date">{{ formatSimDate(req.createdAt) }}</span>
+        @if (goal.raceId) {
+          <div class="detail-simulate">
+            <button class="btn-simulate" (click)="simulateRace(goal)">&#9889; SIMULATE RACE</button>
+            @if (getSimRequests(goal.id).length > 0) {
+              <div class="sim-history">
+                <span class="detail-section-label">PAST SIMULATIONS</span>
+                @for (req of getSimRequests(goal.id); track req.id) {
+                  <div class="sim-request-item">
+                    <div class="sim-info">
+                      <span class="sim-label">{{ formatSimLabel(req) }}</span>
+                      <span class="sim-date">{{ formatSimDate(req.createdAt) }}</span>
+                    </div>
+                    <div class="sim-actions">
+                      <button class="btn-sm" (click)="rerunSimulation(req)">Re-run</button>
+                      <button class="btn-sm delete" (click)="deleteSimRequest(req)">&#215;</button>
+                    </div>
+                  </div>
+                }
               </div>
-              <div class="sim-actions">
-                <button class="btn-sm" (click)="rerunSimulation(req)">Re-run</button>
-                <button class="btn-sm delete" (click)="deleteSimRequest(req)">&#215;</button>
-              </div>
-            </div>
+            }
           </div>
-        </div>
+        }
 
-      </ng-container>
-
-      <ng-template #noSelection>
+      } @else {
         <div class="detail-empty">
           <span class="detail-empty-icon">&#127937;</span>
           <p>Select a goal to see details</p>
           <button class="btn-primary" (click)="openCreate()">+ ADD GOAL</button>
         </div>
-      </ng-template>
+      }
     </div>
   </div>
 </div>
 
 <!-- Goal Form Modal -->
-<div class="modal-backdrop" *ngIf="isFormOpen" (click)="closeForm()">
+@if (isFormOpen) {
+<div class="modal-backdrop" (click)="closeForm()">
   <div class="modal glass" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>{{ editingGoal ? 'Edit Goal' : (formStep === 'search' ? 'Find a Race' : 'Goal Details') }}</h3>
@@ -205,40 +248,65 @@
     </div>
 
     <!-- Step 1: Race Search -->
-    <div class="modal-body" *ngIf="formStep === 'search' && !editingGoal">
+    @if (formStep === 'search' && !editingGoal) {
+    <div class="modal-body">
       <div class="form-row">
         <label>Search public races</label>
         <input [(ngModel)]="raceSearchQuery" (ngModelChange)="onSearchChange($event)"
           placeholder="e.g. Ironman, Paris-Roubaix..." class="form-input" />
       </div>
 
-      <div class="search-results" *ngIf="searchResults$ | async as results">
-        <div *ngFor="let race of results" class="search-result-item" (click)="selectRace(race)">
-          <div class="result-title">{{ race.title }}</div>
-          <div class="result-meta">
-            <span *ngIf="race.sport">{{ race.sport }}</span>
-            <span *ngIf="race.location">{{ race.location }}</span>
-            <span *ngIf="race.distance">{{ race.distance }}</span>
-          </div>
+      @if (searchResults$ | async as results) {
+        <div class="search-results">
+          @for (race of results; track race.id) {
+            <div class="search-result-item" (click)="selectRace(race)">
+              <div class="result-title">{{ race.title }}</div>
+              <div class="result-meta">
+                @if (race.sport) {
+                  <span>{{ race.sport }}</span>
+                }
+                @if (race.location) {
+                  <span>{{ race.location }}</span>
+                }
+                @if (race.distance) {
+                  <span>{{ race.distance }}</span>
+                }
+              </div>
+            </div>
+          }
+          @if (results.length === 0 && raceSearchQuery.length >= 2) {
+            <div class="no-results">
+              No races found for "{{ raceSearchQuery }}" —
+              <a class="browse-link" routerLink="/races">browse the race catalog</a>
+            </div>
+          }
         </div>
-        <div *ngIf="results.length === 0 && raceSearchQuery.length >= 2" class="no-results">
-          No races found for "{{ raceSearchQuery }}" —
-          <a class="browse-link" routerLink="/races">browse the race catalog</a>
-        </div>
-      </div>
+      }
     </div>
+    }
 
     <!-- Step 2: Goal Details -->
-    <div class="modal-body" *ngIf="formStep === 'details'">
-      <div class="selected-race-banner" *ngIf="selectedRace">
-        <div class="banner-title">{{ selectedRace.title }}</div>
-        <div class="banner-meta">
-          <span *ngIf="selectedRace.sport">{{ selectedRace.sport }}</span>
-          <span *ngIf="selectedRace.location">{{ selectedRace.location }}</span>
-          <span *ngIf="selectedRace.distance">{{ selectedRace.distance }}</span>
+    @if (formStep === 'details') {
+    <div class="modal-body">
+      @if (selectedRace) {
+        <div class="selected-race-banner">
+          <div class="banner-title">{{ selectedRace.title }}</div>
+          <div class="banner-meta">
+            @if (selectedRace.sport) {
+              <span>{{ selectedRace.sport }}</span>
+            }
+            @if (selectedRace.location) {
+              <span>{{ selectedRace.location }}</span>
+            }
+            @if (selectedRace.distance) {
+              <span>{{ selectedRace.distance }}</span>
+            }
+          </div>
+          @if (!editingGoal) {
+            <button class="btn-change" (click)="backToSearch()">Change</button>
+          }
         </div>
-        <button class="btn-change" (click)="backToSearch()" *ngIf="!editingGoal">Change</button>
-      </div>
+      }
 
       <div class="form-row">
         <label>Race Name *</label>
@@ -248,13 +316,17 @@
         <div>
           <label>Sport</label>
           <select [(ngModel)]="form.sport" class="form-input">
-            <option *ngFor="let s of sports" [value]="s">{{ s }}</option>
+            @for (s of sports; track s) {
+              <option [value]="s">{{ s }}</option>
+            }
           </select>
         </div>
         <div>
           <label>Priority</label>
           <select [(ngModel)]="form.priority" class="form-input">
-            <option *ngFor="let p of priorities" [value]="p.value">{{ p.label }}</option>
+            @for (p of priorities; track p.value) {
+              <option [value]="p.value">{{ p.label }}</option>
+            }
           </select>
         </div>
       </div>
@@ -282,9 +354,11 @@
       </div>
     </div>
 
-    <div class="modal-footer" *ngIf="formStep === 'details'">
+    <div class="modal-footer">
       <button class="btn-secondary" (click)="closeForm()">CANCEL</button>
       <button class="btn-primary" (click)="save()" [disabled]="!form.title">SAVE</button>
     </div>
+    }
   </div>
-</div>
+}
+}
