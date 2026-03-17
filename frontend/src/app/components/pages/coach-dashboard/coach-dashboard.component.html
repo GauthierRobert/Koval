@@ -360,97 +360,116 @@
               }
             </div>
 
-            <!-- SWIMMING -->
             <div class="zone-col">
               <div class="zone-col-header">
                 <span class="zone-col-title">SWIMMING</span>
-                <span class="zone-col-ref" *ngIf="selectedAthlete.criticalSwimSpeed">{{ formatSwimPace(selectedAthlete.criticalSwimSpeed) }} CSS</span>
+                @if (selectedAthlete.criticalSwimSpeed) {
+                  <span class="zone-col-ref">{{ formatSwimPace(selectedAthlete.criticalSwimSpeed) }} CSS</span>
+                }
               </div>
-              <div class="zones-table" *ngIf="selectedAthlete.criticalSwimSpeed; else noCss">
-                <div *ngFor="let z of getSwimZones(selectedAthlete.criticalSwimSpeed); trackBy: trackZoneByName" class="zone-row">
-                  <span class="zone-dot" [style.background]="z.color"></span>
-                  <span class="zone-name">{{ z.name }}</span>
-                  <span class="zone-range">
-                    {{ z.low !== null ? formatSwimPace(z.low) : '∞' }}
-                    <ng-container *ngIf="z.high !== null">– {{ formatSwimPace(z.high) }}</ng-container>
-                  </span>
+              @if (selectedAthlete.criticalSwimSpeed) {
+                <div class="zones-table">
+                  @for (z of getSwimZones(selectedAthlete.criticalSwimSpeed); track trackZoneByName(z)) {
+                    <div class="zone-row">
+                      <span class="zone-dot" [style.background]="z.color"></span>
+                      <span class="zone-name">{{ z.name }}</span>
+                      <span class="zone-range">
+                        {{ z.low !== null ? formatSwimPace(z.low) : '∞' }}
+                        @if (z.high !== null) {
+                          – {{ formatSwimPace(z.high) }}
+                        }
+                      </span>
+                    </div>
+                  }
                 </div>
-              </div>
-              <ng-template #noCss>
+              } @else {
                 <div class="zone-no-data">No CSS set</div>
-              </ng-template>
+              }
             </div>
           </div>
 
-          <ng-container *ngIf="athleteSessions$ | async as sessions">
+          @if (athleteSessions$ | async; as sessions) {
             <div class="section-title" style="margin-top: 1.5rem">SPORT DISTRIBUTION</div>
-            <div class="sport-dist" *ngIf="sessions.length > 0">
-              <div *ngFor="let d of getSportDistribution(sessions); trackBy: trackDistBySport" class="dist-row">
-                <app-sport-icon [sport]="$any(d.sport)" [size]="12"></app-sport-icon>
-                <span class="dist-label">{{ d.sport }}</span>
-                <div class="dist-bar-wrap">
-                  <div class="dist-bar" [style.width.%]="d.pct"></div>
-                </div>
-                <span class="dist-pct">{{ d.pct }}%</span>
+            @if (sessions.length > 0) {
+              <div class="sport-dist">
+                @for (d of getSportDistribution(sessions); track trackDistBySport(d)) {
+                  <div class="dist-row">
+                    <app-sport-icon [sport]="$any(d.sport)" [size]="12"></app-sport-icon>
+                    <span class="dist-label">{{ d.sport }}</span>
+                    <div class="dist-bar-wrap">
+                      <div class="dist-bar" [style.width.%]="d.pct"></div>
+                    </div>
+                    <span class="dist-pct">{{ d.pct }}%</span>
+                  </div>
+                }
               </div>
-            </div>
-            <div *ngIf="sessions.length === 0" class="empty-tab">No session data yet.</div>
-          </ng-container>
+            } @else {
+              <div class="empty-tab">No session data yet.</div>
+            }
+          }
 
-          <!-- Custom zone systems with actual values -->
-          <ng-container *ngIf="coachZoneSystems$ | async as systems">
-            <ng-container *ngIf="systems.length > 0">
+          @if (coachZoneSystems$ | async; as systems) {
+            @if (systems.length > 0) {
               <div class="section-title" style="margin-top:1.5rem">COACH ZONE SYSTEMS</div>
-              <ng-container *ngFor="let sys of systems; trackBy: trackSystemByName">
+              @for (sys of systems; track trackSystemByName(sys)) {
                 <div class="zone-system-header">
                   <span class="zone-sys-name">{{ sys.name }}</span>
                   <span class="zone-sys-sport">{{ sys.sportType }}</span>
                   <span class="zone-sys-ref">{{ sys.referenceType }}</span>
                 </div>
                 <div class="zones-table">
-                  <div *ngFor="let z of sys.zones; let i = index; trackBy: trackZoneByLabel" class="zone-row">
-                    <span class="zone-dot" [style.background]="getZoneColor(i)"></span>
-                    <span class="zone-name">{{ z.label }} — {{ z.description }}</span>
-                    <span class="zone-range zone-range--dual">
-                      <span class="zone-actual">{{ getCustomZoneActualRange(z, selectedAthlete) }}</span>
-                      <span class="zone-pct">{{ z.low }}–{{ z.high }}%</span>
-                    </span>
-                  </div>
+                  @for (z of sys.zones; let i = $index; track trackZoneByLabel(z)) {
+                    <div class="zone-row">
+                      <span class="zone-dot" [style.background]="getZoneColor(i)"></span>
+                      <span class="zone-name">{{ z.label }} — {{ z.description }}</span>
+                      <span class="zone-range zone-range--dual">
+                        <span class="zone-actual">{{ getCustomZoneActualRange(z, selectedAthlete) }}</span>
+                        <span class="zone-pct">{{ z.low }}–{{ z.high }}%</span>
+                      </span>
+                    </div>
+                  }
                 </div>
-              </ng-container>
-            </ng-container>
-          </ng-container>
-        </div>
+              }
+            }
+          }
+        }
 
-        <!-- HISTORY tab -->
-        <ng-container *ngIf="activeTab === 'history'">
-          <ng-container *ngIf="athleteSessions$ | async as sessions">
-            <div class="history-table" *ngIf="sessions.length > 0">
-              <div class="hist-header">
-                <span>DATE</span>
-                <span>SPORT</span>
-                <span>TITLE</span>
-                <span>DUR</span>
-                <span>PWR</span>
-                <span>TSS</span>
-                <span>IF</span>
+        @if (activeTab === 'history') {
+          @if (athleteSessions$ | async; as sessions) {
+            @if (sessions.length > 0) {
+              <div class="history-table">
+                <div class="hist-header">
+                  <span>DATE</span>
+                  <span>SPORT</span>
+                  <span>TITLE</span>
+                  <span>DUR</span>
+                  <span>PWR</span>
+                  <span>TSS</span>
+                  <span>IF</span>
+                </div>
+                @for (s of sessions; track trackSessionById(s)) {
+                  <div class="hist-row">
+                    <span>{{ s.completedAt | date:'MMM d' }}</span>
+                    <span><app-sport-icon [sport]="$any(s.sportType)" [size]="12"></app-sport-icon></span>
+                    <span class="hist-title">{{ s.title }}</span>
+                    <span>{{ formatSessionDur(s.totalDurationSeconds) }}</span>
+                    <span>{{ s.avgPower | number:'1.0-0' }}W</span>
+                    <span>{{ s.tss | number:'1.0-0' }}</span>
+                    <span>{{ s.intensityFactor | number:'1.2-2' }}</span>
+                  </div>
+                }
               </div>
-              <div *ngFor="let s of sessions; trackBy: trackSessionById" class="hist-row">
-                <span>{{ s.completedAt | date:'MMM d' }}</span>
-                <span><app-sport-icon [sport]="$any(s.sportType)" [size]="12"></app-sport-icon></span>
-                <span class="hist-title">{{ s.title }}</span>
-                <span>{{ formatSessionDur(s.totalDurationSeconds) }}</span>
-                <span>{{ s.avgPower | number:'1.0-0' }}W</span>
-                <span>{{ s.tss | number:'1.0-0' }}</span>
-                <span>{{ s.intensityFactor | number:'1.2-2' }}</span>
-              </div>
-            </div>
-            <ng-container *ngIf="athleteSessionsError$ | async as hasError">
-              <div *ngIf="hasError" class="empty-tab">Failed to load session data.</div>
-            </ng-container>
-            <div *ngIf="sessions.length === 0 && !(athleteSessionsError$ | async)" class="empty-tab">No recorded sessions yet.</div>
-          </ng-container>
-        </ng-container>
+            }
+            @if (athleteSessionsError$ | async; as hasError) {
+              @if (hasError) {
+                <div class="empty-tab">Failed to load session data.</div>
+              }
+            }
+            @if (sessions.length === 0 && !(athleteSessionsError$ | async)) {
+              <div class="empty-tab">No recorded sessions yet.</div>
+            }
+          }
+        }
 
         <!-- Task 2: PMC tab (separate from performance) -->
         <ng-container *ngIf="activeTab === 'pmc'">
