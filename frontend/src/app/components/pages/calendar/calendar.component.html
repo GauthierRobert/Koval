@@ -8,24 +8,34 @@
             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
           </svg>
         </button>
-        <div class="prefs-dropdown" *ngIf="showPrefsDropdown">
-          <div class="prefs-header">Club Sessions Filter</div>
-          <div *ngIf="!myClubRoles.length" class="prefs-empty">No clubs joined</div>
-          <div *ngFor="let role of myClubRoles" class="prefs-club-row">
-            <label class="prefs-toggle">
-              <input type="checkbox" [checked]="isClubVisible(role.clubId)" (change)="toggleClub(role.clubId)">
-              <span class="prefs-club-name">{{ role.clubName }}</span>
-            </label>
-            <div *ngIf="clubGroupsMap.get(role.clubId)?.length" class="prefs-groups">
-              <div *ngFor="let group of clubGroupsMap.get(role.clubId)" class="prefs-group-row">
+        @if (showPrefsDropdown) {
+          <div class="prefs-dropdown">
+            <div class="prefs-header">Club Sessions Filter</div>
+            @if (!myClubRoles.length) {
+              <div class="prefs-empty">No clubs joined</div>
+            }
+            @for (let role of myClubRoles; track role.clubId) {
+              <div class="prefs-club-row">
                 <label class="prefs-toggle">
-                  <input type="checkbox" [checked]="isGroupVisible(group.id)" (change)="toggleGroup(group.id)">
-                  <span class="prefs-group-name">{{ group.name }}</span>
+                  <input type="checkbox" [checked]="isClubVisible(role.clubId)" (change)="toggleClub(role.clubId)">
+                  <span class="prefs-club-name">{{ role.clubName }}</span>
                 </label>
+                @if (clubGroupsMap.get(role.clubId)?.length) {
+                  <div class="prefs-groups">
+                    @for (let group of clubGroupsMap.get(role.clubId); track group.id) {
+                      <div class="prefs-group-row">
+                        <label class="prefs-toggle">
+                          <input type="checkbox" [checked]="isGroupVisible(group.id)" (change)="toggleGroup(group.id)">
+                          <span class="prefs-group-name">{{ group.name }}</span>
+                        </label>
+                      </div>
+                    }
+                  </div>
+                }
               </div>
-            </div>
+            }
           </div>
-        </div>
+        }
       </div>
 <div class="view-selector">
         <button [class.active]="viewMode === 'week'" (click)="setViewMode('week')">Week</button>
@@ -34,44 +44,52 @@
       <div class="nav-controls">
         <button (click)="navigateWeek(-1)">&lt; {{ viewMode === 'week' ? 'Prev' : 'Last Month' }}</button>
         <button class="today-btn" (click)="goToToday()">TODAY</button>
-        <span class="date-range" *ngIf="viewMode === 'week'">{{ startDate | date : 'MMM d' }} - {{ endDate | date : 'MMM d, y' }}</span>
-        <span class="date-range" *ngIf="viewMode === 'month'">{{ startDate | date : 'MMMM yyyy' }}</span>
+        @if (viewMode === 'week') {
+          <span class="date-range">{{ startDate | date : 'MMM d' }} - {{ endDate | date : 'MMM d, y' }}</span>
+        }
+        @if (viewMode === 'month') {
+          <span class="date-range">{{ startDate | date : 'MMMM yyyy' }}</span>
+        }
         <button (click)="navigateWeek(1)">{{ viewMode === 'week' ? 'Next' : 'Next Month' }} &gt;</button>
       </div>
     </div>
   </div>
 
-  <ng-container *ngIf="entriesByDay$ | async as ebd">
-    <app-calendar-week-view *ngIf="viewMode === 'week'"
-      [days]="weekDays"
-      [entriesByDay]="ebd"
-      [workoutsByDay]="(scheduleByDay$ | async) || emptyMap"
-      [goalsByDay]="(goalsByDay$ | async) || emptyGoalsMap"
-      (addDay)="openScheduleModal($event)"
-      (workoutSelected)="selectWorkout($event)"
-      (sessionSelected)="selectSession($event)"
-      (complete)="markComplete($event)"
-      (skip)="markSkipped($event)"
-      (workoutDeleted)="deleteWorkout($event)"
-      (dropped)="onDrop($event.drop, $event.day)"
-      (linked)="reload$.next()"
-      (joinClubSession)="joinClubSession($event)"
-      (cancelClubSession)="cancelClubSession($event)">
-    </app-calendar-week-view>
+  @if (entriesByDay$ | async as ebd) {
+    @if (viewMode === 'week') {
+      <app-calendar-week-view
+        [days]="weekDays"
+        [entriesByDay]="ebd"
+        [workoutsByDay]="(scheduleByDay$ | async) || emptyMap"
+        [goalsByDay]="(goalsByDay$ | async) || emptyGoalsMap"
+        (addDay)="openScheduleModal($event)"
+        (workoutSelected)="selectWorkout($event)"
+        (sessionSelected)="selectSession($event)"
+        (complete)="markComplete($event)"
+        (skip)="markSkipped($event)"
+        (workoutDeleted)="deleteWorkout($event)"
+        (dropped)="onDrop($event.drop, $event.day)"
+        (linked)="reload$.next()"
+        (joinClubSession)="joinClubSession($event)"
+        (cancelClubSession)="cancelClubSession($event)">
+      </app-calendar-week-view>
+    }
 
-    <app-calendar-month-view *ngIf="viewMode === 'month'"
-      [days]="monthDays"
-      [entriesByDay]="ebd"
-      [startDate]="startDate"
-      [goalsByDay]="(goalsByDay$ | async) || emptyGoalsMap"
-      (addDay)="openScheduleModal($event)"
-      (workoutSelected)="selectWorkout($event)"
-      (sessionSelected)="selectSession($event)"
-      (dropped)="onDrop($event.drop, $event.day)"
-      (joinClubSession)="joinClubSession($event)"
-      (cancelClubSession)="cancelClubSession($event)">
-    </app-calendar-month-view>
-  </ng-container>
+    @if (viewMode === 'month') {
+      <app-calendar-month-view
+        [days]="monthDays"
+        [entriesByDay]="ebd"
+        [startDate]="startDate"
+        [goalsByDay]="(goalsByDay$ | async) || emptyGoalsMap"
+        (addDay)="openScheduleModal($event)"
+        (workoutSelected)="selectWorkout($event)"
+        (sessionSelected)="selectSession($event)"
+        (dropped)="onDrop($event.drop, $event.day)"
+        (joinClubSession)="joinClubSession($event)"
+        (cancelClubSession)="cancelClubSession($event)">
+      </app-calendar-month-view>
+    }
+  }
 </div>
 
 <app-schedule-modal [isOpen]="isScheduleModalOpen" [preselectedDate]="selectedDate" mode="athlete"
