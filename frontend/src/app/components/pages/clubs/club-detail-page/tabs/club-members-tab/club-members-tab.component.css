@@ -87,6 +87,13 @@
   min-width: 0;
 }
 
+.member-name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 .member-name {
   font-size: 13px;
   font-weight: 700;
@@ -97,13 +104,6 @@
   font-size: 9px;
   color: var(--text-muted);
   font-weight: 500;
-}
-
-.member-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 4px;
 }
 
 .member-actions {
@@ -223,7 +223,6 @@
 }
 
 .tag-input {
-  flex: 1;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
@@ -270,18 +269,14 @@
 .group-card-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px 8px;
 }
 
 .group-card-name {
   font-size: 12px;
   font-weight: 700;
   color: var(--text-color);
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .group-card-count {

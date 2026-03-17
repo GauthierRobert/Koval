@@ -2,7 +2,7 @@
   <div class="month-day-names">
     <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
   </div>
-  <div class="month-body" cdkDropListGroup>
+  <div class="month-body">
     @for (day of days; track trackByDay(day)) {
       <div class="month-cell glass" [class.today]="day.isToday"
         [class.other-month]="day.date.getMonth() !== startDate.getMonth()">
@@ -14,24 +14,28 @@
             </svg>
           </button>
         </div>
-        <div class="cell-workouts" cdkDropList [cdkDropListData]="entriesByDay.get(day.key) || EMPTY"
-          (cdkDropListDropped)="dropped.emit({ drop: $event, day: day })">
-          @for (entry of entriesByDay.get(day.key) || EMPTY; track trackByEntry(entry)) {
+        <div class="cell-workouts">
+          @for (entry of entriesByDay.get(day.key) || []; track trackByEntry(entry)) {
 
             @if (entry.kind === 'scheduled') {
-              <div class="mini-card" cdkDrag
-            [cdkDragData]="entry.scheduled"
+              <div class="mini-card"
             (click)="workoutSelected.emit(entry.scheduled)"
             [style.border-left]="'2px solid ' + (entry.scheduled.trainingType ? getTypeColor(entry.scheduled.trainingType) : 'var(--accent-color)')">
             <app-sport-icon [sport]="entry.scheduled.sportType" [size]="10"></app-sport-icon>
             <span class="mini-title">{{ entry.scheduled.trainingTitle || entry.scheduled.title || 'Workout' }}</span>
               <span class="mini-tss">{{ entry.scheduled.tss || 0 }}</span>
+              @if (entry.scheduled.status === 'PENDING') {
+                <button class="btn-reschedule-mini" (click)="openReschedule(entry.scheduled, $event)" title="Reschedule">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                </button>
+              }
             </div>
             }
 
             @if (entry.kind === 'fused') {
-              <div class="mini-card mini-card--fused" cdkDrag
-            [cdkDragData]="entry.scheduled"
+              <div class="mini-card mini-card--fused"
             (click)="workoutSelected.emit(entry.scheduled)"
             [style.border-left]="'2px solid #34d399'">
             <app-sport-icon [sport]="entry.scheduled.sportType" [size]="10"></app-sport-icon>
@@ -53,9 +57,10 @@
             @if (entry.kind === 'club-session') {
               <div class="mini-card mini-card--club-session"
             [class.not-joined]="!entry.clubSession.joined && !entry.clubSession.onWaitingList"
-            style="border-left: 2px solid #a78bfa">
+            [class.mini-card--cancelled]="entry.clubSession.cancelled"
+            [style.border-left]="entry.clubSession.cancelled ? '2px solid #ef4444' : '2px solid #a78bfa'">
             <app-sport-icon [sport]="$any(entry.clubSession.sport)" [size]="10"></app-sport-icon>
-            <span class="mini-title">{{ entry.clubSession.title }}</span>
+            <span class="mini-title" [class.title-cancelled]="entry.clubSession.cancelled">{{ entry.clubSession.title }}</span>
               <span class="mini-club-name">{{ entry.clubSession.clubName }}</span>
             </div>
             }
@@ -76,3 +81,14 @@
     }
   </div>
 </div>
+
+@if (rescheduleTarget) {
+  <div class="reschedule-overlay" (click)="cancelReschedule()">
+    <div class="reschedule-modal" (click)="$event.stopPropagation()">
+      <span class="reschedule-title">Reschedule</span>
+      <span class="reschedule-workout-name">{{ rescheduleTarget.trainingTitle || rescheduleTarget.title || 'Workout' }}</span>
+      <input type="date" class="reschedule-date-input" [value]="rescheduleTarget.scheduledDate" (change)="confirmReschedule($any($event.target).value)" />
+      <button class="reschedule-cancel-btn" (click)="cancelReschedule()">Cancel</button>
+    </div>
+  </div>
+}

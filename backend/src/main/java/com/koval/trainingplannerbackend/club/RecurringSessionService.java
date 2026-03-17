@@ -15,13 +15,16 @@ public class RecurringSessionService {
     private final RecurringSessionTemplateRepository templateRepository;
     private final ClubTrainingSessionRepository sessionRepository;
     private final ClubAuthorizationService authorizationService;
+    private final ClubActivityService clubActivityService;
 
     public RecurringSessionService(RecurringSessionTemplateRepository templateRepository,
                                    ClubTrainingSessionRepository sessionRepository,
-                                   ClubAuthorizationService authorizationService) {
+                                   ClubAuthorizationService authorizationService,
+                                   ClubActivityService clubActivityService) {
         this.templateRepository = templateRepository;
         this.sessionRepository = sessionRepository;
         this.authorizationService = authorizationService;
+        this.clubActivityService = clubActivityService;
     }
 
     public RecurringSessionTemplate createTemplate(String userId, String clubId,
@@ -73,6 +76,36 @@ public class RecurringSessionService {
         template.setOpenToAllDelayUnit(req.openToAllDelayUnit());
         template.setResponsibleCoachId(req.responsibleCoachId());
         return templateRepository.save(template);
+    }
+
+    public int cancelFutureInstances(String userId, String clubId, String templateId, String reason) {
+        RecurringSessionTemplate template = templateRepository.findById(templateId)
+                .orElseThrow(() -> new IllegalArgumentException("Template not found"));
+        if (!template.getClubId().equals(clubId)) {
+            throw new IllegalArgumentException("Template does not belong to this club");
+        }
+        authorizationService.requireAdminOrCoach(userId, clubId);
+
+        template.setActive(false);
+        templateRepository.save(template);
+
+        List<ClubTrainingSession> futureInstances = sessionRepository
+                .findByRecurringTemplateIdAndScheduledAtAfter(templateId, LocalDateTime.now());
+        int cancelledCount = 0;
+        for (ClubTrainingSession session : futureInstances) {
+            if (!session.isCancelled()) {
+                session.setCancelled(true);
+                session.setCancellationReason(reason);
+                session.setCancelledAt(LocalDateTime.now());
+                sessionRepository.save(session);
+                cancelledCount++;
+            }
+        }
+
+        clubActivityService.emitActivity(clubId, ClubActivityType.RECURRING_SERIES_CANCELLED,
+                userId, templateId, template.getTitle());
+
+        return cancelledCount;
     }
 
     public void deactivateTemplate(String userId, String templateId) {

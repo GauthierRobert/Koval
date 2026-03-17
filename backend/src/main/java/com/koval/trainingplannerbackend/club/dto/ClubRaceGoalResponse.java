@@ -1,11 +1,23 @@
 package com.koval.trainingplannerbackend.club.dto;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public record ClubRaceGoalResponse(
-        Object goal,
+        String title,
+        String sport,
+        LocalDate raceDate,
+        String priority,
+        String distance,
+        String location,
         boolean hasUpcomingClubSession,
         List<RaceParticipant> participants
 ) {
-    public record RaceParticipant(String userId, String displayName, String profilePicture) {}
+    public record RaceParticipant(
+            String userId,
+            String displayName,
+            String profilePicture,
+            String priority,
+            String targetTime
+    ) {}
 }

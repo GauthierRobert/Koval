@@ -1,7 +1,5 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, inject, Input, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {CdkDrag, CdkDragDrop, CdkDropList, CdkDropListGroup} from '@angular/cdk/drag-drop';
-
 import {ScheduledWorkout} from '../../../../services/coach.service';
 import {SavedSession} from '../../../../services/history.service';
 import {TRAINING_TYPE_COLORS, TrainingType} from '../../../../models/training.model';
@@ -13,13 +11,13 @@ import {CalendarClubSession} from '../../../../services/calendar.service';
 @Component({
   selector: 'app-calendar-month-view',
   standalone: true,
-  imports: [CommonModule, CdkDropList, CdkDrag, CdkDropListGroup, SportIconComponent],
+  imports: [CommonModule, SportIconComponent],
   templateUrl: './calendar-month-view.component.html',
   styleUrl: './calendar-month-view.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CalendarMonthViewComponent {
-  readonly EMPTY: CalendarEntry[] = [];
+  rescheduleTarget: ScheduledWorkout | null = null;
 
   @Input() days: CalendarDay[] = [];
   @Input() entriesByDay: EntriesByDay = new Map();
@@ -35,9 +33,24 @@ export class CalendarMonthViewComponent {
   @Output() addDay = new EventEmitter<CalendarDay>();
   @Output() workoutSelected = new EventEmitter<ScheduledWorkout>();
   @Output() sessionSelected = new EventEmitter<SavedSession>();
-  @Output() dropped = new EventEmitter<{ drop: CdkDragDrop<CalendarEntry[]>; day: CalendarDay }>();
+  @Output() rescheduled = new EventEmitter<{ workout: ScheduledWorkout; newDate: string }>();
   @Output() joinClubSession = new EventEmitter<CalendarClubSession>();
   @Output() cancelClubSession = new EventEmitter<CalendarClubSession>();
+
+  openReschedule(workout: ScheduledWorkout, event: Event): void {
+    event.stopPropagation();
+    this.rescheduleTarget = workout;
+  }
+
+  confirmReschedule(newDate: string): void {
+    if (!this.rescheduleTarget || !newDate) return;
+    this.rescheduled.emit({ workout: this.rescheduleTarget, newDate });
+    this.rescheduleTarget = null;
+  }
+
+  cancelReschedule(): void {
+    this.rescheduleTarget = null;
+  }
 
   getTypeColor(type: string): string {
     return TRAINING_TYPE_COLORS[type as TrainingType] || '#888';

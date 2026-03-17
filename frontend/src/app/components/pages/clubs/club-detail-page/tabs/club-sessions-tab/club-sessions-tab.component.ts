@@ -70,6 +70,9 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   showCancelConfirm = false;
   cancelTargetSession: ClubTrainingSession | null = null;
   cancelReason = '';
+  showCancelRecurringChoice = false;
+  pendingCancelSession: ClubTrainingSession | null = null;
+  cancelMode: 'single' | 'all' = 'single';
 
   coachMembers: ClubMember[] = [];
   expandedSessionId: string | null = null;
@@ -486,28 +489,76 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
 
   openCancelSessionModal(session: ClubTrainingSession, event: Event): void {
     event.stopPropagation();
-    this.cancelTargetSession = session;
+    if (session.recurringTemplateId) {
+      this.pendingCancelSession = session;
+      this.showCancelRecurringChoice = true;
+      this.cdr.markForCheck();
+    } else {
+      this.cancelTargetSession = session;
+      this.cancelReason = '';
+      this.cancelMode = 'single';
+      this.showCancelConfirm = true;
+      this.cdr.markForCheck();
+    }
+  }
+
+  cancelThisOnly(): void {
+    if (!this.pendingCancelSession) return;
+    this.showCancelRecurringChoice = false;
+    this.cancelTargetSession = this.pendingCancelSession;
+    this.pendingCancelSession = null;
     this.cancelReason = '';
+    this.cancelMode = 'single';
     this.showCancelConfirm = true;
     this.cdr.markForCheck();
+  }
+
+  cancelAllFuture(): void {
+    if (!this.pendingCancelSession) return;
+    this.showCancelRecurringChoice = false;
+    this.cancelTargetSession = this.pendingCancelSession;
+    this.pendingCancelSession = null;
+    this.cancelReason = '';
+    this.cancelMode = 'all';
+    this.showCancelConfirm = true;
+    this.cdr.markForCheck();
+  }
+
+  closeCancelRecurringChoice(): void {
+    this.showCancelRecurringChoice = false;
+    this.pendingCancelSession = null;
   }
 
   closeCancelSessionModal(): void {
     this.showCancelConfirm = false;
     this.cancelTargetSession = null;
     this.cancelReason = '';
+    this.cancelMode = 'single';
   }
 
   confirmCancelSession(): void {
     if (!this.cancelTargetSession) return;
-    this.clubService.cancelEntireSession(this.club.id, this.cancelTargetSession.id, this.cancelReason || undefined).subscribe({
-      next: () => {
-        this.closeCancelSessionModal();
-        this.loadCalendarSessions();
-        this.cdr.markForCheck();
-      },
-      error: () => {},
-    });
+    if (this.cancelMode === 'all' && this.cancelTargetSession.recurringTemplateId) {
+      this.clubService
+        .cancelRecurringSessions(this.club.id, this.cancelTargetSession.recurringTemplateId, this.cancelReason || undefined)
+        .subscribe({
+          next: () => {
+            this.closeCancelSessionModal();
+            this.loadCalendarSessions();
+            this.cdr.markForCheck();
+          },
+          error: () => {},
+        });
+    } else {
+      this.clubService.cancelEntireSession(this.club.id, this.cancelTargetSession.id, this.cancelReason || undefined).subscribe({
+        next: () => {
+          this.closeCancelSessionModal();
+          this.loadCalendarSessions();
+          this.cdr.markForCheck();
+        },
+        error: () => {},
+      });
+    }
   }
 
   isCancelled(session: ClubTrainingSession): boolean {

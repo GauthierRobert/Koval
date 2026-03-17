@@ -2,7 +2,6 @@ import {ChangeDetectionStrategy, Component, EventEmitter, inject, Input, Output}
 import {CommonModule} from '@angular/common';
 import {Observable, of} from 'rxjs';
 import {map} from 'rxjs/operators';
-import {CdkDrag, CdkDragDrop, CdkDropList, CdkDropListGroup} from '@angular/cdk/drag-drop';
 import {RouterModule} from '@angular/router';
 
 import {CalendarClubSession, CalendarService} from '../../../../services/calendar.service';
@@ -18,14 +17,14 @@ import {formatTimeHMS} from '../../../shared/format/format.utils';
 @Component({
   selector: 'app-calendar-week-view',
   standalone: true,
-  imports: [CommonModule, RouterModule, CdkDropList, CdkDrag, CdkDropListGroup, SportIconComponent, TrainingLoadChartComponent],
+  imports: [CommonModule, RouterModule, SportIconComponent, TrainingLoadChartComponent],
   templateUrl: './calendar-week-view.component.html',
   styleUrl: './calendar-week-view.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CalendarWeekViewComponent {
-  readonly EMPTY: CalendarEntry[] = [];
   readonly emptyMap: WorkoutsByDay = new Map();
+  rescheduleTarget: ScheduledWorkout | null = null;
 
   @Input() days: CalendarDay[] = [];
   @Input() entriesByDay: EntriesByDay = new Map();
@@ -38,7 +37,7 @@ export class CalendarWeekViewComponent {
   @Output() complete = new EventEmitter<ScheduledWorkout>();
   @Output() skip = new EventEmitter<ScheduledWorkout>();
   @Output() workoutDeleted = new EventEmitter<ScheduledWorkout>();
-  @Output() dropped = new EventEmitter<{ drop: CdkDragDrop<CalendarEntry[]>; day: CalendarDay }>();
+  @Output() rescheduled = new EventEmitter<{ workout: ScheduledWorkout; newDate: string }>();
   @Output() linked = new EventEmitter<void>();
   @Output() joinClubSession = new EventEmitter<CalendarClubSession>();
   @Output() cancelClubSession = new EventEmitter<CalendarClubSession>();
@@ -102,6 +101,21 @@ export class CalendarWeekViewComponent {
     if (e.kind === 'scheduled') return 'sw-' + e.scheduled.id;
     if (e.kind === 'club-session') return 'club-' + e.clubSession.id;
     return 'sess-' + e.session.id;
+  }
+
+  openReschedule(workout: ScheduledWorkout, event: Event): void {
+    event.stopPropagation();
+    this.rescheduleTarget = workout;
+  }
+
+  confirmReschedule(newDate: string): void {
+    if (!this.rescheduleTarget || !newDate) return;
+    this.rescheduled.emit({ workout: this.rescheduleTarget, newDate });
+    this.rescheduleTarget = null;
+  }
+
+  cancelReschedule(): void {
+    this.rescheduleTarget = null;
   }
 
   formatClubSessionTime(scheduledAt: string): string {

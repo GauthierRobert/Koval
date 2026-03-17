@@ -2,7 +2,6 @@ import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core'
 import {CommonModule} from '@angular/common';
 import {BehaviorSubject, combineLatest, Observable} from 'rxjs';
 import {filter, map, shareReplay, startWith, switchMap, tap} from 'rxjs/operators';
-import {CdkDragDrop} from '@angular/cdk/drag-drop';
 import {Router} from '@angular/router';
 
 import {CalendarClubSession, CalendarService} from '../../../services/calendar.service';
@@ -252,10 +251,8 @@ export class CalendarComponent implements OnInit {
     this.calendarService.deleteScheduledWorkout(workout.id).subscribe(() => this.reload$.next());
   }
 
-  onDrop(event: CdkDragDrop<CalendarEntry[]>, targetDay: CalendarDay): void {
-    const workout: ScheduledWorkout = event.item.data;
-    if (!workout || workout.scheduledDate === targetDay.key) return;
-    this.calendarService.rescheduleWorkout(workout.id, targetDay.key).subscribe(() => this.reload$.next());
+  onReschedule(workout: ScheduledWorkout, newDate: string): void {
+    this.calendarService.rescheduleWorkout(workout.id, newDate).subscribe(() => this.reload$.next());
   }
 
   selectWorkout(workout: ScheduledWorkout): void { this.selectedWorkout = workout; }

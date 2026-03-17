@@ -24,6 +24,8 @@ export interface CalendarClubSession {
     onWaitingList: boolean;
     waitingListPosition: number;
     openToAllFrom?: string;
+    cancelled?: boolean;
+    cancellationReason?: string;
 }
 
 const BASE = environment.apiUrl;

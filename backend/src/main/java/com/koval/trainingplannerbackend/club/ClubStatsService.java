@@ -102,42 +102,64 @@ public class ClubStatsService {
 
     public List<ClubRaceGoalResponse> getRaceGoals(String clubId) {
         List<String> memberIds = getActiveMemberIds(clubId);
-        List<RaceGoal> goals = raceGoalRepository.findByAthleteIdInAndRaceDateGreaterThanEqualOrderByRaceDateAsc(
-                memberIds, LocalDate.now());
+        if (memberIds.isEmpty()) return List.of();
+
+        LocalDate today = LocalDate.now();
+        List<RaceGoal> goals = raceGoalRepository.findByAthleteIdInOrderByRaceDateAsc(memberIds)
+                .stream()
+                .filter(g -> g.getRaceDate() != null && !g.getRaceDate().isBefore(today))
+                .toList();
         List<ClubTrainingSession> sessions = sessionRepository.findByClubIdOrderByScheduledAtDesc(clubId);
 
         // Group goals by race key: raceId if present, else title+date
         Map<String, List<RaceGoal>> goalsByRace = goals.stream()
                 .collect(Collectors.groupingBy(g ->
                         g.getRaceId() != null ? g.getRaceId()
-                                : g.getTitle().toLowerCase().trim() + "|" + g.getRaceDate()));
+                                : g.getTitle().toLowerCase().trim() + "|" + g.getRaceDate(),
+                        LinkedHashMap::new, Collectors.toList()));
 
         // Batch-fetch users for participant info
         List<String> athleteIds = goals.stream().map(RaceGoal::getAthleteId).distinct().toList();
         Map<String, User> userMap = userService.findAllById(athleteIds).stream()
                 .collect(Collectors.toMap(User::getId, u -> u));
 
-        return goals.stream().map(g -> {
+        // One response per unique race, sorted by date
+        return goalsByRace.values().stream().map(raceGoals -> {
+            RaceGoal representative = raceGoals.getFirst();
+
             boolean hasSession = sessions.stream().anyMatch(s ->
                     s.getScheduledAt() != null &&
-                    s.getScheduledAt().toLocalDate().isAfter(LocalDate.now()) &&
-                    s.getScheduledAt().toLocalDate().isBefore(g.getRaceDate().plusDays(1)));
+                    s.getScheduledAt().toLocalDate().isAfter(today) &&
+                    s.getScheduledAt().toLocalDate().isBefore(representative.getRaceDate().plusDays(1)));
 
-            String raceKey = g.getRaceId() != null ? g.getRaceId()
-                    : g.getTitle().toLowerCase().trim() + "|" + g.getRaceDate();
-            List<ClubRaceGoalResponse.RaceParticipant> participants = goalsByRace
-                    .getOrDefault(raceKey, List.of()).stream()
-                    .filter(other -> !other.getAthleteId().equals(g.getAthleteId()))
-                    .map(other -> {
-                        User u = userMap.get(other.getAthleteId());
+            // Best priority: A > B > C
+            String bestPriority = raceGoals.stream()
+                    .map(RaceGoal::getPriority)
+                    .filter(Objects::nonNull)
+                    .min(Comparator.naturalOrder())
+                    .orElse("C");
+
+            List<ClubRaceGoalResponse.RaceParticipant> participants = raceGoals.stream()
+                    .map(g -> {
+                        User u = userMap.get(g.getAthleteId());
                         return new ClubRaceGoalResponse.RaceParticipant(
-                                other.getAthleteId(),
-                                u != null ? u.getDisplayName() : other.getAthleteId(),
-                                u != null ? u.getProfilePicture() : null);
+                                g.getAthleteId(),
+                                u != null ? u.getDisplayName() : g.getAthleteId(),
+                                u != null ? u.getProfilePicture() : null,
+                                g.getPriority(),
+                                g.getTargetTime());
                     })
                     .toList();
 
-            return new ClubRaceGoalResponse(g, hasSession, participants);
+            return new ClubRaceGoalResponse(
+                    representative.getTitle(),
+                    representative.getSport(),
+                    representative.getRaceDate(),
+                    bestPriority,
+                    representative.getDistance(),
+                    representative.getLocation(),
+                    hasSession,
+                    participants);
         }).collect(Collectors.toList());
     }
 

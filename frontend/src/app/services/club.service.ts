@@ -12,6 +12,7 @@ export type ClubActivityType =
   | 'SESSION_CREATED'
   | 'SESSION_JOINED'
   | 'SESSION_CANCELLED'
+  | 'RECURRING_SERIES_CANCELLED'
   | 'TRAINING_CREATED'
   | 'RACE_GOAL_ADDED'
   | 'WAITING_LIST_JOINED';
@@ -145,20 +146,20 @@ export interface LeaderboardEntry {
 }
 
 export interface ClubRaceGoalResponse {
-  goal: {
-    id: string;
-    title: string;
-    sport: string;
-    raceDate: string;
-    priority: string;
-    distance?: string;
-    location?: string;
-    targetTime?: string;
-    notes?: string;
-    athleteId: string;
-  };
+  title: string;
+  sport: string;
+  raceDate: string;
+  priority: string;
+  distance?: string;
+  location?: string;
   hasUpcomingClubSession: boolean;
-  participants: { userId: string; displayName: string; profilePicture: string | null }[];
+  participants: {
+    userId: string;
+    displayName: string;
+    profilePicture: string | null;
+    priority: string;
+    targetTime?: string;
+  }[];
 }
 
 export interface ClubInviteCode {
@@ -460,6 +461,26 @@ export class ClubService {
         },
         error: (err) => observer.error(err),
       });
+    });
+  }
+
+  cancelRecurringSessions(clubId: string, templateId: string, reason?: string): Observable<{ cancelledCount: number }> {
+    return new Observable((observer) => {
+      this.http
+        .put<{ cancelledCount: number }>(`${this.apiUrl}/${clubId}/recurring-sessions/${templateId}/cancel-future`, {
+          reason: reason || null,
+        })
+        .subscribe({
+          next: (result) => {
+            this.ngZone.run(() => {
+              this.loadSessions(clubId);
+              this.loadRecurringTemplates(clubId);
+              observer.next(result);
+              observer.complete();
+            });
+          },
+          error: (err) => observer.error(err),
+        });
     });
   }
 

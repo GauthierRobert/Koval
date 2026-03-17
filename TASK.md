@@ -73,7 +73,8 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 - A button simulate must be present in public race as well (disabled with explication if gpx are not present (Bike/RUN for triathlon))
 - Modify the IA chat example to more reflect the actual TOOL and combination of TOOLS in the app. Make 5 examples
 - In the simulation result, in the leaflet issue, the segment have void before and after and seems to overlap when hover. It is strange, try to fix that.
-
+- In Member List; Tag should be displayed aside the member name, instead of the bottom of the card.
+- Group name in Club member management page in group managemenbt section, the  is cropped, I only see the first letter, I want to see all the name.
 
 ## TO VERIFY
 - I must be able to modify GPX of race clicking on already added gpx on race Button is only limited to small Icon
@@ -83,11 +84,14 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 - Session reminder in coach dashboard must be in main dashboard instead (but only for coach)
 - When add a training of a session, the chance to add an already existing training (of my own) should be possible. In that case, the club id is added into the club ids of the training. A training could then have multiple Clubs/group link
 - Cancelling a session (single event only even for recurrent session) should be possible for coach/Admin/owner. An explication can be added on the reason. This trigger a notificatio  to all club members
-
-## TODO
-
 - the create training ia modal display groups and user but there is issues: user are all selected, when click on group, it should select the group, and the user in the groups.
 - The drag and drop of workout in calendar do not work well, moved training ghost box remain in old place;
+- Delete session and recurring session (with possible of deleting recurring session or only single event of recurring session. Inspire of the edit behaviour)
+
+
+## TODO
+- 
+- RaceGoals in club do not retrieve the goals of the members of the clubs.
 
 ## Nice too have
 - **Retrieve FIT files from Strava** — Implement an endpoint + service to fetch FIT activity files from Strava for the authenticated user. Requires the user to have granted all metric scopes (`activity:read_all`). Parse the FIT data and ingest relevant metrics (power, HR, cadence, TSS) into the session/history store.

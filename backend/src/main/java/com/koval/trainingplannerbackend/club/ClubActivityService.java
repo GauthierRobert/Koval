@@ -72,6 +72,22 @@ public class ClubActivityService {
                                "sessionId", targetId != null ? targetId : ""));
             }
         }
+
+        if (type == ClubActivityType.RECURRING_SERIES_CANCELLED) {
+            List<String> memberIds = getActiveMemberIds(clubId);
+            memberIds.remove(actorId);
+            if (!memberIds.isEmpty()) {
+                User actor = userService.findById(actorId).orElse(null);
+                String actorName = actor != null ? actor.getDisplayName() : "Someone";
+                notificationService.sendToUsers(
+                        memberIds,
+                        "Recurring Series Cancelled",
+                        actorName + " cancelled all future sessions for: " + targetTitle,
+                        Map.of("type", "RECURRING_SERIES_CANCELLED",
+                               "clubId", clubId,
+                               "templateId", targetId != null ? targetId : ""));
+            }
+        }
     }
 
     public List<ClubActivityResponse> getActivityFeed(String clubId, Pageable pageable) {

@@ -581,6 +581,37 @@
   background: rgba(248, 113, 113, 0.2);
 }
 
+/* Cancelled club session */
+.workout-card--club-session.cancelled {
+  opacity: 0.6;
+  border-left-color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.cancelled-badge {
+  font-size: 0.55rem;
+  font-weight: 800;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  letter-spacing: 0.5px;
+}
+
+.title-cancelled {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.cancellation-reason {
+  font-size: 0.65rem;
+  font-style: italic;
+  color: #f87171;
+  opacity: 0.8;
+  padding: 2px 0;
+}
+
 /* Club session row — side by side for same-time sessions */
 .club-session-row {
   display: flex;
@@ -622,4 +653,81 @@
   font-weight: 800;
   font-size: 0.72rem;
   flex-shrink: 0;
+}
+
+/* Reschedule button */
+.btn-reschedule {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  opacity: 0.4;
+  transition: opacity 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.btn-reschedule:hover {
+  opacity: 1;
+  color: var(--accent-color);
+}
+
+/* Reschedule modal */
+.reschedule-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+
+.reschedule-modal {
+  background: var(--surface-color);
+  border: 1px solid var(--accent-border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.reschedule-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--text-color);
+  text-transform: uppercase;
+}
+
+.reschedule-workout-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+.reschedule-date-input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text-color);
+  outline: none;
+  transition: border-color 0.15s;
+  color-scheme: dark;
+  width: 100%;
+  text-align: center;
+}
+
+.reschedule-date-input:focus {
+  border-color: var(--accent-color);
 }

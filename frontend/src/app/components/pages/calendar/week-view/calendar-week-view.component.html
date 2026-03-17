@@ -1,4 +1,4 @@
-<div class="calendar-grid" cdkDropListGroup>
+<div class="calendar-grid">
   @for (day of days; track trackByDay(day)) {
     <div class="day-column glass" [class.today]="day.isToday">
       <div class="day-header">
@@ -6,17 +6,15 @@
         <span class="day-number">{{ day.date | date : 'd' }}</span>
       </div>
 
-      <div class="workout-slot" cdkDropList [cdkDropListData]="entriesByDay.get(day.key) || EMPTY"
-        (cdkDropListDropped)="dropped.emit({ drop: $event, day: day })">
+      <div class="workout-slot">
 
-        @for (group of groupEntries(entriesByDay.get(day.key) || EMPTY); track group) {
+        @for (group of groupEntries(entriesByDay.get(day.key) || []); track group) {
 
           @if (group.type === 'single') {
             @switch (group.entry?.kind) {
 
               @case ('scheduled') {
                 <div class="workout-card clickable"
-                  cdkDrag [cdkDragData]="$any(group.entry).scheduled"
                   [class.completed]="$any(group.entry).scheduled.status === 'COMPLETED'"
                   [class.skipped]="$any(group.entry).scheduled.status === 'SKIPPED'"
                   (click)="workoutSelected.emit($any(group.entry).scheduled)">
@@ -25,6 +23,13 @@
                   <div class="card-top-right">
                     @if ($any(group.entry).scheduled.status !== 'PENDING') {
                       <span class="status-badge">{{ $any(group.entry).scheduled.status }}</span>
+                    }
+                    @if ($any(group.entry).scheduled.status === 'PENDING') {
+                      <button class="btn-reschedule" (click)="openReschedule($any(group.entry).scheduled, $event)" title="Reschedule">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                      </button>
                     }
                     <button class="delete-btn" (click)="workoutDeleted.emit($any(group.entry).scheduled); $event.stopPropagation()" title="Remove">&times;</button>
                   </div>
@@ -80,7 +85,6 @@
 
             @case ('fused') {
               <div class="workout-card workout-card--fused clickable"
-              cdkDrag [cdkDragData]="$any(group.entry).scheduled"
               (click)="workoutSelected.emit($any(group.entry).scheduled)">
               <div class="card-top">
                 <span class="fused-badge">✓ DONE</span>
@@ -162,32 +166,41 @@
 
             @case ('club-session') {
               <div class="workout-card workout-card--club-session"
-              [class.not-joined]="!$any(group.entry).clubSession.joined && !$any(group.entry).clubSession.onWaitingList">
+              [class.not-joined]="!$any(group.entry).clubSession.joined && !$any(group.entry).clubSession.onWaitingList"
+              [class.cancelled]="$any(group.entry).clubSession.cancelled">
               <div class="card-top">
                 <span class="club-session-badge">{{ $any(group.entry).clubSession.clubName }}</span>
+                @if ($any(group.entry).clubSession.cancelled) {
+                  <span class="cancelled-badge">CANCELLED</span>
+                }
                 <span class="club-session-time">{{ formatClubSessionTime($any(group.entry).clubSession.scheduledAt) }}</span>
               </div>
               <div class="workout-info">
                 <div class="title-row">
                   <app-sport-icon [sport]="$any(group.entry).clubSession.sport" [size]="14"></app-sport-icon>
-                  <span class="workout-title">{{ $any(group.entry).clubSession.title }}</span>
+                  <span class="workout-title" [class.title-cancelled]="$any(group.entry).clubSession.cancelled">{{ $any(group.entry).clubSession.title }}</span>
                 </div>
+                @if ($any(group.entry).clubSession.cancelled && $any(group.entry).clubSession.cancellationReason) {
+                  <div class="cancellation-reason">{{ $any(group.entry).clubSession.cancellationReason }}</div>
+                }
                 <div class="club-session-meta">
                   @if ($any(group.entry).clubSession.location) {
                     <span class="club-session-location">{{ $any(group.entry).clubSession.location }}</span>
                   }
                   <span class="club-session-count">{{ $any(group.entry).clubSession.participantIds.length }}{{ $any(group.entry).clubSession.maxParticipants ? '/' + $any(group.entry).clubSession.maxParticipants : '' }}</span>
                 </div>
-                <div class="club-session-actions">
-                  @if (!$any(group.entry).clubSession.joined && !$any(group.entry).clubSession.onWaitingList) {
-                    <button class="btn-join" (click)="joinClubSession.emit($any(group.entry).clubSession)">JOIN</button>
-                  }
-                  @if ($any(group.entry).clubSession.joined || $any(group.entry).clubSession.onWaitingList) {
-                    <button class="btn-cancel-club" (click)="cancelClubSession.emit($any(group.entry).clubSession)">
-                      {{ $any(group.entry).clubSession.onWaitingList ? 'LEAVE WAITLIST' : 'CANCEL' }}
-                    </button>
-                  }
-                </div>
+                @if (!$any(group.entry).clubSession.cancelled) {
+                  <div class="club-session-actions">
+                    @if (!$any(group.entry).clubSession.joined && !$any(group.entry).clubSession.onWaitingList) {
+                      <button class="btn-join" (click)="joinClubSession.emit($any(group.entry).clubSession)">JOIN</button>
+                    }
+                    @if ($any(group.entry).clubSession.joined || $any(group.entry).clubSession.onWaitingList) {
+                      <button class="btn-cancel-club" (click)="cancelClubSession.emit($any(group.entry).clubSession)">
+                        {{ $any(group.entry).clubSession.onWaitingList ? 'LEAVE WAITLIST' : 'CANCEL' }}
+                      </button>
+                    }
+                  </div>
+                }
               </div>
             </div>
             }
@@ -198,26 +211,32 @@
             <div class="club-session-row">
               @for (entry of group.entries; track entry) {
                 <div class="workout-card workout-card--club-session workout-card--compact"
-            [class.not-joined]="!$any(entry).clubSession.joined && !$any(entry).clubSession.onWaitingList">
+            [class.not-joined]="!$any(entry).clubSession.joined && !$any(entry).clubSession.onWaitingList"
+            [class.cancelled]="$any(entry).clubSession.cancelled">
             <div class="card-top">
               <span class="club-session-badge">{{ $any(entry).clubSession.clubName }}</span>
+              @if ($any(entry).clubSession.cancelled) {
+                <span class="cancelled-badge">CANCELLED</span>
+              }
               <span class="club-session-time">{{ formatClubSessionTime($any(entry).clubSession.scheduledAt) }}</span>
             </div>
             <div class="workout-info">
               <div class="title-row">
                 <app-sport-icon [sport]="$any(entry).clubSession.sport" [size]="14"></app-sport-icon>
-                <span class="workout-title">{{ $any(entry).clubSession.title }}</span>
+                <span class="workout-title" [class.title-cancelled]="$any(entry).clubSession.cancelled">{{ $any(entry).clubSession.title }}</span>
               </div>
-              <div class="club-session-actions">
-                @if (!$any(entry).clubSession.joined && !$any(entry).clubSession.onWaitingList) {
-                  <button class="btn-join" (click)="joinClubSession.emit($any(entry).clubSession)">JOIN</button>
-                }
-                @if ($any(entry).clubSession.joined || $any(entry).clubSession.onWaitingList) {
-                  <button class="btn-cancel-club" (click)="cancelClubSession.emit($any(entry).clubSession)">
-                    {{ $any(entry).clubSession.onWaitingList ? 'LEAVE WAITLIST' : 'CANCEL' }}
-                  </button>
-                }
-              </div>
+              @if (!$any(entry).clubSession.cancelled) {
+                <div class="club-session-actions">
+                  @if (!$any(entry).clubSession.joined && !$any(entry).clubSession.onWaitingList) {
+                    <button class="btn-join" (click)="joinClubSession.emit($any(entry).clubSession)">JOIN</button>
+                  }
+                  @if ($any(entry).clubSession.joined || $any(entry).clubSession.onWaitingList) {
+                    <button class="btn-cancel-club" (click)="cancelClubSession.emit($any(entry).clubSession)">
+                      {{ $any(entry).clubSession.onWaitingList ? 'LEAVE WAITLIST' : 'CANCEL' }}
+                    </button>
+                  }
+                </div>
+              }
             </div>
             </div>
               }
@@ -241,7 +260,7 @@
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
         </button>
-        @if (!(entriesByDay.get(day.key) || EMPTY).length && !(goalsByDay.get(day.key) || []).length) {
+        @if (!(entriesByDay.get(day.key) || []).length && !(goalsByDay.get(day.key) || []).length) {
           <div class="rest-day">REST DAY</div>
         }
       </div>
@@ -250,6 +269,17 @@
 </div>
 
 <app-training-load-chart [workoutsByDay]="workoutsByDay" [days]="days"></app-training-load-chart>
+
+@if (rescheduleTarget) {
+  <div class="reschedule-overlay" (click)="cancelReschedule()">
+    <div class="reschedule-modal" (click)="$event.stopPropagation()">
+      <span class="reschedule-title">Reschedule</span>
+      <span class="reschedule-workout-name">{{ rescheduleTarget.trainingTitle || rescheduleTarget.title || 'Workout' }}</span>
+      <input type="date" class="reschedule-date-input" [value]="rescheduleTarget.scheduledDate" (change)="confirmReschedule($any($event.target).value)" />
+      <button class="link-picker-cancel" (click)="cancelReschedule()">Cancel</button>
+    </div>
+  </div>
+}
 
 @if (linkPickerState !== null) {
   <div class="link-modal-overlay" (click)="linkPickerState = null; linkSession = null">

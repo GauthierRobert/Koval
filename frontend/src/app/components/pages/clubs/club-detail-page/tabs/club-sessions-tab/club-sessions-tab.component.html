@@ -305,6 +305,11 @@
                       LEAVE
                     </button>
                   }
+                  @if (canCreate) {
+                    <button class="btn-cancel small" (click)="openCancelSessionModal(session, $event)">
+                      CANCEL SESSION
+                    </button>
+                  }
                 }
               </div>
             </div>
@@ -490,18 +495,44 @@
   </div>
 }
 
+<!-- Cancel Recurring Choice Dialog -->
+@if (showCancelRecurringChoice) {
+  <div class="modal-backdrop" (click)="closeCancelRecurringChoice()">
+  <div class="modal glass small-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Cancel Recurring Session</h3>
+      <button class="close-btn" (click)="closeCancelRecurringChoice()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="recurring-choice-text">This session is part of a recurring series.</p>
+      <div class="recurring-choice-actions">
+        <button class="btn-cancel" (click)="cancelThisOnly()">Cancel this session only</button>
+        <button class="btn-cancel" (click)="cancelAllFuture()">Cancel all future sessions</button>
+        <button class="btn-ghost" (click)="closeCancelRecurringChoice()">Go back</button>
+      </div>
+    </div>
+  </div>
+  </div>
+}
+
 <!-- Cancel Session Confirmation Modal -->
 @if (showCancelConfirm && cancelTargetSession) {
   <div class="modal-backdrop" (click)="closeCancelSessionModal()">
   <div class="modal glass small-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>Cancel Session</h3>
+      <h3>{{ cancelMode === 'all' ? 'Cancel All Future Sessions' : 'Cancel Session' }}</h3>
       <button class="close-btn" (click)="closeCancelSessionModal()">&times;</button>
     </div>
     <div class="modal-body">
-      <p class="recurring-choice-text">
-        Are you sure you want to cancel <strong>{{ cancelTargetSession.title }}</strong>?
-      </p>
+      @if (cancelMode === 'all') {
+        <p class="recurring-choice-text">
+          This will cancel all future sessions for <strong>{{ cancelTargetSession.title }}</strong> and deactivate the recurring template.
+        </p>
+      } @else {
+        <p class="recurring-choice-text">
+          Are you sure you want to cancel <strong>{{ cancelTargetSession.title }}</strong>?
+        </p>
+      }
       <p class="cancel-warning">All participants will be notified.</p>
       <div class="form-row">
         <label>Reason (optional)</label>
@@ -509,7 +540,7 @@
       </div>
       <div class="cancel-confirm-actions">
         <button class="btn-secondary" (click)="closeCancelSessionModal()">GO BACK</button>
-        <button class="btn-cancel" (click)="confirmCancelSession()">CANCEL SESSION</button>
+        <button class="btn-cancel" (click)="confirmCancelSession()">{{ cancelMode === 'all' ? 'CANCEL ALL FUTURE SESSIONS' : 'CANCEL SESSION' }}</button>
       </div>
     </div>
   </div>

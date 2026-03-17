@@ -49,6 +49,7 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
   selectedDate = '';
   selectedAthleteIds: string[] = [];
   notes = '';
+  private clubGroups: { id: string; name: string; memberIds: string[] }[] = [];
 
   showAiGenerate = false;
   aiPrompt = '';
@@ -92,7 +93,20 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
 
       if (this.mode === 'coach' && this.userId) {
         if (this.clubId) {
-          // Load club members instead of coach athletes
+          // Load club groups first, then members (so we can populate user.groups)
+          this.clubService.loadGroups(this.clubId);
+          this.clubService.groups$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(groups => {
+            this.ngZone.run(() => {
+              this.clubGroups = groups;
+              this.availableTags = groups.map(g => g.name);
+              // Re-map groups onto already loaded athletes
+              this.enrichAthletesWithGroups();
+              if (this.preselectedGroupName && this.availableTags.includes(this.preselectedGroupName)) {
+                this.activeTags.clear();
+                this.toggleTag(this.preselectedGroupName);
+              }
+            });
+          });
           this.clubService.loadMembers(this.clubId);
           this.clubService.members$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(members => {
             this.ngZone.run(() => {
@@ -100,18 +114,11 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
                 id: m.userId,
                 displayName: m.displayName || m.userId,
                 profilePicture: m.profilePicture,
-              } as User)).sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { sensitivity: 'base' }));
+                groups: [] as string[],
+              } as unknown as User)).sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { sensitivity: 'base' }));
+              this.enrichAthletesWithGroups();
               if (this.preselectedAthletes && this.preselectedAthletes.length > 0) {
                 this.selectedAthleteIds = this.preselectedAthletes.map(a => a.id);
-              }
-            });
-          });
-          this.clubService.loadGroups(this.clubId);
-          this.clubService.groups$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(groups => {
-            this.ngZone.run(() => {
-              this.availableTags = groups.map(g => g.name);
-              if (this.preselectedGroupName && this.availableTags.includes(this.preselectedGroupName)) {
-                this.toggleTag(this.preselectedGroupName);
               }
             });
           });
@@ -243,6 +250,15 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
     });
   }
 
+  private enrichAthletesWithGroups(): void {
+    if (!this.clubGroups.length || !this.availableAthletes.length) return;
+    for (const athlete of this.availableAthletes) {
+      athlete.groups = this.clubGroups
+        .filter(g => g.memberIds.includes(athlete.id))
+        .map(g => g.name);
+    }
+  }
+
   private resetForm(): void {
     this.selectedTrainingId = '';
     this.selectedDate = '';
@@ -251,6 +267,7 @@ export class ScheduleModalComponent implements OnInit, OnChanges {
     this.availableAthletes = [];
     this.availableTags = [];
     this.activeTags = new Set();
+    this.clubGroups = [];
     this.showAiGenerate = false;
     this.aiPrompt = '';
     this.aiLoading = false;

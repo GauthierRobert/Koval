@@ -5,44 +5,49 @@
       <div class="goals-list">
         @for (item of raceGoals; track item) {
           <div class="goal-row glass">
-            <div class="goal-priority-dot" [style.background-color]="getPriorityColor(item.goal.priority)"></div>
+            <div class="goal-priority-dot" [style.background-color]="getPriorityColor(item.priority)"></div>
             <div class="goal-info">
-              <span class="goal-title">{{ item.goal.title }}</span>
+              <div class="goal-header">
+                <span class="goal-title">{{ item.title }}</span>
+                <span class="participant-count">{{ item.participants.length }}</span>
+              </div>
               <div class="goal-meta">
-                <span>{{ item.goal.sport }}</span>
-                <span>{{ formatDate(item.goal.raceDate) }}</span>
-                @if (item.goal.distance) {
-                  <span>{{ item.goal.distance }}</span>
+                <span>{{ item.sport }}</span>
+                <span>{{ formatDate(item.raceDate) }}</span>
+                @if (item.distance) {
+                  <span>{{ item.distance }}</span>
                 }
-                <span class="days-badge" [class.soon]="daysUntil(item.goal.raceDate) <= 30">
-                  {{ daysUntil(item.goal.raceDate) }}d to go
+                @if (item.location) {
+                  <span>{{ item.location }}</span>
+                }
+                <span class="days-badge" [class.soon]="daysUntil(item.raceDate) <= 30">
+                  {{ daysUntil(item.raceDate) }}d to go
                 </span>
               </div>
-              @if (item.participants.length > 0) {
-                <div class="participants-row">
-                  <div class="participant-avatars">
-                    @for (p of item.participants; track p) {
-                      @if (p.profilePicture) {
-                        <img [src]="p.profilePicture" [title]="p.displayName" class="participant-avatar" />
-                      }
-                      @if (!p.profilePicture) {
-                        <span class="participant-avatar-placeholder" [title]="p.displayName">
-                          {{ p.displayName.charAt(0) }}
-                        </span>
-                      }
+              <div class="participants-row">
+                <div class="participant-avatars">
+                  @for (p of item.participants; track p.userId) {
+                    @if (p.profilePicture) {
+                      <img [src]="p.profilePicture" [title]="p.displayName" class="participant-avatar" />
+                    } @else {
+                      <span class="participant-avatar-placeholder" [title]="p.displayName">
+                        {{ p.displayName.charAt(0) }}
+                      </span>
                     }
-                  </div>
-                  <span class="participants-label">{{ item.participants.length }} also racing</span>
+                  }
                 </div>
-              }
+                <span class="participants-label">
+                  {{ item.participants.length }} {{ item.participants.length === 1 ? 'member' : 'members' }} racing
+                </span>
+              </div>
             </div>
             @if (item.hasUpcomingClubSession) {
               <span class="session-indicator" title="Club session near this race">📅</span>
             }
             <span class="priority-badge"
-              [style.color]="getPriorityColor(item.goal.priority)"
-              [style.border-color]="getPriorityColor(item.goal.priority) + '44'">
-              {{ item.goal.priority }}
+              [style.color]="getPriorityColor(item.priority)"
+              [style.border-color]="getPriorityColor(item.priority) + '44'">
+              {{ item.priority }}
             </span>
           </div>
         }

@@ -86,25 +86,22 @@
               }
 
               <div class="member-info">
-                <span class="member-name">{{ m.displayName || m.userId }}</span>
+                <div class="member-name-row">
+                  <span class="member-name">{{ m.displayName || m.userId }}</span>
+                  @for (tagName of (m.tags || []); track tagName) {
+                    <span class="club-tag small">
+                      {{ tagName }}
+                      @if (isAdmin) {
+                        <button
+                          class="tag-remove-tiny"
+                          (click)="removeFromTag(getTagIdByName(tagName, allTags), m.userId)"
+                          title="Remove tag"
+                        >×</button>
+                      }
+                    </span>
+                  }
+                </div>
                 <span class="member-date">Joined {{ formatDate(m.joinedAt) }}</span>
-                <!-- Tag badges -->
-                @if ((m.tags || []).length > 0) {
-                  <div class="member-tags">
-                    @for (tagName of (m.tags || []); track tagName) {
-                      <span class="club-tag small">
-                        {{ tagName }}
-                        @if (isAdmin) {
-                          <button
-                            class="tag-remove-tiny"
-                            (click)="removeFromTag(getTagIdByName(tagName, allTags), m.userId)"
-                            title="Remove tag"
-                          >×</button>
-                        }
-                      </span>
-                    }
-                  </div>
-                }
               </div>
 
               <div class="member-right">

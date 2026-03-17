@@ -68,7 +68,7 @@
         (complete)="markComplete($event)"
         (skip)="markSkipped($event)"
         (workoutDeleted)="deleteWorkout($event)"
-        (dropped)="onDrop($event.drop, $event.day)"
+        (rescheduled)="onReschedule($event.workout, $event.newDate)"
         (linked)="reload$.next()"
         (joinClubSession)="joinClubSession($event)"
         (cancelClubSession)="cancelClubSession($event)">
@@ -84,7 +84,7 @@
         (addDay)="openScheduleModal($event)"
         (workoutSelected)="selectWorkout($event)"
         (sessionSelected)="selectSession($event)"
-        (dropped)="onDrop($event.drop, $event.day)"
+        (rescheduled)="onReschedule($event.workout, $event.newDate)"
         (joinClubSession)="joinClubSession($event)"
         (cancelClubSession)="cancelClubSession($event)">
       </app-calendar-month-view>

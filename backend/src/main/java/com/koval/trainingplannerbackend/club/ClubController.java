@@ -322,6 +322,15 @@ public class ClubController {
         return ResponseEntity.ok(template);
     }
 
+    @PutMapping("/{id}/recurring-sessions/{templateId}/cancel-future")
+    public ResponseEntity<java.util.Map<String, Integer>> cancelFutureRecurringSessions(
+            @PathVariable String id, @PathVariable String templateId,
+            @RequestBody CancelSessionRequest req) {
+        String userId = SecurityUtils.getCurrentUserId();
+        int cancelledCount = recurringSessionService.cancelFutureInstances(userId, id, templateId, req.reason());
+        return ResponseEntity.ok(java.util.Map.of("cancelledCount", cancelledCount));
+    }
+
     @DeleteMapping("/{id}/recurring-sessions/{templateId}")
     public ResponseEntity<Void> deactivateRecurringSession(
             @PathVariable String id, @PathVariable String templateId) {
