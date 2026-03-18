@@ -58,15 +58,15 @@ firebase:
 # AI debug flag — set to true to log every raw Anthropic HTTP request/response
 app:
   ai:
-    debug-calls: true
+    debug-calls: false
 
 # Logging Configuration
 logging:
   level:
     # Suppress "Unhandled event type" warnings from Anthropic streaming
-    org.springframework.ai.anthropic.api.AnthropicApi: DEBUG
-    org.springframework.ai.anthropic: DEBUG
-    org.springframework.ai: DEBUG
+    org.springframework.ai.anthropic.api.AnthropicApi: INFO
+    org.springframework.ai.anthropic: INFO
+    org.springframework.ai: INFO
     # Keep INFO level for application code
     com.example.trainingplannerbackend: INFO
 
