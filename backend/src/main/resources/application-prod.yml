@@ -15,6 +15,9 @@ strava:
 google:
   redirect-uri: ${GOOGLE_REDIRECT_URI:}
 
+firebase:
+  service-account-json: ${FIREBASE_SERVICE_ACCOUNT_JSON:}
+
 cors:
   allowed-origins: ${ALLOWED_ORIGINS}
 

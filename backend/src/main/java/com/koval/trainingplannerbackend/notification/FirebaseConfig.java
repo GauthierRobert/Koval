@@ -10,38 +10,56 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 
 import jakarta.annotation.PostConstruct;
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
-@ConditionalOnProperty(name = "firebase.service-account-path")
 public class FirebaseConfig {
 
     private static final Logger log = LoggerFactory.getLogger(FirebaseConfig.class);
 
-    @Value("${firebase.service-account-path}")
+    @Value("${firebase.service-account-path:}")
     private String serviceAccountPath;
+
+    @Value("${firebase.service-account-json:}")
+    private String serviceAccountJson;
 
     @PostConstruct
     public void init() {
-        if (serviceAccountPath == null || serviceAccountPath.isBlank()) {
-            log.warn("Firebase service account path not configured — push notifications disabled");
-            return;
-        }
-
         if (!FirebaseApp.getApps().isEmpty()) {
             log.info("FirebaseApp already initialized");
             return;
         }
 
-        try (FileInputStream fis = new FileInputStream(serviceAccountPath)) {
-            FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(fis))
-                    .build();
-            FirebaseApp.initializeApp(options);
-            log.info("Firebase initialized successfully");
+        try {
+            InputStream credentialsStream = resolveCredentials();
+            if (credentialsStream == null) {
+                log.warn("Firebase credentials not configured — push notifications disabled");
+                return;
+            }
+            try (credentialsStream) {
+                FirebaseOptions options = FirebaseOptions.builder()
+                        .setCredentials(GoogleCredentials.fromStream(credentialsStream))
+                        .build();
+                FirebaseApp.initializeApp(options);
+                log.info("Firebase initialized successfully");
+            }
         } catch (IOException e) {
             log.error("Failed to initialize Firebase: {}", e.getMessage());
         }
+    }
+
+    private InputStream resolveCredentials() throws IOException {
+        // Prefer JSON content (env var) over file path — works on all cloud platforms
+        if (serviceAccountJson != null && !serviceAccountJson.isBlank()) {
+            return new ByteArrayInputStream(serviceAccountJson.getBytes(StandardCharsets.UTF_8));
+        }
+        if (serviceAccountPath != null && !serviceAccountPath.isBlank()) {
+            return new FileInputStream(serviceAccountPath);
+        }
+        return null;
     }
 }
