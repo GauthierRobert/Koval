@@ -149,10 +149,8 @@ export interface ClubRaceGoalResponse {
   title: string;
   sport: string;
   raceDate: string;
-  priority: string;
   distance?: string;
   location?: string;
-  hasUpcomingClubSession: boolean;
   participants: {
     userId: string;
     displayName: string;

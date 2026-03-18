@@ -5,7 +5,6 @@
       <div class="goals-list">
         @for (item of raceGoals; track item) {
           <div class="goal-row glass">
-            <div class="goal-priority-dot" [style.background-color]="getPriorityColor(item.priority)"></div>
             <div class="goal-info">
               <div class="goal-header">
                 <span class="goal-title">{{ item.title }}</span>
@@ -57,14 +56,6 @@
                 </div>
               </div>
             </div>
-            @if (item.hasUpcomingClubSession) {
-              <span class="session-indicator" title="Club session near this race">📅</span>
-            }
-            <span class="priority-badge"
-              [style.color]="getPriorityColor(item.priority)"
-              [style.border-color]="getPriorityColor(item.priority) + '44'">
-              {{ item.priority }}
-            </span>
           </div>
         }
       </div>

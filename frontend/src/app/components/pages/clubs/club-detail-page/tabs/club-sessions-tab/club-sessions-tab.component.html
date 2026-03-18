@@ -105,39 +105,43 @@
 
                 <!-- Capacity + Join inline row -->
                 <div class="capacity-join-row">
-                  @if (isParticipant(session) && !isCancelled(session)) {
-                    <span class="attending-badge">ATTENDING</span>
-                  }
-                  <span [class.capacity-full]="isFull(session)">
-                    &#x1f465; {{ getCapacityText(session) }}
-                    @if (isFull(session) && !isCancelled(session)) {
-                      <span class="full-badge">FULL</span>
+                  <div class="capacity-info">
+                    @if (isParticipant(session) && !isCancelled(session)) {
+                      <span class="attending-badge">ATTENDING</span>
                     }
-                  </span>
+                    <span [class.capacity-full]="isFull(session)">
+                      &#x1f465; {{ getCapacityText(session) }}
+                      @if (isFull(session) && !isCancelled(session)) {
+                        <span class="full-badge">FULL</span>
+                      }
+                    </span>
+                  </div>
                   @if (!isCancelled(session)) {
-                    @if (!isParticipant(session) && !isOnWaitingList(session)) {
-                      <button class="btn-primary small" (click)="joinSession(session, $event)">
-                        {{ isFull(session) ? 'JOIN WAITING LIST' : 'JOIN' }}
-                      </button>
-                    }
-                    @if (isParticipant(session)) {
-                      <button class="btn-ghost small"
-                              (click)="cancelSession(session, $event)">
-                        REMOVE MY PARTICIPATION
-                      </button>
-                    }
-                    @if (isOnWaitingList(session)) {
-                      <button class="btn-ghost small"
-                              (click)="cancelSession(session, $event)">
-                        LEAVE WAITING LIST
-                      </button>
-                    }
-                    @if (canCreate) {
-                      <button class="btn-cancel small"
-                              (click)="openCancelSessionModal(session, $event)">
-                        CANCEL SESSION
-                      </button>
-                    }
+                    <div class="capacity-actions">
+                      @if (!isParticipant(session) && !isOnWaitingList(session)) {
+                        <button class="btn-primary small" (click)="joinSession(session, $event)">
+                          {{ isFull(session) ? 'JOIN WAITING LIST' : 'JOIN' }}
+                        </button>
+                      }
+                      @if (isParticipant(session)) {
+                        <button class="btn-ghost small"
+                                (click)="cancelSession(session, $event)">
+                          REMOVE MY PARTICIPATION
+                        </button>
+                      }
+                      @if (isOnWaitingList(session)) {
+                        <button class="btn-ghost small"
+                                (click)="cancelSession(session, $event)">
+                          LEAVE WAITING LIST
+                        </button>
+                      }
+                      @if (canCreate) {
+                        <button class="btn-cancel small"
+                                (click)="openCancelSessionModal(session, $event)">
+                          CANCEL SESSION
+                        </button>
+                      }
+                    </div>
                   }
                 </div>
 

@@ -379,11 +379,18 @@
 
 /* ── Detail: GPX section ──────────────────────────────────────────── */
 .detail-gpx-section {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
   margin-bottom: 1.25rem;
 }
 
+.detail-gpx-section .detail-section-label {
+  grid-column: 1 / -1;
+}
+
 .detail-gpx-discipline {
-  margin-bottom: 1.25rem;
+  min-width: 0;
 }
 
 .gpx-discipline-header {

@@ -7,10 +7,8 @@ public record ClubRaceGoalResponse(
         String title,
         String sport,
         LocalDate raceDate,
-        String priority,
         String distance,
         String location,
-        boolean hasUpcomingClubSession,
         List<RaceParticipant> participants
 ) {
     public record RaceParticipant(

@@ -107,9 +107,8 @@ public class ClubStatsService {
         LocalDate today = LocalDate.now();
         List<RaceGoal> goals = raceGoalRepository.findByAthleteIdInOrderByRaceDateAsc(memberIds)
                 .stream()
-                .filter(g -> g.getRaceDate() != null && !g.getRaceDate().isBefore(today))
+                .filter(g -> g.getRaceDate() == null || !g.getRaceDate().isBefore(today))
                 .toList();
-        List<ClubTrainingSession> sessions = sessionRepository.findByClubIdOrderByScheduledAtDesc(clubId);
 
         // Group goals by race key: raceId if present, else title+date
         Map<String, List<RaceGoal>> goalsByRace = goals.stream()
@@ -126,19 +125,6 @@ public class ClubStatsService {
         // One response per unique race, sorted by date
         return goalsByRace.values().stream().map(raceGoals -> {
             RaceGoal representative = raceGoals.getFirst();
-
-            boolean hasSession = sessions.stream().anyMatch(s ->
-                    s.getScheduledAt() != null &&
-                    s.getScheduledAt().toLocalDate().isAfter(today) &&
-                    s.getScheduledAt().toLocalDate().isBefore(representative.getRaceDate().plusDays(1)));
-
-            // Best priority: A > B > C
-            String bestPriority = raceGoals.stream()
-                    .map(RaceGoal::getPriority)
-                    .filter(Objects::nonNull)
-                    .min(Comparator.naturalOrder())
-                    .orElse("C");
-
             List<ClubRaceGoalResponse.RaceParticipant> participants = raceGoals.stream()
                     .map(g -> {
                         User u = userMap.get(g.getAthleteId());
@@ -155,10 +141,8 @@ public class ClubStatsService {
                     representative.getTitle(),
                     representative.getSport(),
                     representative.getRaceDate(),
-                    bestPriority,
                     representative.getDistance(),
                     representative.getLocation(),
-                    hasSession,
                     participants);
         }).collect(Collectors.toList());
     }
