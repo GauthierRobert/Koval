@@ -94,7 +94,7 @@ jobs:
           projectId: ${{ secrets.GCP_PROJECT_ID }}
 
   mobile-android:
-    name: Build Android APK
+    name: Build Android APK (Release)
     runs-on: ubuntu-latest
 
     steps:
@@ -123,19 +123,19 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('mobile/android/**/*.gradle*', 'mobile/android/**/gradle-wrapper.properties') }}
+          key: gradle-${{ hashFiles('mobile/package-lock.json') }}
           restore-keys: gradle-
 
       - name: Create google-services.json
         working-directory: mobile
         run: |
           if [ -z "$GOOGLE_SERVICES_JSON" ]; then
-            echo "::notice::GOOGLE_SERVICES_JSON secret not set, skipping"
-            exit 0
+            echo "::error::GOOGLE_SERVICES_JSON secret is required for production builds"
+            exit 1
           fi
           echo "$GOOGLE_SERVICES_JSON" > google-services.json
           python3 -c "import json; json.load(open('google-services.json'))" || {
-            echo "::error::google-services.json is not valid JSON. Check the GOOGLE_SERVICES_JSON secret."
+            echo "::error::google-services.json is not valid JSON"
             exit 1
           }
         env:
@@ -145,13 +145,23 @@ jobs:
         working-directory: mobile
         run: npx expo prebuild --platform android --no-install
 
-      - name: Build debug APK
+      - name: Decode keystore
+        working-directory: mobile/android/app
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > koval.keystore
+
+      - name: Build release APK
         working-directory: mobile/android
-        run: ./gradlew assembleDebug --no-daemon
+        run: |
+          ./gradlew assembleRelease --no-daemon \
+            -Pandroid.injected.signing.store.file="$(pwd)/app/koval.keystore" \
+            -Pandroid.injected.signing.store.password="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            -Pandroid.injected.signing.key.alias="${{ secrets.ANDROID_KEY_ALIAS }}" \
+            -Pandroid.injected.signing.key.password="${{ secrets.ANDROID_KEY_PASSWORD }}"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: koval-android-debug-${{ github.sha }}
-          path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          name: koval-android-release-${{ github.sha }}
+          path: mobile/android/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
