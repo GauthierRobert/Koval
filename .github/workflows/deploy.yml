@@ -148,7 +148,16 @@ jobs:
       - name: Decode keystore
         working-directory: mobile/android/app
         run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > koval.keystore
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | tr -d '\n\r ' | base64 --decode > koval.keystore
+          # Verify the file is a valid keystore
+          file koval.keystore
+
+      - name: Verify keystore
+        working-directory: mobile/android/app
+        run: |
+          keytool -list -keystore koval.keystore \
+            -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            -alias "${{ secrets.ANDROID_KEY_ALIAS }}"
 
       - name: Build release APK
         working-directory: mobile/android
