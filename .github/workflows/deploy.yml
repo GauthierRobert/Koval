@@ -156,8 +156,8 @@ jobs:
         working-directory: mobile/android/app
         run: |
           keytool -list -keystore koval.keystore \
-            -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
-            -alias "${{ secrets.ANDROID_KEY_ALIAS }}"
+            -storepass '${{ secrets.ANDROID_KEYSTORE_PASSWORD }}' \
+            -alias '${{ secrets.ANDROID_KEY_ALIAS }}'
 
       - name: Build release APK
         working-directory: mobile/android
