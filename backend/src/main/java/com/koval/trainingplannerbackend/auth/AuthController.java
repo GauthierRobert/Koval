@@ -49,9 +49,10 @@ public class AuthController {
     // --- Strava OAuth ---
 
     @GetMapping("/strava")
-    public ResponseEntity<Map<String, String>> getStravaAuthUrl() {
+    public ResponseEntity<Map<String, String>> getStravaAuthUrl(
+            @RequestParam(required = false) String redirectUri) {
         Map<String, String> response = new HashMap<>();
-        response.put("authUrl", stravaOAuthService.getAuthorizationUrl());
+        response.put("authUrl", stravaOAuthService.getAuthorizationUrl(redirectUri));
         return ResponseEntity.ok(response);
     }
 
