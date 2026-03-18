@@ -71,7 +71,7 @@ public class RaceService {
         mergeIfPresent(updates.getElevationGainM(), existing::setElevationGainM);
         mergeIfPresent(updates.getDescription(), existing::setDescription);
         mergeIfPresent(updates.getWebsite(), existing::setWebsite);
-        mergeIfPresent(updates.getTypicalMonth(), existing::setTypicalMonth);
+        mergeIfPresent(updates.getScheduledDate(), existing::setScheduledDate);
         return repository.save(existing);
     }
 

@@ -131,6 +131,14 @@
             @if (getActualRange(z, user, activeSport); as actual) {
               <span class="zone-actual">{{ actual }}</span>
             }
+            @if (activeSport === 'RUNNING') {
+              @if (getRunningPaceForDistance(z, user, 400); as pace400) {
+                <span class="zone-pace-sub">{{ pace400 }}<span class="pace-unit">/400m</span></span>
+              }
+              @if (getRunningPaceForDistance(z, user, 100); as pace100) {
+                <span class="zone-pace-sub">{{ pace100 }}<span class="pace-unit">/100m</span></span>
+              }
+            }
           </div>
         }
       </div>
@@ -183,6 +191,14 @@
                 <span class="zone-pct">{{ z.low }}–{{ z.high }}%</span>
                 @if (getActualRangeForSystem(z, user, sys); as actual) {
                   <span class="zone-actual">{{ actual }}</span>
+                }
+                @if (sys.sportType === 'RUNNING') {
+                  @if (getRunningPaceForDistanceFromSystem(z, user, sys, 400); as pace400) {
+                    <span class="zone-pace-sub">{{ pace400 }}<span class="pace-unit">/400m</span></span>
+                  }
+                  @if (getRunningPaceForDistanceFromSystem(z, user, sys, 100); as pace100) {
+                    <span class="zone-pace-sub">{{ pace100 }}<span class="pace-unit">/100m</span></span>
+                  }
                 }
               </div>
             }

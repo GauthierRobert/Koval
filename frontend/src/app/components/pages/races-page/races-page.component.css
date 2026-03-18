@@ -172,6 +172,19 @@
   font-weight: 700;
 }
 
+.race-year {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+input[type='date'].form-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.5;
+}
+
 .btn-simulate {
   background: rgba(56, 189, 248, 0.12);
   border: 1px solid rgba(56, 189, 248, 0.3);
@@ -425,5 +438,80 @@
 
 .gpx-chip--upload:hover {
   background: rgba(255, 157, 0, 0.18);
+}
+
+/* Edit button */
+.btn-edit {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.5);
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btn-edit:hover {
+  background: rgba(255, 157, 0, 0.12);
+  border-color: rgba(255, 157, 0, 0.3);
+  color: var(--accent-color, #ff9d00);
+}
+
+/* Edit form */
+.race-edit-form {
+  cursor: default;
+}
+
+.edit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem 1rem;
+}
+
+.edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.edit-field label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+}
+
+.edit-field--full {
+  grid-column: 1 / -1;
+}
+
+.edit-field .form-input {
+  font-size: 0.8rem;
+  padding: 0.4rem 0.6rem;
+}
+
+.edit-textarea {
+  resize: vertical;
+  min-height: 60px;
+  font-family: inherit;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.edit-actions .btn-primary,
+.edit-actions .btn-secondary {
+  padding: 0.35rem 1rem;
+  font-size: 0.72rem;
 }
 

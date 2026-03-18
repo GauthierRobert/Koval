@@ -8,7 +8,7 @@ public record RaceSummary(
         String location, String country, String region, String distance,
         Double swimDistanceM, Double bikeDistanceM, Double runDistanceM,
         Integer elevationGainM, String description, String website,
-        Integer typicalMonth,
+        String scheduledDate,
         boolean hasSwimGpx, boolean hasBikeGpx, boolean hasRunGpx,
         String createdBy, boolean verified
 ) {
@@ -18,7 +18,7 @@ public record RaceSummary(
                 r.getLocation(), r.getCountry(), r.getRegion(), r.getDistance(),
                 r.getSwimDistanceM(), r.getBikeDistanceM(), r.getRunDistanceM(),
                 r.getElevationGainM(), r.getDescription(), r.getWebsite(),
-                r.getTypicalMonth(),
+                r.getScheduledDate(),
                 r.getSwimGpx() != null, r.getBikeGpx() != null, r.getRunGpx() != null,
                 r.getCreatedBy(), r.isVerified()
         );

@@ -89,6 +89,9 @@
           <div class="browse-race-header">
             <app-sport-icon [sport]="$any(race.sport)" [size]="14"></app-sport-icon>
             <span class="browse-race-title">{{ race.title }}</span>
+            @if (race.scheduledDate) {
+              <span class="race-year">{{ race.scheduledDate.substring(0, 4) }}</span>
+            }
             @if (race.verified) {
               <span class="browse-race-verified" title="Verified">&#10003;</span>
             }
@@ -124,6 +127,11 @@
               (click)="addToMyGoals(race); $event.stopPropagation()">
               {{ addedRaceIds.has(race.id) ? '✓ ADDED' : '+ ADD TO MY GOALS' }}
             </button>
+            @if (isOwnRace(race) && editingRaceId !== race.id) {
+              <button class="btn-edit" (click)="startEdit(race); $event.stopPropagation()" title="Edit race">
+                ✎
+              </button>
+            }
             <span class="expand-caret">{{ expandedRaceId === race.id ? '▾' : '▸' }}</span>
           </div>
           <div class="browse-race-meta">
@@ -133,8 +141,8 @@
             @if (race.distance) {
               <span>· {{ race.distance }}</span>
             }
-            @if (race.typicalMonth) {
-              <span>· {{ monthNames[race.typicalMonth || 0] }}</span>
+            @if (race.scheduledDate) {
+              <span>· {{ race.scheduledDate | date:'mediumDate':'UTC' }}</span>
             }
             @if (race.elevationGainM) {
               <span>· {{ race.elevationGainM }}m elev</span>
@@ -154,19 +162,88 @@
             </div>
           }
 
-          <!-- Expanded section: description + website -->
+          <!-- Expanded section -->
           @if (expandedRaceId === race.id) {
-            <div class="race-expanded">
-              @if (race.description) {
-                <p class="race-desc">{{ race.description }}</p>
-              }
-              @if (race.website) {
-                <a class="race-website" [href]="race.website" target="_blank" rel="noopener"
-                  (click)="$event.stopPropagation()">
-                  {{ race.website }}
-                </a>
-              }
-            </div>
+            @if (editingRaceId === race.id) {
+              <!-- Edit form -->
+              <div class="race-expanded race-edit-form" (click)="$event.stopPropagation()">
+                <div class="edit-grid">
+                  <div class="edit-field">
+                    <label>Title</label>
+                    <input class="form-input" [(ngModel)]="editForm.title" />
+                  </div>
+                  <div class="edit-field">
+                    <label>Sport</label>
+                    <select class="form-input" [(ngModel)]="editForm.sport">
+                      <option value="CYCLING">Cycling</option>
+                      <option value="RUNNING">Running</option>
+                      <option value="SWIMMING">Swimming</option>
+                      <option value="TRIATHLON">Triathlon</option>
+                      <option value="OTHER">Other</option>
+                    </select>
+                  </div>
+                  <div class="edit-field">
+                    <label>Location</label>
+                    <input class="form-input" [(ngModel)]="editForm.location" />
+                  </div>
+                  <div class="edit-field">
+                    <label>Country</label>
+                    <input class="form-input" [(ngModel)]="editForm.country" />
+                  </div>
+                  <div class="edit-field">
+                    <label>Distance</label>
+                    <input class="form-input" [(ngModel)]="editForm.distance" placeholder="e.g. 140.6 miles" />
+                  </div>
+                  <div class="edit-field">
+                    <label>Scheduled Date</label>
+                    <input class="form-input" type="date" [(ngModel)]="editForm.scheduledDate" />
+                  </div>
+                  <div class="edit-field">
+                    <label>Elevation (m)</label>
+                    <input class="form-input" type="number" [(ngModel)]="editForm.elevationGainM" />
+                  </div>
+                  <div class="edit-field">
+                    <label>Swim (m)</label>
+                    <input class="form-input" type="number" [(ngModel)]="editForm.swimDistanceM" />
+                  </div>
+                  <div class="edit-field">
+                    <label>Bike (m)</label>
+                    <input class="form-input" type="number" [(ngModel)]="editForm.bikeDistanceM" />
+                  </div>
+                  <div class="edit-field">
+                    <label>Run (m)</label>
+                    <input class="form-input" type="number" [(ngModel)]="editForm.runDistanceM" />
+                  </div>
+                  <div class="edit-field edit-field--full">
+                    <label>Website</label>
+                    <input class="form-input" [(ngModel)]="editForm.website" placeholder="https://..." />
+                  </div>
+                  <div class="edit-field edit-field--full">
+                    <label>Description</label>
+                    <textarea class="form-input edit-textarea" [(ngModel)]="editForm.description" rows="3"></textarea>
+                  </div>
+                </div>
+                <div class="edit-actions">
+                  <button class="btn-primary" (click)="saveEdit(race)" [disabled]="isSavingEdit">
+                    {{ isSavingEdit ? 'SAVING...' : 'SAVE' }}
+                  </button>
+                  <button class="btn-secondary" (click)="cancelEdit()" [disabled]="isSavingEdit">CANCEL</button>
+                </div>
+              </div>
+            } @else {
+              <!-- Read-only expanded -->
+              <div class="race-expanded">
+                @if (getCachedRace(race).description) {
+                  <p class="race-desc">{{ getCachedRace(race).description }}</p>
+                }
+                @if (getCachedRace(race).website) {
+                  <a class="race-website" [href]="getCachedRace(race).website" target="_blank" rel="noopener"
+                    (click)="$event.stopPropagation()">
+                    {{ getCachedRace(race).website }}
+                  </a>
+                }
+              </div>
+            }
           }
         </div>
       }

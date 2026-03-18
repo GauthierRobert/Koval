@@ -11,7 +11,7 @@
         @for (group of groupEntries(entriesByDay.get(day.key) || []); track group) {
 
           @if (group.type === 'single') {
-            @switch (group.entry?.kind) {
+            @switch (group.entry.kind) {
 
               @case ('scheduled') {
                 <div class="workout-card clickable"

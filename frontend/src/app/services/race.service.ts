@@ -19,7 +19,7 @@ export interface Race {
   elevationGainM?: number;
   description?: string;
   website?: string;
-  typicalMonth?: number;
+  scheduledDate?: string;
   hasSwimGpx?: boolean;
   hasBikeGpx?: boolean;
   hasRunGpx?: boolean;
@@ -94,6 +94,10 @@ export class RaceService {
 
   createRace(title: string): Observable<Race> {
     return this.http.post<Race>(this.apiUrl, { title });
+  }
+
+  updateRace(id: string, updates: Partial<Race>): Observable<Race> {
+    return this.http.put<Race>(`${this.apiUrl}/${id}`, updates);
   }
 
   aiComplete(raceId: string): Observable<Race> {

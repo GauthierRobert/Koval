@@ -5,7 +5,7 @@ import {BehaviorSubject, combineLatest, map, Observable} from 'rxjs';
 import {AuthService, User} from '../../../services/auth.service';
 import {Zone, ZoneSystem} from '../../../services/zone';
 import {ZoneService} from '../../../services/zone.service';
-import {formatPace as sharedFormatPace} from '../../shared/format/format.utils';
+import {formatPace as sharedFormatPace, formatPaceCompact} from '../../shared/format/format.utils';
 
 type Sport = 'CYCLING' | 'RUNNING' | 'SWIMMING';
 
@@ -182,6 +182,48 @@ export class PhysiologyPageComponent implements OnInit {
     const slow = zone.low === 0 ? null : ref / (zone.low / 100);
     const fast = ref / (zone.high / 100);
     return slow === null ? `< ${this.formatPace(fast)}` : `${this.formatPace(slow)}–${this.formatPace(fast)}`;
+  }
+
+  /** Compute pace range scaled to a given distance (in meters), using compact format */
+  private computePaceForDistance(zone: Zone, refPerKm: number | undefined, distanceM: number): string | null {
+    if (!refPerKm) return null;
+    const scale = distanceM / 1000;
+    const slow = zone.low === 0 ? null : (refPerKm / (zone.low / 100)) * scale;
+    const fast = (refPerKm / (zone.high / 100)) * scale;
+    if (slow === null) return `< ${formatPaceCompact(fast)}`;
+    return `${formatPaceCompact(slow)}–${formatPaceCompact(fast)}`;
+  }
+
+  getRunningPaceForDistance(zone: Zone, user: User, distanceM: number): string | null {
+    return this.computePaceForDistance(zone, user.functionalThresholdPace, distanceM);
+  }
+
+  getRunningPaceForDistanceFromSystem(zone: Zone, user: User, sys: ZoneSystem, distanceM: number): string | null {
+    switch (sys.referenceType) {
+      case 'THRESHOLD_PACE':    return this.computePaceForDistance(zone, user.functionalThresholdPace, distanceM);
+      case 'VO2MAX_PACE':       return this.computePaceForDistance(zone, user.vo2maxPace, distanceM);
+      case 'PACE_5K':           return this.computePaceForDistance(zone, user.pace5k, distanceM);
+      case 'PACE_10K':          return this.computePaceForDistance(zone, user.pace10k, distanceM);
+      case 'PACE_HALF_MARATHON':return this.computePaceForDistance(zone, user.paceHalfMarathon, distanceM);
+      case 'PACE_MARATHON':     return this.computePaceForDistance(zone, user.paceMarathon, distanceM);
+      case 'CUSTOM': {
+        const unit = sys.referenceUnit || '';
+        if (!this.isPaceUnit(unit)) return null;
+        const val = user.customZoneReferenceValues?.[sys.id!];
+        if (!val) return null;
+        const baseDistM = this.getBaseDistanceM(unit);
+        const refPerKm = val * (1000 / baseDistM);
+        return this.computePaceForDistance(zone, refPerKm, distanceM);
+      }
+      default: return null;
+    }
+  }
+
+  private getBaseDistanceM(unit: string): number {
+    const lower = unit.toLowerCase();
+    if (lower.includes('/100m')) return 100;
+    if (lower.includes('/mi')) return 1609.34;
+    return 1000; // default /km
   }
 
   getSectionTitle(): string {

@@ -34,6 +34,14 @@ export function formatPace(totalSeconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+/** Format total seconds as pace, omitting minutes when 0 → "SSs" instead of "0:SS" */
+export function formatPaceCompact(totalSeconds: number): string {
+  const m = Math.floor(totalSeconds / 60);
+  const s = Math.round(totalSeconds % 60);
+  if (m === 0) return `${s}s`;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 /** Format pace with unit based on sport: "4:30/km" or "1:45/100m" */
 export function formatPaceWithUnit(secPerUnit: number | null, sport: string): string {
   if (secPerUnit === null) return '\u221E';

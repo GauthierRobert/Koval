@@ -35,7 +35,7 @@ public class Race {
 
     private String description;
     private String website;
-    private Integer typicalMonth; // 1-12
+    private String scheduledDate; // YYYY-MM-DD
 
     // Raw GPX stored as binary (typically 50-500KB each)
     private byte[] swimGpx;

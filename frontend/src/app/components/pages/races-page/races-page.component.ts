@@ -5,6 +5,7 @@ import {FormsModule} from '@angular/forms';
 import {Router} from '@angular/router';
 import {CountryFacet, PageResponse, Race, RaceService, SportFacet,} from '../../../services/race.service';
 import {RaceGoalService} from '../../../services/race-goal.service';
+import {AuthService} from '../../../services/auth.service';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 
 @Component({
@@ -18,6 +19,7 @@ import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 export class RacesPageComponent implements OnInit {
   private raceService = inject(RaceService);
   private raceGoalService = inject(RaceGoalService);
+  private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
   private router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -44,10 +46,10 @@ export class RacesPageComponent implements OnInit {
   isAiCompleting = false;
   newRaceTitle = '';
 
-  readonly monthNames = [
-    '', 'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
-  ];
+  // Edit race state
+  editingRaceId: string | null = null;
+  editForm: Partial<Race> = {};
+  isSavingEdit = false;
 
   ngOnInit(): void {
     this.loadSportFacets();
@@ -291,6 +293,61 @@ export class RacesPageComponent implements OnInit {
   simulateRace(race: Race): void {
     if (!this.canSimulate(this.getCachedRace(race))) return;
     this.router.navigate(['/pacing'], { queryParams: { raceId: race.id } });
+  }
+
+  isOwnRace(race: Race): boolean {
+    return !!race.createdBy && race.createdBy === this.authService.currentUser?.id;
+  }
+
+  startEdit(race: Race): void {
+    this.editingRaceId = race.id;
+    this.expandedRaceId = race.id;
+    const r = this.getCachedRace(race);
+    this.editForm = {
+      title: r.title,
+      sport: r.sport,
+      location: r.location ?? '',
+      country: r.country ?? '',
+      distance: r.distance ?? '',
+      swimDistanceM: r.swimDistanceM,
+      bikeDistanceM: r.bikeDistanceM,
+      runDistanceM: r.runDistanceM,
+      elevationGainM: r.elevationGainM,
+      description: r.description ?? '',
+      website: r.website ?? '',
+      scheduledDate: r.scheduledDate ?? '',
+    };
+    this.cdr.markForCheck();
+  }
+
+  cancelEdit(): void {
+    this.editingRaceId = null;
+    this.editForm = {};
+    this.cdr.markForCheck();
+  }
+
+  saveEdit(race: Race): void {
+    if (!this.editingRaceId) return;
+    this.isSavingEdit = true;
+    this.cdr.markForCheck();
+
+    this.raceService.updateRace(race.id, this.editForm).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (updated) => {
+        this.raceCache[race.id] = updated;
+        if (this.browseResults) {
+          const idx = this.browseResults.content.findIndex(r => r.id === race.id);
+          if (idx !== -1) this.browseResults.content[idx] = updated;
+        }
+        this.editingRaceId = null;
+        this.editForm = {};
+        this.isSavingEdit = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.isSavingEdit = false;
+        this.cdr.markForCheck();
+      },
+    });
   }
 
   formatDistance(meters?: number): string {

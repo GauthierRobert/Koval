@@ -60,6 +60,11 @@ public class RaceController {
     @PutMapping("/{id}")
     public ResponseEntity<RaceSummary> updateRace(@PathVariable String id, @RequestBody Race updates) {
         try {
+            String userId = SecurityUtils.getCurrentUserId();
+            Race existing = raceService.getRaceById(id);
+            if (!userId.equals(existing.getCreatedBy())) {
+                return ResponseEntity.status(403).build();
+            }
             return ResponseEntity.ok(RaceSummary.from(raceService.updateRace(id, updates)));
         } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();

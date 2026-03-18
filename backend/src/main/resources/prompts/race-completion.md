@@ -8,5 +8,5 @@ runDistanceM (meters, null if not applicable),
 elevationGainM (total elevation gain in meters, null if unknown),
 description (3-10 sentence description of the race),
 website (official website URL, null if unknown),
-typicalMonth (integer 1-12 for when the race typically occurs, null if unknown).
+scheduledDate (next upcoming edition date in YYYY-MM-DD format, null if unknown).
 Return ONLY valid JSON. No markdown, no explanation.

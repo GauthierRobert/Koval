@@ -255,6 +255,21 @@
   text-align: right;
 }
 
+.zone-pace-sub {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 70px;
+  text-align: right;
+}
+
+.pace-unit {
+  font-size: 9px;
+  font-weight: 500;
+  opacity: 0.6;
+}
+
 .empty-note {
   font-size: 0.8rem;
   color: var(--text-muted);

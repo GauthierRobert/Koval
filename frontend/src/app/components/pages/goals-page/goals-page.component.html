@@ -28,6 +28,9 @@
               <div class="sidebar-goal-row1">
                 <app-sport-icon [sport]="$any(goal.sport)" [size]="12"></app-sport-icon>
                 <span class="sidebar-goal-title">{{ goal.title }}</span>
+                @if (goal.raceDate) {
+                  <span class="sidebar-goal-year">{{ goal.raceDate.substring(0, 4) }}</span>
+                }
               </div>
               <div class="sidebar-goal-row2">
                 @if (goal.raceDate) {
@@ -59,6 +62,9 @@
             </div>
             <app-sport-icon [sport]="$any(goal.sport)" [size]="20"></app-sport-icon>
             <h2 class="detail-title">{{ goal.title }}</h2>
+            @if (goal.raceDate) {
+              <span class="detail-title-year">{{ goal.raceDate.substring(0, 4) }}</span>
+            }
             <div class="detail-actions">
               <button class="btn-icon" (click)="openEdit(goal)" title="Edit">&#9998;</button>
               <button class="btn-icon btn-icon--danger" (click)="delete(goal)" title="Delete">&#10005;</button>
