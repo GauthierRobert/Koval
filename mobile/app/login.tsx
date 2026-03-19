@@ -6,17 +6,28 @@ import {useAuth} from '../hooks/useAuth';
 import {theme} from '../constants/theme';
 
 export default function LoginScreen() {
-  const { login } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
+  const { login, loginStrava } = useAuth();
+  const [isLoading, setIsLoading] = useState<'google' | 'strava' | null>(null);
 
   async function handleGoogleLogin() {
-    setIsLoading(true);
+    setIsLoading('google');
     try {
       await login();
     } catch (err) {
       Alert.alert('Sign-in failed', err instanceof Error ? err.message : 'Please try again.');
     } finally {
-      setIsLoading(false);
+      setIsLoading(null);
+    }
+  }
+
+  async function handleStravaLogin() {
+    setIsLoading('strava');
+    try {
+      await loginStrava();
+    } catch (err) {
+      Alert.alert('Sign-in failed', err instanceof Error ? err.message : 'Please try again.');
+    } finally {
+      setIsLoading(null);
     }
   }
 
@@ -55,12 +66,34 @@ export default function LoginScreen() {
       {/* ── Actions ── */}
       <View style={styles.actions}>
         <TouchableOpacity
-          style={[styles.googleBtn, isLoading && styles.btnDisabled]}
-          onPress={handleGoogleLogin}
-          disabled={isLoading}
+          style={[styles.stravaBtn, isLoading && styles.btnDisabled]}
+          onPress={handleStravaLogin}
+          disabled={!!isLoading}
           activeOpacity={0.85}
         >
-          {isLoading ? (
+          {isLoading === 'strava' ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <Ionicons name="bicycle" size={20} color="#fff" />
+              <Text style={styles.stravaBtnText}>Connect with Strava</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <TouchableOpacity
+          style={[styles.googleBtn, isLoading && styles.btnDisabled]}
+          onPress={handleGoogleLogin}
+          disabled={!!isLoading}
+          activeOpacity={0.85}
+        >
+          {isLoading === 'google' ? (
             <ActivityIndicator color={theme.colors.text} />
           ) : (
             <>
@@ -170,21 +203,57 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.xl,
     gap: theme.spacing.md,
   },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: theme.colors.border,
+  },
+  dividerText: {
+    color: theme.colors.textMuted,
+    fontSize: theme.fontSize.sm,
+    fontWeight: '500',
+  },
+  stravaBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.sm,
+    backgroundColor: '#fc4c02',
+    borderRadius: theme.radius.md,
+    height: 54,
+    shadowColor: '#fc4c02',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  stravaBtnText: {
+    color: '#fff',
+    fontSize: theme.fontSize.lg,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
   googleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: theme.spacing.sm,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.surfaceElevated,
     borderRadius: theme.radius.md,
     height: 54,
-    ...theme.shadow.glow,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   btnDisabled: {
     opacity: 0.55,
   },
   googleBtnText: {
-    color: '#fff',
+    color: theme.colors.text,
     fontSize: theme.fontSize.lg,
     fontWeight: '700',
     letterSpacing: 0.2,

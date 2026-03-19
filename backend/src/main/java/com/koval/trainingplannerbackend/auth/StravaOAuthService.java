@@ -35,11 +35,13 @@ public class StravaOAuthService {
     /**
      * Generate the Strava authorization URL.
      */
-    public String getAuthorizationUrl() {
+    public String getAuthorizationUrl(String overrideRedirectUri) {
+        String effectiveRedirectUri = (overrideRedirectUri != null && !overrideRedirectUri.isBlank())
+                ? overrideRedirectUri : redirectUri;
         return STRAVA_AUTH_URL +
                 "?client_id=" + clientId +
                 "&response_type=code" +
-                "&redirect_uri=" + redirectUri +
+                "&redirect_uri=" + effectiveRedirectUri +
                 "&approval_prompt=auto" +
                 "&scope=read,activity:read_all,profile:read_all";
     }

@@ -1,11 +1,12 @@
 import React, {createContext, useContext, useEffect, useState} from 'react';
-import {fetchCurrentUser, loginWithGoogle, logout as logoutService, User} from '../services/authService';
+import {fetchCurrentUser, loginWithGoogle, loginWithStrava, logout as logoutService, User} from '../services/authService';
 import {getToken} from '../services/api';
 
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
   login: () => Promise<void>;
+  loginStrava: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -13,6 +14,7 @@ const AuthContext = createContext<AuthContextValue>({
   user: null,
   loading: true,
   login: async () => {},
+  loginStrava: async () => {},
   logout: async () => {},
 });
 
@@ -47,6 +49,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function loginStrava() {
+    setLoading(true);
+    try {
+      const me = await loginWithStrava();
+      setUser(me);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function logout() {
     await logoutService();
     setUser(null);
@@ -54,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return React.createElement(
     AuthContext.Provider,
-    { value: { user, loading, login, logout } },
+    { value: { user, loading, login, loginStrava, logout } },
     children
   );
 }
