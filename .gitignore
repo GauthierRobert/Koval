@@ -46,3 +46,4 @@ Thumbs.db
 /mongo-data/
 setup-gcp.sh
 .claude/plans
+platform-tools

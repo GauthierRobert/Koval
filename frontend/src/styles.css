@@ -337,7 +337,7 @@ select option {
 }
 
 .tab-btn--ai-background{
-  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  background: var(--secondary-color);
   color: #fff;
 }
 

@@ -215,9 +215,9 @@
 }
 
 .ai-btn-corner:hover {
-  background: rgba(168, 85, 247, 0.12);
-  border-color: rgba(168, 85, 247, 0.3);
-  color: #c084fc;
+  background: rgba(0, 160, 233, 0.12);
+  border-color: rgba(0, 160, 233, 0.3);
+  color: var(--secondary-color);
 }
 
 .ai-btn-corner svg {
@@ -278,9 +278,9 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--text-muted);
-  border: 1px solid var(--glass-border);
+  background: rgba(0, 160, 233, 0.12);
+  color: var(--secondary-color);
+  border: 1px solid rgba(0, 160, 233, 0.25);
   font-size: 10px;
   font-weight: 700;
   display: flex;
@@ -290,8 +290,9 @@
 }
 
 .attendee-avatar.waiting {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-muted);
+  background: rgba(0, 160, 233, 0.06);
+  color: var(--secondary-color);
+  opacity: 0.6;
 }
 
 .attendee-name {
@@ -929,7 +930,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
+  padding: 3px 6px;
   transition: all 0.15s;
   z-index: 2;
 }
@@ -941,7 +942,7 @@
 }
 
 .edit-btn-corner.small {
-  padding: 2px;
+  padding: 2px 5px;
 }
 
 /* --- Recurring choice dialog --- */

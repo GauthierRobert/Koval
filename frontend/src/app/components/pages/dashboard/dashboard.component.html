@@ -3,10 +3,16 @@
 
     <div class="header glass">
       <div class="header-left">
-        <div class="header-avatar">D</div>
+        <div class="header-avatar">
+          @if (vm.user?.profilePicture) {
+            <img [src]="vm.user!.profilePicture" [alt]="vm.user!.displayName" class="header-avatar-img" />
+          } @else {
+            {{ vm.user?.displayName?.charAt(0)?.toUpperCase() ?? 'A' }}
+          }
+        </div>
         <div class="header-info">
-          <span class="header-title">ATHLETE <span class="dim">DASHBOARD</span></span>
-          <span class="header-subtitle">Weekly summary &amp; performance overview</span>
+          <span class="header-title">{{ vm.user?.displayName | uppercase }}</span>
+          <span class="header-subtitle">{{ vm.user?.role | titlecase }} · Koval Training</span>
         </div>
       </div>
       <div class="header-right">
@@ -29,90 +35,87 @@
       </div>
     }
 
-    <!-- Status strip: CTL / ATL / TSB / FTP — sourced from live PMC API -->
-    @if (vm.form.ctl != null || vm.form.ftp) {
-      <div class="status-strip glass">
-        @if (vm.form.ctl != null) {
-          <div class="stat-item">
-            <span class="stat-label">FITNESS</span>
-            <span class="stat-value fitness">{{ vm.form.ctl | number:'1.0-0' }}</span>
-            <span class="stat-sublabel">CTL</span>
-          </div>
-        }
-        @if (vm.form.atl != null) {
-          <div class="stat-sep"></div>
-          <div class="stat-item">
-            <span class="stat-label">FATIGUE</span>
-            <span class="stat-value fatigue">{{ vm.form.atl | number:'1.0-0' }}</span>
-            <span class="stat-sublabel">ATL</span>
-          </div>
-        }
-        @if (vm.form.tsb != null) {
-          <div class="stat-sep"></div>
-          <div class="stat-item">
-            <span class="stat-label">FORM</span>
-            <span class="stat-value"
-              [class.form-positive]="vm.form.tsb! > 5"
-              [class.form-negative]="vm.form.tsb! < -10"
-              [class.form-neutral]="vm.form.tsb! >= -10 && vm.form.tsb! <= 5">
-              {{ vm.form.tsb! > 0 ? '+' : '' }}{{ vm.form.tsb | number:'1.0-0' }}
-            </span>
-            <span class="stat-sublabel">TSB</span>
-          </div>
-        }
-        @if (vm.form.ftp) {
-          <div class="stat-sep"></div>
-          <div class="stat-item">
-            <span class="stat-label">FTP</span>
-            <span class="stat-value ftp">{{ vm.form.ftp }}W</span>
-            <span class="stat-sublabel">threshold</span>
-          </div>
-        }
-      </div>
-    }
-
     <div class="dashboard-body">
 
-      <!-- Schedule row: overdue + this week -->
-      <div class="schedule-row">
-        @if (vm.overdue.length > 0) {
-          <div class="schedule-panel overdue-panel">
-            <span class="panel-label overdue-label">OVERDUE</span>
-            <div class="chips-row">
-              @for (w of vm.overdue; track trackWorkoutById(w)) {
-                <div class="workout-chip overdue" (click)="openDetail(w)">
-                  <app-sport-icon [sport]="w.sportType" [size]="12"></app-sport-icon>
-                  <span class="chip-date">{{ formatScheduleDate(w.scheduledDate) }}</span>
-                  <span class="chip-title">{{ w.trainingTitle || w.title || 'Workout' }}</span>
-                  @if (formatScheduleDuration(w)) {
-                    <span class="chip-dur">{{ formatScheduleDuration(w) }}</span>
-                  }
-                </div>
+      <!-- Today's Focus + Metrics side by side -->
+      <div class="focus-metrics-row">
+
+        <div class="focus-card glass">
+          <span class="card-label">TODAY'S FOCUS</span>
+          @if (vm.upcoming[0]?.scheduledDate === todayKey) {
+            <div class="focus-sport-badge" [ngClass]="'focus-sport-badge--' + vm.upcoming[0].sportType.toLowerCase()">
+              {{ vm.upcoming[0].sportType }}
+            </div>
+            <div class="focus-title">{{ vm.upcoming[0].trainingTitle || vm.upcoming[0].title || 'Workout' }}</div>
+            <div class="focus-meta">
+              @if (formatScheduleDuration(vm.upcoming[0])) {
+                <span class="focus-meta-chip">{{ formatScheduleDuration(vm.upcoming[0]) }}</span>
               }
+            </div>
+            <button class="view-workout-btn" (click)="openDetail(vm.upcoming[0])">VIEW WORKOUT</button>
+          } @else {
+            <div class="focus-rest-label">Rest Day</div>
+            <div class="focus-rest-sub">No workout scheduled. Recovery is training too.</div>
+          }
+        </div>
+
+        @if (vm.form.ctl != null || vm.form.atl != null || vm.form.tsb != null) {
+          <div class="metrics-panel glass">
+            <span class="card-label">PERFORMANCE</span>
+            <div class="mp-row">
+              <span class="mp-big-val fitness">{{ vm.form.ctl != null ? (vm.form.ctl | number:'1.0-0') : '–' }}</span>
+              <span class="mp-big-val fatigue">{{ vm.form.atl != null ? (vm.form.atl | number:'1.0-0') : '–' }}</span>
+              <span class="mp-big-val"
+                [class.form-positive]="(vm.form.tsb ?? 0) > 5"
+                [class.form-negative]="(vm.form.tsb ?? 0) < -10"
+                [class.form-neutral]="(vm.form.tsb ?? 0) >= -10 && (vm.form.tsb ?? 0) <= 5">
+                @if (vm.form.tsb != null) {
+                  {{ vm.form.tsb > 0 ? '+' : '' }}{{ vm.form.tsb | number:'1.0-0' }}
+                } @else { – }
+              </span>
+            </div>
+            <div class="mp-row">
+              <div class="mp-meta">
+                <span class="mp-label">FITNESS</span>
+                <span class="mp-sublabel">CTL</span>
+              </div>
+              <div class="mp-meta">
+                <span class="mp-label">FATIGUE</span>
+                <span class="mp-sublabel">ATL</span>
+              </div>
+              <div class="mp-meta">
+                <span class="mp-label">FORM</span>
+                <span class="mp-sublabel">TSB</span>
+              </div>
             </div>
           </div>
         }
 
-        <div class="schedule-panel week-panel">
-          <span class="panel-label week-label">THIS WEEK</span>
-          @if (vm.upcoming.length > 0) {
-            <div class="chips-row">
-              @for (w of vm.upcoming; track trackWorkoutById(w)) {
-                <div class="workout-chip" (click)="openDetail(w)">
-                  <app-sport-icon [sport]="w.sportType" [size]="12"></app-sport-icon>
-                  <span class="chip-date">{{ formatScheduleDate(w.scheduledDate) }}</span>
-                  <span class="chip-title">{{ w.trainingTitle || w.title || 'Workout' }}</span>
-                  @if (formatScheduleDuration(w)) {
-                    <span class="chip-dur">{{ formatScheduleDuration(w) }}</span>
-                  }
-                </div>
-              }
+        @if (vm.user?.ftp || vm.user?.functionalThresholdPace || vm.user?.criticalSwimSpeed) {
+          <div class="metrics-panel glass">
+            <span class="card-label">THRESHOLDS</span>
+            <div class="mp-row">
+              <span class="mp-big-val swimming">{{ vm.user?.criticalSwimSpeed ? formatSwimPace(vm.user!.criticalSwimSpeed!) : '–' }}</span>
+              <span class="mp-big-val cycling">{{ vm.user?.ftp ?? '–' }}</span>
+              <span class="mp-big-val running">{{ vm.user?.functionalThresholdPace ? formatPace(vm.user!.functionalThresholdPace!) : '–' }}</span>
             </div>
-          }
-          @if (!vm.upcoming.length) {
-            <span class="empty-dim">No workouts scheduled</span>
-          }
-        </div>
+            <div class="mp-row">
+              <div class="mp-meta">
+                <span class="mp-label">SWIM</span>
+                <span class="mp-sublabel">/100m</span>
+              </div>
+              <div class="mp-meta">
+                <span class="mp-label">BIKE</span>
+                <span class="mp-sublabel">watts</span>
+              </div>
+              <div class="mp-meta">
+                <span class="mp-label">RUN</span>
+                <span class="mp-sublabel">min/km</span>
+              </div>
+            </div>
+          </div>
+        }
+
       </div>
 
       <!-- Next Race Goal -->
@@ -232,53 +235,43 @@
         </div>
       }
 
-      <!-- Empty state CTAs -->
-      @if (!hasAnyActivity(vm.weekMetrics) && !vm.upcoming.length && !vm.overdue.length && !vm.latestFit) {
-        <div
-          class="empty-ctas">
-        <a class="cta-card glass" routerLink="/history">
-          <div class="cta-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-          </div>
-          <div class="cta-text">
-            <strong>Import Activity</strong>
-            <span>Upload a .FIT file from your device</span>
-          </div>
-        </a>
-        <a class="cta-card glass" routerLink="/chat">
-          <div class="cta-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-          </div>
-          <div class="cta-text">
-            <strong>Generate with AI</strong>
-            <span>Let the assistant plan your training</span>
-          </div>
-        </a>
-        <a class="cta-card glass" routerLink="/calendar">
-          <div class="cta-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-            </svg>
-          </div>
-          <div class="cta-text">
-            <strong>Plan Your Week</strong>
-            <span>Schedule workouts on your calendar</span>
-          </div>
-        </a>
+      <!-- Quick Actions — always visible -->
+      <div class="quick-actions-section">
+        <div class="quick-actions-label">QUICK ACTIONS</div>
+        <div class="quick-actions-grid">
+          <a class="quick-tile" routerLink="/chat">
+            <span class="quick-tile-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </span>
+            <span class="quick-tile-title">Chat with AI</span>
+            <span class="quick-tile-sub">Generate a new workout plan</span>
+          </a>
+          <a class="quick-tile" routerLink="/calendar">
+            <span class="quick-tile-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </span>
+            <span class="quick-tile-title">Calendar</span>
+            <span class="quick-tile-sub">View and schedule workouts</span>
+          </a>
+          <a class="quick-tile" routerLink="/trainings">
+            <span class="quick-tile-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </svg>
+            </span>
+            <span class="quick-tile-title">Browse Library</span>
+            <span class="quick-tile-sub">Explore saved workouts</span>
+          </a>
         </div>
-      }
+      </div>
 
     </div>
   </div>

@@ -91,7 +91,7 @@ export class DashboardComponent {
   private coachService = inject(CoachService);
   private router = inject(Router);
 
-  private readonly todayKey = toDateKey(new Date());
+  readonly todayKey = toDateKey(new Date());
   private readonly sevenDaysAgoKey = toDateKey(subDays(new Date(), 7));
   private readonly fourteenDaysAhead = toDateKey(subDays(new Date(), -14));
 
@@ -223,7 +223,7 @@ export class DashboardComponent {
 
   formatScheduleDate(dateStr: string): string {
     const d = new Date(dateStr + 'T00:00:00');
-    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    return d.toLocaleDateString('en-US', {weekday: 'short', month: 'short', day: 'numeric'});
   }
 
   formatScheduleDuration(workout: ScheduledWorkout): string {
@@ -236,7 +236,7 @@ export class DashboardComponent {
   }
 
   formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return new Date(date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
   }
 
   totalWeekTss(metrics: WeekMetrics): number {
@@ -265,5 +265,26 @@ export class DashboardComponent {
 
   trackBySport(stat: SportStats): string {
     return stat.sport;
+  }
+
+  formatPace(secondsPerKm: number): string {
+    const m = Math.floor(secondsPerKm / 60);
+    const s = Math.floor(secondsPerKm % 60);
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  formatSwimPace(secondsPer100m: number): string {
+    const m = Math.floor(secondsPer100m / 60);
+    const s = Math.floor(secondsPer100m % 60);
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  get greeting(): string {
+    const h = new Date().getHours();
+    return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  }
+
+  get todayFormatted(): string {
+    return new Date().toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'});
   }
 }

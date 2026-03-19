@@ -61,6 +61,56 @@
       margin: 0;
     }
 
+    .backend-status {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-text {
+      color: var(--text-muted, #888);
+    }
+
+    /* checking */
+    .status-checking .status-dot {
+      background: #888;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    /* starting */
+    .status-starting .status-dot {
+      background: #f59e0b;
+      animation: pulse 1s ease-in-out infinite;
+    }
+    .status-starting .status-text { color: #f59e0b; }
+
+    /* active */
+    .status-active .status-dot { background: #22c55e; }
+    .status-active .status-text { color: #22c55e; }
+
+    /* offline */
+    .status-offline .status-dot { background: #ef4444; }
+    .status-offline .status-text { color: #ef4444; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
     .auth-buttons {
       display: flex;
       flex-direction: column;

@@ -7,6 +7,12 @@
           <h1>Koval <span class="accent">TRAINING</span></h1>
         </div>
         <p class="subtitle">AI-powered cycling & triathlon training</p>
+
+        <div class="backend-status" [class]="'status-' + backendStatus">
+          <span class="status-dot"></span>
+          <span class="status-text">{{ statusLabel }}</span>
+        </div>
+
         <div class="auth-buttons">
           <button class="auth-btn strava" (click)="loginWithStrava()">
             <span class="btn-text">Connect with Strava</span>
