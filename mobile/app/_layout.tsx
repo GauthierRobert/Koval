@@ -61,7 +61,9 @@ function RootLayoutInner() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
       <Stack.Screen name="login" />
+      <Stack.Screen name="auth/callback" />
       <Stack.Screen name="(tabs)" />
     </Stack>
   );
