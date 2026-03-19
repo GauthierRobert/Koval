@@ -49,6 +49,7 @@ public class NotationToolService {
             @ToolParam(description = "from context") String userId,
             @ToolParam(description = "e.g. 10minWARM + 5x300m85%/R:200m60% + 5minCOOL") String notation,
             @ToolParam(description = "CYCLING|RUNNING|SWIMMING|BRICK") String sport,
+            String title,
             String description,
             @ToolParam(description = "VO2MAX|THRESHOLD|SWEET_SPOT|ENDURANCE|SPRINT|RECOVERY|MIXED|TEST") String type,
             @ToolParam(description = "zone ID or \"null\"") String zoneSystemId,
@@ -73,8 +74,8 @@ public class NotationToolService {
         String resolvedClubId = isPresent(clubId) ? clubId : null;
 
         Training training = createTrainingInstance(sport);
-        training.setTitle(notation);
-        training.setDescription(description);
+        training.setTitle(title);
+        training.setDescription(notation + "\n" + description);
         training.setTrainingType(parseTrainingType(type));
         training.setBlocks(resolvedBlocks);
         training.setGroupIds(new ArrayList<>());
@@ -108,7 +109,8 @@ public class NotationToolService {
             if (isPresent(scheduledAt)) {
                 try {
                     scheduledDateTime = LocalDateTime.parse(scheduledAt);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
             CreateSessionRequest sessionReq = new CreateSessionRequest(
                     description, sport, scheduledDateTime, null, null, saved.getId(), null, null, null, null, false, null, null);
@@ -132,7 +134,8 @@ public class NotationToolService {
         if (isPresent(zoneSystemId)) {
             try {
                 return zoneSystemService.getZoneSystem(zoneSystemId);
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
         try {
             SportType sportType = SportType.valueOf(sport.trim().toUpperCase());
@@ -166,13 +169,13 @@ public class NotationToolService {
     }
 
     private static Integer hardcodedFallback(String upperLabel) {
-        if (upperLabel.equals("FC"))   return 95;
-        if (upperLabel.equals("SC"))   return 85;
-        if (upperLabel.equals("BC"))   return 80;
-        if (upperLabel.equals("E5"))   return 85;
-        if (upperLabel.equals("E4"))   return 75;
-        if (upperLabel.equals("E3"))   return 70;
-        if (upperLabel.equals("E2"))   return 65;
+        if (upperLabel.equals("FC")) return 95;
+        if (upperLabel.equals("SC")) return 85;
+        if (upperLabel.equals("BC")) return 80;
+        if (upperLabel.equals("E5")) return 85;
+        if (upperLabel.equals("E4")) return 75;
+        if (upperLabel.equals("E3")) return 70;
+        if (upperLabel.equals("E2")) return 65;
         if (upperLabel.equals("E1") || upperLabel.equals("E")) return 60;
         if (upperLabel.startsWith("WARM")) return 60;
         if (upperLabel.startsWith("COOL")) return 55;
@@ -190,10 +193,10 @@ public class NotationToolService {
     private static Training createTrainingInstance(String sport) {
         if (sport == null) return new CyclingTraining();
         return switch (sport.trim().toUpperCase()) {
-            case "RUNNING"  -> new RunningTraining();
+            case "RUNNING" -> new RunningTraining();
             case "SWIMMING" -> new SwimmingTraining();
-            case "BRICK"    -> new BrickTraining();
-            default         -> new CyclingTraining();
+            case "BRICK" -> new BrickTraining();
+            default -> new CyclingTraining();
         };
     }
 

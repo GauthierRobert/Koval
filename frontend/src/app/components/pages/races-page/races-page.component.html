@@ -8,265 +8,308 @@
 
   <!-- Create Race inline form -->
   @if (isCreatingRace) {
-    <div class="create-race-panel glass">
-      <div class="form-row">
-        <label>Race Title</label>
-        <input [(ngModel)]="newRaceTitle" placeholder="e.g. Ironman Nice 2026" class="form-input" />
-      </div>
-      <button class="btn-primary" (click)="createAndCompleteRace()"
-        [disabled]="!newRaceTitle.trim() || isAiCompleting">
-        @if (!isAiCompleting) {
-          <span>Create &amp; Auto-Complete with AI</span>
-        }
-        @if (isAiCompleting) {
-          <span class="ai-loading">AI is completing race details...</span>
-        }
-      </button>
+  <div class="create-race-panel glass">
+    <div class="form-row">
+      <label>Race Title</label>
+      <input [(ngModel)]="newRaceTitle" placeholder="e.g. Ironman Nice 2026" class="form-input"/>
     </div>
+    <button class="btn-primary" (click)="createAndCompleteRace()"
+            [disabled]="!newRaceTitle.trim() || isAiCompleting">
+      @if (!isAiCompleting) {
+      <span>Create &amp; Auto-Complete with AI</span>
+      }
+      @if (isAiCompleting) {
+      <span class="ai-loading">AI is completing race details...</span>
+      }
+    </button>
+  </div>
   }
 
   <!-- Breadcrumb navigation -->
   @if (selectedBrowseSport) {
-    <div class="browse-breadcrumb">
-      <button class="breadcrumb-link" (click)="backToSports()">All Sports</button>
-      <span class="breadcrumb-sep">/</span>
-      @if (!selectedBrowseCountry) {
-        <span class="breadcrumb-current">{{ selectedBrowseSport }}</span>
-      }
-      @if (selectedBrowseCountry) {
-        <button class="breadcrumb-link" (click)="backToCountries()">{{ selectedBrowseSport }}</button>
-        <span class="breadcrumb-sep">/</span>
-        <span class="breadcrumb-current">{{ selectedBrowseCountry }}</span>
-      }
-    </div>
+  <div class="browse-breadcrumb">
+    <button class="breadcrumb-link" (click)="backToSports()">All Sports</button>
+    <span class="breadcrumb-sep">/</span>
+    @if (!selectedBrowseCountry) {
+    <span class="breadcrumb-current">{{ selectedBrowseSport }}</span>
+    }
+    @if (selectedBrowseCountry) {
+    <button class="breadcrumb-link" (click)="backToCountries()">{{ selectedBrowseSport }}</button>
+    <span class="breadcrumb-sep">/</span>
+    <span class="breadcrumb-current">{{ selectedBrowseCountry }}</span>
+    }
+  </div>
   }
 
   <!-- Level 0: Sport Cards -->
   @if (!selectedBrowseSport) {
-    <div class="facet-grid">
-      @for (facet of sportFacets; track facet) {
-        <div class="facet-card glass" (click)="selectBrowseSport(facet.sport)">
-          <div class="facet-name">{{ facet.sport }}</div>
-          <div class="facet-counts">
-            <span>{{ facet.raceCount }} races</span>
-            <span>{{ facet.countryCount }} countries</span>
-          </div>
-        </div>
-      }
-      @if (sportFacets.length === 0 && !browseLoading) {
-        <div class="browse-empty">
-          No races in the catalog yet. Be the first to create one!
-        </div>
-      }
+  <div class="facet-grid">
+    @for (facet of sportFacets; track facet) {
+    <div class="facet-card glass" (click)="selectBrowseSport(facet.sport)">
+      <div class="facet-name">{{ facet.sport }}</div>
+      <div class="facet-counts">
+        <span>{{ facet.raceCount }} races</span>
+        <span>{{ facet.countryCount }} countries</span>
+      </div>
     </div>
+    }
+    @if (sportFacets.length === 0 && !browseLoading) {
+    <div class="browse-empty">
+      No races in the catalog yet. Be the first to create one!
+    </div>
+    }
+  </div>
   }
 
   <!-- Level 1: Country Cards -->
   @if (selectedBrowseSport && !selectedBrowseCountry && !browseLoading) {
-    <div class="facet-grid facet-grid--countries">
-      @for (facet of countryFacets; track facet) {
-        <div class="facet-card facet-card--country glass"
-          (click)="selectBrowseCountry(facet.country)">
-          <div class="facet-name">{{ facet.country || 'Unknown' }}</div>
-          <div class="facet-counts"><span>{{ facet.raceCount }} races</span></div>
-        </div>
-      }
-      @if (countryFacets.length === 0) {
-        <div class="browse-empty">
-          No races found for {{ selectedBrowseSport }}.
-        </div>
-      }
+  <div class="facet-grid facet-grid--countries">
+    @for (facet of countryFacets; track facet) {
+    <div class="facet-card facet-card--country glass"
+         (click)="selectBrowseCountry(facet.country)">
+      <div class="facet-name">{{ facet.country || 'Unknown' }}</div>
+      <div class="facet-counts"><span>{{ facet.raceCount }} races</span></div>
     </div>
+    }
+    @if (countryFacets.length === 0) {
+    <div class="browse-empty">
+      No races found for {{ selectedBrowseSport }}.
+    </div>
+    }
+  </div>
   }
 
   <!-- Level 2: Race List -->
   @if (selectedBrowseCountry && browseResults && !browseLoading) {
-    <div class="browse-race-list">
-      @for (race of browseResults.content; track race.id) {
-        <div class="browse-race-item glass"
-          [class.browse-race-item--open]="expandedRaceId === race.id"
-          (click)="toggleExpand(race)">
-          <div class="browse-race-header">
-            <app-sport-icon [sport]="$any(race.sport)" [size]="14"></app-sport-icon>
-            <span class="browse-race-title">{{ race.title }}</span>
-            @if (race.scheduledDate) {
+  <div class="browse-race-list">
+    @for (race of browseResults.content; track race.id) {
+    <div class="browse-race-item glass"
+         [class.browse-race-item--open]="expandedRaceId === race.id"
+         (click)="toggleExpand(race)">
+      <div class="browse-race-header">
+        <app-sport-icon [sport]="$any(race.sport)" [size]="14"></app-sport-icon>
+        <span class="browse-race-title">{{ race.title }}
+              @if (race.scheduledDate) {
               <span class="race-year">{{ race.scheduledDate.substring(0, 4) }}</span>
-            }
-            @if (race.verified) {
-              <span class="browse-race-verified" title="Verified">&#10003;</span>
-            }
-            <div class="gpx-chips" (click)="$event.stopPropagation()">
-              @for (disc of getGpxDisciplines(getCachedRace(race)); track disc) {
-                @if (hasGpxForDiscipline(getCachedRace(race), disc)) {
-                  <label class="gpx-chip gpx-chip--done" title="Click to replace GPX">
-                    {{ disc | uppercase }} ✓
-                    <input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race, disc)">
-                  </label>
-                }
-                @if (!hasGpxForDiscipline(getCachedRace(race), disc)) {
-                  <label class="gpx-chip gpx-chip--upload">
-                    @if (!isGpxUploading(race.id, disc)) {
-                      <span>{{ disc | uppercase }} ↑</span>
-                    }
-                    @if (isGpxUploading(race.id, disc)) {
-                      <span>{{ disc | uppercase }} …</span>
-                    }
-                    <input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race, disc)">
-                  </label>
-                }
-              }
-            </div>
-            <button class="btn-simulate"
-              [disabled]="!canSimulate(getCachedRace(race))"
-              [title]="canSimulate(getCachedRace(race)) ? 'Simulate this race' : getSimulateDisabledReason(getCachedRace(race))"
-              (click)="simulateRace(race); $event.stopPropagation()">
-              ⚡ SIMULATE
-            </button>
-            <button class="btn-add-goal" [class.btn-add-goal--added]="addedRaceIds.has(race.id)"
-              [disabled]="addedRaceIds.has(race.id)"
-              (click)="addToMyGoals(race); $event.stopPropagation()">
-              {{ addedRaceIds.has(race.id) ? '✓ ADDED' : '+ ADD TO MY GOALS' }}
-            </button>
-            @if (isOwnRace(race) && editingRaceId !== race.id) {
-              <button class="btn-edit" (click)="startEdit(race); $event.stopPropagation()" title="Edit race">
-                ✎
-              </button>
-            }
-            <span class="expand-caret">{{ expandedRaceId === race.id ? '▾' : '▸' }}</span>
-          </div>
-          <div class="browse-race-meta">
-            @if (race.location) {
-              <span>{{ race.location }}</span>
-            }
-            @if (race.distance) {
-              <span>· {{ race.distance }}</span>
-            }
-            @if (race.scheduledDate) {
-              <span>· {{ race.scheduledDate | date:'mediumDate':'UTC' }}</span>
-            }
-            @if (race.elevationGainM) {
-              <span>· {{ race.elevationGainM }}m elev</span>
-            }
-          </div>
-          @if (race.swimDistanceM || race.bikeDistanceM || race.runDistanceM) {
-            <div class="discipline-distances">
-              @if (race.swimDistanceM) {
-                <span class="discipline-badge swim">S: {{ formatDistance(race.swimDistanceM) }}</span>
-              }
-              @if (race.bikeDistanceM) {
-                <span class="discipline-badge bike">B: {{ formatDistance(race.bikeDistanceM) }}</span>
-              }
-              @if (race.runDistanceM) {
-                <span class="discipline-badge run">R: {{ formatDistance(race.runDistanceM) }}</span>
-              }
-            </div>
-          }
+            }</span>
 
-          <!-- Expanded section -->
-          @if (expandedRaceId === race.id) {
-            @if (editingRaceId === race.id) {
-              <!-- Edit form -->
-              <div class="race-expanded race-edit-form" (click)="$event.stopPropagation()">
-                <div class="edit-grid">
-                  <div class="edit-field">
-                    <label>Title</label>
-                    <input class="form-input" [(ngModel)]="editForm.title" />
-                  </div>
-                  <div class="edit-field">
-                    <label>Sport</label>
-                    <select class="form-input" [(ngModel)]="editForm.sport">
-                      <option value="CYCLING">Cycling</option>
-                      <option value="RUNNING">Running</option>
-                      <option value="SWIMMING">Swimming</option>
-                      <option value="TRIATHLON">Triathlon</option>
-                      <option value="OTHER">Other</option>
-                    </select>
-                  </div>
-                  <div class="edit-field">
-                    <label>Location</label>
-                    <input class="form-input" [(ngModel)]="editForm.location" />
-                  </div>
-                  <div class="edit-field">
-                    <label>Country</label>
-                    <input class="form-input" [(ngModel)]="editForm.country" />
-                  </div>
-                  <div class="edit-field">
-                    <label>Distance</label>
-                    <input class="form-input" [(ngModel)]="editForm.distance" placeholder="e.g. 140.6 miles" />
-                  </div>
-                  <div class="edit-field">
-                    <label>Scheduled Date</label>
-                    <input class="form-input" type="date" [(ngModel)]="editForm.scheduledDate" />
-                  </div>
-                  <div class="edit-field">
-                    <label>Elevation (m)</label>
-                    <input class="form-input" type="number" [(ngModel)]="editForm.elevationGainM" />
-                  </div>
-                  <div class="edit-field">
-                    <label>Swim (m)</label>
-                    <input class="form-input" type="number" [(ngModel)]="editForm.swimDistanceM" />
-                  </div>
-                  <div class="edit-field">
-                    <label>Bike (m)</label>
-                    <input class="form-input" type="number" [(ngModel)]="editForm.bikeDistanceM" />
-                  </div>
-                  <div class="edit-field">
-                    <label>Run (m)</label>
-                    <input class="form-input" type="number" [(ngModel)]="editForm.runDistanceM" />
-                  </div>
-                  <div class="edit-field edit-field--full">
-                    <label>Website</label>
-                    <input class="form-input" [(ngModel)]="editForm.website" placeholder="https://..." />
-                  </div>
-                  <div class="edit-field edit-field--full">
-                    <label>Description</label>
-                    <textarea class="form-input edit-textarea" [(ngModel)]="editForm.description" rows="3"></textarea>
-                  </div>
-                </div>
-                <div class="edit-actions">
-                  <button class="btn-primary" (click)="saveEdit(race)" [disabled]="isSavingEdit">
-                    {{ isSavingEdit ? 'SAVING...' : 'SAVE' }}
-                  </button>
-                  <button class="btn-secondary" (click)="cancelEdit()" [disabled]="isSavingEdit">CANCEL</button>
-                </div>
-              </div>
+        @if (race.verified) {
+        <span class="browse-race-verified" title="Verified">&#10003;</span>
+        }
+        <button class="btn-simulate"
+                [disabled]="!canSimulate(getCachedRace(race))"
+                [title]="canSimulate(getCachedRace(race)) ? 'Simulate this race' : getSimulateDisabledReason(getCachedRace(race))"
+                (click)="simulateRace(race); $event.stopPropagation()">
+          ⚡ SIMULATE
+        </button>
+        @if (addedRaceIds$ | async; as addedRaceIds) {
+        <button class="btn-add-goal" [class.btn-add-goal--added]="addedRaceIds.has(race.id)"
+                [disabled]="addedRaceIds.has(race.id)"
+                (click)="addToMyGoals(race); $event.stopPropagation()">
+          {{ addedRaceIds.has(race.id) ? '✓ ADDED' : '+ ADD TO MY GOALS' }}
+        </button>
+        }
+        @if (isOwnRace(race) && editingRaceId !== race.id) {
+        <button class="btn-edit" (click)="startEdit(race); $event.stopPropagation()" title="Edit race">
+          ✎
+        </button>
+        }
+        <span class="expand-caret">{{ expandedRaceId === race.id ? '▾' : '▸' }}</span>
+      </div>
+      <div class="browse-race-meta">
+        @if (race.location) {
+        <span>{{ race.location }}</span>
+        }
+        @if (race.distance) {
+        <span>· {{ race.distance }}</span>
+        }
+        @if (race.scheduledDate) {
+        <span>· {{ race.scheduledDate | date:'mediumDate':'UTC' }}</span>
+        }
+        @if (race.elevationGainM) {
+        <span>· {{ race.elevationGainM }}m elev</span>
+        }
+      </div>
+      @if (race.swimDistanceM || race.bikeDistanceM || race.runDistanceM) {
+      <div class="discipline-distances" (click)="$event.stopPropagation()">
+        @if (race.swimDistanceM) {
+        <div class="discipline-group">
+          <span class="discipline-badge swim">S: {{ formatDistance(race.swimDistanceM) }}</span>
+          <label class="gpx-btn gpx-btn--swim" [class.gpx-btn--done]="hasGpxForDiscipline(getCachedRace(race), 'swim')">
+            @if (isGpxUploading(race.id, 'swim')) {
+            <span>GPX …</span>
+            } @else if (hasGpxForDiscipline(getCachedRace(race), 'swim')) {
+            <span>GPX ✓</span>
             } @else {
-              <!-- Read-only expanded -->
-              <div class="race-expanded">
-                @if (getCachedRace(race).description) {
-                  <p class="race-desc">{{ getCachedRace(race).description }}</p>
-                }
-                @if (getCachedRace(race).website) {
-                  <a class="race-website" [href]="getCachedRace(race).website" target="_blank" rel="noopener"
-                    (click)="$event.stopPropagation()">
-                    {{ getCachedRace(race).website }}
-                  </a>
-                }
-              </div>
+            <span>GPX ↑</span>
             }
+            <input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race, 'swim')">
+          </label>
+          @if (hasGpxForDiscipline(getCachedRace(race), 'swim')) {
+          <span class="gpx-loops">
+            <input type="number" class="loops-input" min="1" max="99"
+                   [value]="getCachedRace(race).swimGpxLoops ?? 1"
+                   (change)="updateLoops(race, 'swim', $event)">
+            <span class="loops-label">loops</span>
+          </span>
           }
         </div>
-      }
-      @if (browseResults.content.length === 0) {
-        <div class="browse-empty">
-          No races found.
+        }
+        @if (race.bikeDistanceM) {
+        <div class="discipline-group">
+          <span class="discipline-badge bike">B: {{ formatDistance(race.bikeDistanceM) }}</span>
+          <label class="gpx-btn gpx-btn--bike" [class.gpx-btn--done]="hasGpxForDiscipline(getCachedRace(race), 'bike')">
+            @if (isGpxUploading(race.id, 'bike')) {
+            <span>GPX …</span>
+            } @else if (hasGpxForDiscipline(getCachedRace(race), 'bike')) {
+            <span>GPX ✓</span>
+            } @else {
+            <span>GPX ↑</span>
+            }
+            <input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race, 'bike')">
+          </label>
+          @if (hasGpxForDiscipline(getCachedRace(race), 'bike')) {
+          <span class="gpx-loops">
+            <input type="number" class="loops-input" min="1" max="99"
+                   [value]="getCachedRace(race).bikeGpxLoops ?? 1"
+                   (change)="updateLoops(race, 'bike', $event)">
+            <span class="loops-label">loops</span>
+          </span>
+          }
         </div>
+        }
+        @if (race.runDistanceM) {
+        <div class="discipline-group">
+          <span class="discipline-badge run">R: {{ formatDistance(race.runDistanceM) }}</span>
+          <label class="gpx-btn gpx-btn--run" [class.gpx-btn--done]="hasGpxForDiscipline(getCachedRace(race), 'run')">
+            @if (isGpxUploading(race.id, 'run')) {
+            <span>GPX …</span>
+            } @else if (hasGpxForDiscipline(getCachedRace(race), 'run')) {
+            <span>GPX ✓</span>
+            } @else {
+            <span>GPX ↑</span>
+            }
+            <input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race, 'run')">
+          </label>
+          @if (hasGpxForDiscipline(getCachedRace(race), 'run')) {
+          <span class="gpx-loops">
+            <input type="number" class="loops-input" min="1" max="99"
+                   [value]="getCachedRace(race).runGpxLoops ?? 1"
+                   (change)="updateLoops(race, 'run', $event)">
+            <span class="loops-label">loops</span>
+          </span>
+          }
+        </div>
+        }
+      </div>
       }
 
-      <!-- Pagination -->
-      @if (browseResults.totalPages > 1) {
-        <div class="browse-pagination">
-          <button class="btn-secondary" (click)="browsePrevPage()" [disabled]="browsePage === 0">Prev</button>
-          <span class="page-info">{{ browsePage + 1 }} / {{ browseResults.totalPages }}</span>
-          <button class="btn-secondary" (click)="browseNextPage()"
-            [disabled]="browsePage >= browseResults.totalPages - 1">Next</button>
+      <!-- Expanded section -->
+      @if (expandedRaceId === race.id) {
+      @if (editingRaceId === race.id) {
+      <!-- Edit form -->
+      <div class="race-expanded race-edit-form" (click)="$event.stopPropagation()">
+        <div class="edit-grid">
+          <div class="edit-field">
+            <label>Title</label>
+            <input class="form-input" [(ngModel)]="editForm.title"/>
+          </div>
+          <div class="edit-field">
+            <label>Sport</label>
+            <select class="form-input" [(ngModel)]="editForm.sport">
+              <option value="CYCLING">Cycling</option>
+              <option value="RUNNING">Running</option>
+              <option value="SWIMMING">Swimming</option>
+              <option value="TRIATHLON">Triathlon</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div class="edit-field">
+            <label>Location</label>
+            <input class="form-input" [(ngModel)]="editForm.location"/>
+          </div>
+          <div class="edit-field">
+            <label>Country</label>
+            <input class="form-input" [(ngModel)]="editForm.country"/>
+          </div>
+          <div class="edit-field">
+            <label>Distance</label>
+            <input class="form-input" [(ngModel)]="editForm.distance" placeholder="e.g. 140.6 miles"/>
+          </div>
+          <div class="edit-field">
+            <label>Scheduled Date</label>
+            <input class="form-input" type="date" [(ngModel)]="editForm.scheduledDate"/>
+          </div>
+          <div class="edit-field">
+            <label>Elevation (m)</label>
+            <input class="form-input" type="number" [(ngModel)]="editForm.elevationGainM"/>
+          </div>
+          <div class="edit-field">
+            <label>Swim (m)</label>
+            <input class="form-input" type="number" [(ngModel)]="editForm.swimDistanceM"/>
+          </div>
+          <div class="edit-field">
+            <label>Bike (m)</label>
+            <input class="form-input" type="number" [(ngModel)]="editForm.bikeDistanceM"/>
+          </div>
+          <div class="edit-field">
+            <label>Run (m)</label>
+            <input class="form-input" type="number" [(ngModel)]="editForm.runDistanceM"/>
+          </div>
+          <div class="edit-field edit-field--full">
+            <label>Website</label>
+            <input class="form-input" [(ngModel)]="editForm.website" placeholder="https://..."/>
+          </div>
+          <div class="edit-field edit-field--full">
+            <label>Description</label>
+            <textarea class="form-input edit-textarea" [(ngModel)]="editForm.description" rows="3"></textarea>
+          </div>
         </div>
+        <div class="edit-actions">
+          <button class="btn-primary" (click)="saveEdit(race)" [disabled]="isSavingEdit">
+            {{ isSavingEdit ? 'SAVING...' : 'SAVE' }}
+          </button>
+          <button class="btn-secondary" (click)="cancelEdit()" [disabled]="isSavingEdit">CANCEL</button>
+        </div>
+      </div>
+      } @else {
+      <!-- Read-only expanded -->
+      <div class="race-expanded">
+        @if (getCachedRace(race).description) {
+        <p class="race-desc">{{ getCachedRace(race).description }}</p>
+        }
+        @if (getCachedRace(race).website) {
+        <a class="race-website" [href]="getCachedRace(race).website" target="_blank" rel="noopener"
+           (click)="$event.stopPropagation()">
+          {{ getCachedRace(race).website }}
+        </a>
+        }
+      </div>
+      }
       }
     </div>
+    }
+    @if (browseResults.content.length === 0) {
+    <div class="browse-empty">
+      No races found.
+    </div>
+    }
+
+    <!-- Pagination -->
+    @if (browseResults.totalPages > 1) {
+    <div class="browse-pagination">
+      <button class="btn-secondary" (click)="browsePrevPage()" [disabled]="browsePage === 0">Prev</button>
+      <span class="page-info">{{ browsePage + 1 }} / {{ browseResults.totalPages }}</span>
+      <button class="btn-secondary" (click)="browseNextPage()"
+              [disabled]="browsePage >= browseResults.totalPages - 1">Next
+      </button>
+    </div>
+    }
+  </div>
   }
 
   <!-- Loading -->
   @if (browseLoading) {
-    <div class="browse-loading">Loading...</div>
+  <div class="browse-loading">Loading...</div>
   }
 </div>

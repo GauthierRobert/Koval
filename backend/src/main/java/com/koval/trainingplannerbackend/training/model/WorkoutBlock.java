@@ -21,6 +21,10 @@ public record WorkoutBlock(
         @JsonProperty(required = true)
         String label,
 
+        @JsonPropertyDescription("Short description to add relevant details")
+        @JsonProperty(required = true)
+        String description,
+
         // --- UNIFIED INTENSITY ---
         @JsonPropertyDescription("% of reference (FTP/Pace/CSS). Example: 90.")
         Integer intensityTarget,
@@ -44,13 +48,13 @@ public record WorkoutBlock(
 ) {
 
     public WorkoutBlock updateType(BlockType type) {
-        return new WorkoutBlock(type, this.durationSeconds(), this.distanceMeters(), this.label(),
+        return new WorkoutBlock(type, this.durationSeconds(), this.distanceMeters(), this.label(), this.description,
                 this.intensityTarget(), this.intensityStart(), this.intensityEnd(), this.cadenceTarget(),
                 this.zoneTarget(), this.zoneLabel());
     }
 
     public WorkoutBlock withResolvedIntensity(Integer resolvedIntensity, String resolvedZoneLabel) {
-        return new WorkoutBlock(type, durationSeconds, distanceMeters, label,
+        return new WorkoutBlock(type, durationSeconds, distanceMeters, label, description,
                 resolvedIntensity, intensityStart, intensityEnd, cadenceTarget, zoneTarget, resolvedZoneLabel);
     }
 

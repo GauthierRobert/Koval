@@ -63,6 +63,7 @@ export interface WorkoutBlock {
     zoneTarget?: string;
     zoneSystemId?: string;
     label: string;
+    description?: string;
     zoneLabel?: string;
 }
 
@@ -86,7 +87,7 @@ export interface Training {
     clubGroupIds?: string[];
     _receivedMeta?: {
         assignedByName?: string;
-        origin: 'COACH_GROUP' | 'CLUB';
+        origin: 'COACH_GROUP' | 'CLUB' | 'CLUB_SESSION';
         originName?: string;
     };
 }
@@ -95,7 +96,7 @@ export interface ReceivedTraining {
     id: string;
     trainingId: string;
     assignedByName?: string;
-    origin: 'COACH_GROUP' | 'CLUB';
+    origin: 'COACH_GROUP' | 'CLUB' | 'CLUB_SESSION';
     originName?: string;
     receivedAt: string;
 }

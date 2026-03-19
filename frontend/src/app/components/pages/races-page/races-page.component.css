@@ -173,11 +173,12 @@
 }
 
 .race-year {
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.3);
   letter-spacing: 0.05em;
   flex-shrink: 0;
+  margin-left: 4px;
 }
 
 input[type='date'].form-input::-webkit-calendar-picker-indicator {
@@ -259,7 +260,14 @@ input[type='date'].form-input::-webkit-calendar-picker-indicator {
 .discipline-distances {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 1rem;
+  align-items: center;
+}
+
+.discipline-group {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 .discipline-badge {
@@ -400,44 +408,71 @@ input[type='date'].form-input::-webkit-calendar-picker-indicator {
 .race-website:hover { text-decoration: underline; }
 
 
-.gpx-chips {
-  display: flex;
-  gap: 0.3rem;
-  align-items: center;
-}
-
-.gpx-chip {
+/* GPX upload button (neutral, next to discipline badges) */
+.gpx-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 600;
-  padding: 2px 8px;
+  padding: 2px 6px;
   border-radius: 4px;
   cursor: pointer;
   letter-spacing: 0.03em;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.gpx-chip--done {
-  background: rgba(52, 211, 153, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(52, 211, 153, 0.25);
-  transition: background 0.15s, border-color 0.15s;
+.gpx-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
-.gpx-chip--done:hover {
-  background: rgba(52, 211, 153, 0.25);
-  border-color: rgba(52, 211, 153, 0.5);
+.gpx-btn--done {
+  color: rgba(255, 255, 255, 0.5);
 }
 
-.gpx-chip--upload {
-  background: rgba(255, 157, 0, 0.1);
-  color: var(--accent-color, #ff9d00);
-  border: 1px dashed rgba(255, 157, 0, 0.4);
+.discipline-group .gpx-btn--done.gpx-btn--swim { border-color: rgba(56, 189, 248, 0.5); }
+.discipline-group .gpx-btn--done.gpx-btn--bike { border-color: rgba(52, 211, 153, 0.5); }
+.discipline-group .gpx-btn--done.gpx-btn--run  { border-color: rgba(251, 146, 60, 0.5); }
+
+/* GPX loops input */
+.gpx-loops {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
 }
 
-.gpx-chip--upload:hover {
-  background: rgba(255, 157, 0, 0.18);
+.loops-input {
+  width: 32px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 1px 2px;
+  -moz-appearance: textfield;
+}
+
+.loops-input::-webkit-outer-spin-button,
+.loops-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.loops-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.loops-label {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.03em;
 }
 
 /* Edit button */

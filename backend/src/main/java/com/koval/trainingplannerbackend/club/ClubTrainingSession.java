@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend.club;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -14,6 +15,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @Document(collection = "club_training_sessions")
+@CompoundIndex(name = "participant_linked_idx", def = "{'participantIds': 1, 'linkedTrainingId': 1, 'cancelled': 1}")
 public class ClubTrainingSession {
     @Id
     private String id;

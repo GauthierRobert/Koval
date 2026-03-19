@@ -72,6 +72,9 @@ public class RaceService {
         mergeIfPresent(updates.getDescription(), existing::setDescription);
         mergeIfPresent(updates.getWebsite(), existing::setWebsite);
         mergeIfPresent(updates.getScheduledDate(), existing::setScheduledDate);
+        mergeIfPresent(updates.getSwimGpxLoops(), existing::setSwimGpxLoops);
+        mergeIfPresent(updates.getBikeGpxLoops(), existing::setBikeGpxLoops);
+        mergeIfPresent(updates.getRunGpxLoops(), existing::setRunGpxLoops);
         return repository.save(existing);
     }
 

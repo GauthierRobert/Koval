@@ -190,18 +190,37 @@
       border-left: 3px solid #636e72;
       border-radius: 5px;
       padding: 4px 8px;
-      display: flex;
+      display: grid;
+      grid-template-columns: 24px 56px 1fr 52px 8px 52px auto 56px;
       align-items: center;
       gap: 6px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
     }
 
+    .step-card.edit-mode {
+      grid-template-columns: 24px 56px 1fr 52px 8px 52px auto 56px auto;
+    }
+
     .step-number {
       font-size: 9px;
       color: var(--text-muted);
       font-weight: 600;
-      flex-shrink: 0;
+    }
+
+    .step-label {
+      color: var(--color-white);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .step-desc {
+      color: var(--text-muted);
+      font-weight: 400;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
     }
 
     .step-duration,
@@ -209,6 +228,7 @@
       color: var(--color-white);
       font-weight: 600;
       white-space: nowrap;
+      text-align: right;
     }
 
     .step-duration.estimated,
@@ -219,11 +239,7 @@
 
     .step-separator {
       opacity: 0.25;
-      flex-shrink: 0;
-    }
-
-    .step-spacer {
-      flex: 1;
+      text-align: center;
     }
 
     .step-intensity {
@@ -231,6 +247,7 @@
       font-weight: 700;
       color: var(--color-white);
       white-space: nowrap;
+      text-align: right;
     }
 
     .step-absolute {
@@ -238,6 +255,7 @@
       color: var(--accent-color);
       font-weight: 600;
       white-space: nowrap;
+      text-align: right;
     }
 
     /* ── Right panel: chart ────────────────────────────────── */

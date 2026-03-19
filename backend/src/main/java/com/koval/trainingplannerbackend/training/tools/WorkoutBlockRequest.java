@@ -22,6 +22,10 @@ public record WorkoutBlockRequest(
         @JsonProperty(required = true)
         String label,
 
+        @JsonPropertyDescription("Short description")
+        @JsonProperty(required = true)
+        String desc,
+
         @JsonPropertyDescription("% ref e.g. 90")
         Integer pct,
 

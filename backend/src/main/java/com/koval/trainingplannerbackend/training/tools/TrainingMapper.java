@@ -99,7 +99,7 @@ public class TrainingMapper {
             dur = (int) Math.round(dist / metersPerSecond);
         }
 
-        return new WorkoutBlock(b.type(), dur, dist, b.label(), b.pct(), b.pctFrom(), b.pctTo(), b.cad(), b.zone(), null);
+        return new WorkoutBlock(b.type(), dur, dist, b.label(), b.desc(), b.pct(), b.pctFrom(), b.pctTo(), b.cad(), b.zone(), null);
     }
 
     /**

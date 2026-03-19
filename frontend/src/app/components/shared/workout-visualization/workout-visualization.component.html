@@ -55,9 +55,11 @@
     <div class="left-panel">
       <div class="block-steps-list">
         @for (block of displayBlocks; let i = $index; track block) {
-          <div class="step-card"
+          <div class="step-card" [class.edit-mode]="isEditMode"
             [style.border-left-color]="getBlockColor(block)">
             <span class="step-number">#{{ i + 1 }}</span>
+            <span class="step-label">{{ block.label }}</span>
+            <span class="step-desc">{{ block.description ?? '' }}</span>
             @if (!(formatBlockEstimates(block).durationEstimated && block.type ==='PAUSE')) {
               <span class="step-duration" [class.estimated]="formatBlockEstimates(block).durationEstimated">{{ formatBlockEstimates(block).durationEstimated ? '~' : '' }}{{ formatBlockEstimates(block).duration }}</span>
             }
@@ -65,7 +67,6 @@
             @if (!(formatBlockEstimates(block).distanceEstimated && block.type ==='PAUSE')) {
               <span class="step-distance" [class.estimated]="formatBlockEstimates(block).distanceEstimated">{{ formatBlockEstimates(block).distanceEstimated ? '~' : '' }}{{ formatBlockEstimates(block).distance }}</span>
             }
-            <span class="step-spacer"></span>
             <span class="step-intensity">{{ getBlockIntensityDisplay(block) }}</span>
             @if (block.type !== 'FREE' && block.type !== 'PAUSE') {
               <span class="step-absolute">

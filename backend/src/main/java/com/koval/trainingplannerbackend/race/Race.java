@@ -42,6 +42,11 @@ public class Race {
     private byte[] bikeGpx;
     private byte[] runGpx;
 
+    // Number of loops for each GPX (1 = single loop / full course, >1 = GPX is one lap repeated N times)
+    private Integer swimGpxLoops;
+    private Integer bikeGpxLoops;
+    private Integer runGpxLoops;
+
     private String createdBy;    // userId
     private LocalDateTime createdAt;
     private boolean verified;

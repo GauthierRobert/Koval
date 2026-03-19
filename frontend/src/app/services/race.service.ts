@@ -23,6 +23,9 @@ export interface Race {
   hasSwimGpx?: boolean;
   hasBikeGpx?: boolean;
   hasRunGpx?: boolean;
+  swimGpxLoops?: number;
+  bikeGpxLoops?: number;
+  runGpxLoops?: number;
   createdBy?: string;
   verified?: boolean;
 }

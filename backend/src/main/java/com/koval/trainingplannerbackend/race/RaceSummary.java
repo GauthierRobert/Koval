@@ -10,6 +10,7 @@ public record RaceSummary(
         Integer elevationGainM, String description, String website,
         String scheduledDate,
         boolean hasSwimGpx, boolean hasBikeGpx, boolean hasRunGpx,
+        Integer swimGpxLoops, Integer bikeGpxLoops, Integer runGpxLoops,
         String createdBy, boolean verified
 ) {
     public static RaceSummary from(Race r) {
@@ -20,6 +21,7 @@ public record RaceSummary(
                 r.getElevationGainM(), r.getDescription(), r.getWebsite(),
                 r.getScheduledDate(),
                 r.getSwimGpx() != null, r.getBikeGpx() != null, r.getRunGpx() != null,
+                r.getSwimGpxLoops(), r.getBikeGpxLoops(), r.getRunGpxLoops(),
                 r.getCreatedBy(), r.isVerified()
         );
     }

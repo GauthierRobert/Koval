@@ -3,6 +3,8 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Router} from '@angular/router';
+import {Observable} from 'rxjs';
+import {map} from 'rxjs/operators';
 import {CountryFacet, PageResponse, Race, RaceService, SportFacet,} from '../../../services/race.service';
 import {RaceGoalService} from '../../../services/race-goal.service';
 import {AuthService} from '../../../services/auth.service';
@@ -34,7 +36,9 @@ export class RacesPageComponent implements OnInit {
   browseLoading = false;
 
   // "Added" tracking for ADD TO MY GOALS buttons
-  addedRaceIds = new Set<string>();
+  addedRaceIds$: Observable<Set<string>> = this.raceGoalService.goals$.pipe(
+    map(goals => new Set(goals.filter(g => g.raceId).map(g => g.raceId!)))
+  );
 
   // Expand / GPX state
   expandedRaceId: string | null = null;
@@ -53,12 +57,6 @@ export class RacesPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadSportFacets();
-    this.raceGoalService.goals$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((goals) => {
-      for (const g of goals) {
-        if (g.raceId) this.addedRaceIds.add(g.raceId);
-      }
-      this.cdr.markForCheck();
-    });
   }
 
   loadSportFacets(): void {
@@ -141,7 +139,6 @@ export class RacesPageComponent implements OnInit {
   }
 
   addToMyGoals(race: Race): void {
-    if (this.addedRaceIds.has(race.id)) return;
     this.raceGoalService
       .createGoal({
         raceId: race.id,
@@ -152,12 +149,7 @@ export class RacesPageComponent implements OnInit {
         priority: 'A',
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.addedRaceIds.add(race.id);
-          this.cdr.markForCheck();
-        },
-      });
+      .subscribe();
   }
 
   toggleCreateRace(): void {
@@ -345,6 +337,18 @@ export class RacesPageComponent implements OnInit {
       },
       error: () => {
         this.isSavingEdit = false;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  updateLoops(race: Race, discipline: string, event: Event): void {
+    const value = +(event.target as HTMLInputElement).value;
+    const loops = Math.max(1, Math.min(99, value || 1));
+    const key = discipline + 'GpxLoops' as 'swimGpxLoops' | 'bikeGpxLoops' | 'runGpxLoops';
+    this.raceService.updateRace(race.id, { [key]: loops }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (updated) => {
+        this.raceCache[race.id] = updated;
         this.cdr.markForCheck();
       },
     });
