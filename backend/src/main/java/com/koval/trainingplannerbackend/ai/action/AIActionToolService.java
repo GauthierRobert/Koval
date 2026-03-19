@@ -6,7 +6,7 @@ import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.tools.TrainingMapper;
 import com.koval.trainingplannerbackend.training.tools.TrainingRequest;
-import com.koval.trainingplannerbackend.training.tools.WorkoutBlockRequest;
+import com.koval.trainingplannerbackend.training.tools.WorkoutElementRequest;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
@@ -45,7 +45,7 @@ public class AIActionToolService {
             @ToolParam(description = "Training title") String title,
             @ToolParam(description = "Training description") String description,
             @ToolParam(description = "Training type: VO2MAX|THRESHOLD|SWEET_SPOT|ENDURANCE|SPRINT|RECOVERY|MIXED|TEST") String trainingType,
-            @ToolParam(description = "Workout blocks (WARMUP, STEADY, INTERVAL, RAMP, COOLDOWN, FREE, PAUSE)") List<WorkoutBlockRequest> blocks,
+            @ToolParam(description = "Workout blocks (WARMUP, STEADY, INTERVAL, RAMP, COOLDOWN, FREE, PAUSE)") List<WorkoutElementRequest> blocks,
             @ToolParam(description = "Estimated TSS") Integer estimatedTss,
             @ToolParam(description = "Title for the club session") String sessionTitle,
             @ToolParam(description = "Description for the club session") String sessionDescription,

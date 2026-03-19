@@ -55,38 +55,87 @@
     <div class="left-panel">
       <div class="block-steps-list">
         @for (block of displayBlocks; let i = $index; track block) {
-          <div class="step-card" [class.edit-mode]="isEditMode"
-            [style.border-left-color]="getBlockColor(block)">
-            <span class="step-number">#{{ i + 1 }}</span>
-            <span class="step-label">{{ block.label }}</span>
-            <span class="step-desc">{{ block.description ?? '' }}</span>
-            @if (!(formatBlockEstimates(block).durationEstimated && block.type ==='PAUSE')) {
-              <span class="step-duration" [class.estimated]="formatBlockEstimates(block).durationEstimated">{{ formatBlockEstimates(block).durationEstimated ? '~' : '' }}{{ formatBlockEstimates(block).duration }}</span>
-            }
-            <span class="step-separator">|</span>
-            @if (!(formatBlockEstimates(block).distanceEstimated && block.type ==='PAUSE')) {
-              <span class="step-distance" [class.estimated]="formatBlockEstimates(block).distanceEstimated">{{ formatBlockEstimates(block).distanceEstimated ? '~' : '' }}{{ formatBlockEstimates(block).distance }}</span>
-            }
-            <span class="step-intensity">{{ getBlockIntensityDisplay(block) }}</span>
-            @if (block.type !== 'FREE' && block.type !== 'PAUSE') {
-              <span class="step-absolute">
-                @if (block.type !== 'RAMP') {
-                  {{ calculateIntensityValue(getEffectiveIntensity(block, 'TARGET')) }}
+          @if (isSetElement(block)) {
+            <div class="set-wrapper">
+              <div class="set-header">
+                <span class="set-badge">&times;{{ block.repetitions }}</span>
+                @if (block.restDurationSeconds) {
+                  <span class="set-rest">Rest {{ formatDuration(block.restDurationSeconds) }}</span>
                 }
-                @if (block.type === 'RAMP') {
-                  {{ calculateIntensityValue(getEffectiveIntensity(block, 'START')) }}&rarr;{{ calculateIntensityValue(getEffectiveIntensity(block, 'END')) }}
+                @if (isEditMode) {
+                  <div class="step-actions">
+                    <button class="step-action-btn" title="Move up" (click)="moveBlock(i, 'up'); $event.stopPropagation()" [disabled]="i === 0">&#x25B2;</button>
+                    <button class="step-action-btn" title="Move down" (click)="moveBlock(i, 'down'); $event.stopPropagation()" [disabled]="i === displayBlocks.length - 1">&#x25BC;</button>
+                    <button class="step-action-btn delete" title="Remove set" (click)="removeBlock(i); $event.stopPropagation()">&times;</button>
+                  </div>
                 }
-              </span>
-            }
-            @if (isEditMode) {
-              <div class="step-actions">
-                <button class="step-action-btn" title="Move up" (click)="moveBlock(i, 'up'); $event.stopPropagation()" [disabled]="i === 0">&#x25B2;</button>
-                <button class="step-action-btn" title="Move down" (click)="moveBlock(i, 'down'); $event.stopPropagation()" [disabled]="i === displayBlocks.length - 1">&#x25BC;</button>
-                <button class="step-action-btn edit" title="Edit block" (click)="openEditBlock(i); $event.stopPropagation()">&#x270E;</button>
-                <button class="step-action-btn delete" title="Remove block" (click)="removeBlock(i); $event.stopPropagation()">&times;</button>
               </div>
-            }
-          </div>
+              <div class="set-children">
+                @for (child of block.elements; track child) {
+                  @if (isSetElement(child)) {
+                    <div class="set-wrapper nested">
+                      <div class="set-header">
+                        <span class="set-badge">&times;{{ child.repetitions }}</span>
+                        @if (child.restDurationSeconds) {
+                          <span class="set-rest">Rest {{ formatDuration(child.restDurationSeconds) }}</span>
+                        }
+                      </div>
+                      <div class="set-children">
+                        @for (leaf of child.elements; track leaf) {
+                          <div class="step-card" [style.border-left-color]="getBlockColor(leaf)">
+                            <span class="step-label">{{ leaf.label }}</span>
+                            <span class="step-desc">{{ leaf.description ?? '' }}</span>
+                            <span class="step-duration">{{ formatBlockDurationOrDistance(leaf) }}</span>
+                            <span class="step-intensity">{{ getBlockIntensityDisplay(leaf) }}</span>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  } @else {
+                    <div class="step-card" [style.border-left-color]="getBlockColor(child)">
+                      <span class="step-label">{{ child.label }}</span>
+                      <span class="step-desc">{{ child.description ?? '' }}</span>
+                      <span class="step-duration">{{ formatBlockDurationOrDistance(child) }}</span>
+                      <span class="step-intensity">{{ getBlockIntensityDisplay(child) }}</span>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          } @else {
+            <div class="step-card" [class.edit-mode]="isEditMode"
+              [style.border-left-color]="getBlockColor(block)">
+              <span class="step-number">#{{ i + 1 }}</span>
+              <span class="step-label">{{ block.label }}</span>
+              <span class="step-desc">{{ block.description ?? '' }}</span>
+              @if (!(formatBlockEstimates(block).durationEstimated && block.type ==='PAUSE')) {
+                <span class="step-duration" [class.estimated]="formatBlockEstimates(block).durationEstimated">{{ formatBlockEstimates(block).durationEstimated ? '~' : '' }}{{ formatBlockEstimates(block).duration }}</span>
+              }
+              <span class="step-separator">|</span>
+              @if (!(formatBlockEstimates(block).distanceEstimated && block.type ==='PAUSE')) {
+                <span class="step-distance" [class.estimated]="formatBlockEstimates(block).distanceEstimated">{{ formatBlockEstimates(block).distanceEstimated ? '~' : '' }}{{ formatBlockEstimates(block).distance }}</span>
+              }
+              <span class="step-intensity">{{ getBlockIntensityDisplay(block) }}</span>
+              @if (block.type !== 'FREE' && block.type !== 'PAUSE') {
+                <span class="step-absolute">
+                  @if (block.type !== 'RAMP') {
+                    {{ calculateIntensityValue(getEffectiveIntensity(block, 'TARGET')) }}
+                  }
+                  @if (block.type === 'RAMP') {
+                    {{ calculateIntensityValue(getEffectiveIntensity(block, 'START')) }}&rarr;{{ calculateIntensityValue(getEffectiveIntensity(block, 'END')) }}
+                  }
+                </span>
+              }
+              @if (isEditMode) {
+                <div class="step-actions">
+                  <button class="step-action-btn" title="Move up" (click)="moveBlock(i, 'up'); $event.stopPropagation()" [disabled]="i === 0">&#x25B2;</button>
+                  <button class="step-action-btn" title="Move down" (click)="moveBlock(i, 'down'); $event.stopPropagation()" [disabled]="i === displayBlocks.length - 1">&#x25BC;</button>
+                  <button class="step-action-btn edit" title="Edit block" (click)="openEditBlock(i); $event.stopPropagation()">&#x270E;</button>
+                  <button class="step-action-btn delete" title="Remove block" (click)="removeBlock(i); $event.stopPropagation()">&times;</button>
+                </div>
+              }
+            </div>
+          }
         }
       </div>
       @if (isEditMode) {
@@ -112,7 +161,7 @@
           }
         </div>
         <div class="chart-area">
-          @for (block of displayBlocks; let i = $index; track block) {
+          @for (block of displayFlatBlocks; let i = $index; track i) {
             <div class="block-bar-wrapper"
               [style.width.%]="getBlockWidth(block)">
               <div class="bar-container" [style.height.%]="getBlockHeight(block)">
@@ -173,7 +222,7 @@
         </div>
         <div class="stat">
           <span class="label">Blocks</span>
-          <span class="value">{{ displayBlocks.length }}</span>
+          <span class="value">{{ displayFlatBlocks.length }}</span>
         </div>
       </div>
 

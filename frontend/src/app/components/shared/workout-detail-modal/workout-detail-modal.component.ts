@@ -4,7 +4,7 @@ import {Router} from '@angular/router';
 import {BehaviorSubject, of} from 'rxjs';
 import {catchError, map, startWith, switchMap} from 'rxjs/operators';
 import {TrainingService} from '../../../services/training.service';
-import {hasDurationEstimate, Training, WorkoutBlock} from '../../../models/training.model';
+import {flattenElements, hasDurationEstimate, Training, WorkoutBlock} from '../../../models/training.model';
 import {ScheduledWorkout} from '../../../services/coach.service';
 import {CalendarService} from '../../../services/calendar.service';
 import {WorkoutExecutionService} from '../../../services/workout-execution.service';
@@ -149,10 +149,14 @@ export class WorkoutDetailModalComponent {
     return sharedGetBlockColor(block);
   }
 
+  getFlatBlocks(training: Training): WorkoutBlock[] {
+    return flattenElements(training.blocks ?? []);
+  }
+
   getNumericalTotalDuration(training: Training): number {
     if (training.estimatedDurationSeconds) return training.estimatedDurationSeconds;
     if (!training.blocks) return 0;
-    return training.blocks.reduce((acc, b) => acc + (this.getEstimatedBlockDuration(b, training)), 0);
+    return this.getFlatBlocks(training).reduce((acc, b) => acc + (this.getEstimatedBlockDuration(b, training)), 0);
   }
 
   // Helper

@@ -82,25 +82,41 @@ public class TrainingToolService {
         if (request.blocks() == null || request.blocks().isEmpty()) {
             return "Error: blocks list is required and cannot be empty.";
         }
-        for (int i = 0; i < request.blocks().size(); i++) {
-            WorkoutBlockRequest b = request.blocks().get(i);
-            if (b.type() == null) {
-                return "Error: block[" + i + "] is missing required field 'type'.";
-            }
-            if (b.pct() != null && (b.pct() < 0 || b.pct() > MAX_INTENSITY_PERCENT)) {
-                return "Error: block[" + i + "] has out-of-range intensity pct=" + b.pct() + " (expected 0-" + MAX_INTENSITY_PERCENT + ").";
-            }
-            if (b.pctFrom() != null && (b.pctFrom() < 0 || b.pctFrom() > MAX_INTENSITY_PERCENT)) {
-                return "Error: block[" + i + "] has out-of-range pctFrom=" + b.pctFrom() + " (expected 0-" + MAX_INTENSITY_PERCENT + ").";
-            }
-            if (b.pctTo() != null && (b.pctTo() < 0 || b.pctTo() > MAX_INTENSITY_PERCENT)) {
-                return "Error: block[" + i + "] has out-of-range pctTo=" + b.pctTo() + " (expected 0-" + MAX_INTENSITY_PERCENT + ").";
-            }
-            if (b.dur() != null && b.dur() <= 0) {
-                return "Error: block[" + i + "] has invalid duration=" + b.dur() + " (must be > 0).";
-            }
-            if (b.dist() != null && b.dist() <= 0) {
-                return "Error: block[" + i + "] has invalid distance=" + b.dist() + " (must be > 0).";
+        return validateElements(request.blocks(), "block");
+    }
+
+    private String validateElements(java.util.List<WorkoutElementRequest> elements, String path) {
+        for (int i = 0; i < elements.size(); i++) {
+            WorkoutElementRequest b = elements.get(i);
+            String prefix = path + "[" + i + "]";
+
+            if (b.isSet()) {
+                // Validate set
+                if (b.reps() == null || b.reps() < 1) {
+                    return "Error: " + prefix + " is a set but has invalid reps=" + b.reps() + " (must be >= 1).";
+                }
+                String childError = validateElements(b.elements(), prefix + ".elements");
+                if (childError != null) return childError;
+            } else {
+                // Validate leaf
+                if (b.type() == null) {
+                    return "Error: " + prefix + " is missing required field 'type'.";
+                }
+                if (b.pct() != null && (b.pct() < 0 || b.pct() > MAX_INTENSITY_PERCENT)) {
+                    return "Error: " + prefix + " has out-of-range intensity pct=" + b.pct() + " (expected 0-" + MAX_INTENSITY_PERCENT + ").";
+                }
+                if (b.pctFrom() != null && (b.pctFrom() < 0 || b.pctFrom() > MAX_INTENSITY_PERCENT)) {
+                    return "Error: " + prefix + " has out-of-range pctFrom=" + b.pctFrom() + " (expected 0-" + MAX_INTENSITY_PERCENT + ").";
+                }
+                if (b.pctTo() != null && (b.pctTo() < 0 || b.pctTo() > MAX_INTENSITY_PERCENT)) {
+                    return "Error: " + prefix + " has out-of-range pctTo=" + b.pctTo() + " (expected 0-" + MAX_INTENSITY_PERCENT + ").";
+                }
+                if (b.dur() != null && b.dur() <= 0) {
+                    return "Error: " + prefix + " has invalid duration=" + b.dur() + " (must be > 0).";
+                }
+                if (b.dist() != null && b.dist() <= 0) {
+                    return "Error: " + prefix + " has invalid distance=" + b.dist() + " (must be > 0).";
+                }
             }
         }
         return null;

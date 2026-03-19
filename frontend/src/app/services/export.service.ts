@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {Training, WorkoutBlock} from '../models/training.model';
+import {flattenElements, Training, WorkoutBlock} from '../models/training.model';
 
 @Injectable({
     providedIn: 'root'
@@ -38,7 +38,8 @@ export class ExportService {
 
     private blocksToZwiftXML(blocks: WorkoutBlock[], ftp: number): string {
         if (!blocks) return '';
-        return blocks.map(b => this.blockToZwiftXML(b, ftp))
+        const flat = flattenElements(blocks);
+        return flat.map(b => this.blockToZwiftXML(b, ftp))
             .filter(xml => xml !== '')
             .join('\n        ');
     }

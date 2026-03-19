@@ -45,7 +45,7 @@
 
           <div class="chart-wrapper">
             <div class="chart-area">
-              @for (block of training.blocks; track block) {
+              @for (block of getFlatBlocks(training); track $index) {
                 <div class="block-bar-wrapper"
                   [style.width.%]="getBlockWidth(block, training)">
                   <div class="bar-container" [style.height.%]="getBlockHeight(block, training)">
@@ -57,15 +57,15 @@
             </div>
           </div>
 
-          @if (training.blocks && training.blocks.length) {
+          @if (getFlatBlocks(training).length) {
             <div class="blocks-section">
               <button class="toggle-details-btn" (click)="toggleBlockDetails()">
                 <span class="toggle-arrow" [class.open]="showBlockDetails">&#9660;</span>
-                {{ showBlockDetails ? 'HIDE DETAILS' : 'SHOW DETAILS' }} ({{ training.blocks.length }} blocks)
+                {{ showBlockDetails ? 'HIDE DETAILS' : 'SHOW DETAILS' }} ({{ getFlatBlocks(training).length }} blocks)
               </button>
               @if (showBlockDetails) {
                 <div class="blocks-list">
-                  @for (block of training.blocks; let i = $index; track block) {
+                  @for (block of getFlatBlocks(training); let i = $index; track i) {
                     <div class="block-item">
                       <span class="block-index">{{ i + 1 }}</span>
                       <span class="block-label">{{ block.label || block.type }}</span>
@@ -98,7 +98,7 @@
               <span class="stat-label">Duration</span>
             </div>
             <div class="stat">
-              <span class="stat-value">{{ (training.blocks || []).length }}</span>
+              <span class="stat-value">{{ getFlatBlocks(training).length }}</span>
               <span class="stat-label">Blocks</span>
             </div>
             @if (workout.tss) {

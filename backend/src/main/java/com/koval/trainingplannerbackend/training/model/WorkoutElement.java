@@ -1,14 +1,30 @@
 package com.koval.trainingplannerbackend.training.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public record WorkoutBlock(
+import java.util.List;
 
-        @JsonPropertyDescription("WARMUP, INTERVAL, STEADY, COOLDOWN, RAMP, FREE, PAUSE")
-        @JsonProperty(required = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public record WorkoutElement(
+
+        // ── SET FIELDS (non-null when this is a repeatable group) ──
+
+        @JsonPropertyDescription("Number of repetitions for this set (e.g. 10 for '10x...')")
+        Integer repetitions,
+
+        @JsonPropertyDescription("Child elements (blocks or nested sets)")
+        List<WorkoutElement> elements,
+
+        @JsonPropertyDescription("Passive rest duration (sec) between repetitions")
+        Integer restDurationSeconds,
+
+        @JsonPropertyDescription("Intensity % during rest between repetitions (default ~40)")
+        Integer restIntensity,
+
+        // ── LEAF FIELDS (same as former WorkoutBlock) ──
+
+        @JsonPropertyDescription("WARMUP, INTERVAL, STEADY, COOLDOWN, RAMP, FREE, PAUSE. Required for leaf blocks, null for sets.")
         BlockType type,
 
         @JsonPropertyDescription("Duration (sec). Omit if distance set.")
@@ -17,12 +33,10 @@ public record WorkoutBlock(
         @JsonPropertyDescription("Distance (m). Omit if duration set.")
         Integer distanceMeters,
 
-        @JsonPropertyDescription("Label (e.g., 'Z2 Endurance').")
-        @JsonProperty(required = true)
+        @JsonPropertyDescription("Label (e.g., 'Z2 Endurance'). Required for leaf blocks, null for sets.")
         String label,
 
         @JsonPropertyDescription("Short description to add relevant details")
-        @JsonProperty(required = true)
         String description,
 
         // --- UNIFIED INTENSITY ---
@@ -47,15 +61,23 @@ public record WorkoutBlock(
         String zoneLabel
 ) {
 
-    public WorkoutBlock updateType(BlockType type) {
-        return new WorkoutBlock(type, this.durationSeconds(), this.distanceMeters(), this.label(), this.description,
+    /**
+     * Returns true when this element is a set (has children), false when it's a leaf block.
+     */
+    public boolean isSet() {
+        return elements != null && !elements.isEmpty();
+    }
+
+    public WorkoutElement updateType(BlockType type) {
+        return new WorkoutElement(repetitions, elements, restDurationSeconds, restIntensity,
+                type, this.durationSeconds(), this.distanceMeters(), this.label(), this.description,
                 this.intensityTarget(), this.intensityStart(), this.intensityEnd(), this.cadenceTarget(),
                 this.zoneTarget(), this.zoneLabel());
     }
 
-    public WorkoutBlock withResolvedIntensity(Integer resolvedIntensity, String resolvedZoneLabel) {
-        return new WorkoutBlock(type, durationSeconds, distanceMeters, label, description,
+    public WorkoutElement withResolvedIntensity(Integer resolvedIntensity, String resolvedZoneLabel) {
+        return new WorkoutElement(repetitions, elements, restDurationSeconds, restIntensity,
+                type, durationSeconds, distanceMeters, label, description,
                 resolvedIntensity, intensityStart, intensityEnd, cadenceTarget, zoneTarget, resolvedZoneLabel);
     }
-
 }

@@ -1,7 +1,7 @@
 import {Component, inject, Input} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TrainingService} from '../../../services/training.service';
-import {hasDurationEstimate, Training, WorkoutBlock} from '../../../models/training.model';
+import {flattenElements, hasDurationEstimate, isSet, Training, WorkoutBlock} from '../../../models/training.model';
 import {WorkoutExecutionService} from '../../../services/workout-execution.service';
 import {ExportService} from '../../../services/export.service';
 import {ScheduleModalComponent} from '../schedule-modal/schedule-modal.component';
@@ -58,6 +58,15 @@ export class WorkoutVisualizationComponent {
 
   get displayBlocks(): WorkoutBlock[] {
     return this.pendingBlocks ?? this.training?.blocks ?? [];
+  }
+
+  /** Flat list for chart, metrics, zone distribution. */
+  get displayFlatBlocks(): WorkoutBlock[] {
+    return flattenElements(this.displayBlocks);
+  }
+
+  isSetElement(block: WorkoutBlock): boolean {
+    return isSet(block);
   }
 
   isOwner(): boolean {
@@ -257,8 +266,8 @@ export class WorkoutVisualizationComponent {
   getMaxIntensity(): number {
     if (!this.training) return 150;
 
-    // Scan all blocks for max effective intensity
-    const intensities = this.displayBlocks.flatMap(b => [
+    // Scan all flat blocks for max effective intensity
+    const intensities = this.displayFlatBlocks.flatMap(b => [
       this.getEffectiveIntensity(b, 'TARGET'),
       this.getEffectiveIntensity(b, 'START'),
       this.getEffectiveIntensity(b, 'END')
@@ -281,7 +290,7 @@ export class WorkoutVisualizationComponent {
   getNumericalTotalDuration(): number {
     if (!this.training) return 0;
     if (!this.pendingBlocks && this.training.estimatedDurationSeconds) return this.training.estimatedDurationSeconds;
-    return this.displayBlocks.reduce((acc, b) => acc + this.getEstimatedBlockDuration(b), 0);
+    return this.displayFlatBlocks.reduce((acc, b) => acc + this.getEstimatedBlockDuration(b), 0);
   }
 
   // Helper to centralize estimation
@@ -445,7 +454,7 @@ export class WorkoutVisualizationComponent {
     const zoneMap = new Map<string, number>();
     let totalSeconds = 0;
 
-    for (const block of this.displayBlocks) {
+    for (const block of this.displayFlatBlocks) {
       if (block.type === 'PAUSE') continue;
       const dur = this.getEstimatedBlockDuration(block);
       if (dur <= 0) continue;

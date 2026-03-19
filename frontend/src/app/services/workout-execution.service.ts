@@ -1,6 +1,6 @@
 import {inject, Injectable} from '@angular/core';
 import {BehaviorSubject, interval, Subscription} from 'rxjs';
-import {Training, WorkoutBlock} from '../models/training.model';
+import {flattenElements, Training, WorkoutBlock} from '../models/training.model';
 import {BluetoothService, LiveMetrics} from './bluetooth.service';
 
 export type { LiveMetrics } from './bluetooth.service';
@@ -90,13 +90,12 @@ export class WorkoutExecutionService {
     private timerSubscription?: Subscription;
     private metricsSubscription?: Subscription;
 
-    private flattenElements(blocks: WorkoutBlock[]): WorkoutBlock[] {
-        // Backend now handles flattening. Pass through.
-        return blocks || [];
+    private flattenBlocks(blocks: WorkoutBlock[]): WorkoutBlock[] {
+        return flattenElements(blocks || []);
     }
 
     startWorkout(training: Training, scheduledWorkoutId: string | null = null) {
-        const flatBlocks = this.flattenElements(training.blocks || []);
+        const flatBlocks = this.flattenBlocks(training.blocks || []);
         if (flatBlocks.length === 0) return;
 
         const initialDuration = flatBlocks[0].durationSeconds || 0;

@@ -7,7 +7,8 @@ import com.koval.trainingplannerbackend.training.model.SportType;
 import com.koval.trainingplannerbackend.training.model.SwimmingTraining;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.model.TrainingType;
-import com.koval.trainingplannerbackend.training.model.WorkoutBlock;
+import com.koval.trainingplannerbackend.training.model.WorkoutElement;
+import com.koval.trainingplannerbackend.training.model.WorkoutElementFlattener;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -48,12 +49,14 @@ public class TrainingMapper {
         // Block mapping + total duration calculation
         if (request.blocks() != null && !request.blocks().isEmpty()) {
             String sport = request.sport() != null ? request.sport().toUpperCase() : "CYCLING";
-            List<WorkoutBlock> blocks = request.blocks().stream()
-                    .map(b -> enforceDistanceXorDuration(b, sport))
+            List<WorkoutElement> blocks = request.blocks().stream()
+                    .map(b -> mapElement(b, sport))
                     .toList();
             training.setBlocks(blocks);
 
-            int totalDuration = blocks.stream()
+            // Flatten to compute total duration
+            List<WorkoutElement> flat = WorkoutElementFlattener.flatten(blocks);
+            int totalDuration = flat.stream()
                     .mapToInt(wb -> wb.durationSeconds() != null ? wb.durationSeconds() : 0)
                     .sum();
             training.setEstimatedDurationSeconds(totalDuration);
@@ -66,16 +69,24 @@ public class TrainingMapper {
     }
 
     /**
-     * Enforces that each block has exactly one of durationSeconds or distanceMeters.
-     * If both are provided, the preferred dimension per sport is kept and the other extrapolated.
-     * If only one is provided, the other is extrapolated from typical sport speeds.
-     *
-     * Typical speeds used for extrapolation:
-     *   CYCLING:  ~30 km/h  (8.33 m/s)
-     *   RUNNING:  ~12 km/h  (3.33 m/s)
-     *   SWIMMING: ~3.6 km/h (1.00 m/s)
+     * Recursively maps a WorkoutElementRequest to a WorkoutElement.
+     * Sets map children recursively; leaves enforce distance-xor-duration.
      */
-    private WorkoutBlock enforceDistanceXorDuration(WorkoutBlockRequest b, String sport) {
+    private WorkoutElement mapElement(WorkoutElementRequest b, String sport) {
+        if (b.isSet()) {
+            List<WorkoutElement> children = b.elements().stream()
+                    .map(child -> mapElement(child, sport))
+                    .toList();
+            return new WorkoutElement(b.reps(), children, b.restDur(), b.restPct(),
+                    null, null, null, null, null, null, null, null, null, null, null);
+        }
+        return enforceDistanceXorDuration(b, sport);
+    }
+
+    /**
+     * Enforces that each leaf block has exactly one of durationSeconds or distanceMeters.
+     */
+    private WorkoutElement enforceDistanceXorDuration(WorkoutElementRequest b, String sport) {
         Integer dur = b.dur();
         Integer dist = b.dist();
 
@@ -86,8 +97,6 @@ public class TrainingMapper {
         double metersPerSecond = sportType.getTypicalSpeedMps();
 
         if (hasDur && hasDist) {
-            // Both set — keep the primary dimension per sport, extrapolate the other.
-            // For swimming/running (distance-based sports) prefer distance; for cycling prefer duration.
             if ("RUNNING".equals(sport) || "SWIMMING".equals(sport)) {
                 dur = (int) Math.round(dist / metersPerSecond);
             } else {
@@ -99,7 +108,8 @@ public class TrainingMapper {
             dur = (int) Math.round(dist / metersPerSecond);
         }
 
-        return new WorkoutBlock(b.type(), dur, dist, b.label(), b.desc(), b.pct(), b.pctFrom(), b.pctTo(), b.cad(), b.zone(), null);
+        return new WorkoutElement(null, null, null, null,
+                b.type(), dur, dist, b.label(), b.desc(), b.pct(), b.pctFrom(), b.pctTo(), b.cad(), b.zone(), null);
     }
 
     /**

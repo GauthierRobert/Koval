@@ -53,6 +53,13 @@ export const TRAINING_TYPE_LABELS: Record<TrainingType, string> = {
 };
 
 export interface WorkoutBlock {
+    // Set fields (non-null when this is a repeatable group)
+    repetitions?: number;
+    elements?: WorkoutBlock[];
+    restDurationSeconds?: number;
+    restIntensity?: number;
+
+    // Leaf fields (single block)
     type: 'WARMUP' | 'STEADY' | 'INTERVAL' | 'COOLDOWN' | 'RAMP' | 'FREE' | 'PAUSE';
     durationSeconds?: number;
     distanceMeters?: number;
@@ -65,6 +72,45 @@ export interface WorkoutBlock {
     label: string;
     description?: string;
     zoneLabel?: string;
+}
+
+/** Alias for clarity — WorkoutBlock is now a recursive WorkoutElement. */
+export type WorkoutElement = WorkoutBlock;
+
+/** Returns true when the block is a set (has children). */
+export function isSet(block: WorkoutBlock): boolean {
+    return !!block.elements && block.elements.length > 0;
+}
+
+/** Flattens a tree of WorkoutElements into a sequential list of leaf blocks. */
+export function flattenElements(elements: WorkoutBlock[]): WorkoutBlock[] {
+    if (!elements || elements.length === 0) return [];
+    const result: WorkoutBlock[] = [];
+    for (const element of elements) {
+        flattenElement(element, result);
+    }
+    return result;
+}
+
+function flattenElement(element: WorkoutBlock, result: WorkoutBlock[]): void {
+    if (!isSet(element)) {
+        result.push(element);
+        return;
+    }
+    const reps = element.repetitions ?? 1;
+    const flatChildren = flattenElements(element.elements!);
+    for (let i = 0; i < reps; i++) {
+        result.push(...flatChildren);
+        // Insert rest PAUSE between reps (not after the last one)
+        if (i < reps - 1 && element.restDurationSeconds && element.restDurationSeconds > 0) {
+            result.push({
+                type: 'PAUSE',
+                durationSeconds: element.restDurationSeconds,
+                intensityTarget: element.restIntensity ?? 40,
+                label: 'Rest',
+            });
+        }
+    }
 }
 
 export interface Training {
@@ -103,7 +149,7 @@ export interface ReceivedTraining {
 
 /** Returns true when at least one block is distance-based (no explicit durationSeconds). */
 export function hasDurationEstimate(training: Training): boolean {
-    return (training.blocks ?? []).some(
+    return flattenElements(training.blocks ?? []).some(
         (b) => (b.distanceMeters ?? 0) > 0 && !((b.durationSeconds ?? 0) > 0)
     );
 }

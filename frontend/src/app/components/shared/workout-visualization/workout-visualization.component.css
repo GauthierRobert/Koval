@@ -694,3 +694,47 @@
         max-height: 180px;
       }
     }
+
+    /* ── Set wrapper (nested blocks) ──────────────────────── */
+
+    .set-wrapper {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 6px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .set-wrapper.nested {
+      margin-left: 12px;
+      border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .set-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+    }
+
+    .set-badge {
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .set-rest {
+      color: var(--text-muted);
+      font-size: 9px;
+    }
+
+    .set-children {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding-left: 8px;
+      border-left: 2px solid rgba(255, 255, 255, 0.06);
+    }

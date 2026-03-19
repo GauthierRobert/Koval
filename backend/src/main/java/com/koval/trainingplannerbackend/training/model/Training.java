@@ -35,7 +35,7 @@ public abstract class Training {
     @NotBlank
     private String title;
     private String description;
-    private List<WorkoutBlock> blocks;
+    private List<WorkoutElement> blocks;
     private LocalDateTime createdAt;
     private Integer estimatedTss;
     private Double estimatedIf;

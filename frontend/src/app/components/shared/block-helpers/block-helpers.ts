@@ -1,4 +1,4 @@
-import {Training, WorkoutBlock} from '../../../models/training.model';
+import {flattenElements, Training, WorkoutBlock} from '../../../models/training.model';
 
 /**
  * Pure utility functions for computing workout block visual properties.
@@ -7,7 +7,8 @@ import {Training, WorkoutBlock} from '../../../models/training.model';
 
 export function getMaxIntensity(training: Training): number {
   if (!training.blocks) return 150;
-  const intensities = training.blocks.flatMap((b) => [
+  const flat = flattenElements(training.blocks);
+  const intensities = flat.flatMap((b) => [
     b.intensityTarget || 0,
     b.intensityStart || 0,
     b.intensityEnd || 0,

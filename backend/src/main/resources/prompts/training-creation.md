@@ -24,28 +24,68 @@ Goal: Create and modify structured training plans with precise power/pace target
 | `type` | String (required) | `VO2MAX` \| `THRESHOLD` \| `SWEET_SPOT` \| `ENDURANCE` \| `SPRINT` \| `RECOVERY` \| `MIXED` \| `TEST` |
 | `tss` | Integer (required) | Estimated TSS (see TSS section below) |
 | `zoneSystemId` | String | Zone system ID — set when a default zone system exists |
-| `blocks` | List\<WorkoutBlock\> (required) | Ordered list of blocks |
+| `blocks` | List\<WorkoutElement\> (required) | Ordered list of blocks or sets |
 | `tags` | List\<String\> | Group IDs — ONLY for COACH role when explicitly requested, otherwise omit |
 
-### WorkoutBlock
+### WorkoutElement (block or repeatable set)
+An element is either a **leaf block** (has `type`) or a **set** (has `reps` + `elements`).
+
+#### Leaf fields (single block)
 | Field | Type                 | Description                                                                             |
 |-------|----------------------|-----------------------------------------------------------------------------------------|
 | `type` | BlockType (required) | `WARMUP` \| `INTERVAL` \| `STEADY` \| `COOLDOWN` \| `RAMP` \| `FREE` \| `PAUSE`         |
 | `dur` | Integer              | Duration in seconds — **exactly one of** `dur` or `dist` (never both)                   |
 | `dist` | Integer              | Distance in meters — backend extrapolates the other                                     |
 | `label` | String (required)    | Zone label, e.g. "Z2" or "Z4 VO2max"                                                    |
-| `desc` | String (optionalAdd) | Short description of the block (max 10 words)                                           |
+| `desc` | String (optional)    | Short description of the block (max 10 words)                                           |
 | `pct` | Integer              | Intensity as % of reference (e.g. 90 = 90% FTP). Use for STEADY/INTERVAL/WARMUP/COOLDOWN |
 | `pctFrom` | Integer              | Ramp start % — use with `pctTo` for RAMP blocks only                                    |
 | `pctTo` | Integer              | Ramp end % — use with `pctFrom` for RAMP blocks only                                    |
 | `cad` | Integer              | Cadence target (RPM for cycling, SPM for running)                                       |
 | `zone` | String               | Zone label (e.g. "Z3") — use **instead of** `pct` for zone-based targeting              |
 
+#### Set fields (repeatable group)
+| Field | Type | Description |
+|-------|------|-------------|
+| `reps` | Integer (required) | Number of repetitions (e.g. 10 for "10×...") |
+| `elements` | List\<WorkoutElement\> (required) | Children (leaf blocks or nested sets) |
+| `restDur` | Integer | Passive rest (sec) between repetitions |
+| `restPct` | Integer | Intensity % during rest between reps (default ~40) |
+
 **Prefer `dur` for CYCLING; prefer `dist` for RUNNING and SWIMMING intervals.**
-Expand all repeated sequences explicitly — no shorthand.
+Use `reps` + `elements` for repeated sets instead of expanding sequences explicitly.
+
+#### Example: 10×30s on/30s off
+```json
+{
+  "reps": 10,
+  "elements": [
+    {"type": "INTERVAL", "dur": 30, "label": "Z5 Sprint", "pct": 120},
+    {"type": "STEADY", "dur": 30, "label": "Recovery", "pct": 55}
+  ]
+}
+```
+
+#### Example: 2 sets of 10×30/30 with 2min rest between sets
+```json
+{
+  "reps": 2,
+  "restDur": 120,
+  "restPct": 40,
+  "elements": [
+    {
+      "reps": 10,
+      "elements": [
+        {"type": "INTERVAL", "dur": 30, "label": "Z5", "pct": 120},
+        {"type": "STEADY", "dur": 30, "label": "Recovery", "pct": 55}
+      ]
+    }
+  ]
+}
+```
 
 ## TSS ESTIMATION
-Always compute TSS before calling `createTraining`. The formula:
+Always compute TSS before calling `createTraining`. For sets, multiply per-rep TSS by the number of reps and add rest TSS. The formula:
 
 **TSS = Σ (block_duration_seconds × (block_intensity / 100)²) / 36**
 

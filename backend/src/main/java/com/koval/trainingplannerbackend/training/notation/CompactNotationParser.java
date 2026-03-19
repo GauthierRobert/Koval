@@ -1,7 +1,7 @@
 package com.koval.trainingplannerbackend.training.notation;
 
 import com.koval.trainingplannerbackend.training.model.BlockType;
-import com.koval.trainingplannerbackend.training.model.WorkoutBlock;
+import com.koval.trainingplannerbackend.training.model.WorkoutElement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +9,9 @@ import java.util.Set;
 
 /**
  * Stateless recursive-descent parser for compact workout notation.
- * No Spring dependencies.
+ * Returns a TREE of {@link WorkoutElement} nodes — sets are NOT expanded.
+ * Use {@link com.koval.trainingplannerbackend.training.model.WorkoutElementFlattener}
+ * to expand into a flat sequential list.
  *
  * <p>Grammar:
  * <pre>
@@ -23,18 +25,6 @@ import java.util.Set;
  *   descriptor    ::= IDENT NUMBER? | NUMBER '%' | (none → FREE)
  *   time          ::= NUMBER "'" NUMBER? | NUMBER '"'
  * </pre>
- *
- * <p>BlockType resolution:
- * <ul>
- *   <li>WORK context (inside Mx block) → INTERVAL</li>
- *   <li>REST context (after /R:) → STEADY</li>
- *   <li>STANDALONE context:
- *     WARM... → WARMUP, COOL... → COOLDOWN, P → PAUSE, F → FREE,
- *     FC/SC/BC → INTERVAL, otherwise → STEADY</li>
- * </ul>
- *
- * <p>Intensity: null for zone-code descriptors (resolved later by zone system);
- * integer for NUMBER% descriptors (already resolved).
  */
 public final class CompactNotationParser {
 
@@ -54,11 +44,12 @@ public final class CompactNotationParser {
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Parses a complete notation string into a flat, expanded list of WorkoutBlocks.
+     * Parses a complete notation string into a tree of WorkoutElements.
+     * Sets are returned as single nodes with repetitions and children — NOT expanded.
      *
      * @throws CompactNotationException if the notation is invalid
      */
-    public static List<WorkoutBlock> parse(String notation) {
+    public static List<WorkoutElement> parse(String notation) {
         if (notation == null || notation.isBlank()) {
             throw new CompactNotationException("Notation must not be blank");
         }
@@ -69,8 +60,8 @@ public final class CompactNotationParser {
     //  Grammar rules
     // ─────────────────────────────────────────────────────────────────────────
 
-    private List<WorkoutBlock> parsePlan() {
-        List<WorkoutBlock> result = new ArrayList<>(parseSection());
+    private List<WorkoutElement> parsePlan() {
+        List<WorkoutElement> result = new ArrayList<>(parseSection());
         skipWs();
         while (pos < input.length() && input.charAt(pos) == '+') {
             pos++; // consume '+'
@@ -86,15 +77,8 @@ public final class CompactNotationParser {
 
     /**
      * section ::= outer_set | inline_reps | standalone_block
-     *
-     * <p>Discriminated by lookahead:
-     * <ul>
-     *   <li>INT 'x(' ... → outer_set</li>
-     *   <li>INT 'x' DIGIT → inline_reps</li>
-     *   <li>otherwise → standalone_block</li>
-     * </ul>
      */
-    private List<WorkoutBlock> parseSection() {
+    private List<WorkoutElement> parseSection() {
         skipWs();
         if (pos >= input.length()) {
             throw new CompactNotationException("Expected section but reached end of input");
@@ -108,9 +92,9 @@ public final class CompactNotationParser {
                 pos++; // consume 'x'
                 skipWs();
                 if (pos < input.length() && input.charAt(pos) == '(') {
-                    return parseOuterSetBody(n);
+                    return List.of(parseOuterSetBody(n));
                 } else if (pos < input.length() && Character.isDigit(input.charAt(pos))) {
-                    return parseInlineRepsBody(n);
+                    return List.of(parseInlineRepsBody(n));
                 } else {
                     throw new CompactNotationException(
                             "Expected '(' or digit after 'x' at position " + pos);
@@ -123,45 +107,38 @@ public final class CompactNotationParser {
     }
 
     /**
-     * Called after consuming N and 'x('. Parses inner content and optional /r:time,
-     * then expands into N × (inner + optional PAUSE).
+     * Called after consuming N and 'x('. Parses inner content and optional /r:time.
+     * Returns ONE set node with repetitions=N and children.
      */
-    private List<WorkoutBlock> parseOuterSetBody(int n) {
+    private WorkoutElement parseOuterSetBody(int n) {
         expect('(');
-        List<WorkoutBlock> inner = parseInner();
+        List<WorkoutElement> inner = parseInner();
         skipWs();
         expect(')');
 
         // Optional passive rest: /r:time
         skipWs();
-        Integer pauseSeconds = null;
+        Integer restDurationSeconds = null;
         if (pos < input.length() && input.charAt(pos) == '/') {
             int saved = pos;
             pos++;
             if (pos < input.length() && input.charAt(pos) == 'r'
                     && pos + 1 < input.length() && input.charAt(pos + 1) == ':') {
                 pos += 2; // consume 'r:'
-                pauseSeconds = parseTime();
+                restDurationSeconds = parseTime();
             } else {
                 pos = saved; // not a /r: — backtrack
             }
         }
 
-        List<WorkoutBlock> result = new ArrayList<>();
-        for (int i = 0; i < n; i++) {
-            result.addAll(inner);
-            if (pauseSeconds != null) {
-                result.add(pauseBlock(pauseSeconds));
-            }
-        }
-        return result;
+        return setElement(n, inner, restDurationSeconds);
     }
 
     /**
      * inner ::= inline_reps | standalone_block
      * (Used inside parentheses; no nested outer_sets.)
      */
-    private List<WorkoutBlock> parseInner() {
+    private List<WorkoutElement> parseInner() {
         skipWs();
         int saved = pos;
         if (pos < input.length() && Character.isDigit(input.charAt(pos))) {
@@ -171,7 +148,7 @@ public final class CompactNotationParser {
                 pos++; // consume 'x'
                 skipWs();
                 if (pos < input.length() && Character.isDigit(input.charAt(pos))) {
-                    return parseInlineRepsBody(n);
+                    return List.of(parseInlineRepsBody(n));
                 }
                 throw new CompactNotationException(
                         "Expected digit after 'x' inside parentheses at position " + pos);
@@ -184,13 +161,13 @@ public final class CompactNotationParser {
     /**
      * Called after consuming N and 'x' for inline reps.
      * Parses: standalone_block (/R: standalone_block)?
-     * Expands into N × [work, rest?].
+     * Returns ONE set node with repetitions=N and [work, rest?] as children.
      */
-    private List<WorkoutBlock> parseInlineRepsBody(int n) {
-        WorkoutBlock work = parseStandaloneBlock(BlockCtx.WORK);
+    private WorkoutElement parseInlineRepsBody(int n) {
+        WorkoutElement work = parseStandaloneBlock(BlockCtx.WORK);
 
         // Optional active rest: /R:
-        WorkoutBlock rest = null;
+        WorkoutElement rest = null;
         skipWs();
         if (pos < input.length() && input.charAt(pos) == '/') {
             int saved = pos;
@@ -204,25 +181,17 @@ public final class CompactNotationParser {
             }
         }
 
-        List<WorkoutBlock> result = new ArrayList<>();
-        for (int i = 0; i < n; i++) {
-            result.add(work);
-            if (rest != null) result.add(rest);
-        }
-        return result;
+        List<WorkoutElement> children = new ArrayList<>();
+        children.add(work);
+        if (rest != null) children.add(rest);
+
+        return setElement(n, children, null);
     }
 
     /**
      * standalone_block ::= NUMBER unit descriptor
-     *
-     * <p>Descriptor options:
-     * <ul>
-     *   <li>IDENT (letters + optional trailing digits) → zone code label, intensityTarget = null</li>
-     *   <li>NUMBER '%' → direct percentage, intensityTarget = n, label = "n%"</li>
-     *   <li>(none) → FREE block, label = null</li>
-     * </ul>
      */
-    private WorkoutBlock parseStandaloneBlock(BlockCtx ctx) {
+    private WorkoutElement parseStandaloneBlock(BlockCtx ctx) {
         skipWs();
         int quantity = parseInteger();
         String unit = parseUnit();
@@ -262,7 +231,7 @@ public final class CompactNotationParser {
         String label = descLabel != null ? descLabel : (intensityPct != null ? intensityPct + "%" : null);
         String zoneTarget = (intensityPct == null && descLabel != null) ? descLabel : null;
 
-        return new WorkoutBlock(type, durationSeconds, distanceMeters, label, null, intensityPct, null, null, null, zoneTarget, null);
+        return leafElement(type, durationSeconds, distanceMeters, label, intensityPct, zoneTarget);
     }
 
     /** Resolve BlockType from context and descriptor. */
@@ -287,10 +256,6 @@ public final class CompactNotationParser {
     //  Lexical helpers
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * time ::= NUMBER "'" NUMBER? | NUMBER '"'
-     * Returns total duration in seconds.
-     */
     private int parseTime() {
         skipWs();
         int n = parseInteger();
@@ -312,7 +277,6 @@ public final class CompactNotationParser {
         }
     }
 
-    /** Parse one or more consecutive digits as a non-negative integer. */
     private int parseInteger() {
         skipWs();
         if (pos >= input.length() || !Character.isDigit(input.charAt(pos))) {
@@ -326,17 +290,11 @@ public final class CompactNotationParser {
         return Integer.parseInt(input, start, pos, 10);
     }
 
-    /**
-     * Parse unit: km, sec, min, m, s, h (checked longest-first to avoid prefix conflicts).
-     * Must immediately follow the number (no leading whitespace consumed by default,
-     * but skipWs() is called defensively).
-     */
     private String parseUnit() {
         skipWs();
         if (pos >= input.length()) {
             throw new CompactNotationException("Expected unit at position " + pos + " but got EOF");
         }
-        // Check multi-char units first to avoid prefix collisions (m vs min, s vs sec)
         if (startsWith("km"))  { pos += 2; return "km"; }
         if (startsWith("sec")) { pos += 3; return "sec"; }
         if (startsWith("min")) { pos += 3; return "min"; }
@@ -348,7 +306,6 @@ public final class CompactNotationParser {
                 "Expected unit (m, km, s, sec, min, h) at position " + pos + " but got '" + c + "'");
     }
 
-    /** Parse an identifier: letters and digits (e.g. "FC", "E4", "WARM", "COOL"). */
     private String parseIdent() {
         int start = pos;
         while (pos < input.length()
@@ -391,7 +348,16 @@ public final class CompactNotationParser {
     //  Factory helpers
     // ─────────────────────────────────────────────────────────────────────────
 
-    private static WorkoutBlock pauseBlock(int seconds) {
-        return new WorkoutBlock(BlockType.PAUSE, seconds, null, "P", null,null, null, null, null, null, null);
+    private static WorkoutElement leafElement(BlockType type, Integer durationSeconds,
+                                              Integer distanceMeters, String label,
+                                              Integer intensityPct, String zoneTarget) {
+        return new WorkoutElement(null, null, null, null,
+                type, durationSeconds, distanceMeters, label, null,
+                intensityPct, null, null, null, zoneTarget, null);
+    }
+
+    private static WorkoutElement setElement(int reps, List<WorkoutElement> children, Integer restDurationSeconds) {
+        return new WorkoutElement(reps, children, restDurationSeconds, null,
+                null, null, null, null, null, null, null, null, null, null, null);
     }
 }

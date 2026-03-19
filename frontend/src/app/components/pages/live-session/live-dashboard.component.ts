@@ -190,7 +190,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
 
   getBlockProgress(state: any): number {
     if (!state.training) return 0;
-    const block = state.training.blocks[state.currentBlockIndex];
+    const block = state.flatBlocks[state.currentBlockIndex];
     const duration = block.durationSeconds || 0;
     if (duration === 0) return 0;
     return ((duration - state.remainingBlockSeconds) / duration) * 100;
@@ -198,7 +198,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
 
   getTargetPower(state: any): number {
     if (!state.training) return 0;
-    const block = state.training.blocks[state.currentBlockIndex];
+    const block = state.flatBlocks[state.currentBlockIndex];
     if (state.training.sportType !== 'CYCLING') return this.getCurrentTargetIntensity(state);
     const ftp = this.trainingService.currentFtp ?? 250;
 
@@ -215,7 +215,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
 
   getCurrentTargetIntensity(state: any): number {
     if (!state.training) return 0;
-    const block = state.training.blocks[state.currentBlockIndex];
+    const block = state.flatBlocks[state.currentBlockIndex];
     if (block.type === 'RAMP') {
       const duration = block.durationSeconds || 1;
       const progress = (duration - state.remainingBlockSeconds) / duration;

@@ -5,7 +5,8 @@ import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.training.group.GroupService;
 import com.koval.trainingplannerbackend.training.model.SportType;
 import com.koval.trainingplannerbackend.training.model.Training;
-import com.koval.trainingplannerbackend.training.model.WorkoutBlock;
+import com.koval.trainingplannerbackend.training.model.WorkoutElement;
+import com.koval.trainingplannerbackend.training.model.WorkoutElementFlattener;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystem;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystemService;
 import org.springframework.stereotype.Service;
@@ -81,8 +82,7 @@ public class TrainingMetricsService {
     // ── Zone resolution ─────────────────────────────────────────────────────
 
     private void resolveZoneTargets(Training training, String userId) {
-        boolean hasZoneTargets = training.getBlocks().stream()
-                .anyMatch(b -> b.zoneTarget() != null && !b.zoneTarget().isBlank());
+        boolean hasZoneTargets = hasZoneTargetsRecursive(training.getBlocks());
         if (!hasZoneTargets) return;
 
         ZoneSystem zoneSystem = resolveZoneSystem(training, userId);
@@ -96,20 +96,45 @@ public class TrainingMetricsService {
                                 z.label() + " - " + (z.description() != null ? z.description() : "") + " (" + z.low() + "-" + z.high() + "%)"),
                         (a, b) -> a));
 
-        List<WorkoutBlock> resolvedBlocks = training.getBlocks().stream()
-                .map(block -> {
-                    if (block.zoneTarget() != null && !block.zoneTarget().isBlank()
-                            && (block.intensityTarget() == null || block.intensityTarget() == 0)) {
-                        ZoneResolution resolution = zoneMap.get(block.zoneTarget().toUpperCase());
-                        if (resolution != null) {
-                            return block.withResolvedIntensity(resolution.midpoint(), resolution.displayLabel());
-                        }
-                    }
-                    return block;
-                })
+        List<WorkoutElement> resolvedBlocks = training.getBlocks().stream()
+                .map(block -> resolveElementZones(block, zoneMap))
                 .toList();
 
         training.setBlocks(resolvedBlocks);
+    }
+
+    private boolean hasZoneTargetsRecursive(List<WorkoutElement> elements) {
+        if (elements == null) return false;
+        for (WorkoutElement e : elements) {
+            if (e.isSet()) {
+                if (hasZoneTargetsRecursive(e.elements())) return true;
+            } else if (e.zoneTarget() != null && !e.zoneTarget().isBlank()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private WorkoutElement resolveElementZones(WorkoutElement element, Map<String, ZoneResolution> zoneMap) {
+        if (element.isSet()) {
+            var resolvedChildren = element.elements().stream()
+                    .map(child -> resolveElementZones(child, zoneMap))
+                    .toList();
+            return new WorkoutElement(element.repetitions(), resolvedChildren,
+                    element.restDurationSeconds(), element.restIntensity(),
+                    element.type(), element.durationSeconds(), element.distanceMeters(),
+                    element.label(), element.description(), element.intensityTarget(),
+                    element.intensityStart(), element.intensityEnd(), element.cadenceTarget(),
+                    element.zoneTarget(), element.zoneLabel());
+        }
+        if (element.zoneTarget() != null && !element.zoneTarget().isBlank()
+                && (element.intensityTarget() == null || element.intensityTarget() == 0)) {
+            ZoneResolution resolution = zoneMap.get(element.zoneTarget().toUpperCase());
+            if (resolution != null) {
+                return element.withResolvedIntensity(resolution.midpoint(), resolution.displayLabel());
+            }
+        }
+        return element;
     }
 
     private record ZoneResolution(int midpoint, String displayLabel) {}
@@ -151,7 +176,8 @@ public class TrainingMetricsService {
         int totalDistance = 0;
         double totalTss = 0;
 
-        for (WorkoutBlock block : training.getBlocks()) {
+        List<WorkoutElement> flatBlocks = WorkoutElementFlattener.flatten(training.getBlocks());
+        for (WorkoutElement block : flatBlocks) {
             double intensity = getBlockIntensity(block);
             int blockDuration;
             int blockDistance;
@@ -176,7 +202,7 @@ public class TrainingMetricsService {
         return new MetricsResult(totalTss, totalDurationSeconds, totalDistance);
     }
 
-    private double getBlockIntensity(WorkoutBlock block) {
+    private double getBlockIntensity(WorkoutElement block) {
         if (block.intensityStart() != null && block.intensityStart() > 0
                 && block.intensityEnd() != null && block.intensityEnd() > 0) {
             return (block.intensityStart() + block.intensityEnd()) / 2.0;

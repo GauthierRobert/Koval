@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.training.tools;
 
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.model.TrainingType;
+import com.koval.trainingplannerbackend.training.model.WorkoutElementFlattener;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ public record TrainingSummary(
                 t.getTrainingType(),
                 durationMin,
                 t.getEstimatedDistance() == null ? 0 : t.getEstimatedDistance(),
-                t.getBlocks() != null ? t.getBlocks().size() : 0,
+                t.getBlocks() != null ? WorkoutElementFlattener.flatten(t.getBlocks()).size() : 0,
                 t.getGroupIds()
         );
     }

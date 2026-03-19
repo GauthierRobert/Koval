@@ -5,8 +5,26 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.koval.trainingplannerbackend.training.model.BlockType;
 
+import java.util.List;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record WorkoutBlockRequest(
+public record WorkoutElementRequest(
+
+        // ── SET FIELDS ──
+
+        @JsonPropertyDescription("Repetitions for this set (e.g. 10 for '10x...')")
+        Integer reps,
+
+        @JsonPropertyDescription("Child elements (blocks or nested sets)")
+        List<WorkoutElementRequest> elements,
+
+        @JsonPropertyDescription("Passive rest (sec) between reps")
+        Integer restDur,
+
+        @JsonPropertyDescription("Rest intensity % between reps (default ~40)")
+        Integer restPct,
+
+        // ── LEAF FIELDS ──
 
         @JsonPropertyDescription("WARMUP|INTERVAL|STEADY|COOLDOWN|RAMP|FREE|PAUSE")
         @JsonProperty(required = true)
@@ -40,4 +58,8 @@ public record WorkoutBlockRequest(
 
         @JsonPropertyDescription("Zone label (e.g. 'Z3'). Use instead of pct for zone-based targeting.")
         String zone
-) {}
+) {
+    public boolean isSet() {
+        return elements != null && !elements.isEmpty();
+    }
+}

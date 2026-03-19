@@ -27,7 +27,7 @@ public record TrainingRequest(
     String zoneSystemId,
 
     @JsonPropertyDescription("Blocks")
-    List<WorkoutBlockRequest> blocks,
+    List<WorkoutElementRequest> blocks,
 
     @JsonPropertyDescription("Tags e.g. 'club-btc'")
     List<String> tags

@@ -9,7 +9,7 @@ import com.koval.trainingplannerbackend.training.metrics.TrainingMetricsService;
 import com.koval.trainingplannerbackend.training.model.BlockType;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.model.TrainingType;
-import com.koval.trainingplannerbackend.training.model.WorkoutBlock;
+import com.koval.trainingplannerbackend.training.model.WorkoutElement;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -53,25 +53,37 @@ public class TrainingService {
     }
 
     /**
-     * Because AI can be Wrong
+     * Because AI can be Wrong — recurses into sets.
      */
-    private WorkoutBlock standardizeBlockType(WorkoutBlock workoutBlock) {
-        if ((workoutBlock.intensityEnd() != null && workoutBlock.intensityEnd() > 0) &&
-            (workoutBlock.intensityStart() != null && workoutBlock.intensityStart() > 0)) {
-            return workoutBlock.updateType(BlockType.RAMP);
+    private WorkoutElement standardizeBlockType(WorkoutElement element) {
+        if (element.isSet()) {
+            var standardizedChildren = element.elements().stream()
+                    .map(this::standardizeBlockType)
+                    .toList();
+            return new WorkoutElement(element.repetitions(), standardizedChildren,
+                    element.restDurationSeconds(), element.restIntensity(),
+                    element.type(), element.durationSeconds(), element.distanceMeters(),
+                    element.label(), element.description(), element.intensityTarget(),
+                    element.intensityStart(), element.intensityEnd(), element.cadenceTarget(),
+                    element.zoneTarget(), element.zoneLabel());
+        }
+
+        if ((element.intensityEnd() != null && element.intensityEnd() > 0) &&
+            (element.intensityStart() != null && element.intensityStart() > 0)) {
+            return element.updateType(BlockType.RAMP);
         }
 
         // Don't reclassify zone-targeted blocks as PAUSE — they may have no intensity before enrichment
-        if (workoutBlock.zoneTarget() != null && !workoutBlock.zoneTarget().isBlank()) {
-            return workoutBlock;
+        if (element.zoneTarget() != null && !element.zoneTarget().isBlank()) {
+            return element;
         }
 
-        if ((workoutBlock.intensityEnd() == null || workoutBlock.intensityEnd() == 0) &&
-            (workoutBlock.intensityStart() == null || workoutBlock.intensityStart() == 0) &&
-            (workoutBlock.intensityTarget() == null || workoutBlock.intensityTarget() == 0)) {
-            return workoutBlock.updateType(BlockType.PAUSE);
+        if ((element.intensityEnd() == null || element.intensityEnd() == 0) &&
+            (element.intensityStart() == null || element.intensityStart() == 0) &&
+            (element.intensityTarget() == null || element.intensityTarget() == 0)) {
+            return element.updateType(BlockType.PAUSE);
         }
-        return workoutBlock;
+        return element;
     }
 
     /**

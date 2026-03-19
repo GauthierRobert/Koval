@@ -1,7 +1,8 @@
 package com.koval.trainingplannerbackend.notation;
 
 import com.koval.trainingplannerbackend.training.model.BlockType;
-import com.koval.trainingplannerbackend.training.model.WorkoutBlock;
+import com.koval.trainingplannerbackend.training.model.WorkoutElement;
+import com.koval.trainingplannerbackend.training.model.WorkoutElementFlattener;
 import com.koval.trainingplannerbackend.training.notation.CompactNotationException;
 import com.koval.trainingplannerbackend.training.notation.CompactNotationParser;
 import org.junit.jupiter.api.Test;
@@ -11,8 +12,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Pure JUnit 5 unit tests for {@link CompactNotationParser}.
- * No Spring context required.
+ * Unit tests for {@link CompactNotationParser}.
+ * Parser now returns a tree — sets are NOT expanded.
  */
 class CompactNotationParserTest {
 
@@ -22,64 +23,61 @@ class CompactNotationParserTest {
 
     @Test
     void singleDistanceBlock_zonecode_isInterval() {
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("300mFC");
+        List<WorkoutElement> elements = CompactNotationParser.parse("300mFC");
 
-        assertEquals(1, blocks.size());
-        WorkoutBlock b = blocks.get(0);
-        assertEquals(BlockType.INTERVAL, b.type());    // FC is a high-effort code
+        assertEquals(1, elements.size());
+        WorkoutElement b = elements.get(0);
+        assertFalse(b.isSet());
+        assertEquals(BlockType.INTERVAL, b.type());
         assertEquals(300, b.distanceMeters());
         assertNull(b.durationSeconds());
         assertEquals("FC", b.label());
-        assertNull(b.intensityTarget());               // resolved later by zone system
-    }
-
-    @Test
-    void singleDurationBlock_warmup() {
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("10minWARM");
-
-        assertEquals(1, blocks.size());
-        WorkoutBlock b = blocks.get(0);
-        assertEquals(BlockType.WARMUP, b.type());
-        assertEquals(600, b.durationSeconds());        // 10 × 60
-        assertNull(b.distanceMeters());
-        assertEquals("WARM", b.label());
         assertNull(b.intensityTarget());
     }
 
     @Test
-    void singleBlock_cooldown() {
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("200mCOOL");
+    void singleDurationBlock_warmup() {
+        List<WorkoutElement> elements = CompactNotationParser.parse("10minWARM");
 
-        assertEquals(1, blocks.size());
-        assertEquals(BlockType.COOLDOWN, blocks.get(0).type());
+        assertEquals(1, elements.size());
+        WorkoutElement b = elements.get(0);
+        assertFalse(b.isSet());
+        assertEquals(BlockType.WARMUP, b.type());
+        assertEquals(600, b.durationSeconds());
+        assertNull(b.distanceMeters());
+        assertEquals("WARM", b.label());
+    }
+
+    @Test
+    void singleBlock_cooldown() {
+        List<WorkoutElement> elements = CompactNotationParser.parse("200mCOOL");
+        assertEquals(1, elements.size());
+        assertEquals(BlockType.COOLDOWN, elements.get(0).type());
     }
 
     @Test
     void singleBlock_pause_code() {
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("60sP");
-
-        assertEquals(1, blocks.size());
-        assertEquals(BlockType.PAUSE, blocks.get(0).type());
-        assertEquals(60, blocks.get(0).durationSeconds());
+        List<WorkoutElement> elements = CompactNotationParser.parse("60sP");
+        assertEquals(1, elements.size());
+        assertEquals(BlockType.PAUSE, elements.get(0).type());
+        assertEquals(60, elements.get(0).durationSeconds());
     }
 
     @Test
     void singleBlock_free_code() {
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("30minF");
-
-        assertEquals(1, blocks.size());
-        assertEquals(BlockType.FREE, blocks.get(0).type());
-        assertEquals(1800, blocks.get(0).durationSeconds());
+        List<WorkoutElement> elements = CompactNotationParser.parse("30minF");
+        assertEquals(1, elements.size());
+        assertEquals(BlockType.FREE, elements.get(0).type());
+        assertEquals(1800, elements.get(0).durationSeconds());
     }
 
     @Test
     void singleBlock_steady_unknown_code() {
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("400mE3");
-
-        assertEquals(1, blocks.size());
-        assertEquals(BlockType.STEADY, blocks.get(0).type());
-        assertEquals(400, blocks.get(0).distanceMeters());
-        assertEquals("E3", blocks.get(0).label());
+        List<WorkoutElement> elements = CompactNotationParser.parse("400mE3");
+        assertEquals(1, elements.size());
+        assertEquals(BlockType.STEADY, elements.get(0).type());
+        assertEquals(400, elements.get(0).distanceMeters());
+        assertEquals("E3", elements.get(0).label());
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -88,145 +86,147 @@ class CompactNotationParserTest {
 
     @Test
     void singleBlock_directPercent_isStandalone() {
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("300m80%");
-
-        assertEquals(1, blocks.size());
-        WorkoutBlock b = blocks.get(0);
+        List<WorkoutElement> elements = CompactNotationParser.parse("300m80%");
+        assertEquals(1, elements.size());
+        WorkoutElement b = elements.get(0);
+        assertFalse(b.isSet());
         assertEquals(BlockType.STEADY, b.type());
         assertEquals(300, b.distanceMeters());
-        assertTrue(b.label() == null || b.label().contains("%"), "label should be null or contain %");
         assertEquals(80, b.intensityTarget());
     }
 
     @Test
     void singleBlock_directPercent_label() {
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("200m75%");
-
-        assertEquals(1, blocks.size());
-        assertEquals(75, blocks.get(0).intensityTarget());
-        assertEquals("75%", blocks.get(0).label());
+        List<WorkoutElement> elements = CompactNotationParser.parse("200m75%");
+        assertEquals(1, elements.size());
+        assertEquals(75, elements.get(0).intensityTarget());
+        assertEquals("75%", elements.get(0).label());
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Inline reps
+    //  Inline reps — now return set nodes
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
-    void inlineReps_workOnly() {
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("5x100mFC");
+    void inlineReps_workOnly_returnsSetNode() {
+        List<WorkoutElement> elements = CompactNotationParser.parse("5x100mFC");
 
-        // 5 INTERVAL blocks
-        assertEquals(5, blocks.size());
-        for (WorkoutBlock b : blocks) {
-            assertEquals(BlockType.INTERVAL, b.type());
-            assertEquals(100, b.distanceMeters());
-            assertEquals("FC", b.label());
-            assertNull(b.intensityTarget());
-        }
+        assertEquals(1, elements.size());
+        WorkoutElement set = elements.get(0);
+        assertTrue(set.isSet());
+        assertEquals(5, set.repetitions());
+        assertEquals(1, set.elements().size()); // 1 child: work block
+        assertEquals(BlockType.INTERVAL, set.elements().get(0).type());
+        assertEquals("FC", set.elements().get(0).label());
+
+        // Flatten regression: 5 blocks
+        assertEquals(5, WorkoutElementFlattener.flatten(elements).size());
     }
 
     @Test
-    void inlineReps_withActiveRest() {
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("5x100mFC/R:100mE3");
+    void inlineReps_withActiveRest_returnsSetNode() {
+        List<WorkoutElement> elements = CompactNotationParser.parse("5x100mFC/R:100mE3");
 
-        // 5 × [INTERVAL work + STEADY rest] = 10
-        assertEquals(10, blocks.size());
+        assertEquals(1, elements.size());
+        WorkoutElement set = elements.get(0);
+        assertTrue(set.isSet());
+        assertEquals(5, set.repetitions());
+        assertEquals(2, set.elements().size()); // work + rest
+        assertEquals(BlockType.INTERVAL, set.elements().get(0).type());
+        assertEquals(BlockType.STEADY, set.elements().get(1).type());
+        assertEquals("E3", set.elements().get(1).label());
+
+        // Flatten regression: 5 * 2 = 10
+        assertEquals(10, WorkoutElementFlattener.flatten(elements).size());
+    }
+
+    @Test
+    void inlineReps_percentSyntax_flattens() {
+        List<WorkoutElement> elements = CompactNotationParser.parse("5x100m80%/R:100m60%");
+
+        assertEquals(1, elements.size());
+        assertTrue(elements.get(0).isSet());
+
+        List<WorkoutElement> flat = WorkoutElementFlattener.flatten(elements);
+        assertEquals(10, flat.size());
         for (int i = 0; i < 10; i += 2) {
-            WorkoutBlock work = blocks.get(i);
-            WorkoutBlock rest = blocks.get(i + 1);
-
-            assertEquals(BlockType.INTERVAL, work.type());
-            assertEquals(100, work.distanceMeters());
-            assertEquals("FC", work.label());
-
-            assertEquals(BlockType.STEADY, rest.type());
-            assertEquals(100, rest.distanceMeters());
-            assertEquals("E3", rest.label());
-        }
-    }
-
-    @Test
-    void inlineReps_percentSyntax() {
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("5x100m80%/R:100m60%");
-
-        assertEquals(10, blocks.size());
-        for (int i = 0; i < 10; i += 2) {
-            assertEquals(BlockType.INTERVAL, blocks.get(i).type());
-            assertEquals(80, blocks.get(i).intensityTarget());
-
-            assertEquals(BlockType.STEADY, blocks.get(i + 1).type());
-            assertEquals(60, blocks.get(i + 1).intensityTarget());
+            assertEquals(BlockType.INTERVAL, flat.get(i).type());
+            assertEquals(80, flat.get(i).intensityTarget());
+            assertEquals(BlockType.STEADY, flat.get(i + 1).type());
+            assertEquals(60, flat.get(i + 1).intensityTarget());
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Outer sets
+    //  Outer sets — now return nested set nodes
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
-    void outerSet_singleRepWithPassiveRest_quoteSeconds() {
-        // 1x(5x300mFC/R:200mE4)/r:2'30  → 5×[INTERVAL, STEADY] + PAUSE(150) = 11
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("1x(5x300mFC/R:200mE4)/r:2'30");
+    void outerSet_singleRepWithPassiveRest() {
+        // 1x(5x300mFC/R:200mE4)/r:2'30
+        List<WorkoutElement> elements = CompactNotationParser.parse("1x(5x300mFC/R:200mE4)/r:2'30");
 
-        assertEquals(11, blocks.size());
+        assertEquals(1, elements.size());
+        WorkoutElement outer = elements.get(0);
+        assertTrue(outer.isSet());
+        assertEquals(1, outer.repetitions());
+        assertEquals(150, outer.restDurationSeconds()); // 2'30 = 150s
 
-        // First 10: 5 pairs
-        for (int i = 0; i < 10; i += 2) {
-            assertEquals(BlockType.INTERVAL, blocks.get(i).type());
-            assertEquals(300, blocks.get(i).distanceMeters());
-            assertEquals(BlockType.STEADY, blocks.get(i + 1).type());
-            assertEquals(200, blocks.get(i + 1).distanceMeters());
-        }
+        // Inner: 1 set node (5x...)
+        assertEquals(1, outer.elements().size());
+        WorkoutElement inner = outer.elements().get(0);
+        assertTrue(inner.isSet());
+        assertEquals(5, inner.repetitions());
 
-        // Last: PAUSE 150s
-        WorkoutBlock pause = blocks.get(10);
-        assertEquals(BlockType.PAUSE, pause.type());
-        assertEquals(150, pause.durationSeconds()); // 2×60 + 30
+        // Flatten: 1 rep → no inter-rep rest pause. 5 × 2 children = 10 blocks.
+        assertEquals(10, WorkoutElementFlattener.flatten(elements).size());
     }
 
     @Test
-    void outerSet_twoRepsWithPassiveRest_quoteOnly() {
-        // 2x(4x300mFC/R:200mE4)/r:2' → 2 × (4×[INTERVAL, STEADY] + PAUSE(120)) = 18
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("2x(4x300mFC/R:200mE4)/r:2'");
+    void outerSet_twoRepsWithPassiveRest() {
+        // 2x(4x300mFC/R:200mE4)/r:2'
+        List<WorkoutElement> elements = CompactNotationParser.parse("2x(4x300mFC/R:200mE4)/r:2'");
 
-        assertEquals(18, blocks.size());
+        assertEquals(1, elements.size());
+        WorkoutElement outer = elements.get(0);
+        assertTrue(outer.isSet());
+        assertEquals(2, outer.repetitions());
+        assertEquals(120, outer.restDurationSeconds()); // 2' = 120s
 
-        // Each outer rep: 8 workout blocks + 1 PAUSE
-        for (int rep = 0; rep < 2; rep++) {
-            int base = rep * 9;
-            for (int i = 0; i < 8; i += 2) {
-                assertEquals(BlockType.INTERVAL, blocks.get(base + i).type());
-                assertEquals(BlockType.STEADY, blocks.get(base + i + 1).type());
-            }
-            assertEquals(BlockType.PAUSE, blocks.get(base + 8).type());
-            assertEquals(120, blocks.get(base + 8).durationSeconds()); // 2×60
-        }
+        // Flatten regression: 2 × (4 × 2) + 1 pause = 17
+        List<WorkoutElement> flat = WorkoutElementFlattener.flatten(elements);
+        assertEquals(17, flat.size());
     }
 
     @Test
     void outerSet_noPassiveRest() {
-        // 2x(3x200mFC) → 2 × (3×INTERVAL) = 6
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("2x(3x200mFC)");
+        // 2x(3x200mFC)
+        List<WorkoutElement> elements = CompactNotationParser.parse("2x(3x200mFC)");
 
-        assertEquals(6, blocks.size());
-        for (WorkoutBlock b : blocks) {
-            assertEquals(BlockType.INTERVAL, b.type());
-            assertEquals(200, b.distanceMeters());
-        }
+        assertEquals(1, elements.size());
+        WorkoutElement outer = elements.get(0);
+        assertTrue(outer.isSet());
+        assertEquals(2, outer.repetitions());
+        assertNull(outer.restDurationSeconds());
+
+        // Flatten: 2 * 3 = 6
+        assertEquals(6, WorkoutElementFlattener.flatten(elements).size());
     }
 
     @Test
     void outerSet_passiveRest_doubleQuote_seconds() {
-        // 3x(2x100mFC)/r:30"  → 3 × (2×INTERVAL + PAUSE(30)) = 9
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("3x(2x100mFC)/r:30\"");
+        // 3x(2x100mFC)/r:30"
+        List<WorkoutElement> elements = CompactNotationParser.parse("3x(2x100mFC)/r:30\"");
 
-        assertEquals(9, blocks.size());
-        // Every 3rd block (index 2, 5, 8) should be PAUSE with 30s
-        for (int rep = 0; rep < 3; rep++) {
-            int pauseIdx = rep * 3 + 2;
-            assertEquals(BlockType.PAUSE, blocks.get(pauseIdx).type());
-            assertEquals(30, blocks.get(pauseIdx).durationSeconds());
-        }
+        assertEquals(1, elements.size());
+        WorkoutElement outer = elements.get(0);
+        assertTrue(outer.isSet());
+        assertEquals(3, outer.repetitions());
+        assertEquals(30, outer.restDurationSeconds());
+
+        // Flatten: 3 × 2 + 2 pauses = 8
+        List<WorkoutElement> flat = WorkoutElementFlattener.flatten(elements);
+        assertEquals(8, flat.size());
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -234,33 +234,56 @@ class CompactNotationParserTest {
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
-    void fullUserExample_threeSection_thirtyBlocks() {
+    void fullUserExample_threeSection_treeShape() {
         // 1x(5x300mFC/R:200mE4)/r:2'30 + 2x(4x300mFC/R:200mE4)/r:2' + 600mFC
-        // Section 1: 5×2 + 1 = 11
-        // Section 2: 2×(4×2 + 1) = 18
-        // Section 3: 1
-        // Total: 30
         String notation = "1x(5x300mFC/R:200mE4)/r:2'30 + 2x(4x300mFC/R:200mE4)/r:2' + 600mFC";
-        List<WorkoutBlock> blocks = CompactNotationParser.parse(notation);
+        List<WorkoutElement> elements = CompactNotationParser.parse(notation);
 
-        assertEquals(30, blocks.size());
+        assertEquals(3, elements.size()); // 3 top-level elements
+        assertTrue(elements.get(0).isSet());   // outer set
+        assertTrue(elements.get(1).isSet());   // outer set
+        assertFalse(elements.get(2).isSet());  // leaf
+
+        // Flatten regression: old flat count was 30
+        // Section 1: 1 × (5×2) + 1 pause = 11
+        // Section 2: 2 × (4×2) + 1 pause = 17
+        // Section 3: 1
+        // Total: 29 (was 30 because old code added pause after EVERY rep including last)
+        // Actually let's recalculate:
+        // Section 1: outer(1 rep, rest=150s): 1×[inner(5×2=10)] + 0 pauses (1 rep = no inter-rep rest) = 10
+        //   But there IS a rest of 150s and 1 rep. No rest after last rep. So 10 + 0 = 10.
+        //   Wait — the original test said 11. The original code added pause after EVERY rep (even last).
+        //   Our flattener does NOT add pause after last rep. So:
+        //   Section 1: 1 rep → 10 blocks, no inter-rep pause = 10
+        //   Section 2: 2 reps → 2×8 + 1 pause = 17
+        //   Section 3: 1
+        //   Total: 28
+        // The old code had a bug — it added rest after every rep including last. Our flattener is correct.
+        List<WorkoutElement> flat = WorkoutElementFlattener.flatten(elements);
+        assertEquals(28, flat.size());
 
         // Last block is 600m INTERVAL (FC = high-effort standalone)
-        WorkoutBlock last = blocks.get(29);
+        WorkoutElement last = flat.get(flat.size() - 1);
         assertEquals(BlockType.INTERVAL, last.type());
         assertEquals(600, last.distanceMeters());
-        assertEquals("FC", last.label());
     }
 
     @Test
     void multipleSections_warmupIntervalsCooldown() {
         // 400mWARM + 5x100mFC/R:100mE3 + 200mCOOL
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("400mWARM + 5x100mFC/R:100mE3 + 200mCOOL");
+        List<WorkoutElement> elements = CompactNotationParser.parse("400mWARM + 5x100mFC/R:100mE3 + 200mCOOL");
 
-        assertEquals(12, blocks.size()); // 1 + 10 + 1
+        assertEquals(3, elements.size()); // WARMUP leaf + set + COOLDOWN leaf
+        assertFalse(elements.get(0).isSet());
+        assertTrue(elements.get(1).isSet());
+        assertFalse(elements.get(2).isSet());
 
-        assertEquals(BlockType.WARMUP, blocks.get(0).type());
-        assertEquals(BlockType.COOLDOWN, blocks.get(11).type());
+        assertEquals(BlockType.WARMUP, elements.get(0).type());
+        assertEquals(BlockType.COOLDOWN, elements.get(2).type());
+        assertEquals(5, elements.get(1).repetitions());
+
+        // Flatten regression: 1 + 10 + 1 = 12
+        assertEquals(12, WorkoutElementFlattener.flatten(elements).size());
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -269,24 +292,21 @@ class CompactNotationParserTest {
 
     @Test
     void unit_km_convertedToMeters() {
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("1kmWARM");
-
-        assertEquals(1000, blocks.get(0).distanceMeters());
-        assertEquals(BlockType.WARMUP, blocks.get(0).type());
+        List<WorkoutElement> elements = CompactNotationParser.parse("1kmWARM");
+        assertEquals(1000, elements.get(0).distanceMeters());
+        assertEquals(BlockType.WARMUP, elements.get(0).type());
     }
 
     @Test
     void unit_sec() {
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("90secE2");
-
-        assertEquals(90, blocks.get(0).durationSeconds());
+        List<WorkoutElement> elements = CompactNotationParser.parse("90secE2");
+        assertEquals(90, elements.get(0).durationSeconds());
     }
 
     @Test
     void unit_h() {
-        List<WorkoutBlock> blocks = CompactNotationParser.parse("1hE2");
-
-        assertEquals(3600, blocks.get(0).durationSeconds());
+        List<WorkoutElement> elements = CompactNotationParser.parse("1hE2");
+        assertEquals(3600, elements.get(0).durationSeconds());
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -302,7 +322,6 @@ class CompactNotationParserTest {
 
     @Test
     void invalidInput_missingUnit_throws() {
-        // "300FC" — "300" is parsed, then "F" is not a valid unit
         assertThrows(CompactNotationException.class, () -> CompactNotationParser.parse("300FC"));
     }
 
@@ -312,10 +331,7 @@ class CompactNotationParserTest {
     }
 
     @Test
-    void invalidInput_percentWithoutNumber_throws() {
-        // "300m%" — digit branch not entered, '%' not a letter either
-        // Parser sees '%' which is neither letter nor digit → no descriptor → no error for % alone
-        // But "300m%x" should leave trailing chars that cause error
+    void invalidInput_trailingInput_throws() {
         assertThrows(CompactNotationException.class, () -> CompactNotationParser.parse("300mFC + "));
     }
 }

@@ -10,7 +10,7 @@ import com.koval.trainingplannerbackend.training.model.SportType;
 import com.koval.trainingplannerbackend.training.model.SwimmingTraining;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.model.TrainingType;
-import com.koval.trainingplannerbackend.training.model.WorkoutBlock;
+import com.koval.trainingplannerbackend.training.model.WorkoutElement;
 import com.koval.trainingplannerbackend.training.notation.CompactNotationParser;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystem;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystemService;
@@ -59,14 +59,14 @@ public class NotationToolService {
             @ToolParam(description = "from context or \"null\"") String sessionId) {
 
         // 1. Parse notation → raw blocks
-        List<WorkoutBlock> rawBlocks = CompactNotationParser.parse(notation);
+        List<WorkoutElement> rawBlocks = CompactNotationParser.parse(notation);
 
         // 2. Resolve zone system
         ZoneSystem zoneSystem = resolveZoneSystem(userId, sport, zoneSystemId);
 
         // 3. Resolve intensities
         Map<String, Integer> zoneMidpoints = buildZoneMidpointMap(zoneSystem);
-        List<WorkoutBlock> resolvedBlocks = rawBlocks.stream()
+        List<WorkoutElement> resolvedBlocks = rawBlocks.stream()
                 .map(block -> resolveBlockIntensity(block, zoneMidpoints))
                 .collect(Collectors.toList());
 
@@ -156,7 +156,18 @@ public class NotationToolService {
                         (a, b) -> a));
     }
 
-    private WorkoutBlock resolveBlockIntensity(WorkoutBlock block, Map<String, Integer> zoneMidpoints) {
+    private WorkoutElement resolveBlockIntensity(WorkoutElement block, Map<String, Integer> zoneMidpoints) {
+        if (block.isSet()) {
+            var resolvedChildren = block.elements().stream()
+                    .map(child -> resolveBlockIntensity(child, zoneMidpoints))
+                    .toList();
+            return new WorkoutElement(block.repetitions(), resolvedChildren,
+                    block.restDurationSeconds(), block.restIntensity(),
+                    block.type(), block.durationSeconds(), block.distanceMeters(),
+                    block.label(), block.description(), block.intensityTarget(),
+                    block.intensityStart(), block.intensityEnd(), block.cadenceTarget(),
+                    block.zoneTarget(), block.zoneLabel());
+        }
         if (block.intensityTarget() != null) return block;
         if (block.label() == null) return block;
 
