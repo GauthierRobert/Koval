@@ -34,7 +34,7 @@ export function ChatInput({ onSend, disabled, prefill }: ChatInputProps) {
           style={styles.input}
           value={text}
           onChangeText={setText}
-          placeholder="Ask your AI coach…"
+          placeholder="Ask your AI assistant…"
           placeholderTextColor={theme.colors.textMuted}
           multiline
           maxLength={2000}

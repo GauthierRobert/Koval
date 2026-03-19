@@ -54,7 +54,7 @@ export default function LoginScreen() {
 
         {/* Feature pills */}
         <View style={styles.pills}>
-          {['AI Coach', 'Live Workouts', 'Calendar'].map(label => (
+          {['AI Assistant', 'Calendar', 'Club Management'].map(label => (
             <View key={label} style={styles.pill}>
               <Ionicons name="checkmark-circle" size={13} color={theme.colors.primary} />
               <Text style={styles.pillText}>{label}</Text>

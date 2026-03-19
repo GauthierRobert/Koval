@@ -40,7 +40,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="chat"
         options={{
-          title: 'AI Coach',
+          title: 'AI Assistant',
           tabBarLabel: 'Chat',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="sparkles-outline" size={size} color={color} />

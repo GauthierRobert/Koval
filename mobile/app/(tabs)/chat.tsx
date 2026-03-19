@@ -172,7 +172,7 @@ function EmptyState({
         <Ionicons name="sparkles" size={32} color={theme.colors.primary} />
       </View>
 
-      <Text style={emptyStyles.title}>AI Coach</Text>
+      <Text style={emptyStyles.title}>AI Assistant</Text>
       <Text style={emptyStyles.subtitle}>
         Generate workouts, plan your week, or ask anything about your training.
       </Text>
