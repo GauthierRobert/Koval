@@ -26,8 +26,5 @@ EXAMPLES:
 "3x10min threshold" → 10minWARM + 3x10min95%/R:3min55% + 5minCOOL
 With zones: "5x100m fast" → 400mWARM + 5x100mFC/R:100mE3 + 200mCOOL
 
-Pass userId, clubId, clubGroupId, sessionId, sport, zoneSystemId from context ("null" if absent).
-sport from context is REQUIRED — always use it.
-zoneSystemId: pass directly ("null" if absent — tool resolves sport default).
-sessionId present (not "null") → links to existing session instead of creating new one.
-scheduledAt ISO-8601 or "null".
+Context params (userId, sport, zoneSystemId, clubId, clubGroupId, sessionId) are injected automatically — do NOT pass them.
+scheduledAt: ISO-8601 or "null".

@@ -4,6 +4,7 @@ import com.koval.trainingplannerbackend.ai.UserContextResolver;
 import com.koval.trainingplannerbackend.ai.UserContextResolver.UserContext;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystem;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystemService;
+import com.koval.trainingplannerbackend.ai.action.NotationToolService.NotationContext;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -19,6 +20,7 @@ public class AIActionService {
     private final ChatClient actionZoneClient;
     private final ChatClient actionTrainingSessionClient;
     private final ChatClient actionNotationTrainingClient;
+    private final NotationToolService notationToolService;
     private final UserContextResolver userContextResolver;
     private final ZoneSystemService zoneSystemService;
 
@@ -29,11 +31,13 @@ public class AIActionService {
     public AIActionService(@Qualifier("actionZoneClient") ChatClient actionZoneClient,
                            @Qualifier("actionTrainingSessionClient") ChatClient actionTrainingSessionClient,
                            @Qualifier("actionNotationTrainingClient") ChatClient actionNotationTrainingClient,
+                           NotationToolService notationToolService,
                            UserContextResolver userContextResolver,
                            ZoneSystemService zoneSystemService) {
         this.actionZoneClient = actionZoneClient;
         this.actionTrainingSessionClient = actionTrainingSessionClient;
         this.actionNotationTrainingClient = actionNotationTrainingClient;
+        this.notationToolService = notationToolService;
         this.userContextResolver = userContextResolver;
         this.zoneSystemService = zoneSystemService;
     }
@@ -48,6 +52,12 @@ public class AIActionService {
 
         String systemContext = buildSystemContext(userCtx, context);
 
+        if (actionType == AIActionType.TRAINING_FROM_NOTATION) {
+            notationToolService.setContext(new NotationContext(
+                    userCtx.userId(), context.sport(), context.zoneSystemId(),
+                    context.clubId(), context.clubGroupId(), context.sessionId()));
+        }
+
         try {
             String content = client.prompt()
                     .messages(new SystemMessage(systemContext))
@@ -58,6 +68,10 @@ public class AIActionService {
         } catch (Exception e) {
             String msg = e.getMessage() != null ? e.getMessage() : "Unknown error";
             return new ActionResult("Action failed: " + msg, false);
+        } finally {
+            if (actionType == AIActionType.TRAINING_FROM_NOTATION) {
+                notationToolService.clearContext();
+            }
         }
     }
 

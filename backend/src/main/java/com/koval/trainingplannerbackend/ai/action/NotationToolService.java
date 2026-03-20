@@ -22,15 +22,23 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
  * AI tool service: converts a compact notation string into a persisted Training,
  * with optional club session creation when a club context is provided.
+ *
+ * Context params (userId, sport, zoneSystemId, clubId, clubGroupId, sessionId)
+ * are set via ThreadLocal before the LLM call to avoid wasting tokens on
+ * pass-through tool parameters.
  */
 @Component
 public class NotationToolService {
+
+    public record NotationContext(String userId, String sport, String zoneSystemId,
+                                  String clubId, String clubGroupId, String sessionId) {}
+
+    private static final ThreadLocal<NotationContext> CONTEXT = new ThreadLocal<>();
 
     private final ZoneSystemService zoneSystemService;
     private final TrainingService trainingService;
@@ -44,19 +52,33 @@ public class NotationToolService {
         this.clubSessionService = clubSessionService;
     }
 
+    public void setContext(NotationContext context) {
+        CONTEXT.set(context);
+    }
+
+    public void clearContext() {
+        CONTEXT.remove();
+    }
+
     @Tool(description = "Parse compact notation → create Training + optional club session. Call ONCE.")
     public String createTrainingFromNotation(
-            @ToolParam(description = "from context") String userId,
             @ToolParam(description = "e.g. 10minWARM + 5x300m85%/R:200m60% + 5minCOOL") String notation,
-            @ToolParam(description = "CYCLING|RUNNING|SWIMMING|BRICK") String sport,
             String title,
             String description,
             @ToolParam(description = "VO2MAX|THRESHOLD|SWEET_SPOT|ENDURANCE|SPRINT|RECOVERY|MIXED|TEST") String type,
-            @ToolParam(description = "zone ID or \"null\"") String zoneSystemId,
-            @ToolParam(description = "from context or \"null\"") String clubId,
-            @ToolParam(description = "from context or \"null\"") String clubGroupId,
-            @ToolParam(description = "ISO-8601 or \"null\"") String scheduledAt,
-            @ToolParam(description = "from context or \"null\"") String sessionId) {
+            @ToolParam(description = "ISO-8601 or \"null\"") String scheduledAt) {
+
+        NotationContext ctx = CONTEXT.get();
+        if (ctx == null) {
+            return "Error: notation context not set";
+        }
+
+        String userId = ctx.userId();
+        String sport = ctx.sport();
+        String zoneSystemId = ctx.zoneSystemId();
+        String clubId = ctx.clubId();
+        String clubGroupId = ctx.clubGroupId();
+        String sessionId = ctx.sessionId();
 
         // 1. Parse notation → raw blocks
         List<WorkoutElement> rawBlocks = CompactNotationParser.parse(notation);
