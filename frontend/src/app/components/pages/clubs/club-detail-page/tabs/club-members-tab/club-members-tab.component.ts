@@ -3,12 +3,12 @@ import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {ClubDetail, ClubGroup, ClubMember, ClubMemberRole, ClubService,} from '../../../../../../services/club.service';
 import {User} from '../../../../../../services/auth.service';
-import {ScheduleModalComponent} from '../../../../../shared/schedule-modal/schedule-modal.component';
+import {TrainingActionModalComponent} from '../../../../../shared/training-action-modal/training-action-modal.component';
 
 @Component({
   selector: 'app-club-members-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, ScheduleModalComponent],
+  imports: [CommonModule, FormsModule, TrainingActionModalComponent],
   templateUrl: './club-members-tab.component.html',
   styleUrl: './club-members-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

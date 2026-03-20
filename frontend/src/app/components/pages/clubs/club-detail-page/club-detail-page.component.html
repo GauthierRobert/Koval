@@ -85,15 +85,15 @@
       }
     </div>
 
-    <app-create-with-ai-modal
+    <app-training-action-modal
       [isOpen]="showAiModal"
-      actionType="TRAINING_FROM_NOTATION"
-      [context]="aiContext"
+      mode="session"
+      [clubId]="aiContext.clubId"
+      [sessionId]="aiContext.sessionId"
       [sessionInfo]="aiSessionInfo"
-      label="Create Training with AI"
       (closed)="showAiModal = false; aiSessionInfo = null"
-      (created)="onAiCreated($event)">
-    </app-create-with-ai-modal>
+      (completed)="onAiCreated($event)">
+    </app-training-action-modal>
 
   } @else {
     <div class="loading-state">

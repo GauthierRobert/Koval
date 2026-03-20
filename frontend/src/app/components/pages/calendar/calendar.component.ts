@@ -7,7 +7,7 @@ import {Router} from '@angular/router';
 import {CalendarClubSession, CalendarService} from '../../../services/calendar.service';
 import {AuthService} from '../../../services/auth.service';
 import {ScheduledWorkout} from '../../../services/coach.service';
-import {ScheduleModalComponent} from '../../shared/schedule-modal/schedule-modal.component';
+import {TrainingActionModalComponent} from '../../shared/training-action-modal/training-action-modal.component';
 import {WorkoutDetailModalComponent} from '../../shared/workout-detail-modal/workout-detail-modal.component';
 import {HistoryService, SavedSession} from '../../../services/history.service';
 import {CalendarWeekViewComponent} from './week-view/calendar-week-view.component';
@@ -104,7 +104,7 @@ function buildEntriesByDay(scheduled: ScheduledWorkout[], sessions: SavedSession
   standalone: true,
   imports: [
     CommonModule,
-    ScheduleModalComponent,
+    TrainingActionModalComponent,
     WorkoutDetailModalComponent,
     CalendarWeekViewComponent,
     CalendarMonthViewComponent,

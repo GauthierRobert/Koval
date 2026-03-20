@@ -45,8 +45,9 @@
         </div>
       </div>
 
-      <app-schedule-modal [isOpen]="isScheduleModalOpen" [preselectedTraining]="training" mode="athlete"
-        (closed)="isScheduleModalOpen = false" (scheduled)="isScheduleModalOpen = false"></app-schedule-modal>
+      <app-training-action-modal [isOpen]="isScheduleModalOpen" mode="self-schedule"
+        [preselectedTrainingId]="training!.id"
+        (closed)="isScheduleModalOpen = false" (completed)="isScheduleModalOpen = false"></app-training-action-modal>
     }
 
   <div class="dashboard-panels" [class.compact-panels]="compact">

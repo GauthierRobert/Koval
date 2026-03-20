@@ -154,12 +154,7 @@ public class CoachController {
         // Enrich group athletes
         List<Map<String, Object>> enriched = new ArrayList<>();
         for (User athlete : groupAthletes) {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", athlete.getId());
-            map.put("displayName", athlete.getDisplayName());
-            map.put("profilePicture", athlete.getProfilePicture());
-            map.put("role", athlete.getRole().name());
-            map.put("ftp", athlete.getFtp());
+            Map<String, Object> map = buildAthleteMap(athlete);
             List<String> athleteGroupNames = coachGroups.stream()
                     .filter(group -> group.getAthleteIds().contains(athlete.getId()))
                     .map(Group::getName)
@@ -172,12 +167,7 @@ public class CoachController {
 
         // Add club-only athletes
         for (User athlete : clubOnlyUsers) {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", athlete.getId());
-            map.put("displayName", athlete.getDisplayName());
-            map.put("profilePicture", athlete.getProfilePicture());
-            map.put("role", athlete.getRole().name());
-            map.put("ftp", athlete.getFtp());
+            Map<String, Object> map = buildAthleteMap(athlete);
             map.put("groups", List.of());
             map.put("clubs", userClubNames.getOrDefault(athlete.getId(), List.of()));
             map.put("hasCoach", false);
@@ -281,10 +271,7 @@ public class CoachController {
     @GetMapping("/athletes/{athleteId}/sessions")
     public ResponseEntity<List<CompletedSession>> getAthleteSessions(@PathVariable String athleteId) {
         String coachId = SecurityUtils.getCurrentUserId();
-        // Validate coach owns this athlete
-        List<User> athletes = coachService.getCoachAthletes(coachId);
-        boolean owns = athletes.stream().anyMatch(a -> a.getId().equals(athleteId));
-        if (!owns) return ResponseEntity.notFound().build();
+        if (!coachService.isCoachOfAthlete(coachId, athleteId)) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(sessionRepository.findByUserIdOrderByCompletedAtDesc(athleteId));
     }
 
@@ -294,18 +281,14 @@ public class CoachController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         String coachId = SecurityUtils.getCurrentUserId();
-        List<User> athletes = coachService.getCoachAthletes(coachId);
-        boolean owns = athletes.stream().anyMatch(a -> a.getId().equals(athleteId));
-        if (!owns) return ResponseEntity.notFound().build();
+        if (!coachService.isCoachOfAthlete(coachId, athleteId)) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(analyticsService.generatePmc(athleteId, from, to));
     }
 
     @GetMapping("/athletes/{athleteId}/goals")
     public ResponseEntity<List<RaceGoal>> getAthleteGoals(@PathVariable String athleteId) {
         String coachId = SecurityUtils.getCurrentUserId();
-        List<User> athletes = coachService.getCoachAthletes(coachId);
-        boolean owns = athletes.stream().anyMatch(a -> a.getId().equals(athleteId));
-        if (!owns) return ResponseEntity.notFound().build();
+        if (!coachService.isCoachOfAthlete(coachId, athleteId)) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(raceGoalService.getGoalsForAthlete(athleteId));
     }
 
@@ -371,5 +354,25 @@ public class CoachController {
         }
 
         throw new com.koval.trainingplannerbackend.config.exceptions.ValidationException("Invalid invite code");
+    }
+
+    private Map<String, Object> buildAthleteMap(User athlete) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", athlete.getId());
+        map.put("displayName", athlete.getDisplayName());
+        map.put("profilePicture", athlete.getProfilePicture());
+        map.put("role", athlete.getRole().name());
+        map.put("ftp", athlete.getFtp());
+        map.put("weightKg", athlete.getWeightKg());
+        map.put("functionalThresholdPace", athlete.getFunctionalThresholdPace());
+        map.put("criticalSwimSpeed", athlete.getCriticalSwimSpeed());
+        map.put("pace5k", athlete.getPace5k());
+        map.put("pace10k", athlete.getPace10k());
+        map.put("paceHalfMarathon", athlete.getPaceHalfMarathon());
+        map.put("paceMarathon", athlete.getPaceMarathon());
+        map.put("vo2maxPower", athlete.getVo2maxPower());
+        map.put("vo2maxPace", athlete.getVo2maxPace());
+        map.put("customZoneReferenceValues", athlete.getCustomZoneReferenceValues());
+        return map;
     }
 }

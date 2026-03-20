@@ -130,7 +130,7 @@
             </div>
             <div class="actions">
               <button class="share-btn" (click)="openShareModal()">SHARE</button>
-              <button class="assign-btn" (click)="assignWorkout()">ASSIGN WORKOUT</button>
+              <button class="ai-btn-corner" (click)="assignWorkout()">+ Assign</button>
             </div>
           </div>
 
@@ -562,8 +562,9 @@
   </div>
 </div>
 
-<app-schedule-modal [isOpen]="isScheduleModalOpen" [preselectedAthletes]="selectedAthlete ? [selectedAthlete] : null"
-  mode="coach" (closed)="isScheduleModalOpen = false" (scheduled)="onScheduled()"></app-schedule-modal>
+<app-training-action-modal [isOpen]="isScheduleModalOpen" mode="coach-assign"
+  [preselectedAthletes]="selectedAthlete ? [selectedAthlete] : undefined"
+  (closed)="isScheduleModalOpen = false" (completed)="onScheduled()"></app-training-action-modal>
 
 <app-invite-code-modal [isOpen]="isInviteCodeModalOpen" [availableTags]="(allTags$ | async) || []"
   (closed)="isInviteCodeModalOpen = false" (codeGenerated)="onCodeGenerated()"></app-invite-code-modal>

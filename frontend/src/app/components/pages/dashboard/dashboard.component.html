@@ -66,9 +66,9 @@
               <span class="mp-big-val fitness">{{ vm.form.ctl != null ? (vm.form.ctl | number:'1.0-0') : '–' }}</span>
               <span class="mp-big-val fatigue">{{ vm.form.atl != null ? (vm.form.atl | number:'1.0-0') : '–' }}</span>
               <span class="mp-big-val"
-                [class.form-positive]="(vm.form.tsb ?? 0) > 5"
-                [class.form-negative]="(vm.form.tsb ?? 0) < -10"
-                [class.form-neutral]="(vm.form.tsb ?? 0) >= -10 && (vm.form.tsb ?? 0) <= 5">
+                [class.form-positive]="vm.form.tsb > 5"
+                [class.form-negative]="vm.form.tsb < -10"
+                [class.form-neutral]="vm.form.tsb >= -10 && vm.form.tsb <= 5">
                 @if (vm.form.tsb != null) {
                   {{ vm.form.tsb > 0 ? '+' : '' }}{{ vm.form.tsb | number:'1.0-0' }}
                 } @else { – }

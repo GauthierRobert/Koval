@@ -267,11 +267,25 @@ public class CoachService {
     }
 
     /**
-     * Check whether a coach has access to a given athlete.
+     * Check whether a coach has access to a given athlete (via groups or clubs).
      */
     public boolean isCoachOfAthlete(String coachId, String athleteId) {
-        List<String> athleteIds = groupService.getAthleteIdsForCoach(coachId);
-        return athleteIds.contains(athleteId);
+        // Check group-based ownership
+        List<String> groupAthleteIds = groupService.getAthleteIdsForCoach(coachId);
+        if (groupAthleteIds.contains(athleteId)) {
+            return true;
+        }
+        // Check club-based ownership (coach/admin/owner in a club where athlete is a member)
+        var roles = clubMembershipService.getMyClubRoles(coachId);
+        for (var role : roles) {
+            if (role.role() == ClubMemberRole.COACH || role.role() == ClubMemberRole.ADMIN || role.role() == ClubMemberRole.OWNER) {
+                List<String> memberIds = clubMembershipService.getActiveMemberIds(role.clubId());
+                if (memberIds.contains(athleteId)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

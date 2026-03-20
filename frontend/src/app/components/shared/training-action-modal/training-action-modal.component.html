@@ -1,0 +1,232 @@
+@if (isOpen) {
+  <div class="modal-backdrop" (click)="close()">
+    <div class="modal-panel" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <span class="ai-icon">✨</span> {{ modalTitle }}
+        </h2>
+        <button class="close-btn" (click)="close()" [disabled]="loading">&times;</button>
+      </div>
+
+      <!-- Tab strip -->
+      @if (showTabs) {
+        <div class="mode-tabs">
+          <button class="mode-tab" [class.active]="tab === 'ai'" (click)="setTab('ai')">Create with AI</button>
+          <button class="mode-tab" [class.active]="tab === 'select'" (click)="setTab('select')">Select existing</button>
+        </div>
+      }
+
+      <div class="modal-body">
+        <!-- Session context banner -->
+        @if (showSessionBanner && sessionInfo) {
+          <div class="session-context">
+            <div class="context-label">Generating training for:</div>
+            <div class="context-details">
+              @if (sessionInfo.sport) {
+                <span class="context-badge">{{ sessionInfo.sport }}</span>
+              }
+              @if (sessionInfo.scheduledAt) {
+                <span class="context-item">&#x1f4c5; {{ sessionInfo.scheduledAt }}</span>
+              }
+              @if (sessionInfo.clubGroupName) {
+                <span class="context-item">&#x1f465; {{ sessionInfo.clubGroupName }}</span>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- ===== AI TAB ===== -->
+        @if (tab === 'ai') {
+          <p class="hint">Describe what you want to create in natural language.</p>
+
+          @if (showSportSelector) {
+            <div class="form-group">
+              <label class="field-label">Sport *</label>
+              <select class="field-select" [(ngModel)]="selectedSport" (ngModelChange)="onSportChange()" [disabled]="loading">
+                @for (s of sportOptions; track s.value) {
+                  <option [ngValue]="s.value">{{ s.label }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          @if (filteredZoneSystems.length > 0) {
+            <div class="form-group">
+              <label class="field-label">Zone System (optional)</label>
+              <select class="field-select" [(ngModel)]="selectedZoneSystemId" [disabled]="loading">
+                <option value="">— Sport default —</option>
+                @for (z of filteredZoneSystems; track z.id) {
+                  <option [value]="z.id">{{ z.name }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          @if (availableGroups.length > 0 && clubId) {
+            <div class="form-group">
+              <label class="field-label">Club Group (optional)</label>
+              <select class="field-select" [(ngModel)]="selectedGroupId">
+                <option value="">— No group —</option>
+                @for (group of availableGroups; track group.id) {
+                  <option [value]="group.id">{{ group.name }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          <div class="form-group">
+            <label class="field-label">Prompt</label>
+            <textarea
+              class="prompt-textarea"
+              [(ngModel)]="prompt"
+              placeholder="e.g. Create a 60-min sweet-spot group ride for Tuesday evening"
+              rows="4"
+              [disabled]="loading"
+            ></textarea>
+          </div>
+        }
+
+        <!-- ===== SELECT EXISTING TAB ===== -->
+        @if (tab === 'select') {
+          <p class="hint">Pick one of your trainings{{ mode === 'session' ? ' to link to this session' : '' }}.</p>
+
+          <div class="form-group">
+            <input
+              type="text"
+              class="search-input"
+              [(ngModel)]="searchQuery"
+              placeholder="Search by title or description..."
+              [disabled]="loading"
+            />
+          </div>
+
+          @if (filteredTrainings.length > 0) {
+            <div class="training-list">
+              @for (t of filteredTrainings; track t.id) {
+                <div
+                  class="training-item"
+                  [class.selected]="selectedTrainingId === t.id"
+                  (click)="selectTraining(t)"
+                >
+                  <div class="training-item-header">
+                    <span class="training-title">{{ t.title }}</span>
+                    <div class="training-badges">
+                      @if (t.sportType) {
+                        <span class="badge sport-badge">{{ t.sportType }}</span>
+                      }
+                      @if (t.trainingType) {
+                        <span class="badge type-badge">{{ t.trainingType }}</span>
+                      }
+                    </div>
+                  </div>
+                  @if (t.description) {
+                    <div class="training-description">{{ t.description }}</div>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          @if (filteredTrainings.length === 0 && availableTrainings.length > 0) {
+            <div class="empty-state">
+              No trainings match your search.
+            </div>
+          }
+          @if (availableTrainings.length === 0) {
+            <div class="empty-state">
+              You don't have any trainings yet.
+            </div>
+          }
+        }
+
+        <!-- ===== SHARED FIELDS (shown on both tabs for non-session modes) ===== -->
+
+        <!-- Date picker -->
+        @if (showDatePicker) {
+          <div class="form-group">
+            <label class="field-label">Date *</label>
+            <input type="date" class="field-select" [(ngModel)]="selectedDate" [disabled]="loading" />
+          </div>
+        }
+
+        <!-- Athlete chip (coach-assign: single pre-selected) -->
+        @if (showAthleteChip && preselectedAthletes) {
+          <div class="form-group">
+            <label class="field-label">Athlete</label>
+            <div class="athlete-chips">
+              @for (a of preselectedAthletes; track a.id) {
+                <span class="athlete-chip">{{ a.displayName }}</span>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Tag filter + athlete multi-select (group-assign) -->
+        @if (showTagFilter) {
+          <div class="form-group">
+            <label class="field-label">Group filter</label>
+            <div class="tag-filter-row">
+              @for (tag of availableTags; track tag) {
+                <span class="modal-tag-chip"
+                      [class.active]="isTagActive(tag)"
+                      (click)="toggleTag(tag)">{{ tag }}</span>
+              }
+            </div>
+          </div>
+        }
+
+        @if (showAthleteSelect && availableAthletes.length > 0) {
+          <div class="form-group">
+            <label class="field-label">Athletes *</label>
+            <div class="athlete-checkboxes">
+              @for (a of availableAthletes; track a.id) {
+                <label class="checkbox-label">
+                  <input type="checkbox" [checked]="isAthleteSelected(a.id)" (change)="toggleAthlete(a.id)" />
+                  <span>{{ a.displayName }}</span>
+                </label>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Notes -->
+        @if (showNotes) {
+          <div class="form-group">
+            <label class="field-label">Notes <span class="optional">(optional)</span></label>
+            <textarea
+              class="prompt-textarea"
+              [(ngModel)]="notes"
+              placeholder="e.g. Focus on cadence during intervals"
+              rows="2"
+              [disabled]="loading"
+            ></textarea>
+          </div>
+        }
+
+        @if (errorMessage) {
+          <div class="status-message error">{{ errorMessage }}</div>
+        }
+        @if (successMessage) {
+          <div class="status-message success">{{ successMessage }}</div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-ghost" (click)="close()" [disabled]="loading">Cancel</button>
+        <button
+          class="btn-primary"
+          (click)="submit()"
+          [disabled]="!canSubmit">
+          @if (!loading) {
+            <span>{{ submitLabel }}</span>
+          }
+          @if (loading) {
+            <span class="spinner">{{ loadingLabel }}</span>
+          }
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

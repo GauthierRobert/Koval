@@ -4,7 +4,7 @@ import {TrainingService} from '../../../services/training.service';
 import {flattenElements, hasDurationEstimate, isSet, Training, WorkoutBlock} from '../../../models/training.model';
 import {WorkoutExecutionService} from '../../../services/workout-execution.service';
 import {ExportService} from '../../../services/export.service';
-import {ScheduleModalComponent} from '../schedule-modal/schedule-modal.component';
+import {TrainingActionModalComponent} from '../training-action-modal/training-action-modal.component';
 import {BlockEditorModalComponent} from '../block-editor-modal/block-editor-modal.component';
 import {AuthService} from '../../../services/auth.service';
 import {DurationEstimationService} from '../../../services/duration-estimation.service';
@@ -15,7 +15,7 @@ import {formatPace as sharedFormatPace} from '../format/format.utils';
 @Component({
   selector: 'app-workout-visualization',
   standalone: true,
-  imports: [CommonModule, ScheduleModalComponent, BlockEditorModalComponent],
+  imports: [CommonModule, TrainingActionModalComponent, BlockEditorModalComponent],
   templateUrl: './workout-visualization.component.html',
   styleUrl: './workout-visualization.component.css'
 })

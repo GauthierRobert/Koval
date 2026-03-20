@@ -15,8 +15,8 @@ import {ClubMembersTabComponent} from './tabs/club-members-tab/club-members-tab.
 import {ClubStatsTabComponent} from './tabs/club-stats-tab/club-stats-tab.component';
 import {ClubLeaderboardTabComponent} from './tabs/club-leaderboard-tab/club-leaderboard-tab.component';
 import {ClubRaceGoalsTabComponent} from './tabs/club-race-goals-tab/club-race-goals-tab.component';
-import {CreateWithAiModalComponent} from '../../../shared/create-with-ai-modal/create-with-ai-modal.component';
-import {ActionContext, ActionResult} from '../../../../services/ai-action.service';
+import {TrainingActionModalComponent} from '../../../shared/training-action-modal/training-action-modal.component';
+import {ActionContext} from '../../../../services/ai-action.service';
 import {map, Observable, Subscription} from 'rxjs';
 
 type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals';
@@ -33,7 +33,7 @@ type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-g
     ClubStatsTabComponent,
     ClubLeaderboardTabComponent,
     ClubRaceGoalsTabComponent,
-    CreateWithAiModalComponent,
+    TrainingActionModalComponent,
   ],
   templateUrl: './club-detail-page.component.html',
   styleUrl: './club-detail-page.component.css',
@@ -183,7 +183,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  onAiCreated(_result: ActionResult): void {
+  onAiCreated(_result: { success: boolean; content?: string }): void {
     this.showAiModal = false;
     this.aiSessionInfo = null;
     // Reload sessions for the week containing the session so the card reflects the new training

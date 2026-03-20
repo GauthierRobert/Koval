@@ -92,8 +92,8 @@
   }
 </div>
 
-<app-schedule-modal [isOpen]="isScheduleModalOpen" [preselectedDate]="selectedDate" mode="athlete"
-  (closed)="isScheduleModalOpen = false" (scheduled)="onScheduled()"></app-schedule-modal>
+<app-training-action-modal [isOpen]="isScheduleModalOpen" mode="self-schedule" [preselectedDate]="selectedDate ?? undefined"
+  (closed)="isScheduleModalOpen = false" (completed)="onScheduled()"></app-training-action-modal>
 
 <app-workout-detail-modal [workout]="selectedWorkout" (closed)="onDetailClosed()" (started)="onDetailStarted()"
   (statusChanged)="onDetailStatusChanged()"></app-workout-detail-modal>

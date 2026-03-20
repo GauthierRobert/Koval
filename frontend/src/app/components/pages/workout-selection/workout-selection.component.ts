@@ -17,8 +17,7 @@ import {RouterModule} from '@angular/router';
 import {WorkoutVisualizationComponent} from '../../shared/workout-visualization/workout-visualization.component';
 import {SidebarComponent} from '../../layout/sidebar/sidebar.component';
 import {FilterPillOption, FilterPillsComponent} from '../../shared/filter-pills/filter-pills.component';
-import {CreateWithAiModalComponent} from '../../shared/create-with-ai-modal/create-with-ai-modal.component';
-import {ActionResult} from '../../../services/ai-action.service';
+import {TrainingActionModalComponent} from '../../shared/training-action-modal/training-action-modal.component';
 
 @Component({
   selector: 'app-workout-selection',
@@ -29,7 +28,7 @@ import {ActionResult} from '../../../services/ai-action.service';
     RouterModule,
     SidebarComponent,
     FilterPillsComponent,
-    CreateWithAiModalComponent,
+    TrainingActionModalComponent,
   ],
   templateUrl: './workout-selection.component.html',
   styleUrl: './workout-selection.component.css',
@@ -92,7 +91,7 @@ export class WorkoutSelectionComponent implements OnInit {
     this.filterService.setTagFilter(value as string);
   }
 
-  onAiCreated(_result: ActionResult): void {
+  onAiCreated(_result: { success: boolean; content?: string }): void {
     this.showAiModal = false;
     this.trainingService.loadTrainings();
   }

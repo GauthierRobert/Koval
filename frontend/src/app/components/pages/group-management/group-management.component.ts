@@ -7,12 +7,12 @@ import {Group, GroupService} from '../../../services/group.service';
 import {CoachService, InviteCode} from '../../../services/coach.service';
 import {User} from '../../../services/auth.service';
 import {Router} from '@angular/router';
-import {ScheduleModalComponent} from '../../shared/schedule-modal/schedule-modal.component';
+import {TrainingActionModalComponent} from '../../shared/training-action-modal/training-action-modal.component';
 
 @Component({
   selector: 'app-group-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, ScheduleModalComponent],
+  imports: [CommonModule, FormsModule, TrainingActionModalComponent],
   templateUrl: './group-management.component.html',
   styleUrl: './group-management.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

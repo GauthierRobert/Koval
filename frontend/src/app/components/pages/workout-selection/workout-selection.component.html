@@ -61,14 +61,12 @@
     </div>
 
     <!-- AI modal -->
-    <app-create-with-ai-modal
+    <app-training-action-modal
       [isOpen]="showAiModal"
-      actionType="TRAINING_FROM_NOTATION"
-      [context]="{}"
-      label="Create Training with AI"
+      mode="self-schedule"
       (closed)="showAiModal = false"
-      (created)="onAiCreated($event)">
-    </app-create-with-ai-modal>
+      (completed)="onAiCreated($event)">
+    </app-training-action-modal>
 
     <!-- Content area -->
     <div class="content-area">

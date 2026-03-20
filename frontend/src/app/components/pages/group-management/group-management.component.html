@@ -82,13 +82,12 @@
     }
   </div>
 
-  <app-schedule-modal
+  <app-training-action-modal
     [isOpen]="isScheduleModalOpen"
+    mode="group-assign"
     [preselectedAthletes]="assigningGroupAthletes"
-    [groupId]="assigningGroupId"
-    [preselectedGroupName]="assigningGroupName"
-    mode="coach"
+    [groupId]="assigningGroupId ?? undefined"
     (closed)="isScheduleModalOpen = false"
-    (scheduled)="onScheduled()">
-  </app-schedule-modal>
+    (completed)="onScheduled()">
+  </app-training-action-modal>
 </div>

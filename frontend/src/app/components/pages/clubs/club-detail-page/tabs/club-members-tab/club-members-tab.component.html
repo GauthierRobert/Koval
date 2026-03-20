@@ -13,7 +13,7 @@
                   <span class="group-card-name">{{ tag.name }}</span>
                   <span class="group-card-count">{{ tag.memberIds.length }} members</span>
                   @if (canAssign) {
-                    <button class="assign-training-btn" (click)="assignToClubGroup(tag)">ASSIGN TRAINING</button>
+                    <button class="ai-btn-corner" (click)="assignToClubGroup(tag)">+ Assign</button>
                   }
                   @if (isAdmin) {
                     <button class="tag-delete" (click)="deleteTag(tag.id)">×</button>
@@ -71,7 +71,7 @@
       <div class="members-header-row">
         <h4 class="section-title">Members</h4>
         @if (canAssign && members.length > 0) {
-          <button class="assign-all-btn" (click)="assignToAllMembers(members)">ASSIGN TO ALL</button>
+          <button class="ai-btn-corner" (click)="assignToAllMembers(members)">+ Assign</button>
         }
       </div>
       @if (members.length > 0) {
@@ -148,12 +148,12 @@
 
   }
 
-  <app-schedule-modal
+  <app-training-action-modal
     [isOpen]="isScheduleModalOpen"
+    mode="group-assign"
     [preselectedAthletes]="assigningAthletes"
     [clubId]="club.id"
-    mode="coach"
     (closed)="isScheduleModalOpen = false"
-    (scheduled)="onScheduled()">
-  </app-schedule-modal>
+    (completed)="onScheduled()">
+  </app-training-action-modal>
 </div>

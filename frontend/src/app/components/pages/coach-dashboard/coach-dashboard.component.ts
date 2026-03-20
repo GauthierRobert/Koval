@@ -11,7 +11,7 @@ import {Group} from '../../../services/group.service';
 import {ZoneService} from '../../../services/zone.service';
 import {ZoneSystem} from '../../../services/zone';
 import {MetricsService, PmcDataPoint} from '../../../services/metrics.service';
-import {ScheduleModalComponent} from '../../shared/schedule-modal/schedule-modal.component';
+import {TrainingActionModalComponent} from '../../shared/training-action-modal/training-action-modal.component';
 import {InviteCodeModalComponent} from '../../shared/invite-code-modal/invite-code-modal.component';
 import {ShareTrainingModalComponent} from '../../shared/share-training-modal/share-training-modal.component';
 import {TrainingService} from '../../../services/training.service';
@@ -26,7 +26,7 @@ import {SessionData, SessionSummary} from '../../../models/session-types.model';
 @Component({
   selector: 'app-coach-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ScheduleModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, SportIconComponent, PmcChartComponent],
+  imports: [CommonModule, FormsModule, RouterModule, TrainingActionModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, SportIconComponent, PmcChartComponent],
   templateUrl: './coach-dashboard.component.html',
   styleUrl: './coach-dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
