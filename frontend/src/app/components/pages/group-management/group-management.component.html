@@ -9,20 +9,26 @@
     </div>
     <div class="header-right"></div>
   </div>
-  <div class="header-sub-bar">
-    <div class="input-with-tooltip">
-      <input class="create-input" [(ngModel)]="newGroupName" placeholder="Group name"
-             (keydown.enter)="createGroup()"
-             title="A short label for grouping athletes (e.g. 'Sprint Group', 'Beginners')" />
-      <span class="input-desc">Group label for athletes</span>
+  <div class="create-banner">
+    <div class="create-banner-label">
+      <span class="create-banner-icon">+</span>
+      <span>New Group</span>
     </div>
-    <div class="input-with-tooltip">
-      <input class="create-input create-input--num" type="number"
-             [(ngModel)]="newGroupMaxAthletes" min="0" placeholder="Max (0=&#8734;)"
-             title="Maximum number of athletes allowed in this group. 0 means unlimited." />
-      <span class="input-desc">0 = unlimited slots</span>
+    <div class="create-banner-fields">
+      <div class="create-field">
+        <label class="create-field-label">Group name</label>
+        <input class="create-input" [(ngModel)]="newGroupName" placeholder="e.g. Sprint Group"
+               (keydown.enter)="createGroup()"
+               title="A short label for grouping athletes (e.g. 'Sprint Group', 'Beginners')" />
+      </div>
+      <div class="create-field">
+        <label class="create-field-label">Max athletes</label>
+        <input class="create-input create-input--num" type="number"
+               [(ngModel)]="newGroupMaxAthletes" min="0" placeholder="0 = unlimited"
+               title="Maximum number of athletes allowed in this group. 0 means unlimited." />
+      </div>
+      <button class="create-btn" (click)="createGroup()" [disabled]="!newGroupName.trim()">CREATE GROUP</button>
     </div>
-    <button class="create-btn" (click)="createGroup()" [disabled]="!newGroupName.trim()">CREATE GROUP</button>
   </div>
 
   <div class="tags-body">

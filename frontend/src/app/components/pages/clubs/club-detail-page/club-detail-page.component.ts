@@ -6,7 +6,9 @@ import {
   ClubGroup,
   ClubInviteCode,
   ClubService,
-  ClubTrainingSession
+  ClubTrainingSession,
+  GroupLinkedTraining,
+  getEffectiveLinkedTrainings,
 } from '../../../../services/club.service';
 import {AuthService} from '../../../../services/auth.service';
 import {ClubFeedTabComponent} from './tabs/club-feed-tab/club-feed-tab.component';
@@ -57,6 +59,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   aiContext: ActionContext = {};
   aiSessionInfo: { scheduledAt?: string; sport?: string; clubGroupName?: string } | null = null;
   private aiSessionDate: string | undefined;
+  aiExistingLinkedTrainings: GroupLinkedTraining[] = [];
   private clubGroups: ClubGroup[] = [];
   private subs = new Subscription();
 
@@ -179,6 +182,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
       clubGroupName: groupName,
     };
     this.aiSessionDate = session.scheduledAt;
+    this.aiExistingLinkedTrainings = getEffectiveLinkedTrainings(session);
     this.showAiModal = true;
     this.cdr.markForCheck();
   }

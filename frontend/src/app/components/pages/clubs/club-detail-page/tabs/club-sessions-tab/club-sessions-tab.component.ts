@@ -22,6 +22,8 @@ import {
   ClubTrainingSession,
   CreateRecurringSessionData,
   CreateSessionData,
+  GroupLinkedTraining,
+  getEffectiveLinkedTrainings,
 } from '../../../../../../services/club.service';
 import {AuthService} from '../../../../../../services/auth.service';
 import {TrainingService} from '../../../../../../services/training.service';
@@ -629,6 +631,66 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
       const name = member?.displayName || entry.userId.substring(0, 8);
       return { name, initial: name.charAt(0).toUpperCase(), position: i + 1 };
     });
+  }
+
+  // --- Multi-training helpers ---
+
+  getEffectiveLinkedTrainings(session: ClubTrainingSession): GroupLinkedTraining[] {
+    return getEffectiveLinkedTrainings(session);
+  }
+
+  hasAnyLinkedTraining(session: ClubTrainingSession): boolean {
+    return this.getEffectiveLinkedTrainings(session).length > 0;
+  }
+
+  getUserGroupIds(): Set<string> {
+    if (!this.currentUserId) return new Set();
+    return new Set(
+      this.clubGroups
+        .filter((g) => g.memberIds.includes(this.currentUserId!))
+        .map((g) => g.id),
+    );
+  }
+
+  unlinkTraining(session: ClubTrainingSession, glt: GroupLinkedTraining, event: Event): void {
+    event.stopPropagation();
+    this.clubService.unlinkTrainingFromSession(this.club.id, session.id, glt.clubGroupId || undefined).subscribe({
+      next: () => {
+        this.loadCalendarSessions();
+        this.cdr.markForCheck();
+      },
+      error: () => {},
+    });
+  }
+
+  canLinkMoreTrainings(session: ClubTrainingSession): boolean {
+    const effective = this.getEffectiveLinkedTrainings(session);
+    // Club-level linked → no more
+    if (effective.some(glt => !glt.clubGroupId)) return false;
+    // No groups exist → can link only if nothing linked yet
+    if (this.clubGroups.length === 0) return effective.length === 0;
+    // All groups linked
+    const linkedGroupIds = new Set(effective.filter(g => g.clubGroupId).map(g => g.clubGroupId));
+    return this.clubGroups.some(g => !linkedGroupIds.has(g.id));
+  }
+
+  isInUserGroup(glt: GroupLinkedTraining): boolean {
+    if (!glt.clubGroupId) return true; // club-level = visible to all
+    return this.getUserGroupIds().has(glt.clubGroupId);
+  }
+
+  getUserLinkedTraining(session: ClubTrainingSession): GroupLinkedTraining | null {
+    const effective = this.getEffectiveLinkedTrainings(session);
+    if (effective.length === 0) return null;
+    const userGroups = this.getUserGroupIds();
+    // Match user's group first
+    const match = effective.find((glt) => glt.clubGroupId && userGroups.has(glt.clubGroupId));
+    if (match) return match;
+    // Fall back to club-level
+    const clubLevel = effective.find((glt) => !glt.clubGroupId);
+    if (clubLevel) return clubLevel;
+    // Last resort
+    return effective[0];
   }
 
   private static getMonday(d: Date): Date {

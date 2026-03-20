@@ -36,8 +36,13 @@
           </div>
         }
 
+        <!-- All groups linked message -->
+        @if (mode === 'session' && !canLinkTraining) {
+          <div class="status-message info">All available groups already have a linked training for this session.</div>
+        }
+
         <!-- ===== AI TAB ===== -->
-        @if (tab === 'ai') {
+        @if (tab === 'ai' && canLinkTraining) {
           <p class="hint">Describe what you want to create in natural language.</p>
 
           @if (showSportSelector) {
@@ -63,7 +68,19 @@
             </div>
           }
 
-          @if (availableGroups.length > 0 && clubId) {
+          @if (mode === 'session' && sessionAvailableGroups.length > 0) {
+            <div class="form-group">
+              <label class="field-label">Link for Group</label>
+              <select class="field-select" [(ngModel)]="selectedGroupId" [disabled]="loading">
+                @if (sessionShowNoGroupOption) {
+                  <option value="">-- Entire club --</option>
+                }
+                @for (group of sessionAvailableGroups; track group.id) {
+                  <option [value]="group.id">{{ group.name }}</option>
+                }
+              </select>
+            </div>
+          } @else if (availableGroups.length > 0 && clubId && mode !== 'session') {
             <div class="form-group">
               <label class="field-label">Club Group (optional)</label>
               <select class="field-select" [(ngModel)]="selectedGroupId">
@@ -88,7 +105,7 @@
         }
 
         <!-- ===== SELECT EXISTING TAB ===== -->
-        @if (tab === 'select') {
+        @if (tab === 'select' && canLinkTraining) {
           <p class="hint">Pick one of your trainings{{ mode === 'session' ? ' to link to this session' : '' }}.</p>
 
           <div class="form-group">
@@ -100,6 +117,20 @@
               [disabled]="loading"
             />
           </div>
+
+          @if (mode === 'session' && sessionAvailableGroups.length > 0) {
+            <div class="form-group">
+              <label class="field-label">Link for Group</label>
+              <select class="field-select" [(ngModel)]="selectedGroupId" [disabled]="loading">
+                @if (sessionShowNoGroupOption) {
+                  <option value="">-- Entire club --</option>
+                }
+                @for (group of sessionAvailableGroups; track group.id) {
+                  <option [value]="group.id">{{ group.name }}</option>
+                }
+              </select>
+            </div>
+          }
 
           @if (filteredTrainings.length > 0) {
             <div class="training-list">

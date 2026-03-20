@@ -42,6 +42,7 @@ public class ClubTrainingSession {
     private Integer durationMinutes;
     private String linkedTrainingTitle;
     private String linkedTrainingDescription;
+    private List<GroupLinkedTraining> linkedTrainings = new ArrayList<>();
     private List<WaitingListEntry> waitingList = new ArrayList<>();
     private boolean cancelled;
     private String cancellationReason;
@@ -63,5 +64,19 @@ public class ClubTrainingSession {
 
     public boolean isOnWaitingList(String userId) {
         return waitingList.stream().anyMatch(e -> Objects.equals(e.userId(), userId));
+    }
+
+    public List<GroupLinkedTraining> getEffectiveLinkedTrainings() {
+        if (linkedTrainings != null && !linkedTrainings.isEmpty()) {
+            return linkedTrainings;
+        }
+        if (linkedTrainingId != null && !linkedTrainingId.isBlank()) {
+            GroupLinkedTraining glt = new GroupLinkedTraining();
+            glt.setTrainingId(linkedTrainingId);
+            glt.setTrainingTitle(linkedTrainingTitle);
+            glt.setTrainingDescription(linkedTrainingDescription);
+            return List.of(glt);
+        }
+        return List.of();
     }
 }

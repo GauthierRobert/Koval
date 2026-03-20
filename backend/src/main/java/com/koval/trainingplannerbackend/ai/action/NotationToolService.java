@@ -97,7 +97,7 @@ public class NotationToolService {
         // 6. Link to existing session or create a new club session
         if (isPresent(sessionId) && resolvedClubId != null) {
             try {
-                clubSessionService.linkTrainingToSession(userId, resolvedClubId, sessionId, saved.getId());
+                clubSessionService.linkTrainingToSession(userId, resolvedClubId, sessionId, saved.getId(), null);
                 return "Created '" + saved.getTitle() + "' and linked to existing session [" + sessionId + "]";
             } catch (Exception e) {
                 return "Created '" + saved.getTitle() + "' [" + saved.getId() + "] (linking failed: " + e.getMessage() + ")";

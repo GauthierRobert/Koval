@@ -150,16 +150,67 @@ public class ClubSessionService {
                        "sessionId", session.getId()));
     }
 
-    public ClubTrainingSession linkTrainingToSession(String userId, String clubId, String sessionId, String trainingId) {
+    public ClubTrainingSession linkTrainingToSession(String userId, String clubId, String sessionId,
+                                                       String trainingId, String clubGroupId) {
         authorizationService.requireAdminOrCoach(userId, clubId);
         ClubTrainingSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
         if (session.isCancelled()) {
             throw new IllegalStateException("Cannot link training to a cancelled session");
         }
-        session.setLinkedTrainingId(trainingId);
-        enrichFromLinkedTraining(session);
+
+        GroupLinkedTraining glt = new GroupLinkedTraining();
+        glt.setClubGroupId(clubGroupId);
+        glt.setTrainingId(trainingId);
+        if (clubGroupId != null) {
+            clubGroupRepository.findById(clubGroupId)
+                    .ifPresent(g -> glt.setClubGroupName(g.getName()));
+        }
+        enrichGroupLinkedTraining(glt);
+
+        // Add or replace entry for this group
+        List<GroupLinkedTraining> list = session.getLinkedTrainings();
+        if (list == null) {
+            list = new ArrayList<>();
+            session.setLinkedTrainings(list);
+        }
+        list.removeIf(existing -> Objects.equals(existing.getClubGroupId(), clubGroupId));
+        list.add(glt);
+
+        // Also set legacy field for backward compat when clubGroupId is null
+        if (clubGroupId == null) {
+            session.setLinkedTrainingId(trainingId);
+            enrichFromLinkedTraining(session);
+        }
+
         trainingService.addClubIdToTraining(trainingId, clubId);
+        return sessionRepository.save(session);
+    }
+
+    public ClubTrainingSession unlinkTrainingFromSession(String userId, String clubId, String sessionId,
+                                                           String clubGroupId) {
+        authorizationService.requireAdminOrCoach(userId, clubId);
+        ClubTrainingSession session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        if (!session.getClubId().equals(clubId)) {
+            throw new IllegalArgumentException("Session does not belong to this club");
+        }
+        if (session.isCancelled()) {
+            throw new IllegalStateException("Cannot unlink training from a cancelled session");
+        }
+
+        List<GroupLinkedTraining> list = session.getLinkedTrainings();
+        if (list != null) {
+            list.removeIf(existing -> Objects.equals(clubGroupId, existing.getClubGroupId()));
+        }
+
+        // Also clear legacy fields when unlinking club-level entry
+        if (clubGroupId == null) {
+            session.setLinkedTrainingId(null);
+            session.setLinkedTrainingTitle(null);
+            session.setLinkedTrainingDescription(null);
+        }
+
         return sessionRepository.save(session);
     }
 
@@ -229,6 +280,9 @@ public class ClubSessionService {
                 }
             }
 
+            // Resolve user's linked training from effective list
+            GroupLinkedTraining resolved = resolveUserLinkedTraining(s, userGroupIds);
+
             result.add(new CalendarClubSessionResponse(
                     s.getId(), s.getClubId(), club.getName(), s.getTitle(), s.getSport(),
                     s.getScheduledAt(), s.getLocation(), s.getDescription(),
@@ -237,9 +291,31 @@ public class ClubSessionService {
                     groupNameMap.get(s.getClubGroupId()),
                     joined, onWaitingList, waitingListPosition,
                     s.computeOpenToAllFrom(),
-                    s.isCancelled(), s.getCancellationReason()));
+                    s.isCancelled(), s.getCancellationReason(),
+                    resolved != null ? resolved.getTrainingId() : null,
+                    resolved != null ? resolved.getTrainingTitle() : null,
+                    resolved != null ? resolved.getTrainingDescription() : null));
         }
         return result;
+    }
+
+    private GroupLinkedTraining resolveUserLinkedTraining(ClubTrainingSession session, Set<String> userGroupIds) {
+        List<GroupLinkedTraining> effective = session.getEffectiveLinkedTrainings();
+        if (effective.isEmpty()) return null;
+        // First: find entry matching user's group
+        for (GroupLinkedTraining glt : effective) {
+            if (glt.getClubGroupId() != null && userGroupIds.contains(glt.getClubGroupId())) {
+                return glt;
+            }
+        }
+        // Fall back: club-level entry (null clubGroupId)
+        for (GroupLinkedTraining glt : effective) {
+            if (glt.getClubGroupId() == null) {
+                return glt;
+            }
+        }
+        // Last resort: first entry
+        return effective.get(0);
     }
 
     private List<ClubTrainingSession> filterByGroupVisibility(String userId, String clubId,
@@ -255,6 +331,17 @@ public class ClubSessionService {
             LocalDateTime openFrom = s.computeOpenToAllFrom();
             return openFrom != null && !LocalDateTime.now().isBefore(openFrom);
         }).toList();
+    }
+
+    private void enrichGroupLinkedTraining(GroupLinkedTraining glt) {
+        if (glt.getTrainingId() == null) return;
+        try {
+            Training t = trainingService.getTrainingById(glt.getTrainingId());
+            glt.setTrainingTitle(t.getTitle());
+            glt.setTrainingDescription(t.getDescription());
+        } catch (Exception e) {
+            log.warn("Failed to enrich group linked training {}: {}", glt.getTrainingId(), e.getMessage());
+        }
     }
 
     void enrichFromLinkedTraining(ClubTrainingSession session) {

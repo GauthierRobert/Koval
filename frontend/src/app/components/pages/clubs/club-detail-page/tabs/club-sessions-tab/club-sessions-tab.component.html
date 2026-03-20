@@ -59,12 +59,12 @@
                       <svg xmlns="http://www.w3.org/2000/svg" height="14" viewBox="0 -960 960 960" width="14" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>
                     </button>
                   }
-                  @if (isCoach && !session.linkedTrainingId) {
+                  @if (isCoach && canLinkMoreTrainings(session)) {
                     <button
                       class="ai-btn-corner"
                       (click)="onAiCreateForSession(session, $event)"
                       title="Create training with AI">
-                      <span>✨ training</span>
+                      <span>Link training</span>
                     </button>
                   }
                   @if (session.scheduledAt) {
@@ -80,19 +80,28 @@
                   <div class="cancellation-reason">{{ session.cancellationReason }}</div>
                 }
 
-                <!-- Linked training info -->
-                @if (session.linkedTrainingId) {
-                  <button class="linked-training-btn"
-                          (click)="navigateToTraining(session.linkedTrainingId!, $event)">
-                    <span class="linked-badge">{{ session.linkedTrainingTitle || 'Linked Training' }}</span>
-                    @if (session.linkedTrainingDescription) {
-                      <span class="linked-desc">{{ truncate(session.linkedTrainingDescription, 80) }}</span>
+                <!-- Linked trainings (one per group) -->
+                @for (glt of getEffectiveLinkedTrainings(session); track glt.trainingId) {
+                  <div class="linked-training-row">
+                    <button class="linked-training-btn"
+                            [class.dimmed]="!isInUserGroup(glt)"
+                            (click)="navigateToTraining(glt.trainingId, $event)">
+                      @if (glt.clubGroupName) {
+                        <span class="linked-group-badge">{{ glt.clubGroupName }}</span>
+                      }
+                      <span class="linked-badge">{{ glt.trainingTitle || 'Linked Training' }}</span>
+                      @if (glt.trainingDescription) {
+                        <span class="linked-desc">{{ truncate(glt.trainingDescription, 80) }}</span>
+                      }
+                      <span class="linked-view-arrow">View &rarr;</span>
+                    </button>
+                    @if (isCoach && !isCancelled(session)) {
+                      <button class="unlink-btn" (click)="unlinkTraining(session, glt, $event)" title="Unlink training">&times;</button>
                     }
-                    <span class="linked-view-arrow">View &rarr;</span>
-                  </button>
+                  </div>
                 }
 
-                @if (session.description && !session.linkedTrainingId && !session.recurringTemplateId) {
+                @if (session.description && !hasAnyLinkedTraining(session) && !session.recurringTemplateId) {
                   <p class="session-desc">{{ session.description }}</p>
                 }
 
@@ -240,8 +249,8 @@
               @for (session of getSessionsForDay(sessions, day); track session.id) {
                 <div
                   class="time-grid-session"
-                  [class.has-training]="!!session.linkedTrainingId"
-                  [class.no-training]="!session.linkedTrainingId"
+                  [class.has-training]="hasAnyLinkedTraining(session)"
+                  [class.no-training]="!hasAnyLinkedTraining(session)"
                   [class.cancelled]="isCancelled(session)"
                   [style.top.px]="getSessionTopPx(session)"
                   [style.height.px]="getSessionHeightPx(session)">
@@ -264,8 +273,10 @@
                     </button>
                   }
                 </div>
-                @if (!session.linkedTrainingId) {
-                  @if (isCoach) {
+                @if (getUserLinkedTraining(session); as userTraining) {
+                  <button class="tg-view-link" (click)="navigateToTraining(userTraining.trainingId, $event)">View &rarr;</button>
+                } @else {
+                  @if (isCoach && canLinkMoreTrainings(session)) {
                     <button
                       class="ai-btn-corner small"
                       (click)="onAiCreateForSession(session, $event)"
@@ -277,8 +288,6 @@
                       <span>+ training</span>
                     </button>
                   }
-                } @else {
-                  <button class="tg-view-link" (click)="navigateToTraining(session.linkedTrainingId!, $event)">View &rarr;</button>
                 }
 
               </div>
@@ -286,8 +295,10 @@
                 <span class="cancelled-badge small">CANCELLED</span>
               }
               <div class="tg-session-title" [class.title-cancelled]="isCancelled(session)">{{ session.title }}</div>
-              @if (session.linkedTrainingDescription && session.linkedTrainingId) {
-                <div class="tg-session-desc">{{ truncate(session.linkedTrainingDescription, 40) }}</div>
+              @if (getUserLinkedTraining(session); as userTraining) {
+                @if (userTraining.trainingDescription) {
+                  <div class="tg-session-desc">{{ truncate(userTraining.trainingDescription, 40) }}</div>
+                }
               }
               <div class="tg-capacity-join-row">
                 <span class="tg-session-capacity" [class.capacity-full]="isFull(session)">

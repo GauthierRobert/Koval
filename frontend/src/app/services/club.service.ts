@@ -69,6 +69,30 @@ export interface WaitingListEntry {
   joinedAt: string;
 }
 
+export interface GroupLinkedTraining {
+  clubGroupId?: string;
+  clubGroupName?: string;
+  trainingId: string;
+  trainingTitle?: string;
+  trainingDescription?: string;
+}
+
+export function getEffectiveLinkedTrainings(session: ClubTrainingSession): GroupLinkedTraining[] {
+  if (session.linkedTrainings && session.linkedTrainings.length > 0) {
+    return session.linkedTrainings;
+  }
+  if (session.linkedTrainingId) {
+    return [
+      {
+        trainingId: session.linkedTrainingId,
+        trainingTitle: session.linkedTrainingTitle,
+        trainingDescription: session.linkedTrainingDescription,
+      },
+    ];
+  }
+  return [];
+}
+
 export interface ClubTrainingSession {
   id: string;
   clubId: string;
@@ -79,6 +103,7 @@ export interface ClubTrainingSession {
   location?: string;
   description?: string;
   linkedTrainingId?: string;
+  linkedTrainings?: GroupLinkedTraining[];
   participantIds: string[];
   createdAt: string;
   recurringTemplateId?: string;
@@ -677,9 +702,24 @@ export class ClubService {
     });
   }
 
-  linkTrainingToSession(clubId: string, sessionId: string, trainingId: string): Observable<void> {
+  linkTrainingToSession(clubId: string, sessionId: string, trainingId: string, clubGroupId?: string): Observable<void> {
     return new Observable((observer) => {
-      this.http.put<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/link-training`, { trainingId }).subscribe({
+      this.http.put<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/link-training`, { trainingId, clubGroupId: clubGroupId || null }).subscribe({
+        next: () => {
+          this.ngZone.run(() => {
+            this.loadSessions(clubId);
+            observer.next();
+            observer.complete();
+          });
+        },
+        error: (err) => observer.error(err),
+      });
+    });
+  }
+
+  unlinkTrainingFromSession(clubId: string, sessionId: string, clubGroupId?: string): Observable<void> {
+    return new Observable((observer) => {
+      this.http.put<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/unlink-training`, { clubGroupId: clubGroupId ?? null }).subscribe({
         next: () => {
           this.ngZone.run(() => {
             this.loadSessions(clubId);

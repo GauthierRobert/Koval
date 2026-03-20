@@ -346,6 +346,14 @@ public class ClubController {
             @PathVariable String id, @PathVariable String sessionId,
             @RequestBody LinkTrainingRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(clubSessionService.linkTrainingToSession(userId, id, sessionId, req.trainingId()));
+        return ResponseEntity.ok(clubSessionService.linkTrainingToSession(userId, id, sessionId, req.trainingId(), req.clubGroupId()));
+    }
+
+    @PutMapping("/{id}/sessions/{sessionId}/unlink-training")
+    public ResponseEntity<ClubTrainingSession> unlinkTrainingFromSession(
+            @PathVariable String id, @PathVariable String sessionId,
+            @RequestBody UnlinkTrainingRequest req) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(clubSessionService.unlinkTrainingFromSession(userId, id, sessionId, req.clubGroupId()));
     }
 }

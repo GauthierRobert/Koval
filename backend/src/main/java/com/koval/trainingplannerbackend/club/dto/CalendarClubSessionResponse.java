@@ -10,5 +10,6 @@ public record CalendarClubSessionResponse(
         Integer maxParticipants, String clubGroupId, String clubGroupName,
         boolean joined, boolean onWaitingList, int waitingListPosition,
         LocalDateTime openToAllFrom,
-        boolean cancelled, String cancellationReason
+        boolean cancelled, String cancellationReason,
+        String linkedTrainingId, String linkedTrainingTitle, String linkedTrainingDescription
 ) {}

@@ -2,6 +2,9 @@ package com.koval.trainingplannerbackend.club;
 
 import com.koval.trainingplannerbackend.club.dto.CreateSessionRequest;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Static utility that copies shared properties onto a ClubTrainingSession
  * from either a RecurringSessionTemplate or a CreateSessionRequest.
@@ -16,6 +19,19 @@ public final class SessionPropertyMapper {
         session.setLocation(template.getLocation());
         session.setDescription(template.getDescription());
         session.setLinkedTrainingId(template.getLinkedTrainingId());
+        if (template.getLinkedTrainings() != null && !template.getLinkedTrainings().isEmpty()) {
+            List<GroupLinkedTraining> copy = new ArrayList<>();
+            for (GroupLinkedTraining src : template.getLinkedTrainings()) {
+                GroupLinkedTraining dest = new GroupLinkedTraining();
+                dest.setClubGroupId(src.getClubGroupId());
+                dest.setClubGroupName(src.getClubGroupName());
+                dest.setTrainingId(src.getTrainingId());
+                dest.setTrainingTitle(src.getTrainingTitle());
+                dest.setTrainingDescription(src.getTrainingDescription());
+                copy.add(dest);
+            }
+            session.setLinkedTrainings(copy);
+        }
         session.setMaxParticipants(template.getMaxParticipants());
         session.setDurationMinutes(template.getDurationMinutes());
         session.setClubGroupId(template.getClubGroupId());

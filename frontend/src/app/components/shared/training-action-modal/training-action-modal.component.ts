@@ -14,7 +14,7 @@ import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {ActionContext, ActionResult, AIActionService, AIActionType} from '../../../services/ai-action.service';
-import {ClubGroup, ClubService} from '../../../services/club.service';
+import {ClubGroup, ClubService, GroupLinkedTraining} from '../../../services/club.service';
 import {ZoneService} from '../../../services/zone.service';
 import {ZoneSystem} from '../../../services/zone';
 import {TrainingService} from '../../../services/training.service';
@@ -42,6 +42,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
   @Input() sessionId?: string;
   @Input() sessionInfo: { scheduledAt?: string; sport?: string; clubGroupName?: string } | null = null;
   @Input() preselectedTrainingId?: string;
+  @Input() existingLinkedTrainings: GroupLinkedTraining[] = [];
 
   @Output() closed = new EventEmitter<void>();
   @Output() completed = new EventEmitter<{ success: boolean; content?: string }>();
@@ -155,6 +156,32 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
     return true;
   }
 
+  /** Groups still available for linking (excludes already-linked groups). */
+  get sessionAvailableGroups(): ClubGroup[] {
+    if (this.mode !== 'session') return this.availableGroups;
+    // If a club-level training is already linked, no groups available
+    if (this.existingLinkedTrainings.some(glt => !glt.clubGroupId)) return [];
+    const linkedGroupIds = new Set(this.existingLinkedTrainings.filter(g => g.clubGroupId).map(g => g.clubGroupId));
+    return this.availableGroups.filter(g => !linkedGroupIds.has(g.id));
+  }
+
+  /** Show "Entire club" option only if no group-level training is linked yet. */
+  get sessionShowNoGroupOption(): boolean {
+    if (this.mode !== 'session') return true;
+    return !this.existingLinkedTrainings.some(glt => !!glt.clubGroupId);
+  }
+
+  /** False when all slots are taken (club-level linked OR all groups linked). */
+  get canLinkTraining(): boolean {
+    if (this.mode !== 'session') return true;
+    // Club-level linked → no more linking
+    if (this.existingLinkedTrainings.some(glt => !glt.clubGroupId)) return false;
+    // No groups exist → can link only if nothing linked yet
+    if (this.availableGroups.length === 0) return this.existingLinkedTrainings.length === 0;
+    // All groups linked
+    return this.sessionAvailableGroups.length > 0 || this.sessionShowNoGroupOption;
+  }
+
   get filteredTrainings(): Training[] {
     if (!this.searchQuery.trim()) return this.availableTrainings;
     const q = this.searchQuery.toLowerCase();
@@ -167,6 +194,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
 
   get canSubmit(): boolean {
     if (this.loading) return false;
+    if (this.mode === 'session' && !this.canLinkTraining) return false;
 
     if (this.tab === 'ai') {
       return !!this.prompt.trim() && !!this.selectedSport;
@@ -406,7 +434,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
 
   private submitSessionLink(): void {
     if (!this.clubId || !this.sessionId || !this.selectedTrainingId) return;
-    this.clubService.linkTrainingToSession(this.clubId, this.sessionId, this.selectedTrainingId).subscribe({
+    this.clubService.linkTrainingToSession(this.clubId, this.sessionId, this.selectedTrainingId, this.selectedGroupId || undefined).subscribe({
       next: () => {
         this.ngZone.run(() => {
           this.loading = false;

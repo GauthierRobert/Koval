@@ -213,6 +213,12 @@
   color: #86efac;
 }
 
+.status-message.info {
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;

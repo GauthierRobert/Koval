@@ -66,40 +66,88 @@
   gap: 1.5rem;
 }
 
-.header-sub-bar {
+/* ── Create banner ── */
+.create-banner {
+  margin: var(--space-md) var(--page-padding) 0;
+  padding: var(--space-md) var(--space-lg, 20px);
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.create-banner-label {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-xs, 4px) var(--page-padding);
-  border-bottom: 1px solid var(--glass-border);
-  flex-shrink: 0;
+  gap: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.create-banner-icon {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 157, 0, 0.1);
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+.create-banner-fields {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-md);
   flex-wrap: wrap;
 }
 
-/* ── Create form in header ── */
-.create-form {
+.create-field {
   display: flex;
-  gap: 8px;
-  align-items: center;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.create-field-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .create-input {
-  background: var(--surface-elevated);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   color: var(--text-color);
-  font-size: 0.8rem;
-  padding: 5px 10px;
+  font-size: 0.82rem;
+  padding: 8px 12px;
   outline: none;
-  width: 180px;
+  width: 200px;
+  transition: border-color 0.15s;
 }
 
 .create-input--num {
   width: 130px;
 }
 
+.create-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
 .create-input:focus {
   border-color: var(--accent-color);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .create-btn {
@@ -110,9 +158,10 @@
   font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 1px;
-  padding: 5px 14px;
+  padding: 8px 18px;
   cursor: pointer;
   white-space: nowrap;
+  transition: background 0.15s;
 }
 
 .create-btn:hover:not(:disabled) {
@@ -257,18 +306,6 @@
   background: var(--danger-subtle);
 }
 
-/* ── Input tooltips ── */
-.input-with-tooltip {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.input-desc {
-  font-size: 0.55rem;
-  color: var(--text-muted);
-  padding-left: 2px;
-}
 
 .invite-code {
   font-family: 'SF Mono', 'Fira Code', monospace;

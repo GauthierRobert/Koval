@@ -9,6 +9,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -28,6 +30,7 @@ public class RecurringSessionTemplate {
     private String location;
     private String description;
     private String linkedTrainingId;
+    private List<GroupLinkedTraining> linkedTrainings = new ArrayList<>();
     private Integer maxParticipants;
     private Integer durationMinutes;
     private String clubGroupId;

@@ -91,6 +91,7 @@
       [clubId]="aiContext.clubId"
       [sessionId]="aiContext.sessionId"
       [sessionInfo]="aiSessionInfo"
+      [existingLinkedTrainings]="aiExistingLinkedTrainings"
       (closed)="showAiModal = false; aiSessionInfo = null"
       (completed)="onAiCreated($event)">
     </app-training-action-modal>

@@ -24,7 +24,7 @@ public class StravaOAuthService {
     @Value("${strava.client-secret:}")
     private String clientSecret;
 
-    @Value("${strava.redirect-uri:http://localhost:8080/api/auth/strava/callback}")
+    @Value("${strava.redirect-uri:http://localhost:4200/auth/callback}")
     private String redirectUri;
 
     private static final String STRAVA_AUTH_URL = "https://www.strava.com/oauth/authorize";
