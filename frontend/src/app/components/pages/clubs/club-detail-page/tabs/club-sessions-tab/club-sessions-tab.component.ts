@@ -567,6 +567,22 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
     return !!session.cancelled;
   }
 
+  getOpenToAllLabel(session: ClubTrainingSession): string {
+    if (!session.openToAll || !session.scheduledAt) return '';
+    const delay = session.openToAllDelayValue ?? 2;
+    const unit = session.openToAllDelayUnit ?? 'DAYS';
+    const scheduledMs = new Date(session.scheduledAt).getTime();
+    const offsetMs = unit === 'HOURS' ? delay * 3600_000 : delay * 86400_000;
+    const openFromMs = scheduledMs - offsetMs;
+    const nowMs = Date.now();
+    if (nowMs >= openFromMs) return 'Opened to all';
+    const remainMs = openFromMs - nowMs;
+    const remainH = Math.ceil(remainMs / 3600_000);
+    if (remainH <= 48) return `Open to all in ${remainH}h`;
+    const remainD = Math.ceil(remainMs / 86400_000);
+    return `Open to all in ${remainD}d`;
+  }
+
   // --- Status helpers ---
 
   isParticipant(session: ClubTrainingSession): boolean {

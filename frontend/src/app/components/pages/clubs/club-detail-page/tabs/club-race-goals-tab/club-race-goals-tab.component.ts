@@ -1,6 +1,6 @@
 import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {ClubService} from '../../../../../../services/club.service';
+import {ClubRaceGoalResponse, ClubService} from '../../../../../../services/club.service';
 
 @Component({
   selector: 'app-club-race-goals-tab',
@@ -13,6 +13,17 @@ import {ClubService} from '../../../../../../services/club.service';
 export class ClubRaceGoalsTabComponent {
   private clubService = inject(ClubService);
   raceGoals$ = this.clubService.raceGoals$;
+
+  membersModalGoal: ClubRaceGoalResponse | null = null;
+
+  openMembersModal(goal: ClubRaceGoalResponse, event: Event): void {
+    event.stopPropagation();
+    this.membersModalGoal = goal;
+  }
+
+  closeMembersModal(): void {
+    this.membersModalGoal = null;
+  }
 
   formatDate(dateStr: string): string {
     return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {

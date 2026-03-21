@@ -23,9 +23,9 @@
                   {{ daysUntil(item.raceDate) }}d to go
                 </span>
               </div>
-              <div class="participants-row tooltip-anchor">
+              <div class="participants-row">
                 <div class="participant-avatars">
-                  @for (p of item.participants; track p.userId) {
+                  @for (p of item.participants.slice(0, 5); track p.userId) {
                     @if (p.profilePicture) {
                       <img [src]="p.profilePicture" class="participant-avatar" />
                     } @else {
@@ -35,25 +35,9 @@
                     }
                   }
                 </div>
-                <span class="participants-label">
-                  {{ item.participants.length }} {{ item.participants.length === 1 ? 'member' : 'members' }} racing
-                </span>
-                <div class="participants-tooltip">
-                  @for (p of item.participants; track p.userId) {
-                    <div class="tooltip-participant">
-                      @if (p.profilePicture) {
-                        <img [src]="p.profilePicture" class="tooltip-avatar" />
-                      } @else {
-                        <span class="tooltip-avatar-placeholder">{{ p.displayName.charAt(0) }}</span>
-                      }
-                      <span class="tooltip-name">{{ p.displayName }}</span>
-                      <span class="tooltip-priority" [style.color]="getPriorityColor(p.priority)">{{ p.priority }}</span>
-                      @if (p.targetTime) {
-                        <span class="tooltip-target">{{ p.targetTime }}</span>
-                      }
-                    </div>
-                  }
-                </div>
+                <button class="view-members-btn" (click)="openMembersModal(item, $event)">
+                  View {{ item.participants.length }} {{ item.participants.length === 1 ? 'member' : 'members' }}
+                </button>
               </div>
             </div>
           </div>
@@ -67,3 +51,33 @@
     }
   }
 </div>
+
+@if (membersModalGoal) {
+  <div class="modal-backdrop" (click)="closeMembersModal()">
+    <div class="modal-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">{{ membersModalGoal.title }}</h3>
+        <button class="modal-close" (click)="closeMembersModal()">&times;</button>
+      </div>
+      <div class="modal-subtitle">
+        {{ membersModalGoal.participants.length }} {{ membersModalGoal.participants.length === 1 ? 'member' : 'members' }} racing
+      </div>
+      <div class="modal-members-list">
+        @for (p of membersModalGoal.participants; track p.userId) {
+          <div class="modal-member-row">
+            @if (p.profilePicture) {
+              <img [src]="p.profilePicture" class="modal-member-avatar" />
+            } @else {
+              <span class="modal-member-avatar-placeholder">{{ p.displayName.charAt(0) }}</span>
+            }
+            <span class="modal-member-name">{{ p.displayName }}</span>
+            <span class="modal-member-priority" [style.background]="getPriorityColor(p.priority) + '20'" [style.color]="getPriorityColor(p.priority)">{{ p.priority }}</span>
+            @if (p.targetTime) {
+              <span class="modal-member-target">{{ p.targetTime }}</span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

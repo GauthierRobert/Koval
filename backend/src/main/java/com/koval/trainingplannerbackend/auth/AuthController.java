@@ -120,6 +120,38 @@ public class AuthController {
         }
     }
 
+    /**
+     * Mobile OAuth callback: Google redirects here (HTTPS), we exchange the code
+     * and redirect to the mobile deep link with the JWT token.
+     */
+    @GetMapping("/google/mobile-callback")
+    public ResponseEntity<Void> handleGoogleMobileCallback(@RequestParam String code) {
+        try {
+            String serverCallbackUri = googleOAuthService.getMobileCallbackUri();
+            GoogleOAuthService.GoogleUserInfo googleUser =
+                    googleOAuthService.exchangeCodeAndGetUserInfo(code, serverCallbackUri);
+
+            User user = userService.findOrCreateFromGoogle(
+                    googleUser.getGoogleId(),
+                    googleUser.getName(),
+                    googleUser.getEmail(),
+                    googleUser.getPicture());
+
+            String jwt = generateJwtToken(user);
+
+            String deepLink = "koval://auth/callback?token=" + jwt;
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", deepLink)
+                    .build();
+        } catch (Exception e) {
+            String errorLink = "koval://auth/callback?error=" +
+                    java.net.URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", errorLink)
+                    .build();
+        }
+    }
+
     // --- DEV ONLY — login with arbitrary userId, no password ---
 
     public record DevLoginRequest(String userId, String displayName, UserRole role) {

@@ -1,7 +1,6 @@
 package com.koval.trainingplannerbackend.training.tools;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.koval.trainingplannerbackend.training.model.BlockType;
 
@@ -25,9 +24,7 @@ public record WorkoutElementRequest(
         Integer restPct,
 
         // ── LEAF FIELDS ──
-
-        @JsonPropertyDescription("WARMUP|INTERVAL|STEADY|COOLDOWN|RAMP|FREE|PAUSE")
-        @JsonProperty(required = true)
+        @JsonPropertyDescription("WARMUP|INTERVAL|STEADY|COOLDOWN|RAMP|FREE|PAUSE (required for leaf blocks, omit for sets)")
         BlockType type,
 
         @JsonPropertyDescription("sec")
@@ -36,12 +33,10 @@ public record WorkoutElementRequest(
         @JsonPropertyDescription("m")
         Integer dist,
 
-        @JsonPropertyDescription("e.g. 'Z2'")
-        @JsonProperty(required = true)
+        @JsonPropertyDescription("e.g. 'Z2' (required for leaf blocks, omit for sets)")
         String label,
 
         @JsonPropertyDescription("Short description")
-        @JsonProperty(required = true)
         String desc,
 
         @JsonPropertyDescription("% ref e.g. 90")

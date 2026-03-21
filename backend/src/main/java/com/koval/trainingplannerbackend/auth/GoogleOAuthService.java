@@ -25,14 +25,28 @@ public class GoogleOAuthService {
     @Value("${google.redirect-uri:http://localhost:4200/auth/google/callback}")
     private String redirectUri;
 
+    @Value("${google.mobile-callback-uri:}")
+    private String mobileCallbackUri;
+
     private static final String GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
     private static final String GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
     private static final String GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    public String getMobileCallbackUri() {
+        return mobileCallbackUri;
+    }
+
     public String getAuthorizationUrl(String overrideRedirectUri) {
-        String uri = (overrideRedirectUri != null && !overrideRedirectUri.isEmpty()) ? overrideRedirectUri : redirectUri;
+        String uri;
+        if ("mobile".equals(overrideRedirectUri) && mobileCallbackUri != null && !mobileCallbackUri.isEmpty()) {
+            uri = mobileCallbackUri;
+        } else if (overrideRedirectUri != null && !overrideRedirectUri.isEmpty() && !"mobile".equals(overrideRedirectUri)) {
+            uri = overrideRedirectUri;
+        } else {
+            uri = redirectUri;
+        }
         return GOOGLE_AUTH_URL +
                 "?client_id=" + clientId +
                 "&redirect_uri=" + uri +

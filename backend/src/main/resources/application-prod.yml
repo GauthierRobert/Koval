@@ -14,6 +14,7 @@ strava:
 
 google:
   redirect-uri: ${GOOGLE_REDIRECT_URI:}
+  mobile-callback-uri: ${GOOGLE_MOBILE_CALLBACK_URI:}
 
 firebase:
   service-account-json: ${FIREBASE_SERVICE_ACCOUNT_JSON:}

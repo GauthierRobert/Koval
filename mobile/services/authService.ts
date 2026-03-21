@@ -20,17 +20,53 @@ interface AuthResponse {
 
 /** Fetch an OAuth authorization URL from the backend. */
 async function fetchAuthUrl(provider: 'google' | 'strava'): Promise<string> {
+  // For Google, use 'mobile' hint so backend uses its server-side mobile callback URI.
+  // For Strava, custom schemes are allowed so we pass the deep link directly.
+  const redirectParam =
+    provider === 'google' ? 'mobile' : MOBILE_REDIRECT_URI;
   const res = await fetch(
-    `${API_URL}/api/auth/${provider}?redirectUri=${encodeURIComponent(MOBILE_REDIRECT_URI)}`
+    `${API_URL}/api/auth/${provider}?redirectUri=${encodeURIComponent(redirectParam)}`
   );
   if (!res.ok) throw new Error(`Failed to fetch ${provider} auth URL`);
   const data = await res.json();
   return data.authUrl as string;
 }
 
-/** Run the OAuth browser flow and extract the authorization code. */
-async function runOAuthFlow(provider: 'google' | 'strava'): Promise<string> {
-  const authUrl = await fetchAuthUrl(provider);
+/**
+ * Google OAuth: the backend handles the callback and redirects to koval://auth/callback?token=xxx.
+ * We just open the browser and wait for the deep link with the token.
+ */
+async function runGoogleOAuthFlow(): Promise<User> {
+  const authUrl = await fetchAuthUrl('google');
+
+  const result = await WebBrowser.openAuthSessionAsync(authUrl, MOBILE_REDIRECT_URI);
+
+  if (result.type !== 'success') {
+    throw new Error('OAuth cancelled or failed');
+  }
+
+  const parsed = Linking.parse(result.url);
+
+  const error = parsed.queryParams?.['error'] as string | undefined;
+  if (error) {
+    throw new Error(`Authentication failed: ${error}`);
+  }
+
+  const token = parsed.queryParams?.['token'] as string | undefined;
+  if (!token) {
+    throw new Error('No token in callback URL');
+  }
+
+  await saveToken(token);
+  return fetchCurrentUser();
+}
+
+/**
+ * Strava OAuth: custom URL schemes are allowed, so the browser redirects
+ * back to the app with a code, which we exchange via the backend.
+ */
+async function runStravaOAuthFlow(): Promise<User> {
+  const authUrl = await fetchAuthUrl('strava');
 
   const result = await WebBrowser.openAuthSessionAsync(authUrl, MOBILE_REDIRECT_URI);
 
@@ -43,16 +79,8 @@ async function runOAuthFlow(provider: 'google' | 'strava'): Promise<string> {
   if (!code) {
     throw new Error('No authorization code in callback URL');
   }
-  return code;
-}
 
-/** Exchange an authorization code for a JWT via the backend callback. */
-async function exchangeCode(provider: 'google' | 'strava', code: string): Promise<User> {
-  const callbackUrl =
-    provider === 'google'
-      ? `${API_URL}/api/auth/google/callback?code=${encodeURIComponent(code)}&redirectUri=${encodeURIComponent(MOBILE_REDIRECT_URI)}`
-      : `${API_URL}/api/auth/strava/callback?code=${encodeURIComponent(code)}`;
-
+  const callbackUrl = `${API_URL}/api/auth/strava/callback?code=${encodeURIComponent(code)}`;
   const res = await fetch(callbackUrl);
   if (!res.ok) {
     const text = await res.text();
@@ -65,14 +93,12 @@ async function exchangeCode(provider: 'google' | 'strava', code: string): Promis
 
 /** Full Google OAuth flow for mobile. Returns the authenticated user. */
 export async function loginWithGoogle(): Promise<User> {
-  const code = await runOAuthFlow('google');
-  return exchangeCode('google', code);
+  return runGoogleOAuthFlow();
 }
 
 /** Full Strava OAuth flow for mobile. Returns the authenticated user. */
 export async function loginWithStrava(): Promise<User> {
-  const code = await runOAuthFlow('strava');
-  return exchangeCode('strava', code);
+  return runStravaOAuthFlow();
 }
 
 export async function fetchCurrentUser(): Promise<User> {
