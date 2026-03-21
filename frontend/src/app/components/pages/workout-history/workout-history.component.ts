@@ -1,8 +1,10 @@
-import {ChangeDetectionStrategy, Component, ElementRef, inject, ViewChild} from '@angular/core';
+import {ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, OnInit, ViewChild} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {ActivatedRoute} from '@angular/router';
 import {BehaviorSubject, combineLatest} from 'rxjs';
-import {map} from 'rxjs/operators';
+import {filter, map, take} from 'rxjs/operators';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {SessionAnalysisComponent} from '../session-analysis/session-analysis.component';
 import {FilterPillsComponent} from '../../shared/filter-pills/filter-pills.component';
@@ -28,16 +30,34 @@ type SportFilter = string | null;
     styleUrl: './workout-history.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class WorkoutHistoryComponent {
+export class WorkoutHistoryComponent implements OnInit {
     @ViewChild('fitInput') fitInputRef!: ElementRef<HTMLInputElement>;
 
     historyService = inject(HistoryService);
     private fitExport = inject(FitExportService);
     private authService = inject(AuthService);
     private metricsService = inject(MetricsService);
+    private route = inject(ActivatedRoute);
+    private destroyRef = inject(DestroyRef);
     stravaSyncService = inject(StravaSyncService);
 
     sessions$ = this.historyService.sessions$;
+
+    ngOnInit(): void {
+        const sessionId = this.route.snapshot.paramMap.get('sessionId');
+        if (sessionId) {
+            this.historyService.sessions$.pipe(
+                filter(sessions => sessions.length > 0),
+                take(1),
+                takeUntilDestroyed(this.destroyRef),
+            ).subscribe(sessions => {
+                const match = sessions.find(s => s.id === sessionId);
+                if (match) {
+                    this.historyService.selectSession(match);
+                }
+            });
+        }
+    }
 
     // Filters
     readonly sportOptions = [

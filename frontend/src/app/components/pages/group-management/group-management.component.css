@@ -70,7 +70,6 @@
 .create-banner {
   margin: var(--space-md) var(--page-padding) 0;
   padding: var(--space-md) var(--space-lg, 20px);
-  background: var(--surface-elevated);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   flex-shrink: 0;
@@ -198,7 +197,6 @@
 }
 
 .tag-card {
-  background: var(--surface-elevated);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   overflow: hidden;

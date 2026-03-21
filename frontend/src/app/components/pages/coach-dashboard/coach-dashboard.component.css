@@ -1129,8 +1129,17 @@
   transition: background 0.15s;
 }
 
+.hist-row.clickable {
+  cursor: pointer;
+}
+
 .hist-row:hover {
   background: rgba(255, 255, 255, 0.02);
+}
+
+.hist-row.clickable:hover {
+  background: var(--accent-subtle);
+  border-left: 2px solid var(--accent-color);
 }
 
 .hist-row:last-child {
@@ -1248,3 +1257,27 @@
 }
 
 .t-status.club { color: #818cf8; }
+
+/* ── Session Analysis Back Button ── */
+
+.analysis-back-row {
+  margin-bottom: 1rem;
+}
+
+.back-btn {
+  background: none;
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.back-btn:hover {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+  color: var(--accent-color);
+}

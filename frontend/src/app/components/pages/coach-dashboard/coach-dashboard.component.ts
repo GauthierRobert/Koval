@@ -18,6 +18,8 @@ import {TrainingService} from '../../../services/training.service';
 import {Training, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS, TrainingType} from '../../../models/training.model';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {PmcChartComponent} from '../../shared/pmc-chart/pmc-chart.component';
+import {SessionAnalysisComponent} from '../session-analysis/session-analysis.component';
+import {SavedSession} from '../../../services/history.service';
 import {daysUntil as sharedDaysUntil, formatPaceWithUnit, formatTimeHMS} from '../../shared/format/format.utils';
 
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
@@ -26,7 +28,7 @@ import {SessionData, SessionSummary} from '../../../models/session-types.model';
 @Component({
   selector: 'app-coach-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TrainingActionModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, SportIconComponent, PmcChartComponent],
+  imports: [CommonModule, FormsModule, RouterModule, TrainingActionModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, SportIconComponent, PmcChartComponent, SessionAnalysisComponent],
   templateUrl: './coach-dashboard.component.html',
   styleUrl: './coach-dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -87,6 +89,9 @@ export class CoachDashboardComponent implements OnInit {
 
   private athleteSessionsErrorSubject = new BehaviorSubject<boolean>(false);
   athleteSessionsError$ = this.athleteSessionsErrorSubject.asObservable();
+
+  private selectedAthleteSessionSubject = new BehaviorSubject<SavedSession | null>(null);
+  selectedAthleteSession$ = this.selectedAthleteSessionSubject.asObservable();
 
   private athletePmcSubject = new BehaviorSubject<PmcDataPoint[]>([]);
   athletePmc$ = this.athletePmcSubject.asObservable();
@@ -235,6 +240,7 @@ export class CoachDashboardComponent implements OnInit {
     this.scheduleWeekStart = this.getMondayOfWeek(new Date());
     this.scheduleWeekEnd = this.getSundayOfWeek(new Date());
     this.athleteScheduleTssSubject.next(new Map());
+    this.selectedAthleteSessionSubject.next(null);
     this.selectedAthlete = athlete;
     this.loadAthleteSchedule(athlete.id);
     this.loadAthleteSessions(athlete.id);
@@ -488,6 +494,38 @@ export class CoachDashboardComponent implements OnInit {
     if (tsb > 5) return 'FRESH';
     if (tsb < -10) return 'TIRED';
     return 'NEUTRAL';
+  }
+
+  openSessionAnalysis(session: SessionData): void {
+    this.coachService.getSessionById(session.id).subscribe({
+      next: (s: any) => this.ngZone.run(() => {
+        const saved: SavedSession = {
+          id: s.id,
+          title: s.title,
+          totalDuration: s.totalDurationSeconds,
+          avgPower: s.avgPower,
+          avgHR: s.avgHR,
+          avgCadence: s.avgCadence,
+          avgSpeed: s.avgSpeed || 0,
+          blockSummaries: s.blockSummaries || [],
+          history: [],
+          sportType: s.sportType,
+          date: new Date(s.completedAt),
+          syncedToStrava: false,
+          syncedToGarmin: false,
+          tss: s.tss ?? undefined,
+          intensityFactor: s.intensityFactor ?? undefined,
+          fitFileId: s.fitFileId ?? undefined,
+          stravaActivityId: s.stravaActivityId ?? undefined,
+        };
+        this.selectedAthleteSessionSubject.next(saved);
+      }),
+      error: () => {},
+    });
+  }
+
+  closeSessionAnalysis(): void {
+    this.selectedAthleteSessionSubject.next(null);
   }
 
   trackTagByName(group: Group): string { return group.name; }

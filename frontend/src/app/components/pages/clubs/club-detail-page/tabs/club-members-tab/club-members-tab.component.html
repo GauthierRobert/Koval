@@ -4,7 +4,7 @@
     <!-- Group Management (coach/admin/owner) -->
     @if (canManageGroups) {
       <h4 class="section-title">Groups</h4>
-      <div class="tag-panel">
+      <div class="glass tag-panel">
         @if (allTags.length > 0) {
           <div class="group-cards">
             @for (tag of allTags; track tag.id) {

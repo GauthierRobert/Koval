@@ -28,6 +28,7 @@ import {ZoneBlock} from '../session-analysis.component';
                 }
             </div>
             <canvas #canvas class="chart-canvas"
+                [style.height.px]="(showHR || showCadence) ? 300 : 200"
                 (mousemove)="onMouseMove($event)"
                 (mouseleave)="onMouseLeave()">
             </canvas>
@@ -63,7 +64,7 @@ import {ZoneBlock} from '../session-analysis.component';
             background: rgba(255,255,255,0.1);
             margin: 0 2px;
         }
-        .chart-canvas { width: 100%; height: 200px; display: block; cursor: crosshair; }
+        .chart-canvas { width: 100%; display: block; cursor: crosshair; }
     `],
 })
 export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
@@ -111,7 +112,6 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         const t0 = this.records[0].timestamp;
         const totalSec = this.records[n - 1].timestamp - t0 || n;
 
-        // Convert mouseX to target timestamp, then find nearest record
         const targetT = t0 + ((mouseX - this.ML) / cW) * totalSec;
         let lo = 0, hi = n - 1;
         while (lo < hi) {
@@ -119,7 +119,6 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
             if (this.records[mid].timestamp < targetT) lo = mid + 1;
             else hi = mid;
         }
-        // Pick whichever neighbour is closer
         const clamped = (lo > 0 && Math.abs(this.records[lo - 1].timestamp - targetT) < Math.abs(this.records[lo].timestamp - targetT))
             ? lo - 1 : lo;
 
@@ -146,52 +145,63 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         if (!this.records.length) return;
 
         const mL = this.ML, mR = this.MR, mT = 12, mB = 28;
-        const cW = W - mL - mR;
-        const cH = H - mT - mB;
         const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#ff9d00';
         const n = this.records.length;
         const t0 = this.records[0].timestamp;
         const totalSec = this.records[n - 1].timestamp - t0 || n;
+        const cW = W - mL - mR;
         const xOf = (i: number) => mL + ((this.records[i].timestamp - t0) / totalSec) * cW;
 
-        // Hoisted scale functions for reuse in tooltip
-        let yOfPrimary: ((v: number) => number) | null = null;
-        let maxHR = 220;
-        let yOfHR: ((hr: number) => number) | null = null;
-        let maxCad = 120;
-        let yOfCad: ((c: number) => number) | null = null;
+        // ── Layout: primary (top) + optional secondary (bottom) ────────────
+        const hasSecondary = this.showHR || this.showCadence;
+        const gap = hasSecondary ? 10 : 0;
+        const totalChartH = H - mT - mB;
+        const primaryH = hasSecondary ? Math.round(totalChartH * 0.6) : totalChartH;
+        const secondaryH = hasSecondary ? totalChartH - primaryH - gap : 0;
 
-        // Compute scales (needed for both real and block modes)
+        const pTop = mT;
+        const pBottom = mT + primaryH;
+        const sTop = pBottom + gap;
+        const sBottom = sTop + secondaryH;
+
+        // ── Compute scales ─────────────────────────────────────────────────
+        let yOfPrimary: (v: number) => number;
         let maxP = 1, maxS = 1;
         if (this.isCycling) {
             const smoothed = this.rollingAvg(this.records.map((r) => r.power), 5);
             maxP = Math.max(this.ftp ? this.ftp * 1.5 : 0, ...smoothed) || 1;
-            yOfPrimary = (p: number) => mT + cH * (1 - p / maxP);
+            yOfPrimary = (p: number) => pTop + primaryH * (1 - p / maxP);
         } else {
             const speeds = this.records.map((r) => (r.speed || 0) * 3.6);
             const smoothedS = this.rollingAvg(speeds, 5);
             maxS = Math.max(...smoothedS.filter((v) => v > 0), 1);
-            yOfPrimary = (s: number) => mT + cH * (1 - s / maxS);
+            yOfPrimary = (s: number) => pTop + primaryH * (1 - s / maxS);
         }
-        {
-            const hrs = this.records.map((r) => r.heartRate).filter((v) => v > 0);
-            maxHR = hrs.length ? Math.max(...hrs) * 1.05 : 220;
-            yOfHR = (hr: number) => mT + cH * (1 - hr / maxHR);
-        }
-        {
-            const cads = this.records.map((r) => r.cadence).filter((v) => v > 0);
-            maxCad = cads.length ? Math.max(...cads) * 1.1 : 120;
-            yOfCad = (c: number) => mT + cH * (1 - c / maxCad);
-        }
+
+        const hrs = this.records.map((r) => r.heartRate).filter((v) => v > 0);
+        const minHR = hrs.length ? Math.min(...hrs) * 0.9 : 60;
+        const maxHR = hrs.length ? Math.max(...hrs) * 1.05 : 220;
+        const yOfHR = (hr: number) => sTop + secondaryH * (1 - (hr - minHR) / (maxHR - minHR));
+
+        const cads = this.records.map((r) => r.cadence).filter((v) => v > 0);
+        const maxCad = cads.length ? Math.max(...cads) * 1.1 : 120;
+        const yOfCad = (c: number) => sTop + secondaryH * (1 - c / maxCad);
 
         const useZoneBlocks = this.showBlocks && this.zoneBlocks.length > 0;
         const usePlannedBlocks = this.showBlocks && !useZoneBlocks && this.blockSummaries.length > 0;
         const useBlocks = useZoneBlocks || usePlannedBlocks;
 
-        if (useZoneBlocks) {
-            // ── Zone block staircase ───────────────────────────────────────────
-            const baseY = H - mB;
+        // ── Draw separator between sections ────────────────────────────────
+        if (hasSecondary) {
+            ctx.fillStyle = 'rgba(255,255,255,0.06)';
+            ctx.fillRect(mL, pBottom + Math.floor(gap / 2), cW, 1);
+        }
 
+        // ════════════════════════════════════════════════════════════════════
+        // PRIMARY SECTION (Power / Speed)
+        // ════════════════════════════════════════════════════════════════════
+
+        if (useZoneBlocks) {
             if (this.showPrimary) {
                 for (const b of this.zoneBlocks) {
                     const x1 = xOf(b.startIndex);
@@ -199,7 +209,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
                     const val = this.isCycling ? b.avgPower : b.avgSpeed;
                     const y = yOfPrimary(val);
                     ctx.fillStyle = b.color + '40';
-                    ctx.fillRect(x1, y, x2 - x1, baseY - y);
+                    ctx.fillRect(x1, y, x2 - x1, pBottom - y);
                     ctx.strokeStyle = b.color;
                     ctx.lineWidth = 2;
                     ctx.beginPath();
@@ -208,48 +218,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
                     ctx.stroke();
                 }
             }
-
-            if (this.showHR) {
-                ctx.save();
-                ctx.setLineDash([3, 3]);
-                ctx.strokeStyle = '#e74c3c';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                let first = true;
-                for (const b of this.zoneBlocks) {
-                    const x1 = xOf(b.startIndex);
-                    const x2 = xOf(b.endIndex);
-                    const y = yOfHR!(b.avgHR);
-                    if (first) { ctx.moveTo(x1, y); first = false; }
-                    else ctx.lineTo(x1, y);
-                    ctx.lineTo(x2, y);
-                }
-                ctx.stroke();
-                ctx.restore();
-            }
-
-            if (this.showCadence) {
-                ctx.save();
-                ctx.setLineDash([2, 4]);
-                ctx.strokeStyle = '#3b82f6';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                let first = true;
-                for (const b of this.zoneBlocks) {
-                    const x1 = xOf(b.startIndex);
-                    const x2 = xOf(b.endIndex);
-                    const y = yOfCad!(b.avgCadence);
-                    if (first) { ctx.moveTo(x1, y); first = false; }
-                    else ctx.lineTo(x1, y);
-                    ctx.lineTo(x2, y);
-                }
-                ctx.stroke();
-                ctx.restore();
-            }
-
         } else if (usePlannedBlocks) {
-            // ── Planned block staircase ────────────────────────────────────────
-            const baseY = H - mB;
             const xTime = (sec: number) => mL + (sec / totalSec) * cW;
             let accTime = 0;
 
@@ -260,7 +229,6 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
                     const val = this.isCycling ? b.actualPower : (b.distanceMeters && b.durationSeconds > 0
                         ? (b.distanceMeters / b.durationSeconds) * 3.6 : 0);
                     const y = yOfPrimary(val);
-                    // Target line (dashed, dimmer)
                     if (b.targetPower > 0) {
                         const yTarget = yOfPrimary(b.targetPower);
                         ctx.save();
@@ -273,9 +241,8 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
                         ctx.stroke();
                         ctx.restore();
                     }
-                    // Actual filled step
                     ctx.fillStyle = accent + '30';
-                    ctx.fillRect(x1, y, x2 - x1, baseY - y);
+                    ctx.fillRect(x1, y, x2 - x1, pBottom - y);
                     ctx.strokeStyle = accent;
                     ctx.lineWidth = 2;
                     ctx.beginPath();
@@ -284,59 +251,12 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
                     ctx.stroke();
                     accTime += b.durationSeconds;
                 }
-            } else {
-                // Still need to advance accTime for HR/cadence
-                accTime = 0;
             }
-
-            if (this.showHR) {
-                ctx.save();
-                ctx.setLineDash([3, 3]);
-                ctx.strokeStyle = '#e74c3c';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                let first = true;
-                let t = 0;
-                for (const b of this.blockSummaries) {
-                    const x1 = xTime(t);
-                    const x2 = xTime(t + b.durationSeconds);
-                    const y = yOfHR!(b.actualHR);
-                    if (first) { ctx.moveTo(x1, y); first = false; }
-                    else ctx.lineTo(x1, y);
-                    ctx.lineTo(x2, y);
-                    t += b.durationSeconds;
-                }
-                ctx.stroke();
-                ctx.restore();
-            }
-
-            if (this.showCadence) {
-                ctx.save();
-                ctx.setLineDash([2, 4]);
-                ctx.strokeStyle = '#3b82f6';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                let first = true;
-                let t = 0;
-                for (const b of this.blockSummaries) {
-                    const x1 = xTime(t);
-                    const x2 = xTime(t + b.durationSeconds);
-                    const y = yOfCad!(b.actualCadence);
-                    if (first) { ctx.moveTo(x1, y); first = false; }
-                    else ctx.lineTo(x1, y);
-                    ctx.lineTo(x2, y);
-                    t += b.durationSeconds;
-                }
-                ctx.stroke();
-                ctx.restore();
-            }
-
         } else {
-            // ── Real data mode ─────────────────────────────────────────────────
+            // Real data mode — primary
             if (this.isCycling) {
                 const smoothed = this.rollingAvg(this.records.map((r) => r.power), 5);
 
-                // FTP reference line
                 if (this.ftp) {
                     const ftpY = yOfPrimary(this.ftp);
                     ctx.save();
@@ -355,108 +275,190 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
 
                 if (this.showPrimary && smoothed.length > 1) {
                     ctx.beginPath();
-                    ctx.moveTo(xOf(0), H - mB);
-                    smoothed.forEach((p, i) => ctx.lineTo(xOf(i), yOfPrimary!(p)));
-                    ctx.lineTo(xOf(n - 1), H - mB);
+                    ctx.moveTo(xOf(0), pBottom);
+                    smoothed.forEach((p, i) => ctx.lineTo(xOf(i), yOfPrimary(p)));
+                    ctx.lineTo(xOf(n - 1), pBottom);
                     ctx.closePath();
-                    const grad = ctx.createLinearGradient(0, mT, 0, H - mB);
+                    const grad = ctx.createLinearGradient(0, pTop, 0, pBottom);
                     grad.addColorStop(0, accent + '80');
                     grad.addColorStop(1, accent + '08');
                     ctx.fillStyle = grad;
                     ctx.fill();
 
                     ctx.beginPath();
-                    ctx.moveTo(xOf(0), yOfPrimary!(smoothed[0]));
-                    smoothed.forEach((p, i) => ctx.lineTo(xOf(i), yOfPrimary!(p)));
+                    ctx.moveTo(xOf(0), yOfPrimary(smoothed[0]));
+                    smoothed.forEach((p, i) => ctx.lineTo(xOf(i), yOfPrimary(p)));
                     ctx.strokeStyle = accent;
                     ctx.lineWidth = 2;
                     ctx.stroke();
                 }
-
             } else {
                 const speeds = this.records.map((r) => (r.speed || 0) * 3.6);
                 const smoothed = this.rollingAvg(speeds, 5);
 
                 if (this.showPrimary && smoothed.length > 1) {
                     ctx.beginPath();
-                    ctx.moveTo(xOf(0), H - mB);
-                    smoothed.forEach((s, i) => ctx.lineTo(xOf(i), yOfPrimary!(s)));
-                    ctx.lineTo(xOf(n - 1), H - mB);
+                    ctx.moveTo(xOf(0), pBottom);
+                    smoothed.forEach((s, i) => ctx.lineTo(xOf(i), yOfPrimary(s)));
+                    ctx.lineTo(xOf(n - 1), pBottom);
                     ctx.closePath();
-                    const grad = ctx.createLinearGradient(0, mT, 0, H - mB);
+                    const grad = ctx.createLinearGradient(0, pTop, 0, pBottom);
                     grad.addColorStop(0, accent + '80');
                     grad.addColorStop(1, accent + '08');
                     ctx.fillStyle = grad;
                     ctx.fill();
 
                     ctx.beginPath();
-                    ctx.moveTo(xOf(0), yOfPrimary!(smoothed[0]));
-                    smoothed.forEach((s, i) => ctx.lineTo(xOf(i), yOfPrimary!(s)));
+                    ctx.moveTo(xOf(0), yOfPrimary(smoothed[0]));
+                    smoothed.forEach((s, i) => ctx.lineTo(xOf(i), yOfPrimary(s)));
                     ctx.strokeStyle = accent;
                     ctx.lineWidth = 2;
                     ctx.stroke();
                 }
             }
+        }
 
-            // ── HR line (real) ─────────────────────────────────────────────────
-            if (this.showHR) {
-                ctx.save();
-                ctx.setLineDash([3, 3]);
-                ctx.beginPath();
-                let first = true;
-                this.records.forEach((r, i) => {
-                    if (!r.heartRate) return;
-                    if (first) { ctx.moveTo(xOf(i), yOfHR!(r.heartRate)); first = false; }
-                    else ctx.lineTo(xOf(i), yOfHR!(r.heartRate));
-                });
-                ctx.strokeStyle = '#e74c3c';
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-                ctx.restore();
+        // ════════════════════════════════════════════════════════════════════
+        // SECONDARY SECTION (HR + Cadence) — solid lines, own Y region
+        // ════════════════════════════════════════════════════════════════════
+
+        if (hasSecondary) {
+            if (useZoneBlocks) {
+                if (this.showHR) {
+                    ctx.strokeStyle = '#e74c3c';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    let first = true;
+                    for (const b of this.zoneBlocks) {
+                        const x1 = xOf(b.startIndex);
+                        const x2 = xOf(b.endIndex);
+                        const y = yOfHR(b.avgHR);
+                        if (first) { ctx.moveTo(x1, y); first = false; }
+                        else ctx.lineTo(x1, y);
+                        ctx.lineTo(x2, y);
+                    }
+                    ctx.stroke();
+                }
+                if (this.showCadence) {
+                    ctx.strokeStyle = '#3b82f6';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    let first = true;
+                    for (const b of this.zoneBlocks) {
+                        const x1 = xOf(b.startIndex);
+                        const x2 = xOf(b.endIndex);
+                        const y = yOfCad(b.avgCadence);
+                        if (first) { ctx.moveTo(x1, y); first = false; }
+                        else ctx.lineTo(x1, y);
+                        ctx.lineTo(x2, y);
+                    }
+                    ctx.stroke();
+                }
+            } else if (usePlannedBlocks) {
+                const xTime = (sec: number) => mL + (sec / totalSec) * cW;
+                if (this.showHR) {
+                    ctx.strokeStyle = '#e74c3c';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    let first = true;
+                    let t = 0;
+                    for (const b of this.blockSummaries) {
+                        const x1 = xTime(t);
+                        const x2 = xTime(t + b.durationSeconds);
+                        const y = yOfHR(b.actualHR);
+                        if (first) { ctx.moveTo(x1, y); first = false; }
+                        else ctx.lineTo(x1, y);
+                        ctx.lineTo(x2, y);
+                        t += b.durationSeconds;
+                    }
+                    ctx.stroke();
+                }
+                if (this.showCadence) {
+                    ctx.strokeStyle = '#3b82f6';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    let first = true;
+                    let t = 0;
+                    for (const b of this.blockSummaries) {
+                        const x1 = xTime(t);
+                        const x2 = xTime(t + b.durationSeconds);
+                        const y = yOfCad(b.actualCadence);
+                        if (first) { ctx.moveTo(x1, y); first = false; }
+                        else ctx.lineTo(x1, y);
+                        ctx.lineTo(x2, y);
+                        t += b.durationSeconds;
+                    }
+                    ctx.stroke();
+                }
+            } else {
+                // Real data — solid lines
+                if (this.showHR) {
+                    ctx.beginPath();
+                    let first = true;
+                    this.records.forEach((r, i) => {
+                        if (!r.heartRate) return;
+                        if (first) { ctx.moveTo(xOf(i), yOfHR(r.heartRate)); first = false; }
+                        else ctx.lineTo(xOf(i), yOfHR(r.heartRate));
+                    });
+                    ctx.strokeStyle = '#e74c3c';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                }
+
+                if (this.showCadence) {
+                    ctx.beginPath();
+                    let first = true;
+                    this.records.forEach((r, i) => {
+                        if (!r.cadence) return;
+                        if (first) { ctx.moveTo(xOf(i), yOfCad(r.cadence)); first = false; }
+                        else ctx.lineTo(xOf(i), yOfCad(r.cadence));
+                    });
+                    ctx.strokeStyle = '#3b82f6';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                }
             }
 
-            // ── Cadence line (real) ────────────────────────────────────────────
+            // Secondary Y-axis labels
+            if (this.showHR) {
+                ctx.fillStyle = '#e74c3c';
+                ctx.font = '9px monospace';
+                ctx.textAlign = 'right';
+                const hrLow = Math.round(minHR);
+                const hrHigh = Math.round(maxHR);
+                const hrMid = Math.round((minHR + maxHR) / 2);
+                ctx.fillText(String(hrHigh), mL - 4, yOfHR(hrHigh) + 4);
+                ctx.fillText(String(hrMid), mL - 4, yOfHR(hrMid) + 4);
+                ctx.fillText(String(hrLow), mL - 4, yOfHR(hrLow) + 4);
+            }
             if (this.showCadence) {
-                ctx.save();
-                ctx.setLineDash([2, 4]);
-                ctx.beginPath();
-                let first = true;
-                this.records.forEach((r, i) => {
-                    if (!r.cadence) return;
-                    if (first) { ctx.moveTo(xOf(i), yOfCad!(r.cadence)); first = false; }
-                    else ctx.lineTo(xOf(i), yOfCad!(r.cadence));
+                ctx.fillStyle = '#3b82f6';
+                ctx.font = '9px monospace';
+                ctx.textAlign = 'left';
+                [0, 0.5, 1].forEach((frac) => {
+                    const c = Math.round(maxCad * frac);
+                    ctx.fillText(String(c), W - mR + 4, yOfCad(c) + 4);
                 });
-                ctx.strokeStyle = '#3b82f6';
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-                ctx.restore();
             }
         }
 
-        // ── Y-axis labels ──────────────────────────────────────────────────
+        // ── Primary Y-axis labels ──────────────────────────────────────────
         ctx.fillStyle = 'rgba(255,255,255,0.4)';
         ctx.font = '9px monospace';
         ctx.textAlign = 'right';
         if (this.isCycling) {
             [0, 0.5, 1].forEach((frac) => {
                 const p = Math.round(maxP * frac);
-                ctx.fillText(String(p), mL - 4, yOfPrimary!(p) + 4);
+                ctx.fillText(String(p), mL - 4, yOfPrimary(p) + 4);
             });
         } else {
             [0, 0.5, 1].forEach((frac) => {
                 const s = Math.round(maxS * frac * 10) / 10;
-                ctx.fillText(s + ' km/h', mL - 4, yOfPrimary!(s) + 4);
+                ctx.fillText(s + ' km/h', mL - 4, yOfPrimary(s) + 4);
             });
         }
 
-        if (this.showHR) {
-            ctx.fillStyle = '#e74c3c';
-            ctx.font = '9px monospace';
-            ctx.textAlign = 'right';
-            ctx.fillText('HR', W - 2, mT + 10);
-        }
-
-        // ── Block boundary dashed lines ──────────────────────────────────────
+        // ── Block boundary dashed lines ────────────────────────────────────
         if (this.blockSummaries.length > 0 && !useBlocks) {
             ctx.save();
             ctx.setLineDash([4, 4]);
@@ -464,18 +466,19 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
             ctx.lineWidth = 1;
 
             let accTime = 0;
+            const lineBottom = hasSecondary ? sBottom : pBottom;
             for (let i = 0; i < this.blockSummaries.length - 1; i++) {
                 accTime += this.blockSummaries[i].durationSeconds;
                 const x = mL + (accTime / totalSec) * cW;
                 ctx.beginPath();
                 ctx.moveTo(x, mT);
-                ctx.lineTo(x, H - mB);
+                ctx.lineTo(x, lineBottom);
                 ctx.stroke();
             }
             ctx.restore();
         }
 
-        // ── X-axis labels (elapsed minutes) ──────────────────────────────────
+        // ── X-axis labels (elapsed minutes) ────────────────────────────────
         const tickEvery = this.pickTickInterval(totalSec);
         ctx.fillStyle = 'rgba(255,255,255,0.4)';
         ctx.font = '9px monospace';
@@ -485,22 +488,23 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
             ctx.fillText(`${Math.round(s / 60)}m`, x, H - 6);
         }
 
-        // ── Hover crosshair + tooltip ─────────────────────────────────────────
+        // ── Hover crosshair + tooltip ──────────────────────────────────────
         if (this.hoverIdx === null) return;
         const rec = this.records[this.hoverIdx];
         const hx = xOf(this.hoverIdx);
+        const crosshairBottom = hasSecondary ? sBottom : pBottom;
 
-        // Vertical crosshair
+        // Vertical crosshair spanning both sections
         ctx.save();
         ctx.strokeStyle = 'rgba(255,255,255,0.25)';
         ctx.lineWidth = 1;
         ctx.setLineDash([]);
         ctx.beginPath();
-        ctx.moveTo(hx, mT); ctx.lineTo(hx, H - mB);
+        ctx.moveTo(hx, mT); ctx.lineTo(hx, crosshairBottom);
         ctx.stroke();
         ctx.restore();
 
-        // Resolve block context for tooltip when in block mode
+        // Resolve block context
         let blockPrimary: number | null = null;
         let blockMaxPrimary: number | null = null;
         let blockHR: number | null = null;
@@ -534,19 +538,22 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
 
         const inBlock = useBlocks && blockPrimary !== null;
 
-        // Dots on visible lines
+        // Dots — primary section
         const dots: Array<{ y: number; color: string }> = [];
-        if (this.showPrimary && yOfPrimary) {
+        if (this.showPrimary) {
             const val = inBlock ? blockPrimary! : (this.isCycling ? rec.power : (rec.speed || 0) * 3.6);
             dots.push({ y: yOfPrimary(val), color: accent });
         }
-        if (this.showHR && yOfHR) {
-            const val = inBlock ? blockHR! : rec.heartRate;
-            if (val) dots.push({ y: yOfHR(val), color: '#e74c3c' });
-        }
-        if (this.showCadence && yOfCad) {
-            const val = inBlock ? blockCad! : rec.cadence;
-            if (val) dots.push({ y: yOfCad(val), color: '#3b82f6' });
+        // Dots — secondary section
+        if (hasSecondary) {
+            if (this.showHR) {
+                const val = inBlock ? blockHR! : rec.heartRate;
+                if (val) dots.push({ y: yOfHR(val), color: '#e74c3c' });
+            }
+            if (this.showCadence) {
+                const val = inBlock ? blockCad! : rec.cadence;
+                if (val) dots.push({ y: yOfCad(val), color: '#3b82f6' });
+            }
         }
         dots.forEach(({ y, color }) => {
             ctx.beginPath();
@@ -600,7 +607,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         let tx = hx + 14;
         if (tx + boxW > W - mR) tx = hx - boxW - 14;
         let ty = mT + 16;
-        if (ty + boxH > H - mB) ty = H - mB - boxH;
+        if (ty + boxH > crosshairBottom) ty = crosshairBottom - boxH;
 
         // Background
         ctx.save();

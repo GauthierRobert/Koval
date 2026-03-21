@@ -160,7 +160,7 @@ public class SessionController {
     public ResponseEntity<?> downloadFit(@PathVariable String id) {
         String userId = SecurityUtils.getCurrentUserId();
         return repository.findById(id)
-                .filter(s -> userId.equals(s.getUserId()))
+                .filter(s -> userId.equals(s.getUserId()) || isCoachOfAthlete(userId, s.getUserId()))
                 .filter(s -> s.getFitFileId() != null)
                 .map(s -> {
                     try {

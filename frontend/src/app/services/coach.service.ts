@@ -138,6 +138,10 @@ export class CoachService {
             .pipe(catchError(() => of([] as any[])));
     }
 
+    getSessionById(sessionId: string): Observable<any> {
+        return this.http.get<any>(`${environment.apiUrl}/api/sessions/${sessionId}`);
+    }
+
     getAthletePmc(athleteId: string, from: string, to: string): Observable<PmcDataPoint[]> {
         return this.http
             .get<PmcDataPoint[]>(`${this.apiUrl}/athletes/${athleteId}/pmc`, {

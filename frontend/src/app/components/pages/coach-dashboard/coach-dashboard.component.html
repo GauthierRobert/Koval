@@ -439,38 +439,45 @@
         }
 
         @if (activeTab === 'history') {
-          @if (athleteSessions$ | async; as sessions) {
-            @if (sessions.length > 0) {
-              <div class="history-table">
-                <div class="hist-header">
-                  <span>DATE</span>
-                  <span>SPORT</span>
-                  <span>TITLE</span>
-                  <span>DUR</span>
-                  <span>PWR</span>
-                  <span>TSS</span>
-                  <span>IF</span>
-                </div>
-                @for (s of sessions; track trackSessionById(s)) {
-                  <div class="hist-row">
-                    <span>{{ s.completedAt | date:'MMM d' }}</span>
-                    <span><app-sport-icon [sport]="$any(s.sportType)" [size]="12"></app-sport-icon></span>
-                    <span class="hist-title">{{ s.title }}</span>
-                    <span>{{ formatSessionDur(s.totalDurationSeconds) }}</span>
-                    <span>{{ s.avgPower | number:'1.0-0' }}W</span>
-                    <span>{{ s.tss | number:'1.0-0' }}</span>
-                    <span>{{ s.intensityFactor | number:'1.2-2' }}</span>
+          @if (selectedAthleteSession$ | async; as analysisSession) {
+            <div class="analysis-back-row">
+              <button class="back-btn" (click)="closeSessionAnalysis()">&#8592; Back to history</button>
+            </div>
+            <app-session-analysis [session]="analysisSession"></app-session-analysis>
+          } @else {
+            @if (athleteSessions$ | async; as sessions) {
+              @if (sessions.length > 0) {
+                <div class="history-table">
+                  <div class="hist-header">
+                    <span>DATE</span>
+                    <span>SPORT</span>
+                    <span>TITLE</span>
+                    <span>DUR</span>
+                    <span>PWR</span>
+                    <span>TSS</span>
+                    <span>IF</span>
                   </div>
-                }
-              </div>
-            }
-            @if (athleteSessionsError$ | async; as hasError) {
-              @if (hasError) {
-                <div class="empty-tab">Failed to load session data.</div>
+                  @for (s of sessions; track trackSessionById(s)) {
+                    <div class="hist-row clickable" (click)="openSessionAnalysis(s)">
+                      <span>{{ s.completedAt | date:'MMM d' }}</span>
+                      <span><app-sport-icon [sport]="$any(s.sportType)" [size]="12"></app-sport-icon></span>
+                      <span class="hist-title">{{ s.title }}</span>
+                      <span>{{ formatSessionDur(s.totalDurationSeconds) }}</span>
+                      <span>{{ s.avgPower | number:'1.0-0' }}W</span>
+                      <span>{{ s.tss | number:'1.0-0' }}</span>
+                      <span>{{ s.intensityFactor | number:'1.2-2' }}</span>
+                    </div>
+                  }
+                </div>
               }
-            }
-            @if (sessions.length === 0 && !(athleteSessionsError$ | async)) {
-              <div class="empty-tab">No recorded sessions yet.</div>
+              @if (athleteSessionsError$ | async; as hasError) {
+                @if (hasError) {
+                  <div class="empty-tab">Failed to load session data.</div>
+                }
+              }
+              @if (sessions.length === 0 && !(athleteSessionsError$ | async)) {
+                <div class="empty-tab">No recorded sessions yet.</div>
+              }
             }
           }
         }

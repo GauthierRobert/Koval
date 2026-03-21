@@ -61,10 +61,10 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'analysis/:id',
+    path: 'analysis/:sessionId',
     loadComponent: () =>
-      import('./components/pages/session-analysis/session-analysis.component').then(
-        (m) => m.SessionAnalysisComponent,
+      import('./components/pages/workout-history/workout-history.component').then(
+        (m) => m.WorkoutHistoryComponent,
       ),
     canActivate: [authGuard],
   },
