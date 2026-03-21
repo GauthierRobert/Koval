@@ -57,6 +57,39 @@
   cursor: not-allowed;
 }
 
+.sidebar-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.strava-btn {
+  background: rgba(252, 76, 2, 0.08);
+  border-color: rgba(252, 76, 2, 0.25);
+  color: #fc4c02;
+}
+
+.strava-btn:hover:not(:disabled) {
+  background: rgba(252, 76, 2, 0.15);
+}
+
+.sync-result {
+  margin: 8px 12px;
+  padding: 8px 12px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: var(--radius-sm);
+  color: #22c55e;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.sync-result.sync-empty {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+}
+
 .fit-input {
   display: none;
 }

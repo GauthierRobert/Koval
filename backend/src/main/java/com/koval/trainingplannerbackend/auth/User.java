@@ -46,6 +46,7 @@ public class User {
     private String stravaAccessToken;
     private String stravaRefreshToken;
     private Long stravaTokenExpiresAt;
+    private LocalDateTime stravaLastSyncAt;
 
     public User() {
         this.createdAt = LocalDateTime.now();

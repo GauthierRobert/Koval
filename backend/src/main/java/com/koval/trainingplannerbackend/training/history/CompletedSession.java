@@ -38,6 +38,9 @@ public class CompletedSession {
     private Integer rpe;
     private boolean syntheticCompletion; // true when created from planned data via COMPLETE button
 
+    @Indexed(unique = true, sparse = true)
+    private String stravaActivityId;
+
     public record BlockSummary(
             String label,
             String type,

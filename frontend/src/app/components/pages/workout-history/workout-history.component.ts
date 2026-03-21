@@ -13,6 +13,7 @@ import {BlockSummary, SessionSummary} from '../../../services/workout-execution.
 import {FitExportService} from '../../../services/fit-export.service';
 import {AuthService} from '../../../services/auth.service';
 import {MetricsService} from '../../../services/metrics.service';
+import {StravaSyncService} from '../../../services/strava-sync.service';
 
 // @ts-ignore
 import FitParser from 'fit-file-parser';
@@ -34,6 +35,7 @@ export class WorkoutHistoryComponent {
     private fitExport = inject(FitExportService);
     private authService = inject(AuthService);
     private metricsService = inject(MetricsService);
+    stravaSyncService = inject(StravaSyncService);
 
     sessions$ = this.historyService.sessions$;
 
@@ -93,6 +95,9 @@ export class WorkoutHistoryComponent {
 
     ftp$ = this.authService.user$.pipe(map((u) => u?.ftp ?? null));
 
+    syncing$ = this.stravaSyncService.syncing$;
+    syncResult$ = this.stravaSyncService.lastResult$;
+
     importing = false;
     importError = false;
 
@@ -108,13 +113,24 @@ export class WorkoutHistoryComponent {
         return this.metricsService.computeIF(session.avgPower, ftp);
     }
 
+    syncStrava(): void {
+        this.stravaSyncService.sync().subscribe();
+    }
+
     onSelect(session: SavedSession): void {
         this.historyService.selectSession(session);
     }
 
     downloadFit(event: Event, session: SavedSession) {
         event.stopPropagation();
-        this.fitExport.exportSession(session, session.date);
+        if (session.stravaActivityId && !session.fitFileId) {
+            // Strava session without FIT — build it from streams first, then download
+            this.stravaSyncService.buildFit(session.id).subscribe({
+                next: () => this.fitExport.exportSession(session, session.date),
+            });
+        } else {
+            this.fitExport.exportSession(session, session.date);
+        }
     }
 
     triggerUpload() {

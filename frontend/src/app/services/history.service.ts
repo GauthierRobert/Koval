@@ -19,6 +19,7 @@ export interface SavedSession extends SessionSummary {
     fitFileId?: string;
     rpe?: number;
     scheduledWorkoutId?: string;
+    stravaActivityId?: string;
 }
 
 @Injectable({
@@ -45,6 +46,10 @@ export class HistoryService {
         ).subscribe(() => this.loadSessions());
     }
 
+    reload(): void {
+        this.loadSessions();
+    }
+
     private loadSessions(): void {
         this.http.get<any[]>(this.apiUrl).subscribe({
             next: (sessions) => {
@@ -67,6 +72,7 @@ export class HistoryService {
                     fitFileId: s.fitFileId ?? undefined,
                     rpe: s.rpe ?? undefined,
                     scheduledWorkoutId: s.scheduledWorkoutId ?? undefined,
+                    stravaActivityId: s.stravaActivityId ?? undefined,
                 }));
                 parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
                 this.sessionsSubject.next(parsed);
