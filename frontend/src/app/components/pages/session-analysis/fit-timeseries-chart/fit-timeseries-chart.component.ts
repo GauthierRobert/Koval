@@ -2,6 +2,7 @@ import {AfterViewInit, Component, ElementRef, Input, OnChanges, ViewChild,} from
 import {CommonModule} from '@angular/common';
 import {FitRecord} from '../../../../services/metrics.service';
 import {BlockSummary} from '../../../../services/workout-execution.service';
+import {ZoneBlock} from '../session-analysis.component';
 
 @Component({
     selector: 'app-fit-timeseries-chart',
@@ -19,6 +20,12 @@ import {BlockSummary} from '../../../../services/workout-execution.service';
                 <button class="toggle-btn" [class.active]="showCadence" (click)="showCadence = !showCadence; draw()">
                     <span class="dot cad"></span> Cadence
                 </button>
+                @if (zoneBlocks.length > 0 || blockSummaries.length > 0) {
+                    <span class="toggle-sep"></span>
+                    <button class="toggle-btn" [class.active]="showBlocks" (click)="showBlocks = !showBlocks; draw()">
+                        <span class="dot blocks"></span> Blocks
+                    </button>
+                }
             </div>
             <canvas #canvas class="chart-canvas"
                 (mousemove)="onMouseMove($event)"
@@ -50,6 +57,12 @@ import {BlockSummary} from '../../../../services/workout-execution.service';
         .dot.power { background: var(--accent-color, #ff9d00); }
         .dot.hr { background: #e74c3c; }
         .dot.cad { background: #3b82f6; }
+        .dot.blocks { background: #2ecc71; }
+        .toggle-sep {
+            width: 1px; height: 16px;
+            background: rgba(255,255,255,0.1);
+            margin: 0 2px;
+        }
         .chart-canvas { width: 100%; height: 200px; display: block; cursor: crosshair; }
     `],
 })
@@ -58,12 +71,14 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
     @Input() ftp: number | null = null;
     @Input() sportType = 'CYCLING';
     @Input() blockSummaries: BlockSummary[] = [];
+    @Input() zoneBlocks: ZoneBlock[] = [];
 
     @ViewChild('canvas') private canvasRef!: ElementRef<HTMLCanvasElement>;
 
     showPrimary = true;
     showHR = true;
     showCadence = false;
+    showBlocks = false;
 
     private ready = false;
     private hoverIdx: number | null = null;
@@ -146,146 +161,303 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         let maxCad = 120;
         let yOfCad: ((c: number) => number) | null = null;
 
+        // Compute scales (needed for both real and block modes)
+        let maxP = 1, maxS = 1;
         if (this.isCycling) {
-            // ── Primary metric: Power (W) ─────────────────────────────────────
             const smoothed = this.rollingAvg(this.records.map((r) => r.power), 5);
-            const maxP = Math.max(this.ftp ? this.ftp * 1.5 : 0, ...smoothed) || 1;
-            const yOfPow = (p: number) => mT + cH * (1 - p / maxP);
-            yOfPrimary = yOfPow;
-
-            // FTP reference line (only if FTP is set)
-            if (this.ftp) {
-                const ftpY = yOfPow(this.ftp);
-                ctx.save();
-                ctx.setLineDash([4, 4]);
-                ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(mL, ftpY); ctx.lineTo(W - mR, ftpY);
-                ctx.stroke();
-                ctx.restore();
-                ctx.fillStyle = 'rgba(255,255,255,0.3)';
-                ctx.font = '9px monospace';
-                ctx.textAlign = 'left';
-                ctx.fillText('FTP', mL + 2, ftpY - 3);
-            }
-
-            if (this.showPrimary && smoothed.length > 1) {
-                ctx.beginPath();
-                ctx.moveTo(xOf(0), H - mB);
-                smoothed.forEach((p, i) => ctx.lineTo(xOf(i), yOfPow(p)));
-                ctx.lineTo(xOf(n - 1), H - mB);
-                ctx.closePath();
-                const grad = ctx.createLinearGradient(0, mT, 0, H - mB);
-                grad.addColorStop(0, accent + '80');
-                grad.addColorStop(1, accent + '08');
-                ctx.fillStyle = grad;
-                ctx.fill();
-
-                ctx.beginPath();
-                ctx.moveTo(xOf(0), yOfPow(smoothed[0]));
-                smoothed.forEach((p, i) => ctx.lineTo(xOf(i), yOfPow(p)));
-                ctx.strokeStyle = accent;
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
-
-            // Left Y-axis labels (watts)
-            ctx.fillStyle = 'rgba(255,255,255,0.4)';
-            ctx.font = '9px monospace';
-            ctx.textAlign = 'right';
-            [0, 0.5, 1].forEach((frac) => {
-                const p = Math.round(maxP * frac);
-                ctx.fillText(String(p), mL - 4, yOfPow(p) + 4);
-            });
-
+            maxP = Math.max(this.ftp ? this.ftp * 1.5 : 0, ...smoothed) || 1;
+            yOfPrimary = (p: number) => mT + cH * (1 - p / maxP);
         } else {
-            // ── Primary metric: Speed (km/h) for running/swimming ─────────────
             const speeds = this.records.map((r) => (r.speed || 0) * 3.6);
-            const smoothed = this.rollingAvg(speeds, 5);
-            const maxS = Math.max(...smoothed.filter((v) => v > 0), 1);
-            const yOfSpd = (s: number) => mT + cH * (1 - s / maxS);
-            yOfPrimary = yOfSpd;
-
-            if (this.showPrimary && smoothed.length > 1) {
-                ctx.beginPath();
-                ctx.moveTo(xOf(0), H - mB);
-                smoothed.forEach((s, i) => ctx.lineTo(xOf(i), yOfSpd(s)));
-                ctx.lineTo(xOf(n - 1), H - mB);
-                ctx.closePath();
-                const grad = ctx.createLinearGradient(0, mT, 0, H - mB);
-                grad.addColorStop(0, accent + '80');
-                grad.addColorStop(1, accent + '08');
-                ctx.fillStyle = grad;
-                ctx.fill();
-
-                ctx.beginPath();
-                ctx.moveTo(xOf(0), yOfSpd(smoothed[0]));
-                smoothed.forEach((s, i) => ctx.lineTo(xOf(i), yOfSpd(s)));
-                ctx.strokeStyle = accent;
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
-
-            // Left Y-axis labels (km/h)
-            ctx.fillStyle = 'rgba(255,255,255,0.4)';
-            ctx.font = '9px monospace';
-            ctx.textAlign = 'right';
-            [0, 0.5, 1].forEach((frac) => {
-                const s = Math.round(maxS * frac * 10) / 10;
-                ctx.fillText(s + ' km/h', mL - 4, yOfSpd(s) + 4);
-            });
+            const smoothedS = this.rollingAvg(speeds, 5);
+            maxS = Math.max(...smoothedS.filter((v) => v > 0), 1);
+            yOfPrimary = (s: number) => mT + cH * (1 - s / maxS);
         }
-
-        // ── HR line (right scale, all sports) ────────────────────────────────
-        if (this.showHR) {
+        {
             const hrs = this.records.map((r) => r.heartRate).filter((v) => v > 0);
             maxHR = hrs.length ? Math.max(...hrs) * 1.05 : 220;
             yOfHR = (hr: number) => mT + cH * (1 - hr / maxHR);
+        }
+        {
+            const cads = this.records.map((r) => r.cadence).filter((v) => v > 0);
+            maxCad = cads.length ? Math.max(...cads) * 1.1 : 120;
+            yOfCad = (c: number) => mT + cH * (1 - c / maxCad);
+        }
 
-            ctx.save();
-            ctx.setLineDash([3, 3]);
-            ctx.beginPath();
-            let first = true;
-            this.records.forEach((r, i) => {
-                if (!r.heartRate) return;
-                if (first) { ctx.moveTo(xOf(i), yOfHR!(r.heartRate)); first = false; }
-                else ctx.lineTo(xOf(i), yOfHR!(r.heartRate));
+        const useZoneBlocks = this.showBlocks && this.zoneBlocks.length > 0;
+        const usePlannedBlocks = this.showBlocks && !useZoneBlocks && this.blockSummaries.length > 0;
+        const useBlocks = useZoneBlocks || usePlannedBlocks;
+
+        if (useZoneBlocks) {
+            // ── Zone block staircase ───────────────────────────────────────────
+            const baseY = H - mB;
+
+            if (this.showPrimary) {
+                for (const b of this.zoneBlocks) {
+                    const x1 = xOf(b.startIndex);
+                    const x2 = xOf(b.endIndex);
+                    const val = this.isCycling ? b.avgPower : b.avgSpeed;
+                    const y = yOfPrimary(val);
+                    ctx.fillStyle = b.color + '40';
+                    ctx.fillRect(x1, y, x2 - x1, baseY - y);
+                    ctx.strokeStyle = b.color;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y);
+                    ctx.lineTo(x2, y);
+                    ctx.stroke();
+                }
+            }
+
+            if (this.showHR) {
+                ctx.save();
+                ctx.setLineDash([3, 3]);
+                ctx.strokeStyle = '#e74c3c';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                let first = true;
+                for (const b of this.zoneBlocks) {
+                    const x1 = xOf(b.startIndex);
+                    const x2 = xOf(b.endIndex);
+                    const y = yOfHR!(b.avgHR);
+                    if (first) { ctx.moveTo(x1, y); first = false; }
+                    else ctx.lineTo(x1, y);
+                    ctx.lineTo(x2, y);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            if (this.showCadence) {
+                ctx.save();
+                ctx.setLineDash([2, 4]);
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                let first = true;
+                for (const b of this.zoneBlocks) {
+                    const x1 = xOf(b.startIndex);
+                    const x2 = xOf(b.endIndex);
+                    const y = yOfCad!(b.avgCadence);
+                    if (first) { ctx.moveTo(x1, y); first = false; }
+                    else ctx.lineTo(x1, y);
+                    ctx.lineTo(x2, y);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+
+        } else if (usePlannedBlocks) {
+            // ── Planned block staircase ────────────────────────────────────────
+            const baseY = H - mB;
+            const xTime = (sec: number) => mL + (sec / totalSec) * cW;
+            let accTime = 0;
+
+            if (this.showPrimary) {
+                for (const b of this.blockSummaries) {
+                    const x1 = xTime(accTime);
+                    const x2 = xTime(accTime + b.durationSeconds);
+                    const val = this.isCycling ? b.actualPower : (b.distanceMeters && b.durationSeconds > 0
+                        ? (b.distanceMeters / b.durationSeconds) * 3.6 : 0);
+                    const y = yOfPrimary(val);
+                    // Target line (dashed, dimmer)
+                    if (b.targetPower > 0) {
+                        const yTarget = yOfPrimary(b.targetPower);
+                        ctx.save();
+                        ctx.setLineDash([3, 3]);
+                        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(x1, yTarget);
+                        ctx.lineTo(x2, yTarget);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                    // Actual filled step
+                    ctx.fillStyle = accent + '30';
+                    ctx.fillRect(x1, y, x2 - x1, baseY - y);
+                    ctx.strokeStyle = accent;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y);
+                    ctx.lineTo(x2, y);
+                    ctx.stroke();
+                    accTime += b.durationSeconds;
+                }
+            } else {
+                // Still need to advance accTime for HR/cadence
+                accTime = 0;
+            }
+
+            if (this.showHR) {
+                ctx.save();
+                ctx.setLineDash([3, 3]);
+                ctx.strokeStyle = '#e74c3c';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                let first = true;
+                let t = 0;
+                for (const b of this.blockSummaries) {
+                    const x1 = xTime(t);
+                    const x2 = xTime(t + b.durationSeconds);
+                    const y = yOfHR!(b.actualHR);
+                    if (first) { ctx.moveTo(x1, y); first = false; }
+                    else ctx.lineTo(x1, y);
+                    ctx.lineTo(x2, y);
+                    t += b.durationSeconds;
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            if (this.showCadence) {
+                ctx.save();
+                ctx.setLineDash([2, 4]);
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                let first = true;
+                let t = 0;
+                for (const b of this.blockSummaries) {
+                    const x1 = xTime(t);
+                    const x2 = xTime(t + b.durationSeconds);
+                    const y = yOfCad!(b.actualCadence);
+                    if (first) { ctx.moveTo(x1, y); first = false; }
+                    else ctx.lineTo(x1, y);
+                    ctx.lineTo(x2, y);
+                    t += b.durationSeconds;
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+
+        } else {
+            // ── Real data mode ─────────────────────────────────────────────────
+            if (this.isCycling) {
+                const smoothed = this.rollingAvg(this.records.map((r) => r.power), 5);
+
+                // FTP reference line
+                if (this.ftp) {
+                    const ftpY = yOfPrimary(this.ftp);
+                    ctx.save();
+                    ctx.setLineDash([4, 4]);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(mL, ftpY); ctx.lineTo(W - mR, ftpY);
+                    ctx.stroke();
+                    ctx.restore();
+                    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                    ctx.font = '9px monospace';
+                    ctx.textAlign = 'left';
+                    ctx.fillText('FTP', mL + 2, ftpY - 3);
+                }
+
+                if (this.showPrimary && smoothed.length > 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(xOf(0), H - mB);
+                    smoothed.forEach((p, i) => ctx.lineTo(xOf(i), yOfPrimary!(p)));
+                    ctx.lineTo(xOf(n - 1), H - mB);
+                    ctx.closePath();
+                    const grad = ctx.createLinearGradient(0, mT, 0, H - mB);
+                    grad.addColorStop(0, accent + '80');
+                    grad.addColorStop(1, accent + '08');
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.moveTo(xOf(0), yOfPrimary!(smoothed[0]));
+                    smoothed.forEach((p, i) => ctx.lineTo(xOf(i), yOfPrimary!(p)));
+                    ctx.strokeStyle = accent;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+
+            } else {
+                const speeds = this.records.map((r) => (r.speed || 0) * 3.6);
+                const smoothed = this.rollingAvg(speeds, 5);
+
+                if (this.showPrimary && smoothed.length > 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(xOf(0), H - mB);
+                    smoothed.forEach((s, i) => ctx.lineTo(xOf(i), yOfPrimary!(s)));
+                    ctx.lineTo(xOf(n - 1), H - mB);
+                    ctx.closePath();
+                    const grad = ctx.createLinearGradient(0, mT, 0, H - mB);
+                    grad.addColorStop(0, accent + '80');
+                    grad.addColorStop(1, accent + '08');
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.moveTo(xOf(0), yOfPrimary!(smoothed[0]));
+                    smoothed.forEach((s, i) => ctx.lineTo(xOf(i), yOfPrimary!(s)));
+                    ctx.strokeStyle = accent;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            }
+
+            // ── HR line (real) ─────────────────────────────────────────────────
+            if (this.showHR) {
+                ctx.save();
+                ctx.setLineDash([3, 3]);
+                ctx.beginPath();
+                let first = true;
+                this.records.forEach((r, i) => {
+                    if (!r.heartRate) return;
+                    if (first) { ctx.moveTo(xOf(i), yOfHR!(r.heartRate)); first = false; }
+                    else ctx.lineTo(xOf(i), yOfHR!(r.heartRate));
+                });
+                ctx.strokeStyle = '#e74c3c';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // ── Cadence line (real) ────────────────────────────────────────────
+            if (this.showCadence) {
+                ctx.save();
+                ctx.setLineDash([2, 4]);
+                ctx.beginPath();
+                let first = true;
+                this.records.forEach((r, i) => {
+                    if (!r.cadence) return;
+                    if (first) { ctx.moveTo(xOf(i), yOfCad!(r.cadence)); first = false; }
+                    else ctx.lineTo(xOf(i), yOfCad!(r.cadence));
+                });
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        // ── Y-axis labels ──────────────────────────────────────────────────
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.font = '9px monospace';
+        ctx.textAlign = 'right';
+        if (this.isCycling) {
+            [0, 0.5, 1].forEach((frac) => {
+                const p = Math.round(maxP * frac);
+                ctx.fillText(String(p), mL - 4, yOfPrimary!(p) + 4);
             });
-            ctx.strokeStyle = '#e74c3c';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-            ctx.restore();
+        } else {
+            [0, 0.5, 1].forEach((frac) => {
+                const s = Math.round(maxS * frac * 10) / 10;
+                ctx.fillText(s + ' km/h', mL - 4, yOfPrimary!(s) + 4);
+            });
+        }
 
+        if (this.showHR) {
             ctx.fillStyle = '#e74c3c';
             ctx.font = '9px monospace';
             ctx.textAlign = 'right';
             ctx.fillText('HR', W - 2, mT + 10);
         }
 
-        // ── Cadence line (right scale, all sports) ───────────────────────────
-        if (this.showCadence) {
-            const cads = this.records.map((r) => r.cadence).filter((v) => v > 0);
-            maxCad = cads.length ? Math.max(...cads) * 1.1 : 120;
-            yOfCad = (c: number) => mT + cH * (1 - c / maxCad);
-
-            ctx.save();
-            ctx.setLineDash([2, 4]);
-            ctx.beginPath();
-            let first = true;
-            this.records.forEach((r, i) => {
-                if (!r.cadence) return;
-                if (first) { ctx.moveTo(xOf(i), yOfCad!(r.cadence)); first = false; }
-                else ctx.lineTo(xOf(i), yOfCad!(r.cadence));
-            });
-            ctx.strokeStyle = '#3b82f6';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-            ctx.restore();
-        }
-
         // ── Block boundary dashed lines ──────────────────────────────────────
-        if (this.blockSummaries.length > 1) {
+        if (this.blockSummaries.length > 0 && !useBlocks) {
             ctx.save();
             ctx.setLineDash([4, 4]);
             ctx.strokeStyle = 'rgba(255,255,255,0.12)';

@@ -362,6 +362,7 @@ export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
                     ctx.fillRect(x, currentY - bH, barW, bH);
                 }
             }
+            ctx.globalAlpha = 1;
 
             // ── Fatigue zone fill ─────────────────────────────────────────────
             ctx.save();
