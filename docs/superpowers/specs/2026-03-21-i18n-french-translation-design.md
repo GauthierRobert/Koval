@@ -13,22 +13,43 @@ Add full French translation support to the Angular frontend using ngx-translate.
 ### Dependencies
 
 ```
-@ngx-translate/core
-@ngx-translate/http-loader
+@ngx-translate/core@^17.0.0
+@ngx-translate/http-loader@^17.0.0
 ```
 
 ### Translation Files
 
 ```
-frontend/src/assets/i18n/en.json   — English (source of truth)
-frontend/src/assets/i18n/fr.json   — French
+frontend/public/i18n/en.json   — English (source of truth)
+frontend/public/i18n/fr.json   — French
 ```
+
+Files placed in `public/` so they are served by Angular's build system (the project uses `public/` as asset root in `angular.json`, not `src/assets/`). The `HttpLoaderFactory` prefix is set to `./i18n/`.
 
 Single file per language. Nested JSON structure with component-based namespaces.
 
 ### App Configuration
 
-**`app.config.ts`**: Add `TranslateModule.forRoot()` with `HttpLoaderFactory` via `importProvidersFrom()`.
+**`app.config.ts`**:
+
+```typescript
+import { importProvidersFrom } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
+import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+
+export function HttpLoaderFactory(http: HttpClient) {
+  return new TranslateHttpLoader(http, './i18n/', '.json');
+}
+
+// In providers array:
+importProvidersFrom(
+  TranslateModule.forRoot({
+    loader: { provide: TranslateLoader, useFactory: HttpLoaderFactory, deps: [HttpClient] },
+    defaultLanguage: 'en'
+  })
+)
+```
 
 **Language initialization** (in `app.component.ts`):
 1. Check `localStorage.getItem('lang')`
@@ -40,7 +61,14 @@ Single file per language. Nested JSON structure with component-based namespaces.
 
 Every standalone component using the `translate` pipe must add `TranslateModule` to its `imports` array.
 
-Services using translations inject `TranslateService` and use `translate.instant('KEY')`.
+### TypeScript Translation Strategy
+
+Two patterns depending on reactivity needs:
+
+- **One-shot messages** (error toasts, notifications, confirmations): Use `translate.instant('KEY')`. These are displayed once and don't need to react to language changes.
+- **Persistent display strings** (computed labels in TS that stay on screen): Use `translate.stream('KEY')` which returns an Observable, or move the translation to the template with the `translate` pipe. This ensures the value updates when the user switches language.
+
+Methods that compute display strings (e.g., `getMembershipLabel()`, `getOpenToAllLabel()`) should return translation keys instead of English strings, and let the template translate them via the pipe.
 
 ## Key Convention
 
@@ -156,6 +184,11 @@ All ~750 strings will be translated. Major areas:
 | Common (reusable) | ~30 | — |
 | **Total** | **~780** | **~47 HTML, ~25 TS** |
 
+## Known Limitations
+
+- **Date formatting**: ~24 occurrences of hardcoded `'en-US'` locale in `toLocaleDateString()` / `toLocaleTimeString()` calls across 14 files. These dates will remain in English format regardless of language selection. Should be addressed as a follow-up by replacing hardcoded locale with the active language.
+- **Single JSON file size**: ~780 keys per file (~1500 lines of JSON). Manageable but may cause merge conflicts if multiple people edit translations simultaneously. Can split per-namespace later if needed.
+
 ## Non-Goals
 
 - Backend translation (API error messages stay in English)
@@ -164,3 +197,4 @@ All ~750 strings will be translated. Major areas:
 - Lazy-loading translation files per route
 - Translating the brand name "Koval TRAINING"
 - Translating sport-specific abbreviations that are universal (FTP, TSS, CTL, ATL, TSB, RPM, BPM, W, W/kg)
+- Date/time locale formatting (follow-up task)
