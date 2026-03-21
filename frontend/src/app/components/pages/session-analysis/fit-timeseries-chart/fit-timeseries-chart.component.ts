@@ -500,17 +500,53 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         ctx.stroke();
         ctx.restore();
 
+        // Resolve block context for tooltip when in block mode
+        let blockPrimary: number | null = null;
+        let blockMaxPrimary: number | null = null;
+        let blockHR: number | null = null;
+        let blockCad: number | null = null;
+        let blockLabel: string | null = null;
+
+        if (useZoneBlocks) {
+            const zb = this.zoneBlocks.find(b => this.hoverIdx! >= b.startIndex && this.hoverIdx! <= b.endIndex);
+            if (zb) {
+                blockPrimary = this.isCycling ? zb.avgPower : zb.avgSpeed;
+                blockMaxPrimary = this.isCycling ? zb.maxPower : zb.maxSpeed;
+                blockHR = zb.avgHR;
+                blockCad = zb.avgCadence;
+                blockLabel = `${zb.zoneLabel} · ${zb.zoneDescription}`;
+            }
+        } else if (usePlannedBlocks) {
+            const elapsed = rec.timestamp - t0;
+            let accTime = 0;
+            for (const b of this.blockSummaries) {
+                if (elapsed >= accTime && elapsed < accTime + b.durationSeconds) {
+                    blockPrimary = this.isCycling ? b.actualPower
+                        : (b.distanceMeters && b.durationSeconds > 0 ? (b.distanceMeters / b.durationSeconds) * 3.6 : 0);
+                    blockHR = b.actualHR;
+                    blockCad = b.actualCadence;
+                    blockLabel = b.label;
+                    break;
+                }
+                accTime += b.durationSeconds;
+            }
+        }
+
+        const inBlock = useBlocks && blockPrimary !== null;
+
         // Dots on visible lines
         const dots: Array<{ y: number; color: string }> = [];
         if (this.showPrimary && yOfPrimary) {
-            const val = this.isCycling ? rec.power : (rec.speed || 0) * 3.6;
+            const val = inBlock ? blockPrimary! : (this.isCycling ? rec.power : (rec.speed || 0) * 3.6);
             dots.push({ y: yOfPrimary(val), color: accent });
         }
-        if (this.showHR && yOfHR && rec.heartRate) {
-            dots.push({ y: yOfHR(rec.heartRate), color: '#e74c3c' });
+        if (this.showHR && yOfHR) {
+            const val = inBlock ? blockHR! : rec.heartRate;
+            if (val) dots.push({ y: yOfHR(val), color: '#e74c3c' });
         }
-        if (this.showCadence && yOfCad && rec.cadence) {
-            dots.push({ y: yOfCad(rec.cadence), color: '#3b82f6' });
+        if (this.showCadence && yOfCad) {
+            const val = inBlock ? blockCad! : rec.cadence;
+            if (val) dots.push({ y: yOfCad(val), color: '#3b82f6' });
         }
         dots.forEach(({ y, color }) => {
             ctx.beginPath();
@@ -524,18 +560,25 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
 
         // Tooltip box
         const rows: Array<{ label: string; value: string; color: string }> = [];
-        if (this.showPrimary) {
-            if (this.isCycling) {
-                rows.push({ label: 'Power', value: `${Math.round(rec.power)}W`, color: accent });
-            } else {
-                rows.push({ label: 'Speed', value: `${((rec.speed || 0) * 3.6).toFixed(1)} km/h`, color: accent });
+        if (inBlock) {
+            if (this.showPrimary) {
+                if (this.isCycling) {
+                    rows.push({ label: 'Avg Power', value: `${Math.round(blockPrimary!)}W`, color: accent });
+                    if (blockMaxPrimary) rows.push({ label: 'Max Power', value: `${Math.round(blockMaxPrimary)}W`, color: accent });
+                } else {
+                    rows.push({ label: 'Avg Speed', value: `${blockPrimary!.toFixed(1)} km/h`, color: accent });
+                    if (blockMaxPrimary) rows.push({ label: 'Max Speed', value: `${blockMaxPrimary.toFixed(1)} km/h`, color: accent });
+                }
             }
-        }
-        if (this.showHR && rec.heartRate) {
-            rows.push({ label: 'HR', value: `${Math.round(rec.heartRate)} bpm`, color: '#e74c3c' });
-        }
-        if (this.showCadence && rec.cadence) {
-            rows.push({ label: 'Cadence', value: `${Math.round(rec.cadence)} rpm`, color: '#3b82f6' });
+            if (this.showHR && blockHR) rows.push({ label: 'Avg HR', value: `${Math.round(blockHR)} bpm`, color: '#e74c3c' });
+            if (this.showCadence && blockCad) rows.push({ label: 'Avg Cad', value: `${Math.round(blockCad)} rpm`, color: '#3b82f6' });
+        } else {
+            if (this.showPrimary) {
+                if (this.isCycling) rows.push({ label: 'Power', value: `${Math.round(rec.power)}W`, color: accent });
+                else rows.push({ label: 'Speed', value: `${((rec.speed || 0) * 3.6).toFixed(1)} km/h`, color: accent });
+            }
+            if (this.showHR && rec.heartRate) rows.push({ label: 'HR', value: `${Math.round(rec.heartRate)} bpm`, color: '#e74c3c' });
+            if (this.showCadence && rec.cadence) rows.push({ label: 'Cadence', value: `${Math.round(rec.cadence)} rpm`, color: '#3b82f6' });
         }
 
         if (rows.length === 0) return;
@@ -543,12 +586,16 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         const elapsed = this.records[this.hoverIdx].timestamp - t0;
         const em = Math.floor(elapsed / 60);
         const es = elapsed % 60;
-        const timeStr = `${em}:${String(es).padStart(2, '0')}`;
+        const timeStr = blockLabel ? blockLabel : `${em}:${String(es).padStart(2, '0')}`;
 
+        const labelFont = inBlock ? '11px monospace' : '9px monospace';
+        const valueFont = inBlock ? 'bold 12px monospace' : 'bold 10px monospace';
+        const headerFont = inBlock ? '11px monospace' : '9px monospace';
         const pad = 10;
-        const rowH = 18;
-        const boxW = 130;
-        const boxH = pad + 18 + rows.length * rowH + pad;
+        const rowH = inBlock ? 22 : 18;
+        const boxW = inBlock ? 180 : 130;
+        const headerH = inBlock ? 22 : 18;
+        const boxH = pad + headerH + rows.length * rowH + pad;
 
         let tx = hx + 14;
         if (tx + boxW > W - mR) tx = hx - boxW - 14;
@@ -578,23 +625,23 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
 
         // Time header
         ctx.fillStyle = 'rgba(255,255,255,0.8)';
-        ctx.font = '9px monospace';
+        ctx.font = headerFont;
         ctx.textAlign = 'left';
-        ctx.fillText(timeStr, tx + pad, ty + pad + 8);
+        ctx.fillText(timeStr, tx + pad, ty + pad + (inBlock ? 10 : 8));
 
         // Separator
         ctx.fillStyle = 'rgba(255,255,255,0.15)';
-        ctx.fillRect(tx + pad, ty + pad + 13, boxW - pad * 2, 1);
+        ctx.fillRect(tx + pad, ty + pad + (inBlock ? 15 : 13), boxW - pad * 2, 1);
 
         // Value rows
         rows.forEach((row, ri) => {
-            const ry = ty + pad + 18 + ri * rowH + 11;
+            const ry = ty + pad + headerH + ri * rowH + (inBlock ? 14 : 11);
             ctx.fillStyle = 'rgba(255,255,255,0.65)';
-            ctx.font = '9px monospace';
+            ctx.font = labelFont;
             ctx.textAlign = 'left';
             ctx.fillText(row.label, tx + pad, ry);
             ctx.fillStyle = row.color;
-            ctx.font = 'bold 10px monospace';
+            ctx.font = valueFont;
             ctx.textAlign = 'right';
             ctx.fillText(row.value, tx + boxW - pad, ry);
         });

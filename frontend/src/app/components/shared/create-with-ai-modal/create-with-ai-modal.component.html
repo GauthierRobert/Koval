@@ -81,7 +81,7 @@
             <textarea
               class="prompt-textarea"
               [(ngModel)]="prompt"
-              placeholder="e.g. Create a 60-min sweet-spot group ride for Tuesday evening at 7pm"
+              [placeholder]="promptPlaceholder"
               rows="4"
               [disabled]="loading"
             ></textarea>
@@ -141,6 +141,9 @@
           }
         }
 
+        @if (aiMessage) {
+          <div class="status-message info">{{ aiMessage }}</div>
+        }
         @if (errorMessage) {
           <div class="status-message error">{{ errorMessage }}</div>
         }

@@ -58,6 +58,8 @@ public class NotationToolService {
             @ToolParam(description = "ISO-8601 or \"null\"") String scheduledAt,
             @ToolParam(description = "from context or \"null\"") String sessionId) {
 
+        ActionToolTracker.markCalled();
+
         // 1. Parse notation → raw blocks
         List<WorkoutElement> rawBlocks = CompactNotationParser.parse(notation);
 

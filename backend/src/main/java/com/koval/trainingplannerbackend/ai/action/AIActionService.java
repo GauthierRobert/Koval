@@ -49,12 +49,18 @@ public class AIActionService {
         String systemContext = buildSystemContext(userCtx, context);
 
         try {
+            ActionToolTracker.reset();
             String content = client.prompt()
                     .messages(new SystemMessage(systemContext))
                     .user(userMessage)
                     .call()
                     .content();
-            return new ActionResult(content != null ? content : "Done.", true);
+
+            if (ActionToolTracker.wasCalled()) {
+                return new ActionResult("done", true);
+            }
+            // AI didn't call a tool — it's asking for clarification
+            return new ActionResult(content != null ? content : "Could not complete the action.", false);
         } catch (Exception e) {
             String msg = e.getMessage() != null ? e.getMessage() : "Unknown error";
             return new ActionResult("Action failed: " + msg, false);

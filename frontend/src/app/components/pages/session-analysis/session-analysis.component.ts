@@ -16,6 +16,7 @@ interface FitState {
     loading: boolean;
     error: boolean;
     records: FitRecord[];
+    movingTime: number; // seconds with pauses stripped
 }
 
 interface ZoneDistEntry {
@@ -111,16 +112,31 @@ export class SessionAnalysisComponent implements OnDestroy {
         distinctUntilChanged((a, b) => a?.fitFileId === b?.fitFileId),
         switchMap((session) => {
             if (!session?.fitFileId) {
-                return of({ loading: false, error: false, records: [] as FitRecord[] });
+                return of({ loading: false, error: false, records: [] as FitRecord[], movingTime: 0 });
             }
             return this.metricsService.downloadStoredFit(session.id).pipe(
                 switchMap((buffer) => from(this.metricsService.parseFitTimeSeries(buffer))),
-                map((records) => ({ loading: false, error: false, records })),
-                catchError(() => of({ loading: false, error: true, records: [] as FitRecord[] })),
-                startWith({ loading: true, error: false, records: [] as FitRecord[] }),
+                map((records) => {
+                    const stripped = this.stripPauses(records);
+                    return { loading: false, error: false, records: stripped.records, movingTime: stripped.movingTime };
+                }),
+                catchError(() => of({ loading: false, error: true, records: [] as FitRecord[], movingTime: 0 })),
+                startWith({ loading: true, error: false, records: [] as FitRecord[], movingTime: 0 }),
             );
         }),
         shareReplay(1),
+    );
+
+    movingTime$: Observable<number | null> = combineLatest([
+        this.fitState$,
+        this.sessionSubject,
+    ]).pipe(
+        map(([fit, session]) => {
+            if (!fit || fit.loading || fit.error || fit.records.length === 0 || !session) return null;
+            // Only show if meaningfully different from total duration (>5s difference = pauses exist)
+            if (Math.abs(fit.movingTime - session.totalDuration) < 5) return null;
+            return fit.movingTime;
+        }),
     );
 
     userZoneSystems$: Observable<ZoneSystem[]> = combineLatest([
@@ -161,6 +177,20 @@ export class SessionAnalysisComponent implements OnDestroy {
 
         if (!referenceValue || referenceValue <= 0) return null;
         return { zones, referenceValue };
+    }
+
+    private stripPauses(records: FitRecord[]): { records: FitRecord[]; movingTime: number } {
+        if (records.length < 2) return { records, movingTime: 0 };
+        const PAUSE_THRESHOLD = 3; // gap >3s between records = pause
+        const result: FitRecord[] = [records[0]];
+        let adjustedTime = records[0].timestamp;
+        for (let i = 1; i < records.length; i++) {
+            const gap = records[i].timestamp - records[i - 1].timestamp;
+            adjustedTime += gap > PAUSE_THRESHOLD ? 1 : gap;
+            result.push({ ...records[i], timestamp: adjustedTime });
+        }
+        const movingTime = result[result.length - 1].timestamp - result[0].timestamp;
+        return { records: result, movingTime };
     }
 
     private recordPercent(record: FitRecord, sport: SportType, referenceValue: number): number {

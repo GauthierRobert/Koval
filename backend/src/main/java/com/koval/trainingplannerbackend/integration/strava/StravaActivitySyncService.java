@@ -55,7 +55,7 @@ public class StravaActivitySyncService {
 
         // Determine after epoch: last sync, or 30 days before account creation for first sync
         LocalDateTime after = user.getStravaLastSyncAt() != null
-                ? user.getStravaLastSyncAt()
+                ? user.getStravaLastSyncAt().minusDays(1)
                 : user.getCreatedAt().minusDays(1);
         long afterEpoch = after.toEpochSecond(ZoneOffset.UTC);
 
@@ -82,6 +82,19 @@ public class StravaActivitySyncService {
 
             try {
                 CompletedSession session = mapper.map(activity);
+
+                // Fetch laps for per-lap block breakdown (non-fatal)
+                boolean deviceWatts = Boolean.TRUE.equals(activity.get("device_watts"));
+                try {
+                    List<Map<String, Object>> laps = stravaApiClient.fetchLaps(user, stravaId);
+                    List<CompletedSession.BlockSummary> lapBlocks = mapper.mapLaps(laps, session.getSportType(), deviceWatts);
+                    if (lapBlocks != null) {
+                        session.setBlockSummaries(lapBlocks);
+                    }
+                } catch (Exception lapEx) {
+                    log.warn("Failed to fetch laps for Strava activity {}: {}", stravaId, lapEx.getMessage());
+                }
+
                 CompletedSession saved = sessionService.saveSession(session, userId);
 
                 // Fetch streams and build FIT file (non-fatal if it fails)

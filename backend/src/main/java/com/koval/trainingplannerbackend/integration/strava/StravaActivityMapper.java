@@ -41,7 +41,7 @@ public class StravaActivityMapper {
         String type = (String) activity.get("type");
         session.setSportType(mapSportType(type));
 
-        // Single block summary with distance
+        // Fallback single block summary (overridden if laps are fetched)
         Double distance = doubleValueOrNull(activity.get("distance"));
         if (distance != null) {
             CompletedSession.BlockSummary summary = new CompletedSession.BlockSummary(
@@ -55,6 +55,29 @@ public class StravaActivityMapper {
         }
 
         return session;
+    }
+
+    /**
+     * Convert Strava laps to per-lap BlockSummary list.
+     * Returns null if laps has 1 or fewer entries (no useful breakdown).
+     */
+    public List<CompletedSession.BlockSummary> mapLaps(List<Map<String, Object>> laps, String sportType, boolean deviceWatts) {
+        if (laps == null || laps.size() <= 1) return null;
+
+        return laps.stream().map(lap -> {
+            String name = (String) lap.get("name");
+            int elapsed = intValue(lap.get("elapsed_time"));
+            double power = deviceWatts ? doubleValue(lap.get("average_watts")) : 0;
+            double hr = doubleValue(lap.get("average_heartrate"));
+            double cadence = doubleValue(lap.get("average_cadence"));
+            Double distance = doubleValueOrNull(lap.get("distance"));
+
+            return new CompletedSession.BlockSummary(
+                    name != null ? name : "Lap",
+                    sportType,
+                    elapsed,
+                    0, power, cadence, hr, distance);
+        }).toList();
     }
 
     private String mapSportType(String stravaType) {

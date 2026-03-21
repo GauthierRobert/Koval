@@ -33,6 +33,8 @@ public class ZoneToolService {
             @ToolParam(description = "Unit of measurement for the reference value (e.g., 'W', 'bpm', 'sec/km', 'sec/100m', 'kg'). Required for CUSTOM reference type, ignored for standard types.") String referenceUnit,
             @ToolParam(description = "List of zones, each with label (e.g., 'Z1'), low (% lower bound), high (% upper bound), and description") List<Zone> zones) {
 
+        com.koval.trainingplannerbackend.ai.action.ActionToolTracker.markCalled();
+
         ZoneSystem zoneSystem = new ZoneSystem();
         zoneSystem.setCoachId(coachId);
         zoneSystem.setName(name);

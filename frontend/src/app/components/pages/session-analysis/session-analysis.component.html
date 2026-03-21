@@ -47,6 +47,12 @@
           <span class="stat-label">Duration</span>
           <span class="stat-value compact">{{ formatTime(session.totalDuration) }}</span>
         </div>
+        @if (movingTime$ | async; as mt) {
+          <div class="stat-card glass">
+            <span class="stat-label">Moving Time</span>
+            <span class="stat-value compact">{{ formatTime(mt) }}</span>
+          </div>
+        }
         @if (session.sportType === 'CYCLING') {
           <div class="stat-card glass">
             <span class="stat-label">Avg Power</span>

@@ -84,6 +84,30 @@ public class StravaApiClient {
     }
 
     /**
+     * Fetch laps for a single activity.
+     */
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> fetchLaps(User user, String activityId) {
+        String token = ensureValidToken(user);
+        String url = "https://www.strava.com/api/v3/activities/" + activityId + "/laps";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+
+        try {
+            ResponseEntity<List> response = restTemplate.exchange(
+                    url, HttpMethod.GET, new HttpEntity<>(headers), List.class);
+            List<Map<String, Object>> laps = response.getBody();
+            return laps != null ? laps : List.of();
+        } catch (HttpClientErrorException.TooManyRequests e) {
+            throw new RateLimitException("Strava API rate limit exceeded");
+        } catch (Exception e) {
+            log.warn("Failed to fetch laps for activity {}: {}", activityId, e.getMessage());
+            return List.of();
+        }
+    }
+
+    /**
      * Fetch per-second streams for a single activity.
      * Returns a map keyed by stream type (time, watts, heartrate, cadence, velocity_smooth, distance, altitude).
      * Each value is a List of Numbers.

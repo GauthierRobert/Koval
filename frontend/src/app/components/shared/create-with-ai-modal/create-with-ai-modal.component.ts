@@ -34,6 +34,7 @@ export class CreateWithAiModalComponent implements OnChanges {
   prompt = '';
   loading = false;
   errorMessage = '';
+  aiMessage = '';
   successMessage = '';
 
   availableGroups: ClubGroup[] = [];
@@ -50,6 +51,17 @@ export class CreateWithAiModalComponent implements OnChanges {
   availableTrainings: Training[] = [];
   selectedTrainingId: string | null = null;
   searchQuery = '';
+
+  get promptPlaceholder(): string {
+    switch (this.actionType) {
+      case 'ZONE_CREATION':
+        return 'e.g. Create 7 power zones based on FTP for cycling, from Active Recovery to Neuromuscular';
+      case 'TRAINING_FROM_NOTATION':
+        return 'e.g. 1h sweet-spot session: 10min warm-up, 3x10min at 88-93% with 5min recovery, 10min cool-down';
+      default:
+        return 'e.g. Create a 60-min sweet-spot group ride for Tuesday evening at 7pm';
+    }
+  }
 
   get showSportSelector(): boolean {
     return this.actionType === 'TRAINING_FROM_NOTATION' || this.actionType === 'TRAINING_WITH_SESSION';
@@ -116,6 +128,7 @@ export class CreateWithAiModalComponent implements OnChanges {
   setMode(mode: 'ai' | 'select'): void {
     this.mode = mode;
     this.errorMessage = '';
+    this.aiMessage = '';
     this.successMessage = '';
   }
 
@@ -128,6 +141,7 @@ export class CreateWithAiModalComponent implements OnChanges {
 
     this.loading = true;
     this.errorMessage = '';
+    this.aiMessage = '';
     this.successMessage = '';
 
     this.clubService
@@ -154,6 +168,7 @@ export class CreateWithAiModalComponent implements OnChanges {
 
     this.loading = true;
     this.errorMessage = '';
+    this.aiMessage = '';
     this.successMessage = '';
 
     const ctx: ActionContext = {
@@ -171,7 +186,8 @@ export class CreateWithAiModalComponent implements OnChanges {
             this.successMessage = result.content;
             this.created.emit(result);
           } else {
-            this.errorMessage = result.content;
+            // AI is asking for clarification — show as info, not error
+            this.aiMessage = result.content;
           }
         });
       },
@@ -193,6 +209,7 @@ export class CreateWithAiModalComponent implements OnChanges {
     this.prompt = '';
     this.loading = false;
     this.errorMessage = '';
+    this.aiMessage = '';
     this.successMessage = '';
     this.selectedGroupId = '';
     this.availableGroups = [];

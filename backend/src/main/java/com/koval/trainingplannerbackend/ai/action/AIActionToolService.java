@@ -56,6 +56,8 @@ public class AIActionToolService {
             @ToolParam(description = "Club group ID from system context — pass null if not applicable") String clubGroupId,
             @ToolParam(description = "Coach group ID from system context — pass null if not applicable") String coachGroupId) {
 
+        ActionToolTracker.markCalled();
+
         // 1. Build and save the Training
         List<String> groupIds = new ArrayList<>();
         if (coachGroupId != null && !coachGroupId.equals("null")) {
