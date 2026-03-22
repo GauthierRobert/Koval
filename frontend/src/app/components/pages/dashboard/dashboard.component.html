@@ -12,7 +12,7 @@
         </div>
         <div class="header-info">
           <span class="header-title">{{ vm.user?.displayName | uppercase }}</span>
-          <span class="header-subtitle">{{ vm.user?.role | titlecase }} · Koval Training</span>
+          <span class="header-subtitle">{{ vm.user?.role | titlecase }}{{ 'DASHBOARD.HEADER_SUBTITLE_SEPARATOR' | translate }}</span>
         </div>
       </div>
       <div class="header-right">
@@ -27,9 +27,9 @@
         <span class="reminder-icon">&#9888;</span>
         <div class="reminder-info">
           <span class="reminder-title">{{ r.title }}</span>
-          <span class="reminder-meta">{{ r.scheduledAt | date:'EEE, MMM d · HH:mm' }} — No training linked</span>
+          <span class="reminder-meta">{{ r.scheduledAt | date:'EEE, MMM d · HH:mm' }} — {{ 'DASHBOARD.REMINDER_NO_TRAINING_LINKED' | translate }}</span>
         </div>
-        <button class="reminder-action" (click)="navigateToLinkTraining(r)">LINK TRAINING</button>
+        <button class="reminder-action" (click)="navigateToLinkTraining(r)">{{ 'DASHBOARD.BTN_LINK_TRAINING' | translate }}</button>
         </div>
         }
       </div>
@@ -41,27 +41,27 @@
       <div class="focus-metrics-row">
 
         <div class="focus-card glass">
-          <span class="card-label">TODAY'S FOCUS</span>
+          <span class="card-label">{{ 'DASHBOARD.CARD_TODAYS_FOCUS' | translate }}</span>
           @if (vm.upcoming[0]?.scheduledDate === todayKey) {
             <div class="focus-sport-badge" [ngClass]="'focus-sport-badge--' + vm.upcoming[0].sportType.toLowerCase()">
               {{ vm.upcoming[0].sportType }}
             </div>
-            <div class="focus-title">{{ vm.upcoming[0].trainingTitle || vm.upcoming[0].title || 'Workout' }}</div>
+            <div class="focus-title">{{ vm.upcoming[0].trainingTitle || vm.upcoming[0].title || ('DASHBOARD.DEFAULT_WORKOUT_TITLE' | translate) }}</div>
             <div class="focus-meta">
               @if (formatScheduleDuration(vm.upcoming[0])) {
                 <span class="focus-meta-chip">{{ formatScheduleDuration(vm.upcoming[0]) }}</span>
               }
             </div>
-            <button class="view-workout-btn" (click)="openDetail(vm.upcoming[0])">VIEW WORKOUT</button>
+            <button class="view-workout-btn" (click)="openDetail(vm.upcoming[0])">{{ 'DASHBOARD.BTN_VIEW_WORKOUT' | translate }}</button>
           } @else {
-            <div class="focus-rest-label">Rest Day</div>
-            <div class="focus-rest-sub">No workout scheduled. Recovery is training too.</div>
+            <div class="focus-rest-label">{{ 'DASHBOARD.FOCUS_REST_DAY' | translate }}</div>
+            <div class="focus-rest-sub">{{ 'DASHBOARD.FOCUS_REST_SUB' | translate }}</div>
           }
         </div>
 
         @if (vm.form.ctl != null || vm.form.atl != null || vm.form.tsb != null) {
           <div class="metrics-panel glass">
-            <span class="card-label">PERFORMANCE</span>
+            <span class="card-label">{{ 'DASHBOARD.CARD_PERFORMANCE' | translate }}</span>
             <div class="mp-row">
               <span class="mp-big-val fitness">{{ vm.form.ctl != null ? (vm.form.ctl | number:'1.0-0') : '–' }}</span>
               <span class="mp-big-val fatigue">{{ vm.form.atl != null ? (vm.form.atl | number:'1.0-0') : '–' }}</span>
@@ -76,15 +76,15 @@
             </div>
             <div class="mp-row">
               <div class="mp-meta">
-                <span class="mp-label">FITNESS</span>
+                <span class="mp-label">{{ 'DASHBOARD.LABEL_FITNESS' | translate }}</span>
                 <span class="mp-sublabel">CTL</span>
               </div>
               <div class="mp-meta">
-                <span class="mp-label">FATIGUE</span>
+                <span class="mp-label">{{ 'DASHBOARD.LABEL_FATIGUE' | translate }}</span>
                 <span class="mp-sublabel">ATL</span>
               </div>
               <div class="mp-meta">
-                <span class="mp-label">FORM</span>
+                <span class="mp-label">{{ 'DASHBOARD.LABEL_FORM' | translate }}</span>
                 <span class="mp-sublabel">TSB</span>
               </div>
             </div>
@@ -93,7 +93,7 @@
 
         @if (vm.user?.ftp || vm.user?.functionalThresholdPace || vm.user?.criticalSwimSpeed) {
           <div class="metrics-panel glass">
-            <span class="card-label">THRESHOLDS</span>
+            <span class="card-label">{{ 'DASHBOARD.CARD_THRESHOLDS' | translate }}</span>
             <div class="mp-row">
               <span class="mp-big-val swimming">{{ vm.user?.criticalSwimSpeed ? formatSwimPace(vm.user!.criticalSwimSpeed!) : '–' }}</span>
               <span class="mp-big-val cycling">{{ vm.user?.ftp ?? '–' }}</span>
@@ -101,16 +101,16 @@
             </div>
             <div class="mp-row">
               <div class="mp-meta">
-                <span class="mp-label">SWIM</span>
-                <span class="mp-sublabel">/100m</span>
+                <span class="mp-label">{{ 'DASHBOARD.LABEL_SWIM' | translate }}</span>
+                <span class="mp-sublabel">{{ 'DASHBOARD.LABEL_SWIM_UNIT' | translate }}</span>
               </div>
               <div class="mp-meta">
-                <span class="mp-label">BIKE</span>
-                <span class="mp-sublabel">watts</span>
+                <span class="mp-label">{{ 'DASHBOARD.LABEL_BIKE' | translate }}</span>
+                <span class="mp-sublabel">{{ 'DASHBOARD.LABEL_BIKE_UNIT' | translate }}</span>
               </div>
               <div class="mp-meta">
-                <span class="mp-label">RUN</span>
-                <span class="mp-sublabel">min/km</span>
+                <span class="mp-label">{{ 'DASHBOARD.LABEL_RUN' | translate }}</span>
+                <span class="mp-sublabel">{{ 'DASHBOARD.LABEL_RUN_UNIT' | translate }}</span>
               </div>
             </div>
           </div>
@@ -122,7 +122,7 @@
       @if (vm.nextGoal; as goal) {
         <div class="next-goal-card glass" [routerLink]="['/goals']"
           [style.border-left-color]="getGoalPriorityColor(goal.priority)">
-        <div class="next-goal-label">NEXT RACE GOAL</div>
+        <div class="next-goal-label">{{ 'DASHBOARD.CARD_NEXT_RACE_GOAL' | translate }}</div>
         <div class="next-goal-body">
           <span class="next-goal-flag">🏁</span>
           <div class="next-goal-info">
@@ -141,7 +141,7 @@
       <!-- Week TSS summary -->
       @if (hasAnyActivity(vm.weekMetrics)) {
         <div class="week-tss-bar">
-          <span class="week-tss-total">{{ totalWeekTss(vm.weekMetrics) }} TSS this week</span>
+          <span class="week-tss-total">{{ 'DASHBOARD.WEEK_TSS_SUMMARY' | translate: { tss: totalWeekTss(vm.weekMetrics) } }}</span>
           @if (totalPrevTss(vm.weekMetrics) > 0) {
             <span class="week-tss-vs">
           <span
@@ -149,7 +149,7 @@
             [class.trend-down]="totalWeekTss(vm.weekMetrics) < totalPrevTss(vm.weekMetrics)">
             {{ totalWeekTss(vm.weekMetrics) >= totalPrevTss(vm.weekMetrics) ? '▲' : '▼' }}
             {{ (totalWeekTss(vm.weekMetrics) - totalPrevTss(vm.weekMetrics)) | number:'1.0-0' }}
-            vs last week
+            {{ 'DASHBOARD.WEEK_TSS_VS_LAST_WEEK' | translate }}
               </span>
             </span>
           }
@@ -191,27 +191,27 @@
           @if (vm.upcoming.length > 0) {
             <div class="next-workout glass">
               <div class="next-header">
-                <span class="next-label">NEXT WORKOUT</span>
+                <span class="next-label">{{ 'DASHBOARD.CARD_NEXT_WORKOUT' | translate }}</span>
                 <span class="next-date">{{ formatScheduleDate(vm.upcoming[0].scheduledDate) }}</span>
               </div>
               <div class="next-body">
                 <app-sport-icon [sport]="vm.upcoming[0].sportType" [size]="16"></app-sport-icon>
-                <span class="next-title">{{ vm.upcoming[0].trainingTitle || vm.upcoming[0].title || 'Workout' }}</span>
+                <span class="next-title">{{ vm.upcoming[0].trainingTitle || vm.upcoming[0].title || ('DASHBOARD.DEFAULT_WORKOUT_TITLE' | translate) }}</span>
                 @if (formatScheduleDuration(vm.upcoming[0])) {
                   <span class="next-dur">
                     {{ formatScheduleDuration(vm.upcoming[0]) }}
                   </span>
                 }
               </div>
-              <a routerLink="/calendar" class="view-link">VIEW IN CALENDAR →</a>
+              <a routerLink="/calendar" class="view-link">{{ 'DASHBOARD.LINK_VIEW_IN_CALENDAR' | translate }}</a>
             </div>
           }
 
           @if (vm.latestFit; as fit) {
             <div class="latest-fit glass">
               <div class="fit-header">
-                <span class="fit-label">LATEST ACTIVITY</span>
-                <span class="fit-badge">FIT</span>
+                <span class="fit-label">{{ 'DASHBOARD.CARD_LATEST_ACTIVITY' | translate }}</span>
+                <span class="fit-badge">{{ 'DASHBOARD.LATEST_ACTIVITY_BADGE' | translate }}</span>
               </div>
               <div class="fit-body">
                 <app-sport-icon [sport]="fit.sportType" [size]="16"></app-sport-icon>
@@ -222,14 +222,14 @@
                 <span class="fit-dur">{{ formatDuration(fit.totalDuration) }}</span>
                 @if (fit.avgPower) {
                   <span class="fit-sep">·</span>
-                  <span class="fit-power">{{ fit.avgPower | number:'1.0-0' }}W avg</span>
+                  <span class="fit-power">{{ 'DASHBOARD.LATEST_ACTIVITY_AVG_POWER' | translate: { power: (fit.avgPower | number:'1.0-0') } }}</span>
                 }
                 @if (fit.tss) {
                   <span class="fit-sep">·</span>
                   <span class="fit-tss">TSS {{ fit.tss | number:'1.0-0' }}</span>
                 }
               </div>
-              <button class="view-btn" (click)="openAnalysis(fit)">VIEW ANALYSIS →</button>
+              <button class="view-btn" (click)="openAnalysis(fit)">{{ 'DASHBOARD.BTN_VIEW_ANALYSIS' | translate }}</button>
             </div>
           }
         </div>
@@ -237,7 +237,7 @@
 
       <!-- Quick Actions — always visible -->
       <div class="quick-actions-section">
-        <div class="quick-actions-label">QUICK ACTIONS</div>
+        <div class="quick-actions-label">{{ 'DASHBOARD.QUICK_ACTIONS_LABEL' | translate }}</div>
         <div class="quick-actions-grid">
           <a class="quick-tile" routerLink="/chat">
             <span class="quick-tile-icon">
@@ -245,8 +245,8 @@
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
             </span>
-            <span class="quick-tile-title">Chat with AI</span>
-            <span class="quick-tile-sub">Generate a new workout plan</span>
+            <span class="quick-tile-title">{{ 'DASHBOARD.QUICK_TILE_CHAT_TITLE' | translate }}</span>
+            <span class="quick-tile-sub">{{ 'DASHBOARD.QUICK_TILE_CHAT_SUB' | translate }}</span>
           </a>
           <a class="quick-tile" routerLink="/calendar">
             <span class="quick-tile-icon">
@@ -257,8 +257,8 @@
                 <line x1="3" y1="10" x2="21" y2="10"/>
               </svg>
             </span>
-            <span class="quick-tile-title">Calendar</span>
-            <span class="quick-tile-sub">View and schedule workouts</span>
+            <span class="quick-tile-title">{{ 'DASHBOARD.QUICK_TILE_CALENDAR_TITLE' | translate }}</span>
+            <span class="quick-tile-sub">{{ 'DASHBOARD.QUICK_TILE_CALENDAR_SUB' | translate }}</span>
           </a>
           <a class="quick-tile" routerLink="/trainings">
             <span class="quick-tile-icon">
@@ -267,8 +267,8 @@
                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
               </svg>
             </span>
-            <span class="quick-tile-title">Browse Library</span>
-            <span class="quick-tile-sub">Explore saved workouts</span>
+            <span class="quick-tile-title">{{ 'DASHBOARD.QUICK_TILE_LIBRARY_TITLE' | translate }}</span>
+            <span class="quick-tile-sub">{{ 'DASHBOARD.QUICK_TILE_LIBRARY_SUB' | translate }}</span>
           </a>
         </div>
       </div>

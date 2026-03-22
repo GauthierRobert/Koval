@@ -1,6 +1,7 @@
 import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {Router, RouterModule} from '@angular/router';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {BehaviorSubject, combineLatest} from 'rxjs';
 import {filter, map, shareReplay, startWith, switchMap} from 'rxjs/operators';
 import {AuthService} from '../../../services/auth.service';
@@ -77,7 +78,7 @@ function computeWeekMetrics(sessions: SavedSession[]): WeekMetrics {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, SportIconComponent, WorkoutDetailModalComponent],
+  imports: [CommonModule, RouterModule, SportIconComponent, WorkoutDetailModalComponent, TranslateModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -90,6 +91,7 @@ export class DashboardComponent {
   private raceGoalService = inject(RaceGoalService);
   private coachService = inject(CoachService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   readonly todayKey = toDateKey(new Date());
   private readonly sevenDaysAgoKey = toDateKey(subDays(new Date(), 7));
@@ -281,7 +283,9 @@ export class DashboardComponent {
 
   get greeting(): string {
     const h = new Date().getHours();
-    return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+    if (h < 12) return this.translate.instant('DASHBOARD.GREETING_MORNING');
+    if (h < 18) return this.translate.instant('DASHBOARD.GREETING_AFTERNOON');
+    return this.translate.instant('DASHBOARD.GREETING_EVENING');
   }
 
   get todayFormatted(): string {

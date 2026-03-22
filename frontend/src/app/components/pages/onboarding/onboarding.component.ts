@@ -1,13 +1,14 @@
-import {ChangeDetectionStrategy, Component} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Router} from '@angular/router';
 import {AuthService} from '../../../services/auth.service';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 
 @Component({
     selector: 'app-onboarding',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, TranslateModule],
     templateUrl: './onboarding.component.html',
     styleUrl: './onboarding.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,6 +26,8 @@ export class OnboardingComponent {
 
     saving = false;
     error = '';
+
+    private translate = inject(TranslateService);
 
     constructor(private authService: AuthService, private router: Router) {}
 
@@ -51,7 +54,7 @@ export class OnboardingComponent {
             next: () => this.router.navigate([this.role === 'COACH' ? '/coach' : '/']),
             error: () => {
                 this.saving = false;
-                this.error = 'Failed to save. Please try again.';
+                this.error = this.translate.instant('ONBOARDING.ERROR_SAVE_FAILED');
             },
         });
     }

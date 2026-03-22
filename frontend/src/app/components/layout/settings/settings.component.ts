@@ -6,11 +6,14 @@ import {AuthService, User} from '../../../services/auth.service';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {ZoneService} from '../../../services/zone.service';
 import {ZoneSystem} from '../../../services/zone';
+import {TranslateModule} from '@ngx-translate/core';
 
 interface PaceField {
     key: string;
     label: string;
+    labelKey: string;
     hint: string;
+    hintKey: string;
     minutes: number | null;
     seconds: number | null;
 }
@@ -18,7 +21,7 @@ interface PaceField {
 @Component({
     selector: 'app-settings',
     standalone: true,
-    imports: [CommonModule, FormsModule, SportIconComponent],
+    imports: [CommonModule, FormsModule, SportIconComponent, TranslateModule],
     templateUrl: './settings.component.html',
     styleUrls: ['./settings.component.css'],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,15 +42,15 @@ export class SettingsComponent implements OnInit {
     customRefValues: Record<string, number | null> = {};
 
     primaryRunFields: PaceField[] = [
-        { key: 'functionalThresholdPace', label: 'Threshold Pace', hint: 'Lactate threshold pace', minutes: null, seconds: null },
-        { key: 'vo2maxPace', label: 'VO2max Pace', hint: 'VO2max intensity pace', minutes: null, seconds: null },
+        { key: 'functionalThresholdPace', label: 'Threshold Pace', labelKey: 'SETTINGS.FIELD_THRESHOLD_PACE_LABEL', hint: 'Lactate threshold pace', hintKey: 'SETTINGS.FIELD_THRESHOLD_PACE_HINT', minutes: null, seconds: null },
+        { key: 'vo2maxPace', label: 'VO2max Pace', labelKey: 'SETTINGS.FIELD_VO2MAX_PACE_LABEL', hint: 'VO2max intensity pace', hintKey: 'SETTINGS.FIELD_VO2MAX_PACE_HINT', minutes: null, seconds: null },
     ];
 
     secondaryRunFields: PaceField[] = [
-        { key: 'pace5k', label: '5K Pace', hint: 'Current 5K race pace', minutes: null, seconds: null },
-        { key: 'pace10k', label: '10K Pace', hint: 'Current 10K race pace', minutes: null, seconds: null },
-        { key: 'paceHalfMarathon', label: 'Half Marathon Pace', hint: 'Current half marathon race pace', minutes: null, seconds: null },
-        { key: 'paceMarathon', label: 'Marathon Pace', hint: 'Current marathon race pace', minutes: null, seconds: null },
+        { key: 'pace5k', label: '5K Pace', labelKey: 'SETTINGS.FIELD_5K_PACE_LABEL', hint: 'Current 5K race pace', hintKey: 'SETTINGS.FIELD_5K_PACE_HINT', minutes: null, seconds: null },
+        { key: 'pace10k', label: '10K Pace', labelKey: 'SETTINGS.FIELD_10K_PACE_LABEL', hint: 'Current 10K race pace', hintKey: 'SETTINGS.FIELD_10K_PACE_HINT', minutes: null, seconds: null },
+        { key: 'paceHalfMarathon', label: 'Half Marathon Pace', labelKey: 'SETTINGS.FIELD_HALF_MARATHON_PACE_LABEL', hint: 'Current half marathon race pace', hintKey: 'SETTINGS.FIELD_HALF_MARATHON_PACE_HINT', minutes: null, seconds: null },
+        { key: 'paceMarathon', label: 'Marathon Pace', labelKey: 'SETTINGS.FIELD_MARATHON_PACE_LABEL', hint: 'Current marathon race pace', hintKey: 'SETTINGS.FIELD_MARATHON_PACE_HINT', minutes: null, seconds: null },
     ];
 
     get allRunFields(): PaceField[] {
@@ -55,7 +58,7 @@ export class SettingsComponent implements OnInit {
     }
 
     swimFields: PaceField[] = [
-        { key: 'criticalSwimSpeed', label: 'Critical Swim Speed', hint: 'Threshold pace per 100m', minutes: null, seconds: null },
+        { key: 'criticalSwimSpeed', label: 'Critical Swim Speed', labelKey: 'SETTINGS.FIELD_CRITICAL_SWIM_SPEED_LABEL', hint: 'Threshold pace per 100m', hintKey: 'SETTINGS.FIELD_CRITICAL_SWIM_SPEED_HINT', minutes: null, seconds: null },
     ];
 
     ngOnInit() {

@@ -3,88 +3,88 @@
     <div class="onboarding-header">
       <div class="logo-mark"></div>
       <h1>Welcome to <span class="accent">Koval Training</span></h1>
-      <p class="subtitle">Tell us a bit about yourself to get started</p>
+      <p class="subtitle">{{ 'ONBOARDING.SUBTITLE' | translate }}</p>
     </div>
 
     <form class="onboarding-form" (ngSubmit)="submit()">
       <!-- Role -->
       <div class="field-group">
-        <label class="field-label">I am a <span class="required">*</span></label>
+        <label class="field-label">{{ 'ONBOARDING.ROLE_LABEL' | translate }} <span class="required">*</span></label>
         <div class="role-toggle">
           <button type="button" class="role-btn" [class.active]="role === 'ATHLETE'" (click)="role = 'ATHLETE'">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="7" r="4"/><path d="M5.2 20a7 7 0 0 1 13.6 0"/>
             </svg>
-            ATHLETE
+            {{ 'ONBOARDING.ROLE_BTN_ATHLETE' | translate }}
           </button>
           <button type="button" class="role-btn" [class.active]="role === 'COACH'" (click)="role = 'COACH'">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
               <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
-            COACH
+            {{ 'ONBOARDING.ROLE_BTN_COACH' | translate }}
           </button>
         </div>
       </div>
 
-      <div class="section-divider">Physical Profile <span class="optional-group">(optional — improves zone accuracy)</span></div>
+      <div class="section-divider">{{ 'ONBOARDING.SECTION_PHYSICAL_PROFILE' | translate }} <span class="optional-group">{{ 'ONBOARDING.SECTION_PHYSICAL_PROFILE_NOTE' | translate }}</span></div>
 
       <!-- Weight + FTP row -->
       <div class="field-row-2">
         <div class="field-group">
-          <label class="field-label">Body Weight <span class="optional">(optional)</span></label>
+          <label class="field-label">{{ 'ONBOARDING.FIELD_BODY_WEIGHT_LABEL' | translate }} <span class="optional">{{ 'ONBOARDING.FIELD_BODY_WEIGHT_OPTIONAL' | translate }}</span></label>
           <div class="input-row">
             <input type="number" class="field-input" [(ngModel)]="weightKg" name="weight"
               min="30" max="200" placeholder="—" />
-            <span class="field-unit">kg</span>
+            <span class="field-unit">{{ 'ONBOARDING.FIELD_BODY_WEIGHT_UNIT' | translate }}</span>
           </div>
-          <span class="field-hint">Used for W/kg calculations.</span>
+          <span class="field-hint">{{ 'ONBOARDING.FIELD_BODY_WEIGHT_HINT' | translate }}</span>
         </div>
 
         <div class="field-group">
-          <label class="field-label">FTP <span class="optional">(optional)</span></label>
+          <label class="field-label">{{ 'ONBOARDING.FIELD_FTP_LABEL' | translate }} <span class="optional">{{ 'ONBOARDING.FIELD_FTP_OPTIONAL' | translate }}</span></label>
           <div class="input-row">
             <input type="number" class="field-input" [(ngModel)]="ftp" name="ftp"
               min="50" max="600" placeholder="—" />
-            <span class="field-unit">W</span>
+            <span class="field-unit">{{ 'ONBOARDING.FIELD_FTP_UNIT' | translate }}</span>
           </div>
-          <span class="field-hint">Best sustained power ~60 min. Bike zones.</span>
+          <span class="field-hint">{{ 'ONBOARDING.FIELD_FTP_HINT' | translate }}</span>
         </div>
       </div>
 
       <!-- Threshold Run Pace -->
       <div class="field-group">
-        <label class="field-label">Threshold Run Pace <span class="optional">(optional)</span></label>
+        <label class="field-label">{{ 'ONBOARDING.FIELD_THRESHOLD_PACE_LABEL' | translate }} <span class="optional">{{ 'ONBOARDING.FIELD_THRESHOLD_PACE_OPTIONAL' | translate }}</span></label>
         <div class="pace-row">
           <input type="number" class="pace-input" [(ngModel)]="thresholdPaceMinutes" name="tpMin"
             min="2" max="15" placeholder="—" />
           <span class="pace-sep">:</span>
           <input type="number" class="pace-input pace-sec" [(ngModel)]="thresholdPaceSeconds" name="tpSec"
             min="0" max="59" placeholder="00" />
-          <span class="field-unit">/km</span>
+          <span class="field-unit">{{ 'ONBOARDING.FIELD_THRESHOLD_PACE_UNIT' | translate }}</span>
         </div>
-        <span class="field-hint">Lactate threshold pace. Used for run zones.</span>
+        <span class="field-hint">{{ 'ONBOARDING.FIELD_THRESHOLD_PACE_HINT' | translate }}</span>
       </div>
 
       <!-- CSS -->
       <div class="field-group">
-        <label class="field-label">Critical Swim Speed (CSS) <span class="optional">(optional)</span></label>
+        <label class="field-label">{{ 'ONBOARDING.FIELD_CSS_LABEL' | translate }} <span class="optional">{{ 'ONBOARDING.FIELD_CSS_OPTIONAL' | translate }}</span></label>
         <div class="pace-row">
           <input type="number" class="pace-input" [(ngModel)]="cssMinutes" name="cssMin"
             min="1" max="5" placeholder="—" />
           <span class="pace-sep">:</span>
           <input type="number" class="pace-input pace-sec" [(ngModel)]="cssSeconds" name="cssSec"
             min="0" max="59" placeholder="00" />
-          <span class="field-unit">/100m</span>
+          <span class="field-unit">{{ 'ONBOARDING.FIELD_CSS_UNIT' | translate }}</span>
         </div>
-        <span class="field-hint">Threshold swim pace. Used for swim zones.</span>
+        <span class="field-hint">{{ 'ONBOARDING.FIELD_CSS_HINT' | translate }}</span>
       </div>
 
       <div class="unset-note">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
-        Values left empty will show as "not set" — zones and metrics requiring them won't be displayed until you add them in Settings.
+        {{ 'ONBOARDING.UNSET_NOTE' | translate }}
       </div>
 
       @if (error) {
@@ -92,10 +92,10 @@
       }
 
       <button type="submit" class="submit-btn" [disabled]="saving">
-        {{ saving ? 'SAVING...' : 'GET STARTED' }}
+        {{ saving ? ('ONBOARDING.BTN_SAVING' | translate) : ('ONBOARDING.BTN_GET_STARTED' | translate) }}
       </button>
 
-      <p class="skip-note">You can update these values anytime in Settings.</p>
+      <p class="skip-note">{{ 'ONBOARDING.SKIP_NOTE' | translate }}</p>
     </form>
   </div>
 </div>

@@ -1,10 +1,12 @@
 import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {AuthService} from '../../../services/auth.service';
+import {TranslateModule} from '@ngx-translate/core';
 
 @Component({
     selector: 'app-auth-callback',
     standalone: true,
+    imports: [TranslateModule],
     templateUrl: './auth-callback.component.html',
     styleUrl: './auth-callback.component.css'
 })

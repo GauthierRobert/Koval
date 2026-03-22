@@ -6,11 +6,12 @@ import {BluetoothService} from '../../../services/bluetooth.service';
 import {AuthService} from '../../../services/auth.service';
 import {CoachService} from '../../../services/coach.service';
 import {TrainingHistoryComponent} from '../training-history/training-history.component';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 
 @Component({
     selector: 'app-sidebar',
     standalone: true,
-    imports: [CommonModule, FormsModule, TrainingHistoryComponent],
+    imports: [CommonModule, FormsModule, TrainingHistoryComponent, TranslateModule],
     templateUrl: './sidebar.component.html',
     styleUrl: './sidebar.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -19,6 +20,7 @@ export class SidebarComponent {
     private bluetoothService = inject(BluetoothService);
     private authService = inject(AuthService);
     private coachService = inject(CoachService);
+    private translate = inject(TranslateService);
 
     user$ = this.authService.user$;
     inviteCode = '';
@@ -46,7 +48,7 @@ export class SidebarComponent {
             },
             error: () => {
                 this.joiningSubject.next(false);
-                this.joinError = 'Invalid or expired code';
+                this.joinError = this.translate.instant('SIDEBAR.INVALID_CODE');
             },
         });
     }

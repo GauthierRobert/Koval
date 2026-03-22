@@ -87,11 +87,11 @@ export class TopBarComponent {
 
   getMembershipLabel(status: string | undefined): string {
     if (!status) return '';
-    if (status.startsWith('ACTIVE_OWNER')) return 'Owner';
-    if (status.startsWith('ACTIVE_ADMIN')) return 'Admin';
-    if (status.startsWith('ACTIVE_COACH')) return 'Coach';
-    if (status.startsWith('ACTIVE')) return 'Member';
-    if (status.startsWith('PENDING')) return 'Pending';
+    if (status.startsWith('ACTIVE_OWNER')) return this.translateService.instant('COMMON.OWNER');
+    if (status.startsWith('ACTIVE_ADMIN')) return this.translateService.instant('COMMON.ADMIN');
+    if (status.startsWith('ACTIVE_COACH')) return this.translateService.instant('COMMON.COACH');
+    if (status.startsWith('ACTIVE')) return this.translateService.instant('COMMON.MEMBER_ROLE');
+    if (status.startsWith('PENDING')) return this.translateService.instant('COMMON.PENDING');
     return status;
   }
 

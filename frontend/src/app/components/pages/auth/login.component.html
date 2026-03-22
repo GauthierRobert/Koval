@@ -6,7 +6,7 @@
           </div>
           <h1>Koval <span class="accent">TRAINING</span></h1>
         </div>
-        <p class="subtitle">AI-powered cycling & triathlon training</p>
+        <p class="subtitle">{{ 'LOGIN.SUBTITLE' | translate }}</p>
 
         <div class="backend-status" [class]="'status-' + backendStatus">
           <span class="status-dot"></span>
@@ -15,28 +15,28 @@
 
         <div class="auth-buttons">
           <button class="auth-btn strava" (click)="loginWithStrava()">
-            <span class="btn-text">Connect with Strava</span>
+            <span class="btn-text">{{ 'LOGIN.BTN_CONNECT_STRAVA' | translate }}</span>
           </button>
           <button class="auth-btn google" (click)="loginWithGoogle()">
-            <span class="btn-text">Continue with Google</span>
+            <span class="btn-text">{{ 'LOGIN.BTN_CONTINUE_GOOGLE' | translate }}</span>
           </button>
         </div>
 
         <!-- DEV ONLY -->
         <div class="dev-section">
-          <div class="dev-label">DEV LOGIN</div>
+          <div class="dev-label">{{ 'LOGIN.DEV_SECTION_LABEL' | translate }}</div>
           <div class="dev-row">
             <input
               class="dev-input"
               [(ngModel)]="devUserId"
-              placeholder="User ID"
+              [placeholder]="'LOGIN.DEV_USER_ID_PLACEHOLDER' | translate"
               (keydown.enter)="devLogin()"
             />
             <select class="dev-select" [(ngModel)]="devRole">
-              <option value="ATHLETE">Athlete</option>
-              <option value="COACH">Coach</option>
+              <option value="ATHLETE">{{ 'LOGIN.DEV_ROLE_ATHLETE' | translate }}</option>
+              <option value="COACH">{{ 'LOGIN.DEV_ROLE_COACH' | translate }}</option>
             </select>
-            <button class="dev-btn" (click)="devLogin()" [disabled]="!devUserId.trim()">GO</button>
+            <button class="dev-btn" (click)="devLogin()" [disabled]="!devUserId.trim()">{{ 'LOGIN.DEV_BTN_GO' | translate }}</button>
           </div>
         </div>
       </div>

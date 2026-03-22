@@ -1,6 +1,6 @@
 <aside class="sidebar glass">
   <div class="sidebar-header">
-    <h3 class="sidebar-title">WORKOUTS</h3>
+    <h3 class="sidebar-title">{{ 'SIDEBAR.WORKOUTS_TITLE' | translate }}</h3>
   </div>
   <div class="sidebar-content">
     <app-training-history></app-training-history>
@@ -11,17 +11,18 @@
         <input type="checkbox" (change)="toggleSimulation($event)" />
         <span class="slider round"></span>
       </label>
-      <span class="toggle-label">Simulate Trainer</span>
+      <span class="toggle-label">{{ 'SIDEBAR.SIMULATE_TRAINER_LABEL' | translate }}</span>
     </div>
     @if (user$ | async; as user) {
       @if (user.role === 'ATHLETE') {
         <div class="join-section">
-          <span class="join-title">JOIN A TEAM</span>
+          <span class="join-title">{{ 'SIDEBAR.JOIN_A_TEAM_TITLE' | translate }}</span>
           <div class="join-row">
-            <input class="join-input" [(ngModel)]="inviteCode" (keydown.enter)="redeemCode()" placeholder="CODE"
+            <input class="join-input" [(ngModel)]="inviteCode" (keydown.enter)="redeemCode()"
+              [placeholder]="'SIDEBAR.JOIN_CODE_PLACEHOLDER' | translate"
               maxlength="8" />
             <button class="join-btn" (click)="redeemCode()" [disabled]="(joining$ | async) || !inviteCode.trim()">
-              {{ (joining$ | async) ? '...' : 'JOIN' }}
+              {{ (joining$ | async) ? ('SIDEBAR.JOIN_BTN_LOADING' | translate) : ('SIDEBAR.JOIN_BTN_LABEL' | translate) }}
             </button>
           </div>
           @if (joinError) {

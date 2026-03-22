@@ -19,13 +19,13 @@
           </div>
           <span class="item-meta">
             <span [style.font-style]="isDurationEstimated(training) ? 'italic' : ''">{{ getDuration(training) }}</span>
-            &bull; {{ (training.blocks || []).length }} blocks
+            &bull; {{ (training.blocks || []).length }} {{ 'TRAINING_HISTORY.META_BLOCKS' | translate }}
           </span>
           @if (training._receivedMeta) {
             <span class="received-meta">
-              from {{ training._receivedMeta.assignedByName }}
+              {{ 'TRAINING_HISTORY.META_RECEIVED_FROM' | translate }} {{ training._receivedMeta.assignedByName }}
               @if (training._receivedMeta.originName) {
-                via {{ training._receivedMeta.originName }}
+                {{ 'TRAINING_HISTORY.META_RECEIVED_VIA' | translate }} {{ training._receivedMeta.originName }}
               }
             </span>
           }
@@ -38,7 +38,7 @@
           }
         </div>
         @if ((activeContext$ | async) === 'mine') {
-          <button class="delete-btn" title="Delete training" (click)="onDelete($event, training)">&times;</button>
+          <button class="delete-btn" [title]="'TRAINING_HISTORY.BTN_DELETE_TITLE' | translate" (click)="onDelete($event, training)">&times;</button>
         }
       </div>
     }

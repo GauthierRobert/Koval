@@ -13,11 +13,12 @@ import {
 } from '../../../models/training.model';
 import {DurationEstimationService} from '../../../services/duration-estimation.service';
 import {HistoryService} from '../../../services/history.service';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 
 @Component({
     selector: 'app-training-history',
     standalone: true,
-    imports: [CommonModule, SportIconComponent],
+    imports: [CommonModule, SportIconComponent, TranslateModule],
     templateUrl: './training-history.component.html',
     styleUrl: './training-history.component.css',
 })
@@ -26,6 +27,7 @@ export class TrainingHistoryComponent {
     private filterService = inject(TrainingFilterService);
     private historyService = inject(HistoryService);
     private durationService = inject(DurationEstimationService);
+    private translate = inject(TranslateService);
 
     selectedTraining$ = this.trainingService.selectedTraining$;
     filteredTrainings$ = this.filterService.filteredTrainings$;
@@ -38,7 +40,7 @@ export class TrainingHistoryComponent {
 
     onDelete(event: Event, training: Training): void {
         event.stopPropagation();
-        if (!confirm(`Delete "${training.title}"?`)) return;
+        if (!confirm(this.translate.instant('TRAINING_HISTORY.DELETE_CONFIRM', { title: training.title }))) return;
         this.trainingService.deleteTraining(training.id).subscribe({
             next: () => this.trainingService.removeTrainingLocally(training.id),
             error: () => this.trainingService.removeTrainingLocally(training.id),

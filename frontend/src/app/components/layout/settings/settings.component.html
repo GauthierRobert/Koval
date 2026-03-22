@@ -1,6 +1,6 @@
 <div class="settings-modal glass">
     <div class="header">
-        <h3>REFERENCE VALUES</h3>
+        <h3>{{ 'SETTINGS.TITLE' | translate }}</h3>
         <button class="close-btn" (click)="close()">&#10005;</button>
     </div>
 
@@ -11,17 +11,17 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <circle cx="12" cy="7" r="4"/><path d="M5.2 20a7 7 0 0 1 13.6 0"/>
                 </svg>
-                <h2>Physical Profile</h2>
+                <h2>{{ 'SETTINGS.SECTION_PHYSICAL_PROFILE' | translate }}</h2>
             </div>
             <div class="card-body">
                 <div class="field-row">
                     <div class="field-info">
-                        <label>Body Weight</label>
-                        <span class="hint">Used for W/kg calculations</span>
+                        <label>{{ 'SETTINGS.FIELD_BODY_WEIGHT_LABEL' | translate }}</label>
+                        <span class="hint">{{ 'SETTINGS.FIELD_BODY_WEIGHT_HINT' | translate }}</span>
                     </div>
                     <div class="field-input ftp-input-group">
                         <input type="number" [(ngModel)]="weightKg" min="30" max="200" class="value-input numeric" placeholder="—" />
-                        <span class="unit">kg</span>
+                        <span class="unit">{{ 'SETTINGS.FIELD_BODY_WEIGHT_UNIT' | translate }}</span>
                     </div>
                 </div>
             </div>
@@ -31,27 +31,27 @@
         <section class="settings-card">
             <div class="card-header">
                 <app-sport-icon sport="CYCLING" [size]="22"></app-sport-icon>
-                <h2>Cycling</h2>
+                <h2>{{ 'SETTINGS.SECTION_CYCLING' | translate }}</h2>
             </div>
             <div class="card-body">
                 <div class="field-row">
                     <div class="field-info">
                         <label>FTP</label>
-                        <span class="hint">Functional Threshold Power</span>
+                        <span class="hint">{{ 'SETTINGS.FIELD_FTP_HINT' | translate }}</span>
                     </div>
                     <div class="field-input ftp-input-group">
                         <input type="number" [(ngModel)]="ftp" min="50" max="600" class="value-input numeric" placeholder="—" />
-                        <span class="unit">W</span>
+                        <span class="unit">{{ 'SETTINGS.FIELD_FTP_UNIT' | translate }}</span>
                     </div>
                 </div>
                 <div class="field-row">
                     <div class="field-info">
-                        <label>VO2max Power</label>
-                        <span class="hint">VO2max intensity power</span>
+                        <label>{{ 'SETTINGS.FIELD_VO2MAX_POWER_LABEL' | translate }}</label>
+                        <span class="hint">{{ 'SETTINGS.FIELD_VO2MAX_POWER_HINT' | translate }}</span>
                     </div>
                     <div class="field-input ftp-input-group">
                         <input type="number" [(ngModel)]="vo2maxPower" min="50" max="800" class="value-input numeric" placeholder="—" />
-                        <span class="unit">W</span>
+                        <span class="unit">{{ 'SETTINGS.FIELD_FTP_UNIT' | translate }}</span>
                     </div>
                 </div>
             </div>
@@ -61,15 +61,15 @@
         <section class="settings-card">
             <div class="card-header">
                 <app-sport-icon sport="RUNNING" [size]="22"></app-sport-icon>
-                <h2>Running</h2>
+                <h2>{{ 'SETTINGS.SECTION_RUNNING' | translate }}</h2>
             </div>
             <div class="card-body">
                 <!-- Primary run fields (always visible) -->
                 @for (field of primaryRunFields; track field) {
                   <div class="field-row">
                     <div class="field-info">
-                        <label>{{ field.label }}</label>
-                        <span class="hint">{{ field.hint }}</span>
+                        <label>{{ field.labelKey | translate }}</label>
+                        <span class="hint">{{ field.hintKey | translate }}</span>
                     </div>
                     <div class="field-input pace-input-group">
                         <input type="number" [(ngModel)]="field.minutes" min="0" max="15"
@@ -77,14 +77,14 @@
                         <span class="pace-sep">:</span>
                         <input type="number" [(ngModel)]="field.seconds" min="0" max="59"
                             class="value-input pace-part" placeholder="00" />
-                        <span class="unit">/km</span>
+                        <span class="unit">{{ 'SETTINGS.PACE_UNIT_PER_KM' | translate }}</span>
                     </div>
                   </div>
                 }
 
                 <!-- Toggle for secondary run fields -->
                 <div class="toggle-row" (click)="showSecondaryRunning = !showSecondaryRunning">
-                    <span class="toggle-label">Race paces</span>
+                    <span class="toggle-label">{{ 'SETTINGS.TOGGLE_RACE_PACES' | translate }}</span>
                     <span class="toggle-arrow">{{ showSecondaryRunning ? '▾' : '▸' }}</span>
                 </div>
 
@@ -93,8 +93,8 @@
                   @for (field of secondaryRunFields; track field) {
                     <div class="field-row">
                       <div class="field-info">
-                          <label>{{ field.label }}</label>
-                          <span class="hint">{{ field.hint }}</span>
+                          <label>{{ field.labelKey | translate }}</label>
+                          <span class="hint">{{ field.hintKey | translate }}</span>
                       </div>
                       <div class="field-input pace-input-group">
                           <input type="number" [(ngModel)]="field.minutes" min="0" max="15"
@@ -102,7 +102,7 @@
                           <span class="pace-sep">:</span>
                           <input type="number" [(ngModel)]="field.seconds" min="0" max="59"
                               class="value-input pace-part" placeholder="00" />
-                          <span class="unit">/km</span>
+                          <span class="unit">{{ 'SETTINGS.PACE_UNIT_PER_KM' | translate }}</span>
                       </div>
                     </div>
                   }
@@ -114,14 +114,14 @@
         <section class="settings-card">
             <div class="card-header">
                 <app-sport-icon sport="SWIMMING" [size]="22"></app-sport-icon>
-                <h2>Swimming</h2>
+                <h2>{{ 'SETTINGS.SECTION_SWIMMING' | translate }}</h2>
             </div>
             <div class="card-body">
                 @for (field of swimFields; track field) {
                   <div class="field-row">
                     <div class="field-info">
-                        <label>{{ field.label }}</label>
-                        <span class="hint">{{ field.hint }}</span>
+                        <label>{{ field.labelKey | translate }}</label>
+                        <span class="hint">{{ field.hintKey | translate }}</span>
                     </div>
                     <div class="field-input pace-input-group">
                         <input type="number" [(ngModel)]="field.minutes" min="0" max="10"
@@ -129,7 +129,7 @@
                         <span class="pace-sep">:</span>
                         <input type="number" [(ngModel)]="field.seconds" min="0" max="59"
                             class="value-input pace-part" placeholder="00" />
-                        <span class="unit">/100m</span>
+                        <span class="unit">{{ 'SETTINGS.PACE_UNIT_PER_100M' | translate }}</span>
                     </div>
                   </div>
                 }
@@ -144,14 +144,14 @@
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                       <path d="M12 20v-6M6 20V10M18 20V4"/>
                   </svg>
-                  <h2>Custom Zones</h2>
+                  <h2>{{ 'SETTINGS.SECTION_CUSTOM_ZONES' | translate }}</h2>
               </div>
               <div class="card-body">
                   @for (sys of customZoneSystems; track sys.id) {
                     <div class="field-row">
                       <div class="field-info">
                           <label>{{ sys.referenceName || sys.name }}</label>
-                          <span class="hint">{{ sys.name }}@if (sys.referenceUnit) { — unit: {{ sys.referenceUnit }} }</span>
+                          <span class="hint">{{ sys.name }}@if (sys.referenceUnit) { — {{ 'SETTINGS.FIELD_CUSTOM_ZONE_HINT_UNIT' | translate }} {{ sys.referenceUnit }} }</span>
                       </div>
                       <div class="field-input ftp-input-group">
                           <input type="number" [(ngModel)]="customRefValues[sys.id!]"
@@ -171,13 +171,13 @@
     <div class="actions-bar">
         <button class="save-btn" (click)="save()" [disabled]="saving">
             @if (!saving && !saved) {
-              <span>SAVE SETTINGS</span>
+              <span>{{ 'SETTINGS.BTN_SAVE_SETTINGS' | translate }}</span>
             }
             @if (saving) {
-              <span>SAVING...</span>
+              <span>{{ 'SETTINGS.BTN_SAVING' | translate }}</span>
             }
             @if (saved) {
-              <span class="saved-text">&#10003; SAVED</span>
+              <span class="saved-text">&#10003; {{ 'SETTINGS.BTN_SAVED' | translate }}</span>
             }
         </button>
     </div>
