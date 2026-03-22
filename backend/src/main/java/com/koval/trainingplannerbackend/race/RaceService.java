@@ -1,8 +1,8 @@
 package com.koval.trainingplannerbackend.race;
 
 import com.koval.trainingplannerbackend.pacing.dto.RouteCoordinate;
-import com.koval.trainingplannerbackend.pacing.gpx.GpxParser;
 import com.koval.trainingplannerbackend.pacing.gpx.GpxParseResult;
+import com.koval.trainingplannerbackend.pacing.gpx.GpxParser;
 import org.bson.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

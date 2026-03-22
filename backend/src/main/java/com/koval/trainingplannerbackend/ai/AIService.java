@@ -2,20 +2,18 @@ package com.koval.trainingplannerbackend.ai;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.koval.trainingplannerbackend.ai.UsageTracker;
 import com.koval.trainingplannerbackend.ai.UserContextResolver.UserContext;
 import com.koval.trainingplannerbackend.ai.agents.AgentType;
 import com.koval.trainingplannerbackend.ai.agents.RouterService;
 import com.koval.trainingplannerbackend.ai.agents.TrainingAgent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;

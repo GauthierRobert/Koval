@@ -2,7 +2,6 @@ package com.koval.trainingplannerbackend.integration.strava;
 
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;

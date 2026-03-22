@@ -1,8 +1,9 @@
 package com.koval.trainingplannerbackend.training;
 
-import com.koval.trainingplannerbackend.club.ClubMembership;
 import com.koval.trainingplannerbackend.club.ClubMemberStatus;
+import com.koval.trainingplannerbackend.club.ClubMembership;
 import com.koval.trainingplannerbackend.club.ClubMembershipRepository;
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.training.metrics.TrainingMetricsService;
 import com.koval.trainingplannerbackend.training.model.BlockType;
 import com.koval.trainingplannerbackend.training.model.Training;
@@ -11,13 +12,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static java.util.Optional.*;
+import static java.util.Optional.ofNullable;
 
 /**
  * Service for Training CRUD operations.

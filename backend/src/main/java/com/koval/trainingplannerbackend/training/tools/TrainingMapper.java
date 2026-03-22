@@ -1,14 +1,6 @@
 package com.koval.trainingplannerbackend.training.tools;
 
-import com.koval.trainingplannerbackend.training.model.BrickTraining;
-import com.koval.trainingplannerbackend.training.model.CyclingTraining;
-import com.koval.trainingplannerbackend.training.model.RunningTraining;
-import com.koval.trainingplannerbackend.training.model.SportType;
-import com.koval.trainingplannerbackend.training.model.SwimmingTraining;
-import com.koval.trainingplannerbackend.training.model.Training;
-import com.koval.trainingplannerbackend.training.model.TrainingType;
-import com.koval.trainingplannerbackend.training.model.WorkoutElement;
-import com.koval.trainingplannerbackend.training.model.WorkoutElementFlattener;
+import com.koval.trainingplannerbackend.training.model.*;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

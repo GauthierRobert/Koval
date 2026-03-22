@@ -4,9 +4,8 @@ import com.koval.trainingplannerbackend.ai.agents.AgentType;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.Message;
-import org.springframework.stereotype.Service;
-
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;

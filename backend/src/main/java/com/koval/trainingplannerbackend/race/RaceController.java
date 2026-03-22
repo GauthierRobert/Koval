@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.race;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.pacing.dto.RouteCoordinate;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
@@ -10,8 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.NoSuchElementException;

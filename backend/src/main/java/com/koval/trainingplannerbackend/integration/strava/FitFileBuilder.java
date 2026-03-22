@@ -1,7 +1,6 @@
 package com.koval.trainingplannerbackend.integration.strava;
 
 import java.io.ByteArrayOutputStream;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;

@@ -1,10 +1,6 @@
 package com.koval.trainingplannerbackend.pacing;
 
-import com.koval.trainingplannerbackend.pacing.dto.AthleteProfile;
-import com.koval.trainingplannerbackend.pacing.dto.PacingPlanResponse;
-import com.koval.trainingplannerbackend.pacing.dto.PacingSegment;
-import com.koval.trainingplannerbackend.pacing.dto.PacingSummary;
-import com.koval.trainingplannerbackend.pacing.dto.RouteCoordinate;
+import com.koval.trainingplannerbackend.pacing.dto.*;
 import com.koval.trainingplannerbackend.pacing.gpx.CourseSegment;
 import org.springframework.stereotype.Service;
 

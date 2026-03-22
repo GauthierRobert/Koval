@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.migration;
 
+import com.mongodb.client.result.UpdateResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -8,8 +9,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Component;
-
-import com.mongodb.client.result.UpdateResult;
 
 @Component
 public class ClubIdToClubIdsMigration implements CommandLineRunner {

@@ -6,14 +6,14 @@ import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundExcept
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import com.koval.trainingplannerbackend.training.notation.CompactNotationException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.stream.Collectors;
 

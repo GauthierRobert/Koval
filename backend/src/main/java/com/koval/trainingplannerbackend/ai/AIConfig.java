@@ -11,7 +11,6 @@ import com.koval.trainingplannerbackend.training.tools.TrainingToolService;
 import com.koval.trainingplannerbackend.training.zone.ZoneToolService;
 import org.springframework.ai.anthropic.AnthropicChatModel;
 import org.springframework.ai.anthropic.AnthropicChatOptions;
-import org.springframework.ai.anthropic.api.AnthropicApi;
 import org.springframework.ai.anthropic.api.AnthropicCacheOptions;
 import org.springframework.ai.anthropic.api.AnthropicCacheStrategy;
 import org.springframework.ai.anthropic.api.AnthropicCacheTtl;
@@ -21,12 +20,9 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.messages.MessageType;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -43,7 +39,7 @@ import java.util.stream.Stream;
 @Configuration
 public class AIConfig {
 
-    private static final String SONNET = "claude-sonnet-4-5";
+    private static final String SONNET = "claude-sonnet-4-6";
     private static final String HAIKU = "claude-haiku-4-5-20251001";
 
     private final String commonRules;

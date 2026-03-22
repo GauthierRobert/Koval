@@ -2,7 +2,6 @@ package com.koval.trainingplannerbackend.race;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;

@@ -1,6 +1,8 @@
 package com.koval.trainingplannerbackend.club;
 
-import com.koval.trainingplannerbackend.club.dto.*;
+import com.koval.trainingplannerbackend.club.dto.ClubDetailResponse;
+import com.koval.trainingplannerbackend.club.dto.ClubSummaryResponse;
+import com.koval.trainingplannerbackend.club.dto.CreateClubRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 

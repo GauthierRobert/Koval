@@ -4,13 +4,13 @@ import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.auth.UserRole;
 import com.koval.trainingplannerbackend.auth.UserService;
-import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
-import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
-import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import com.koval.trainingplannerbackend.club.Club;
 import com.koval.trainingplannerbackend.club.ClubMemberRole;
 import com.koval.trainingplannerbackend.club.ClubMembershipService;
 import com.koval.trainingplannerbackend.club.ClubRepository;
+import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
+import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import com.koval.trainingplannerbackend.notification.NotificationService;
 import com.koval.trainingplannerbackend.training.group.Group;
 import com.koval.trainingplannerbackend.training.group.GroupService;
@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Service for Coach-specific operations.
