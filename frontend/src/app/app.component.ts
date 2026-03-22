@@ -13,6 +13,7 @@ import {BluetoothService} from './services/bluetooth.service';
 import {AuthService} from './services/auth.service';
 import {NotificationToastComponent} from './components/shared/notification-toast/notification-toast.component';
 import {ErrorToastComponent} from './components/shared/error-toast/error-toast.component';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 
 @Component({
   selector: 'app-root',
@@ -25,7 +26,8 @@ import {ErrorToastComponent} from './components/shared/error-toast/error-toast.c
     DeviceManagerComponent,
     SettingsComponent,
     NotificationToastComponent,
-    ErrorToastComponent
+    ErrorToastComponent,
+    TranslateModule
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
@@ -42,10 +44,20 @@ export class AppComponent {
     private executionService: WorkoutExecutionService,
     private bluetoothService: BluetoothService,
     private authService: AuthService,
+    private translate: TranslateService,
   ) {
     this.selectedTraining$ = this.trainingService.selectedTraining$;
     this.executionState$ = this.executionService.state$;
     this.showDeviceManager$ = this.bluetoothService.showDeviceManager$;
     this.showSettings$ = this.authService.showSettings$;
+
+    const savedLang = localStorage.getItem('lang');
+    const browserLang = navigator.language?.split('-')[0];
+    const supportedLangs = ['en', 'fr'];
+    const lang =
+      (savedLang && supportedLangs.includes(savedLang) ? savedLang : null) ??
+      (browserLang && supportedLangs.includes(browserLang) ? browserLang : null) ??
+      'en';
+    translate.use(lang);
   }
 }
