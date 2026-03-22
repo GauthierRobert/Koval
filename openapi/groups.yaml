@@ -1,0 +1,131 @@
+openapi: 3.1.0
+info:
+  title: Training Planner - Groups API
+  version: 1.0.0
+  description: Coach athlete groups management.
+
+servers:
+  - url: http://localhost:8080
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/groups:
+    get:
+      operationId: listGroups
+      summary: List groups (coach sees own groups, athlete sees groups they belong to)
+      responses:
+        "200":
+          description: Groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Group"
+
+    post:
+      operationId: createGroup
+      summary: Create a new group (coach only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                maxAthletes:
+                  type: integer
+      responses:
+        "200":
+          description: Created group
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+
+  /api/groups/{id}:
+    put:
+      operationId: renameGroup
+      summary: Rename a group
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        "200":
+          description: Updated group
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+
+    delete:
+      operationId: deleteGroup
+      summary: Delete a group (coach only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /api/groups/{id}/leave:
+    delete:
+      operationId: leaveGroup
+      summary: Athlete leaves a group
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Left
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Group:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        coachId:
+          type: string
+        maxAthletes:
+          type: integer
+        athleteIds:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time

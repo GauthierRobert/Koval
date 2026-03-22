@@ -1,0 +1,241 @@
+openapi: 3.1.0
+info:
+  title: Training Planner - AI API
+  version: 1.0.0
+  description: AI chat (standard and streaming), one-shot actions, and chat history.
+
+servers:
+  - url: http://localhost:8080
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/ai/chat:
+    post:
+      operationId: chat
+      summary: Send a message to the AI assistant
+      description: |
+        The AI can create/update/delete trainings, assign workouts, and access history
+        via tool calls. Returns the text response with usage metadata.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRequest"
+      responses:
+        "200":
+          description: AI response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
+
+  /api/ai/chat/stream:
+    post:
+      operationId: chatStream
+      summary: Send a message and receive a streaming response (SSE)
+      description: |
+        Returns Server-Sent Events. Each event has `data:<token>`.
+        Format: no space after `data:`. Multi-line content uses multiple `data:` lines.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRequest"
+      responses:
+        "200":
+          description: SSE stream of tokens
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+  /api/ai/plan:
+    post:
+      operationId: plan
+      summary: Send a planning request to the AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRequest"
+      responses:
+        "200":
+          description: AI response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
+
+  /api/ai/history:
+    get:
+      operationId: listChatHistories
+      summary: List all chat histories for the current user
+      responses:
+        "200":
+          description: Chat histories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatHistory"
+
+  /api/ai/history/{chatHistoryId}:
+    get:
+      operationId: getChatHistory
+      summary: Get a specific chat history with messages
+      parameters:
+        - name: chatHistoryId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Chat history with messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatHistoryDetail"
+
+    delete:
+      operationId: deleteChatHistory
+      summary: Delete a chat history
+      parameters:
+        - name: chatHistoryId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /api/ai/action:
+    post:
+      operationId: executeAction
+      summary: Execute a one-shot AI action (stateless, no history)
+      description: |
+        Used for quick operations like zone creation or training+session creation.
+        Uses Claude Haiku with temp=0.3 for fast, deterministic results.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActionRequest"
+      responses:
+        "200":
+          description: Action result
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ChatRequest:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        chatHistoryId:
+          type: string
+          description: Omit for new conversation, provide to continue existing
+        agentType:
+          type: string
+
+    ChatResponse:
+      type: object
+      properties:
+        response:
+          type: string
+        chatHistoryId:
+          type: string
+        inputTokens:
+          type: integer
+        outputTokens:
+          type: integer
+        cacheReadTokens:
+          type: integer
+        cacheWriteTokens:
+          type: integer
+        toolEvents:
+          type: array
+          items:
+            type: object
+
+    ChatHistory:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        title:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        lastUpdatedAt:
+          type: string
+          format: date-time
+        lastAgentType:
+          type: string
+        conversationSummary:
+          type: string
+
+    ChatHistoryDetail:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum: [user, assistant]
+              content:
+                type: string
+
+    AIActionType:
+      type: string
+      enum: [ZONE_CREATION, TRAINING_WITH_SESSION]
+
+    ActionContext:
+      type: object
+      properties:
+        clubId:
+          type: string
+        clubTagId:
+          type: string
+        coachTagId:
+          type: string
+
+    ActionRequest:
+      type: object
+      required: [message, actionType]
+      properties:
+        message:
+          type: string
+        actionType:
+          $ref: "#/components/schemas/AIActionType"
+        context:
+          $ref: "#/components/schemas/ActionContext"

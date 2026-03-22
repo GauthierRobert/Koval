@@ -1,0 +1,81 @@
+openapi: 3.1.0
+info:
+  title: Training Planner - Strava Integration API
+  version: 1.0.0
+  description: Strava activity sync and FIT file generation.
+
+servers:
+  - url: http://localhost:8080
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/integration/strava/sync:
+    post:
+      operationId: syncStravaActivities
+      summary: Sync recent Strava activities as completed sessions
+      responses:
+        "200":
+          description: Sync result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncResult"
+
+  /api/integration/strava/status:
+    get:
+      operationId: getStravaStatus
+      summary: Get Strava sync status (connected, last sync time)
+      responses:
+        "200":
+          description: Sync status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncStatus"
+
+  /api/integration/strava/sessions/{sessionId}/build-fit:
+    post:
+      operationId: buildFitFromStrava
+      summary: Build a FIT file from a Strava-synced session's stream data
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session with generated FIT file
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    SyncResult:
+      type: object
+      properties:
+        imported:
+          type: integer
+        skipped:
+          type: integer
+        errors:
+          type: integer
+
+    SyncStatus:
+      type: object
+      properties:
+        connected:
+          type: boolean
+        lastSyncAt:
+          type: string
+          format: date-time

@@ -1,0 +1,378 @@
+openapi: 3.1.0
+info:
+  title: Training Planner - Sessions API
+  version: 1.0.0
+  description: Completed workout sessions, PMC analytics, and FIT file management.
+
+servers:
+  - url: http://localhost:8080
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/sessions:
+    get:
+      operationId: listSessions
+      summary: List all completed sessions for the current user
+      responses:
+        "200":
+          description: Sessions ordered by completedAt desc
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CompletedSession"
+
+    post:
+      operationId: saveSession
+      summary: Save a completed session (computes TSS/IF, auto-associates to schedule)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompletedSession"
+      responses:
+        "200":
+          description: Saved session with computed metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompletedSession"
+
+  /api/sessions?page:
+    get:
+      operationId: listSessionsPaginated
+      summary: List sessions with pagination
+      parameters:
+        - name: page
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Paginated sessions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageCompletedSession"
+
+  /api/sessions/{id}:
+    get:
+      operationId: getSession
+      summary: Get a session by ID (owner or coach of owner)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompletedSession"
+        "404":
+          description: Not found or no access
+
+    patch:
+      operationId: patchSession
+      summary: Patch session fields (currently supports RPE)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rpe:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+      responses:
+        "200":
+          description: Updated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompletedSession"
+
+    delete:
+      operationId: deleteSession
+      summary: Delete a session and its FIT file
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /api/sessions/calendar:
+    get:
+      operationId: listSessionsForCalendar
+      summary: List sessions in a date range
+      parameters:
+        - name: start
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: end
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Sessions in range
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CompletedSession"
+
+  /api/sessions/{sessionId}/link/{scheduledWorkoutId}:
+    post:
+      operationId: linkSessionToSchedule
+      summary: Manually link a session to a scheduled workout
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: scheduledWorkoutId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Linked session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompletedSession"
+        "404":
+          description: Not found
+
+  /api/sessions/pmc:
+    get:
+      operationId: getPmc
+      summary: Get PMC (Performance Management Chart) data
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: PMC data points
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PmcDataPoint"
+
+  /api/sessions/{id}/fit:
+    post:
+      operationId: uploadFitFile
+      summary: Upload a FIT file for a session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Session with FIT file linked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompletedSession"
+
+    get:
+      operationId: downloadFitFile
+      summary: Download the FIT file for a session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: FIT binary data
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: No FIT file
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    BlockSummary:
+      type: object
+      properties:
+        label:
+          type: string
+        type:
+          type: string
+        durationSeconds:
+          type: integer
+        targetPower:
+          type: number
+        actualPower:
+          type: number
+        actualCadence:
+          type: number
+        actualHR:
+          type: number
+        distanceMeters:
+          type: number
+
+    CompletedSession:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        userId:
+          type: string
+          readOnly: true
+        trainingId:
+          type: string
+        title:
+          type: string
+        completedAt:
+          type: string
+          format: date-time
+        totalDurationSeconds:
+          type: integer
+        avgPower:
+          type: number
+        avgHR:
+          type: number
+        avgCadence:
+          type: number
+        avgSpeed:
+          type: number
+        sportType:
+          type: string
+          enum: [CYCLING, RUNNING, SWIMMING, BRICK]
+        blockSummaries:
+          type: array
+          items:
+            $ref: "#/components/schemas/BlockSummary"
+        scheduledWorkoutId:
+          type: string
+        tss:
+          type: number
+          readOnly: true
+        intensityFactor:
+          type: number
+          readOnly: true
+        fitFileId:
+          type: string
+          readOnly: true
+        rpe:
+          type: integer
+          minimum: 1
+          maximum: 10
+        syntheticCompletion:
+          type: boolean
+        stravaActivityId:
+          type: string
+
+    PmcDataPoint:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        ctl:
+          type: number
+          description: Chronic Training Load (fitness)
+        atl:
+          type: number
+          description: Acute Training Load (fatigue)
+        tsb:
+          type: number
+          description: Training Stress Balance (form)
+        dailyTss:
+          type: number
+        sportTss:
+          type: object
+          additionalProperties:
+            type: number
+        predicted:
+          type: boolean
+
+    PageCompletedSession:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/CompletedSession"
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        number:
+          type: integer
+        size:
+          type: integer

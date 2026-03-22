@@ -1,0 +1,145 @@
+openapi: 3.1.0
+info:
+  title: Training Planner - Goals API
+  version: 1.0.0
+  description: Race goal management for athletes.
+
+servers:
+  - url: http://localhost:8080
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/goals:
+    get:
+      operationId: listGoals
+      summary: List all race goals for the current user
+      responses:
+        "200":
+          description: Goals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RaceGoal"
+
+    post:
+      operationId: createGoal
+      summary: Create a new race goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RaceGoal"
+      responses:
+        "200":
+          description: Created goal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RaceGoal"
+
+  /api/goals/{id}:
+    put:
+      operationId: updateGoal
+      summary: Update a race goal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RaceGoal"
+      responses:
+        "200":
+          description: Updated goal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RaceGoal"
+
+    delete:
+      operationId: deleteGoal
+      summary: Delete a race goal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /api/goals/{id}/link-race/{raceId}:
+    post:
+      operationId: linkGoalToRace
+      summary: Link a goal to a race from the race database
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: raceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Updated goal with linked race
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RaceGoal"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RaceGoal:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        athleteId:
+          type: string
+          readOnly: true
+        title:
+          type: string
+        sport:
+          type: string
+        raceDate:
+          type: string
+          format: date
+        priority:
+          type: string
+          enum: [A, B, C]
+        distance:
+          type: string
+        location:
+          type: string
+        notes:
+          type: string
+        targetTime:
+          type: string
+        raceId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true

@@ -1,0 +1,396 @@
+openapi: 3.1.0
+info:
+  title: Training Planner - Races API
+  version: 1.0.0
+  description: Race database with GPX routes, search, browsing, and AI auto-complete.
+
+servers:
+  - url: http://localhost:8080
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/races:
+    get:
+      operationId: searchRaces
+      summary: Search races by query, sport, or region
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: sport
+          in: query
+          schema:
+            type: string
+        - name: region
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Matching races
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RaceSummary"
+
+    post:
+      operationId: createRace
+      summary: Create a new race
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Race"
+      responses:
+        "200":
+          description: Created race
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RaceSummary"
+
+  /api/races/{id}:
+    get:
+      operationId: getRace
+      summary: Get a race by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Race
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RaceSummary"
+
+    put:
+      operationId: updateRace
+      summary: Update a race
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Race"
+      responses:
+        "200":
+          description: Updated race
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RaceSummary"
+
+  /api/races/{id}/gpx/{discipline}:
+    post:
+      operationId: uploadGpx
+      summary: Upload a GPX file for a race discipline
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: discipline
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [swim, bike, run]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Uploaded
+
+    get:
+      operationId: downloadGpx
+      summary: Download the GPX file for a discipline
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: discipline
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [swim, bike, run]
+      responses:
+        "200":
+          description: GPX data
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+    delete:
+      operationId: deleteGpx
+      summary: Delete a GPX file
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: discipline
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [swim, bike, run]
+      responses:
+        "204":
+          description: Deleted
+
+  /api/races/{id}/route/{discipline}:
+    get:
+      operationId: getRoute
+      summary: Get parsed route coordinates for a discipline
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: discipline
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [swim, bike, run]
+      responses:
+        "200":
+          description: Route coordinates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RouteCoordinate"
+
+  /api/races/facets/sports:
+    get:
+      operationId: getSportFacets
+      summary: Get available sport types with counts
+      responses:
+        "200":
+          description: Sport facets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    sport:
+                      type: string
+                    count:
+                      type: integer
+
+  /api/races/facets/countries:
+    get:
+      operationId: getCountryFacets
+      summary: Get available countries for a sport
+      parameters:
+        - name: sport
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Country facets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    country:
+                      type: string
+                    count:
+                      type: integer
+
+  /api/races/browse:
+    get:
+      operationId: browseRaces
+      summary: Browse races by sport and country with pagination
+      parameters:
+        - name: sport
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: country
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Paginated races
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RaceSummary"
+                  totalElements:
+                    type: integer
+                  totalPages:
+                    type: integer
+
+  /api/races/{id}/ai-complete:
+    post:
+      operationId: aiCompleteRace
+      summary: Use AI to auto-complete missing race details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Race with AI-completed fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RaceSummary"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Race:
+      type: object
+      required: [title, sport]
+      properties:
+        title:
+          type: string
+        sport:
+          type: string
+        location:
+          type: string
+        country:
+          type: string
+        region:
+          type: string
+        distance:
+          type: string
+        swimDistanceM:
+          type: number
+        bikeDistanceM:
+          type: number
+        runDistanceM:
+          type: number
+        elevationGainM:
+          type: integer
+        description:
+          type: string
+        website:
+          type: string
+        scheduledDate:
+          type: string
+        swimGpxLoops:
+          type: integer
+        bikeGpxLoops:
+          type: integer
+        runGpxLoops:
+          type: integer
+
+    RaceSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        sport:
+          type: string
+        location:
+          type: string
+        country:
+          type: string
+        region:
+          type: string
+        distance:
+          type: string
+        swimDistanceM:
+          type: number
+        bikeDistanceM:
+          type: number
+        runDistanceM:
+          type: number
+        elevationGainM:
+          type: integer
+        description:
+          type: string
+        website:
+          type: string
+        scheduledDate:
+          type: string
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        verified:
+          type: boolean
+
+    RouteCoordinate:
+      type: object
+      properties:
+        lat:
+          type: number
+        lon:
+          type: number
+        ele:
+          type: number
+        distance:
+          type: number

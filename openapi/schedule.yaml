@@ -1,0 +1,233 @@
+openapi: 3.1.0
+info:
+  title: Training Planner - Schedule API
+  version: 1.0.0
+  description: Self-scheduling for athletes - schedule, reschedule, complete, and skip workouts.
+
+servers:
+  - url: http://localhost:8080
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/schedule:
+    post:
+      operationId: selfSchedule
+      summary: Schedule a training for yourself
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScheduleRequest"
+      responses:
+        "200":
+          description: Created scheduled workout
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduledWorkoutResponse"
+
+    get:
+      operationId: getMySchedule
+      summary: Get your scheduled workouts for a date range
+      parameters:
+        - name: start
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: end
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: includeClubSessions
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Scheduled workouts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScheduledWorkoutResponse"
+
+  /api/schedule/{id}:
+    delete:
+      operationId: deleteScheduledWorkout
+      summary: Delete a scheduled workout
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /api/schedule/{id}/complete:
+    post:
+      operationId: completeScheduledWorkout
+      summary: Mark a scheduled workout as completed
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduledWorkoutResponse"
+
+  /api/schedule/{id}/reschedule:
+    patch:
+      operationId: rescheduleWorkout
+      summary: Reschedule a workout to a new date
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scheduledDate]
+              properties:
+                scheduledDate:
+                  type: string
+                  format: date
+      responses:
+        "200":
+          description: Rescheduled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduledWorkoutResponse"
+
+  /api/schedule/{id}/skip:
+    post:
+      operationId: skipScheduledWorkout
+      summary: Skip a scheduled workout
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Skipped
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduledWorkoutResponse"
+
+  /api/schedule/club-sessions:
+    get:
+      operationId: getClubSessionsForCalendar
+      summary: Get club sessions for calendar display
+      parameters:
+        - name: start
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: end
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Club sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ScheduleRequest:
+      type: object
+      required: [trainingId, scheduledDate]
+      properties:
+        trainingId:
+          type: string
+        scheduledDate:
+          type: string
+          format: date
+        notes:
+          type: string
+
+    ScheduledWorkoutResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        trainingId:
+          type: string
+        athleteId:
+          type: string
+        assignedBy:
+          type: string
+        scheduledDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, SKIPPED]
+        notes:
+          type: string
+        tss:
+          type: integer
+        intensityFactor:
+          type: number
+        completedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        trainingTitle:
+          type: string
+        trainingType:
+          type: string
+        totalDurationSeconds:
+          type: integer
+        sportType:
+          type: string
+        sessionId:
+          type: string
+        isClubSession:
+          type: boolean
+        clubName:
+          type: string
+        clubGroupName:
+          type: string

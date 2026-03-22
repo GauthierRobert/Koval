@@ -1,0 +1,233 @@
+openapi: 3.1.0
+info:
+  title: Training Planner - Zones API
+  version: 1.0.0
+  description: Training zone system management for coaches and athletes.
+
+servers:
+  - url: http://localhost:8080
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/zones/coach:
+    post:
+      operationId: createZoneSystem
+      summary: Create a zone system (coach only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ZoneSystem"
+      responses:
+        "200":
+          description: Created zone system
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZoneSystem"
+        "403":
+          description: Not a coach
+
+    get:
+      operationId: listCoachZoneSystems
+      summary: List zone systems created by the current coach
+      responses:
+        "200":
+          description: Zone systems
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ZoneSystem"
+
+  /api/zones/coach/search:
+    get:
+      operationId: searchCoachZoneSystem
+      summary: Search a coach's zone system by name
+      parameters:
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Zone system
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZoneSystem"
+
+  /api/zones/coach/{id}:
+    put:
+      operationId: updateZoneSystem
+      summary: Update a zone system
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ZoneSystem"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZoneSystem"
+
+    delete:
+      operationId: deleteZoneSystem
+      summary: Delete a zone system
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /api/zones/coach/{id}/default:
+    put:
+      operationId: setDefaultForSport
+      summary: Set/unset a zone system as default for its sport
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: value
+          in: query
+          required: true
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZoneSystem"
+
+  /api/zones/my-zones:
+    get:
+      operationId: getMyZoneSystems
+      summary: Get all zone systems accessible to the current user (own + coach's)
+      responses:
+        "200":
+          description: Zone systems
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ZoneSystem"
+
+  /api/zones/{id}:
+    get:
+      operationId: getZoneSystem
+      summary: Get a zone system by ID (access-checked - must be coach or athlete of coach)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Zone system
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZoneSystem"
+        "403":
+          description: Access denied
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ZoneReferenceType:
+      type: string
+      enum:
+        - FTP
+        - VO2MAX_POWER
+        - THRESHOLD_PACE
+        - VO2MAX_PACE
+        - CSS
+        - PACE_5K
+        - PACE_10K
+        - PACE_HALF_MARATHON
+        - PACE_MARATHON
+        - CUSTOM
+
+    Zone:
+      type: object
+      required: [label, low, high]
+      properties:
+        label:
+          type: string
+          description: "e.g. Z1, Z2, Z3"
+        low:
+          type: integer
+          description: Lower bound %
+        high:
+          type: integer
+          description: Upper bound %
+        description:
+          type: string
+          description: "e.g. 'Recovery', 'Endurance', 'Tempo'"
+
+    ZoneSystem:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        coachId:
+          type: string
+          readOnly: true
+        name:
+          type: string
+        sportType:
+          type: string
+          enum: [CYCLING, RUNNING, SWIMMING, BRICK]
+        referenceType:
+          $ref: "#/components/schemas/ZoneReferenceType"
+        referenceName:
+          type: string
+        referenceUnit:
+          type: string
+        zones:
+          type: array
+          items:
+            $ref: "#/components/schemas/Zone"
+        defaultForSport:
+          type: boolean
+        annotations:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true

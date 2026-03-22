@@ -1,0 +1,306 @@
+openapi: 3.1.0
+info:
+  title: Training Planner - Trainings API
+  version: 1.0.0
+  description: Training workout CRUD, received trainings, and club trainings.
+
+servers:
+  - url: http://localhost:8080
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/trainings:
+    get:
+      operationId: listTrainings
+      summary: List all trainings created by the current user
+      responses:
+        "200":
+          description: List of trainings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Training"
+
+    post:
+      operationId: createTraining
+      summary: Create a new training
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Training"
+      responses:
+        "201":
+          description: Created training
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Training"
+
+  /api/trainings?page:
+    get:
+      operationId: listTrainingsPaginated
+      summary: List trainings with pagination
+      parameters:
+        - name: page
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated trainings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageTraining"
+
+  /api/trainings/{id}:
+    get:
+      operationId: getTraining
+      summary: Get a training by ID (access-checked)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Training with zone-enriched metrics for the requesting user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Training"
+        "403":
+          description: Access denied
+
+    put:
+      operationId: updateTraining
+      summary: Update a training (access-checked)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Training"
+      responses:
+        "200":
+          description: Updated training
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Training"
+
+    delete:
+      operationId: deleteTraining
+      summary: Delete a training (access-checked)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /api/trainings/received:
+    get:
+      operationId: getReceivedTrainings
+      summary: List trainings received from coaches or club sessions
+      responses:
+        "200":
+          description: Received trainings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReceivedTrainingResponse"
+
+  /api/trainings/club-trainings:
+    get:
+      operationId: listClubTrainings
+      summary: List trainings from clubs the user belongs to
+      responses:
+        "200":
+          description: Club trainings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Training"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    SportType:
+      type: string
+      enum: [CYCLING, RUNNING, SWIMMING, BRICK]
+
+    TrainingType:
+      type: string
+      enum: [VO2MAX, THRESHOLD, SWEET_SPOT, ENDURANCE, SPRINT, RECOVERY, MIXED, TEST]
+
+    BlockType:
+      type: string
+      enum: [WARMUP, STEADY, INTERVAL, COOLDOWN, RAMP, FREE, PAUSE]
+
+    WorkoutElement:
+      type: object
+      description: |
+        A leaf block (has `type`) or a repeatable set (has `repetitions` + `elements`).
+      properties:
+        repetitions:
+          type: integer
+          description: Number of reps for sets
+        elements:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkoutElement"
+          description: Children (for sets)
+        restDurationSeconds:
+          type: integer
+          description: Rest between repetitions
+        restIntensity:
+          type: integer
+          description: Intensity % during rest
+        type:
+          $ref: "#/components/schemas/BlockType"
+        durationSeconds:
+          type: integer
+        distanceMeters:
+          type: integer
+        label:
+          type: string
+        description:
+          type: string
+        intensityTarget:
+          type: integer
+          description: "% of reference (FTP/Pace/CSS)"
+        intensityStart:
+          type: integer
+          description: Start % for ramps
+        intensityEnd:
+          type: integer
+          description: End % for ramps
+        cadenceTarget:
+          type: integer
+        zoneTarget:
+          type: string
+          description: "Zone label (e.g. 'Z3')"
+        zoneLabel:
+          type: string
+          description: Resolved display label (read-only, filled by server)
+
+    Training:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        title:
+          type: string
+        description:
+          type: string
+        sportType:
+          $ref: "#/components/schemas/SportType"
+        trainingType:
+          $ref: "#/components/schemas/TrainingType"
+        blocks:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkoutElement"
+        estimatedTss:
+          type: integer
+        estimatedIf:
+          type: number
+        estimatedDurationSeconds:
+          type: integer
+        estimatedDistance:
+          type: integer
+        zoneSystemId:
+          type: string
+        groupIds:
+          type: array
+          items:
+            type: string
+        clubIds:
+          type: array
+          items:
+            type: string
+        clubGroupIds:
+          type: array
+          items:
+            type: string
+        createdBy:
+          type: string
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+
+    ReceivedTrainingOrigin:
+      type: string
+      enum: [COACH_GROUP, CLUB, CLUB_SESSION]
+
+    ReceivedTrainingResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        trainingId:
+          type: string
+        assignedByName:
+          type: string
+        origin:
+          $ref: "#/components/schemas/ReceivedTrainingOrigin"
+        originName:
+          type: string
+        receivedAt:
+          type: string
+          format: date-time
+
+    PageTraining:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/Training"
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        number:
+          type: integer
+        size:
+          type: integer

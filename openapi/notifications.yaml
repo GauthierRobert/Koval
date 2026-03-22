@@ -1,0 +1,56 @@
+openapi: 3.1.0
+info:
+  title: Training Planner - Notifications API
+  version: 1.0.0
+  description: Push notification token management (FCM).
+
+servers:
+  - url: http://localhost:8080
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/notifications/register-token:
+    post:
+      operationId: registerToken
+      summary: Register an FCM push notification token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+                  description: Firebase Cloud Messaging device token
+      responses:
+        "200":
+          description: Registered
+
+  /api/notifications/unregister-token:
+    delete:
+      operationId: unregisterToken
+      summary: Unregister an FCM push notification token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+      responses:
+        "200":
+          description: Unregistered
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

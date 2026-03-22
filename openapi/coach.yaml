@@ -1,0 +1,600 @@
+openapi: 3.1.0
+info:
+  title: Training Planner - Coach API
+  version: 1.0.0
+  description: Coach-athlete management, workout assignment, invite codes, and athlete data access.
+
+servers:
+  - url: http://localhost:8080
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/coach/assign:
+    post:
+      operationId: assignTraining
+      summary: Assign a training to one or more athletes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignmentRequest"
+      responses:
+        "200":
+          description: Created scheduled workouts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScheduledWorkout"
+
+  /api/coach/assign/{id}:
+    delete:
+      operationId: deleteAssignment
+      summary: Delete a scheduled workout assignment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /api/coach/athletes:
+    get:
+      operationId: listAthletes
+      summary: List all athletes for the current coach
+      responses:
+        "200":
+          description: Athletes with profile info
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AthleteInfo"
+
+  /api/coach/athletes/{athleteId}:
+    delete:
+      operationId: removeAthlete
+      summary: Remove an athlete from the coach's roster
+      parameters:
+        - name: athleteId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Removed
+
+  /api/coach/athletes/{athleteId}/groups:
+    get:
+      operationId: getAthleteGroups
+      summary: Get groups for an athlete
+      parameters:
+        - name: athleteId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Group"
+
+    put:
+      operationId: setAthleteGroups
+      summary: Replace athlete's groups
+      parameters:
+        - name: athleteId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                groups:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: Updated groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Group"
+
+    post:
+      operationId: addAthleteToGroup
+      summary: Add athlete to a group by name
+      parameters:
+        - name: athleteId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                group:
+                  type: string
+      responses:
+        "200":
+          description: Group
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+
+  /api/coach/athletes/{athleteId}/groups/{groupName}:
+    delete:
+      operationId: removeAthleteFromGroup
+      summary: Remove athlete from a group
+      parameters:
+        - name: athleteId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: groupName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Updated group
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+
+  /api/coach/athletes/groups:
+    get:
+      operationId: listCoachGroups
+      summary: List all groups for the coach
+      responses:
+        "200":
+          description: Groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Group"
+
+  /api/coach/schedule/{athleteId}:
+    get:
+      operationId: getAthleteSchedule
+      summary: Get scheduled workouts for an athlete
+      parameters:
+        - name: athleteId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: start
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Scheduled workouts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScheduledWorkoutResponse"
+
+  /api/coach/schedule/{id}/complete:
+    post:
+      operationId: markCompleted
+      summary: Mark a scheduled workout as completed
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tss:
+                  type: integer
+                intensityFactor:
+                  type: number
+      responses:
+        "200":
+          description: Updated scheduled workout
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduledWorkout"
+
+  /api/coach/schedule/{id}/skip:
+    post:
+      operationId: skipScheduledWorkout
+      summary: Skip a scheduled workout
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduledWorkout"
+
+  /api/coach/athletes/{athleteId}/sessions:
+    get:
+      operationId: getAthleteSessions
+      summary: Get completed sessions for an athlete
+      parameters:
+        - name: athleteId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /api/coach/athletes/{athleteId}/pmc:
+    get:
+      operationId: getAthletePmc
+      summary: Get PMC data for an athlete
+      parameters:
+        - name: athleteId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: PMC data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /api/coach/athletes/{athleteId}/goals:
+    get:
+      operationId: getAthleteGoals
+      summary: Get race goals for an athlete
+      parameters:
+        - name: athleteId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Goals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /api/coach/session-reminders:
+    get:
+      operationId: getSessionReminders
+      summary: Get upcoming club sessions for the coach
+      responses:
+        "200":
+          description: Upcoming sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /api/coach/invite-codes:
+    post:
+      operationId: createInviteCode
+      summary: Create an invite code for athletes to join
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteCodeRequest"
+      responses:
+        "200":
+          description: Created invite code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InviteCode"
+
+    get:
+      operationId: listInviteCodes
+      summary: List coach's invite codes
+      responses:
+        "200":
+          description: Invite codes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InviteCode"
+
+  /api/coach/invite-codes/{id}:
+    delete:
+      operationId: deleteInviteCode
+      summary: Delete an invite code
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /api/coach/redeem-invite:
+    post:
+      operationId: redeemInviteCode
+      summary: Athlete redeems an invite code to join a coach
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+      responses:
+        "200":
+          description: Redeemed
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ScheduleStatus:
+      type: string
+      enum: [PENDING, COMPLETED, SKIPPED]
+
+    AssignmentRequest:
+      type: object
+      required: [trainingId, athleteIds, scheduledDate]
+      properties:
+        trainingId:
+          type: string
+        athleteIds:
+          type: array
+          items:
+            type: string
+        scheduledDate:
+          type: string
+          format: date
+        notes:
+          type: string
+        tss:
+          type: integer
+        intensityFactor:
+          type: number
+        clubId:
+          type: string
+        groupId:
+          type: string
+
+    ScheduledWorkout:
+      type: object
+      properties:
+        id:
+          type: string
+        trainingId:
+          type: string
+        athleteId:
+          type: string
+        assignedBy:
+          type: string
+        scheduledDate:
+          type: string
+          format: date
+        status:
+          $ref: "#/components/schemas/ScheduleStatus"
+        notes:
+          type: string
+        tss:
+          type: integer
+        intensityFactor:
+          type: number
+        sessionId:
+          type: string
+        completedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    ScheduledWorkoutResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        trainingId:
+          type: string
+        athleteId:
+          type: string
+        assignedBy:
+          type: string
+        scheduledDate:
+          type: string
+          format: date
+        status:
+          $ref: "#/components/schemas/ScheduleStatus"
+        notes:
+          type: string
+        tss:
+          type: integer
+        intensityFactor:
+          type: number
+        completedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        trainingTitle:
+          type: string
+        trainingType:
+          type: string
+        totalDurationSeconds:
+          type: integer
+        sportType:
+          type: string
+        sessionId:
+          type: string
+        isClubSession:
+          type: boolean
+        clubName:
+          type: string
+        clubGroupName:
+          type: string
+
+    Group:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        coachId:
+          type: string
+        maxAthletes:
+          type: integer
+        athleteIds:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    AthleteInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+        profilePicture:
+          type: string
+        ftp:
+          type: integer
+        ctl:
+          type: number
+        atl:
+          type: number
+        tsb:
+          type: number
+
+    InviteCodeRequest:
+      type: object
+      properties:
+        groups:
+          type: array
+          items:
+            type: string
+        maxUses:
+          type: integer
+        expiresAt:
+          type: string
+          format: date-time
+        code:
+          type: string
+
+    InviteCode:
+      type: object
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        coachId:
+          type: string
+        groups:
+          type: array
+          items:
+            type: string
+        maxUses:
+          type: integer
+        usedCount:
+          type: integer
+        expiresAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time

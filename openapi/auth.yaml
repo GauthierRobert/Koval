@@ -1,0 +1,344 @@
+openapi: 3.1.0
+info:
+  title: Training Planner - Auth API
+  version: 1.0.0
+  description: Authentication, user profile, settings, and onboarding.
+
+servers:
+  - url: http://localhost:8080
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/auth/strava:
+    get:
+      operationId: getStravaOAuthUrl
+      summary: Get Strava OAuth URL
+      security: []
+      parameters:
+        - name: redirectUri
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OAuth URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+
+  /api/auth/strava/callback:
+    get:
+      operationId: stravaCallback
+      summary: Handle Strava OAuth callback
+      security: []
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: JWT token and user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /api/auth/google:
+    get:
+      operationId: getGoogleOAuthUrl
+      summary: Get Google OAuth URL
+      security: []
+      parameters:
+        - name: redirectUri
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OAuth URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+
+  /api/auth/google/callback:
+    get:
+      operationId: googleCallback
+      summary: Handle Google OAuth callback
+      security: []
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: redirectUri
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: JWT token and user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /api/auth/google/mobile-callback:
+    get:
+      operationId: googleMobileCallback
+      summary: Handle Google OAuth callback for mobile (deep link redirect)
+      security: []
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "302":
+          description: Redirects to mobile deep link with token
+
+  /api/auth/dev/login:
+    post:
+      operationId: devLogin
+      summary: Developer login (non-production)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DevLoginRequest"
+      responses:
+        "200":
+          description: JWT token and user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /api/auth/me:
+    get:
+      operationId: getCurrentUser
+      summary: Get current user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /api/auth/role:
+    post:
+      operationId: setRole
+      summary: Set user role (ATHLETE or COACH)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role:
+                  $ref: "#/components/schemas/UserRole"
+      responses:
+        "200":
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /api/auth/settings:
+    put:
+      operationId: updateSettings
+      summary: Update user settings (FTP, weight, paces, etc.)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsRequest"
+      responses:
+        "200":
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /api/auth/me/zone-reference:
+    patch:
+      operationId: updateZoneReference
+      summary: Update a custom zone reference value
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [zoneSystemId, value]
+              properties:
+                zoneSystemId:
+                  type: string
+                value:
+                  type: integer
+      responses:
+        "200":
+          description: Updated
+
+  /api/auth/onboarding:
+    post:
+      operationId: completeOnboarding
+      summary: Complete user onboarding
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingRequest"
+      responses:
+        "200":
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserRole:
+      type: string
+      enum: [ATHLETE, COACH]
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/UserProfile"
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+        profilePicture:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+        ftp:
+          type: integer
+        weightKg:
+          type: integer
+        ctl:
+          type: number
+        atl:
+          type: number
+        tsb:
+          type: number
+        functionalThresholdPace:
+          type: integer
+          description: Threshold pace in sec/km
+        criticalSwimSpeed:
+          type: integer
+          description: CSS in sec/100m
+        pace5k:
+          type: integer
+        pace10k:
+          type: integer
+        paceHalfMarathon:
+          type: integer
+        paceMarathon:
+          type: integer
+        vo2maxPower:
+          type: integer
+        vo2maxPace:
+          type: integer
+        needsOnboarding:
+          type: boolean
+        customZoneReferenceValues:
+          type: object
+          additionalProperties:
+            type: integer
+        createdAt:
+          type: string
+          format: date-time
+        lastLogin:
+          type: string
+          format: date-time
+
+    DevLoginRequest:
+      type: object
+      required: [userId, displayName, role]
+      properties:
+        userId:
+          type: string
+        displayName:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+
+    SettingsRequest:
+      type: object
+      properties:
+        ftp:
+          type: integer
+        weightKg:
+          type: integer
+        functionalThresholdPace:
+          type: integer
+        criticalSwimSpeed:
+          type: integer
+        pace5k:
+          type: integer
+        pace10k:
+          type: integer
+        paceHalfMarathon:
+          type: integer
+        paceMarathon:
+          type: integer
+        vo2maxPower:
+          type: integer
+        vo2maxPace:
+          type: integer
+
+    OnboardingRequest:
+      type: object
+      required: [role]
+      properties:
+        role:
+          $ref: "#/components/schemas/UserRole"
+        ftp:
+          type: integer
+        weightKg:
+          type: integer
+        functionalThresholdPace:
+          type: integer
+        criticalSwimSpeed:
+          type: integer

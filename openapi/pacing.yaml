@@ -1,0 +1,271 @@
+openapi: 3.1.0
+info:
+  title: Training Planner - Pacing API
+  version: 1.0.0
+  description: Pacing plan generation for triathlon/cycling/running races.
+
+servers:
+  - url: http://localhost:8080
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/pacing/generate:
+    post:
+      operationId: generatePacingPlan
+      summary: Generate a pacing plan from GPX file(s)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                gpx:
+                  type: string
+                  format: binary
+                  description: Single GPX file (for cycling/running)
+                bikeGpx:
+                  type: string
+                  format: binary
+                  description: Bike GPX (for triathlon)
+                runGpx:
+                  type: string
+                  format: binary
+                  description: Run GPX (for triathlon)
+                profile:
+                  type: string
+                  description: JSON athlete profile
+                discipline:
+                  type: string
+                  default: TRIATHLON
+                  enum: [TRIATHLON, CYCLING, RUNNING]
+                bikeLoops:
+                  type: integer
+                  default: 1
+                runLoops:
+                  type: integer
+                  default: 1
+      responses:
+        "200":
+          description: Pacing plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PacingPlanResponse"
+
+  /api/pacing/generate-from-race:
+    post:
+      operationId: generateFromRace
+      summary: Generate a pacing plan from a saved race's GPX data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [raceId]
+              properties:
+                raceId:
+                  type: string
+                profile:
+                  type: string
+                  description: JSON athlete profile
+                discipline:
+                  type: string
+                  default: TRIATHLON
+                bikeLoops:
+                  type: integer
+                  default: 1
+                runLoops:
+                  type: integer
+                  default: 1
+      responses:
+        "200":
+          description: Pacing plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PacingPlanResponse"
+
+  /api/pacing/defaults:
+    get:
+      operationId: getDefaultProfile
+      summary: Get default athlete profile from user settings
+      responses:
+        "200":
+          description: Athlete profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AthleteProfile"
+
+  /api/pacing/simulation-requests:
+    post:
+      operationId: createSimulationRequest
+      summary: Save a simulation request for later reference
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SimulationRequest"
+      responses:
+        "200":
+          description: Saved simulation request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimulationRequest"
+
+    get:
+      operationId: listSimulationRequests
+      summary: List saved simulation requests
+      parameters:
+        - name: goalId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Simulation requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SimulationRequest"
+
+  /api/pacing/simulation-requests/{id}:
+    delete:
+      operationId: deleteSimulationRequest
+      summary: Delete a simulation request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    PacingPlanResponse:
+      type: object
+      properties:
+        bikeSegments:
+          type: array
+          items:
+            $ref: "#/components/schemas/PacingSegment"
+        runSegments:
+          type: array
+          items:
+            $ref: "#/components/schemas/PacingSegment"
+        bikeSummary:
+          $ref: "#/components/schemas/PacingSummary"
+        runSummary:
+          $ref: "#/components/schemas/PacingSummary"
+        swimSummary:
+          $ref: "#/components/schemas/PacingSummary"
+        bikeRouteCoordinates:
+          type: array
+          items:
+            type: object
+            properties:
+              lat:
+                type: number
+              lon:
+                type: number
+              ele:
+                type: number
+        runRouteCoordinates:
+          type: array
+          items:
+            type: object
+            properties:
+              lat:
+                type: number
+              lon:
+                type: number
+              ele:
+                type: number
+
+    PacingSegment:
+      type: object
+      properties:
+        startKm:
+          type: number
+        endKm:
+          type: number
+        distanceM:
+          type: number
+        elevationGain:
+          type: number
+        elevationLoss:
+          type: number
+        avgGradient:
+          type: number
+        targetPower:
+          type: number
+        targetSpeed:
+          type: number
+        estimatedTime:
+          type: number
+
+    PacingSummary:
+      type: object
+      properties:
+        totalDistanceM:
+          type: number
+        totalTimeSeconds:
+          type: number
+        avgPower:
+          type: number
+        avgSpeed:
+          type: number
+        tss:
+          type: number
+
+    AthleteProfile:
+      type: object
+      properties:
+        ftp:
+          type: integer
+        weightKg:
+          type: integer
+        functionalThresholdPace:
+          type: integer
+        criticalSwimSpeed:
+          type: integer
+
+    SimulationRequest:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        goalId:
+          type: string
+        raceId:
+          type: string
+        profile:
+          type: string
+        discipline:
+          type: string
+        bikeLoops:
+          type: integer
+        runLoops:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time

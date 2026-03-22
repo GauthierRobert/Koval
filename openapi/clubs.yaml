@@ -1,0 +1,1281 @@
+openapi: 3.1.0
+info:
+  title: Training Planner - Clubs API
+  version: 1.0.0
+  description: Club management, membership, groups, sessions, recurring sessions, stats, and activity feed.
+
+servers:
+  - url: http://localhost:8080
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ── Club CRUD ───────────────────────────────────────────────────────────
+
+  /api/clubs:
+    post:
+      operationId: createClub
+      summary: Create a new club
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateClubRequest"
+      responses:
+        "200":
+          description: Created club
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Club"
+
+    get:
+      operationId: listMyClubs
+      summary: List clubs the current user belongs to
+      responses:
+        "200":
+          description: Club summaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClubSummaryResponse"
+
+  /api/clubs/public:
+    get:
+      operationId: listPublicClubs
+      summary: Browse public clubs
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Public clubs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Club"
+
+  /api/clubs/my-roles:
+    get:
+      operationId: getMyClubRoles
+      summary: Get the user's role in each club they belong to
+      responses:
+        "200":
+          description: Role entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MyClubRoleEntry"
+
+  /api/clubs/{id}:
+    get:
+      operationId: getClubDetail
+      summary: Get club detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Club detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubDetailResponse"
+
+  # ── Membership ──────────────────────────────────────────────────────────
+
+  /api/clubs/{id}/join:
+    post:
+      operationId: joinClub
+      summary: Join a club (or request to join if approval-required)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Membership
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubMembership"
+
+  /api/clubs/{id}/leave:
+    delete:
+      operationId: leaveClub
+      summary: Leave a club
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Left
+
+  /api/clubs/{id}/members:
+    get:
+      operationId: listClubMembers
+      summary: List active club members
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClubMemberResponse"
+
+  /api/clubs/{id}/members/pending:
+    get:
+      operationId: listPendingMembers
+      summary: List pending membership requests
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Pending members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClubMemberResponse"
+
+  /api/clubs/{id}/members/{membershipId}/approve:
+    post:
+      operationId: approveMember
+      summary: Approve a pending membership
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: membershipId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubMembership"
+
+  /api/clubs/{id}/members/{membershipId}/reject:
+    delete:
+      operationId: rejectMember
+      summary: Reject a pending membership
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: membershipId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Rejected
+
+  /api/clubs/{id}/members/{membershipId}/role:
+    put:
+      operationId: updateMemberRole
+      summary: Update a member's role
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: membershipId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role:
+                  type: string
+                  enum: [MEMBER, COACH, ADMIN]
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubMembership"
+
+  # ── Club Groups ─────────────────────────────────────────────────────────
+
+  /api/clubs/{id}/groups:
+    post:
+      operationId: createClubGroup
+      summary: Create a club subgroup
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubGroup"
+
+    get:
+      operationId: listClubGroups
+      summary: List club subgroups
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClubGroup"
+
+  /api/clubs/{id}/groups/{groupId}:
+    delete:
+      operationId: deleteClubGroup
+      summary: Delete a club subgroup
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /api/clubs/{id}/groups/{groupId}/join:
+    post:
+      operationId: joinClubGroup
+      summary: Join a club subgroup
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Updated group
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubGroup"
+
+  /api/clubs/{id}/groups/{groupId}/leave:
+    delete:
+      operationId: leaveClubGroup
+      summary: Leave a club subgroup
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Updated group
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubGroup"
+
+  /api/clubs/{id}/groups/{groupId}/members/{targetUserId}:
+    post:
+      operationId: addMemberToClubGroup
+      summary: Add a member to a club subgroup (admin/coach)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: targetUserId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Updated group
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubGroup"
+
+    delete:
+      operationId: removeMemberFromClubGroup
+      summary: Remove a member from a club subgroup
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: targetUserId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Updated group
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubGroup"
+
+  # ── Club Invite Codes ──────────────────────────────────────────────────
+
+  /api/clubs/{id}/invite-codes:
+    post:
+      operationId: createClubInviteCode
+      summary: Create an invite code for a club
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                clubGroupId:
+                  type: string
+                maxUses:
+                  type: integer
+                expiresAt:
+                  type: string
+                  format: date-time
+      responses:
+        "200":
+          description: Created invite code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubInviteCodeResponse"
+
+    get:
+      operationId: listClubInviteCodes
+      summary: List invite codes for a club
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Invite codes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClubInviteCodeResponse"
+
+  /api/clubs/{id}/invite-codes/{codeId}:
+    delete:
+      operationId: deleteClubInviteCode
+      summary: Delete a club invite code
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: codeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /api/clubs/redeem-invite:
+    post:
+      operationId: redeemClubInviteCode
+      summary: Redeem a club invite code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+      responses:
+        "200":
+          description: Membership
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubMembership"
+
+  # ── Club Sessions ──────────────────────────────────────────────────────
+
+  /api/clubs/{id}/sessions:
+    post:
+      operationId: createClubSession
+      summary: Create a club training session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSessionRequest"
+      responses:
+        "200":
+          description: Created session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubTrainingSession"
+
+    get:
+      operationId: listClubSessions
+      summary: List club sessions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClubTrainingSession"
+
+  /api/clubs/{id}/sessions/{sessionId}:
+    put:
+      operationId: updateClubSession
+      summary: Update a club session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSessionRequest"
+      responses:
+        "200":
+          description: Updated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubTrainingSession"
+
+  /api/clubs/{id}/sessions/{sessionId}/cancel:
+    put:
+      operationId: cancelClubSession
+      summary: Cancel a club session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Cancelled session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubTrainingSession"
+
+  /api/clubs/{id}/sessions/{sessionId}/join:
+    post:
+      operationId: joinClubSession
+      summary: Join a club session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Updated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubTrainingSession"
+
+    delete:
+      operationId: leaveClubSession
+      summary: Leave a club session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Updated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubTrainingSession"
+
+  /api/clubs/{id}/sessions/{sessionId}/link-training:
+    put:
+      operationId: linkTrainingToSession
+      summary: Link a training to a club session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [trainingId]
+              properties:
+                trainingId:
+                  type: string
+                clubGroupId:
+                  type: string
+      responses:
+        "200":
+          description: Updated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubTrainingSession"
+
+  /api/clubs/{id}/sessions/{sessionId}/unlink-training:
+    put:
+      operationId: unlinkTrainingFromSession
+      summary: Unlink a training from a club session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                clubGroupId:
+                  type: string
+      responses:
+        "200":
+          description: Updated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubTrainingSession"
+
+  # ── Recurring Sessions ─────────────────────────────────────────────────
+
+  /api/clubs/{id}/recurring-sessions:
+    post:
+      operationId: createRecurringSession
+      summary: Create a recurring session template
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecurringSessionTemplate"
+      responses:
+        "200":
+          description: Created template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecurringSessionTemplate"
+
+    get:
+      operationId: listRecurringSessions
+      summary: List recurring session templates
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RecurringSessionTemplate"
+
+  /api/clubs/{id}/recurring-sessions/{templateId}:
+    put:
+      operationId: updateRecurringSession
+      summary: Update a recurring session template (future instances only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecurringSessionTemplate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecurringSessionTemplate"
+
+    delete:
+      operationId: deleteRecurringSession
+      summary: Delete a recurring session template
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /api/clubs/{id}/recurring-sessions/{templateId}/with-instances:
+    put:
+      operationId: updateRecurringSessionWithInstances
+      summary: Update template and regenerate future instances
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecurringSessionTemplate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecurringSessionTemplate"
+
+  /api/clubs/{id}/recurring-sessions/{templateId}/cancel-future:
+    put:
+      operationId: cancelFutureRecurringSessions
+      summary: Cancel all future instances of a recurring session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Count of cancelled sessions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cancelledCount:
+                    type: integer
+
+  # ── Stats & Feed ───────────────────────────────────────────────────────
+
+  /api/clubs/{id}/feed:
+    get:
+      operationId: getClubFeed
+      summary: Get club activity feed
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Activity feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /api/clubs/{id}/stats/weekly:
+    get:
+      operationId: getClubWeeklyStats
+      summary: Get club weekly stats
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Weekly stats
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/clubs/{id}/leaderboard:
+    get:
+      operationId: getClubLeaderboard
+      summary: Get club leaderboard
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Leaderboard entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /api/clubs/{id}/race-goals:
+    get:
+      operationId: getClubRaceGoals
+      summary: Get race goals for club members
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Race goals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ClubMemberStatus:
+      type: string
+      enum: [ACTIVE, PENDING]
+
+    CreateClubRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        logoUrl:
+          type: string
+        visibility:
+          type: string
+          enum: [PUBLIC, PRIVATE]
+
+    Club:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        logoUrl:
+          type: string
+        visibility:
+          type: string
+          enum: [PUBLIC, PRIVATE]
+        ownerId:
+          type: string
+        memberCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    ClubSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        memberCount:
+          type: integer
+        logoUrl:
+          type: string
+
+    ClubDetailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        logoUrl:
+          type: string
+        visibility:
+          type: string
+        ownerId:
+          type: string
+        memberCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    MyClubRoleEntry:
+      type: object
+      properties:
+        clubId:
+          type: string
+        clubName:
+          type: string
+        role:
+          type: string
+
+    ClubMembership:
+      type: object
+      properties:
+        id:
+          type: string
+        clubId:
+          type: string
+        userId:
+          type: string
+        role:
+          type: string
+          enum: [MEMBER, COACH, ADMIN]
+        status:
+          $ref: "#/components/schemas/ClubMemberStatus"
+        joinedAt:
+          type: string
+          format: date-time
+        requestedAt:
+          type: string
+          format: date-time
+
+    ClubMemberResponse:
+      type: object
+      properties:
+        membershipId:
+          type: string
+        userId:
+          type: string
+        displayName:
+          type: string
+        profilePicture:
+          type: string
+        role:
+          type: string
+        status:
+          type: string
+
+    ClubGroup:
+      type: object
+      properties:
+        id:
+          type: string
+        clubId:
+          type: string
+        name:
+          type: string
+        memberIds:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ClubInviteCodeResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        clubGroupId:
+          type: string
+        maxUses:
+          type: integer
+        usedCount:
+          type: integer
+        expiresAt:
+          type: string
+          format: date-time
+
+    CreateSessionRequest:
+      type: object
+      required: [title, scheduledAt]
+      properties:
+        title:
+          type: string
+        sport:
+          type: string
+        scheduledAt:
+          type: string
+          format: date-time
+        location:
+          type: string
+        description:
+          type: string
+        linkedTrainingId:
+          type: string
+        clubGroupId:
+          type: string
+        openToAll:
+          type: boolean
+        openToAllDelayValue:
+          type: integer
+        openToAllDelayUnit:
+          type: string
+        responsibleCoachId:
+          type: string
+        maxParticipants:
+          type: integer
+        durationMinutes:
+          type: integer
+
+    ClubTrainingSession:
+      type: object
+      properties:
+        id:
+          type: string
+        clubId:
+          type: string
+        createdBy:
+          type: string
+        title:
+          type: string
+        sport:
+          type: string
+        scheduledAt:
+          type: string
+          format: date-time
+        location:
+          type: string
+        description:
+          type: string
+        linkedTrainingId:
+          type: string
+        participantIds:
+          type: array
+          items:
+            type: string
+        recurringTemplateId:
+          type: string
+        clubGroupId:
+          type: string
+        openToAll:
+          type: boolean
+        responsibleCoachId:
+          type: string
+        maxParticipants:
+          type: integer
+        durationMinutes:
+          type: integer
+        linkedTrainingTitle:
+          type: string
+        linkedTrainingDescription:
+          type: string
+        cancelled:
+          type: boolean
+        cancellationReason:
+          type: string
+        cancelledAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    RecurringSessionTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+        clubId:
+          type: string
+        createdBy:
+          type: string
+        title:
+          type: string
+        sport:
+          type: string
+        dayOfWeek:
+          type: string
+          enum: [MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY]
+        timeOfDay:
+          type: string
+          format: time
+        location:
+          type: string
+        description:
+          type: string
+        linkedTrainingId:
+          type: string
+        maxParticipants:
+          type: integer
+        durationMinutes:
+          type: integer
+        clubGroupId:
+          type: string
+        openToAll:
+          type: boolean
+        responsibleCoachId:
+          type: string
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
