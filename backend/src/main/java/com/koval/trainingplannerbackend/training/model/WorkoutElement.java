@@ -75,6 +75,13 @@ public record WorkoutElement(
                 this.zoneTarget(), this.zoneLabel());
     }
 
+    public WorkoutElement withElements(List<WorkoutElement> newElements) {
+        return new WorkoutElement(repetitions, newElements, restDurationSeconds, restIntensity,
+                type, durationSeconds, distanceMeters, label, description,
+                intensityTarget, intensityStart, intensityEnd, cadenceTarget,
+                zoneTarget, zoneLabel);
+    }
+
     public WorkoutElement withResolvedIntensity(Integer resolvedIntensity, String resolvedZoneLabel) {
         return new WorkoutElement(repetitions, elements, restDurationSeconds, restIntensity,
                 type, durationSeconds, distanceMeters, label, description,

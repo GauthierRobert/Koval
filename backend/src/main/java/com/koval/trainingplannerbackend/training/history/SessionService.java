@@ -3,14 +3,23 @@ package com.koval.trainingplannerbackend.training.history;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.coach.CoachService;
 import com.koval.trainingplannerbackend.training.metrics.TssCalculator;
+import com.mongodb.client.gridfs.model.GridFSFile;
 import org.bson.types.ObjectId;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
+import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Business logic for completed workout sessions.
@@ -160,5 +169,71 @@ public class SessionService {
                     return true;
                 })
                 .orElse(false);
+    }
+
+    // ── Query methods ────────────────────────────────────────────────────────
+
+    public List<CompletedSession> listSessions(String userId) {
+        return repository.findByUserIdOrderByCompletedAtDesc(userId);
+    }
+
+    public Page<CompletedSession> listSessions(String userId, Pageable pageable) {
+        return repository.findByUserIdOrderByCompletedAtDesc(userId, pageable);
+    }
+
+    public Optional<CompletedSession> getSession(String userId, String sessionId) {
+        return repository.findById(sessionId)
+                .filter(s -> userId.equals(s.getUserId()) || isCoachOfOwner(userId, s.getUserId()));
+    }
+
+    public List<CompletedSession> listForCalendar(String userId, LocalDate start, LocalDate end) {
+        return repository.findByUserIdAndCompletedAtBetween(
+                userId, start.atStartOfDay(), end.atTime(23, 59, 59));
+    }
+
+    // ── FIT file operations ─────────────────────────────────────────────────
+
+    public record FitFileResult(byte[] data, String filename) {}
+
+    public CompletedSession uploadFitFile(String sessionId, String userId, InputStream data) throws IOException {
+        CompletedSession session = repository.findById(sessionId)
+                .filter(s -> userId.equals(s.getUserId()))
+                .orElse(null);
+        if (session == null) return null;
+
+        if (session.getFitFileId() != null) {
+            try {
+                gridFsOperations.delete(
+                        Query.query(Criteria.where("_id").is(new ObjectId(session.getFitFileId()))));
+            } catch (Exception ignored) {}
+        }
+        ObjectId fileId = gridFsOperations.store(data, session.getId() + ".fit", "application/octet-stream");
+        session.setFitFileId(fileId.toHexString());
+        return repository.save(session);
+    }
+
+    public Optional<FitFileResult> downloadFitFile(String sessionId, String userId) throws IOException {
+        return repository.findById(sessionId)
+                .filter(s -> userId.equals(s.getUserId()) || isCoachOfOwner(userId, s.getUserId()))
+                .filter(s -> s.getFitFileId() != null)
+                .map(s -> {
+                    try {
+                        GridFSFile gridFile = gridFsOperations.findOne(
+                                Query.query(Criteria.where("_id").is(new ObjectId(s.getFitFileId()))));
+                        if (gridFile == null) return null;
+                        GridFsResource resource = gridFsOperations.getResource(gridFile);
+                        return new FitFileResult(resource.getInputStream().readAllBytes(), s.getId() + ".fit");
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    private boolean isCoachOfOwner(String coachId, String athleteId) {
+        try {
+            return coachService.isCoachOfAthlete(coachId, athleteId);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

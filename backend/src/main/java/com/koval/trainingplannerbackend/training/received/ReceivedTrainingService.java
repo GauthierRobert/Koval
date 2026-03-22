@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,10 +45,16 @@ public class ReceivedTrainingService {
                 .map(User::getDisplayName)
                 .orElse("Unknown");
 
+        Set<String> alreadyReceived = receivedTrainingRepository
+                .findByTrainingIdAndAthleteIdIn(trainingId, athleteIds)
+                .stream()
+                .map(ReceivedTraining::getAthleteId)
+                .collect(Collectors.toSet());
+
+        LocalDateTime now = LocalDateTime.now();
+        List<ReceivedTraining> toSave = new ArrayList<>();
         for (String athleteId : athleteIds) {
-            if (receivedTrainingRepository.existsByAthleteIdAndTrainingId(athleteId, trainingId)) {
-                continue;
-            }
+            if (alreadyReceived.contains(athleteId)) continue;
 
             ReceivedTraining rt = new ReceivedTraining();
             rt.setAthleteId(athleteId);
@@ -57,8 +64,11 @@ public class ReceivedTrainingService {
             rt.setOrigin(origin);
             rt.setOriginId(originId);
             rt.setOriginName(originName);
-            rt.setReceivedAt(LocalDateTime.now());
-            receivedTrainingRepository.save(rt);
+            rt.setReceivedAt(now);
+            toSave.add(rt);
+        }
+        if (!toSave.isEmpty()) {
+            receivedTrainingRepository.saveAll(toSave);
         }
     }
 

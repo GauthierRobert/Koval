@@ -19,15 +19,18 @@ public class ClubActivityService {
     private final ClubMembershipRepository membershipRepository;
     private final UserService userService;
     private final NotificationService notificationService;
+    private final ClubAuthorizationService authorizationService;
 
     public ClubActivityService(ClubActivityRepository activityRepository,
                                ClubMembershipRepository membershipRepository,
                                UserService userService,
-                               NotificationService notificationService) {
+                               NotificationService notificationService,
+                               ClubAuthorizationService authorizationService) {
         this.activityRepository = activityRepository;
         this.membershipRepository = membershipRepository;
         this.userService = userService;
         this.notificationService = notificationService;
+        this.authorizationService = authorizationService;
     }
 
     public void emitActivity(String clubId, ClubActivityType type, String actorId,
@@ -42,55 +45,31 @@ public class ClubActivityService {
         activityRepository.save(activity);
 
         if (type == ClubActivityType.SESSION_CREATED) {
-            List<String> memberIds = getActiveMemberIds(clubId);
-            memberIds.remove(actorId);
-            if (!memberIds.isEmpty()) {
-                User actor = userService.findById(actorId).orElse(null);
-                String actorName = actor != null ? actor.getDisplayName() : "Someone";
-                notificationService.sendToUsers(
-                        memberIds,
-                        "New Group Session",
-                        actorName + " created a training session: " + targetTitle,
-                        Map.of("type", "SESSION_CREATED",
-                               "clubId", clubId,
-                               "sessionId", targetId != null ? targetId : ""));
-            }
-        }
-
-        if (type == ClubActivityType.SESSION_CANCELLED) {
-            List<String> memberIds = getActiveMemberIds(clubId);
-            memberIds.remove(actorId);
-            if (!memberIds.isEmpty()) {
-                User actor = userService.findById(actorId).orElse(null);
-                String actorName = actor != null ? actor.getDisplayName() : "Someone";
-                notificationService.sendToUsers(
-                        memberIds,
-                        "Session Cancelled",
-                        actorName + " cancelled the session: " + targetTitle,
-                        Map.of("type", "SESSION_CANCELLED",
-                               "clubId", clubId,
-                               "sessionId", targetId != null ? targetId : ""));
-            }
-        }
-
-        if (type == ClubActivityType.RECURRING_SERIES_CANCELLED) {
-            List<String> memberIds = getActiveMemberIds(clubId);
-            memberIds.remove(actorId);
-            if (!memberIds.isEmpty()) {
-                User actor = userService.findById(actorId).orElse(null);
-                String actorName = actor != null ? actor.getDisplayName() : "Someone";
-                notificationService.sendToUsers(
-                        memberIds,
-                        "Recurring Series Cancelled",
-                        actorName + " cancelled all future sessions for: " + targetTitle,
-                        Map.of("type", "RECURRING_SERIES_CANCELLED",
-                               "clubId", clubId,
-                               "templateId", targetId != null ? targetId : ""));
-            }
+            notifyMembersExceptActor(clubId, actorId,
+                    "New Group Session",
+                    "created a training session: " + nonNull(targetTitle),
+                    Map.of("type", "SESSION_CREATED",
+                           "clubId", clubId,
+                           "sessionId", nonNull(targetId)));
+        } else if (type == ClubActivityType.SESSION_CANCELLED) {
+            notifyMembersExceptActor(clubId, actorId,
+                    "Session Cancelled",
+                    "cancelled the session: " + nonNull(targetTitle),
+                    Map.of("type", "SESSION_CANCELLED",
+                           "clubId", clubId,
+                           "sessionId", nonNull(targetId)));
+        } else if (type == ClubActivityType.RECURRING_SERIES_CANCELLED) {
+            notifyMembersExceptActor(clubId, actorId,
+                    "Recurring Series Cancelled",
+                    "cancelled all future sessions for: " + nonNull(targetTitle),
+                    Map.of("type", "RECURRING_SERIES_CANCELLED",
+                           "clubId", clubId,
+                           "templateId", nonNull(targetId)));
         }
     }
 
-    public List<ClubActivityResponse> getActivityFeed(String clubId, Pageable pageable) {
+    public List<ClubActivityResponse> getActivityFeed(String userId, String clubId, Pageable pageable) {
+        authorizationService.requireActiveMember(userId, clubId);
         List<ClubActivity> activities = activityRepository.findByClubIdOrderByOccurredAtDesc(clubId, pageable);
         List<String> actorIds = activities.stream().map(ClubActivity::getActorId).distinct().toList();
         Map<String, User> userMap = userService.findAllById(actorIds).stream()
@@ -102,6 +81,21 @@ public class ClubActivityService {
                     a.getId(), a.getType(), a.getActorId(), actorName,
                     a.getTargetId(), a.getTargetTitle(), a.getOccurredAt());
         }).collect(Collectors.toList());
+    }
+
+    private void notifyMembersExceptActor(String clubId, String actorId,
+                                           String title, String message,
+                                           Map<String, String> data) {
+        List<String> memberIds = getActiveMemberIds(clubId);
+        memberIds.remove(actorId);
+        if (memberIds.isEmpty()) return;
+        User actor = userService.findById(actorId).orElse(null);
+        String actorName = actor != null ? actor.getDisplayName() : "Someone";
+        notificationService.sendToUsers(memberIds, title, actorName + " " + message, data);
+    }
+
+    private static String nonNull(String s) {
+        return s != null ? s : "";
     }
 
     List<String> getActiveMemberIds(String clubId) {

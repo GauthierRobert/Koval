@@ -246,15 +246,12 @@ public class ClubSessionService {
         List<ClubTrainingSession> sessions = sessionRepository.findByClubIdInAndScheduledAtBetween(
                 clubIds, start.atStartOfDay(), end.plusDays(1).atStartOfDay());
 
-        Set<String> userGroupIds = new HashSet<>();
-        for (String clubId : clubIds) {
-            clubGroupRepository.findByClubIdAndMemberIdsContaining(clubId, userId)
-                    .forEach(g -> userGroupIds.add(g.getId()));
-        }
+        // Batch group queries instead of per-club loops
+        Set<String> userGroupIds = clubGroupRepository.findByClubIdInAndMemberIdsContaining(clubIds, userId)
+                .stream().map(ClubGroup::getId).collect(Collectors.toSet());
 
-        Map<String, String> groupNameMap = new HashMap<>();
-        clubIds.forEach(clubId -> clubGroupRepository.findByClubId(clubId)
-                .forEach(g -> groupNameMap.put(g.getId(), g.getName())));
+        Map<String, String> groupNameMap = clubGroupRepository.findByClubIdIn(clubIds).stream()
+                .collect(Collectors.toMap(ClubGroup::getId, ClubGroup::getName));
 
         List<CalendarClubSessionResponse> result = new ArrayList<>();
         for (ClubTrainingSession s : sessions) {
@@ -268,35 +265,41 @@ public class ClubSessionService {
             Club club = clubMap.get(s.getClubId());
             if (club == null) continue;
 
-            boolean joined = s.getParticipantIds().contains(userId);
-            boolean onWaitingList = s.isOnWaitingList(userId);
-            int waitingListPosition = 0;
-            if (onWaitingList) {
-                for (int i = 0; i < s.getWaitingList().size(); i++) {
-                    if (s.getWaitingList().get(i).userId().equals(userId)) {
-                        waitingListPosition = i + 1;
-                        break;
-                    }
-                }
-            }
-
-            // Resolve user's linked training from effective list
-            GroupLinkedTraining resolved = resolveUserLinkedTraining(s, userGroupIds);
-
-            result.add(new CalendarClubSessionResponse(
-                    s.getId(), s.getClubId(), club.getName(), s.getTitle(), s.getSport(),
-                    s.getScheduledAt(), s.getLocation(), s.getDescription(),
-                    s.getDurationMinutes(), s.getParticipantIds(),
-                    s.getMaxParticipants(), s.getClubGroupId(),
-                    groupNameMap.get(s.getClubGroupId()),
-                    joined, onWaitingList, waitingListPosition,
-                    s.computeOpenToAllFrom(),
-                    s.isCancelled(), s.getCancellationReason(),
-                    resolved != null ? resolved.getTrainingId() : null,
-                    resolved != null ? resolved.getTrainingTitle() : null,
-                    resolved != null ? resolved.getTrainingDescription() : null));
+            result.add(toCalendarResponse(s, userId, club, groupNameMap, userGroupIds));
         }
         return result;
+    }
+
+    private CalendarClubSessionResponse toCalendarResponse(ClubTrainingSession s, String userId,
+                                                            Club club, Map<String, String> groupNameMap,
+                                                            Set<String> userGroupIds) {
+        boolean joined = s.getParticipantIds().contains(userId);
+        boolean onWaitingList = s.isOnWaitingList(userId);
+        int waitingListPosition = computeWaitingListPosition(s, userId);
+
+        GroupLinkedTraining resolved = resolveUserLinkedTraining(s, userGroupIds);
+
+        return new CalendarClubSessionResponse(
+                s.getId(), s.getClubId(), club.getName(), s.getTitle(), s.getSport(),
+                s.getScheduledAt(), s.getLocation(), s.getDescription(),
+                s.getDurationMinutes(), s.getParticipantIds(),
+                s.getMaxParticipants(), s.getClubGroupId(),
+                groupNameMap.get(s.getClubGroupId()),
+                joined, onWaitingList, waitingListPosition,
+                s.computeOpenToAllFrom(),
+                s.isCancelled(), s.getCancellationReason(),
+                resolved != null ? resolved.getTrainingId() : null,
+                resolved != null ? resolved.getTrainingTitle() : null,
+                resolved != null ? resolved.getTrainingDescription() : null);
+    }
+
+    private static int computeWaitingListPosition(ClubTrainingSession session, String userId) {
+        for (int i = 0; i < session.getWaitingList().size(); i++) {
+            if (session.getWaitingList().get(i).userId().equals(userId)) {
+                return i + 1;
+            }
+        }
+        return 0;
     }
 
     private GroupLinkedTraining resolveUserLinkedTraining(ClubTrainingSession session, Set<String> userGroupIds) {

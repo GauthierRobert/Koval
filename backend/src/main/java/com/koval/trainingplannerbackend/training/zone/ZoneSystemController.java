@@ -119,11 +119,8 @@ public class ZoneSystemController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ZoneSystem> getZoneSystem(@PathVariable String id) {
-        // Allow any authenticated user to read a zone system if they have the ID (for
-        // now)
-        // In a real app, might check if the user is the coach or an athlete assigned to
-        // the coach
-        return ResponseEntity.ok(zoneSystemService.getZoneSystem(id));
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(zoneSystemService.getZoneSystemWithAccess(id, userId));
     }
 
 }

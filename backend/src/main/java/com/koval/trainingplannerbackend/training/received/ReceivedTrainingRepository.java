@@ -9,4 +9,6 @@ public interface ReceivedTrainingRepository extends MongoRepository<ReceivedTrai
     List<ReceivedTraining> findByAthleteId(String athleteId);
 
     boolean existsByAthleteIdAndTrainingId(String athleteId, String trainingId);
+
+    List<ReceivedTraining> findByTrainingIdAndAthleteIdIn(String trainingId, List<String> athleteIds);
 }

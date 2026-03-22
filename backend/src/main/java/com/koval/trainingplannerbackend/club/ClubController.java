@@ -22,7 +22,6 @@ public class ClubController {
     private final ClubActivityService clubActivityService;
     private final ClubStatsService clubStatsService;
     private final RecurringSessionService recurringSessionService;
-    private final ClubGroupRepository clubGroupRepository;
 
     public ClubController(ClubService clubService, ClubSessionService clubSessionService,
                           ClubMembershipService clubMembershipService,
@@ -30,8 +29,7 @@ public class ClubController {
                           ClubInviteCodeService clubInviteCodeService,
                           ClubActivityService clubActivityService,
                           ClubStatsService clubStatsService,
-                          RecurringSessionService recurringSessionService,
-                          ClubGroupRepository clubGroupRepository) {
+                          RecurringSessionService recurringSessionService) {
         this.clubService = clubService;
         this.clubSessionService = clubSessionService;
         this.clubMembershipService = clubMembershipService;
@@ -40,7 +38,6 @@ public class ClubController {
         this.clubActivityService = clubActivityService;
         this.clubStatsService = clubStatsService;
         this.recurringSessionService = recurringSessionService;
-        this.clubGroupRepository = clubGroupRepository;
     }
 
     // Endpoints
@@ -90,7 +87,8 @@ public class ClubController {
 
     @GetMapping("/{id}/members")
     public ResponseEntity<List<ClubMemberResponse>> getMembers(@PathVariable String id) {
-        return ResponseEntity.ok(clubMembershipService.getMembers(id));
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(clubMembershipService.getMembers(userId, id));
     }
 
     @GetMapping("/{id}/members/pending")
@@ -131,7 +129,8 @@ public class ClubController {
 
     @GetMapping("/{id}/groups")
     public ResponseEntity<List<ClubGroup>> listGroups(@PathVariable String id) {
-        return ResponseEntity.ok(clubGroupService.listGroups(id));
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(clubGroupService.listGroups(userId, id));
     }
 
     @DeleteMapping("/{id}/groups/{groupId}")
@@ -178,15 +177,13 @@ public class ClubController {
         String userId = SecurityUtils.getCurrentUserId();
         LocalDateTime expiresAt = req.expiresAt() != null ? LocalDateTime.parse(req.expiresAt()) : null;
         ClubInviteCode code = clubInviteCodeService.generateInviteCode(userId, id, req.clubGroupId(), req.maxUses(), expiresAt);
-        return ResponseEntity.ok(toInviteCodeResponse(code));
+        return ResponseEntity.ok(clubInviteCodeService.toResponse(code));
     }
 
     @GetMapping("/{id}/invite-codes")
     public ResponseEntity<List<ClubInviteCodeResponse>> getInviteCodes(@PathVariable String id) {
         String userId = SecurityUtils.getCurrentUserId();
-        List<ClubInviteCode> codes = clubInviteCodeService.getClubInviteCodes(userId, id);
-        List<ClubInviteCodeResponse> responses = codes.stream().map(this::toInviteCodeResponse).toList();
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(clubInviteCodeService.getClubInviteCodeResponses(userId, id));
     }
 
     @DeleteMapping("/{id}/invite-codes/{codeId}")
@@ -203,27 +200,13 @@ public class ClubController {
         return ResponseEntity.ok(clubInviteCodeService.redeemClubInviteCode(userId, req.code()));
     }
 
-    private ClubInviteCodeResponse toInviteCodeResponse(ClubInviteCode code) {
-        String groupName = null;
-        if (code.getClubGroupId() != null) {
-            groupName = clubGroupRepository.findById(code.getClubGroupId())
-                    .map(ClubGroup::getName).orElse(null);
-        }
-        return new ClubInviteCodeResponse(
-                code.getId(), code.getCode(), code.getClubId(), code.getCreatedBy(),
-                code.getClubGroupId(), groupName,
-                code.getMaxUses(), code.getCurrentUses(),
-                code.getExpiresAt() != null ? code.getExpiresAt().toString() : null,
-                code.isActive(),
-                code.getCreatedAt() != null ? code.getCreatedAt().toString() : null);
-    }
-
     @GetMapping("/{id}/feed")
     public ResponseEntity<List<ClubActivityResponse>> getActivityFeed(
             @PathVariable String id,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(clubActivityService.getActivityFeed(id, PageRequest.of(page, size)));
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(clubActivityService.getActivityFeed(userId, id, PageRequest.of(page, size)));
     }
 
     @PostMapping("/{id}/sessions")
@@ -277,17 +260,20 @@ public class ClubController {
 
     @GetMapping("/{id}/stats/weekly")
     public ResponseEntity<ClubWeeklyStatsResponse> getWeeklyStats(@PathVariable String id) {
-        return ResponseEntity.ok(clubStatsService.getWeeklyStats(id));
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(clubStatsService.getWeeklyStats(userId, id));
     }
 
     @GetMapping("/{id}/leaderboard")
     public ResponseEntity<List<LeaderboardEntry>> getLeaderboard(@PathVariable String id) {
-        return ResponseEntity.ok(clubStatsService.getLeaderboard(id));
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(clubStatsService.getLeaderboard(userId, id));
     }
 
     @GetMapping("/{id}/race-goals")
     public ResponseEntity<List<ClubRaceGoalResponse>> getRaceGoals(@PathVariable String id) {
-        return ResponseEntity.ok(clubStatsService.getRaceGoals(id));
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(clubStatsService.getRaceGoals(userId, id));
     }
 
     // --- Recurring Sessions ---
@@ -301,7 +287,8 @@ public class ClubController {
 
     @GetMapping("/{id}/recurring-sessions")
     public ResponseEntity<List<RecurringSessionTemplate>> listRecurringSessions(@PathVariable String id) {
-        return ResponseEntity.ok(recurringSessionService.listTemplates(id));
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(recurringSessionService.listTemplates(userId, id));
     }
 
     @PutMapping("/{id}/recurring-sessions/{templateId}")

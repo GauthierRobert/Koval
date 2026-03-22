@@ -75,7 +75,7 @@ public record ScheduledWorkoutResponse(
         } else {
             title = session.getTitle();
             duration = session.getDurationMinutes() != null ? session.getDurationMinutes() * 60 : null;
-            sport = parseSportType(session.getSport());
+            sport = SportType.fromStringOrNull(session.getSport());
         }
 
         return new ScheduledWorkoutResponse(
@@ -98,12 +98,4 @@ public record ScheduledWorkoutResponse(
                 true, clubName, clubGroupName);
     }
 
-    private static SportType parseSportType(String sport) {
-        if (sport == null) return null;
-        try {
-            return SportType.valueOf(sport.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
 }

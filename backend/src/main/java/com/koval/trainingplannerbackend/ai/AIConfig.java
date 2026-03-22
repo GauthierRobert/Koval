@@ -164,7 +164,7 @@ public class AIConfig {
                 .build();
     }
 
-    @Bean
+@Bean
     public ChatClient actionTrainingCreatorClient(AnthropicChatModel chatModel,
                                                   ContextToolService contextToolService,
                                                    CreationTrainingToolService creationTrainingToolService) {

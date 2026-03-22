@@ -1,11 +1,14 @@
 package com.koval.trainingplannerbackend.club;
 
+import com.koval.trainingplannerbackend.club.dto.ClubInviteCodeResponse;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ClubInviteCodeService {
@@ -84,11 +87,7 @@ public class ClubInviteCodeService {
                 membership.setStatus(ClubMemberStatus.ACTIVE);
                 membership.setJoinedAt(LocalDateTime.now());
                 membershipRepository.save(membership);
-                Club club = clubRepository.findById(clubId)
-                        .orElseThrow(() -> new IllegalArgumentException("Club not found"));
-                club.setMemberCount(club.getMemberCount() + 1);
-                clubRepository.save(club);
-                activityService.emitActivity(clubId, ClubActivityType.MEMBER_JOINED, userId, null, null);
+                incrementMemberCountAndEmitJoined(clubId, userId);
             }
         } else {
             membership = new ClubMembership();
@@ -99,12 +98,7 @@ public class ClubInviteCodeService {
             membership.setJoinedAt(LocalDateTime.now());
             membership.setRequestedAt(LocalDateTime.now());
             membership = membershipRepository.save(membership);
-
-            Club club = clubRepository.findById(clubId)
-                    .orElseThrow(() -> new IllegalArgumentException("Club not found"));
-            club.setMemberCount(club.getMemberCount() + 1);
-            clubRepository.save(club);
-            activityService.emitActivity(clubId, ClubActivityType.MEMBER_JOINED, userId, null, null);
+            incrementMemberCountAndEmitJoined(clubId, userId);
         }
 
         if (inviteCode.getClubGroupId() != null) {
@@ -124,6 +118,30 @@ public class ClubInviteCodeService {
     public List<ClubInviteCode> getClubInviteCodes(String userId, String clubId) {
         authorizationService.requireAdminOrCoach(userId, clubId);
         return clubInviteCodeRepository.findByClubId(clubId);
+    }
+
+    public List<ClubInviteCodeResponse> getClubInviteCodeResponses(String userId, String clubId) {
+        List<ClubInviteCode> codes = getClubInviteCodes(userId, clubId);
+
+        // Batch-load group names
+        List<String> groupIds = codes.stream()
+                .map(ClubInviteCode::getClubGroupId)
+                .filter(gid -> gid != null)
+                .distinct()
+                .toList();
+        Map<String, String> groupNameMap = clubGroupRepository.findAllById(groupIds).stream()
+                .collect(Collectors.toMap(ClubGroup::getId, ClubGroup::getName));
+
+        return codes.stream().map(code -> toResponse(code, groupNameMap)).toList();
+    }
+
+    public ClubInviteCodeResponse toResponse(ClubInviteCode code) {
+        String groupName = null;
+        if (code.getClubGroupId() != null) {
+            groupName = clubGroupRepository.findById(code.getClubGroupId())
+                    .map(ClubGroup::getName).orElse(null);
+        }
+        return toResponse(code, groupName);
     }
 
     public void deactivateClubInviteCode(String userId, String clubId, String codeId) {
@@ -153,5 +171,28 @@ public class ClubInviteCodeService {
             }
         }
         throw new IllegalStateException("Unable to generate unique invite code after 10 attempts");
+    }
+
+    private void incrementMemberCountAndEmitJoined(String clubId, String userId) {
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(() -> new IllegalArgumentException("Club not found"));
+        club.setMemberCount(club.getMemberCount() + 1);
+        clubRepository.save(club);
+        activityService.emitActivity(clubId, ClubActivityType.MEMBER_JOINED, userId, null, null);
+    }
+
+    private ClubInviteCodeResponse toResponse(ClubInviteCode code, Map<String, String> groupNameMap) {
+        String groupName = code.getClubGroupId() != null ? groupNameMap.get(code.getClubGroupId()) : null;
+        return toResponse(code, groupName);
+    }
+
+    private static ClubInviteCodeResponse toResponse(ClubInviteCode code, String groupName) {
+        return new ClubInviteCodeResponse(
+                code.getId(), code.getCode(), code.getClubId(), code.getCreatedBy(),
+                code.getClubGroupId(), groupName,
+                code.getMaxUses(), code.getCurrentUses(),
+                code.getExpiresAt() != null ? code.getExpiresAt().toString() : null,
+                code.isActive(),
+                code.getCreatedAt() != null ? code.getCreatedAt().toString() : null);
     }
 }

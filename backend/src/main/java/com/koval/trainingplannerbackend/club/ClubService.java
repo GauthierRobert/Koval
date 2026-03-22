@@ -54,15 +54,7 @@ public class ClubService {
         clubActivityService.emitActivity(club.getId(), ClubActivityType.MEMBER_JOINED, userId, null, null);
 
         // Auto-generate default invite code for the club
-        ClubInviteCode autoCode = new ClubInviteCode();
-        autoCode.setCode(clubInviteCodeService.generateUniqueClubCode());
-        autoCode.setClubId(club.getId());
-        autoCode.setCreatedBy(userId);
-        autoCode.setMaxUses(0);
-        autoCode.setType("CLUB");
-        autoCode.setCreatedAt(LocalDateTime.now());
-        // Save via repository directly since we just need a simple persist
-        clubInviteCodeService.saveCode(autoCode);
+        clubInviteCodeService.generateInviteCode(userId, club.getId(), null, 0, null);
 
         return club;
     }

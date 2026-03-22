@@ -2,7 +2,6 @@ package com.koval.trainingplannerbackend.club;
 
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -10,18 +9,15 @@ public class ClubGroupService {
 
     private final ClubGroupRepository clubGroupRepository;
     private final ClubMembershipRepository membershipRepository;
-    private final ClubInviteCodeRepository clubInviteCodeRepository;
     private final ClubAuthorizationService authorizationService;
     private final ClubInviteCodeService inviteCodeService;
 
     public ClubGroupService(ClubGroupRepository clubGroupRepository,
                             ClubMembershipRepository membershipRepository,
-                            ClubInviteCodeRepository clubInviteCodeRepository,
                             ClubAuthorizationService authorizationService,
                             ClubInviteCodeService inviteCodeService) {
         this.clubGroupRepository = clubGroupRepository;
         this.membershipRepository = membershipRepository;
-        this.clubInviteCodeRepository = clubInviteCodeRepository;
         this.authorizationService = authorizationService;
         this.inviteCodeService = inviteCodeService;
     }
@@ -34,44 +30,28 @@ public class ClubGroupService {
         ClubGroup group = new ClubGroup();
         group.setClubId(clubId);
         group.setName(name);
-        group.setCreatedAt(LocalDateTime.now());
+        group.setCreatedAt(java.time.LocalDateTime.now());
         group = clubGroupRepository.save(group);
 
-        // Auto-generate invite code for the group
-        ClubInviteCode autoCode = new ClubInviteCode();
-        autoCode.setCode(inviteCodeService.generateUniqueClubCode());
-        autoCode.setClubId(clubId);
-        autoCode.setCreatedBy(adminId);
-        autoCode.setClubGroupId(group.getId());
-        autoCode.setMaxUses(0);
-        autoCode.setType("CLUB");
-        autoCode.setCreatedAt(LocalDateTime.now());
-        clubInviteCodeRepository.save(autoCode);
+        inviteCodeService.generateInviteCode(adminId, clubId, group.getId(), 0, null);
 
         return group;
     }
 
-    public List<ClubGroup> listGroups(String clubId) {
+    public List<ClubGroup> listGroups(String userId, String clubId) {
+        authorizationService.requireActiveMember(userId, clubId);
         return clubGroupRepository.findByClubId(clubId);
     }
 
     public void deleteGroup(String adminId, String clubId, String groupId) {
         authorizationService.requireAdminOrOwner(adminId, clubId);
-        ClubGroup group = clubGroupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
-        if (!group.getClubId().equals(clubId)) {
-            throw new IllegalArgumentException("Group does not belong to this club");
-        }
+        ClubGroup group = requireGroupInClub(clubId, groupId);
         clubGroupRepository.delete(group);
     }
 
     public ClubGroup addMemberToGroup(String adminId, String clubId, String groupId, String targetUserId) {
         authorizationService.requireAdminOrOwner(adminId, clubId);
-        ClubGroup group = clubGroupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
-        if (!group.getClubId().equals(clubId)) {
-            throw new IllegalArgumentException("Group does not belong to this club");
-        }
+        ClubGroup group = requireGroupInClub(clubId, groupId);
         ClubMembership targetMembership = membershipRepository.findByClubIdAndUserId(clubId, targetUserId)
                 .orElseThrow(() -> new IllegalArgumentException("User is not a member of this club"));
         if (targetMembership.getStatus() != ClubMemberStatus.ACTIVE) {
@@ -86,22 +66,14 @@ public class ClubGroupService {
 
     public ClubGroup removeMemberFromGroup(String adminId, String clubId, String groupId, String targetUserId) {
         authorizationService.requireAdminOrOwner(adminId, clubId);
-        ClubGroup group = clubGroupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
-        if (!group.getClubId().equals(clubId)) {
-            throw new IllegalArgumentException("Group does not belong to this club");
-        }
+        ClubGroup group = requireGroupInClub(clubId, groupId);
         group.getMemberIds().remove(targetUserId);
         return clubGroupRepository.save(group);
     }
 
     public ClubGroup joinGroupSelf(String userId, String clubId, String groupId) {
         authorizationService.requireActiveMember(userId, clubId);
-        ClubGroup group = clubGroupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
-        if (!group.getClubId().equals(clubId)) {
-            throw new IllegalArgumentException("Group does not belong to this club");
-        }
+        ClubGroup group = requireGroupInClub(clubId, groupId);
         if (!group.getMemberIds().contains(userId)) {
             group.getMemberIds().add(userId);
             clubGroupRepository.save(group);
@@ -110,12 +82,18 @@ public class ClubGroupService {
     }
 
     public ClubGroup leaveGroupSelf(String userId, String clubId, String groupId) {
+        authorizationService.requireActiveMember(userId, clubId);
+        ClubGroup group = requireGroupInClub(clubId, groupId);
+        group.getMemberIds().remove(userId);
+        return clubGroupRepository.save(group);
+    }
+
+    private ClubGroup requireGroupInClub(String clubId, String groupId) {
         ClubGroup group = clubGroupRepository.findById(groupId)
                 .orElseThrow(() -> new IllegalArgumentException("Group not found"));
         if (!group.getClubId().equals(clubId)) {
             throw new IllegalArgumentException("Group does not belong to this club");
         }
-        group.getMemberIds().remove(userId);
-        return clubGroupRepository.save(group);
+        return group;
     }
 }

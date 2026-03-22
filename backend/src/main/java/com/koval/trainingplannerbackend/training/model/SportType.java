@@ -15,4 +15,22 @@ public enum SportType {
     public double getTypicalSpeedMps() {
         return typicalSpeedMps;
     }
+
+    public static SportType fromString(String sport) {
+        if (sport == null) return CYCLING;
+        try {
+            return valueOf(sport.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return CYCLING;
+        }
+    }
+
+    public static SportType fromStringOrNull(String sport) {
+        if (sport == null) return null;
+        try {
+            return valueOf(sport.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
 }

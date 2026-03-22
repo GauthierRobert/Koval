@@ -9,4 +9,6 @@ public interface ClubGroupRepository extends MongoRepository<ClubGroup, String> 
     List<ClubGroup> findByClubId(String clubId);
     Optional<ClubGroup> findByClubIdAndName(String clubId, String name);
     List<ClubGroup> findByClubIdAndMemberIdsContaining(String clubId, String userId);
+    List<ClubGroup> findByClubIdIn(List<String> clubIds);
+    List<ClubGroup> findByClubIdInAndMemberIdsContaining(List<String> clubIds, String userId);
 }

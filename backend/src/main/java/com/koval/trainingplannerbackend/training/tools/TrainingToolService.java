@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.training.tools;
 
 import com.koval.trainingplannerbackend.ai.ToolEventEmitter;
+import com.koval.trainingplannerbackend.training.TrainingAccessService;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.ai.chat.model.ToolContext;
@@ -22,10 +23,14 @@ public class TrainingToolService {
 
     private final TrainingService trainingManagementService;
     private final TrainingMapper trainingMapper;
+    private final TrainingAccessService trainingAccessService;
 
-    public TrainingToolService(TrainingService trainingManagementService, TrainingMapper trainingMapper) {
+    public TrainingToolService(TrainingService trainingManagementService,
+                               TrainingMapper trainingMapper,
+                               TrainingAccessService trainingAccessService) {
         this.trainingManagementService = trainingManagementService;
         this.trainingMapper = trainingMapper;
+        this.trainingAccessService = trainingAccessService;
     }
 
     @Tool(description = "List training plans created by a specific user. Returns summaries. Use limit/offset for pagination (default: 15 most recent).")
@@ -129,10 +134,7 @@ public class TrainingToolService {
             ToolContext context) {
         ToolEventEmitter.emitToolCall(context, "deleteTraining", "Deleting training...");
         Training existing = trainingManagementService.getTrainingById(trainingId);
-        if (!userId.equals(existing.getCreatedBy())) {
-            ToolEventEmitter.emitToolResult(context, "deleteTraining", "Not authorized", false);
-            throw new IllegalStateException("Training does not belong to user " + userId);
-        }
+        trainingAccessService.verifyAccess(userId, existing);
         String title = existing.getTitle();
         trainingManagementService.deleteTraining(trainingId);
         ToolEventEmitter.emitToolResult(context, "deleteTraining", title, true);

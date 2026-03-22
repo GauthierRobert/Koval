@@ -3,12 +3,9 @@ package com.koval.trainingplannerbackend.training;
 import com.koval.trainingplannerbackend.club.ClubMembership;
 import com.koval.trainingplannerbackend.club.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.ClubMembershipRepository;
-import com.koval.trainingplannerbackend.training.group.Group;
-import com.koval.trainingplannerbackend.training.group.GroupService;
 import com.koval.trainingplannerbackend.training.metrics.TrainingMetricsService;
 import com.koval.trainingplannerbackend.training.model.BlockType;
 import com.koval.trainingplannerbackend.training.model.Training;
-import com.koval.trainingplannerbackend.training.model.TrainingType;
 import com.koval.trainingplannerbackend.training.model.WorkoutElement;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +17,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static java.util.Optional.*;
+
 /**
  * Service for Training CRUD operations.
  */
@@ -27,16 +26,13 @@ import java.util.Optional;
 public class TrainingService {
 
     private final TrainingRepository trainingRepository;
-    private final GroupService groupService;
     private final TrainingMetricsService metricsService;
     private final ClubMembershipRepository membershipRepository;
 
     public TrainingService(TrainingRepository trainingRepository,
-                           GroupService groupService,
                            TrainingMetricsService metricsService,
                            ClubMembershipRepository membershipRepository) {
         this.trainingRepository = trainingRepository;
-        this.groupService = groupService;
         this.metricsService = metricsService;
         this.membershipRepository = membershipRepository;
     }
@@ -60,12 +56,7 @@ public class TrainingService {
             var standardizedChildren = element.elements().stream()
                     .map(this::standardizeBlockType)
                     .toList();
-            return new WorkoutElement(element.repetitions(), standardizedChildren,
-                    element.restDurationSeconds(), element.restIntensity(),
-                    element.type(), element.durationSeconds(), element.distanceMeters(),
-                    element.label(), element.description(), element.intensityTarget(),
-                    element.intensityStart(), element.intensityEnd(), element.cadenceTarget(),
-                    element.zoneTarget(), element.zoneLabel());
+            return element.withElements(standardizedChildren);
         }
 
         if ((element.intensityEnd() != null && element.intensityEnd() > 0) &&
@@ -96,22 +87,15 @@ public class TrainingService {
         }
 
         Training training = existing.get();
-        if (updates.getTitle() != null)
-            training.setTitle(updates.getTitle());
-        if (updates.getDescription() != null)
-            training.setDescription(updates.getDescription());
-        if (updates.getBlocks() != null)
-            training.setBlocks((updates.getBlocks().stream().map(this::standardizeBlockType).toList()));
-        if (updates.getGroupIds() != null)
-            training.setGroupIds(updates.getGroupIds());
-        if (updates.getTrainingType() != null)
-            training.setTrainingType(updates.getTrainingType());
-        if (updates.getClubIds() != null)
-            training.setClubIds(updates.getClubIds());
-        if (updates.getClubGroupIds() != null)
-            training.setClubGroupIds(updates.getClubGroupIds());
-        if (updates.getZoneSystemId() != null)
-            training.setZoneSystemId(updates.getZoneSystemId());
+        ofNullable(updates.getTitle()).ifPresent(training::setTitle);
+        ofNullable(updates.getDescription()).ifPresent(training::setDescription);
+        ofNullable(updates.getBlocks()).ifPresent(blocks ->
+                training.setBlocks(blocks.stream().map(this::standardizeBlockType).toList()));
+        ofNullable(updates.getGroupIds()).ifPresent(training::setGroupIds);
+        ofNullable(updates.getTrainingType()).ifPresent(training::setTrainingType);
+        ofNullable(updates.getClubIds()).ifPresent(training::setClubIds);
+        ofNullable(updates.getClubGroupIds()).ifPresent(training::setClubGroupIds);
+        ofNullable(updates.getZoneSystemId()).ifPresent(training::setZoneSystemId);
 
         metricsService.calculateTrainingMetrics(training, existing.get().getCreatedBy());
         return trainingRepository.save(training);
@@ -150,33 +134,6 @@ public class TrainingService {
     }
 
     /**
-     * Search trainings by group (group ID).
-     */
-    public List<Training> searchByGroup(String groupId) {
-        return trainingRepository.findByGroupIdsContaining(groupId);
-    }
-
-    /**
-     * Search trainings by training type.
-     */
-    public List<Training> searchByType(TrainingType trainingType) {
-        return trainingRepository.findByTrainingType(trainingType);
-    }
-
-    /**
-     * Discover trainings available to an athlete based on their groups.
-     */
-    public List<Training> discoverTrainingsByUserGroups(String athleteId) {
-        List<Group> athleteGroups = groupService.getGroupsForAthlete(athleteId);
-        if (athleteGroups.isEmpty()) {
-            return List.of();
-        }
-
-        List<String> groupIds = athleteGroups.stream().map(Group::getId).toList();
-        return trainingRepository.findByGroupIdsIn(groupIds);
-    }
-
-    /**
      * Discover trainings from clubs the user is an active member of.
      */
     public List<Training> discoverClubTrainings(String userId) {
@@ -198,13 +155,4 @@ public class TrainingService {
         return trainingRepository.save(training);
     }
 
-    /**
-     * Check if a user is an active member of a club.
-     */
-    public boolean isUserActiveClubMember(String userId, String clubId) {
-        if (clubId == null) return false;
-        return membershipRepository.findByClubIdAndUserId(clubId, userId)
-                .map(m -> m.getStatus() == ClubMemberStatus.ACTIVE)
-                .orElse(false);
-    }
 }

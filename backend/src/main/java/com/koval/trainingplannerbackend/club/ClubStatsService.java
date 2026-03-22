@@ -20,26 +20,30 @@ import java.util.stream.Collectors;
 @Service
 public class ClubStatsService {
 
-    private final ClubMembershipRepository membershipRepository;
     private final ClubTrainingSessionRepository sessionRepository;
     private final CompletedSessionRepository completedSessionRepository;
     private final RaceGoalRepository raceGoalRepository;
     private final UserService userService;
+    private final ClubMembershipService clubMembershipService;
+    private final ClubAuthorizationService authorizationService;
 
-    public ClubStatsService(ClubMembershipRepository membershipRepository,
-                            ClubTrainingSessionRepository sessionRepository,
+    public ClubStatsService(ClubTrainingSessionRepository sessionRepository,
                             CompletedSessionRepository completedSessionRepository,
                             RaceGoalRepository raceGoalRepository,
-                            UserService userService) {
-        this.membershipRepository = membershipRepository;
+                            UserService userService,
+                            ClubMembershipService clubMembershipService,
+                            ClubAuthorizationService authorizationService) {
         this.sessionRepository = sessionRepository;
         this.completedSessionRepository = completedSessionRepository;
         this.raceGoalRepository = raceGoalRepository;
         this.userService = userService;
+        this.clubMembershipService = clubMembershipService;
+        this.authorizationService = authorizationService;
     }
 
-    public ClubWeeklyStatsResponse getWeeklyStats(String clubId) {
-        List<String> memberIds = getActiveMemberIds(clubId);
+    public ClubWeeklyStatsResponse getWeeklyStats(String userId, String clubId) {
+        authorizationService.requireActiveMember(userId, clubId);
+        List<String> memberIds = clubMembershipService.getActiveMemberIds(clubId);
         LocalDateTime weekStart = LocalDate.now().with(DayOfWeek.MONDAY).atStartOfDay();
         LocalDateTime weekEnd = weekStart.plusDays(7);
 
@@ -61,8 +65,9 @@ public class ClubStatsService {
         return new ClubWeeklyStatsResponse(swimKm, bikeKm, runKm, sessions.size(), memberIds.size());
     }
 
-    public List<LeaderboardEntry> getLeaderboard(String clubId) {
-        List<String> memberIds = getActiveMemberIds(clubId);
+    public List<LeaderboardEntry> getLeaderboard(String userId, String clubId) {
+        authorizationService.requireActiveMember(userId, clubId);
+        List<String> memberIds = clubMembershipService.getActiveMemberIds(clubId);
         LocalDateTime weekStart = LocalDate.now().with(DayOfWeek.MONDAY).atStartOfDay();
         LocalDateTime weekEnd = weekStart.plusDays(7);
 
@@ -100,8 +105,9 @@ public class ClubStatsService {
         return leaderboard;
     }
 
-    public List<ClubRaceGoalResponse> getRaceGoals(String clubId) {
-        List<String> memberIds = getActiveMemberIds(clubId);
+    public List<ClubRaceGoalResponse> getRaceGoals(String userId, String clubId) {
+        authorizationService.requireActiveMember(userId, clubId);
+        List<String> memberIds = clubMembershipService.getActiveMemberIds(clubId);
         if (memberIds.isEmpty()) return List.of();
 
         LocalDate today = LocalDate.now();
@@ -145,10 +151,5 @@ public class ClubStatsService {
                     representative.getLocation(),
                     participants);
         }).collect(Collectors.toList());
-    }
-
-    private List<String> getActiveMemberIds(String clubId) {
-        return membershipRepository.findByClubIdAndStatus(clubId, ClubMemberStatus.ACTIVE)
-                .stream().map(ClubMembership::getUserId).collect(Collectors.toList());
     }
 }

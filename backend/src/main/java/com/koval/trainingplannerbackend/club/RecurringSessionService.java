@@ -7,6 +7,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -34,21 +35,8 @@ public class RecurringSessionService {
         RecurringSessionTemplate template = new RecurringSessionTemplate();
         template.setClubId(clubId);
         template.setCreatedBy(userId);
-        template.setTitle(req.title());
-        template.setSport(req.sport());
-        template.setDayOfWeek(req.dayOfWeek());
-        template.setTimeOfDay(req.timeOfDay());
-        template.setLocation(req.location());
-        template.setDescription(req.description());
-        template.setLinkedTrainingId(req.linkedTrainingId());
-        template.setMaxParticipants(req.maxParticipants());
-        template.setDurationMinutes(req.durationMinutes());
-        template.setClubGroupId(req.clubGroupId());
-        template.setOpenToAll(req.openToAll() == null || req.openToAll());
-        template.setOpenToAllDelayValue(req.openToAllDelayValue());
-        template.setOpenToAllDelayUnit(req.openToAllDelayUnit());
-        template.setResponsibleCoachId(req.responsibleCoachId());
         template.setCreatedAt(LocalDateTime.now());
+        SessionPropertyMapper.applyRequest(req, template);
         template = templateRepository.save(template);
 
         generateInstances(template, 4);
@@ -61,20 +49,7 @@ public class RecurringSessionService {
                 .orElseThrow(() -> new IllegalArgumentException("Template not found"));
         authorizationService.requireAdminOrCoach(userId, template.getClubId());
 
-        template.setTitle(req.title());
-        template.setSport(req.sport());
-        template.setDayOfWeek(req.dayOfWeek());
-        template.setTimeOfDay(req.timeOfDay());
-        template.setLocation(req.location());
-        template.setDescription(req.description());
-        template.setLinkedTrainingId(req.linkedTrainingId());
-        template.setMaxParticipants(req.maxParticipants());
-        template.setDurationMinutes(req.durationMinutes());
-        template.setClubGroupId(req.clubGroupId());
-        template.setOpenToAll(req.openToAll() ==null || req.openToAll());
-        template.setOpenToAllDelayValue(req.openToAllDelayValue());
-        template.setOpenToAllDelayUnit(req.openToAllDelayUnit());
-        template.setResponsibleCoachId(req.responsibleCoachId());
+        SessionPropertyMapper.applyRequest(req, template);
         return templateRepository.save(template);
     }
 
@@ -91,15 +66,19 @@ public class RecurringSessionService {
 
         List<ClubTrainingSession> futureInstances = sessionRepository
                 .findByRecurringTemplateIdAndScheduledAtAfter(templateId, LocalDateTime.now());
+        List<ClubTrainingSession> toSave = new ArrayList<>();
         int cancelledCount = 0;
         for (ClubTrainingSession session : futureInstances) {
             if (!session.isCancelled()) {
                 session.setCancelled(true);
                 session.setCancellationReason(reason);
                 session.setCancelledAt(LocalDateTime.now());
-                sessionRepository.save(session);
+                toSave.add(session);
                 cancelledCount++;
             }
+        }
+        if (!toSave.isEmpty()) {
+            sessionRepository.saveAll(toSave);
         }
 
         clubActivityService.emitActivity(clubId, ClubActivityType.RECURRING_SERIES_CANCELLED,
@@ -116,7 +95,8 @@ public class RecurringSessionService {
         templateRepository.save(template);
     }
 
-    public List<RecurringSessionTemplate> listTemplates(String clubId) {
+    public List<RecurringSessionTemplate> listTemplates(String userId, String clubId) {
+        authorizationService.requireActiveMember(userId, clubId);
         return templateRepository.findByClubId(clubId);
     }
 
@@ -124,6 +104,7 @@ public class RecurringSessionService {
         LocalDate today = LocalDate.now();
         DayOfWeek targetDay = template.getDayOfWeek();
 
+        List<ClubTrainingSession> toSave = new ArrayList<>();
         for (int week = 0; week < weeksAhead; week++) {
             LocalDate targetDate = today.plusWeeks(week).with(TemporalAdjusters.nextOrSame(targetDay));
             // Skip if the target date is in the past
@@ -149,7 +130,10 @@ public class RecurringSessionService {
             session.setRecurringTemplateId(template.getId());
             session.setCreatedAt(LocalDateTime.now());
             SessionPropertyMapper.applyTemplate(template, session);
-            sessionRepository.save(session);
+            toSave.add(session);
+        }
+        if (!toSave.isEmpty()) {
+            sessionRepository.saveAll(toSave);
         }
     }
 
@@ -164,7 +148,9 @@ public class RecurringSessionService {
             if (template.getTimeOfDay() != null && session.getScheduledAt() != null) {
                 session.setScheduledAt(session.getScheduledAt().toLocalDate().atTime(template.getTimeOfDay()));
             }
-            sessionRepository.save(session);
+        }
+        if (!futureInstances.isEmpty()) {
+            sessionRepository.saveAll(futureInstances);
         }
     }
 

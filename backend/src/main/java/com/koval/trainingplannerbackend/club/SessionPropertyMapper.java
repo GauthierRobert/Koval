@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.club;
 
+import com.koval.trainingplannerbackend.club.dto.CreateRecurringSessionRequest;
 import com.koval.trainingplannerbackend.club.dto.CreateSessionRequest;
 
 import java.util.ArrayList;
@@ -39,6 +40,23 @@ public final class SessionPropertyMapper {
         session.setOpenToAllDelayValue(template.getOpenToAllDelayValue());
         session.setOpenToAllDelayUnit(template.getOpenToAllDelayUnit());
         session.setResponsibleCoachId(template.getResponsibleCoachId());
+    }
+
+    public static void applyRequest(CreateRecurringSessionRequest req, RecurringSessionTemplate template) {
+        template.setTitle(req.title());
+        template.setSport(req.sport());
+        template.setDayOfWeek(req.dayOfWeek());
+        template.setTimeOfDay(req.timeOfDay());
+        template.setLocation(req.location());
+        template.setDescription(req.description());
+        template.setLinkedTrainingId(req.linkedTrainingId());
+        template.setMaxParticipants(req.maxParticipants());
+        template.setDurationMinutes(req.durationMinutes());
+        template.setClubGroupId(req.clubGroupId());
+        template.setOpenToAll(req.openToAll() == null || req.openToAll());
+        template.setOpenToAllDelayValue(req.openToAllDelayValue());
+        template.setOpenToAllDelayUnit(req.openToAllDelayUnit());
+        template.setResponsibleCoachId(req.responsibleCoachId());
     }
 
     public static void applyRequest(CreateSessionRequest req, ClubTrainingSession session) {

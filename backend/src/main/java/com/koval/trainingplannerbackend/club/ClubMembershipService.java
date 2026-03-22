@@ -103,7 +103,8 @@ public class ClubMembershipService {
         membershipRepository.delete(target);
     }
 
-    public List<ClubMemberResponse> getMembers(String clubId) {
+    public List<ClubMemberResponse> getMembers(String userId, String clubId) {
+        authorizationService.requireActiveMember(userId, clubId);
         List<ClubMembership> memberships = membershipRepository.findByClubIdAndStatus(clubId, ClubMemberStatus.ACTIVE);
 
         List<ClubGroup> allGroups = clubGroupRepository.findByClubId(clubId);

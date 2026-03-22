@@ -9,8 +9,10 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class SessionAssociationService {
@@ -47,14 +49,22 @@ public class SessionAssociationService {
         List<ScheduledWorkout> candidates = scheduledWorkoutRepository
                 .findByAthleteIdAndScheduledDate(userId, day);
 
+        List<ScheduledWorkout> pending = candidates.stream()
+                .filter(sw -> "PENDING".equals(sw.getStatus() != null ? sw.getStatus().name() : null))
+                .toList();
+        if (pending.isEmpty()) return;
+
+        List<String> trainingIds = pending.stream().map(ScheduledWorkout::getTrainingId).toList();
+        Map<String, Training> trainingsById = trainingRepository.findAllById(trainingIds).stream()
+                .collect(Collectors.toMap(Training::getId, Function.identity()));
+
         ScheduledWorkout best = null;
         int bestScore = 0;
 
-        for (ScheduledWorkout sw : candidates) {
-            if (!"PENDING".equals(sw.getStatus() != null ? sw.getStatus().name() : null)) continue;
-            Optional<Training> trainingOpt = trainingRepository.findById(sw.getTrainingId());
-            if (trainingOpt.isEmpty()) continue;
-            int s = scoreCandidate(session, sw, trainingOpt.get());
+        for (ScheduledWorkout sw : pending) {
+            Training training = trainingsById.get(sw.getTrainingId());
+            if (training == null) continue;
+            int s = scoreCandidate(session, sw, training);
             if (s > bestScore) {
                 bestScore = s;
                 best = sw;

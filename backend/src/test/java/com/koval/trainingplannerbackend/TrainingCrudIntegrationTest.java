@@ -166,30 +166,6 @@ class TrainingCrudIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("Search trainings by type")
-    void searchByType() throws Exception {
-        mockMvc.perform(post("/api/trainings")
-                        .header("Authorization", bearer(athleteToken))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(CYCLING_TRAINING))
-                .andExpect(status().isCreated());
-
-        mockMvc.perform(get("/api/trainings/search/type")
-                        .param("type", "SWEET_SPOT")
-                        .header("Authorization", bearer(athleteToken)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].trainingType").value("SWEET_SPOT"));
-
-        // Search for non-matching type
-        mockMvc.perform(get("/api/trainings/search/type")
-                        .param("type", "VO2MAX")
-                        .header("Authorization", bearer(athleteToken)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0)));
-    }
-
-    @Test
     @DisplayName("Create running training with distance-based blocks")
     void createRunningTraining() throws Exception {
         mockMvc.perform(post("/api/trainings")

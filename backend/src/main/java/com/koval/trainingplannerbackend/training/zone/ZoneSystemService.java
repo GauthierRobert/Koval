@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.training.zone;
 
 import com.koval.trainingplannerbackend.training.group.GroupService;
 import com.koval.trainingplannerbackend.training.model.SportType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -86,6 +87,14 @@ public class ZoneSystemService {
     public ZoneSystem getZoneSystem(String id) {
         return zoneSystemRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("ZoneSystem not found: " + id));
+    }
+
+    public ZoneSystem getZoneSystemWithAccess(String id, String userId) {
+        ZoneSystem zs = getZoneSystem(id);
+        if (userId.equals(zs.getCoachId())) return zs;
+        List<String> coachIds = groupService.getCoachIdsForAthlete(userId);
+        if (coachIds.contains(zs.getCoachId())) return zs;
+        throw new AccessDeniedException("You do not have access to this zone system");
     }
 
     public ZoneSystem setDefaultForSport(String zoneSystemId, String coachId, boolean isDefault) {

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.OptionalDouble;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,51 +38,13 @@ public class AnalyticsService {
      * - SWIMMING: speed-based sTSS using criticalSwimSpeed
      */
     public void computeAndAttachMetrics(CompletedSession session, User user) {
-        if (user == null)
-            return;
-        double durationHours = session.getTotalDurationSeconds() / 3600.0;
-        if (durationHours <= 0)
-            return;
+        if (user == null) return;
+        if (session.getTotalDurationSeconds() <= 0) return;
 
-        SportType sport = parseSportType(session.getSportType());
-        double intensityFactor = 0;
+        SportType sport = SportType.fromString(session.getSportType());
+        OptionalDouble ifOpt = computeIntensityFactor(session, user, sport);
 
-        if (sport == SportType.CYCLING) {
-            int ftp = user.getFtp() != null ? user.getFtp() : 0;
-            if (ftp <= 0 || session.getAvgPower() <= 0)
-                return;
-            intensityFactor = session.getAvgPower() / (double) ftp;
-
-        } else if (sport == SportType.RUNNING) {
-            int ftPaceSec = user.getFunctionalThresholdPace() != null ? user.getFunctionalThresholdPace() : 0;
-            if (ftPaceSec <= 0 || session.getAvgSpeed() <= 0)
-                return;
-            // functionalThresholdPace is sec/km → threshold speed in m/s = 1000 / sec/km
-            double thresholdSpeed = 1000.0 / ftPaceSec;
-            intensityFactor = session.getAvgSpeed() / thresholdSpeed;
-
-        } else if (sport == SportType.SWIMMING) {
-            int cssSec = user.getCriticalSwimSpeed() != null ? user.getCriticalSwimSpeed() : 0;
-            if (cssSec <= 0 || session.getAvgSpeed() <= 0)
-                return;
-            // criticalSwimSpeed is sec/100m → CSS in m/s = 100 / sec/100m
-            double cssSpeed = 100.0 / cssSec;
-            intensityFactor = session.getAvgSpeed() / cssSpeed;
-
-        } else {
-            // BRICK: prefer power if available, fall back to running pace
-            int ftp = user.getFtp() != null ? user.getFtp() : 0;
-            if (ftp > 0 && session.getAvgPower() > 0) {
-                intensityFactor = session.getAvgPower() / (double) ftp;
-            } else {
-                int ftPaceSec = user.getFunctionalThresholdPace() != null ? user.getFunctionalThresholdPace() : 0;
-                if (ftPaceSec <= 0 || session.getAvgSpeed() <= 0)
-                    return;
-                intensityFactor = session.getAvgSpeed() / (1000.0 / ftPaceSec);
-            }
-        }
-
-        if (intensityFactor <= 0) {
+        if (ifOpt.isEmpty() || ifOpt.getAsDouble() <= 0) {
             // RPE fallback — use heuristic when no sensor data available
             if (session.getRpe() != null && session.getRpe() > 0) {
                 double intensity = session.getRpe() / 10.0;
@@ -91,9 +54,44 @@ public class AnalyticsService {
             }
             return;
         }
+
+        double intensityFactor = ifOpt.getAsDouble();
         double tss = TssCalculator.computeTss(session.getTotalDurationSeconds(), intensityFactor);
         session.setIntensityFactor(Math.round(intensityFactor * 1000.0) / 1000.0);
         session.setTss(Math.round(tss * 10.0) / 10.0);
+    }
+
+    private OptionalDouble computeIntensityFactor(CompletedSession session, User user, SportType sport) {
+        return switch (sport) {
+            case CYCLING -> {
+                int ftp = user.getFtp() != null ? user.getFtp() : 0;
+                yield (ftp > 0 && session.getAvgPower() > 0)
+                        ? OptionalDouble.of(session.getAvgPower() / (double) ftp)
+                        : OptionalDouble.empty();
+            }
+            case RUNNING -> {
+                int ftPaceSec = user.getFunctionalThresholdPace() != null ? user.getFunctionalThresholdPace() : 0;
+                yield (ftPaceSec > 0 && session.getAvgSpeed() > 0)
+                        ? OptionalDouble.of(session.getAvgSpeed() / (1000.0 / ftPaceSec))
+                        : OptionalDouble.empty();
+            }
+            case SWIMMING -> {
+                int cssSec = user.getCriticalSwimSpeed() != null ? user.getCriticalSwimSpeed() : 0;
+                yield (cssSec > 0 && session.getAvgSpeed() > 0)
+                        ? OptionalDouble.of(session.getAvgSpeed() / (100.0 / cssSec))
+                        : OptionalDouble.empty();
+            }
+            case BRICK -> {
+                int ftp = user.getFtp() != null ? user.getFtp() : 0;
+                if (ftp > 0 && session.getAvgPower() > 0) {
+                    yield OptionalDouble.of(session.getAvgPower() / (double) ftp);
+                }
+                int ftPaceSec = user.getFunctionalThresholdPace() != null ? user.getFunctionalThresholdPace() : 0;
+                yield (ftPaceSec > 0 && session.getAvgSpeed() > 0)
+                        ? OptionalDouble.of(session.getAvgSpeed() / (1000.0 / ftPaceSec))
+                        : OptionalDouble.empty();
+            }
+        };
     }
 
     /**
@@ -117,16 +115,6 @@ public class AnalyticsService {
             }
         }
         if (changed) session.setBlockSummaries(updated);
-    }
-
-    private SportType parseSportType(String sportType) {
-        if (sportType == null)
-            return SportType.CYCLING;
-        try {
-            return SportType.valueOf(sportType);
-        } catch (IllegalArgumentException e) {
-            return SportType.CYCLING;
-        }
     }
 
     /**

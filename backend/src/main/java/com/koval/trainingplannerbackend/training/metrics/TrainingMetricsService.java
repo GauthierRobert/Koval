@@ -120,12 +120,7 @@ public class TrainingMetricsService {
             var resolvedChildren = element.elements().stream()
                     .map(child -> resolveElementZones(child, zoneMap))
                     .toList();
-            return new WorkoutElement(element.repetitions(), resolvedChildren,
-                    element.restDurationSeconds(), element.restIntensity(),
-                    element.type(), element.durationSeconds(), element.distanceMeters(),
-                    element.label(), element.description(), element.intensityTarget(),
-                    element.intensityStart(), element.intensityEnd(), element.cadenceTarget(),
-                    element.zoneTarget(), element.zoneLabel());
+            return element.withElements(resolvedChildren);
         }
         if (element.zoneTarget() != null && !element.zoneTarget().isBlank()
                 && (element.intensityTarget() == null || element.intensityTarget() == 0)) {
