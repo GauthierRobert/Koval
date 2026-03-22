@@ -2,14 +2,13 @@
   <!-- Left sidebar - full height -->
   <div class="athlete-list glass">
     <div class="section-header">
-      <h3>ATHLETES</h3>
+      <h3>{{ 'COACH_DASHBOARD.ATHLETES_HEADING' | translate }}</h3>
     </div>
 
     @if (allTags$ | async; as tags) {
       @if (tags.length > 0) {
         <div class="tag-filters">
-          <span class="tag-filter-chip" [class.active]="!activeTagFilter && !activeClubFilter" (click)="setTagFilter(null); setClubFilter(null)">All ({{
-            (athletes$ | async)?.length || 0 }})</span>
+          <span class="tag-filter-chip" [class.active]="!activeTagFilter && !activeClubFilter" (click)="setTagFilter(null); setClubFilter(null)">{{ 'COACH_DASHBOARD.ALL_FILTER' | translate: { count: (athletes$ | async)?.length || 0 } }}</span>
           @for (tag of tags; track trackTagByName(tag)) {
             <span class="tag-filter-chip" [class.active]="activeTagFilter === tag.name"
               (click)="toggleTagFilter(tag.name)">{{ tag.name }} ({{ getTagCount(tag.name) }})</span>
@@ -21,7 +20,7 @@
     @if (clubRoles$ | async; as clubRoles) {
       @if (clubRoles.length > 0) {
         <div class="club-filters">
-          <div class="filter-section-label">CLUBS</div>
+          <div class="filter-section-label">{{ 'COACH_DASHBOARD.CLUBS_FILTER_LABEL' | translate }}</div>
           <div class="tag-filters">
             @for (entry of clubRoles; track entry) {
               <span class="tag-filter-chip"
@@ -58,15 +57,15 @@
 
               @if (selectedAthlete?.id === athlete.id && (athleteMetrics$ | async); as m) {
                 <div class="mini-metrics">
-                  <span class="chip fitness">C: {{ m.ctl | number:'1.0-0' }}</span>
-                  <span class="chip fatigue">A: {{ m.atl | number:'1.0-0' }}</span>
-                  <span class="chip form" [class.positive]="m.tsb > 0">F: {{ m.tsb > 0 ? '+' : '' }}{{ m.tsb | number:'1.0-0' }}</span>
+                  <span class="chip fitness">{{ 'COACH_DASHBOARD.CHIP_FITNESS' | translate }} {{ m.ctl | number:'1.0-0' }}</span>
+                  <span class="chip fatigue">{{ 'COACH_DASHBOARD.CHIP_FATIGUE' | translate }} {{ m.atl | number:'1.0-0' }}</span>
+                  <span class="chip form" [class.positive]="m.tsb > 0">{{ 'COACH_DASHBOARD.CHIP_FORM' | translate }} {{ m.tsb > 0 ? '+' : '' }}{{ m.tsb | number:'1.0-0' }}</span>
                 </div>
               } @else {
                 <div class="mini-metrics">
-                  <span class="chip fitness">C: —</span>
-                  <span class="chip fatigue">A: —</span>
-                  <span class="chip form">F: —</span>
+                  <span class="chip fitness">{{ 'COACH_DASHBOARD.CHIP_FITNESS' | translate }} —</span>
+                  <span class="chip fatigue">{{ 'COACH_DASHBOARD.CHIP_FATIGUE' | translate }} —</span>
+                  <span class="chip form">{{ 'COACH_DASHBOARD.CHIP_FORM' | translate }} —</span>
                 </div>
               }
             </div>
@@ -76,12 +75,12 @@
       }
       @if (filtered.length === 0 && activeTagFilter) {
         <div class="empty-athletes">
-          No athletes with tag "{{ activeTagFilter }}"
+          {{ 'COACH_DASHBOARD.NO_ATHLETES_WITH_TAG' | translate: { tag: activeTagFilter } }}
         </div>
       }
       @if (filtered.length === 0 && !activeTagFilter && (allTags$ | async)?.length) {
         <div class="empty-athletes">
-          No athletes registered yet
+          {{ 'COACH_DASHBOARD.NO_ATHLETES_YET' | translate }}
         </div>
       }
     }
@@ -93,17 +92,17 @@
       <div class="header-left">
         <div class="header-avatar">C</div>
         <div class="header-info">
-          <span class="header-title">COACH <span class="dim">MANAGEMENT</span></span>
-          <span class="header-subtitle">Athlete roster &amp; performance tracking</span>
+          <span class="header-title">{{ 'COACH_DASHBOARD.HEADER_TITLE' | translate }} <span class="dim">{{ 'COACH_DASHBOARD.HEADER_TITLE_DIM' | translate }}</span></span>
+          <span class="header-subtitle">{{ 'COACH_DASHBOARD.HEADER_SUBTITLE' | translate }}</span>
         </div>
       </div>
       <div class="header-right">
         <div class="stat">
-          <span class="label">Roster</span>
+          <span class="label">{{ 'COACH_DASHBOARD.STAT_ROSTER' | translate }}</span>
           <span class="value">{{ (athletes$ | async)?.length || 0 }}</span>
         </div>
         <div class="stat">
-          <span class="label">Pending</span>
+          <span class="label">{{ 'COACH_DASHBOARD.STAT_PENDING' | translate }}</span>
           <span class="value accent">4</span>
         </div>
       </div>
@@ -129,18 +128,18 @@
               </div>
             </div>
             <div class="actions">
-              <button class="share-btn" (click)="openShareModal()">SHARE</button>
-              <button class="ai-btn-corner" (click)="assignWorkout()">+ Assign</button>
+              <button class="share-btn" (click)="openShareModal()">{{ 'COACH_DASHBOARD.SHARE_BTN' | translate }}</button>
+              <button class="ai-btn-corner" (click)="assignWorkout()">{{ 'COACH_DASHBOARD.ASSIGN_BTN' | translate }}</button>
             </div>
           </div>
 
           <!-- Task 2: Added PMC tab -->
           <div class="physiological-tabs">
-            <div class="tab" [class.active]="activeTab === 'performance'" (click)="activeTab = 'performance'">PERFORMANCE</div>
-            <div class="tab" [class.active]="activeTab === 'physiology'" (click)="activeTab = 'physiology'">PHYSIOLOGY</div>
-            <div class="tab" [class.active]="activeTab === 'history'"    (click)="activeTab = 'history'">HISTORY</div>
-            <div class="tab" [class.active]="activeTab === 'pmc'"        (click)="activeTab = 'pmc'">PMC</div>
-            <div class="tab" [class.active]="activeTab === 'goals'"      (click)="activeTab = 'goals'">GOALS</div>
+            <div class="tab" [class.active]="activeTab === 'performance'" (click)="activeTab = 'performance'">{{ 'COACH_DASHBOARD.TAB_PERFORMANCE' | translate }}</div>
+            <div class="tab" [class.active]="activeTab === 'physiology'" (click)="activeTab = 'physiology'">{{ 'COACH_DASHBOARD.TAB_PHYSIOLOGY' | translate }}</div>
+            <div class="tab" [class.active]="activeTab === 'history'"    (click)="activeTab = 'history'">{{ 'COACH_DASHBOARD.TAB_HISTORY' | translate }}</div>
+            <div class="tab" [class.active]="activeTab === 'pmc'"        (click)="activeTab = 'pmc'">{{ 'COACH_DASHBOARD.TAB_PMC' | translate }}</div>
+            <div class="tab" [class.active]="activeTab === 'goals'"      (click)="activeTab = 'goals'">{{ 'COACH_DASHBOARD.TAB_GOALS' | translate }}</div>
           </div>
         </div>
 
@@ -148,21 +147,21 @@
           @if (athleteMetrics$ | async; as metrics) {
             <div class="metrics-dashboard">
               <div class="m-card">
-                <span class="m-label">FITNESS (CTL)</span>
+                <span class="m-label">{{ 'COACH_DASHBOARD.METRIC_FITNESS_CTL' | translate }}</span>
                 <span class="m-value">{{ metrics.ctl | number:'1.1-1' }}</span>
                 <span class="m-trend" [class.up]="metrics.ctlTrend >= 0" [class.down]="metrics.ctlTrend < 0">
                   {{ metrics.ctlTrend >= 0 ? '↑' : '↓' }} {{ (metrics.ctlTrend < 0 ? -metrics.ctlTrend : metrics.ctlTrend) | number:'1.1-1' }}
                 </span>
               </div>
               <div class="m-card">
-                <span class="m-label">FATIGUE (ATL)</span>
+                <span class="m-label">{{ 'COACH_DASHBOARD.METRIC_FATIGUE_ATL' | translate }}</span>
                 <span class="m-value">{{ metrics.atl | number:'1.1-1' }}</span>
                 <span class="m-trend" [class.up]="metrics.atlTrend < 0" [class.down]="metrics.atlTrend >= 0">
                   {{ metrics.atlTrend >= 0 ? '↑' : '↓' }} {{ (metrics.atlTrend < 0 ? -metrics.atlTrend : metrics.atlTrend) | number:'1.1-1' }}
                 </span>
               </div>
               <div class="m-card">
-                <span class="m-label">FORM (TSB)</span>
+                <span class="m-label">{{ 'COACH_DASHBOARD.METRIC_FORM_TSB' | translate }}</span>
                 <span class="m-value">{{ metrics.tsb > 0 ? '+' : '' }}{{ metrics.tsb | number:'1.1-1' }}</span>
                 <span class="m-condition"
                   [class.fresh]="metrics.tsb > 5"
@@ -170,7 +169,7 @@
                   [class.neutral]="metrics.tsb >= -10 && metrics.tsb <= 5">{{ getFormCondition(metrics.tsb) }}</span>
               </div>
               <div class="m-card">
-                <span class="m-label">FTP (EST)</span>
+                <span class="m-label">{{ 'COACH_DASHBOARD.METRIC_FTP_EST' | translate }}</span>
                 <span class="m-value">{{ selectedAthlete.ftp ? selectedAthlete.ftp + 'W' : '—' }}</span>
                 <span class="m-meta">{{ selectedAthlete.ftp ? (selectedAthlete.ftp / 70 | number:'1.1-1') + ' W/kg' : '—' }}</span>
               </div>
@@ -178,19 +177,19 @@
           } @else {
             <div class="metrics-dashboard">
               <div class="m-card">
-                <span class="m-label">FITNESS (CTL)</span>
+                <span class="m-label">{{ 'COACH_DASHBOARD.METRIC_FITNESS_CTL' | translate }}</span>
                 <span class="m-value">—</span>
               </div>
               <div class="m-card">
-                <span class="m-label">FATIGUE (ATL)</span>
+                <span class="m-label">{{ 'COACH_DASHBOARD.METRIC_FATIGUE_ATL' | translate }}</span>
                 <span class="m-value">—</span>
               </div>
               <div class="m-card">
-                <span class="m-label">FORM (TSB)</span>
+                <span class="m-label">{{ 'COACH_DASHBOARD.METRIC_FORM_TSB' | translate }}</span>
                 <span class="m-value">—</span>
               </div>
               <div class="m-card">
-                <span class="m-label">FTP (EST)</span>
+                <span class="m-label">{{ 'COACH_DASHBOARD.METRIC_FTP_EST' | translate }}</span>
                 <span class="m-value">{{ selectedAthlete.ftp ? selectedAthlete.ftp + 'W' : '—' }}</span>
                 <span class="m-meta">{{ selectedAthlete.ftp ? (selectedAthlete.ftp / 70 | number:'1.1-1') + ' W/kg' : '—' }}</span>
               </div>
@@ -199,7 +198,7 @@
 
           <div class="technical-schedule">
             <div class="section-title">
-              TECHNICAL SCHEDULE
+              {{ 'COACH_DASHBOARD.TECHNICAL_SCHEDULE' | translate }}
               <div class="week-nav">
                 <button class="week-nav-btn" (click)="navigateScheduleWeek(-1)">‹</button>
                 <span class="week-label">{{ scheduleWeekLabel }}</span>
@@ -208,13 +207,13 @@
             </div>
             <div class="schedule-table">
               <div class="table-header">
-                <span>DATE</span>
-                <span>SESSION TITLE</span>
-                <span>TYPE</span>
-                <span>DUR</span>
-                <span>IF</span>
-                <span>TSS</span>
-                <span>STATUS</span>
+                <span>{{ 'COACH_DASHBOARD.SCHEDULE_COL_DATE' | translate }}</span>
+                <span>{{ 'COACH_DASHBOARD.SCHEDULE_COL_SESSION_TITLE' | translate }}</span>
+                <span>{{ 'COACH_DASHBOARD.SCHEDULE_COL_TYPE' | translate }}</span>
+                <span>{{ 'COACH_DASHBOARD.SCHEDULE_COL_DUR' | translate }}</span>
+                <span>{{ 'COACH_DASHBOARD.SCHEDULE_COL_IF' | translate }}</span>
+                <span>{{ 'COACH_DASHBOARD.SCHEDULE_COL_TSS' | translate }}</span>
+                <span>{{ 'COACH_DASHBOARD.SCHEDULE_COL_STATUS' | translate }}</span>
               </div>
               @if (athleteSchedule$ | async; as schedule) {
                 @for (workout of schedule; track trackScheduleById(workout)) {
@@ -249,13 +248,13 @@
                     <span class="t-status"
                       [class.pending]="workout.status === 'PENDING' && !workout.isClubSession"
                       [class.club]="workout.isClubSession">
-                      {{ workout.isClubSession ? 'CLUB' : workout.status }}
+                      {{ workout.isClubSession ? ('COACH_DASHBOARD.CLUB_STATUS' | translate) : workout.status }}
                     </span>
                   </div>
                 }
                 @if (schedule.length === 0) {
                   <div class="table-row empty-row">
-                    <span class="t-empty">No scheduled workouts for this period</span>
+                    <span class="t-empty">{{ 'COACH_DASHBOARD.SCHEDULE_EMPTY' | translate }}</span>
                   </div>
                 }
               }
@@ -265,13 +264,13 @@
           @if (athleteSessions$ | async; as sessions) {
             @if (sessions.length > 0) {
               <div class="coach-sessions-panel">
-                <div class="section-title">RECENT SESSIONS</div>
+                <div class="section-title">{{ 'COACH_DASHBOARD.RECENT_SESSIONS' | translate }}</div>
                 <div class="sessions-mini-table">
                   <div class="sm-header">
-                    <span>Sport</span>
-                    <span>Session</span>
-                    <span>TSS</span>
-                    <span>IF</span>
+                    <span>{{ 'COACH_DASHBOARD.SESSIONS_COL_SPORT' | translate }}</span>
+                    <span>{{ 'COACH_DASHBOARD.SESSIONS_COL_SESSION' | translate }}</span>
+                    <span>{{ 'COACH_DASHBOARD.SESSIONS_COL_TSS' | translate }}</span>
+                    <span>{{ 'COACH_DASHBOARD.SESSIONS_COL_IF' | translate }}</span>
                   </div>
                   @for (s of sessions.slice(0, 5); track trackSessionById(s)) {
                     <div class="sm-row">
@@ -295,18 +294,18 @@
                 <span class="phys-value">{{ selectedAthlete.ftp || '—' }}W</span>
               </div>
               <div class="phys-stat">
-                <span class="phys-label">VO2MAX (est.)</span>
-                <span class="phys-value">{{ getEstimatedVo2Max(selectedAthlete.ftp) }} ml/kg/min</span>
+                <span class="phys-label">{{ 'COACH_DASHBOARD.PHYS_VO2MAX_EST' | translate }}</span>
+                <span class="phys-value">{{ getEstimatedVo2Max(selectedAthlete.ftp) }} {{ 'COACH_DASHBOARD.PHYS_VO2MAX_UNIT' | translate }}</span>
               </div>
               @if (selectedAthlete.functionalThresholdPace) {
                 <div class="phys-stat">
-                  <span class="phys-label">THRESHOLD PACE</span>
+                  <span class="phys-label">{{ 'COACH_DASHBOARD.PHYS_THRESHOLD_PACE' | translate }}</span>
                   <span class="phys-value">{{ formatPace(selectedAthlete.functionalThresholdPace) }}</span>
                 </div>
               }
               @if (selectedAthlete.criticalSwimSpeed) {
                 <div class="phys-stat">
-                  <span class="phys-label">CSS</span>
+                  <span class="phys-label">{{ 'COACH_DASHBOARD.PHYS_CSS' | translate }}</span>
                   <span class="phys-value">{{ formatSwimPace(selectedAthlete.criticalSwimSpeed) }}</span>
                 </div>
               }
@@ -316,7 +315,7 @@
           <div class="zones-3col">
             <div class="zone-col">
               <div class="zone-col-header">
-                <span class="zone-col-title">CYCLING</span>
+                <span class="zone-col-title">{{ 'COACH_DASHBOARD.ZONE_COL_CYCLING' | translate }}</span>
                 @if (selectedAthlete.ftp) {
                   <span class="zone-col-ref">{{ selectedAthlete.ftp }}W FTP</span>
                 }
@@ -332,13 +331,13 @@
                   }
                 </div>
               } @else {
-                <div class="zone-no-data">No FTP set</div>
+                <div class="zone-no-data">{{ 'COACH_DASHBOARD.ZONE_NO_FTP' | translate }}</div>
               }
             </div>
 
             <div class="zone-col">
               <div class="zone-col-header">
-                <span class="zone-col-title">RUNNING</span>
+                <span class="zone-col-title">{{ 'COACH_DASHBOARD.ZONE_COL_RUNNING' | translate }}</span>
                 @if (selectedAthlete.functionalThresholdPace) {
                   <span class="zone-col-ref">{{ formatPace(selectedAthlete.functionalThresholdPace) }} FTP</span>
                 }
@@ -359,13 +358,13 @@
                   }
                 </div>
               } @else {
-                <div class="zone-no-data">No threshold pace set</div>
+                <div class="zone-no-data">{{ 'COACH_DASHBOARD.ZONE_NO_THRESHOLD_PACE' | translate }}</div>
               }
             </div>
 
             <div class="zone-col">
               <div class="zone-col-header">
-                <span class="zone-col-title">SWIMMING</span>
+                <span class="zone-col-title">{{ 'COACH_DASHBOARD.ZONE_COL_SWIMMING' | translate }}</span>
                 @if (selectedAthlete.criticalSwimSpeed) {
                   <span class="zone-col-ref">{{ formatSwimPace(selectedAthlete.criticalSwimSpeed) }} CSS</span>
                 }
@@ -386,13 +385,13 @@
                   }
                 </div>
               } @else {
-                <div class="zone-no-data">No CSS set</div>
+                <div class="zone-no-data">{{ 'COACH_DASHBOARD.ZONE_NO_CSS' | translate }}</div>
               }
             </div>
           </div>
 
           @if (athleteSessions$ | async; as sessions) {
-            <div class="section-title" style="margin-top: 1.5rem">SPORT DISTRIBUTION</div>
+            <div class="section-title" style="margin-top: 1.5rem">{{ 'COACH_DASHBOARD.SPORT_DISTRIBUTION' | translate }}</div>
             @if (sessions.length > 0) {
               <div class="sport-dist">
                 @for (d of getSportDistribution(sessions); track trackDistBySport(d)) {
@@ -407,13 +406,13 @@
                 }
               </div>
             } @else {
-              <div class="empty-tab">No session data yet.</div>
+              <div class="empty-tab">{{ 'COACH_DASHBOARD.EMPTY_TAB_NO_SESSION_DATA' | translate }}</div>
             }
           }
 
           @if (coachZoneSystems$ | async; as systems) {
             @if (systems.length > 0) {
-              <div class="section-title" style="margin-top:1.5rem">COACH ZONE SYSTEMS</div>
+              <div class="section-title" style="margin-top:1.5rem">{{ 'COACH_DASHBOARD.COACH_ZONE_SYSTEMS' | translate }}</div>
               @for (sys of systems; track trackSystemByName(sys)) {
                 <div class="zone-system-header">
                   <span class="zone-sys-name">{{ sys.name }}</span>
@@ -441,7 +440,7 @@
         @if (activeTab === 'history') {
           @if (selectedAthleteSession$ | async; as analysisSession) {
             <div class="analysis-back-row">
-              <button class="back-btn" (click)="closeSessionAnalysis()">&#8592; Back to history</button>
+              <button class="back-btn" (click)="closeSessionAnalysis()">{{ 'COACH_DASHBOARD.BACK_TO_HISTORY' | translate }}</button>
             </div>
             <app-session-analysis [session]="analysisSession"></app-session-analysis>
           } @else {
@@ -449,13 +448,13 @@
               @if (sessions.length > 0) {
                 <div class="history-table">
                   <div class="hist-header">
-                    <span>DATE</span>
-                    <span>SPORT</span>
-                    <span>TITLE</span>
-                    <span>DUR</span>
-                    <span>PWR</span>
-                    <span>TSS</span>
-                    <span>IF</span>
+                    <span>{{ 'COACH_DASHBOARD.HISTORY_COL_DATE' | translate }}</span>
+                    <span>{{ 'COACH_DASHBOARD.HISTORY_COL_SPORT' | translate }}</span>
+                    <span>{{ 'COACH_DASHBOARD.HISTORY_COL_TITLE' | translate }}</span>
+                    <span>{{ 'COACH_DASHBOARD.HISTORY_COL_DUR' | translate }}</span>
+                    <span>{{ 'COACH_DASHBOARD.HISTORY_COL_PWR' | translate }}</span>
+                    <span>{{ 'COACH_DASHBOARD.HISTORY_COL_TSS' | translate }}</span>
+                    <span>{{ 'COACH_DASHBOARD.HISTORY_COL_IF' | translate }}</span>
                   </div>
                   @for (s of sessions; track trackSessionById(s)) {
                     <div class="hist-row clickable" (click)="openSessionAnalysis(s)">
@@ -472,11 +471,11 @@
               }
               @if (athleteSessionsError$ | async; as hasError) {
                 @if (hasError) {
-                  <div class="empty-tab">Failed to load session data.</div>
+                  <div class="empty-tab">{{ 'COACH_DASHBOARD.FAILED_LOAD_SESSIONS' | translate }}</div>
                 }
               }
               @if (sessions.length === 0 && !(athleteSessionsError$ | async)) {
-                <div class="empty-tab">No recorded sessions yet.</div>
+                <div class="empty-tab">{{ 'COACH_DASHBOARD.NO_RECORDED_SESSIONS' | translate }}</div>
               }
             }
           }
@@ -487,14 +486,14 @@
             @if (pmcData.length > 0) {
               <div class="coach-pmc-panel">
                 <div class="coach-pmc-header">
-                  <div class="section-title">PMC — 90 DAYS</div>
-                  <button class="view-pmc-btn" (click)="viewAthletePmc(selectedAthlete!.id)">VIEW FULL PMC →</button>
+                  <div class="section-title">{{ 'COACH_DASHBOARD.PMC_90_DAYS' | translate }}</div>
+                  <button class="view-pmc-btn" (click)="viewAthletePmc(selectedAthlete!.id)">{{ 'COACH_DASHBOARD.VIEW_FULL_PMC' | translate }}</button>
                 </div>
                 <app-pmc-chart [data]="pmcData" [goals]="athleteGoals$ | async"></app-pmc-chart>
               </div>
             }
             @if (pmcData.length === 0) {
-              <div class="empty-tab">No PMC data available.</div>
+              <div class="empty-tab">{{ 'COACH_DASHBOARD.EMPTY_PMC' | translate }}</div>
             }
           }
         }
@@ -503,19 +502,19 @@
           @if (athleteGoals$ | async; as goals) {
             @if (goals.length > 0) {
               <div class="goals-tab-panel">
-                <div class="section-title">RACE GOALS</div>
+                <div class="section-title">{{ 'COACH_DASHBOARD.RACE_GOALS' | translate }}</div>
                 <table class="goals-table">
                   <thead>
                     <tr>
-                      <th>Priority</th>
-                      <th>Race</th>
-                      <th>Sport</th>
-                      <th>Date</th>
-                      <th>Days</th>
-                      <th>Distance</th>
-                      <th>Target Time</th>
-                      <th>Location</th>
-                      <th>Notes</th>
+                      <th>{{ 'COACH_DASHBOARD.GOALS_COL_PRIORITY' | translate }}</th>
+                      <th>{{ 'COACH_DASHBOARD.GOALS_COL_RACE' | translate }}</th>
+                      <th>{{ 'COACH_DASHBOARD.GOALS_COL_SPORT' | translate }}</th>
+                      <th>{{ 'COACH_DASHBOARD.GOALS_COL_DATE' | translate }}</th>
+                      <th>{{ 'COACH_DASHBOARD.GOALS_COL_DAYS' | translate }}</th>
+                      <th>{{ 'COACH_DASHBOARD.GOALS_COL_DISTANCE' | translate }}</th>
+                      <th>{{ 'COACH_DASHBOARD.GOALS_COL_TARGET_TIME' | translate }}</th>
+                      <th>{{ 'COACH_DASHBOARD.GOALS_COL_LOCATION' | translate }}</th>
+                      <th>{{ 'COACH_DASHBOARD.GOALS_COL_NOTES' | translate }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -524,7 +523,7 @@
                         <td>
                           <span class="goal-priority-dot"
                             [style.background-color]="getPriorityColor(goal.priority)"
-                            [title]="goal.priority === 'A' ? 'Goal Race' : goal.priority === 'B' ? 'Target Race' : 'Training Race'">
+                            [title]="goal.priority === 'A' ? ('COACH_DASHBOARD.GOAL_PRIORITY_A_TITLE' | translate) : goal.priority === 'B' ? ('COACH_DASHBOARD.GOAL_PRIORITY_B_TITLE' | translate) : ('COACH_DASHBOARD.GOAL_PRIORITY_C_TITLE' | translate)">
                             {{ goal.priority }}
                           </span>
                         </td>
@@ -533,7 +532,7 @@
                         <td>{{ goal.raceDate | date:'MMM d, y' }}</td>
                         <td>
                           <span class="days-badge-coach" [class.past]="daysUntil(goal.raceDate) < 0">
-                            {{ daysUntil(goal.raceDate) < 0 ? (daysUntil(goal.raceDate) * -1) + 'd ago' : daysUntil(goal.raceDate) + 'd' }}
+                            {{ daysUntil(goal.raceDate) < 0 ? ('COACH_DASHBOARD.DAYS_AGO' | translate: { n: daysUntil(goal.raceDate) * -1 }) : ('COACH_DASHBOARD.DAYS_AHEAD' | translate: { n: daysUntil(goal.raceDate) }) }}
                           </span>
                         </td>
                         <td>{{ goal.distance || '—' }}</td>
@@ -546,7 +545,7 @@
                 </table>
               </div>
             } @else {
-              <div class="empty-tab">No race goals for this athlete.</div>
+              <div class="empty-tab">{{ 'COACH_DASHBOARD.EMPTY_RACE_GOALS' | translate }}</div>
             }
           }
         }
@@ -561,8 +560,8 @@
             <circle cx="12" cy="7" r="4"/>
           </svg>
         </div>
-        <h3>Select an Athlete</h3>
-          <p>Choose an athlete from the roster to view performance metrics, manage training loads, and track progression.</p>
+        <h3>{{ 'COACH_DASHBOARD.PLACEHOLDER_SELECT_ATHLETE' | translate }}</h3>
+          <p>{{ 'COACH_DASHBOARD.PLACEHOLDER_SELECT_ATHLETE_DESC' | translate }}</p>
         </div>
       </div>
     }

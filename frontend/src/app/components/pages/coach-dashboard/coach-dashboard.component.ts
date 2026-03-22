@@ -2,6 +2,7 @@ import {ChangeDetectionStrategy, Component, DestroyRef, inject, NgZone, OnInit} 
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {BehaviorSubject, combineLatest, map, Observable, of} from 'rxjs';
 import {CoachService, ScheduledWorkout} from '../../../services/coach.service';
 import {AuthService, User} from '../../../services/auth.service';
@@ -28,7 +29,7 @@ import {SessionData, SessionSummary} from '../../../models/session-types.model';
 @Component({
   selector: 'app-coach-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TrainingActionModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, SportIconComponent, PmcChartComponent, SessionAnalysisComponent],
+  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, TrainingActionModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, SportIconComponent, PmcChartComponent, SessionAnalysisComponent],
   templateUrl: './coach-dashboard.component.html',
   styleUrl: './coach-dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -128,6 +129,7 @@ export class CoachDashboardComponent implements OnInit {
 
   coachTrainings$: Observable<Training[]> = of([]);
 
+  private readonly translate = inject(TranslateService);
   private readonly coachService = inject(CoachService);
   private readonly authService = inject(AuthService);
   private readonly clubService = inject(ClubService);
@@ -491,9 +493,9 @@ export class CoachDashboardComponent implements OnInit {
 
   // Task 7: Form condition label
   getFormCondition(tsb: number): string {
-    if (tsb > 5) return 'FRESH';
-    if (tsb < -10) return 'TIRED';
-    return 'NEUTRAL';
+    if (tsb > 5) return this.translate.instant('COACH_DASHBOARD.CONDITION_FRESH');
+    if (tsb < -10) return this.translate.instant('COACH_DASHBOARD.CONDITION_TIRED');
+    return this.translate.instant('COACH_DASHBOARD.CONDITION_NEUTRAL');
   }
 
   openSessionAnalysis(session: SessionData): void {

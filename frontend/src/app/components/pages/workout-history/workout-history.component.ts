@@ -2,6 +2,7 @@ import {ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, OnIn
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {ActivatedRoute} from '@angular/router';
 import {BehaviorSubject, combineLatest} from 'rxjs';
 import {filter, map, take} from 'rxjs/operators';
@@ -25,7 +26,7 @@ type SportFilter = string | null;
 @Component({
     selector: 'app-workout-history',
     standalone: true,
-    imports: [CommonModule, FormsModule, SportIconComponent, SessionAnalysisComponent, FilterPillsComponent],
+    imports: [CommonModule, FormsModule, TranslateModule, SportIconComponent, SessionAnalysisComponent, FilterPillsComponent],
     templateUrl: './workout-history.component.html',
     styleUrl: './workout-history.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -35,6 +36,7 @@ export class WorkoutHistoryComponent implements OnInit {
 
     historyService = inject(HistoryService);
     private fitExport = inject(FitExportService);
+    private translate = inject(TranslateService);
     private authService = inject(AuthService);
     private metricsService = inject(MetricsService);
     private route = inject(ActivatedRoute);
@@ -59,13 +61,15 @@ export class WorkoutHistoryComponent implements OnInit {
         }
     }
 
-    // Filters
-    readonly sportOptions = [
-        { label: 'ALL', value: null },
-        { label: 'Bike', value: 'CYCLING' },
-        { label: 'Run', value: 'RUNNING' },
-        { label: 'Swim', value: 'SWIMMING' },
-    ];
+    // Filters — labels translated via instant (language known at component init)
+    get sportOptions() {
+        return [
+            { label: this.translate.instant('WORKOUT_HISTORY.SPORT_FILTER_ALL'), value: null },
+            { label: this.translate.instant('WORKOUT_HISTORY.SPORT_FILTER_BIKE'), value: 'CYCLING' },
+            { label: this.translate.instant('WORKOUT_HISTORY.SPORT_FILTER_RUN'), value: 'RUNNING' },
+            { label: this.translate.instant('WORKOUT_HISTORY.SPORT_FILTER_SWIM'), value: 'SWIMMING' },
+        ];
+    }
 
     private sportFilterSubject = new BehaviorSubject<SportFilter>(null);
     private dateFromSubject = new BehaviorSubject<string>('');

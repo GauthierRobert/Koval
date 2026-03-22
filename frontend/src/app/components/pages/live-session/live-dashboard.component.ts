@@ -1,6 +1,7 @@
 import {AfterViewInit, Component, DestroyRef, ElementRef, inject, OnDestroy, ViewChild} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {WorkoutExecutionService} from '../../../services/workout-execution.service';
 import {BluetoothService} from '../../../services/bluetooth.service';
 import {TrainingService} from '../../../services/training.service';
@@ -14,11 +15,12 @@ import {formatPace, formatTimeMS} from '../../shared/format/format.utils';
 @Component({
   selector: 'app-live-dashboard',
   standalone: true,
-  imports: [CommonModule, ZombieGameComponent, SessionSummaryComponent],
+  imports: [CommonModule, TranslateModule, ZombieGameComponent, SessionSummaryComponent],
   templateUrl: './live-dashboard.component.html',
   styleUrl: './live-dashboard.component.css'
 })
 export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
+  private translate = inject(TranslateService);
   private executionService = inject(WorkoutExecutionService);
   private bluetoothService = inject(BluetoothService);
   private trainingService = inject(TrainingService);
@@ -259,10 +261,10 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
   }
 
   getSportLabel(training: any): string {
-    if (!training) return 'POWER';
-    if (training.sportType === 'CYCLING') return 'WATTS';
-    if (training.sportType === 'RUNNING' || training.sportType === 'SWIMMING') return 'PACE';
-    return 'INTENSITY';
+    if (!training) return this.translate.instant('LIVE_SESSION.SPORT_LABEL_POWER');
+    if (training.sportType === 'CYCLING') return this.translate.instant('LIVE_SESSION.SPORT_LABEL_WATTS');
+    if (training.sportType === 'RUNNING' || training.sportType === 'SWIMMING') return this.translate.instant('LIVE_SESSION.SPORT_LABEL_PACE');
+    return this.translate.instant('LIVE_SESSION.SPORT_LABEL_INTENSITY');
   }
 
   formatPaceValue(totalSeconds: number): string {

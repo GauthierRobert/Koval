@@ -1,5 +1,6 @@
 import {Component, inject, Input, OnDestroy} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {TranslateModule} from '@ngx-translate/core';
 import {BehaviorSubject, combineLatest, from, Observable, of, Subject} from 'rxjs';
 import {catchError, debounceTime, distinctUntilChanged, map, shareReplay, startWith, switchMap} from 'rxjs/operators';
 import {HistoryService, SavedSession} from '../../../services/history.service';
@@ -47,7 +48,7 @@ export interface ZoneBlock {
 @Component({
     selector: 'app-session-analysis',
     standalone: true,
-    imports: [CommonModule, SportIconComponent, FitTimeseriesChartComponent],
+    imports: [CommonModule, TranslateModule, SportIconComponent, FitTimeseriesChartComponent],
     templateUrl: './session-analysis.component.html',
     styleUrl: './session-analysis.component.css',
 })

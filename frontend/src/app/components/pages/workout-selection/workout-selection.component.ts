@@ -1,5 +1,6 @@
 import {Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {TrainingService} from '../../../services/training.service';
 import {TrainingFilterService} from '../../../services/training-filter.service';
 import {
@@ -24,6 +25,7 @@ import {TrainingActionModalComponent} from '../../shared/training-action-modal/t
   standalone: true,
   imports: [
     CommonModule,
+    TranslateModule,
     WorkoutVisualizationComponent,
     RouterModule,
     SidebarComponent,
@@ -36,12 +38,13 @@ import {TrainingActionModalComponent} from '../../shared/training-action-modal/t
 export class WorkoutSelectionComponent implements OnInit {
   private trainingService = inject(TrainingService);
   filterService = inject(TrainingFilterService);
+  private translate = inject(TranslateService);
 
   showAiModal = false;
 
   sourceOptions$: Observable<FilterPillOption[]> = this.trainingService.receivedTrainings$.pipe(
     map((received) => {
-      const options: FilterPillOption[] = [{ label: 'My Trainings', value: 'mine' }];
+      const options: FilterPillOption[] = [{ label: this.translate.instant('WORKOUT_SELECTION.SOURCE_MY_TRAININGS'), value: 'mine' }];
       const origins = new Set<string>();
       received.forEach((r) => {
         if (r.originName) origins.add(r.originName);
@@ -64,7 +67,7 @@ export class WorkoutSelectionComponent implements OnInit {
 
   tagOptions$: Observable<FilterPillOption[]> = this.filterService.availableTags$.pipe(
     map((tags) => [
-      { label: 'My Workouts', value: '__mine__' } as FilterPillOption,
+      { label: this.translate.instant('WORKOUT_SELECTION.TAG_MY_WORKOUTS'), value: '__mine__' } as FilterPillOption,
       ...tags.map((tag) => ({ label: tag, value: tag }) as FilterPillOption),
     ]),
   );

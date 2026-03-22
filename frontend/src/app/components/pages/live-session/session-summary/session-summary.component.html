@@ -1,25 +1,25 @@
 <div class="summary-overlay">
   <div class="summary-card">
     <header class="summary-header">
-      <h1>WORKOUT COMPLETE</h1>
+      <h1>{{ 'SESSION_SUMMARY.WORKOUT_COMPLETE' | translate }}</h1>
       <p class="workout-title">{{ summary.title }}</p>
     </header>
 
     <div class="top-stats">
       <div class="stat-item">
-        <span class="label">TOTAL TIME</span>
+        <span class="label">{{ 'SESSION_SUMMARY.STAT_TOTAL_TIME' | translate }}</span>
         <span class="value">{{ formatTime(summary.totalDuration) }}</span>
       </div>
       <div class="stat-item">
-        <span class="label">AVG {{ getSportLabel() }}</span>
+        <span class="label">{{ getSportLabel() }}</span>
         <span class="value">{{ summary.avgPower }}{{ getSportUnit() }}</span>
       </div>
       <div class="stat-item">
-        <span class="label">AVG HR</span>
+        <span class="label">{{ 'SESSION_SUMMARY.STAT_AVG_HR' | translate }}</span>
         <span class="value hr">{{ summary.avgHR > 0 ? summary.avgHR : '--' }}</span>
       </div>
       <div class="stat-item">
-        <span class="label">AVG CADENCE</span>
+        <span class="label">{{ 'SESSION_SUMMARY.STAT_AVG_CADENCE' | translate }}</span>
         <span class="value">{{ summary.avgCadence }} RPM</span>
       </div>
     </div>
@@ -28,11 +28,11 @@
       <table class="summary-table">
         <thead>
           <tr>
-            <th>INTERVAL</th>
-            <th>DURATION</th>
-            <th>TARGET</th>
-            <th>ACTUAL</th>
-            <th>DELTA</th>
+            <th>{{ 'SESSION_SUMMARY.TABLE_COL_INTERVAL' | translate }}</th>
+            <th>{{ 'SESSION_SUMMARY.TABLE_COL_DURATION' | translate }}</th>
+            <th>{{ 'SESSION_SUMMARY.TABLE_COL_TARGET' | translate }}</th>
+            <th>{{ 'SESSION_SUMMARY.TABLE_COL_ACTUAL' | translate }}</th>
+            <th>{{ 'SESSION_SUMMARY.TABLE_COL_DELTA' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -62,9 +62,9 @@
           <polyline points="7 10 12 15 17 10"/>
           <line x1="12" y1="15" x2="12" y2="3"/>
         </svg>
-        DOWNLOAD FIT
+        {{ 'SESSION_SUMMARY.BTN_DOWNLOAD_FIT' | translate }}
       </button>
-      <button class="done-btn" (click)="close.emit()">DONE</button>
+      <button class="done-btn" (click)="close.emit()">{{ 'SESSION_SUMMARY.BTN_DONE' | translate }}</button>
     </footer>
   </div>
 </div>

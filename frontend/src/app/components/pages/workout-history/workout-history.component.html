@@ -3,7 +3,7 @@
   <!-- Left panel: session list -->
   <aside class="history-sidebar glass">
     <div class="sidebar-header">
-      <h3 class="sidebar-title">ACTIVITIES</h3>
+      <h3 class="sidebar-title">{{ 'WORKOUT_HISTORY.SIDEBAR_TITLE' | translate }}</h3>
       <div class="sidebar-actions">
         <button class="import-btn strava-btn" (click)="syncStrava()" [disabled]="(syncing$ | async) === true">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -13,7 +13,7 @@
             <polyline points="9 21 3 21 3 15" />
             <path d="M3 21l7-7" />
           </svg>
-          {{ (syncing$ | async) ? 'SYNCING...' : 'STRAVA SYNC' }}
+          {{ (syncing$ | async) ? ('WORKOUT_HISTORY.BTN_SYNCING' | translate) : ('WORKOUT_HISTORY.BTN_STRAVA_SYNC' | translate) }}
         </button>
         <button class="import-btn" (click)="triggerUpload()" [disabled]="importing">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -22,7 +22,7 @@
             <polyline points="17 8 12 3 7 8" />
             <line x1="12" y1="3" x2="12" y2="15" />
           </svg>
-          {{ importing ? 'IMPORTING...' : 'IMPORT .FIT' }}
+          {{ importing ? ('WORKOUT_HISTORY.BTN_IMPORTING' | translate) : ('WORKOUT_HISTORY.BTN_IMPORT_FIT' | translate) }}
         </button>
       </div>
       <input #fitInput type="file" accept=".fit" class="fit-input" (change)="onFileSelected($event)" />
@@ -31,16 +31,16 @@
     @if (syncResult$ | async; as result) {
       <div class="sync-result" [class.sync-empty]="result.newlyImported === 0">
         @if (result.newlyImported > 0) {
-          Imported {{ result.newlyImported }} activit{{ result.newlyImported === 1 ? 'y' : 'ies' }} from Strava
+          {{ 'WORKOUT_HISTORY.SYNC_RESULT_IMPORTED' | translate: { count: result.newlyImported } }}
         } @else {
-          Already up to date
+          {{ 'WORKOUT_HISTORY.SYNC_RESULT_UP_TO_DATE' | translate }}
         }
       </div>
     }
 
     @if (importError) {
       <div class="import-error">
-        Could not parse FIT file. Make sure it contains a valid session.
+        {{ 'WORKOUT_HISTORY.IMPORT_ERROR' | translate }}
       </div>
     }
 
@@ -55,9 +55,9 @@
 
     <!-- Date range filter -->
     <div class="date-filter-bar">
-      <label class="date-label">From</label>
+      <label class="date-label">{{ 'WORKOUT_HISTORY.DATE_FILTER_FROM' | translate }}</label>
       <input type="date" class="date-input" [ngModel]="dateFrom" (ngModelChange)="onDateFromChange($event)" />
-      <label class="date-label">To</label>
+      <label class="date-label">{{ 'WORKOUT_HISTORY.DATE_FILTER_TO' | translate }}</label>
       <input type="date" class="date-input" [ngModel]="dateTo" (ngModelChange)="onDateToChange($event)" />
     </div>
 
@@ -66,8 +66,8 @@
         <div class="session-list">
           @if (sessions.length === 0) {
             <div class="empty-state">
-              <p>No activities yet</p>
-              <p class="empty-hint">Upload a .FIT file to get started</p>
+              <p>{{ 'WORKOUT_HISTORY.EMPTY_NO_ACTIVITIES' | translate }}</p>
+              <p class="empty-hint">{{ 'WORKOUT_HISTORY.EMPTY_HINT_UPLOAD' | translate }}</p>
             </div>
           }
 
@@ -88,7 +88,7 @@
               <span class="metric-chip if">{{ getIF(session, ftp) | number:'1.2-2' }} IF</span>
             </div>
           </div>
-          <button class="dl-btn" (click)="downloadFit($event, session)" title="Download FIT">
+          <button class="dl-btn" (click)="downloadFit($event, session)" [title]="'WORKOUT_HISTORY.DOWNLOAD_FIT_TITLE' | translate">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
               stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -109,8 +109,8 @@
       <div class="header-left">
         <div class="header-avatar">A</div>
         <div class="header-info">
-          <span class="header-title">ACTIVITY <span class="dim">HISTORY</span></span>
-          <span class="header-subtitle">Past sessions &amp; analytics</span>
+          <span class="header-title">{{ 'WORKOUT_HISTORY.HEADER_TITLE' | translate }} <span class="dim">{{ 'WORKOUT_HISTORY.HEADER_TITLE_DIM' | translate }}</span></span>
+          <span class="header-subtitle">{{ 'WORKOUT_HISTORY.HEADER_SUBTITLE' | translate }}</span>
         </div>
       </div>
       <div class="header-right"></div>
@@ -120,8 +120,8 @@
     } @else {
       <div class="empty-main">
         <div class="empty-card glass">
-          <h2>Activity Analysis</h2>
-          <p>Select an activity from the list to view detailed performance metrics and power data.</p>
+          <h2>{{ 'WORKOUT_HISTORY.EMPTY_MAIN_HEADING' | translate }}</h2>
+          <p>{{ 'WORKOUT_HISTORY.EMPTY_MAIN_DESC' | translate }}</p>
           <button class="import-cta" (click)="triggerUpload()" [disabled]="importing">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
@@ -129,7 +129,7 @@
               <polyline points="17 8 12 3 7 8" />
               <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
-            Import .FIT File
+            {{ 'WORKOUT_HISTORY.BTN_IMPORT_FIT_FILE' | translate }}
           </button>
         </div>
       </div>

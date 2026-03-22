@@ -10,29 +10,29 @@
           }
         </div>
         <div class="power-meter">
-          <div class="label">TARGET: {{ targetPower }}W</div>
+          <div class="label">{{ 'ZOMBIE_GAME.LABEL_TARGET' | translate: { power: targetPower } }}</div>
           <div class="current-power" [style.color]="getPowerColor()">{{ currentPower }}W</div>
         </div>
         @if (isTooFast) {
-          <div class="warning">TOO FAST! RELAX!</div>
+          <div class="warning">{{ 'ZOMBIE_GAME.WARNING_TOO_FAST' | translate }}</div>
         }
       </div>
 
       <!-- Entities -->
       <div class="entities">
         <div class="cyclist" [style.left.px]="playerX">
-          <img src="assets/player.png" alt="cyclist">
+          <img src="assets/player.png" [alt]="'ZOMBIE_GAME.ALT_CYCLIST' | translate">
         </div>
         <div class="zombie" [style.left.px]="zombieX">
-          <img src="assets/zombie.png" alt="zombie">
+          <img src="assets/zombie.png" [alt]="'ZOMBIE_GAME.ALT_ZOMBIE' | translate">
         </div>
       </div>
 
       @if (lives === 0) {
         <div class="game-overlay">
-          <h2>GAME OVER</h2>
-          <p>Stay focused on the workout!</p>
-          <button (click)="closeGame()">RETURN TO DASHBOARD</button>
+          <h2>{{ 'ZOMBIE_GAME.GAME_OVER_TITLE' | translate }}</h2>
+          <p>{{ 'ZOMBIE_GAME.GAME_OVER_DESC' | translate }}</p>
+          <button (click)="closeGame()">{{ 'ZOMBIE_GAME.BTN_RETURN_DASHBOARD' | translate }}</button>
         </div>
       }
     </div>

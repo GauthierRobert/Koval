@@ -7,12 +7,12 @@
       <div class="header-left">
         <div class="header-avatar">T</div>
         <div class="header-info">
-          <span class="header-title">TRAINING <span class="dim">LIBRARY</span></span>
-          <span class="header-subtitle">Browse and manage your workouts</span>
+          <span class="header-title">{{ 'WORKOUT_SELECTION.HEADER_TITLE' | translate }} <span class="dim">{{ 'WORKOUT_SELECTION.HEADER_TITLE_DIM' | translate }}</span></span>
+          <span class="header-subtitle">{{ 'WORKOUT_SELECTION.HEADER_SUBTITLE' | translate }}</span>
         </div>
       </div>
       <div class="header-right">
-        <button class="tab-btn tab-btn--ai tab-btn--ai-background" (click)="showAiModal = true">✨ CREATE WITH AI</button>
+        <button class="tab-btn tab-btn--ai tab-btn--ai-background" (click)="showAiModal = true">✨ {{ 'WORKOUT_SELECTION.BTN_CREATE_WITH_AI' | translate }}</button>
       </div>
     </div>
 
@@ -78,12 +78,9 @@
       @if (!(selectedTraining$ | async)) {
         <div class="empty-state">
         <div class="hero-content glass">
-          <h1>Training Library</h1>
-          <p>
-            Select a workout from the sidebar to view its details, or chat with the Assistant to
-            generate a new training plan tailored to your profile.
-          </p>
-          <button class="cta-btn" routerLink="/chat">Chat with Assistant</button>
+          <h1>{{ 'WORKOUT_SELECTION.EMPTY_STATE_HEADING' | translate }}</h1>
+          <p>{{ 'WORKOUT_SELECTION.EMPTY_STATE_DESC' | translate }}</p>
+          <button class="cta-btn" routerLink="/chat">{{ 'WORKOUT_SELECTION.BTN_CHAT_ASSISTANT' | translate }}</button>
         </div>
       </div>
       }

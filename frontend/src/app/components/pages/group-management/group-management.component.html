@@ -3,8 +3,8 @@
     <div class="header-left">
       <div class="header-avatar">G</div>
       <div class="header-info">
-        <span class="header-title">GROUP <span class="dim">MANAGEMENT</span></span>
-        <span class="header-subtitle">Manage athlete groups &amp; invite codes</span>
+        <span class="header-title">{{ 'GROUP_MANAGEMENT.HEADER_TITLE' | translate }} <span class="dim">{{ 'GROUP_MANAGEMENT.HEADER_TITLE_DIM' | translate }}</span></span>
+        <span class="header-subtitle">{{ 'GROUP_MANAGEMENT.HEADER_SUBTITLE' | translate }}</span>
       </div>
     </div>
     <div class="header-right"></div>
@@ -12,22 +12,22 @@
   <div class="glass create-banner">
     <div class="create-banner-label">
       <span class="create-banner-icon">+</span>
-      <span>New Group</span>
+      <span>{{ 'GROUP_MANAGEMENT.NEW_GROUP_LABEL' | translate }}</span>
     </div>
     <div class="create-banner-fields">
       <div class="create-field">
-        <label class="create-field-label">Group name</label>
-        <input class="create-input" [(ngModel)]="newGroupName" placeholder="e.g. Sprint Group"
+        <label class="create-field-label">{{ 'GROUP_MANAGEMENT.FIELD_GROUP_NAME_LABEL' | translate }}</label>
+        <input class="create-input" [(ngModel)]="newGroupName" [placeholder]="'GROUP_MANAGEMENT.FIELD_GROUP_NAME_PLACEHOLDER' | translate"
                (keydown.enter)="createGroup()"
-               title="A short label for grouping athletes (e.g. 'Sprint Group', 'Beginners')" />
+               [title]="'GROUP_MANAGEMENT.FIELD_GROUP_NAME_TITLE' | translate" />
       </div>
       <div class="create-field">
-        <label class="create-field-label">Max athletes</label>
+        <label class="create-field-label">{{ 'GROUP_MANAGEMENT.FIELD_MAX_ATHLETES_LABEL' | translate }}</label>
         <input class="create-input create-input--num" type="number"
-               [(ngModel)]="newGroupMaxAthletes" min="0" placeholder="0 = unlimited"
-               title="Maximum number of athletes allowed in this group. 0 means unlimited." />
+               [(ngModel)]="newGroupMaxAthletes" min="0" [placeholder]="'GROUP_MANAGEMENT.FIELD_MAX_ATHLETES_PLACEHOLDER' | translate"
+               [title]="'GROUP_MANAGEMENT.FIELD_MAX_ATHLETES_TITLE' | translate" />
       </div>
-      <button class="create-btn" (click)="createGroup()" [disabled]="!newGroupName.trim()">CREATE GROUP</button>
+      <button class="create-btn" (click)="createGroup()" [disabled]="!newGroupName.trim()">{{ 'GROUP_MANAGEMENT.CREATE_GROUP_BTN' | translate }}</button>
     </div>
   </div>
 
@@ -35,7 +35,7 @@
     @if (groupData$ | async; as tags) {
       @if (tags.length === 0) {
         <div class="empty-state">
-          No groups yet. Use the form above to create your first group.
+          {{ 'GROUP_MANAGEMENT.EMPTY_GROUPS' | translate }}
         </div>
       }
 
@@ -46,8 +46,8 @@
               <div class="tag-card-header">
                 <div class="tag-name-row">
                   @if (editingGrouId !== tag.id) {
-                    <span class="tag-name" (click)="startEdit(tag)" title="Click to rename">{{ tag.name }}</span>
-                    <button class="icon-btn edit-btn" (click)="startEdit(tag)" title="Rename">✎</button>
+                    <span class="tag-name" (click)="startEdit(tag)" [title]="'GROUP_MANAGEMENT.RENAME_TITLE' | translate">{{ tag.name }}</span>
+                    <button class="icon-btn edit-btn" (click)="startEdit(tag)" [title]="'GROUP_MANAGEMENT.RENAME_EDIT_ICON_TITLE' | translate">✎</button>
                   }
                   @if (editingGrouId === tag.id) {
                     <input class="rename-input" [(ngModel)]="editingName"
@@ -57,27 +57,27 @@
                 </div>
                 <span class="tag-athlete-count">{{ tag.groupAthletes.length }}{{ tag.maxAthletes > 0 ? ' / ' + tag.maxAthletes : '' }}</span>
                 @if (tag.inviteCode) {
-                  <span class="invite-code" [class.copied]="copiedCodeId === tag.id" (click)="copyCode(tag); $event.stopPropagation()" title="Click to copy">
-                    {{ copiedCodeId === tag.id ? '✓ COPIED' : tag.inviteCode }}
+                  <span class="invite-code" [class.copied]="copiedCodeId === tag.id" (click)="copyCode(tag); $event.stopPropagation()" [title]="'GROUP_MANAGEMENT.COPY_CODE_TITLE' | translate">
+                    {{ copiedCodeId === tag.id ? ('GROUP_MANAGEMENT.COPIED_LABEL' | translate) : tag.inviteCode }}
                   </span>
                 }
 
-                <button class="delete-btn" (click)="deleteGroup(tag)" title="Delete group">DELETE</button>
+                <button class="delete-btn" (click)="deleteGroup(tag)" [title]="'GROUP_MANAGEMENT.DELETE_GROUP_TITLE' | translate">{{ 'GROUP_MANAGEMENT.DELETE_GROUP_BTN' | translate }}</button>
               </div>
 
               <div class="athletes-section">
-                <div class="athletes-label">ATHLETES ({{ tag.groupAthletes.length }}) <button class="assign-btn" (click)="assignToGroup(tag)" title="Assign training to group">ASSIGN TRAINING</button></div>
+                <div class="athletes-label">{{ 'GROUP_MANAGEMENT.ATHLETES_SECTION_LABEL' | translate: { count: tag.groupAthletes.length } }} <button class="assign-btn" (click)="assignToGroup(tag)" [title]="'GROUP_MANAGEMENT.ASSIGN_TRAINING_TITLE' | translate">{{ 'GROUP_MANAGEMENT.ASSIGN_TRAINING_BTN' | translate }}</button></div>
                 @if (tag.groupAthletes.length === 0) {
-                  <div class="no-athletes">No athletes in this group</div>
+                  <div class="no-athletes">{{ 'GROUP_MANAGEMENT.NO_ATHLETES_IN_GROUP' | translate }}</div>
                 }
                 @for (athlete of tag.groupAthletes; track athlete.id) {
                   <div class="athlete-row"
                     style="cursor: pointer"
                     (click)="navigateToCoach(athlete.id)"
-                    title="View in coach dashboard">
+                    [title]="'GROUP_MANAGEMENT.ATHLETE_ROW_TITLE' | translate">
                     <div class="avatar-sm">{{ athlete.displayName[0].toUpperCase() }}</div>
                     <span class="athlete-name">{{ athlete.displayName }}</span>
-                    <button class="remove-btn" (click)="$event.stopPropagation(); removeAthleteFromTag(athlete, tag)" title="Remove from group">&times;</button>
+                    <button class="remove-btn" (click)="$event.stopPropagation(); removeAthleteFromTag(athlete, tag)" [title]="'GROUP_MANAGEMENT.REMOVE_ATHLETE_TITLE' | translate">&times;</button>
                   </div>
                 }
               </div>

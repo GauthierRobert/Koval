@@ -1,6 +1,7 @@
-import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {BehaviorSubject, combineLatest} from 'rxjs';
 import {map} from 'rxjs/operators';
 import {Group, GroupService} from '../../../services/group.service';
@@ -12,7 +13,7 @@ import {TrainingActionModalComponent} from '../../shared/training-action-modal/t
 @Component({
   selector: 'app-group-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, TrainingActionModalComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, TrainingActionModalComponent],
   templateUrl: './group-management.component.html',
   styleUrl: './group-management.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,6 +45,8 @@ export class GroupManagementComponent implements OnInit {
   assigningGroupId: string | null = null;
   assigningGroupName: string | null = null;
   assigningGroupAthletes: User[] = [];
+
+  private translate = inject(TranslateService);
 
   constructor(
     private groupService: GroupService,
@@ -121,7 +124,7 @@ export class GroupManagementComponent implements OnInit {
   }
 
   deleteGroup(group: Group): void {
-    if (!confirm(`Delete group "${group.name}"? This will remove it from all athletes.`)) return;
+    if (!confirm(this.translate.instant('GROUP_MANAGEMENT.DELETE_GROUP_CONFIRM', { name: group.name }))) return;
     this.groupService.deleteGroup(group.id).subscribe({
       next: () => this.loadGroups(),
       error: () => {},

@@ -1,5 +1,6 @@
 import {Component, EventEmitter, inject, Input, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {BlockSummary, SessionSummary} from '../../../../services/workout-execution.service';
 import {AuthService} from '../../../../services/auth.service';
 import {FitExportService} from '../../../../services/fit-export.service';
@@ -8,7 +9,7 @@ import {formatTimeMS} from '../../../shared/format/format.utils';
 @Component({
     selector: 'app-session-summary',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, TranslateModule],
     templateUrl: './session-summary.component.html',
     styleUrl: './session-summary.component.css'
 })
@@ -17,6 +18,7 @@ export class SessionSummaryComponent {
     @Output() close = new EventEmitter<void>();
     private authService = inject(AuthService);
     private fitExport = inject(FitExportService);
+    private translate = inject(TranslateService);
 
     formatTime(seconds: number): string {
         return formatTimeMS(seconds);
@@ -29,9 +31,9 @@ export class SessionSummaryComponent {
     }
 
     getSportLabel(): string {
-        if (!this.summary) return 'POWER';
-        if (this.summary.sportType === 'RUNNING' || this.summary.sportType === 'SWIMMING') return 'PACE';
-        return 'POWER';
+        if (!this.summary) return this.translate.instant('SESSION_SUMMARY.STAT_AVG_POWER');
+        if (this.summary.sportType === 'RUNNING' || this.summary.sportType === 'SWIMMING') return this.translate.instant('SESSION_SUMMARY.STAT_AVG_PACE');
+        return this.translate.instant('SESSION_SUMMARY.STAT_AVG_POWER');
     }
 
     getSportUnit(): string {
