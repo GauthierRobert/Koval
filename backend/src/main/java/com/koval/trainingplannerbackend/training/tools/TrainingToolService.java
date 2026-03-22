@@ -75,7 +75,7 @@ public class TrainingToolService {
         return result;
     }
 
-    private String validateTrainingRequest(TrainingRequest request) {
+    public static String validateTrainingRequest(TrainingRequest request) {
         if (request.title() == null || request.title().isBlank()) {
             return "Error: title is required and cannot be blank.";
         }
@@ -85,7 +85,7 @@ public class TrainingToolService {
         return validateElements(request.blocks(), "block");
     }
 
-    private String validateElements(java.util.List<WorkoutElementRequest> elements, String path) {
+    private static String validateElements(java.util.List<WorkoutElementRequest> elements, String path) {
         for (int i = 0; i < elements.size(); i++) {
             WorkoutElementRequest b = elements.get(i);
             String prefix = path + "[" + i + "]";

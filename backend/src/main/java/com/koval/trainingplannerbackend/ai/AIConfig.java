@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.ai;
 
 import com.koval.trainingplannerbackend.ai.action.AIActionToolService;
+import com.koval.trainingplannerbackend.ai.action.CreationTrainingToolService;
 import com.koval.trainingplannerbackend.ai.action.NotationToolService;
 import com.koval.trainingplannerbackend.coach.tools.CoachToolService;
 import com.koval.trainingplannerbackend.goal.GoalToolService;
@@ -153,12 +154,24 @@ public class AIConfig {
     }
 
     @Bean
+    @Deprecated
     public ChatClient actionNotationTrainingClient(AnthropicChatModel chatModel,
                                                    NotationToolService notationToolService) {
         return ChatClient.builder(chatModel)
                 .defaultSystem(loadPrompt("action-notation"))
                 .defaultOptions(sonnetCachedActionOptions())
                 .defaultTools(notationToolService)
+                .build();
+    }
+
+    @Bean
+    public ChatClient actionTrainingCreatorClient(AnthropicChatModel chatModel,
+                                                  ContextToolService contextToolService,
+                                                   CreationTrainingToolService creationTrainingToolService) {
+        return ChatClient.builder(chatModel)
+                .defaultSystem(agentPrompt("training-creation"))
+                .defaultOptions(sonnetOptions())
+                .defaultTools(contextToolService, creationTrainingToolService)
                 .build();
     }
 

@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
  * with optional club session creation when a club context is provided.
  */
 @Component
+@Deprecated
 public class NotationToolService {
 
     private final ZoneSystemService zoneSystemService;

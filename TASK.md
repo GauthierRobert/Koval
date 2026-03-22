@@ -89,12 +89,11 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 - Delete session and recurring session (with possible of deleting recurring session or only single event of recurring session. Inspire of the edit behaviour)
 - RaceGoals in club do not retrieve the goals of the members of the clubs.
 - Display in a "tooltip" The member that participate in a RACE (in the club race page).
+- Retrieve FIT files from Strava** — Implement an endpoint + service to fetch FIT activity files from Strava for the authenticated user. Requires the user to have granted all metric scopes (`activity:read_all`). Parse the FIT data and ingest relevant metrics (power, HR, cadence, TSS) into the session/history store.
 
 ## TODO
 
-
 ## Nice too have
-- **Retrieve FIT files from Strava** — Implement an endpoint + service to fetch FIT activity files from Strava for the authenticated user. Requires the user to have granted all metric scopes (`activity:read_all`). Parse the FIT data and ingest relevant metrics (power, HR, cadence, TSS) into the session/history store.
 
 ## Later
 

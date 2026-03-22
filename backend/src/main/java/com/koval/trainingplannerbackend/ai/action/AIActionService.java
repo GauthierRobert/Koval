@@ -18,7 +18,7 @@ public class AIActionService {
 
     private final ChatClient actionZoneClient;
     private final ChatClient actionTrainingSessionClient;
-    private final ChatClient actionNotationTrainingClient;
+    private final ChatClient actionTrainingCreatorClient;
     private final UserContextResolver userContextResolver;
     private final ZoneSystemService zoneSystemService;
 
@@ -28,12 +28,12 @@ public class AIActionService {
 
     public AIActionService(@Qualifier("actionZoneClient") ChatClient actionZoneClient,
                            @Qualifier("actionTrainingSessionClient") ChatClient actionTrainingSessionClient,
-                           @Qualifier("actionNotationTrainingClient") ChatClient actionNotationTrainingClient,
+                           @Qualifier("actionTrainingCreatorClient") ChatClient actionTrainingCreatorClient,
                            UserContextResolver userContextResolver,
                            ZoneSystemService zoneSystemService) {
         this.actionZoneClient = actionZoneClient;
         this.actionTrainingSessionClient = actionTrainingSessionClient;
-        this.actionNotationTrainingClient = actionNotationTrainingClient;
+        this.actionTrainingCreatorClient = actionTrainingCreatorClient;
         this.userContextResolver = userContextResolver;
         this.zoneSystemService = zoneSystemService;
     }
@@ -43,7 +43,7 @@ public class AIActionService {
         ChatClient client = switch (actionType) {
             case ZONE_CREATION          -> actionZoneClient;
             case TRAINING_WITH_SESSION  -> actionTrainingSessionClient;
-            case TRAINING_FROM_NOTATION -> actionNotationTrainingClient;
+            case TRAINING_CREATION -> actionTrainingCreatorClient;
         };
 
         String systemContext = buildSystemContext(userCtx, context);
@@ -71,7 +71,6 @@ public class AIActionService {
         StringBuilder sb = new StringBuilder();
         sb.append("userId = ").append(ctx.userId()).append("\n");
         sb.append("userRole = ").append(ctx.role()).append("\n");
-        sb.append("ftp = ").append(ctx.ftp()).append("\n");
         sb.append("clubId = ").append(context.clubId() != null ? context.clubId() : "null").append("\n");
         sb.append("clubGroupId = ").append(context.clubGroupId() != null ? context.clubGroupId() : "null").append("\n");
         sb.append("coachGroupId = ").append(context.coachGroupId() != null ? context.coachGroupId() : "null").append("\n");
