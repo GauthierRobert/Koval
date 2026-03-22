@@ -1,6 +1,7 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnInit, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {BehaviorSubject, combineLatest} from 'rxjs';
 import {map} from 'rxjs/operators';
 import {Router} from '@angular/router';
@@ -14,7 +15,7 @@ import {ActionResult} from '../../../services/ai-action.service';
 @Component({
   selector: 'app-zone-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule, SportIconComponent, CreateWithAiModalComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, SportIconComponent, CreateWithAiModalComponent],
   templateUrl: './zone-manager.component.html',
   styleUrls: ['./zone-manager.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,6 +27,7 @@ export class ZoneManagerComponent implements OnInit {
   private zoneService = inject(ZoneService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   private zoneSystemsSubject = new BehaviorSubject<ZoneSystem[]>([]);
   private sportFilterSubject = new BehaviorSubject<SportType | null>(null);
@@ -47,26 +49,28 @@ export class ZoneManagerComponent implements OnInit {
 
   sportTypes: SportType[] = ['CYCLING', 'RUNNING', 'SWIMMING'];
 
-  referenceTypesBySport: Record<SportType, { value: ZoneReferenceType; label: string }[]> = {
-    CYCLING: [
-      { value: 'FTP', label: 'FTP (% of Threshold Power)' },
-      { value: 'VO2MAX_POWER', label: 'VO2max Power' },
-      { value: 'CUSTOM', label: 'Custom' },
-    ],
-    RUNNING: [
-      { value: 'THRESHOLD_PACE', label: 'Threshold Pace' },
-      { value: 'VO2MAX_PACE', label: 'VO2max Pace' },
-      { value: 'PACE_5K', label: '5K Pace' },
-      { value: 'PACE_10K', label: '10K Pace' },
-      { value: 'PACE_HALF_MARATHON', label: 'Half Marathon Pace' },
-      { value: 'PACE_MARATHON', label: 'Marathon Pace' },
-      { value: 'CUSTOM', label: 'Custom' },
-    ],
-    SWIMMING: [
-      { value: 'CSS', label: 'CSS (Critical Swim Speed)' },
-      { value: 'CUSTOM', label: 'Custom' },
-    ],
-  };
+  get referenceTypesBySport(): Record<SportType, { value: ZoneReferenceType; label: string }[]> {
+    return {
+      CYCLING: [
+        { value: 'FTP', label: this.translate.instant('ZONE_MANAGER.REF_FTP_LABEL') },
+        { value: 'VO2MAX_POWER', label: this.translate.instant('ZONE_MANAGER.REF_VO2MAX_POWER_LABEL') },
+        { value: 'CUSTOM', label: this.translate.instant('ZONE_MANAGER.REF_CUSTOM_LABEL') },
+      ],
+      RUNNING: [
+        { value: 'THRESHOLD_PACE', label: this.translate.instant('ZONE_MANAGER.REF_THRESHOLD_PACE_LABEL') },
+        { value: 'VO2MAX_PACE', label: this.translate.instant('ZONE_MANAGER.REF_VO2MAX_PACE_LABEL') },
+        { value: 'PACE_5K', label: this.translate.instant('ZONE_MANAGER.REF_PACE_5K_LABEL') },
+        { value: 'PACE_10K', label: this.translate.instant('ZONE_MANAGER.REF_PACE_10K_LABEL') },
+        { value: 'PACE_HALF_MARATHON', label: this.translate.instant('ZONE_MANAGER.REF_PACE_HALF_MARATHON_LABEL') },
+        { value: 'PACE_MARATHON', label: this.translate.instant('ZONE_MANAGER.REF_PACE_MARATHON_LABEL') },
+        { value: 'CUSTOM', label: this.translate.instant('ZONE_MANAGER.REF_CUSTOM_LABEL') },
+      ],
+      SWIMMING: [
+        { value: 'CSS', label: this.translate.instant('ZONE_MANAGER.REF_CSS_LABEL') },
+        { value: 'CUSTOM', label: this.translate.instant('ZONE_MANAGER.REF_CUSTOM_LABEL') },
+      ],
+    };
+  }
 
   readonly defaultZonesBySport: Record<SportType, Zone[]> = {
     CYCLING: [
@@ -251,16 +255,16 @@ export class ZoneManagerComponent implements OnInit {
     switch (referenceType) {
       case 'FTP':
       case 'VO2MAX_POWER':
-        return 'W (watts)';
+        return this.translate.instant('ZONE_MANAGER.UNIT_WATTS');
       case 'THRESHOLD_PACE':
       case 'VO2MAX_PACE':
       case 'PACE_5K':
       case 'PACE_10K':
       case 'PACE_HALF_MARATHON':
       case 'PACE_MARATHON':
-        return 'min/km';
+        return this.translate.instant('ZONE_MANAGER.UNIT_MIN_PER_KM');
       case 'CSS':
-        return 'min/100m';
+        return this.translate.instant('ZONE_MANAGER.UNIT_MIN_PER_100M');
       default:
         return '';
     }

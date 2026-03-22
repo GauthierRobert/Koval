@@ -4,19 +4,19 @@
     <!-- Sidebar -->
     <div class="goals-sidebar">
       <div class="sidebar-header">
-        <span class="sidebar-title">Goals</span>
-        <button class="btn-icon-sm" (click)="openCreate()" title="Add goal">+</button>
+        <span class="sidebar-title">{{ 'GOALS.SIDEBAR_TITLE' | translate }}</span>
+        <button class="btn-icon-sm" (click)="openCreate()" [title]="'GOALS.BTN_ADD_GOAL_TITLE' | translate">+</button>
       </div>
 
       @if (allGoals.length > 0) {
         @if (isUpcoming(allGoals[0])) {
-          <div class="sidebar-section-label">UPCOMING</div>
+          <div class="sidebar-section-label">{{ 'GOALS.SECTION_UPCOMING' | translate }}</div>
         }
         @for (goal of allGoals; let i = $index; track goal.id) {
           <!-- PAST section label before first past goal -->
           @if (!isUpcoming(goal) && (i === 0 || isUpcoming(allGoals[i - 1]))) {
             <div class="sidebar-section-label sidebar-section-label--past">
-              PAST
+              {{ 'GOALS.SECTION_PAST' | translate }}
             </div>
           }
           <div class="sidebar-goal-item"
@@ -46,7 +46,7 @@
           </div>
         }
       } @else {
-        <div class="sidebar-empty">No goals yet</div>
+        <div class="sidebar-empty">{{ 'GOALS.SIDEBAR_EMPTY' | translate }}</div>
       }
     </div>
 
@@ -66,8 +66,8 @@
               <span class="detail-title-year">{{ goal.raceDate.substring(0, 4) }}</span>
             }
             <div class="detail-actions">
-              <button class="btn-icon" (click)="openEdit(goal)" title="Edit">&#9998;</button>
-              <button class="btn-icon btn-icon--danger" (click)="delete(goal)" title="Delete">&#10005;</button>
+              <button class="btn-icon" (click)="openEdit(goal)" [title]="'GOALS.BTN_EDIT_TITLE' | translate">&#9998;</button>
+              <button class="btn-icon btn-icon--danger" (click)="delete(goal)" [title]="'GOALS.BTN_DELETE_TITLE' | translate">&#10005;</button>
             </div>
           </div>
         </div>
@@ -76,37 +76,37 @@
         <div class="detail-meta-grid">
           @if (goal.raceDate) {
             <div class="detail-meta-item">
-              <span class="detail-meta-label">DATE</span>
+              <span class="detail-meta-label">{{ 'GOALS.META_DATE' | translate }}</span>
               <span class="detail-meta-value">{{ formatDate(goal.raceDate) }}</span>
             </div>
           }
           @if (goal.raceDate && isUpcoming(goal)) {
             <div class="detail-meta-item">
-              <span class="detail-meta-label">COUNTDOWN</span>
-              <span class="detail-meta-value accent">{{ daysUntil(goal.raceDate) }} days · {{ weeksUntil(goal.raceDate) }} weeks</span>
+              <span class="detail-meta-label">{{ 'GOALS.META_COUNTDOWN' | translate }}</span>
+              <span class="detail-meta-value accent">{{ 'GOALS.META_COUNTDOWN_VALUE' | translate: { days: daysUntil(goal.raceDate), weeks: weeksUntil(goal.raceDate) } }}</span>
             </div>
           }
           @if (goal.location) {
             <div class="detail-meta-item">
-              <span class="detail-meta-label">LOCATION</span>
+              <span class="detail-meta-label">{{ 'GOALS.META_LOCATION' | translate }}</span>
               <span class="detail-meta-value">{{ goal.location }}</span>
             </div>
           }
           @if (goal.distance) {
             <div class="detail-meta-item">
-              <span class="detail-meta-label">DISTANCE</span>
+              <span class="detail-meta-label">{{ 'GOALS.META_DISTANCE' | translate }}</span>
               <span class="detail-meta-value">{{ goal.distance }}</span>
             </div>
           }
           @if (goal.targetTime) {
             <div class="detail-meta-item">
-              <span class="detail-meta-label">TARGET TIME</span>
+              <span class="detail-meta-label">{{ 'GOALS.META_TARGET_TIME' | translate }}</span>
               <span class="detail-meta-value accent">{{ goal.targetTime }}</span>
             </div>
           }
           @if (goal.sport) {
             <div class="detail-meta-item">
-              <span class="detail-meta-label">SPORT</span>
+              <span class="detail-meta-label">{{ 'GOALS.META_SPORT' | translate }}</span>
               <span class="detail-meta-value">{{ goal.sport }}</span>
             </div>
           }
@@ -118,14 +118,14 @@
             <div class="progress-bar-track">
               <div class="progress-bar-fill" [style.width.%]="getProgressPercent(goal)"></div>
             </div>
-            <span class="progress-label">{{ getProgressPercent(goal) }}% of training window elapsed</span>
+            <span class="progress-label">{{ 'GOALS.PROGRESS_LABEL' | translate: { percent: getProgressPercent(goal) } }}</span>
           </div>
         }
 
         <!-- Notes -->
         @if (goal.notes) {
           <div class="detail-notes">
-            <span class="detail-section-label">NOTES</span>
+            <span class="detail-section-label">{{ 'GOALS.SECTION_NOTES' | translate }}</span>
             <p class="detail-notes-text">{{ goal.notes }}</p>
           </div>
         }
@@ -133,7 +133,7 @@
         <!-- Race info (if linked race loaded) -->
         @if (goal.raceId && getRace(goal.raceId); as race) {
           <div class="detail-race-info">
-            <span class="detail-section-label">RACE INFO</span>
+            <span class="detail-section-label">{{ 'GOALS.SECTION_RACE_INFO' | translate }}</span>
             @if (race.swimDistanceM || race.bikeDistanceM || race.runDistanceM || race.elevationGainM) {
               <div class="detail-race-distances">
                 @if (race.swimDistanceM) {
@@ -162,7 +162,7 @@
 
           <!-- GPX per discipline -->
           <div class="detail-gpx-section">
-            <span class="detail-section-label">GPX ROUTES</span>
+            <span class="detail-section-label">{{ 'GOALS.SECTION_GPX_ROUTES' | translate }}</span>
             @for (disc of getGpxDisciplines(race); track disc) {
               <div class="detail-gpx-discipline">
                 <div class="gpx-discipline-header">
@@ -172,8 +172,8 @@
                   <!-- Has GPX: green chip + re-upload -->
                   @if (hasGpxForDiscipline(race, disc)) {
                     <span class="gpx-chip gpx-chip--done">
-                      &#10003; Uploaded
-                      <label class="gpx-reupload" title="Replace GPX">
+                      &#10003; {{ 'GOALS.GPX_UPLOADED' | translate }}
+                      <label class="gpx-reupload" [title]="'GOALS.GPX_REPLACE_TITLE' | translate">
                         &#8593;
                         <input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race.id, disc)">
                       </label>
@@ -183,10 +183,10 @@
                   @if (!hasGpxForDiscipline(race, disc)) {
                     <label class="gpx-chip gpx-chip--upload">
                       @if (!isGpxUploading(race.id, disc)) {
-                        <span>&#8593; Upload GPX</span>
+                        <span>&#8593; {{ 'GOALS.GPX_UPLOAD_LABEL' | translate }}</span>
                       }
                       @if (isGpxUploading(race.id, disc)) {
-                        <span>Uploading...</span>
+                        <span>{{ 'GOALS.GPX_UPLOADING' | translate }}</span>
                       }
                       <input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race.id, disc)">
                     </label>
@@ -202,7 +202,7 @@
                   </div>
                 }
                 @if (hasGpxForDiscipline(race, disc) && getRouteCoordsForDiscipline(race, disc).length === 0) {
-                  <div class="detail-map-loading">Loading route...</div>
+                  <div class="detail-map-loading">{{ 'GOALS.MAP_LOADING' | translate }}</div>
                 }
               </div>
             }
@@ -212,10 +212,10 @@
         <!-- Simulation section -->
         @if (goal.raceId) {
           <div class="detail-simulate">
-            <button class="btn-simulate" (click)="simulateRace(goal)">&#9889; SIMULATE RACE</button>
+            <button class="btn-simulate" (click)="simulateRace(goal)">&#9889; {{ 'GOALS.BTN_SIMULATE_RACE' | translate }}</button>
             @if (getSimRequests(goal.id).length > 0) {
               <div class="sim-history">
-                <span class="detail-section-label">PAST SIMULATIONS</span>
+                <span class="detail-section-label">{{ 'GOALS.SECTION_PAST_SIMULATIONS' | translate }}</span>
                 @for (req of getSimRequests(goal.id); track req.id) {
                   <div class="sim-request-item">
                     <div class="sim-info">
@@ -223,7 +223,7 @@
                       <span class="sim-date">{{ formatSimDate(req.createdAt) }}</span>
                     </div>
                     <div class="sim-actions">
-                      <button class="btn-sm" (click)="rerunSimulation(req)">Re-run</button>
+                      <button class="btn-sm" (click)="rerunSimulation(req)">{{ 'GOALS.BTN_RERUN' | translate }}</button>
                       <button class="btn-sm delete" (click)="deleteSimRequest(req)">&#215;</button>
                     </div>
                   </div>
@@ -236,8 +236,8 @@
       } @else {
         <div class="detail-empty">
           <span class="detail-empty-icon">&#127937;</span>
-          <p>Select a goal to see details</p>
-          <button class="btn-primary" (click)="openCreate()">+ ADD GOAL</button>
+          <p>{{ 'GOALS.DETAIL_EMPTY_DESC' | translate }}</p>
+          <button class="btn-primary" (click)="openCreate()">{{ 'GOALS.BTN_ADD_GOAL' | translate }}</button>
         </div>
       }
     </div>
@@ -250,7 +250,7 @@
 <div class="modal-backdrop" (click)="closeForm()">
   <div class="modal glass" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>{{ editingGoal ? 'Edit Goal' : (formStep === 'search' ? 'Find a Race' : 'Goal Details') }}</h3>
+      <h3>{{ editingGoal ? ('GOALS.MODAL_EDIT_TITLE' | translate) : (formStep === 'search' ? ('GOALS.MODAL_FIND_RACE_TITLE' | translate) : ('GOALS.MODAL_GOAL_DETAILS_TITLE' | translate)) }}</h3>
       <button class="close-btn" (click)="closeForm()">&times;</button>
     </div>
 
@@ -258,9 +258,9 @@
     @if (formStep === 'search' && !editingGoal) {
     <div class="modal-body">
       <div class="form-row">
-        <label>Search public races</label>
+        <label>{{ 'GOALS.SEARCH_LABEL' | translate }}</label>
         <input [(ngModel)]="raceSearchQuery" (ngModelChange)="onSearchChange($event)"
-          placeholder="e.g. Ironman, Paris-Roubaix..." class="form-input" />
+          [placeholder]="'GOALS.SEARCH_PLACEHOLDER' | translate" class="form-input" />
       </div>
 
       @if (searchResults$ | async; as results) {
@@ -283,8 +283,8 @@
           }
           @if (results.length === 0 && raceSearchQuery.length >= 2) {
             <div class="no-results">
-              No races found for "{{ raceSearchQuery }}" —
-              <a class="browse-link" routerLink="/races">browse the race catalog</a>
+              {{ 'GOALS.NO_RACES_FOUND' | translate: { query: raceSearchQuery } }}
+              <a class="browse-link" routerLink="/races">{{ 'GOALS.BROWSE_RACE_CATALOG' | translate }}</a>
             </div>
           }
         </div>
@@ -310,18 +310,18 @@
             }
           </div>
           @if (!editingGoal) {
-            <button class="btn-change" (click)="backToSearch()">Change</button>
+            <button class="btn-change" (click)="backToSearch()">{{ 'GOALS.BTN_CHANGE' | translate }}</button>
           }
         </div>
       }
 
       <div class="form-row">
-        <label>Race Name *</label>
-        <input [(ngModel)]="form.title" placeholder="e.g. Paris-Roubaix 2026" class="form-input" />
+        <label>{{ 'GOALS.FIELD_RACE_NAME_LABEL' | translate }}</label>
+        <input [(ngModel)]="form.title" [placeholder]="'GOALS.FIELD_RACE_NAME_PLACEHOLDER' | translate" class="form-input" />
       </div>
       <div class="form-row two-col">
         <div>
-          <label>Sport</label>
+          <label>{{ 'GOALS.FIELD_SPORT_LABEL' | translate }}</label>
           <select [(ngModel)]="form.sport" class="form-input">
             @for (s of sports; track s) {
               <option [value]="s">{{ s }}</option>
@@ -329,7 +329,7 @@
           </select>
         </div>
         <div>
-          <label>Priority</label>
+          <label>{{ 'GOALS.FIELD_PRIORITY_LABEL' | translate }}</label>
           <select [(ngModel)]="form.priority" class="form-input">
             @for (p of priorities; track p.value) {
               <option [value]="p.value">{{ p.label }}</option>
@@ -338,32 +338,32 @@
         </div>
       </div>
       <div class="form-row">
-        <label>Race Date</label>
+        <label>{{ 'GOALS.FIELD_RACE_DATE_LABEL' | translate }}</label>
         <input type="date" [(ngModel)]="form.raceDate" class="form-input" />
       </div>
       <div class="form-row two-col">
         <div>
-          <label>Distance</label>
-          <input [(ngModel)]="form.distance" placeholder="e.g. 100km" class="form-input" />
+          <label>{{ 'GOALS.FIELD_DISTANCE_LABEL' | translate }}</label>
+          <input [(ngModel)]="form.distance" [placeholder]="'GOALS.FIELD_DISTANCE_PLACEHOLDER' | translate" class="form-input" />
         </div>
         <div>
-          <label>Target Time</label>
-          <input [(ngModel)]="form.targetTime" placeholder="e.g. 3:30:00" class="form-input" />
+          <label>{{ 'GOALS.FIELD_TARGET_TIME_LABEL' | translate }}</label>
+          <input [(ngModel)]="form.targetTime" [placeholder]="'GOALS.FIELD_TARGET_TIME_PLACEHOLDER' | translate" class="form-input" />
         </div>
       </div>
       <div class="form-row">
-        <label>Location</label>
-        <input [(ngModel)]="form.location" placeholder="e.g. Paris, France" class="form-input" />
+        <label>{{ 'GOALS.FIELD_LOCATION_LABEL' | translate }}</label>
+        <input [(ngModel)]="form.location" [placeholder]="'GOALS.FIELD_LOCATION_PLACEHOLDER' | translate" class="form-input" />
       </div>
       <div class="form-row">
-        <label>Notes</label>
-        <textarea [(ngModel)]="form.notes" placeholder="Goals, strategy, context..." class="form-input" rows="3"></textarea>
+        <label>{{ 'GOALS.FIELD_NOTES_LABEL' | translate }}</label>
+        <textarea [(ngModel)]="form.notes" [placeholder]="'GOALS.FIELD_NOTES_PLACEHOLDER' | translate" class="form-input" rows="3"></textarea>
       </div>
     </div>
 
     <div class="modal-footer">
-      <button class="btn-secondary" (click)="closeForm()">CANCEL</button>
-      <button class="btn-primary" (click)="save()" [disabled]="!form.title">SAVE</button>
+      <button class="btn-secondary" (click)="closeForm()">{{ 'GOALS.BTN_CANCEL' | translate }}</button>
+      <button class="btn-primary" (click)="save()" [disabled]="!form.title">{{ 'GOALS.BTN_SAVE' | translate }}</button>
     </div>
     }
   </div>

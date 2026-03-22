@@ -2,6 +2,7 @@ import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, injec
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {Router} from '@angular/router';
 import {Observable} from 'rxjs';
 import {map} from 'rxjs/operators';
@@ -13,7 +14,7 @@ import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 @Component({
   selector: 'app-races-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, SportIconComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, SportIconComponent],
   templateUrl: './races-page.component.html',
   styleUrl: './races-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,6 +26,7 @@ export class RacesPageComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private translate = inject(TranslateService);
 
   // Browse state
   sportFacets: SportFacet[] = [];
@@ -279,7 +281,7 @@ export class RacesPageComponent implements OnInit {
       if (!race.hasRunGpx) missing.push('Run');
     }
     if (missing.length === 0) return '';
-    return 'Upload ' + missing.join(' and ') + ' GPX to simulate';
+    return this.translate.instant('RACES.SIMULATE_MISSING_GPX', { missing: missing.join(' and ') });
   }
 
   simulateRace(race: Race): void {

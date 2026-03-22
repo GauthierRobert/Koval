@@ -1,73 +1,73 @@
 @if (user$ | async; as user) {
   <div class="physiology-page">
     <div class="page-header">
-      <h2>PHYSIOLOGY</h2>
-      <p class="subtitle">Your physiological profile and training zones</p>
+      <h2>{{ 'PHYSIOLOGY.PAGE_TITLE' | translate }}</h2>
+      <p class="subtitle">{{ 'PHYSIOLOGY.PAGE_SUBTITLE' | translate }}</p>
     </div>
 
     <div class="phys-stats">
       @if (user.ftp) {
         <div class="phys-stat">
-          <span class="phys-label">FTP</span>
+          <span class="phys-label">{{ 'PHYSIOLOGY.LABEL_FTP' | translate }}</span>
           <span class="phys-value">{{ user.ftp }}<span class="phys-unit">W</span></span>
         </div>
       } @else {
         <div class="phys-stat phys-stat-unset">
-          <span class="phys-label">FTP</span>
-          <span class="phys-unset">not set</span>
+          <span class="phys-label">{{ 'PHYSIOLOGY.LABEL_FTP' | translate }}</span>
+          <span class="phys-unset">{{ 'PHYSIOLOGY.NOT_SET' | translate }}</span>
         </div>
       }
 
       @if (user.ftp) {
         <div class="phys-stat">
-          <span class="phys-label">VO2MAX (est.)</span>
-          <span class="phys-value">{{ getEstimatedVo2Max(user) }} <span class="phys-unit">ml/kg/min</span></span>
+          <span class="phys-label">{{ 'PHYSIOLOGY.LABEL_VO2MAX_EST' | translate }}</span>
+          <span class="phys-value">{{ getEstimatedVo2Max(user) }} <span class="phys-unit">{{ 'PHYSIOLOGY.UNIT_VO2MAX' | translate }}</span></span>
           @if (!user.weightKg) {
-            <span class="phys-note">using 70 kg</span>
+            <span class="phys-note">{{ 'PHYSIOLOGY.VO2MAX_WEIGHT_NOTE' | translate }}</span>
           }
         </div>
       }
 
       @if (user.ftp) {
         <div class="phys-stat">
-          <span class="phys-label">W/kg</span>
+          <span class="phys-label">{{ 'PHYSIOLOGY.LABEL_W_KG' | translate }}</span>
           <span class="phys-value" [class.phys-unset-val]="!user.weightKg">{{ getWkg(user) }}</span>
         </div>
       }
 
       @if (user.weightKg) {
         <div class="phys-stat">
-          <span class="phys-label">WEIGHT</span>
-          <span class="phys-value">{{ user.weightKg }}<span class="phys-unit">kg</span></span>
+          <span class="phys-label">{{ 'PHYSIOLOGY.LABEL_WEIGHT' | translate }}</span>
+          <span class="phys-value">{{ user.weightKg }}<span class="phys-unit">{{ 'PHYSIOLOGY.UNIT_WEIGHT' | translate }}</span></span>
         </div>
       } @else {
         <div class="phys-stat phys-stat-unset">
-          <span class="phys-label">WEIGHT</span>
-          <span class="phys-unset">not set</span>
+          <span class="phys-label">{{ 'PHYSIOLOGY.LABEL_WEIGHT' | translate }}</span>
+          <span class="phys-unset">{{ 'PHYSIOLOGY.NOT_SET' | translate }}</span>
         </div>
       }
 
       @if (user.functionalThresholdPace) {
         <div class="phys-stat">
-          <span class="phys-label">THRESHOLD PACE</span>
-          <span class="phys-value">{{ formatPace(user.functionalThresholdPace) }}<span class="phys-unit">/km</span></span>
+          <span class="phys-label">{{ 'PHYSIOLOGY.LABEL_THRESHOLD_PACE' | translate }}</span>
+          <span class="phys-value">{{ formatPace(user.functionalThresholdPace) }}<span class="phys-unit">{{ 'PHYSIOLOGY.UNIT_PACE_KM' | translate }}</span></span>
         </div>
       } @else {
         <div class="phys-stat phys-stat-unset">
-          <span class="phys-label">THRESHOLD PACE</span>
-          <span class="phys-unset">not set</span>
+          <span class="phys-label">{{ 'PHYSIOLOGY.LABEL_THRESHOLD_PACE' | translate }}</span>
+          <span class="phys-unset">{{ 'PHYSIOLOGY.NOT_SET' | translate }}</span>
         </div>
       }
 
       @if (user.criticalSwimSpeed) {
         <div class="phys-stat">
-          <span class="phys-label">CSS</span>
-          <span class="phys-value">{{ formatPace(user.criticalSwimSpeed) }}<span class="phys-unit">/100m</span></span>
+          <span class="phys-label">{{ 'PHYSIOLOGY.LABEL_CSS' | translate }}</span>
+          <span class="phys-value">{{ formatPace(user.criticalSwimSpeed) }}<span class="phys-unit">{{ 'PHYSIOLOGY.UNIT_PACE_100M' | translate }}</span></span>
         </div>
       } @else {
         <div class="phys-stat phys-stat-unset">
-          <span class="phys-label">CSS</span>
-          <span class="phys-unset">not set</span>
+          <span class="phys-label">{{ 'PHYSIOLOGY.LABEL_CSS' | translate }}</span>
+          <span class="phys-unset">{{ 'PHYSIOLOGY.NOT_SET' | translate }}</span>
         </div>
       }
     </div>
@@ -75,13 +75,13 @@
     <!-- Sport tab selector -->
     <div class="sport-tabs">
       <button class="tab-btn" [class.active]="(activeSport) === 'CYCLING'" (click)="activeSport = 'CYCLING'">
-        CYCLING
+        {{ 'PHYSIOLOGY.TAB_CYCLING' | translate }}
       </button>
       <button class="tab-btn" [class.active]="(activeSport) === 'RUNNING'" (click)="activeSport = 'RUNNING'">
-        RUNNING
+        {{ 'PHYSIOLOGY.TAB_RUNNING' | translate }}
       </button>
       <button class="tab-btn" [class.active]="(activeSport) === 'SWIMMING'" (click)="activeSport = 'SWIMMING'">
-        SWIMMING
+        {{ 'PHYSIOLOGY.TAB_SWIMMING' | translate }}
       </button>
     </div>
 
@@ -100,7 +100,7 @@
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
         {{ getEmptyNote() }}
-        <span class="ref-cta">Set it in <strong>Settings</strong> to unlock zones.</span>
+        <span class="ref-cta">{{ 'PHYSIOLOGY.NO_REF_CTA' | translate }}</span>
       </div>
     }
 
@@ -133,10 +133,10 @@
             }
             @if (activeSport === 'RUNNING') {
               @if (getRunningPaceForDistance(z, user, 400); as pace400) {
-                <span class="zone-pace-sub">{{ pace400 }}<span class="pace-unit">/400m</span></span>
+                <span class="zone-pace-sub">{{ pace400 }}<span class="pace-unit">{{ 'PHYSIOLOGY.PACE_UNIT_400M' | translate }}</span></span>
               }
               @if (getRunningPaceForDistance(z, user, 100); as pace100) {
-                <span class="zone-pace-sub">{{ pace100 }}<span class="pace-unit">/100m</span></span>
+                <span class="zone-pace-sub">{{ pace100 }}<span class="pace-unit">{{ 'PHYSIOLOGY.PACE_UNIT_100M' | translate }}</span></span>
               }
             }
           </div>
@@ -194,10 +194,10 @@
                 }
                 @if (sys.sportType === 'RUNNING') {
                   @if (getRunningPaceForDistanceFromSystem(z, user, sys, 400); as pace400) {
-                    <span class="zone-pace-sub">{{ pace400 }}<span class="pace-unit">/400m</span></span>
+                    <span class="zone-pace-sub">{{ pace400 }}<span class="pace-unit">{{ 'PHYSIOLOGY.PACE_UNIT_400M' | translate }}</span></span>
                   }
                   @if (getRunningPaceForDistanceFromSystem(z, user, sys, 100); as pace100) {
-                    <span class="zone-pace-sub">{{ pace100 }}<span class="pace-unit">/100m</span></span>
+                    <span class="zone-pace-sub">{{ pace100 }}<span class="pace-unit">{{ 'PHYSIOLOGY.PACE_UNIT_100M' | translate }}</span></span>
                   }
                 }
               </div>

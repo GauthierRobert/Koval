@@ -1,8 +1,8 @@
 <div class="races-page">
   <div class="page-header">
-    <h1><span class="accent">Races</span></h1>
+    <h1><span class="accent">{{ 'RACES.PAGE_TITLE' | translate }}</span></h1>
     <button class="btn-primary" (click)="toggleCreateRace()">
-      {{ isCreatingRace ? 'CANCEL' : '+ CREATE RACE' }}
+      {{ isCreatingRace ? ('RACES.BTN_CANCEL_CREATE' | translate) : ('RACES.BTN_CREATE_RACE' | translate) }}
     </button>
   </div>
 
@@ -10,16 +10,16 @@
   @if (isCreatingRace) {
   <div class="create-race-panel glass">
     <div class="form-row">
-      <label>Race Title</label>
-      <input [(ngModel)]="newRaceTitle" placeholder="e.g. Ironman Nice 2026" class="form-input"/>
+      <label>{{ 'RACES.FIELD_RACE_TITLE_LABEL' | translate }}</label>
+      <input [(ngModel)]="newRaceTitle" [placeholder]="'RACES.FIELD_RACE_TITLE_PLACEHOLDER' | translate" class="form-input"/>
     </div>
     <button class="btn-primary" (click)="createAndCompleteRace()"
             [disabled]="!newRaceTitle.trim() || isAiCompleting">
       @if (!isAiCompleting) {
-      <span>Create &amp; Auto-Complete with AI</span>
+      <span>{{ 'RACES.BTN_CREATE_AI_COMPLETE' | translate }}</span>
       }
       @if (isAiCompleting) {
-      <span class="ai-loading">AI is completing race details...</span>
+      <span class="ai-loading">{{ 'RACES.BTN_AI_COMPLETING' | translate }}</span>
       }
     </button>
   </div>
@@ -28,7 +28,7 @@
   <!-- Breadcrumb navigation -->
   @if (selectedBrowseSport) {
   <div class="browse-breadcrumb">
-    <button class="breadcrumb-link" (click)="backToSports()">All Sports</button>
+    <button class="breadcrumb-link" (click)="backToSports()">{{ 'RACES.BREADCRUMB_ALL_SPORTS' | translate }}</button>
     <span class="breadcrumb-sep">/</span>
     @if (!selectedBrowseCountry) {
     <span class="breadcrumb-current">{{ selectedBrowseSport }}</span>
@@ -48,14 +48,14 @@
     <div class="facet-card glass" (click)="selectBrowseSport(facet.sport)">
       <div class="facet-name">{{ facet.sport }}</div>
       <div class="facet-counts">
-        <span>{{ facet.raceCount }} races</span>
-        <span>{{ facet.countryCount }} countries</span>
+        <span>{{ 'RACES.FACET_RACES_COUNT' | translate: { count: facet.raceCount } }}</span>
+        <span>{{ 'RACES.FACET_COUNTRIES_COUNT' | translate: { count: facet.countryCount } }}</span>
       </div>
     </div>
     }
     @if (sportFacets.length === 0 && !browseLoading) {
     <div class="browse-empty">
-      No races in the catalog yet. Be the first to create one!
+      {{ 'RACES.BROWSE_EMPTY_CATALOG' | translate }}
     </div>
     }
   </div>
@@ -67,13 +67,13 @@
     @for (facet of countryFacets; track facet) {
     <div class="facet-card facet-card--country glass"
          (click)="selectBrowseCountry(facet.country)">
-      <div class="facet-name">{{ facet.country || 'Unknown' }}</div>
-      <div class="facet-counts"><span>{{ facet.raceCount }} races</span></div>
+      <div class="facet-name">{{ facet.country || ('RACES.COUNTRY_UNKNOWN' | translate) }}</div>
+      <div class="facet-counts"><span>{{ 'RACES.FACET_RACES_COUNT' | translate: { count: facet.raceCount } }}</span></div>
     </div>
     }
     @if (countryFacets.length === 0) {
     <div class="browse-empty">
-      No races found for {{ selectedBrowseSport }}.
+      {{ 'RACES.BROWSE_EMPTY_SPORT' | translate: { sport: selectedBrowseSport } }}
     </div>
     }
   </div>
@@ -94,23 +94,23 @@
             }</span>
 
         @if (race.verified) {
-        <span class="browse-race-verified" title="Verified">&#10003;</span>
+        <span class="browse-race-verified" [title]="'RACES.VERIFIED_TITLE' | translate">&#10003;</span>
         }
         <button class="btn-simulate"
                 [disabled]="!canSimulate(getCachedRace(race))"
                 [title]="canSimulate(getCachedRace(race)) ? 'Simulate this race' : getSimulateDisabledReason(getCachedRace(race))"
                 (click)="simulateRace(race); $event.stopPropagation()">
-          ⚡ SIMULATE
+          ⚡ {{ 'RACES.BTN_SIMULATE' | translate }}
         </button>
         @if (addedRaceIds$ | async; as addedRaceIds) {
         <button class="btn-add-goal" [class.btn-add-goal--added]="addedRaceIds.has(race.id)"
                 [disabled]="addedRaceIds.has(race.id)"
                 (click)="addToMyGoals(race); $event.stopPropagation()">
-          {{ addedRaceIds.has(race.id) ? '✓ ADDED' : '+ ADD TO MY GOALS' }}
+          {{ addedRaceIds.has(race.id) ? ('RACES.BTN_ADDED' | translate) : ('RACES.BTN_ADD_TO_GOALS' | translate) }}
         </button>
         }
         @if (isOwnRace(race) && editingRaceId !== race.id) {
-        <button class="btn-edit" (click)="startEdit(race); $event.stopPropagation()" title="Edit race">
+        <button class="btn-edit" (click)="startEdit(race); $event.stopPropagation()" [title]="'RACES.BTN_EDIT_RACE_TITLE' | translate">
           ✎
         </button>
         }
@@ -137,11 +137,11 @@
           <span class="discipline-badge swim">S: {{ formatDistance(race.swimDistanceM) }}</span>
           <label class="gpx-btn gpx-btn--swim" [class.gpx-btn--done]="hasGpxForDiscipline(getCachedRace(race), 'swim')">
             @if (isGpxUploading(race.id, 'swim')) {
-            <span>GPX …</span>
+            <span>{{ 'RACES.GPX_UPLOADING' | translate }}</span>
             } @else if (hasGpxForDiscipline(getCachedRace(race), 'swim')) {
-            <span>GPX ✓</span>
+            <span>{{ 'RACES.GPX_DONE' | translate }}</span>
             } @else {
-            <span>GPX ↑</span>
+            <span>{{ 'RACES.GPX_UPLOAD' | translate }}</span>
             }
             <input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race, 'swim')">
           </label>
@@ -150,7 +150,7 @@
             <input type="number" class="loops-input" min="1" max="99"
                    [value]="getCachedRace(race).swimGpxLoops ?? 1"
                    (change)="updateLoops(race, 'swim', $event)">
-            <span class="loops-label">loops</span>
+            <span class="loops-label">{{ 'RACES.LOOPS_LABEL' | translate }}</span>
           </span>
           }
         </div>
@@ -160,11 +160,11 @@
           <span class="discipline-badge bike">B: {{ formatDistance(race.bikeDistanceM) }}</span>
           <label class="gpx-btn gpx-btn--bike" [class.gpx-btn--done]="hasGpxForDiscipline(getCachedRace(race), 'bike')">
             @if (isGpxUploading(race.id, 'bike')) {
-            <span>GPX …</span>
+            <span>{{ 'RACES.GPX_UPLOADING' | translate }}</span>
             } @else if (hasGpxForDiscipline(getCachedRace(race), 'bike')) {
-            <span>GPX ✓</span>
+            <span>{{ 'RACES.GPX_DONE' | translate }}</span>
             } @else {
-            <span>GPX ↑</span>
+            <span>{{ 'RACES.GPX_UPLOAD' | translate }}</span>
             }
             <input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race, 'bike')">
           </label>
@@ -173,7 +173,7 @@
             <input type="number" class="loops-input" min="1" max="99"
                    [value]="getCachedRace(race).bikeGpxLoops ?? 1"
                    (change)="updateLoops(race, 'bike', $event)">
-            <span class="loops-label">loops</span>
+            <span class="loops-label">{{ 'RACES.LOOPS_LABEL' | translate }}</span>
           </span>
           }
         </div>
@@ -183,11 +183,11 @@
           <span class="discipline-badge run">R: {{ formatDistance(race.runDistanceM) }}</span>
           <label class="gpx-btn gpx-btn--run" [class.gpx-btn--done]="hasGpxForDiscipline(getCachedRace(race), 'run')">
             @if (isGpxUploading(race.id, 'run')) {
-            <span>GPX …</span>
+            <span>{{ 'RACES.GPX_UPLOADING' | translate }}</span>
             } @else if (hasGpxForDiscipline(getCachedRace(race), 'run')) {
-            <span>GPX ✓</span>
+            <span>{{ 'RACES.GPX_DONE' | translate }}</span>
             } @else {
-            <span>GPX ↑</span>
+            <span>{{ 'RACES.GPX_UPLOAD' | translate }}</span>
             }
             <input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race, 'run')">
           </label>
@@ -196,7 +196,7 @@
             <input type="number" class="loops-input" min="1" max="99"
                    [value]="getCachedRace(race).runGpxLoops ?? 1"
                    (change)="updateLoops(race, 'run', $event)">
-            <span class="loops-label">loops</span>
+            <span class="loops-label">{{ 'RACES.LOOPS_LABEL' | translate }}</span>
           </span>
           }
         </div>
@@ -211,65 +211,65 @@
       <div class="race-expanded race-edit-form" (click)="$event.stopPropagation()">
         <div class="edit-grid">
           <div class="edit-field">
-            <label>Title</label>
+            <label>{{ 'RACES.EDIT_FIELD_TITLE' | translate }}</label>
             <input class="form-input" [(ngModel)]="editForm.title"/>
           </div>
           <div class="edit-field">
-            <label>Sport</label>
+            <label>{{ 'RACES.EDIT_FIELD_SPORT' | translate }}</label>
             <select class="form-input" [(ngModel)]="editForm.sport">
-              <option value="CYCLING">Cycling</option>
-              <option value="RUNNING">Running</option>
-              <option value="SWIMMING">Swimming</option>
-              <option value="TRIATHLON">Triathlon</option>
-              <option value="OTHER">Other</option>
+              <option value="CYCLING">{{ 'RACES.SPORT_CYCLING' | translate }}</option>
+              <option value="RUNNING">{{ 'RACES.SPORT_RUNNING' | translate }}</option>
+              <option value="SWIMMING">{{ 'RACES.SPORT_SWIMMING' | translate }}</option>
+              <option value="TRIATHLON">{{ 'RACES.SPORT_TRIATHLON' | translate }}</option>
+              <option value="OTHER">{{ 'RACES.SPORT_OTHER' | translate }}</option>
             </select>
           </div>
           <div class="edit-field">
-            <label>Location</label>
+            <label>{{ 'RACES.EDIT_FIELD_LOCATION' | translate }}</label>
             <input class="form-input" [(ngModel)]="editForm.location"/>
           </div>
           <div class="edit-field">
-            <label>Country</label>
+            <label>{{ 'RACES.EDIT_FIELD_COUNTRY' | translate }}</label>
             <input class="form-input" [(ngModel)]="editForm.country"/>
           </div>
           <div class="edit-field">
-            <label>Distance</label>
-            <input class="form-input" [(ngModel)]="editForm.distance" placeholder="e.g. 140.6 miles"/>
+            <label>{{ 'RACES.EDIT_FIELD_DISTANCE' | translate }}</label>
+            <input class="form-input" [(ngModel)]="editForm.distance" [placeholder]="'RACES.EDIT_FIELD_DISTANCE_PLACEHOLDER' | translate"/>
           </div>
           <div class="edit-field">
-            <label>Scheduled Date</label>
+            <label>{{ 'RACES.EDIT_FIELD_SCHEDULED_DATE' | translate }}</label>
             <input class="form-input" type="date" [(ngModel)]="editForm.scheduledDate"/>
           </div>
           <div class="edit-field">
-            <label>Elevation (m)</label>
+            <label>{{ 'RACES.EDIT_FIELD_ELEVATION' | translate }}</label>
             <input class="form-input" type="number" [(ngModel)]="editForm.elevationGainM"/>
           </div>
           <div class="edit-field">
-            <label>Swim (m)</label>
+            <label>{{ 'RACES.EDIT_FIELD_SWIM' | translate }}</label>
             <input class="form-input" type="number" [(ngModel)]="editForm.swimDistanceM"/>
           </div>
           <div class="edit-field">
-            <label>Bike (m)</label>
+            <label>{{ 'RACES.EDIT_FIELD_BIKE' | translate }}</label>
             <input class="form-input" type="number" [(ngModel)]="editForm.bikeDistanceM"/>
           </div>
           <div class="edit-field">
-            <label>Run (m)</label>
+            <label>{{ 'RACES.EDIT_FIELD_RUN' | translate }}</label>
             <input class="form-input" type="number" [(ngModel)]="editForm.runDistanceM"/>
           </div>
           <div class="edit-field edit-field--full">
-            <label>Website</label>
+            <label>{{ 'RACES.EDIT_FIELD_WEBSITE' | translate }}</label>
             <input class="form-input" [(ngModel)]="editForm.website" placeholder="https://..."/>
           </div>
           <div class="edit-field edit-field--full">
-            <label>Description</label>
+            <label>{{ 'RACES.EDIT_FIELD_DESCRIPTION' | translate }}</label>
             <textarea class="form-input edit-textarea" [(ngModel)]="editForm.description" rows="3"></textarea>
           </div>
         </div>
         <div class="edit-actions">
           <button class="btn-primary" (click)="saveEdit(race)" [disabled]="isSavingEdit">
-            {{ isSavingEdit ? 'SAVING...' : 'SAVE' }}
+            {{ isSavingEdit ? ('RACES.BTN_SAVING' | translate) : ('RACES.BTN_SAVE' | translate) }}
           </button>
-          <button class="btn-secondary" (click)="cancelEdit()" [disabled]="isSavingEdit">CANCEL</button>
+          <button class="btn-secondary" (click)="cancelEdit()" [disabled]="isSavingEdit">{{ 'RACES.BTN_CANCEL' | translate }}</button>
         </div>
       </div>
       } @else {
@@ -291,17 +291,17 @@
     }
     @if (browseResults.content.length === 0) {
     <div class="browse-empty">
-      No races found.
+      {{ 'RACES.BROWSE_EMPTY_RESULTS' | translate }}
     </div>
     }
 
     <!-- Pagination -->
     @if (browseResults.totalPages > 1) {
     <div class="browse-pagination">
-      <button class="btn-secondary" (click)="browsePrevPage()" [disabled]="browsePage === 0">Prev</button>
-      <span class="page-info">{{ browsePage + 1 }} / {{ browseResults.totalPages }}</span>
+      <button class="btn-secondary" (click)="browsePrevPage()" [disabled]="browsePage === 0">{{ 'RACES.PAGINATION_PREV' | translate }}</button>
+      <span class="page-info">{{ 'RACES.PAGINATION_INFO' | translate: { current: browsePage + 1, total: browseResults.totalPages } }}</span>
       <button class="btn-secondary" (click)="browseNextPage()"
-              [disabled]="browsePage >= browseResults.totalPages - 1">Next
+              [disabled]="browsePage >= browseResults.totalPages - 1">{{ 'RACES.PAGINATION_NEXT' | translate }}
       </button>
     </div>
     }
@@ -310,6 +310,6 @@
 
   <!-- Loading -->
   @if (browseLoading) {
-  <div class="browse-loading">Loading...</div>
+  <div class="browse-loading">{{ 'RACES.LOADING' | translate }}</div>
   }
 </div>

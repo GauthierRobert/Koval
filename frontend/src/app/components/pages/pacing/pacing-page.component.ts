@@ -2,6 +2,7 @@ import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit} f
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {ActivatedRoute} from '@angular/router';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {
   AthleteProfile,
   PacingPlanResponse,
@@ -44,7 +45,7 @@ interface RacePlanGroup {
 @Component({
   selector: 'app-pacing-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ElevationChartComponent, RouteMapComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, ElevationChartComponent, RouteMapComponent],
   templateUrl: './pacing-page.component.html',
   styleUrl: './pacing-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -55,6 +56,7 @@ export class PacingPageComponent implements OnInit {
   private raceService = inject(RaceService);
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
+  private translate = inject(TranslateService);
 
   pacingPlan$ = this.pacingService.pacingPlan$;
   loading$ = this.pacingService.loading$;
@@ -232,13 +234,13 @@ export class PacingPageComponent implements OnInit {
   }
 
   private getTerrainLabel(gradient: number): string {
-    if (gradient > 6) return 'Steep Climb';
-    if (gradient > 3) return 'Climb';
-    if (gradient > 1) return 'Slight Climb';
-    if (gradient >= -1) return 'Flat';
-    if (gradient >= -3) return 'Slight Descent';
-    if (gradient >= -6) return 'Descent';
-    return 'Steep Descent';
+    if (gradient > 6) return this.translate.instant('PACING.TERRAIN_STEEP_CLIMB');
+    if (gradient > 3) return this.translate.instant('PACING.TERRAIN_CLIMB');
+    if (gradient > 1) return this.translate.instant('PACING.TERRAIN_SLIGHT_CLIMB');
+    if (gradient >= -1) return this.translate.instant('PACING.TERRAIN_FLAT');
+    if (gradient >= -3) return this.translate.instant('PACING.TERRAIN_SLIGHT_DESCENT');
+    if (gradient >= -6) return this.translate.instant('PACING.TERRAIN_DESCENT');
+    return this.translate.instant('PACING.TERRAIN_STEEP_DESCENT');
   }
 
   ngOnInit(): void {
@@ -307,7 +309,7 @@ export class PacingPageComponent implements OnInit {
 
   private setFile(file: File, target: 'gpx' | 'bike' | 'run' = 'gpx'): void {
     if (!file.name.toLowerCase().endsWith('.gpx')) {
-      this.errorSubject.next('Please select a .gpx file');
+      this.errorSubject.next(this.translate.instant('PACING.ERROR_INVALID_GPX'));
       return;
     }
     if (target === 'bike') {
@@ -332,26 +334,26 @@ export class PacingPageComponent implements OnInit {
       if (this.discipline === 'SWIM') return null;
       if (this.discipline === 'TRIATHLON') {
         const missing: string[] = [];
-        if (!this.linkedRace.hasBikeGpx) missing.push('Bike GPX');
-        if (!this.linkedRace.hasRunGpx) missing.push('Run GPX');
-        return missing.length ? `Race is missing ${missing.join(' and ')}` : null;
+        if (!this.linkedRace.hasBikeGpx) missing.push(this.translate.instant('PACING.GPX_INDICATOR_BIKE'));
+        if (!this.linkedRace.hasRunGpx) missing.push(this.translate.instant('PACING.GPX_INDICATOR_RUN'));
+        return missing.length ? this.translate.instant('PACING.BLOCKED_RACE_MISSING_MULTI', { missing: missing.join(' and ') }) : null;
       }
-      if (this.discipline === 'BIKE') return this.linkedRace.hasBikeGpx ? null : 'Race is missing Bike GPX';
-      if (this.discipline === 'RUN') return this.linkedRace.hasRunGpx ? null : 'Race is missing Run GPX';
+      if (this.discipline === 'BIKE') return this.linkedRace.hasBikeGpx ? null : this.translate.instant('PACING.BLOCKED_RACE_MISSING_BIKE');
+      if (this.discipline === 'RUN') return this.linkedRace.hasRunGpx ? null : this.translate.instant('PACING.BLOCKED_RACE_MISSING_RUN');
     }
     if (this.discipline === 'SWIM') return null;
     if (this.discipline === 'TRIATHLON') {
       const missing: string[] = [];
-      if (!this.bikeGpxFile) missing.push('Bike GPX');
-      if (!this.runGpxFile) missing.push('Run GPX');
-      return missing.length ? `Upload ${missing.join(' and ')}` : null;
+      if (!this.bikeGpxFile) missing.push(this.translate.instant('PACING.GPX_INDICATOR_BIKE'));
+      if (!this.runGpxFile) missing.push(this.translate.instant('PACING.GPX_INDICATOR_RUN'));
+      return missing.length ? this.translate.instant('PACING.ERROR_UPLOAD_BIKE_RUN', { missing: missing.join(' and ') }) : null;
     }
-    return this.gpxFile ? null : 'Upload a GPX file';
+    return this.gpxFile ? null : this.translate.instant('PACING.ERROR_UPLOAD_REQUIRED');
   }
 
   generate(): void {
     if (!this.canGenerate()) {
-      this.errorSubject.next('Please upload the required GPX file(s)');
+      this.errorSubject.next(this.translate.instant('PACING.ERROR_UPLOAD_REQUIRED_FILES'));
       return;
     }
     this.errorSubject.next(null);
@@ -372,7 +374,7 @@ export class PacingPageComponent implements OnInit {
             this.saveSimulationRequest();
           },
           error: (err) => {
-            const msg = err.error?.error || err.message || 'Failed to generate pacing plan';
+            const msg = err.error?.error || err.message || this.translate.instant('PACING.ERROR_FAILED_GENERATE');
             this.errorSubject.next(msg);
           },
         });
@@ -394,7 +396,7 @@ export class PacingPageComponent implements OnInit {
           this.setDefaultTab(plan);
         },
         error: (err) => {
-          const msg = err.error?.error || err.message || 'Failed to generate pacing plan';
+          const msg = err.error?.error || err.message || this.translate.instant('PACING.ERROR_FAILED_GENERATE');
           this.errorSubject.next(msg);
         },
       });
@@ -509,7 +511,7 @@ export class PacingPageComponent implements OnInit {
 
   regenerate(): void {
     if (!this.canGenerate()) {
-      this.errorSubject.next('Please upload the required GPX file(s)');
+      this.errorSubject.next(this.translate.instant('PACING.ERROR_UPLOAD_REQUIRED_FILES'));
       return;
     }
     this.errorSubject.next(null);
@@ -529,7 +531,7 @@ export class PacingPageComponent implements OnInit {
             this.setDefaultTab(plan);
           },
           error: (err) => {
-            const msg = err.error?.error || err.message || 'Failed to generate pacing plan';
+            const msg = err.error?.error || err.message || this.translate.instant('PACING.ERROR_FAILED_GENERATE');
             this.errorSubject.next(msg);
           },
         });
@@ -551,7 +553,7 @@ export class PacingPageComponent implements OnInit {
           this.setDefaultTab(plan);
         },
         error: (err) => {
-          const msg = err.error?.error || err.message || 'Failed to generate pacing plan';
+          const msg = err.error?.error || err.message || this.translate.instant('PACING.ERROR_FAILED_GENERATE');
           this.errorSubject.next(msg);
         },
       });

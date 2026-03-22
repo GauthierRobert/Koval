@@ -1,6 +1,7 @@
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {BehaviorSubject, debounceTime, distinctUntilChanged, of, switchMap} from 'rxjs';
 import {map, take} from 'rxjs/operators';
@@ -13,7 +14,7 @@ import {daysUntil as sharedDaysUntil, weeksUntil as sharedWeeksUntil} from '../.
 @Component({
   selector: 'app-goals-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SportIconComponent, RouteMapComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, SportIconComponent, RouteMapComponent],
   templateUrl: './goals-page.component.html',
   styleUrl: './goals-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,6 +25,7 @@ export class GoalsPageComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
+  private translate = inject(TranslateService);
 
   allGoals$ = this.raceGoalService.goals$.pipe(map((goals) => this.sortGoals(goals)));
 
@@ -57,11 +59,13 @@ export class GoalsPageComponent implements OnInit {
   simRequestsCache: Record<string, SimulationRequest[]> = {};
 
   readonly sports = ['CYCLING', 'RUNNING', 'SWIMMING', 'TRIATHLON', 'OTHER'];
-  readonly priorities: Array<{ value: 'A' | 'B' | 'C'; label: string }> = [
-    { value: 'A', label: 'A \u2014 Goal Race' },
-    { value: 'B', label: 'B \u2014 Target Race' },
-    { value: 'C', label: 'C \u2014 Training Race' },
-  ];
+  get priorities(): Array<{ value: 'A' | 'B' | 'C'; label: string }> {
+    return [
+      { value: 'A', label: this.translate.instant('GOALS.PRIORITY_A') },
+      { value: 'B', label: this.translate.instant('GOALS.PRIORITY_B') },
+      { value: 'C', label: this.translate.instant('GOALS.PRIORITY_C') },
+    ];
+  }
 
   ngOnInit(): void {
     this.raceGoalService.loadGoals();
@@ -200,7 +204,7 @@ export class GoalsPageComponent implements OnInit {
   }
 
   delete(goal: RaceGoal): void {
-    if (confirm(`Delete "${goal.title}"?`)) {
+    if (confirm(this.translate.instant('GOALS.DELETE_CONFIRM', { title: goal.title }))) {
       this.raceGoalService.deleteGoal(goal.id);
     }
   }

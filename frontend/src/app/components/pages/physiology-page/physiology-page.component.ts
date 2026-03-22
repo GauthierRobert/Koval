@@ -1,6 +1,7 @@
-import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {BehaviorSubject, combineLatest, map, Observable} from 'rxjs';
 import {AuthService, User} from '../../../services/auth.service';
 import {Zone, ZoneSystem} from '../../../services/zone';
@@ -12,7 +13,7 @@ type Sport = 'CYCLING' | 'RUNNING' | 'SWIMMING';
 @Component({
   selector: 'app-physiology-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './physiology-page.component.html',
   styleUrl: './physiology-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -66,6 +67,8 @@ export class PhysiologyPageComponent implements OnInit {
   readonly zoneColors = [
     '#6366f1', '#3b82f6', '#22c55e', '#eab308', '#f97316', '#ef4444', '#dc2626',
   ];
+
+  private translate = inject(TranslateService);
 
   constructor(
     private authService: AuthService,
@@ -228,9 +231,9 @@ export class PhysiologyPageComponent implements OnInit {
 
   getSectionTitle(): string {
     switch (this.activeSport) {
-      case 'CYCLING': return 'COGGAN 7 ZONES — CYCLING';
-      case 'RUNNING': return '5-ZONE SYSTEM — RUNNING';
-      case 'SWIMMING': return '5-ZONE SYSTEM — SWIMMING';
+      case 'CYCLING': return this.translate.instant('PHYSIOLOGY.ZONE_SECTION_CYCLING');
+      case 'RUNNING': return this.translate.instant('PHYSIOLOGY.ZONE_SECTION_RUNNING');
+      case 'SWIMMING': return this.translate.instant('PHYSIOLOGY.ZONE_SECTION_SWIMMING');
     }
   }
 
@@ -254,9 +257,9 @@ export class PhysiologyPageComponent implements OnInit {
 
   getEmptyNote(): string {
     switch (this.activeSport) {
-      case 'CYCLING': return 'No FTP set. Update your reference values in Settings.';
-      case 'RUNNING': return 'No threshold pace set. Update your reference values in Settings.';
-      case 'SWIMMING': return 'No critical swim speed set. Update your reference values in Settings.';
+      case 'CYCLING': return this.translate.instant('PHYSIOLOGY.EMPTY_FTP');
+      case 'RUNNING': return this.translate.instant('PHYSIOLOGY.EMPTY_THRESHOLD_PACE');
+      case 'SWIMMING': return this.translate.instant('PHYSIOLOGY.EMPTY_CSS');
     }
   }
 
@@ -276,7 +279,7 @@ export class PhysiologyPageComponent implements OnInit {
   getWkg(user: User): string {
     if (!user.ftp) return '—';
     const weight = user.weightKg ?? null;
-    if (!weight) return '— (weight not set)';
+    if (!weight) return `— ${this.translate.instant('PHYSIOLOGY.WEIGHT_NOT_SET_SUFFIX')}`;
     return (user.ftp / weight).toFixed(2);
   }
 

@@ -1,8 +1,8 @@
 <div class="pmc-container">
   @if (athleteId) {
     <div class="athlete-pmc-banner">
-      <button class="back-btn" (click)="backToCoach()">← BACK TO COACH</button>
-      <span class="athlete-pmc-label">Viewing athlete PMC</span>
+      <button class="back-btn" (click)="backToCoach()">{{ 'PMC.BACK_TO_COACH' | translate }}</button>
+      <span class="athlete-pmc-label">{{ 'PMC.ATHLETE_PMC_LABEL' | translate }}</span>
     </div>
   }
 
@@ -10,26 +10,26 @@
 
     <!-- ── Left sidebar — single glass panel, full height ── -->
     <aside class="pmc-sidebar glass">
-      <div class="section-header"><h3>PERFORMANCE</h3></div>
+      <div class="section-header"><h3>{{ 'PMC.SIDEBAR_PERFORMANCE' | translate }}</h3></div>
 
       @if (user$ | async; as user) {
         <div class="load-badges">
           <div class="load-badge ctl">
             <span class="badge-label">CTL</span>
             <span class="badge-value">{{ user.ctl | number:'1.0-0' }}</span>
-            <span class="badge-desc">Fitness</span>
+            <span class="badge-desc">{{ 'PMC.BADGE_FITNESS' | translate }}</span>
           </div>
           <div class="load-badge atl">
             <span class="badge-label">ATL</span>
             <span class="badge-value">{{ user.atl | number:'1.0-0' }}</span>
-            <span class="badge-desc">Fatigue</span>
+            <span class="badge-desc">{{ 'PMC.BADGE_FATIGUE' | translate }}</span>
           </div>
           <div class="load-badge tsb"
             [class.positive]="(user.tsb ?? 0) >= 0"
             [class.negative]="(user.tsb ?? 0) < 0">
             <span class="badge-label">TSB</span>
             <span class="badge-value">{{ (user.tsb ?? 0) >= 0 ? '+' : '' }}{{ user.tsb | number:'1.0-0' }}</span>
-            <span class="badge-desc">{{ (user.tsb ?? 0) >= 0 ? 'Fresh' : 'Fatigued' }}</span>
+            <span class="badge-desc">{{ (user.tsb ?? 0) >= 0 ? ('PMC.BADGE_TSB_FRESH' | translate) : ('PMC.BADGE_TSB_FATIGUED' | translate) }}</span>
           </div>
         </div>
       }
@@ -39,37 +39,37 @@
           <span class="loading-dots"><span></span><span></span><span></span></span>
         }
         @if (!loading) {
-          <span>↻ Refresh</span>
+          <span>↻ {{ 'PMC.BTN_REFRESH' | translate }}</span>
         }
       </button>
 
       @if (error) {
-        <div class="chart-error">Could not load PMC data.</div>
+        <div class="chart-error">{{ 'PMC.LOAD_ERROR' | translate }}</div>
       }
 
       <div class="divider"></div>
 
-      <div class="section-header"><h3>PROJECTION</h3></div>
+      <div class="section-header"><h3>{{ 'PMC.SIDEBAR_PROJECTION' | translate }}</h3></div>
 
       @if (scheduledWorkoutCount$ | async; as count) {
         <div class="schedule-pill" [class.empty]="count === 0">
-          {{ count > 0 ? (count + ' workout' + (count !== 1 ? 's' : '')) : 'No pending workouts' }}
+          {{ count > 0 ? ('PMC.SCHEDULED_WORKOUTS' | translate: { count: count }) : ('PMC.NO_PENDING_WORKOUTS' | translate) }}
         </div>
       }
 
       <div class="divider"></div>
 
-      <div class="section-header"><h3>PEAK FORM</h3></div>
+      <div class="section-header"><h3>{{ 'PMC.SIDEBAR_PEAK_FORM' | translate }}</h3></div>
       @if (peakForm$ | async; as peak) {
         <div class="peak-result">
           <div class="peak-icon">★</div>
           <div class="peak-info">
             <span class="peak-date">{{ formatPeakDate(peak.date) }}</span>
-            <span class="peak-tsb">TSB <strong>+{{ peak.tsb | number:'1.0-0' }}</strong></span>
+            <span class="peak-tsb">{{ 'PMC.TSB_PEAK_LABEL' | translate }} <strong>+{{ peak.tsb | number:'1.0-0' }}</strong></span>
           </div>
         </div>
       } @else {
-        <p class="no-peak">Adjust projection to find a peak form window.</p>
+        <p class="no-peak">{{ 'PMC.NO_PEAK_MSG' | translate }}</p>
       }
     </aside>
 
@@ -78,8 +78,8 @@
       <div class="header glass">
         <div class="header-left">
           <div class="header-info">
-            <span class="header-title">PERFORMANCE <span class="dim">MANAGEMENT</span></span>
-            <span class="header-subtitle">Training load, fitness &amp; form tracking</span>
+            <span class="header-title">{{ 'PMC.HEADER_TITLE' | translate }} <span class="dim">{{ 'PMC.HEADER_TITLE_DIM' | translate }}</span></span>
+            <span class="header-subtitle">{{ 'PMC.HEADER_SUBTITLE' | translate }}</span>
           </div>
         </div>
       </div>

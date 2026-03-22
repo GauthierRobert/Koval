@@ -2,7 +2,7 @@
   <!-- Header -->
   <div class="zone-header">
     <div class="header-left">
-      <span class="highlight">ZONE</span> <span class="dim">SYSTEMS</span>
+      <span class="highlight">{{ 'ZONE_MANAGER.HEADING_ZONE' | translate }}</span> <span class="dim">{{ 'ZONE_MANAGER.HEADING_SYSTEMS' | translate }}</span>
       <span class="zone-count">{{ (zoneSystems$ | async)?.length }}</span>
     </div>
     <div class="header-right">
@@ -15,15 +15,15 @@
           </button>
         }
       </div>
-      <button class="ai-btn" (click)="showAiModal = true">✨ CREATE WITH AI</button>
+      <button class="ai-btn" (click)="showAiModal = true">✨ {{ 'ZONE_MANAGER.BTN_CREATE_WITH_AI' | translate }}</button>
       <div class="create-dropdown">
-        <button class="create-btn" (click)="showCreateMenu = !showCreateMenu">+ NEW</button>
+        <button class="create-btn" (click)="showCreateMenu = !showCreateMenu">{{ 'ZONE_MANAGER.BTN_NEW' | translate }}</button>
         @if (showCreateMenu) {
           <div class="create-menu">
             @for (sport of sportTypes; track sport) {
               <button class="create-option" (click)="createNewSystem(sport)">
                 <app-sport-icon [sport]="sport" [size]="14"></app-sport-icon>
-                {{ getSportLabel(sport) }} Zones
+                {{ 'ZONE_MANAGER.SPORT_ZONES_OPTION' | translate: { sport: getSportLabel(sport) } }}
               </button>
             }
           </div>
@@ -45,9 +45,9 @@
             </div>
             <div class="system-card-meta">
               <span class="meta-badge">{{ system.referenceType }}</span>
-              <span class="meta-count">{{ system.zones.length }} zones</span>
+              <span class="meta-count">{{ 'ZONE_MANAGER.ZONE_COUNT_BADGE' | translate: { count: system.zones.length } }}</span>
               @if (system.defaultForSport) {
-                <span class="default-badge">DEFAULT</span>
+                <span class="default-badge">{{ 'ZONE_MANAGER.DEFAULT_BADGE' | translate }}</span>
               }
             </div>
             <div class="zone-bar-preview">
@@ -62,8 +62,8 @@
 
         @if (systems.length === 0) {
           <div class="empty-systems">
-            <p>No zone systems</p>
-            <p class="hint">Click <strong>+ NEW</strong> to create one</p>
+            <p>{{ 'ZONE_MANAGER.EMPTY_NO_SYSTEMS' | translate }}</p>
+            <p class="hint">{{ 'ZONE_MANAGER.EMPTY_HINT_CREATE' | translate }}</p>
           </div>
         }
       }
@@ -75,10 +75,10 @@
       <!-- Editor header -->
       <div class="editor-header">
         <div class="editor-title">
-          <input [(ngModel)]="editingSystem.name" class="name-input" placeholder="System Name" />
+          <input [(ngModel)]="editingSystem.name" class="name-input" [placeholder]="'ZONE_MANAGER.ZONE_PLACEHOLDER_SYSTEM_NAME' | translate" />
           <div class="editor-config">
             <div class="config-item">
-              <label>SPORT</label>
+              <label>{{ 'ZONE_MANAGER.LABEL_SPORT' | translate }}</label>
               <select [(ngModel)]="editingSystem.sportType">
                 @for (s of sportTypes; track s) {
                   <option [value]="s">{{ getSportLabel(s) }}</option>
@@ -86,7 +86,7 @@
               </select>
             </div>
             <div class="config-item">
-              <label>REFERENCE</label>
+              <label>{{ 'ZONE_MANAGER.LABEL_REFERENCE' | translate }}</label>
               <select [(ngModel)]="editingSystem.referenceType">
                 @for (r of availableReferenceTypes; track r.value) {
                   <option [value]="r.value">{{ r.label }}</option>
@@ -95,23 +95,23 @@
             </div>
             @if (editingSystem.referenceType === 'CUSTOM') {
               <div class="config-item">
-                <label>REFERENCE NAME</label>
-                <input class="config-input" [(ngModel)]="editingSystem.referenceName" placeholder="e.g., Lactate Threshold" />
+                <label>{{ 'ZONE_MANAGER.LABEL_REFERENCE_NAME' | translate }}</label>
+                <input class="config-input" [(ngModel)]="editingSystem.referenceName" [placeholder]="'ZONE_MANAGER.PLACEHOLDER_REFERENCE_NAME' | translate" />
               </div>
               <div class="config-item">
-                <label>UNIT</label>
-                <input class="config-input" [(ngModel)]="editingSystem.referenceUnit" placeholder="e.g., W, bpm, sec/km" />
+                <label>{{ 'ZONE_MANAGER.LABEL_UNIT' | translate }}</label>
+                <input class="config-input" [(ngModel)]="editingSystem.referenceUnit" [placeholder]="'ZONE_MANAGER.PLACEHOLDER_UNIT' | translate" />
               </div>
             } @else {
               <div class="config-item">
-                <label>UNIT</label>
+                <label>{{ 'ZONE_MANAGER.LABEL_UNIT' | translate }}</label>
                 <span class="config-readonly">{{ getDefaultUnit(editingSystem.referenceType) }}</span>
               </div>
             }
             <div class="config-item config-default">
               <label class="default-toggle">
                 <input type="checkbox" [(ngModel)]="editingSystem.defaultForSport" />
-                DEFAULT FOR {{ getSportLabel(editingSystem.sportType) }}
+                {{ 'ZONE_MANAGER.LABEL_DEFAULT_FOR_SPORT' | translate: { sport: getSportLabel(editingSystem.sportType) } }}
               </label>
             </div>
           </div>
@@ -119,16 +119,16 @@
         <div class="editor-actions">
           <button class="save-btn" [class.saved]="saved" (click)="saveSystem()" [disabled]="saving || saved">
             @if (!saving && !saved) {
-              <span>SAVE</span>
+              <span>{{ 'ZONE_MANAGER.BTN_SAVE' | translate }}</span>
             }
             @if (saving) {
-              <span>SAVING...</span>
+              <span>{{ 'ZONE_MANAGER.BTN_SAVING' | translate }}</span>
             }
             @if (saved) {
-              <span>✓ SAVED</span>
+              <span>✓ {{ 'ZONE_MANAGER.BTN_SAVED' | translate }}</span>
             }
           </button>
-          <button class="delete-btn" (click)="deleteSystem()" [disabled]="deleting">DELETE</button>
+          <button class="delete-btn" (click)="deleteSystem()" [disabled]="deleting">{{ 'ZONE_MANAGER.BTN_DELETE' | translate }}</button>
         </div>
       </div>
 
@@ -151,9 +151,9 @@
       <div class="zones-table">
         <div class="zones-table-header">
           <span class="col-color"></span>
-          <span class="col-label">LABEL</span>
-          <span class="col-range">RANGE (%)</span>
-          <span class="col-desc">DESCRIPTION</span>
+          <span class="col-label">{{ 'ZONE_MANAGER.COL_LABEL' | translate }}</span>
+          <span class="col-range">{{ 'ZONE_MANAGER.COL_RANGE' | translate }}</span>
+          <span class="col-desc">{{ 'ZONE_MANAGER.COL_DESCRIPTION' | translate }}</span>
           <span class="col-actions"></span>
         </div>
         @for (zone of editingSystem.zones; let i = $index; track i) {
@@ -171,26 +171,26 @@
             <span class="range-pct">%</span>
           </span>
           <span class="col-desc">
-            <input [(ngModel)]="zone.description" class="zone-input desc-input" placeholder="Description" />
+            <input [(ngModel)]="zone.description" class="zone-input desc-input" [placeholder]="'ZONE_MANAGER.ZONE_PLACEHOLDER_DESCRIPTION' | translate" />
           </span>
           <span class="col-actions">
-            <button class="row-action danger" (click)="removeZone(i)" title="Remove zone">&times;</button>
+            <button class="row-action danger" (click)="removeZone(i)" [title]="'ZONE_MANAGER.BTN_REMOVE_ZONE_TITLE' | translate">&times;</button>
           </span>
           </div>
         }
-        <button class="add-zone-row" (click)="addZone()">+ Add Zone</button>
+        <button class="add-zone-row" (click)="addZone()">{{ 'ZONE_MANAGER.BTN_ADD_ZONE' | translate }}</button>
       </div>
 
       <!-- AI Annotations -->
       <div class="annotations-section">
-        <label class="annotations-label">AI NOTES</label>
+        <label class="annotations-label">{{ 'ZONE_MANAGER.LABEL_AI_NOTES' | translate }}</label>
         <textarea
           class="annotations-input"
           [(ngModel)]="editingSystem.annotations"
-          placeholder="Describe your zone conventions for the AI (e.g., 'Z2 = conversational pace, Z4 intervals use 1:1 rest')"
+          [placeholder]="'ZONE_MANAGER.PLACEHOLDER_AI_NOTES' | translate"
           rows="3">
         </textarea>
-        <span class="annotations-hint">These notes help the AI understand your coaching conventions when creating workouts.</span>
+        <span class="annotations-hint">{{ 'ZONE_MANAGER.HINT_AI_NOTES' | translate }}</span>
       </div>
       </div>
     } @else {
@@ -205,8 +205,8 @@
               <line x1="9" y1="3" x2="9" y2="21" />
             </svg>
           </div>
-          <h3>SELECT A ZONE SYSTEM</h3>
-          <p>Choose from the list or create a new zone system to configure training intensity ranges.</p>
+          <h3>{{ 'ZONE_MANAGER.EMPTY_EDITOR_HEADING' | translate }}</h3>
+          <p>{{ 'ZONE_MANAGER.EMPTY_EDITOR_DESC' | translate }}</p>
         </div>
       </div>
     }
@@ -216,7 +216,7 @@
     [isOpen]="showAiModal"
     actionType="ZONE_CREATION"
     [context]="{}"
-    label="Create Zone System with AI"
+    [label]="'ZONE_MANAGER.CREATE_ZONE_SYSTEM_LABEL' | translate"
     (closed)="showAiModal = false"
     (created)="onAiZoneCreated($event)">
   </app-create-with-ai-modal>

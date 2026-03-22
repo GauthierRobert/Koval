@@ -1,5 +1,6 @@
 import {ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {TranslateModule} from '@ngx-translate/core';
 import {BehaviorSubject, combineLatest, Observable, Subject} from 'rxjs';
 import {debounceTime, distinctUntilChanged, map} from 'rxjs/operators';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -14,7 +15,7 @@ import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
 @Component({
     selector: 'app-pmc-page',
     standalone: true,
-    imports: [CommonModule, PmcChartComponent],
+    imports: [CommonModule, TranslateModule, PmcChartComponent],
     templateUrl: './pmc-page.component.html',
     styleUrl: './pmc-page.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
