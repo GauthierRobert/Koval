@@ -1,12 +1,13 @@
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {TranslateModule} from '@ngx-translate/core';
 import {ClubService} from '../../../../../../services/club.service';
 import {AuthService} from '../../../../../../services/auth.service';
 
 @Component({
   selector: 'app-club-leaderboard-tab',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './club-leaderboard-tab.component.html',
   styleUrl: './club-leaderboard-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

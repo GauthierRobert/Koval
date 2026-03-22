@@ -2,6 +2,7 @@ import {inject, Injectable, NgZone} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject} from 'rxjs';
 import {skip, take} from 'rxjs/operators';
+import {TranslateService} from '@ngx-translate/core';
 import {TrainingService} from './training.service';
 import {environment} from '../../environments/environment';
 
@@ -58,6 +59,7 @@ export class ChatService {
   private http = inject(HttpClient);
   private ngZone = inject(NgZone);
   private trainingService = inject(TrainingService);
+  private translate = inject(TranslateService);
 
   private chatMessagesSubject = new BehaviorSubject<ChatMessage[]>([]);
   chatMessages$ = this.chatMessagesSubject.asObservable();
@@ -120,7 +122,10 @@ export class ChatService {
       this.addMessage({ role: 'user', content: message, timestamp: new Date() });
       this.addMessage({
         role: 'assistant',
-        content: `Your message is too long (${message.length.toLocaleString()} characters). Please keep it under ${this.MAX_MESSAGE_CHARS.toLocaleString()} characters and try again.`,
+        content: this.translate.instant('AI_CHAT.ERROR_MESSAGE_TOO_LONG', {
+          actual: message.length.toLocaleString(),
+          max: this.MAX_MESSAGE_CHARS.toLocaleString(),
+        }),
         timestamp: new Date(),
       });
       this.ngZone.run(() => this.activityStatusSubject.next('error'));
@@ -321,7 +326,7 @@ export class ChatService {
       }
     } catch {
       if (!aiMessage.content) {
-        aiMessage.content = "Sorry, I'm having trouble connecting to the assistant. Is the system operational?";
+        aiMessage.content = this.translate.instant('AI_CHAT.ERROR_CONNECTION');
       }
       this.emit();
     } finally {

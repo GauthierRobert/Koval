@@ -14,6 +14,7 @@ import {
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Router, RouterModule} from '@angular/router';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {
   ClubDetail,
   ClubGroup,
@@ -33,7 +34,7 @@ type ViewMode = 'LIST' | 'CALENDAR';
 @Component({
   selector: 'app-club-sessions-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, TranslateModule],
   templateUrl: './club-sessions-tab.component.html',
   styleUrl: './club-sessions-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,6 +49,7 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   private trainingService = inject(TrainingService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private translate = inject(TranslateService);
 
   sessions$ = this.clubService.sessions$;
   currentUserId: string | null = null;
@@ -575,12 +577,12 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
     const offsetMs = unit === 'HOURS' ? delay * 3600_000 : delay * 86400_000;
     const openFromMs = scheduledMs - offsetMs;
     const nowMs = Date.now();
-    if (nowMs >= openFromMs) return 'Opened to all';
+    if (nowMs >= openFromMs) return this.translate.instant('CLUB_SESSIONS.OPEN_TO_ALL_OPENED');
     const remainMs = openFromMs - nowMs;
     const remainH = Math.ceil(remainMs / 3600_000);
-    if (remainH <= 48) return `Open to all in ${remainH}h`;
+    if (remainH <= 48) return this.translate.instant('CLUB_SESSIONS.OPEN_TO_ALL_IN_HOURS', { remainH });
     const remainD = Math.ceil(remainMs / 86400_000);
-    return `Open to all in ${remainD}d`;
+    return this.translate.instant('CLUB_SESSIONS.OPEN_TO_ALL_IN_DAYS', { remainD });
   }
 
   // --- Status helpers ---
@@ -604,7 +606,8 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   }
 
   getCapacityText(session: ClubTrainingSession): string {
-    if (session.maxParticipants == null) return `${session.participantIds.length} participants`;
+    if (session.maxParticipants == null)
+      return this.translate.instant('CLUB_SESSIONS.CAPACITY_PARTICIPANTS', { count: session.participantIds.length });
     return `${session.participantIds.length}/${session.maxParticipants}`;
   }
 

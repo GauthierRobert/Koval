@@ -5,12 +5,12 @@
     <div class="header-left">
       <div class="header-avatar">C</div>
       <div class="header-info">
-        <span class="header-title">MY <span class="dim">CLUBS</span></span>
-        <span class="header-subtitle">Browse and manage your clubs</span>
+        <span class="header-title">{{ 'CLUBS_LIST.PAGE_TITLE' | translate }}</span>
+        <span class="header-subtitle">{{ 'CLUBS_LIST.PAGE_SUBTITLE' | translate }}</span>
       </div>
     </div>
     <div class="header-right">
-      <button class="create-btn" (click)="openCreate()">+ CREATE CLUB</button>
+      <button class="create-btn" (click)="openCreate()">{{ 'CLUBS_LIST.BTN_CREATE_CLUB' | translate }}</button>
     </div>
   </div>
 
@@ -20,7 +20,7 @@
     @if (userClubs$ | async; as userClubs) {
       @if (userClubs.length > 0) {
         <section>
-          <span class="section-label">YOUR CLUBS</span>
+          <span class="section-label">{{ 'CLUBS_LIST.SECTION_YOUR_CLUBS' | translate }}</span>
           <div class="clubs-grid">
             @for (club of userClubs; track club.id) {
               <div
@@ -30,7 +30,7 @@
                 <div class="card-top">
                   @if (club.logoUrl) {
                     <div class="club-logo">
-                      <img [src]="club.logoUrl" alt="Club logo" />
+                      <img [src]="club.logoUrl" [alt]="'CLUB_DETAIL.LOGO_ALT' | translate" />
                     </div>
                   } @else {
                     <div class="club-initials">{{ club.name.charAt(0).toUpperCase() }}</div>
@@ -41,14 +41,14 @@
                       <span class="club-desc">{{ club.description }}</span>
                     }
                   </div>
-                  @if (getMembershipLabel(club.membershipStatus) !== 'OWNER') {
+                  @if (!club.membershipStatus?.startsWith('ACTIVE_OWNER')) {
                     <button class="leave-btn" (click)="leave(club.id, $event)">
-                      LEAVE
+                      {{ 'CLUBS_LIST.BTN_LEAVE' | translate }}
                     </button>
                   }
                 </div>
                 <div class="card-meta">
-                  <span class="meta-chip">{{ club.memberCount }} members</span>
+                  <span class="meta-chip">{{ 'CLUBS_LIST.MEMBER_COUNT' | translate: { count: club.memberCount } }}</span>
                   <span class="meta-chip" [class.meta-chip--private]="club.visibility === 'PRIVATE'">
                     {{ club.visibility }}
                   </span>
@@ -72,10 +72,10 @@
               </svg>
             </div>
             <div class="empty-text">
-              <strong>No clubs yet</strong>
-              <span>Create or join a club to start training with others</span>
+              <strong>{{ 'CLUBS_LIST.EMPTY_TITLE' | translate }}</strong>
+              <span>{{ 'CLUBS_LIST.EMPTY_SUBTITLE' | translate }}</span>
             </div>
-            <button class="create-btn" (click)="openCreate()">CREATE YOUR FIRST CLUB</button>
+            <button class="create-btn" (click)="openCreate()">{{ 'CLUBS_LIST.BTN_CREATE_FIRST_CLUB' | translate }}</button>
           </div>
         </div>
       }
@@ -83,7 +83,7 @@
 
     @if (publicClubs.length > 0) {
       <section>
-        <span class="section-label">BROWSE PUBLIC CLUBS</span>
+        <span class="section-label">{{ 'CLUBS_LIST.SECTION_BROWSE_PUBLIC' | translate }}</span>
         <div class="clubs-grid">
           @for (club of publicClubs; track club.id) {
             <div
@@ -101,7 +101,7 @@
                   <button
                     class="join-btn"
                     (click)="join(club.id, $event)">
-                    JOIN
+                    {{ 'CLUBS_LIST.BTN_JOIN' | translate }}
                   </button>
                 }
                 @if (club.membershipStatus) {
@@ -111,7 +111,7 @@
                 }
               </div>
               <div class="card-meta">
-                <span class="meta-chip">{{ club.memberCount }} members</span>
+                <span class="meta-chip">{{ 'CLUBS_LIST.MEMBER_COUNT' | translate: { count: club.memberCount } }}</span>
               </div>
             </div>
           }
@@ -126,40 +126,40 @@
   <div class="modal-backdrop" (click)="closeForm()">
     <div class="modal-card glass" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>Create New Club</h3>
+        <h3>{{ 'CLUBS_LIST.MODAL_CREATE_TITLE' | translate }}</h3>
         <button class="modal-close" (click)="closeForm()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label>CLUB NAME</label>
-          <input [(ngModel)]="form.name" placeholder="e.g. Morning Riders" class="form-input" />
+          <label>{{ 'CLUBS_LIST.FORM_LABEL_CLUB_NAME' | translate }}</label>
+          <input [(ngModel)]="form.name" [placeholder]="'CLUBS_LIST.FORM_PLACEHOLDER_CLUB_NAME' | translate" class="form-input" />
         </div>
         <div class="form-group">
-          <label>DESCRIPTION</label>
+          <label>{{ 'CLUBS_LIST.FORM_LABEL_DESCRIPTION' | translate }}</label>
           <textarea
             [(ngModel)]="form.description"
-            placeholder="What's this club about?"
+            [placeholder]="'CLUBS_LIST.FORM_PLACEHOLDER_DESCRIPTION' | translate"
             class="form-input"
             rows="3"></textarea>
         </div>
         <div class="form-group">
-          <label>LOCATION</label>
-          <input [(ngModel)]="form.location" placeholder="e.g. Paris, France" class="form-input" />
+          <label>{{ 'CLUBS_LIST.FORM_LABEL_LOCATION' | translate }}</label>
+          <input [(ngModel)]="form.location" [placeholder]="'CLUBS_LIST.FORM_PLACEHOLDER_LOCATION' | translate" class="form-input" />
         </div>
         <div class="form-group">
-          <label>VISIBILITY</label>
+          <label>{{ 'CLUBS_LIST.FORM_LABEL_VISIBILITY' | translate }}</label>
           <select [(ngModel)]="form.visibility" class="form-input">
             @for (v of visibilityOptions; track v.value) {
-              <option [value]="v.value">{{ v.label }}</option>
+              <option [value]="v.value">{{ v.label | translate }}</option>
             }
           </select>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn-secondary" (click)="closeForm()">CANCEL</button>
-        <button class="btn-primary" (click)="save()" [disabled]="!form.name">CREATE</button>
+        <button class="btn-secondary" (click)="closeForm()">{{ 'CLUBS_LIST.BTN_CANCEL' | translate }}</button>
+        <button class="btn-primary" (click)="save()" [disabled]="!form.name">{{ 'CLUBS_LIST.BTN_CREATE' | translate }}</button>
       </div>
     </div>
   </div>

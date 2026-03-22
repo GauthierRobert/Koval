@@ -1,33 +1,33 @@
 <div class="stats-tab">
   @if (weeklyStats$ | async; as stats) {
-    <h4 class="section-title">This Week</h4>
+    <h4 class="section-title">{{ 'CLUB_STATS.SECTION_THIS_WEEK' | translate }}</h4>
     <div class="stats-grid">
       <div class="stat-card glass">
         <span class="stat-icon">🏊</span>
         <div class="stat-value">{{ stats.totalSwimKm | number:'1.1-1' }}</div>
-        <div class="stat-label">Swim km</div>
+        <div class="stat-label">{{ 'CLUB_STATS.STAT_SWIM_KM' | translate }}</div>
       </div>
       <div class="stat-card glass">
         <span class="stat-icon">🚴</span>
         <div class="stat-value">{{ stats.totalBikeKm | number:'1.1-1' }}</div>
-        <div class="stat-label">Bike km</div>
+        <div class="stat-label">{{ 'CLUB_STATS.STAT_BIKE_KM' | translate }}</div>
       </div>
       <div class="stat-card glass">
         <span class="stat-icon">🏃</span>
         <div class="stat-value">{{ stats.totalRunKm | number:'1.1-1' }}</div>
-        <div class="stat-label">Run km</div>
+        <div class="stat-label">{{ 'CLUB_STATS.STAT_RUN_KM' | translate }}</div>
       </div>
       <div class="stat-card glass">
         <span class="stat-icon">💪</span>
         <div class="stat-value">{{ stats.totalSessions }}</div>
-        <div class="stat-label">Sessions</div>
+        <div class="stat-label">{{ 'CLUB_STATS.STAT_SESSIONS' | translate }}</div>
       </div>
     </div>
-    <p class="stat-note">{{ stats.memberCount }} active members tracked this week</p>
+    <p class="stat-note">{{ 'CLUB_STATS.ACTIVE_MEMBERS_NOTE' | translate: { count: stats.memberCount } }}</p>
   } @else {
     <div class="empty-tab">
       <span>📊</span>
-      <p>Loading weekly stats...</p>
+      <p>{{ 'CLUB_STATS.LOADING' | translate }}</p>
     </div>
   }
 </div>

@@ -1,5 +1,6 @@
 import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {TranslateModule} from '@ngx-translate/core';
 import {BehaviorSubject, combineLatest, Observable} from 'rxjs';
 import {filter, map, shareReplay, startWith, switchMap, tap} from 'rxjs/operators';
 import {Router} from '@angular/router';
@@ -104,6 +105,7 @@ function buildEntriesByDay(scheduled: ScheduledWorkout[], sessions: SavedSession
   standalone: true,
   imports: [
     CommonModule,
+    TranslateModule,
     TrainingActionModalComponent,
     WorkoutDetailModalComponent,
     CalendarWeekViewComponent,

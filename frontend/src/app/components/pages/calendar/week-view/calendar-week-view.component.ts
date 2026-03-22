@@ -1,5 +1,6 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, inject, Input, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {TranslateModule} from '@ngx-translate/core';
 import {Observable, of} from 'rxjs';
 import {map} from 'rxjs/operators';
 import {RouterModule} from '@angular/router';
@@ -17,7 +18,7 @@ import {formatTimeHMS} from '../../../shared/format/format.utils';
 @Component({
   selector: 'app-calendar-week-view',
   standalone: true,
-  imports: [CommonModule, RouterModule, SportIconComponent, TrainingLoadChartComponent],
+  imports: [CommonModule, RouterModule, SportIconComponent, TrainingLoadChartComponent, TranslateModule],
   templateUrl: './calendar-week-view.component.html',
   styleUrl: './calendar-week-view.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

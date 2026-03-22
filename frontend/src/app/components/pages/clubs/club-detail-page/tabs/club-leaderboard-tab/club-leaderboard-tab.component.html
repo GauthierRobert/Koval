@@ -1,5 +1,5 @@
 <div class="leaderboard-tab">
-  <h4 class="section-title">Weekly TSS Leaderboard</h4>
+  <h4 class="section-title">{{ 'CLUB_LEADERBOARD.SECTION_TITLE' | translate }}</h4>
   @if (leaderboard$ | async; as entries) {
     @if (entries.length > 0) {
       <div class="leaderboard-list">
@@ -21,7 +21,7 @@
             </div>
             <div class="entry-stats">
               <span class="tss-value">{{ entry.weeklyTss | number:'1.0-0' }} TSS</span>
-              <span class="session-count">{{ entry.sessionCount }} sessions</span>
+              <span class="session-count">{{ 'CLUB_LEADERBOARD.SESSIONS_COUNT' | translate: { count: entry.sessionCount } }}</span>
             </div>
           </div>
         }
@@ -29,7 +29,7 @@
     } @else {
       <div class="empty-tab">
         <span>🏆</span>
-        <p>No activity recorded this week yet.</p>
+        <p>{{ 'CLUB_LEADERBOARD.EMPTY_NO_ACTIVITY' | translate }}</p>
       </div>
     }
   }

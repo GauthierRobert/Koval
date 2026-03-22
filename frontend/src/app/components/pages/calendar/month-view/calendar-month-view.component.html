@@ -1,6 +1,12 @@
 <div class="month-grid">
   <div class="month-day-names">
-    <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
+    <span>{{ 'CALENDAR_MONTH.DAY_MON' | translate }}</span>
+    <span>{{ 'CALENDAR_MONTH.DAY_TUE' | translate }}</span>
+    <span>{{ 'CALENDAR_MONTH.DAY_WED' | translate }}</span>
+    <span>{{ 'CALENDAR_MONTH.DAY_THU' | translate }}</span>
+    <span>{{ 'CALENDAR_MONTH.DAY_FRI' | translate }}</span>
+    <span>{{ 'CALENDAR_MONTH.DAY_SAT' | translate }}</span>
+    <span>{{ 'CALENDAR_MONTH.DAY_SUN' | translate }}</span>
   </div>
   <div class="month-body">
     @for (day of days; track trackByDay(day)) {
@@ -8,7 +14,7 @@
         [class.other-month]="day.date.getMonth() !== startDate.getMonth()">
         <div class="cell-header">
           <span class="cell-day">{{ day.date | date : 'd' }}</span>
-          <button class="cell-add-bar" (click)="addDay.emit(day)" title="Add training">
+          <button class="cell-add-bar" (click)="addDay.emit(day)" [title]="'CALENDAR_MONTH.BTN_ADD_TRAINING_TITLE' | translate">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
@@ -22,10 +28,10 @@
             (click)="workoutSelected.emit(entry.scheduled)"
             [style.border-left]="'2px solid ' + (entry.scheduled.trainingType ? getTypeColor(entry.scheduled.trainingType) : 'var(--accent-color)')">
             <app-sport-icon [sport]="entry.scheduled.sportType" [size]="10"></app-sport-icon>
-            <span class="mini-title">{{ entry.scheduled.trainingTitle || entry.scheduled.title || 'Workout' }}</span>
+            <span class="mini-title">{{ entry.scheduled.trainingTitle || entry.scheduled.title || ('CALENDAR_MONTH.WORKOUT_FALLBACK_TITLE' | translate) }}</span>
               <span class="mini-tss">{{ entry.scheduled.tss || 0 }}</span>
               @if (entry.scheduled.status === 'PENDING') {
-                <button class="btn-reschedule-mini" (click)="openReschedule(entry.scheduled, $event)" title="Reschedule">
+                <button class="btn-reschedule-mini" (click)="openReschedule(entry.scheduled, $event)" [title]="'CALENDAR_MONTH.BTN_ADD_TRAINING_TITLE' | translate">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                   </svg>
@@ -39,7 +45,7 @@
             (click)="workoutSelected.emit(entry.scheduled)"
             [style.border-left]="'2px solid #34d399'">
             <app-sport-icon [sport]="entry.scheduled.sportType" [size]="10"></app-sport-icon>
-            <span class="mini-title">{{ entry.scheduled.trainingTitle || 'Workout' }}</span>
+            <span class="mini-title">{{ entry.scheduled.trainingTitle || ('CALENDAR_MONTH.WORKOUT_FALLBACK_TITLE' | translate) }}</span>
               <span class="mini-tss">{{ entry.session.tss || 0 }}</span>
             </div>
             }
@@ -85,10 +91,10 @@
 @if (rescheduleTarget) {
   <div class="reschedule-overlay" (click)="cancelReschedule()">
     <div class="reschedule-modal" (click)="$event.stopPropagation()">
-      <span class="reschedule-title">Reschedule</span>
-      <span class="reschedule-workout-name">{{ rescheduleTarget.trainingTitle || rescheduleTarget.title || 'Workout' }}</span>
+      <span class="reschedule-title">{{ 'CALENDAR_MONTH.RESCHEDULE_MODAL_TITLE' | translate }}</span>
+      <span class="reschedule-workout-name">{{ rescheduleTarget.trainingTitle || rescheduleTarget.title || ('CALENDAR_MONTH.RESCHEDULE_WORKOUT_FALLBACK' | translate) }}</span>
       <input type="date" class="reschedule-date-input" [value]="rescheduleTarget.scheduledDate" (change)="confirmReschedule($any($event.target).value)" />
-      <button class="reschedule-cancel-btn" (click)="cancelReschedule()">Cancel</button>
+      <button class="reschedule-cancel-btn" (click)="cancelReschedule()">{{ 'CALENDAR_MONTH.RESCHEDULE_BTN_CANCEL' | translate }}</button>
     </div>
   </div>
 }

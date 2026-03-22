@@ -1,11 +1,12 @@
 import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {TranslateModule} from '@ngx-translate/core';
 import {ClubRaceGoalResponse, ClubService} from '../../../../../../services/club.service';
 
 @Component({
   selector: 'app-club-race-goals-tab',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './club-race-goals-tab.component.html',
   styleUrl: './club-race-goals-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

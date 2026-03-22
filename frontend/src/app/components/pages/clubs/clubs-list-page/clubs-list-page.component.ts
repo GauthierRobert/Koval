@@ -2,12 +2,13 @@ import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core'
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Router} from '@angular/router';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {ClubService, ClubSummary, ClubVisibility, CreateClubData,} from '../../../../services/club.service';
 
 @Component({
   selector: 'app-clubs-list-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './clubs-list-page.component.html',
   styleUrl: './clubs-list-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -15,6 +16,7 @@ import {ClubService, ClubSummary, ClubVisibility, CreateClubData,} from '../../.
 export class ClubsListPageComponent implements OnInit {
   private clubService = inject(ClubService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   userClubs$ = this.clubService.userClubs$;
 
@@ -24,8 +26,8 @@ export class ClubsListPageComponent implements OnInit {
   form: Partial<CreateClubData> = this.emptyForm();
 
   readonly visibilityOptions: Array<{ value: ClubVisibility; label: string }> = [
-    { value: 'PUBLIC', label: 'Public — anyone can join' },
-    { value: 'PRIVATE', label: 'Private — approval required' },
+    { value: 'PUBLIC', label: 'CLUBS_LIST.VISIBILITY_PUBLIC' },
+    { value: 'PRIVATE', label: 'CLUBS_LIST.VISIBILITY_PRIVATE' },
   ];
 
   ngOnInit(): void {
@@ -82,10 +84,10 @@ export class ClubsListPageComponent implements OnInit {
 
   getMembershipLabel(status: string | undefined): string {
     if (!status) return '';
-    if (status.startsWith('ACTIVE_OWNER')) return 'OWNER';
-    if (status.startsWith('ACTIVE_ADMIN')) return 'ADMIN';
-    if (status.startsWith('ACTIVE')) return 'MEMBER';
-    if (status.startsWith('PENDING')) return 'PENDING';
+    if (status.startsWith('ACTIVE_OWNER')) return this.translate.instant('CLUBS_LIST.MEMBERSHIP_OWNER');
+    if (status.startsWith('ACTIVE_ADMIN')) return this.translate.instant('CLUBS_LIST.MEMBERSHIP_ADMIN');
+    if (status.startsWith('ACTIVE')) return this.translate.instant('CLUBS_LIST.MEMBERSHIP_MEMBER');
+    if (status.startsWith('PENDING')) return this.translate.instant('CLUBS_LIST.MEMBERSHIP_PENDING');
     return status;
   }
 

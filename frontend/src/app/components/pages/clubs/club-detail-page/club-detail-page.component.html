@@ -10,7 +10,7 @@
           <div class="club-avatar">{{ club.name.charAt(0).toUpperCase() }}</div>
         }
         @if (club.logoUrl) {
-          <img class="club-avatar-img" [src]="club.logoUrl" alt="Club logo" />
+          <img class="club-avatar-img" [src]="club.logoUrl" [alt]="'CLUB_DETAIL.LOGO_ALT' | translate" />
         }
         <div class="header-info">
           <span class="header-title">{{ club.name | uppercase }}</span>
@@ -20,7 +20,7 @@
         </div>
       </div>
       <div class="header-badges">
-        <span class="h-badge">{{ club.memberCount }} members</span>
+        <span class="h-badge">{{ 'CLUB_DETAIL.HEADER_MEMBER_COUNT' | translate: { count: club.memberCount } }}</span>
         @if (club.location) {
           <span class="h-badge">{{ club.location }}</span>
         }
@@ -39,16 +39,16 @@
           <span class="invite-code-chip" (click)="copyClubCode(code.code, code.id)">{{ code.code }}</span>
           <button class="btn-copy" (click)="copyClubCode(code.code, code.id)"
             [class.btn-copied]="copiedClubCodeId === code.id">
-            {{ copiedClubCodeId === code.id ? 'COPIED' : 'COPY' }}
+            {{ copiedClubCodeId === code.id ? ('CLUB_DETAIL.INVITE_BTN_COPIED' | translate) : ('CLUB_DETAIL.INVITE_BTN_COPY' | translate) }}
           </button>
         </div>
       }
       <div class="header-actions">
         @if (!club.currentMembershipStatus) {
-          <button class="btn-join" (click)="join(club)">JOIN</button>
+          <button class="btn-join" (click)="join(club)">{{ 'CLUB_DETAIL.BTN_JOIN' | translate }}</button>
         }
         @if (club.currentMembershipStatus && club.currentMemberRole !== 'OWNER') {
-          <button class="btn-leave" (click)="leave(club)">LEAVE</button>
+          <button class="btn-leave" (click)="leave(club)">{{ 'CLUB_DETAIL.BTN_LEAVE' | translate }}</button>
         }
       </div>
     </div>
@@ -59,7 +59,7 @@
           class="tab-btn"
           [class.active]="activeTab === tab.id"
           (click)="activateTab(tab.id)">
-          {{ tab.label }}
+          {{ tab.label | translate }}
         </button>
       }
     </div>
@@ -99,7 +99,7 @@
   } @else {
     <div class="loading-state">
       <div class="loading-spinner"></div>
-      <span>Loading club...</span>
+      <span>{{ 'CLUB_DETAIL.LOADING' | translate }}</span>
     </div>
   }
 </div>

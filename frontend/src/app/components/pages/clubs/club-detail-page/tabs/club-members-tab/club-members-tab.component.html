@@ -3,7 +3,7 @@
 
     <!-- Group Management (coach/admin/owner) -->
     @if (canManageGroups) {
-      <h4 class="section-title">Groups</h4>
+      <h4 class="section-title">{{ 'CLUB_MEMBERS.SECTION_GROUPS' | translate }}</h4>
       <div class="glass tag-panel">
         @if (allTags.length > 0) {
           <div class="group-cards">
@@ -11,12 +11,12 @@
               <div class="group-card">
                 <div class="group-card-header">
                   <span class="group-card-name">{{ tag.name }}</span>
-                  <span class="group-card-count">{{ tag.memberIds.length }} members</span>
+                  <span class="group-card-count">{{ 'CLUB_MEMBERS.GROUP_MEMBER_COUNT' | translate: { count: tag.memberIds.length } }}</span>
                   @if (canAssign) {
-                    <button class="ai-btn-corner" (click)="assignToClubGroup(tag)">+ Assign</button>
+                    <button class="ai-btn-corner" (click)="assignToClubGroup(tag)">{{ 'CLUB_MEMBERS.BTN_ASSIGN' | translate }}</button>
                   }
                   @if (isAdmin) {
-                    <button class="tag-delete" (click)="deleteTag(tag.id)">×</button>
+                    <button class="tag-delete" (click)="deleteTag(tag.id)">{{ 'CLUB_MEMBERS.BTN_DELETE_GROUP' | translate }}</button>
                   }
                 </div>
               </div>
@@ -24,12 +24,12 @@
           </div>
         }
         @if (allTags.length === 0) {
-          <span class="no-tags">No groups yet.</span>
+          <span class="no-tags">{{ 'CLUB_MEMBERS.NO_GROUPS' | translate }}</span>
         }
         @if (isAdmin) {
           <div class="tag-create-row">
-            <input class="tag-input" [(ngModel)]="newTagName" placeholder="Group name…" (keyup.enter)="createTag()" />
-            <button class="btn-small" (click)="createTag()">Add</button>
+            <input class="tag-input" [(ngModel)]="newTagName" [placeholder]="'CLUB_MEMBERS.PLACEHOLDER_GROUP_NAME' | translate" (keyup.enter)="createTag()" />
+            <button class="btn-small" (click)="createTag()">{{ 'CLUB_MEMBERS.BTN_ADD_GROUP' | translate }}</button>
           </div>
         }
       </div>
@@ -40,7 +40,7 @@
       @if (pending$ | async; as pending) {
         @if (pending.length > 0) {
           <div class="pending-section">
-            <h4 class="section-title">Pending Requests <span class="badge-count">{{ pending.length }}</span></h4>
+            <h4 class="section-title">{{ 'CLUB_MEMBERS.SECTION_PENDING' | translate }} <span class="badge-count">{{ pending.length }}</span></h4>
             <div class="member-list">
               @for (m of pending; track m.membershipId) {
                 <div class="member-row glass">
@@ -52,11 +52,11 @@
                   }
                   <div class="member-info">
                     <span class="member-name">{{ m.displayName || m.userId }}</span>
-                    <span class="member-date">Requested {{ formatDate(m.joinedAt) }}</span>
+                    <span class="member-date">{{ 'CLUB_MEMBERS.PENDING_REQUESTED' | translate: { date: formatDate(m.joinedAt) } }}</span>
                   </div>
                   <div class="member-actions">
-                    <button class="btn-approve" (click)="approve(m.membershipId)">APPROVE</button>
-                    <button class="btn-reject" (click)="reject(m.membershipId)">REJECT</button>
+                    <button class="btn-approve" (click)="approve(m.membershipId)">{{ 'CLUB_MEMBERS.BTN_APPROVE' | translate }}</button>
+                    <button class="btn-reject" (click)="reject(m.membershipId)">{{ 'CLUB_MEMBERS.BTN_REJECT' | translate }}</button>
                   </div>
                 </div>
               }
@@ -69,9 +69,9 @@
     <!-- Active Members -->
     @if (members$ | async; as members) {
       <div class="members-header-row">
-        <h4 class="section-title">Members</h4>
+        <h4 class="section-title">{{ 'CLUB_MEMBERS.SECTION_MEMBERS' | translate }}</h4>
         @if (canAssign && members.length > 0) {
-          <button class="ai-btn-corner" (click)="assignToAllMembers(members)">+ Assign</button>
+          <button class="ai-btn-corner" (click)="assignToAllMembers(members)">{{ 'CLUB_MEMBERS.BTN_ASSIGN' | translate }}</button>
         }
       </div>
       @if (members.length > 0) {
@@ -95,13 +95,13 @@
                         <button
                           class="tag-remove-tiny"
                           (click)="removeFromTag(getTagIdByName(tagName, allTags), m.userId)"
-                          title="Remove tag"
+                          [title]="'CLUB_MEMBERS.REMOVE_TAG_TITLE' | translate"
                         >×</button>
                       }
                     </span>
                   }
                 </div>
-                <span class="member-date">Joined {{ formatDate(m.joinedAt) }}</span>
+                <span class="member-date">{{ 'CLUB_MEMBERS.MEMBER_JOINED' | translate: { date: formatDate(m.joinedAt) } }}</span>
               </div>
 
               <div class="member-right">
@@ -127,7 +127,7 @@
                       class="tag-select"
                       (change)="addToTag($any($event.target).value, m.userId); $any($event.target).value = ''"
                     >
-                      <option value="">+ Tag</option>
+                      <option value="">{{ 'CLUB_MEMBERS.TAG_ADD_PLACEHOLDER' | translate }}</option>
                       @for (tag of getAvailableTags(m, allTags); track tag.id) {
                         <option [value]="tag.id">{{ tag.name }}</option>
                       }
@@ -141,7 +141,7 @@
       } @else {
         <div class="empty-tab">
           <span>👥</span>
-          <p>No members yet.</p>
+          <p>{{ 'CLUB_MEMBERS.EMPTY_NO_MEMBERS' | translate }}</p>
         </div>
       }
     }

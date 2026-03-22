@@ -1,17 +1,19 @@
 import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {ClubService} from '../../../../../../services/club.service';
 
 @Component({
   selector: 'app-club-feed-tab',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './club-feed-tab.component.html',
   styleUrl: './club-feed-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClubFeedTabComponent {
   private clubService = inject(ClubService);
+  private translate = inject(TranslateService);
   feed$ = this.clubService.feed$;
 
   getActivityColor(type: string): string {
@@ -28,15 +30,16 @@ export class ClubFeedTabComponent {
   }
 
   getActivityText(type: string, actorName: string, targetTitle: string | undefined): string {
+    const params = { actorName, targetTitle: targetTitle ?? '' };
     switch (type) {
-      case 'MEMBER_JOINED': return `${actorName} joined the club`;
-      case 'MEMBER_LEFT': return `${actorName} left the club`;
-      case 'SESSION_CREATED': return `${actorName} created session: ${targetTitle ?? ''}`;
-      case 'SESSION_JOINED': return `${actorName} joined session: ${targetTitle ?? ''}`;
-      case 'SESSION_CANCELLED': return `${actorName} cancelled session: ${targetTitle ?? ''}`;
-      case 'TRAINING_CREATED': return `${actorName} created a training`;
-      case 'RACE_GOAL_ADDED': return `${actorName} added a race goal`;
-      default: return `${actorName} did something`;
+      case 'MEMBER_JOINED': return this.translate.instant('CLUB_FEED.ACTIVITY_MEMBER_JOINED', params);
+      case 'MEMBER_LEFT': return this.translate.instant('CLUB_FEED.ACTIVITY_MEMBER_LEFT', params);
+      case 'SESSION_CREATED': return this.translate.instant('CLUB_FEED.ACTIVITY_SESSION_CREATED', params);
+      case 'SESSION_JOINED': return this.translate.instant('CLUB_FEED.ACTIVITY_SESSION_JOINED', params);
+      case 'SESSION_CANCELLED': return this.translate.instant('CLUB_FEED.ACTIVITY_SESSION_CANCELLED', params);
+      case 'TRAINING_CREATED': return this.translate.instant('CLUB_FEED.ACTIVITY_TRAINING_CREATED', params);
+      case 'RACE_GOAL_ADDED': return this.translate.instant('CLUB_FEED.ACTIVITY_RACE_GOAL_ADDED', params);
+      default: return this.translate.instant('CLUB_FEED.ACTIVITY_DEFAULT', params);
     }
   }
 

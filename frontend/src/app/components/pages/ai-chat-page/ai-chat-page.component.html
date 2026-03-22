@@ -2,8 +2,8 @@
   <!-- Sidebar/History -->
   <div class="chat-sidebar glass">
     <div class="sidebar-header">
-      <h3 class="sidebar-title">SESSIONS</h3>
-      <button class="new-chat-btn" (click)="newChat()">+</button>
+      <h3 class="sidebar-title">{{ 'AI_CHAT.SIDEBAR_SESSIONS_TITLE' | translate }}</h3>
+      <button class="new-chat-btn" (click)="newChat()">{{ 'AI_CHAT.BTN_NEW_CHAT' | translate }}</button>
     </div>
     <div class="history-list">
       @for (h of chatService.chatHistories$ | async; track h.id) {
@@ -12,19 +12,19 @@
           [class.active]="h.id === (chatService.activeChatId$ | async)"
           (click)="loadConversation(h.id)"
         >
-          <span class="history-title">{{ h.title || 'Untitled' }}</span>
+          <span class="history-title">{{ h.title || ('AI_CHAT.HISTORY_ITEM_UNTITLED' | translate) }}</span>
           <button class="delete-btn" (click)="deleteConversation(h.id, $event)">&times;</button>
         </div>
       }
     </div>
     <div class="system-context">
       <div class="context-item">
-        <span class="c-label">MODEL</span>
-        <span class="c-value">CLAUDE SONNET 4.5</span>
+        <span class="c-label">{{ 'AI_CHAT.CONTEXT_MODEL_LABEL' | translate }}</span>
+        <span class="c-value">{{ 'AI_CHAT.CONTEXT_MODEL_VALUE' | translate }}</span>
       </div>
       <div class="context-item">
-        <span class="c-label">READY</span>
-        <span class="c-value status-ok">SYSTEM_NOMINAL</span>
+        <span class="c-label">{{ 'AI_CHAT.CONTEXT_READY_LABEL' | translate }}</span>
+        <span class="c-value status-ok">{{ 'AI_CHAT.CONTEXT_READY_VALUE' | translate }}</span>
       </div>
     </div>
   </div>
@@ -35,8 +35,8 @@
       <div class="header-left">
         <div class="header-avatar">K</div>
         <div class="header-info">
-          <span class="header-title">KOVAL <span class="dim">ASSISTANT</span></span>
-          <span class="header-subtitle">AI-powered training guidance</span>
+          <span class="header-title">{{ 'AI_CHAT.HEADER_TITLE' | translate }} <span class="dim">{{ 'AI_CHAT.HEADER_TITLE_DIM' | translate }}</span></span>
+          <span class="header-subtitle">{{ 'AI_CHAT.HEADER_SUBTITLE' | translate }}</span>
         </div>
       </div>
       <div class="header-right"></div>
@@ -49,13 +49,13 @@
     <div class="messages-container" #scrollMe (scroll)="onScroll()">
       @if (messages?.length === 0 && !streaming) {
         <div class="welcome-overlay">
-          <h1>Technical Assistance.</h1>
-          <p>Define objectives or request physiological analysis.</p>
+          <h1>{{ 'AI_CHAT.WELCOME_HEADING' | translate }}</h1>
+          <p>{{ 'AI_CHAT.WELCOME_SUBHEADING' | translate }}</p>
           <div class="suggestion-grid">
-            <button (click)="quickSend('Create a 1h over/under sweet spot cycling workout and schedule it for Saturday')">SWEET SPOT + SCHEDULE</button>
-            <button (click)="quickSend('How is my fitness trending this month and what do I have planned next week?')">FITNESS CHECK</button>
-            <button (click)="quickSend('Create a VO2max bike session for my group this Wednesday at 6pm')">GROUP VO2MAX SESSION</button>
-            <button (click)="quickSend('Organize a 2h endurance club ride for Saturday morning at 9am')">ENDURANCE CLUB RIDE</button>
+            <button (click)="quickSendKey('AI_CHAT.SUGGESTION_SWEET_SPOT_PROMPT')">{{ 'AI_CHAT.SUGGESTION_SWEET_SPOT' | translate }}</button>
+            <button (click)="quickSendKey('AI_CHAT.SUGGESTION_FITNESS_CHECK_PROMPT')">{{ 'AI_CHAT.SUGGESTION_FITNESS_CHECK' | translate }}</button>
+            <button (click)="quickSendKey('AI_CHAT.SUGGESTION_GROUP_VO2MAX_PROMPT')">{{ 'AI_CHAT.SUGGESTION_GROUP_VO2MAX' | translate }}</button>
+            <button (click)="quickSendKey('AI_CHAT.SUGGESTION_ENDURANCE_RIDE_PROMPT')">{{ 'AI_CHAT.SUGGESTION_ENDURANCE_RIDE' | translate }}</button>
           </div>
         </div>
       }
@@ -65,7 +65,7 @@
           @if (msg.content || msg.role === 'user') {
             <div class="message-bubble glass" [class.accent]="msg.role === 'user'">
               <div class="msg-header">
-                {{ msg.role === 'assistant' ? 'COACH AI' : 'YOU' }}
+                {{ msg.role === 'assistant' ? ('AI_CHAT.MSG_SENDER_AI' | translate) : ('AI_CHAT.MSG_SENDER_USER' | translate) }}
                 @if (msg.role === 'assistant' && msg.agentType) {
                   <span class="agent-badge">{{ getAgentLabel(msg.agentType) }}</span>
                 }
@@ -96,7 +96,7 @@
         @if (msg.role === 'assistant' && msg.isPlan) {
           <div class="message-wrapper ai">
             <div class="plan-card glass">
-              <div class="plan-header">{{ msg.planTasks!.length }} INDEPENDENT TASKS PLANNED</div>
+              <div class="plan-header">{{ 'AI_CHAT.PLAN_HEADER' | translate: { count: msg.planTasks!.length } }}</div>
               @for (t of msg.planTasks!; track $index) {
                 <div class="plan-task-row">
                   <span class="plan-agent-tag">{{ t.agentType | slice:0:3 }}</span>
@@ -104,7 +104,7 @@
                 </div>
               }
               <button class="run-parallel-btn" (click)="executePlan(msg.planTasks!)">
-                RUN ALL IN PARALLEL
+                {{ 'AI_CHAT.BTN_RUN_PARALLEL' | translate }}
               </button>
             </div>
           </div>
@@ -122,7 +122,7 @@
               @if (fetchedTrainings[msg.createdTraining.id]; as fullTraining) {
                 <app-workout-visualization [training]="fullTraining" [compact]="true"></app-workout-visualization>
               } @else {
-                <div class="ct-loading">Loading workout...</div>
+                <div class="ct-loading">{{ 'AI_CHAT.TRAINING_LOADING' | translate }}</div>
               }
             </div>
           </div>
@@ -132,7 +132,7 @@
       @if (streaming) {
         <div class="message-wrapper ai">
           <div class="message-bubble glass typing">
-            <span class="analyzing">{{ activityStatus === 'in_progress' ? 'PROCESSING' : 'GENERATING RESPONSE' }}</span>
+            <span class="analyzing">{{ activityStatus === 'in_progress' ? ('AI_CHAT.STATUS_PROCESSING' | translate) : ('AI_CHAT.STATUS_GENERATING' | translate) }}</span>
             <div class="dots"><span>.</span><span>.</span><span>.</span></div>
           </div>
         </div>
@@ -146,14 +146,14 @@
             class="agent-tab"
             [class.active]="selectedAgentIndex === i"
             (click)="selectAgent(i)"
-          >{{ opt.label }}</button>
+          >{{ opt.label | translate }}</button>
         }
       </div>
       <div class="input-wrapper-technical">
         <textarea
           [(ngModel)]="userInput"
           (keydown.enter)="$event.preventDefault(); sendMessage()"
-          placeholder="Enter technical command or query..."
+          [placeholder]="'AI_CHAT.INPUT_PLACEHOLDER' | translate"
           [disabled]="streaming ?? false"
           rows="1"
         ></textarea>
@@ -162,7 +162,7 @@
           (click)="sendMessage()"
           [disabled]="!userInput.trim() || (streaming ?? false)"
         >
-          <span class="icon">RUN</span>
+          <span class="icon">{{ 'AI_CHAT.BTN_SEND' | translate }}</span>
         </button>
       </div>
     </div>

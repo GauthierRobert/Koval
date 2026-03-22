@@ -1,7 +1,7 @@
 <div class="race-goals-tab">
   @if (raceGoals$ | async; as raceGoals) {
     @if (raceGoals.length > 0) {
-      <h4 class="section-title">Upcoming Races</h4>
+      <h4 class="section-title">{{ 'CLUB_RACE_GOALS.SECTION_UPCOMING_RACES' | translate }}</h4>
       <div class="goals-list">
         @for (item of raceGoals; track item) {
           <div class="goal-row glass">
@@ -20,7 +20,7 @@
                   <span>{{ item.location }}</span>
                 }
                 <span class="days-badge" [class.soon]="daysUntil(item.raceDate) <= 30">
-                  {{ daysUntil(item.raceDate) }}d to go
+                  {{ 'CLUB_RACE_GOALS.DAYS_TO_GO' | translate: { days: daysUntil(item.raceDate) } }}
                 </span>
               </div>
               <div class="participants-row">
@@ -36,7 +36,9 @@
                   }
                 </div>
                 <button class="view-members-btn" (click)="openMembersModal(item, $event)">
-                  View {{ item.participants.length }} {{ item.participants.length === 1 ? 'member' : 'members' }}
+                  {{ item.participants.length === 1
+                    ? ('CLUB_RACE_GOALS.BTN_VIEW_MEMBERS_SINGULAR' | translate: { count: item.participants.length })
+                    : ('CLUB_RACE_GOALS.BTN_VIEW_MEMBERS_PLURAL' | translate: { count: item.participants.length }) }}
                 </button>
               </div>
             </div>
@@ -46,7 +48,7 @@
     } @else {
       <div class="empty-tab">
         <span>🏁</span>
-        <p>No race goals from club members yet.</p>
+        <p>{{ 'CLUB_RACE_GOALS.EMPTY_NO_GOALS' | translate }}</p>
       </div>
     }
   }
@@ -60,7 +62,9 @@
         <button class="modal-close" (click)="closeMembersModal()">&times;</button>
       </div>
       <div class="modal-subtitle">
-        {{ membersModalGoal.participants.length }} {{ membersModalGoal.participants.length === 1 ? 'member' : 'members' }} racing
+        {{ membersModalGoal.participants.length === 1
+          ? ('CLUB_RACE_GOALS.MODAL_RACING_SINGULAR' | translate: { count: membersModalGoal.participants.length })
+          : ('CLUB_RACE_GOALS.MODAL_RACING_PLURAL' | translate: { count: membersModalGoal.participants.length }) }}
       </div>
       <div class="modal-members-list">
         @for (p of membersModalGoal.participants; track p.userId) {

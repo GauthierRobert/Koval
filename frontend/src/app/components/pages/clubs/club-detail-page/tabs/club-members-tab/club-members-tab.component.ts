@@ -1,6 +1,7 @@
 import {ChangeDetectionStrategy, Component, inject, Input, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {TranslateModule} from '@ngx-translate/core';
 import {ClubDetail, ClubGroup, ClubMember, ClubMemberRole, ClubService,} from '../../../../../../services/club.service';
 import {User} from '../../../../../../services/auth.service';
 import {TrainingActionModalComponent} from '../../../../../shared/training-action-modal/training-action-modal.component';
@@ -8,7 +9,7 @@ import {TrainingActionModalComponent} from '../../../../../shared/training-actio
 @Component({
   selector: 'app-club-members-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, TrainingActionModalComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, TrainingActionModalComponent],
   templateUrl: './club-members-tab.component.html',
   styleUrl: './club-members-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

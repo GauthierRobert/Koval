@@ -2,6 +2,7 @@ import {ChangeDetectionStrategy, Component, ElementRef, inject, OnDestroy, OnIni
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Subscription} from 'rxjs';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {AgentType, ChatService, PlanTask} from '../../../services/chat.service';
 import {Training} from '../../../models/training.model';
 import {TrainingService} from '../../../services/training.service';
@@ -15,7 +16,7 @@ interface AgentOption {
 @Component({
   selector: 'app-ai-chat-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, WorkoutVisualizationComponent],
+  imports: [CommonModule, FormsModule, WorkoutVisualizationComponent, TranslateModule],
   templateUrl: './ai-chat-page.component.html',
   styleUrl: './ai-chat-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,6 +26,7 @@ export class AIChatPageComponent implements OnInit, OnDestroy {
 
   chatService = inject(ChatService);
   private trainingService = inject(TrainingService);
+  private translate = inject(TranslateService);
   userInput = '';
   fetchedTrainings: Record<string, Training> = {};
   private nearBottom = true;
@@ -33,11 +35,11 @@ export class AIChatPageComponent implements OnInit, OnDestroy {
   selectedAgentIndex = 0;
 
   agentOptions: AgentOption[] = [
-    { label: 'AUTO', value: null },
-    { label: 'CREATE', value: 'TRAINING_CREATION' },
-    { label: 'SCHEDULE', value: 'SCHEDULING' },
-    { label: 'ANALYSE', value: 'ANALYSIS' },
-    { label: 'COACH', value: 'COACH_MANAGEMENT' },
+    { label: 'AI_CHAT.AGENT_AUTO', value: null },
+    { label: 'AI_CHAT.AGENT_CREATE', value: 'TRAINING_CREATION' },
+    { label: 'AI_CHAT.AGENT_SCHEDULE', value: 'SCHEDULING' },
+    { label: 'AI_CHAT.AGENT_ANALYSE', value: 'ANALYSIS' },
+    { label: 'AI_CHAT.AGENT_COACH', value: 'COACH_MANAGEMENT' },
   ];
 
   ngOnInit(): void {
@@ -82,14 +84,15 @@ export class AIChatPageComponent implements OnInit, OnDestroy {
 
   getAgentLabel(agentType: string | undefined): string {
     if (!agentType) return '';
-    const labels: Record<string, string> = {
-      TRAINING_CREATION: 'CREATE',
-      SCHEDULING: 'SCHEDULE',
-      ANALYSIS: 'ANALYSE',
-      COACH_MANAGEMENT: 'COACH',
-      GENERAL: 'GENERAL',
+    const keys: Record<string, string> = {
+      TRAINING_CREATION: 'AI_CHAT.AGENT_CREATE',
+      SCHEDULING: 'AI_CHAT.AGENT_SCHEDULE',
+      ANALYSIS: 'AI_CHAT.AGENT_ANALYSE',
+      COACH_MANAGEMENT: 'AI_CHAT.AGENT_COACH',
+      GENERAL: 'AI_CHAT.AGENT_GENERAL',
     };
-    return labels[agentType] ?? agentType;
+    const key = keys[agentType];
+    return key ? this.translate.instant(key) : agentType;
   }
 
   newChat(): void {
@@ -109,6 +112,10 @@ export class AIChatPageComponent implements OnInit, OnDestroy {
   quickSend(text: string): void {
     this.userInput = text;
     this.sendMessage();
+  }
+
+  quickSendKey(key: string): void {
+    this.quickSend(this.translate.instant(key));
   }
 
   sendMessage(): void {

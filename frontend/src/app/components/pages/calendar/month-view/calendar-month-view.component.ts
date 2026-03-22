@@ -1,5 +1,6 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, inject, Input, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {TranslateModule} from '@ngx-translate/core';
 import {ScheduledWorkout} from '../../../../services/coach.service';
 import {SavedSession} from '../../../../services/history.service';
 import {TRAINING_TYPE_COLORS, TrainingType} from '../../../../models/training.model';
@@ -11,7 +12,7 @@ import {CalendarClubSession} from '../../../../services/calendar.service';
 @Component({
   selector: 'app-calendar-month-view',
   standalone: true,
-  imports: [CommonModule, SportIconComponent],
+  imports: [CommonModule, SportIconComponent, TranslateModule],
   templateUrl: './calendar-month-view.component.html',
   styleUrl: './calendar-month-view.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

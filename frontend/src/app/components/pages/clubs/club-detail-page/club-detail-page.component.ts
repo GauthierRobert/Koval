@@ -1,6 +1,7 @@
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {
   ClubDetail,
   ClubGroup,
@@ -29,6 +30,7 @@ type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-g
   imports: [
     CommonModule,
     RouterModule,
+    TranslateModule,
     ClubFeedTabComponent,
     ClubSessionsTabComponent,
     ClubMembersTabComponent,
@@ -47,6 +49,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   private clubService = inject(ClubService);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
+  private translate = inject(TranslateService);
 
   selectedClub$ = this.clubService.selectedClub$;
   currentUserId: string | null = null;
@@ -69,12 +72,12 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   );
 
   readonly tabs: Array<{ id: TabId; label: string }> = [
-    { id: 'feed', label: 'FEED' },
-    { id: 'sessions', label: 'SESSIONS' },
-    { id: 'members', label: 'MEMBERS' },
-    { id: 'stats', label: 'STATS' },
-    { id: 'leaderboard', label: 'LEADERBOARD' },
-    { id: 'race-goals', label: 'RACE GOALS' },
+    { id: 'feed', label: 'CLUB_DETAIL.TAB_FEED' },
+    { id: 'sessions', label: 'CLUB_DETAIL.TAB_SESSIONS' },
+    { id: 'members', label: 'CLUB_DETAIL.TAB_MEMBERS' },
+    { id: 'stats', label: 'CLUB_DETAIL.TAB_STATS' },
+    { id: 'leaderboard', label: 'CLUB_DETAIL.TAB_LEADERBOARD' },
+    { id: 'race-goals', label: 'CLUB_DETAIL.TAB_RACE_GOALS' },
   ];
 
   ngOnInit(): void {
@@ -211,8 +214,8 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
 
   getMembershipLabel(status: string | undefined): string {
     if (!status) return '';
-    if (status === 'ACTIVE') return 'MEMBER';
-    if (status === 'PENDING') return 'PENDING';
+    if (status === 'ACTIVE') return this.translate.instant('CLUB_DETAIL.MEMBERSHIP_MEMBER');
+    if (status === 'PENDING') return this.translate.instant('CLUB_DETAIL.MEMBERSHIP_PENDING');
     return status;
   }
 
