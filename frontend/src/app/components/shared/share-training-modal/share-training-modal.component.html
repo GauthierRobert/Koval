@@ -2,15 +2,15 @@
       <div class="modal-backdrop" (click)="close()">
         <div class="modal-card glass" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>SHARE <span class="highlight">TRAINING</span></h2>
+            <h2>{{ 'SHARE_TRAINING.HEADING_SHARE' | translate }} <span class="highlight">{{ 'SHARE_TRAINING.HEADING_TRAINING' | translate }}</span></h2>
             <button class="close-btn" (click)="close()">&times;</button>
           </div>
 
           <div class="modal-body">
             <div class="field">
-              <label>Training</label>
+              <label>{{ 'SHARE_TRAINING.LABEL_TRAINING' | translate }}</label>
               <select [(ngModel)]="selectedTrainingId" (ngModelChange)="onTrainingSelected()">
-                <option value="" disabled>Select a training...</option>
+                <option value="" disabled>{{ 'SHARE_TRAINING.SELECT_TRAINING_PLACEHOLDER' | translate }}</option>
                 @for (t of allTrainings; track t.id) {
                   <option [value]="t.id">{{ t.title }}</option>
                 }
@@ -19,7 +19,7 @@
 
             @if (activeTraining) {
               <div class="field">
-                <label>Share with tag groups</label>
+                <label>{{ 'SHARE_TRAINING.LABEL_SHARE_WITH_TAGS' | translate }}</label>
                 <div class="tag-selector">
                   @for (tag of availableTags; track tag.id) {
                     <span
@@ -31,7 +31,7 @@
                 </div>
                 @if (availableTags.length === 0) {
                   <div class="hint">
-                    No tags available. Add tags to your athletes first.
+                    {{ 'SHARE_TRAINING.HINT_NO_TAGS' | translate }}
                   </div>
                 }
               </div>
@@ -42,7 +42,7 @@
               (click)="save()"
               [disabled]="saving || !activeTraining"
             >
-              {{ saving ? 'SAVING...' : 'SAVE' }}
+              {{ (saving ? 'SHARE_TRAINING.BTN_SAVING' : 'SHARE_TRAINING.BTN_SAVE') | translate }}
             </button>
           </div>
         </div>

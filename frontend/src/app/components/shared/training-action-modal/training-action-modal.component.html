@@ -12,8 +12,8 @@
       <!-- Tab strip -->
       @if (showTabs) {
         <div class="mode-tabs">
-          <button class="mode-tab" [class.active]="tab === 'ai'" (click)="setTab('ai')">Create with AI</button>
-          <button class="mode-tab" [class.active]="tab === 'select'" (click)="setTab('select')">Select existing</button>
+          <button class="mode-tab" [class.active]="tab === 'ai'" (click)="setTab('ai')">{{ 'TRAINING_ACTION.TAB_CREATE_WITH_AI' | translate }}</button>
+          <button class="mode-tab" [class.active]="tab === 'select'" (click)="setTab('select')">{{ 'TRAINING_ACTION.TAB_SELECT_EXISTING' | translate }}</button>
         </div>
       }
 
@@ -21,7 +21,7 @@
         <!-- Session context banner -->
         @if (showSessionBanner && sessionInfo) {
           <div class="session-context">
-            <div class="context-label">Generating training for:</div>
+            <div class="context-label">{{ 'TRAINING_ACTION.SESSION_BANNER_LABEL' | translate }}</div>
             <div class="context-details">
               @if (sessionInfo.sport) {
                 <span class="context-badge">{{ sessionInfo.sport }}</span>
@@ -38,16 +38,16 @@
 
         <!-- All groups linked message -->
         @if (mode === 'session' && !canLinkTraining) {
-          <div class="status-message info">All available groups already have a linked training for this session.</div>
+          <div class="status-message info">{{ 'TRAINING_ACTION.MSG_ALL_GROUPS_LINKED' | translate }}</div>
         }
 
         <!-- ===== AI TAB ===== -->
         @if (tab === 'ai' && canLinkTraining) {
-          <p class="hint">Describe what you want to create in natural language.</p>
+          <p class="hint">{{ 'TRAINING_ACTION.HINT_DESCRIBE_NATURAL' | translate }}</p>
 
           @if (showSportSelector) {
             <div class="form-group">
-              <label class="field-label">Sport *</label>
+              <label class="field-label">{{ 'TRAINING_ACTION.LABEL_SPORT' | translate }}</label>
               <select class="field-select" [(ngModel)]="selectedSport" (ngModelChange)="onSportChange()" [disabled]="loading">
                 @for (s of sportOptions; track s.value) {
                   <option [ngValue]="s.value">{{ s.label }}</option>
@@ -58,9 +58,9 @@
 
           @if (filteredZoneSystems.length > 0) {
             <div class="form-group">
-              <label class="field-label">Zone System (optional)</label>
+              <label class="field-label">{{ 'TRAINING_ACTION.LABEL_ZONE_SYSTEM' | translate }}</label>
               <select class="field-select" [(ngModel)]="selectedZoneSystemId" [disabled]="loading">
-                <option value="">— Sport default —</option>
+                <option value="">{{ 'TRAINING_ACTION.OPTION_SPORT_DEFAULT' | translate }}</option>
                 @for (z of filteredZoneSystems; track z.id) {
                   <option [value]="z.id">{{ z.name }}</option>
                 }
@@ -70,10 +70,10 @@
 
           @if (mode === 'session' && sessionAvailableGroups.length > 0) {
             <div class="form-group">
-              <label class="field-label">Link for Group</label>
+              <label class="field-label">{{ 'TRAINING_ACTION.LABEL_LINK_FOR_GROUP' | translate }}</label>
               <select class="field-select" [(ngModel)]="selectedGroupId" [disabled]="loading">
                 @if (sessionShowNoGroupOption) {
-                  <option value="">-- Entire club --</option>
+                  <option value="">{{ 'TRAINING_ACTION.OPTION_ENTIRE_CLUB' | translate }}</option>
                 }
                 @for (group of sessionAvailableGroups; track group.id) {
                   <option [value]="group.id">{{ group.name }}</option>
@@ -82,9 +82,9 @@
             </div>
           } @else if (availableGroups.length > 0 && clubId && mode !== 'session') {
             <div class="form-group">
-              <label class="field-label">Club Group (optional)</label>
+              <label class="field-label">{{ 'TRAINING_ACTION.LABEL_CLUB_GROUP' | translate }}</label>
               <select class="field-select" [(ngModel)]="selectedGroupId">
-                <option value="">— No group —</option>
+                <option value="">{{ 'TRAINING_ACTION.OPTION_NO_GROUP' | translate }}</option>
                 @for (group of availableGroups; track group.id) {
                   <option [value]="group.id">{{ group.name }}</option>
                 }
@@ -93,11 +93,11 @@
           }
 
           <div class="form-group">
-            <label class="field-label">Prompt</label>
+            <label class="field-label">{{ 'TRAINING_ACTION.LABEL_PROMPT' | translate }}</label>
             <textarea
               class="prompt-textarea"
               [(ngModel)]="prompt"
-              placeholder="e.g. Create a 60-min sweet-spot group ride for Tuesday evening"
+              [placeholder]="'TRAINING_ACTION.PLACEHOLDER_PROMPT' | translate"
               rows="4"
               [disabled]="loading"
             ></textarea>
@@ -106,24 +106,24 @@
 
         <!-- ===== SELECT EXISTING TAB ===== -->
         @if (tab === 'select' && canLinkTraining) {
-          <p class="hint">Pick one of your trainings{{ mode === 'session' ? ' to link to this session' : '' }}.</p>
+          <p class="hint">{{ 'TRAINING_ACTION.HINT_PICK_TRAINING' | translate: { modeHint: mode === 'session' ? ('TRAINING_ACTION.HINT_PICK_TRAINING_SESSION_SUFFIX' | translate) : '' } }}</p>
 
           <div class="form-group">
             <input
               type="text"
               class="search-input"
               [(ngModel)]="searchQuery"
-              placeholder="Search by title or description..."
+              [placeholder]="'TRAINING_ACTION.PLACEHOLDER_SEARCH' | translate"
               [disabled]="loading"
             />
           </div>
 
           @if (mode === 'session' && sessionAvailableGroups.length > 0) {
             <div class="form-group">
-              <label class="field-label">Link for Group</label>
+              <label class="field-label">{{ 'TRAINING_ACTION.LABEL_LINK_FOR_GROUP' | translate }}</label>
               <select class="field-select" [(ngModel)]="selectedGroupId" [disabled]="loading">
                 @if (sessionShowNoGroupOption) {
-                  <option value="">-- Entire club --</option>
+                  <option value="">{{ 'TRAINING_ACTION.OPTION_ENTIRE_CLUB' | translate }}</option>
                 }
                 @for (group of sessionAvailableGroups; track group.id) {
                   <option [value]="group.id">{{ group.name }}</option>
@@ -161,12 +161,12 @@
 
           @if (filteredTrainings.length === 0 && availableTrainings.length > 0) {
             <div class="empty-state">
-              No trainings match your search.
+              {{ 'TRAINING_ACTION.EMPTY_NO_MATCH' | translate }}
             </div>
           }
           @if (availableTrainings.length === 0) {
             <div class="empty-state">
-              You don't have any trainings yet.
+              {{ 'TRAINING_ACTION.EMPTY_NO_TRAININGS' | translate }}
             </div>
           }
         }
@@ -176,7 +176,7 @@
         <!-- Date picker -->
         @if (showDatePicker) {
           <div class="form-group">
-            <label class="field-label">Date *</label>
+            <label class="field-label">{{ 'TRAINING_ACTION.LABEL_DATE' | translate }}</label>
             <input type="date" class="field-select" [(ngModel)]="selectedDate" [disabled]="loading" />
           </div>
         }
@@ -184,7 +184,7 @@
         <!-- Athlete chip (coach-assign: single pre-selected) -->
         @if (showAthleteChip && preselectedAthletes) {
           <div class="form-group">
-            <label class="field-label">Athlete</label>
+            <label class="field-label">{{ 'TRAINING_ACTION.LABEL_ATHLETE' | translate }}</label>
             <div class="athlete-chips">
               @for (a of preselectedAthletes; track a.id) {
                 <span class="athlete-chip">{{ a.displayName }}</span>
@@ -196,7 +196,7 @@
         <!-- Tag filter + athlete multi-select (group-assign) -->
         @if (showTagFilter) {
           <div class="form-group">
-            <label class="field-label">Group filter</label>
+            <label class="field-label">{{ 'TRAINING_ACTION.LABEL_GROUP_FILTER' | translate }}</label>
             <div class="tag-filter-row">
               @for (tag of availableTags; track tag) {
                 <span class="modal-tag-chip"
@@ -209,7 +209,7 @@
 
         @if (showAthleteSelect && availableAthletes.length > 0) {
           <div class="form-group">
-            <label class="field-label">Athletes *</label>
+            <label class="field-label">{{ 'TRAINING_ACTION.LABEL_ATHLETES' | translate }}</label>
             <div class="athlete-checkboxes">
               @for (a of availableAthletes; track a.id) {
                 <label class="checkbox-label">
@@ -224,11 +224,11 @@
         <!-- Notes -->
         @if (showNotes) {
           <div class="form-group">
-            <label class="field-label">Notes <span class="optional">(optional)</span></label>
+            <label class="field-label">{{ 'TRAINING_ACTION.LABEL_NOTES' | translate }} <span class="optional">{{ 'TRAINING_ACTION.OPTIONAL_NOTES' | translate }}</span></label>
             <textarea
               class="prompt-textarea"
               [(ngModel)]="notes"
-              placeholder="e.g. Focus on cadence during intervals"
+              [placeholder]="'TRAINING_ACTION.PLACEHOLDER_NOTES' | translate"
               rows="2"
               [disabled]="loading"
             ></textarea>
@@ -244,7 +244,7 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn-ghost" (click)="close()" [disabled]="loading">Cancel</button>
+        <button class="btn-ghost" (click)="close()" [disabled]="loading">{{ 'TRAINING_ACTION.BTN_CANCEL' | translate }}</button>
         <button
           class="btn-primary"
           (click)="submit()"

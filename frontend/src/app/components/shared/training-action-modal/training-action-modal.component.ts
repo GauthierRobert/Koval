@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {ActionContext, ActionResult, AIActionService, AIActionType} from '../../../services/ai-action.service';
 import {ClubGroup, ClubService, GroupLinkedTraining} from '../../../services/club.service';
@@ -28,7 +29,7 @@ export type TrainingActionMode = 'session' | 'self-schedule' | 'coach-assign' | 
 @Component({
   selector: 'app-training-action-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './training-action-modal.component.html',
   styleUrl: './training-action-modal.component.css',
 })
@@ -56,6 +57,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
   private authService = inject(AuthService);
   private ngZone = inject(NgZone);
   private destroyRef = inject(DestroyRef);
+  private translate = inject(TranslateService);
 
   // Tab state
   tab: 'ai' | 'select' = 'ai';
@@ -93,30 +95,30 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
 
   get modalTitle(): string {
     switch (this.mode) {
-      case 'session': return 'Link Training';
-      case 'self-schedule': return 'Schedule Workout';
+      case 'session': return this.translate.instant('TRAINING_ACTION.MODAL_TITLE_LINK_TRAINING');
+      case 'self-schedule': return this.translate.instant('TRAINING_ACTION.MODAL_TITLE_SCHEDULE_WORKOUT');
       case 'coach-assign':
-      case 'group-assign': return 'Assign Workout';
+      case 'group-assign': return this.translate.instant('TRAINING_ACTION.MODAL_TITLE_ASSIGN_WORKOUT');
     }
   }
 
   get submitLabel(): string {
-    if (this.tab === 'ai') return 'Generate';
+    if (this.tab === 'ai') return this.translate.instant('TRAINING_ACTION.SUBMIT_GENERATE');
     switch (this.mode) {
-      case 'session': return 'Link Training';
-      case 'self-schedule': return 'Schedule';
-      case 'coach-assign': return 'Assign';
-      case 'group-assign': return `Assign to ${this.selectedAthleteIds.length} Athletes`;
+      case 'session': return this.translate.instant('TRAINING_ACTION.SUBMIT_LINK_TRAINING');
+      case 'self-schedule': return this.translate.instant('TRAINING_ACTION.SUBMIT_SCHEDULE');
+      case 'coach-assign': return this.translate.instant('TRAINING_ACTION.SUBMIT_ASSIGN');
+      case 'group-assign': return this.translate.instant('TRAINING_ACTION.SUBMIT_ASSIGN_TO_N_ATHLETES', { count: this.selectedAthleteIds.length });
     }
   }
 
   get loadingLabel(): string {
-    if (this.tab === 'ai') return 'Generating...';
+    if (this.tab === 'ai') return this.translate.instant('TRAINING_ACTION.LOADING_GENERATING');
     switch (this.mode) {
-      case 'session': return 'Linking...';
-      case 'self-schedule': return 'Scheduling...';
+      case 'session': return this.translate.instant('TRAINING_ACTION.LOADING_LINKING');
+      case 'self-schedule': return this.translate.instant('TRAINING_ACTION.LOADING_SCHEDULING');
       case 'coach-assign':
-      case 'group-assign': return 'Assigning...';
+      case 'group-assign': return this.translate.instant('TRAINING_ACTION.LOADING_ASSIGNING');
     }
   }
 
@@ -376,7 +378,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
         error: (err) => {
           this.ngZone.run(() => {
             this.loading = false;
-            this.errorMessage = err?.error?.message ?? 'An unexpected error occurred.';
+            this.errorMessage = err?.error?.message ?? this.translate.instant('TRAINING_ACTION.ERROR_UNEXPECTED');
           });
         },
       });
@@ -394,7 +396,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
           this.ngZone.run(() => {
             this.loading = false;
             this.prompt = '';
-            this.successMessage = 'Training created! Select it below to continue.';
+            this.successMessage = this.translate.instant('TRAINING_ACTION.SUCCESS_TRAINING_CREATED');
             this.trainingService.loadTrainings();
             this.tab = 'select';
           });
@@ -402,7 +404,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
         error: (err) => {
           this.ngZone.run(() => {
             this.loading = false;
-            this.errorMessage = err?.error?.message ?? 'Failed to generate training.';
+            this.errorMessage = err?.error?.message ?? this.translate.instant('TRAINING_ACTION.ERROR_FAILED_GENERATE');
           });
         },
       });
@@ -438,14 +440,14 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
       next: () => {
         this.ngZone.run(() => {
           this.loading = false;
-          this.successMessage = 'Training linked to session successfully.';
+          this.successMessage = this.translate.instant('TRAINING_ACTION.SUCCESS_TRAINING_LINKED');
           this.completed.emit({ success: true, content: 'Training linked.' });
         });
       },
       error: (err) => {
         this.ngZone.run(() => {
           this.loading = false;
-          this.errorMessage = err?.error?.message ?? 'Failed to link training.';
+          this.errorMessage = err?.error?.message ?? this.translate.instant('TRAINING_ACTION.ERROR_FAILED_LINK');
         });
       },
     });
@@ -466,7 +468,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
       error: (err) => {
         this.ngZone.run(() => {
           this.loading = false;
-          this.errorMessage = err?.error?.message ?? 'Failed to schedule workout.';
+          this.errorMessage = err?.error?.message ?? this.translate.instant('TRAINING_ACTION.ERROR_FAILED_SCHEDULE');
         });
       },
     });
@@ -488,7 +490,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
       error: (err) => {
         this.ngZone.run(() => {
           this.loading = false;
-          this.errorMessage = err?.error?.message ?? 'Failed to assign training.';
+          this.errorMessage = err?.error?.message ?? this.translate.instant('TRAINING_ACTION.ERROR_FAILED_ASSIGN');
         });
       },
     });
@@ -514,7 +516,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
       error: (err) => {
         this.ngZone.run(() => {
           this.loading = false;
-          this.errorMessage = err?.error?.message ?? 'Failed to assign training.';
+          this.errorMessage = err?.error?.message ?? this.translate.instant('TRAINING_ACTION.ERROR_FAILED_ASSIGN');
         });
       },
     });

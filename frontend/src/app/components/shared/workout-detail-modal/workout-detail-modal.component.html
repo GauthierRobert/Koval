@@ -7,14 +7,14 @@
         @if (state.loading) {
           <div class="loading-state">
             <div class="spinner"></div>
-            <span>Loading workout...</span>
+            <span>{{ 'WORKOUT_DETAIL.LOADING_WORKOUT' | translate }}</span>
           </div>
         }
 
         @if (state.error) {
           <div class="error-state">
-            <span>{{ state.error }}</span>
-            <button class="retry-btn" (click)="close()">Close</button>
+            <span>{{ state.error | translate }}</span>
+            <button class="retry-btn" (click)="close()">{{ 'WORKOUT_DETAIL.BTN_CLOSE' | translate }}</button>
           </div>
         }
 
@@ -33,12 +33,12 @@
             }
             @if (workout.notes) {
               <p class="notes">
-                <span class="notes-label">Notes:</span> {{ workout.notes }}
+                <span class="notes-label">{{ 'WORKOUT_DETAIL.LABEL_NOTES' | translate }}</span> {{ workout.notes }}
               </p>
             }
             @if (workout.assignedBy) {
               <p class="assigned-by">
-                Assigned by <strong>{{ workout.assignedBy }}</strong>
+                {{ 'WORKOUT_DETAIL.ASSIGNED_BY' | translate: { name: workout.assignedBy } }}
               </p>
             }
           </div>
@@ -61,7 +61,7 @@
             <div class="blocks-section">
               <button class="toggle-details-btn" (click)="toggleBlockDetails()">
                 <span class="toggle-arrow" [class.open]="showBlockDetails">&#9660;</span>
-                {{ showBlockDetails ? 'HIDE DETAILS' : 'SHOW DETAILS' }} ({{ getFlatBlocks(training).length }} blocks)
+                {{ (showBlockDetails ? 'WORKOUT_DETAIL.BTN_HIDE_DETAILS_COUNT' : 'WORKOUT_DETAIL.BTN_SHOW_DETAILS_COUNT') | translate: { count: getFlatBlocks(training).length } }}
               </button>
               @if (showBlockDetails) {
                 <div class="blocks-list">
@@ -83,7 +83,7 @@
                     </div>
                   }
                   <button class="library-link-inline" (click)="viewInLibrary(training)">
-                    Open in Training Library &rarr;
+                    {{ 'WORKOUT_DETAIL.LINK_OPEN_IN_LIBRARY' | translate }}
                   </button>
                 </div>
               }
@@ -95,11 +95,11 @@
             <div class="stat">
               <span class="stat-value" [style.font-style]="isDurationEstimated(training) ? 'italic' : ''">{{
                 getTotalDuration(training) }}</span>
-              <span class="stat-label">Duration</span>
+              <span class="stat-label">{{ 'WORKOUT_DETAIL.STAT_DURATION' | translate }}</span>
             </div>
             <div class="stat">
               <span class="stat-value">{{ getFlatBlocks(training).length }}</span>
-              <span class="stat-label">Blocks</span>
+              <span class="stat-label">{{ 'WORKOUT_DETAIL.STAT_BLOCKS' | translate }}</span>
             </div>
             @if (workout.tss) {
               <div class="stat">
@@ -110,7 +110,7 @@
             @if (workout.intensityFactor || workout.if) {
               <div class="stat">
                 <span class="stat-value">{{ workout.intensityFactor || workout.if }}</span>
-                <span class="stat-label">IF</span>
+                <span class="stat-label">{{ 'WORKOUT_DETAIL.STAT_IF' | translate }}</span>
               </div>
             }
           </div>
@@ -118,15 +118,15 @@
           <div class="modal-actions">
             @if (training.sportType === 'CYCLING') {
               <button class="start-btn" (click)="startTraining(training)">
-                <span class="play-icon">&#9654;</span> Start Training
+                <span class="play-icon">&#9654;</span> {{ 'WORKOUT_DETAIL.BTN_START_TRAINING' | translate }}
               </button>
             }
             @if (workout.status === 'PENDING') {
               <button class="complete-btn" [disabled]="isFutureDate(workout.scheduledDate)"
-                (click)="markComplete()">Mark Complete</button>
-              <button class="skip-btn" (click)="markSkipped()">Skip</button>
+                (click)="markComplete()">{{ 'WORKOUT_DETAIL.BTN_MARK_COMPLETE' | translate }}</button>
+              <button class="skip-btn" (click)="markSkipped()">{{ 'WORKOUT_DETAIL.BTN_SKIP' | translate }}</button>
             }
-            <button class="library-link-btn" (click)="viewInLibrary(training)">View in Training Library</button>
+            <button class="library-link-btn" (click)="viewInLibrary(training)">{{ 'WORKOUT_DETAIL.BTN_VIEW_IN_LIBRARY' | translate }}</button>
           </div>
         }
       }

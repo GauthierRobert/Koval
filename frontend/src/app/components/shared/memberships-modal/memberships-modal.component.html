@@ -1,21 +1,21 @@
 <div class="modal-backdrop" (click)="onBackdropClick()">
   <div class="modal glass" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>MY MEMBERSHIPS</h3>
+      <h3>{{ 'MEMBERSHIPS.HEADING_MY_MEMBERSHIPS' | translate }}</h3>
       <button class="close-btn" (click)="closed.emit()">&times;</button>
     </div>
 
     <div class="modal-body">
       <!-- Invite code section -->
       <div class="section">
-        <div class="section-label">JOIN WITH INVITE CODE</div>
+        <div class="section-label">{{ 'MEMBERSHIPS.SECTION_JOIN_WITH_CODE' | translate }}</div>
         <div class="invite-row">
           <input
             class="form-input"
             [(ngModel)]="inviteCode"
-            placeholder="Enter invite code..."
+            [placeholder]="'MEMBERSHIPS.PLACEHOLDER_INVITE_CODE' | translate"
             (keydown.enter)="redeemCode()" />
-          <button class="btn-primary" (click)="redeemCode()" [disabled]="!inviteCode.trim()">JOIN</button>
+          <button class="btn-primary" (click)="redeemCode()" [disabled]="!inviteCode.trim()">{{ 'MEMBERSHIPS.BTN_JOIN' | translate }}</button>
         </div>
         @if (message$ | async; as msg) {
           <div
@@ -29,7 +29,7 @@
 
       <!-- Clubs section -->
       <div class="section">
-        <div class="section-label">CLUBS</div>
+        <div class="section-label">{{ 'MEMBERSHIPS.SECTION_CLUBS' | translate }}</div>
         @if (clubsWithGroups$ | async; as clubsWithGroups) {
           @if (clubsWithGroups.length > 0) {
             <div class="membership-list">
@@ -44,7 +44,7 @@
                       <button
                         class="btn-leave"
                         (click)="leaveClub(cwg.club.id)">
-                        LEAVE
+                        {{ 'MEMBERSHIPS.BTN_LEAVE' | translate }}
                       </button>
                     }
                   </div>
@@ -55,10 +55,10 @@
                         <span class="item-name sub" [class.not-member]="!gm.isMember">{{ gm.group.name }}</span>
                       </div>
                       @if (gm.isMember) {
-                        <button class="btn-leave" (click)="leaveClubGroup(cwg.club.id, gm.group.id)">LEAVE</button>
+                        <button class="btn-leave" (click)="leaveClubGroup(cwg.club.id, gm.group.id)">{{ 'MEMBERSHIPS.BTN_LEAVE' | translate }}</button>
                       }
                       @if (!gm.isMember) {
-                        <button class="btn-join-group" (click)="joinClubGroup(cwg.club.id, gm.group.id)">JOIN</button>
+                        <button class="btn-join-group" (click)="joinClubGroup(cwg.club.id, gm.group.id)">{{ 'MEMBERSHIPS.BTN_JOIN_GROUP' | translate }}</button>
                       }
                     </div>
                   }
@@ -66,14 +66,14 @@
               }
             </div>
           } @else {
-            <div class="empty-state">No clubs yet</div>
+            <div class="empty-state">{{ 'MEMBERSHIPS.EMPTY_NO_CLUBS' | translate }}</div>
           }
         }
       </div>
 
       <!-- Training groups section -->
       <div class="section">
-        <div class="section-label">TRAINING GROUPS</div>
+        <div class="section-label">{{ 'MEMBERSHIPS.SECTION_TRAINING_GROUPS' | translate }}</div>
         @if (coachGroups$ | async; as groups) {
           @if (groups.length > 0) {
             <div class="membership-list">
@@ -82,12 +82,12 @@
                   <div class="item-info">
                     <span class="item-name">{{ group.name }}</span>
                   </div>
-                  <button class="btn-leave" (click)="leaveCoachGroup(group.id)">LEAVE</button>
+                  <button class="btn-leave" (click)="leaveCoachGroup(group.id)">{{ 'MEMBERSHIPS.BTN_LEAVE' | translate }}</button>
                 </div>
               }
             </div>
           } @else {
-            <div class="empty-state">No training groups yet</div>
+            <div class="empty-state">{{ 'MEMBERSHIPS.EMPTY_NO_TRAINING_GROUPS' | translate }}</div>
           }
         }
       </div>

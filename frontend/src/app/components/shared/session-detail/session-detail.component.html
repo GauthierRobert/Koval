@@ -6,19 +6,19 @@
 
   <div class="top-stats">
     <div class="stat-item">
-      <span class="label">Total Time</span>
+      <span class="label">{{ 'SESSION_DETAIL.STAT_TOTAL_TIME' | translate }}</span>
       <span class="value">{{ formatTime(session.totalDuration) }}</span>
     </div>
     <div class="stat-item">
-      <span class="label">Avg Power</span>
+      <span class="label">{{ 'SESSION_DETAIL.STAT_AVG_POWER' | translate }}</span>
       <span class="value">{{ session.avgPower }}{{ getSportUnit() }}</span>
     </div>
     <div class="stat-item">
-      <span class="label">Avg HR</span>
+      <span class="label">{{ 'SESSION_DETAIL.STAT_AVG_HR' | translate }}</span>
       <span class="value hr">{{ session.avgHR > 0 ? session.avgHR : '--' }}</span>
     </div>
     <div class="stat-item">
-      <span class="label">Avg Cadence</span>
+      <span class="label">{{ 'SESSION_DETAIL.STAT_AVG_CADENCE' | translate }}</span>
       <span class="value">{{ session.avgCadence }} RPM</span>
     </div>
   </div>
@@ -27,13 +27,13 @@
     <div class="chart-section">
       <div class="chart-toggles">
         <button class="toggle-btn power" [class.active]="showPower" (click)="showPower = !showPower; drawChart()">
-          <span class="dot"></span> Power
+          <span class="dot"></span> {{ 'SESSION_DETAIL.TOGGLE_POWER' | translate }}
         </button>
         <button class="toggle-btn heartrate" [class.active]="showHR" (click)="showHR = !showHR; drawChart()">
-          <span class="dot"></span> Heart Rate
+          <span class="dot"></span> {{ 'SESSION_DETAIL.TOGGLE_HEART_RATE' | translate }}
         </button>
         <button class="toggle-btn cadence" [class.active]="showCadence" (click)="showCadence = !showCadence; drawChart()">
-          <span class="dot"></span> Cadence
+          <span class="dot"></span> {{ 'SESSION_DETAIL.TOGGLE_CADENCE' | translate }}
         </button>
       </div>
       <div class="chart-area">
@@ -43,7 +43,7 @@
   } @else {
     <div class="chart-section">
       <div class="chart-area">
-        <div class="no-chart">No time-series data available for this session</div>
+        <div class="no-chart">{{ 'SESSION_DETAIL.NO_CHART_DATA' | translate }}</div>
       </div>
     </div>
   }
@@ -53,13 +53,13 @@
       <table class="summary-table">
         <thead>
           <tr>
-            <th>Interval</th>
-            <th>Duration</th>
-            <th>Target</th>
-            <th>Actual</th>
-            <th>Delta</th>
-            <th>HR</th>
-            <th>Cadence</th>
+            <th>{{ 'SESSION_DETAIL.TABLE_COL_INTERVAL' | translate }}</th>
+            <th>{{ 'SESSION_DETAIL.TABLE_COL_DURATION' | translate }}</th>
+            <th>{{ 'SESSION_DETAIL.TABLE_COL_TARGET' | translate }}</th>
+            <th>{{ 'SESSION_DETAIL.TABLE_COL_ACTUAL' | translate }}</th>
+            <th>{{ 'SESSION_DETAIL.TABLE_COL_DELTA' | translate }}</th>
+            <th>{{ 'SESSION_DETAIL.TABLE_COL_HR' | translate }}</th>
+            <th>{{ 'SESSION_DETAIL.TABLE_COL_CADENCE' | translate }}</th>
           </tr>
         </thead>
         <tbody>

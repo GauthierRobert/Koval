@@ -1,6 +1,7 @@
 import {Component, EventEmitter, inject, Input, NgZone, OnChanges, Output, SimpleChanges,} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {ActionContext, ActionResult, AIActionService, AIActionType} from '../../../services/ai-action.service';
 import {ClubGroup, ClubService} from '../../../services/club.service';
 import {ZoneService} from '../../../services/zone.service';
@@ -11,7 +12,7 @@ import {Training} from '../../../models/training.model';
 @Component({
   selector: 'app-create-with-ai-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './create-with-ai-modal.component.html',
   styleUrl: './create-with-ai-modal.component.css',
 })
@@ -30,6 +31,7 @@ export class CreateWithAiModalComponent implements OnChanges {
   private zoneService = inject(ZoneService);
   private trainingService = inject(TrainingService);
   private ngZone = inject(NgZone);
+  private translate = inject(TranslateService);
 
   prompt = '';
   loading = false;
@@ -55,11 +57,11 @@ export class CreateWithAiModalComponent implements OnChanges {
   get promptPlaceholder(): string {
     switch (this.actionType) {
       case 'ZONE_CREATION':
-        return 'e.g. Create 7 power zones based on FTP for cycling, from Active Recovery to Neuromuscular';
+        return this.translate.instant('CREATE_WITH_AI.PLACEHOLDER_PROMPT_ZONE_CREATION');
       case 'TRAINING_FROM_NOTATION':
-        return 'e.g. 1h sweet-spot session: 10min warm-up, 3x10min at 88-93% with 5min recovery, 10min cool-down';
+        return this.translate.instant('CREATE_WITH_AI.PLACEHOLDER_PROMPT_TRAINING_NOTATION');
       default:
-        return 'e.g. Create a 60-min sweet-spot group ride for Tuesday evening at 7pm';
+        return this.translate.instant('CREATE_WITH_AI.PLACEHOLDER_PROMPT_DEFAULT');
     }
   }
 
@@ -150,14 +152,14 @@ export class CreateWithAiModalComponent implements OnChanges {
         next: () => {
           this.ngZone.run(() => {
             this.loading = false;
-            this.successMessage = 'Training linked to session successfully.';
+            this.successMessage = this.translate.instant('CREATE_WITH_AI.SUCCESS_TRAINING_LINKED');
             this.created.emit({ success: true, content: 'Training linked.' });
           });
         },
         error: (err) => {
           this.ngZone.run(() => {
             this.loading = false;
-            this.errorMessage = err?.error?.message ?? 'Failed to link training.';
+            this.errorMessage = err?.error?.message ?? this.translate.instant('CREATE_WITH_AI.ERROR_FAILED_LINK');
           });
         },
       });
@@ -194,7 +196,7 @@ export class CreateWithAiModalComponent implements OnChanges {
       error: (err) => {
         this.ngZone.run(() => {
           this.loading = false;
-          this.errorMessage = err?.error?.message ?? 'An unexpected error occurred.';
+          this.errorMessage = err?.error?.message ?? this.translate.instant('CREATE_WITH_AI.ERROR_UNEXPECTED');
         });
       },
     });

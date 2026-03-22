@@ -9,16 +9,15 @@
         <div class="action-buttons">
           <div class="export-dropdown">
             <button class="export-btn" (click)="toggleExportDropdown($event)">
-              EXPORT
+              {{ 'WORKOUT_VIZ.BTN_EXPORT' | translate }}
               <span class="dropdown-caret">&#x25BC;</span>
             </button>
             @if (isExportDropdownOpen) {
               <div class="dropdown-menu glass">
                 @if (training.sportType === 'CYCLING') {
-                  <button class="dropdown-item" (click)="exportToZwift()">Zwift
-                    (.zwo)</button>
+                  <button class="dropdown-item" (click)="exportToZwift()">{{ 'WORKOUT_VIZ.EXPORT_ZWIFT' | translate }}</button>
                 }
-                <button class="dropdown-item" (click)="exportToJSON()">JSON</button>
+                <button class="dropdown-item" (click)="exportToJSON()">{{ 'WORKOUT_VIZ.EXPORT_JSON' | translate }}</button>
               </div>
             }
           </div>
@@ -27,19 +26,19 @@
           </button>
           @if (isOwner()) {
             @if (!isEditMode) {
-              <button class="edit-blocks-btn" (click)="enterEditMode()">EDIT BLOCKS</button>
+              <button class="edit-blocks-btn" (click)="enterEditMode()">{{ 'WORKOUT_VIZ.BTN_EDIT_BLOCKS' | translate }}</button>
             }
             @if (isEditMode) {
-              <button class="edit-blocks-btn" (click)="cancelEdits()">CANCEL</button>
+              <button class="edit-blocks-btn" (click)="cancelEdits()">{{ 'WORKOUT_VIZ.BTN_CANCEL' | translate }}</button>
               <button class="edit-blocks-btn active" [disabled]="isSaving" (click)="saveEdits()">
-                {{ isSaving ? 'Saving...' : 'DONE' }}
+                {{ (isSaving ? 'WORKOUT_VIZ.BTN_SAVING' : 'WORKOUT_VIZ.BTN_DONE') | translate }}
               </button>
             }
           }
-          <button class="schedule-btn" (click)="openScheduleModal()">SCHEDULE</button>
+          <button class="schedule-btn" (click)="openScheduleModal()">{{ 'WORKOUT_VIZ.BTN_SCHEDULE' | translate }}</button>
           @if (training.sportType === 'CYCLING') {
             <button class="start-btn" (click)="startWorkout()">
-              <span class="play-icon">&#x25B6;</span> START WORKOUT
+              <span class="play-icon">&#x25B6;</span> {{ 'WORKOUT_VIZ.BTN_START_WORKOUT' | translate }}
             </button>
           }
         </div>
@@ -61,13 +60,13 @@
               <div class="set-header">
                 <span class="set-badge">&times;{{ block.repetitions }}</span>
                 @if (block.restDurationSeconds) {
-                  <span class="set-rest">Rest {{ formatDuration(block.restDurationSeconds) }}</span>
+                  <span class="set-rest">{{ 'WORKOUT_VIZ.SET_REST_LABEL' | translate: { duration: formatDuration(block.restDurationSeconds) } }}</span>
                 }
                 @if (isEditMode) {
                   <div class="step-actions">
-                    <button class="step-action-btn" title="Move up" (click)="moveBlock(i, 'up'); $event.stopPropagation()" [disabled]="i === 0">&#x25B2;</button>
-                    <button class="step-action-btn" title="Move down" (click)="moveBlock(i, 'down'); $event.stopPropagation()" [disabled]="i === displayBlocks.length - 1">&#x25BC;</button>
-                    <button class="step-action-btn delete" title="Remove set" (click)="removeBlock(i); $event.stopPropagation()">&times;</button>
+                    <button class="step-action-btn" [title]="'WORKOUT_VIZ.MOVE_UP_TITLE' | translate" (click)="moveBlock(i, 'up'); $event.stopPropagation()" [disabled]="i === 0">&#x25B2;</button>
+                    <button class="step-action-btn" [title]="'WORKOUT_VIZ.MOVE_DOWN_TITLE' | translate" (click)="moveBlock(i, 'down'); $event.stopPropagation()" [disabled]="i === displayBlocks.length - 1">&#x25BC;</button>
+                    <button class="step-action-btn delete" [title]="'WORKOUT_VIZ.REMOVE_SET_TITLE' | translate" (click)="removeBlock(i); $event.stopPropagation()">&times;</button>
                   </div>
                 }
               </div>
@@ -78,7 +77,7 @@
                       <div class="set-header">
                         <span class="set-badge">&times;{{ child.repetitions }}</span>
                         @if (child.restDurationSeconds) {
-                          <span class="set-rest">Rest {{ formatDuration(child.restDurationSeconds) }}</span>
+                          <span class="set-rest">{{ 'WORKOUT_VIZ.SET_REST_LABEL' | translate: { duration: formatDuration(child.restDurationSeconds) } }}</span>
                         }
                       </div>
                       <div class="set-children">
@@ -129,10 +128,10 @@
               }
               @if (isEditMode) {
                 <div class="step-actions">
-                  <button class="step-action-btn" title="Move up" (click)="moveBlock(i, 'up'); $event.stopPropagation()" [disabled]="i === 0">&#x25B2;</button>
-                  <button class="step-action-btn" title="Move down" (click)="moveBlock(i, 'down'); $event.stopPropagation()" [disabled]="i === displayBlocks.length - 1">&#x25BC;</button>
-                  <button class="step-action-btn edit" title="Edit block" (click)="openEditBlock(i); $event.stopPropagation()">&#x270E;</button>
-                  <button class="step-action-btn delete" title="Remove block" (click)="removeBlock(i); $event.stopPropagation()">&times;</button>
+                  <button class="step-action-btn" [title]="'WORKOUT_VIZ.MOVE_UP_TITLE' | translate" (click)="moveBlock(i, 'up'); $event.stopPropagation()" [disabled]="i === 0">&#x25B2;</button>
+                  <button class="step-action-btn" [title]="'WORKOUT_VIZ.MOVE_DOWN_TITLE' | translate" (click)="moveBlock(i, 'down'); $event.stopPropagation()" [disabled]="i === displayBlocks.length - 1">&#x25BC;</button>
+                  <button class="step-action-btn edit" [title]="'WORKOUT_VIZ.EDIT_BLOCK_TITLE' | translate" (click)="openEditBlock(i); $event.stopPropagation()">&#x270E;</button>
+                  <button class="step-action-btn delete" [title]="'WORKOUT_VIZ.REMOVE_BLOCK_TITLE' | translate" (click)="removeBlock(i); $event.stopPropagation()">&times;</button>
                 </div>
               }
             </div>
@@ -140,7 +139,7 @@
         }
       </div>
       @if (isEditMode) {
-        <button class="add-block-btn" (click)="openAddBlock()">+ ADD BLOCK</button>
+        <button class="add-block-btn" (click)="openAddBlock()">{{ 'WORKOUT_VIZ.BTN_ADD_BLOCK' | translate }}</button>
       }
     </div>
 
@@ -210,26 +209,26 @@
 
       <div class="metrics-bar glass">
         <div class="stat">
-          <span class="label">Duration</span>
+          <span class="label">{{ 'WORKOUT_VIZ.STAT_DURATION' | translate }}</span>
           <span class="value" [style.font-style]="isDurationEstimated() ? 'italic' : ''">{{ getTotalDuration() }}</span>
         </div>
         <div class="stat">
-          <span class="label">TSS</span>
+          <span class="label">{{ 'WORKOUT_VIZ.STAT_TSS' | translate }}</span>
           <span class="value">{{ training.estimatedTss || '-' }}</span>
         </div>
         <div class="stat">
-          <span class="label">IF</span>
+          <span class="label">{{ 'WORKOUT_VIZ.STAT_IF' | translate }}</span>
           <span class="value">{{ training.estimatedIf | number:'1.2-2' }}</span>
         </div>
         <div class="stat">
-          <span class="label">Blocks</span>
+          <span class="label">{{ 'WORKOUT_VIZ.STAT_BLOCKS' | translate }}</span>
           <span class="value">{{ displayFlatBlocks.length }}</span>
         </div>
       </div>
 
       @if (getZoneRepartition().length > 0) {
         <div class="zone-repartition glass">
-          <div class="panel-header">Zone Distribution</div>
+          <div class="panel-header">{{ 'WORKOUT_VIZ.ZONE_DISTRIBUTION_HEADING' | translate }}</div>
           <div class="zone-bars">
             @for (zone of getZoneRepartition(); track zone) {
               <div class="zone-row">

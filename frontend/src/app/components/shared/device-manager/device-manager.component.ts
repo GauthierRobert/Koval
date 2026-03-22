@@ -1,11 +1,12 @@
 import {Component, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {TranslateModule} from '@ngx-translate/core';
 import {BluetoothService} from '../../../services/bluetooth.service';
 
 @Component({
   selector: 'app-device-manager',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './device-manager.component.html',
   styleUrl: './device-manager.component.css'
 })

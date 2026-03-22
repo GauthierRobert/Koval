@@ -2,17 +2,17 @@
       <div class="modal-backdrop" (click)="close()">
       <div class="modal-card glass" (click)="$event.stopPropagation()">
         <div class="modal-header">
-          <h2>INVITE <span class="highlight">CODES</span></h2>
+          <h2>{{ 'INVITE_CODE.HEADING_INVITE' | translate }} <span class="highlight">{{ 'INVITE_CODE.HEADING_CODES' | translate }}</span></h2>
           <button class="close-btn" (click)="close()">&times;</button>
         </div>
 
         <div class="modal-body">
           <!-- Generate new code -->
           <div class="generate-section">
-            <h3 class="sub-title">GENERATE NEW CODE</h3>
+            <h3 class="sub-title">{{ 'INVITE_CODE.SECTION_GENERATE' | translate }}</h3>
 
             <div class="field">
-              <label>Tags (athletes will receive these)</label>
+              <label>{{ 'INVITE_CODE.LABEL_TAGS' | translate }}</label>
               <div class="tag-selector">
                 @for (tag of unassignedTags; track tag.id) {
                   <span
@@ -26,19 +26,19 @@
                     class="tag-input"
                     [(ngModel)]="newTagInput"
                     (keydown.enter)="addNewTag()"
-                    placeholder="Tag name, then Enter..."
+                    [placeholder]="'INVITE_CODE.PLACEHOLDER_TAG_NAME' | translate"
                   />
                 </div>
               </div>
             </div>
 
             <div class="field">
-              <label>Max uses (0 = unlimited)</label>
+              <label>{{ 'INVITE_CODE.LABEL_MAX_USES' | translate }}</label>
               <input type="number" class="num-input" [(ngModel)]="maxUses" min="0" />
             </div>
 
             <button class="generate-btn" (click)="generate()" [disabled]="generating">
-              {{ generating ? 'GENERATING...' : 'GENERATE CODE' }}
+              {{ (generating ? 'INVITE_CODE.BTN_GENERATING' : 'INVITE_CODE.BTN_GENERATE') | translate }}
             </button>
           </div>
 
@@ -46,11 +46,11 @@
           @if (generatedCode) {
             <div class="code-display">
             <div class="code-display-inner">
-              <span class="code-display-label">Share this code with your athletes</span>
+              <span class="code-display-label">{{ 'INVITE_CODE.SHARE_CODE_LABEL' | translate }}</span>
               <div class="code-value">{{ generatedCode }}</div>
             </div>
             <button class="copy-btn" (click)="copyCode()">
-              {{ copied ? 'COPIED!' : 'COPY' }}
+              {{ (copied ? 'INVITE_CODE.BTN_COPIED' : 'INVITE_CODE.BTN_COPY') | translate }}
             </button>
             </div>
           }
@@ -59,10 +59,10 @@
           @if ((inviteCodes$ | async)?.length) {
             <div class="codes-section">
               <div class="codes-header">
-                <h3 class="sub-title">EXISTING CODES</h3>
+                <h3 class="sub-title">{{ 'INVITE_CODE.SECTION_EXISTING_CODES' | translate }}</h3>
                 @if (hasInactiveCodes$ | async) {
                   <button class="toggle-inactive-btn" (click)="toggleShowInactive()">
-                    {{ showInactive ? 'HIDE' : 'SHOW' }} INACTIVE
+                    {{ (showInactive ? 'INVITE_CODE.BTN_HIDE_INACTIVE' : 'INVITE_CODE.BTN_SHOW_INACTIVE') | translate }}
                   </button>
                 }
               </div>
@@ -79,20 +79,20 @@
                           <span class="mini-tag">{{ resolveTagName(groupId) }}</span>
                         }
                         @if (code.groupIds.length === 0) {
-                          <span class="no-tags">No groups</span>
+                          <span class="no-tags">{{ 'INVITE_CODE.NO_GROUPS' | translate }}</span>
                         }
                       </div>
-                      <span class="code-uses">{{ code.currentUses }}{{ code.maxUses > 0 ? ' / ' + code.maxUses : '' }} uses</span>
+                      <span class="code-uses">{{ 'INVITE_CODE.USES_DISPLAY' | translate: { current: code.currentUses, max: code.maxUses > 0 ? code.maxUses : '∞' } }}</span>
                     </div>
                     @if (code.active) {
                       <button
                         class="deactivate-btn"
                         (click)="deactivate(code)"
-                        title="Deactivate"
+                        [title]="'INVITE_CODE.BTN_DEACTIVATE_TITLE' | translate"
                       >&times;</button>
                     }
                     @if (!code.active) {
-                      <span class="inactive-badge">INACTIVE</span>
+                      <span class="inactive-badge">{{ 'INVITE_CODE.BADGE_INACTIVE' | translate }}</span>
                     }
                   </div>
                 }

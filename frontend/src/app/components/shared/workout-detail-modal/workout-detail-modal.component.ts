@@ -1,5 +1,6 @@
 import {Component, EventEmitter, inject, Input, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {TranslateModule} from '@ngx-translate/core';
 import {Router} from '@angular/router';
 import {BehaviorSubject, of} from 'rxjs';
 import {catchError, map, startWith, switchMap} from 'rxjs/operators';
@@ -33,7 +34,7 @@ const LOADING_STATE: TrainingState = { training: null, loading: true, error: nul
 @Component({
   selector: 'app-workout-detail-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './workout-detail-modal.component.html',
   styleUrl: './workout-detail-modal.component.css',
 })
@@ -75,7 +76,7 @@ export class WorkoutDetailModalComponent {
       if (!w) return of(IDLE_STATE);
       return this.trainingService.getTrainingById(w.trainingId).pipe(
         map((t): TrainingState => ({ training: t, loading: false, error: null })),
-        catchError(() => of<TrainingState>({ training: null, loading: false, error: 'Could not load workout details.' })),
+        catchError(() => of<TrainingState>({ training: null, loading: false, error: 'WORKOUT_DETAIL.ERROR_LOAD_FAILED' })),
         startWith(LOADING_STATE)
       );
     })

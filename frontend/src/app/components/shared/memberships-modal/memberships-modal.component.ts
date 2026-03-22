@@ -1,6 +1,7 @@
 import {ChangeDetectionStrategy, Component, DestroyRef, EventEmitter, inject, OnInit, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {BehaviorSubject, forkJoin, of} from 'rxjs';
 import {catchError} from 'rxjs/operators';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -22,7 +23,7 @@ interface ClubWithGroups {
 @Component({
   selector: 'app-memberships-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './memberships-modal.component.html',
   styleUrl: './memberships-modal.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -35,6 +36,7 @@ export class MembershipsModalComponent implements OnInit {
   private coachService = inject(CoachService);
   private authService = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
+  private translate = inject(TranslateService);
 
   inviteCode = '';
   private messageSubject = new BehaviorSubject<string>('');
@@ -100,14 +102,14 @@ export class MembershipsModalComponent implements OnInit {
     if (!code) return;
     this.coachService.redeemInviteCode(code).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
-        this.messageSubject.next('Joined successfully!');
+        this.messageSubject.next(this.translate.instant('MEMBERSHIPS.MSG_JOINED_SUCCESSFULLY'));
         this.messageTypeSubject.next('success');
         this.inviteCode = '';
         this.authService.refreshUser();
         this.loadAll();
       },
       error: () => {
-        this.messageSubject.next('Invalid or expired invite code.');
+        this.messageSubject.next(this.translate.instant('MEMBERSHIPS.MSG_INVALID_CODE'));
         this.messageTypeSubject.next('error');
       },
     });
@@ -160,11 +162,11 @@ export class MembershipsModalComponent implements OnInit {
   }
 
   getRoleBadge(club: ClubSummary): string {
-    if (!club.membershipStatus) return 'MEMBER';
-    if (club.membershipStatus.includes('OWNER')) return 'OWNER';
-    if (club.membershipStatus.includes('ADMIN')) return 'ADMIN';
-    if (club.membershipStatus.includes('COACH')) return 'COACH';
-    return 'MEMBER';
+    if (!club.membershipStatus) return this.translate.instant('MEMBERSHIPS.ROLE_MEMBER');
+    if (club.membershipStatus.includes('OWNER')) return this.translate.instant('MEMBERSHIPS.ROLE_OWNER');
+    if (club.membershipStatus.includes('ADMIN')) return this.translate.instant('MEMBERSHIPS.ROLE_ADMIN');
+    if (club.membershipStatus.includes('COACH')) return this.translate.instant('MEMBERSHIPS.ROLE_COACH');
+    return this.translate.instant('MEMBERSHIPS.ROLE_MEMBER');
   }
 
   onBackdropClick(): void {

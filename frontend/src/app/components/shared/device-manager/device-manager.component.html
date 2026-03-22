@@ -1,6 +1,6 @@
     <div class="device-manager glass">
       <div class="header">
-        <h3>DEVICES</h3>
+        <h3>{{ 'DEVICE_MANAGER.HEADING_DEVICES' | translate }}</h3>
         <button class="close-btn" (click)="onClose()">✕</button>
       </div>
 
@@ -9,7 +9,7 @@
         <div class="device-item">
           <div class="icon">🚲</div>
           <div class="info">
-            <div class="name">Smart Trainer</div>
+            <div class="name">{{ 'DEVICE_MANAGER.DEVICE_SMART_TRAINER' | translate }}</div>
             <div class="status" [class.connected]="(trainerStatus$ | async) === 'Connected'">
               {{ trainerStatus$ | async }}
             </div>
@@ -17,7 +17,7 @@
           <button class="action-btn"
                   [disabled]="(trainerStatus$ | async) === 'Scanning' || (trainerStatus$ | async) === 'Connecting'"
                   (click)="connectTrainer()">
-            {{ (trainerStatus$ | async) === 'Connected' ? 'FORGET' : 'PAIR' }}
+            {{ ((trainerStatus$ | async) === 'Connected' ? 'DEVICE_MANAGER.BTN_FORGET' : 'DEVICE_MANAGER.BTN_PAIR') | translate }}
           </button>
         </div>
 
@@ -25,7 +25,7 @@
         <div class="device-item">
           <div class="icon">❤️</div>
           <div class="info">
-            <div class="name">Heart Rate Monitor</div>
+            <div class="name">{{ 'DEVICE_MANAGER.DEVICE_HEART_RATE_MONITOR' | translate }}</div>
             <div class="status" [class.connected]="(hrStatus$ | async) === 'Connected'">
               {{ hrStatus$ | async }}
             </div>
@@ -33,7 +33,7 @@
           <button class="action-btn"
                   [disabled]="(hrStatus$ | async) === 'Scanning' || (hrStatus$ | async) === 'Connecting'"
                   (click)="connectHR()">
-            {{ (hrStatus$ | async) === 'Connected' ? 'FORGET' : 'PAIR' }}
+            {{ ((hrStatus$ | async) === 'Connected' ? 'DEVICE_MANAGER.BTN_FORGET' : 'DEVICE_MANAGER.BTN_PAIR') | translate }}
           </button>
         </div>
 
@@ -41,7 +41,7 @@
         <div class="device-item">
           <div class="icon">⚡</div>
           <div class="info">
-            <div class="name">Power Meter</div>
+            <div class="name">{{ 'DEVICE_MANAGER.DEVICE_POWER_METER' | translate }}</div>
             <div class="status" [class.connected]="(pmStatus$ | async) === 'Connected'">
               {{ pmStatus$ | async }}
             </div>
@@ -49,7 +49,7 @@
           <button class="action-btn"
                   [disabled]="(pmStatus$ | async) === 'Scanning' || (pmStatus$ | async) === 'Connecting'"
                   (click)="connectPM()">
-            {{ (pmStatus$ | async) === 'Connected' ? 'FORGET' : 'PAIR' }}
+            {{ ((pmStatus$ | async) === 'Connected' ? 'DEVICE_MANAGER.BTN_FORGET' : 'DEVICE_MANAGER.BTN_PAIR') | translate }}
           </button>
         </div>
 
@@ -57,7 +57,7 @@
         <div class="device-item">
           <div class="icon">🔄</div>
           <div class="info">
-            <div class="name">Cadence Sensor</div>
+            <div class="name">{{ 'DEVICE_MANAGER.DEVICE_CADENCE_SENSOR' | translate }}</div>
             <div class="status" [class.connected]="(cadenceStatus$ | async) === 'Connected'">
               {{ cadenceStatus$ | async }}
             </div>
@@ -65,12 +65,12 @@
           <button class="action-btn"
                   [disabled]="(cadenceStatus$ | async) === 'Scanning' || (cadenceStatus$ | async) === 'Connecting'"
                   (click)="connectCadence()">
-            {{ (cadenceStatus$ | async) === 'Connected' ? 'FORGET' : 'PAIR' }}
+            {{ ((cadenceStatus$ | async) === 'Connected' ? 'DEVICE_MANAGER.BTN_FORGET' : 'DEVICE_MANAGER.BTN_PAIR') | translate }}
           </button>
         </div>
       </div>
 
       <div class="footer-note">
-        Ensure your devices are in pairing mode and Bluetooth is enabled in your browser.
+        {{ 'DEVICE_MANAGER.FOOTER_BLUETOOTH_HINT' | translate }}
       </div>
     </div>

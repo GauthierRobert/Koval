@@ -1,5 +1,6 @@
 import {AfterViewInit, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild,} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {TranslateModule} from '@ngx-translate/core';
 import {SavedSession} from '../../../services/history.service';
 import {formatTimeHMS} from '../format/format.utils';
 import {BlockSummary, LiveMetrics} from '../../../services/workout-execution.service';
@@ -7,7 +8,7 @@ import {BlockSummary, LiveMetrics} from '../../../services/workout-execution.ser
 @Component({
     selector: 'app-session-detail',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, TranslateModule],
     templateUrl: './session-detail.component.html',
     styleUrls: ['./session-detail.component.css'],
 })

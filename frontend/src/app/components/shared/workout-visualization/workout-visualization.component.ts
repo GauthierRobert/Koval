@@ -1,5 +1,6 @@
 import {Component, inject, Input} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {TrainingService} from '../../../services/training.service';
 import {flattenElements, hasDurationEstimate, isSet, Training, WorkoutBlock} from '../../../models/training.model';
 import {WorkoutExecutionService} from '../../../services/workout-execution.service';
@@ -15,7 +16,7 @@ import {formatPace as sharedFormatPace} from '../format/format.utils';
 @Component({
   selector: 'app-workout-visualization',
   standalone: true,
-  imports: [CommonModule, TrainingActionModalComponent, BlockEditorModalComponent],
+  imports: [CommonModule, TrainingActionModalComponent, BlockEditorModalComponent, TranslateModule],
   templateUrl: './workout-visualization.component.html',
   styleUrl: './workout-visualization.component.css'
 })
@@ -29,6 +30,7 @@ export class WorkoutVisualizationComponent {
   private zoneService = inject(ZoneService);
 
   private currentZoneSystem: ZoneSystem | null = null;
+  private translate = inject(TranslateService);
 
   ngOnChanges() {
     if (this.training?.zoneSystemId) {
@@ -244,8 +246,8 @@ export class WorkoutVisualizationComponent {
   }
 
   getDisplayIntensity(block: WorkoutBlock): string {
-    if (block.type === 'PAUSE') return 'PAUSE';
-    if (block.type === 'FREE') return 'FREE';
+    if (block.type === 'PAUSE') return this.translate.instant('WORKOUT_VIZ.INTENSITY_PAUSE').toUpperCase();
+    if (block.type === 'FREE') return this.translate.instant('WORKOUT_VIZ.INTENSITY_FREE').toUpperCase();
 
     const start = this.getEffectiveIntensity(block, 'START');
     const end = this.getEffectiveIntensity(block, 'END');
@@ -519,8 +521,8 @@ export class WorkoutVisualizationComponent {
   getBlockIntensityDisplay(block: WorkoutBlock): string {
     if (block.zoneLabel) return block.zoneLabel;
     if (block.zoneTarget) return block.zoneTarget;
-    if (block.type === 'PAUSE') return 'Pause';
-    if (block.type === 'FREE') return 'Free';
+    if (block.type === 'PAUSE') return this.translate.instant('WORKOUT_VIZ.INTENSITY_PAUSE');
+    if (block.type === 'FREE') return this.translate.instant('WORKOUT_VIZ.INTENSITY_FREE');
     if (block.type === 'RAMP') {
       return `${block.intensityStart || 0}% → ${block.intensityEnd || 0}%`;
     }

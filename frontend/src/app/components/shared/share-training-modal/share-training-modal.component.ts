@@ -1,6 +1,7 @@
 import {Component, EventEmitter, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {TranslateModule} from '@ngx-translate/core';
 import {TrainingService} from '../../../services/training.service';
 import {Training} from '../../../models/training.model';
 import {Group} from '../../../services/group.service';
@@ -8,7 +9,7 @@ import {Group} from '../../../services/group.service';
 @Component({
   selector: 'app-share-training-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './share-training-modal.component.html',
   styleUrl: './share-training-modal.component.css'
 })

@@ -12,8 +12,8 @@
       <!-- Tab strip (only when linking to a session is possible) -->
       @if (showSelectTab) {
         <div class="mode-tabs">
-          <button class="mode-tab" [class.active]="mode === 'ai'" (click)="setMode('ai')">Create with AI</button>
-          <button class="mode-tab" [class.active]="mode === 'select'" (click)="setMode('select')">Select existing</button>
+          <button class="mode-tab" [class.active]="mode === 'ai'" (click)="setMode('ai')">{{ 'CREATE_WITH_AI.TAB_CREATE_WITH_AI' | translate }}</button>
+          <button class="mode-tab" [class.active]="mode === 'select'" (click)="setMode('select')">{{ 'CREATE_WITH_AI.TAB_SELECT_EXISTING' | translate }}</button>
         </div>
       }
 
@@ -21,7 +21,7 @@
         <!-- Session context banner -->
         @if (sessionInfo) {
           <div class="session-context">
-            <div class="context-label">Generating training for:</div>
+            <div class="context-label">{{ 'CREATE_WITH_AI.SESSION_BANNER_LABEL' | translate }}</div>
             <div class="context-details">
               @if (sessionInfo.sport) {
                 <span class="context-badge">{{ sessionInfo.sport }}</span>
@@ -38,13 +38,13 @@
 
         <!-- ===== AI MODE ===== -->
         @if (mode === 'ai') {
-          <p class="hint">Describe what you want to create in natural language.</p>
+          <p class="hint">{{ 'CREATE_WITH_AI.HINT_DESCRIBE_NATURAL' | translate }}</p>
 
           @if (showSportSelector) {
             <div class="form-group">
-              <label class="field-label">Sport *</label>
+              <label class="field-label">{{ 'CREATE_WITH_AI.LABEL_SPORT' | translate }}</label>
               <select class="field-select" [(ngModel)]="selectedSport" (ngModelChange)="onSportChange()" [disabled]="loading">
-                <option value="" disabled>Select a sport</option>
+                <option value="" disabled>{{ 'CREATE_WITH_AI.OPTION_SELECT_SPORT' | translate }}</option>
                 @for (s of sports; track s) {
                   <option [value]="s">{{ s }}</option>
                 }
@@ -54,9 +54,9 @@
 
           @if (showSportSelector && filteredZoneSystems.length > 0) {
             <div class="form-group">
-              <label class="field-label">Zone System (optional)</label>
+              <label class="field-label">{{ 'CREATE_WITH_AI.LABEL_ZONE_SYSTEM' | translate }}</label>
               <select class="field-select" [(ngModel)]="selectedZoneSystemId" [disabled]="loading">
-                <option value="">— Sport default —</option>
+                <option value="">{{ 'CREATE_WITH_AI.OPTION_SPORT_DEFAULT' | translate }}</option>
                 @for (z of filteredZoneSystems; track z.id) {
                   <option [value]="z.id">{{ z.name }}</option>
                 }
@@ -66,9 +66,9 @@
 
           @if (showTagSelector && availableGroups.length > 0) {
             <div class="form-group">
-              <label class="field-label">Club Group (optional)</label>
+              <label class="field-label">{{ 'CREATE_WITH_AI.LABEL_CLUB_GROUP' | translate }}</label>
               <select class="field-select" [(ngModel)]="selectedGroupId">
-                <option value="">— No group —</option>
+                <option value="">{{ 'CREATE_WITH_AI.OPTION_NO_GROUP' | translate }}</option>
                 @for (group of availableGroups; track group.id) {
                   <option [value]="group.id">{{ group.name }}</option>
                 }
@@ -77,7 +77,7 @@
           }
 
           <div class="form-group">
-            <label class="field-label">Prompt</label>
+            <label class="field-label">{{ 'CREATE_WITH_AI.LABEL_PROMPT' | translate }}</label>
             <textarea
               class="prompt-textarea"
               [(ngModel)]="prompt"
@@ -90,14 +90,14 @@
 
         <!-- ===== SELECT EXISTING MODE ===== -->
         @if (mode === 'select') {
-          <p class="hint">Pick one of your trainings to link to this session.</p>
+          <p class="hint">{{ 'CREATE_WITH_AI.HINT_PICK_TRAINING_SELECT' | translate }}</p>
 
           <div class="form-group">
             <input
               type="text"
               class="search-input"
               [(ngModel)]="searchQuery"
-              placeholder="Search by title or description..."
+              [placeholder]="'CREATE_WITH_AI.PLACEHOLDER_SEARCH' | translate"
               [disabled]="loading"
             />
           </div>
@@ -131,12 +131,12 @@
 
           @if (filteredTrainings.length === 0 && availableTrainings.length > 0) {
             <div class="empty-state">
-              No trainings match your search.
+              {{ 'CREATE_WITH_AI.EMPTY_NO_MATCH' | translate }}
             </div>
           }
           @if (availableTrainings.length === 0) {
             <div class="empty-state">
-              You don't have any trainings yet.
+              {{ 'CREATE_WITH_AI.EMPTY_NO_TRAININGS' | translate }}
             </div>
           }
         }
@@ -153,7 +153,7 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn-ghost" (click)="close()" [disabled]="loading">Cancel</button>
+        <button class="btn-ghost" (click)="close()" [disabled]="loading">{{ 'CREATE_WITH_AI.BTN_CANCEL' | translate }}</button>
 
         @if (mode === 'ai') {
           <button
@@ -161,10 +161,10 @@
             (click)="submit()"
             [disabled]="!prompt.trim() || loading || (showSportSelector && !selectedSport)">
             @if (!loading) {
-              <span>Generate</span>
+              <span>{{ 'CREATE_WITH_AI.BTN_GENERATE' | translate }}</span>
             }
             @if (loading) {
-              <span class="spinner">Generating...</span>
+              <span class="spinner">{{ 'CREATE_WITH_AI.BTN_GENERATING' | translate }}</span>
             }
           </button>
         }
@@ -175,10 +175,10 @@
             (click)="confirmSelection()"
             [disabled]="!selectedTrainingId || loading">
             @if (!loading) {
-              <span>Link Training</span>
+              <span>{{ 'CREATE_WITH_AI.BTN_LINK_TRAINING' | translate }}</span>
             }
             @if (loading) {
-              <span class="spinner">Linking...</span>
+              <span class="spinner">{{ 'CREATE_WITH_AI.BTN_LINKING' | translate }}</span>
             }
           </button>
         }

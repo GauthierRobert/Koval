@@ -1,6 +1,7 @@
-import {Component, EventEmitter, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
+import {Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {BehaviorSubject, combineLatest, map, Observable} from 'rxjs';
 import {CoachService, InviteCode} from '../../../services/coach.service';
 import {AuthService} from '../../../services/auth.service';
@@ -9,7 +10,7 @@ import {Group, GroupService} from '../../../services/group.service';
 @Component({
   selector: 'app-invite-code-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './invite-code-modal.component.html',
   styleUrl: './invite-code-modal.component.css',
 })
