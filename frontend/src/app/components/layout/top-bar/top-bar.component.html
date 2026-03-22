@@ -139,6 +139,9 @@
   </nav>
 
   <div class="right-section">
+    <button class="lang-toggle" (click)="toggleLang()">
+      {{ currentLang === 'en' ? 'FR' : 'EN' }}
+    </button>
     <div class="topbar-controls">
       <button class="device-btn" (click)="toggleMemberships()" title="My Memberships">
         <svg class="bt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

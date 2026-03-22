@@ -7,11 +7,12 @@ import {ClubService, ClubSummary} from '../../../services/club.service';
 import {TrainingFilterService} from '../../../services/training-filter.service';
 import {combineLatest, map} from 'rxjs';
 import {MembershipsModalComponent} from '../../shared/memberships-modal/memberships-modal.component';
+import {TranslateService, TranslateModule} from '@ngx-translate/core';
 
 @Component({
   selector: 'app-top-bar',
   standalone: true,
-  imports: [CommonModule, RouterModule, MembershipsModalComponent],
+  imports: [CommonModule, RouterModule, MembershipsModalComponent, TranslateModule],
   templateUrl: './top-bar.component.html',
   styleUrl: './top-bar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -22,6 +23,14 @@ export class TopBarComponent {
   private authService = inject(AuthService);
   clubService = inject(ClubService);
   private filterService = inject(TrainingFilterService);
+  private translateService = inject(TranslateService);
+  currentLang = this.translateService.currentLang || 'en';
+
+  toggleLang(): void {
+    this.currentLang = this.currentLang === 'en' ? 'fr' : 'en';
+    this.translateService.use(this.currentLang);
+    localStorage.setItem('lang', this.currentLang);
+  }
 
   isAnalyticsOpen = false;
   isTrainingOpen = false;
