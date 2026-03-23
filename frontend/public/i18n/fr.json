@@ -111,6 +111,11 @@
     "SECTION_AI_INSTRUCTIONS": "Instructions IA",
     "AI_INSTRUCTIONS_HINT": "Ces instructions sont injectées dans chaque interaction avec l'IA. Définis ta philosophie de coaching, tes structures de séances préférées, tes conventions de nommage, etc.",
     "AI_INSTRUCTIONS_PLACEHOLDER": "ex. Toujours nommer les séances avec le format 'Sport - Type - Durée'. Préférer un ratio travail/récupération 1:1 pour les intervalles VO2max. Ne jamais prescrire plus de 2 séances d'intensité par semaine.",
+    "SECTION_CONNECTED_APPS": "Applications connectées",
+    "APP_CONNECTED": "Connecté",
+    "APP_NOT_CONNECTED": "Non connecté",
+    "BTN_UNLINK": "DISSOCIER",
+    "UNLINK_DISABLED_HINT": "Impossible de dissocier votre seule méthode de connexion",
     "BTN_SAVE_SETTINGS": "ENREGISTRER",
     "BTN_SAVING": "ENREGISTREMENT...",
     "BTN_SAVED": "ENREGISTRÉ"

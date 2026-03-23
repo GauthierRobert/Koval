@@ -111,6 +111,11 @@
     "SECTION_AI_INSTRUCTIONS": "AI Instructions",
     "AI_INSTRUCTIONS_HINT": "These instructions are injected into every AI interaction. Define your coaching philosophy, preferred workout structures, naming conventions, etc.",
     "AI_INSTRUCTIONS_PLACEHOLDER": "e.g. Always name workouts with the format 'Sport - Type - Duration'. Prefer 1:1 work/rest ratio for VO2max intervals. Never prescribe more than 2 intensity sessions per week.",
+    "SECTION_CONNECTED_APPS": "Connected Apps",
+    "APP_CONNECTED": "Connected",
+    "APP_NOT_CONNECTED": "Not connected",
+    "BTN_UNLINK": "UNLINK",
+    "UNLINK_DISABLED_HINT": "Cannot unlink your only login method",
     "BTN_SAVE_SETTINGS": "SAVE SETTINGS",
     "BTN_SAVING": "SAVING...",
     "BTN_SAVED": "SAVED"

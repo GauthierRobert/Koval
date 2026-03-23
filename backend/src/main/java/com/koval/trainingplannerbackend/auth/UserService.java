@@ -148,6 +148,35 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public User unlinkStrava(String userId) {
+        User user = getUserById(userId);
+        if (user.getGoogleId() == null) {
+            throw new IllegalStateException("Cannot unlink Strava — it's your only login method");
+        }
+        user.setStravaId(null);
+        user.setStravaAccessToken(null);
+        user.setStravaRefreshToken(null);
+        user.setStravaTokenExpiresAt(null);
+        user.setStravaLastSyncAt(null);
+        if (user.getAuthProvider() == AuthProvider.STRAVA) {
+            user.setAuthProvider(AuthProvider.GOOGLE);
+        }
+        return userRepository.save(user);
+    }
+
+    public User unlinkGoogle(String userId) {
+        User user = getUserById(userId);
+        if (user.getStravaId() == null) {
+            throw new IllegalStateException("Cannot unlink Google — it's your only login method");
+        }
+        user.setGoogleId(null);
+        user.setEmail(null);
+        if (user.getAuthProvider() == AuthProvider.GOOGLE) {
+            user.setAuthProvider(AuthProvider.STRAVA);
+        }
+        return userRepository.save(user);
+    }
+
     /**
      * Convert a User entity to a Map suitable for JSON responses.
      * Includes tag information and coach-specific metadata.
@@ -175,6 +204,12 @@ public class UserService {
 
         map.put("customZoneReferenceValues", user.getCustomZoneReferenceValues());
         map.put("needsOnboarding", user.isNeedsOnboarding());
+
+        Map<String, Boolean> linkedAccounts = new HashMap<>();
+        linkedAccounts.put("strava", user.getStravaId() != null);
+        linkedAccounts.put("google", user.getGoogleId() != null);
+        map.put("linkedAccounts", linkedAccounts);
+        map.put("authProvider", user.getAuthProvider() != null ? user.getAuthProvider().name() : null);
 
         if (user.isCoach()) {
             List<String> athleteIds = groupService.getAthleteIdsForCoach(user.getId());

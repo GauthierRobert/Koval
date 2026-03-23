@@ -23,6 +23,7 @@ export interface FitRecord {
     cadence: number;       // rpm (cycling/running) or spm (swimming)
     speed: number;         // m/s
     distance: number;      // m cumulative (running/swimming); 0 for cycling
+    elevation?: number;    // meters (from enhanced_altitude or altitude)
 }
 
 @Injectable({ providedIn: 'root' })
@@ -161,7 +162,6 @@ export class MetricsService {
                     reject(new Error(error));
                     return;
                 }
-                console.log(data.records[3])
                 const records: FitRecord[] = (data.records || []).map((r: any) => ({
                     timestamp: r.timestamp ? Math.round(new Date(r.timestamp).getTime() / 1000) : 0,
                     power: Math.round(r.power || 0),
@@ -172,6 +172,8 @@ export class MetricsService {
                     speed: r.speed || 0,
                     // distance: scale 100 in FIT → fit-file-parser returns meters
                     distance: r.distance || 0,
+                    // enhanced_altitude has 0.2m resolution vs 5m for legacy altitude
+                    elevation: r.enhanced_altitude ?? r.altitude ?? undefined,
                 }));
                 resolve(records);
             });

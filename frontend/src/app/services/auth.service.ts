@@ -31,6 +31,8 @@ export interface User {
     needsOnboarding?: boolean;
     aiPrePrompt?: string;
     aiPrePromptEnabled?: boolean;
+    linkedAccounts?: { strava: boolean; google: boolean };
+    authProvider?: string;
 }
 
 @Injectable({
@@ -162,6 +164,18 @@ export class AuthService {
 
     setCustomZoneReference(zoneSystemId: string, value: number): Observable<void> {
         return this.http.patch<void>(`${this.apiUrl}/me/zone-reference`, { zoneSystemId, value });
+    }
+
+    unlinkStrava(): Observable<User> {
+        return this.http.delete<User>(`${this.apiUrl}/link/strava`).pipe(
+            tap(user => this.userSubject.next(user))
+        );
+    }
+
+    unlinkGoogle(): Observable<User> {
+        return this.http.delete<User>(`${this.apiUrl}/link/google`).pipe(
+            tap(user => this.userSubject.next(user))
+        );
     }
 
     updateSettings(settings: Partial<User>): Observable<any> {

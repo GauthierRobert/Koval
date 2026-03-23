@@ -245,6 +245,68 @@ h3 {
     line-height: 1;
 }
 
+/* Connected Apps */
+.linked-app-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.app-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.app-icon {
+    flex-shrink: 0;
+}
+
+.app-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.app-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.app-status {
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+.app-status.connected {
+    color: var(--positive-alt);
+}
+
+.unlink-btn {
+    background: rgba(255, 77, 106, 0.1);
+    border: 1px solid rgba(255, 77, 106, 0.2);
+    color: #ff4d6a;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+
+.unlink-btn:hover:not(:disabled) {
+    background: rgba(255, 77, 106, 0.2);
+    border-color: rgba(255, 77, 106, 0.4);
+}
+
+.unlink-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
 /* AI Pre-prompt */
 .ai-preprompt-textarea {
     width: 100%;

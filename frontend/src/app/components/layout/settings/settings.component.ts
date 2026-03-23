@@ -30,6 +30,9 @@ export class SettingsComponent implements OnInit {
     private authService = inject(AuthService);
     private zoneService = inject(ZoneService);
 
+    user$ = this.authService.user$;
+    unlinking = false;
+
     ftp: number | null = null;
     weightKg: number | null = null;
     vo2maxPower: number | null = null;
@@ -117,6 +120,23 @@ export class SettingsComponent implements OnInit {
         const m = field.minutes ?? 0;
         const s = field.seconds ?? 0;
         return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    canUnlink(user: User, provider: 'strava' | 'google'): boolean {
+        if (!user.linkedAccounts) return false;
+        const other = provider === 'strava' ? 'google' : 'strava';
+        return user.linkedAccounts[other] === true;
+    }
+
+    unlinkApp(provider: 'strava' | 'google') {
+        this.unlinking = true;
+        const obs = provider === 'strava'
+            ? this.authService.unlinkStrava()
+            : this.authService.unlinkGoogle();
+        obs.subscribe({
+            next: () => this.unlinking = false,
+            error: () => this.unlinking = false,
+        });
     }
 
     close() {
