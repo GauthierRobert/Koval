@@ -149,6 +149,7 @@ jobs:
       - name: Build release APK
         working-directory: android
         run: |
+          chmod +x ./gradlew
           ./gradlew assembleRelease --no-daemon \
             -Pandroid.injected.signing.store.file="$(pwd)/app/koval.keystore" \
             -Pandroid.injected.signing.store.password='${{ secrets.ANDROID_KEYSTORE_PASSWORD }}' \

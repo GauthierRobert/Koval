@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DirectionsBike
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -36,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -46,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.koval.trainingplanner.BuildConfig
 import com.koval.trainingplanner.domain.model.UserRole
+import com.koval.trainingplanner.ui.common.KovalLogo
 import com.koval.trainingplanner.ui.theme.Background
 import com.koval.trainingplanner.ui.theme.Border
 import com.koval.trainingplanner.ui.theme.Danger
@@ -99,21 +98,8 @@ fun LoginScreen(viewModel: LoginViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            // App icon
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(PrimaryMuted),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.DirectionsBike,
-                    contentDescription = null,
-                    tint = Primary,
-                    modifier = Modifier.size(40.dp),
-                )
-            }
+            // App logo
+            KovalLogo(modifier = Modifier.size(80.dp))
 
             Spacer(Modifier.height(24.dp))
 
