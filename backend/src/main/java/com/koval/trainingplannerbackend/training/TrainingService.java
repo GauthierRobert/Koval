@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import static java.util.Optional.ofNullable;
 
@@ -58,8 +57,7 @@ public class TrainingService {
             return element.withElements(standardizedChildren);
         }
 
-        if ((element.intensityEnd() != null && element.intensityEnd() > 0) &&
-            (element.intensityStart() != null && element.intensityStart() > 0)) {
+        if (isPositive(element.intensityEnd()) && isPositive(element.intensityStart())) {
             return element.updateType(BlockType.RAMP);
         }
 
@@ -68,24 +66,24 @@ public class TrainingService {
             return element;
         }
 
-        if ((element.intensityEnd() == null || element.intensityEnd() == 0) &&
-            (element.intensityStart() == null || element.intensityStart() == 0) &&
-            (element.intensityTarget() == null || element.intensityTarget() == 0)) {
+        if (!isPositive(element.intensityEnd()) && !isPositive(element.intensityStart())
+                && !isPositive(element.intensityTarget())) {
             return element.updateType(BlockType.PAUSE);
         }
         return element;
+    }
+
+    private static boolean isPositive(Integer val) {
+        return val != null && val > 0;
     }
 
     /**
      * Update an existing training.
      */
     public Training updateTraining(String trainingId, Training updates) {
-        Optional<Training> existing = trainingRepository.findById(trainingId);
-        if (existing.isEmpty()) {
-            throw new ResourceNotFoundException("Training", trainingId);
-        }
+        Training training = trainingRepository.findById(trainingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Training", trainingId));
 
-        Training training = existing.get();
         ofNullable(updates.getTitle()).ifPresent(training::setTitle);
         ofNullable(updates.getDescription()).ifPresent(training::setDescription);
         ofNullable(updates.getBlocks()).ifPresent(blocks ->
@@ -96,7 +94,7 @@ public class TrainingService {
         ofNullable(updates.getClubGroupIds()).ifPresent(training::setClubGroupIds);
         ofNullable(updates.getZoneSystemId()).ifPresent(training::setZoneSystemId);
 
-        metricsService.calculateTrainingMetrics(training, existing.get().getCreatedBy());
+        metricsService.calculateTrainingMetrics(training, training.getCreatedBy());
         return trainingRepository.save(training);
     }
 

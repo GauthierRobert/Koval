@@ -105,14 +105,9 @@ public class TrainingMetricsService {
 
     private boolean hasZoneTargetsRecursive(List<WorkoutElement> elements) {
         if (elements == null) return false;
-        for (WorkoutElement e : elements) {
-            if (e.isSet()) {
-                if (hasZoneTargetsRecursive(e.elements())) return true;
-            } else if (e.zoneTarget() != null && !e.zoneTarget().isBlank()) {
-                return true;
-            }
-        }
-        return false;
+        return elements.stream().anyMatch(e -> e.isSet()
+                ? hasZoneTargetsRecursive(e.elements())
+                : e.zoneTarget() != null && !e.zoneTarget().isBlank());
     }
 
     private WorkoutElement resolveElementZones(WorkoutElement element, Map<String, ZoneResolution> zoneMap) {
@@ -150,13 +145,11 @@ public class TrainingMetricsService {
         if (defaultZs.isPresent()) return defaultZs.get();
 
         // 3. Try coach's default via group membership
-        List<String> coachIds = groupService.getCoachIdsForAthlete(userId);
-        for (String coachId : coachIds) {
-            Optional<ZoneSystem> coachZs = zoneSystemService.getDefaultZoneSystem(coachId, sport);
-            if (coachZs.isPresent()) return coachZs.get();
-        }
-
-        return null;
+        return groupService.getCoachIdsForAthlete(userId).stream()
+                .map(coachId -> zoneSystemService.getDefaultZoneSystem(coachId, sport))
+                .flatMap(Optional::stream)
+                .findFirst()
+                .orElse(null);
     }
 
     // ── Block-level metrics ─────────────────────────────────────────────────

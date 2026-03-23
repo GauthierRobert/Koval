@@ -22,17 +22,7 @@ public class TrainingMapper {
         // Groups (default to empty list if null)
         training.setGroupIds(request.tags() != null ? request.tags() : new ArrayList<>());
 
-        // Enums (safe handling)
-        if (request.type() != null) {
-            try {
-                training.setTrainingType(TrainingType.valueOf(request.type().toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                // Fallback if the AI invents an unknown type
-                training.setTrainingType(TrainingType.MIXED);
-            }
-        } else {
-            training.setTrainingType(TrainingType.MIXED);
-        }
+        training.setTrainingType(safeValueOf(TrainingType.class, request.type(), TrainingType.MIXED));
 
         if (request.tss() != null) {
             training.setEstimatedTss(request.tss());
@@ -102,6 +92,12 @@ public class TrainingMapper {
 
         return new WorkoutElement(null, null, null, null,
                 b.type(), dur, dist, b.label(), b.desc(), b.pct(), b.pctFrom(), b.pctTo(), b.cad(), b.zone(), null);
+    }
+
+    private static <T extends Enum<T>> T safeValueOf(Class<T> enumType, String value, T fallback) {
+        if (value == null) return fallback;
+        try { return Enum.valueOf(enumType, value.toUpperCase()); }
+        catch (IllegalArgumentException e) { return fallback; }
     }
 
     /**

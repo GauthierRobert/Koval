@@ -48,7 +48,8 @@
       "Bash(mvn test:*)",
       "Bash(node -e \"JSON.parse\\(require\\(''fs''\\).readFileSync\\(''frontend/public/i18n/en.json'',''utf8''\\)\\); console.log\\(''Valid JSON''\\)\")",
       "Bash(node -e \"const j=JSON.parse\\(require\\(''fs''\\).readFileSync\\(''frontend/public/i18n/en.json'',''utf8''\\)\\); let c=0; for\\(const ns of Object.keys\\(j\\)\\) c+=Object.keys\\(j[ns]\\).length; console.log\\(''Namespaces:'', Object.keys\\(j\\).length, ''| Keys:'', c\\)\")",
-      "Bash(chmod +x \"C:\\\\Users\\\\gauth\\\\Documents\\\\Dev Projects\\\\training-planner-ai\\\\training-planner-ai\\\\android\\\\gradlew\")"
+      "Bash(chmod +x \"C:\\\\Users\\\\gauth\\\\Documents\\\\Dev Projects\\\\training-planner-ai\\\\training-planner-ai\\\\android\\\\gradlew\")",
+      "Bash(sort -k2)"
     ]
   }
 }

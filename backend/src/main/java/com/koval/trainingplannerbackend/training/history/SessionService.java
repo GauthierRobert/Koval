@@ -81,14 +81,7 @@ public class SessionService {
 
         // Link to scheduled workout if provided or auto-associated
         if (saved.getScheduledWorkoutId() != null) {
-            try {
-                coachService.markCompleted(saved.getScheduledWorkoutId(),
-                        saved.getTss() != null ? saved.getTss().intValue() : null,
-                        saved.getIntensityFactor(),
-                        saved.getId());
-            } catch (Exception ignored) {
-                // Non-fatal if linking fails
-            }
+            tryMarkCompleted(saved.getScheduledWorkoutId(), saved);
         }
 
         return saved;
@@ -98,9 +91,7 @@ public class SessionService {
      * Manually link a session to a scheduled workout.
      */
     public CompletedSession linkSessionToSchedule(String sessionId, String scheduledWorkoutId, String userId) {
-        CompletedSession session = repository.findById(sessionId)
-                .filter(s -> userId.equals(s.getUserId()))
-                .orElse(null);
+        CompletedSession session = findOwnedSession(sessionId, userId);
         if (session == null) return null;
 
         // Clear old link if session was previously linked to a different scheduled workout
@@ -114,16 +105,7 @@ public class SessionService {
 
         session.setScheduledWorkoutId(scheduledWorkoutId);
         CompletedSession saved = repository.save(session);
-
-        try {
-            coachService.markCompleted(scheduledWorkoutId,
-                    saved.getTss() != null ? saved.getTss().intValue() : null,
-                    saved.getIntensityFactor(),
-                    saved.getId());
-        } catch (Exception ignored) {
-            // Non-fatal
-        }
-
+        tryMarkCompleted(scheduledWorkoutId, saved);
         return saved;
     }
 
@@ -131,9 +113,7 @@ public class SessionService {
      * Patch session fields (currently supports RPE).
      */
     public CompletedSession patchSession(String id, Map<String, Object> body, String userId) {
-        CompletedSession session = repository.findById(id)
-                .filter(s -> userId.equals(s.getUserId()))
-                .orElse(null);
+        CompletedSession session = findOwnedSession(id, userId);
         if (session == null) return null;
 
         if (body.containsKey("rpe")) {
@@ -196,9 +176,7 @@ public class SessionService {
     public record FitFileResult(byte[] data, String filename) {}
 
     public CompletedSession uploadFitFile(String sessionId, String userId, InputStream data) throws IOException {
-        CompletedSession session = repository.findById(sessionId)
-                .filter(s -> userId.equals(s.getUserId()))
-                .orElse(null);
+        CompletedSession session = findOwnedSession(sessionId, userId);
         if (session == null) return null;
 
         if (session.getFitFileId() != null) {
@@ -227,6 +205,22 @@ public class SessionService {
                         throw new RuntimeException(e);
                     }
                 });
+    }
+
+    private CompletedSession findOwnedSession(String sessionId, String userId) {
+        return repository.findById(sessionId)
+                .filter(s -> userId.equals(s.getUserId()))
+                .orElse(null);
+    }
+
+    private void tryMarkCompleted(String scheduledWorkoutId, CompletedSession session) {
+        try {
+            coachService.markCompleted(scheduledWorkoutId,
+                    session.getTss() != null ? session.getTss().intValue() : null,
+                    session.getIntensityFactor(),
+                    session.getId());
+        } catch (Exception ignored) {
+        }
     }
 
     private boolean isCoachOfOwner(String coachId, String athleteId) {

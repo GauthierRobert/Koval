@@ -14,6 +14,8 @@ public class AnalyticsService {
 
     private static final int CTL_TIME_CONSTANT = 42;
     private static final int ATL_TIME_CONSTANT = 7;
+    private static final double K_CTL = 1.0 - Math.exp(-1.0 / CTL_TIME_CONSTANT);
+    private static final double K_ATL = 1.0 - Math.exp(-1.0 / ATL_TIME_CONSTANT);
 
     private final CompletedSessionRepository sessionRepository;
     private final UserRepository userRepository;
@@ -60,34 +62,38 @@ public class AnalyticsService {
     private OptionalDouble computeIntensityFactor(CompletedSession session, User user, SportType sport) {
         return switch (sport) {
             case CYCLING -> {
-                int ftp = user.getFtp() != null ? user.getFtp() : 0;
+                int ftp = orZero(user.getFtp());
                 yield (ftp > 0 && session.getAvgPower() > 0)
                         ? OptionalDouble.of(session.getAvgPower() / (double) ftp)
                         : OptionalDouble.empty();
             }
             case RUNNING -> {
-                int ftPaceSec = user.getFunctionalThresholdPace() != null ? user.getFunctionalThresholdPace() : 0;
+                int ftPaceSec = orZero(user.getFunctionalThresholdPace());
                 yield (ftPaceSec > 0 && session.getAvgSpeed() > 0)
                         ? OptionalDouble.of(session.getAvgSpeed() / (1000.0 / ftPaceSec))
                         : OptionalDouble.empty();
             }
             case SWIMMING -> {
-                int cssSec = user.getCriticalSwimSpeed() != null ? user.getCriticalSwimSpeed() : 0;
+                int cssSec = orZero(user.getCriticalSwimSpeed());
                 yield (cssSec > 0 && session.getAvgSpeed() > 0)
                         ? OptionalDouble.of(session.getAvgSpeed() / (100.0 / cssSec))
                         : OptionalDouble.empty();
             }
             case BRICK -> {
-                int ftp = user.getFtp() != null ? user.getFtp() : 0;
+                int ftp = orZero(user.getFtp());
                 if (ftp > 0 && session.getAvgPower() > 0) {
                     yield OptionalDouble.of(session.getAvgPower() / (double) ftp);
                 }
-                int ftPaceSec = user.getFunctionalThresholdPace() != null ? user.getFunctionalThresholdPace() : 0;
+                int ftPaceSec = orZero(user.getFunctionalThresholdPace());
                 yield (ftPaceSec > 0 && session.getAvgSpeed() > 0)
                         ? OptionalDouble.of(session.getAvgSpeed() / (1000.0 / ftPaceSec))
                         : OptionalDouble.empty();
             }
         };
+    }
+
+    private static int orZero(Integer val) {
+        return val != null ? val : 0;
     }
 
     /**
@@ -97,20 +103,14 @@ public class AnalyticsService {
     public void computeBlockDistances(CompletedSession session) {
         if (session.getBlockSummaries() == null || session.getAvgSpeed() <= 0) return;
 
-        boolean changed = false;
-        var updated = new ArrayList<CompletedSession.BlockSummary>();
-        for (var b : session.getBlockSummaries()) {
-            if ((b.distanceMeters() == null || b.distanceMeters() <= 0) && b.durationSeconds() > 0) {
-                updated.add(new CompletedSession.BlockSummary(
-                        b.label(), b.type(), b.durationSeconds(),
-                        b.targetPower(), b.actualPower(), b.actualCadence(), b.actualHR(),
-                        Math.round(b.durationSeconds() * session.getAvgSpeed() * 10.0) / 10.0));
-                changed = true;
-            } else {
-                updated.add(b);
-            }
-        }
-        if (changed) session.setBlockSummaries(updated);
+        session.setBlockSummaries(session.getBlockSummaries().stream()
+                .map(b -> (b.distanceMeters() == null || b.distanceMeters() <= 0) && b.durationSeconds() > 0
+                        ? new CompletedSession.BlockSummary(
+                                b.label(), b.type(), b.durationSeconds(),
+                                b.targetPower(), b.actualPower(), b.actualCadence(), b.actualHR(),
+                                Math.round(b.durationSeconds() * session.getAvgSpeed() * 10.0) / 10.0)
+                        : b)
+                .toList());
     }
 
     /**
@@ -124,29 +124,13 @@ public class AnalyticsService {
             if (sessions.isEmpty())
                 return;
 
-            LocalDate firstDate = sessions.get(0).getCompletedAt().toLocalDate();
-            LocalDate today = LocalDate.now();
-
-            // Build a map of date -> total TSS for that day
             Map<LocalDate, Map<String, Double>> dailyTssMap = buildDailyTssMap(sessions);
+            LocalDate firstDate = sessions.get(0).getCompletedAt().toLocalDate();
+            EmaState state = runEma(new EmaState(0, 0), firstDate, LocalDate.now(), dailyTssMap);
 
-            double ctl = 0.0;
-            double atl = 0.0;
-            double kCTL = 1.0 - Math.exp(-1.0 / CTL_TIME_CONSTANT);
-            double kATL = 1.0 - Math.exp(-1.0 / ATL_TIME_CONSTANT);
-
-            LocalDate cursor = firstDate;
-            while (!cursor.isAfter(today)) {
-                Map<String, Double> sports = dailyTssMap.getOrDefault(cursor, Map.of());
-                double dailyTss = sports.values().stream().mapToDouble(Double::doubleValue).sum();
-                ctl = ctl + (dailyTss - ctl) * kCTL;
-                atl = atl + (dailyTss - atl) * kATL;
-                cursor = cursor.plusDays(1);
-            }
-
-            user.setCtl(Math.round(ctl * 10.0) / 10.0);
-            user.setAtl(Math.round(atl * 10.0) / 10.0);
-            user.setTsb(Math.round((ctl - atl) * 10.0) / 10.0);
+            user.setCtl(Math.round(state.ctl() * 10.0) / 10.0);
+            user.setAtl(Math.round(state.atl() * 10.0) / 10.0);
+            user.setTsb(Math.round((state.ctl() - state.atl()) * 10.0) / 10.0);
             userRepository.save(user);
         });
     }
@@ -157,51 +141,49 @@ public class AnalyticsService {
      */
     public List<PmcDataPoint> generatePmc(String userId, LocalDate from, LocalDate to) {
         List<CompletedSession> sessions = sessionRepository.findByUserIdOrderByCompletedAtAsc(userId);
-
-        // Build daily TSS map from all sessions (not just the window)
         Map<LocalDate, Map<String, Double>> dailyTssMap = buildDailyTssMap(sessions);
 
         // Start EMA from the earliest session or from 'from' date, whichever is earlier
         LocalDate startDate = sessions.isEmpty() ? from : sessions.get(0).getCompletedAt().toLocalDate();
-        if (from.isBefore(startDate))
-            startDate = from;
+        if (from.isBefore(startDate)) startDate = from;
 
-        double ctl = 0.0;
-        double atl = 0.0;
-        double kCTL = 1.0 - Math.exp(-1.0 / CTL_TIME_CONSTANT);
-        double kATL = 1.0 - Math.exp(-1.0 / ATL_TIME_CONSTANT);
-
-        // Warm up EMA from startDate to the day before 'from'
-        LocalDate cursor = startDate;
-        while (cursor.isBefore(from)) {
-            Map<String, Double> sports = dailyTssMap.getOrDefault(cursor, Map.of());
-            double dailyTss = sports.values().stream().mapToDouble(Double::doubleValue).sum();
-            ctl = ctl + (dailyTss - ctl) * kCTL;
-            atl = atl + (dailyTss - atl) * kATL;
-            cursor = cursor.plusDays(1);
-        }
+        // Warm up EMA before the requested window
+        EmaState state = runEma(new EmaState(0, 0), startDate, from.minusDays(1), dailyTssMap);
 
         // Collect results for the requested window
         List<PmcDataPoint> result = new ArrayList<>();
-        cursor = from;
+        LocalDate cursor = from;
         while (!cursor.isAfter(to)) {
             Map<String, Double> sports = dailyTssMap.getOrDefault(cursor, Map.of());
             double dailyTss = sports.values().stream().mapToDouble(Double::doubleValue).sum();
-            ctl = ctl + (dailyTss - ctl) * kCTL;
-            atl = atl + (dailyTss - atl) * kATL;
-            double tsb = ctl - atl;
-            result.add(new PmcDataPoint(
-                    cursor,
-                    Math.round(ctl * 10.0) / 10.0,
-                    Math.round(atl * 10.0) / 10.0,
-                    Math.round(tsb * 10.0) / 10.0,
-                    dailyTss,
-                    sports,
-                    false));
+            state = state.step(dailyTss);
+            result.add(new PmcDataPoint(cursor,
+                    Math.round(state.ctl() * 10.0) / 10.0,
+                    Math.round(state.atl() * 10.0) / 10.0,
+                    Math.round((state.ctl() - state.atl()) * 10.0) / 10.0,
+                    dailyTss, sports, false));
             cursor = cursor.plusDays(1);
         }
 
         return result;
+    }
+
+    private record EmaState(double ctl, double atl) {
+        EmaState step(double dailyTss) {
+            return new EmaState(ctl + (dailyTss - ctl) * K_CTL, atl + (dailyTss - atl) * K_ATL);
+        }
+    }
+
+    private EmaState runEma(EmaState state, LocalDate from, LocalDate to,
+                            Map<LocalDate, Map<String, Double>> dailyTssMap) {
+        LocalDate cursor = from;
+        while (!cursor.isAfter(to)) {
+            double dailyTss = dailyTssMap.getOrDefault(cursor, Map.of())
+                    .values().stream().mapToDouble(Double::doubleValue).sum();
+            state = state.step(dailyTss);
+            cursor = cursor.plusDays(1);
+        }
+        return state;
     }
 
     private Map<LocalDate, Map<String, Double>> buildDailyTssMap(List<CompletedSession> sessions) {

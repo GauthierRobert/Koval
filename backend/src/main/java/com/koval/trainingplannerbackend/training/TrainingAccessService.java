@@ -26,11 +26,8 @@ public class TrainingAccessService {
     public void verifyAccess(String userId, Training training) {
         if (userId.equals(training.getCreatedBy())) return;
         if (coachService.isCoachOfAthlete(userId, training.getCreatedBy())) return;
-        if (training.getClubIds() != null) {
-            for (String cid : training.getClubIds()) {
-                if (isActiveClubMember(userId, cid)) return;
-            }
-        }
+        if (training.getClubIds() != null &&
+                training.getClubIds().stream().anyMatch(cid -> isActiveClubMember(userId, cid))) return;
         if (receivedTrainingService.hasReceived(userId, training.getId())) return;
         throw new AccessDeniedException("You do not have access to this training");
     }

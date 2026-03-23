@@ -7,7 +7,7 @@ import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -139,10 +139,8 @@ public class SessionAssociationService {
     }
 
     static Set<String> wordSet(String text) {
-        Set<String> words = new HashSet<>();
-        for (String w : text.toLowerCase().split("\\W+")) {
-            if (w.length() > 2) words.add(w);
-        }
-        return words;
+        return Arrays.stream(text.toLowerCase().split("\\W+"))
+                .filter(w -> w.length() > 2)
+                .collect(Collectors.toSet());
     }
 }

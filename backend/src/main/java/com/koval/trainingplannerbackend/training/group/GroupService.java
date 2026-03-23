@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class GroupService {
@@ -23,17 +22,14 @@ public class GroupService {
      */
     public Group getOrCreateGroup(String name, String coachId, int maxAthletes) {
         String normalized = name.toLowerCase().trim();
-        Optional<Group> existing = groupRepository.findByCoachIdAndName(coachId, normalized);
-        if (existing.isPresent()) {
-            return existing.get();
-        }
-
-        Group group = new Group();
-        group.setName(normalized);
-        group.setCoachId(coachId);
-        group.setMaxAthletes(maxAthletes);
-        group.setCreatedAt(LocalDateTime.now());
-        return groupRepository.save(group);
+        return groupRepository.findByCoachIdAndName(coachId, normalized).orElseGet(() -> {
+            Group group = new Group();
+            group.setName(normalized);
+            group.setCoachId(coachId);
+            group.setMaxAthletes(maxAthletes);
+            group.setCreatedAt(LocalDateTime.now());
+            return groupRepository.save(group);
+        });
     }
 
     /**
@@ -78,15 +74,11 @@ public class GroupService {
      */
     @Transactional
     public void removeAthleteFromAllCoachGroups(String coachId, String athleteId) {
-        List<Group> coachGroups = groupRepository.findByCoachId(coachId);
-        List<Group> modifiedGroups = new ArrayList<>();
-        for (Group group : coachGroups) {
-            if (group.getAthleteIds().remove(athleteId)) {
-                modifiedGroups.add(group);
-            }
-        }
-        if (!modifiedGroups.isEmpty()) {
-            groupRepository.saveAll(modifiedGroups);
+        List<Group> modified = groupRepository.findByCoachId(coachId).stream()
+                .filter(g -> g.getAthleteIds().remove(athleteId))
+                .toList();
+        if (!modified.isEmpty()) {
+            groupRepository.saveAll(modified);
         }
     }
 
@@ -94,12 +86,10 @@ public class GroupService {
      * Get all unique athlete IDs across all groups for a coach.
      */
     public List<String> getAthleteIdsForCoach(String coachId) {
-        List<Group> groups = groupRepository.findByCoachId(coachId);
-        Set<String> athleteIds = new LinkedHashSet<>();
-        for (Group group : groups) {
-            athleteIds.addAll(group.getAthleteIds());
-        }
-        return new ArrayList<>(athleteIds);
+        return groupRepository.findByCoachId(coachId).stream()
+                .flatMap(g -> g.getAthleteIds().stream())
+                .distinct()
+                .toList();
     }
 
     /**
@@ -113,22 +103,17 @@ public class GroupService {
      * Get all unique coach IDs for an athlete.
      */
     public List<String> getCoachIdsForAthlete(String athleteId) {
-        List<Group> groups = groupRepository.findByAthleteIdsContaining(athleteId);
-        return groups.stream()
+        return groupRepository.findByAthleteIdsContaining(athleteId).stream()
                 .map(Group::getCoachId)
                 .distinct()
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
      * Rename a group. Only the coach who owns it can rename.
      */
     public Group renameGroup(String groupId, String newName, String coachId) {
-        Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new ResourceNotFoundException("Group", groupId));
-        if (!coachId.equals(group.getCoachId())) {
-            throw new ForbiddenOperationException("Only the group owner can rename this group");
-        }
+        Group group = getGroupOwnedBy(groupId, coachId);
         group.setName(newName.toLowerCase().trim());
         return groupRepository.save(group);
     }
@@ -137,12 +122,17 @@ public class GroupService {
      * Delete a group. Only the coach who owns it can delete.
      */
     public void deleteGroup(String groupId, String coachId) {
+        getGroupOwnedBy(groupId, coachId);
+        groupRepository.deleteById(groupId);
+    }
+
+    private Group getGroupOwnedBy(String groupId, String coachId) {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new ResourceNotFoundException("Group", groupId));
         if (!coachId.equals(group.getCoachId())) {
-            throw new ForbiddenOperationException("Only the group owner can delete this group");
+            throw new ForbiddenOperationException("Only the group owner can perform this operation");
         }
-        groupRepository.deleteById(groupId);
+        return group;
     }
 
     /**
