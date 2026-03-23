@@ -244,3 +244,89 @@ h3 {
     font-size: 12px;
     line-height: 1;
 }
+
+/* AI Pre-prompt */
+.ai-preprompt-textarea {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 12px;
+    padding: 8px 10px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-top: 6px;
+    box-sizing: border-box;
+}
+
+.ai-preprompt-textarea:focus {
+    border-color: var(--accent-color);
+}
+
+.ai-hint {
+    font-size: 10px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.char-count {
+    display: block;
+    text-align: right;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.ai-preprompt-textarea.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Toggle switch */
+.ai-toggle {
+    position: relative;
+    display: inline-block;
+    width: 34px;
+    height: 18px;
+    margin-left: auto;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.ai-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.ai-toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9px;
+    transition: background 0.2s;
+}
+
+.ai-toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    left: 2px;
+    bottom: 2px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.ai-toggle input:checked + .ai-toggle-slider {
+    background: var(--accent-color);
+}
+
+.ai-toggle input:checked + .ai-toggle-slider::before {
+    transform: translateX(16px);
+    background: var(--color-white);
+}

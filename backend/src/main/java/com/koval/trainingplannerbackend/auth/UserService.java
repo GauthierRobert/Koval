@@ -124,7 +124,8 @@ public class UserService {
             Integer criticalSwimSpeed, Integer pace5k, Integer pace10k,
             Integer paceHalfMarathon, Integer paceMarathon,
             Integer vo2maxPower, Integer vo2maxPace,
-            Map<String, Integer> customZoneReferenceValues) {
+            Map<String, Integer> customZoneReferenceValues,
+            String aiPrePrompt, Boolean aiPrePromptEnabled) {
         User user = getUserById(userId);
         // Always set all fields — null means "clear this value"
         user.setFtp(ftp);
@@ -139,6 +140,10 @@ public class UserService {
         user.setVo2maxPace(vo2maxPace);
         if (customZoneReferenceValues != null) {
             user.getCustomZoneReferenceValues().putAll(customZoneReferenceValues);
+        }
+        user.setAiPrePrompt(aiPrePrompt);
+        if (aiPrePromptEnabled != null) {
+            user.setAiPrePromptEnabled(aiPrePromptEnabled);
         }
         return userRepository.save(user);
     }
@@ -174,6 +179,8 @@ public class UserService {
         if (user.isCoach()) {
             List<String> athleteIds = groupService.getAthleteIdsForCoach(user.getId());
             map.put("athleteCount", athleteIds.size());
+            map.put("aiPrePrompt", user.getAiPrePrompt());
+            map.put("aiPrePromptEnabled", user.isAiPrePromptEnabled());
         }
         return map;
     }

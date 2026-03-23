@@ -1,4 +1,4 @@
-import {Component, EventEmitter, inject, Input, NgZone, OnChanges, Output, SimpleChanges,} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
@@ -8,6 +8,14 @@ import {ZoneService} from '../../../services/zone.service';
 import {ZoneSystem} from '../../../services/zone';
 import {TrainingService} from '../../../services/training.service';
 import {Training} from '../../../models/training.model';
+import {BehaviorSubject, combineLatest, map, Observable} from 'rxjs';
+
+interface ModalState {
+  loading: boolean;
+  errorMessage: string;
+  aiMessage: string;
+  successMessage: string;
+}
 
 @Component({
   selector: 'app-create-with-ai-modal',
@@ -15,6 +23,7 @@ import {Training} from '../../../models/training.model';
   imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './create-with-ai-modal.component.html',
   styleUrl: './create-with-ai-modal.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CreateWithAiModalComponent implements OnChanges {
   @Input() isOpen = false;
@@ -30,27 +39,46 @@ export class CreateWithAiModalComponent implements OnChanges {
   private clubService = inject(ClubService);
   private zoneService = inject(ZoneService);
   private trainingService = inject(TrainingService);
-  private ngZone = inject(NgZone);
   private translate = inject(TranslateService);
 
+  // Reactive state
+  private stateSubject = new BehaviorSubject<ModalState>({
+    loading: false,
+    errorMessage: '',
+    aiMessage: '',
+    successMessage: '',
+  });
+  state$ = this.stateSubject.asObservable();
+
+  private groupsSubject = new BehaviorSubject<ClubGroup[]>([]);
+  groups$ = this.groupsSubject.asObservable();
+
+  private allZoneSystemsSubject = new BehaviorSubject<ZoneSystem[]>([]);
+  private filteredZoneSystemsSubject = new BehaviorSubject<ZoneSystem[]>([]);
+  filteredZoneSystems$ = this.filteredZoneSystemsSubject.asObservable();
+
+  private trainingsSubject = new BehaviorSubject<Training[]>([]);
+  trainings$ = this.trainingsSubject.asObservable();
+  private searchQuerySubject = new BehaviorSubject<string>('');
+  filteredTrainings$: Observable<Training[]> = combineLatest([
+    this.trainingsSubject,
+    this.searchQuerySubject,
+  ]).pipe(
+    map(([trainings, query]) => {
+      if (!query.trim()) return trainings;
+      const q = query.toLowerCase();
+      return trainings.filter(
+        (t) => t.title?.toLowerCase().includes(q) || t.description?.toLowerCase().includes(q),
+      );
+    }),
+  );
+
   prompt = '';
-  loading = false;
-  errorMessage = '';
-  aiMessage = '';
-  successMessage = '';
-
-  availableGroups: ClubGroup[] = [];
   selectedGroupId = '';
-
   selectedSport = '';
   selectedZoneSystemId = '';
-  allZoneSystems: ZoneSystem[] = [];
-  filteredZoneSystems: ZoneSystem[] = [];
   readonly sports = ['CYCLING', 'RUNNING', 'SWIMMING'];
-
-  // Select existing training tab
   mode: 'ai' | 'select' = 'ai';
-  availableTrainings: Training[] = [];
   selectedTrainingId: string | null = null;
   searchQuery = '';
 
@@ -78,60 +106,48 @@ export class CreateWithAiModalComponent implements OnChanges {
     return !!this.context.sessionId && !!this.context.clubId;
   }
 
-  get filteredTrainings(): Training[] {
-    if (!this.searchQuery.trim()) return this.availableTrainings;
-    const q = this.searchQuery.toLowerCase();
-    return this.availableTrainings.filter(
-      (t) =>
-        t.title?.toLowerCase().includes(q) ||
-        t.description?.toLowerCase().includes(q)
-    );
-  }
-
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen) {
       this.resetState();
       if (this.showTagSelector) {
         this.clubService.loadGroups(this.context.clubId!);
-        this.clubService.groups$.subscribe((groups) => {
-          this.ngZone.run(() => (this.availableGroups = groups));
-        });
+        this.clubService.groups$.subscribe((groups) => this.groupsSubject.next(groups));
       }
       if (this.showSportSelector) {
         this.zoneService.getMyZoneSystems().subscribe({
           next: (systems) => {
-            this.ngZone.run(() => {
-              this.allZoneSystems = systems;
-              this.selectedSport = 'CYCLING';
-              this.onSportChange();
-            });
+            this.allZoneSystemsSubject.next(systems);
+            this.selectedSport = 'CYCLING';
+            this.onSportChange();
           },
           error: () => {
-            this.allZoneSystems = [];
+            this.allZoneSystemsSubject.next([]);
             this.selectedSport = 'CYCLING';
           },
         });
       }
       if (this.showSelectTab) {
-        this.trainingService.trainings$.subscribe((trainings) => {
-          this.ngZone.run(() => (this.availableTrainings = trainings));
-        });
+        this.trainingService.trainings$.subscribe((trainings) => this.trainingsSubject.next(trainings));
         this.trainingService.loadTrainings();
       }
     }
   }
 
   onSportChange(): void {
-    this.filteredZoneSystems = this.allZoneSystems.filter((z) => z.sportType === this.selectedSport);
-    const defaultSystem = this.filteredZoneSystems.find((z) => z.defaultForSport);
+    const filtered = this.allZoneSystemsSubject.value.filter((z) => z.sportType === this.selectedSport);
+    this.filteredZoneSystemsSubject.next(filtered);
+    const defaultSystem = filtered.find((z) => z.defaultForSport);
     this.selectedZoneSystemId = defaultSystem?.id ?? '';
+  }
+
+  onSearchQueryChange(query: string): void {
+    this.searchQuery = query;
+    this.searchQuerySubject.next(query);
   }
 
   setMode(mode: 'ai' | 'select'): void {
     this.mode = mode;
-    this.errorMessage = '';
-    this.aiMessage = '';
-    this.successMessage = '';
+    this.patchState({ errorMessage: '', aiMessage: '', successMessage: '' });
   }
 
   selectTraining(t: Training): void {
@@ -139,39 +155,35 @@ export class CreateWithAiModalComponent implements OnChanges {
   }
 
   confirmSelection(): void {
-    if (!this.selectedTrainingId || this.loading || !this.context.clubId || !this.context.sessionId) return;
+    const state = this.stateSubject.value;
+    if (!this.selectedTrainingId || state.loading || !this.context.clubId || !this.context.sessionId) return;
 
-    this.loading = true;
-    this.errorMessage = '';
-    this.aiMessage = '';
-    this.successMessage = '';
+    this.patchState({ loading: true, errorMessage: '', aiMessage: '', successMessage: '' });
 
     this.clubService
       .linkTrainingToSession(this.context.clubId, this.context.sessionId, this.selectedTrainingId)
       .subscribe({
         next: () => {
-          this.ngZone.run(() => {
-            this.loading = false;
-            this.successMessage = this.translate.instant('CREATE_WITH_AI.SUCCESS_TRAINING_LINKED');
-            this.created.emit({ success: true, content: 'Training linked.' });
+          this.patchState({
+            loading: false,
+            successMessage: this.translate.instant('CREATE_WITH_AI.SUCCESS_TRAINING_LINKED'),
           });
+          this.created.emit({ success: true, content: 'Training linked.' });
         },
         error: (err) => {
-          this.ngZone.run(() => {
-            this.loading = false;
-            this.errorMessage = err?.error?.message ?? this.translate.instant('CREATE_WITH_AI.ERROR_FAILED_LINK');
+          this.patchState({
+            loading: false,
+            errorMessage: err?.error?.message ?? this.translate.instant('CREATE_WITH_AI.ERROR_FAILED_LINK'),
           });
         },
       });
   }
 
   submit(): void {
-    if (!this.prompt.trim() || this.loading) return;
+    const state = this.stateSubject.value;
+    if (!this.prompt.trim() || state.loading) return;
 
-    this.loading = true;
-    this.errorMessage = '';
-    this.aiMessage = '';
-    this.successMessage = '';
+    this.patchState({ loading: true, errorMessage: '', aiMessage: '', successMessage: '' });
 
     const ctx: ActionContext = {
       ...this.context,
@@ -182,46 +194,44 @@ export class CreateWithAiModalComponent implements OnChanges {
 
     this.aiActionService.executeAction(this.prompt.trim(), this.actionType, ctx).subscribe({
       next: (result) => {
-        this.ngZone.run(() => {
-          this.loading = false;
-          if (result.success) {
-            this.successMessage = result.content;
-            this.created.emit(result);
-          } else {
-            // AI is asking for clarification — show as info, not error
-            this.aiMessage = result.content;
-          }
-        });
+        if (result.success) {
+          this.patchState({ loading: false, successMessage: result.content });
+          this.created.emit(result);
+        } else {
+          this.patchState({ loading: false, aiMessage: result.content });
+        }
       },
       error: (err) => {
-        this.ngZone.run(() => {
-          this.loading = false;
-          this.errorMessage = err?.error?.message ?? this.translate.instant('CREATE_WITH_AI.ERROR_UNEXPECTED');
+        this.patchState({
+          loading: false,
+          errorMessage: err?.error?.message ?? this.translate.instant('CREATE_WITH_AI.ERROR_UNEXPECTED'),
         });
       },
     });
   }
 
   close(): void {
-    if (this.loading) return;
+    if (this.stateSubject.value.loading) return;
     this.closed.emit();
+  }
+
+  private patchState(patch: Partial<ModalState>): void {
+    this.stateSubject.next({ ...this.stateSubject.value, ...patch });
   }
 
   private resetState(): void {
     this.prompt = '';
-    this.loading = false;
-    this.errorMessage = '';
-    this.aiMessage = '';
-    this.successMessage = '';
     this.selectedGroupId = '';
-    this.availableGroups = [];
     this.selectedSport = '';
     this.selectedZoneSystemId = '';
-    this.allZoneSystems = [];
-    this.filteredZoneSystems = [];
     this.mode = 'ai';
-    this.availableTrainings = [];
     this.selectedTrainingId = null;
     this.searchQuery = '';
+    this.stateSubject.next({ loading: false, errorMessage: '', aiMessage: '', successMessage: '' });
+    this.groupsSubject.next([]);
+    this.allZoneSystemsSubject.next([]);
+    this.filteredZoneSystemsSubject.next([]);
+    this.trainingsSubject.next([]);
+    this.searchQuerySubject.next('');
   }
 }

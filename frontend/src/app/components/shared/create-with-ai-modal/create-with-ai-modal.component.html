@@ -1,4 +1,5 @@
 @if (isOpen) {
+  @if (state$ | async; as state) {
   <div class="modal-backdrop" (click)="close()">
     <div class="modal-panel" (click)="$event.stopPropagation()">
 
@@ -6,7 +7,7 @@
         <h2 class="modal-title">
           <span class="ai-icon">✨</span> {{ label }}
         </h2>
-        <button class="close-btn" (click)="close()" [disabled]="loading">&times;</button>
+        <button class="close-btn" (click)="close()" [disabled]="state.loading">&times;</button>
       </div>
 
       <!-- Tab strip (only when linking to a session is possible) -->
@@ -43,7 +44,7 @@
           @if (showSportSelector) {
             <div class="form-group">
               <label class="field-label">{{ 'CREATE_WITH_AI.LABEL_SPORT' | translate }}</label>
-              <select class="field-select" [(ngModel)]="selectedSport" (ngModelChange)="onSportChange()" [disabled]="loading">
+              <select class="field-select" [(ngModel)]="selectedSport" (ngModelChange)="onSportChange()" [disabled]="state.loading">
                 <option value="" disabled>{{ 'CREATE_WITH_AI.OPTION_SELECT_SPORT' | translate }}</option>
                 @for (s of sports; track s) {
                   <option [value]="s">{{ s }}</option>
@@ -52,28 +53,32 @@
             </div>
           }
 
-          @if (showSportSelector && filteredZoneSystems.length > 0) {
-            <div class="form-group">
-              <label class="field-label">{{ 'CREATE_WITH_AI.LABEL_ZONE_SYSTEM' | translate }}</label>
-              <select class="field-select" [(ngModel)]="selectedZoneSystemId" [disabled]="loading">
-                <option value="">{{ 'CREATE_WITH_AI.OPTION_SPORT_DEFAULT' | translate }}</option>
-                @for (z of filteredZoneSystems; track z.id) {
-                  <option [value]="z.id">{{ z.name }}</option>
-                }
-              </select>
-            </div>
+          @if (showSportSelector && (filteredZoneSystems$ | async); as zoneSystems) {
+            @if (zoneSystems.length > 0) {
+              <div class="form-group">
+                <label class="field-label">{{ 'CREATE_WITH_AI.LABEL_ZONE_SYSTEM' | translate }}</label>
+                <select class="field-select" [(ngModel)]="selectedZoneSystemId" [disabled]="state.loading">
+                  <option value="">{{ 'CREATE_WITH_AI.OPTION_SPORT_DEFAULT' | translate }}</option>
+                  @for (z of zoneSystems; track z.id) {
+                    <option [value]="z.id">{{ z.name }}</option>
+                  }
+                </select>
+              </div>
+            }
           }
 
-          @if (showTagSelector && availableGroups.length > 0) {
-            <div class="form-group">
-              <label class="field-label">{{ 'CREATE_WITH_AI.LABEL_CLUB_GROUP' | translate }}</label>
-              <select class="field-select" [(ngModel)]="selectedGroupId">
-                <option value="">{{ 'CREATE_WITH_AI.OPTION_NO_GROUP' | translate }}</option>
-                @for (group of availableGroups; track group.id) {
-                  <option [value]="group.id">{{ group.name }}</option>
-                }
-              </select>
-            </div>
+          @if (showTagSelector && (groups$ | async); as groups) {
+            @if (groups.length > 0) {
+              <div class="form-group">
+                <label class="field-label">{{ 'CREATE_WITH_AI.LABEL_CLUB_GROUP' | translate }}</label>
+                <select class="field-select" [(ngModel)]="selectedGroupId">
+                  <option value="">{{ 'CREATE_WITH_AI.OPTION_NO_GROUP' | translate }}</option>
+                  @for (group of groups; track group.id) {
+                    <option [value]="group.id">{{ group.name }}</option>
+                  }
+                </select>
+              </div>
+            }
           }
 
           <div class="form-group">
@@ -83,7 +88,7 @@
               [(ngModel)]="prompt"
               [placeholder]="promptPlaceholder"
               rows="4"
-              [disabled]="loading"
+              [disabled]="state.loading"
             ></textarea>
           </div>
         }
@@ -96,74 +101,77 @@
             <input
               type="text"
               class="search-input"
-              [(ngModel)]="searchQuery"
+              [ngModel]="searchQuery"
+              (ngModelChange)="onSearchQueryChange($event)"
               [placeholder]="'CREATE_WITH_AI.PLACEHOLDER_SEARCH' | translate"
-              [disabled]="loading"
+              [disabled]="state.loading"
             />
           </div>
 
-          @if (filteredTrainings.length > 0) {
-            <div class="training-list">
-              @for (t of filteredTrainings; track t.id) {
-                <div
-                  class="training-item"
-                  [class.selected]="selectedTrainingId === t.id"
-                  (click)="selectTraining(t)"
-                >
-                  <div class="training-item-header">
-                    <span class="training-title">{{ t.title }}</span>
-                    <div class="training-badges">
-                      @if (t.sportType) {
-                        <span class="badge sport-badge">{{ t.sportType }}</span>
-                      }
-                      @if (t.trainingType) {
-                        <span class="badge type-badge">{{ t.trainingType }}</span>
-                      }
+          @if (filteredTrainings$ | async; as trainings) {
+            @if (trainings.length > 0) {
+              <div class="training-list">
+                @for (t of trainings; track t.id) {
+                  <div
+                    class="training-item"
+                    [class.selected]="selectedTrainingId === t.id"
+                    (click)="selectTraining(t)"
+                  >
+                    <div class="training-item-header">
+                      <span class="training-title">{{ t.title }}</span>
+                      <div class="training-badges">
+                        @if (t.sportType) {
+                          <span class="badge sport-badge">{{ t.sportType }}</span>
+                        }
+                        @if (t.trainingType) {
+                          <span class="badge type-badge">{{ t.trainingType }}</span>
+                        }
+                      </div>
                     </div>
+                    @if (t.description) {
+                      <div class="training-description">{{ t.description }}</div>
+                    }
                   </div>
-                  @if (t.description) {
-                    <div class="training-description">{{ t.description }}</div>
-                  }
-                </div>
-              }
-            </div>
+                }
+              </div>
+            }
           }
 
-          @if (filteredTrainings.length === 0 && availableTrainings.length > 0) {
+          @if ((filteredTrainings$ | async)?.length === 0 && (trainings$ | async)?.length) {
             <div class="empty-state">
               {{ 'CREATE_WITH_AI.EMPTY_NO_MATCH' | translate }}
             </div>
           }
-          @if (availableTrainings.length === 0) {
+          @if ((trainings$ | async)?.length === 0) {
             <div class="empty-state">
               {{ 'CREATE_WITH_AI.EMPTY_NO_TRAININGS' | translate }}
             </div>
           }
         }
 
-        @if (aiMessage) {
-          <div class="status-message info">{{ aiMessage }}</div>
+        @if (state.aiMessage) {
+          <div class="status-message info">{{ state.aiMessage }}</div>
         }
-        @if (errorMessage) {
-          <div class="status-message error">{{ errorMessage }}</div>
+        @if (state.errorMessage) {
+          <div class="status-message error">{{ state.errorMessage }}</div>
         }
-        @if (successMessage) {
-          <div class="status-message success">{{ successMessage }}</div>
+        @if (state.successMessage) {
+          <div class="status-message success">{{ state.successMessage }}</div>
         }
       </div>
 
       <div class="modal-footer">
-        <button class="btn-ghost" (click)="close()" [disabled]="loading">{{ 'CREATE_WITH_AI.BTN_CANCEL' | translate }}</button>
+        <button class="btn-ghost" (click)="close()" [disabled]="state.loading">{{ 'CREATE_WITH_AI.BTN_CANCEL' | translate }}</button>
 
         @if (mode === 'ai') {
           <button
             class="btn-primary"
             (click)="submit()"
-            [disabled]="!prompt.trim() || loading || (showSportSelector && !selectedSport)">
-            @if (!loading) {
+            [disabled]="!prompt.trim() || state.loading || (showSportSelector && !selectedSport)">
+            @if (!state.loading) {
               <span>{{ 'CREATE_WITH_AI.BTN_GENERATE' | translate }}</span>
             }
-            @if (loading) {
+            @if (state.loading) {
               <span class="spinner">{{ 'CREATE_WITH_AI.BTN_GENERATING' | translate }}</span>
             }
           </button>
@@ -173,11 +181,11 @@
           <button
             class="btn-primary"
             (click)="confirmSelection()"
-            [disabled]="!selectedTrainingId || loading">
-            @if (!loading) {
+            [disabled]="!selectedTrainingId || state.loading">
+            @if (!state.loading) {
               <span>{{ 'CREATE_WITH_AI.BTN_LINK_TRAINING' | translate }}</span>
             }
-            @if (loading) {
+            @if (state.loading) {
               <span class="spinner">{{ 'CREATE_WITH_AI.BTN_LINKING' | translate }}</span>
             }
           </button>
@@ -186,4 +194,5 @@
 
     </div>
   </div>
+  }
 }

@@ -141,7 +141,12 @@ public abstract class BaseAgentService implements TrainingAgent {
                 weekStart, weekEnd);
 
         String zoneContext = buildDefaultZoneContext(ctx);
-        return zoneContext.isEmpty() ? base : base + "\n" + zoneContext;
+        String result = zoneContext.isEmpty() ? base : base + "\n" + zoneContext;
+
+        if (ctx.aiPrePrompt() != null && !ctx.aiPrePrompt().isBlank()) {
+            result += "\n\nCoach's custom instructions:\n" + ctx.aiPrePrompt();
+        }
+        return result;
     }
 
     private String buildDefaultZoneContext(UserContext ctx) {

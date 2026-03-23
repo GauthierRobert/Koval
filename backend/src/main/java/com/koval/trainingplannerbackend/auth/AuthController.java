@@ -219,7 +219,8 @@ public class AuthController {
             Integer criticalSwimSpeed, Integer pace5k, Integer pace10k,
             Integer paceHalfMarathon, Integer paceMarathon,
             Integer vo2maxPower, Integer vo2maxPace,
-            Map<String, Integer> customZoneReferenceValues) {
+            Map<String, Integer> customZoneReferenceValues,
+            String aiPrePrompt, Boolean aiPrePromptEnabled) {
     }
 
     @PutMapping("/settings")
@@ -238,7 +239,8 @@ public class AuthController {
                     request.criticalSwimSpeed(), request.pace5k(), request.pace10k(),
                     request.paceHalfMarathon(), request.paceMarathon(),
                     request.vo2maxPower(), request.vo2maxPace(),
-                    request.customZoneReferenceValues());
+                    request.customZoneReferenceValues(),
+                    request.aiPrePrompt(), request.aiPrePromptEnabled());
             return ResponseEntity.ok(userService.userToMap(user));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

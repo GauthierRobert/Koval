@@ -23,8 +23,9 @@ public class UserContextResolver {
         User user = userRepository.findById(userId).orElse(null);
         String role = user != null ? user.getRole().name() : DEFAULT_ROLE;
         int ftp = user != null && user.getFtp() != null ? user.getFtp() : DEFAULT_FTP;
-        return new UserContext(userId, role, ftp);
+        String aiPrePrompt = user != null && user.isAiPrePromptEnabled() ? user.getAiPrePrompt() : null;
+        return new UserContext(userId, role, ftp, aiPrePrompt);
     }
 
-    public record UserContext(String userId, String role, int ftp) {}
+    public record UserContext(String userId, String role, int ftp, String aiPrePrompt) {}
 }

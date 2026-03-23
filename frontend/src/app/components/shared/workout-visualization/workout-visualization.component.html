@@ -36,11 +36,12 @@
             }
           }
           <button class="schedule-btn" (click)="openScheduleModal()">{{ 'WORKOUT_VIZ.BTN_SCHEDULE' | translate }}</button>
-          @if (training.sportType === 'CYCLING') {
+          <!-- TODO Disable temporary - Start workout button in training library -->
+          <!-- @if (training.sportType === 'CYCLING') {
             <button class="start-btn" (click)="startWorkout()">
               <span class="play-icon">&#x25B6;</span> {{ 'WORKOUT_VIZ.BTN_START_WORKOUT' | translate }}
             </button>
-          }
+          } -->
         </div>
       </div>
 

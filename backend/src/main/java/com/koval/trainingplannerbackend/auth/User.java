@@ -63,6 +63,9 @@ public class User {
 
     private boolean needsOnboarding = false;
 
+    private String aiPrePrompt;
+    private boolean aiPrePromptEnabled = false;
+
     private Map<String, Integer> customZoneReferenceValues = new HashMap<>();
 
     private List<String> fcmTokens = new ArrayList<>();

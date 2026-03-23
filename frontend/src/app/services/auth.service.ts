@@ -29,6 +29,8 @@ export interface User {
     atl?: number;
     tsb?: number;
     needsOnboarding?: boolean;
+    aiPrePrompt?: string;
+    aiPrePromptEnabled?: boolean;
 }
 
 @Injectable({

@@ -98,6 +98,9 @@ public class AIActionService {
                 }
             } catch (Exception ignored) {}
         }
+        if (ctx.aiPrePrompt() != null && !ctx.aiPrePrompt().isBlank()) {
+            sb.append("\n\nCoach's custom instructions:\n").append(ctx.aiPrePrompt());
+        }
         return sb.toString();
     }
 }

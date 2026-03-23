@@ -33,6 +33,9 @@ export class SettingsComponent implements OnInit {
     ftp: number | null = null;
     weightKg: number | null = null;
     vo2maxPower: number | null = null;
+    aiPrePrompt = '';
+    aiPrePromptEnabled = false;
+    isCoach = false;
     saving = false;
     saved = false;
 
@@ -78,6 +81,9 @@ export class SettingsComponent implements OnInit {
         this.ftp = user.ftp ?? null;
         this.weightKg = user.weightKg ?? null;
         this.vo2maxPower = user.vo2maxPower ?? null;
+        this.isCoach = user.role === 'COACH';
+        this.aiPrePrompt = user.aiPrePrompt ?? '';
+        this.aiPrePromptEnabled = user.aiPrePromptEnabled ?? false;
 
         for (const field of [...this.allRunFields, ...this.swimFields]) {
             const val = (user as any)[field.key] as number | undefined;
@@ -125,6 +131,7 @@ export class SettingsComponent implements OnInit {
             ftp: this.ftp ?? null,
             weightKg: this.weightKg ?? null,
             vo2maxPower: this.vo2maxPower ?? null,
+            ...(this.isCoach ? { aiPrePrompt: this.aiPrePrompt.trim() || null, aiPrePromptEnabled: this.aiPrePromptEnabled } : {}),
         };
         for (const field of [...this.allRunFields, ...this.swimFields]) {
             const val = this.paceToSeconds(field);
