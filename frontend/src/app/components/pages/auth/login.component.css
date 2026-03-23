@@ -24,22 +24,9 @@
       gap: 16px;
     }
 
-    .logo-icon {
+    .logo-img {
       width: 36px;
-      height: 36px;
-      background: var(--accent-color, #ff6600);
-      transform: rotate(-10deg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 6px;
-    }
-
-    .logo-inner {
-      width: 18px;
-      height: 18px;
-      background: var(--color-white);
-      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+      height: auto;
     }
 
     h1 {

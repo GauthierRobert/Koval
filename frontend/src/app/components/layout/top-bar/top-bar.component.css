@@ -23,22 +23,9 @@
       min-width: 280px;
     }
 
-    .logo {
+    .logo-img {
       width: 28px;
-      height: 28px;
-      background: var(--accent-color);
-      transform: rotate(-10deg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 4px;
-    }
-
-    .logo-inner {
-      width: 14px;
-      height: 14px;
-      background: var(--color-white);
-      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+      height: auto;
     }
 
     .app-title {

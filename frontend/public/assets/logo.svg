@@ -1,0 +1,17 @@
+<svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" role="img">
+  <title>Koval logo</title>
+  <defs>
+    <mask id="k-cuts">
+      <rect width="200" height="190" fill="white"/>
+      <polygon points="69,0 81,0 81,190 69,190" fill="black"/>
+      <polygon points="81,110 81,86 180,0 152,0" fill="black"/>
+      <polygon points="81,96 81,120 190,190 162,190" fill="black"/>
+    </mask>
+  </defs>
+  <!-- Rounded white square background -->
+  <rect x="10" y="10" width="220" height="220" rx="64" ry="64" fill="black" stroke="#ff9d00" stroke-width="12"/>
+  <!-- Triangle with K cuts, centered and rotated 10° -->
+  <g transform="rotate(-10, 120, 125) translate(10, 12)">
+    <polygon points="100,18 182,172 18,172" fill="#ff9d00" mask="url(#k-cuts)"/>
+  </g>
+</svg>
