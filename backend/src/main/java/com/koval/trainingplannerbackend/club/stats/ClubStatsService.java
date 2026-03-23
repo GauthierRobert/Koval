@@ -1,10 +1,13 @@
-package com.koval.trainingplannerbackend.club;
+package com.koval.trainingplannerbackend.club.stats;
 
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserService;
 import com.koval.trainingplannerbackend.club.dto.ClubRaceGoalResponse;
 import com.koval.trainingplannerbackend.club.dto.ClubWeeklyStatsResponse;
 import com.koval.trainingplannerbackend.club.dto.LeaderboardEntry;
+import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService;
+import com.koval.trainingplannerbackend.club.membership.ClubMembershipService;
+import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
 import com.koval.trainingplannerbackend.goal.RaceGoal;
 import com.koval.trainingplannerbackend.goal.RaceGoalRepository;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;

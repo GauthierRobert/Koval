@@ -1,6 +1,6 @@
 package com.koval.trainingplannerbackend.coach;
 
-import com.koval.trainingplannerbackend.club.ClubTrainingSession;
+import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
 import com.koval.trainingplannerbackend.training.model.SportType;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.model.TrainingType;

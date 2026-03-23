@@ -1,4 +1,4 @@
-package com.koval.trainingplannerbackend.club;
+package com.koval.trainingplannerbackend.club.invite;
 
 import lombok.Getter;
 import lombok.Setter;

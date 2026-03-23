@@ -1,4 +1,4 @@
-package com.koval.trainingplannerbackend.club;
+package com.koval.trainingplannerbackend.club.activity;
 
 public enum ClubActivityType {
     MEMBER_JOINED, MEMBER_LEFT, SESSION_CREATED, SESSION_JOINED, SESSION_CANCELLED, RECURRING_SERIES_CANCELLED, TRAINING_CREATED, RACE_GOAL_ADDED, WAITING_LIST_JOINED

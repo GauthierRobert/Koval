@@ -1,6 +1,6 @@
 package com.koval.trainingplannerbackend.club.dto;
 
-import com.koval.trainingplannerbackend.club.OpenToAllDelayUnit;
+import com.koval.trainingplannerbackend.club.session.OpenToAllDelayUnit;
 
 import java.time.LocalDateTime;
 

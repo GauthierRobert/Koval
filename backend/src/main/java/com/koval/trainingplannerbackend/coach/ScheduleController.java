@@ -1,7 +1,7 @@
 package com.koval.trainingplannerbackend.coach;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
-import com.koval.trainingplannerbackend.club.ClubSessionService;
+import com.koval.trainingplannerbackend.club.session.ClubSessionService;
 import com.koval.trainingplannerbackend.club.dto.CalendarClubSessionResponse;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;

@@ -1,8 +1,8 @@
 package com.koval.trainingplannerbackend.training;
 
-import com.koval.trainingplannerbackend.club.ClubMemberStatus;
-import com.koval.trainingplannerbackend.club.ClubMembership;
-import com.koval.trainingplannerbackend.club.ClubMembershipRepository;
+import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
+import com.koval.trainingplannerbackend.club.membership.ClubMembership;
+import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.training.metrics.TrainingMetricsService;
 import com.koval.trainingplannerbackend.training.model.BlockType;

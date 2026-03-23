@@ -1,8 +1,12 @@
-package com.koval.trainingplannerbackend.club;
+package com.koval.trainingplannerbackend.club.activity;
 
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserService;
 import com.koval.trainingplannerbackend.club.dto.ClubActivityResponse;
+import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService;
+import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
+import com.koval.trainingplannerbackend.club.membership.ClubMembership;
+import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
 import com.koval.trainingplannerbackend.notification.NotificationService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;

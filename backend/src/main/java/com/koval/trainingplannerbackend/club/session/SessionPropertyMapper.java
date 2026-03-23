@@ -1,7 +1,8 @@
-package com.koval.trainingplannerbackend.club;
+package com.koval.trainingplannerbackend.club.session;
 
 import com.koval.trainingplannerbackend.club.dto.CreateRecurringSessionRequest;
 import com.koval.trainingplannerbackend.club.dto.CreateSessionRequest;
+import com.koval.trainingplannerbackend.club.recurring.RecurringSessionTemplate;
 
 import java.util.ArrayList;
 import java.util.List;

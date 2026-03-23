@@ -1,4 +1,4 @@
-package com.koval.trainingplannerbackend.club;
+package com.koval.trainingplannerbackend.club.membership;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 

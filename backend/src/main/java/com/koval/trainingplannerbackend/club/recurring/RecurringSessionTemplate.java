@@ -1,5 +1,7 @@
-package com.koval.trainingplannerbackend.club;
+package com.koval.trainingplannerbackend.club.recurring;
 
+import com.koval.trainingplannerbackend.club.session.GroupLinkedTraining;
+import com.koval.trainingplannerbackend.club.session.OpenToAllDelayUnit;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;

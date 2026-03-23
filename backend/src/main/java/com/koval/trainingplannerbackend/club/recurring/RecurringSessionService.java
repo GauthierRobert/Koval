@@ -1,6 +1,12 @@
-package com.koval.trainingplannerbackend.club;
+package com.koval.trainingplannerbackend.club.recurring;
 
+import com.koval.trainingplannerbackend.club.activity.ClubActivityService;
+import com.koval.trainingplannerbackend.club.activity.ClubActivityType;
 import com.koval.trainingplannerbackend.club.dto.CreateRecurringSessionRequest;
+import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService;
+import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
+import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
+import com.koval.trainingplannerbackend.club.session.SessionPropertyMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;

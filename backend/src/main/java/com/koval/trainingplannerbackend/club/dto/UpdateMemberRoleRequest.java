@@ -1,5 +1,5 @@
 package com.koval.trainingplannerbackend.club.dto;
 
-import com.koval.trainingplannerbackend.club.ClubMemberRole;
+import com.koval.trainingplannerbackend.club.membership.ClubMemberRole;
 
 public record UpdateMemberRoleRequest(ClubMemberRole role) {}

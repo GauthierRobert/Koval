@@ -1,6 +1,6 @@
 package com.koval.trainingplannerbackend.ai.action;
 
-import com.koval.trainingplannerbackend.club.ClubSessionService;
+import com.koval.trainingplannerbackend.club.session.ClubSessionService;
 import com.koval.trainingplannerbackend.club.dto.CreateSessionRequest;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.model.*;

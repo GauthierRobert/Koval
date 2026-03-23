@@ -1,7 +1,7 @@
 package com.koval.trainingplannerbackend.training;
 
-import com.koval.trainingplannerbackend.club.ClubMemberStatus;
-import com.koval.trainingplannerbackend.club.ClubMembershipRepository;
+import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
+import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
 import com.koval.trainingplannerbackend.coach.CoachService;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.received.ReceivedTrainingService;

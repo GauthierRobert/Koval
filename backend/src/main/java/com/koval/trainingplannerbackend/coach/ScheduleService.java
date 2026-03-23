@@ -1,6 +1,13 @@
 package com.koval.trainingplannerbackend.coach;
 
-import com.koval.trainingplannerbackend.club.*;
+import com.koval.trainingplannerbackend.club.Club;
+import com.koval.trainingplannerbackend.club.ClubRepository;
+import com.koval.trainingplannerbackend.club.group.ClubGroupRepository;
+import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
+import com.koval.trainingplannerbackend.club.membership.ClubMembership;
+import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
+import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
+import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;

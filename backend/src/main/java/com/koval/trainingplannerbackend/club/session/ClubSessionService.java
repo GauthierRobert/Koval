@@ -1,7 +1,17 @@
-package com.koval.trainingplannerbackend.club;
+package com.koval.trainingplannerbackend.club.session;
 
+import com.koval.trainingplannerbackend.club.Club;
+import com.koval.trainingplannerbackend.club.activity.ClubActivityService;
+import com.koval.trainingplannerbackend.club.activity.ClubActivityType;
+import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService;
+import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
+import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
+import com.koval.trainingplannerbackend.club.ClubRepository;
 import com.koval.trainingplannerbackend.club.dto.CalendarClubSessionResponse;
 import com.koval.trainingplannerbackend.club.dto.CreateSessionRequest;
+import com.koval.trainingplannerbackend.club.group.ClubGroup;
+import com.koval.trainingplannerbackend.club.group.ClubGroupRepository;
+import com.koval.trainingplannerbackend.club.membership.ClubMembership;
 import com.koval.trainingplannerbackend.notification.NotificationService;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.model.Training;

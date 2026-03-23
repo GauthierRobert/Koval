@@ -4,8 +4,8 @@ import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.club.Club;
 import com.koval.trainingplannerbackend.club.ClubRepository;
-import com.koval.trainingplannerbackend.club.ClubTrainingSession;
-import com.koval.trainingplannerbackend.club.ClubTrainingSessionRepository;
+import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
+import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

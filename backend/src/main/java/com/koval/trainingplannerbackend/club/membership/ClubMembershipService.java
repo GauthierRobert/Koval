@@ -1,9 +1,16 @@
-package com.koval.trainingplannerbackend.club;
+package com.koval.trainingplannerbackend.club.membership;
 
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserService;
+import com.koval.trainingplannerbackend.club.Club;
+import com.koval.trainingplannerbackend.club.ClubRepository;
+import com.koval.trainingplannerbackend.club.ClubVisibility;
+import com.koval.trainingplannerbackend.club.activity.ClubActivityService;
+import com.koval.trainingplannerbackend.club.activity.ClubActivityType;
 import com.koval.trainingplannerbackend.club.dto.ClubMemberResponse;
 import com.koval.trainingplannerbackend.club.dto.MyClubRoleEntry;
+import com.koval.trainingplannerbackend.club.group.ClubGroup;
+import com.koval.trainingplannerbackend.club.group.ClubGroupRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

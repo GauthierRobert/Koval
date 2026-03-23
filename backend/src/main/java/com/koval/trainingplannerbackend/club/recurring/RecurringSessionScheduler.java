@@ -1,4 +1,4 @@
-package com.koval.trainingplannerbackend.club;
+package com.koval.trainingplannerbackend.club.recurring;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
