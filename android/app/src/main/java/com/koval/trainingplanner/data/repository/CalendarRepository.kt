@@ -80,7 +80,7 @@ class CalendarRepository @Inject constructor(
         waitingList = waitingList ?: emptyList(),
         maxParticipants = maxParticipants,
         durationMinutes = durationMinutes,
-        linkedTrainings = linkedTrainings?.map { LinkedTraining(it.trainingId, it.title, it.clubGroupId) } ?: emptyList(),
+        linkedTrainings = linkedTrainings?.map { LinkedTraining(it.trainingId, it.title, it.clubGroupId, it.clubGroupName, it.relevant ?: false) } ?: emptyList(),
         clubGroupId = clubGroupId,
         clubGroupName = clubGroupName,
         responsibleCoachId = responsibleCoachId,

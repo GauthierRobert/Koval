@@ -30,6 +30,8 @@ data class LinkedTrainingDto(
     val trainingId: String,
     val title: String? = null,
     val clubGroupId: String? = null,
+    val clubGroupName: String? = null,
+    val relevant: Boolean? = null,
 )
 
 @JsonClass(generateAdapter = true)

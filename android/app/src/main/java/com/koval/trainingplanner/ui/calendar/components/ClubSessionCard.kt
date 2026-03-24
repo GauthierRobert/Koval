@@ -217,28 +217,52 @@ fun ClubSessionCard(
                     )
                 }
 
-                // Linked trainings with clickable titles
+                // Linked trainings with clickable titles and group names
                 if (session.linkedTrainings.isNotEmpty()) {
-                    Row(
+                    Column(
                         modifier = Modifier.padding(start = 46.dp, top = 2.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         session.linkedTrainings.forEach { linked ->
                             linked.title?.let { title ->
+                                val isRelevant = linked.relevant
                                 Surface(
-                                    shape = RoundedCornerShape(4.dp),
-                                    color = Primary.copy(alpha = 0.1f),
-                                    modifier = Modifier.clickable { onTrainingClick(linked.trainingId) },
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = if (isRelevant) Primary.copy(alpha = 0.15f) else SurfaceColor.copy(alpha = 0.6f),
+                                    border = if (isRelevant) BorderStroke(1.dp, Primary.copy(alpha = 0.4f)) else BorderStroke(1.dp, Border.copy(alpha = 0.5f)),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onTrainingClick(linked.trainingId) },
                                 ) {
-                                    Text(
-                                        text = title,
-                                        color = Primary,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                        maxLines = 1,
-                                    )
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = title,
+                                                color = if (isRelevant) Primary else TextSecondary,
+                                                fontSize = 11.sp,
+                                                fontWeight = if (isRelevant) FontWeight.SemiBold else FontWeight.Normal,
+                                                maxLines = 1,
+                                            )
+                                            val groupLabel = linked.clubGroupName ?: "All club"
+                                            Text(
+                                                text = groupLabel,
+                                                color = if (isRelevant) Primary.copy(alpha = 0.7f) else TextMuted,
+                                                fontSize = 10.sp,
+                                                maxLines = 1,
+                                            )
+                                        }
+                                        if (isRelevant) {
+                                            Icon(
+                                                Icons.Filled.HowToReg,
+                                                contentDescription = "Your training",
+                                                tint = Primary,
+                                                modifier = Modifier.size(14.dp),
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }

@@ -11,5 +11,12 @@ public record CalendarClubSessionResponse(
         boolean joined, boolean onWaitingList, int waitingListPosition,
         LocalDateTime openToAllFrom,
         boolean cancelled, String cancellationReason,
-        String linkedTrainingId, String linkedTrainingTitle, String linkedTrainingDescription
-) {}
+        String linkedTrainingId, String linkedTrainingTitle, String linkedTrainingDescription,
+        List<CalendarLinkedTraining> linkedTrainings
+) {
+    public record CalendarLinkedTraining(
+            String trainingId, String title,
+            String clubGroupId, String clubGroupName,
+            boolean relevant
+    ) {}
+}

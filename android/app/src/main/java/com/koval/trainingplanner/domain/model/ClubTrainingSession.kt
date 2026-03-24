@@ -26,4 +26,6 @@ data class LinkedTraining(
     val trainingId: String,
     val title: String? = null,
     val clubGroupId: String? = null,
+    val clubGroupName: String? = null,
+    val relevant: Boolean = false,
 )

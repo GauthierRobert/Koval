@@ -310,6 +310,16 @@ public class ClubSessionService {
 
         GroupLinkedTraining resolved = resolveUserLinkedTraining(s, userGroupIds);
 
+        List<GroupLinkedTraining> effective = s.getEffectiveLinkedTrainings();
+        List<CalendarClubSessionResponse.CalendarLinkedTraining> linkedTrainings = effective.stream()
+                .map(glt -> new CalendarClubSessionResponse.CalendarLinkedTraining(
+                        glt.getTrainingId(),
+                        glt.getTrainingTitle(),
+                        glt.getClubGroupId(),
+                        glt.getClubGroupId() != null ? groupNameMap.getOrDefault(glt.getClubGroupId(), glt.getClubGroupName()) : null,
+                        glt.getClubGroupId() == null || userGroupIds.contains(glt.getClubGroupId())
+                )).toList();
+
         return new CalendarClubSessionResponse(
                 s.getId(), s.getClubId(), club.getName(), s.getTitle(), s.getSport(),
                 s.getScheduledAt(), s.getLocation(), s.getDescription(),
@@ -321,7 +331,8 @@ public class ClubSessionService {
                 s.isCancelled(), s.getCancellationReason(),
                 resolved != null ? resolved.getTrainingId() : null,
                 resolved != null ? resolved.getTrainingTitle() : null,
-                resolved != null ? resolved.getTrainingDescription() : null);
+                resolved != null ? resolved.getTrainingDescription() : null,
+                linkedTrainings);
     }
 
     private static int computeWaitingListPosition(ClubTrainingSession session, String userId) {
