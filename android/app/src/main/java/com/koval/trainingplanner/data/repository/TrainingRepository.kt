@@ -20,6 +20,57 @@ class TrainingRepository @Inject constructor(
         return trainingApi.getTraining(id).toDomain()
     }
 
+    suspend fun listTrainings(): List<Training> {
+        return trainingApi.listTrainings().map { it.toDomain() }
+    }
+
+    suspend fun listClubTrainings(): List<Training> {
+        return trainingApi.listClubTrainings().map { it.toDomain() }
+    }
+
+    suspend fun createTraining(training: Training): Training {
+        return trainingApi.createTraining(training.toDto()).toDomain()
+    }
+
+    suspend fun updateTraining(id: String, training: Training): Training {
+        return trainingApi.updateTraining(id, training.toDto()).toDomain()
+    }
+
+    suspend fun deleteTraining(id: String) {
+        trainingApi.deleteTraining(id)
+    }
+
+    private fun Training.toDto() = TrainingDto(
+        id = id,
+        title = title,
+        description = description,
+        blocks = blocks.map { it.toDto() },
+        sportType = sportType.name,
+        trainingType = trainingType?.name,
+        estimatedTss = estimatedTss,
+        estimatedIf = estimatedIf,
+        estimatedDurationSeconds = estimatedDurationSeconds,
+        estimatedDistance = estimatedDistance,
+    )
+
+    private fun WorkoutElement.toDto(): WorkoutElementDto = WorkoutElementDto(
+        repetitions = repetitions,
+        elements = elements?.map { it.toDto() },
+        restDurationSeconds = restDurationSeconds,
+        restIntensity = restIntensity,
+        type = type?.name,
+        durationSeconds = durationSeconds,
+        distanceMeters = distanceMeters,
+        label = label,
+        description = description,
+        intensityTarget = intensityTarget,
+        intensityStart = intensityStart,
+        intensityEnd = intensityEnd,
+        cadenceTarget = cadenceTarget,
+        zoneTarget = zoneTarget,
+        zoneLabel = zoneLabel,
+    )
+
     private fun TrainingDto.toDomain() = Training(
         id = id,
         title = title,

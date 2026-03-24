@@ -1,0 +1,100 @@
+@if (plan$ | async; as plan) {
+  <div class="plan-detail">
+    <!-- Header -->
+    <div class="plan-header">
+      <a routerLink="/plans" class="back-link">&larr; {{ 'PLANS.BACK_TO_PLANS' | translate }}</a>
+      <div class="header-row">
+        <div class="header-left">
+          <div class="title-row">
+            <app-sport-icon [sport]="plan.sportType" [size]="24"></app-sport-icon>
+            <h1>{{ plan.title }}</h1>
+            <span class="status-badge" [style.background]="STATUS_COLORS[plan.status]">{{ plan.status }}</span>
+          </div>
+          @if (plan.description) {
+            <p class="description">{{ plan.description }}</p>
+          }
+          <div class="meta-row">
+            <span>{{ plan.durationWeeks }} {{ 'PLANS.WEEKS' | translate }}</span>
+            @if (plan.startDate) {
+              <span class="meta-sep">·</span>
+              <span>{{ 'PLANS.STARTS' | translate }} {{ plan.startDate }}</span>
+            }
+          </div>
+        </div>
+        <div class="header-actions">
+          @if (plan.status === 'DRAFT' || plan.status === 'PAUSED') {
+            <button class="btn-activate" (click)="activatePlan(plan)">
+              {{ 'PLANS.BTN_ACTIVATE' | translate }}
+            </button>
+          }
+          @if (plan.status === 'ACTIVE') {
+            <button class="btn-pause" (click)="pausePlan(plan)">
+              {{ 'PLANS.BTN_PAUSE' | translate }}
+            </button>
+          }
+          <button class="btn-delete" (click)="deletePlan(plan)">
+            {{ 'COMMON.DELETE' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    @if (progress$ | async; as progress) {
+      <div class="progress-section glass">
+        <div class="progress-header">
+          <span class="progress-label">{{ 'PLANS.PROGRESS' | translate }}</span>
+          <span class="progress-percent">{{ progress.completionPercent }}%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="progress.completionPercent"></div>
+        </div>
+        <div class="progress-stats">
+          <span class="stat completed">{{ progress.completedWorkouts }} {{ 'PLANS.COMPLETED' | translate }}</span>
+          <span class="stat pending">{{ progress.pendingWorkouts }} {{ 'PLANS.PENDING' | translate }}</span>
+          <span class="stat skipped">{{ progress.skippedWorkouts }} {{ 'PLANS.SKIPPED' | translate }}</span>
+        </div>
+      </div>
+    }
+
+    <!-- Week-by-week timeline -->
+    @if (trainingMap$ | async; as trainingMap) {
+      <div class="weeks-timeline">
+        @for (week of plan.weeks; track week.weekNumber) {
+          <div class="week-row" [class.current-week]="isCurrentWeek(plan.startDate, week.weekNumber)">
+            <div class="week-header">
+              <span class="week-number">{{ 'PLANS.WEEK' | translate }} {{ week.weekNumber }}</span>
+              @if (week.label) {
+                <span class="week-label">{{ week.label }}</span>
+              }
+              @if (week.targetTss) {
+                <span class="week-tss">{{ week.targetTss }} TSS</span>
+              }
+              @if (isCurrentWeek(plan.startDate, week.weekNumber)) {
+                <span class="current-badge">{{ 'PLANS.CURRENT' | translate }}</span>
+              }
+            </div>
+            <div class="week-days">
+              @for (day of DAYS; track day) {
+                <div class="day-slot" [class.has-workout]="getTrainingForDay(week, day)">
+                  <span class="day-label">{{ DAY_LABELS[day] }}</span>
+                  <span class="day-date">{{ computeDate(plan.startDate, week.weekNumber, day) }}</span>
+                  @if (getTrainingForDay(week, day); as planDay) {
+                    <div class="day-workout">
+                      {{ getTrainingTitle(planDay.trainingId, trainingMap) }}
+                    </div>
+                    @if (planDay.notes) {
+                      <div class="day-notes">{{ planDay.notes }}</div>
+                    }
+                  } @else {
+                    <div class="day-rest">{{ 'PLANS.REST' | translate }}</div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+}

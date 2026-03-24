@@ -139,7 +139,8 @@ public class CoachService {
                 coach.getDisplayName() + " assigned you a workout for " + scheduledDate,
                 Map.of("type", "TRAINING_ASSIGNED",
                        "trainingId", trainingId,
-                       "scheduledDate", scheduledDate.toString()));
+                       "scheduledDate", scheduledDate.toString()),
+                "workoutAssigned");
 
         return assignments;
     }
@@ -203,7 +204,8 @@ public class CoachService {
                 coach.getDisplayName() + " assigned you a workout for " + scheduledDate,
                 Map.of("type", "TRAINING_ASSIGNED",
                        "trainingId", trainingId,
-                       "scheduledDate", scheduledDate.toString()));
+                       "scheduledDate", scheduledDate.toString()),
+                "workoutAssigned");
 
         return assignments;
     }

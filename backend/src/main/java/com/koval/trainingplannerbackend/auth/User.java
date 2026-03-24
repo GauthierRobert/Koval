@@ -6,6 +6,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import com.koval.trainingplannerbackend.notification.NotificationPreferences;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -69,6 +71,8 @@ public class User {
     private Map<String, Integer> customZoneReferenceValues = new HashMap<>();
 
     private List<String> fcmTokens = new ArrayList<>();
+
+    private NotificationPreferences notificationPreferences = new NotificationPreferences();
 
     // Helper methods
     public boolean isCoach() {

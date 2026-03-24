@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.training.history;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
+import com.koval.trainingplannerbackend.training.metrics.PowerCurveService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -22,11 +23,14 @@ public class SessionController {
 
     private final SessionService sessionService;
     private final AnalyticsService analyticsService;
+    private final PowerCurveService powerCurveService;
 
     public SessionController(SessionService sessionService,
-                             AnalyticsService analyticsService) {
+                             AnalyticsService analyticsService,
+                             PowerCurveService powerCurveService) {
         this.sessionService = sessionService;
         this.analyticsService = analyticsService;
+        this.powerCurveService = powerCurveService;
     }
 
     @PostMapping
@@ -118,5 +122,44 @@ public class SessionController {
                         .contentType(MediaType.APPLICATION_OCTET_STREAM)
                         .body((Object) fit.data()))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    // ── Analytics endpoints ─────────────────────────────────────────────
+
+    @GetMapping("/power-curve")
+    public ResponseEntity<Map<Integer, Double>> getPowerCurve(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(powerCurveService.getBestPowerCurve(userId, from, to));
+    }
+
+    @GetMapping("/{id}/power-curve")
+    public ResponseEntity<Map<Integer, Double>> getSessionPowerCurve(@PathVariable String id) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(powerCurveService.getSessionPowerCurve(id, userId));
+    }
+
+    @PutMapping("/{id}/power-curve")
+    public ResponseEntity<Void> saveSessionPowerCurve(@PathVariable String id,
+                                                       @RequestBody Map<Integer, Double> powerCurve) {
+        String userId = SecurityUtils.getCurrentUserId();
+        powerCurveService.savePowerCurve(id, userId, powerCurve);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/volume")
+    public ResponseEntity<List<PowerCurveService.VolumeEntry>> getVolume(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(defaultValue = "week") String groupBy) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(powerCurveService.computeVolume(userId, from, to, groupBy));
+    }
+
+    @GetMapping("/personal-records")
+    public ResponseEntity<Map<Integer, Double>> getPersonalRecords() {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(powerCurveService.getPersonalRecords(userId));
     }
 }

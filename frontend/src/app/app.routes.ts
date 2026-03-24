@@ -19,6 +19,22 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'builder',
+    loadComponent: () =>
+      import('./components/pages/workout-builder/workout-builder.component').then(
+        (m) => m.WorkoutBuilderComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'builder/:id',
+    loadComponent: () =>
+      import('./components/pages/workout-builder/workout-builder.component').then(
+        (m) => m.WorkoutBuilderComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
     path: 'active-session',
     loadComponent: () =>
       import('./components/pages/live-session/live-dashboard.component').then(
@@ -75,6 +91,14 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'analytics',
+    loadComponent: () =>
+      import('./components/pages/analytics/analytics-page.component').then(
+        (m) => m.AnalyticsPageComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
     path: 'groups',
     loadComponent: () =>
       import('./components/pages/group-management/group-management.component').then(
@@ -106,6 +130,22 @@ export const routes: Routes = [
     path: 'pacing',
     loadComponent: () =>
       import('./components/pages/pacing/pacing-page.component').then((m) => m.PacingPageComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'plans',
+    loadComponent: () =>
+      import('./components/pages/plans/plan-list-page/plan-list-page.component').then(
+        (m) => m.PlanListPageComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'plans/:id',
+    loadComponent: () =>
+      import('./components/pages/plans/plan-detail-page/plan-detail-page.component').then(
+        (m) => m.PlanDetailPageComponent,
+      ),
     canActivate: [authGuard],
   },
   {

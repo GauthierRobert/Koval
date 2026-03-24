@@ -8,6 +8,9 @@ import com.koval.trainingplannerbackend.club.membership.ClubMembership;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
+import com.koval.trainingplannerbackend.auth.User;
+import com.koval.trainingplannerbackend.auth.UserRepository;
+import com.koval.trainingplannerbackend.notification.NotificationService;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
@@ -38,6 +41,8 @@ public class ScheduleService {
     private final ClubTrainingSessionRepository clubTrainingSessionRepository;
     private final ClubRepository clubRepository;
     private final ClubGroupRepository clubGroupRepository;
+    private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
     public ScheduleService(ScheduledWorkoutRepository scheduledWorkoutRepository,
             TrainingRepository trainingRepository,
@@ -47,7 +52,9 @@ public class ScheduleService {
             ClubMembershipRepository clubMembershipRepository,
             ClubTrainingSessionRepository clubTrainingSessionRepository,
             ClubRepository clubRepository,
-            ClubGroupRepository clubGroupRepository) {
+            ClubGroupRepository clubGroupRepository,
+            NotificationService notificationService,
+            UserRepository userRepository) {
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
         this.trainingRepository = trainingRepository;
         this.coachService = coachService;
@@ -57,6 +64,8 @@ public class ScheduleService {
         this.clubTrainingSessionRepository = clubTrainingSessionRepository;
         this.clubRepository = clubRepository;
         this.clubGroupRepository = clubGroupRepository;
+        this.notificationService = notificationService;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -109,10 +118,34 @@ public class ScheduleService {
         CompletedSession saved = completedSessionRepository.save(session);
         analyticsService.recomputeAndSaveUserLoad(workout.getAthleteId());
 
-        return coachService.markCompleted(scheduledWorkoutId,
+        ScheduledWorkout result = coachService.markCompleted(scheduledWorkoutId,
                 saved.getTss() != null ? saved.getTss().intValue() : null,
                 saved.getIntensityFactor(),
                 saved.getId());
+
+        // Notify coach that athlete completed the workout
+        notifyCoachOfCompletion(workout);
+
+        return result;
+    }
+
+    private void notifyCoachOfCompletion(ScheduledWorkout workout) {
+        String coachId = workout.getAssignedBy();
+        if (coachId == null || coachId.equals(workout.getAthleteId())) return;
+
+        String athleteName = userRepository.findById(workout.getAthleteId())
+                .map(User::getDisplayName).orElse("An athlete");
+        String trainingTitle = trainingRepository.findById(workout.getTrainingId())
+                .map(Training::getTitle).orElse("a workout");
+
+        notificationService.sendToUsers(
+                List.of(coachId),
+                "Workout Completed",
+                athleteName + " completed \"" + trainingTitle + "\"",
+                Map.of("type", "WORKOUT_COMPLETED",
+                       "athleteId", workout.getAthleteId(),
+                       "trainingId", workout.getTrainingId()),
+                "workoutCompletedCoach");
     }
 
     // --- Enrichment helpers ---

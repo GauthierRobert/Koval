@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -37,6 +38,9 @@ public class CompletedSession {
     private String fitFileId; // GridFS ObjectId; null when no FIT stored
     private Integer rpe;
     private boolean syntheticCompletion; // true when created from planned data via COMPLETE button
+
+    private Double totalDistance; // meters
+    private Map<Integer, Double> powerCurve; // duration (seconds) -> best avg power (watts)
 
     @Indexed(unique = true, sparse = true)
     private String stravaActivityId;

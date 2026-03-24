@@ -69,6 +69,11 @@
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_TRAININGS_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_TRAININGS_DESC' | translate }}</span>
         </a>
+        <a routerLink="/plans" routerLinkActive="active" class="dropdown-item"
+          (click)="closeTraining()">
+          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PLANS_LABEL' | translate }}</span>
+          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PLANS_DESC' | translate }}</span>
+        </a>
         <a routerLink="/history" routerLinkActive="active" class="dropdown-item"
           (click)="closeTraining()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_HISTORY_LABEL' | translate }}</span>
@@ -118,6 +123,11 @@
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PMC_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PMC_DESC' | translate }}</span>
         </a>
+        <a routerLink="/analytics" routerLinkActive="active" class="dropdown-item"
+          (click)="closeAnalytics()">
+          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_ANALYTICS_LABEL' | translate }}</span>
+          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_ANALYTICS_DESC' | translate }}</span>
+        </a>
         <a routerLink="/physiology" routerLinkActive="active" class="dropdown-item"
           (click)="closeAnalytics()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PHYSIOLOGY_LABEL' | translate }}</span>
@@ -148,6 +158,14 @@
           <circle cx="9" cy="7" r="4" />
           <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
           <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      </button>
+
+      <button class="device-btn" (click)="showNotifPrefs = !showNotifPrefs" [title]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate">
+        <svg class="bt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
         </svg>
       </button>
 
@@ -207,4 +225,8 @@
 
 @if (showMemberships) {
   <app-memberships-modal (closed)="showMemberships = false"></app-memberships-modal>
+}
+
+@if (showNotifPrefs) {
+  <app-notification-preferences (close)="showNotifPrefs = false"></app-notification-preferences>
 }

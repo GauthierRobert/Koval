@@ -32,6 +32,19 @@ public class NotificationService {
 
     @Async
     public void sendToUsers(List<String> userIds, String title, String body, Map<String, String> data) {
+        sendToUsers(userIds, title, body, data, null);
+    }
+
+    /**
+     * Send a notification to users, optionally filtering by preference type.
+     *
+     * @param preferenceType if non-null, only sends to users whose NotificationPreferences
+     *                       has the corresponding flag enabled. Valid values match
+     *                       NotificationPreferences field names.
+     */
+    @Async
+    public void sendToUsers(List<String> userIds, String title, String body,
+                            Map<String, String> data, String preferenceType) {
         if (!isFirebaseAvailable()) {
             log.debug("Firebase not initialized — skipping notification: {}", title);
             return;
@@ -41,6 +54,10 @@ public class NotificationService {
         Map<String, List<String>> tokensByUser = new HashMap<>();
 
         userIds.forEach(userId -> userRepository.findById(userId).ifPresent(user -> {
+            if (preferenceType != null && !isPreferenceEnabled(user, preferenceType)) {
+                log.debug("User {} has {} preference disabled — skipping", userId, preferenceType);
+                return;
+            }
             List<String> tokens = user.getFcmTokens();
             if (tokens != null && !tokens.isEmpty()) {
                 allTokens.addAll(tokens);
@@ -54,6 +71,21 @@ public class NotificationService {
         }
 
         sendToTokens(allTokens, title, body, data, tokensByUser);
+    }
+
+    private boolean isPreferenceEnabled(User user, String preferenceType) {
+        NotificationPreferences prefs = user.getNotificationPreferences();
+        if (prefs == null) return true; // default: all enabled
+        return switch (preferenceType) {
+            case "workoutAssigned" -> prefs.isWorkoutAssigned();
+            case "workoutReminder" -> prefs.isWorkoutReminder();
+            case "workoutCompletedCoach" -> prefs.isWorkoutCompletedCoach();
+            case "clubSessionCreated" -> prefs.isClubSessionCreated();
+            case "clubSessionCancelled" -> prefs.isClubSessionCancelled();
+            case "waitingListPromoted" -> prefs.isWaitingListPromoted();
+            case "planActivated" -> prefs.isPlanActivated();
+            default -> true;
+        };
     }
 
     private void sendToTokens(List<String> tokens, String title, String body,
@@ -128,6 +160,21 @@ public class NotificationService {
                 userRepository.save(user);
             }
         });
+    }
+
+    public NotificationPreferences getPreferences(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        NotificationPreferences prefs = user.getNotificationPreferences();
+        return prefs != null ? prefs : new NotificationPreferences();
+    }
+
+    public NotificationPreferences updatePreferences(String userId, NotificationPreferences prefs) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        user.setNotificationPreferences(prefs);
+        userRepository.save(user);
+        return prefs;
     }
 
     private boolean isFirebaseAvailable() {

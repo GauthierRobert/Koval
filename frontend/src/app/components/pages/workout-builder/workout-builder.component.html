@@ -1,0 +1,396 @@
+<div class="builder-page">
+  <!-- Banner header -->
+  <div class="builder-banner glass">
+    <div class="banner-left">
+      <a routerLink="/trainings" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/>
+        </svg>
+      </a>
+      <div class="banner-avatar">W</div>
+      <div class="banner-info">
+        <span class="banner-title">
+          {{ isEditing ? ('BUILDER.EDIT_TITLE' | translate) : ('BUILDER.CREATE_TITLE' | translate) }}
+          <span class="dim">{{ 'BUILDER.SUBTITLE' | translate }}</span>
+        </span>
+        <span class="banner-subtitle">
+          {{ (blocks$ | async)?.length ?? 0 }} {{ 'BUILDER.BLOCKS' | translate }}
+          &bull; {{ formattedDuration }}
+          &bull; {{ estimatedTss }} TSS
+        </span>
+      </div>
+    </div>
+    <div class="banner-actions">
+      <button class="btn-ghost" routerLink="/trainings">{{ 'COMMON.CANCEL' | translate }}</button>
+      <button class="btn-primary" (click)="save()" [disabled]="!canSave()">
+        {{ isEditing ? ('COMMON.SAVE' | translate) : ('COMMON.CREATE' | translate) }}
+      </button>
+    </div>
+  </div>
+
+  <div class="builder-layout">
+    <!-- Left panel: Metadata + Metrics -->
+    <aside class="panel metadata-panel glass">
+      <div class="panel-section">
+        <h3>{{ 'BUILDER.METADATA' | translate }}</h3>
+
+        <div class="form-field">
+          <label>{{ 'BUILDER.FIELD_TITLE' | translate }}</label>
+          <input type="text" [(ngModel)]="title" [placeholder]="'BUILDER.PLACEHOLDER_TITLE' | translate" />
+        </div>
+
+        <div class="form-field">
+          <label>{{ 'BUILDER.FIELD_DESCRIPTION' | translate }}</label>
+          <textarea [(ngModel)]="description" rows="2" [placeholder]="'BUILDER.PLACEHOLDER_DESC' | translate"></textarea>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-field">
+            <label>{{ 'BUILDER.FIELD_SPORT' | translate }}</label>
+            <select [(ngModel)]="sportType">
+              @for (s of SPORT_TYPES; track s) {
+                <option [value]="s">{{ s }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-field">
+            <label>{{ 'BUILDER.FIELD_TYPE' | translate }}</label>
+            <select [(ngModel)]="trainingType">
+              @for (t of TRAINING_TYPES; track t) {
+                <option [value]="t">{{ t }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-section metrics-section">
+        <h3>{{ 'BUILDER.METRICS' | translate }}</h3>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-value">{{ estimatedTss }}</span>
+            <span class="metric-label">TSS</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-value">{{ formattedDuration }}</span>
+            <span class="metric-label">{{ 'BUILDER.DURATION' | translate }}</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-value">{{ (blocks$ | async)?.length ?? 0 }}</span>
+            <span class="metric-label">{{ 'BUILDER.BLOCKS' | translate }}</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center panel: Block timeline -->
+    <div class="panel timeline-panel">
+      <div class="timeline-header">
+        <h3>{{ 'BUILDER.BLOCKS_TIMELINE' | translate }}</h3>
+        <div class="timeline-actions">
+          @if (selectedForSet.size > 0) {
+            <button class="btn-set" (click)="showSetForm = true">
+              {{ 'BUILDER.GROUP_AS_SET' | translate }} ({{ selectedForSet.size }})
+            </button>
+          }
+        </div>
+      </div>
+
+      @if (showSetForm) {
+        <div class="set-form glass">
+          <div class="set-form-row">
+            <label>{{ 'BUILDER.REPS' | translate }}</label>
+            <input type="number" [(ngModel)]="setReps" min="1" max="20" />
+          </div>
+          <div class="set-form-row">
+            <label>{{ 'BUILDER.REST_DURATION' | translate }}</label>
+            <input type="number" [(ngModel)]="setRestDuration" min="0" /> s
+          </div>
+          <div class="set-form-row">
+            <label>{{ 'BUILDER.REST_INTENSITY' | translate }}</label>
+            <input type="number" [(ngModel)]="setRestIntensity" min="0" max="100" /> %
+          </div>
+          <div class="set-form-actions">
+            <button class="btn-ghost" (click)="showSetForm = false; selectedForSet.clear()">{{ 'COMMON.CANCEL' | translate }}</button>
+            <button class="btn-primary" (click)="createSet()">{{ 'BUILDER.CREATE_SET' | translate }}</button>
+          </div>
+        </div>
+      }
+
+      <!-- Block list with drag-and-drop -->
+      <div class="block-list" cdkDropList (cdkDropListDropped)="dropBlock($event)">
+        @if (blocks$ | async; as blocks) {
+          @if (blocks.length === 0) {
+            <div class="empty-timeline">
+              <div class="empty-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <line x1="12" y1="8" x2="12" y2="16"/>
+                  <line x1="8" y1="12" x2="16" y2="12"/>
+                </svg>
+              </div>
+              <p>{{ 'BUILDER.EMPTY_BLOCKS' | translate }}</p>
+              <span class="empty-hint">{{ 'BUILDER.EMPTY_HINT' | translate }}</span>
+            </div>
+          }
+          @for (block of blocks; track $index) {
+            @if (isSet(block)) {
+              <!-- Set block with visible children -->
+              <div class="set-group" cdkDrag [class.selected]="selectedBlockIndex === $index">
+                <div class="block-item set-header" (click)="selectBlock($index)">
+                  <div class="block-drag-handle" cdkDragHandle>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="8" cy="6" r="2"/><circle cx="16" cy="6" r="2"/>
+                      <circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/>
+                      <circle cx="8" cy="18" r="2"/><circle cx="16" cy="18" r="2"/>
+                    </svg>
+                  </div>
+                  <div class="set-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2"/>
+                      <path d="M12 8v8"/><path d="M8 12h8"/>
+                    </svg>
+                  </div>
+                  <div class="block-info">
+                    <span class="block-label">{{ block.label || (block.repetitions + 'x Set') }}</span>
+                    <span class="block-meta">{{ block.repetitions }}x · {{ block.elements?.length }} blocks
+                      @if (block.restDurationSeconds) {
+                        · {{ formatSeconds(block.restDurationSeconds) }} rest
+                      }
+                    </span>
+                  </div>
+                  <div class="block-actions">
+                    <button class="block-action-btn" (click)="toggleSetSelection($index); $event.stopPropagation()"
+                            [title]="'BUILDER.SELECT_FOR_SET' | translate">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        @if (selectedForSet.has($index)) {
+                          <rect x="3" y="3" width="18" height="18" rx="3" fill="var(--accent-color, #ff9d00)"/>
+                          <path d="M9 12l2 2 4-4" stroke="white"/>
+                        } @else {
+                          <rect x="3" y="3" width="18" height="18" rx="3"/>
+                        }
+                      </svg>
+                    </button>
+                    <button class="block-action-btn" (click)="duplicateBlock($index); $event.stopPropagation()"
+                            [title]="'BUILDER.DUPLICATE' | translate">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2"/>
+                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                      </svg>
+                    </button>
+                    <button class="block-action-btn delete" (click)="removeBlock($index); $event.stopPropagation()"
+                            [title]="'COMMON.DELETE' | translate">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="set-children">
+                  @for (el of block.elements ?? []; track $index) {
+                    <div class="set-child-item">
+                      <div class="block-color-bar" [style.background]="blockColor(el)"></div>
+                      <div class="block-info">
+                        <span class="block-label">{{ el.label || el.type }}</span>
+                        <span class="block-meta">
+                          {{ formatBlockDuration(el) }}
+                          @if (el.intensityTarget) {
+                            · {{ el.intensityTarget }}%
+                          }
+                          @if (el.intensityStart && el.intensityEnd) {
+                            · {{ el.intensityStart }}% → {{ el.intensityEnd }}%
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  }
+                  @if (block.restDurationSeconds) {
+                    <div class="set-rest-indicator">
+                      <span>{{ formatSeconds(block.restDurationSeconds) }} rest @ {{ block.restIntensity ?? 40 }}%</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            } @else {
+              <!-- Regular block -->
+              <div
+                class="block-item"
+                cdkDrag
+                [class.selected]="selectedBlockIndex === $index"
+                [class.set-selected]="selectedForSet.has($index)"
+                (click)="selectBlock($index)">
+                <div class="block-drag-handle" cdkDragHandle>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="8" cy="6" r="2"/><circle cx="16" cy="6" r="2"/>
+                    <circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/>
+                    <circle cx="8" cy="18" r="2"/><circle cx="16" cy="18" r="2"/>
+                  </svg>
+                </div>
+                <div class="block-color-bar" [style.background]="blockColor(block)"></div>
+                <div class="block-info">
+                  <span class="block-label">{{ block.label || block.type }}</span>
+                  <span class="block-meta">
+                    {{ formatBlockDuration(block) }}
+                    @if (block.intensityTarget) {
+                      · {{ block.intensityTarget }}%
+                    }
+                    @if (block.intensityStart && block.intensityEnd) {
+                      · {{ block.intensityStart }}% → {{ block.intensityEnd }}%
+                    }
+                  </span>
+                </div>
+                <div class="block-actions">
+                  <button class="block-action-btn" (click)="toggleSetSelection($index); $event.stopPropagation()"
+                          [title]="'BUILDER.SELECT_FOR_SET' | translate">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      @if (selectedForSet.has($index)) {
+                        <rect x="3" y="3" width="18" height="18" rx="3" fill="var(--accent-color, #ff9d00)"/>
+                        <path d="M9 12l2 2 4-4" stroke="white"/>
+                      } @else {
+                        <rect x="3" y="3" width="18" height="18" rx="3"/>
+                      }
+                    </svg>
+                  </button>
+                  <button class="block-action-btn" (click)="duplicateBlock($index); $event.stopPropagation()"
+                          [title]="'BUILDER.DUPLICATE' | translate">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2"/>
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                    </svg>
+                  </button>
+                  <button class="block-action-btn delete" (click)="removeBlock($index); $event.stopPropagation()"
+                          [title]="'COMMON.DELETE' | translate">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            }
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Right panel: Block editor -->
+    <div class="panel editor-panel glass">
+
+      @if (isSelectedBlockASet()) {
+        <!-- Set editor -->
+        <h3>{{ 'BUILDER.EDIT_SET' | translate }}</h3>
+
+        <div class="form-field">
+          <label>{{ 'BUILDER.LABEL' | translate }}</label>
+          <input type="text" [(ngModel)]="editLabel" placeholder="e.g. 3x Set" />
+        </div>
+
+        <div class="form-field">
+          <label>{{ 'BUILDER.REPS' | translate }}</label>
+          <input type="number" [(ngModel)]="editSetReps" min="1" max="50" />
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-field">
+            <label>{{ 'BUILDER.REST_DURATION' | translate }} (s)</label>
+            <input type="number" [(ngModel)]="editSetRestDuration" min="0" />
+          </div>
+          <div class="form-field">
+            <label>{{ 'BUILDER.REST_INTENSITY' | translate }} (%)</label>
+            <input type="number" [(ngModel)]="editSetRestIntensity" min="0" max="100" />
+          </div>
+        </div>
+
+        <div class="set-contents">
+          <label class="set-contents-label">{{ 'BUILDER.SET_CONTENTS' | translate }}</label>
+          @if (blocks[selectedBlockIndex]; as setBlock) {
+            @for (el of setBlock.elements ?? []; track $index) {
+              <div class="set-element-row">
+                <div class="block-color-bar" [style.background]="blockColor(el)"></div>
+                <span class="set-element-name">{{ el.label || el.type }}</span>
+                <span class="set-element-meta">{{ formatBlockDuration(el) }}</span>
+              </div>
+            }
+          }
+        </div>
+
+        <button class="btn-primary full-width" (click)="updateBlock()">{{ 'BUILDER.UPDATE_SET' | translate }}</button>
+        <button class="btn-ghost full-width" (click)="selectedBlockIndex = -1" style="margin-top: 0.35rem">{{ 'BUILDER.DESELECT' | translate }}</button>
+      } @else {
+        <!-- Block editor / add -->
+        <h3>{{ selectedBlockIndex >= 0 ? ('BUILDER.EDIT_BLOCK' | translate) : ('BUILDER.ADD_BLOCK' | translate) }}</h3>
+
+        <div class="form-field">
+          <label>{{ 'BUILDER.BLOCK_TYPE' | translate }}</label>
+          <div class="type-chips">
+            @for (t of BLOCK_TYPES; track t) {
+              <button class="type-chip" [class.active]="editType === t"
+                      [style.--chip-color]="blockColor({type: t})"
+                      (click)="editType = t">
+                {{ t }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>{{ 'BUILDER.LABEL' | translate }}</label>
+          <input type="text" [(ngModel)]="editLabel" [placeholder]="editType" />
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-field">
+            <label>{{ 'BUILDER.DURATION_MIN' | translate }}</label>
+            <input type="number" [(ngModel)]="editDurationMin" min="0" />
+          </div>
+          <div class="form-field">
+            <label>{{ 'BUILDER.DURATION_SEC' | translate }}</label>
+            <input type="number" [(ngModel)]="editDurationSec" min="0" max="59" />
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>{{ 'BUILDER.DISTANCE_M' | translate }}</label>
+          <input type="number" [(ngModel)]="editDistanceMeters" min="0" [placeholder]="'BUILDER.OPTIONAL' | translate" />
+        </div>
+
+        @if (!hideIntensity()) {
+          @if (isRamp()) {
+            <div class="form-row-2">
+              <div class="form-field">
+                <label>{{ 'BUILDER.INTENSITY_START' | translate }}</label>
+                <input type="number" [(ngModel)]="editIntensityStart" min="0" max="250" />
+              </div>
+              <div class="form-field">
+                <label>{{ 'BUILDER.INTENSITY_END' | translate }}</label>
+                <input type="number" [(ngModel)]="editIntensityEnd" min="0" max="250" />
+              </div>
+            </div>
+          } @else {
+            <div class="form-field">
+              <label>{{ 'BUILDER.INTENSITY_PCT' | translate }}</label>
+              <input type="number" [(ngModel)]="editIntensity" min="0" max="250" />
+            </div>
+          }
+        }
+
+        <div class="form-row-2">
+          <div class="form-field">
+            <label>{{ 'BUILDER.CADENCE' | translate }}</label>
+            <input type="number" [(ngModel)]="editCadence" min="0" [placeholder]="'BUILDER.OPTIONAL' | translate" />
+          </div>
+          <div class="form-field">
+            <label>{{ 'BUILDER.ZONE' | translate }}</label>
+            <input type="text" [(ngModel)]="editZone" [placeholder]="'BUILDER.ZONE_PLACEHOLDER' | translate" />
+          </div>
+        </div>
+
+        @if (selectedBlockIndex >= 0) {
+          <button class="btn-primary full-width" (click)="updateBlock()">{{ 'BUILDER.UPDATE_BLOCK' | translate }}</button>
+          <button class="btn-ghost full-width" (click)="selectedBlockIndex = -1" style="margin-top: 0.35rem">{{ 'BUILDER.DESELECT' | translate }}</button>
+        } @else {
+          <button class="btn-primary full-width" (click)="addBlock()">{{ 'BUILDER.ADD_BLOCK_BTN' | translate }}</button>
+        }
+      }
+    </div>
+  </div>
+</div>

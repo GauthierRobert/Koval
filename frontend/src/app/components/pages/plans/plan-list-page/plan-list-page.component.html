@@ -1,0 +1,90 @@
+<div class="plans-page">
+  <div class="page-header">
+    <div class="header-left">
+      <h1>{{ 'PLANS.PAGE_TITLE' | translate }}</h1>
+      <p class="subtitle">{{ 'PLANS.PAGE_SUBTITLE' | translate }}</p>
+    </div>
+    <button class="btn-create" (click)="toggleCreateForm()">
+      + {{ 'PLANS.BTN_NEW_PLAN' | translate }}
+    </button>
+  </div>
+
+  @if (showCreateForm) {
+    <div class="create-form glass">
+      <h3>{{ 'PLANS.CREATE_TITLE' | translate }}</h3>
+      <div class="form-row">
+        <label>{{ 'PLANS.FIELD_TITLE' | translate }}</label>
+        <input type="text" [(ngModel)]="newTitle" [placeholder]="'PLANS.PLACEHOLDER_TITLE' | translate" />
+      </div>
+      <div class="form-row">
+        <label>{{ 'PLANS.FIELD_DESCRIPTION' | translate }}</label>
+        <textarea [(ngModel)]="newDescription" rows="2" [placeholder]="'PLANS.PLACEHOLDER_DESCRIPTION' | translate"></textarea>
+      </div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label>{{ 'PLANS.FIELD_SPORT' | translate }}</label>
+          <select [(ngModel)]="newSport">
+            <option value="CYCLING">Cycling</option>
+            <option value="RUNNING">Running</option>
+            <option value="SWIMMING">Swimming</option>
+            <option value="BRICK">Brick</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>{{ 'PLANS.FIELD_START_DATE' | translate }}</label>
+          <input type="date" [(ngModel)]="newStartDate" />
+        </div>
+        <div class="form-row">
+          <label>{{ 'PLANS.FIELD_DURATION' | translate }}</label>
+          <input type="number" [(ngModel)]="newDurationWeeks" min="1" max="52" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" (click)="showCreateForm = false">{{ 'COMMON.CANCEL' | translate }}</button>
+        <button class="btn-primary" (click)="createPlan()" [disabled]="!newTitle.trim()">{{ 'COMMON.CREATE' | translate }}</button>
+      </div>
+    </div>
+  }
+
+  <div class="plans-grid">
+    @if (plans$ | async; as plans) {
+      @if (plans.length === 0 && !showCreateForm) {
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <h3>{{ 'PLANS.EMPTY_TITLE' | translate }}</h3>
+          <p>{{ 'PLANS.EMPTY_MESSAGE' | translate }}</p>
+        </div>
+      }
+      @for (plan of plans; track plan.id) {
+        <div class="plan-card glass" (click)="openPlan(plan)">
+          <div class="plan-card-header">
+            <div class="plan-title-row">
+              <app-sport-icon [sport]="plan.sportType" [size]="20"></app-sport-icon>
+              <h3 class="plan-title">{{ plan.title }}</h3>
+            </div>
+            <span class="status-badge" [style.background]="statusColor(plan.status)">
+              {{ plan.status }}
+            </span>
+          </div>
+          @if (plan.description) {
+            <p class="plan-description">{{ plan.description }}</p>
+          }
+          <div class="plan-meta">
+            <span class="meta-item">{{ plan.durationWeeks }}w</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">{{ workoutCount(plan) }} workouts</span>
+            @if (plan.startDate) {
+              <span class="meta-sep">·</span>
+              <span class="meta-item">{{ formatDate(plan.startDate) }}</span>
+            }
+          </div>
+          <button class="btn-delete" (click)="deletePlan($event, plan)" [title]="'COMMON.DELETE' | translate">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+            </svg>
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>

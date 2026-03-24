@@ -29,4 +29,16 @@ public class NotificationController {
         notificationService.unregisterToken(userId, request.token());
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/preferences")
+    public ResponseEntity<NotificationPreferences> getPreferences() {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(notificationService.getPreferences(userId));
+    }
+
+    @PutMapping("/preferences")
+    public ResponseEntity<NotificationPreferences> updatePreferences(@RequestBody NotificationPreferences prefs) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(notificationService.updatePreferences(userId, prefs));
+    }
 }

@@ -68,6 +68,12 @@ public class ClubSessionService {
         session = sessionRepository.save(session);
 
         activityService.emitActivity(clubId, ClubActivityType.SESSION_CREATED, userId, session.getId(), session.getTitle());
+
+        // Notify active club members about the new session
+        notifyClubMembers(clubId, session, "New Club Session",
+                "\"" + session.getTitle() + "\" has been scheduled",
+                "SESSION_CREATED", "clubSessionCreated");
+
         return session;
     }
 
@@ -96,6 +102,20 @@ public class ClubSessionService {
         session.setCancelledAt(LocalDateTime.now());
         sessionRepository.save(session);
         activityService.emitActivity(clubId, ClubActivityType.SESSION_CANCELLED, userId, sessionId, session.getTitle());
+
+        // Notify participants about cancellation
+        if (!session.getParticipantIds().isEmpty()) {
+            notificationService.sendToUsers(
+                    session.getParticipantIds(),
+                    "Session Cancelled",
+                    "\"" + session.getTitle() + "\" has been cancelled"
+                            + (reason != null && !reason.isBlank() ? ": " + reason : ""),
+                    Map.of("type", "SESSION_CANCELLED",
+                           "clubId", clubId,
+                           "sessionId", sessionId),
+                    "clubSessionCancelled");
+        }
+
         return session;
     }
 
@@ -157,7 +177,8 @@ public class ClubSessionService {
                 "A spot opened in " + session.getTitle() + ". You've been automatically added.",
                 Map.of("type", "WAITING_LIST_PROMOTED",
                        "clubId", session.getClubId(),
-                       "sessionId", session.getId()));
+                       "sessionId", session.getId()),
+                "waitingListPromoted");
     }
 
     public ClubTrainingSession linkTrainingToSession(String userId, String clubId, String sessionId,
@@ -354,6 +375,22 @@ public class ClubSessionService {
             glt.setTrainingDescription(t.getDescription());
         } catch (Exception e) {
             log.warn("Failed to enrich group linked training {}: {}", glt.getTrainingId(), e.getMessage());
+        }
+    }
+
+    private void notifyClubMembers(String clubId, ClubTrainingSession session,
+                                     String title, String body, String type, String preferenceType) {
+        List<String> memberIds = membershipRepository.findByClubId(clubId).stream()
+                .filter(m -> m.getStatus() == ClubMemberStatus.ACTIVE)
+                .map(ClubMembership::getUserId)
+                .filter(id -> !id.equals(session.getCreatedBy()))
+                .toList();
+        if (!memberIds.isEmpty()) {
+            notificationService.sendToUsers(memberIds, title, body,
+                    Map.of("type", type,
+                           "clubId", clubId,
+                           "sessionId", session.getId()),
+                    preferenceType);
         }
     }
 

@@ -1,5 +1,6 @@
 import {Component, inject, Input} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {Router} from '@angular/router';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {TrainingService} from '../../../services/training.service';
 import {flattenElements, hasDurationEstimate, isSet, Training, WorkoutBlock} from '../../../models/training.model';
@@ -29,6 +30,7 @@ export class WorkoutVisualizationComponent {
   private durationService = inject(DurationEstimationService);
   private zoneService = inject(ZoneService);
 
+  private router = inject(Router);
   private currentZoneSystem: ZoneSystem | null = null;
   private translate = inject(TranslateService);
 
@@ -77,8 +79,9 @@ export class WorkoutVisualizationComponent {
   }
 
   enterEditMode(): void {
-    this.isEditMode = true;
-    this.pendingBlocks = [...(this.training?.blocks || [])];
+    if (this.training?.id) {
+      this.router.navigate(['/builder', this.training.id]);
+    }
   }
 
   cancelEdits(): void {

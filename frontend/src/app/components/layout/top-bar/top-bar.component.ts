@@ -7,12 +7,13 @@ import {ClubService, ClubSummary} from '../../../services/club.service';
 import {TrainingFilterService} from '../../../services/training-filter.service';
 import {combineLatest, map} from 'rxjs';
 import {MembershipsModalComponent} from '../../shared/memberships-modal/memberships-modal.component';
+import {NotificationPreferencesComponent} from '../../shared/notification-preferences/notification-preferences.component';
 import {TranslateService, TranslateModule} from '@ngx-translate/core';
 
 @Component({
   selector: 'app-top-bar',
   standalone: true,
-  imports: [CommonModule, RouterModule, MembershipsModalComponent, TranslateModule],
+  imports: [CommonModule, RouterModule, MembershipsModalComponent, NotificationPreferencesComponent, TranslateModule],
   templateUrl: './top-bar.component.html',
   styleUrl: './top-bar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +37,7 @@ export class TopBarComponent {
   isTrainingOpen = false;
   isClubsOpen = false;
   showMemberships = false;
+  showNotifPrefs = false;
 
   user$ = this.authService.user$;
   isCoach$ = this.authService.user$.pipe(map(u => u?.role === 'COACH'));

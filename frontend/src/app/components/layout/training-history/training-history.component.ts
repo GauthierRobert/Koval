@@ -1,6 +1,7 @@
 import {Component, inject} from '@angular/core';
 
 import {CommonModule} from '@angular/common';
+import {Router} from '@angular/router';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {TrainingService} from '../../../services/training.service';
 import {TrainingFilterService} from '../../../services/training-filter.service';
@@ -28,6 +29,7 @@ export class TrainingHistoryComponent {
     private historyService = inject(HistoryService);
     private durationService = inject(DurationEstimationService);
     private translate = inject(TranslateService);
+    private router = inject(Router);
 
     selectedTraining$ = this.trainingService.selectedTraining$;
     filteredTrainings$ = this.filterService.filteredTrainings$;
@@ -36,6 +38,11 @@ export class TrainingHistoryComponent {
     onSelect(training: Training): void {
         this.historyService.selectSession(null);
         this.trainingService.selectTraining(training);
+    }
+
+    onEdit(event: Event, training: Training): void {
+        event.stopPropagation();
+        this.router.navigate(['/builder', training.id]);
     }
 
     onDelete(event: Event, training: Training): void {

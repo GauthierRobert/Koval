@@ -45,7 +45,11 @@ import com.koval.trainingplanner.ui.calendar.CalendarScreen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.koval.trainingplanner.ui.chat.ChatScreen
+import com.koval.trainingplanner.ui.builder.WorkoutBuilderScreen
+import com.koval.trainingplanner.ui.history.HistoryScreen
+import com.koval.trainingplanner.ui.history.SessionDetailScreen
 import com.koval.trainingplanner.ui.training.TrainingDetailScreen
+import com.koval.trainingplanner.ui.training.TrainingListScreen
 import com.koval.trainingplanner.ui.zones.ZonesScreen
 import com.koval.trainingplanner.ui.theme.Background
 import com.koval.trainingplanner.ui.theme.Primary
@@ -89,6 +93,8 @@ fun KovalNavHost(intent: Intent?) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val isDetailScreen = currentRoute == Screen.TrainingDetail.route
+        || currentRoute == Screen.SessionDetail.route
+        || currentRoute == Screen.WorkoutBuilder.route
     val showBottomBar = authState.user != null && !isDetailScreen
 
     Scaffold(
@@ -127,6 +133,23 @@ fun KovalNavHost(intent: Intent?) {
                     },
                 )
             }
+            composable(Screen.Trainings.route) {
+                TrainingListScreen(
+                    onTrainingClick = { trainingId ->
+                        navController.navigate(Screen.TrainingDetail.createRoute(trainingId))
+                    },
+                    onCreateClick = {
+                        navController.navigate(Screen.WorkoutBuilder.createRoute())
+                    },
+                )
+            }
+            composable(Screen.History.route) {
+                HistoryScreen(
+                    onSessionClick = { sessionId ->
+                        navController.navigate(Screen.SessionDetail.createRoute(sessionId))
+                    },
+                )
+            }
             composable(Screen.Zones.route) {
                 ZonesScreen()
             }
@@ -138,6 +161,24 @@ fun KovalNavHost(intent: Intent?) {
                 arguments = listOf(navArgument("trainingId") { type = NavType.StringType }),
             ) {
                 TrainingDetailScreen(onBack = { navController.popBackStack() })
+            }
+            composable(
+                route = Screen.SessionDetail.route,
+                arguments = listOf(navArgument("sessionId") { type = NavType.StringType }),
+            ) {
+                SessionDetailScreen(onBack = { navController.popBackStack() })
+            }
+            composable(
+                route = Screen.WorkoutBuilder.route,
+                arguments = listOf(
+                    navArgument("trainingId") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                        nullable = true
+                    },
+                ),
+            ) {
+                WorkoutBuilderScreen(onBack = { navController.popBackStack() })
             }
         }
     }

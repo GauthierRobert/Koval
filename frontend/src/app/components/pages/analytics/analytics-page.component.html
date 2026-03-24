@@ -1,0 +1,129 @@
+<div class="analytics-page">
+  <div class="page-header">
+    <h1>{{ 'ANALYTICS.PAGE_TITLE' | translate }}</h1>
+    <div class="date-filters">
+      <input type="date" [(ngModel)]="dateFrom" (change)="loadData()" />
+      <span class="date-sep">—</span>
+      <input type="date" [(ngModel)]="dateTo" (change)="loadData()" />
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab" [class.active]="activeTab === 'power-curve'" (click)="setTab('power-curve')">
+      {{ 'ANALYTICS.TAB_POWER_CURVE' | translate }}
+    </button>
+    <button class="tab" [class.active]="activeTab === 'volume'" (click)="setTab('volume')">
+      {{ 'ANALYTICS.TAB_VOLUME' | translate }}
+    </button>
+    <button class="tab" [class.active]="activeTab === 'records'" (click)="setTab('records')">
+      {{ 'ANALYTICS.TAB_RECORDS' | translate }}
+    </button>
+  </div>
+
+  <!-- Power Curve Tab -->
+  @if (activeTab === 'power-curve') {
+    <div class="tab-content">
+      @if (powerCurve$ | async; as data) {
+        @if (powerCurveEntries(data).length === 0) {
+          <div class="empty-state">
+            <h3>{{ 'ANALYTICS.NO_POWER_DATA' | translate }}</h3>
+            <p>{{ 'ANALYTICS.NO_POWER_DATA_DESC' | translate }}</p>
+          </div>
+        } @else {
+          <div class="chart-container glass">
+            <h3>{{ 'ANALYTICS.POWER_CURVE_TITLE' | translate }}</h3>
+            <div class="bar-chart">
+              @for (entry of powerCurveEntries(data); track entry.duration) {
+                <div class="bar-col">
+                  <span class="bar-value">{{ entry.power }}W</span>
+                  <div class="bar" [style.height.%]="barHeight(entry.power, maxPower(data))"></div>
+                  <span class="bar-label">{{ entry.label }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      }
+    </div>
+  }
+
+  <!-- Volume Tab -->
+  @if (activeTab === 'volume') {
+    <div class="tab-content">
+      <div class="volume-controls">
+        <select [(ngModel)]="volumeGroupBy" (ngModelChange)="loadData()">
+          <option value="week">{{ 'ANALYTICS.BY_WEEK' | translate }}</option>
+          <option value="month">{{ 'ANALYTICS.BY_MONTH' | translate }}</option>
+        </select>
+      </div>
+      @if (volume$ | async; as entries) {
+        @if (entries.length === 0) {
+          <div class="empty-state">
+            <h3>{{ 'ANALYTICS.NO_VOLUME_DATA' | translate }}</h3>
+          </div>
+        } @else {
+          <div class="chart-container glass">
+            <h3>{{ 'ANALYTICS.VOLUME_TITLE' | translate }}</h3>
+            <div class="bar-chart volume-chart">
+              @for (entry of entries; track entry.period) {
+                <div class="bar-col">
+                  <span class="bar-value">{{ entry.totalTss | number:'1.0-0' }}</span>
+                  <div class="bar volume-bar" [style.height.%]="volumeBarHeight(entry.totalTss, maxVolumeTss(entries))"></div>
+                  <span class="bar-label">{{ entry.period }}</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Volume stats table -->
+          <div class="volume-table glass">
+            <table>
+              <thead>
+                <tr>
+                  <th>{{ 'ANALYTICS.PERIOD' | translate }}</th>
+                  <th>TSS</th>
+                  <th>{{ 'ANALYTICS.DURATION' | translate }}</th>
+                  <th>{{ 'ANALYTICS.DISTANCE' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (entry of entries; track entry.period) {
+                  <tr>
+                    <td>{{ entry.period }}</td>
+                    <td>{{ entry.totalTss | number:'1.0-0' }}</td>
+                    <td>{{ formatDuration(entry.totalDurationSeconds) }}</td>
+                    <td>{{ formatDistance(entry.totalDistanceMeters) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+    </div>
+  }
+
+  <!-- Records Tab -->
+  @if (activeTab === 'records') {
+    <div class="tab-content">
+      @if (personalRecords$ | async; as records) {
+        @if (recordEntries(records).length === 0) {
+          <div class="empty-state">
+            <h3>{{ 'ANALYTICS.NO_RECORDS' | translate }}</h3>
+            <p>{{ 'ANALYTICS.NO_RECORDS_DESC' | translate }}</p>
+          </div>
+        } @else {
+          <div class="records-grid">
+            @for (entry of recordEntries(records); track entry.duration) {
+              <div class="record-card glass">
+                <span class="record-duration">{{ entry.label }}</span>
+                <span class="record-power">{{ entry.power }}W</span>
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+  }
+</div>

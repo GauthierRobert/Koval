@@ -90,9 +90,32 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 - RaceGoals in club do not retrieve the goals of the members of the clubs.
 - Display in a "tooltip" The member that participate in a RACE (in the club race page).
 - Retrieve FIT files from Strava** — Implement an endpoint + service to fetch FIT activity files from Strava for the authenticated user. Requires the user to have granted all metric scopes (`activity:read_all`). Parse the FIT data and ingest relevant metrics (power, HR, cadence, TSS) into the session/history store.
-
+- Zones are display label, lower-higher, pace with lower-higher, but pace must be displayed higher-lower, as it is inverse of intensity,more instense, lower the pace is.
 ## TODO
-
+* ANDROID
+  - Remove from route the IA assistant and History for now. Add //TODO Temporary
+  - In physiology, when % = 0 do not diusplay value /km /400m,...
+  - Display the default zones in physiology
+  - Compact training card in Trainings lib
+  - Compact training filters
+  - Remove Complete/skip/delete/usage from calendar workout cards
+  - Move leave button at the place of the "joined" label in club session in calendar view. Remove the Joined label and add an icon below the sporticon to say I participate. 
+  - Add trainings title (with link to see the trianing) linked to the club session
+  - Compact club session in calendar view.
+  - Add waiting list feature in calendar session view
+  - Move the user setting (logout, name) in a profile tab (aside Zones, History,Training,...)
+  - Add reference value of the athete in the training view (if 75% FTP, display 75% as it is and at the left part, display XXX W, the calcualte value based on reference value (can be custom reference,with custom zone system))
+  - Add possibiltiy to see graphs value when over it.
+  - Instead of My Training / CLub filter, I want My Training, [Name of CLub 1] , [Name of club 2], Name of Coach Group 1, ... Like in angular
+  - User should be able to join CLub/Group in angular. Add this feature in profile/settings tab
+* ANGULAR
+  - remove old way to edit blocks
+  - In training builder, sets do not work correctly, Intensity of rest is never used, it will always be a PAUSE with 0 intensity. It must be one or the other. Default Rest intensity must be 60%. A check box could help to choose between Passive rest (PAUSE, zero intensity) or active rest (steady intensity). Make it cleared in angular, how to group elements, that one element can be a set with pause>/steady intensity. The way to group element hidden and not clear
+* BACKEND
+  - Add way to link trainings into plan, I mean populate training with plans
+* OVERALL
+  - Disable all element in front end concerning plan for now (add //TODO temporary) Also, disable plans tools/prompt for IA for now
+  - Add CGU that user must accept at least once. It must be displayed in angular or android based on first connection.
 ## Nice too have
 
 ## Later

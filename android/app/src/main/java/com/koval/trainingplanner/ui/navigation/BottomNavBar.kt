@@ -3,9 +3,13 @@ package com.koval.trainingplanner.ui.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.FitnessCenter
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -31,6 +35,8 @@ data class BottomNavItem(
 
 val bottomNavItems = listOf(
     BottomNavItem(Screen.Calendar, "Calendar", Icons.Filled.CalendarMonth, Icons.Outlined.CalendarMonth),
+    BottomNavItem(Screen.Trainings, "Trainings", Icons.Filled.FitnessCenter, Icons.Outlined.FitnessCenter),
+    BottomNavItem(Screen.History, "History", Icons.Filled.History, Icons.Outlined.History),
     BottomNavItem(Screen.Zones, "Zones", Icons.Filled.Speed, Icons.Outlined.Speed),
     BottomNavItem(Screen.Chat, "Chat", Icons.Filled.AutoAwesome, Icons.Outlined.AutoAwesome),
 )

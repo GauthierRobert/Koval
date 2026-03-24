@@ -23,4 +23,6 @@ public interface ScheduledWorkoutRepository extends MongoRepository<ScheduledWor
     List<ScheduledWorkout> findByAthleteIdAndScheduledDate(String athleteId, LocalDate date);
 
     List<ScheduledWorkout> findByPlanId(String planId);
+
+    List<ScheduledWorkout> findByScheduledDateAndStatus(LocalDate scheduledDate, ScheduleStatus status);
 }

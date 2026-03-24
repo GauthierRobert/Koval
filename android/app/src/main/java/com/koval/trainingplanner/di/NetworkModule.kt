@@ -8,6 +8,7 @@ import com.koval.trainingplanner.data.remote.api.ChatApi
 import com.koval.trainingplanner.data.remote.api.ClubApi
 import com.koval.trainingplanner.data.remote.api.GoalApi
 import com.koval.trainingplanner.data.remote.api.NotificationApi
+import com.koval.trainingplanner.data.remote.api.SessionApi
 import com.koval.trainingplanner.data.remote.api.TrainingApi
 import com.koval.trainingplanner.data.remote.api.ZoneApi
 import com.squareup.moshi.Moshi
@@ -109,4 +110,8 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideZoneApi(retrofit: Retrofit): ZoneApi = retrofit.create(ZoneApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideSessionApi(retrofit: Retrofit): SessionApi = retrofit.create(SessionApi::class.java)
 }
