@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,17 +38,15 @@ public class NotificationService {
         }
 
         List<String> allTokens = new ArrayList<>();
-        Map<String, List<String>> tokensByUser = new java.util.HashMap<>();
+        Map<String, List<String>> tokensByUser = new HashMap<>();
 
-        for (String userId : userIds) {
-            userRepository.findById(userId).ifPresent(user -> {
-                List<String> tokens = user.getFcmTokens();
-                if (tokens != null && !tokens.isEmpty()) {
-                    allTokens.addAll(tokens);
-                    tokensByUser.put(userId, new ArrayList<>(tokens));
-                }
-            });
-        }
+        userIds.forEach(userId -> userRepository.findById(userId).ifPresent(user -> {
+            List<String> tokens = user.getFcmTokens();
+            if (tokens != null && !tokens.isEmpty()) {
+                allTokens.addAll(tokens);
+                tokensByUser.put(userId, new ArrayList<>(tokens));
+            }
+        }));
 
         if (allTokens.isEmpty()) {
             log.debug("No FCM tokens found for users {} — skipping notification", userIds);
