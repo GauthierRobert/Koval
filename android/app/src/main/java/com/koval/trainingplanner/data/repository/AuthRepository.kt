@@ -58,5 +58,7 @@ class AuthRepository @Inject constructor(
         profilePicture = profilePicture,
         role = try { UserRole.valueOf(role ?: "ATHLETE") } catch (_: Exception) { UserRole.ATHLETE },
         ftp = ftp,
+        functionalThresholdPace = functionalThresholdPace,
+        criticalSwimSpeed = criticalSwimSpeed,
     )
 }

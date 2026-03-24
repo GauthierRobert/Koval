@@ -22,6 +22,8 @@ data class UserDto(
     val profilePicture: String? = null,
     val role: String? = null,
     val ftp: Int? = null,
+    val functionalThresholdPace: Int? = null,
+    val criticalSwimSpeed: Int? = null,
 )
 
 @JsonClass(generateAdapter = true)

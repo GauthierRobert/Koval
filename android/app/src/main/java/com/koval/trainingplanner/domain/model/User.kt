@@ -6,4 +6,6 @@ data class User(
     val profilePicture: String? = null,
     val role: UserRole,
     val ftp: Int? = null,
+    val functionalThresholdPace: Int? = null,
+    val criticalSwimSpeed: Int? = null,
 )

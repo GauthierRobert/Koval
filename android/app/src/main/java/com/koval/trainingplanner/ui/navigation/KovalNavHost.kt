@@ -46,6 +46,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.koval.trainingplanner.ui.chat.ChatScreen
 import com.koval.trainingplanner.ui.training.TrainingDetailScreen
+import com.koval.trainingplanner.ui.zones.ZonesScreen
 import com.koval.trainingplanner.ui.theme.Background
 import com.koval.trainingplanner.ui.theme.Primary
 import com.koval.trainingplanner.ui.theme.SurfaceElevated
@@ -125,6 +126,9 @@ fun KovalNavHost(intent: Intent?) {
                         navController.navigate(Screen.TrainingDetail.createRoute(trainingId))
                     },
                 )
+            }
+            composable(Screen.Zones.route) {
+                ZonesScreen()
             }
             composable(Screen.Chat.route) {
                 ChatScreen()

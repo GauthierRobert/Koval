@@ -9,6 +9,7 @@ import com.koval.trainingplanner.data.remote.api.ClubApi
 import com.koval.trainingplanner.data.remote.api.GoalApi
 import com.koval.trainingplanner.data.remote.api.NotificationApi
 import com.koval.trainingplanner.data.remote.api.TrainingApi
+import com.koval.trainingplanner.data.remote.api.ZoneApi
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -104,4 +105,8 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideGoalApi(retrofit: Retrofit): GoalApi = retrofit.create(GoalApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideZoneApi(retrofit: Retrofit): ZoneApi = retrofit.create(ZoneApi::class.java)
 }

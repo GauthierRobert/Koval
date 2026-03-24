@@ -35,10 +35,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -55,6 +53,14 @@ import com.koval.trainingplanner.ui.theme.Border
 import com.koval.trainingplanner.ui.theme.Primary
 import com.koval.trainingplanner.ui.theme.Surface as SurfaceColor
 import com.koval.trainingplanner.ui.theme.SurfaceElevated
+import com.koval.trainingplanner.ui.theme.BlockCooldown
+import com.koval.trainingplanner.ui.theme.BlockPause
+import com.koval.trainingplanner.ui.theme.IntensityAnaerobic
+import com.koval.trainingplanner.ui.theme.IntensityEndurance
+import com.koval.trainingplanner.ui.theme.IntensityRecovery
+import com.koval.trainingplanner.ui.theme.IntensityTempo
+import com.koval.trainingplanner.ui.theme.IntensityThreshold
+import com.koval.trainingplanner.ui.theme.IntensityVo2max
 import com.koval.trainingplanner.ui.theme.TextMuted
 import com.koval.trainingplanner.ui.theme.TextPrimary
 import com.koval.trainingplanner.ui.theme.TextSecondary
@@ -216,11 +222,12 @@ private fun TrainingDetailContent(training: Training) {
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly,
                         ) {
-                            ZoneLegend("Z1", TypeRecovery)
-                            ZoneLegend("Z2", TypeEndurance)
-                            ZoneLegend("SS", TypeSweetSpot)
-                            ZoneLegend("Z4", TypeThreshold)
-                            ZoneLegend("Z5", TypeVo2max)
+                            ZoneLegend("Z1", IntensityRecovery)
+                            ZoneLegend("Z2", IntensityEndurance)
+                            ZoneLegend("Z3", IntensityTempo)
+                            ZoneLegend("Z4", IntensityThreshold)
+                            ZoneLegend("Z5", IntensityVo2max)
+                            ZoneLegend("Z6", IntensityAnaerobic)
                         }
                     }
                 }
@@ -258,6 +265,8 @@ private data class FlatBlock(
     val intensityStart: Int,
     val intensityEnd: Int,
     val type: BlockType,
+    val zoneTarget: String? = null,
+    val zoneLabel: String? = null,
 )
 
 private fun flattenBlocks(elements: List<WorkoutElement>): List<FlatBlock> {
@@ -294,28 +303,77 @@ private fun flattenBlocks(elements: List<WorkoutElement>): List<FlatBlock> {
                 start = intensity
                 end = intensity
             }
-            result.add(FlatBlock(duration, start, end, type))
+            result.add(FlatBlock(duration, start, end, type, element.zoneTarget, element.zoneLabel))
         }
     }
     return result
 }
 
-private fun blockColor(type: BlockType): Color = when (type) {
-    BlockType.WARMUP -> TypeEndurance
-    BlockType.COOLDOWN -> TypeRecovery
-    BlockType.STEADY -> TypeSweetSpot
-    BlockType.INTERVAL -> TypeVo2max
-    BlockType.RAMP -> TypeThreshold
-    BlockType.FREE -> TypeMixed
-    BlockType.PAUSE -> TextMuted
+/** Matches Angular's getBlockColor() from block-helpers.ts */
+private fun blockColor(
+    type: BlockType,
+    intensityTarget: Int? = null,
+    intensityStart: Int? = null,
+    intensityEnd: Int? = null,
+): Color = when (type) {
+    BlockType.PAUSE -> BlockPause
+    BlockType.FREE -> BlockPause // Angular uses #636e72 for both
+    BlockType.WARMUP -> Color(0xFF0984E3).copy(alpha = 0.6f)
+    BlockType.COOLDOWN -> BlockCooldown.copy(alpha = 0.6f)
+    else -> {
+        val intensity = if (type == BlockType.RAMP) {
+            ((intensityStart ?: 0) + (intensityEnd ?: 0)) / 2
+        } else {
+            intensityTarget ?: 0
+        }
+        intensityToColor(intensity)
+    }
 }
 
-private fun intensityColor(intensity: Int): Color = when {
-    intensity < 56 -> TypeRecovery
-    intensity < 76 -> TypeEndurance
-    intensity < 91 -> TypeSweetSpot
-    intensity < 106 -> TypeThreshold
-    else -> TypeVo2max
+private fun intensityToColor(intensity: Int): Color = when {
+    intensity < 55 -> IntensityRecovery   // #B2BEC3
+    intensity < 75 -> IntensityEndurance   // #3498DB
+    intensity < 90 -> IntensityTempo       // #2ECC71
+    intensity < 105 -> IntensityThreshold  // #F1C40F
+    intensity < 120 -> IntensityVo2max     // #E67E22
+    else -> IntensityAnaerobic             // #E74C3C
+}
+
+/** Resolves zone name from zoneTarget, or falls back to default zone boundaries. Matches Angular's getBlockZoneName(). */
+private fun getBlockZoneName(
+    type: BlockType,
+    zoneTarget: String? = null,
+    intensityTarget: Int? = null,
+    intensityStart: Int? = null,
+    intensityEnd: Int? = null,
+): String {
+    if (!zoneTarget.isNullOrBlank()) return zoneTarget.uppercase()
+    val intensity = if (type == BlockType.RAMP) {
+        ((intensityStart ?: 0) + (intensityEnd ?: 0)) / 2
+    } else {
+        intensityTarget ?: 0
+    }
+    return when {
+        intensity < 55 -> "Z1"
+        intensity < 75 -> "Z2"
+        intensity < 90 -> "Z3"
+        intensity < 105 -> "Z4"
+        intensity < 120 -> "Z5"
+        else -> "Z6"
+    }
+}
+
+/** Returns display text for intensity. Matches Angular's getBlockIntensityDisplay(). */
+private fun getIntensityDisplay(element: WorkoutElement): String {
+    if (!element.zoneLabel.isNullOrBlank()) return element.zoneLabel
+    if (!element.zoneTarget.isNullOrBlank()) return element.zoneTarget
+    val type = element.type ?: BlockType.STEADY
+    if (type == BlockType.PAUSE) return "PAUSE"
+    if (type == BlockType.FREE) return "FREE"
+    if (type == BlockType.RAMP) {
+        return "${element.intensityStart ?: 0}% → ${element.intensityEnd ?: 0}%"
+    }
+    return element.intensityTarget?.let { "$it%" } ?: "-"
 }
 
 @Composable
@@ -346,10 +404,15 @@ private fun IntensityGraph(blocks: List<FlatBlock>, modifier: Modifier = Modifie
             val blockWidth = (block.durationSeconds.toFloat() / totalDuration) * w
             val yStart = h - (block.intensityStart.toFloat() / yScale) * h
             val yEnd = h - (block.intensityEnd.toFloat() / yScale) * h
-            val color = blockColor(block.type)
+            val color = blockColor(
+                type = block.type,
+                intensityTarget = block.intensityStart,
+                intensityStart = block.intensityStart,
+                intensityEnd = block.intensityEnd,
+            )
 
             if (block.type == BlockType.RAMP) {
-                // Draw as a trapezoid with gradient fill
+                // Draw as a trapezoid with flat fill
                 val path = Path().apply {
                     moveTo(xOffset, h)
                     lineTo(xOffset, yStart)
@@ -357,14 +420,7 @@ private fun IntensityGraph(blocks: List<FlatBlock>, modifier: Modifier = Modifie
                     lineTo(xOffset + blockWidth, h)
                     close()
                 }
-                drawPath(
-                    path = path,
-                    brush = Brush.verticalGradient(
-                        colors = listOf(color.copy(alpha = 0.8f), color.copy(alpha = 0.2f)),
-                        startY = minOf(yStart, yEnd),
-                        endY = h,
-                    ),
-                )
+                drawPath(path = path, color = color.copy(alpha = 0.45f))
                 // Outline top edge
                 drawLine(
                     color = color,
@@ -374,13 +430,9 @@ private fun IntensityGraph(blocks: List<FlatBlock>, modifier: Modifier = Modifie
                 )
             } else {
                 val blockHeight = h - yStart
-                // Filled rect
+                // Filled rect (flat)
                 drawRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(color.copy(alpha = 0.7f), color.copy(alpha = 0.15f)),
-                        startY = yStart,
-                        endY = h,
-                    ),
+                    color = color.copy(alpha = 0.45f),
                     topLeft = Offset(xOffset, yStart),
                     size = Size(blockWidth, blockHeight),
                 )
@@ -516,13 +568,25 @@ private fun SetElementContent(element: WorkoutElement, index: Int, nestLevel: In
 @Composable
 private fun LeafElementContent(element: WorkoutElement, index: Int) {
     val type = element.type ?: BlockType.STEADY
-    val color = blockColor(type)
+    val color = blockColor(
+        type = type,
+        intensityTarget = element.intensityTarget,
+        intensityStart = element.intensityStart,
+        intensityEnd = element.intensityEnd,
+    )
 
     Row(
         modifier = Modifier.padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Type color indicator
+        // Zone indicator badge
+        val zoneName = getBlockZoneName(
+            type = type,
+            zoneTarget = element.zoneTarget,
+            intensityTarget = element.intensityTarget,
+            intensityStart = element.intensityStart,
+            intensityEnd = element.intensityEnd,
+        )
         Box(
             modifier = Modifier
                 .size(36.dp)
@@ -530,7 +594,11 @@ private fun LeafElementContent(element: WorkoutElement, index: Int) {
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = type.name.take(3),
+                text = if (type == BlockType.FREE || type == BlockType.PAUSE) {
+                    type.name.take(3)
+                } else {
+                    zoneName
+                },
                 color = color,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
@@ -557,32 +625,22 @@ private fun LeafElementContent(element: WorkoutElement, index: Int) {
                 element.distanceMeters?.let {
                     Text("${it}m", color = TextSecondary, fontSize = 12.sp)
                 }
-                // Intensity
-                when {
-                    type == BlockType.RAMP && element.intensityStart != null && element.intensityEnd != null -> {
-                        Text(
-                            "${element.intensityStart}% → ${element.intensityEnd}%",
-                            color = color,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
-
-                    element.intensityTarget != null -> {
-                        Text(
-                            "${element.intensityTarget}%",
-                            color = intensityColor(element.intensityTarget),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
+                // Intensity display (zone-aware)
+                val intensityText = getIntensityDisplay(element)
+                if (intensityText != "-" && type != BlockType.PAUSE && type != BlockType.FREE) {
+                    Text(
+                        intensityText,
+                        color = color,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
                 }
                 element.cadenceTarget?.let {
                     Text("${it}rpm", color = TextSecondary, fontSize = 12.sp)
                 }
             }
 
-            // Zone label
+            // Zone label (enriched description from backend)
             element.zoneLabel?.let {
                 Text(it, color = TextMuted, fontSize = 11.sp)
             }
