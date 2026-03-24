@@ -78,7 +78,6 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 - I must be able to modify GPX of race clicking on already added gpx on race Button is only limited to small Icon
 - Change getRaceGoals. It must retrieve all the future goals of the members with all the participants in the clubs
 
-## TO VERIFY
 - Sessions linked to Club group, should only be visible to club group member, unless the condition open to all is activated and respected
 - The set Custom value should belong the the updateSettings api, as well at the set of the value should be displayed in the setting page where athlete set all the other reference. Hide 5k/10/semi/mararthon reference in running, a toggle can be there to show other reference value. Customs must be displayed in any case.
 - Session reminder in coach dashboard must be in main dashboard instead (but only for coach)
@@ -91,23 +90,24 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 - Display in a "tooltip" The member that participate in a RACE (in the club race page).
 - Retrieve FIT files from Strava** — Implement an endpoint + service to fetch FIT activity files from Strava for the authenticated user. Requires the user to have granted all metric scopes (`activity:read_all`). Parse the FIT data and ingest relevant metrics (power, HR, cadence, TSS) into the session/history store.
 - Zones are display label, lower-higher, pace with lower-higher, but pace must be displayed higher-lower, as it is inverse of intensity,more instense, lower the pace is.
+- ~~ANDROID: Remove from route the IA assistant and History for now. Add //TODO Temporary~~ ✅
+- ~~ANDROID: In physiology, when % = 0 do not display value /km /400m,...~~ ✅
+- ~~ANDROID: Display the default zones in physiology~~ ✅
+- ~~ANDROID: Compact training card in Trainings lib~~ ✅
+- ~~ANDROID: Compact training filters~~ ✅
+- ~~ANDROID: Remove Complete/skip/delete/usage from calendar workout cards~~ ✅
+- ~~ANDROID: Move leave button at the place of the "joined" label in club session in calendar view. Remove the Joined label and add an icon below the sporticon to say I participate.~~ ✅
+- ~~ANDROID: Add trainings title (with link to see the training) linked to the club session~~ ✅
+- ~~ANDROID: Compact club session in calendar view.~~ ✅
+- ~~ANDROID: Add waiting list feature in calendar session view~~ ✅
+- ~~ANDROID: Move the user setting (logout, name) in a profile tab (aside Zones, History,Training,...)~~ ✅
+- ~~ANDROID: Add reference value of the athlete in the training view (if 75% FTP, display 75% as it is and at the left part, display XXX W, the calculated value based on reference value)~~ ✅
+- ~~ANDROID: Add possibility to see graphs value when over it.~~ ✅
+- ~~ANDROID: Instead of My Training / Club filter, use My Training, [Name of Club 1], [Name of club 2], Name of Coach Group 1, ... Like in angular~~ ✅
+- ~~ANDROID: User should be able to join Club/Group. Add this feature in profile/settings tab~~ ✅
+## TO VERIFY
+
 ## TODO
-* ANDROID
-  - Remove from route the IA assistant and History for now. Add //TODO Temporary
-  - In physiology, when % = 0 do not diusplay value /km /400m,...
-  - Display the default zones in physiology
-  - Compact training card in Trainings lib
-  - Compact training filters
-  - Remove Complete/skip/delete/usage from calendar workout cards
-  - Move leave button at the place of the "joined" label in club session in calendar view. Remove the Joined label and add an icon below the sporticon to say I participate. 
-  - Add trainings title (with link to see the trianing) linked to the club session
-  - Compact club session in calendar view.
-  - Add waiting list feature in calendar session view
-  - Move the user setting (logout, name) in a profile tab (aside Zones, History,Training,...)
-  - Add reference value of the athete in the training view (if 75% FTP, display 75% as it is and at the left part, display XXX W, the calcualte value based on reference value (can be custom reference,with custom zone system))
-  - Add possibiltiy to see graphs value when over it.
-  - Instead of My Training / CLub filter, I want My Training, [Name of CLub 1] , [Name of club 2], Name of Coach Group 1, ... Like in angular
-  - User should be able to join CLub/Group in angular. Add this feature in profile/settings tab
 * ANGULAR
   - remove old way to edit blocks
   - In training builder, sets do not work correctly, Intensity of rest is never used, it will always be a PAUSE with 0 intensity. It must be one or the other. Default Rest intensity must be 60%. A check box could help to choose between Passive rest (PAUSE, zero intensity) or active rest (steady intensity). Make it cleared in angular, how to group elements, that one element can be a set with pause>/steady intensity. The way to group element hidden and not clear

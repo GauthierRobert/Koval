@@ -1,0 +1,84 @@
+.cgu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+}
+
+.cgu-card {
+  width: min(520px, 90vw);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-md, 12px);
+  padding: 1.5rem;
+  gap: 1rem;
+}
+
+.cgu-header {
+  text-align: center;
+}
+
+.cgu-header h2 {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 1.25rem;
+  color: var(--text-color, #ececf1);
+}
+
+.cgu-desc {
+  font-size: 13px;
+  color: var(--text-muted, #8e8ea0);
+  margin: 0;
+}
+
+.logo-mark {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+  border-radius: 10px;
+  background: var(--accent-subtle, rgba(255, 157, 0, 0.12));
+  border: 1px solid var(--accent-color, #ff9d00);
+}
+
+.cgu-content {
+  flex: 1;
+  min-height: 200px;
+  max-height: 50vh;
+  overflow: auto;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-sm, 6px);
+}
+
+.cgu-iframe {
+  width: 100%;
+  min-height: 300px;
+  border: none;
+  background: white;
+  border-radius: var(--radius-sm, 6px);
+}
+
+.cgu-accept-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  background: var(--accent-color, #ff9d00);
+  color: #000;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.cgu-accept-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.cgu-accept-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

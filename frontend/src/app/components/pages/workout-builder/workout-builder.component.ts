@@ -62,13 +62,15 @@ export class WorkoutBuilderComponent implements OnInit {
   showSetForm = false;
   setReps = 3;
   setRestDuration = 120;
-  setRestIntensity = 40;
+  setRestIntensity = 60;
+  setPassiveRest = false;
   selectedForSet: Set<number> = new Set();
 
   // Set editing (edit existing set)
   editSetReps = 3;
   editSetRestDuration = 120;
-  editSetRestIntensity = 40;
+  editSetRestIntensity = 60;
+  editSetPassiveRest = false;
 
   readonly BLOCK_TYPES: BlockType[] = ['WARMUP', 'STEADY', 'INTERVAL', 'RAMP', 'COOLDOWN', 'FREE', 'PAUSE'];
   readonly SPORT_TYPES: SportType[] = ['CYCLING', 'RUNNING', 'SWIMMING', 'BRICK'];
@@ -135,7 +137,7 @@ export class WorkoutBuilderComponent implements OnInit {
         label: this.editLabel || `${this.editSetReps}x Set`,
         repetitions: this.editSetReps,
         restDurationSeconds: this.editSetRestDuration,
-        restIntensity: this.editSetRestIntensity,
+        restIntensity: this.editSetPassiveRest ? 0 : this.editSetRestIntensity,
       };
     } else {
       blocks[this.selectedBlockIndex] = {
@@ -181,7 +183,8 @@ export class WorkoutBuilderComponent implements OnInit {
     if (isSet(block)) {
       this.editSetReps = block.repetitions ?? 3;
       this.editSetRestDuration = block.restDurationSeconds ?? 120;
-      this.editSetRestIntensity = block.restIntensity ?? 40;
+      this.editSetPassiveRest = (block.restIntensity ?? 60) === 0;
+      this.editSetRestIntensity = this.editSetPassiveRest ? 60 : (block.restIntensity ?? 60);
       this.editLabel = block.label || '';
     } else {
       this.editType = block.type;
@@ -232,7 +235,7 @@ export class WorkoutBuilderComponent implements OnInit {
       repetitions: this.setReps,
       elements: selectedBlocks,
       restDurationSeconds: this.setRestDuration,
-      restIntensity: this.setRestIntensity,
+      restIntensity: this.setPassiveRest ? 0 : this.setRestIntensity,
     };
 
     // Remove selected blocks and insert set at first index position
@@ -267,7 +270,7 @@ export class WorkoutBuilderComponent implements OnInit {
       if (isSet(block)) {
         const reps = block.repetitions ?? 1;
         const childTss = this.computeTss(block.elements!);
-        const restTss = (block.restDurationSeconds ?? 0) * Math.pow((block.restIntensity ?? 40) / 100, 2) / 36;
+        const restTss = (block.restDurationSeconds ?? 0) * Math.pow((block.restIntensity ?? 60) / 100, 2) / 36;
         tss += reps * childTss + (reps - 1) * restTss;
       } else {
         const dur = block.durationSeconds ?? 0;
@@ -352,6 +355,12 @@ export class WorkoutBuilderComponent implements OnInit {
       PAUSE: '#374151',
     };
     return colors[block.type] || '#6b7280';
+  }
+
+  formatSeconds(sec: number): string {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return s > 0 ? `${m}m${s}s` : `${m}m`;
   }
 
   formatBlockDuration(block: WorkoutBlock): string {

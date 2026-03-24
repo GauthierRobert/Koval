@@ -7,7 +7,6 @@ import {flattenElements, hasDurationEstimate, isSet, Training, WorkoutBlock} fro
 import {WorkoutExecutionService} from '../../../services/workout-execution.service';
 import {ExportService} from '../../../services/export.service';
 import {TrainingActionModalComponent} from '../training-action-modal/training-action-modal.component';
-import {BlockEditorModalComponent} from '../block-editor-modal/block-editor-modal.component';
 import {AuthService} from '../../../services/auth.service';
 import {DurationEstimationService} from '../../../services/duration-estimation.service';
 import {ZoneService} from '../../../services/zone.service';
@@ -17,7 +16,7 @@ import {formatPace as sharedFormatPace} from '../format/format.utils';
 @Component({
   selector: 'app-workout-visualization',
   standalone: true,
-  imports: [CommonModule, TrainingActionModalComponent, BlockEditorModalComponent, TranslateModule],
+  imports: [CommonModule, TrainingActionModalComponent, TranslateModule],
   templateUrl: './workout-visualization.component.html',
   styleUrl: './workout-visualization.component.css'
 })
@@ -43,25 +42,14 @@ export class WorkoutVisualizationComponent {
     } else {
       this.currentZoneSystem = null;
     }
-    // Exit edit mode when training changes
-    this.isEditMode = false;
-    this.pendingBlocks = null;
-    this.closeBlockEditor();
   }
   user$ = this.authService.user$;
   isExportDropdownOpen = false;
   isScheduleModalOpen = false;
   displayUnit: 'PERCENT' | 'ABSOLUTE' = 'PERCENT'; // Default to %
 
-  // Block editing state
-  isEditMode = false;
-  editingBlockIndex: number | null = null;
-  isAddingBlock = false;
-  isSaving = false;
-  pendingBlocks: WorkoutBlock[] | null = null;
-
   get displayBlocks(): WorkoutBlock[] {
-    return this.pendingBlocks ?? this.training?.blocks ?? [];
+    return this.training?.blocks ?? [];
   }
 
   /** Flat list for chart, metrics, zone distribution. */
@@ -82,82 +70,6 @@ export class WorkoutVisualizationComponent {
     if (this.training?.id) {
       this.router.navigate(['/builder', this.training.id]);
     }
-  }
-
-  cancelEdits(): void {
-    this.isEditMode = false;
-    this.pendingBlocks = null;
-    this.closeBlockEditor();
-  }
-
-  saveEdits(): void {
-    if (this.pendingBlocks) this.saveBlocks(this.pendingBlocks);
-  }
-
-  openEditBlock(index: number): void {
-    this.isAddingBlock = false;
-    this.editingBlockIndex = index;
-  }
-
-  openAddBlock(): void {
-    this.editingBlockIndex = null;
-    this.isAddingBlock = true;
-  }
-
-  closeBlockEditor(): void {
-    this.editingBlockIndex = null;
-    this.isAddingBlock = false;
-  }
-
-  get isBlockEditorOpen(): boolean {
-    return this.editingBlockIndex !== null || this.isAddingBlock;
-  }
-
-  get editingBlock(): WorkoutBlock | null {
-    if (this.editingBlockIndex !== null) {
-      return this.displayBlocks[this.editingBlockIndex] ?? null;
-    }
-    return null;
-  }
-
-  onBlockSaved(block: WorkoutBlock): void {
-    if (!this.training) return;
-    const blocks = [...this.displayBlocks];
-    if (this.isAddingBlock) {
-      blocks.push(block);
-    } else if (this.editingBlockIndex !== null) {
-      blocks[this.editingBlockIndex] = block;
-    }
-    this.pendingBlocks = blocks;
-    this.closeBlockEditor();
-  }
-
-  removeBlock(index: number): void {
-    const blocks = [...this.displayBlocks];
-    blocks.splice(index, 1);
-    this.pendingBlocks = blocks;
-  }
-
-  moveBlock(index: number, direction: 'up' | 'down'): void {
-    const blocks = [...this.displayBlocks];
-    const toIndex = direction === 'up' ? index - 1 : index + 1;
-    if (toIndex < 0 || toIndex >= blocks.length) return;
-    [blocks[index], blocks[toIndex]] = [blocks[toIndex], blocks[index]];
-    this.pendingBlocks = blocks;
-  }
-
-  private saveBlocks(blocks: WorkoutBlock[]): void {
-    if (!this.training) return;
-    this.isSaving = true;
-    this.trainingService.updateTraining(this.training.id, { blocks }).subscribe({
-      next: () => {
-        this.isSaving = false;
-        this.isEditMode = false;
-        this.pendingBlocks = null;
-        this.closeBlockEditor();
-      },
-      error: () => this.isSaving = false,
-    });
   }
 
   toggleUnits() {
@@ -294,7 +206,7 @@ export class WorkoutVisualizationComponent {
 
   getNumericalTotalDuration(): number {
     if (!this.training) return 0;
-    if (!this.pendingBlocks && this.training.estimatedDurationSeconds) return this.training.estimatedDurationSeconds;
+    if (this.training.estimatedDurationSeconds) return this.training.estimatedDurationSeconds;
     return this.displayFlatBlocks.reduce((acc, b) => acc + this.getEstimatedBlockDuration(b), 0);
   }
 

@@ -15,6 +15,7 @@ import {AuthService} from './services/auth.service';
 import {NotificationService} from './services/notification.service';
 import {NotificationToastComponent} from './components/shared/notification-toast/notification-toast.component';
 import {ErrorToastComponent} from './components/shared/error-toast/error-toast.component';
+import {CguModalComponent} from './components/shared/cgu-modal/cgu-modal.component';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 
 @Component({
@@ -29,6 +30,7 @@ import {TranslateModule, TranslateService} from '@ngx-translate/core';
     SettingsComponent,
     NotificationToastComponent,
     ErrorToastComponent,
+    CguModalComponent,
     TranslateModule
   ],
   templateUrl: './app.component.html',

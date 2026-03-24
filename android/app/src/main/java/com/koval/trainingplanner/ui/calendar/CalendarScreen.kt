@@ -209,9 +209,6 @@ fun CalendarScreen(
                     WorkoutCard(
                         workout = workout,
                         onClick = { workout.trainingId?.let { onTrainingClick(it) } },
-                        onComplete = { viewModel.markCompleted(workout.id) },
-                        onSkip = { viewModel.markSkipped(workout.id) },
-                        onDelete = { viewModel.deleteWorkout(workout.id) },
                         showDate = state.isWeekView,
                     )
                 }

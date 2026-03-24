@@ -356,70 +356,83 @@ private fun ZoneRow(
                 maxLines = 1,
             )
 
-            // Sport-specific absolute values
+            // Sport-specific absolute values — skip when low or high is 0
             when (sportType) {
                 SportType.CYCLING -> {
                     val ftp = user?.ftp
                     if (ftp != null) {
-                        val lowW = zone.low * ftp / 100
-                        val highW = zone.high * ftp / 100
-                        Text(
-                            text = "$lowW-${highW}W",
-                            color = zoneColor,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.width(62.dp),
-                        )
+                        val lowW = if (zone.low > 0) zone.low * ftp / 100 else null
+                        val highW = if (zone.high > 0) zone.high * ftp / 100 else null
+                        val text = when {
+                            lowW != null && highW != null -> "$lowW-${highW}W"
+                            highW != null -> "≤${highW}W"
+                            lowW != null -> "≥${lowW}W"
+                            else -> ""
+                        }
+                        if (text.isNotEmpty()) {
+                            Text(
+                                text = text,
+                                color = zoneColor,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.width(62.dp),
+                            )
+                        } else {
+                            Spacer(Modifier.width(62.dp))
+                        }
                     }
                 }
                 SportType.RUNNING -> {
                     val tp = user?.functionalThresholdPace
                     if (tp != null) {
-                        // Higher % = faster pace → use high% for fast end, low% for slow end
-                        // pace_sec_per_km = thresholdPace / (percent / 100)
-                        val slowPace = tp.toFloat() / (zone.low.toFloat() / 100f)
-                        val fastPace = tp.toFloat() / (zone.high.toFloat() / 100f)
+                        if (zone.low > 0 && zone.high > 0) {
+                            val slowPace = tp.toFloat() / (zone.low.toFloat() / 100f)
+                            val fastPace = tp.toFloat() / (zone.high.toFloat() / 100f)
 
-                        // /km column (min:sec)
-                        Text(
-                            text = "${formatPace(fastPace)}-${formatPace(slowPace)}",
-                            color = zoneColor,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.width(52.dp),
-                        )
-                        // /400m column (min:sec)
-                        Text(
-                            text = "${formatPace(fastPace * 0.4f)}-${formatPace(slowPace * 0.4f)}",
-                            color = zoneColor,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.width(50.dp),
-                        )
-                        // /100m column (seconds)
-                        val fast100 = (fastPace * 0.1f).toInt()
-                        val slow100 = (slowPace * 0.1f).toInt()
-                        Text(
-                            text = "${fast100}-${slow100}s",
-                            color = zoneColor,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.width(40.dp),
-                        )
+                            Text(
+                                text = "${formatPace(fastPace)}-${formatPace(slowPace)}",
+                                color = zoneColor,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.width(52.dp),
+                            )
+                            Text(
+                                text = "${formatPace(fastPace * 0.4f)}-${formatPace(slowPace * 0.4f)}",
+                                color = zoneColor,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.width(50.dp),
+                            )
+                            val fast100 = (fastPace * 0.1f).toInt()
+                            val slow100 = (slowPace * 0.1f).toInt()
+                            Text(
+                                text = "${fast100}-${slow100}s",
+                                color = zoneColor,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.width(40.dp),
+                            )
+                        } else {
+                            Spacer(Modifier.width(142.dp))
+                        }
                     }
                 }
                 SportType.SWIMMING -> {
                     val css = user?.criticalSwimSpeed
                     if (css != null) {
-                        val slowPace = css.toFloat() / (zone.low.toFloat() / 100f)
-                        val fastPace = css.toFloat() / (zone.high.toFloat() / 100f)
-                        Text(
-                            text = "${formatPace(fastPace)}-${formatPace(slowPace)}",
-                            color = zoneColor,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.width(56.dp),
-                        )
+                        if (zone.low > 0 && zone.high > 0) {
+                            val slowPace = css.toFloat() / (zone.low.toFloat() / 100f)
+                            val fastPace = css.toFloat() / (zone.high.toFloat() / 100f)
+                            Text(
+                                text = "${formatPace(fastPace)}-${formatPace(slowPace)}",
+                                color = zoneColor,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.width(56.dp),
+                            )
+                        } else {
+                            Spacer(Modifier.width(56.dp))
+                        }
                     }
                 }
                 else -> {}

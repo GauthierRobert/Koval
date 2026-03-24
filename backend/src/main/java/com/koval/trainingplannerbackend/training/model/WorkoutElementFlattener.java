@@ -38,13 +38,16 @@ public final class WorkoutElementFlattener {
 
         for (int i = 0; i < reps; i++) {
             result.addAll(flatChildren);
-            // Insert rest PAUSE between reps (not after the last one)
+            // Insert rest between reps (not after the last one)
+            // restIntensity == 0 → passive rest (PAUSE), > 0 → active rest (STEADY)
             if (i < reps - 1 && element.restDurationSeconds() != null && element.restDurationSeconds() > 0) {
-                int restIntensity = element.restIntensity() != null ? element.restIntensity() : 40;
+                int restIntensity = element.restIntensity() != null ? element.restIntensity() : 60;
+                BlockType restType = restIntensity > 0 ? BlockType.STEADY : BlockType.PAUSE;
+                String restLabel = restIntensity > 0 ? "Active Rest" : "Rest";
                 result.add(new WorkoutElement(
                         null, null, null, null,
-                        BlockType.PAUSE, element.restDurationSeconds(), null,
-                        "Rest", null, restIntensity, null, null, null, null, null));
+                        restType, element.restDurationSeconds(), null,
+                        restLabel, null, restIntensity, null, null, null, null, null));
             }
         }
     }

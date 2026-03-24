@@ -334,7 +334,7 @@ public class AuthController {
     }
 
     public record OnboardingRequest(UserRole role, Integer ftp, Integer weightKg, Integer criticalSwimSpeed,
-            Integer functionalThresholdPace) {
+            Integer functionalThresholdPace, Boolean cguAccepted) {
     }
 
     @PostMapping("/onboarding")
@@ -355,6 +355,10 @@ public class AuthController {
             if (request.weightKg() != null) user.setWeightKg(request.weightKg());
             if (request.criticalSwimSpeed() != null) user.setCriticalSwimSpeed(request.criticalSwimSpeed());
             if (request.functionalThresholdPace() != null) user.setFunctionalThresholdPace(request.functionalThresholdPace());
+            if (Boolean.TRUE.equals(request.cguAccepted())) {
+                user.setCguAcceptedAt(java.time.LocalDateTime.now());
+                user.setCguVersion(CguConstants.CURRENT_VERSION);
+            }
             user.setNeedsOnboarding(false);
 
             userRepository.save(user);
@@ -365,6 +369,26 @@ public class AuthController {
             response.put("token", jwt);
             response.put("user", userService.userToMap(user));
             return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/cgu/accept")
+    public ResponseEntity<Map<String, Object>> acceptCgu(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            String userId = parseJwtToken(authHeader.substring(7));
+            User user = userService.getUserById(userId);
+            user.setCguAcceptedAt(java.time.LocalDateTime.now());
+            user.setCguVersion(CguConstants.CURRENT_VERSION);
+            userRepository.save(user);
+            return ResponseEntity.ok(userService.userToMap(user));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }

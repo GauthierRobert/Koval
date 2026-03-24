@@ -9,17 +9,19 @@
         <div class="item-details">
           <div class="item-title-row">
             <span class="item-title">{{ training.title }}</span>
-            @if (training.trainingType) {
-              <span class="type-badge"
-                [style.background]="getTypeColor(training.trainingType) + '20'"
-                [style.color]="getTypeColor(training.trainingType)"
-                [style.border-color]="getTypeColor(training.trainingType) + '40'">{{ getTypeLabel(training.trainingType)
-                }}</span>
-            }
           </div>
           <span class="item-meta">
             <span [style.font-style]="isDurationEstimated(training) ? 'italic' : ''">{{ getDuration(training) }}</span>
             &bull; {{ (training.blocks || []).length }} {{ 'TRAINING_HISTORY.META_BLOCKS' | translate }}
+            <div>
+              @if (training.trainingType) {
+              <span class="type-badge"
+                    [style.background]="getTypeColor(training.trainingType) + '20'"
+                    [style.color]="getTypeColor(training.trainingType)"
+                    [style.border-color]="getTypeColor(training.trainingType) + '40'">{{ getTypeLabel(training.trainingType)
+                    }}</span>
+              }
+            </div>
           </span>
           @if (training._receivedMeta) {
             <span class="received-meta">
@@ -29,6 +31,7 @@
               }
             </span>
           }
+
           @if (training.groupIds?.length && !training._receivedMeta) {
             <div class="item-tags">
               @for (tag of training.groupIds; track tag) {

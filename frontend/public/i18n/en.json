@@ -178,7 +178,12 @@
     "ERROR_SAVE_FAILED": "Failed to save. Please try again.",
     "BTN_SAVING": "SAVING...",
     "BTN_GET_STARTED": "GET STARTED",
-    "SKIP_NOTE": "You can update these values anytime in Settings."
+    "SKIP_NOTE": "You can update these values anytime in Settings.",
+    "CGU_ACCEPT_PREFIX": "I accept the",
+    "CGU_LINK_TEXT": "Terms of Service",
+    "CGU_MODAL_TITLE": "Terms of Service",
+    "CGU_MODAL_DESC": "Please accept the Terms of Service to continue using the application.",
+    "CGU_MODAL_ACCEPT": "Accept & Continue"
   },
   "DASHBOARD": {
     "HEADER_SUBTITLE_SEPARATOR": "· Koval Training",
@@ -967,7 +972,11 @@
     "EDIT_SET": "Edit Set",
     "UPDATE_SET": "Update Set",
     "SET_CONTENTS": "Set Contents",
-    "DESELECT": "Deselect"
+    "DESELECT": "Deselect",
+    "PASSIVE_REST": "Passive rest (pause, zero intensity)",
+    "PASSIVE_REST_HINT": "Complete stop — no pedaling or movement",
+    "ACTIVE_REST_HINT": "Easy effort at the specified intensity",
+    "SET_GROUPING_HINT": "Use the checkboxes to select blocks, then click 'Group as Set' to create a repeating set"
   },
   "PLANS": {
     "PAGE_TITLE": "Training Plans",

@@ -21,14 +21,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.Speed
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -102,26 +97,21 @@ fun TrainingListScreen(
                 }
             }
 
-            // Source filter
+            // Filters (source, sport, type) — compact
             SourceFilterRow(
-                selected = state.sourceFilter,
-                onSelect = viewModel::setSourceFilter,
-                clubCount = state.clubTrainings.size,
+                contexts = state.sourceContexts,
+                activeKey = state.activeSource,
+                onSelect = viewModel::setActiveSource,
             )
-
-            // Sport filter
             SportFilterRow(
                 selected = state.sportFilter,
                 onSelect = viewModel::setSportFilter,
             )
-
-            // Type filter
             TypeFilterRow(
                 selected = state.typeFilter,
                 onSelect = viewModel::setTypeFilter,
             )
-
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
 
             when {
                 state.isLoading -> {
@@ -145,7 +135,7 @@ fun TrainingListScreen(
                 else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
                         items(trainings, key = { it.id }) { training ->
                             TrainingCard(
@@ -162,114 +152,84 @@ fun TrainingListScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SourceFilterRow(
-    selected: TrainingSource,
-    onSelect: (TrainingSource) -> Unit,
-    clubCount: Int,
+    contexts: List<TrainingSourceContext>,
+    activeKey: String,
+    onSelect: (String) -> Unit,
 ) {
-    Row(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    FlowRow(
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        SourceChip("My Trainings", selected == TrainingSource.MY) { onSelect(TrainingSource.MY) }
-        SourceChip("Club ($clubCount)", selected == TrainingSource.CLUB) { onSelect(TrainingSource.CLUB) }
+        contexts.forEach { ctx ->
+            CompactChip(ctx.label, activeKey == ctx.key, Primary) { onSelect(ctx.key) }
+        }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SourceChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    FilterChip(
-        selected = selected,
-        onClick = onClick,
-        label = { Text(label, fontSize = 13.sp) },
-        colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = Primary.copy(alpha = 0.15f),
-            selectedLabelColor = Primary,
-            containerColor = SurfaceColor,
-            labelColor = TextSecondary,
-        ),
-        border = FilterChipDefaults.filterChipBorder(
-            borderColor = Border,
-            selectedBorderColor = Primary.copy(alpha = 0.3f),
-            enabled = true,
-            selected = selected,
-        ),
-    )
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SportFilterRow(selected: SportType?, onSelect: (SportType?) -> Unit) {
     FlowRow(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         SportType.entries.forEach { sport ->
-            SportFilterChip(sport, selected == sport) { onSelect(sport) }
+            CompactChip(
+                label = sport.name.lowercase().replaceFirstChar { it.uppercase() },
+                selected = selected == sport,
+                accentColor = sportColor(sport),
+            ) { onSelect(sport) }
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SportFilterChip(sport: SportType, selected: Boolean, onClick: () -> Unit) {
-    val sportColor = sportColor(sport)
-    FilterChip(
-        selected = selected,
-        onClick = onClick,
-        label = { Text(sport.name.lowercase().replaceFirstChar { it.uppercase() }, fontSize = 12.sp) },
-        colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = sportColor.copy(alpha = 0.15f),
-            selectedLabelColor = sportColor,
-            containerColor = Color.Transparent,
-            labelColor = TextMuted,
-        ),
-        border = FilterChipDefaults.filterChipBorder(
-            borderColor = Border,
-            selectedBorderColor = sportColor.copy(alpha = 0.3f),
-            enabled = true,
-            selected = selected,
-        ),
-    )
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TypeFilterRow(selected: TrainingType?, onSelect: (TrainingType?) -> Unit) {
     FlowRow(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         TrainingType.entries.forEach { type ->
-            TypeFilterChip(type, selected == type) { onSelect(type) }
+            CompactChip(
+                label = type.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
+                selected = selected == type,
+                accentColor = trainingTypeColor(type),
+            ) { onSelect(type) }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TypeFilterChip(type: TrainingType, selected: Boolean, onClick: () -> Unit) {
-    val color = trainingTypeColor(type)
-    FilterChip(
-        selected = selected,
-        onClick = onClick,
-        label = { Text(type.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }, fontSize = 11.sp) },
-        colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = color.copy(alpha = 0.15f),
-            selectedLabelColor = color,
-            containerColor = Color.Transparent,
-            labelColor = TextMuted,
+private fun CompactChip(
+    label: String,
+    selected: Boolean,
+    accentColor: Color,
+    onClick: () -> Unit,
+) {
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = if (selected) accentColor.copy(alpha = 0.15f) else Color.Transparent,
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (selected) accentColor.copy(alpha = 0.3f) else Border,
         ),
-        border = FilterChipDefaults.filterChipBorder(
-            borderColor = Border,
-            selectedBorderColor = color.copy(alpha = 0.3f),
-            enabled = true,
-            selected = selected,
-        ),
-    )
+        modifier = Modifier.clickable(onClick = onClick),
+    ) {
+        Text(
+            text = label,
+            color = if (selected) accentColor else TextMuted,
+            fontSize = 11.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+        )
+    }
 }
 
 @Composable
@@ -282,7 +242,7 @@ private fun TrainingCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(10.dp),
         color = SurfaceColor,
         border = androidx.compose.foundation.BorderStroke(1.dp, Border),
     ) {
@@ -294,56 +254,48 @@ private fun TrainingCard(
             // Left color bar based on sport
             Box(
                 modifier = Modifier
-                    .width(4.dp)
+                    .width(3.dp)
                     .fillMaxHeight()
-                    .clip(RoundedCornerShape(topStart = 14.dp, bottomStart = 14.dp))
+                    .clip(RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp))
                     .background(sportColor(training.sportType)),
             )
 
             Row(
-                modifier = Modifier.padding(12.dp),
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 SportIcon(sport = training.sportType)
-                Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(10.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = training.title,
-                        color = TextPrimary,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium,
-                        maxLines = 1,
-                    )
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        training.estimatedDurationSeconds?.let {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Filled.Timer, null, tint = TextMuted, modifier = Modifier.height(13.dp))
-                                Spacer(Modifier.width(2.dp))
-                                Text(formatDuration(it), color = TextSecondary, fontSize = 13.sp)
-                            }
-                        }
-                        training.estimatedTss?.let {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Filled.Speed, null, tint = TextMuted, modifier = Modifier.height(13.dp))
-                                Spacer(Modifier.width(2.dp))
-                                Text("$it TSS", color = TextSecondary, fontSize = 13.sp)
-                            }
-                        }
-                        training.estimatedIf?.let {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Filled.FitnessCenter, null, tint = TextMuted, modifier = Modifier.height(13.dp))
-                                Spacer(Modifier.width(2.dp))
-                                Text("IF %.2f".format(it), color = TextSecondary, fontSize = 13.sp)
-                            }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = training.title,
+                            color = TextPrimary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            modifier = Modifier.weight(1f, fill = false),
+                        )
+                        training.trainingType?.let { type ->
+                            Spacer(Modifier.width(6.dp))
+                            TrainingTypePillSmall(type)
                         }
                     }
-                }
 
-                // Training type pill
-                training.trainingType?.let { type ->
-                    TrainingTypePillSmall(type)
+                    // Metrics in a single compact row
+                    val metricParts = buildList {
+                        training.estimatedDurationSeconds?.let { add(formatDuration(it)) }
+                        training.estimatedTss?.let { add("$it TSS") }
+                        training.estimatedIf?.let { add("IF %.2f".format(it)) }
+                    }
+                    if (metricParts.isNotEmpty()) {
+                        Text(
+                            text = metricParts.joinToString(" · "),
+                            color = TextSecondary,
+                            fontSize = 12.sp,
+                        )
+                    }
                 }
             }
         }

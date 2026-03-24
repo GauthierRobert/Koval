@@ -1,5 +1,6 @@
 package com.koval.trainingplanner.data.remote.api
 
+import com.koval.trainingplanner.data.remote.dto.ReceivedTrainingDto
 import com.koval.trainingplanner.data.remote.dto.TrainingDto
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -18,6 +19,9 @@ interface TrainingApi {
 
     @GET("api/trainings/club-trainings")
     suspend fun listClubTrainings(): List<TrainingDto>
+
+    @GET("api/trainings/received")
+    suspend fun listReceivedTrainings(): List<ReceivedTrainingDto>
 
     @POST("api/trainings")
     suspend fun createTraining(@Body training: TrainingDto): TrainingDto

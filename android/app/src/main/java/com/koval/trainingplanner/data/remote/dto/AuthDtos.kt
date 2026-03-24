@@ -24,6 +24,9 @@ data class UserDto(
     val ftp: Int? = null,
     val functionalThresholdPace: Int? = null,
     val criticalSwimSpeed: Int? = null,
+    val cguAcceptedAt: String? = null,
+    val cguVersion: String? = null,
+    val needsCguAcceptance: Boolean? = null,
 )
 
 @JsonClass(generateAdapter = true)

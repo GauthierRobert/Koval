@@ -266,3 +266,37 @@
   margin-top: 1px;
   opacity: 0.6;
 }
+
+/* CGU section */
+.cgu-section {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm, 6px);
+  background: rgba(255, 157, 0, 0.05);
+  border: 1px solid rgba(255, 157, 0, 0.15);
+}
+
+.cgu-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-color, #ececf1);
+}
+
+.cgu-checkbox input[type="checkbox"] {
+  accent-color: var(--accent-color, #ff9d00);
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.cgu-link {
+  color: var(--accent-color, #ff9d00);
+  text-decoration: underline;
+}
+
+.cgu-link:hover {
+  opacity: 0.8;
+}

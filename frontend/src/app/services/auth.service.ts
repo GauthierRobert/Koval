@@ -29,6 +29,9 @@ export interface User {
     atl?: number;
     tsb?: number;
     needsOnboarding?: boolean;
+    cguAcceptedAt?: string;
+    cguVersion?: string;
+    needsCguAcceptance?: boolean;
     aiPrePrompt?: string;
     aiPrePromptEnabled?: boolean;
     linkedAccounts?: { strava: boolean; google: boolean };
@@ -198,13 +201,19 @@ export class AuthService {
         }
     }
 
-    completeOnboarding(data: { role: 'ATHLETE' | 'COACH'; ftp?: number; weightKg?: number; criticalSwimSpeed?: number; functionalThresholdPace?: number }): Observable<{ token: string; user: User }> {
+    completeOnboarding(data: { role: 'ATHLETE' | 'COACH'; ftp?: number; weightKg?: number; criticalSwimSpeed?: number; functionalThresholdPace?: number; cguAccepted?: boolean }): Observable<{ token: string; user: User }> {
         return this.http.post<{ token: string; user: User }>(`${this.apiUrl}/onboarding`, data).pipe(
             tap(response => {
                 localStorage.setItem('token', response.token);
                 this.userSubject.next(response.user);
                 this.setUiMode(response.user.role === 'COACH' ? 'coach' : 'athlete');
             })
+        );
+    }
+
+    acceptCgu(): Observable<User> {
+        return this.http.post<User>(`${this.apiUrl}/cgu/accept`, {}).pipe(
+            tap(user => this.userSubject.next(user))
         );
     }
 }

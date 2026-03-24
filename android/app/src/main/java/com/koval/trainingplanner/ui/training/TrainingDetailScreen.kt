@@ -31,20 +31,26 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.koval.trainingplanner.domain.model.BlockType
+import com.koval.trainingplanner.domain.model.SportType
 import com.koval.trainingplanner.domain.model.Training
 import com.koval.trainingplanner.domain.model.TrainingType
+import com.koval.trainingplanner.domain.model.User
 import com.koval.trainingplanner.domain.model.WorkoutElement
 import com.koval.trainingplanner.ui.calendar.components.SportIcon
 import com.koval.trainingplanner.ui.calendar.components.formatDuration
@@ -121,14 +127,14 @@ fun TrainingDetailScreen(
             }
 
             state.training != null -> {
-                TrainingDetailContent(training = state.training!!)
+                TrainingDetailContent(training = state.training!!, user = state.user)
             }
         }
     }
 }
 
 @Composable
-private fun TrainingDetailContent(training: Training) {
+private fun TrainingDetailContent(training: Training, user: User?) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -212,9 +218,7 @@ private fun TrainingDetailContent(training: Training) {
                         Spacer(Modifier.height(12.dp))
                         IntensityGraph(
                             blocks = flatBlocks,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(160.dp),
+                            modifier = Modifier.fillMaxWidth(),
                         )
                         // Zone legend
                         Spacer(Modifier.height(8.dp))
@@ -250,6 +254,8 @@ private fun TrainingDetailContent(training: Training) {
             WorkoutElementCard(
                 element = element,
                 index = index + 1,
+                sportType = training.sportType,
+                user = user,
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
@@ -382,79 +388,138 @@ private fun IntensityGraph(blocks: List<FlatBlock>, modifier: Modifier = Modifie
     val maxIntensity = blocks.maxOf { maxOf(it.intensityStart, it.intensityEnd) }.coerceAtLeast(100)
     val yScale = maxIntensity + 10 // 10% headroom
 
-    Canvas(modifier = modifier) {
-        val w = size.width
-        val h = size.height
+    // Track touched block index via pointer (-1 = no touch)
+    var touchedIndex by remember { mutableIntStateOf(-1) }
 
-        // Draw zone guidelines
-        val zones = listOf(55, 75, 90, 105)
-        for (zone in zones) {
-            val y = h - (zone.toFloat() / yScale) * h
-            drawLine(
-                color = Border,
-                start = Offset(0f, y),
-                end = Offset(w, y),
-                strokeWidth = 1f,
-            )
-        }
+    Column(modifier = modifier) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(140.dp)
+                .pointerInput(blocks) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull()
+                            if (change != null) {
+                                if (change.pressed) {
+                                    val touchX = change.position.x
+                                    val w = size.width.toFloat()
+                                    // Find block at touchX
+                                    var xOff = 0f
+                                    var idx = -1
+                                    for (i in blocks.indices) {
+                                        val bw = (blocks[i].durationSeconds.toFloat() / totalDuration) * w
+                                        if (touchX >= xOff && touchX < xOff + bw) {
+                                            idx = i
+                                            break
+                                        }
+                                        xOff += bw
+                                    }
+                                    touchedIndex = idx
+                                } else {
+                                    touchedIndex = -1
+                                }
+                                change.consume()
+                            }
+                        }
+                    }
+                },
+        ) {
+            val w = size.width
+            val h = size.height
 
-        // Draw blocks
-        var xOffset = 0f
-        for (block in blocks) {
-            val blockWidth = (block.durationSeconds.toFloat() / totalDuration) * w
-            val yStart = h - (block.intensityStart.toFloat() / yScale) * h
-            val yEnd = h - (block.intensityEnd.toFloat() / yScale) * h
-            val color = blockColor(
-                type = block.type,
-                intensityTarget = block.intensityStart,
-                intensityStart = block.intensityStart,
-                intensityEnd = block.intensityEnd,
-            )
-
-            if (block.type == BlockType.RAMP) {
-                // Draw as a trapezoid with flat fill
-                val path = Path().apply {
-                    moveTo(xOffset, h)
-                    lineTo(xOffset, yStart)
-                    lineTo(xOffset + blockWidth, yEnd)
-                    lineTo(xOffset + blockWidth, h)
-                    close()
-                }
-                drawPath(path = path, color = color.copy(alpha = 0.45f))
-                // Outline top edge
+            // Draw zone guidelines
+            val zones = listOf(55, 75, 90, 105)
+            for (zone in zones) {
+                val y = h - (zone.toFloat() / yScale) * h
                 drawLine(
-                    color = color,
-                    start = Offset(xOffset, yStart),
-                    end = Offset(xOffset + blockWidth, yEnd),
-                    strokeWidth = 2f,
-                )
-            } else {
-                val blockHeight = h - yStart
-                // Filled rect (flat)
-                drawRect(
-                    color = color.copy(alpha = 0.45f),
-                    topLeft = Offset(xOffset, yStart),
-                    size = Size(blockWidth, blockHeight),
-                )
-                // Top edge
-                drawLine(
-                    color = color,
-                    start = Offset(xOffset, yStart),
-                    end = Offset(xOffset + blockWidth, yStart),
-                    strokeWidth = 2f,
-                )
-            }
-
-            // Separator line
-            if (xOffset > 0f) {
-                drawLine(
-                    color = Background.copy(alpha = 0.5f),
-                    start = Offset(xOffset, 0f),
-                    end = Offset(xOffset, h),
+                    color = Border,
+                    start = Offset(0f, y),
+                    end = Offset(w, y),
                     strokeWidth = 1f,
                 )
             }
-            xOffset += blockWidth
+
+            // Draw blocks
+            var xOffset = 0f
+            for ((i, block) in blocks.withIndex()) {
+                val blockWidth = (block.durationSeconds.toFloat() / totalDuration) * w
+                val yStart = h - (block.intensityStart.toFloat() / yScale) * h
+                val yEnd = h - (block.intensityEnd.toFloat() / yScale) * h
+                val color = blockColor(
+                    type = block.type,
+                    intensityTarget = block.intensityStart,
+                    intensityStart = block.intensityStart,
+                    intensityEnd = block.intensityEnd,
+                )
+                val isHighlighted = i == touchedIndex
+
+                if (block.type == BlockType.RAMP) {
+                    val path = Path().apply {
+                        moveTo(xOffset, h)
+                        lineTo(xOffset, yStart)
+                        lineTo(xOffset + blockWidth, yEnd)
+                        lineTo(xOffset + blockWidth, h)
+                        close()
+                    }
+                    drawPath(path = path, color = color.copy(alpha = if (isHighlighted) 0.7f else 0.45f))
+                    drawLine(color = color, start = Offset(xOffset, yStart), end = Offset(xOffset + blockWidth, yEnd), strokeWidth = 2f)
+                } else {
+                    val blockHeight = h - yStart
+                    drawRect(
+                        color = color.copy(alpha = if (isHighlighted) 0.7f else 0.45f),
+                        topLeft = Offset(xOffset, yStart),
+                        size = Size(blockWidth, blockHeight),
+                    )
+                    drawLine(color = color, start = Offset(xOffset, yStart), end = Offset(xOffset + blockWidth, yStart), strokeWidth = 2f)
+                }
+
+                if (xOffset > 0f) {
+                    drawLine(color = Background.copy(alpha = 0.5f), start = Offset(xOffset, 0f), end = Offset(xOffset, h), strokeWidth = 1f)
+                }
+                xOffset += blockWidth
+            }
+        }
+
+        // Touched block info (shown below graph)
+        if (touchedIndex in blocks.indices) {
+            val block = blocks[touchedIndex]
+            val color = blockColor(block.type, block.intensityStart, block.intensityStart, block.intensityEnd)
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = color.copy(alpha = 0.12f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 6.dp),
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = block.type.name,
+                        color = color,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    val parts = buildList {
+                        add(formatDuration(block.durationSeconds))
+                        if (block.type == BlockType.RAMP) {
+                            add("${block.intensityStart}% → ${block.intensityEnd}%")
+                        } else if (block.type != BlockType.FREE && block.type != BlockType.PAUSE) {
+                            add("${block.intensityStart}%")
+                        }
+                        block.zoneTarget?.let { add(it) }
+                    }
+                    Text(
+                        text = parts.joinToString(" · "),
+                        color = TextSecondary,
+                        fontSize = 12.sp,
+                    )
+                }
+            }
         }
     }
 }
@@ -478,6 +543,8 @@ private fun ZoneLegend(label: String, color: Color) {
 private fun WorkoutElementCard(
     element: WorkoutElement,
     index: Int,
+    sportType: SportType,
+    user: User?,
     modifier: Modifier = Modifier,
     nestLevel: Int = 0,
 ) {
@@ -488,15 +555,15 @@ private fun WorkoutElementCard(
         border = androidx.compose.foundation.BorderStroke(1.dp, Border),
     ) {
         if (element.isSet) {
-            SetElementContent(element, index, nestLevel)
+            SetElementContent(element, index, nestLevel, sportType, user)
         } else {
-            LeafElementContent(element, index)
+            LeafElementContent(element, index, sportType, user)
         }
     }
 }
 
 @Composable
-private fun SetElementContent(element: WorkoutElement, index: Int, nestLevel: Int) {
+private fun SetElementContent(element: WorkoutElement, index: Int, nestLevel: Int, sportType: SportType, user: User?) {
     Column(modifier = Modifier.padding(12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             // Repeat badge
@@ -556,17 +623,19 @@ private fun SetElementContent(element: WorkoutElement, index: Int, nestLevel: In
                 WorkoutElementCard(
                     element = child,
                     index = childIdx + 1,
+                    sportType = sportType,
+                    user = user,
                     nestLevel = nestLevel + 1,
                 )
             } else {
-                LeafElementContent(child, childIdx + 1)
+                LeafElementContent(child, childIdx + 1, sportType, user)
             }
         }
     }
 }
 
 @Composable
-private fun LeafElementContent(element: WorkoutElement, index: Int) {
+private fun LeafElementContent(element: WorkoutElement, index: Int, sportType: SportType, user: User?) {
     val type = element.type ?: BlockType.STEADY
     val color = blockColor(
         type = type,
@@ -579,6 +648,24 @@ private fun LeafElementContent(element: WorkoutElement, index: Int) {
         modifier = Modifier.padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // Absolute value badge (left side) — e.g. "225W" or "4:30/km"
+        val absText = computeAbsoluteValue(element, sportType, user)
+        if (absText != null) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.width(48.dp),
+            ) {
+                Text(
+                    text = absText,
+                    color = color,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+        }
+
         // Zone indicator badge
         val zoneName = getBlockZoneName(
             type = type,
@@ -656,6 +743,45 @@ private fun LeafElementContent(element: WorkoutElement, index: Int) {
                 )
             }
         }
+    }
+}
+
+/** Compute absolute reference value for a block, e.g. "225W" or "4:30" */
+private fun computeAbsoluteValue(element: WorkoutElement, sportType: SportType, user: User?): String? {
+    val type = element.type ?: return null
+    if (type == BlockType.PAUSE || type == BlockType.FREE) return null
+
+    val intensity = if (type == BlockType.RAMP) {
+        // Show average of ramp start/end
+        val s = element.intensityStart ?: return null
+        val e = element.intensityEnd ?: return null
+        (s + e) / 2
+    } else {
+        element.intensityTarget ?: return null
+    }
+    if (intensity <= 0) return null
+
+    return when (sportType) {
+        SportType.CYCLING -> {
+            val ftp = user?.ftp ?: return null
+            "${intensity * ftp / 100}W"
+        }
+        SportType.RUNNING -> {
+            val tp = user?.functionalThresholdPace ?: return null
+            // pace_per_km = tp / (intensity / 100)
+            val paceSec = (tp.toFloat() / (intensity.toFloat() / 100f)).toInt()
+            val m = paceSec / 60
+            val s = paceSec % 60
+            "$m:%02d".format(s)
+        }
+        SportType.SWIMMING -> {
+            val css = user?.criticalSwimSpeed ?: return null
+            val paceSec = (css.toFloat() / (intensity.toFloat() / 100f)).toInt()
+            val m = paceSec / 60
+            val s = paceSec % 60
+            "$m:%02d".format(s)
+        }
+        else -> null
     }
 }
 

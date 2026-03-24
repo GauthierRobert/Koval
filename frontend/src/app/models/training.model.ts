@@ -101,13 +101,14 @@ function flattenElement(element: WorkoutBlock, result: WorkoutBlock[]): void {
     const flatChildren = flattenElements(element.elements!);
     for (let i = 0; i < reps; i++) {
         result.push(...flatChildren);
-        // Insert rest PAUSE between reps (not after the last one)
+        // Insert rest between reps (not after the last one)
         if (i < reps - 1 && element.restDurationSeconds && element.restDurationSeconds > 0) {
+            const intensity = element.restIntensity ?? 60;
             result.push({
-                type: 'PAUSE',
+                type: intensity > 0 ? 'STEADY' : 'PAUSE',
                 durationSeconds: element.restDurationSeconds,
-                intensityTarget: element.restIntensity ?? 40,
-                label: 'Rest',
+                intensityTarget: intensity,
+                label: intensity > 0 ? 'Active Rest' : 'Rest',
             });
         }
     }

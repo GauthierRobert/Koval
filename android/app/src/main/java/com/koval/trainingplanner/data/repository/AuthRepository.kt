@@ -52,6 +52,10 @@ class AuthRepository @Inject constructor(
         tokenManager.removeToken()
     }
 
+    suspend fun acceptCgu(): User {
+        return authApi.acceptCgu().toDomain()
+    }
+
     private fun UserDto.toDomain() = User(
         id = id,
         displayName = displayName ?: "User",
@@ -60,5 +64,6 @@ class AuthRepository @Inject constructor(
         ftp = ftp,
         functionalThresholdPace = functionalThresholdPace,
         criticalSwimSpeed = criticalSwimSpeed,
+        needsCguAcceptance = needsCguAcceptance ?: false,
     )
 }

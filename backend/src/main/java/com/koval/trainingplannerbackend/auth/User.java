@@ -65,6 +65,9 @@ public class User {
 
     private boolean needsOnboarding = false;
 
+    private LocalDateTime cguAcceptedAt;
+    private String cguVersion;
+
     private String aiPrePrompt;
     private boolean aiPrePromptEnabled = false;
 

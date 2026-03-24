@@ -205,6 +205,13 @@ public class UserService {
         map.put("customZoneReferenceValues", user.getCustomZoneReferenceValues());
         map.put("needsOnboarding", user.isNeedsOnboarding());
 
+        // CGU acceptance
+        map.put("cguAcceptedAt", user.getCguAcceptedAt());
+        map.put("cguVersion", user.getCguVersion());
+        boolean needsCgu = user.getCguAcceptedAt() == null
+                || !CguConstants.CURRENT_VERSION.equals(user.getCguVersion());
+        map.put("needsCguAcceptance", needsCgu);
+
         Map<String, Boolean> linkedAccounts = new HashMap<>();
         linkedAccounts.put("strava", user.getStravaId() != null);
         linkedAccounts.put("google", user.getGoogleId() != null);

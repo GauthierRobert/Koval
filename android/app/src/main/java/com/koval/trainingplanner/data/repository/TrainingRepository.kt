@@ -1,9 +1,11 @@
 package com.koval.trainingplanner.data.repository
 
 import com.koval.trainingplanner.data.remote.api.TrainingApi
+import com.koval.trainingplanner.data.remote.dto.ReceivedTrainingDto
 import com.koval.trainingplanner.data.remote.dto.TrainingDto
 import com.koval.trainingplanner.data.remote.dto.WorkoutElementDto
 import com.koval.trainingplanner.domain.model.BlockType
+import com.koval.trainingplanner.domain.model.ReceivedTraining
 import com.koval.trainingplanner.domain.model.SportType
 import com.koval.trainingplanner.domain.model.Training
 import com.koval.trainingplanner.domain.model.TrainingType
@@ -27,6 +29,18 @@ class TrainingRepository @Inject constructor(
     suspend fun listClubTrainings(): List<Training> {
         return trainingApi.listClubTrainings().map { it.toDomain() }
     }
+
+    suspend fun listReceivedTrainings(): List<ReceivedTraining> {
+        return trainingApi.listReceivedTrainings().map { it.toDomain() }
+    }
+
+    private fun ReceivedTrainingDto.toDomain() = ReceivedTraining(
+        id = id ?: "",
+        trainingId = trainingId ?: "",
+        assignedByName = assignedByName,
+        origin = origin ?: "COACH_GROUP",
+        originName = originName,
+    )
 
     suspend fun createTraining(training: Training): Training {
         return trainingApi.createTraining(training.toDto()).toDomain()

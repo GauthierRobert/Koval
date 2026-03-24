@@ -132,22 +132,23 @@ export const routes: Routes = [
       import('./components/pages/pacing/pacing-page.component').then((m) => m.PacingPageComponent),
     canActivate: [authGuard],
   },
-  {
-    path: 'plans',
-    loadComponent: () =>
-      import('./components/pages/plans/plan-list-page/plan-list-page.component').then(
-        (m) => m.PlanListPageComponent,
-      ),
-    canActivate: [authGuard],
-  },
-  {
-    path: 'plans/:id',
-    loadComponent: () =>
-      import('./components/pages/plans/plan-detail-page/plan-detail-page.component').then(
-        (m) => m.PlanDetailPageComponent,
-      ),
-    canActivate: [authGuard],
-  },
+  //TODO temporary — plans disabled
+  // {
+  //   path: 'plans',
+  //   loadComponent: () =>
+  //     import('./components/pages/plans/plan-list-page/plan-list-page.component').then(
+  //       (m) => m.PlanListPageComponent,
+  //     ),
+  //   canActivate: [authGuard],
+  // },
+  // {
+  //   path: 'plans/:id',
+  //   loadComponent: () =>
+  //     import('./components/pages/plans/plan-detail-page/plan-detail-page.component').then(
+  //       (m) => m.PlanDetailPageComponent,
+  //     ),
+  //   canActivate: [authGuard],
+  // },
   {
     path: 'onboarding',
     loadComponent: () =>

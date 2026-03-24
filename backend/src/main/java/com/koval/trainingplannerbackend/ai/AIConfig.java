@@ -5,7 +5,7 @@ import com.koval.trainingplannerbackend.ai.action.CreationTrainingToolService;
 import com.koval.trainingplannerbackend.ai.action.NotationToolService;
 import com.koval.trainingplannerbackend.coach.tools.CoachToolService;
 import com.koval.trainingplannerbackend.goal.GoalToolService;
-import com.koval.trainingplannerbackend.plan.PlanToolService;
+// import com.koval.trainingplannerbackend.plan.PlanToolService; //TODO temporary — plans disabled
 import com.koval.trainingplannerbackend.race.RaceToolService;
 import com.koval.trainingplannerbackend.training.history.HistoryToolService;
 import com.koval.trainingplannerbackend.training.tools.TrainingToolService;
@@ -63,13 +63,13 @@ public class AIConfig {
     public ChatClient trainingCreationClient(AnthropicChatModel chatModel,
                                              ChatMemory chatMemory,
                                              ContextToolService contextToolService,
-                                             TrainingToolService trainingToolService,
-                                             PlanToolService planToolService) {
+                                             TrainingToolService trainingToolService) {
+        //TODO temporary — plans disabled: PlanToolService removed from tools
         return ChatClient.builder(chatModel)
                 .defaultSystem(agentPrompt("training-creation"))
                 .defaultOptions(sonnetOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultTools(contextToolService, trainingToolService, planToolService)
+                .defaultTools(contextToolService, trainingToolService)
                 .build();
     }
 
@@ -80,13 +80,13 @@ public class AIConfig {
                                        TrainingToolService trainingToolService,
                                        CoachToolService coachToolService,
                                        GoalToolService goalToolService,
-                                       RaceToolService raceToolService,
-                                       PlanToolService planToolService) {
+                                       RaceToolService raceToolService) {
+        //TODO temporary — plans disabled: PlanToolService removed from tools
         return ChatClient.builder(chatModel)
                 .defaultSystem(agentPrompt("scheduling"))
                 .defaultOptions(sonnetOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultTools(contextToolService, trainingToolService, coachToolService, goalToolService, raceToolService, planToolService)
+                .defaultTools(contextToolService, trainingToolService, coachToolService, goalToolService, raceToolService)
                 .build();
     }
 

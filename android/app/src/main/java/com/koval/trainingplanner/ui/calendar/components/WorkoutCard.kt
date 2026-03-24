@@ -2,7 +2,6 @@ package com.koval.trainingplanner.ui.calendar.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -12,18 +11,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +28,6 @@ import com.koval.trainingplanner.domain.model.ScheduledWorkout
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import com.koval.trainingplanner.ui.theme.Border
-import com.koval.trainingplanner.ui.theme.Danger
 import com.koval.trainingplanner.ui.theme.Success
 import com.koval.trainingplanner.ui.theme.Surface as SurfaceColor
 import com.koval.trainingplanner.ui.theme.TextPrimary
@@ -48,9 +38,6 @@ import com.koval.trainingplanner.ui.theme.Warning
 fun WorkoutCard(
     workout: ScheduledWorkout,
     onClick: () -> Unit = {},
-    onComplete: () -> Unit,
-    onSkip: () -> Unit,
-    onDelete: () -> Unit,
     showDate: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
@@ -64,7 +51,7 @@ fun WorkoutCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(10.dp),
         color = SurfaceColor,
         border = androidx.compose.foundation.BorderStroke(1.dp, Border),
     ) {
@@ -76,13 +63,13 @@ fun WorkoutCard(
             // Left color bar
             Box(
                 modifier = Modifier
-                    .width(4.dp)
+                    .width(3.dp)
                     .fillMaxHeight()
-                    .clip(RoundedCornerShape(topStart = 14.dp, bottomStart = 14.dp))
+                    .clip(RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp))
                     .background(statusColor),
             )
 
-            Column(modifier = Modifier.padding(12.dp).weight(1f)) {
+            Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp).weight(1f)) {
                 if (showDate) {
                     val dateLabel = try {
                         LocalDate.parse(workout.scheduledDate)
@@ -95,7 +82,7 @@ fun WorkoutCard(
                         color = TextSecondary,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(bottom = 6.dp),
+                        modifier = Modifier.padding(bottom = 4.dp),
                     )
                 }
                 Row(
@@ -104,26 +91,27 @@ fun WorkoutCard(
                 ) {
                     SportIcon(sport = workout.sportType)
 
-                    Spacer(Modifier.width(12.dp))
+                    Spacer(Modifier.width(10.dp))
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = workout.trainingTitle ?: "Workout",
                             color = TextPrimary,
-                            fontSize = 15.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
                             maxLines = 1,
                         )
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            workout.totalDurationSeconds?.let {
-                                Text(formatDuration(it), color = TextSecondary, fontSize = 13.sp)
-                            }
-                            workout.tss?.let {
-                                Text("${it.toInt()} TSS", color = TextSecondary, fontSize = 13.sp)
-                            }
-                            workout.intensityFactor?.let {
-                                Text("IF %.2f".format(it), color = TextSecondary, fontSize = 13.sp)
-                            }
+                        val metricParts = buildList {
+                            workout.totalDurationSeconds?.let { add(formatDuration(it)) }
+                            workout.tss?.let { add("${it.toInt()} TSS") }
+                            workout.intensityFactor?.let { add("IF %.2f".format(it)) }
+                        }
+                        if (metricParts.isNotEmpty()) {
+                            Text(
+                                text = metricParts.joinToString(" · "),
+                                color = TextSecondary,
+                                fontSize = 12.sp,
+                            )
                         }
                     }
 
@@ -136,34 +124,11 @@ fun WorkoutCard(
                     Text(
                         text = it,
                         color = TextSecondary,
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         fontStyle = FontStyle.Italic,
-                        modifier = Modifier.padding(start = 52.dp, top = 4.dp),
+                        modifier = Modifier.padding(start = 46.dp, top = 2.dp),
+                        maxLines = 1,
                     )
-                }
-
-                // Actions for pending
-                if (workout.status == ScheduleStatus.PENDING) {
-                    Spacer(Modifier.height(8.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        TextButton(onClick = onComplete) {
-                            Icon(Icons.Filled.Check, null, tint = Success, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("Complete", color = Success, fontSize = 13.sp)
-                        }
-                        TextButton(onClick = onSkip) {
-                            Icon(Icons.Filled.SkipNext, null, tint = Warning, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("Skip", color = Warning, fontSize = 13.sp)
-                        }
-                        Spacer(Modifier.weight(1f))
-                        IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
-                            Icon(Icons.Filled.Delete, null, tint = Danger, modifier = Modifier.size(16.dp))
-                        }
-                    }
                 }
             }
         }

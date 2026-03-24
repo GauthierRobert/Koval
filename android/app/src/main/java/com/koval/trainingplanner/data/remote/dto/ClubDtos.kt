@@ -36,3 +36,14 @@ data class LinkedTrainingDto(
 data class NotificationTokenRequest(
     val token: String,
 )
+
+@JsonClass(generateAdapter = true)
+data class RedeemInviteRequest(
+    val code: String,
+)
+
+@JsonClass(generateAdapter = true)
+data class RedeemInviteResponse(
+    val type: String? = null,
+    val message: String? = null,
+)

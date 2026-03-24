@@ -25,15 +25,7 @@
             {{ displayUnit === 'PERCENT' ? '%' : getSportUnit() }}
           </button>
           @if (isOwner()) {
-            @if (!isEditMode) {
-              <button class="edit-blocks-btn" (click)="enterEditMode()">{{ 'WORKOUT_VIZ.BTN_EDIT_BLOCKS' | translate }}</button>
-            }
-            @if (isEditMode) {
-              <button class="edit-blocks-btn" (click)="cancelEdits()">{{ 'WORKOUT_VIZ.BTN_CANCEL' | translate }}</button>
-              <button class="edit-blocks-btn active" [disabled]="isSaving" (click)="saveEdits()">
-                {{ (isSaving ? 'WORKOUT_VIZ.BTN_SAVING' : 'WORKOUT_VIZ.BTN_DONE') | translate }}
-              </button>
-            }
+            <button class="edit-blocks-btn" (click)="enterEditMode()">{{ 'WORKOUT_VIZ.BTN_EDIT_BLOCKS' | translate }}</button>
           }
           <button class="schedule-btn" (click)="openScheduleModal()">{{ 'WORKOUT_VIZ.BTN_SCHEDULE' | translate }}</button>
           <!-- TODO Disable temporary - Start workout button in training library -->
@@ -62,13 +54,6 @@
                 <span class="set-badge">&times;{{ block.repetitions }}</span>
                 @if (block.restDurationSeconds) {
                   <span class="set-rest">{{ 'WORKOUT_VIZ.SET_REST_LABEL' | translate: { duration: formatDuration(block.restDurationSeconds) } }}</span>
-                }
-                @if (isEditMode) {
-                  <div class="step-actions">
-                    <button class="step-action-btn" [title]="'WORKOUT_VIZ.MOVE_UP_TITLE' | translate" (click)="moveBlock(i, 'up'); $event.stopPropagation()" [disabled]="i === 0">&#x25B2;</button>
-                    <button class="step-action-btn" [title]="'WORKOUT_VIZ.MOVE_DOWN_TITLE' | translate" (click)="moveBlock(i, 'down'); $event.stopPropagation()" [disabled]="i === displayBlocks.length - 1">&#x25BC;</button>
-                    <button class="step-action-btn delete" [title]="'WORKOUT_VIZ.REMOVE_SET_TITLE' | translate" (click)="removeBlock(i); $event.stopPropagation()">&times;</button>
-                  </div>
                 }
               </div>
               <div class="set-children">
@@ -104,7 +89,7 @@
               </div>
             </div>
           } @else {
-            <div class="step-card" [class.edit-mode]="isEditMode"
+            <div class="step-card"
               [style.border-left-color]="getBlockColor(block)">
               <span class="step-number">#{{ i + 1 }}</span>
               <span class="step-label">{{ block.label }}</span>
@@ -127,30 +112,11 @@
                   }
                 </span>
               }
-              @if (isEditMode) {
-                <div class="step-actions">
-                  <button class="step-action-btn" [title]="'WORKOUT_VIZ.MOVE_UP_TITLE' | translate" (click)="moveBlock(i, 'up'); $event.stopPropagation()" [disabled]="i === 0">&#x25B2;</button>
-                  <button class="step-action-btn" [title]="'WORKOUT_VIZ.MOVE_DOWN_TITLE' | translate" (click)="moveBlock(i, 'down'); $event.stopPropagation()" [disabled]="i === displayBlocks.length - 1">&#x25BC;</button>
-                  <button class="step-action-btn edit" [title]="'WORKOUT_VIZ.EDIT_BLOCK_TITLE' | translate" (click)="openEditBlock(i); $event.stopPropagation()">&#x270E;</button>
-                  <button class="step-action-btn delete" [title]="'WORKOUT_VIZ.REMOVE_BLOCK_TITLE' | translate" (click)="removeBlock(i); $event.stopPropagation()">&times;</button>
-                </div>
-              }
             </div>
           }
         }
       </div>
-      @if (isEditMode) {
-        <button class="add-block-btn" (click)="openAddBlock()">{{ 'WORKOUT_VIZ.BTN_ADD_BLOCK' | translate }}</button>
-      }
     </div>
-
-    <app-block-editor-modal
-      [isOpen]="isBlockEditorOpen"
-      [block]="editingBlock"
-      [sportType]="training.sportType"
-      (closed)="closeBlockEditor()"
-      (saved)="onBlockSaved($event)">
-    </app-block-editor-modal>
     }
 
     <!-- RIGHT PANEL: Chart + Metrics + Zone distribution -->

@@ -524,3 +524,61 @@
 .cdk-drag-animating {
   transition: transform 200ms ease;
 }
+
+/* ─── Set grouping hint ──────────────────────────────────── */
+.set-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted, #8e8ea0);
+  padding: 4px 8px;
+  margin-bottom: 6px;
+  opacity: 0.7;
+}
+
+/* ─── Passive rest toggle ───────────────────────────────── */
+.passive-rest-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.passive-rest-toggle input[type="checkbox"] {
+  accent-color: var(--accent-color, #ff9d00);
+  width: 14px;
+  height: 14px;
+}
+
+.rest-hint {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted, #8e8ea0);
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+/* ─── Highlighted group as set button ───────────────────── */
+.btn-set-highlight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: pulse-set 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-set {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.3); }
+  50% { box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1); }
+}
+
+/* ─── Set rest indicator ────────────────────────────────── */
+.set-rest-indicator {
+  padding: 4px 12px 4px 24px;
+  font-size: 11px;
+  color: var(--text-muted, #8e8ea0);
+  font-style: italic;
+  border-top: 1px dashed rgba(255, 255, 255, 0.06);
+}

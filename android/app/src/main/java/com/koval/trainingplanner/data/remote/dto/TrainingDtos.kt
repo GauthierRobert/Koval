@@ -17,6 +17,16 @@ data class TrainingDto(
 )
 
 @JsonClass(generateAdapter = true)
+data class ReceivedTrainingDto(
+    val id: String? = null,
+    val trainingId: String? = null,
+    val assignedByName: String? = null,
+    val origin: String? = null,
+    val originName: String? = null,
+    val receivedAt: String? = null,
+)
+
+@JsonClass(generateAdapter = true)
 data class WorkoutElementDto(
     val repetitions: Int? = null,
     val elements: List<WorkoutElementDto>? = null,

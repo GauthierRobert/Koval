@@ -13,6 +13,14 @@ data class Training(
     val estimatedDistance: Int? = null,
 )
 
+data class ReceivedTraining(
+    val id: String,
+    val trainingId: String,
+    val assignedByName: String?,
+    val origin: String,
+    val originName: String?,
+)
+
 data class WorkoutElement(
     // Set fields
     val repetitions: Int? = null,

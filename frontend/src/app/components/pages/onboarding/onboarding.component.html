@@ -87,11 +87,21 @@
         {{ 'ONBOARDING.UNSET_NOTE' | translate }}
       </div>
 
+      <div class="field-group cgu-section">
+        <label class="cgu-checkbox">
+          <input type="checkbox" [(ngModel)]="cguAccepted" name="cgu" />
+          <span>{{ 'ONBOARDING.CGU_ACCEPT_PREFIX' | translate }}
+            <a href="/assets/cgu.html" target="_blank" class="cgu-link">{{ 'ONBOARDING.CGU_LINK_TEXT' | translate }}</a>
+          </span>
+          <span class="required">*</span>
+        </label>
+      </div>
+
       @if (error) {
         <div class="error-msg">{{ error }}</div>
       }
 
-      <button type="submit" class="submit-btn" [disabled]="saving">
+      <button type="submit" class="submit-btn" [disabled]="saving || !cguAccepted">
         {{ saving ? ('ONBOARDING.BTN_SAVING' | translate) : ('ONBOARDING.BTN_GET_STARTED' | translate) }}
       </button>
 

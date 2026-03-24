@@ -24,6 +24,7 @@ export class OnboardingComponent {
     thresholdPaceMinutes: number | null = null;
     thresholdPaceSeconds: number | null = null;
 
+    cguAccepted = false;
     saving = false;
     error = '';
 
@@ -50,6 +51,7 @@ export class OnboardingComponent {
             weightKg: this.weightKg ?? undefined,
             criticalSwimSpeed: this.cssTotal,
             functionalThresholdPace: this.thresholdPaceTotal,
+            cguAccepted: this.cguAccepted,
         }).subscribe({
             next: () => this.router.navigate([this.role === 'COACH' ? '/coach' : '/']),
             error: () => {

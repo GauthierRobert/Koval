@@ -1,23 +1,8 @@
 package com.koval.trainingplanner.ui.navigation
 
 import android.content.Intent
-import android.net.Uri
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -25,37 +10,28 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import coil3.compose.AsyncImage
-import com.koval.trainingplanner.domain.model.User
 import com.koval.trainingplanner.ui.auth.LoginScreen
 import com.koval.trainingplanner.ui.auth.LoginViewModel
 import com.koval.trainingplanner.ui.calendar.CalendarScreen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import com.koval.trainingplanner.ui.chat.ChatScreen
 import com.koval.trainingplanner.ui.builder.WorkoutBuilderScreen
 import com.koval.trainingplanner.ui.history.HistoryScreen
 import com.koval.trainingplanner.ui.history.SessionDetailScreen
+import com.koval.trainingplanner.ui.profile.JoinGroupDialog
+import com.koval.trainingplanner.ui.profile.ProfileScreen
+import com.koval.trainingplanner.ui.profile.ProfileViewModel
 import com.koval.trainingplanner.ui.training.TrainingDetailScreen
 import com.koval.trainingplanner.ui.training.TrainingListScreen
 import com.koval.trainingplanner.ui.zones.ZonesScreen
 import com.koval.trainingplanner.ui.theme.Background
-import com.koval.trainingplanner.ui.theme.Primary
-import com.koval.trainingplanner.ui.theme.SurfaceElevated
-import com.koval.trainingplanner.ui.theme.TextPrimary
-import com.koval.trainingplanner.ui.theme.TextSecondary
 
 @Composable
 fun KovalNavHost(intent: Intent?) {
@@ -95,23 +71,11 @@ fun KovalNavHost(intent: Intent?) {
     val isDetailScreen = currentRoute == Screen.TrainingDetail.route
         || currentRoute == Screen.SessionDetail.route
         || currentRoute == Screen.WorkoutBuilder.route
+        || currentRoute == Screen.History.route
     val showBottomBar = authState.user != null && !isDetailScreen
 
     Scaffold(
         containerColor = Background,
-        topBar = {
-            if (authState.user != null && !isDetailScreen) {
-                TopBar(
-                    user = authState.user!!,
-                    onLogout = {
-                        loginViewModel.logout()
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    },
-                )
-            }
-        },
         bottomBar = {
             if (showBottomBar) {
                 BottomNavBar(navController)
@@ -153,8 +117,33 @@ fun KovalNavHost(intent: Intent?) {
             composable(Screen.Zones.route) {
                 ZonesScreen()
             }
-            composable(Screen.Chat.route) {
-                ChatScreen()
+            // TODO Temporary — Chat screen removed from navigation
+            composable(Screen.Profile.route) {
+                val profileViewModel: ProfileViewModel = hiltViewModel()
+                val joinState by profileViewModel.joinState.collectAsState()
+                var showJoinDialog by remember { mutableStateOf(false) }
+
+                ProfileScreen(
+                    user = authState.user,
+                    onLogout = {
+                        loginViewModel.logout()
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
+                    onJoinGroupClick = { showJoinDialog = true },
+                )
+
+                if (showJoinDialog) {
+                    JoinGroupDialog(
+                        joinState = joinState,
+                        onRedeem = { code -> profileViewModel.redeemInvite(code) },
+                        onDismiss = {
+                            showJoinDialog = false
+                            profileViewModel.clearJoinState()
+                        },
+                    )
+                }
             }
             composable(
                 route = Screen.TrainingDetail.route,
@@ -184,62 +173,3 @@ fun KovalNavHost(intent: Intent?) {
     }
 }
 
-@Composable
-private fun TopBar(user: User, onLogout: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Background)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (user.profilePicture != null) {
-                AsyncImage(
-                    model = user.profilePicture,
-                    contentDescription = "Profile",
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop,
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(SurfaceElevated),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = user.displayName.take(1).uppercase(),
-                        color = Primary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = user.displayName,
-                color = TextPrimary,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp,
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = user.role.name,
-                color = TextSecondary,
-                fontSize = 12.sp,
-            )
-        }
-        IconButton(onClick = onLogout) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Logout,
-                contentDescription = "Logout",
-                tint = TextSecondary,
-            )
-        }
-    }
-}

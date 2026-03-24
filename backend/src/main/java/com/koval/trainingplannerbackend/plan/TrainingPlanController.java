@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
+// @RestController //TODO temporary — plans disabled
 @RequestMapping("/api/plans")
 @CrossOrigin(origins = "*")
 public class TrainingPlanController {
@@ -32,7 +32,11 @@ public class TrainingPlanController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TrainingPlan> getPlan(@PathVariable String id) {
+    public ResponseEntity<?> getPlan(@PathVariable String id,
+                                     @RequestParam(defaultValue = "false") boolean populate) {
+        if (populate) {
+            return ResponseEntity.ok(planService.populatePlan(id));
+        }
         return ResponseEntity.ok(planService.getPlan(id));
     }
 

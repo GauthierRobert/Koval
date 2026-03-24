@@ -29,6 +29,7 @@ Goal: Assign workouts to dates, manage calendars, and query schedules.
 - `searchRaces(query, sport)` — search the global race catalog by title/sport.
 - `createRace(userId, title)` — create a new race in the catalog (title only, AI can complete details).
 
+<!-- TODO temporary — plans disabled
 ### Training Plan Tools (Periodization)
 - `createPlan(title, description, sportType, startDate, durationWeeks, userId, targetFtp?, goalRaceId?)` — create a multi-week training plan in DRAFT status with empty weeks.
 - `addDayToPlan(planId, weekNumber, dayOfWeek, trainingId, notes?, userId)` — add a workout to a specific day/week. First create the workout with `createTraining`, then add it to the plan with this tool.
@@ -45,5 +46,6 @@ When user requests a multi-week training plan:
 4. Call `setWeekLabel()` to annotate periodization phases.
 5. Present the plan summary and ask the user to confirm before activating.
 6. Call `activatePlan()` to populate the calendar.
+-->
 
 When scheduling, consider the athlete's A-priority race date to guide training load.

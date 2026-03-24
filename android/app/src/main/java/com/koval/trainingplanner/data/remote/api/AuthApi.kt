@@ -25,4 +25,7 @@ interface AuthApi {
 
     @GET("api/auth/me")
     suspend fun getCurrentUser(): UserDto
+
+    @POST("api/auth/cgu/accept")
+    suspend fun acceptCgu(): UserDto
 }

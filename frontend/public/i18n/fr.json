@@ -178,7 +178,12 @@
     "ERROR_SAVE_FAILED": "Échec de l'enregistrement. Réessaie.",
     "BTN_SAVING": "ENREGISTREMENT...",
     "BTN_GET_STARTED": "COMMENCER",
-    "SKIP_NOTE": "Tu peux mettre à jour ces valeurs à tout moment dans Paramètres."
+    "SKIP_NOTE": "Tu peux mettre à jour ces valeurs à tout moment dans Paramètres.",
+    "CGU_ACCEPT_PREFIX": "J'accepte les",
+    "CGU_LINK_TEXT": "Conditions Générales d'Utilisation",
+    "CGU_MODAL_TITLE": "Conditions Générales d'Utilisation",
+    "CGU_MODAL_DESC": "Veuillez accepter les CGU pour continuer à utiliser l'application.",
+    "CGU_MODAL_ACCEPT": "Accepter & Continuer"
   },
   "DASHBOARD": {
     "HEADER_SUBTITLE_SEPARATOR": "· Koval Training",
@@ -967,7 +972,11 @@
     "EDIT_SET": "Modifier le set",
     "UPDATE_SET": "Mettre à jour le set",
     "SET_CONTENTS": "Contenu du set",
-    "DESELECT": "Désélectionner"
+    "DESELECT": "Désélectionner",
+    "PASSIVE_REST": "Repos passif (pause, intensité zéro)",
+    "PASSIVE_REST_HINT": "Arrêt complet — aucun pédalage ou mouvement",
+    "ACTIVE_REST_HINT": "Effort facile à l'intensité spécifiée",
+    "SET_GROUPING_HINT": "Utilisez les cases à cocher pour sélectionner des blocs, puis cliquez sur 'Grouper en set' pour créer un set répétable"
   },
   "PLANS": {
     "PAGE_TITLE": "Plans d'entraînement",

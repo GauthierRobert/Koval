@@ -11,6 +11,8 @@ import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.koval.trainingplannerbackend.training.TrainingRepository;
+
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,20 +20,25 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 public class TrainingPlanService {
 
     private final TrainingPlanRepository planRepository;
+    private final TrainingRepository trainingRepository;
     private final ScheduledWorkoutRepository scheduledWorkoutRepository;
     private final TrainingService trainingService;
     private final NotificationService notificationService;
 
     public TrainingPlanService(TrainingPlanRepository planRepository,
+                               TrainingRepository trainingRepository,
                                ScheduledWorkoutRepository scheduledWorkoutRepository,
                                TrainingService trainingService,
                                NotificationService notificationService) {
         this.planRepository = planRepository;
+        this.trainingRepository = trainingRepository;
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
         this.trainingService = trainingService;
         this.notificationService = notificationService;
@@ -206,6 +213,20 @@ public class TrainingPlanService {
         }
 
         planRepository.deleteById(planId);
+    }
+
+    /**
+     * Returns a populated view of the plan with Training objects resolved from their IDs.
+     */
+    public TrainingPlanPopulated populatePlan(String planId) {
+        TrainingPlan plan = getPlan(planId);
+        List<String> trainingIds = TrainingPlanPopulated.collectTrainingIds(plan);
+
+        Map<String, Training> trainingsById = StreamSupport
+                .stream(trainingRepository.findAllById(trainingIds).spliterator(), false)
+                .collect(Collectors.toMap(Training::getId, t -> t, (a, b) -> a));
+
+        return TrainingPlanPopulated.from(plan, trainingsById);
     }
 
     private void verifyOwnership(TrainingPlan plan, String userId) {

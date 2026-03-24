@@ -8,4 +8,5 @@ data class User(
     val ftp: Int? = null,
     val functionalThresholdPace: Int? = null,
     val criticalSwimSpeed: Int? = null,
+    val needsCguAcceptance: Boolean = false,
 )
