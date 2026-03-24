@@ -89,7 +89,7 @@
               </div>
             </div>
           } @else {
-            <div class="step-card"
+            <div class="step-card" [class.ramp]="block.type === 'RAMP'"
               [style.border-left-color]="getBlockColor(block)">
               <span class="step-number">#{{ i + 1 }}</span>
               <span class="step-label">{{ block.label }}</span>

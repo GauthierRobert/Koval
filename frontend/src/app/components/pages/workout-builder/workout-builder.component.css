@@ -508,6 +508,11 @@
   width: 100%;
 }
 
+.btn-dissociate:hover {
+  border-color: var(--danger-color, #f87171);
+  color: var(--danger-color, #f87171);
+}
+
 /* ─── CDK drag-drop ───────────────────────────────────────── */
 .cdk-drag-preview {
   background: var(--surface-color, rgba(30, 30, 40, 0.95));
@@ -574,11 +579,95 @@
   50% { box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1); }
 }
 
+/* ─── Set group (timeline) ─────────────────────────────── */
+.set-group {
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  border-radius: var(--radius-sm, 6px);
+  padding: 4px;
+  background: rgba(139, 92, 246, 0.04);
+  transition: border-color 0.15s;
+}
+
+.set-group.selected {
+  border-color: var(--accent-color, #ff9d00);
+  background: rgba(255, 157, 0, 0.04);
+}
+
+.set-group .set-header {
+  border: none;
+  background: transparent;
+}
+
+.set-group .set-header:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.set-group:hover .block-actions {
+  opacity: 1;
+}
+
+.set-icon {
+  color: #a78bfa;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.set-children {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 10px;
+  margin: 2px 0 2px 14px;
+  border-left: 2px solid rgba(139, 92, 246, 0.2);
+}
+
+.set-child-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.set-child-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.set-child-item.selected {
+  border-color: var(--accent-color, #ff9d00);
+  background: var(--accent-subtle, rgba(255, 157, 0, 0.08));
+}
+
+.child-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.set-child-item:hover .child-actions {
+  opacity: 1;
+}
+
+.set-child-item .block-label {
+  font-size: 12px;
+}
+
+.set-child-item .block-meta {
+  font-size: 10px;
+}
+
 /* ─── Set rest indicator ────────────────────────────────── */
 .set-rest-indicator {
-  padding: 4px 12px 4px 24px;
+  padding: 4px 12px 4px 10px;
   font-size: 11px;
   color: var(--text-muted, #8e8ea0);
   font-style: italic;
-  border-top: 1px dashed rgba(255, 255, 255, 0.06);
+  border-top: 1px dashed rgba(139, 92, 246, 0.15);
 }

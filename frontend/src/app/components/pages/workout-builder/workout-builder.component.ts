@@ -43,6 +43,7 @@ export class WorkoutBuilderComponent implements OnInit {
 
   // Editor state
   selectedBlockIndex = -1;
+  selectedChildIndex = -1; // child within a set (-1 = set itself selected)
   isEditing = false; // true when editing existing training
   trainingId: string | null = null;
 
@@ -131,7 +132,25 @@ export class WorkoutBuilderComponent implements OnInit {
     const blocks = [...this.blocks];
     const current = blocks[this.selectedBlockIndex];
 
-    if (isSet(current)) {
+    if (this.selectedChildIndex >= 0 && isSet(current)) {
+      // Updating a child element within a set
+      const elements = [...(current.elements ?? [])];
+      elements[this.selectedChildIndex] = {
+        ...elements[this.selectedChildIndex],
+        type: this.editType,
+        label: this.editLabel || this.editType,
+        durationSeconds: (this.editDurationMin || 0) * 60 + (this.editDurationSec || 0),
+        distanceMeters: this.editDistanceMeters ?? undefined,
+        ...(this.editType === 'RAMP'
+          ? { intensityStart: this.editIntensityStart ?? undefined, intensityEnd: this.editIntensityEnd ?? undefined, intensityTarget: undefined }
+          : this.editType !== 'FREE' && this.editType !== 'PAUSE'
+            ? { intensityTarget: this.editIntensity ?? undefined, intensityStart: undefined, intensityEnd: undefined }
+            : { intensityTarget: undefined, intensityStart: undefined, intensityEnd: undefined }),
+        cadenceTarget: this.editCadence ?? undefined,
+        zoneTarget: this.editZone || undefined,
+      };
+      blocks[this.selectedBlockIndex] = { ...current, elements };
+    } else if (isSet(current)) {
       blocks[this.selectedBlockIndex] = {
         ...current,
         label: this.editLabel || `${this.editSetReps}x Set`,
@@ -157,6 +176,7 @@ export class WorkoutBuilderComponent implements OnInit {
     }
     this.blocksSubject.next(blocks);
     this.selectedBlockIndex = -1;
+    this.selectedChildIndex = -1;
     this.resetBlockForm();
   }
 
@@ -165,6 +185,7 @@ export class WorkoutBuilderComponent implements OnInit {
     this.blocksSubject.next(blocks);
     if (this.selectedBlockIndex === index) {
       this.selectedBlockIndex = -1;
+      this.selectedChildIndex = -1;
       this.resetBlockForm();
     }
   }
@@ -177,6 +198,7 @@ export class WorkoutBuilderComponent implements OnInit {
 
   selectBlock(index: number): void {
     this.selectedBlockIndex = index;
+    this.selectedChildIndex = -1;
     const block = this.blocks[index];
     if (!block) return;
 
@@ -187,24 +209,81 @@ export class WorkoutBuilderComponent implements OnInit {
       this.editSetRestIntensity = this.editSetPassiveRest ? 60 : (block.restIntensity ?? 60);
       this.editLabel = block.label || '';
     } else {
-      this.editType = block.type;
-      this.editLabel = block.label || '';
-      const dur = block.durationSeconds || 0;
-      this.editDurationMin = Math.floor(dur / 60);
-      this.editDurationSec = dur % 60;
-      this.editDistanceMeters = block.distanceMeters ?? null;
-      this.editIntensity = block.intensityTarget ?? null;
-      this.editIntensityStart = block.intensityStart ?? null;
-      this.editIntensityEnd = block.intensityEnd ?? null;
-      this.editCadence = block.cadenceTarget ?? null;
-      this.editZone = block.zoneTarget || '';
+      this.populateBlockForm(block);
     }
+  }
+
+  selectChildBlock(parentIndex: number, childIndex: number): void {
+    this.selectedBlockIndex = parentIndex;
+    this.selectedChildIndex = childIndex;
+    const parent = this.blocks[parentIndex];
+    if (!parent?.elements?.[childIndex]) return;
+    this.populateBlockForm(parent.elements[childIndex]);
+  }
+
+  deselectBlock(): void {
+    if (this.selectedChildIndex >= 0) {
+      // Go back to set-level selection
+      this.selectedChildIndex = -1;
+      this.selectBlock(this.selectedBlockIndex);
+    } else {
+      this.selectedBlockIndex = -1;
+      this.selectedChildIndex = -1;
+      this.resetBlockForm();
+    }
+  }
+
+  dissociateSet(index: number): void {
+    const blocks = [...this.blocks];
+    const set = blocks[index];
+    if (!set?.elements) return;
+    blocks.splice(index, 1, ...set.elements);
+    this.blocksSubject.next(blocks);
+    this.selectedBlockIndex = -1;
+    this.selectedChildIndex = -1;
+    this.resetBlockForm();
+  }
+
+  removeChildBlock(parentIndex: number, childIndex: number): void {
+    const blocks = [...this.blocks];
+    const parent = blocks[parentIndex];
+    if (!parent?.elements) return;
+    const elements = parent.elements.filter((_, i) => i !== childIndex);
+    if (elements.length === 0) {
+      // Remove the set entirely if no children left
+      blocks.splice(parentIndex, 1);
+      this.selectedBlockIndex = -1;
+      this.selectedChildIndex = -1;
+      this.resetBlockForm();
+    } else {
+      blocks[parentIndex] = { ...parent, elements };
+      if (this.selectedChildIndex === childIndex) {
+        this.selectedChildIndex = -1;
+        this.selectBlock(parentIndex);
+      }
+    }
+    this.blocksSubject.next(blocks);
   }
 
   isSelectedBlockASet(): boolean {
     if (this.selectedBlockIndex < 0) return false;
+    if (this.selectedChildIndex >= 0) return false; // editing a child, show block editor
     const block = this.blocks[this.selectedBlockIndex];
     return !!block && isSet(block);
+  }
+
+  private populateBlockForm(block: WorkoutBlock): void {
+    this.editType = block.type;
+    this.editLabel = block.label || '';
+    const dur = block.durationSeconds || 0;
+    this.editDurationMin = Math.floor(dur / 60);
+    this.editDurationSec = dur % 60;
+    this.editDistanceMeters = block.distanceMeters ?? null;
+    this.editIntensity = block.intensityTarget ?? null;
+    this.editIntensityStart = block.intensityStart ?? null;
+    this.editIntensityEnd = block.intensityEnd ?? null;
+    this.editCadence = block.cadenceTarget ?? null;
+    this.editZone = block.zoneTarget || '';
   }
 
   dropBlock(event: CdkDragDrop<WorkoutBlock[]>): void {
