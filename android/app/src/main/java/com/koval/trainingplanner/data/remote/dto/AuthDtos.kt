@@ -28,5 +28,5 @@ data class UserDto(
 
 @JsonClass(generateAdapter = true)
 data class AuthUrlResponse(
-    val url: String,
+    val authUrl: String,
 )

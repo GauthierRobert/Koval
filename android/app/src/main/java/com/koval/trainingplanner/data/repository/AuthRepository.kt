@@ -24,7 +24,7 @@ class AuthRepository @Inject constructor(
     }
 
     suspend fun getStravaAuthUrl(redirectUri: String): String {
-        return authApi.getStravaAuthUrl(redirectUri).url
+        return authApi.getStravaAuthUrl(redirectUri).authUrl
     }
 
     suspend fun exchangeStravaCode(code: String): User {
@@ -34,7 +34,7 @@ class AuthRepository @Inject constructor(
     }
 
     suspend fun getGoogleAuthUrl(redirectUri: String): String {
-        return authApi.getGoogleAuthUrl(redirectUri).url
+        return authApi.getGoogleAuthUrl(redirectUri).authUrl
     }
 
     suspend fun handleGoogleToken(token: String): User {
