@@ -5,6 +5,7 @@ import com.koval.trainingplannerbackend.ai.action.CreationTrainingToolService;
 import com.koval.trainingplannerbackend.ai.action.NotationToolService;
 import com.koval.trainingplannerbackend.coach.tools.CoachToolService;
 import com.koval.trainingplannerbackend.goal.GoalToolService;
+import com.koval.trainingplannerbackend.plan.PlanToolService;
 import com.koval.trainingplannerbackend.race.RaceToolService;
 import com.koval.trainingplannerbackend.training.history.HistoryToolService;
 import com.koval.trainingplannerbackend.training.tools.TrainingToolService;
@@ -62,12 +63,13 @@ public class AIConfig {
     public ChatClient trainingCreationClient(AnthropicChatModel chatModel,
                                              ChatMemory chatMemory,
                                              ContextToolService contextToolService,
-                                             TrainingToolService trainingToolService) {
+                                             TrainingToolService trainingToolService,
+                                             PlanToolService planToolService) {
         return ChatClient.builder(chatModel)
                 .defaultSystem(agentPrompt("training-creation"))
                 .defaultOptions(sonnetOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultTools(contextToolService, trainingToolService)
+                .defaultTools(contextToolService, trainingToolService, planToolService)
                 .build();
     }
 
@@ -78,12 +80,13 @@ public class AIConfig {
                                        TrainingToolService trainingToolService,
                                        CoachToolService coachToolService,
                                        GoalToolService goalToolService,
-                                       RaceToolService raceToolService) {
+                                       RaceToolService raceToolService,
+                                       PlanToolService planToolService) {
         return ChatClient.builder(chatModel)
                 .defaultSystem(agentPrompt("scheduling"))
                 .defaultOptions(sonnetOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultTools(contextToolService, trainingToolService, coachToolService, goalToolService, raceToolService)
+                .defaultTools(contextToolService, trainingToolService, coachToolService, goalToolService, raceToolService, planToolService)
                 .build();
     }
 

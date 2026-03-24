@@ -20,6 +20,7 @@ public class ScheduledWorkout {
     private String id;
 
     private String trainingId; // Reference to Training document
+    private String planId;     // Reference to TrainingPlan document (if part of a plan)
     @Indexed
     private String athleteId; // User ID of the athlete
     @Indexed

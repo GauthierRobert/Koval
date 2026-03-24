@@ -60,10 +60,12 @@ public class RouterService {
             AgentType.TRAINING_CREATION,
             Pattern.compile("(?i)\\b(créer?|crée|fais|génère)\\b.*(entraînement|séance|workout|exercice|plan)"),
             AgentType.TRAINING_CREATION,
-            // Scheduling — EN + FR
+            // Scheduling — EN + FR (includes training plans / periodization)
             Pattern.compile("(?i)\\b(schedule|assign|calendar|plan for|set for|planifie|programme|calendrier|assigne|prévois)\\b"),
             AgentType.SCHEDULING,
             Pattern.compile("(?i)\\b(race goal|add goal|my goals|objectif|course|mes objectifs|ajoute.*objectif)\\b"),
+            AgentType.SCHEDULING,
+            Pattern.compile("(?i)\\b(training plan|periodiz|week plan|multi.?week|activate.*plan|plan d'entraînement|périodisation|programme.*semaines)\\b"),
             AgentType.SCHEDULING,
             // Analysis — EN + FR
             Pattern.compile("(?i)\\b(analy[sz]e|review|performance|CTL|ATL|TSB|PMC|fitness|fatigue|form|bilan|progression|forme)\\b"),
