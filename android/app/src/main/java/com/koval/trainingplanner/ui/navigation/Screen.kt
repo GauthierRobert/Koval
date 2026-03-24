@@ -9,6 +9,7 @@ sealed class Screen(val route: String) {
     // TODO Temporary — Chat/AI assistant removed from navigation
     data object Chat : Screen("chat")
     data object Zones : Screen("zones")
+    data object Notifications : Screen("notifications")
     data object Profile : Screen("profile")
     data object TrainingDetail : Screen("training/{trainingId}") {
         fun createRoute(trainingId: String) = "training/$trainingId"

@@ -1,6 +1,10 @@
 package com.koval.trainingplanner.ui.navigation
 
+import android.Manifest
 import android.content.Intent
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -25,6 +29,8 @@ import androidx.navigation.navArgument
 import com.koval.trainingplanner.ui.builder.WorkoutBuilderScreen
 import com.koval.trainingplanner.ui.history.HistoryScreen
 import com.koval.trainingplanner.ui.history.SessionDetailScreen
+import com.koval.trainingplanner.data.local.NotificationStore
+import com.koval.trainingplanner.ui.notifications.NotificationsScreen
 import com.koval.trainingplanner.ui.profile.JoinGroupDialog
 import com.koval.trainingplanner.ui.profile.ProfileScreen
 import com.koval.trainingplanner.ui.profile.ProfileViewModel
@@ -34,11 +40,22 @@ import com.koval.trainingplanner.ui.zones.ZonesScreen
 import com.koval.trainingplanner.ui.theme.Background
 
 @Composable
-fun KovalNavHost(intent: Intent?) {
+fun KovalNavHost(intent: Intent?, notificationStore: NotificationStore) {
     val navController = rememberNavController()
     val loginViewModel: LoginViewModel = hiltViewModel()
     val authState by loginViewModel.authState.collectAsState()
     var deepLinkProcessed by remember { mutableStateOf(false) }
+
+    // Request POST_NOTIFICATIONS permission on Android 13+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* granted or not — no action needed */ }
+
+    LaunchedEffect(authState.user) {
+        if (authState.user != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
 
     // Handle deep links (OAuth callbacks)
     LaunchedEffect(intent?.data) {
@@ -78,7 +95,7 @@ fun KovalNavHost(intent: Intent?) {
         containerColor = Background,
         bottomBar = {
             if (showBottomBar) {
-                BottomNavBar(navController)
+                BottomNavBar(navController, notificationStore)
             }
         },
     ) { padding ->
@@ -117,7 +134,9 @@ fun KovalNavHost(intent: Intent?) {
             composable(Screen.Zones.route) {
                 ZonesScreen()
             }
-            // TODO Temporary — Chat screen removed from navigation
+            composable(Screen.Notifications.route) {
+                NotificationsScreen(notificationStore)
+            }
             composable(Screen.Profile.route) {
                 val profileViewModel: ProfileViewModel = hiltViewModel()
                 val joinState by profileViewModel.joinState.collectAsState()

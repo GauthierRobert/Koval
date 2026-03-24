@@ -9,6 +9,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.koval.trainingplanner.MainActivity
 import com.koval.trainingplanner.R
+import com.koval.trainingplanner.data.local.NotificationStore
 import com.koval.trainingplanner.data.local.TokenManager
 import com.koval.trainingplanner.data.remote.api.NotificationApi
 import com.koval.trainingplanner.data.remote.dto.NotificationTokenRequest
@@ -23,6 +24,7 @@ class KovalMessagingService : FirebaseMessagingService() {
 
     @Inject lateinit var tokenManager: TokenManager
     @Inject lateinit var notificationApi: NotificationApi
+    @Inject lateinit var notificationStore: NotificationStore
 
     override fun onNewToken(token: String) {
         tokenManager.saveFcmToken(token)
@@ -39,6 +41,9 @@ class KovalMessagingService : FirebaseMessagingService() {
         val type = message.data["type"]
         val title = message.notification?.title ?: message.data["title"] ?: "Koval"
         val body = message.notification?.body ?: message.data["body"] ?: ""
+
+        // Persist locally for the notification list
+        notificationStore.add(title, body, type)
 
         val channelId = when (type) {
             "TRAINING_ASSIGNED" -> "workouts"

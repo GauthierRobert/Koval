@@ -105,17 +105,18 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 - ~~ANDROID: Add possibility to see graphs value when over it.~~ ✅
 - ~~ANDROID: Instead of My Training / Club filter, use My Training, [Name of Club 1], [Name of club 2], Name of Coach Group 1, ... Like in angular~~ ✅
 - ~~ANDROID: User should be able to join Club/Group. Add this feature in profile/settings tab~~ ✅
-## TO VERIFY
+- remove old way to edit blocks
+- In training builder, sets do not work correctly, Intensity of rest is never used, it will always be a PAUSE with 0 intensity. It must be one or the other. Default Rest intensity must be 60%. A check box could help to choose between Passive rest (PAUSE, zero intensity) or active rest (steady intensity). Make it cleared in angular, how to group elements, that one element can be a set with pause>/steady intensity. The way to group element hidden and not clear
+- Add way to link trainings into plan, I mean populate training with plans
+- Disable all element in front end concerning plan for now (add //TODO temporary) Also, disable plans tools/prompt for IA for now
+- Add CGU that user must accept at least once. It must be displayed in angular or android based on first connection.
+- Google login in android redirect to localhost:4200 in dev mode. I suppose it does not wokr in production as well; Need to fix. Add redirect to mobile, new endpoint
+
+# TO VERIFY
 
 ## TODO
-* ANGULAR
-  - remove old way to edit blocks
-  - In training builder, sets do not work correctly, Intensity of rest is never used, it will always be a PAUSE with 0 intensity. It must be one or the other. Default Rest intensity must be 60%. A check box could help to choose between Passive rest (PAUSE, zero intensity) or active rest (steady intensity). Make it cleared in angular, how to group elements, that one element can be a set with pause>/steady intensity. The way to group element hidden and not clear
-* BACKEND
-  - Add way to link trainings into plan, I mean populate training with plans
-* OVERALL
-  - Disable all element in front end concerning plan for now (add //TODO temporary) Also, disable plans tools/prompt for IA for now
-  - Add CGU that user must accept at least once. It must be displayed in angular or android based on first connection.
+
+
 ## Nice too have
 
 ## Later

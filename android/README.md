@@ -1,4 +1,4 @@
-# Koval Android
+    # Koval Android
 
 Native Android app for the Koval training planner, built with Kotlin + Jetpack Compose.
 

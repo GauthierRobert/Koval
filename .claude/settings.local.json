@@ -55,7 +55,11 @@
       "Read(//c/Users/gauth/.sdkman/candidates/**)",
       "Bash(reg query:*)",
       "Bash(export JAVA_HOME=\"C:/Program Files/Java/jdk-25\")",
-      "Bash(./gradlew compileDebugKotlin)"
+      "Bash(./gradlew compileDebugKotlin)",
+      "Bash(./gradlew assembleDebug)",
+      "Read(//c/Program Files/Android/Android Studio/jbr//**)",
+      "Read(//c/Users/gauth/Documents/Dev Projects/training-planner-ai/training-planner-ai/android/$LOCALAPPDATA/**)",
+      "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-25\" ./gradlew assembleDebug)"
     ]
   }
 }
