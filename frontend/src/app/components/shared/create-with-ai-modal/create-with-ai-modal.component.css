@@ -199,7 +199,7 @@
 .status-message.error {
   background: rgba(239, 68, 68, 0.12);
   border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
+  color: var(--danger-color);
 }
 
 .status-message.success {

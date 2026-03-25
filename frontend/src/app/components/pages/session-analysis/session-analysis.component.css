@@ -366,7 +366,7 @@
 
 .view-toggle {
   display: flex;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elevated);
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
@@ -390,7 +390,7 @@
 }
 
 .toggle-pill:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elevated);
 }
 
 /* ── Block tables ─────────────────────────────────────── */
@@ -428,7 +428,7 @@
 }
 
 .blocks-row:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elevated);
 }
 
 .b-label {
@@ -480,7 +480,7 @@
 }
 
 .zone-block-row:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elevated);
 }
 
 .zb-zone {

@@ -200,7 +200,7 @@ public class CoachService {
 
         notificationService.sendToUsers(
                 athleteIds,
-                "New Training Assigned",
+                clubName + " — New Training",
                 coach.getDisplayName() + " assigned you a workout for " + scheduledDate,
                 Map.of("type", "TRAINING_ASSIGNED",
                        "trainingId", trainingId,

@@ -10,25 +10,18 @@ import java.util.List;
 public record TrainingRequest(
     @JsonPropertyDescription("CYCLING|RUNNING|SWIMMING|BRICK")
     String sport,
-
-    @JsonPropertyDescription("Title e.g. 'VO2Max 5x3min'")
+    @JsonPropertyDescription("Workout title, e.g. 'VO2Max 5×3min'")
     String title,
-
-    @JsonPropertyDescription("Goal")
+    @JsonPropertyDescription("Workout goal / summary")
     String desc,
-
-    @JsonPropertyDescription("VO2MAX|THRESHOLD|SWEET_SPOT|ENDURANCE|RECOVERY|MIXED|TEST")
+    @JsonPropertyDescription("VO2MAX|THRESHOLD|SWEET_SPOT|ENDURANCE|SPRINT|RECOVERY|MIXED|TEST")
     String type,
-
-    @JsonPropertyDescription("TSS")
+    @JsonPropertyDescription("Estimated TSS — compute before calling (see prompt rules)")
     Integer tss,
-
-    @JsonPropertyDescription("Zone system id")
+    @JsonPropertyDescription("Zone system ID — set when a default zone system exists for the sport")
     String zoneSystemId,
-
-    @JsonPropertyDescription("Blocks")
+    @JsonPropertyDescription("Ordered list of workout elements (blocks or sets)")
     List<WorkoutElementRequest> blocks,
-
-    @JsonPropertyDescription("GroupIds")
+    @JsonPropertyDescription("Group IDs — ONLY for COACH role when explicitly requested, otherwise omit")
     List<String> groupIds
 ) {}

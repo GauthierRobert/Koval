@@ -8,7 +8,12 @@
       "Read(//c/Program Files/Android/Android Studio/jbr/**)",
       "Read(//c/Users/gauth/Documents/Dev Projects/training-planner-ai/training-planner-ai/android/$LOCALAPPDATA/**)",
       "Bash(reg query:*)",
-      "Bash(JAVA_HOME=\"C:/Program Files/Android/Android Studio/jbr\" ./gradlew assembleDebug)"
+      "Bash(JAVA_HOME=\"C:/Program Files/Android/Android Studio/jbr\" ./gradlew assembleDebug)",
+      "Bash(export PATH=\"$PATH:$LOCALAPPDATA/Android/Sdk/platform-tools\")",
+      "Bash(adb devices:*)",
+      "Bash(adb logcat:*)",
+      "Bash(adb install:*)",
+      "Bash(adb shell:*)"
     ]
   }
 }

@@ -378,7 +378,7 @@
 }
 
 .form-input {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elevated);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   padding: 10px 12px;

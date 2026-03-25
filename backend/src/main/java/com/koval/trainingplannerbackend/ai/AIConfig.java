@@ -163,17 +163,6 @@ public class AIConfig {
                 .build();
     }
 
-    @Bean
-    @Deprecated
-    public ChatClient actionNotationTrainingClient(AnthropicChatModel chatModel,
-                                                   NotationToolService notationToolService) {
-        return withLogging(ChatClient.builder(chatModel))
-                .defaultSystem(loadPrompt("action-create-training"))
-                .defaultOptions(sonnetCachedActionOptions())
-                .defaultTools(notationToolService)
-                .build();
-    }
-
 @Bean
     public ChatClient actionTrainingCreatorClient(AnthropicChatModel chatModel,
                                                   ContextToolService contextToolService,

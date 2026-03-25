@@ -237,6 +237,7 @@ export class WorkoutVisualizationComponent {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     if (s === 0) return `${m}min`;
+    if(m === 0) return `${s}sec`
     return `${m}m ${s}sec`;
   }
 

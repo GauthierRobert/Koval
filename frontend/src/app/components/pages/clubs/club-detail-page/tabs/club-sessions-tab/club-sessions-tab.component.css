@@ -54,7 +54,7 @@
 }
 
 .view-toggle button:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elevated);
 }
 
 /* --- Session cards (list view) --- */
@@ -369,10 +369,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid var(--danger-border);
   border-radius: var(--radius-sm);
-  background: rgba(239, 68, 68, 0.1);
-  color: #fca5a5;
+  background: var(--danger-subtle);
+  color: var(--danger-color);
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
@@ -394,7 +394,7 @@
   flex-wrap: wrap;
   margin: 6px 0;
   padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elevated);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -408,16 +408,22 @@
   opacity: 0.4;
 }
 
+.group-badge,
 .linked-group-badge {
   font-size: 9px;
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 3px;
-  background: rgba(167, 139, 250, 0.12);
-  color: #a78bfa;
+  background: var(--secondary-color);
+  color: black;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   flex-shrink: 0;
+}
+
+.group-badge.small {
+  font-size: 7px;
+  padding: 1px 4px;
 }
 
 .linked-training-btn:hover {
@@ -467,7 +473,7 @@
   font-weight: 600;
   color: var(--text-muted);
   padding: 6px 10px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elevated);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   margin-top: 6px;
@@ -891,7 +897,7 @@
 }
 
 .form-input {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elevated);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   padding: 10px 12px;

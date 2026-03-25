@@ -221,7 +221,7 @@
 }
 
 .block-item:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elevated);
 }
 
 .block-index {
@@ -437,7 +437,7 @@
 }
 
 .library-link-btn {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elevated);
   color: var(--text-muted);
   border: 1px solid var(--glass-border);
   padding: 10px 16px;

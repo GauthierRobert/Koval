@@ -59,7 +59,7 @@ firebase:
 # AI debug flags
 app:
   ai:
-    debug-calls: false
+    debug-calls: true
     log-prompts: false
 
 # Logging Configuration

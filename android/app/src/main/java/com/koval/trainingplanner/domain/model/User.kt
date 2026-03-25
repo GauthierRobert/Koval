@@ -8,5 +8,10 @@ data class User(
     val ftp: Int? = null,
     val functionalThresholdPace: Int? = null,
     val criticalSwimSpeed: Int? = null,
+    val vo2maxPace: Int? = null,
+    val pace5k: Int? = null,
+    val pace10k: Int? = null,
+    val paceHalfMarathon: Int? = null,
+    val paceMarathon: Int? = null,
     val needsCguAcceptance: Boolean = false,
 )

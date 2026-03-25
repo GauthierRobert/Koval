@@ -64,6 +64,11 @@ class AuthRepository @Inject constructor(
         ftp = ftp,
         functionalThresholdPace = functionalThresholdPace,
         criticalSwimSpeed = criticalSwimSpeed,
+        vo2maxPace = vo2maxPace,
+        pace5k = pace5k,
+        pace10k = pace10k,
+        paceHalfMarathon = paceHalfMarathon,
+        paceMarathon = paceMarathon,
         needsCguAcceptance = needsCguAcceptance ?: false,
     )
 }

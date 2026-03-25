@@ -86,7 +86,7 @@
   align-items: stretch;
   cursor: pointer;
   transition: background 0.12s;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--surface-elevated);
   min-height: 52px;
 }
 
@@ -759,7 +759,7 @@ input[type='date'].form-input::-webkit-calendar-picker-indicator {
 
 .search-result-item {
   padding: 0.6rem 0.75rem;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elevated);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-sm, 6px);
   cursor: pointer;

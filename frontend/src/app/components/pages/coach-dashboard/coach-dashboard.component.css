@@ -874,7 +874,7 @@
   transition: background 0.15s;
 }
 
-.sm-row:hover { background: rgba(255, 255, 255, 0.04); }
+.sm-row:hover { background: var(--surface-elevated); }
 
 .sm-sport { display: flex; align-items: center; color: var(--success-color); }
 
@@ -1021,7 +1021,7 @@
   align-items: center;
   gap: 12px;
   padding: 10px var(--space-md);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--surface-elevated);
   font-size: var(--text-sm);
 }
 

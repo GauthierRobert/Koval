@@ -228,7 +228,7 @@ private fun ZoneSystemCard(system: ZoneSystem, user: User?, modifier: Modifier =
             Spacer(Modifier.height(12.dp))
 
             // Column headers
-            ZoneTableHeader(system.sportType, user)
+            ZoneTableHeader(system.sportType, user, getRunningRef(system, user))
 
             Spacer(Modifier.height(4.dp))
 
@@ -253,7 +253,7 @@ private fun ZoneSystemCard(system: ZoneSystem, user: User?, modifier: Modifier =
 // ── Zone Table Header ──
 
 @Composable
-private fun ZoneTableHeader(sportType: SportType, user: User?) {
+private fun ZoneTableHeader(sportType: SportType, user: User?, runningRef: Int?) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -268,7 +268,6 @@ private fun ZoneTableHeader(sportType: SportType, user: User?) {
         Text("Description", color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(1f))
 
-        // Sport-specific columns
         when (sportType) {
             SportType.CYCLING -> {
                 if (user?.ftp != null) {
@@ -277,7 +276,7 @@ private fun ZoneTableHeader(sportType: SportType, user: User?) {
                 }
             }
             SportType.RUNNING -> {
-                if (user?.functionalThresholdPace != null) {
+                if (runningRef != null) {
                     Text("/km", color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold,
                         modifier = Modifier.width(52.dp))
                     Text("/400m", color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold,
@@ -383,11 +382,11 @@ private fun ZoneRow(
                     }
                 }
                 SportType.RUNNING -> {
-                    val tp = user?.functionalThresholdPace
-                    if (tp != null) {
+                    val ref = getRunningRefForType(referenceType, user)
+                    if (ref != null) {
                         if (zone.low > 0 && zone.high > 0) {
-                            val slowPace = tp.toFloat() / (zone.low.toFloat() / 100f)
-                            val fastPace = tp.toFloat() / (zone.high.toFloat() / 100f)
+                            val slowPace = ref.toFloat() / (zone.low.toFloat() / 100f)
+                            val fastPace = ref.toFloat() / (zone.high.toFloat() / 100f)
 
                             Text(
                                 text = "${formatPace(fastPace)}-${formatPace(slowPace)}",
@@ -397,16 +396,14 @@ private fun ZoneRow(
                                 modifier = Modifier.width(52.dp),
                             )
                             Text(
-                                text = "${formatPace(fastPace * 0.4f)}-${formatPace(slowPace * 0.4f)}",
+                                text = "${formatPaceCompact(fastPace * 0.4f)}-${formatPaceCompact(slowPace * 0.4f)}",
                                 color = zoneColor,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Medium,
                                 modifier = Modifier.width(50.dp),
                             )
-                            val fast100 = (fastPace * 0.1f).toInt()
-                            val slow100 = (slowPace * 0.1f).toInt()
                             Text(
-                                text = "${fast100}-${slow100}s",
+                                text = "${formatPaceCompact(fastPace * 0.1f)}-${formatPaceCompact(slowPace * 0.1f)}",
                                 color = zoneColor,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Medium,
@@ -449,10 +446,38 @@ private fun getZoneColor(index: Int, total: Int): Color {
     return if (index < colors.size) colors[index] else IntensityAnaerobic
 }
 
+/** Resolve the running reference value (seconds/km) for a zone system + user */
+private fun getRunningRefForType(referenceType: String, user: User?): Int? {
+    if (user == null) return null
+    return when (referenceType) {
+        "THRESHOLD_PACE" -> user.functionalThresholdPace
+        "VO2MAX_PACE" -> user.vo2maxPace
+        "PACE_5K" -> user.pace5k
+        "PACE_10K" -> user.pace10k
+        "PACE_HALF_MARATHON" -> user.paceHalfMarathon
+        "PACE_MARATHON" -> user.paceMarathon
+        else -> user.functionalThresholdPace
+    }
+}
+
+/** Convenience to resolve the running ref for a ZoneSystem */
+private fun getRunningRef(system: ZoneSystem, user: User?): Int? {
+    if (system.sportType != SportType.RUNNING) return null
+    return getRunningRefForType(system.referenceType, user)
+}
+
 /** Formats seconds to m:ss */
 private fun formatPace(totalSeconds: Float): String {
     val secs = totalSeconds.toInt()
     val m = secs / 60
     val s = secs % 60
     return "$m:%02d".format(s)
+}
+
+/** Compact format: "SSs" when under 60s, otherwise "m:ss" */
+private fun formatPaceCompact(totalSeconds: Float): String {
+    val secs = totalSeconds.toInt()
+    val m = secs / 60
+    val s = secs % 60
+    return if (m == 0) "${s}s" else "$m:%02d".format(s)
 }

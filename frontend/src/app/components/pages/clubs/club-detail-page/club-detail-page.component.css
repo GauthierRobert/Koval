@@ -168,7 +168,7 @@
 }
 
 .btn-copy:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elevated);
   color: var(--text-color);
 }
 
@@ -208,7 +208,7 @@
 }
 
 .tab-btn:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elevated);
   color: var(--text-color);
 }
 

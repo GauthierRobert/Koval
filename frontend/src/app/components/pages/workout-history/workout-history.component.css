@@ -93,7 +93,7 @@
 }
 
 .sync-result.sync-empty {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elevated);
   border-color: rgba(255, 255, 255, 0.1);
   color: var(--text-muted);
 }
@@ -195,7 +195,7 @@
 }
 
 .session-item:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elevated);
 }
 
 .session-item.active {

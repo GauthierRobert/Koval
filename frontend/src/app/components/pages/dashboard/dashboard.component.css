@@ -285,7 +285,7 @@
 .workout-chip.overdue {
   background: rgba(248, 113, 113, 0.08);
   border-color: rgba(248, 113, 113, 0.3);
-  color: #fca5a5;
+  color: var(--danger-color);
 }
 
 .workout-chip.overdue:hover {
@@ -662,7 +662,7 @@
   transition: background 0.15s;
 }
 
-.next-goal-card:hover { background: rgba(255, 255, 255, 0.04); }
+.next-goal-card:hover { background: var(--surface-elevated); }
 
 .next-goal-label {
   font-size: 0.65rem;

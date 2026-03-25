@@ -28,23 +28,15 @@ public class TrainingMapper {
             training.setEstimatedTss(request.tss());
         }
 
-        // Block mapping + total duration calculation
+        // Block mapping
         if (request.blocks() != null && !request.blocks().isEmpty()) {
             String sport = request.sport() != null ? request.sport().toUpperCase() : "CYCLING";
             List<WorkoutElement> blocks = request.blocks().stream()
                     .map(b -> mapElement(b, sport))
                     .toList();
             training.setBlocks(blocks);
-
-            // Flatten to compute total duration
-            List<WorkoutElement> flat = WorkoutElementFlattener.flatten(blocks);
-            int totalDuration = flat.stream()
-                    .mapToInt(wb -> wb.durationSeconds() != null ? wb.durationSeconds() : 0)
-                    .sum();
-            training.setEstimatedDurationSeconds(totalDuration);
         } else {
             training.setBlocks(new ArrayList<>());
-            training.setEstimatedDurationSeconds(0);
         }
 
         return training;

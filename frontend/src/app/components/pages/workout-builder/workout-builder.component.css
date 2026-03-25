@@ -599,7 +599,7 @@
 }
 
 .set-group .set-header:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elevated);
 }
 
 .set-group:hover .block-actions {
@@ -629,7 +629,7 @@
   padding: 4px 8px;
   border-radius: 4px;
   background: var(--surface-raised);;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--surface-elevated);
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }

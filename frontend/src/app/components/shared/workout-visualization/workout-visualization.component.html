@@ -73,7 +73,6 @@
                       <div class="set-children">
                         @for (leaf of child.elements; track leaf) {
                           <div class="step-card set-child-card" [class.ramp]="leaf.type === 'RAMP'" [style.border-left-color]="getBlockColor(leaf)">
-                            <span class="step-number"></span>
                             <span class="step-label">{{ leaf.label }}</span>
                             <span class="step-duration" [class.estimated]="formatBlockEstimates(leaf).durationEstimated">{{ formatBlockEstimates(leaf).durationEstimated ? '~' : '' }}{{ formatBlockEstimates(leaf).duration }}</span>
                             <span class="step-separator">|</span>
@@ -94,7 +93,6 @@
                     </div>
                   } @else {
                     <div class="step-card set-child-card" [class.ramp]="child.type === 'RAMP'" [style.border-left-color]="getBlockColor(child)">
-                      <span class="step-number"></span>
                       <span class="step-label">{{ child.label }}</span>
                       <span class="step-duration" [class.estimated]="formatBlockEstimates(child).durationEstimated">{{ formatBlockEstimates(child).durationEstimated ? '~' : '' }}{{ formatBlockEstimates(child).duration }}</span>
                       <span class="step-separator">|</span>

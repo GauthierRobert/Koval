@@ -40,6 +40,9 @@
                     (click)="toggleSessionDetail(session)">
                 <div class="session-header">
                   <span class="session-sport-badge">{{ session.sport || ('CLUB_SESSIONS.SESSION_BADGE_GENERAL' | translate) }}</span>
+                  @if (session.clubGroupId) {
+                    <span class="group-badge">{{ getGroupName(session.clubGroupId) }}</span>
+                  }
                   @if (isCancelled(session)) {
                     <span class="cancelled-badge">{{ 'CLUB_SESSIONS.SESSION_BADGE_CANCELLED' | translate }}</span>
                   }
@@ -260,6 +263,9 @@
               <div class="tg-session-header">
                 <div class="tg-session-top">
                   <span class="session-sport-badge small">{{ session.sport || 'GEN' }}</span>
+                  @if (session.clubGroupId) {
+                    <span class="group-badge small">{{ getGroupName(session.clubGroupId) }}</span>
+                  }
                   @if (session.openToAll) {
                     <span class="open-to-all-badge small" [class.opened]="getOpenToAllLabel(session) === ('CLUB_SESSIONS.OPEN_TO_ALL_OPENED' | translate)">{{ getOpenToAllLabel(session) === ('CLUB_SESSIONS.OPEN_TO_ALL_OPENED' | translate) ? 'Open' : getOpenToAllLabel(session) }}</span>
                   }

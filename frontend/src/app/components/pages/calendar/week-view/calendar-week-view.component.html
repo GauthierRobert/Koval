@@ -152,6 +152,7 @@
                   </svg>
                 </a>
                 <button class="btn-primary small" (click)="$event.stopPropagation(); openLinkPicker($any(group.entry).session)">{{ 'CALENDAR_WEEK.BTN_LINK_TO_PLAN' | translate }}</button>
+                <button class="btn-ghost small" (click)="$event.stopPropagation(); openClubSessionLinkPicker($any(group.entry).session)">{{ 'CALENDAR_WEEK.BTN_LINK_TO_CLUB' | translate }}</button>
               </div>
               <div class="workout-info">
                 <div class="title-row">
@@ -181,7 +182,11 @@
               [class.not-joined]="!$any(group.entry).clubSession.joined && !$any(group.entry).clubSession.onWaitingList"
               [class.cancelled]="$any(group.entry).clubSession.cancelled">
               <div class="card-top">
-                <span class="club-session-badge">{{ $any(group.entry).clubSession.clubName }}</span>
+                <span class="club-session-badge">{{ $any(group.entry).clubSession.clubName }}
+                </span>
+                @if ($any(group.entry).clubSession.location) {
+                <span class="club-session-location">{{ $any(group.entry).clubSession.location }}</span>
+                }
                 @if ($any(group.entry).clubSession.cancelled) {
                   <span class="cancelled-badge">{{ 'CALENDAR_WEEK.CLUB_SESSION_BADGE_CANCELLED' | translate }}</span>
                 }
@@ -212,9 +217,6 @@
                   <div class="cancellation-reason">{{ $any(group.entry).clubSession.cancellationReason }}</div>
                 }
                 <div class="club-session-meta">
-                  @if ($any(group.entry).clubSession.location) {
-                    <span class="club-session-location">{{ $any(group.entry).clubSession.location }}</span>
-                  }
                   <span class="club-session-count">
                     <svg class="icon-inline" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     {{ $any(group.entry).clubSession.participantIds.length }}{{ $any(group.entry).clubSession.maxParticipants ? '/' + $any(group.entry).clubSession.maxParticipants : '' }}</span>
@@ -227,9 +229,6 @@
                         <button class="btn-ghost small" (click)="cancelClubSession.emit($any(group.entry).clubSession)">
                           {{ $any(group.entry).clubSession.onWaitingList ? ('CALENDAR_WEEK.CLUB_SESSION_BTN_LEAVE_WAITLIST' | translate) : ('CALENDAR_WEEK.CLUB_SESSION_BTN_CANCEL' | translate) }}
                         </button>
-                      }
-                      @if ($any(group.entry).clubSession.joined && !$any(group.entry).linkedSession) {
-                        <button class="btn-ghost small" (click)="openClubSessionLinkPicker($any(group.entry).clubSession)">{{ 'CALENDAR_WEEK.CLUB_SESSION_BTN_LINK_SESSION' | translate }}</button>
                       }
                     </div>
                   }
@@ -264,10 +263,10 @@
               @if (!$any(entry).clubSession.cancelled) {
                 <div class="club-session-actions">
                   @if (!$any(entry).clubSession.joined && !$any(entry).clubSession.onWaitingList) {
-                    <button class="btn-join" (click)="joinClubSession.emit($any(entry).clubSession)">{{ 'CALENDAR_WEEK.CLUB_SESSION_BTN_JOIN' | translate }}</button>
+                    <button class="btn-primary small" (click)="joinClubSession.emit($any(entry).clubSession)">{{ 'CALENDAR_WEEK.CLUB_SESSION_BTN_JOIN' | translate }}</button>
                   }
                   @if ($any(entry).clubSession.joined || $any(entry).clubSession.onWaitingList) {
-                    <button class="btn-cancel-club" (click)="cancelClubSession.emit($any(entry).clubSession)">
+                    <button class="btn-ghost small" (click)="cancelClubSession.emit($any(entry).clubSession)">
                       {{ $any(entry).clubSession.onWaitingList ? ('CALENDAR_WEEK.CLUB_SESSION_BTN_LEAVE_WAITLIST' | translate) : ('CALENDAR_WEEK.CLUB_SESSION_BTN_CANCEL' | translate) }}
                     </button>
                   }
@@ -349,31 +348,31 @@
 }
 
 @if (clubSessionLinkPickerState !== null) {
-  <div class="link-modal-overlay" (click)="clubSessionLinkPickerState = null; clubSessionLinkTarget = null">
+  <div class="link-modal-overlay" (click)="clubSessionLinkPickerState = null; clubSessionLinkSession = null">
     <div class="link-modal" (click)="$event.stopPropagation()">
       <div class="link-modal-header">
         <span class="link-modal-title">{{ 'CALENDAR_WEEK.CLUB_SESSION_LINK_MODAL_TITLE' | translate }}</span>
-        @if (clubSessionLinkTarget) {
+        @if (clubSessionLinkSession) {
           <span class="link-modal-session">
-            <strong>{{ clubSessionLinkTarget.title }}</strong> &mdash; {{ clubSessionLinkTarget.scheduledAt | date:'MMM d, yyyy' }}
+            <strong>{{ clubSessionLinkSession.title }}</strong> &mdash; {{ clubSessionLinkSession.date | date:'MMM d, yyyy' }}
           </span>
         }
       </div>
       <div class="link-modal-list">
-        @if (nearbySessions$ | async; as nearby) {
+        @if (nearbyClubSessions$ | async; as nearby) {
           @if (!nearby.length) {
             <div class="link-picker-empty">{{ 'CALENDAR_WEEK.CLUB_SESSION_LINK_PICKER_EMPTY' | translate }}</div>
           }
-          @for (sess of nearby; track sess.id) {
-            <div class="link-picker-item" (click)="confirmClubSessionLink(sess.id)">
-              <span>{{ sess.title }}</span>
-              <span style="color: var(--text-muted); font-size: 0.7rem; margin-left: auto;">{{ sess.date | date:'MMM d' }}</span>
+          @for (cs of nearby; track cs.id) {
+            <div class="link-picker-item" (click)="confirmClubSessionLink(cs.id)">
+              <span>{{ cs.clubName }} &mdash; {{ cs.title }}</span>
+              <span style="color: var(--text-muted); font-size: 0.7rem; margin-left: auto;">{{ cs.scheduledAt | date:'MMM d, HH:mm' }}</span>
             </div>
           }
         }
       </div>
       <div class="link-modal-footer">
-        <button class="link-picker-cancel" (click)="clubSessionLinkPickerState = null; clubSessionLinkTarget = null">{{ 'CALENDAR_WEEK.LINK_PICKER_BTN_CANCEL' | translate }}</button>
+        <button class="link-picker-cancel" (click)="clubSessionLinkPickerState = null; clubSessionLinkSession = null">{{ 'CALENDAR_WEEK.LINK_PICKER_BTN_CANCEL' | translate }}</button>
       </div>
     </div>
   </div>

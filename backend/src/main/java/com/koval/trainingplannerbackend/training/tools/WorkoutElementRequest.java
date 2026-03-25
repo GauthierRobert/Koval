@@ -8,50 +8,33 @@ import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record WorkoutElementRequest(
-
-        // ── SET FIELDS ──
-
-        @JsonPropertyDescription("Repetitions for this set (e.g. 10 for '10x...')")
+        @JsonPropertyDescription("SETS : Number of repetitions for a set (e.g. 10 for '10×...')")
         Integer reps,
-
-        @JsonPropertyDescription("Child elements (blocks or nested sets)")
+        @JsonPropertyDescription("SETS : Children elements for a set (leaf blocks or nested sets)")
         List<WorkoutElementRequest> elements,
-
-        @JsonPropertyDescription("Passive rest (sec) between reps")
+        @JsonPropertyDescription("SETS : Passive rest duration (seconds) between repetitions")
         Integer restDur,
-
-        @JsonPropertyDescription("Rest intensity % between reps (default ~40)")
+        @JsonPropertyDescription("SETS : Intensity % during rest between reps (default ~60)")
         Integer restPct,
-
-        // ── LEAF FIELDS ──
-        @JsonPropertyDescription("WARMUP|INTERVAL|STEADY|COOLDOWN|RAMP|FREE|PAUSE (required for leaf blocks, omit for sets)")
+        @JsonPropertyDescription("LEAF FIELDS : WARMUP|INTERVAL|STEADY|COOLDOWN|RAMP|FREE|PAUSE — leaf block type")
         BlockType type,
-
-        @JsonPropertyDescription("sec")
+        @JsonPropertyDescription("LEAF FIELDS : Duration in seconds — exactly one of dur or dist, never both")
         Integer dur,
-
-        @JsonPropertyDescription("m")
+        @JsonPropertyDescription("LEAF FIELDS : Distance in meters — exactly one of dur or dist, never both")
         Integer dist,
-
-        @JsonPropertyDescription("e.g. 'Z2' (required for leaf blocks, omit for sets)")
+        @JsonPropertyDescription("LEAF FIELDS : Zone label, e.g. 'Z2' or 'Z4 VO2max'")
         String label,
-
-        @JsonPropertyDescription("Short description")
+        @JsonPropertyDescription("LEAF FIELDS : Short description of the block (max 10 words)")
         String desc,
-
-        @JsonPropertyDescription("% ref e.g. 90")
+        @JsonPropertyDescription("LEAF FIELDS : Intensity as % of reference (e.g. 90 = 90% FTP). For STEADY/INTERVAL/WARMUP/COOLDOWN")
         Integer pct,
-
-        @JsonPropertyDescription("Ramp start %")
+        @JsonPropertyDescription("LEAF FIELDS : Ramp start % — use with pctTo for RAMP blocks only")
         Integer pctFrom,
-
-        @JsonPropertyDescription("Ramp end %")
+        @JsonPropertyDescription("LEAF FIELDS : Ramp end % — use with pctFrom for RAMP blocks only")
         Integer pctTo,
-
-        @JsonPropertyDescription("RPM/SPM")
+        @JsonPropertyDescription("LEAF FIELDS : Cadence target (RPM for cycling, SPM for running)")
         Integer cad,
-
-        @JsonPropertyDescription("Zone label (e.g. 'Z3'). Use instead of pct for zone-based targeting.")
+        @JsonPropertyDescription("LEAF FIELDS : Zone label (e.g. 'Z3') — use instead of pct for zone-based targeting")
         String zone
 ) {
     public boolean isSet() {

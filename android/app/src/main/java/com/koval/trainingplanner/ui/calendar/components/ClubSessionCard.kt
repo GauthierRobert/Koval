@@ -59,9 +59,9 @@ fun ClubSessionCard(
     modifier: Modifier = Modifier,
 ) {
     val isCancelled = session.cancelled
-    val isParticipant = currentUserId != null && currentUserId in session.participantIds
-    val isOnWaitingList = currentUserId != null && currentUserId in session.waitingList
-    val isJoined = isParticipant || isOnWaitingList
+    val isParticipant = session.joined && !session.onWaitingList
+    val isOnWaitingList = session.onWaitingList
+    val isJoined = session.joined || session.onWaitingList
     val isFull = session.maxParticipants != null && session.participantIds.size >= session.maxParticipants
 
     Surface(
@@ -188,18 +188,17 @@ fun ClubSessionCard(
                 }
 
                 // Waiting list info
-                if (session.waitingList.isNotEmpty() && !isOnWaitingList) {
+                if (isOnWaitingList && session.waitingListPosition > 0) {
                     Text(
-                        text = "${session.waitingList.size} on waiting list",
+                        text = "Position ${session.waitingListPosition} on waiting list",
                         color = Warning,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(start = 46.dp),
                     )
                 } else if (isOnWaitingList) {
-                    val position = session.waitingList.indexOf(currentUserId) + 1
                     Text(
-                        text = "Position $position on waiting list",
+                        text = "On waiting list",
                         color = Warning,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,

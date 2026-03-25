@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -70,8 +71,9 @@ public class ClubSessionService {
         activityService.emitActivity(clubId, ClubActivityType.SESSION_CREATED, userId, session.getId(), session.getTitle());
 
         // Notify active club members about the new session
-        notifyClubMembers(clubId, session, "New Club Session",
-                "\"" + session.getTitle() + "\" has been scheduled",
+        notifyClubMembers(clubId, session,
+                getClubName(clubId) + " — New Session",
+                "\"" + session.getTitle() + "\" — " + formatSessionDate(session),
                 "SESSION_CREATED", "clubSessionCreated");
 
         return session;
@@ -105,11 +107,12 @@ public class ClubSessionService {
 
         // Notify participants about cancellation
         if (!session.getParticipantIds().isEmpty()) {
+            String body = getClubName(clubId) + " — \"" + session.getTitle() + "\" (" + formatSessionDate(session) + ") has been cancelled"
+                    + (reason != null && !reason.isBlank() ? ": " + reason : "");
             notificationService.sendToUsers(
                     session.getParticipantIds(),
                     "Session Cancelled",
-                    "\"" + session.getTitle() + "\" has been cancelled"
-                            + (reason != null && !reason.isBlank() ? ": " + reason : ""),
+                    body,
                     Map.of("type", "SESSION_CANCELLED",
                            "clubId", clubId,
                            "sessionId", sessionId),
@@ -174,7 +177,7 @@ public class ClubSessionService {
         notificationService.sendToUsers(
                 List.of(promoted.userId()),
                 "You're In!",
-                "A spot opened in " + session.getTitle() + ". You've been automatically added.",
+                getClubName(session.getClubId()) + " — A spot opened in \"" + session.getTitle() + "\" (" + formatSessionDate(session) + "). You've been automatically added.",
                 Map.of("type", "WAITING_LIST_PROMOTED",
                        "clubId", session.getClubId(),
                        "sessionId", session.getId()),
@@ -403,6 +406,16 @@ public class ClubSessionService {
                            "sessionId", session.getId()),
                     preferenceType);
         }
+    }
+
+    private String getClubName(String clubId) {
+        return clubRepository.findById(clubId).map(Club::getName).orElse("Club");
+    }
+
+    private static final DateTimeFormatter SESSION_DATE_FMT = DateTimeFormatter.ofPattern("EEE d MMM, HH:mm");
+
+    private String formatSessionDate(ClubTrainingSession session) {
+        return session.getScheduledAt() != null ? session.getScheduledAt().format(SESSION_DATE_FMT) : "";
     }
 
     void enrichFromLinkedTraining(ClubTrainingSession session) {

@@ -178,7 +178,6 @@ class CalendarViewModel @Inject constructor(
 
     // Join/leave club session
     fun joinSession(session: ClubTrainingSession) {
-        val userId = _uiState.value.currentUserId ?: return
         viewModelScope.launch {
             // Optimistic update
             _uiState.update { state ->
@@ -186,24 +185,23 @@ class CalendarViewModel @Inject constructor(
                     if (it.id == session.id) {
                         val isFull = it.maxParticipants != null && it.participantIds.size >= it.maxParticipants
                         if (isFull) {
-                            it.copy(waitingList = it.waitingList + userId)
+                            it.copy(onWaitingList = true, waitingListPosition = 0)
                         } else {
-                            it.copy(participantIds = it.participantIds + userId)
+                            it.copy(joined = true)
                         }
                     } else it
                 })
             }
             try {
                 calendarRepository.joinSession(session.clubId, session.id)
+                // Reload to get accurate server state
+                loadSchedule(isRefresh = true)
             } catch (_: Exception) {
                 // Revert on failure
                 _uiState.update { state ->
                     state.copy(clubSessions = state.clubSessions.map {
                         if (it.id == session.id) {
-                            it.copy(
-                                participantIds = it.participantIds - userId,
-                                waitingList = it.waitingList - userId,
-                            )
+                            it.copy(joined = false, onWaitingList = false, waitingListPosition = 0)
                         } else it
                     })
                 }
@@ -212,31 +210,31 @@ class CalendarViewModel @Inject constructor(
     }
 
     fun leaveSession(session: ClubTrainingSession) {
-        val userId = _uiState.value.currentUserId ?: return
         viewModelScope.launch {
-            val wasParticipant = userId in session.participantIds
-            val wasWaiting = userId in session.waitingList
+            val prevJoined = session.joined
+            val prevOnWaitingList = session.onWaitingList
+            val prevWaitingListPosition = session.waitingListPosition
             // Optimistic update
             _uiState.update { state ->
                 state.copy(clubSessions = state.clubSessions.map {
                     if (it.id == session.id) {
-                        it.copy(
-                            participantIds = it.participantIds - userId,
-                            waitingList = it.waitingList - userId,
-                        )
+                        it.copy(joined = false, onWaitingList = false, waitingListPosition = 0)
                     } else it
                 })
             }
             try {
                 calendarRepository.leaveSession(session.clubId, session.id)
+                loadSchedule(isRefresh = true)
             } catch (_: Exception) {
                 // Revert on failure
                 _uiState.update { state ->
                     state.copy(clubSessions = state.clubSessions.map {
                         if (it.id == session.id) {
-                            if (wasParticipant) it.copy(participantIds = it.participantIds + userId)
-                            else if (wasWaiting) it.copy(waitingList = it.waitingList + userId)
-                            else it
+                            it.copy(
+                                joined = prevJoined,
+                                onWaitingList = prevOnWaitingList,
+                                waitingListPosition = prevWaitingListPosition,
+                            )
                         } else it
                     })
                 }
