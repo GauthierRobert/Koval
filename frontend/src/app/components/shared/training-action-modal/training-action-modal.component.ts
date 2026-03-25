@@ -128,8 +128,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
 
   get showDatePicker(): boolean {
     if (this.mode === 'session') return false;
-    return !(this.mode === 'self-schedule' && !this.preselectedDate);
-
+    return true;
   }
 
   get showAthleteSelect(): boolean {
@@ -150,8 +149,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
 
   get showTabs(): boolean {
     if (this.preselectedTrainingId) return false;
-    return !(this.mode === 'self-schedule' && !this.preselectedDate);
-
+    return true;
   }
 
   get showSportSelector(): boolean {
@@ -230,6 +228,8 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
 
       if (this.preselectedDate) {
         this.selectedDate = this.preselectedDate;
+      } else if (this.mode === 'self-schedule') {
+        this.selectedDate = new Date().toISOString().slice(0, 10);
       }
       if (this.preselectedTrainingId) {
         this.selectedTrainingId = this.preselectedTrainingId;

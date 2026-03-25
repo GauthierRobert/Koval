@@ -12,24 +12,24 @@
     <aside class="pmc-sidebar glass">
       <div class="section-header"><h3>{{ 'PMC.SIDEBAR_PERFORMANCE' | translate }}</h3></div>
 
-      @if (user$ | async; as user) {
+      @if (latestMetrics$ | async; as m) {
         <div class="load-badges">
           <div class="load-badge ctl">
             <span class="badge-label">CTL</span>
-            <span class="badge-value">{{ user.ctl | number:'1.0-0' }}</span>
+            <span class="badge-value">{{ m.ctl | number:'1.0-0' }}</span>
             <span class="badge-desc">{{ 'PMC.BADGE_FITNESS' | translate }}</span>
           </div>
           <div class="load-badge atl">
             <span class="badge-label">ATL</span>
-            <span class="badge-value">{{ user.atl | number:'1.0-0' }}</span>
+            <span class="badge-value">{{ m.atl | number:'1.0-0' }}</span>
             <span class="badge-desc">{{ 'PMC.BADGE_FATIGUE' | translate }}</span>
           </div>
           <div class="load-badge tsb"
-            [class.positive]="(user.tsb ?? 0) >= 0"
-            [class.negative]="(user.tsb ?? 0) < 0">
+            [class.positive]="(m.tsb ?? 0) >= 0"
+            [class.negative]="(m.tsb ?? 0) < 0">
             <span class="badge-label">TSB</span>
-            <span class="badge-value">{{ (user.tsb ?? 0) >= 0 ? '+' : '' }}{{ user.tsb | number:'1.0-0' }}</span>
-            <span class="badge-desc">{{ (user.tsb ?? 0) >= 0 ? ('PMC.BADGE_TSB_FRESH' | translate) : ('PMC.BADGE_TSB_FATIGUED' | translate) }}</span>
+            <span class="badge-value">{{ (m.tsb ?? 0) >= 0 ? '+' : '' }}{{ m.tsb | number:'1.0-0' }}</span>
+            <span class="badge-desc">{{ (m.tsb ?? 0) >= 0 ? ('PMC.BADGE_TSB_FRESH' | translate) : ('PMC.BADGE_TSB_FATIGUED' | translate) }}</span>
           </div>
         </div>
       }

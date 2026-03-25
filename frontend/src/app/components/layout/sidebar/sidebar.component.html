@@ -5,6 +5,7 @@
   <div class="sidebar-content">
     <app-training-history></app-training-history>
   </div>
+  <!--TODO temporary
   <div class="sidebar-footer">
     <div class="simulation-panel">
       <label class="switch">
@@ -13,23 +14,6 @@
       </label>
       <span class="toggle-label">{{ 'SIDEBAR.SIMULATE_TRAINER_LABEL' | translate }}</span>
     </div>
-    @if (user$ | async; as user) {
-      @if (user.role === 'ATHLETE') {
-        <div class="join-section">
-          <span class="join-title">{{ 'SIDEBAR.JOIN_A_TEAM_TITLE' | translate }}</span>
-          <div class="join-row">
-            <input class="join-input" [(ngModel)]="inviteCode" (keydown.enter)="redeemCode()"
-              [placeholder]="'SIDEBAR.JOIN_CODE_PLACEHOLDER' | translate"
-              maxlength="8" />
-            <button class="join-btn" (click)="redeemCode()" [disabled]="(joining$ | async) || !inviteCode.trim()">
-              {{ (joining$ | async) ? ('SIDEBAR.JOIN_BTN_LOADING' | translate) : ('SIDEBAR.JOIN_BTN_LABEL' | translate) }}
-            </button>
-          </div>
-          @if (joinError) {
-            <span class="join-error">{{ joinError }}</span>
-          }
-        </div>
-      }
-    }
   </div>
+  -->
 </aside>

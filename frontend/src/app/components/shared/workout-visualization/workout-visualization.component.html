@@ -2,12 +2,7 @@
   <div class="viz-container" [class.compact]="compact">
     @if (!compact) {
       <div class="header">
-        <div class="title-section">
-          <h1>{{ training.title }}</h1>
-          @if (training.description) {
-            <p class="description">{{ training.description }}</p>
-          }
-        </div>
+        <h1>{{ training.title }}</h1>
         <div class="action-buttons">
           <div class="export-dropdown">
             <button class="export-btn" (click)="toggleExportDropdown($event)">
@@ -38,6 +33,9 @@
           } -->
         </div>
       </div>
+      @if (training.description) {
+        <p class="description">{{ training.description }}</p>
+      }
 
       <app-training-action-modal [isOpen]="isScheduleModalOpen" mode="self-schedule"
         [preselectedTrainingId]="training!.id"
@@ -77,7 +75,6 @@
                           <div class="step-card set-child-card" [class.ramp]="leaf.type === 'RAMP'" [style.border-left-color]="getBlockColor(leaf)">
                             <span class="step-number"></span>
                             <span class="step-label">{{ leaf.label }}</span>
-                            <span class="step-desc">{{ leaf.description ?? '' }}</span>
                             <span class="step-duration" [class.estimated]="formatBlockEstimates(leaf).durationEstimated">{{ formatBlockEstimates(leaf).durationEstimated ? '~' : '' }}{{ formatBlockEstimates(leaf).duration }}</span>
                             <span class="step-separator">|</span>
                             <span class="step-distance" [class.estimated]="formatBlockEstimates(leaf).distanceEstimated">{{ formatBlockEstimates(leaf).distanceEstimated ? '~' : '' }}{{ formatBlockEstimates(leaf).distance }}</span>
@@ -90,6 +87,7 @@
                                 {{ calculateIntensityValue(getEffectiveIntensity(leaf, 'START')) }}&rarr;{{ calculateIntensityValue(getEffectiveIntensity(leaf, 'END')) }}
                               }
                             </span>
+                            <span class="step-desc">{{ leaf.description ?? '' }}</span>
                           </div>
                         }
                       </div>
@@ -98,7 +96,6 @@
                     <div class="step-card set-child-card" [class.ramp]="child.type === 'RAMP'" [style.border-left-color]="getBlockColor(child)">
                       <span class="step-number"></span>
                       <span class="step-label">{{ child.label }}</span>
-                      <span class="step-desc">{{ child.description ?? '' }}</span>
                       <span class="step-duration" [class.estimated]="formatBlockEstimates(child).durationEstimated">{{ formatBlockEstimates(child).durationEstimated ? '~' : '' }}{{ formatBlockEstimates(child).duration }}</span>
                       <span class="step-separator">|</span>
                       <span class="step-distance" [class.estimated]="formatBlockEstimates(child).distanceEstimated">{{ formatBlockEstimates(child).distanceEstimated ? '~' : '' }}{{ formatBlockEstimates(child).distance }}</span>
@@ -111,6 +108,7 @@
                           {{ calculateIntensityValue(getEffectiveIntensity(child, 'START')) }}&rarr;{{ calculateIntensityValue(getEffectiveIntensity(child, 'END')) }}
                         }
                       </span>
+                      <span class="step-desc">{{ child.description ?? '' }}</span>
                     </div>
                   }
                 }
@@ -121,7 +119,6 @@
               [style.border-left-color]="getBlockColor(block)">
               <span class="step-number">#{{ i + 1 }}</span>
               <span class="step-label">{{ block.label }}</span>
-              <span class="step-desc">{{ block.description ?? '' }}</span>
               @if (!(formatBlockEstimates(block).durationEstimated && block.type ==='PAUSE')) {
                 <span class="step-duration" [class.estimated]="formatBlockEstimates(block).durationEstimated">{{ formatBlockEstimates(block).durationEstimated ? '~' : '' }}{{ formatBlockEstimates(block).duration }}</span>
               }
@@ -140,6 +137,7 @@
                   }
                 </span>
               }
+              <span class="step-desc">{{ block.description ?? '' }}</span>
             </div>
           }
         }

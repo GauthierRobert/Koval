@@ -37,6 +37,16 @@ export class PmcPageComponent implements OnInit {
     private pmcDataSubject = new BehaviorSubject<PmcDataPoint[]>([]);
     pmcData$ = this.pmcDataSubject.asObservable();
 
+    /** Latest real CTL/ATL/TSB derived from PMC data (not cached user fields). */
+    latestMetrics$ = this.pmcData$.pipe(
+        map(data => {
+            const real = data.filter(d => !d.predicted);
+            if (!real.length) return null;
+            const latest = real[real.length - 1];
+            return { ctl: latest.ctl, atl: latest.atl, tsb: latest.tsb };
+        }),
+    );
+
     // Dynamic loading state
     private loadedFrom = '';
     private loadedTo = '';

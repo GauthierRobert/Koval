@@ -193,7 +193,7 @@
       border-radius: 5px;
       padding: 4px 8px;
       display: grid;
-      grid-template-columns: 24px 56px 1fr 52px 8px 52px auto 56px;
+      grid-template-columns: 24px 56px 52px 8px 52px auto 56px;
       align-items: center;
       gap: 6px;
       font-family: 'JetBrains Mono', monospace;
@@ -201,7 +201,7 @@
     }
 
     .step-card.edit-mode {
-      grid-template-columns: 24px 56px 1fr 52px 8px 52px auto 56px auto;
+      grid-template-columns: 24px 56px 52px 8px 52px auto 56px auto;
     }
 
     .step-number {
@@ -219,10 +219,14 @@
     .step-desc {
       color: var(--text-muted);
       font-weight: 400;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: pre-line;
+      grid-column: 1 / -1;
       min-width: 0;
+      line-height: 1.4;
+    }
+
+    .step-desc:empty {
+      display: none;
     }
 
     .step-duration,
@@ -268,14 +272,14 @@
 
     .step-card.ramp .step-intensity {
       grid-row: 2;
-      grid-column: 1 / 5;
+      grid-column: 1 / 4;
       text-align: left;
       padding-left: 24px;
     }
 
     .step-card.ramp .step-absolute {
       grid-row: 2;
-      grid-column: 5 / -1;
+      grid-column: 4 / -1;
       text-align: right;
     }
 

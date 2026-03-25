@@ -63,6 +63,7 @@ export class SessionAnalysisComponent implements OnDestroy {
     selectedZoneSystemId$ = new BehaviorSubject<string | null>(null);
 
     private readonly ZONE_COLORS = ['#b2bec3', '#3498db', '#2ecc71', '#f1c40f', '#e67e22', '#e74c3c', '#c0392b'];
+    private readonly MAX_MERGE_ZONE_GAP = 2;
 
     private readonly defaultZonesBySport: Record<SportType, Zone[]> = {
         CYCLING: [
@@ -298,37 +299,13 @@ export class SessionAnalysisComponent implements OnDestroy {
         const minBlockSec = Math.max(5, smoothFactor * 2);
         let blocks = this.groupZoneRuns(smoothed, records, percents, zones);
 
-        // Pass 4 — merge short blocks into largest neighbor, repeat until stable
-        let changed = true;
-        while (changed) {
-            changed = false;
-            const next: ZoneBlock[] = [];
-            for (let i = 0; i < blocks.length; i++) {
-                const b = blocks[i];
-                if (b.durationSeconds < minBlockSec && blocks.length > 1) {
-                    // Pick neighbor with longest duration
-                    const prev = next.length > 0 ? next[next.length - 1] : null;
-                    const nxt = i + 1 < blocks.length ? blocks[i + 1] : null;
-                    const target = !prev ? nxt : !nxt ? prev :
-                        (prev.durationSeconds >= nxt.durationSeconds ? prev : nxt);
-                    if (target && target === prev) {
-                        this.mergeBlockInto(prev, b, records, percents);
-                        changed = true;
-                        continue;
-                    } else if (target && target === nxt) {
-                        this.mergeBlockInto(nxt, b, records, percents);
-                        changed = true;
-                        next.push(nxt);
-                        i++; // skip nxt since we already consumed it
-                        continue;
-                    }
-                }
-                next.push(b);
-            }
-            blocks = next;
-            // Also merge any consecutive same-zone blocks created by merges
-            blocks = this.collapseAdjacentSameZone(blocks, records, percents, zones);
-        }
+        // Pass 4 — merge short blocks (zone-distance-aware, bidirectional)
+        // 4a: Forward pass
+        blocks = this.mergeShortBlocksSinglePass(blocks, minBlockSec, this.MAX_MERGE_ZONE_GAP, records, percents, zones);
+        // 4b: Reverse pass — eliminates forward-only directional bias
+        blocks.reverse();
+        blocks = this.mergeShortBlocksSinglePass(blocks, minBlockSec, this.MAX_MERGE_ZONE_GAP, records, percents, zones);
+        blocks.reverse();
 
         // Pass 5 — reclassify each block based on its average percent (= avg power / reference)
         for (const b of blocks) {
@@ -372,6 +349,61 @@ export class SessionAnalysisComponent implements OnDestroy {
             }
         }
         return out;
+    }
+
+    private mergeShortBlocksSinglePass(
+        blocks: ZoneBlock[], minBlockSec: number, maxZoneGap: number,
+        records: FitRecord[], percents: number[], zones: Zone[],
+    ): ZoneBlock[] {
+        let changed = true;
+        while (changed) {
+            changed = false;
+            const next: ZoneBlock[] = [];
+            for (let i = 0; i < blocks.length; i++) {
+                const b = blocks[i];
+                if (b.durationSeconds < minBlockSec && blocks.length > 1) {
+                    const prev = next.length > 0 ? next[next.length - 1] : null;
+                    const nxt = i + 1 < blocks.length ? blocks[i + 1] : null;
+
+                    // Zone-distance gating
+                    const prevDist = prev ? Math.abs(prev.zoneIndex - b.zoneIndex) : Infinity;
+                    const nxtDist = nxt ? Math.abs(nxt.zoneIndex - b.zoneIndex) : Infinity;
+                    const prevOk = prev !== null && prevDist <= maxZoneGap;
+                    const nxtOk = nxt !== null && nxtDist <= maxZoneGap;
+
+                    if (!prevOk && !nxtOk) {
+                        next.push(b);
+                        continue;
+                    }
+
+                    // Prefer closer zone; tiebreak by duration
+                    let target: ZoneBlock | null;
+                    if (prevOk && nxtOk) {
+                        if (prevDist < nxtDist) target = prev;
+                        else if (nxtDist < prevDist) target = nxt;
+                        else target = prev!.durationSeconds >= nxt!.durationSeconds ? prev : nxt;
+                    } else {
+                        target = prevOk ? prev : nxt;
+                    }
+
+                    if (target === prev) {
+                        this.mergeBlockInto(prev!, b, records, percents);
+                        changed = true;
+                        continue;
+                    } else if (target === nxt) {
+                        this.mergeBlockInto(nxt!, b, records, percents);
+                        changed = true;
+                        next.push(nxt!);
+                        i++;
+                        continue;
+                    }
+                }
+                next.push(b);
+            }
+            blocks = next;
+            blocks = this.collapseAdjacentSameZone(blocks, records, percents, zones);
+        }
+        return blocks;
     }
 
     private buildBlock(zi: number, start: number, end: number, records: FitRecord[], percents: number[], zones: Zone[]): ZoneBlock {

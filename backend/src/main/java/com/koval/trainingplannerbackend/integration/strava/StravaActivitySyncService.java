@@ -55,8 +55,8 @@ public class StravaActivitySyncService {
 
         // Determine after epoch: last sync, or 30 days before account creation for first sync
         LocalDateTime after = user.getStravaLastSyncAt() != null
-                ? user.getStravaLastSyncAt().minusDays(1)
-                : user.getCreatedAt().minusDays(1);
+                ? user.getStravaLastSyncAt()
+                : user.getCreatedAt().minusDays(7);
         long afterEpoch = after.toEpochSecond(ZoneOffset.UTC);
 
         // Fetch activities from Strava
