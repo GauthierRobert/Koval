@@ -94,6 +94,9 @@
 }
 
 .session-time-inline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 11px;
   font-weight: 600;
   color: var(--text-muted);
@@ -360,8 +363,8 @@
 }
 
 .unlink-btn {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -719,7 +722,7 @@
 }
 
 .time-grid-session.no-training {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-raised);;
   border: 1px solid var(--glass-border);
 }
 .tg-session-header{
@@ -912,74 +915,6 @@
   border-top: 1px solid var(--glass-border);
 }
 
-/* --- Buttons --- */
-.btn-primary {
-  background: var(--accent-color);
-  color: #000;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 6px 16px;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-
-.btn-primary:hover:not(:disabled) {
-  opacity: 0.85;
-}
-
-.btn-primary:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.btn-primary.small {
-  padding: 1px 10px;
-  font-size: 8px;
-}
-
-.btn-secondary {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-color);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  padding: 6px 14px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.btn-ghost {
-  background: none;
-  color: var(--text-muted);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  padding: 5px 12px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btn-ghost:hover {
-  background: rgba(248, 113, 113, 0.12);
-  color: #f87171;
-  border-color: rgba(248, 113, 113, 0.3);
-}
-
-.btn-ghost.small {
-  padding: 1px 10px;
-  font-size: 8px;
-}
 
 /* --- Edit button --- */
 .edit-btn-corner {

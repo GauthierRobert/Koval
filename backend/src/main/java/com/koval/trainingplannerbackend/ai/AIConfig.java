@@ -137,7 +137,7 @@ public class AIConfig {
                                        ZoneToolService zoneToolService) {
         return ChatClient.builder(chatModel)
                 .defaultSystem(loadPrompt("action-zone"))
-                .defaultOptions(haikuActionOptions())
+                .defaultOptions(sonnetOptions())
                 .defaultTools(zoneToolService)
                 .build();
     }
@@ -147,7 +147,7 @@ public class AIConfig {
                                                   AIActionToolService aiActionToolService) {
         return ChatClient.builder(chatModel)
                 .defaultSystem(loadPrompt("action-training-session"))
-                .defaultOptions(haikuActionOptions())
+                .defaultOptions(sonnetCachedActionOptions())
                 .defaultTools(aiActionToolService)
                 .build();
     }
@@ -157,7 +157,7 @@ public class AIConfig {
     public ChatClient actionNotationTrainingClient(AnthropicChatModel chatModel,
                                                    NotationToolService notationToolService) {
         return ChatClient.builder(chatModel)
-                .defaultSystem(loadPrompt("action-notation"))
+                .defaultSystem(loadPrompt("action-create-training"))
                 .defaultOptions(sonnetCachedActionOptions())
                 .defaultTools(notationToolService)
                 .build();

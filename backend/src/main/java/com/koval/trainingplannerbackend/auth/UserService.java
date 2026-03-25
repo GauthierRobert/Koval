@@ -23,7 +23,7 @@ public class UserService {
     }
 
     public User findOrCreateFromStrava(String stravaId, String displayName, String profilePicture,
-            String accessToken, String refreshToken, Long expiresAt) {
+            String accessToken, String refreshToken, Long expiresAt, String email) {
         Optional<User> existing = userRepository.findByStravaId(stravaId);
 
         if (existing.isPresent()) {
@@ -35,11 +35,26 @@ public class UserService {
             return userRepository.save(user);
         }
 
+        // Reconcile by email: if a user with the same email exists (e.g. from Google), link Strava
+        if (email != null && !email.isBlank()) {
+            Optional<User> byEmail = userRepository.findByEmail(email);
+            if (byEmail.isPresent()) {
+                User user = byEmail.get();
+                user.setStravaId(stravaId);
+                user.setStravaAccessToken(accessToken);
+                user.setStravaRefreshToken(refreshToken);
+                user.setStravaTokenExpiresAt(expiresAt);
+                user.setLastLogin(LocalDateTime.now());
+                return userRepository.save(user);
+            }
+        }
+
         User newUser = new User();
         newUser.setStravaId(stravaId);
         newUser.setAuthProvider(AuthProvider.STRAVA);
         newUser.setDisplayName(displayName);
         newUser.setProfilePicture(profilePicture);
+        newUser.setEmail(email);
         newUser.setStravaAccessToken(accessToken);
         newUser.setStravaRefreshToken(refreshToken);
         newUser.setStravaTokenExpiresAt(expiresAt);
@@ -201,6 +216,10 @@ public class UserService {
         map.put("hasCoach", groupService.athleteHasCoach(user.getId()));
         List<Group> userGroups = groupService.getGroupsForAthlete(user.getId());
         map.put("groups", userGroups.stream().map(Group::getName).toList());
+
+        map.put("ctl", user.getCtl());
+        map.put("atl", user.getAtl());
+        map.put("tsb", user.getTsb());
 
         map.put("customZoneReferenceValues", user.getCustomZoneReferenceValues());
         map.put("needsOnboarding", user.isNeedsOnboarding());

@@ -57,7 +57,7 @@
   width: 100%;
   min-height: 300px;
   border: none;
-  background: white;
+  background: var(--bg-color, #0f0f11);
   border-radius: var(--radius-sm, 6px);
 }
 

@@ -232,7 +232,7 @@
 }
 
 .system-card:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-raised);;
 }
 
 .system-card.selected {
@@ -521,7 +521,7 @@
   grid-template-columns: 28px 72px 180px 1fr 36px;
   padding: 6px 0;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--surface-raised);;
   transition: background 0.15s;
 }
 

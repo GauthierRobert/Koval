@@ -58,7 +58,8 @@ public class AuthController {
                     tokenResponse.getProfilePicture(),
                     tokenResponse.getAccessToken(),
                     tokenResponse.getRefreshToken(),
-                    tokenResponse.getExpiresAt());
+                    tokenResponse.getExpiresAt(),
+                    tokenResponse.getEmail());
 
             String jwt = generateJwtToken(user);
 

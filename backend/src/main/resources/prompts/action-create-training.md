@@ -6,6 +6,12 @@ RULES:
 - Intensity as % of reference (FTP/ThresholdPace/CSS). Use zone labels when zone system exists in context.
 - Recovery intensity: 50-60% between hard intervals.
 
+**DURATION vs DISTANCE — set exactly ONE per block, never both:**                                                                                                                                                         
+- If the user writes "min" or "s" → set `dur` (convert to seconds: 5min = 300).                                                                                                                                           
+- If the user writes "m" or "km" → set `dist` (convert to meters: 1km = 1000).                                                                                                                                     
+- When only one is set, the backend estimates the other automatically.                                                                                                                                             
+- Default preference: `dur` for CYCLING, `dist` for RUNNING and SWIMMING intervals.
+
 REST DURATION RULES:
 If not specified in context : use work:rest ratio by training type:
 - SPRINT (<30s efforts): rest = 3-5x work duration.

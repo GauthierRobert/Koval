@@ -86,7 +86,7 @@ export class CreateWithAiModalComponent implements OnChanges {
     switch (this.actionType) {
       case 'ZONE_CREATION':
         return this.translate.instant('CREATE_WITH_AI.PLACEHOLDER_PROMPT_ZONE_CREATION');
-      case 'TRAINING_FROM_NOTATION':
+      case 'TRAINING_CREATION':
         return this.translate.instant('CREATE_WITH_AI.PLACEHOLDER_PROMPT_TRAINING_NOTATION');
       default:
         return this.translate.instant('CREATE_WITH_AI.PLACEHOLDER_PROMPT_DEFAULT');
@@ -94,11 +94,11 @@ export class CreateWithAiModalComponent implements OnChanges {
   }
 
   get showSportSelector(): boolean {
-    return this.actionType === 'TRAINING_FROM_NOTATION' || this.actionType === 'TRAINING_WITH_SESSION';
+    return this.actionType === 'TRAINING_CREATION' || this.actionType === 'TRAINING_WITH_SESSION';
   }
 
   get showTagSelector(): boolean {
-    return (this.actionType === 'TRAINING_WITH_SESSION' || this.actionType === 'TRAINING_FROM_NOTATION')
+    return (this.actionType === 'TRAINING_WITH_SESSION' || this.actionType === 'TRAINING_CREATION')
         && !!this.context.clubId;
   }
 

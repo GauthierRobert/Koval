@@ -29,6 +29,6 @@ public record TrainingRequest(
     @JsonPropertyDescription("Blocks")
     List<WorkoutElementRequest> blocks,
 
-    @JsonPropertyDescription("Tags e.g. 'club-btc'")
-    List<String> tags
+    @JsonPropertyDescription("GroupIds")
+    List<String> groupIds
 ) {}

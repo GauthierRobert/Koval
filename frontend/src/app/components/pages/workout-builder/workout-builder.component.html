@@ -113,21 +113,30 @@
             <input type="number" [(ngModel)]="setReps" min="1" max="20" />
           </div>
           <div class="set-form-row">
-            <label>{{ 'BUILDER.REST_DURATION' | translate }}</label>
-            <input type="number" [(ngModel)]="setRestDuration" min="0" /> s
-          </div>
-          <div class="set-form-row">
             <label class="passive-rest-toggle">
-              <input type="checkbox" [(ngModel)]="setPassiveRest" />
-              {{ 'BUILDER.PASSIVE_REST' | translate }}
+              <input type="checkbox" [(ngModel)]="setNoRest" />
+              {{ 'BUILDER.NO_REST' | translate }}
             </label>
-            <span class="rest-hint">{{ setPassiveRest ? ('BUILDER.PASSIVE_REST_HINT' | translate) : ('BUILDER.ACTIVE_REST_HINT' | translate) }}</span>
+            <span class="rest-hint">{{ 'BUILDER.NO_REST_HINT' | translate }}</span>
           </div>
-          @if (!setPassiveRest) {
+          @if (!setNoRest) {
             <div class="set-form-row">
-              <label>{{ 'BUILDER.REST_INTENSITY' | translate }}</label>
-              <input type="number" [(ngModel)]="setRestIntensity" min="1" max="100" /> %
+              <label>{{ 'BUILDER.REST_DURATION' | translate }}</label>
+              <input type="number" [(ngModel)]="setRestDuration" min="0" /> s
             </div>
+            <div class="set-form-row">
+              <label class="passive-rest-toggle">
+                <input type="checkbox" [(ngModel)]="setPassiveRest" />
+                {{ 'BUILDER.PASSIVE_REST' | translate }}
+              </label>
+              <span class="rest-hint">{{ setPassiveRest ? ('BUILDER.PASSIVE_REST_HINT' | translate) : ('BUILDER.ACTIVE_REST_HINT' | translate) }}</span>
+            </div>
+            @if (!setPassiveRest) {
+              <div class="set-form-row">
+                <label>{{ 'BUILDER.REST_INTENSITY' | translate }}</label>
+                <input type="number" [(ngModel)]="setRestIntensity" min="1" max="100" /> %
+              </div>
+            }
           }
           <div class="set-form-actions">
             <button class="btn-ghost" (click)="showSetForm = false; selectedForSet.clear()">{{ 'COMMON.CANCEL' | translate }}</button>
@@ -323,22 +332,32 @@
         </div>
 
         <div class="form-field">
-          <label>{{ 'BUILDER.REST_DURATION' | translate }} (s)</label>
-          <input type="number" [(ngModel)]="editSetRestDuration" min="0" />
+          <label class="passive-rest-toggle">
+            <input type="checkbox" [(ngModel)]="editSetNoRest" />
+            {{ 'BUILDER.NO_REST' | translate }}
+          </label>
+          <span class="rest-hint">{{ 'BUILDER.NO_REST_HINT' | translate }}</span>
         </div>
 
-        <div class="form-field">
-          <label class="passive-rest-toggle">
-            <input type="checkbox" [(ngModel)]="editSetPassiveRest" />
-            {{ 'BUILDER.PASSIVE_REST' | translate }}
-          </label>
-          <span class="rest-hint">{{ editSetPassiveRest ? ('BUILDER.PASSIVE_REST_HINT' | translate) : ('BUILDER.ACTIVE_REST_HINT' | translate) }}</span>
-        </div>
-        @if (!editSetPassiveRest) {
+        @if (!editSetNoRest) {
           <div class="form-field">
-            <label>{{ 'BUILDER.REST_INTENSITY' | translate }} (%)</label>
-            <input type="number" [(ngModel)]="editSetRestIntensity" min="1" max="100" />
+            <label>{{ 'BUILDER.REST_DURATION' | translate }} (s)</label>
+            <input type="number" [(ngModel)]="editSetRestDuration" min="0" />
           </div>
+
+          <div class="form-field">
+            <label class="passive-rest-toggle">
+              <input type="checkbox" [(ngModel)]="editSetPassiveRest" />
+              {{ 'BUILDER.PASSIVE_REST' | translate }}
+            </label>
+            <span class="rest-hint">{{ editSetPassiveRest ? ('BUILDER.PASSIVE_REST_HINT' | translate) : ('BUILDER.ACTIVE_REST_HINT' | translate) }}</span>
+          </div>
+          @if (!editSetPassiveRest) {
+            <div class="form-field">
+              <label>{{ 'BUILDER.REST_INTENSITY' | translate }} (%)</label>
+              <input type="number" [(ngModel)]="editSetRestIntensity" min="1" max="100" />
+            </div>
+          }
         }
 
         <div class="set-contents">

@@ -62,12 +62,12 @@
     </div>
 
     <!-- AI modal -->
-    <app-training-action-modal
+    <app-create-with-ai-modal
       [isOpen]="showAiModal"
-      mode="self-schedule"
+      actionType="TRAINING_CREATION"
       (closed)="showAiModal = false"
-      (completed)="onAiCreated($event)">
-    </app-training-action-modal>
+      (created)="onAiCreated($event)">
+    </app-create-with-ai-modal>
 
     <!-- Content area -->
     <div class="content-area">

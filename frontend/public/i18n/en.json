@@ -134,7 +134,7 @@
     "DELETE_CONFIRM": "Delete \"{{title}}\"?"
   },
   "LOGIN": {
-    "SUBTITLE": "AI-powered cycling & triathlon training",
+    "SUBTITLE": "Management platform for clubs and endurance athlete",
     "BTN_CONNECT_STRAVA": "Connect with Strava",
     "BTN_CONTINUE_GOOGLE": "Continue with Google",
     "DEV_SECTION_LABEL": "DEV LOGIN",
@@ -294,7 +294,7 @@
     "CLUB_SESSION_BADGE_CANCELLED": "CANCELLED",
     "CLUB_SESSION_BTN_JOIN": "JOIN",
     "CLUB_SESSION_BTN_LEAVE_WAITLIST": "LEAVE WAITLIST",
-    "CLUB_SESSION_BTN_CANCEL": "CANCEL",
+    "CLUB_SESSION_BTN_CANCEL": "LEAVE",
     "REST_DAY": "REST DAY",
     "BTN_ADD_TRAINING_TITLE": "Add training",
     "RESCHEDULE_MODAL_TITLE": "Reschedule",
@@ -974,6 +974,8 @@
     "SET_CONTENTS": "Set Contents",
     "DESELECT": "Deselect",
     "DISSOCIATE_SET": "Ungroup Set",
+    "NO_REST": "No rest between reps",
+    "NO_REST_HINT": "Rest is manually set within the set blocks",
     "PASSIVE_REST": "Passive rest (pause, zero intensity)",
     "PASSIVE_REST_HINT": "Complete stop — no pedaling or movement",
     "ACTIVE_REST_HINT": "Easy effort at the specified intensity",

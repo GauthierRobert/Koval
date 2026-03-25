@@ -150,7 +150,7 @@
 
 .browse-race-item--open {
   border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-raised);;
 }
 
 .browse-race-header {

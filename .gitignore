@@ -47,3 +47,6 @@ Thumbs.db
 setup-gcp.sh
 .claude/plans
 platform-tools
+google-services.json
+firebase-sa-key.json
+env.local

@@ -12,7 +12,6 @@ import {
   getEffectiveLinkedTrainings,
 } from '../../../../services/club.service';
 import {AuthService} from '../../../../services/auth.service';
-import {ClubFeedTabComponent} from './tabs/club-feed-tab/club-feed-tab.component';
 import {ClubSessionsTabComponent} from './tabs/club-sessions-tab/club-sessions-tab.component';
 import {ClubMembersTabComponent} from './tabs/club-members-tab/club-members-tab.component';
 import {ClubStatsTabComponent} from './tabs/club-stats-tab/club-stats-tab.component';
@@ -22,7 +21,7 @@ import {TrainingActionModalComponent} from '../../../shared/training-action-moda
 import {ActionContext} from '../../../../services/ai-action.service';
 import {map, Observable, Subscription} from 'rxjs';
 
-type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals';
+type TabId = 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals';
 
 @Component({
   selector: 'app-club-detail-page',
@@ -31,7 +30,6 @@ type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-g
     CommonModule,
     RouterModule,
     TranslateModule,
-    ClubFeedTabComponent,
     ClubSessionsTabComponent,
     ClubMembersTabComponent,
     ClubStatsTabComponent,
@@ -54,7 +52,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   selectedClub$ = this.clubService.selectedClub$;
   currentUserId: string | null = null;
 
-  activeTab: TabId = 'feed';
+  activeTab: TabId = 'sessions';
   loadedTabs = new Set<TabId>();
 
   clubId = '';
@@ -72,7 +70,6 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   );
 
   readonly tabs: Array<{ id: TabId; label: string }> = [
-    { id: 'feed', label: 'CLUB_DETAIL.TAB_FEED' },
     { id: 'sessions', label: 'CLUB_DETAIL.TAB_SESSIONS' },
     { id: 'members', label: 'CLUB_DETAIL.TAB_MEMBERS' },
     { id: 'stats', label: 'CLUB_DETAIL.TAB_STATS' },
@@ -92,10 +89,10 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
       this.route.params.subscribe((params) => {
         this.clubId = params['id'];
         this.loadedTabs.clear();
-        this.activeTab = 'feed';
+        this.activeTab = 'sessions';
         this.clubService.resetDetail();
         this.clubService.loadClubDetail(this.clubId);
-        this.activateTab('feed');
+        this.activateTab('sessions');
       })
     );
 
@@ -126,9 +123,6 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
     this.loadedTabs.add(tab);
 
     switch (tab) {
-      case 'feed':
-        this.clubService.loadFeed(this.clubId);
-        break;
       case 'sessions':
         this.clubService.loadRecurringTemplates(this.clubId);
         break;

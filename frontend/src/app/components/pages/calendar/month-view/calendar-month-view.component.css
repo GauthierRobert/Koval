@@ -151,7 +151,7 @@
 .mini-card--fused { background: var(--success-subtle); border-color: var(--success-border); }
 .mini-card--session { background: var(--session-subtle); border-color: var(--session-border); }
 .mini-card--club-session { background: rgba(167, 139, 250, 0.06); border-color: rgba(167, 139, 250, 0.3); }
-.mini-card--club-session.not-joined { opacity: 0.5; }
+.mini-card--club-session.not-joined { opacity: 0.8; }
 .mini-card--cancelled { opacity: 0.5; background: rgba(239, 68, 68, 0.06); border-color: rgba(239, 68, 68, 0.2); }
 .title-cancelled { text-decoration: line-through; opacity: 0.7; }
 

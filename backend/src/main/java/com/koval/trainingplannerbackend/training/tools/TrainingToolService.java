@@ -40,7 +40,7 @@ public class TrainingToolService {
             @ToolParam(description = "Number of trainings to skip (default 0)", required = false) Integer offset) {
         int effectiveLimit = (limit != null && limit > 0) ? limit : 15;
         int effectiveOffset = (offset != null && offset >= 0) ? offset : 0;
-        int page = effectiveLimit > 0 ? effectiveOffset / effectiveLimit : 0;
+        int page = effectiveOffset / effectiveLimit;
         return trainingManagementService.listTrainingsByUser(userId, PageRequest.of(page, effectiveLimit))
                 .getContent().stream()
                 .map(TrainingSummary::from).toList();

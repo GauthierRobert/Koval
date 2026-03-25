@@ -20,7 +20,7 @@ public class TrainingMapper {
         training.setDescription(request.desc());
 
         // Groups (default to empty list if null)
-        training.setGroupIds(request.tags() != null ? request.tags() : new ArrayList<>());
+        training.setGroupIds(request.groupIds() != null ? request.groupIds() : new ArrayList<>());
 
         training.setTrainingType(safeValueOf(TrainingType.class, request.type(), TrainingType.MIXED));
 

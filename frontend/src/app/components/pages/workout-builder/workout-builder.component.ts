@@ -62,6 +62,7 @@ export class WorkoutBuilderComponent implements OnInit {
   // Set form (create new set)
   showSetForm = false;
   setReps = 3;
+  setNoRest = false;
   setRestDuration = 120;
   setRestIntensity = 60;
   setPassiveRest = false;
@@ -69,6 +70,7 @@ export class WorkoutBuilderComponent implements OnInit {
 
   // Set editing (edit existing set)
   editSetReps = 3;
+  editSetNoRest = false;
   editSetRestDuration = 120;
   editSetRestIntensity = 60;
   editSetPassiveRest = false;
@@ -155,8 +157,8 @@ export class WorkoutBuilderComponent implements OnInit {
         ...current,
         label: this.editLabel || `${this.editSetReps}x Set`,
         repetitions: this.editSetReps,
-        restDurationSeconds: this.editSetRestDuration,
-        restIntensity: this.editSetPassiveRest ? 0 : this.editSetRestIntensity,
+        restDurationSeconds: this.editSetNoRest ? 0 : this.editSetRestDuration,
+        restIntensity: this.editSetNoRest ? 0 : this.editSetPassiveRest ? 0 : this.editSetRestIntensity,
       };
     } else {
       blocks[this.selectedBlockIndex] = {
@@ -204,6 +206,7 @@ export class WorkoutBuilderComponent implements OnInit {
 
     if (isSet(block)) {
       this.editSetReps = block.repetitions ?? 3;
+      this.editSetNoRest = (block.restDurationSeconds ?? 0) === 0;
       this.editSetRestDuration = block.restDurationSeconds ?? 120;
       this.editSetPassiveRest = (block.restIntensity ?? 60) === 0;
       this.editSetRestIntensity = this.editSetPassiveRest ? 60 : (block.restIntensity ?? 60);
@@ -313,8 +316,8 @@ export class WorkoutBuilderComponent implements OnInit {
       label: `${this.setReps}x Set`,
       repetitions: this.setReps,
       elements: selectedBlocks,
-      restDurationSeconds: this.setRestDuration,
-      restIntensity: this.setPassiveRest ? 0 : this.setRestIntensity,
+      restDurationSeconds: this.setNoRest ? 0 : this.setRestDuration,
+      restIntensity: this.setNoRest ? 0 : this.setPassiveRest ? 0 : this.setRestIntensity,
     };
 
     // Remove selected blocks and insert set at first index position

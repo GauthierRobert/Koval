@@ -128,8 +128,8 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
 
   get showDatePicker(): boolean {
     if (this.mode === 'session') return false;
-    if (this.mode === 'self-schedule' && !this.preselectedDate) return false;
-    return true;
+    return !(this.mode === 'self-schedule' && !this.preselectedDate);
+
   }
 
   get showAthleteSelect(): boolean {
@@ -150,8 +150,8 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
 
   get showTabs(): boolean {
     if (this.preselectedTrainingId) return false;
-    if (this.mode === 'self-schedule' && !this.preselectedDate) return false;
-    return true;
+    return !(this.mode === 'self-schedule' && !this.preselectedDate);
+
   }
 
   get showSportSelector(): boolean {
@@ -208,9 +208,9 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
     if (this.showDatePicker && !this.selectedDate) return false;
 
     if (this.mode === 'coach-assign' && (!this.preselectedAthletes || this.preselectedAthletes.length === 0)) return false;
-    if (this.mode === 'group-assign' && this.selectedAthleteIds.length === 0) return false;
+    return !(this.mode === 'group-assign' && this.selectedAthleteIds.length === 0);
 
-    return true;
+
   }
 
   ngOnInit(): void {
@@ -391,7 +391,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
         clubGroupId: this.selectedGroupId || undefined,
         coachGroupId: this.groupId,
       };
-      this.aiActionService.executeAction(this.prompt.trim(), 'TRAINING_FROM_NOTATION', ctx).subscribe({
+      this.aiActionService.executeAction(this.prompt.trim(), 'TRAINING_CREATION', ctx).subscribe({
         next: () => {
           this.ngZone.run(() => {
             this.loading = false;

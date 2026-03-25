@@ -292,7 +292,7 @@
       justify-content: space-between;
       padding: 12px 16px;
       border-radius: 12px;
-      background: rgba(255, 255, 255, 0.03);
+      background: var(--surface-raised);;
       border: 1px solid rgba(255, 255, 255, 0.06);
       gap: 16px;
       transition: background 0.2s;

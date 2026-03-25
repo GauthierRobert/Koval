@@ -9,11 +9,11 @@
 }
 
 .modal-panel {
-  background: #1a1a2e;
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: var(--surface-color, #1e1e2e);
+  border: 1px solid var(--glass-border);
   border-radius: 12px;
   width: 100%;
-  max-width: 520px;
+  max-width: 700px;
   max-height: 85vh;
   padding: 0;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
@@ -321,7 +321,7 @@
 
 .training-item {
   padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-raised);;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   cursor: pointer;

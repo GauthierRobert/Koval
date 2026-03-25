@@ -29,6 +29,7 @@ public class StravaOAuthService {
 
     private static final String STRAVA_AUTH_URL = "https://www.strava.com/oauth/authorize";
     private static final String STRAVA_TOKEN_URL = "https://www.strava.com/oauth/token";
+    private static final String STRAVA_ATHLETE_URL = "https://www.strava.com/api/v3/athlete";
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -62,7 +63,12 @@ public class StravaOAuthService {
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
 
         ResponseEntity<Map> response = restTemplate.postForEntity(STRAVA_TOKEN_URL, request, Map.class);
-        return parseTokenResponse(response.getBody());
+        StravaTokenResponse tokenResponse = parseTokenResponse(response.getBody());
+
+        // Fetch full athlete profile (includes email) — not available in token response
+        fetchAthleteEmail(tokenResponse);
+
+        return tokenResponse;
     }
 
     /**
@@ -82,6 +88,22 @@ public class StravaOAuthService {
 
         ResponseEntity<Map> response = restTemplate.postForEntity(STRAVA_TOKEN_URL, request, Map.class);
         return parseTokenResponse(response.getBody());
+    }
+
+    private void fetchAthleteEmail(StravaTokenResponse tokenResponse) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(tokenResponse.getAccessToken());
+            HttpEntity<Void> request = new HttpEntity<>(headers);
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    STRAVA_ATHLETE_URL, org.springframework.http.HttpMethod.GET, request, Map.class);
+            Map<String, Object> athlete = response.getBody();
+            if (athlete != null && athlete.get("email") != null) {
+                tokenResponse.setEmail((String) athlete.get("email"));
+            }
+        } catch (Exception e) {
+            // Non-critical — proceed without email
+        }
     }
 
     private StravaTokenResponse parseTokenResponse(Map<String, Object> responseBody) {
@@ -117,6 +139,7 @@ public class StravaOAuthService {
         private String firstName;
         private String lastName;
         private String profilePicture;
+        private String email;
 
         // Getters and Setters
         public String getAccessToken() {
@@ -173,6 +196,14 @@ public class StravaOAuthService {
 
         public void setProfilePicture(String profilePicture) {
             this.profilePicture = profilePicture;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
         }
 
         public String getDisplayName() {

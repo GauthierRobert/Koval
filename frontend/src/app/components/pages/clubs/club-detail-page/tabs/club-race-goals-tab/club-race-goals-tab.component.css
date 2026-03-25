@@ -190,10 +190,10 @@
 }
 
 .modal-panel {
-  background: var(--surface-elevated, #1e1e2e);
+  background: var(--surface-color, #1e1e2e);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  width: 380px;
+  width: 520px;
   max-height: 70vh;
   display: flex;
   flex-direction: column;
@@ -254,7 +254,7 @@
 }
 
 .modal-member-row:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-raised);;
 }
 
 .modal-member-avatar {

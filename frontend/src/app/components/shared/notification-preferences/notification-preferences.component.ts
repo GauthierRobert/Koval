@@ -124,7 +124,7 @@ export interface NotificationPreferences {
         justify-content: space-between;
         padding: 0.6rem 0.75rem;
         border-radius: 8px;
-        background: rgba(255, 255, 255, 0.03);
+        background: var(--surface-raised);;
         cursor: pointer;
         transition: background 0.15s;
       }

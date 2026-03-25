@@ -18,7 +18,7 @@ import {RouterModule} from '@angular/router';
 import {WorkoutVisualizationComponent} from '../../shared/workout-visualization/workout-visualization.component';
 import {SidebarComponent} from '../../layout/sidebar/sidebar.component';
 import {FilterPillOption, FilterPillsComponent} from '../../shared/filter-pills/filter-pills.component';
-import {TrainingActionModalComponent} from '../../shared/training-action-modal/training-action-modal.component';
+import {CreateWithAiModalComponent} from '../../shared/create-with-ai-modal/create-with-ai-modal.component';
 
 @Component({
   selector: 'app-workout-selection',
@@ -30,7 +30,7 @@ import {TrainingActionModalComponent} from '../../shared/training-action-modal/t
     RouterModule,
     SidebarComponent,
     FilterPillsComponent,
-    TrainingActionModalComponent,
+    CreateWithAiModalComponent,
   ],
   templateUrl: './workout-selection.component.html',
   styleUrl: './workout-selection.component.css',

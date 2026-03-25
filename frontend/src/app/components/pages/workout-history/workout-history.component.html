@@ -8,18 +8,12 @@
         <button class="icon-btn strava-btn" (click)="syncStrava()" [disabled]="(syncing$ | async) === true"
           [title]="(syncing$ | async) ? ('WORKOUT_HISTORY.BTN_SYNCING' | translate) : ('WORKOUT_HISTORY.BTN_STRAVA_SYNC' | translate)">
           @if ((syncing$ | async) === true) {
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FC4C02" stroke-width="2.5"
               stroke-linecap="round" stroke-linejoin="round" class="spin">
               <path d="M21 12a9 9 0 1 1-6.219-8.56" />
             </svg>
           } @else {
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="15 3 21 3 21 9" />
-              <path d="M21 3l-7 7" />
-              <polyline points="9 21 3 21 3 15" />
-              <path d="M3 21l7-7" />
-            </svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#FC4C02"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
           }
         </button>
         <button class="icon-btn" (click)="triggerUpload()" [disabled]="importing"

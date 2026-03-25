@@ -139,6 +139,7 @@
               <div class="workout-card workout-card--session clickable" (click)="sessionSelected.emit($any(group.entry).session)">
               <div class="card-top">
                 <span class="session-badge">{{ 'CALENDAR_WEEK.SESSION_BADGE' | translate }}</span>
+                <button class="btn-primary small" (click)="$event.stopPropagation(); openLinkPicker($any(group.entry).session)">{{ 'CALENDAR_WEEK.BTN_LINK_TO_PLAN' | translate }}</button>
               </div>
               <div class="workout-info">
                 <div class="title-row">
@@ -160,7 +161,6 @@
                   </div>
                 </div>
               </div>
-              <button class="btn-link-session" (click)="$event.stopPropagation(); openLinkPicker($any(group.entry).session)">{{ 'CALENDAR_WEEK.BTN_LINK_TO_PLAN' | translate }}</button>
             </div>
             }
 
@@ -187,20 +187,22 @@
                   @if ($any(group.entry).clubSession.location) {
                     <span class="club-session-location">{{ $any(group.entry).clubSession.location }}</span>
                   }
-                  <span class="club-session-count">{{ $any(group.entry).clubSession.participantIds.length }}{{ $any(group.entry).clubSession.maxParticipants ? '/' + $any(group.entry).clubSession.maxParticipants : '' }}</span>
+                  <span class="club-session-count">
+                    <svg class="icon-inline" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    {{ $any(group.entry).clubSession.participantIds.length }}{{ $any(group.entry).clubSession.maxParticipants ? '/' + $any(group.entry).clubSession.maxParticipants : '' }}</span>
+                  @if (!$any(group.entry).clubSession.cancelled) {
+                    <div class="club-session-actions">
+                      @if (!$any(group.entry).clubSession.joined && !$any(group.entry).clubSession.onWaitingList) {
+                        <button  class="btn-primary small"  (click)="joinClubSession.emit($any(group.entry).clubSession)">{{ 'CALENDAR_WEEK.CLUB_SESSION_BTN_JOIN' | translate }}</button>
+                      }
+                      @if ($any(group.entry).clubSession.joined || $any(group.entry).clubSession.onWaitingList) {
+                        <button class="btn-ghost small" (click)="cancelClubSession.emit($any(group.entry).clubSession)">
+                          {{ $any(group.entry).clubSession.onWaitingList ? ('CALENDAR_WEEK.CLUB_SESSION_BTN_LEAVE_WAITLIST' | translate) : ('CALENDAR_WEEK.CLUB_SESSION_BTN_CANCEL' | translate) }}
+                        </button>
+                      }
+                    </div>
+                  }
                 </div>
-                @if (!$any(group.entry).clubSession.cancelled) {
-                  <div class="club-session-actions">
-                    @if (!$any(group.entry).clubSession.joined && !$any(group.entry).clubSession.onWaitingList) {
-                      <button class="btn-join" (click)="joinClubSession.emit($any(group.entry).clubSession)">{{ 'CALENDAR_WEEK.CLUB_SESSION_BTN_JOIN' | translate }}</button>
-                    }
-                    @if ($any(group.entry).clubSession.joined || $any(group.entry).clubSession.onWaitingList) {
-                      <button class="btn-cancel-club" (click)="cancelClubSession.emit($any(group.entry).clubSession)">
-                        {{ $any(group.entry).clubSession.onWaitingList ? ('CALENDAR_WEEK.CLUB_SESSION_BTN_LEAVE_WAITLIST' | translate) : ('CALENDAR_WEEK.CLUB_SESSION_BTN_CANCEL' | translate) }}
-                      </button>
-                    }
-                  </div>
-                }
               </div>
             </div>
             }

@@ -5,6 +5,7 @@
   --surface-color: #1a1a1f;
   --surface-hover: rgba(255, 255, 255, 0.06);
   --surface-elevated: rgba(255, 255, 255, 0.04);
+  --surface-raised: rgba(255, 255, 255, 0.03);
   --sidebar-color: rgba(22, 22, 28, 0.85);
   --text-color: #ececf1;
   --text-muted: #8e8ea0;
@@ -28,7 +29,6 @@
   --danger-border: rgba(248, 113, 113, 0.25);
 
   /* Cyan — used for standalone FIT sessions */
-  --session-color: #0891b2;
   --session-subtle: rgba(8, 145, 178, 0.08);
   --session-border: rgba(8, 145, 178, 0.25);
   --session-text: #38bdf8;
@@ -296,32 +296,10 @@ select option {
   letter-spacing: 0.08em;
 }
 
-/* Buttons */
-.btn {
-  padding: 8px 16px;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btn-primary {
-  background: var(--accent-color);
-  color: #000;
-}
-
-.btn-ghost {
-  background: transparent;
-  border: 1px solid var(--glass-border);
-  color: var(--text-color);
-}
-
-.btn-danger {
-  background: var(--danger-subtle);
-  border: 1px solid var(--danger-border);
-  color: var(--danger-color);
+/* Inline SVG icon alignment */
+.icon-inline {
+  display: inline-block;
+  vertical-align: -0.15em;
 }
 
 /* Responsive breakpoints */
@@ -356,4 +334,78 @@ select option {
   transition: filter 0.2s;
 }
 
+/* --- Buttons --- */
+.btn-primary {
+  background: var(--accent-color);
+  color: #000;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.btn-primary:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-primary.small {
+  padding: 1px 10px;
+  font-size: 8px;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-color);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-ghost {
+  background: none;
+  color: var(--text-muted);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-ghost:hover {
+  background: rgba(248, 113, 113, 0.12);
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+.btn-ghost.small {
+  padding: 1px 10px;
+  font-size: 8px;
+}
+
+.btn-danger {
+  background: var(--danger-subtle);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-color);
+}
 
