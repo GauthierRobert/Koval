@@ -26,6 +26,18 @@ export interface CalendarClubSession {
     openToAllFrom?: string;
     cancelled?: boolean;
     cancellationReason?: string;
+    linkedTrainingId?: string;
+    linkedTrainingTitle?: string;
+    linkedTrainingDescription?: string;
+    linkedTrainings?: CalendarLinkedTraining[];
+}
+
+export interface CalendarLinkedTraining {
+    trainingId: string;
+    title: string;
+    clubGroupId?: string;
+    clubGroupName?: string;
+    relevant: boolean;
 }
 
 const BASE = environment.apiUrl;
@@ -102,6 +114,7 @@ export class CalendarService {
                 intensityFactor: s.intensityFactor ?? undefined,
                 fitFileId: s.fitFileId ?? undefined,
                 scheduledWorkoutId: s.scheduledWorkoutId ?? undefined,
+                clubSessionId: s.clubSessionId ?? undefined,
             } as SavedSession))),
             catchError(() => of([] as SavedSession[]))
         );
@@ -109,6 +122,10 @@ export class CalendarService {
 
     linkSessionToSchedule(sessionId: string, scheduledWorkoutId: string): Observable<any> {
         return this.http.post(`${BASE}/api/sessions/${sessionId}/link/${scheduledWorkoutId}`, {});
+    }
+
+    linkSessionToClubSession(sessionId: string, clubSessionId: string): Observable<any> {
+        return this.http.post(`${BASE}/api/sessions/${sessionId}/link-club-session/${clubSessionId}`, {});
     }
 
     getClubSessionsForCalendar(start: string, end: string): Observable<CalendarClubSession[]> {

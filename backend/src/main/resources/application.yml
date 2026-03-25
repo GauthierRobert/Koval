@@ -60,7 +60,7 @@ firebase:
 app:
   ai:
     debug-calls: false
-    log-prompts: true
+    log-prompts: false
 
 # Logging Configuration
 logging:

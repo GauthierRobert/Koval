@@ -4,7 +4,9 @@
       <div class="header">
         <div class="title-section">
           <h1>{{ training.title }}</h1>
-          <p class="description">{{ training.description }}</p>
+          @if (training.description) {
+            <p class="description">{{ training.description }}</p>
+          }
         </div>
         <div class="action-buttons">
           <div class="export-dropdown">
@@ -54,6 +56,8 @@
                 <span class="set-badge">&times;{{ block.repetitions }}</span>
                 @if (block.restDurationSeconds) {
                   <span class="set-rest">{{ 'WORKOUT_VIZ.SET_REST_LABEL' | translate: { duration: formatDuration(block.restDurationSeconds) } }}</span>
+                } @else if ((block.repetitions ?? 1) > 1) {
+                  <span class="set-rest set-no-rest">{{ 'WORKOUT_VIZ.SET_NO_REST_LABEL' | translate }}</span>
                 }
               </div>
               <div class="set-children">
@@ -64,6 +68,8 @@
                         <span class="set-badge">&times;{{ child.repetitions }}</span>
                         @if (child.restDurationSeconds) {
                           <span class="set-rest">{{ 'WORKOUT_VIZ.SET_REST_LABEL' | translate: { duration: formatDuration(child.restDurationSeconds) } }}</span>
+                        } @else if ((child.repetitions ?? 1) > 1) {
+                          <span class="set-rest set-no-rest">{{ 'WORKOUT_VIZ.SET_NO_REST_LABEL' | translate }}</span>
                         }
                       </div>
                       <div class="set-children">

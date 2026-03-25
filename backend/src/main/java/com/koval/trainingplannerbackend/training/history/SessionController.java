@@ -76,6 +76,15 @@ public class SessionController {
         return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
     }
 
+    @PostMapping("/{sessionId}/link-club-session/{clubSessionId}")
+    public ResponseEntity<CompletedSession> linkToClubSession(
+            @PathVariable String sessionId,
+            @PathVariable String clubSessionId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        CompletedSession result = sessionService.linkSessionToClubSession(sessionId, clubSessionId, userId);
+        return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
+    }
+
     @PatchMapping("/{id}")
     public ResponseEntity<CompletedSession> patch(@PathVariable String id,
             @RequestBody Map<String, Object> body) {

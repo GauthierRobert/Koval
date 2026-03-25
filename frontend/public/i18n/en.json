@@ -295,6 +295,9 @@
     "CLUB_SESSION_BTN_JOIN": "JOIN",
     "CLUB_SESSION_BTN_LEAVE_WAITLIST": "LEAVE WAITLIST",
     "CLUB_SESSION_BTN_CANCEL": "LEAVE",
+    "CLUB_SESSION_BTN_LINK_SESSION": "LINK SESSION",
+    "CLUB_SESSION_LINK_MODAL_TITLE": "Link Recorded Session to Club Session",
+    "CLUB_SESSION_LINK_PICKER_EMPTY": "No unlinked sessions found nearby",
     "REST_DAY": "REST DAY",
     "BTN_ADD_TRAINING_TITLE": "Add training",
     "RESCHEDULE_MODAL_TITLE": "Reschedule",
@@ -1314,7 +1317,8 @@
     "BTN_START_TRAINING": "Start Training",
     "BTN_MARK_COMPLETE": "Mark Complete",
     "BTN_SKIP": "Skip",
-    "BTN_VIEW_IN_LIBRARY": "View in Training Library"
+    "BTN_VIEW_IN_LIBRARY": "View in Training Library",
+    "BTN_VIEW_ANALYSIS": "See Analysis"
   },
   "WORKOUT_VIZ": {
     "BTN_EXPORT": "EXPORT",
@@ -1333,6 +1337,7 @@
     "EDIT_BLOCK_TITLE": "Edit block",
     "REMOVE_BLOCK_TITLE": "Remove block",
     "SET_REST_LABEL": "Rest {{duration}}",
+    "SET_NO_REST_LABEL": "No rest",
     "STAT_DURATION": "Duration",
     "STAT_TSS": "TSS",
     "STAT_IF": "IF",

@@ -295,6 +295,9 @@
     "CLUB_SESSION_BTN_JOIN": "REJOINDRE",
     "CLUB_SESSION_BTN_LEAVE_WAITLIST": "QUITTER LA LISTE D'ATTENTE",
     "CLUB_SESSION_BTN_CANCEL": "QUITTER",
+    "CLUB_SESSION_BTN_LINK_SESSION": "LIER SESSION",
+    "CLUB_SESSION_LINK_MODAL_TITLE": "Lier une session enregistrée à une session de club",
+    "CLUB_SESSION_LINK_PICKER_EMPTY": "Aucune session non liée trouvée à proximité",
     "REST_DAY": "JOUR DE REPOS",
     "BTN_ADD_TRAINING_TITLE": "Ajouter un entraînement",
     "RESCHEDULE_MODAL_TITLE": "Replanifier",
@@ -1314,7 +1317,8 @@
     "BTN_START_TRAINING": "Démarrer l'entraînement",
     "BTN_MARK_COMPLETE": "Marquer comme terminé",
     "BTN_SKIP": "Passer",
-    "BTN_VIEW_IN_LIBRARY": "Voir dans la bibliothèque"
+    "BTN_VIEW_IN_LIBRARY": "Voir dans la bibliothèque",
+    "BTN_VIEW_ANALYSIS": "Voir l'analyse"
   },
   "WORKOUT_VIZ": {
     "BTN_EXPORT": "EXPORTER",
@@ -1333,6 +1337,7 @@
     "EDIT_BLOCK_TITLE": "Modifier le bloc",
     "REMOVE_BLOCK_TITLE": "Supprimer le bloc",
     "SET_REST_LABEL": "Récup. {{duration}}",
+    "SET_NO_REST_LABEL": "Sans repos",
     "STAT_DURATION": "Durée",
     "STAT_TSS": "TSS",
     "STAT_IF": "IF",

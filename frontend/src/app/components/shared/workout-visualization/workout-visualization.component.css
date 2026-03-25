@@ -139,6 +139,8 @@
       color: var(--text-muted);
       max-width: 600px;
       line-height: 1.6;
+      white-space: pre-line;
+      margin: 0;
     }
 
     /* ── Two-panel layout ─────────────────────────────────── */
@@ -748,6 +750,11 @@
     .set-rest {
       color: var(--text-muted);
       font-size: 9px;
+    }
+
+    .set-no-rest {
+      font-style: italic;
+      opacity: 0.7;
     }
 
     .set-children {

@@ -47,6 +47,10 @@ export class CalendarWeekViewComponent {
   linkSession: SavedSession | null = null;
   nearbyScheduled$: Observable<ScheduledWorkout[]> = of([]);
 
+  clubSessionLinkPickerState: { clubSessionId: string } | null = null;
+  clubSessionLinkTarget: CalendarClubSession | null = null;
+  nearbySessions$: Observable<SavedSession[]> = of([]);
+
   private readonly calendarService = inject(CalendarService);
   private readonly raceGoalService = inject(RaceGoalService);
 
@@ -70,6 +74,28 @@ export class CalendarWeekViewComponent {
     if (!this.linkPickerState) return;
     this.calendarService.linkSessionToSchedule(this.linkPickerState.sessionId, scheduledWorkoutId)
       .subscribe(() => { this.linkPickerState = null; this.linked.emit(); });
+  }
+
+  openClubSessionLinkPicker(clubSession: CalendarClubSession): void {
+    this.clubSessionLinkPickerState = { clubSessionId: clubSession.id };
+    this.clubSessionLinkTarget = clubSession;
+    const d = new Date(clubSession.scheduledAt);
+    const from = new Date(d); from.setDate(d.getDate() - 3);
+    const to = new Date(d); to.setDate(d.getDate() + 3);
+    this.nearbySessions$ = this.calendarService
+      .getSessionsForCalendar(toDateKey(from), toDateKey(to)).pipe(
+        map(sessions => sessions.filter(s => !s.scheduledWorkoutId && !s.clubSessionId))
+      );
+  }
+
+  confirmClubSessionLink(sessionId: string): void {
+    if (!this.clubSessionLinkPickerState) return;
+    this.calendarService.linkSessionToClubSession(sessionId, this.clubSessionLinkPickerState.clubSessionId)
+      .subscribe(() => {
+        this.clubSessionLinkPickerState = null;
+        this.clubSessionLinkTarget = null;
+        this.linked.emit();
+      });
   }
 
   formatDuration(workout: ScheduledWorkout): string {

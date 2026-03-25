@@ -19,6 +19,7 @@ export interface SavedSession extends SessionSummary {
     fitFileId?: string;
     rpe?: number;
     scheduledWorkoutId?: string;
+    clubSessionId?: string;
     stravaActivityId?: string;
 }
 
@@ -72,6 +73,7 @@ export class HistoryService {
                     fitFileId: s.fitFileId ?? undefined,
                     rpe: s.rpe ?? undefined,
                     scheduledWorkoutId: s.scheduledWorkoutId ?? undefined,
+                    clubSessionId: s.clubSessionId ?? undefined,
                     stravaActivityId: s.stravaActivityId ?? undefined,
                 }));
                 parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

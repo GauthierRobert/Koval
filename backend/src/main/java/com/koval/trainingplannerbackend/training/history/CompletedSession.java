@@ -33,6 +33,7 @@ public class CompletedSession {
     private List<BlockSummary> blockSummaries;
 
     private String scheduledWorkoutId; // Reference to ScheduledWorkout
+    private String clubSessionId; // Reference to ClubTrainingSession
     private Double tss;
     private Double intensityFactor;
     private String fitFileId; // GridFS ObjectId; null when no FIT stored

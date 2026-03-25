@@ -671,3 +671,7 @@
   font-style: italic;
   border-top: 1px dashed rgba(139, 92, 246, 0.15);
 }
+
+.set-rest-indicator.set-no-rest {
+  opacity: 0.7;
+}

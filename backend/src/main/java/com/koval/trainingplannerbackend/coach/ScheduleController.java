@@ -65,6 +65,10 @@ public class ScheduleController {
     @PostMapping
     public ResponseEntity<ScheduledWorkoutResponse> scheduleWorkout(
             @RequestBody ScheduleRequest request) {
+        if (request.getScheduledDate() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
         String userId = SecurityUtils.getCurrentUserId();
 
         ScheduledWorkout workout = new ScheduledWorkout();
@@ -119,12 +123,12 @@ public class ScheduleController {
     @PatchMapping("/{id}/reschedule")
     public ResponseEntity<ScheduledWorkoutResponse> rescheduleWorkout(
             @PathVariable String id,
-            @RequestBody Map<String, String> body) {
-        String userId = SecurityUtils.getCurrentUserId();
-        String newDate = body.get("scheduledDate");
+            @RequestBody ScheduleRequest body) {
+        LocalDate newDate = body.getScheduledDate();
         if (newDate == null) {
             return ResponseEntity.badRequest().build();
         }
+        String userId = SecurityUtils.getCurrentUserId();
 
         return scheduledWorkoutRepository.findById(id)
                 .map(workout -> {
@@ -136,7 +140,7 @@ public class ScheduleController {
                     if (workout.getStatus() != ScheduleStatus.PENDING) {
                         return ResponseEntity.badRequest().<ScheduledWorkoutResponse>build();
                     }
-                    workout.setScheduledDate(LocalDate.parse(newDate));
+                    workout.setScheduledDate(newDate);
                     ScheduledWorkout saved = scheduledWorkoutRepository.save(workout);
                     return ResponseEntity.ok(scheduleService.enrichSingle(saved));
                 })

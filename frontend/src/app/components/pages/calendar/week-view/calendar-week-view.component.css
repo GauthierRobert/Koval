@@ -521,6 +521,34 @@
 .club-session-actions {
   display: flex;
   gap: 4px;
+  flex-wrap: wrap;
+}
+
+.linked-training-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  color: var(--accent-color);
+  opacity: 0.85;
+  overflow: hidden;
+}
+
+.linked-training-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.linked-training-compact {
+  font-size: 0.6rem;
+  color: var(--accent-color);
+  opacity: 0.8;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Cancelled club session */

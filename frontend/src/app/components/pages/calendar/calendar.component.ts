@@ -25,7 +25,7 @@ export interface CalendarDay {
 export interface ScheduledEntry { kind: 'scheduled'; scheduled: ScheduledWorkout; }
 export interface FusedEntry      { kind: 'fused'; scheduled: ScheduledWorkout; session: SavedSession; }
 export interface StandaloneEntry { kind: 'standalone'; session: SavedSession; }
-export interface ClubSessionEntry { kind: 'club-session'; clubSession: CalendarClubSession; }
+export interface ClubSessionEntry { kind: 'club-session'; clubSession: CalendarClubSession; linkedSession?: SavedSession; }
 export type CalendarEntry = ScheduledEntry | FusedEntry | StandaloneEntry | ClubSessionEntry;
 
 export interface ClubCalendarPreferences {
@@ -83,6 +83,15 @@ function buildEntriesByDay(scheduled: ScheduledWorkout[], sessions: SavedSession
     }
   }
 
+  // Build reverse map from clubSessionId to SavedSession
+  const sessionByClubSessionId = new Map<string, SavedSession>();
+  for (const sess of sessions) {
+    if (sess.clubSessionId) {
+      sessionByClubSessionId.set(sess.clubSessionId, sess);
+      consumed.add(sess.id);
+    }
+  }
+
   for (const sess of sessions) {
     if (consumed.has(sess.id)) continue;
     const key = toDateKey(new Date(sess.date));
@@ -94,7 +103,8 @@ function buildEntriesByDay(scheduled: ScheduledWorkout[], sessions: SavedSession
     if (!cs.scheduledAt) continue;
     const key = cs.scheduledAt.split('T')[0];
     if (!byDay.has(key)) byDay.set(key, []);
-    byDay.get(key)!.push({ kind: 'club-session', clubSession: cs });
+    const linkedSession = sessionByClubSessionId.get(cs.id);
+    byDay.get(key)!.push({ kind: 'club-session', clubSession: cs, linkedSession });
   }
 
   return byDay;

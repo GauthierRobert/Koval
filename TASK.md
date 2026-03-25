@@ -111,13 +111,15 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 - Disable all element in front end concerning plan for now (add //TODO temporary) Also, disable plans tools/prompt for IA for now
 - Add CGU that user must accept at least once. It must be displayed in angular or android based on first connection.
 - Google login in android redirect to localhost:4200 in dev mode. I suppose it does not wokr in production as well; Need to fix. Add redirect to mobile, new endpoint
+- In Block Mode, the graphs in analyse workout still follows the unique element value when mouse is hover the graphs and not the block value
+- Display description in a new line in the training lirbary details workout
 
 # TO VERIFY
 
 ## TODO
-- Display description in a new line in the training lirbary details workout
+- When schedule a training in the workout library, no input for schedule date is visible and then no scheduled date is sent.
 - When set have zero rest, the display show a zero as set summary. It must be more clear.
-- In Block Mode, the graphs in analyse workout still follows the unique element value when mouse is hover the graphs and not the block value
+- The Block group feature can be improved, when there is huge differences of speed like 10*(30 second fast then 30 at 0) the 0 part is sometimes taken as part of the 30 seconds fast. The algorithm must do pass in forward then revert, to verify in which block it can be grouped
 
 ## Nice too have
 

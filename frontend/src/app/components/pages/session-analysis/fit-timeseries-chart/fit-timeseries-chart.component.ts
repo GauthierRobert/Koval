@@ -417,8 +417,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         if (this.hoverIdx !== null) {
             const hx = xOf(this.hoverIdx);
             this.drawCrosshair(ctx, hx, top, bottom);
-            const rec = this.records[this.hoverIdx];
-            const val = this.isCycling ? rec.power : (rec.speed || 0) * 3.6;
+            const val = this.hoverPrimaryValue(this.hoverIdx, t0);
             this.drawDot(ctx, hx, yOf(val), accent);
         }
     }
@@ -473,7 +472,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         if (this.hoverIdx !== null) {
             const hx = xOf(this.hoverIdx);
             this.drawCrosshair(ctx, hx, top, bottom);
-            const hr = this.records[this.hoverIdx].heartRate;
+            const hr = this.hoverHR(this.hoverIdx, t0);
             if (hr) this.drawDot(ctx, hx, yOf(hr), color);
         }
     }
@@ -530,7 +529,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         if (this.hoverIdx !== null) {
             const hx = xOf(this.hoverIdx);
             this.drawCrosshair(ctx, hx, top, bottom);
-            const c = this.getCad(this.records[this.hoverIdx]);
+            const c = this.hoverCadence(this.hoverIdx, t0);
             if (c) this.drawDot(ctx, hx, yOf(c), color);
         }
     }
@@ -758,6 +757,53 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
             rows.push({ label: 'Elevation', value: `${Math.round(rec.elevation)}m`, color: '#4caf50' });
         }
         this.ttRows = rows;
+    }
+
+    // ── Hover value helpers (block-aware) ───────────────────────────────
+
+    private findPlannedBlock(idx: number, t0: number): BlockSummary | null {
+        const elapsed = this.records[idx].timestamp - t0;
+        let acc = 0;
+        for (const b of this.blockSummaries) {
+            if (elapsed >= acc && elapsed < acc + b.durationSeconds) return b;
+            acc += b.durationSeconds;
+        }
+        return null;
+    }
+
+    private hoverPrimaryValue(idx: number, t0: number): number {
+        if (this.useZB) {
+            const zb = this.zoneBlocks.find(b => idx >= b.startIndex && idx <= b.endIndex);
+            if (zb) return this.isCycling ? zb.avgPower : zb.avgSpeed;
+        } else if (this.usePB) {
+            const pb = this.findPlannedBlock(idx, t0);
+            if (pb) return this.isCycling ? pb.actualPower
+                : (pb.distanceMeters && pb.durationSeconds > 0 ? (pb.distanceMeters / pb.durationSeconds) * 3.6 : 0);
+        }
+        const rec = this.records[idx];
+        return this.isCycling ? rec.power : (rec.speed || 0) * 3.6;
+    }
+
+    private hoverHR(idx: number, t0: number): number {
+        if (this.useZB) {
+            const zb = this.zoneBlocks.find(b => idx >= b.startIndex && idx <= b.endIndex);
+            if (zb) return zb.avgHR;
+        } else if (this.usePB) {
+            const pb = this.findPlannedBlock(idx, t0);
+            if (pb) return pb.actualHR;
+        }
+        return this.records[idx].heartRate;
+    }
+
+    private hoverCadence(idx: number, t0: number): number {
+        if (this.useZB) {
+            const zb = this.zoneBlocks.find(b => idx >= b.startIndex && idx <= b.endIndex);
+            if (zb) return this.getCadBlock(zb.avgCadence);
+        } else if (this.usePB) {
+            const pb = this.findPlannedBlock(idx, t0);
+            if (pb) return this.getCadBlock(pb.actualCadence);
+        }
+        return this.getCad(this.records[idx]);
     }
 
     // ── Utilities ────────────────────────────────────────────────────────

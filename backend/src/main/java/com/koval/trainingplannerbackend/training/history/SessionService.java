@@ -1,6 +1,8 @@
 package com.koval.trainingplannerbackend.training.history;
 
 import com.koval.trainingplannerbackend.auth.UserRepository;
+import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
+import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
 import com.koval.trainingplannerbackend.coach.CoachService;
 import com.koval.trainingplannerbackend.training.metrics.TssCalculator;
 import com.mongodb.client.gridfs.model.GridFSFile;
@@ -34,19 +36,22 @@ public class SessionService {
     private final CoachService coachService;
     private final GridFsOperations gridFsOperations;
     private final SessionAssociationService associationService;
+    private final ClubTrainingSessionRepository clubTrainingSessionRepository;
 
     public SessionService(CompletedSessionRepository repository,
                           AnalyticsService analyticsService,
                           UserRepository userRepository,
                           CoachService coachService,
                           GridFsOperations gridFsOperations,
-                          SessionAssociationService associationService) {
+                          SessionAssociationService associationService,
+                          ClubTrainingSessionRepository clubTrainingSessionRepository) {
         this.repository = repository;
         this.analyticsService = analyticsService;
         this.userRepository = userRepository;
         this.coachService = coachService;
         this.gridFsOperations = gridFsOperations;
         this.associationService = associationService;
+        this.clubTrainingSessionRepository = clubTrainingSessionRepository;
     }
 
     /**
@@ -107,6 +112,20 @@ public class SessionService {
         CompletedSession saved = repository.save(session);
         tryMarkCompleted(scheduledWorkoutId, saved);
         return saved;
+    }
+
+    /**
+     * Manually link a session to a club training session.
+     */
+    public CompletedSession linkSessionToClubSession(String sessionId, String clubSessionId, String userId) {
+        CompletedSession session = findOwnedSession(sessionId, userId);
+        if (session == null) return null;
+
+        ClubTrainingSession clubSession = clubTrainingSessionRepository.findById(clubSessionId).orElse(null);
+        if (clubSession == null || !clubSession.getParticipantIds().contains(userId)) return null;
+
+        session.setClubSessionId(clubSessionId);
+        return repository.save(session);
     }
 
     /**

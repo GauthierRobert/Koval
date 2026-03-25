@@ -1,7 +1,7 @@
 import {Component, EventEmitter, inject, Input, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
-import {Router} from '@angular/router';
+import {Router, RouterModule} from '@angular/router';
 import {BehaviorSubject, of} from 'rxjs';
 import {catchError, map, startWith, switchMap} from 'rxjs/operators';
 import {TrainingService} from '../../../services/training.service';
@@ -34,7 +34,7 @@ const LOADING_STATE: TrainingState = { training: null, loading: true, error: nul
 @Component({
   selector: 'app-workout-detail-modal',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslateModule, RouterModule],
   templateUrl: './workout-detail-modal.component.html',
   styleUrl: './workout-detail-modal.component.css',
 })

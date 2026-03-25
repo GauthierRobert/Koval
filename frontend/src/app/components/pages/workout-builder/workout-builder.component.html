@@ -184,6 +184,8 @@
                     <span class="block-meta">{{ block.repetitions }}x · {{ block.elements?.length }} blocks
                       @if (block.restDurationSeconds) {
                         · {{ formatSeconds(block.restDurationSeconds) }} rest
+                      } @else if ((block.repetitions ?? 1) > 1) {
+                        · {{ 'WORKOUT_VIZ.SET_NO_REST_LABEL' | translate }}
                       }
                     </span>
                   </div>
@@ -249,6 +251,10 @@
                       } @else {
                         <span>{{ formatSeconds(block.restDurationSeconds) }} active rest @ {{ block.restIntensity ?? 60 }}%</span>
                       }
+                    </div>
+                  } @else if ((block.repetitions ?? 1) > 1) {
+                    <div class="set-rest-indicator set-no-rest">
+                      <span>{{ 'WORKOUT_VIZ.SET_NO_REST_LABEL' | translate }}</span>
                     </div>
                   }
                 </div>
