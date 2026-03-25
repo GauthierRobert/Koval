@@ -702,8 +702,6 @@
 /* --- Time-Grid Session Cards --- */
 .time-grid-session {
   position: absolute;
-  left: 2px;
-  right: 2px;
   border-radius: var(--radius-sm);
   padding: 4px 6px;
   overflow: hidden;
@@ -714,6 +712,7 @@
   gap: 1px;
   transition: box-shadow 0.15s;
   cursor: default;
+  box-sizing: border-box;
 }
 
 .time-grid-session:hover {
@@ -731,15 +730,20 @@
   background: var(--surface-raised);;
   border: 1px solid var(--glass-border);
 }
-.tg-session-header{
+.tg-session-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-width: 0;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 .tg-session-top {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .tg-session-time {
@@ -756,6 +760,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--text-color);
+  min-width: 0;
 }
 
 .tg-session-desc {
@@ -791,6 +796,8 @@
   align-items: center;
   gap: 4px;
   margin-top: auto;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 /* --- Empty tab --- */

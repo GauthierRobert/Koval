@@ -103,6 +103,7 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
     });
     this.sessions$.subscribe((sessions) => {
       this.allSessions = sessions;
+      this.clearOverlapCache();
     });
     this.buildCalendarDays();
     if (this.club) {
@@ -232,6 +233,75 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   getSessionHeightPx(session: ClubTrainingSession): number {
     const dur = session.durationMinutes ?? 60;
     return Math.max((dur / 60) * this.HOUR_HEIGHT_PX, 28);
+  }
+
+  /**
+   * Computes side-by-side layout for overlapping sessions in a day.
+   * Returns a map of sessionId → { col, totalCols } for CSS positioning.
+   */
+  private overlapCache = new Map<string, Map<string, { col: number; totalCols: number }>>();
+
+  getSessionLayout(sessions: ClubTrainingSession[], session: ClubTrainingSession): { left: string; width: string } {
+    const dayKey = session.scheduledAt?.substring(0, 10) ?? '';
+    if (!this.overlapCache.has(dayKey)) {
+      this.overlapCache.set(dayKey, this.computeOverlapLayout(sessions));
+    }
+    const layout = this.overlapCache.get(dayKey)!.get(session.id);
+    if (!layout || layout.totalCols <= 1) {
+      return { left: '2px', width: 'calc(100% - 4px)' };
+    }
+    const colWidth = 100 / layout.totalCols;
+    return {
+      left: `calc(${layout.col * colWidth}% + 1px)`,
+      width: `calc(${colWidth}% - 2px)`,
+    };
+  }
+
+  private computeOverlapLayout(sessions: ClubTrainingSession[]): Map<string, { col: number; totalCols: number }> {
+    const result = new Map<string, { col: number; totalCols: number }>();
+    if (!sessions.length) return result;
+
+    const items = sessions.map(s => ({
+      id: s.id,
+      top: this.getSessionTopPx(s),
+      bottom: this.getSessionTopPx(s) + this.getSessionHeightPx(s),
+    })).sort((a, b) => a.top - b.top || a.bottom - b.bottom);
+
+    // Greedy column assignment
+    const columns: { id: string; bottom: number }[][] = [];
+    const colMap = new Map<string, number>();
+
+    for (const item of items) {
+      let placed = false;
+      for (let c = 0; c < columns.length; c++) {
+        const col = columns[c];
+        if (col[col.length - 1].bottom <= item.top) {
+          col.push(item);
+          colMap.set(item.id, c);
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) {
+        columns.push([item]);
+        colMap.set(item.id, columns.length - 1);
+      }
+    }
+
+    // Find overlapping groups to determine totalCols per session
+    for (const item of items) {
+      const overlapping = items.filter(
+        other => other.id !== item.id && other.top < item.bottom && other.bottom > item.top
+      );
+      const cols = new Set([colMap.get(item.id)!, ...overlapping.map(o => colMap.get(o.id)!)]);
+      result.set(item.id, { col: colMap.get(item.id)!, totalCols: cols.size });
+    }
+
+    return result;
+  }
+
+  clearOverlapCache(): void {
+    this.overlapCache.clear();
   }
 
   formatHourLabel(hour: number): string {
