@@ -115,7 +115,9 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 # TO VERIFY
 
 ## TODO
-
+- Display description in a new line in the training lirbary details workout
+- When set have zero rest, the display show a zero as set summary. It must be more clear.
+- In Block Mode, the graphs in analyse workout still follows the unique element value when mouse is hover the graphs and not the block value
 
 ## Nice too have
 

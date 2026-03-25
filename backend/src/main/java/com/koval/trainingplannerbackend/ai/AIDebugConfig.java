@@ -6,18 +6,23 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Activates HTTP-level Anthropic call logging when {@code app.ai.debug-calls=true}.
- * <p>
- * Spring AI's {@code AnthropicAutoConfiguration} applies {@link RestClientCustomizer} beans
- * to the RestClient it builds, so this interceptor is injected automatically.
+ * Activates AI debugging tools:
+ * - HTTP-level request/response logging ({@code app.ai.debug-calls=true})
+ * - Prompt-level logging ({@code app.ai.log-prompts=true})
  */
 @Configuration
-@ConditionalOnProperty(name = "app.ai.debug-calls", havingValue = "true")
 class AIDebugConfig {
 
     @Bean
+    @ConditionalOnProperty(name = "app.ai.debug-calls", havingValue = "true")
     RestClientCustomizer anthropicCallLoggerCustomizer() {
         AnthropicCallLogger logger = new AnthropicCallLogger();
         return builder -> builder.requestInterceptor(logger);
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "app.ai.log-prompts", havingValue = "true")
+    PromptLogger promptLogger() {
+        return new PromptLogger();
     }
 }

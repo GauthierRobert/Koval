@@ -68,21 +68,43 @@
                       </div>
                       <div class="set-children">
                         @for (leaf of child.elements; track leaf) {
-                          <div class="step-card" [style.border-left-color]="getBlockColor(leaf)">
+                          <div class="step-card set-child-card" [class.ramp]="leaf.type === 'RAMP'" [style.border-left-color]="getBlockColor(leaf)">
+                            <span class="step-number"></span>
                             <span class="step-label">{{ leaf.label }}</span>
                             <span class="step-desc">{{ leaf.description ?? '' }}</span>
-                            <span class="step-duration">{{ formatBlockDurationOrDistance(leaf) }}</span>
+                            <span class="step-duration" [class.estimated]="formatBlockEstimates(leaf).durationEstimated">{{ formatBlockEstimates(leaf).durationEstimated ? '~' : '' }}{{ formatBlockEstimates(leaf).duration }}</span>
+                            <span class="step-separator">|</span>
+                            <span class="step-distance" [class.estimated]="formatBlockEstimates(leaf).distanceEstimated">{{ formatBlockEstimates(leaf).distanceEstimated ? '~' : '' }}{{ formatBlockEstimates(leaf).distance }}</span>
                             <span class="step-intensity">{{ getBlockIntensityDisplay(leaf) }}</span>
+                            <span class="step-absolute">
+                              @if (leaf.type !== 'FREE' && leaf.type !== 'PAUSE' && leaf.type !== 'RAMP') {
+                                {{ calculateIntensityValue(getEffectiveIntensity(leaf, 'TARGET')) }}
+                              }
+                              @if (leaf.type === 'RAMP') {
+                                {{ calculateIntensityValue(getEffectiveIntensity(leaf, 'START')) }}&rarr;{{ calculateIntensityValue(getEffectiveIntensity(leaf, 'END')) }}
+                              }
+                            </span>
                           </div>
                         }
                       </div>
                     </div>
                   } @else {
-                    <div class="step-card" [style.border-left-color]="getBlockColor(child)">
+                    <div class="step-card set-child-card" [class.ramp]="child.type === 'RAMP'" [style.border-left-color]="getBlockColor(child)">
+                      <span class="step-number"></span>
                       <span class="step-label">{{ child.label }}</span>
                       <span class="step-desc">{{ child.description ?? '' }}</span>
-                      <span class="step-duration">{{ formatBlockDurationOrDistance(child) }}</span>
+                      <span class="step-duration" [class.estimated]="formatBlockEstimates(child).durationEstimated">{{ formatBlockEstimates(child).durationEstimated ? '~' : '' }}{{ formatBlockEstimates(child).duration }}</span>
+                      <span class="step-separator">|</span>
+                      <span class="step-distance" [class.estimated]="formatBlockEstimates(child).distanceEstimated">{{ formatBlockEstimates(child).distanceEstimated ? '~' : '' }}{{ formatBlockEstimates(child).distance }}</span>
                       <span class="step-intensity">{{ getBlockIntensityDisplay(child) }}</span>
+                      <span class="step-absolute">
+                        @if (child.type !== 'FREE' && child.type !== 'PAUSE' && child.type !== 'RAMP') {
+                          {{ calculateIntensityValue(getEffectiveIntensity(child, 'TARGET')) }}
+                        }
+                        @if (child.type === 'RAMP') {
+                          {{ calculateIntensityValue(getEffectiveIntensity(child, 'START')) }}&rarr;{{ calculateIntensityValue(getEffectiveIntensity(child, 'END')) }}
+                        }
+                      </span>
                     </div>
                   }
                 }

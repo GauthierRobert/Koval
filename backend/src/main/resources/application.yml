@@ -56,10 +56,11 @@ cors:
 firebase:
   service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}
 
-# AI debug flag — set to true to log every raw Anthropic HTTP request/response
+# AI debug flags
 app:
   ai:
     debug-calls: false
+    log-prompts: true
 
 # Logging Configuration
 logging:

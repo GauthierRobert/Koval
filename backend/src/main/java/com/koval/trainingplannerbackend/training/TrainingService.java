@@ -86,6 +86,7 @@ public class TrainingService {
 
         ofNullable(updates.getTitle()).ifPresent(training::setTitle);
         ofNullable(updates.getDescription()).ifPresent(training::setDescription);
+        ofNullable(updates.getSportType()).ifPresent(training::setSportType);
         ofNullable(updates.getBlocks()).ifPresent(blocks ->
                 training.setBlocks(blocks.stream().map(this::standardizeBlockType).toList()));
         ofNullable(updates.getGroupIds()).ifPresent(training::setGroupIds);

@@ -1,9 +1,11 @@
 @if (user$ | async; as user) {
-  <div class="physiology-page">
-    <div class="page-header">
-      <h2>{{ 'PHYSIOLOGY.PAGE_TITLE' | translate }}</h2>
-      <p class="subtitle">{{ 'PHYSIOLOGY.PAGE_SUBTITLE' | translate }}</p>
-    </div>
+  <div class="physiology-page" [class.embedded]="embedded">
+    @if (!embedded) {
+      <div class="page-header">
+        <h2>{{ 'PHYSIOLOGY.PAGE_TITLE' | translate }}</h2>
+        <p class="subtitle">{{ 'PHYSIOLOGY.PAGE_SUBTITLE' | translate }}</p>
+      </div>
+    }
 
     <div class="phys-stats">
       @if (user.ftp) {

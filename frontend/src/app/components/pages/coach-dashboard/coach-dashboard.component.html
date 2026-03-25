@@ -282,117 +282,8 @@
                   }
                 </div>
               </div>
-            }
-          }
-        }
 
-        @if (activeTab === 'physiology') {
-          <div class="physiology-panel">
-            <div class="phys-stats">
-              <div class="phys-stat">
-                <span class="phys-label">FTP</span>
-                <span class="phys-value">{{ selectedAthlete.ftp || '—' }}W</span>
-              </div>
-              <div class="phys-stat">
-                <span class="phys-label">{{ 'COACH_DASHBOARD.PHYS_VO2MAX_EST' | translate }}</span>
-                <span class="phys-value">{{ getEstimatedVo2Max(selectedAthlete.ftp) }} {{ 'COACH_DASHBOARD.PHYS_VO2MAX_UNIT' | translate }}</span>
-              </div>
-              @if (selectedAthlete.functionalThresholdPace) {
-                <div class="phys-stat">
-                  <span class="phys-label">{{ 'COACH_DASHBOARD.PHYS_THRESHOLD_PACE' | translate }}</span>
-                  <span class="phys-value">{{ formatPace(selectedAthlete.functionalThresholdPace) }}</span>
-                </div>
-              }
-              @if (selectedAthlete.criticalSwimSpeed) {
-                <div class="phys-stat">
-                  <span class="phys-label">{{ 'COACH_DASHBOARD.PHYS_CSS' | translate }}</span>
-                  <span class="phys-value">{{ formatSwimPace(selectedAthlete.criticalSwimSpeed) }}</span>
-                </div>
-              }
-            </div>
-
-          <!-- 3-column zones grid -->
-          <div class="zones-3col">
-            <div class="zone-col">
-              <div class="zone-col-header">
-                <span class="zone-col-title">{{ 'COACH_DASHBOARD.ZONE_COL_CYCLING' | translate }}</span>
-                @if (selectedAthlete.ftp) {
-                  <span class="zone-col-ref">{{ selectedAthlete.ftp }}W FTP</span>
-                }
-              </div>
-              @if (selectedAthlete.ftp) {
-                <div class="zones-table">
-                  @for (z of getPowerZones(selectedAthlete.ftp); track trackZoneByName(z)) {
-                    <div class="zone-row">
-                      <span class="zone-dot" [style.background]="z.color"></span>
-                      <span class="zone-name">{{ z.name }}</span>
-                      <span class="zone-range">{{ z.low }}–{{ z.high !== null ? z.high + 'W' : '∞' }}</span>
-                    </div>
-                  }
-                </div>
-              } @else {
-                <div class="zone-no-data">{{ 'COACH_DASHBOARD.ZONE_NO_FTP' | translate }}</div>
-              }
-            </div>
-
-            <div class="zone-col">
-              <div class="zone-col-header">
-                <span class="zone-col-title">{{ 'COACH_DASHBOARD.ZONE_COL_RUNNING' | translate }}</span>
-                @if (selectedAthlete.functionalThresholdPace) {
-                  <span class="zone-col-ref">{{ formatPace(selectedAthlete.functionalThresholdPace) }} FTP</span>
-                }
-              </div>
-              @if (selectedAthlete.functionalThresholdPace) {
-                <div class="zones-table">
-                  @for (z of getRunZones(selectedAthlete.ftp, selectedAthlete.functionalThresholdPace); track trackZoneByName(z)) {
-                    <div class="zone-row">
-                      <span class="zone-dot" [style.background]="z.color"></span>
-                      <span class="zone-name">{{ z.name }}</span>
-                      <span class="zone-range">
-                        {{ z.low !== null ? formatPace(z.low) : '∞' }}
-                        @if (z.high !== null) {
-                          – {{ formatPace(z.high) }}
-                        }
-                      </span>
-                    </div>
-                  }
-                </div>
-              } @else {
-                <div class="zone-no-data">{{ 'COACH_DASHBOARD.ZONE_NO_THRESHOLD_PACE' | translate }}</div>
-              }
-            </div>
-
-            <div class="zone-col">
-              <div class="zone-col-header">
-                <span class="zone-col-title">{{ 'COACH_DASHBOARD.ZONE_COL_SWIMMING' | translate }}</span>
-                @if (selectedAthlete.criticalSwimSpeed) {
-                  <span class="zone-col-ref">{{ formatSwimPace(selectedAthlete.criticalSwimSpeed) }} CSS</span>
-                }
-              </div>
-              @if (selectedAthlete.criticalSwimSpeed) {
-                <div class="zones-table">
-                  @for (z of getSwimZones(selectedAthlete.criticalSwimSpeed); track trackZoneByName(z)) {
-                    <div class="zone-row">
-                      <span class="zone-dot" [style.background]="z.color"></span>
-                      <span class="zone-name">{{ z.name }}</span>
-                      <span class="zone-range">
-                        {{ z.low !== null ? formatSwimPace(z.low) : '∞' }}
-                        @if (z.high !== null) {
-                          – {{ formatSwimPace(z.high) }}
-                        }
-                      </span>
-                    </div>
-                  }
-                </div>
-              } @else {
-                <div class="zone-no-data">{{ 'COACH_DASHBOARD.ZONE_NO_CSS' | translate }}</div>
-              }
-            </div>
-          </div>
-
-          @if (athleteSessions$ | async; as sessions) {
-            <div class="section-title" style="margin-top: 1.5rem">{{ 'COACH_DASHBOARD.SPORT_DISTRIBUTION' | translate }}</div>
-            @if (sessions.length > 0) {
+              <div class="section-title" style="margin-top: 1.5rem">{{ 'COACH_DASHBOARD.SPORT_DISTRIBUTION' | translate }}</div>
               <div class="sport-dist">
                 @for (d of getSportDistribution(sessions); track trackDistBySport(d)) {
                   <div class="dist-row">
@@ -405,36 +296,12 @@
                   </div>
                 }
               </div>
-            } @else {
-              <div class="empty-tab">{{ 'COACH_DASHBOARD.EMPTY_TAB_NO_SESSION_DATA' | translate }}</div>
             }
           }
+        }
 
-          @if (coachZoneSystems$ | async; as systems) {
-            @if (systems.length > 0) {
-              <div class="section-title" style="margin-top:1.5rem">{{ 'COACH_DASHBOARD.COACH_ZONE_SYSTEMS' | translate }}</div>
-              @for (sys of systems; track trackSystemByName(sys)) {
-                <div class="zone-system-header">
-                  <span class="zone-sys-name">{{ sys.name }}</span>
-                  <span class="zone-sys-sport">{{ sys.sportType }}</span>
-                  <span class="zone-sys-ref">{{ sys.referenceType }}</span>
-                </div>
-                <div class="zones-table">
-                  @for (z of sys.zones; let i = $index; track trackZoneByLabel(z)) {
-                    <div class="zone-row">
-                      <span class="zone-dot" [style.background]="getZoneColor(i)"></span>
-                      <span class="zone-name">{{ z.label }} — {{ z.description }}</span>
-                      <span class="zone-range zone-range--dual">
-                        <span class="zone-actual">{{ getCustomZoneActualRange(z, selectedAthlete) }}</span>
-                        <span class="zone-pct">{{ z.low }}–{{ z.high }}%</span>
-                      </span>
-                    </div>
-                  }
-                </div>
-              }
-            }
-          }
-          </div>
+        @if (activeTab === 'physiology') {
+          <app-physiology-page [overrideUser]="selectedAthlete" [embedded]="true"></app-physiology-page>
         }
 
         @if (activeTab === 'history') {

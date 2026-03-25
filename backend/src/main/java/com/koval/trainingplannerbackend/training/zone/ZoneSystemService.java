@@ -1,5 +1,9 @@
 package com.koval.trainingplannerbackend.training.zone;
 
+import com.koval.trainingplannerbackend.club.membership.ClubMemberRole;
+import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
+import com.koval.trainingplannerbackend.club.membership.ClubMembership;
+import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
 import com.koval.trainingplannerbackend.training.group.GroupService;
 import com.koval.trainingplannerbackend.training.model.SportType;
 import org.springframework.security.access.AccessDeniedException;
@@ -19,6 +23,7 @@ public class ZoneSystemService {
 
     private final ZoneSystemRepository zoneSystemRepository;
     private final GroupService groupService;
+    private final ClubMembershipRepository clubMembershipRepository;
 
     private record CacheEntry(List<ZoneSystem> value, long timestamp) {
         boolean isExpired() {
@@ -28,9 +33,11 @@ public class ZoneSystemService {
 
     private final Map<String, CacheEntry> defaultZoneCache = new ConcurrentHashMap<>();
 
-    public ZoneSystemService(ZoneSystemRepository zoneSystemRepository, GroupService groupService) {
+    public ZoneSystemService(ZoneSystemRepository zoneSystemRepository, GroupService groupService,
+                             ClubMembershipRepository clubMembershipRepository) {
         this.zoneSystemRepository = zoneSystemRepository;
         this.groupService = groupService;
+        this.clubMembershipRepository = clubMembershipRepository;
     }
 
     public ZoneSystem createZoneSystem(ZoneSystem zoneSystem) {
@@ -94,6 +101,9 @@ public class ZoneSystemService {
         if (userId.equals(zs.getCoachId())) return zs;
         List<String> coachIds = groupService.getCoachIdsForAthlete(userId);
         if (coachIds.contains(zs.getCoachId())) return zs;
+        // Check if user shares a club with the zone system's coach
+        List<ZoneSystem> clubZones = getZoneSystemsFromClubCoaches(userId);
+        if (clubZones.stream().anyMatch(z -> z.getId().equals(id))) return zs;
         throw new AccessDeniedException("You do not have access to this zone system");
     }
 
@@ -142,5 +152,29 @@ public class ZoneSystemService {
         List<String> coachIds = groupService.getCoachIdsForAthlete(athleteId);
         if (coachIds.isEmpty()) return List.of();
         return zoneSystemRepository.findByCoachIdIn(coachIds);
+    }
+
+    /**
+     * Returns zone systems from all coaches in clubs where the user is an active member.
+     */
+    public List<ZoneSystem> getZoneSystemsFromClubCoaches(String userId) {
+        // Find all clubs the user belongs to (active memberships)
+        List<ClubMembership> userMemberships = clubMembershipRepository.findByUserId(userId).stream()
+                .filter(m -> m.getStatus() == ClubMemberStatus.ACTIVE)
+                .toList();
+        if (userMemberships.isEmpty()) return List.of();
+
+        // For each club, find all coach-role members
+        List<String> clubCoachIds = new ArrayList<>();
+        for (ClubMembership membership : userMemberships) {
+            clubMembershipRepository.findByClubIdAndStatus(membership.getClubId(), ClubMemberStatus.ACTIVE).stream()
+                    .filter(m -> m.getRole() == ClubMemberRole.COACH || m.getRole() == ClubMemberRole.OWNER)
+                    .filter(m -> !m.getUserId().equals(userId)) // exclude self
+                    .map(ClubMembership::getUserId)
+                    .forEach(clubCoachIds::add);
+        }
+
+        if (clubCoachIds.isEmpty()) return List.of();
+        return zoneSystemRepository.findByCoachIdIn(clubCoachIds.stream().distinct().toList());
     }
 }

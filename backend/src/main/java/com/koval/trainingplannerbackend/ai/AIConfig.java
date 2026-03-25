@@ -21,6 +21,7 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.messages.MessageType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -45,8 +46,18 @@ public class AIConfig {
 
     private final String commonRules;
 
+    @Autowired(required = false)
+    private PromptLogger promptLogger;
+
     public AIConfig() {
         this.commonRules = loadPrompt("common-rules");
+    }
+
+    private ChatClient.Builder withLogging(ChatClient.Builder builder) {
+        if (promptLogger != null) {
+            builder.defaultAdvisors(promptLogger);
+        }
+        return builder;
     }
 
     // ── Beans ───────────────────────────────────────────────────────────
@@ -55,7 +66,7 @@ public class AIConfig {
     public ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository) {
         return MessageWindowChatMemory.builder()
                 .chatMemoryRepository(chatMemoryRepository)
-                .maxMessages(12)
+                .maxMessages(8)
                 .build();
     }
 
@@ -65,7 +76,7 @@ public class AIConfig {
                                              ContextToolService contextToolService,
                                              TrainingToolService trainingToolService) {
         //TODO temporary — plans disabled: PlanToolService removed from tools
-        return ChatClient.builder(chatModel)
+        return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(agentPrompt("training-creation"))
                 .defaultOptions(sonnetOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
@@ -82,7 +93,7 @@ public class AIConfig {
                                        GoalToolService goalToolService,
                                        RaceToolService raceToolService) {
         //TODO temporary — plans disabled: PlanToolService removed from tools
-        return ChatClient.builder(chatModel)
+        return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(agentPrompt("scheduling"))
                 .defaultOptions(sonnetOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
@@ -96,7 +107,7 @@ public class AIConfig {
                                      ContextToolService contextToolService,
                                      HistoryToolService historyToolService,
                                      GoalToolService goalToolService) {
-        return ChatClient.builder(chatModel)
+        return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(agentPrompt("analysis"))
                 .defaultOptions(sonnetOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
@@ -111,7 +122,7 @@ public class AIConfig {
                                             CoachToolService coachToolService,
                                             ZoneToolService zoneToolService,
                                             GoalToolService goalToolService) {
-        return ChatClient.builder(chatModel)
+        return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(agentPrompt("coach-management"))
                 .defaultOptions(sonnetOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
@@ -124,7 +135,7 @@ public class AIConfig {
                                     ChatMemory chatMemory,
                                     ContextToolService contextToolService,
                                     HistoryToolService historyToolService) {
-        return ChatClient.builder(chatModel)
+        return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(agentPrompt("general"))
                 .defaultOptions(haikuOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
@@ -135,7 +146,7 @@ public class AIConfig {
     @Bean
     public ChatClient actionZoneClient(AnthropicChatModel chatModel,
                                        ZoneToolService zoneToolService) {
-        return ChatClient.builder(chatModel)
+        return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(loadPrompt("action-zone"))
                 .defaultOptions(sonnetOptions())
                 .defaultTools(zoneToolService)
@@ -145,7 +156,7 @@ public class AIConfig {
     @Bean
     public ChatClient actionTrainingSessionClient(AnthropicChatModel chatModel,
                                                   AIActionToolService aiActionToolService) {
-        return ChatClient.builder(chatModel)
+        return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(loadPrompt("action-training-session"))
                 .defaultOptions(sonnetCachedActionOptions())
                 .defaultTools(aiActionToolService)
@@ -156,7 +167,7 @@ public class AIConfig {
     @Deprecated
     public ChatClient actionNotationTrainingClient(AnthropicChatModel chatModel,
                                                    NotationToolService notationToolService) {
-        return ChatClient.builder(chatModel)
+        return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(loadPrompt("action-create-training"))
                 .defaultOptions(sonnetCachedActionOptions())
                 .defaultTools(notationToolService)
@@ -167,7 +178,7 @@ public class AIConfig {
     public ChatClient actionTrainingCreatorClient(AnthropicChatModel chatModel,
                                                   ContextToolService contextToolService,
                                                    CreationTrainingToolService creationTrainingToolService) {
-        return ChatClient.builder(chatModel)
+        return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(agentPrompt("training-creation"))
                 .defaultOptions(sonnetOptions())
                 .defaultTools(contextToolService, creationTrainingToolService)
@@ -176,7 +187,7 @@ public class AIConfig {
 
     @Bean
     public ChatClient raceCompletionClient(AnthropicChatModel chatModel) {
-        return ChatClient.builder(chatModel)
+        return withLogging(ChatClient.builder(chatModel))
                 .defaultOptions(AnthropicChatOptions.builder()
                         .model(SONNET)
                         .temperature(0.3)
@@ -188,7 +199,7 @@ public class AIConfig {
 
     @Bean
     public ChatClient routerClient(AnthropicChatModel chatModel) {
-        return ChatClient.builder(chatModel)
+        return withLogging(ChatClient.builder(chatModel))
                 .defaultOptions(AnthropicChatOptions.builder()
                         .model(HAIKU)
                         .temperature(0.0)
@@ -200,7 +211,7 @@ public class AIConfig {
 
     @Bean
     public ChatClient plannerClient(AnthropicChatModel chatModel) {
-        return ChatClient.builder(chatModel)
+        return withLogging(ChatClient.builder(chatModel))
                 .defaultOptions(AnthropicChatOptions.builder()
                         .model(HAIKU)
                         .temperature(0.0)
@@ -231,7 +242,7 @@ public class AIConfig {
         return AnthropicChatOptions.builder()
                 .model(SONNET)
                 .temperature(0.7)
-                .maxTokens(8192)
+                .maxTokens(4096)
                 .cacheOptions(cacheOptions())
                 .build();
     }

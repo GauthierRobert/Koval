@@ -9,8 +9,6 @@ import {AuthService, User} from '../../../services/auth.service';
 import {ClubService, MyClubRoleEntry} from '../../../services/club.service';
 import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
 import {Group} from '../../../services/group.service';
-import {ZoneService} from '../../../services/zone.service';
-import {ZoneSystem} from '../../../services/zone';
 import {MetricsService, PmcDataPoint} from '../../../services/metrics.service';
 import {TrainingActionModalComponent} from '../../shared/training-action-modal/training-action-modal.component';
 import {InviteCodeModalComponent} from '../../shared/invite-code-modal/invite-code-modal.component';
@@ -21,15 +19,16 @@ import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {PmcChartComponent} from '../../shared/pmc-chart/pmc-chart.component';
 import {SessionAnalysisComponent} from '../session-analysis/session-analysis.component';
 import {SavedSession} from '../../../services/history.service';
-import {daysUntil as sharedDaysUntil, formatPaceWithUnit, formatTimeHMS} from '../../shared/format/format.utils';
+import {daysUntil as sharedDaysUntil, formatTimeHMS} from '../../shared/format/format.utils';
 
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
 import {SessionData, SessionSummary} from '../../../models/session-types.model';
+import {PhysiologyPageComponent} from '../physiology-page/physiology-page.component';
 
 @Component({
   selector: 'app-coach-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, TrainingActionModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, SportIconComponent, PmcChartComponent, SessionAnalysisComponent],
+  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, TrainingActionModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, SportIconComponent, PmcChartComponent, SessionAnalysisComponent, PhysiologyPageComponent],
   templateUrl: './coach-dashboard.component.html',
   styleUrl: './coach-dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,12 +44,6 @@ export class CoachDashboardComponent implements OnInit {
 
   scheduleWeekStart: Date = this.getMondayOfWeek(new Date());
   scheduleWeekEnd: Date = this.getSundayOfWeek(new Date());
-
-  private coachZoneSystemsSubject = new BehaviorSubject<ZoneSystem[]>([]);
-  coachZoneSystems$ = this.coachZoneSystemsSubject.asObservable();
-
-  readonly ZONE_COLORS = ['#6366f1', '#3b82f6', '#22c55e', '#eab308', '#f97316', '#ef4444', '#7f1d1d'];
-  getZoneColor(i: number): string { return this.ZONE_COLORS[i % this.ZONE_COLORS.length]; }
 
   private userId = '';
 
@@ -135,7 +128,6 @@ export class CoachDashboardComponent implements OnInit {
   private readonly clubService = inject(ClubService);
   private readonly metricsService = inject(MetricsService);
   private readonly trainingService = inject(TrainingService);
-  private readonly zoneService = inject(ZoneService);
   private readonly raceGoalService = inject(RaceGoalService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -148,10 +140,6 @@ export class CoachDashboardComponent implements OnInit {
         this.userId = u.id;
         this.loadAthletes();
         this.loadTags();
-        this.zoneService.getCoachZoneSystems().subscribe({
-          next: (systems) => this.ngZone.run(() => this.coachZoneSystemsSubject.next(systems)),
-          error: () => {}
-        });
         this.clubService.loadMyClubRoles();
         this.clubService.myClubRoles$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
           roles => this.clubRolesSubject.next(roles.filter(r => r.role !== 'MEMBER'))
@@ -411,66 +399,6 @@ export class CoachDashboardComponent implements OnInit {
     }
   }
 
-  getPowerZones(ftp: number | undefined): { name: string; low: number; high: number | null; color: string }[] {
-    if (!ftp) return [];
-    return [
-      { name: 'Z1 — Active Recovery', low: 0,                          high: Math.round(ftp * 0.55),       color: '#60a5fa' },
-      { name: 'Z2 — Endurance',       low: Math.round(ftp * 0.55) + 1, high: Math.round(ftp * 0.75),       color: '#34d399' },
-      { name: 'Z3 — Tempo',           low: Math.round(ftp * 0.75) + 1, high: Math.round(ftp * 0.90),       color: '#fbbf24' },
-      { name: 'Z4 — Threshold',       low: Math.round(ftp * 0.90) + 1, high: Math.round(ftp * 1.05),       color: '#f97316' },
-      { name: 'Z5 — VO2Max',          low: Math.round(ftp * 1.05) + 1, high: Math.round(ftp * 1.20),       color: '#f43f5e' },
-      { name: 'Z6 — Anaerobic',       low: Math.round(ftp * 1.20) + 1, high: null,                         color: '#a855f7' },
-    ];
-  }
-
-  // Task 1: Run zones (Coggan) — pace in sec/km derived from functionalThresholdPace
-  getRunZones(ftp: number | undefined, thresholdPace: number | undefined): { name: string; low: number | null; high: number | null; color: string }[] {
-    if (!thresholdPace) return [];
-    // thresholdPace is in sec/km at threshold. Lower = faster.
-    // Zone boundaries as percentage of threshold pace (inverse relationship — higher % means slower)
-    return [
-      { name: 'Z1 — Recovery',   low: Math.round(thresholdPace * 1.29), high: null,                              color: '#60a5fa' },
-      { name: 'Z2 — Endurance',  low: Math.round(thresholdPace * 1.14), high: Math.round(thresholdPace * 1.29),  color: '#34d399' },
-      { name: 'Z3 — Tempo',      low: Math.round(thresholdPace * 1.06), high: Math.round(thresholdPace * 1.14),  color: '#fbbf24' },
-      { name: 'Z4 — Threshold',  low: Math.round(thresholdPace * 0.99), high: Math.round(thresholdPace * 1.06),  color: '#f97316' },
-      { name: 'Z5 — VO2Max',     low: null,                             high: Math.round(thresholdPace * 0.99),  color: '#f43f5e' },
-    ];
-  }
-
-  // Task 1: Swim zones derived from critical swim speed (sec/100m)
-  getSwimZones(css: number | undefined): { name: string; low: number | null; high: number | null; color: string }[] {
-    if (!css) return [];
-    return [
-      { name: 'Z1 — Recovery',   low: Math.round(css * 1.30), high: null,                          color: '#60a5fa' },
-      { name: 'Z2 — Endurance',  low: Math.round(css * 1.15), high: Math.round(css * 1.30),        color: '#34d399' },
-      { name: 'Z3 — Tempo',      low: Math.round(css * 1.05), high: Math.round(css * 1.15),        color: '#fbbf24' },
-      { name: 'Z4 — Threshold',  low: Math.round(css * 0.97), high: Math.round(css * 1.05),        color: '#f97316' },
-      { name: 'Z5 — VO2Max',     low: null,                   high: Math.round(css * 0.97),        color: '#f43f5e' },
-    ];
-  }
-
-  // Task 1: Compute actual watts/pace from athlete ref value + zone %
-  getCustomZoneActualRange(zone: { low: number; high: number }, athlete: User): string {
-    const refValue = athlete.ftp || 0;
-    if (!refValue) return `${zone.low}–${zone.high}%`;
-    const low = Math.round(refValue * zone.low / 100);
-    const high = Math.round(refValue * zone.high / 100);
-    return `${low}–${high}W`;
-  }
-
-  formatPace(secPerKm: number | null): string {
-    return formatPaceWithUnit(secPerKm, 'RUNNING');
-  }
-
-  formatSwimPace(secPer100m: number | null): string {
-    return formatPaceWithUnit(secPer100m, 'SWIMMING');
-  }
-
-  getEstimatedVo2Max(ftp: number | undefined): string {
-    if (!ftp) return '—';
-    return ((ftp / 0.757) * (10.8 / 70)).toFixed(1);
-  }
-
   getSportDistribution(sessions: SessionData[]): SessionSummary[] {
     const map = new Map<string, number>();
     for (const s of sessions) map.set(s.sportType, (map.get(s.sportType) ?? 0) + 1);
@@ -535,9 +463,6 @@ export class CoachDashboardComponent implements OnInit {
   trackByValue(value: string): string { return value; }
   trackScheduleById(workout: ScheduledWorkout): string { return workout.id; }
   trackSessionById(s: SessionData): string { return s.id; }
-  trackZoneByName(z: { name: string }): string { return z.name; }
-  trackZoneByLabel(z: { label: string }): string { return z.label; }
   trackDistBySport(d: { sport: string }): string { return d.sport; }
-  trackSystemByName(sys: { name: string }): string { return sys.name; }
   trackGoalById(goal: RaceGoal): string { return goal.id; }
 }

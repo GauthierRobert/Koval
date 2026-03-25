@@ -53,7 +53,7 @@ public class ContextToolService {
         );
     }
 
-    @Tool(description = "Scheduled workouts for a user in a date range. Status: PENDING, COMPLETED, SKIPPED.")
+    @Tool(description = "Scheduled workouts for a user in a date range (max 20 results). Status: PENDING, COMPLETED, SKIPPED.")
     public List<ScheduleSummary> getUserSchedule(
             @ToolParam(description = "User ID") String userId,
             @ToolParam(description = "Start date (YYYY-MM-DD, inclusive)") LocalDate startDate,
@@ -62,6 +62,11 @@ public class ContextToolService {
                 .findByAthleteIdAndScheduledDateBetween(userId, startDate, endDate);
 
         if (workouts.isEmpty()) return List.of();
+
+        // Limit to 20 most recent to control token usage
+        if (workouts.size() > 20) {
+            workouts = workouts.subList(workouts.size() - 20, workouts.size());
+        }
 
         List<String> trainingIds = workouts.stream()
                 .map(ScheduledWorkout::getTrainingId).distinct().toList();

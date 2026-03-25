@@ -99,10 +99,23 @@ public class ZoneSystemController {
             result.addAll(zoneSystemService.getZoneSystemsForCoach(userId));
         }
 
+        // Zones from direct coach-athlete relationships (Groups)
         List<ZoneSystem> coachZones = zoneSystemService.getZoneSystemsForAthlete(userId);
         Set<String> existingIds = result.stream().map(ZoneSystem::getId).collect(Collectors.toSet());
         for (ZoneSystem z : coachZones) {
-            if (!existingIds.contains(z.getId())) result.add(z);
+            if (!existingIds.contains(z.getId())) {
+                result.add(z);
+                existingIds.add(z.getId());
+            }
+        }
+
+        // Zones from coaches in the user's clubs
+        List<ZoneSystem> clubCoachZones = zoneSystemService.getZoneSystemsFromClubCoaches(userId);
+        for (ZoneSystem z : clubCoachZones) {
+            if (!existingIds.contains(z.getId())) {
+                result.add(z);
+                existingIds.add(z.getId());
+            }
         }
 
         return ResponseEntity.ok(result);

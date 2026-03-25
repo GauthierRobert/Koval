@@ -1,8 +1,8 @@
-import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, Input, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {BehaviorSubject, combineLatest, map, Observable} from 'rxjs';
+import {BehaviorSubject, combineLatest, map, Observable, of, switchMap} from 'rxjs';
 import {AuthService, User} from '../../../services/auth.service';
 import {Zone, ZoneSystem} from '../../../services/zone';
 import {ZoneService} from '../../../services/zone.service';
@@ -19,6 +19,16 @@ type Sport = 'CYCLING' | 'RUNNING' | 'SWIMMING';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PhysiologyPageComponent implements OnInit {
+  /** When set, use this user instead of the authenticated user */
+  private overrideUser$ = new BehaviorSubject<User | null>(null);
+
+  @Input() set overrideUser(u: User | null) {
+    this.overrideUser$.next(u);
+  }
+
+  /** When true, hides the page header (title + subtitle) */
+  @Input() embedded = false;
+
   user$: Observable<User | null>;
 
   private activeSport$ = new BehaviorSubject<Sport>('CYCLING');
@@ -74,7 +84,9 @@ export class PhysiologyPageComponent implements OnInit {
     private authService: AuthService,
     private zoneService: ZoneService,
   ) {
-    this.user$ = this.authService.user$;
+    this.user$ = this.overrideUser$.pipe(
+      switchMap(override => override ? of(override) : this.authService.user$),
+    );
   }
 
   ngOnInit(): void {

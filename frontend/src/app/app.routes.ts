@@ -74,7 +74,7 @@ export const routes: Routes = [
     path: 'chat',
     loadComponent: () =>
       import('./components/pages/ai-chat-page/ai-chat-page.component').then((m) => m.AIChatPageComponent),
-    canActivate: [authGuard],
+    canActivate: [authGuard, coachGuard],
   },
   {
     path: 'analysis/:sessionId',
