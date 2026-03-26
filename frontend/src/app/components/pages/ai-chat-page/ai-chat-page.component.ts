@@ -32,6 +32,7 @@ export class AIChatPageComponent implements OnInit, OnDestroy {
   private nearBottom = true;
   private subscription!: Subscription;
 
+  chatSidebarOpen = false;
   selectedAgentIndex = 0;
 
   agentOptions: AgentOption[] = [

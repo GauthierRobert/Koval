@@ -2,6 +2,8 @@
   padding: 24px;
   max-width: 1600px;
   margin: 0 auto;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .pacing-page.results-active {
@@ -1079,6 +1081,49 @@
   .modal-content {
     width: 95vw;
     padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pacing-page {
+    padding: 12px;
+  }
+
+  .page-header {
+    padding: 8px 12px;
+  }
+
+  .page-header h1 {
+    font-size: 18px;
+  }
+
+  .form-panel-wide {
+    padding: 16px;
+    gap: 14px;
+  }
+
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-fields-row .field {
+    min-width: 100px;
+  }
+
+  .results-view {
+    padding: 0 12px 12px;
+  }
+
+  .summary-row {
+    flex-direction: column;
+  }
+
+  .tab-row {
+    flex-wrap: wrap;
+  }
+
+  .race-plan-item {
+    padding: 10px 12px;
   }
 }
 

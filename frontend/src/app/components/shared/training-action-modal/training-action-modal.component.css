@@ -473,3 +473,11 @@ input[type="date"].field-select {
 .checkbox-label input[type="checkbox"] {
   accent-color: #6366f1;
 }
+
+@media (max-width: 480px) {
+  .modal-panel {
+    width: calc(100vw - 24px);
+    max-height: calc(100vh - 48px);
+    border-radius: 16px;
+  }
+}

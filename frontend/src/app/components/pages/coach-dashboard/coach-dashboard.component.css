@@ -1281,3 +1281,103 @@
   border-color: var(--accent-border);
   color: var(--accent-color);
 }
+
+/* ── Responsive: Tablet & large phones ─────────────────────────────── */
+@media (max-width: 768px) {
+  .coach-container {
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 64px);
+  }
+
+  .athlete-list {
+    width: 100%;
+    max-height: 200px;
+    border-right: none;
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .main-area {
+    width: 100%;
+  }
+
+  .athlete-detail {
+    padding: 1rem;
+  }
+
+  .metrics-dashboard {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .table-header,
+  .table-row {
+    grid-template-columns: 80px 1fr 70px 60px 90px;
+  }
+
+  .table-header span:nth-child(5),
+  .table-row span:nth-child(5) {
+    display: none;
+  }
+
+  .table-header span:nth-child(6),
+  .table-row span:nth-child(6) {
+    display: none;
+  }
+
+  .hist-header,
+  .hist-row {
+    grid-template-columns: 50px 28px 1fr 60px 55px;
+  }
+
+  .hist-header span:nth-child(6),
+  .hist-row span:nth-child(6),
+  .hist-header span:nth-child(7),
+  .hist-row span:nth-child(7) {
+    display: none;
+  }
+
+  .zones-3col {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-banner {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .header-right {
+    gap: 0.75rem;
+  }
+
+  .phys-stats {
+    flex-direction: column;
+  }
+
+  .detail-gpx-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .metrics-dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .coach-tabs {
+    flex-wrap: wrap;
+  }
+
+  .sm-header,
+  .sm-row {
+    grid-template-columns: 24px 1fr 50px;
+  }
+
+  .athlete-detail {
+    padding: 0.75rem;
+  }
+}

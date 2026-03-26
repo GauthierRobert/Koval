@@ -29,3 +29,16 @@
   border-color: var(--pill-color, var(--accent-color));
   color: var(--pill-color, var(--accent-color));
 }
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  :host {
+    gap: 4px;
+  }
+
+  .filter-pill {
+    font-size: 9px;
+    padding: 4px 8px;
+    border-radius: 8px;
+  }
+}

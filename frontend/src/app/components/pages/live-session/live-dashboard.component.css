@@ -127,3 +127,46 @@
     .confirmation-card h2 { color: var(--accent-color); margin-bottom: 10px; font-size: 24px; font-weight: 800; }
     .confirmation-card p { color: var(--text-muted); margin-bottom: 30px; font-size: 16px; }
     .confirm-actions { display: flex; gap: 20px; justify-content: center; }
+
+    /* ── Tablet / large phone ── */
+    @media (max-width: 768px) {
+      .live-container {
+        inset: 0;
+        border-radius: 0;
+        padding: 16px;
+      }
+
+      .top-bar { margin-bottom: 20px; }
+
+      .metrics-grid {
+        grid-template-columns: 1fr 1fr;
+        height: auto;
+        gap: 8px;
+      }
+
+      .live-value { font-size: 32px; }
+      .secondary-block .value { font-size: 24px; }
+      .timer { font-size: 24px; }
+
+      .block-info { gap: 12px; }
+
+      .graph-area { margin-bottom: 16px; }
+
+      .controls { flex-wrap: wrap; gap: 12px; }
+      .control-btn { padding: 12px 24px; font-size: 14px; }
+
+      .confirmation-card { width: 90vw; padding: 24px; }
+      .confirmation-card h2 { font-size: 20px; }
+      .confirm-actions { gap: 12px; }
+    }
+
+    /* ── Small phone ── */
+    @media (max-width: 480px) {
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .live-value { font-size: 28px; }
+      .workout-title { font-size: 18px; }
+      .timer { font-size: 22px; }
+    }

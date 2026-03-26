@@ -44,6 +44,11 @@ export class WorkoutHistoryComponent implements OnInit {
     stravaSyncService = inject(StravaSyncService);
 
     sessions$ = this.historyService.sessions$;
+    mobileListOpen = true;
+
+    toggleMobileList(): void {
+      this.mobileListOpen = !this.mobileListOpen;
+    }
 
     ngOnInit(): void {
         const sessionId = this.route.snapshot.paramMap.get('sessionId');

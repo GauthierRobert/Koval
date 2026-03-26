@@ -787,3 +787,67 @@
   color: var(--text-muted);
   opacity: 0.6;
 }
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .zone-content {
+    flex-direction: column;
+  }
+
+  .systems-list {
+    width: 100%;
+    min-width: 0;
+    max-height: 200px;
+    border-right: none;
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .editor {
+    padding: 1rem;
+  }
+
+  .editor-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .editor-config {
+    flex-wrap: wrap;
+  }
+
+  .zones-table-header,
+  .zone-row {
+    grid-template-columns: 28px 60px 120px 1fr 36px;
+  }
+
+  .zone-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .header-right {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .zone-container {
+    height: auto;
+    overflow: visible;
+  }
+
+  .editor {
+    padding: 0.75rem;
+    gap: 1rem;
+  }
+
+  .zones-table-header,
+  .zone-row {
+    grid-template-columns: 28px 52px 1fr 36px;
+  }
+
+  .sport-filters {
+    flex-wrap: wrap;
+  }
+}

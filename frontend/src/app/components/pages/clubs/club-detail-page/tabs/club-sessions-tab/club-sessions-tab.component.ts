@@ -152,7 +152,12 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
 
   // --- View toggle ---
 
+  get isMobile(): boolean {
+    return window.innerWidth <= 768;
+  }
+
   setViewMode(mode: ViewMode): void {
+    if (mode === 'CALENDAR' && this.isMobile) return;
     this.viewMode = mode;
     if (mode === 'CALENDAR') {
       this.scrolledToCurrentHour = false;

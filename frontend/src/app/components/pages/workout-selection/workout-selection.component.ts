@@ -1,4 +1,4 @@
-import {Component, inject, OnInit} from '@angular/core';
+import {Component, HostListener, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {TrainingService} from '../../../services/training.service';
@@ -12,8 +12,8 @@ import {
   TRAINING_TYPES,
   TrainingType,
 } from '../../../models/training.model';
-import {Observable} from 'rxjs';
-import {map} from 'rxjs/operators';
+import {combineLatest, Observable} from 'rxjs';
+import {filter, map, take} from 'rxjs/operators';
 import {RouterModule} from '@angular/router';
 import {WorkoutVisualizationComponent} from '../../shared/workout-visualization/workout-visualization.component';
 import {SidebarComponent} from '../../layout/sidebar/sidebar.component';
@@ -41,6 +41,15 @@ export class WorkoutSelectionComponent implements OnInit {
   private translate = inject(TranslateService);
 
   showAiModal = false;
+  mobileListOpen = true;
+
+  get isMobile(): boolean {
+    return window.innerWidth <= 768;
+  }
+
+  toggleMobileList(): void {
+    this.mobileListOpen = !this.mobileListOpen;
+  }
 
   sourceOptions$: Observable<FilterPillOption[]> = this.trainingService.receivedTrainings$.pipe(
     map((received) => {
@@ -76,6 +85,16 @@ export class WorkoutSelectionComponent implements OnInit {
 
   ngOnInit(): void {
     this.trainingService.loadReceivedTrainings();
+
+    // Auto-select first training if none is selected
+    combineLatest([this.filterService.filteredTrainings$, this.selectedTraining$]).pipe(
+      filter(([trainings]) => trainings.length > 0),
+      take(1),
+    ).subscribe(([trainings, selected]) => {
+      if (!selected) {
+        this.trainingService.selectTraining(trainings[0]);
+      }
+    });
   }
 
   onContextChange(value: string | null): void {

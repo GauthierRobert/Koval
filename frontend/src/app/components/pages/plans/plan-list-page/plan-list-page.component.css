@@ -235,3 +235,24 @@
   color: var(--text-secondary, #a0a0a0);
   font-size: 0.85rem;
 }
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .plans-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .plans-page {
+    padding: 1.5rem 1rem;
+  }
+}

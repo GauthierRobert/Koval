@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {ChangeDetectionStrategy, Component, HostListener, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {Router, RouterModule} from '@angular/router';
 import {BluetoothService} from '../../../services/bluetooth.service';
@@ -38,6 +38,30 @@ export class TopBarComponent {
   isClubsOpen = false;
   showMemberships = false;
   showNotifPrefs = false;
+  mobileMenuOpen = false;
+
+  toggleMobileMenu(): void {
+    this.mobileMenuOpen = !this.mobileMenuOpen;
+    if (!this.mobileMenuOpen) {
+      this.isClubsOpen = false;
+      this.isTrainingOpen = false;
+      this.isAnalyticsOpen = false;
+    }
+  }
+
+  closeMobileMenu(): void {
+    this.mobileMenuOpen = false;
+    this.isClubsOpen = false;
+    this.isTrainingOpen = false;
+    this.isAnalyticsOpen = false;
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    if (window.innerWidth > 768 && this.mobileMenuOpen) {
+      this.mobileMenuOpen = false;
+    }
+  }
 
   user$ = this.authService.user$;
   isCoach$ = this.authService.user$.pipe(map(u => u?.role === 'COACH'));

@@ -392,3 +392,11 @@ h3 {
     transform: translateX(16px);
     background: var(--color-white);
 }
+
+@media (max-width: 480px) {
+    .settings-modal {
+        width: calc(100vw - 24px);
+        max-height: calc(100vh - 48px);
+        border-radius: 16px;
+    }
+}

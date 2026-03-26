@@ -1,6 +1,6 @@
 <div class="chat-page-layout">
   <!-- Sidebar/History -->
-  <div class="chat-sidebar glass">
+  <div class="chat-sidebar glass" [class.sidebar-open]="chatSidebarOpen">
     <div class="sidebar-header">
       <h3 class="sidebar-title">{{ 'AI_CHAT.SIDEBAR_SESSIONS_TITLE' | translate }}</h3>
       <button class="new-chat-btn" (click)="newChat()">{{ 'AI_CHAT.BTN_NEW_CHAT' | translate }}</button>
@@ -10,7 +10,7 @@
         <div
           class="history-item"
           [class.active]="h.id === (chatService.activeChatId$ | async)"
-          (click)="loadConversation(h.id)"
+          (click)="loadConversation(h.id); chatSidebarOpen = false"
         >
           <span class="history-title">{{ h.title || ('AI_CHAT.HISTORY_ITEM_UNTITLED' | translate) }}</span>
           <button class="delete-btn" (click)="deleteConversation(h.id, $event)">&times;</button>
@@ -39,7 +39,9 @@
           <span class="header-subtitle">{{ 'AI_CHAT.HEADER_SUBTITLE' | translate }}</span>
         </div>
       </div>
-      <div class="header-right"></div>
+      <div class="header-right">
+        <button class="mobile-sidebar-toggle mobile-only" (click)="chatSidebarOpen = !chatSidebarOpen">&#9776;</button>
+      </div>
     </div>
 
     @let messages = chatService.chatMessages$ | async;

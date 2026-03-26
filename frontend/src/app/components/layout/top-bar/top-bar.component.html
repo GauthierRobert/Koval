@@ -1,11 +1,26 @@
 <header class="top-bar glass" [class.disabled]="!(user$ | async)">
   <div class="brand" routerLink="/dashboard" style="cursor: pointer">
     <img src="/assets/logo.svg" alt="Koval Logo" class="logo-img" />
-    <span class="app-title">Koval <span class="accent">TRAINING</span></span>
+    <span class="app-title desktop-only">Koval <span class="accent">TRAINING</span></span>
   </div>
 
-  <nav class="nav-links">
-    <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">{{ 'TOP_BAR.NAV_DASHBOARD' | translate }}</a>
+  <!-- Hamburger button for mobile -->
+  <button class="hamburger-btn mobile-only" (click)="toggleMobileMenu()" aria-label="Toggle menu">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      @if (mobileMenuOpen) {
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      } @else {
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      }
+    </svg>
+  </button>
+
+  <nav class="nav-links" [class.nav-open]="mobileMenuOpen">
+    <a routerLink="/dashboard" routerLinkActive="active" class="nav-link" (click)="closeMobileMenu()">{{ 'TOP_BAR.NAV_DASHBOARD' | translate }}</a>
 
     <!-- Clubs dropdown -->
     <div class="nav-dropdown-wrapper">
@@ -40,7 +55,7 @@
             }
           }
           <div class="club-dropdown-sep"></div>
-          <a class="dropdown-item club-dropdown-create" routerLink="/clubs" (click)="closeClubs()">
+          <a class="dropdown-item club-dropdown-create" routerLink="/clubs" (click)="closeClubs(); closeMobileMenu()">
             <span class="dropdown-label">{{ 'TOP_BAR.CLUB_LIST_LABEL' | translate }}</span>
             <span class="dropdown-desc">{{ 'TOP_BAR.CLUB_LIST_DESC' | translate }}</span>
           </a>
@@ -64,39 +79,39 @@
       @if (isTrainingOpen) {
         <div class="nav-dropdown glass" (click)="$event.stopPropagation()">
         <a routerLink="/trainings" routerLinkActive="active" class="dropdown-item"
-          (click)="closeTraining()">
+          (click)="closeTraining(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_TRAININGS_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_TRAININGS_DESC' | translate }}</span>
         </a>
         <!-- TODO temporary — plans disabled
         <a routerLink="/plans" routerLinkActive="active" class="dropdown-item"
-          (click)="closeTraining()">
+          (click)="closeTraining(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PLANS_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PLANS_DESC' | translate }}</span>
         </a>
         -->
         <a routerLink="/history" routerLinkActive="active" class="dropdown-item"
-          (click)="closeTraining()">
+          (click)="closeTraining(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_HISTORY_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_HISTORY_DESC' | translate }}</span>
         </a>
         <a routerLink="/calendar" routerLinkActive="active" class="dropdown-item"
-          (click)="closeTraining()">
+          (click)="closeTraining(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_CALENDAR_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_CALENDAR_DESC' | translate }}</span>
         </a>
         <a routerLink="/goals" routerLinkActive="active" class="dropdown-item"
-          (click)="closeTraining()">
+          (click)="closeTraining(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_GOALS_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_GOALS_DESC' | translate }}</span>
         </a>
         <a routerLink="/races" routerLinkActive="active" class="dropdown-item"
-          (click)="closeTraining()">
+          (click)="closeTraining(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_RACES_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_RACES_DESC' | translate }}</span>
         </a>
         <a routerLink="/pacing" routerLinkActive="active" class="dropdown-item"
-          (click)="closeTraining()">
+          (click)="closeTraining(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PACING_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PACING_DESC' | translate }}</span>
         </a>
@@ -120,17 +135,17 @@
       @if (isAnalyticsOpen) {
         <div class="nav-dropdown glass" (click)="$event.stopPropagation()">
         <a routerLink="/pmc"        routerLinkActive="active" class="dropdown-item"
-          (click)="closeAnalytics()">
+          (click)="closeAnalytics(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PMC_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PMC_DESC' | translate }}</span>
         </a>
         <a routerLink="/analytics" routerLinkActive="active" class="dropdown-item"
-          (click)="closeAnalytics()">
+          (click)="closeAnalytics(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_ANALYTICS_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_ANALYTICS_DESC' | translate }}</span>
         </a>
         <a routerLink="/physiology" routerLinkActive="active" class="dropdown-item"
-          (click)="closeAnalytics()">
+          (click)="closeAnalytics(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PHYSIOLOGY_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PHYSIOLOGY_DESC' | translate }}</span>
         </a>
@@ -141,10 +156,10 @@
     <!-- Coach-only tabs -->
     @if (isCoach$ | async) {
       <div class="nav-sep"></div>
-      <a routerLink="/coach"  routerLinkActive="active" class="nav-link nav-link--coach">{{ 'TOP_BAR.NAV_COACHING' | translate }}</a>
-      <a routerLink="/groups" routerLinkActive="active" class="nav-link nav-link--coach">{{ 'TOP_BAR.NAV_GROUPS' | translate }}</a>
-      <a routerLink="/zones"  routerLinkActive="active" class="nav-link nav-link--coach">{{ 'TOP_BAR.NAV_ZONES' | translate }}</a>
-      <a routerLink="/chat"   routerLinkActive="active" class="nav-link nav-link--coach">{{ 'TOP_BAR.NAV_ASSISTANT' | translate }}</a>
+      <a routerLink="/coach"  routerLinkActive="active" class="nav-link nav-link--coach" (click)="closeMobileMenu()">{{ 'TOP_BAR.NAV_COACHING' | translate }}</a>
+      <a routerLink="/groups" routerLinkActive="active" class="nav-link nav-link--coach" (click)="closeMobileMenu()">{{ 'TOP_BAR.NAV_GROUPS' | translate }}</a>
+      <a routerLink="/zones"  routerLinkActive="active" class="nav-link nav-link--coach" (click)="closeMobileMenu()">{{ 'TOP_BAR.NAV_ZONES' | translate }}</a>
+      <a routerLink="/chat"   routerLinkActive="active" class="nav-link nav-link--coach" (click)="closeMobileMenu()">{{ 'TOP_BAR.NAV_ASSISTANT' | translate }}</a>
     }
   </nav>
 
@@ -213,6 +228,11 @@
     }
   </div>
 </header>
+
+<!-- Mobile menu backdrop -->
+@if (mobileMenuOpen) {
+  <div class="mobile-backdrop" (click)="closeMobileMenu()"></div>
+}
 
 <!-- Overlays to close dropdowns when clicking outside -->
 @if (isClubsOpen) {

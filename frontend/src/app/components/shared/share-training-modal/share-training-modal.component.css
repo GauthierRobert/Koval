@@ -122,3 +122,11 @@
 
     .save-btn:hover { filter: brightness(1.15); }
     .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    @media (max-width: 480px) {
+      .modal-card {
+        width: calc(100vw - 24px);
+        max-height: calc(100vh - 48px);
+        border-radius: 16px;
+      }
+    }

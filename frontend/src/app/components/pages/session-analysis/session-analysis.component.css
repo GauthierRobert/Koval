@@ -604,6 +604,54 @@
   }
 }
 
+@media (max-width: 480px) {
+  .analysis-page {
+    padding: var(--space-md);
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .stat-value.compact {
+    font-size: 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .rpe-block {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .rpe-slider-wrap {
+    width: 100%;
+  }
+
+  .blocks-header,
+  .blocks-row {
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    font-size: 10px;
+    gap: 4px;
+  }
+
+  .chart-controls {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
 .not-found {
   text-align: center;
   padding: 48px;

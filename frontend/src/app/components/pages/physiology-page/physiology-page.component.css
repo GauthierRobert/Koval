@@ -339,3 +339,55 @@
 .custom-ref-save:hover {
   background: rgba(255, 157, 0, 0.2);
 }
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .phys-stats {
+    flex-direction: column;
+  }
+
+  .phys-stat {
+    min-width: 0;
+  }
+
+  .zone-row {
+    gap: 6px;
+    padding: var(--space-xs) 6px;
+  }
+
+  .zone-actual {
+    min-width: 60px;
+  }
+
+  .zone-pct {
+    min-width: 50px;
+  }
+
+  .sport-tabs {
+    flex-wrap: wrap;
+  }
+
+  .custom-ref-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .physiology-page {
+    padding: var(--space-md);
+  }
+
+  .phys-value {
+    font-size: 1.1rem;
+  }
+
+  .zone-name {
+    font-size: 0.7rem;
+  }
+
+  .zone-pace-sub {
+    display: none;
+  }
+}

@@ -25,11 +25,11 @@
             <span class="badge-desc">{{ 'PMC.BADGE_FATIGUE' | translate }}</span>
           </div>
           <div class="load-badge tsb"
-            [class.positive]="(m.tsb ?? 0) >= 0"
-            [class.negative]="(m.tsb ?? 0) < 0">
+            [class.positive]="m.tsb >= 0"
+            [class.negative]="m.tsb < 0">
             <span class="badge-label">TSB</span>
-            <span class="badge-value">{{ (m.tsb ?? 0) >= 0 ? '+' : '' }}{{ m.tsb | number:'1.0-0' }}</span>
-            <span class="badge-desc">{{ (m.tsb ?? 0) >= 0 ? ('PMC.BADGE_TSB_FRESH' | translate) : ('PMC.BADGE_TSB_FATIGUED' | translate) }}</span>
+            <span class="badge-value">{{ m.tsb >= 0 ? '+' : '' }}{{ m.tsb | number:'1.0-0' }}</span>
+            <span class="badge-desc">{{ m.tsb >= 0 ? ('PMC.BADGE_TSB_FRESH' | translate) : ('PMC.BADGE_TSB_FATIGUED' | translate) }}</span>
           </div>
         </div>
       }

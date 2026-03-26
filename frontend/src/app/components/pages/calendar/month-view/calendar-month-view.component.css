@@ -292,3 +292,54 @@
   background: rgba(255, 255, 255, 0.1);
   color: var(--text-color);
 }
+
+/* ── Responsive: Tablet & large phones ─────────────────────────────── */
+@media (max-width: 768px) {
+  .month-day-names span {
+    padding: 4px;
+    font-size: 8px;
+    letter-spacing: 0.5px;
+  }
+
+  .month-cell {
+    padding: 4px 0;
+  }
+
+  .cell-day {
+    font-size: 10px;
+  }
+
+  .mini-card {
+    padding: 2px 4px;
+    font-size: 9px;
+    gap: 4px;
+  }
+
+  .mini-tss {
+    font-size: 8px;
+  }
+
+  .goal-pill {
+    font-size: 0.6rem;
+    padding: 2px 4px;
+  }
+}
+
+/* ── Responsive: Small phones ──────────────────────────────────────── */
+@media (max-width: 480px) {
+  .mini-title {
+    display: none;
+  }
+
+  .mini-card {
+    justify-content: center;
+  }
+
+  .mini-club-name {
+    font-size: 7px;
+  }
+
+  .goal-pill-title {
+    display: none;
+  }
+}

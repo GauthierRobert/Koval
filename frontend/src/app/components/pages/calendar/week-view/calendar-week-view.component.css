@@ -701,3 +701,53 @@
 .reschedule-date-input:focus {
   border-color: var(--accent-color);
 }
+
+/* ── Responsive: Tablet & large phones ─────────────────────────────── */
+@media (max-width: 768px) {
+  .calendar-grid {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .day-column {
+    padding: 0.5rem;
+    overflow: visible;
+  }
+
+  .workout-slot {
+    overflow: visible;
+  }
+
+  .day-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.4rem;
+  }
+
+  .workout-card {
+    padding: 0.5rem;
+  }
+
+  .card-top {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .technical-metrics {
+    flex-wrap: wrap;
+  }
+
+  .club-session-row {
+    flex-direction: column;
+  }
+
+  .rest-day {
+    writing-mode: horizontal-tb;
+    transform: none;
+    padding: 0.3rem 0;
+    font-size: 0.6rem;
+  }
+}

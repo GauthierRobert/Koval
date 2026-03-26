@@ -422,3 +422,39 @@
 .remove-btn:hover {
   color: var(--danger-color);
 }
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .tags-list {
+    grid-template-columns: 1fr;
+  }
+
+  .create-banner-fields {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .create-input {
+    width: 100%;
+  }
+
+  .create-input--num {
+    width: 100%;
+  }
+
+  .tags-body {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tag-card-header {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .create-banner {
+    margin: var(--space-sm) var(--space-md) 0;
+    padding: var(--space-sm) var(--space-md);
+  }
+}

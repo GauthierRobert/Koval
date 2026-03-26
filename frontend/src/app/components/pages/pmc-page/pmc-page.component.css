@@ -262,3 +262,48 @@
   0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
   40% { transform: scale(1); opacity: 1; }
 }
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .pmc-body {
+    flex-direction: column;
+  }
+
+  .pmc-sidebar {
+    width: 100%;
+    max-height: 220px;
+    border-right: none;
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .load-badges {
+    flex-wrap: wrap;
+  }
+
+  .header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pmc-container {
+    height: auto;
+    overflow: visible;
+  }
+
+  .pmc-sidebar {
+    padding: 0.75rem;
+    gap: 8px;
+  }
+
+  .badge-value {
+    font-size: var(--text-lg);
+  }
+
+  .athlete-pmc-banner {
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+  }
+}

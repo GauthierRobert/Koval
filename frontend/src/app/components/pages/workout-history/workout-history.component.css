@@ -412,3 +412,85 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ── List toggle button (mobile) ───────────────────────────────────── */
+.list-toggle-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.list-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-color);
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  :host {
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .history-layout {
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .history-sidebar {
+    width: 100%;
+    max-height: 40vh;
+    border-right: none;
+    border-bottom: 1px solid var(--glass-border);
+    transition: max-height 0.3s ease, border-bottom 0.3s ease;
+    flex-shrink: 0;
+  }
+
+  .history-sidebar.collapsed {
+    max-height: 0;
+    border-bottom: none;
+    overflow: hidden;
+  }
+
+  .history-main {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .empty-card {
+    padding: 32px 24px;
+  }
+
+  .empty-card h2 {
+    font-size: 1.5rem;
+  }
+
+  .empty-card p {
+    font-size: var(--text-base);
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar-header {
+    padding: 8px;
+  }
+
+  .filter-bar {
+    padding: 6px 8px;
+  }
+
+  .session-item {
+    padding: 6px 8px;
+    gap: 8px;
+  }
+}

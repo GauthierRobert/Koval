@@ -475,6 +475,46 @@ input[type='date'].form-input::-webkit-calendar-picker-indicator {
   letter-spacing: 0.03em;
 }
 
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .create-race-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .edit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .facet-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .races-page {
+    padding: var(--space-md);
+  }
+
+  .facet-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .facet-grid--countries {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+}
+
 /* Edit button */
 .btn-edit {
   background: var(--surface-hover);

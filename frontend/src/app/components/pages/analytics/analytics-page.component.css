@@ -213,3 +213,41 @@
   color: var(--text-secondary, #a0a0a0);
   font-size: 0.85rem;
 }
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .date-filters {
+    flex-wrap: wrap;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
+  .tab {
+    white-space: nowrap;
+  }
+
+  .bar-chart {
+    overflow-x: auto;
+  }
+
+  .volume-table {
+    overflow-x: auto;
+  }
+
+  .analytics-page {
+    padding: 1.5rem 1rem;
+  }
+
+  .records-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+}

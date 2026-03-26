@@ -150,3 +150,54 @@
   background: rgba(255, 157, 0, 0.12);
   color: var(--accent-color);
 }
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .history-container {
+    padding: 2px 0;
+  }
+
+  .history-list {
+    gap: 4px;
+  }
+
+  .history-item {
+    padding: 5px 6px;
+    gap: 6px;
+  }
+
+  .item-icon {
+    font-size: 16px;
+  }
+
+  .item-title {
+    font-size: 11px;
+  }
+
+  .item-title-row {
+    max-width: 100%;
+  }
+
+  .item-meta {
+    font-size: 9px;
+  }
+
+  .type-badge {
+    font-size: 7px;
+    padding: 1px 4px;
+  }
+
+  .tag-chip {
+    font-size: 7px;
+    padding: 1px 4px;
+  }
+
+  .section-title {
+    padding-left: 4px;
+    font-size: 10px;
+  }
+
+  .item-actions {
+    opacity: 1;
+  }
+}

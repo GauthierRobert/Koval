@@ -202,3 +202,27 @@ input:checked + .slider:before {
   font-weight: 600;
 }
 
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    max-height: 40vh;
+    border-right: none;
+    border-bottom: 1px solid var(--glass-border);
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+
+  .sidebar-content {
+    padding: 0 8px;
+    overflow-y: auto;
+    min-height: 0;
+  }
+}
+
+:host.collapsed .sidebar {
+  max-height: 0;
+  border-bottom: none;
+  overflow: hidden;
+}
+

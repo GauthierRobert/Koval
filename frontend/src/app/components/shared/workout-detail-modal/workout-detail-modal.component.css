@@ -454,3 +454,11 @@
   color: var(--accent-color);
   border-color: rgba(255, 157, 0, 0.3);
 }
+
+@media (max-width: 480px) {
+  .modal-card {
+    width: calc(100vw - 24px);
+    max-height: calc(100vh - 48px);
+    border-radius: 16px;
+  }
+}

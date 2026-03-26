@@ -1,6 +1,10 @@
 :root {
   --primary-color: #ff9d00;
   --secondary-color: #00a0e9;
+  --btc-1: #ffbf01;
+  --btc-2: #c40d5d;
+  --btc-3: #db6412;
+  --btc-4: #00359d;
   --bg-color: #0f0f11;
   --surface-color: #1a1a1f;
   --surface-hover: rgba(255, 255, 255, 0.06);
@@ -13,10 +17,6 @@
   --glass-bg: rgba(22, 22, 28, 0.85);
   --glass-border: rgba(255, 255, 255, 0.08);
 
-  --btc-1: #ffbf01;
-  --btc-2: #c40d5d;
-  --btc-3: #db6412;
-  --btc-4: #00359d;
   /* Semantic tints — derived from base *-color via color-mix */
   --accent-color: var(--primary-color);
   --accent-subtle: color-mix(in srgb, var(--accent-color) 8%, transparent);
@@ -61,20 +61,20 @@
 
   /* Positive/negative sentiment colors (for metrics and comparisons) */
   --positive-color: #2ecc71;
-  --positive-alt: #4ade80;
+  --positive-alt: var(--success-color);
   --negative-color: #e74c3c;
 
   /* Chart/metric colors */
-  --metric-fitness: #60a5fa;
-  --metric-fatigue: #f87171;
-  --metric-form-positive: #4ade80;
-  --metric-form-negative: #f87171;
-  --metric-power: #f39c12;
+  --metric-fitness: var(--secondary-color);
+  --metric-fatigue: var(--danger-color);
+  --metric-form-positive: var(--success-color);
+  --metric-form-negative: var(--danger-color);
+  --metric-power: var(--accent-color);
   --metric-heartrate: #e74c3c;
-  --metric-cadence: #3498db;
+  --metric-cadence: var(--secondary-color);
 
   /* Workout block type colors */
-  --block-warmup: #3498db;
+  --block-warmup: var(--secondary-color);
   --block-cooldown: #6c5ce7;
   --block-interval: #e74c3c;
   --block-steady: #9b59b6;
@@ -84,7 +84,7 @@
   /* Chart colors for visualization */
   --chart-tsb-positive: #3b82f6;
   --chart-tsb-negative: #e74c3c;
-  --chart-warmup: #0984e3;
+  --chart-warmup: var(--secondary-color);
   --chart-cooldown: #6c5ce7;
 
   /* Spacing scale */
@@ -113,6 +113,10 @@
   --page-padding: 24px;
   --page-max-width: 1200px;
   --sidebar-width: 260px;
+  --topbar-height: 64px;
+
+  /* Touch targets */
+  --touch-target-min: 44px;
 
   /* Consistent card styling */
   --card-padding: 16px;
@@ -158,11 +162,6 @@ select option {
   align-items: center;
   justify-content: center;
   gap: 8px;
-}
-
-.premium-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(255, 157, 0, 0.3);
 }
 
 .premium-button:active {
@@ -311,15 +310,83 @@ select option {
   vertical-align: -0.15em;
 }
 
-/* Responsive breakpoints */
+/* ── Responsive Breakpoints ──
+   sm: 480px  (small phones)
+   md: 768px  (tablets / large phones)
+   lg: 1024px (tablet landscape / small desktop)
+   Desktop-first: use max-width queries.
+*/
+
+/* Tablet & large phones */
 @media (max-width: 768px) {
   :root {
     --page-padding: 16px;
     --sidebar-width: 0px;
+    --topbar-height: 56px;
+    --card-padding: 12px;
   }
 
   .page {
     padding: var(--page-padding);
+  }
+
+  .page-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  :root {
+    --page-padding: 12px;
+    --space-lg: 16px;
+    --space-xl: 24px;
+    --space-2xl: 32px;
+    --text-2xl: 1.25rem;
+    --text-xl: 1.1rem;
+  }
+
+  .summary-card {
+    width: calc(100vw - 24px);
+    padding: 24px 16px;
+    border-radius: 16px;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+/* Table scroll wrapper for mobile */
+.table-scroll-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hover guard — prevent sticky hover on touch devices */
+@media (hover: hover) {
+  .premium-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 157, 0, 0.3);
+  }
+}
+
+@media (hover: none) {
+  .premium-button:hover {
+    transform: none;
+    box-shadow: none;
   }
 }
 
@@ -416,5 +483,15 @@ select option {
   background: var(--danger-subtle);
   border: 1px solid var(--danger-border);
   color: var(--danger-color);
+}
+
+/* Mobile touch-friendly buttons */
+@media (max-width: 768px) {
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .premium-button {
+    min-height: var(--touch-target-min);
+  }
 }
 

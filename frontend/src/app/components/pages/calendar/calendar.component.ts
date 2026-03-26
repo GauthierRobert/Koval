@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, Component, HostListener, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
 import {BehaviorSubject, combineLatest, Observable} from 'rxjs';
@@ -162,7 +162,21 @@ export class CalendarComponent implements OnInit {
   private savedWeekDate: Date | null = null;
   private savedMonthDate: Date | null = null;
 
+  isMobile = window.innerWidth <= 768;
+
+  @HostListener('window:resize')
+  onResize(): void {
+    const wasMobile = this.isMobile;
+    this.isMobile = window.innerWidth <= 768;
+    if (this.isMobile && !wasMobile && this.viewMode === 'month') {
+      this.setViewMode('week');
+    }
+  }
+
   ngOnInit(): void {
+    if (this.isMobile) {
+      this.viewMode = 'week';
+    }
     this.setWeek(new Date());
     this.loadPreferences();
 

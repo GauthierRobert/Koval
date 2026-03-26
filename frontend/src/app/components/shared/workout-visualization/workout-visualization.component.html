@@ -4,7 +4,7 @@
       <div class="header">
         <h1>{{ training.title }}</h1>
         <div class="action-buttons">
-          <div class="export-dropdown">
+          <div class="export-dropdown desktop-only">
             <button class="export-btn" (click)="toggleExportDropdown($event)">
               {{ 'WORKOUT_VIZ.BTN_EXPORT' | translate }}
               <span class="dropdown-caret">&#x25BC;</span>
@@ -22,7 +22,7 @@
             {{ displayUnit === 'PERCENT' ? '%' : getSportUnit() }}
           </button>
           @if (isOwner()) {
-            <button class="edit-blocks-btn" (click)="enterEditMode()">{{ 'WORKOUT_VIZ.BTN_EDIT_BLOCKS' | translate }}</button>
+            <button class="edit-blocks-btn desktop-only" (click)="enterEditMode()">{{ 'WORKOUT_VIZ.BTN_EDIT_BLOCKS' | translate }}</button>
           }
           <button class="schedule-btn" (click)="openScheduleModal()">{{ 'WORKOUT_VIZ.BTN_SCHEDULE' | translate }}</button>
           <!-- TODO Disable temporary - Start workout button in training library -->

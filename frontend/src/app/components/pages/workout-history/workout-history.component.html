@@ -1,7 +1,7 @@
 <div class="history-layout">
 
   <!-- Left panel: session list -->
-  <aside class="history-sidebar glass">
+  <aside class="history-sidebar glass" [class.collapsed]="!mobileListOpen">
     <div class="sidebar-header">
       <h3 class="sidebar-title">{{ 'WORKOUT_HISTORY.SIDEBAR_TITLE' | translate }}</h3>
       <div class="sidebar-actions">
@@ -114,7 +114,14 @@
           <span class="header-subtitle">{{ 'WORKOUT_HISTORY.HEADER_SUBTITLE' | translate }}</span>
         </div>
       </div>
-      <div class="header-right"></div>
+      <div class="header-right">
+        <button class="list-toggle-btn mobile-only" (click)="toggleMobileList()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+        </button>
+      </div>
     </div>
     @if (historyService.selectedSession$ | async; as session) {
       <app-session-analysis [session]="session"></app-session-analysis>
