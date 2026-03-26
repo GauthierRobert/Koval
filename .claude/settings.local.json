@@ -63,7 +63,8 @@
       "Bash(for f:*)",
       "Read(//c/Users/GAR/Documents/POC/Koval/**)",
       "Bash(done)",
-      "Bash(find /c/Users/GAR/Documents/POC/Koval/backend/src/main/java -type f \\\\\\(-name *Club* -o -name *club* \\\\\\))"
+      "Bash(find /c/Users/GAR/Documents/POC/Koval/backend/src/main/java -type f \\\\\\(-name *Club* -o -name *club* \\\\\\))",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

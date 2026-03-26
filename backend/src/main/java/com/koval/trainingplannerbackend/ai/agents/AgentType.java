@@ -5,5 +5,6 @@ public enum AgentType {
     SCHEDULING,
     ANALYSIS,
     COACH_MANAGEMENT,
+    CLUB_MANAGEMENT,
     GENERAL
 }

@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend.ai;
 import com.koval.trainingplannerbackend.ai.action.AIActionToolService;
 import com.koval.trainingplannerbackend.ai.action.CreationTrainingToolService;
 import com.koval.trainingplannerbackend.ai.action.NotationToolService;
+import com.koval.trainingplannerbackend.club.tools.ClubToolService;
 import com.koval.trainingplannerbackend.coach.tools.CoachToolService;
 import com.koval.trainingplannerbackend.goal.GoalToolService;
 // import com.koval.trainingplannerbackend.plan.PlanToolService; //TODO temporary — plans disabled
@@ -127,6 +128,20 @@ public class AIConfig {
                 .defaultOptions(sonnetOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
                 .defaultTools(contextToolService, coachToolService, zoneToolService, goalToolService)
+                .build();
+    }
+
+    @Bean
+    public ChatClient clubManagementClient(AnthropicChatModel chatModel,
+                                            ChatMemory chatMemory,
+                                            ContextToolService contextToolService,
+                                            ClubToolService clubToolService,
+                                            TrainingToolService trainingToolService) {
+        return withLogging(ChatClient.builder(chatModel))
+                .defaultSystem(agentPrompt("club-management"))
+                .defaultOptions(sonnetOptions())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .defaultTools(contextToolService, clubToolService, trainingToolService)
                 .build();
     }
 

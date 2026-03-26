@@ -30,6 +30,7 @@ public class RouterService {
             SCHEDULING — assigning workouts to dates, calendar management, schedule queries, race goals (add/edit/delete/list goals)
             ANALYSIS — reviewing past sessions, performance metrics, PMC/CTL/ATL/TSB analysis, fitness relative to race goals
             COACH_MANAGEMENT — managing athletes, tags, zone systems, coach-specific operations
+            CLUB_MANAGEMENT — club sessions (create, cancel, link training), recurring sessions, club members, club groups
             GENERAL — greetings, general questions, anything that doesn't fit above
 
             The previous message in this conversation was handled by: {lastAgent}.
@@ -72,7 +73,10 @@ public class RouterService {
             AgentType.ANALYSIS,
             // Coach management — EN + FR
             Pattern.compile("(?i)\\b(athletes?|athlètes?|zone system|système.*zones?|manage.*group|gestion.*groupe|coaching)\\b"),
-            AgentType.COACH_MANAGEMENT
+            AgentType.COACH_MANAGEMENT,
+            // Club management — EN + FR
+            Pattern.compile("(?i)\\b(club.*(session|séance|training|entraînement|member|membre|group|groupe)|recurring.*(session|séance)|séance.*club|link.*training.*session|lier.*entraînement)\\b"),
+            AgentType.CLUB_MANAGEMENT
     );
 
     private final ChatClient routerClient;

@@ -117,17 +117,21 @@ public class AIService {
 
     private AgentType resolveAgent(AgentType explicit, String userMessage, String userRole, String lastAgentType) {
         if (explicit != null) {
-            if (explicit == AgentType.COACH_MANAGEMENT && !"COACH".equals(userRole)) {
-                log.debug("Downgrading COACH_MANAGEMENT to GENERAL for non-coach user (role={})", userRole);
+            if (requiresCoachRole(explicit) && !"COACH".equals(userRole)) {
+                log.debug("Downgrading {} to GENERAL for non-coach user (role={})", explicit, userRole);
                 return AgentType.GENERAL;
             }
             return explicit;
         }
         AgentType classified = routerService.classify(userMessage, userRole, lastAgentType);
-        if (classified == AgentType.COACH_MANAGEMENT && !"COACH".equals(userRole)) {
-            log.debug("Router classified as COACH_MANAGEMENT but user role is {}, falling back to GENERAL", userRole);
+        if (requiresCoachRole(classified) && !"COACH".equals(userRole)) {
+            log.debug("Router classified as {} but user role is {}, falling back to GENERAL", classified, userRole);
             return AgentType.GENERAL;
         }
         return classified;
+    }
+
+    private static boolean requiresCoachRole(AgentType type) {
+        return type == AgentType.COACH_MANAGEMENT || type == AgentType.CLUB_MANAGEMENT;
     }
 }
