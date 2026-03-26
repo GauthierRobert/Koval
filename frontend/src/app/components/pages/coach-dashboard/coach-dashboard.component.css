@@ -295,7 +295,7 @@
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--glass-border);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: var(--color-medium-gray);
   cursor: pointer;
@@ -1208,11 +1208,11 @@
   font-weight: 600;
   padding: 2px 6px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--glass-border);
   color: rgba(255, 255, 255, 0.6);
 }
 
-.days-badge-coach.past { color: #f87171; background: rgba(239, 68, 68, 0.15); }
+.days-badge-coach.past { color: var(--danger-color); background: rgba(239, 68, 68, 0.15); }
 
 .notes-cell {
   max-width: 200px;

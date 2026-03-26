@@ -78,7 +78,7 @@
 }
 
 .workout-card.clickable:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--glass-border);
   border-color: var(--accent-border);
 }
 
@@ -189,7 +189,7 @@
   background: var(--surface-raised);;
   padding: 0.4rem;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--surface-hover);
 }
 
 .m-item {
@@ -377,7 +377,7 @@
 
 .link-modal {
   background: var(--surface-color);
-  border: 1px solid var(--session-border);
+  border: 1px solid var(--info-border);
   border-radius: 14px;
   padding: 1.5rem;
   width: 420px;
@@ -408,7 +408,7 @@
 }
 
 .link-modal-session strong {
-  color: var(--session-text);
+  color: var(--info-text);
 }
 
 .link-modal-list {
@@ -429,8 +429,8 @@
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-color);
-  background: var(--session-subtle);
-  border: 1px solid var(--session-border);
+  background: var(--info-subtle);
+  border: 1px solid var(--info-border);
   transition: all 0.15s;
 }
 
@@ -453,7 +453,7 @@
 }
 
 .link-picker-cancel {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-hover);
   border: 1px solid var(--glass-border);
   color: var(--text-muted);
   font-size: 0.7rem;
@@ -565,7 +565,7 @@
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
   background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  color: var(--danger-color);
   letter-spacing: 0.5px;
 }
 
@@ -577,7 +577,7 @@
 .cancellation-reason {
   font-size: 0.65rem;
   font-style: italic;
-  color: #f87171;
+  color: var(--danger-color);
   opacity: 0.8;
   padding: 2px 0;
 }

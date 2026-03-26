@@ -205,7 +205,7 @@
 .schedule-pill.empty {
   color: var(--text-muted);
   background: var(--surface-raised);;
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--glass-border);
 }
 
 /* ── Peak form ───────────────────────────────────────────── */

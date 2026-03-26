@@ -13,7 +13,7 @@
       gap: 24px;
       padding: 48px;
       background: rgba(22, 22, 28, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--glass-border);
       border-radius: 24px;
       backdrop-filter: blur(20px);
     }
@@ -58,7 +58,7 @@
       font-weight: 600;
       letter-spacing: 0.5px;
       background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--glass-border);
     }
 
     .status-dot {
@@ -80,10 +80,10 @@
 
     /* starting */
     .status-starting .status-dot {
-      background: #f59e0b;
+      background: var(--dev-accent-color);
       animation: pulse 1s ease-in-out infinite;
     }
-    .status-starting .status-text { color: #f59e0b; }
+    .status-starting .status-text { color: var(--dev-accent-color); }
 
     /* active */
     .status-active .status-dot { background: #22c55e; }
@@ -166,7 +166,7 @@
       font-size: 9px;
       font-weight: 800;
       letter-spacing: 2px;
-      color: #f59e0b;
+      color: var(--dev-accent-color);
       margin-bottom: 10px;
       text-align: center;
     }
@@ -178,7 +178,7 @@
 
     .dev-input {
       flex: 1;
-      background: rgba(255, 255, 255, 0.06);
+      background: var(--surface-hover);
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 8px;
       padding: 10px 12px;
@@ -189,11 +189,11 @@
     }
 
     .dev-input:focus {
-      border-color: #f59e0b;
+      border-color: var(--dev-accent-color);
     }
 
     .dev-select {
-      background: rgba(255, 255, 255, 0.06);
+      background: var(--surface-hover);
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 8px;
       padding: 10px 8px;
@@ -210,7 +210,7 @@
     }
 
     .dev-btn {
-      background: #f59e0b;
+      background: var(--dev-accent-color);
       color: var(--color-black);
       border: none;
       border-radius: 8px;

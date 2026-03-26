@@ -70,7 +70,7 @@
 }
 
 .btn-activate {
-  background: #22c55e;
+  background: var(--positive-color);
   color: #fff;
   border: none;
   padding: 0.5rem 1rem;
@@ -81,7 +81,7 @@
 }
 
 .btn-pause {
-  background: #f59e0b;
+  background: var(--dev-accent-color);
   color: #fff;
   border: none;
   padding: 0.5rem 1rem;
@@ -102,8 +102,8 @@
 }
 
 .btn-delete:hover {
-  color: #ef4444;
-  border-color: #ef4444;
+  color: var(--danger-color);
+  border-color: var(--danger-color);
 }
 
 /* Progress section */
@@ -160,7 +160,7 @@
 }
 
 .stat.completed {
-  color: #22c55e;
+  color: var(--positive-color);
 }
 
 .stat.pending {
@@ -168,7 +168,7 @@
 }
 
 .stat.skipped {
-  color: #f59e0b;
+  color: var(--dev-accent-color);
 }
 
 /* Week timeline */

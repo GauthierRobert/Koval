@@ -116,7 +116,7 @@
 }
 
 .volume-bar {
-  background: #22c55e;
+  background: var(--positive-color);
 }
 
 .bar-label {

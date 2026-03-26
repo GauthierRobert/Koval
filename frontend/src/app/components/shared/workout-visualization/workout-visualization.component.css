@@ -62,7 +62,7 @@
       right: 0;
       margin-top: 8px;
       min-width: 140px;
-      background: #1e272e;
+      background: var(--color-very-dark);
       border: 1px solid var(--glass-border);
       border-radius: 10px;
       padding: 6px;
@@ -189,7 +189,7 @@
     .step-card {
       background: var(--surface-elevated);
       border: 1px solid var(--glass-border);
-      border-left: 3px solid #636e72;
+      border-left: 3px solid var(--text-dim);
       border-radius: 5px;
       padding: 4px 8px;
       display: grid;
@@ -421,12 +421,12 @@
     }
 
     .block-bar[data-type="WARMUP"] {
-      border: 2px solid #0984e3;
+      border: 2px solid var(--chart-warmup);
       backdrop-filter: blur(4px);
     }
 
     .block-bar[data-type="COOLDOWN"] {
-      border: 2px solid #6c5ce7;
+      border: 2px solid var(--block-cooldown);
       backdrop-filter: blur(4px);
     }
 
@@ -532,7 +532,7 @@
     .bar-track {
       flex: 1;
       height: 16px;
-      background: rgba(255, 255, 255, 0.06);
+      background: var(--surface-hover);
       border-radius: 4px;
       overflow: hidden;
     }
@@ -625,7 +625,7 @@
     }
 
     .step-action-btn.edit:hover {
-      color: #3498db;
+      color: var(--metric-cadence);
     }
 
     .step-action-btn.delete {
@@ -633,7 +633,7 @@
     }
 
     .step-action-btn.delete:hover {
-      color: #e74c3c;
+      color: var(--negative-color);
     }
 
     .add-block-btn {
@@ -734,7 +734,7 @@
 
     .set-wrapper.nested {
       margin-left: 12px;
-      border-color: rgba(255, 255, 255, 0.06);
+      border-color: var(--surface-hover);
     }
 
     .set-header {
@@ -769,5 +769,5 @@
       flex-direction: column;
       gap: 2px;
       padding-left: 8px;
-      border-left: 2px solid rgba(255, 255, 255, 0.06);
+      border-left: 2px solid var(--surface-hover);
     }

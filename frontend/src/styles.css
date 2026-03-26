@@ -1,8 +1,4 @@
 :root {
-  --btc-1: #ffbf01;
-  --btc-2: #c40d5d;
-  --btc-3: #db6412;
-  --btc-4: #00359d;
   --primary-color: #ff9d00;
   --secondary-color: #00a0e9;
   --bg-color: #0f0f11;
@@ -16,25 +12,34 @@
   --text-dim: #6e6e80;
   --glass-bg: rgba(22, 22, 28, 0.85);
   --glass-border: rgba(255, 255, 255, 0.08);
-  --accent-gradient: linear-gradient(135deg, #ff9d00, #ff6b00);
-  --accent-color: #ff9d00;
+
+  --btc-1: #ffbf01;
+  --btc-2: #c40d5d;
+  --btc-3: #db6412;
+  --btc-4: #00359d;
+  /* Semantic tints — derived from base *-color via color-mix */
+  --accent-color: var(--primary-color);
+  --accent-subtle: color-mix(in srgb, var(--accent-color) 8%, transparent);
+  --accent-border: color-mix(in srgb, var(--accent-color) 25%, transparent);
+  --accent-hover: color-mix(in srgb, var(--accent-color) 15%, transparent);
+  --accent-gradient: linear-gradient(135deg, var(--accent-color), #ff6b00);
+
   --success-color: #34d399;
+  --success-subtle: color-mix(in srgb, var(--success-color) 8%, transparent);
+  --success-border: color-mix(in srgb, var(--success-color) 22%, transparent);
+  --success-hover: color-mix(in srgb, var(--success-color) 15%, transparent);
+
   --danger-color: #f87171;
+  --danger-subtle: color-mix(in srgb, var(--danger-color) 8%, transparent);
+  --danger-border: color-mix(in srgb, var(--danger-color) 25%, transparent);
+  --danger-hover: color-mix(in srgb, var(--danger-color) 15%, transparent);
 
-  /* Semantic tints — used for card types and states */
-  --accent-subtle: rgba(255, 157, 0, 0.08);
-  --accent-border: rgba(255, 157, 0, 0.25);
-  --accent-hover: rgba(255, 157, 0, 0.15);
-
-  --success-subtle: rgba(52, 211, 153, 0.08);
-  --success-border: rgba(52, 211, 153, 0.22);
-
-  --danger-subtle: rgba(248, 113, 113, 0.08);
-  --danger-border: rgba(248, 113, 113, 0.25);
-
+  --info-color: var(--secondary-color);
+  --info-subtle: color-mix(in srgb, var(--info-color) 8%, transparent);
+  --info-border: color-mix(in srgb, var(--info-color) 25%, transparent);
+  --info-hover: color-mix(in srgb, var(--info-color) 15%, transparent);
+  --info-text: #38bdf8;
   /* Cyan — used for standalone FIT sessions */
-  --session-subtle: rgba(8, 145, 178, 0.08);
-  --session-border: rgba(8, 145, 178, 0.25);
   --session-text: #38bdf8;
 
   /* Richer card surface — the "dark blue" of glass elements */
