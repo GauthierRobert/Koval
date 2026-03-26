@@ -11,7 +11,7 @@ import {CommonModule} from '@angular/common';
       [attr.height]="size"
       viewBox="0 0 24 24"
       fill="none"
-      [attr.stroke]="color || 'currentColor'"
+      [attr.stroke]="resolvedColor"
       stroke-width="2"
       stroke-linecap="round"
       stroke-linejoin="round"
@@ -76,4 +76,16 @@ export class SportIconComponent {
     @Input() size: number = 24;
     @Input() color: string = '';
     @Input() className: string = '';
+
+    private static readonly SPORT_COLORS: Record<string, string> = {
+        CYCLING: '#34d399',   // success
+        RUNNING: '#f87171',   // error/danger
+        SWIMMING: '#00a0e9',  // secondary
+        BRICK: '#ff9d00',     // accent
+        GYM: '#8e8ea0',      // muted
+    };
+
+    get resolvedColor(): string {
+        return this.color || SportIconComponent.SPORT_COLORS[this.sport] || 'currentColor';
+    }
 }

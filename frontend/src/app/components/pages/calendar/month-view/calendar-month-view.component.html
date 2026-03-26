@@ -25,6 +25,8 @@
 
             @if (entry.kind === 'scheduled') {
               <div class="mini-card"
+            [class.mini-card--completed]="entry.scheduled.status === 'COMPLETED'"
+            [class.mini-card--skipped]="entry.scheduled.status === 'SKIPPED'"
             (click)="workoutSelected.emit(entry.scheduled)"
             [style.border-left]="'2px solid ' + (entry.scheduled.trainingType ? getTypeColor(entry.scheduled.trainingType) : 'var(--accent-color)')">
             <app-sport-icon [sport]="entry.scheduled.sportType" [size]="10"></app-sport-icon>
@@ -62,11 +64,14 @@
 
             @if (entry.kind === 'club-session') {
               <div class="mini-card mini-card--club-session"
+            [class.mini-card--cs-attending]="entry.clubSession.joined"
+            [class.mini-card--cs-waiting]="entry.clubSession.onWaitingList"
             [class.not-joined]="!entry.clubSession.joined && !entry.clubSession.onWaitingList"
             [class.mini-card--cancelled]="entry.clubSession.cancelled"
-            [style.border-left]="entry.clubSession.cancelled ? '2px solid #ef4444' : '2px solid #a78bfa'">
+            [style.border-left]="entry.clubSession.cancelled ? '2px solid #ef4444' : (entry.clubSession.joined ? '2px solid var(--accent-color)' : (entry.clubSession.onWaitingList ? '2px solid rgba(255,255,255,0.2)' : '2px solid var(--club-session-color)'))">
             <app-sport-icon [sport]="$any(entry.clubSession.sport)" [size]="10"></app-sport-icon>
             <span class="mini-title" [class.title-cancelled]="entry.clubSession.cancelled">{{ entry.clubSession.title }}</span>
+              <span class="mini-cs-time">{{ entry.clubSession.scheduledAt | date:'HH:mm' }}</span>
               <span class="mini-club-name">{{ entry.clubSession.clubName }}</span>
             </div>
             }

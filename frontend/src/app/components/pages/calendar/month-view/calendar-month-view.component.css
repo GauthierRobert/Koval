@@ -150,14 +150,26 @@
 
 .mini-card--fused { background: var(--success-subtle); border-color: var(--success-border); }
 .mini-card--session { background: var(--session-subtle); border-color: var(--session-border); }
-.mini-card--club-session { background: rgba(167, 139, 250, 0.06); border-color: rgba(167, 139, 250, 0.3); }
+.mini-card--club-session { background: var(--club-session-subtle); border-color: var(--club-session-border); }
 .mini-card--club-session.not-joined { opacity: 0.8; }
+.mini-card--cs-attending { background: rgba(255, 157, 0, 0.06); border-color: rgba(255, 157, 0, 0.2); }
+.mini-card--cs-waiting { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.15); }
 .mini-card--cancelled { opacity: 0.5; background: rgba(239, 68, 68, 0.06); border-color: rgba(239, 68, 68, 0.2); }
+.mini-card--completed { background: var(--success-subtle); border-color: var(--success-border); }
+.mini-card--skipped { opacity: 0.5; filter: grayscale(0.5); }
 .title-cancelled { text-decoration: line-through; opacity: 0.7; }
+
+.mini-cs-time {
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
 
 .mini-club-name {
   font-weight: 800;
-  color: #a78bfa;
+  color: var(--club-session-color);
   font-size: 8px;
   flex-shrink: 0;
   text-transform: uppercase;

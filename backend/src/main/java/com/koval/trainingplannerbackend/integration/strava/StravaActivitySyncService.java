@@ -167,7 +167,7 @@ public class StravaActivitySyncService {
         FitFileBuilder builder = new FitFileBuilder();
         byte[] fitBytes = builder.buildFromStreams(
                 streams, session.getSportType(), session.getCompletedAt(),
-                session.getTotalDurationSeconds(),
+                session.getTotalDurationSeconds(), session.getMovingTimeSeconds(),
                 session.getAvgPower(), session.getAvgHR(),
                 session.getAvgCadence(), session.getAvgSpeed());
 

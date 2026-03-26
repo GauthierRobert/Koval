@@ -40,6 +40,7 @@ public class CompletedSession {
     private Integer rpe;
     private boolean syntheticCompletion; // true when created from planned data via COMPLETE button
 
+    private Integer movingTimeSeconds; // excludes pauses; null if unknown
     private Double totalDistance; // meters
     private Map<Integer, Double> powerCurve; // duration (seconds) -> best avg power (watts)
 

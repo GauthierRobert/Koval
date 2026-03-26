@@ -732,7 +732,7 @@
     "CHART_FIT_TIME_SERIES": "FIT TIME-SERIES",
     "SMOOTH_LABEL": "Smooth",
     "TOGGLE_PLANNED": "PLANNED",
-    "TOGGLE_ZONES": "ZONES",
+    "TOGGLE_INTERPOLATED": "INTERPOLATED",
     "NO_FIT_DATA": "No FIT data stored for this session",
     "NO_FIT_HINT": "Start a live session to auto-record time-series data, or import a .FIT file",
     "LOADING_FIT": "Loading FIT data...",

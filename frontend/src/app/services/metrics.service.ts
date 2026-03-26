@@ -26,6 +26,18 @@ export interface FitRecord {
     elevation?: number;    // meters (from enhanced_altitude or altitude)
 }
 
+export interface FitTimerEvent {
+    timestamp: number;     // Unix epoch seconds
+    type: 'stop' | 'start';
+}
+
+export interface FitParseResult {
+    records: FitRecord[];
+    timerEvents: FitTimerEvent[];
+    totalTimerTime: number;   // seconds (from session, excludes pauses)
+    totalElapsedTime: number; // seconds (from session, includes pauses)
+}
+
 @Injectable({ providedIn: 'root' })
 export class MetricsService {
     private readonly apiUrl = `${environment.apiUrl}/api`;
@@ -155,6 +167,10 @@ export class MetricsService {
     // ── FIT time-series parse ─────────────────────────────────────────────────
 
     parseFitTimeSeries(buffer: ArrayBuffer): Promise<FitRecord[]> {
+        return this.parseFitFile(buffer).then(r => r.records);
+    }
+
+    parseFitFile(buffer: ArrayBuffer): Promise<FitParseResult> {
         return new Promise((resolve, reject) => {
             const parser = new FitParser({ force: true, mode: 'list' });
             parser.parse(buffer, (error: any, data: any) => {
@@ -165,17 +181,39 @@ export class MetricsService {
                 const records: FitRecord[] = (data.records || []).map((r: any) => ({
                     timestamp: r.timestamp ? Math.round(new Date(r.timestamp).getTime() / 1000) : 0,
                     power: Math.round(r.power || 0),
-                    // fit-file-parser returns heart_rate (snake_case per FIT SDK profile)
                     heartRate: Math.round(r.heart_rate || 0),
                     cadence: Math.round(r.cadence || 0),
-                    // fit-file-parser applies scale 1000 → returns m/s
                     speed: r.speed || 0,
-                    // distance: scale 100 in FIT → fit-file-parser returns meters
                     distance: r.distance || 0,
-                    // enhanced_altitude has 0.2m resolution vs 5m for legacy altitude
                     elevation: r.enhanced_altitude ?? r.altitude ?? undefined,
                 }));
-                resolve(records);
+
+                // Extract timer stop/start events for pause detection
+                // fit-file-parser may return event/event_type as strings or numeric enums
+                const rawEvents = data.events || [];
+                const timerEvents: FitTimerEvent[] = [];
+                for (const e of rawEvents) {
+                    if (e.event !== 'timer' && e.event !== 0) continue;
+                    const ts = e.timestamp ? Math.round(new Date(e.timestamp).getTime() / 1000) : 0;
+                    if (!ts) continue;
+                    const et = e.event_type;
+                    if (et === 'stop_all' || et === 'stop' || et === 4 || et === 1) {
+                        timerEvents.push({timestamp: ts, type: 'stop'});
+                    } else if (et === 'start' || et === 0) {
+                        timerEvents.push({timestamp: ts, type: 'start'});
+                    }
+                }
+                timerEvents.sort((a, b) => a.timestamp - b.timestamp);
+
+                if (rawEvents.length > 0 && timerEvents.length === 0) {
+                    console.warn('FIT file has events but no timer events were parsed. Event sample:', rawEvents[0]);
+                }
+
+                const session = data.sessions?.[0];
+                const totalTimerTime = Math.round(session?.total_timer_time || 0);
+                const totalElapsedTime = Math.round(session?.total_elapsed_time || 0);
+
+                resolve({records, timerEvents, totalTimerTime, totalElapsedTime});
             });
         });
     }

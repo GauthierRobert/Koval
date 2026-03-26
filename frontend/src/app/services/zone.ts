@@ -33,3 +33,21 @@ export interface ZoneSystem {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface ZoneBlock {
+  zoneIndex: number;
+  zoneLabel: string;
+  zoneDescription: string;
+  color: string;
+  startIndex: number;
+  endIndex: number;
+  durationSeconds: number;
+  distanceMeters: number;
+  avgPower: number;
+  maxPower: number;
+  avgSpeed: number;
+  maxSpeed: number;
+  avgHR: number;
+  avgCadence: number;
+  avgPercent: number;
+}
