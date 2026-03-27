@@ -36,6 +36,7 @@ export interface User {
     aiPrePromptEnabled?: boolean;
     linkedAccounts?: { strava: boolean; google: boolean; garmin: boolean; zwift: boolean };
     authProvider?: string;
+    zwiftAutoSyncWorkouts?: boolean;
 }
 
 @Injectable({

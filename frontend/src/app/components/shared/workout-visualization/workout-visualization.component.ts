@@ -5,6 +5,7 @@ import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {TrainingService} from '../../../services/training.service';
 import {flattenElements, hasDurationEstimate, isSet, Training, WorkoutBlock} from '../../../models/training.model';
 import {WorkoutExecutionService} from '../../../services/workout-execution.service';
+import {HttpClient} from '@angular/common/http';
 import {ExportService} from '../../../services/export.service';
 import {TrainingActionModalComponent} from '../training-action-modal/training-action-modal.component';
 import {AuthService} from '../../../services/auth.service';
@@ -12,6 +13,7 @@ import {DurationEstimationService} from '../../../services/duration-estimation.s
 import {ZoneService} from '../../../services/zone.service';
 import {ZoneSystem} from '../../../services/zone';
 import {formatPace as sharedFormatPace} from '../format/format.utils';
+import {environment} from '../../../../environments/environment';
 
 @Component({
   selector: 'app-workout-visualization',
@@ -331,7 +333,16 @@ export class WorkoutVisualizationComponent {
     this.exportService.exportToJSON(this.training);
   }
 
+  sendToZwift(): void {
+    if (!this.training) return;
+    this.closeDropdownListener();
+    this.http.post(`${environment.apiUrl}/api/integration/zwift/push-workout/${this.training.id}`, {}).subscribe({
+      error: () => {},
+    });
+  }
+
   private exportService = inject(ExportService);
+  private http = inject(HttpClient);
 
   getBlockZoneName(block: WorkoutBlock): string {
     if (block.zoneTarget) return block.zoneTarget.toUpperCase();

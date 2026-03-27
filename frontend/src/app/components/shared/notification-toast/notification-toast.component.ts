@@ -35,9 +35,9 @@ import {MessagePayload} from 'firebase/messaging';
         cursor: pointer;
       }
       .toast {
-        background: var(--surface-elevated, #18182a);
-        border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-        border-left: 4px solid var(--primary, #00c2ff);
+        background: var(--glass-bg);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-left: 4px solid var(--primary-color, #00c2ff);
         border-radius: 10px;
         padding: 14px 18px;
         display: flex;
@@ -45,8 +45,9 @@ import {MessagePayload} from 'firebase/messaging';
         gap: 12px;
         min-width: 300px;
         max-width: 420px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
         animation: slideIn 0.3s ease-out;
+        backdrop-filter: none;
       }
       .toast-content {
         display: flex;
@@ -75,9 +76,9 @@ import {MessagePayload} from 'firebase/messaging';
         margin-top: 8px;
       }
       .toast-refuse-btn {
-        background: rgba(239, 68, 68, 0.15);
-        color: #f87171;
-        border: 1px solid rgba(239, 68, 68, 0.3);
+        background: var(--danger-subtle);
+        color: var(--danger-color, #ef4444);
+        border: 1px solid var(--danger-border);;
         border-radius: 6px;
         padding: 4px 12px;
         font-size: 12px;
@@ -89,7 +90,7 @@ import {MessagePayload} from 'firebase/messaging';
         background: rgba(239, 68, 68, 0.25);
       }
       .toast-cancelled {
-        border-left-color: #ef4444;
+        border-left-color:var(--danger-color, #ef4444);
       }
       @keyframes slideIn {
         from {

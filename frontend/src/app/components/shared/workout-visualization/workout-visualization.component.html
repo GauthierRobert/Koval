@@ -13,6 +13,7 @@
               <div class="dropdown-menu glass">
                 @if (training.sportType === 'CYCLING') {
                   <button class="dropdown-item" (click)="exportToZwift()">{{ 'WORKOUT_VIZ.EXPORT_ZWIFT' | translate }}</button>
+                  <button class="dropdown-item" (click)="sendToZwift()">{{ 'WORKOUT_VIZ.SEND_TO_ZWIFT' | translate }}</button>
                 }
                 <button class="dropdown-item" (click)="exportToJSON()">{{ 'WORKOUT_VIZ.EXPORT_JSON' | translate }}</button>
               </div>

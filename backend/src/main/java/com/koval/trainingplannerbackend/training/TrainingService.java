@@ -4,6 +4,7 @@ import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
+import com.koval.trainingplannerbackend.integration.zwift.ZwiftWorkoutService;
 import com.koval.trainingplannerbackend.training.metrics.TrainingMetricsService;
 import com.koval.trainingplannerbackend.training.model.BlockType;
 import com.koval.trainingplannerbackend.training.model.Training;
@@ -26,13 +27,16 @@ public class TrainingService {
     private final TrainingRepository trainingRepository;
     private final TrainingMetricsService metricsService;
     private final ClubMembershipRepository membershipRepository;
+    private final ZwiftWorkoutService zwiftWorkoutService;
 
     public TrainingService(TrainingRepository trainingRepository,
                            TrainingMetricsService metricsService,
-                           ClubMembershipRepository membershipRepository) {
+                           ClubMembershipRepository membershipRepository,
+                           ZwiftWorkoutService zwiftWorkoutService) {
         this.trainingRepository = trainingRepository;
         this.metricsService = metricsService;
         this.membershipRepository = membershipRepository;
+        this.zwiftWorkoutService = zwiftWorkoutService;
     }
 
     /**
@@ -43,7 +47,9 @@ public class TrainingService {
         training.setCreatedAt(LocalDateTime.now());
         metricsService.calculateTrainingMetrics(training, userId);
         training.setBlocks(training.getBlocks().stream().map(this::standardizeBlockType).toList());
-        return trainingRepository.save(training);
+        Training saved = trainingRepository.save(training);
+        zwiftWorkoutService.autoSyncIfEnabled(userId, saved);
+        return saved;
     }
 
     /**

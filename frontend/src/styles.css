@@ -1,6 +1,10 @@
 :root {
   --primary-color: #ff9d00;
   --secondary-color: #00a0e9;
+  --success-color: #34d399;
+  --danger-color: #f87171;
+  --info-text: #38bdf8;
+
   --btc-1: #ffbf01;
   --btc-2: #c40d5d;
   --btc-3: #db6412;
@@ -24,12 +28,12 @@
   --accent-hover: color-mix(in srgb, var(--accent-color) 15%, transparent);
   --accent-gradient: linear-gradient(135deg, var(--accent-color), #ff6b00);
 
-  --success-color: #34d399;
+
   --success-subtle: color-mix(in srgb, var(--success-color) 8%, transparent);
   --success-border: color-mix(in srgb, var(--success-color) 22%, transparent);
   --success-hover: color-mix(in srgb, var(--success-color) 15%, transparent);
 
-  --danger-color: #f87171;
+
   --danger-subtle: color-mix(in srgb, var(--danger-color) 8%, transparent);
   --danger-border: color-mix(in srgb, var(--danger-color) 25%, transparent);
   --danger-hover: color-mix(in srgb, var(--danger-color) 15%, transparent);
@@ -38,14 +42,6 @@
   --info-subtle: color-mix(in srgb, var(--info-color) 8%, transparent);
   --info-border: color-mix(in srgb, var(--info-color) 25%, transparent);
   --info-hover: color-mix(in srgb, var(--info-color) 15%, transparent);
-  --info-text: #38bdf8;
-  /* Cyan — used for standalone FIT sessions */
-  --session-text: #38bdf8;
-
-  /* Purple — used for club sessions */
-  --club-session-color: #a78bfa;
-  --club-session-subtle: rgba(167, 139, 250, 0.06);
-  --club-session-border: rgba(167, 139, 250, 0.25);
 
   /* Richer card surface — the "dark blue" of glass elements */
   --surface-card: rgba(22, 22, 28, 0.92);

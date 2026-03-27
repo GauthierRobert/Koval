@@ -119,6 +119,7 @@
     "SECTION_CONNECTED_APPS": "Connected Apps",
     "APP_CONNECTED": "Connected",
     "APP_NOT_CONNECTED": "Not connected",
+    "ZWIFT_AUTO_SYNC_WORKOUTS": "Auto-send new cycling workouts to Zwift",
     "BTN_UNLINK": "UNLINK",
     "BTN_CONNECT": "CONNECT",
     "UNLINK_DISABLED_HINT": "Cannot unlink your only login method",
@@ -1330,6 +1331,7 @@
   "WORKOUT_VIZ": {
     "BTN_EXPORT": "EXPORT",
     "EXPORT_ZWIFT": "Zwift (.zwo)",
+    "SEND_TO_ZWIFT": "Send to Zwift",
     "EXPORT_JSON": "JSON",
     "BTN_EDIT_BLOCKS": "EDIT BLOCKS",
     "BTN_CANCEL": "CANCEL",

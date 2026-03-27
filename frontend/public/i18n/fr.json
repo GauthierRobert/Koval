@@ -119,6 +119,7 @@
     "SECTION_CONNECTED_APPS": "Applications connectées",
     "APP_CONNECTED": "Connecté",
     "APP_NOT_CONNECTED": "Non connecté",
+    "ZWIFT_AUTO_SYNC_WORKOUTS": "Envoyer automatiquement les nouveaux entraînements vélo vers Zwift",
     "BTN_UNLINK": "DISSOCIER",
     "BTN_CONNECT": "CONNECTER",
     "UNLINK_DISABLED_HINT": "Impossible de dissocier votre seule méthode de connexion",
@@ -1330,6 +1331,7 @@
   "WORKOUT_VIZ": {
     "BTN_EXPORT": "EXPORTER",
     "EXPORT_ZWIFT": "Zwift (.zwo)",
+    "SEND_TO_ZWIFT": "Envoyer vers Zwift",
     "EXPORT_JSON": "JSON",
     "BTN_EDIT_BLOCKS": "MODIFIER LES BLOCS",
     "BTN_CANCEL": "ANNULER",

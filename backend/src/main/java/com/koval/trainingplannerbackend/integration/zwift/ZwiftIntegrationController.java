@@ -2,7 +2,11 @@ package com.koval.trainingplannerbackend.integration.zwift;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.User;
+import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.auth.UserService;
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
+import com.koval.trainingplannerbackend.training.TrainingService;
+import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,19 +19,25 @@ public class ZwiftIntegrationController {
 
     private final ZwiftAuthService authService;
     private final ZwiftActivitySyncService syncService;
+    private final ZwiftWorkoutService workoutService;
     private final UserService userService;
+    private final UserRepository userRepository;
+    private final TrainingService trainingService;
 
     public ZwiftIntegrationController(ZwiftAuthService authService,
                                        ZwiftActivitySyncService syncService,
-                                       UserService userService) {
+                                       ZwiftWorkoutService workoutService,
+                                       UserService userService,
+                                       UserRepository userRepository,
+                                       TrainingService trainingService) {
         this.authService = authService;
         this.syncService = syncService;
+        this.workoutService = workoutService;
         this.userService = userService;
+        this.userRepository = userRepository;
+        this.trainingService = trainingService;
     }
 
-    /**
-     * Connect Zwift using username/password (no OAuth redirect flow).
-     */
     @PostMapping("/connect")
     public ResponseEntity<Map<String, Object>> connect(@RequestBody ZwiftLoginRequest request) {
         if (!authService.isEnabled()) {
@@ -52,6 +62,38 @@ public class ZwiftIntegrationController {
     @PostMapping("/import-history")
     public ZwiftActivitySyncService.SyncResult importHistory() {
         return syncService.importHistory(SecurityUtils.getCurrentUserId());
+    }
+
+    /**
+     * Push a single training workout to Zwift.
+     */
+    @PostMapping("/push-workout/{trainingId}")
+    public ResponseEntity<Map<String, Object>> pushWorkout(@PathVariable String trainingId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        Training training = trainingService.getTrainingById(trainingId);
+
+        boolean success = workoutService.pushWorkoutToZwift(user, training);
+        return success
+                ? ResponseEntity.ok(Map.of("success", true))
+                : ResponseEntity.badRequest().body(Map.of("success", false, "error", "Failed to push workout to Zwift"));
+    }
+
+    /**
+     * Toggle auto-sync workouts to Zwift.
+     */
+    @PutMapping("/auto-sync")
+    public ResponseEntity<Map<String, Object>> setAutoSync(@RequestBody Map<String, Boolean> body) {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        boolean enabled = Boolean.TRUE.equals(body.get("enabled"));
+        user.setZwiftAutoSyncWorkouts(enabled);
+        userRepository.save(user);
+
+        return ResponseEntity.ok(userService.userToMap(user));
     }
 
     public record ZwiftLoginRequest(String username, String password) {}

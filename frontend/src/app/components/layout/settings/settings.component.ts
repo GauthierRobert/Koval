@@ -170,6 +170,12 @@ export class SettingsComponent implements OnInit {
         });
     }
 
+    toggleZwiftAutoSync(enabled: boolean): void {
+        this.http.put<any>(`${environment.apiUrl}/api/integration/zwift/auto-sync`, { enabled }).subscribe({
+            next: (user) => this.authService.refreshUser(),
+        });
+    }
+
     close() {
         this.authService.toggleSettings(false);
     }

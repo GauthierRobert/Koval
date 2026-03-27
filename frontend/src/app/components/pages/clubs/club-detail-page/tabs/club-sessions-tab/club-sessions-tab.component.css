@@ -287,8 +287,8 @@
 }
 
 .sc-tag.small {
-  font-size: 7px;
-  padding: 1px 5px;
+  font-size: 9px;
+  padding: 2px 8px;
   gap: 2px;
 }
 
@@ -573,7 +573,6 @@
   box-sizing: border-box;
   background: var(--surface-raised);
   border: 1px solid var(--glass-border);
-  border-left: 2px solid var(--club-session-color);
 }
 
 .tg-card:hover {

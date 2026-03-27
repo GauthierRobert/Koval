@@ -120,6 +120,19 @@
                           </button>
                       }
                   </div>
+
+                  <!-- Zwift auto-sync toggle -->
+                  @if (user.linkedAccounts?.zwift) {
+                    <div class="field-row auto-sync-row">
+                      <label class="toggle-label">
+                        <input type="checkbox" class="toggle-input"
+                          [checked]="user.zwiftAutoSyncWorkouts"
+                          (change)="toggleZwiftAutoSync($any($event.target).checked)"/>
+                        <span class="toggle-switch"></span>
+                        <span>{{ 'SETTINGS.ZWIFT_AUTO_SYNC_WORKOUTS' | translate }}</span>
+                      </label>
+                    </div>
+                  }
               </div>
           </section>
         }
