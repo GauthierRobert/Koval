@@ -5,6 +5,7 @@ import com.koval.trainingplannerbackend.pacing.dto.RouteCoordinate;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -103,6 +105,7 @@ public class RaceController {
             byte[] gpx = raceService.getGpxBytes(id, discipline);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + discipline + ".gpx\"")
+                    .cacheControl(CacheControl.maxAge(Duration.ofDays(60)))
                     .contentType(MediaType.APPLICATION_XML)
                     .body(gpx);
         } catch (NoSuchElementException e) {
@@ -114,7 +117,9 @@ public class RaceController {
     public ResponseEntity<List<RouteCoordinate>> getRouteCoordinates(@PathVariable String id,
                                                                        @PathVariable String discipline) {
         try {
-            return ResponseEntity.ok(raceService.getRouteCoordinates(id, discipline));
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.maxAge(Duration.ofDays(60)))
+                    .body(raceService.getRouteCoordinates(id, discipline));
         } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();
         }

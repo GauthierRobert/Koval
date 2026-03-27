@@ -5,6 +5,7 @@ import com.koval.trainingplannerbackend.training.metrics.PowerCurveService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -128,6 +130,7 @@ public class SessionController {
                 .map(fit -> ResponseEntity.ok()
                         .header(HttpHeaders.CONTENT_DISPOSITION,
                                 "attachment; filename=\"" + fit.filename() + "\"")
+                        .cacheControl(CacheControl.maxAge(Duration.ofDays(14)).cachePrivate())
                         .contentType(MediaType.APPLICATION_OCTET_STREAM)
                         .body((Object) fit.data()))
                 .orElse(ResponseEntity.notFound().build());

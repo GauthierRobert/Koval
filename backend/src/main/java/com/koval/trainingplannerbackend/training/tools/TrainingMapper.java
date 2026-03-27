@@ -30,11 +30,9 @@ public class TrainingMapper {
 
         // Block mapping
         if (request.blocks() != null && !request.blocks().isEmpty()) {
-            String sport = request.sport() != null ? request.sport().toUpperCase() : "CYCLING";
-            List<WorkoutElement> blocks = request.blocks().stream()
-                    .map(b -> mapElement(b, sport))
-                    .toList();
-            training.setBlocks(blocks);
+            training.setBlocks(request.blocks().stream()
+                    .map(this::mapElement)
+                    .toList());
         } else {
             training.setBlocks(new ArrayList<>());
         }
@@ -46,44 +44,24 @@ public class TrainingMapper {
      * Recursively maps a WorkoutElementRequest to a WorkoutElement.
      * Sets map children recursively; leaves enforce distance-xor-duration.
      */
-    private WorkoutElement mapElement(WorkoutElementRequest b, String sport) {
-        if (b.isSet()) {
-            List<WorkoutElement> children = b.elements().stream()
-                    .map(child -> mapElement(child, sport))
-                    .toList();
-            return new WorkoutElement(b.reps(), children, b.restDur(), b.restPct(),
-                    null, null, null, null, null, null, null, null, null, null, null);
-        }
-        return enforceDistanceXorDuration(b, sport);
+    private WorkoutElement mapElement(WorkoutElementRequest b) {
+       return b.isSet() ? set(b) : block(b);
+    }
+
+    private WorkoutElement set(WorkoutElementRequest b) {
+        List<WorkoutElement> children = b.elements().stream()
+                .map(this::mapElement)
+                .toList();
+        return new WorkoutElement(b.reps(), children, b.restDur(), b.restPct(),
+                null, null, null, null, null, null, null, null, null, null, null);
     }
 
     /**
      * Enforces that each leaf block has exactly one of durationSeconds or distanceMeters.
      */
-    private WorkoutElement enforceDistanceXorDuration(WorkoutElementRequest b, String sport) {
-        Integer dur = b.dur();
-        Integer dist = b.dist();
-
-        boolean hasDur = dur != null && dur > 0;
-        boolean hasDist = dist != null && dist > 0;
-
-        SportType sportType = SportType.fromString(sport);
-        double metersPerSecond = sportType.getTypicalSpeedMps();
-
-        if (hasDur && hasDist) {
-            if ("RUNNING".equals(sport) || "SWIMMING".equals(sport)) {
-                dur = (int) Math.round(dist / metersPerSecond);
-            } else {
-                dist = (int) Math.round(dur * metersPerSecond);
-            }
-        } else if (hasDur) {
-            dist = (int) Math.round(dur * metersPerSecond);
-        } else if (hasDist) {
-            dur = (int) Math.round(dist / metersPerSecond);
-        }
-
+    private WorkoutElement block(WorkoutElementRequest b) {
         return new WorkoutElement(null, null, null, null,
-                b.type(), dur, dist, b.label(), b.desc(), b.pct(), b.pctFrom(), b.pctTo(), b.cad(), b.zone(), null);
+                b.type(), b.dur(), b.dist(), b.label(), b.desc(), b.pct(), b.pctFrom(), b.pctTo(), b.cad(), b.zone(), null);
     }
 
     private static <T extends Enum<T>> T safeValueOf(Class<T> enumType, String value, T fallback) {

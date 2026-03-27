@@ -28,6 +28,8 @@ public class ClubTrainingSession {
     private String sport;
     private LocalDateTime scheduledAt;
     private String location;
+    private Double meetingPointLat;
+    private Double meetingPointLon;
     private String description;
     private String linkedTrainingId;
     private List<String> participantIds = new ArrayList<>();

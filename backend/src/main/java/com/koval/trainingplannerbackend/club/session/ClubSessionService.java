@@ -171,7 +171,7 @@ public class ClubSessionService {
 
     private void promoteNextFromWaitingList(ClubTrainingSession session) {
         if (session.getWaitingList().isEmpty()) return;
-        WaitingListEntry promoted = session.getWaitingList().remove(0);
+        WaitingListEntry promoted = session.getWaitingList().removeFirst();
         session.getParticipantIds().add(promoted.userId());
 
         notificationService.sendToUsers(

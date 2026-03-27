@@ -95,6 +95,8 @@ public class AIActionToolService {
                     sportType,
                     scheduledDateTime,
                     location,
+                    null,
+                    null,
                     sessionDescription,
                     saved.getId(),
                     maxParticipants,

@@ -53,6 +53,22 @@
   color: var(--accent-color);
 }
 
+/* --- Filter checkbox --- */
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.filter-checkbox input[type="checkbox"] {
+  accent-color: var(--accent-color);
+  cursor: pointer;
+}
+
 .view-toggle button:hover:not(.active) {
   background: var(--surface-elevated);
 }
@@ -322,6 +338,15 @@
   opacity: 0.5;
   flex-shrink: 0;
 }
+
+.sc-location--link {
+  color: var(--accent-color);
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.sc-location--link:hover { opacity: 0.8; }
+.sc-location--link svg { opacity: 0.8; }
 
 /* Cancellation reason */
 .sc-cancel-reason {

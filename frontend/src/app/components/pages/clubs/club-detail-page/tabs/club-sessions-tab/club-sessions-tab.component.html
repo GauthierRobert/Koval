@@ -11,6 +11,12 @@
       }
     </div>
   </div>
+  @if (clubGroups.length > 0) {
+    <label class="filter-checkbox">
+      <input type="checkbox" [checked]="showOtherGroupSessions" (change)="toggleShowOtherGroupSessions()"/>
+      <span>{{ 'CLUB_SESSIONS.SHOW_OTHER_GROUPS' | translate }}</span>
+    </label>
+  }
 
   @if (sessions$ | async; as sessions) {
     <!-- Shared week navigation -->
@@ -23,14 +29,14 @@
 
     <!-- ==================== LIST VIEW ==================== -->
     @if (viewMode === 'LIST') {
-      @if (getListDaysWithSessions(sessions); as days) {
+      @if (getListDaysWithSessions(filterSessions(sessions)); as days) {
         @if (days.length > 0) {
           <div class="sessions-list">
           @for (day of days; track day) {
             <div class="day-group">
               <div class="day-group-header" [class.today]="isToday(day)">{{ formatDayHeader(day) }}</div>
               <div class="day-sessions">
-                @for (session of getSessionsForDay(sessions, day); track session.id) {
+                @for (session of getSessionsForDay(filterSessions(sessions), day); track session.id) {
                   <div
                     class="sc-card glass"
                     [class.sc-card--attending]="isParticipant(session)"
@@ -101,6 +107,14 @@
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                           {{ session.location }}
                         </span>
+                      }
+                      @if (session.meetingPointLat != null && session.meetingPointLon != null) {
+                        <a class="sc-location sc-location--link"
+                           [href]="'https://www.google.com/maps?q=' + session.meetingPointLat + ',' + session.meetingPointLon"
+                           target="_blank" rel="noopener" (click)="$event.stopPropagation()">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                          {{ 'CLUB_SESSIONS.VIEW_ON_MAP' | translate }}
+                        </a>
                       }
                     </div>
 
@@ -261,7 +275,7 @@
               }
 
               <!-- Sessions -->
-              @for (session of getSessionsForDay(sessions, day); track session.id) {
+              @for (session of getSessionsForDay(filterSessions(sessions), day); track session.id) {
                 <div
                   class="tg-card"
                   [class.tg-card--has-training]="hasAnyLinkedTraining(session)"
@@ -461,6 +475,10 @@
           <label>{{ 'CLUB_SESSIONS.FORM_LABEL_TIME' | translate }}</label>
           <input type="time" [(ngModel)]="form['timeOfDay']" class="form-input"/>
         </div>
+        <div class="form-row">
+          <label>{{ 'CLUB_SESSIONS.FORM_LABEL_END_DATE' | translate }}</label>
+          <input type="date" [(ngModel)]="form['endDate']" class="form-input"/>
+        </div>
       }
 
       <!-- Shared fields -->
@@ -479,6 +497,14 @@
       <div class="form-row">
         <label>{{ 'CLUB_SESSIONS.FORM_LABEL_LOCATION' | translate }}</label>
         <input [(ngModel)]="form['location']" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_LOCATION' | translate" class="form-input"/>
+      </div>
+      <div class="form-row">
+        <label>{{ 'CLUB_SESSIONS.FORM_LABEL_MEETING_POINT' | translate }}</label>
+        <app-meeting-point-picker
+          [lat]="form['meetingPointLat']"
+          [lon]="form['meetingPointLon']"
+          (pointChanged)="onMeetingPointChanged($event)"
+        ></app-meeting-point-picker>
       </div>
       <div class="form-row">
         <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DESCRIPTION' | translate }}</label>

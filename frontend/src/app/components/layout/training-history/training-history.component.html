@@ -13,6 +13,9 @@
           <span class="item-meta">
             <span [style.font-style]="isDurationEstimated(training) ? 'italic' : ''">{{ getDuration(training) }}</span>
             &bull; {{ (training.blocks || []).length }} {{ 'TRAINING_HISTORY.META_BLOCKS' | translate }}
+            @if (training.createdAt) {
+              &bull; <span class="item-date">{{ training.createdAt | date:'shortDate' }}</span>
+            }
             <div>
               @if (training.trainingType) {
               <span class="type-badge"

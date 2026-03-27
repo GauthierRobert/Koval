@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -30,6 +31,8 @@ public class RecurringSessionTemplate {
     private DayOfWeek dayOfWeek;
     private LocalTime timeOfDay;
     private String location;
+    private Double meetingPointLat;
+    private Double meetingPointLon;
     private String description;
     private String linkedTrainingId;
     private List<GroupLinkedTraining> linkedTrainings = new ArrayList<>();
@@ -40,6 +43,7 @@ public class RecurringSessionTemplate {
     private Integer openToAllDelayValue;
     private OpenToAllDelayUnit openToAllDelayUnit;
     private String responsibleCoachId;
+    private LocalDate endDate;
     private boolean active = true;
     private LocalDateTime createdAt;
 }

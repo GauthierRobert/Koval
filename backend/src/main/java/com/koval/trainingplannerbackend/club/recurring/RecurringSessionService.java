@@ -109,6 +109,7 @@ public class RecurringSessionService {
     public void generateInstances(RecurringSessionTemplate template, int weeksAhead) {
         LocalDate today = LocalDate.now();
         DayOfWeek targetDay = template.getDayOfWeek();
+        LocalDate endDate = template.getEndDate();
 
         List<ClubTrainingSession> toSave = new ArrayList<>();
         for (int week = 0; week < weeksAhead; week++) {
@@ -116,6 +117,10 @@ public class RecurringSessionService {
             // Skip if the target date is in the past
             if (targetDate.isBefore(today)) {
                 continue;
+            }
+            // Stop generating if past the end date (inclusive)
+            if (endDate != null && targetDate.isAfter(endDate)) {
+                break;
             }
 
             LocalDateTime scheduledAt = targetDate.atTime(template.getTimeOfDay());

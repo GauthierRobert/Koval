@@ -2,11 +2,9 @@ package com.koval.trainingplannerbackend.ai;
 
 import com.koval.trainingplannerbackend.ai.action.AIActionToolService;
 import com.koval.trainingplannerbackend.ai.action.CreationTrainingToolService;
-import com.koval.trainingplannerbackend.ai.action.NotationToolService;
 import com.koval.trainingplannerbackend.club.tools.ClubToolService;
 import com.koval.trainingplannerbackend.coach.tools.CoachToolService;
 import com.koval.trainingplannerbackend.goal.GoalToolService;
-// import com.koval.trainingplannerbackend.plan.PlanToolService; //TODO temporary — plans disabled
 import com.koval.trainingplannerbackend.race.RaceToolService;
 import com.koval.trainingplannerbackend.training.history.HistoryToolService;
 import com.koval.trainingplannerbackend.training.tools.TrainingToolService;

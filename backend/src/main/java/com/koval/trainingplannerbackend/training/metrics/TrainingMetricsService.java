@@ -94,7 +94,7 @@ public class TrainingMetricsService {
                         z -> z.label().toUpperCase(),
                         z -> new ZoneResolution((z.low() + z.high()) / 2,
                                 z.label() + " - " + (z.description() != null ? z.description() : "") + " (" + z.low() + "-" + z.high() + "%)"),
-                        (a, b) -> a));
+                        (a, _) -> a));
 
         List<WorkoutElement> resolvedBlocks = training.getBlocks().stream()
                 .map(block -> resolveElementZones(block, zoneMap))
@@ -141,15 +141,14 @@ public class TrainingMetricsService {
 
         // 2. Try default zone system for the training creator
         String createdBy = training.getCreatedBy() != null ? training.getCreatedBy() : userId;
-        Optional<ZoneSystem> defaultZs = zoneSystemService.getDefaultZoneSystem(createdBy, sport);
-        if (defaultZs.isPresent()) return defaultZs.get();
-
-        // 3. Try coach's default via group membership
-        return groupService.getCoachIdsForAthlete(userId).stream()
+        return zoneSystemService.getDefaultZoneSystem(createdBy, sport)
+                .orElseGet(() -> groupService.getCoachIdsForAthlete(userId).stream()
                 .map(coachId -> zoneSystemService.getDefaultZoneSystem(coachId, sport))
                 .flatMap(Optional::stream)
                 .findFirst()
-                .orElse(null);
+                .orElse(null));
+
+        // 3. Try coach's default via group membership
     }
 
     // ── Block-level metrics ─────────────────────────────────────────────────

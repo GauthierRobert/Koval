@@ -29,13 +29,14 @@ import {
 import {AuthService} from '../../../../../../services/auth.service';
 import {TrainingService} from '../../../../../../services/training.service';
 import {SportIconComponent} from '../../../../../shared/sport-icon/sport-icon.component';
+import {MeetingPoint, MeetingPointPickerComponent} from '../../../../../shared/meeting-point-picker/meeting-point-picker.component';
 
 type ViewMode = 'LIST' | 'CALENDAR';
 
 @Component({
   selector: 'app-club-sessions-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, SportIconComponent],
+  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, SportIconComponent, MeetingPointPickerComponent],
   templateUrl: './club-sessions-tab.component.html',
   styleUrl: './club-sessions-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -91,6 +92,9 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   readonly HOUR_END = 22;
   readonly HOUR_HEIGHT_PX = 120;
   readonly hours = Array.from({ length: 16 }, (_, i) => i + 6);
+
+  private static readonly SHOW_OTHER_GROUPS_KEY = 'club-sessions-show-other-groups';
+  showOtherGroupSessions = localStorage.getItem(ClubSessionsTabComponent.SHOW_OTHER_GROUPS_KEY) !== 'false';
 
   private scrolledToCurrentHour = false;
   private allSessions: ClubTrainingSession[] = [];
@@ -155,6 +159,19 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
 
   get isMobile(): boolean {
     return window.innerWidth <= 768;
+  }
+
+  toggleShowOtherGroupSessions(): void {
+    this.showOtherGroupSessions = !this.showOtherGroupSessions;
+    localStorage.setItem(ClubSessionsTabComponent.SHOW_OTHER_GROUPS_KEY, String(this.showOtherGroupSessions));
+    this.clearOverlapCache();
+    this.cdr.markForCheck();
+  }
+
+  filterSessions(sessions: ClubTrainingSession[]): ClubTrainingSession[] {
+    if (this.showOtherGroupSessions) return sessions;
+    const userGroupIds = this.getUserGroupIds();
+    return sessions.filter((s) => !s.clubGroupId || userGroupIds.has(s.clubGroupId));
   }
 
   setViewMode(mode: ViewMode): void {
@@ -408,6 +425,8 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
       sport: session.sport || 'CYCLING',
       scheduledAt: session.scheduledAt ? this.toDatetimeLocal(session.scheduledAt) : '',
       location: session.location || '',
+      meetingPointLat: session.meetingPointLat ?? null,
+      meetingPointLon: session.meetingPointLon ?? null,
       description: session.description || '',
       maxParticipants: session.maxParticipants || '',
       durationMinutes: session.durationMinutes || '',
@@ -427,6 +446,11 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
+  onMeetingPointChanged(point: MeetingPoint | null): void {
+    this.form['meetingPointLat'] = point?.lat ?? null;
+    this.form['meetingPointLon'] = point?.lon ?? null;
+  }
+
   get isFormValid(): boolean {
     if (!this.form['title'] || !this.form['sport']) return false;
     if (this.isRecurring && (!this.form['dayOfWeek'] || !this.form['timeOfDay'])) return false;
@@ -444,6 +468,8 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
           dayOfWeek: undefined as any,
           timeOfDay: this.form['scheduledAt'] ? new Date(this.form['scheduledAt']).toTimeString().slice(0, 5) : undefined as any,
           location: this.form['location'] || undefined,
+          meetingPointLat: this.form['meetingPointLat'] ?? undefined,
+          meetingPointLon: this.form['meetingPointLon'] ?? undefined,
           description: this.form['description'] || undefined,
           maxParticipants: this.form['maxParticipants'] || undefined,
           clubGroupId: this.form['clubGroupId'] || undefined,
@@ -451,6 +477,7 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
           openToAll: this.form['clubGroupId'] ? this.form['openToAll'] : undefined,
           openToAllDelayValue: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
           openToAllDelayUnit: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
+          endDate: this.form['endDate'] || undefined,
         };
         this.clubService.updateRecurringTemplateWithInstances(this.club.id, this.editingSession.recurringTemplateId, data).subscribe({
           next: () => {
@@ -468,6 +495,8 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
           sport: this.form['sport'],
           scheduledAt: this.form['scheduledAt'] || undefined,
           location: this.form['location'] || undefined,
+          meetingPointLat: this.form['meetingPointLat'] ?? undefined,
+          meetingPointLon: this.form['meetingPointLon'] ?? undefined,
           description: this.form['description'] || undefined,
           maxParticipants: this.form['maxParticipants'] || undefined,
           durationMinutes: this.form['durationMinutes'] || undefined,
@@ -498,6 +527,8 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
         dayOfWeek: this.form['dayOfWeek'],
         timeOfDay: this.form['timeOfDay'],
         location: this.form['location'] || undefined,
+        meetingPointLat: this.form['meetingPointLat'] ?? undefined,
+        meetingPointLon: this.form['meetingPointLon'] ?? undefined,
         description: this.form['description'] || undefined,
         maxParticipants: this.form['maxParticipants'] || undefined,
         clubGroupId: this.form['clubGroupId'] || undefined,
@@ -505,6 +536,7 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
         openToAll: this.form['clubGroupId'] ? this.form['openToAll'] : undefined,
         openToAllDelayValue: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
         openToAllDelayUnit: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
+        endDate: this.form['endDate'] || undefined,
       };
       this.clubService.createRecurringTemplate(this.club.id, data).subscribe({
         next: () => {
@@ -519,6 +551,8 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
         sport: this.form['sport'],
         scheduledAt: this.form['scheduledAt'] || undefined,
         location: this.form['location'] || undefined,
+        meetingPointLat: this.form['meetingPointLat'] ?? undefined,
+        meetingPointLon: this.form['meetingPointLon'] ?? undefined,
         description: this.form['description'] || undefined,
         maxParticipants: this.form['maxParticipants'] || undefined,
         durationMinutes: this.form['durationMinutes'] || undefined,

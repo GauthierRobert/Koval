@@ -4,7 +4,6 @@ import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationExce
 import com.koval.trainingplannerbackend.config.exceptions.RateLimitException;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
-import com.koval.trainingplannerbackend.training.notation.CompactNotationException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,12 +43,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleRateLimit(RateLimitException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                 .body(ErrorResponse.of(429, "Too Many Requests", ex.getCode(), ex.getMessage(), request.getRequestURI()));
-    }
-
-    @ExceptionHandler(CompactNotationException.class)
-    public ResponseEntity<ErrorResponse> handleNotation(CompactNotationException ex, HttpServletRequest request) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponse.of(400, "Bad Request", "INVALID_NOTATION", ex.getMessage(), request.getRequestURI()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)

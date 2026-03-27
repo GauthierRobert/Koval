@@ -1,12 +1,12 @@
 package com.koval.trainingplannerbackend.club.tools;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
+import com.koval.trainingplannerbackend.club.dto.ClubMemberResponse;
 import com.koval.trainingplannerbackend.club.dto.CreateRecurringSessionRequest;
 import com.koval.trainingplannerbackend.club.dto.CreateSessionRequest;
 import com.koval.trainingplannerbackend.club.group.ClubGroup;
 import com.koval.trainingplannerbackend.club.group.ClubGroupService;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipService;
-import com.koval.trainingplannerbackend.club.dto.ClubMemberResponse;
 import com.koval.trainingplannerbackend.club.recurring.RecurringSessionService;
 import com.koval.trainingplannerbackend.club.recurring.RecurringSessionTemplate;
 import com.koval.trainingplannerbackend.club.session.ClubSessionService;
@@ -79,7 +79,7 @@ public class ClubToolService {
         if (title == null || title.isBlank()) return "Error: title is required.";
         if (scheduledAt == null) return "Error: scheduledAt is required.";
 
-        var req = new CreateSessionRequest(title, sport, scheduledAt, location, description,
+        var req = new CreateSessionRequest(title, sport, scheduledAt, location, null, null, description,
                 null, maxParticipants, durationMinutes, clubGroupId, SecurityUtils.getCurrentUserId(),
                 null, null, null);
         ClubTrainingSession session = sessionService.createSession(userId, clubId, req);
@@ -96,6 +96,7 @@ public class ClubToolService {
             @ToolParam(description = "Sport: CYCLING, RUNNING, SWIMMING, or BRICK") String sport,
             @ToolParam(description = "Day of week: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY") DayOfWeek dayOfWeek,
             @ToolParam(description = "Time of day (HH:mm, e.g. 18:30)") LocalTime timeOfDay,
+            @ToolParam(description = "Optional : End date: date when recurring session stops. (null = never)") LocalDate endDate,
             @ToolParam(description = "Location (optional)") String location,
             @ToolParam(description = "Description (optional)") String description,
             @ToolParam(description = "Club group ID to restrict visibility (null = all members)") String clubGroupId,
@@ -106,9 +107,9 @@ public class ClubToolService {
         if (dayOfWeek == null) return "Error: dayOfWeek is required.";
         if (timeOfDay == null) return "Error: timeOfDay is required.";
 
-        var req = new CreateRecurringSessionRequest(title, sport, dayOfWeek, timeOfDay, location, description,
+        var req = new CreateRecurringSessionRequest(title, sport, dayOfWeek, timeOfDay, location, null, null, description,
                 null, maxParticipants, durationMinutes, clubGroupId, SecurityUtils.getCurrentUserId(),
-                null, null, null);
+                null, null, null, endDate);
         RecurringSessionTemplate template = recurringService.createTemplate(userId, clubId, req);
         return toTemplateSummary(template);
     }
@@ -250,15 +251,19 @@ public class ClubToolService {
                                      LocalDateTime scheduledAt, String location,
                                      int participantCount, Integer maxParticipants,
                                      String linkedTrainingTitle, String clubGroupId,
-                                     boolean cancelled, Integer durationMinutes) {}
+                                     boolean cancelled, Integer durationMinutes) {
+    }
 
     public record RecurringTemplateSummary(String id, String title, String sport,
                                            DayOfWeek dayOfWeek, LocalTime timeOfDay,
                                            String location, boolean active,
-                                           String clubGroupId, Integer durationMinutes) {}
+                                           String clubGroupId, Integer durationMinutes) {
+    }
 
     public record ClubMemberSummary(String userId, String displayName,
-                                    String role, List<String> groupTags) {}
+                                    String role, List<String> groupTags) {
+    }
 
-    public record ClubGroupSummary(String id, String name, int memberCount) {}
+    public record ClubGroupSummary(String id, String name, int memberCount) {
+    }
 }

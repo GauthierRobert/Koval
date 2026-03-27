@@ -101,6 +101,8 @@ export interface ClubTrainingSession {
   sport?: string;
   scheduledAt?: string;
   location?: string;
+  meetingPointLat?: number;
+  meetingPointLon?: number;
   description?: string;
   linkedTrainingId?: string;
   linkedTrainings?: GroupLinkedTraining[];
@@ -131,6 +133,8 @@ export interface RecurringSessionTemplate {
   dayOfWeek: string;
   timeOfDay: string;
   location?: string;
+  meetingPointLat?: number;
+  meetingPointLon?: number;
   description?: string;
   linkedTrainingId?: string;
   maxParticipants?: number;
@@ -139,6 +143,7 @@ export interface RecurringSessionTemplate {
   openToAll?: boolean;
   openToAllDelayValue?: number;
   openToAllDelayUnit?: 'HOURS' | 'DAYS';
+  endDate?: string;
   active: boolean;
   createdAt: string;
 }
@@ -212,6 +217,8 @@ export interface CreateSessionData {
   sport?: string;
   scheduledAt?: string;
   location?: string;
+  meetingPointLat?: number;
+  meetingPointLon?: number;
   description?: string;
   linkedTrainingId?: string;
   maxParticipants?: number;
@@ -229,6 +236,8 @@ export interface CreateRecurringSessionData {
   dayOfWeek: string;
   timeOfDay: string;
   location?: string;
+  meetingPointLat?: number;
+  meetingPointLon?: number;
   description?: string;
   linkedTrainingId?: string;
   maxParticipants?: number;
@@ -237,6 +246,7 @@ export interface CreateRecurringSessionData {
   openToAll?: boolean;
   openToAllDelayValue?: number;
   openToAllDelayUnit?: 'HOURS' | 'DAYS';
+  endDate?: string;
 }
 
 @Injectable({ providedIn: 'root' })
