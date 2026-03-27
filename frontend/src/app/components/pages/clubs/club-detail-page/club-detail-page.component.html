@@ -54,6 +54,7 @@
     </div>
 
     <div class="tab-strip glass">
+      <div class="tab-strip-content">
       @for (tab of tabs; track tab.id) {
         <button
           class="tab-btn"
@@ -62,6 +63,7 @@
           {{ tab.label | translate }}
         </button>
       }
+      </div>
     </div>
 
     <div class="tab-body">

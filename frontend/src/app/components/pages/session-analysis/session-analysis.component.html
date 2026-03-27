@@ -196,7 +196,7 @@
                   <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_HR' | translate }}</span>
                   <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_CAD' | translate }}</span>
                 </div>
-                @for (block of blocksWithZones; track block) {
+                @for (block of blocksWithZones; track $index) {
                   <div class="blocks-row">
                     <span class="zb-zone">
                       @if (block.zoneColor) {

@@ -2,12 +2,13 @@ export const environment = {
   production: false,
   apiUrl: 'http://localhost:8080',
   firebase: {
-    apiKey: 'YOUR_API_KEY',
-    authDomain: 'YOUR_PROJECT.firebaseapp.com',
-    projectId: 'YOUR_PROJECT_ID',
-    storageBucket: 'YOUR_PROJECT.appspot.com',
-    messagingSenderId: 'YOUR_SENDER_ID',
-    appId: 'YOUR_APP_ID',
+    apiKey: "AIzaSyBPpyIChAQGziWwZbOLGI-af302iiWqi6g",
+    authDomain: "koval-489519.firebaseapp.com",
+    projectId: "koval-489519",
+    storageBucket: "koval-489519.firebasestorage.app",
+    messagingSenderId: "71896495990",
+    appId: "1:71896495990:web:c3e63c02d589b572d4ec57",
+    measurementId: "G-D2CR3R18Y4"
   },
-  firebaseVapidKey: 'YOUR_VAPID_KEY',
+  firebaseVapidKey: 'BJvhd4f7abMFX69vJdxx7ucDqs2YjDjSrro1cd0EZBkdXKikeM7QuUjYdD6dkYo0G-we3Di-AfLyATQjJZ3k_rc',
 };

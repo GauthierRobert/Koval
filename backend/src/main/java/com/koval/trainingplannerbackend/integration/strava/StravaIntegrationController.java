@@ -15,9 +15,9 @@ public class StravaIntegrationController {
         this.syncService = syncService;
     }
 
-    @PostMapping("/sync")
-    public StravaActivitySyncService.SyncResult sync() {
-        return syncService.sync(SecurityUtils.getCurrentUserId());
+    @PostMapping("/import-history")
+    public StravaActivitySyncService.SyncResult importHistory() {
+        return syncService.importHistory(SecurityUtils.getCurrentUserId());
     }
 
     @GetMapping("/status")

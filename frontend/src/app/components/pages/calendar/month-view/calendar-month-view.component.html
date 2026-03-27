@@ -78,7 +78,7 @@
 
           }
 
-          @for (goal of goalsByDay.get(day.key) || []; track goal) {
+          @for (goal of goalsByDay.get(day.key) || []; track goal.id) {
             <div class="goal-pill" [style.background-color]="getPriorityColor(goal.priority) + '22'"
               [style.border-color]="getPriorityColor(goal.priority) + '66'"
               [title]="goal.title">

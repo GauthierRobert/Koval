@@ -5,7 +5,7 @@
     <div class="sidebar-header">
       <h3 class="sidebar-title">{{ 'WORKOUT_HISTORY.SIDEBAR_TITLE' | translate }}</h3>
       <div class="sidebar-actions">
-        <button class="icon-btn strava-btn" (click)="syncStrava()" [disabled]="(syncing$ | async) === true"
+        <button class="icon-btn strava-btn" (click)="importStravaHistory()" [disabled]="(syncing$ | async) === true"
           [title]="(syncing$ | async) ? ('WORKOUT_HISTORY.BTN_SYNCING' | translate) : ('WORKOUT_HISTORY.BTN_STRAVA_SYNC' | translate)">
           @if ((syncing$ | async) === true) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FC4C02" stroke-width="2.5"

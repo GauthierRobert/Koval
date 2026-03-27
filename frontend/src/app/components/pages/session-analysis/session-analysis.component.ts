@@ -131,38 +131,47 @@ export class SessionAnalysisComponent implements OnDestroy {
             if (!resolved) return [];
             const {zones, referenceValue} = resolved;
 
-            const zoneCounts = new Array(zones.length).fill(0);
-            let walkingCount = 0;
-            let totalCounted = 0;
+            const zoneSeconds = new Array(zones.length).fill(0);
+            let walkingSeconds = 0;
+            let totalSeconds = 0;
+            const records = fit.records;
 
-            for (const record of fit.records) {
+            for (let i = 0; i < records.length; i++) {
+                const record = records[i];
                 if (sport !== 'CYCLING' && record.speed <= 0) continue;
+
+                // Time this record represents: gap to next record, or 1s for the last
+                const dt = i + 1 < records.length
+                    ? Math.min(records[i + 1].timestamp - record.timestamp, 30)
+                    : 1;
+                if (dt <= 0) continue;
+
                 const zi = this.zoneCls.classifyRecord(record.power, record.speed, sport, referenceValue, zones);
                 if (zi === this.zoneCls.WALKING_ZONE_INDEX) {
-                    walkingCount++;
+                    walkingSeconds += dt;
                 } else {
-                    zoneCounts[zi]++;
+                    zoneSeconds[zi] += dt;
                 }
-                totalCounted++;
+                totalSeconds += dt;
             }
 
-            if (totalCounted === 0) return [];
+            if (totalSeconds === 0) return [];
 
             const result: ZoneDistEntry[] = zones.map((z, i) => ({
                 label: z.label,
                 description: z.description ?? '',
                 color: this.zoneCls.getZoneColor(i),
-                seconds: zoneCounts[i],
-                percentage: Math.round((zoneCounts[i] / totalCounted) * 100),
+                seconds: Math.round(zoneSeconds[i]),
+                percentage: Math.round((zoneSeconds[i] / totalSeconds) * 100),
             }));
 
-            if (walkingCount > 0) {
+            if (walkingSeconds > 0) {
                 result.unshift({
                     label: this.zoneCls.WALKING_LABEL,
                     description: this.zoneCls.WALKING_DESCRIPTION,
                     color: this.zoneCls.WALKING_COLOR,
-                    seconds: walkingCount,
-                    percentage: Math.round((walkingCount / totalCounted) * 100),
+                    seconds: Math.round(walkingSeconds),
+                    percentage: Math.round((walkingSeconds / totalSeconds) * 100),
                 });
             }
 

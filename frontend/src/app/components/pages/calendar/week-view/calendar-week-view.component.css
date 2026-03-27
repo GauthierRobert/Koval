@@ -345,7 +345,7 @@
 
 /* Standalone session card */
 .workout-card--session {
-  border-left: 2px solid var(--session-text);
+  border-left: 2px solid var(--info-text);
   border-color: var(--glass-border);
   background: var(--surface-elevated);
   position: relative;
@@ -473,18 +473,8 @@
 
 /* Club session card */
 .workout-card--club-session {
-  border-left: 2px solid var(--club-session-color);
-  background: var(--club-session-subtle);
-  border-color: var(--club-session-border);
-}
-
-.workout-card--club-session.workout-card--cs-attending {
-  border-left-color: var(--accent-color);
-  background: rgba(255, 157, 0, 0.04);
-}
-
-.workout-card--club-session.workout-card--cs-waiting {
-  border-left-color: rgba(255, 255, 255, 0.2);
+  background: var(--info-subtle);
+  border-color: var(--info-border);
 }
 
 .workout-card--club-session.not-joined {
@@ -498,7 +488,7 @@
   border-radius: 4px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: var(--club-session-color);
+  background: var(--info-color);
   color: #000000;
   white-space: nowrap;
 }
@@ -593,7 +583,6 @@
   opacity: 0.6;
   background: rgba(239, 68, 68, 0.06);
   border-color: rgba(239, 68, 68, 0.2);
-  border-left-color: #ef4444;
 }
 
 .cancelled-badge {

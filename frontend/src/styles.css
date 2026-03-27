@@ -116,7 +116,7 @@
 
   /* Page layout */
   --page-padding: 24px;
-  --page-max-width: 1200px;
+  --page-max-width: 70vw;
   --sidebar-width: 260px;
   --topbar-height: 64px;
 

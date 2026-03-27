@@ -59,13 +59,25 @@ export class ZoneInterpolationService {
     private medianFilter(raw: number[], smoothFactor: number): number[] {
         const n = raw.length;
         const half = smoothFactor;
+        const walkIdx = this.cls.WALKING_ZONE_INDEX;
         const smoothed = new Array<number>(n);
         const buf: number[] = [];
         for (let i = 0; i < n; i++) {
+            // Never let the median filter change a walking record to non-walking or vice versa
+            if (raw[i] === walkIdx) {
+                smoothed[i] = walkIdx;
+                continue;
+            }
             const lo = Math.max(0, i - half);
             const hi = Math.min(n - 1, i + half);
             buf.length = 0;
-            for (let j = lo; j <= hi; j++) buf.push(raw[j]);
+            for (let j = lo; j <= hi; j++) {
+                if (raw[j] !== walkIdx) buf.push(raw[j]);
+            }
+            if (buf.length === 0) {
+                smoothed[i] = raw[i];
+                continue;
+            }
             buf.sort((a, b) => a - b);
             smoothed[i] = buf[buf.length >> 1];
         }

@@ -142,8 +142,8 @@ export class WorkoutHistoryComponent implements OnInit {
         return this.metricsService.computeIF(session.avgPower, ftp);
     }
 
-    syncStrava(): void {
-        this.stravaSyncService.sync().subscribe();
+    importStravaHistory(): void {
+        this.stravaSyncService.importHistory().subscribe();
     }
 
     onSelect(session: SavedSession): void {

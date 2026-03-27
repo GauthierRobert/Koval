@@ -192,6 +192,13 @@
   overflow-x: auto;
 }
 
+.tab-strip-content{
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 var(--page-padding);
+}
+
 .tab-btn {
   background: none;
   border: none;
@@ -222,6 +229,9 @@
   flex: 1;
   padding: var(--page-padding);
   overflow-y: auto;
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  width: 100%;
 }
 
 /* ─── Buttons ─────────────────────────────────────────────── */
@@ -303,5 +313,6 @@
 
   .tab-body {
     padding: var(--space-md);
+    max-width: 100%;
   }
 }

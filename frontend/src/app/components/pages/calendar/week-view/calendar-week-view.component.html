@@ -8,7 +8,7 @@
 
       <div class="workout-slot">
 
-        @for (group of groupEntries(entriesByDay.get(day.key) || []); track group) {
+        @for (group of groupEntries(entriesByDay.get(day.key) || []); track $index) {
 
           @if (group.type === 'single') {
             @switch (group.entry.kind) {
@@ -92,11 +92,13 @@
               <div class="card-top">
                 <span class="fused-badge">✓ {{ 'CALENDAR_WEEK.FUSED_BADGE' | translate }}</span>
                 <div class="card-top-right">
-                  <a class="analysis-link" [routerLink]="['/analysis', $any(group.entry).session.id]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                    </svg>
-                  </a>
+                  @if ($any(group.entry).session.fitFileId) {
+                    <a class="analysis-link" [routerLink]="['/analysis', $any(group.entry).session.id]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                      </svg>
+                    </a>
+                  }
                   <button class="delete-btn" (click)="$event.stopPropagation(); workoutDeleted.emit($any(group.entry).scheduled)" [title]="'CALENDAR_WEEK.BTN_REMOVE_TITLE' | translate">&times;</button>
                 </div>
               </div>
@@ -119,20 +121,22 @@
                       </div>
                     </div>
                   </div>
-                  <div class="fused-divider"></div>
-                  <div class="fused-col fused-col--actual">
-                    <span class="fused-label">{{ 'CALENDAR_WEEK.FUSED_LABEL_ACTUAL' | translate }}</span>
-                    <div class="technical-metrics">
-                      <div class="m-item">
-                        <span class="m-val">{{ formatSessionDuration($any(group.entry).session) }}</span>
-                        <span class="m-unit">{{ 'CALENDAR_WEEK.METRIC_DUR' | translate }}</span>
-                      </div>
-                      <div class="m-item">
-                        <span class="m-val">{{ $any(group.entry).session.tss || '—' }}</span>
-                        <span class="m-unit">TSS</span>
+                  @if ($any(group.entry).session.fitFileId) {
+                    <div class="fused-divider"></div>
+                    <div class="fused-col fused-col--actual">
+                      <span class="fused-label">{{ 'CALENDAR_WEEK.FUSED_LABEL_ACTUAL' | translate }}</span>
+                      <div class="technical-metrics">
+                        <div class="m-item">
+                          <span class="m-val">{{ formatSessionDuration($any(group.entry).session) }}</span>
+                          <span class="m-unit">{{ 'CALENDAR_WEEK.METRIC_DUR' | translate }}</span>
+                        </div>
+                        <div class="m-item">
+                          <span class="m-val">{{ $any(group.entry).session.tss || '—' }}</span>
+                          <span class="m-unit">TSS</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  }
                 </div>
               </div>
               </div>
@@ -143,11 +147,13 @@
               <div class="card-top">
                 <span class="session-badge">{{ 'CALENDAR_WEEK.SESSION_BADGE' | translate }}</span>
                 <div class="card-top-right">
-                  <a class="analysis-link" [routerLink]="['/analysis', $any(group.entry).session.id]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                    </svg>
-                  </a>
+                  @if ($any(group.entry).session.fitFileId) {
+                    <a class="analysis-link" [routerLink]="['/analysis', $any(group.entry).session.id]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                      </svg>
+                    </a>
+                  }
                   <button class="btn-primary small" (click)="$event.stopPropagation(); openLinkPicker($any(group.entry).session)">{{ 'CALENDAR_WEEK.BTN_LINK_TO_PLAN' | translate }}</button>
                   <button class="btn-ghost small" (click)="$event.stopPropagation(); openClubSessionLinkPicker($any(group.entry).session)">{{ 'CALENDAR_WEEK.BTN_LINK_TO_CLUB' | translate }}</button>
                 </div>
@@ -254,22 +260,19 @@
 
           @if (group.type === 'club-row') {
             <div class="club-session-row">
-              @for (entry of group.entries; track entry) {
+              @for (entry of group.entries; track trackByEntry(entry)) {
                 <div class="workout-card workout-card--club-session workout-card--compact"
             [class.workout-card--cs-attending]="$any(entry).clubSession.joined"
             [class.workout-card--cs-waiting]="$any(entry).clubSession.onWaitingList"
             [class.not-joined]="!$any(entry).clubSession.joined && !$any(entry).clubSession.onWaitingList"
             [class.cancelled]="$any(entry).clubSession.cancelled">
             <div class="card-top">
-              <div class="card-top-left">
                 <span class="club-session-badge">{{ $any(entry).clubSession.clubName }}</span>
-                <span class="club-session-time">{{ formatClubSessionTime($any(entry).clubSession.scheduledAt) }}</span>
-              </div>
-              <div class="card-top-right">
                 @if ($any(entry).clubSession.cancelled) {
                   <span class="cancelled-badge">{{ 'CALENDAR_WEEK.CLUB_SESSION_BADGE_CANCELLED' | translate }}</span>
+                } @else {
+                  <span class="club-session-time">{{ formatClubSessionTime($any(entry).clubSession.scheduledAt) }}</span>
                 }
-              </div>
             </div>
             <div class="workout-info">
               <div class="title-row">
@@ -299,7 +302,7 @@
 
         }
 
-        @for (goal of goalsByDay.get(day.key) || []; track goal) {
+        @for (goal of goalsByDay.get(day.key) || []; track goal.id) {
           <div class="goal-pill" [style.background-color]="getPriorityColor(goal.priority) + '22'"
             [style.border-color]="getPriorityColor(goal.priority) + '66'"
             [title]="goal.title">

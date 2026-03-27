@@ -84,6 +84,26 @@ public class StravaApiClient {
     }
 
     /**
+     * Fetch a single activity by ID.
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> fetchActivity(User user, String activityId) {
+        String token = ensureValidToken(user);
+        String url = "https://www.strava.com/api/v3/activities/" + activityId;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    url, HttpMethod.GET, new HttpEntity<>(headers), Map.class);
+            return response.getBody() != null ? response.getBody() : Map.of();
+        } catch (HttpClientErrorException.TooManyRequests e) {
+            throw new RateLimitException("Strava API rate limit exceeded");
+        }
+    }
+
+    /**
      * Fetch laps for a single activity.
      */
     @SuppressWarnings("unchecked")

@@ -45,7 +45,11 @@ public class StravaActivitySyncService {
         this.gridFsOperations = gridFsOperations;
     }
 
-    public SyncResult sync(String userId) {
+    /**
+     * Manual history import: imports activities from the last 30 days (max).
+     * Deduplicates against existing sessions.
+     */
+    public SyncResult importHistory(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
@@ -53,10 +57,10 @@ public class StravaActivitySyncService {
             throw new IllegalStateException("Strava is not connected for this user");
         }
 
-        // Determine after epoch: last sync, or 30 days before account creation for first sync
-        LocalDateTime after = user.getStravaLastSyncAt() != null
-                ? user.getStravaLastSyncAt()
-                : user.getCreatedAt().minusDays(7);
+        // Always look back max 30 days, but not before 7 days before account creation
+        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+        LocalDateTime earliest = user.getCreatedAt().minusDays(7);
+        LocalDateTime after = thirtyDaysAgo.isAfter(earliest) ? thirtyDaysAgo : earliest;
         long afterEpoch = after.toEpochSecond(ZoneOffset.UTC);
 
         // Fetch activities from Strava
@@ -121,6 +125,50 @@ public class StravaActivitySyncService {
                 skippedDuplicates,
                 skippedErrors,
                 importedSessions);
+    }
+
+    /**
+     * Import a single activity from Strava (called by webhook).
+     * Skips if already imported. Does NOT update stravaLastSyncAt.
+     */
+    public void importSingleActivity(User user, String stravaActivityId) {
+        // Check for duplicate
+        Set<String> existingIds = sessionRepository.findStravaActivityIdsByUserId(user.getId())
+                .stream()
+                .map(CompletedSession::getStravaActivityId)
+                .collect(Collectors.toSet());
+
+        if (existingIds.contains(stravaActivityId)) {
+            log.debug("Strava activity {} already imported, skipping", stravaActivityId);
+            return;
+        }
+
+        Map<String, Object> activity = stravaApiClient.fetchActivity(user, stravaActivityId);
+        if (activity.isEmpty()) {
+            log.warn("Strava activity {} returned empty response", stravaActivityId);
+            return;
+        }
+
+        CompletedSession session = mapper.map(activity);
+
+        boolean deviceWatts = Boolean.TRUE.equals(activity.get("device_watts"));
+        try {
+            List<Map<String, Object>> laps = stravaApiClient.fetchLaps(user, stravaActivityId);
+            List<CompletedSession.BlockSummary> lapBlocks = mapper.mapLaps(laps, session.getSportType(), deviceWatts);
+            if (lapBlocks != null) {
+                session.setBlockSummaries(lapBlocks);
+            }
+        } catch (Exception lapEx) {
+            log.warn("Failed to fetch laps for Strava activity {}: {}", stravaActivityId, lapEx.getMessage());
+        }
+
+        CompletedSession saved = sessionService.saveSession(session, user.getId());
+
+        try {
+            buildAndStoreFit(saved, user);
+        } catch (Exception fitEx) {
+            log.warn("Failed to build FIT for Strava activity {}: {}", stravaActivityId, fitEx.getMessage());
+        }
     }
 
     public SyncStatus getSyncStatus(String userId) {

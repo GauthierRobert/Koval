@@ -2,10 +2,6 @@
   <div class="tab-header">
     <h3>{{ 'CLUB_SESSIONS.HEADING' | translate }}</h3>
     <div class="tab-header-actions">
-      <div class="view-toggle">
-        <button [class.active]="viewMode === 'LIST'" (click)="setViewMode('LIST')">{{ 'CLUB_SESSIONS.VIEW_LIST' | translate }}</button>
-        <button [class.active]="viewMode === 'CALENDAR'" (click)="setViewMode('CALENDAR')">{{ 'CLUB_SESSIONS.VIEW_CALENDAR' | translate }}</button>
-      </div>
       @if (canCreate) {
         <button class="btn-primary" (click)="openForm()">{{ 'CLUB_SESSIONS.BTN_ADD_SESSION' | translate }}</button>
       }
@@ -28,7 +24,6 @@
     </div>
 
     <!-- ==================== LIST VIEW ==================== -->
-    @if (viewMode === 'LIST') {
       @if (getListDaysWithSessions(filterSessions(sessions)); as days) {
         @if (days.length > 0) {
           <div class="sessions-list">
@@ -234,137 +229,6 @@
         </div>
       }
     }
-
-    <!-- ==================== CALENDAR VIEW (Time-Grid) ==================== -->
-    @if (viewMode === 'CALENDAR') {
-      <div class="time-grid-container">
-        <!-- Sticky header row -->
-        <div class="time-grid-header">
-          <div class="time-gutter-header"></div>
-          @for (day of calendarDays; track day) {
-            <div class="day-header" [class.today]="isToday(day)">
-              {{ formatDayHeader(day) }}
-            </div>
-          }
-        </div>
-
-        <!-- Scrollable body -->
-        <div class="time-grid-body" #timeGridBody (scroll)="onTimeGridScroll()">
-          <!-- Time gutter -->
-          <div class="time-gutter">
-            @for (hour of hours; track hour) {
-              <div class="time-gutter-label" [style.height.px]="HOUR_HEIGHT_PX">
-                {{ formatHourLabel(hour) }}
-              </div>
-            }
-          </div>
-
-          <!-- Day columns -->
-          @for (day of calendarDays; track day) {
-            <div class="day-column" [class.today]="isToday(day)">
-              <!-- Hour grid lines -->
-              @for (hour of hours; track hour) {
-                <div class="hour-line"
-                     [style.top.px]="(hour - HOUR_START) * HOUR_HEIGHT_PX"></div>
-              }
-
-              <!-- Current time line -->
-              @if (isToday(day)) {
-                <div class="current-time-line"
-                     [style.top.px]="getCurrentTimeTopPx()"></div>
-              }
-
-              <!-- Sessions -->
-              @for (session of getSessionsForDay(filterSessions(sessions), day); track session.id) {
-                <div
-                  class="tg-card"
-                  [class.tg-card--has-training]="hasAnyLinkedTraining(session)"
-                  [class.tg-card--attending]="isParticipant(session)"
-                  [class.tg-card--waiting]="isOnWaitingList(session)"
-                  [class.tg-card--cancelled]="isCancelled(session)"
-                  [style.top.px]="getSessionTopPx(session)"
-                  [style.height.px]="getSessionHeightPx(session)"
-                  [style.left]="getSessionLayout(getSessionsForDay(sessions, day), session).left"
-                  [style.width]="getSessionLayout(getSessionsForDay(sessions, day), session).width">
-
-                  <!-- Lead: Time + tags inline -->
-                  <div class="tg-lead">
-                    <span class="tg-time">{{ formatTime(session.scheduledAt) }}</span>
-                    <span class="sc-tag sc-tag--sport small">
-                      <app-sport-icon [sport]="$any(session.sport)" [size]="10"></app-sport-icon>
-                      {{ session.sport || 'GEN' }}
-                    </span>
-                    @if (session.clubGroupId) {
-                      <span class="sc-tag sc-tag--group small">{{ getGroupName(session.clubGroupId) }}</span>
-                    }
-                    @if (session.recurringTemplateId) {
-                      <span class="sc-recurring-icon small"><svg xmlns="http://www.w3.org/2000/svg" height="12px" viewBox="0 -960 960 960" width="12px" fill="currentColor"><path d="M314-115q-104-48-169-145T80-479q0-26 2.5-51t8.5-49l-46 27-40-69 191-110 110 190-70 40-54-94q-11 27-16.5 56t-5.5 60q0 97 53 176.5T354-185l-40 70Zm306-485v-80h109q-46-57-111-88.5T480-800q-55 0-104 17t-90 48l-40-70q50-35 109-55t125-20q79 0 151 29.5T760-765v-55h80v220H620ZM594 0 403-110l110-190 69 40-57 98q118-17 196.5-107T800-480q0-11-.5-20.5T797-520h81q1 10 1.5 19.5t.5 20.5q0 135-80.5 241.5T590-95l44 26-40 69Z"/></svg></span>
-                    }
-                  </div>
-
-                  <!-- Cancelled badge -->
-                  @if (isCancelled(session)) {
-                    <span class="sc-status-pill sc-status-pill--cancelled small">{{ 'CLUB_SESSIONS.SESSION_BADGE_CANCELLED' | translate }}</span>
-                  }
-
-                  <!-- Title -->
-                  <div class="tg-title" [class.sc-title--cancelled]="isCancelled(session)">{{ session.title }}</div>
-
-                  <!-- Linked training description -->
-                  @if (getUserLinkedTraining(session); as userTraining) {
-                    @if (userTraining.trainingDescription) {
-                      <div class="tg-desc">{{ truncate(userTraining.trainingDescription, 40) }}</div>
-                    }
-                  }
-
-                  <!-- Footer: capacity + actions -->
-                  <div class="tg-footer">
-                    <span class="tg-capacity" [class.sc-capacity--full]="isFull(session)">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                      {{ getCapacityText(session) }}
-                    </span>
-                    @if (!isCancelled(session)) {
-                      @if (getUserLinkedTraining(session); as userTraining) {
-                        <button class="tg-view-link" (click)="navigateToTraining(userTraining.trainingId, $event)">{{ 'CLUB_SESSIONS.TG_VIEW_LINK' | translate }}</button>
-                      }
-                      @if (!isParticipant(session) && !isOnWaitingList(session)) {
-                        <button class="btn-primary small" (click)="joinSession(session, $event)">
-                          {{ isFull(session) ? ('CLUB_SESSIONS.BTN_WAIT' | translate) : ('CLUB_SESSIONS.BTN_JOIN' | translate) }}
-                        </button>
-                      }
-                      @if (isParticipant(session)) {
-                        <button class="btn-ghost small" (click)="cancelSession(session, $event)">
-                          {{ 'CLUB_SESSIONS.BTN_CANCEL_INLINE' | translate }}
-                        </button>
-                      }
-                      @if (isOnWaitingList(session)) {
-                        <button class="btn-ghost small" (click)="cancelSession(session, $event)">
-                          {{ 'CLUB_SESSIONS.BTN_LEAVE_INLINE' | translate }}
-                        </button>
-                      }
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          }
-        </div>
-
-        <!-- Off-screen session indicators -->
-        @if (sessionsAboveCount > 0) {
-          <div class="sessions-indicator above">
-            {{ sessionsAboveCount === 1 ? ('CLUB_SESSIONS.SESSIONS_ABOVE' | translate: { count: sessionsAboveCount }) : ('CLUB_SESSIONS.SESSIONS_ABOVE_PLURAL' | translate: { count: sessionsAboveCount }) }}
-          </div>
-        }
-        @if (sessionsBelowCount > 0) {
-          <div class="sessions-indicator below">
-            {{ sessionsBelowCount === 1 ? ('CLUB_SESSIONS.SESSIONS_BELOW' | translate: { count: sessionsBelowCount }) : ('CLUB_SESSIONS.SESSIONS_BELOW_PLURAL' | translate: { count: sessionsBelowCount }) }}
-          </div>
-        }
-      </div>
-
-  }
-}
 </div>
 
 <!-- Unified Session Form Modal -->

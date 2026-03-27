@@ -704,8 +704,8 @@
   },
   "WORKOUT_HISTORY": {
     "SIDEBAR_TITLE": "ACTIVITIES",
-    "BTN_STRAVA_SYNC": "STRAVA SYNC",
-    "BTN_SYNCING": "SYNCING...",
+    "BTN_STRAVA_SYNC": "STRAVA IMPORT",
+    "BTN_SYNCING": "IMPORTING...",
     "BTN_IMPORT_FIT": "IMPORT .FIT",
     "BTN_IMPORTING": "IMPORTING...",
     "SYNC_RESULT_IMPORTED": "Imported {{count}} activities from Strava",

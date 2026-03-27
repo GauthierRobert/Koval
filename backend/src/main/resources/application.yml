@@ -35,6 +35,7 @@ strava:
   client-id: ${STRAVA_CLIENT_ID:}
   client-secret: ${STRAVA_CLIENT_SECRET:}
   redirect-uri: http://localhost:4200/auth/callback
+  webhook-verify-token: ${STRAVA_WEBHOOK_VERIFY_TOKEN:strava-webhook-verify}
 
 # Google OAuth2 Configuration
 # Create your app at: https://console.cloud.google.com/apis/credentials

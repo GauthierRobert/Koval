@@ -30,11 +30,11 @@ export class StravaSyncService {
     private lastResultSubject = new BehaviorSubject<SyncResult | null>(null);
     lastResult$ = this.lastResultSubject.asObservable();
 
-    sync(): Observable<SyncResult> {
+    importHistory(): Observable<SyncResult> {
         this.syncingSubject.next(true);
         this.lastResultSubject.next(null);
 
-        return this.http.post<SyncResult>(`${this.apiUrl}/sync`, {}).pipe(
+        return this.http.post<SyncResult>(`${this.apiUrl}/import-history`, {}).pipe(
             tap({
                 next: (result) => {
                     this.syncingSubject.next(false);
