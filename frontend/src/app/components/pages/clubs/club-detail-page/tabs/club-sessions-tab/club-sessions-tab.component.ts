@@ -28,13 +28,14 @@ import {
 } from '../../../../../../services/club.service';
 import {AuthService} from '../../../../../../services/auth.service';
 import {TrainingService} from '../../../../../../services/training.service';
+import {SportIconComponent} from '../../../../../shared/sport-icon/sport-icon.component';
 
 type ViewMode = 'LIST' | 'CALENDAR';
 
 @Component({
   selector: 'app-club-sessions-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslateModule],
+  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, SportIconComponent],
   templateUrl: './club-sessions-tab.component.html',
   styleUrl: './club-sessions-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

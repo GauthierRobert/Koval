@@ -42,6 +42,11 @@
   /* Cyan — used for standalone FIT sessions */
   --session-text: #38bdf8;
 
+  /* Purple — used for club sessions */
+  --club-session-color: #a78bfa;
+  --club-session-subtle: rgba(167, 139, 250, 0.06);
+  --club-session-border: rgba(167, 139, 250, 0.25);
+
   /* Richer card surface — the "dark blue" of glass elements */
   --surface-card: rgba(22, 22, 28, 0.92);
 

@@ -2,7 +2,7 @@ import {AfterViewInit, Component, ElementRef, Input, OnChanges, ViewChild} from 
 import {CommonModule} from '@angular/common';
 import {FitRecord} from '../../../../services/metrics.service';
 import {BlockSummary} from '../../../../services/workout-execution.service';
-import {ZoneBlock} from '../session-analysis.component';
+import {ZoneBlock} from '../../../../services/zone';
 
 @Component({
     selector: 'app-fit-timeseries-chart',
@@ -109,6 +109,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
     @Input() ftp: number | null = null;
     @Input() sportType = 'CYCLING';
     @Input() blockSummaries: BlockSummary[] = [];
+    @Input() blockColors: string[] = [];
     @Input() zoneBlocks: ZoneBlock[] = [];
 
     @ViewChild('stack') stackRef!: ElementRef<HTMLDivElement>;
@@ -330,7 +331,8 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
             }
         } else if (this.usePB) {
             let acc = 0;
-            for (const b of this.blockSummaries) {
+            for (let bi = 0; bi < this.blockSummaries.length; bi++) {
+                const b = this.blockSummaries[bi];
                 const x1 = xOfT(acc), x2 = xOfT(acc + b.durationSeconds);
                 const val = this.isCycling ? b.actualPower
                     : (b.distanceMeters && b.durationSeconds > 0 ? (b.distanceMeters / b.durationSeconds) * 3.6 : 0);
@@ -342,9 +344,10 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
                     ctx.beginPath(); ctx.moveTo(x1, yt); ctx.lineTo(x2, yt); ctx.stroke();
                     ctx.restore();
                 }
-                ctx.fillStyle = accent + '30';
+                const bColor = this.blockColors[bi] || accent;
+                ctx.fillStyle = bColor + '40';
                 ctx.fillRect(x1, y, x2 - x1, bottom - y);
-                ctx.strokeStyle = accent; ctx.lineWidth = 2;
+                ctx.strokeStyle = bColor; ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke();
                 acc += b.durationSeconds;
             }

@@ -27,6 +27,10 @@ public class StravaActivityMapper {
         }
 
         session.setTotalDurationSeconds(intValue(activity.get("elapsed_time")));
+        int movingTime = intValue(activity.get("moving_time"));
+        if (movingTime > 0) {
+            session.setMovingTimeSeconds(movingTime);
+        }
 
         // Power: only use if device_watts is true
         boolean deviceWatts = Boolean.TRUE.equals(activity.get("device_watts"));

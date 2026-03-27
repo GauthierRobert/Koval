@@ -119,7 +119,16 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 
 ## TODO
 - When schedule a training in the workout library, no input for schedule date is visible and then no scheduled date is sent.
+- FIND a BETTER way, algorithm to calculate moment of pause is incorrect. It there a way to detect that the watch as been stopped ? If yes just use that to calculate the moving time and elapsed time
 
+# Club
+- Club feed need to be improve. A
+    void adding everything in it, only usefully information (Fixed next goal with athlète engagements), 
+    coach announcement (send notification), athlete should also be able to create single session 
+    (like group ride, zwift ride,... in that case notification is created as well), 
+    Session srvp, GPX linked to some sessions when group ride 
+    (map is added in session detail, session detail page must be created). 
+    Propose a design for that, must I combine both, session list with detials in the ssame page when clicked.
 ## Nice too have
 
 ## Later
