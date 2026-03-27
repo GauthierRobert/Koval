@@ -1,0 +1,32 @@
+<svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" role="img">
+  <title>Koval logo</title>
+  <defs>
+    <!-- Hard-edge color bands at 45° (no gradient — each color is a solid stripe) -->
+    <linearGradient id="btc" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"    stop-color="#ffffff"/>
+      <stop offset="16.6%" stop-color="#ffffff"/>
+      <stop offset="16.7%" stop-color="#00359d"/>
+      <stop offset="33.3%" stop-color="#00359d"/>
+      <stop offset="33.4%" stop-color="#db6412"/>
+      <stop offset="50%"   stop-color="#db6412"/>
+      <stop offset="50.1%" stop-color="#ffbf01"/>
+      <stop offset="66.6%" stop-color="#ffbf01"/>
+      <stop offset="66.7%" stop-color="#c40d5d"/>
+      <stop offset="83.3%" stop-color="#c40d5d"/>
+      <stop offset="83.4%" stop-color="#ffffff"/>
+      <stop offset="100%"  stop-color="#ffffff"/>
+    </linearGradient>
+    <mask id="k-cuts">
+      <rect width="200" height="190" fill="white"/>
+      <polygon points="50,0 83,0 81,190 69,190" fill="black"/>
+      <polygon points="81,110 61,86 180,0 152,0" fill="black"/>
+      <polygon points="81,96 61,120 210,190 172,190" fill="black"/>
+    </mask>
+  </defs>
+  <!-- Rounded black square background -->
+  <rect x="10" y="10" width="220" height="220" rx="64" ry="64" fill="black" stroke="url(#btc)" stroke-width="12"/>
+  <!-- Triangle with K cuts, centered and rotated 10° -->
+  <g transform="rotate(-10, 120, 125) translate(10, 12)">
+    <polygon points="100,18 182,172 18,172" fill="url(#btc)" mask="url(#k-cuts)"/>
+  </g>
+</svg>

@@ -300,7 +300,7 @@
 
 .sc-tag--group {
   background: var(--secondary-color);
-  color: #000;
+  color: var(--on-secondary-color);;
 }
 
 .sc-tag--open {
@@ -1038,29 +1038,6 @@
   text-align: center;
   padding: 10px 16px;
   font-size: 11px;
-}
-
-/* --- Cancel styles --- */
-.btn-cancel {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: var(--radius-sm);
-  padding: 5px 12px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.btn-cancel:hover {
-  background: rgba(239, 68, 68, 0.25);
-}
-
-.btn-cancel.small {
-  padding: 1px 10px;
-  font-size: 8px;
 }
 
 .cancel-warning {

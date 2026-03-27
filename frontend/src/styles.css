@@ -5,10 +5,12 @@
   --danger-color: #f87171;
   --info-text: #38bdf8;
 
-  --btc-1: #ffbf01;
-  --btc-2: #c40d5d;
-  --btc-3: #db6412;
-  --btc-4: #00359d;
+/*  --primary-color: #ffbf01;
+  --secondary-color: #00359d;
+  --success-color: #34d399;
+  --danger-color: #c40d5d;
+  --info-text: #db6412;*/
+
   --bg-color: #0f0f11;
   --surface-color: #1a1a1f;
   --surface-hover: rgba(255, 255, 255, 0.06);
@@ -26,7 +28,7 @@
   --accent-subtle: color-mix(in srgb, var(--accent-color) 8%, transparent);
   --accent-border: color-mix(in srgb, var(--accent-color) 25%, transparent);
   --accent-hover: color-mix(in srgb, var(--accent-color) 15%, transparent);
-  --accent-gradient: linear-gradient(135deg, var(--accent-color), #ff6b00);
+  --accent-gradient: linear-gradient(135deg, var(--accent-color), var(#db6412));
 
 
   --success-subtle: color-mix(in srgb, var(--success-color) 8%, transparent);
@@ -42,6 +44,7 @@
   --info-subtle: color-mix(in srgb, var(--info-color) 8%, transparent);
   --info-border: color-mix(in srgb, var(--info-color) 25%, transparent);
   --info-hover: color-mix(in srgb, var(--info-color) 15%, transparent);
+  --on-secondary-color: white;
 
   /* Richer card surface — the "dark blue" of glass elements */
   --surface-card: rgba(22, 22, 28, 0.92);

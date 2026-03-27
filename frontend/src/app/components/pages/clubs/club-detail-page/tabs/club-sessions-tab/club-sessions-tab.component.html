@@ -160,17 +160,17 @@
                             </button>
                           }
                           @if (isParticipant(session)) {
-                            <button class="btn-ghost small" (click)="cancelSession(session, $event)">
+                            <button class="btn-ghost" (click)="cancelSession(session, $event)">
                               {{ 'CLUB_SESSIONS.BTN_REMOVE_PARTICIPATION' | translate }}
                             </button>
                           }
                           @if (isOnWaitingList(session)) {
-                            <button class="btn-ghost small" (click)="cancelSession(session, $event)">
+                            <button class="btn-ghost" (click)="cancelSession(session, $event)">
                               {{ 'CLUB_SESSIONS.BTN_LEAVE_WAITING_LIST' | translate }}
                             </button>
                           }
                           @if (canCreate) {
-                            <button class="btn-cancel small" (click)="openCancelSessionModal(session, $event)">
+                            <button class="btn-danger" (click)="openCancelSessionModal(session, $event)">
                               {{ 'CLUB_SESSIONS.BTN_CANCEL_SESSION' | translate }}
                             </button>
                           }
