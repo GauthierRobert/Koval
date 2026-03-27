@@ -60,38 +60,116 @@
   min-height: 0;
 }
 
-/* Workout Card */
+/* ── Workout Card ──────────────────────────────────────────────────── */
 .workout-card {
   background: var(--surface-elevated);
   padding: 0.5rem 0.6rem;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.65rem;
   position: relative;
   border: 1px solid var(--glass-border);
+  overflow: hidden;
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* Top-bar accent via ::before */
+.workout-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  transition: background 0.18s ease;
 }
 
 .workout-card.clickable {
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .workout-card.clickable:hover {
-  background: var(--glass-border);
+  background: var(--surface-hover);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Card kind: Completed ──────────────────────────────────────────── */
+.workout-card--completed::before { background: var(--success-color); }
+.workout-card--completed {
+  background: var(--success-subtle);
+  border-color: var(--success-border);
+}
+.workout-card--completed.clickable:hover {
+  background: var(--success-hover);
+}
+
+/* ── Card kind: Skipped ────────────────────────────────────────────── */
+.workout-card--skipped::before { background: color-mix(in srgb, var(--danger-color) 40%, transparent); }
+.workout-card--skipped {
+  background: var(--danger-subtle);
+  border-color: var(--danger-border);
+  opacity: 0.6;
+}
+
+/* ── Card kind: Fused ──────────────────────────────────────────────── */
+.workout-card--fused::before { background: var(--success-color); }
+.workout-card--fused {
+  background: var(--success-subtle);
+  border-color: var(--success-border);
+}
+.workout-card--fused.clickable:hover {
+  background: var(--success-hover);
+}
+
+/* ── Card kind: Standalone session ─────────────────────────────────── */
+.workout-card--session::before { background: var(--info-color); }
+.workout-card--session {
+  background: var(--info-subtle);
+  border-color: var(--info-border);
+  position: relative;
+}
+.workout-card--session.clickable:hover {
+  background: var(--info-hover);
+}
+
+/* ── Card kind: Club session ───────────────────────────────────────── */
+.workout-card--club-session {
+  background: var(--info-subtle);
+  border-color: var(--info-border);
+}
+
+.workout-card--cs-attending::before { background: var(--accent-color); }
+.workout-card--cs-attending {
+  background: var(--accent-subtle);
   border-color: var(--accent-border);
 }
 
-.completed {
-  border-color: var(--success-border);
-  background: var(--success-subtle);
+.workout-card--cs-waiting::before { background: color-mix(in srgb, var(--accent-color) 50%, transparent); }
+.workout-card--cs-waiting {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+  opacity: 0.85;
 }
 
-.skipped {
-  opacity: 0.5;
-  filter: grayscale(0.5);
+.workout-card--club-session.not-joined {
+  background: var(--surface-elevated);
+  border-color: var(--glass-border);
+  opacity: 0.75;
+}
+.workout-card--club-session.not-joined::before { background: transparent; }
+
+.workout-card--club-session.cancelled::before { background: color-mix(in srgb, var(--danger-color) 30%, transparent); }
+.workout-card--club-session.cancelled {
+  opacity: 0.55;
+  background: var(--danger-subtle);
+  border-color: var(--danger-border);
 }
 
+/* ── Card layout ───────────────────────────────────────────────────── */
 .card-top {
   display: flex;
   justify-content: space-between;
@@ -113,32 +191,72 @@
   flex-shrink: 0;
 }
 
+/* ── Hover-to-reveal action buttons ────────────────────────────────── */
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+@media (hover: hover) {
+  .card-actions {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    pointer-events: none;
+  }
+  .workout-card:hover .card-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* ── Type indicator (dot + label) ──────────────────────────────────── */
+.type-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.type-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Status badge (subtle tint) ────────────────────────────────────── */
+.status-badge {
+  font-size: 0.55rem;
+  font-weight: 800;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.workout-card--completed .status-badge {
+  background: color-mix(in srgb, var(--success-color) 15%, transparent);
+  color: var(--success-color);
+}
+
+.workout-card--skipped .status-badge {
+  background: color-mix(in srgb, var(--danger-color) 15%, transparent);
+  color: var(--danger-color);
+}
+
 .workout-time {
   font-size: 0.65rem;
   color: var(--text-muted);
   font-weight: 600;
 }
 
-.status-badge {
-  font-size: 0.6rem;
-  font-weight: 800;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.completed .status-badge {
-  background: var(--success-color);
-  color: var(--color-black);
-}
-
-.skipped .status-badge {
-  background: var(--danger-color);
-  color: var(--color-white);
-  opacity: 0.8;
-}
-
+/* ── Delete button ─────────────────────────────────────────────────── */
 .delete-btn {
   background: none;
   border: none;
@@ -161,6 +279,7 @@
   color: var(--danger-color);
 }
 
+/* ── Workout info ──────────────────────────────────────────────────── */
 .workout-info {
   display: flex;
   flex-direction: column;
@@ -185,47 +304,45 @@
   white-space: nowrap;
 }
 
-.type-badge {
-  display: inline-block;
-  font-size: 0.6rem;
-  font-weight: 800;
-  padding: 0.1rem 0.4rem;
-  border-radius: 4px;
-  border: 1px solid;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  width: fit-content;
-}
-
-.technical-metrics {
+/* ── Metrics row (inline with dot separators) ──────────────────────── */
+.metrics-row {
   display: flex;
   justify-content: space-around;
-  background: var(--surface-raised);;
-  padding: 0.4rem;
-  border-radius: 6px;
-  border: 1px solid var(--surface-hover);
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.25rem 0 0.1rem;
 }
 
-.m-item {
+.metric {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  align-items: baseline;
+  gap: 2px;
 }
 
-.m-val {
-  font-size: 0.75rem;
+.metric-val {
+  font-size: 0.72rem;
   font-weight: 800;
   color: var(--text-color);
+  font-variant-numeric: tabular-nums;
 }
 
-.m-unit {
-  font-size: 0.55rem;
+.metric-unit {
+  font-size: 0.5rem;
   color: var(--text-muted);
   text-transform: uppercase;
-  font-weight: 900;
+  font-weight: 700;
 }
 
+.metric-sep {
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  flex-shrink: 0;
+  align-self: center;
+}
 
+/* ── Action buttons ────────────────────────────────────────────────── */
 .btn-complete,
 .btn-skip {
   width: 18px;
@@ -266,6 +383,7 @@
   color: var(--text-color);
 }
 
+/* ── Add button ────────────────────────────────────────────────────── */
 .add-btn {
   background: var(--surface-elevated);
   border: 1px dashed rgba(255, 255, 255, 0.12);
@@ -285,6 +403,7 @@
   background: var(--accent-subtle);
 }
 
+/* ── Rest day ──────────────────────────────────────────────────────── */
 .rest-day {
   flex: 1;
   display: flex;
@@ -299,13 +418,7 @@
   transform: rotate(180deg);
 }
 
-/* Fused card */
-.workout-card--fused {
-  border-left: 2px solid var(--success-color);
-  border-color: var(--success-border);
-  background: var(--success-subtle);
-}
-
+/* ── Analysis link ─────────────────────────────────────────────────── */
 .analysis-link {
   display: flex;
   align-items: center;
@@ -320,50 +433,43 @@
   opacity: 1;
 }
 
+/* ── Fused card internals ──────────────────────────────────────────── */
 .fused-badge {
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   font-weight: 800;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: var(--success-color);
-  color: var(--color-black);
+  background: color-mix(in srgb, var(--success-color) 15%, transparent);
+  color: var(--success-color);
 }
 
 .fused-metrics { display: flex; align-items: flex-start; gap: 0.4rem; }
-.fused-col { flex: 1; display: flex; flex-direction: column; gap: 0.3rem; }
+.fused-col { flex: 1; display: flex; flex-direction: column; gap: 0.2rem; }
 .fused-label {
-  font-size: 0.5rem;
+  font-size: 0.48rem;
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--text-muted);
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
 }
 .fused-col--actual .fused-label { color: var(--success-color); }
-.fused-divider { width: 1px; background: var(--glass-border); align-self: stretch; margin: 0.2rem 0; }
+.fused-divider { width: 1px; background: var(--glass-border); align-self: stretch; margin: 0.15rem 0; }
 
-/* Standalone session card */
-.workout-card--session {
-  border-left: 2px solid var(--info-text);
-  border-color: var(--glass-border);
-  background: var(--surface-elevated);
-  position: relative;
-}
-
+/* ── Session badge ─────────────────────────────────────────────────── */
 .session-badge {
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   font-weight: 800;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: var(--surface-color);
-  border: 1px solid var(--glass-border);
-  color: var(--secondary-color);
+  background: color-mix(in srgb, var(--info-color) 15%, transparent);
+  color: var(--info-color);
 }
 
-/* Task 4: Link picker modal overlay */
+/* ── Link picker modal ─────────────────────────────────────────────── */
 .link-modal-overlay {
   position: fixed;
   inset: 0;
@@ -471,26 +577,22 @@
   color: var(--text-color);
 }
 
-/* Club session card */
-.workout-card--club-session {
-  background: var(--info-subtle);
-  border-color: var(--info-border);
-}
-
-.workout-card--club-session.not-joined {
-  opacity: 0.8;
-}
-
+/* ── Club session internals ────────────────────────────────────────── */
 .club-session-badge {
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   font-weight: 800;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: var(--info-color);
-  color: #000000;
+  background: color-mix(in srgb, var(--info-color) 15%, transparent);
+  color: var(--info-color);
   white-space: nowrap;
+}
+
+.workout-card--cs-attending .club-session-badge {
+  background: color-mix(in srgb, var(--accent-color) 15%, transparent);
+  color: var(--accent-color);
 }
 
 .club-session-time {
@@ -578,13 +680,7 @@
   white-space: nowrap;
 }
 
-/* Cancelled club session */
-.workout-card--club-session.cancelled {
-  opacity: 0.6;
-  background: rgba(239, 68, 68, 0.06);
-  border-color: rgba(239, 68, 68, 0.2);
-}
-
+/* ── Cancelled club session ────────────────────────────────────────── */
 .cancelled-badge {
   font-size: 0.55rem;
   font-weight: 800;
@@ -608,7 +704,7 @@
   padding: 2px 0;
 }
 
-/* Club session row — side by side for same-time sessions */
+/* ── Club session row ──────────────────────────────────────────────── */
 .club-session-row {
   display: flex;
   gap: 0.4rem;
@@ -623,6 +719,7 @@
   display: none;
 }
 
+/* ── Goal pill ─────────────────────────────────────────────────────── */
 .goal-pill {
   display: flex;
   align-items: center;
@@ -651,7 +748,7 @@
   flex-shrink: 0;
 }
 
-/* Reschedule button */
+/* ── Reschedule button ─────────────────────────────────────────────── */
 .btn-reschedule {
   background: none;
   border: none;
@@ -673,7 +770,7 @@
   color: var(--accent-color);
 }
 
-/* Reschedule modal */
+/* ── Reschedule modal ──────────────────────────────────────────────── */
 .reschedule-overlay {
   position: fixed;
   inset: 0;
@@ -765,8 +862,13 @@
     gap: 4px;
   }
 
-  .technical-metrics {
+  .metrics-row {
     flex-wrap: wrap;
+  }
+
+  .card-actions {
+    opacity: 1 !important;
+    pointer-events: auto !important;
   }
 
   .club-session-row {

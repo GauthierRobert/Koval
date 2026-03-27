@@ -137,7 +137,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 14px;
+  padding: 2px 14px;
   background: rgba(255, 255, 255, 0.02);
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   gap: 8px;
@@ -186,7 +186,7 @@
 .sc-status-pill {
   font-size: 8px;
   font-weight: 800;
-  padding: 2px 8px;
+  padding: 5px 16px;
   border-radius: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -212,41 +212,6 @@
 .sc-status-pill.small {
   font-size: 7px;
   padding: 1px 6px;
-}
-
-/* Icon buttons */
-.sc-icon-btn {
-  border-radius: var(--radius-sm);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-muted);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3px 6px;
-  transition: all 0.15s;
-  font-size: 11px;
-  font-weight: 600;
-  font-family: inherit;
-  gap: 4px;
-}
-
-.sc-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--text-color);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.sc-icon-btn--link {
-  font-size: 10px;
-  letter-spacing: 0.04em;
-}
-
-.sc-icon-btn--link:hover {
-  background: rgba(0, 160, 233, 0.12);
-  border-color: rgba(0, 160, 233, 0.3);
-  color: var(--secondary-color);
 }
 
 /* ZONE 2: Title */
@@ -414,6 +379,11 @@
   font-weight: 700;
   color: var(--accent-color);
   margin-left: auto;
+}
+
+.sc-sc-linked__remove {
+  font-size: 10px;
+  padding: 7px 15px;
 }
 
 .sc-unlink-btn {

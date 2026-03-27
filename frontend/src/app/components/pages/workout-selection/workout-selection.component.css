@@ -86,7 +86,7 @@
 }
 
 .tab-btn--manual:hover {
-  border-color: var(--accent-color);
+  border-color: var(--accent-subtle);
   color: var(--accent-color);
   background: var(--accent-subtle);
 }

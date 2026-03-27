@@ -17,11 +17,10 @@
             }
             <div>
               @if (training.trainingType) {
-              <span class="type-badge"
-                    [style.background]="getTypeColor(training.trainingType) + '20'"
-                    [style.color]="getTypeColor(training.trainingType)"
-                    [style.border-color]="getTypeColor(training.trainingType) + '40'">{{ getTypeLabel(training.trainingType)
-                    }}</span>
+              <span class="type-indicator">
+                <span class="type-dot" [style.background]="getTypeColor(training.trainingType)"></span>
+                {{ getTypeLabel(training.trainingType) }}
+              </span>
               }
             </div>
           </span>

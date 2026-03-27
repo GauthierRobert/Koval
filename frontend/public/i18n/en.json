@@ -406,7 +406,7 @@
     "BTN_JOIN_WAITING_LIST": "JOIN WAITING LIST",
     "BTN_REMOVE_PARTICIPATION": "LEAVE",
     "BTN_LEAVE_WAITING_LIST": "LEAVE WAITING LIST",
-    "BTN_CANCEL_SESSION": "CANCEL SESSION",
+    "BTN_CANCEL_SESSION": "Cancel session",
     "DETAIL_ATTENDING": "Attending ({{count}})",
     "DETAIL_NO_ATTENDEES": "No one yet",
     "DETAIL_WAITING_LIST": "Waiting List ({{count}})",

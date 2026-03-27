@@ -15,20 +15,19 @@
 
               @case ('scheduled') {
                 <div class="workout-card clickable"
-                  [class.completed]="$any(group.entry).scheduled.status === 'COMPLETED'"
-                  [class.skipped]="$any(group.entry).scheduled.status === 'SKIPPED'"
-                  [style.border-left]="'2px solid ' + ($any(group.entry).scheduled.trainingType ? getTypeColor($any(group.entry).scheduled.trainingType) : 'var(--accent-color)')"
+                  [class.workout-card--completed]="$any(group.entry).scheduled.status === 'COMPLETED'"
+                  [class.workout-card--skipped]="$any(group.entry).scheduled.status === 'SKIPPED'"
                   (click)="workoutSelected.emit($any(group.entry).scheduled)">
                 <div class="card-top">
                   <div class="card-top-left">
+                    @if ($any(group.entry).scheduled.trainingType) {
+                      <span class="type-indicator">
+                        <span class="type-dot" [style.background]="getTypeColor($any(group.entry).scheduled.trainingType)"></span>
+                        {{ getTypeLabel($any(group.entry).scheduled.trainingType) }}
+                      </span>
+                    }
                     @if ($any(group.entry).scheduled.status !== 'PENDING') {
                       <span class="status-badge">{{ $any(group.entry).scheduled.status }}</span>
-                    }
-                    @if ($any(group.entry).scheduled.trainingType) {
-                      <span class="type-badge"
-                        [style.background]="getTypeColor($any(group.entry).scheduled.trainingType) + '20'"
-                        [style.color]="getTypeColor($any(group.entry).scheduled.trainingType)"
-                        [style.border-color]="getTypeColor($any(group.entry).scheduled.trainingType) + '40'">{{ getTypeLabel($any(group.entry).scheduled.trainingType) }}</span>
                     }
                   </div>
                   <div class="card-top-right">
@@ -39,49 +38,53 @@
                         </svg>
                       </a>
                     }
-                    @if ($any(group.entry).scheduled.status === 'PENDING') {
-                      <button class="btn-complete" [disabled]="isFutureDate($any(group.entry).scheduled.scheduledDate)"
-                        (click)="complete.emit($any(group.entry).scheduled); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_MARK_COMPLETE_TITLE' | translate">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                      </button>
-                      <button class="btn-skip" (click)="skip.emit($any(group.entry).scheduled); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_SKIP_TITLE' | translate">
-                        <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
-                          <polygon points="5 4 15 12 5 20"/>
-                          <rect x="17" y="4" width="3" height="16"/>
-                        </svg>
-                      </button>
-                      <button class="btn-reschedule" (click)="openReschedule($any(group.entry).scheduled, $event)" [title]="'CALENDAR_WEEK.BTN_RESCHEDULE_TITLE' | translate">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                        </svg>
-                      </button>
-                    }
-                    <button class="delete-btn" (click)="workoutDeleted.emit($any(group.entry).scheduled); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_REMOVE_TITLE' | translate">&times;</button>
+                    <div class="card-actions">
+                      @if ($any(group.entry).scheduled.status === 'PENDING') {
+                        <button class="btn-complete" [disabled]="isFutureDate($any(group.entry).scheduled.scheduledDate)"
+                          (click)="complete.emit($any(group.entry).scheduled); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_MARK_COMPLETE_TITLE' | translate">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        </button>
+                        <button class="btn-skip" (click)="skip.emit($any(group.entry).scheduled); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_SKIP_TITLE' | translate">
+                          <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 4 15 12 5 20"/>
+                            <rect x="17" y="4" width="3" height="16"/>
+                          </svg>
+                        </button>
+                        <button class="btn-reschedule" (click)="openReschedule($any(group.entry).scheduled, $event)" [title]="'CALENDAR_WEEK.BTN_RESCHEDULE_TITLE' | translate">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                          </svg>
+                        </button>
+                      }
+                      <button class="delete-btn" (click)="workoutDeleted.emit($any(group.entry).scheduled); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_REMOVE_TITLE' | translate">&times;</button>
+                    </div>
                   </div>
                 </div>
               <div class="workout-info">
                 <div class="title-row">
-                  <app-sport-icon [sport]="$any(group.entry).scheduled.sportType" [size]="16"></app-sport-icon>
+                  <app-sport-icon [sport]="$any(group.entry).scheduled.sportType" [size]="14"></app-sport-icon>
                   <span class="workout-title">
                     {{ $any(group.entry).scheduled.trainingTitle || $any(group.entry).scheduled.title || ('CALENDAR_WEEK.SESSION_FALLBACK_TITLE' | translate) + $any(group.entry).scheduled.trainingId.substring(0, 6) }}
                   </span>
                 </div>
-                <div class="technical-metrics">
-                    <div class="m-item">
-                      <span class="m-val">{{ formatDuration($any(group.entry).scheduled) }}</span>
-                      <span class="m-unit">{{ 'CALENDAR_WEEK.METRIC_DUR' | translate }}</span>
-                    </div>
-                    <div class="m-item">
-                      <span class="m-val">{{ $any(group.entry).scheduled.tss || '-' }}</span>
-                      <span class="m-unit">TSS</span>
-                    </div>
-                    <div class="m-item">
-                      <span class="m-val">{{ $any(group.entry).scheduled.intensityFactor || $any(group.entry).scheduled.if || '-' }}</span>
-                      <span class="m-unit">{{ 'CALENDAR_WEEK.METRIC_IF' | translate }}</span>
-                    </div>
+                <div class="metrics-row">
+                  <div class="metric">
+                    <span class="metric-val">{{ formatDuration($any(group.entry).scheduled) }}</span>
+                    <span class="metric-unit">{{ 'CALENDAR_WEEK.METRIC_DUR' | translate }}</span>
                   </div>
+                  <span class="metric-sep"></span>
+                  <div class="metric">
+                    <span class="metric-val">{{ $any(group.entry).scheduled.tss || '-' }}</span>
+                    <span class="metric-unit">TSS</span>
+                  </div>
+                  <span class="metric-sep"></span>
+                  <div class="metric">
+                    <span class="metric-val">{{ $any(group.entry).scheduled.intensityFactor || $any(group.entry).scheduled.if || '-' }}</span>
+                    <span class="metric-unit">{{ 'CALENDAR_WEEK.METRIC_IF' | translate }}</span>
+                  </div>
+                </div>
               </div>
               </div>
               }
@@ -99,7 +102,9 @@
                       </svg>
                     </a>
                   }
-                  <button class="delete-btn" (click)="$event.stopPropagation(); workoutDeleted.emit($any(group.entry).scheduled)" [title]="'CALENDAR_WEEK.BTN_REMOVE_TITLE' | translate">&times;</button>
+                  <div class="card-actions">
+                    <button class="delete-btn" (click)="$event.stopPropagation(); workoutDeleted.emit($any(group.entry).scheduled)" [title]="'CALENDAR_WEEK.BTN_REMOVE_TITLE' | translate">&times;</button>
+                  </div>
                 </div>
               </div>
               <div class="workout-info">
@@ -110,14 +115,15 @@
                 <div class="fused-metrics">
                   <div class="fused-col">
                     <span class="fused-label">{{ 'CALENDAR_WEEK.FUSED_LABEL_PLANNED' | translate }}</span>
-                    <div class="technical-metrics">
-                      <div class="m-item">
-                        <span class="m-val">{{ formatDuration($any(group.entry).scheduled) }}</span>
-                        <span class="m-unit">{{ 'CALENDAR_WEEK.METRIC_DUR' | translate }}</span>
+                    <div class="metrics-row">
+                      <div class="metric">
+                        <span class="metric-val">{{ formatDuration($any(group.entry).scheduled) }}</span>
+                        <span class="metric-unit">{{ 'CALENDAR_WEEK.METRIC_DUR' | translate }}</span>
                       </div>
-                      <div class="m-item">
-                        <span class="m-val">{{ $any(group.entry).scheduled.tss || '—' }}</span>
-                        <span class="m-unit">TSS</span>
+                      <span class="metric-sep"></span>
+                      <div class="metric">
+                        <span class="metric-val">{{ $any(group.entry).scheduled.tss || '—' }}</span>
+                        <span class="metric-unit">TSS</span>
                       </div>
                     </div>
                   </div>
@@ -125,14 +131,15 @@
                     <div class="fused-divider"></div>
                     <div class="fused-col fused-col--actual">
                       <span class="fused-label">{{ 'CALENDAR_WEEK.FUSED_LABEL_ACTUAL' | translate }}</span>
-                      <div class="technical-metrics">
-                        <div class="m-item">
-                          <span class="m-val">{{ formatSessionDuration($any(group.entry).session) }}</span>
-                          <span class="m-unit">{{ 'CALENDAR_WEEK.METRIC_DUR' | translate }}</span>
+                      <div class="metrics-row">
+                        <div class="metric">
+                          <span class="metric-val">{{ formatSessionDuration($any(group.entry).session) }}</span>
+                          <span class="metric-unit">{{ 'CALENDAR_WEEK.METRIC_DUR' | translate }}</span>
                         </div>
-                        <div class="m-item">
-                          <span class="m-val">{{ $any(group.entry).session.tss || '—' }}</span>
-                          <span class="m-unit">TSS</span>
+                        <span class="metric-sep"></span>
+                        <div class="metric">
+                          <span class="metric-val">{{ $any(group.entry).session.tss || '—' }}</span>
+                          <span class="metric-unit">TSS</span>
                         </div>
                       </div>
                     </div>
@@ -154,8 +161,10 @@
                       </svg>
                     </a>
                   }
-                  <button class="btn-primary small" (click)="$event.stopPropagation(); openLinkPicker($any(group.entry).session)">{{ 'CALENDAR_WEEK.BTN_LINK_TO_PLAN' | translate }}</button>
-                  <button class="btn-ghost small" (click)="$event.stopPropagation(); openClubSessionLinkPicker($any(group.entry).session)">{{ 'CALENDAR_WEEK.BTN_LINK_TO_CLUB' | translate }}</button>
+                  <div class="card-actions">
+                    <button class="btn-primary small" (click)="$event.stopPropagation(); openLinkPicker($any(group.entry).session)">{{ 'CALENDAR_WEEK.BTN_LINK_TO_PLAN' | translate }}</button>
+                    <button class="btn-ghost small" (click)="$event.stopPropagation(); openClubSessionLinkPicker($any(group.entry).session)">{{ 'CALENDAR_WEEK.BTN_LINK_TO_CLUB' | translate }}</button>
+                  </div>
                 </div>
               </div>
               <div class="workout-info">
@@ -163,18 +172,20 @@
                   <app-sport-icon [sport]="$any(group.entry).session.sportType" [size]="14"></app-sport-icon>
                   <span class="workout-title">{{ $any(group.entry).session.title }}</span>
                 </div>
-                <div class="technical-metrics">
-                  <div class="m-item">
-                    <span class="m-val">{{ formatSessionDuration($any(group.entry).session) }}</span>
-                    <span class="m-unit">{{ 'CALENDAR_WEEK.METRIC_DUR' | translate }}</span>
+                <div class="metrics-row">
+                  <div class="metric">
+                    <span class="metric-val">{{ formatSessionDuration($any(group.entry).session) }}</span>
+                    <span class="metric-unit">{{ 'CALENDAR_WEEK.METRIC_DUR' | translate }}</span>
                   </div>
-                  <div class="m-item">
-                    <span class="m-val">{{ $any(group.entry).session.tss || '—' }}</span>
-                    <span class="m-unit">TSS</span>
+                  <span class="metric-sep"></span>
+                  <div class="metric">
+                    <span class="metric-val">{{ $any(group.entry).session.tss || '—' }}</span>
+                    <span class="metric-unit">TSS</span>
                   </div>
-                  <div class="m-item">
-                    <span class="m-val">{{ $any(group.entry).session.avgPower | number:'1.0-0' }}W</span>
-                    <span class="m-unit">PWR</span>
+                  <span class="metric-sep"></span>
+                  <div class="metric">
+                    <span class="metric-val">{{ $any(group.entry).session.avgPower | number:'1.0-0' }}W</span>
+                    <span class="metric-unit">PWR</span>
                   </div>
                 </div>
               </div>

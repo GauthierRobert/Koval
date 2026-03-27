@@ -448,8 +448,7 @@ select option {
 
 .btn-primary {
   @extend %btn-base;
-  background: var(--accent-color);
-  color: #000;
+ @include btn-colors(accent);
   &:hover:not(:disabled) {
     opacity: 0.85;
   }
@@ -490,6 +489,16 @@ select option {
   }
 }
 
+.btn-ghost-neutral {
+  @extend %btn-base;
+  color: var(--text-muted);
+
+  &:hover:not(:disabled) {
+    background: var(--surface-hover);
+    color: var(--text-color);
+  }
+}
+
 /* Mobile touch-friendly buttons */
 @media (max-width: 768px) {
   .btn-primary,
@@ -498,6 +507,7 @@ select option {
   .btn-info,
   .btn-danger,
   .btn-ghost,
+  .btn-ghost-neutral,
   .premium-button {
     min-height: var(--touch-target-min);
   }

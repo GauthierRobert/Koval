@@ -65,7 +65,7 @@
                         }
                         @if (canCreate) {
                           <button
-                            class="sc-icon-btn"
+                            class="btn-ghost-neutral"
                             (click)="openEditForm(session, $event)"
                             [title]="'CLUB_SESSIONS.BTN_EDIT_SESSION_TITLE' | translate">
                             <svg xmlns="http://www.w3.org/2000/svg" height="12" viewBox="0 -960 960 960" width="12" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>
@@ -73,7 +73,7 @@
                         }
                         @if (isCoach && canLinkMoreTrainings(session)) {
                           <button
-                            class="sc-icon-btn sc-icon-btn--link"
+                            class="btn-ghost-neutral"
                             (click)="onAiCreateForSession(session, $event)"
                             [title]="'CLUB_SESSIONS.BTN_AI_CREATE_TITLE' | translate">
                             <span>{{ 'CLUB_SESSIONS.BTN_LINK_TRAINING' | translate }}</span>
@@ -124,7 +124,7 @@
                         <button class="sc-linked__btn"
                                 [class.sc-linked__btn--dimmed]="!isInUserGroup(glt)"
                                 (click)="navigateToTraining(glt.trainingId, $event)">
-                          @if (glt.clubGroupName) {
+                          @if (glt.clubGroupName && !session.clubGroupId) {
                             <span class="sc-tag sc-tag--group small">{{ glt.clubGroupName }}</span>
                           }
                           <span class="sc-linked__title">{{ glt.trainingTitle || ('CLUB_SESSIONS.LINKED_TRAINING_FALLBACK' | translate) }}</span>
@@ -134,7 +134,7 @@
                           <span class="sc-linked__arrow">{{ 'CLUB_SESSIONS.LINKED_VIEW_ARROW' | translate }}</span>
                         </button>
                         @if (isCoach && !isCancelled(session)) {
-                          <button class="sc-unlink-btn" (click)="unlinkTraining(session, glt, $event)" [title]="'CLUB_SESSIONS.BTN_LINK_TRAINING' | translate">&times;</button>
+                          <button class="btn-ghost sc-linked__remove" (click)="unlinkTraining(session, glt, $event)" [title]="'CLUB_SESSIONS.BTN_LINK_TRAINING' | translate">&times;</button>
                         }
                       </div>
                     }
@@ -170,7 +170,7 @@
                             </button>
                           }
                           @if (canCreate) {
-                            <button class="btn-danger" (click)="openCancelSessionModal(session, $event)">
+                            <button class="btn-ghost" (click)="openCancelSessionModal(session, $event)">
                               {{ 'CLUB_SESSIONS.BTN_CANCEL_SESSION' | translate }}
                             </button>
                           }
@@ -396,7 +396,7 @@
       <div class="recurring-choice-actions">
         <button class="btn-primary" (click)="editThisOnly()">{{ 'CLUB_SESSIONS.RECURRING_EDIT_THIS_ONLY' | translate }}</button>
         <button class="btn-secondary" (click)="editAllFuture()">{{ 'CLUB_SESSIONS.RECURRING_EDIT_ALL_FUTURE' | translate }}</button>
-        <button class="btn-ghost" (click)="showRecurringEditChoice = false">{{ 'CLUB_SESSIONS.RECURRING_EDIT_BTN_CANCEL' | translate }}</button>
+        <button class="btn-ghost-neutral" (click)="showRecurringEditChoice = false">{{ 'CLUB_SESSIONS.RECURRING_EDIT_BTN_CANCEL' | translate }}</button>
       </div>
     </div>
   </div>
@@ -414,9 +414,9 @@
     <div class="modal-body">
       <p class="recurring-choice-text">{{ 'CLUB_SESSIONS.RECURRING_EDIT_PART_OF_SERIES' | translate }}</p>
       <div class="recurring-choice-actions">
-        <button class="btn-cancel" (click)="cancelThisOnly()">{{ 'CLUB_SESSIONS.RECURRING_CANCEL_THIS_ONLY' | translate }}</button>
-        <button class="btn-cancel" (click)="cancelAllFuture()">{{ 'CLUB_SESSIONS.RECURRING_CANCEL_ALL_FUTURE' | translate }}</button>
-        <button class="btn-ghost" (click)="closeCancelRecurringChoice()">{{ 'CLUB_SESSIONS.RECURRING_CANCEL_GO_BACK' | translate }}</button>
+        <button class="btn-danger" (click)="cancelThisOnly()">{{ 'CLUB_SESSIONS.RECURRING_CANCEL_THIS_ONLY' | translate }}</button>
+        <button class="btn-danger" (click)="cancelAllFuture()">{{ 'CLUB_SESSIONS.RECURRING_CANCEL_ALL_FUTURE' | translate }}</button>
+        <button class="btn-ghost-neutral" (click)="closeCancelRecurringChoice()">{{ 'CLUB_SESSIONS.RECURRING_CANCEL_GO_BACK' | translate }}</button>
       </div>
     </div>
   </div>
@@ -448,7 +448,7 @@
       </div>
       <div class="cancel-confirm-actions">
         <button class="btn-secondary" (click)="closeCancelSessionModal()">{{ 'CLUB_SESSIONS.BTN_GO_BACK' | translate }}</button>
-        <button class="btn-cancel" (click)="confirmCancelSession()">{{ cancelMode === 'all' ? ('CLUB_SESSIONS.BTN_CANCEL_ALL_FUTURE_CONFIRM' | translate) : ('CLUB_SESSIONS.BTN_CANCEL_SESSION_CONFIRM' | translate) }}</button>
+        <button class="btn-danger" (click)="confirmCancelSession()">{{ cancelMode === 'all' ? ('CLUB_SESSIONS.BTN_CANCEL_ALL_FUTURE_CONFIRM' | translate) : ('CLUB_SESSIONS.BTN_CANCEL_SESSION_CONFIRM' | translate) }}</button>
       </div>
     </div>
   </div>

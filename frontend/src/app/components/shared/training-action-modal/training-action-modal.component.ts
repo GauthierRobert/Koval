@@ -44,6 +44,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
   @Input() sessionInfo: { scheduledAt?: string; sport?: string; clubGroupName?: string } | null = null;
   @Input() preselectedTrainingId?: string;
   @Input() existingLinkedTrainings: GroupLinkedTraining[] = [];
+  @Input() sessionGroupId?: string;
 
   @Output() closed = new EventEmitter<void>();
   @Output() completed = new EventEmitter<{ success: boolean; content?: string }>();
@@ -159,6 +160,8 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
   /** Groups still available for linking (excludes already-linked groups). */
   get sessionAvailableGroups(): ClubGroup[] {
     if (this.mode !== 'session') return this.availableGroups;
+    // Session already belongs to a specific group — no selector needed, auto-set
+    if (this.sessionGroupId) return [];
     // If a club-level training is already linked, no groups available
     if (this.existingLinkedTrainings.some(glt => !glt.clubGroupId)) return [];
     const linkedGroupIds = new Set(this.existingLinkedTrainings.filter(g => g.clubGroupId).map(g => g.clubGroupId));
@@ -237,6 +240,11 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
       }
       if (this.preselectedAthletes?.length) {
         this.selectedAthleteIds = this.preselectedAthletes.map(a => a.id);
+      }
+
+      // Auto-select group when session belongs to a specific group
+      if (this.sessionGroupId) {
+        this.selectedGroupId = this.sessionGroupId;
       }
 
       // Load club groups for AI tag selector

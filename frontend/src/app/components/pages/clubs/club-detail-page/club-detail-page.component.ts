@@ -61,6 +61,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   aiSessionInfo: { scheduledAt?: string; sport?: string; clubGroupName?: string } | null = null;
   private aiSessionDate: string | undefined;
   aiExistingLinkedTrainings: GroupLinkedTraining[] = [];
+  aiSessionGroupId?: string;
   private clubGroups: ClubGroup[] = [];
   private subs = new Subscription();
 
@@ -180,6 +181,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
     };
     this.aiSessionDate = session.scheduledAt;
     this.aiExistingLinkedTrainings = getEffectiveLinkedTrainings(session);
+    this.aiSessionGroupId = session.clubGroupId || undefined;
     this.showAiModal = true;
     this.cdr.markForCheck();
   }
