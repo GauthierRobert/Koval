@@ -50,3 +50,9 @@ platform-tools
 google-services.json
 firebase-sa-key.json
 env.local
+frontend/.env
+
+# Generated from .env at build time
+frontend/src/environments/environment.ts
+frontend/src/environments/environment.prod.ts
+frontend/src/firebase-messaging-sw.js
