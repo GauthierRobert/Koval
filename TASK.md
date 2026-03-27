@@ -119,8 +119,7 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 
 ## TODO
 - When schedule a training in the workout library, no input for schedule date is visible and then no scheduled date is sent.
-- FIND a BETTER way, algorithm to calculate moment of pause is incorrect. It there a way to detect that the watch as been stopped ? If yes just use that to calculate the moving time and elapsed time
-
+- Icon is not found http://localhost:4200/media/assets/leaflet/marker-icon.png
 # Club
 - Club feed need to be improve. A
     void adding everything in it, only usefully information (Fixed next goal with athlète engagements), 
@@ -129,6 +128,12 @@ _ Training assign should be more clear, on training dashboard do not change, jus
     Session srvp, GPX linked to some sessions when group ride 
     (map is added in session detail, session detail page must be created). 
     Propose a design for that, must I combine both, session list with detials in the ssame page when clicked.
+- Add car sharing in club. Athlete can propose their car sharing in the club. Athlete can ask for car sharing and other athlete can accept. 
+  A car sharing must be link to a club session or a race.  The athelte that propose must specify the number of seats and number of bike place. 
+  The athlete that ask must specify if it is only him or also for his bike. Create new tab for that
+- Any member of the club can propose a new group bike ride, open swim session, or open run session. It is the same as a session. But different category. It is open session. And must be visible in a another tabs. 
+  Open session (three sport, must add rdv point with rdv hours, GPX if applicable.  
+
 ## Nice too have
 
 ## Later

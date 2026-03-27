@@ -163,6 +163,82 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    // ── Linking ──────────────────────────────────────────────────────────
+
+    public User linkStrava(String userId, String stravaId, String accessToken,
+                           String refreshToken, Long expiresAt) {
+        // Ensure stravaId is not already used by another user
+        userRepository.findByStravaId(stravaId).ifPresent(other -> {
+            if (!other.getId().equals(userId)) {
+                throw new IllegalStateException("This Strava account is already linked to another user");
+            }
+        });
+        User user = getUserById(userId);
+        user.setStravaId(stravaId);
+        user.setStravaAccessToken(accessToken);
+        user.setStravaRefreshToken(refreshToken);
+        user.setStravaTokenExpiresAt(expiresAt);
+        return userRepository.save(user);
+    }
+
+    public User linkGoogle(String userId, String googleId, String email) {
+        userRepository.findByGoogleId(googleId).ifPresent(other -> {
+            if (!other.getId().equals(userId)) {
+                throw new IllegalStateException("This Google account is already linked to another user");
+            }
+        });
+        User user = getUserById(userId);
+        user.setGoogleId(googleId);
+        user.setEmail(email);
+        return userRepository.save(user);
+    }
+
+    public User linkGarmin(String userId, String garminUserId, String accessToken, String accessTokenSecret) {
+        userRepository.findByGarminUserId(garminUserId).ifPresent(other -> {
+            if (!other.getId().equals(userId)) {
+                throw new IllegalStateException("This Garmin account is already linked to another user");
+            }
+        });
+        User user = getUserById(userId);
+        user.setGarminUserId(garminUserId);
+        user.setGarminAccessToken(accessToken);
+        user.setGarminAccessTokenSecret(accessTokenSecret);
+        return userRepository.save(user);
+    }
+
+    public User unlinkGarmin(String userId) {
+        User user = getUserById(userId);
+        user.setGarminUserId(null);
+        user.setGarminAccessToken(null);
+        user.setGarminAccessTokenSecret(null);
+        user.setGarminLastSyncAt(null);
+        return userRepository.save(user);
+    }
+
+    public User linkZwift(String userId, String zwiftUserId, String accessToken, String refreshToken) {
+        userRepository.findByZwiftUserId(zwiftUserId).ifPresent(other -> {
+            if (!other.getId().equals(userId)) {
+                throw new IllegalStateException("This Zwift account is already linked to another user");
+            }
+        });
+        User user = getUserById(userId);
+        user.setZwiftUserId(zwiftUserId);
+        user.setZwiftAccessToken(accessToken);
+        user.setZwiftRefreshToken(refreshToken);
+        return userRepository.save(user);
+    }
+
+    public User unlinkZwift(String userId) {
+        User user = getUserById(userId);
+        user.setZwiftUserId(null);
+        user.setZwiftAccessToken(null);
+        user.setZwiftRefreshToken(null);
+        user.setZwiftLastSyncAt(null);
+        return userRepository.save(user);
+    }
+
+    // ── Unlinking (existing) ────────────────────────────────────────────
+
     public User unlinkStrava(String userId) {
         User user = getUserById(userId);
         if (user.getGoogleId() == null) {
@@ -234,6 +310,8 @@ public class UserService {
         Map<String, Boolean> linkedAccounts = new HashMap<>();
         linkedAccounts.put("strava", user.getStravaId() != null);
         linkedAccounts.put("google", user.getGoogleId() != null);
+        linkedAccounts.put("garmin", user.getGarminUserId() != null);
+        linkedAccounts.put("zwift", user.getZwiftUserId() != null);
         map.put("linkedAccounts", linkedAccounts);
         map.put("authProvider", user.getAuthProvider() != null ? user.getAuthProvider().name() : null);
 

@@ -37,6 +37,14 @@ strava:
   redirect-uri: http://localhost:4200/auth/callback
   webhook-verify-token: ${STRAVA_WEBHOOK_VERIFY_TOKEN:strava-webhook-verify}
 
+garmin:
+  consumer-key: ${GARMIN_CONSUMER_KEY:}
+  consumer-secret: ${GARMIN_CONSUMER_SECRET:}
+  redirect-uri: http://localhost:4200/auth/garmin/callback
+
+zwift:
+  enabled: ${ZWIFT_ENABLED:false}
+
 # Google OAuth2 Configuration
 # Create your app at: https://console.cloud.google.com/apis/credentials
 google:

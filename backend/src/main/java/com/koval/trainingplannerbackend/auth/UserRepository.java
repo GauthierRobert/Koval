@@ -13,6 +13,10 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     Optional<User> findByGoogleId(String googleId);
 
+    Optional<User> findByGarminUserId(String garminUserId);
+
+    Optional<User> findByZwiftUserId(String zwiftUserId);
+
     Optional<User> findByEmail(String email);
 
     List<User> findByRole(UserRole role);

@@ -36,6 +36,10 @@
                               (click)="unlinkApp('strava')">
                               {{ 'SETTINGS.BTN_UNLINK' | translate }}
                           </button>
+                      } @else {
+                          <button class="connect-btn" (click)="connectStrava()">
+                              {{ 'SETTINGS.BTN_CONNECT' | translate }}
+                          </button>
                       }
                   </div>
 
@@ -61,6 +65,58 @@
                               [title]="!canUnlink(user, 'google') ? ('SETTINGS.UNLINK_DISABLED_HINT' | translate) : ''"
                               (click)="unlinkApp('google')">
                               {{ 'SETTINGS.BTN_UNLINK' | translate }}
+                          </button>
+                      } @else {
+                          <button class="connect-btn" (click)="connectGoogle()">
+                              {{ 'SETTINGS.BTN_CONNECT' | translate }}
+                          </button>
+                      }
+                  </div>
+
+                  <!-- Garmin -->
+                  <div class="field-row linked-app-row">
+                      <div class="app-info">
+                          <svg class="app-icon garmin" viewBox="0 0 24 24" width="20" height="20">
+                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" fill="#007CC3"/>
+                          </svg>
+                          <div class="app-details">
+                              <span class="app-name">Garmin</span>
+                              <span class="app-status" [class.connected]="user.linkedAccounts?.garmin">
+                                  {{ (user.linkedAccounts?.garmin ? 'SETTINGS.APP_CONNECTED' : 'SETTINGS.APP_NOT_CONNECTED') | translate }}
+                              </span>
+                          </div>
+                      </div>
+                      @if (user.linkedAccounts?.garmin) {
+                          <button class="unlink-btn" [disabled]="unlinking" (click)="unlinkApp('garmin')">
+                              {{ 'SETTINGS.BTN_UNLINK' | translate }}
+                          </button>
+                      } @else {
+                          <button class="connect-btn" (click)="connectGarmin()">
+                              {{ 'SETTINGS.BTN_CONNECT' | translate }}
+                          </button>
+                      }
+                  </div>
+
+                  <!-- Zwift -->
+                  <div class="field-row linked-app-row">
+                      <div class="app-info">
+                          <svg class="app-icon zwift" viewBox="0 0 24 24" width="20" height="20">
+                              <path d="M4 4h16l-8 8 8 8H4l8-8z" fill="#F26722"/>
+                          </svg>
+                          <div class="app-details">
+                              <span class="app-name">Zwift</span>
+                              <span class="app-status" [class.connected]="user.linkedAccounts?.zwift">
+                                  {{ (user.linkedAccounts?.zwift ? 'SETTINGS.APP_CONNECTED' : 'SETTINGS.APP_NOT_CONNECTED') | translate }}
+                              </span>
+                          </div>
+                      </div>
+                      @if (user.linkedAccounts?.zwift) {
+                          <button class="unlink-btn" [disabled]="unlinking" (click)="unlinkApp('zwift')">
+                              {{ 'SETTINGS.BTN_UNLINK' | translate }}
+                          </button>
+                      } @else {
+                          <button class="connect-btn" [disabled]="true" [title]="'Coming soon'">
+                              {{ 'SETTINGS.BTN_CONNECT' | translate }}
                           </button>
                       }
                   </div>

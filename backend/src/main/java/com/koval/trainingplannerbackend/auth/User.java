@@ -50,6 +50,20 @@ public class User {
     private Long stravaTokenExpiresAt;
     private LocalDateTime stravaLastSyncAt;
 
+    // Garmin tokens (OAuth 1.0a)
+    @Indexed(unique = true, sparse = true)
+    private String garminUserId;
+    private String garminAccessToken;
+    private String garminAccessTokenSecret;
+    private LocalDateTime garminLastSyncAt;
+
+    // Zwift tokens (unofficial API)
+    @Indexed(unique = true, sparse = true)
+    private String zwiftUserId;
+    private String zwiftAccessToken;
+    private String zwiftRefreshToken;
+    private LocalDateTime zwiftLastSyncAt;
+
     public User() {
         this.createdAt = LocalDateTime.now();
     }

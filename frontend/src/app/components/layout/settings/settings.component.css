@@ -307,6 +307,29 @@ h3 {
     cursor: not-allowed;
 }
 
+.connect-btn {
+    background: var(--accent-subtle);
+    border: 1px solid var(--accent-border);
+    color: var(--accent-color);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.connect-btn:hover:not(:disabled) {
+    background: var(--accent-color);
+    color: var(--color-black, #000);
+}
+
+.connect-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
 /* AI Pre-prompt */
 .ai-preprompt-textarea {
     width: 100%;

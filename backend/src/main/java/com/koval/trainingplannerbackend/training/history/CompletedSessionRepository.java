@@ -13,6 +13,13 @@ public interface CompletedSessionRepository extends MongoRepository<CompletedSes
 
     @Query(value = "{ 'userId': ?0, 'stravaActivityId': { $ne: null } }", fields = "{ 'stravaActivityId': 1 }")
     List<CompletedSession> findStravaActivityIdsByUserId(String userId);
+
+    @Query(value = "{ 'userId': ?0, 'garminActivityId': { $ne: null } }", fields = "{ 'garminActivityId': 1 }")
+    List<CompletedSession> findGarminActivityIdsByUserId(String userId);
+
+    @Query(value = "{ 'userId': ?0, 'zwiftActivityId': { $ne: null } }", fields = "{ 'zwiftActivityId': 1 }")
+    List<CompletedSession> findZwiftActivityIdsByUserId(String userId);
+
     List<CompletedSession> findByUserIdOrderByCompletedAtDesc(String userId);
     Page<CompletedSession> findByUserIdOrderByCompletedAtDesc(String userId, Pageable pageable);
     List<CompletedSession> findByUserIdOrderByCompletedAtAsc(String userId);

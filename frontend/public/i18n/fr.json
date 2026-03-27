@@ -120,6 +120,7 @@
     "APP_CONNECTED": "Connecté",
     "APP_NOT_CONNECTED": "Non connecté",
     "BTN_UNLINK": "DISSOCIER",
+    "BTN_CONNECT": "CONNECTER",
     "UNLINK_DISABLED_HINT": "Impossible de dissocier votre seule méthode de connexion",
     "BTN_SAVE_SETTINGS": "ENREGISTRER",
     "BTN_SAVING": "ENREGISTREMENT...",

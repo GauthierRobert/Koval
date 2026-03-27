@@ -120,6 +120,7 @@
     "APP_CONNECTED": "Connected",
     "APP_NOT_CONNECTED": "Not connected",
     "BTN_UNLINK": "UNLINK",
+    "BTN_CONNECT": "CONNECT",
     "UNLINK_DISABLED_HINT": "Cannot unlink your only login method",
     "BTN_SAVE_SETTINGS": "SAVE SETTINGS",
     "BTN_SAVING": "SAVING...",

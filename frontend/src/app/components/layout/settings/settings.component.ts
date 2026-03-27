@@ -2,11 +2,13 @@ import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core'
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {BehaviorSubject} from 'rxjs';
+import {HttpClient} from '@angular/common/http';
 import {AuthService, User} from '../../../services/auth.service';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {ZoneService} from '../../../services/zone.service';
 import {ZoneSystem} from '../../../services/zone';
 import {TranslateModule} from '@ngx-translate/core';
+import {environment} from '../../../../environments/environment';
 
 interface PaceField {
     key: string;
@@ -27,6 +29,7 @@ interface PaceField {
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsComponent implements OnInit {
+    private http = inject(HttpClient);
     private authService = inject(AuthService);
     private zoneService = inject(ZoneService);
 
@@ -128,14 +131,42 @@ export class SettingsComponent implements OnInit {
         return user.linkedAccounts[other] === true;
     }
 
-    unlinkApp(provider: 'strava' | 'google') {
+    unlinkApp(provider: 'strava' | 'google' | 'garmin' | 'zwift') {
         this.unlinking = true;
-        const obs = provider === 'strava'
-            ? this.authService.unlinkStrava()
-            : this.authService.unlinkGoogle();
+        let obs;
+        switch (provider) {
+            case 'strava': obs = this.authService.unlinkStrava(); break;
+            case 'google': obs = this.authService.unlinkGoogle(); break;
+            case 'garmin': obs = this.authService.unlinkGarmin(); break;
+            case 'zwift': obs = this.authService.unlinkZwift(); break;
+        }
         obs.subscribe({
             next: () => this.unlinking = false,
             error: () => this.unlinking = false,
+        });
+    }
+
+    connectStrava(): void {
+        this.authService.getStravaAuthUrl().subscribe(({authUrl}) => {
+            // Open in same window — callback will link the account
+            const url = new URL(authUrl);
+            url.searchParams.set('state', 'link');
+            window.open(url.toString(), '_blank', 'width=600,height=700');
+        });
+    }
+
+    connectGoogle(): void {
+        this.authService.getGoogleAuthUrl().subscribe(({authUrl}) => {
+            const url = new URL(authUrl);
+            url.searchParams.set('state', 'link');
+            window.open(url.toString(), '_blank', 'width=600,height=700');
+        });
+    }
+
+    connectGarmin(): void {
+        this.http.get<{authUrl: string}>(`${environment.apiUrl}/api/integration/garmin/auth`).subscribe({
+            next: ({authUrl}) => window.open(authUrl, '_blank', 'width=600,height=700'),
+            error: () => {},
         });
     }
 

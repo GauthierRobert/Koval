@@ -248,6 +248,82 @@ public class AuthController {
         }
     }
 
+    // --- Account linking (authenticated user connects an additional provider) ---
+
+    @PostMapping("/link/strava/callback")
+    public ResponseEntity<Map<String, Object>> linkStrava(
+            @RequestParam String code,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        try {
+            String userId = parseJwtToken(authHeader.substring(7));
+            StravaOAuthService.StravaTokenResponse tokenResponse = stravaOAuthService.exchangeCodeForToken(code);
+            User user = userService.linkStrava(userId, tokenResponse.getAthleteId(),
+                    tokenResponse.getAccessToken(), tokenResponse.getRefreshToken(), tokenResponse.getExpiresAt());
+            return ResponseEntity.ok(userService.userToMap(user));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to link Strava: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/link/google/callback")
+    public ResponseEntity<Map<String, Object>> linkGoogle(
+            @RequestParam String code,
+            @RequestParam(required = false) String redirectUri,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        try {
+            String userId = parseJwtToken(authHeader.substring(7));
+            GoogleOAuthService.GoogleUserInfo googleUser = googleOAuthService.exchangeCodeAndGetUserInfo(code, redirectUri);
+            User user = userService.linkGoogle(userId, googleUser.getGoogleId(), googleUser.getEmail());
+            return ResponseEntity.ok(userService.userToMap(user));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to link Google: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/link/garmin")
+    public ResponseEntity<Map<String, Object>> unlinkGarmin(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        try {
+            String userId = parseJwtToken(authHeader.substring(7));
+            User user = userService.unlinkGarmin(userId);
+            return ResponseEntity.ok(userService.userToMap(user));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @DeleteMapping("/link/zwift")
+    public ResponseEntity<Map<String, Object>> unlinkZwift(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        try {
+            String userId = parseJwtToken(authHeader.substring(7));
+            User user = userService.unlinkZwift(userId);
+            return ResponseEntity.ok(userService.userToMap(user));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // --- Unlinking ---
+
     @DeleteMapping("/link/strava")
     public ResponseEntity<Map<String, Object>> unlinkStrava(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {

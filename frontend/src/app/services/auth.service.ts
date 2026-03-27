@@ -34,7 +34,7 @@ export interface User {
     needsCguAcceptance?: boolean;
     aiPrePrompt?: string;
     aiPrePromptEnabled?: boolean;
-    linkedAccounts?: { strava: boolean; google: boolean };
+    linkedAccounts?: { strava: boolean; google: boolean; garmin: boolean; zwift: boolean };
     authProvider?: string;
 }
 
@@ -177,6 +177,32 @@ export class AuthService {
 
     unlinkGoogle(): Observable<User> {
         return this.http.delete<User>(`${this.apiUrl}/link/google`).pipe(
+            tap(user => this.userSubject.next(user))
+        );
+    }
+
+    linkStravaWithCode(code: string): Observable<User> {
+        return this.http.post<User>(`${this.apiUrl}/link/strava/callback?code=${encodeURIComponent(code)}`, {}).pipe(
+            tap(user => this.userSubject.next(user))
+        );
+    }
+
+    linkGoogleWithCode(code: string, redirectUri?: string): Observable<User> {
+        let url = `${this.apiUrl}/link/google/callback?code=${encodeURIComponent(code)}`;
+        if (redirectUri) url += `&redirectUri=${encodeURIComponent(redirectUri)}`;
+        return this.http.post<User>(url, {}).pipe(
+            tap(user => this.userSubject.next(user))
+        );
+    }
+
+    unlinkGarmin(): Observable<User> {
+        return this.http.delete<User>(`${this.apiUrl}/link/garmin`).pipe(
+            tap(user => this.userSubject.next(user))
+        );
+    }
+
+    unlinkZwift(): Observable<User> {
+        return this.http.delete<User>(`${this.apiUrl}/link/zwift`).pipe(
             tap(user => this.userSubject.next(user))
         );
     }

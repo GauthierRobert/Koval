@@ -47,6 +47,12 @@ public class CompletedSession {
     @Indexed(unique = true, sparse = true)
     private String stravaActivityId;
 
+    @Indexed(unique = true, sparse = true)
+    private String garminActivityId;
+
+    @Indexed(unique = true, sparse = true)
+    private String zwiftActivityId;
+
     public record BlockSummary(
             String label,
             String type,
