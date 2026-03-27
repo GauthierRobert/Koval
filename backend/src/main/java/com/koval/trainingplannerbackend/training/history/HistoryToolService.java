@@ -25,6 +25,7 @@ public class HistoryToolService {
         this.analyticsService = analyticsService;
     }
 
+    /** Returns the most recent completed sessions for a user, limited to the given count. */
     @Tool(description = "Get a user's most recent completed workout sessions. Returns title, date, duration, avg power/HR, TSS, IF.")
     public List<SessionSummary> getRecentSessions(
             @ToolParam(description = "User ID") String userId,
@@ -35,6 +36,7 @@ public class HistoryToolService {
                 .toList();
     }
 
+    /** Returns completed sessions for a user within the given inclusive date range. */
     @Tool(description = "Get a user's completed sessions within a date range.")
     public List<SessionSummary> getSessionsByDateRange(
             @ToolParam(description = "User ID") String userId,
@@ -48,6 +50,7 @@ public class HistoryToolService {
                 .toList();
     }
 
+    /** Generates PMC data points (CTL, ATL, TSB) for the given date range. */
     @Tool(description = "Get Performance Management Chart (PMC) data: CTL (fitness), ATL (fatigue), TSB (form) for a date range.")
     public List<PmcDataPoint> getPmcData(
             @ToolParam(description = "User ID") String userId,

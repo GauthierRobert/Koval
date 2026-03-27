@@ -6,6 +6,7 @@ import com.koval.trainingplannerbackend.training.model.WorkoutElementFlattener;
 
 import java.util.List;
 
+/** Lightweight training summary returned by AI tool operations to minimize token usage. */
 public record TrainingSummary(
         String id,
         String title,

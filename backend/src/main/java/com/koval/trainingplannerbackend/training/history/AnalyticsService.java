@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.*;
 
+/**
+ * Session analytics: TSS/IF computation, CTL/ATL/TSB load tracking, and PMC chart generation.
+ */
 @Service
 public class AnalyticsService {
 
@@ -20,6 +23,11 @@ public class AnalyticsService {
     private final CompletedSessionRepository sessionRepository;
     private final UserRepository userRepository;
 
+    /**
+     * A single data point in the Performance Management Chart (PMC), capturing daily
+     * CTL (Chronic Training Load), ATL (Acute Training Load), TSB (Training Stress Balance),
+     * daily TSS totals broken down by sport, and whether the point is predicted.
+     */
     public record PmcDataPoint(LocalDate date, double ctl, double atl,
             double tsb, double dailyTss, Map<String, Double> sportTss, boolean predicted) {
     }
@@ -43,17 +51,23 @@ public class AnalyticsService {
         OptionalDouble ifOpt = computeIntensityFactor(session, user, sport);
 
         if (ifOpt.isEmpty() || ifOpt.getAsDouble() <= 0) {
-            // RPE fallback — use heuristic when no sensor data available
-            if (session.getRpe() != null && session.getRpe() > 0) {
-                double intensity = session.getRpe() / 10.0;
-                double tss = TssCalculator.computeTss(session.getTotalDurationSeconds(), intensity);
-                session.setIntensityFactor(Math.round(intensity * 1000.0) / 1000.0);
-                session.setTss(Math.round(tss * 10.0) / 10.0);
-            }
+            applyRpeFallback(session);
             return;
         }
 
-        double intensityFactor = ifOpt.getAsDouble();
+        applyComputedMetrics(session, ifOpt.getAsDouble());
+    }
+
+    private void applyRpeFallback(CompletedSession session) {
+        if (session.getRpe() != null && session.getRpe() > 0) {
+            double intensity = session.getRpe() / 10.0;
+            double tss = TssCalculator.computeTss(session.getTotalDurationSeconds(), intensity);
+            session.setIntensityFactor(Math.round(intensity * 1000.0) / 1000.0);
+            session.setTss(Math.round(tss * 10.0) / 10.0);
+        }
+    }
+
+    private void applyComputedMetrics(CompletedSession session, double intensityFactor) {
         double tss = TssCalculator.computeTss(session.getTotalDurationSeconds(), intensityFactor);
         session.setIntensityFactor(Math.round(intensityFactor * 1000.0) / 1000.0);
         session.setTss(Math.round(tss * 10.0) / 10.0);
@@ -128,11 +142,15 @@ public class AnalyticsService {
             LocalDate firstDate = sessions.get(0).getCompletedAt().toLocalDate();
             EmaState state = runEma(new EmaState(0, 0), firstDate, LocalDate.now(), dailyTssMap);
 
-            user.setCtl(Math.round(state.ctl() * 10.0) / 10.0);
-            user.setAtl(Math.round(state.atl() * 10.0) / 10.0);
-            user.setTsb(Math.round((state.ctl() - state.atl()) * 10.0) / 10.0);
-            userRepository.save(user);
+            updateUserLoadMetrics(user, state);
         });
+    }
+
+    private void updateUserLoadMetrics(User user, EmaState state) {
+        user.setCtl(Math.round(state.ctl() * 10.0) / 10.0);
+        user.setAtl(Math.round(state.atl() * 10.0) / 10.0);
+        user.setTsb(Math.round((state.ctl() - state.atl()) * 10.0) / 10.0);
+        userRepository.save(user);
     }
 
     /**
@@ -143,15 +161,25 @@ public class AnalyticsService {
         List<CompletedSession> sessions = sessionRepository.findByUserIdOrderByCompletedAtAsc(userId);
         Map<LocalDate, Map<String, Double>> dailyTssMap = buildDailyTssMap(sessions);
 
-        // Start EMA from the earliest session or from 'from' date, whichever is earlier
-        LocalDate startDate = sessions.isEmpty() ? from : sessions.get(0).getCompletedAt().toLocalDate();
-        if (from.isBefore(startDate)) startDate = from;
+        LocalDate startDate = determineEmaStartDate(sessions, from);
 
         // Warm up EMA before the requested window
         EmaState state = runEma(new EmaState(0, 0), startDate, from.minusDays(1), dailyTssMap);
 
-        // Collect results for the requested window
+        return collectPmcWindow(state, from, to, dailyTssMap);
+    }
+
+    private LocalDate determineEmaStartDate(List<CompletedSession> sessions, LocalDate from) {
+        // Start EMA from the earliest session or from 'from' date, whichever is earlier
+        LocalDate startDate = sessions.isEmpty() ? from : sessions.get(0).getCompletedAt().toLocalDate();
+        if (from.isBefore(startDate)) startDate = from;
+        return startDate;
+    }
+
+    private List<PmcDataPoint> collectPmcWindow(EmaState initial, LocalDate from, LocalDate to,
+                                                  Map<LocalDate, Map<String, Double>> dailyTssMap) {
         List<PmcDataPoint> result = new ArrayList<>();
+        EmaState state = initial;
         LocalDate cursor = from;
         while (!cursor.isAfter(to)) {
             Map<String, Double> sports = dailyTssMap.getOrDefault(cursor, Map.of());
@@ -164,7 +192,6 @@ public class AnalyticsService {
                     dailyTss, sports, false));
             cursor = cursor.plusDays(1);
         }
-
         return result;
     }
 

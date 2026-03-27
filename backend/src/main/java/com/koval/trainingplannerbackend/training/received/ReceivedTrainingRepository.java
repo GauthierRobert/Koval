@@ -4,6 +4,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
 
+/** Spring Data repository for {@link ReceivedTraining} documents. */
 public interface ReceivedTrainingRepository extends MongoRepository<ReceivedTraining, String> {
 
     List<ReceivedTraining> findByAthleteId(String athleteId);

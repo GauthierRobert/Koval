@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 
+/** Manages coach-athlete groupings: CRUD, membership, and cross-group queries. */
 @Service
 public class GroupService {
 

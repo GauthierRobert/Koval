@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/** REST API for training plan CRUD operations, discovery, and received training queries. */
 @RestController
 @RequestMapping("/api/trainings")
 @CrossOrigin(origins = "*")
@@ -34,6 +35,7 @@ public class TrainingController {
         this.receivedTrainingService = receivedTrainingService;
     }
 
+    /** Creates a new training plan for the authenticated user. */
     @PostMapping
     public ResponseEntity<Training> createTraining(@Valid @RequestBody Training training) {
         String userId = SecurityUtils.getCurrentUserId();
@@ -41,6 +43,7 @@ public class TrainingController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    /** Retrieves a training by ID, enriched with the requesting user's zone-based metrics. */
     @GetMapping("/{id}")
     public ResponseEntity<Training> getTraining(@PathVariable String id) {
         Training training = trainingService.getTrainingById(id);
@@ -50,6 +53,7 @@ public class TrainingController {
         return ResponseEntity.ok(training);
     }
 
+    /** Updates an existing training (partial update: only non-null fields are applied). */
     @PutMapping("/{id}")
     public ResponseEntity<Training> updateTraining(@PathVariable String id,
                                                    @RequestBody Training updates) {
@@ -60,6 +64,7 @@ public class TrainingController {
         return ResponseEntity.ok(updated);
     }
 
+    /** Deletes a training by ID after verifying access. */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTraining(@PathVariable String id) {
         Training existing = trainingService.getTrainingById(id);
@@ -69,6 +74,7 @@ public class TrainingController {
         return ResponseEntity.noContent().build();
     }
 
+    /** Lists all trainings created by the authenticated user, enriched with user-specific metrics. */
     @GetMapping
     public ResponseEntity<List<Training>> listTrainings() {
         String userId = SecurityUtils.getCurrentUserId();
@@ -77,12 +83,14 @@ public class TrainingController {
         return ResponseEntity.ok(trainings);
     }
 
+    /** Lists trainings received by the authenticated athlete (from coach assignments and club sessions). */
     @GetMapping("/received")
     public ResponseEntity<List<ReceivedTrainingResponse>> getReceivedTrainings() {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(receivedTrainingService.getReceivedTrainings(userId));
     }
 
+    /** Discovers trainings from clubs the user is an active member of. */
     @GetMapping("/club-trainings")
     public ResponseEntity<List<Training>> listClubTrainings() {
         String userId = SecurityUtils.getCurrentUserId();
@@ -91,6 +99,7 @@ public class TrainingController {
         return ResponseEntity.ok(trainings);
     }
 
+    /** Paginated variant of {@link #listTrainings()}. */
     @GetMapping(params = "page")
     public ResponseEntity<Page<Training>> listTrainings(Pageable pageable) {
         String userId = SecurityUtils.getCurrentUserId();

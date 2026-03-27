@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/** Spring Data repository for {@link Training} documents in the {@code trainings} collection. */
 @Repository
 public interface TrainingRepository extends MongoRepository<Training, String> {
 

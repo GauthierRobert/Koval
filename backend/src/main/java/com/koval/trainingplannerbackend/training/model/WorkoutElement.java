@@ -5,6 +5,10 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 
 import java.util.List;
 
+/**
+ * A single element of a structured workout: either a leaf block (with type, duration, intensity)
+ * or a repeatable set containing child elements. Immutable record with "with*" copy methods.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record WorkoutElement(
 
@@ -68,6 +72,7 @@ public record WorkoutElement(
         return elements != null && !elements.isEmpty();
     }
 
+    /** Returns a copy of this element with the given {@link BlockType}, preserving all other fields. */
     public WorkoutElement updateType(BlockType type) {
         return new WorkoutElement(repetitions, elements, restDurationSeconds, restIntensity,
                 type, this.durationSeconds(), this.distanceMeters(), this.label(), this.description,
@@ -75,6 +80,7 @@ public record WorkoutElement(
                 this.zoneTarget(), this.zoneLabel());
     }
 
+    /** Returns a copy of this set element with the given child elements. */
     public WorkoutElement withElements(List<WorkoutElement> newElements) {
         return new WorkoutElement(repetitions, newElements, restDurationSeconds, restIntensity,
                 type, durationSeconds, distanceMeters, label, description,
@@ -82,6 +88,7 @@ public record WorkoutElement(
                 zoneTarget, zoneLabel);
     }
 
+    /** Returns a copy with the zone target resolved to a numeric intensity and display label. */
     public WorkoutElement withResolvedIntensity(Integer resolvedIntensity, String resolvedZoneLabel) {
         return new WorkoutElement(repetitions, elements, restDurationSeconds, restIntensity,
                 type, durationSeconds, distanceMeters, label, description,

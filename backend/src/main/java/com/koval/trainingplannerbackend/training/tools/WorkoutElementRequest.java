@@ -6,6 +6,7 @@ import com.koval.trainingplannerbackend.training.model.BlockType;
 
 import java.util.List;
 
+/** AI-facing compact DTO for a workout element (set or leaf block). Mirrors {@link com.koval.trainingplannerbackend.training.model.WorkoutElement} with abbreviated field names. */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record WorkoutElementRequest(
         @JsonPropertyDescription("SETS : Number of repetitions for a set (e.g. 10 for '10×...')")

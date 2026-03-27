@@ -415,53 +415,8 @@ select option {
 }
 
 /* --- Buttons --- */
-.btn-primary {
-  background: var(--accent-color);
-  color: #000;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 8px 16px;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-
-.btn-primary:hover:not(:disabled) {
-  opacity: 0.85;
-}
-
-.btn-primary:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.btn-primary.small {
-  padding: 1px 10px;
-  font-size: 8px;
-}
-
-.btn-secondary {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-color);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  padding: 8px 16px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.btn-ghost {
+%btn-base {
   background: none;
-  color: var(--text-muted);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   padding: 5px 12px;
@@ -470,29 +425,78 @@ select option {
   letter-spacing: 0.06em;
   cursor: pointer;
   transition: all 0.15s;
+
+  &.small {
+    padding: 1px 10px;
+    font-size: 8px;
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
 }
 
-.btn-ghost:hover {
-  background: rgba(248, 113, 113, 0.12);
-  color: #f87171;
-  border-color: rgba(248, 113, 113, 0.3);
+@mixin btn-colors($color-prefix) {
+  color: var(--#{$color-prefix}-color);
+
+  &:hover:not(:disabled) {
+    background: var(--#{$color-prefix}-hover);
+    border-color: var(--#{$color-prefix}-border);
+  }
 }
 
-.btn-ghost.small {
-  padding: 1px 10px;
-  font-size: 8px;
+.btn-primary {
+  @extend %btn-base;
+  background: var(--accent-color);
+  color: #000;
+  &:hover:not(:disabled) {
+    opacity: 0.85;
+  }
+ }
+
+.btn-secondary {
+  @extend %btn-base;
+  color: var(--text-color);
+
+  &:hover:not(:disabled) {
+      opacity: 0.85;
+  }
+}
+
+.btn-success {
+  @extend %btn-base;
+  @include btn-colors(success);
+}
+
+.btn-info {
+  @extend %btn-base;
+  @include btn-colors(info);
 }
 
 .btn-danger {
-  background: var(--danger-subtle);
-  border: 1px solid var(--danger-border);
-  color: var(--danger-color);
+  @extend %btn-base;
+  @include btn-colors(danger);
+}
+
+.btn-ghost {
+  @extend %btn-base;
+  color: var(--text-muted);
+
+  &:hover:not(:disabled) {
+    background: var(--danger-hover);
+    color: var(--danger-color);
+    border-color: var(--danger-border);
+  }
 }
 
 /* Mobile touch-friendly buttons */
 @media (max-width: 768px) {
   .btn-primary,
   .btn-secondary,
+  .btn-success,
+  .btn-info,
+  .btn-danger,
   .btn-ghost,
   .premium-button {
     min-height: var(--touch-target-min);

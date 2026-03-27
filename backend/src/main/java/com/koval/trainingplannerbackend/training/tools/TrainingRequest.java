@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import java.util.List;
 
 
+/** AI-facing compact DTO for creating or updating a training plan. Field names are abbreviated to reduce token cost. */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record TrainingRequest(
     @JsonPropertyDescription("CYCLING|RUNNING|SWIMMING|BRICK")

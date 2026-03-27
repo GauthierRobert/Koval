@@ -53,6 +53,7 @@ public abstract class Training {
     private List<String> clubIds = new ArrayList<>();
     private List<String> clubGroupIds = new ArrayList<>(); // Optional: club groups within clubs
 
+    /** Adds the given club ID to this training's club list (idempotent, null-safe). */
     public void addClubId(String clubId) {
         if (clubId != null && !this.clubIds.contains(clubId)) {
             this.clubIds.add(clubId);

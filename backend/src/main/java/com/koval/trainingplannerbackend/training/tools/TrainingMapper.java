@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Maps AI-facing {@link TrainingRequest} DTOs to rich {@link Training} entities with sport-specific subclass instantiation. */
 @Component
 public class TrainingMapper {
 

@@ -14,6 +14,10 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Automatically associates completed sessions with pending scheduled workouts
+ * based on sport, date, duration, and title similarity.
+ */
 @Service
 public class SessionAssociationService {
 
@@ -46,18 +50,35 @@ public class SessionAssociationService {
      */
     public void tryAutoAssociate(CompletedSession session, String userId) {
         LocalDate day = session.getCompletedAt().toLocalDate();
+        List<ScheduledWorkout> pending = findPendingCandidates(userId, day);
+        if (pending.isEmpty()) return;
+
+        Map<String, Training> trainingsById = loadTrainingsByIds(pending);
+        ScheduledWorkout best = findBestMatch(session, pending, trainingsById);
+
+        if (best != null) {
+            session.setScheduledWorkoutId(best.getId());
+        }
+    }
+
+    private List<ScheduledWorkout> findPendingCandidates(String userId, LocalDate day) {
         List<ScheduledWorkout> candidates = scheduledWorkoutRepository
                 .findByAthleteIdAndScheduledDate(userId, day);
 
-        List<ScheduledWorkout> pending = candidates.stream()
+        return candidates.stream()
                 .filter(sw -> "PENDING".equals(sw.getStatus() != null ? sw.getStatus().name() : null))
                 .toList();
-        if (pending.isEmpty()) return;
+    }
 
+    private Map<String, Training> loadTrainingsByIds(List<ScheduledWorkout> pending) {
         List<String> trainingIds = pending.stream().map(ScheduledWorkout::getTrainingId).toList();
-        Map<String, Training> trainingsById = trainingRepository.findAllById(trainingIds).stream()
+        return trainingRepository.findAllById(trainingIds).stream()
                 .collect(Collectors.toMap(Training::getId, Function.identity()));
+    }
 
+    private ScheduledWorkout findBestMatch(CompletedSession session,
+                                           List<ScheduledWorkout> pending,
+                                           Map<String, Training> trainingsById) {
         ScheduledWorkout best = null;
         int bestScore = 0;
 
@@ -71,9 +92,7 @@ public class SessionAssociationService {
             }
         }
 
-        if (bestScore >= ASSOCIATION_THRESHOLD && best != null) {
-            session.setScheduledWorkoutId(best.getId());
-        }
+        return bestScore >= ASSOCIATION_THRESHOLD ? best : null;
     }
 
     /**
@@ -118,24 +137,34 @@ public class SessionAssociationService {
             score += DATE_MATCH_SCORE;
         }
 
-        if (training.getEstimatedDurationSeconds() != null && training.getEstimatedDurationSeconds() > 0) {
-            int planned = training.getEstimatedDurationSeconds();
-            int actual = session.getTotalDurationSeconds();
-            double ratio = Math.abs((double) (actual - planned)) / planned;
-            if (ratio <= DURATION_CLOSE_RATIO) {
-                score += DURATION_CLOSE_SCORE;
-            } else if (ratio <= DURATION_MODERATE_RATIO) {
-                score += DURATION_MODERATE_SCORE;
-            }
-        }
-
-        if (training.getTitle() != null && session.getTitle() != null) {
-            Set<String> planWords = wordSet(training.getTitle());
-            planWords.retainAll(wordSet(session.getTitle()));
-            score += Math.min(planWords.size() * TITLE_WORD_SCORE, TITLE_WORD_CAP);
-        }
+        score += scoreDurationProximity(training, session);
+        score += scoreTitleOverlap(training.getTitle(), session.getTitle());
 
         return score;
+    }
+
+    private static int scoreDurationProximity(Training training, CompletedSession session) {
+        if (training.getEstimatedDurationSeconds() == null || training.getEstimatedDurationSeconds() <= 0) {
+            return 0;
+        }
+        int planned = training.getEstimatedDurationSeconds();
+        int actual = session.getTotalDurationSeconds();
+        double ratio = Math.abs((double) (actual - planned)) / planned;
+        if (ratio <= DURATION_CLOSE_RATIO) {
+            return DURATION_CLOSE_SCORE;
+        } else if (ratio <= DURATION_MODERATE_RATIO) {
+            return DURATION_MODERATE_SCORE;
+        }
+        return 0;
+    }
+
+    private static int scoreTitleOverlap(String plannedTitle, String sessionTitle) {
+        if (plannedTitle == null || sessionTitle == null) {
+            return 0;
+        }
+        Set<String> planWords = wordSet(plannedTitle);
+        planWords.retainAll(wordSet(sessionTitle));
+        return Math.min(planWords.size() * TITLE_WORD_SCORE, TITLE_WORD_CAP);
     }
 
     static Set<String> wordSet(String text) {

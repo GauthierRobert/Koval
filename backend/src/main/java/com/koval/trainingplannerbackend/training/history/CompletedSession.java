@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+/** A recorded workout session with performance metrics, optionally linked to a scheduled workout or FIT file. */
 @Getter
 @Setter
 @Document(collection = "completed_sessions")

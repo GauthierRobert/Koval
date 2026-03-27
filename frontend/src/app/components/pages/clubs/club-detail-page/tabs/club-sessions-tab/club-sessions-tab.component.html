@@ -155,7 +155,7 @@
                       @if (!isCancelled(session)) {
                         <div class="sc-actions">
                           @if (!isParticipant(session) && !isOnWaitingList(session)) {
-                            <button class="btn-primary small" (click)="joinSession(session, $event)">
+                            <button class="btn-primary" (click)="joinSession(session, $event)">
                               {{ isFull(session) ? ('CLUB_SESSIONS.BTN_JOIN_WAITING_LIST' | translate) : ('CLUB_SESSIONS.BTN_JOIN' | translate) }}
                             </button>
                           }

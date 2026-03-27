@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/** A named athlete grouping owned by a coach, used to organize and assign workouts to athletes. */
 @Getter
 @Setter
 @Document(collection = "groups")

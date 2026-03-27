@@ -33,6 +33,7 @@ public class TrainingToolService {
         this.trainingAccessService = trainingAccessService;
     }
 
+    /** Lists training plan summaries for a user with pagination support. */
     @Tool(description = "List training plans created by a specific user. Returns summaries. Use limit/offset for pagination (default: 15 most recent).")
     public List<TrainingSummary> listTrainingsByUser(
             @ToolParam(description = "The user ID") String userId,
@@ -46,6 +47,7 @@ public class TrainingToolService {
                 .map(TrainingSummary::from).toList();
     }
 
+    /** Creates a training plan from a validated request and returns its summary. */
     @Tool(description = "Create a new training workout plan. Returns a summary with the new ID.")
     public Object createTraining(
             @ToolParam(description = "The training object to create") TrainingRequest create,
@@ -63,6 +65,7 @@ public class TrainingToolService {
         return result;
     }
 
+    /** Updates an existing training from a validated request and returns its updated summary. */
     @Tool(description = "Update an existing training plan by its ID. Returns updated summary.")
     public Object updateTraining(
             @ToolParam(description = "The training ID to update") String trainingId,
@@ -80,6 +83,7 @@ public class TrainingToolService {
         return result;
     }
 
+    /** Validates title, blocks, and recursively validates all workout elements. Returns null if valid, error message otherwise. */
     public static String validateTrainingRequest(TrainingRequest request) {
         if (request.title() == null || request.title().isBlank()) {
             return "Error: title is required and cannot be blank.";
@@ -90,43 +94,7 @@ public class TrainingToolService {
         return validateElements(request.blocks(), "block");
     }
 
-    private static String validateElements(java.util.List<WorkoutElementRequest> elements, String path) {
-        for (int i = 0; i < elements.size(); i++) {
-            WorkoutElementRequest b = elements.get(i);
-            String prefix = path + "[" + i + "]";
-
-            if (b.isSet()) {
-                // Validate set
-                if (b.reps() == null || b.reps() < 1) {
-                    return "Error: " + prefix + " is a set but has invalid reps=" + b.reps() + " (must be >= 1).";
-                }
-                String childError = validateElements(b.elements(), prefix + ".elements");
-                if (childError != null) return childError;
-            } else {
-                // Validate leaf
-                if (b.type() == null) {
-                    return "Error: " + prefix + " is missing required field 'type'.";
-                }
-                if (b.pct() != null && (b.pct() < 0 || b.pct() > MAX_INTENSITY_PERCENT)) {
-                    return "Error: " + prefix + " has out-of-range intensity pct=" + b.pct() + " (expected 0-" + MAX_INTENSITY_PERCENT + ").";
-                }
-                if (b.pctFrom() != null && (b.pctFrom() < 0 || b.pctFrom() > MAX_INTENSITY_PERCENT)) {
-                    return "Error: " + prefix + " has out-of-range pctFrom=" + b.pctFrom() + " (expected 0-" + MAX_INTENSITY_PERCENT + ").";
-                }
-                if (b.pctTo() != null && (b.pctTo() < 0 || b.pctTo() > MAX_INTENSITY_PERCENT)) {
-                    return "Error: " + prefix + " has out-of-range pctTo=" + b.pctTo() + " (expected 0-" + MAX_INTENSITY_PERCENT + ").";
-                }
-                if (b.dur() != null && b.dur() <= 0) {
-                    return "Error: " + prefix + " has invalid duration=" + b.dur() + " (must be > 0).";
-                }
-                if (b.dist() != null && b.dist() <= 0) {
-                    return "Error: " + prefix + " has invalid distance=" + b.dist() + " (must be > 0).";
-                }
-            }
-        }
-        return null;
-    }
-
+    /** Deletes a training plan after verifying ownership. */
     @Tool(description = "Delete a training plan by its ID. Only the creator can delete their own training.")
     public String deleteTraining(
             @ToolParam(description = "The training ID to delete") String trainingId,
@@ -139,5 +107,46 @@ public class TrainingToolService {
         trainingManagementService.deleteTraining(trainingId);
         ToolEventEmitter.emitToolResult(context, "deleteTraining", title, true);
         return "Deleted training: " + title;
+    }
+
+    // ── Private validation helpers ──────────────────────────────────────────
+
+    private static String validateElements(List<WorkoutElementRequest> elements, String path) {
+        for (int i = 0; i < elements.size(); i++) {
+            WorkoutElementRequest b = elements.get(i);
+            String prefix = path + "[" + i + "]";
+            String error = b.isSet() ? validateSet(b, prefix) : validateLeaf(b, prefix);
+            if (error != null) return error;
+        }
+        return null;
+    }
+
+    private static String validateSet(WorkoutElementRequest b, String prefix) {
+        if (b.reps() == null || b.reps() < 1) {
+            return "Error: " + prefix + " is a set but has invalid reps=" + b.reps() + " (must be >= 1).";
+        }
+        return validateElements(b.elements(), prefix + ".elements");
+    }
+
+    private static String validateLeaf(WorkoutElementRequest b, String prefix) {
+        if (b.type() == null) {
+            return "Error: " + prefix + " is missing required field 'type'.";
+        }
+        if (b.pct() != null && (b.pct() < 0 || b.pct() > MAX_INTENSITY_PERCENT)) {
+            return "Error: " + prefix + " has out-of-range intensity pct=" + b.pct() + " (expected 0-" + MAX_INTENSITY_PERCENT + ").";
+        }
+        if (b.pctFrom() != null && (b.pctFrom() < 0 || b.pctFrom() > MAX_INTENSITY_PERCENT)) {
+            return "Error: " + prefix + " has out-of-range pctFrom=" + b.pctFrom() + " (expected 0-" + MAX_INTENSITY_PERCENT + ").";
+        }
+        if (b.pctTo() != null && (b.pctTo() < 0 || b.pctTo() > MAX_INTENSITY_PERCENT)) {
+            return "Error: " + prefix + " has out-of-range pctTo=" + b.pctTo() + " (expected 0-" + MAX_INTENSITY_PERCENT + ").";
+        }
+        if (b.dur() != null && b.dur() <= 0) {
+            return "Error: " + prefix + " has invalid duration=" + b.dur() + " (must be > 0).";
+        }
+        if (b.dist() != null && b.dist() <= 0) {
+            return "Error: " + prefix + " has invalid distance=" + b.dist() + " (must be > 0).";
+        }
+        return null;
     }
 }

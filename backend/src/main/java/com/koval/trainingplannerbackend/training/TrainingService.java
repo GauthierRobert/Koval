@@ -90,6 +90,13 @@ public class TrainingService {
         Training training = trainingRepository.findById(trainingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Training", trainingId));
 
+        applyPartialUpdates(training, updates);
+
+        metricsService.calculateTrainingMetrics(training, training.getCreatedBy());
+        return trainingRepository.save(training);
+    }
+
+    private void applyPartialUpdates(Training training, Training updates) {
         ofNullable(updates.getTitle()).ifPresent(training::setTitle);
         ofNullable(updates.getDescription()).ifPresent(training::setDescription);
         ofNullable(updates.getSportType()).ifPresent(training::setSportType);
@@ -100,9 +107,6 @@ public class TrainingService {
         ofNullable(updates.getClubIds()).ifPresent(training::setClubIds);
         ofNullable(updates.getClubGroupIds()).ifPresent(training::setClubGroupIds);
         ofNullable(updates.getZoneSystemId()).ifPresent(training::setZoneSystemId);
-
-        metricsService.calculateTrainingMetrics(training, training.getCreatedBy());
-        return trainingRepository.save(training);
     }
 
     /**

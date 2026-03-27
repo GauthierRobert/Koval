@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.training.model;
 
+/** Supported sport disciplines, each carrying a typical speed (m/s) used for distance/duration estimation. */
 public enum SportType {
     CYCLING(8.33),
     RUNNING(3.33),
@@ -16,6 +17,7 @@ public enum SportType {
         return typicalSpeedMps;
     }
 
+    /** Parses a sport name (case-insensitive), defaulting to {@link #CYCLING} for null or unknown values. */
     public static SportType fromString(String sport) {
         if (sport == null) return CYCLING;
         try {
@@ -25,6 +27,7 @@ public enum SportType {
         }
     }
 
+    /** Parses a sport name (case-insensitive), returning {@code null} for null or unknown values. */
     public static SportType fromStringOrNull(String sport) {
         if (sport == null) return null;
         try {

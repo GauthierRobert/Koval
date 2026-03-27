@@ -20,6 +20,7 @@ public class ZoneToolService {
         this.zoneSystemService = zoneSystemService;
     }
 
+    /** Creates a new zone system with the given zones and returns the persisted entity. */
     @Tool(description = """
             Create a new training zone system for the coach. \
             A zone system defines intensity zones (e.g., Z1-Z7) for a specific sport and reference metric. \
@@ -35,19 +36,11 @@ public class ZoneToolService {
             @ToolParam(description = "List of zones, each with label (e.g., 'Z1'), low (% lower bound), high (% upper bound), and description") List<Zone> zones) {
 
         ActionToolTracker.markCalled();
-
-        ZoneSystem zoneSystem = new ZoneSystem();
-        zoneSystem.setCoachId(coachId);
-        zoneSystem.setName(name);
-        zoneSystem.setSportType(sportType);
-        zoneSystem.setReferenceType(referenceType);
-        zoneSystem.setReferenceName(referenceName);
-        zoneSystem.setReferenceUnit(referenceUnit);
-        zoneSystem.setZones(zones);
-
+        ZoneSystem zoneSystem = buildZoneSystem(coachId, name, sportType, referenceType, referenceName, referenceUnit, zones);
         return zoneSystemService.createZoneSystem(zoneSystem);
     }
 
+    /** Lists all zone systems owned by the coach as lightweight summaries. */
     @Tool(description = "List all zone systems owned by the coach. Returns summaries (id, name, sport, reference, zone count). Use getDefaultZoneSystem for full zone details.")
     public List<ZoneSystemSummary> listZoneSystems(
             @ToolParam(description = "The coach's user ID") String coachId) {
@@ -55,6 +48,7 @@ public class ZoneToolService {
                 .map(ZoneSystemSummary::from).toList();
     }
 
+    /** Returns the coach's default zone system for the given sport, or null if none is set. */
     @Tool(description = """
             Get the coach's default zone system for a given sport. \
             Returns the zone system with all zone definitions and annotations, or null if no default is set. \
@@ -63,5 +57,19 @@ public class ZoneToolService {
             @ToolParam(description = "The coach's user ID") String coachId,
             @ToolParam(description = "Sport type: CYCLING, RUNNING, or SWIMMING") SportType sportType) {
         return zoneSystemService.getDefaultZoneSystem(coachId, sportType).orElse(null);
+    }
+
+    private ZoneSystem buildZoneSystem(String coachId, String name, SportType sportType,
+                                       ZoneReferenceType referenceType, String referenceName,
+                                       String referenceUnit, List<Zone> zones) {
+        ZoneSystem zoneSystem = new ZoneSystem();
+        zoneSystem.setCoachId(coachId);
+        zoneSystem.setName(name);
+        zoneSystem.setSportType(sportType);
+        zoneSystem.setReferenceType(referenceType);
+        zoneSystem.setReferenceName(referenceName);
+        zoneSystem.setReferenceUnit(referenceUnit);
+        zoneSystem.setZones(zones);
+        return zoneSystem;
     }
 }

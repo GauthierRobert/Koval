@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/** REST API for coach-athlete group management (create, rename, delete, leave). */
 @RestController
 @RequestMapping("/api/groups")
 @CrossOrigin(origins = "*")
@@ -22,6 +23,7 @@ public class GroupController {
         this.userRepository = userRepository;
     }
 
+    /** Lists groups: coach sees their own groups, athlete sees groups they belong to. */
     @GetMapping
     public ResponseEntity<List<Group>> getGroups() {
         String userId = SecurityUtils.getCurrentUserId();
@@ -36,6 +38,7 @@ public class GroupController {
         }
     }
 
+    /** Creates a new group (coach-only). */
     @PostMapping
     public ResponseEntity<Group> createGroup(@RequestBody CreateGroupRequest request) {
         String userId = SecurityUtils.getCurrentUserId();
@@ -47,6 +50,7 @@ public class GroupController {
         return ResponseEntity.ok(group);
     }
 
+    /** Renames a group (coach-only, must own the group). */
     @PutMapping("/{id}")
     public ResponseEntity<Group> renameGroup(@PathVariable String id, @RequestBody RenameGroupRequest request) {
         String userId = SecurityUtils.getCurrentUserId();
@@ -58,6 +62,7 @@ public class GroupController {
         return ResponseEntity.ok(group);
     }
 
+    /** Removes the authenticated athlete from the specified group. */
     @DeleteMapping("/{id}/leave")
     public ResponseEntity<Void> leaveGroup(@PathVariable String id) {
         String userId = SecurityUtils.getCurrentUserId();
@@ -65,6 +70,7 @@ public class GroupController {
         return ResponseEntity.noContent().build();
     }
 
+    /** Deletes a group (coach-only, must own the group). */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteGroup(@PathVariable String id) {
         String userId = SecurityUtils.getCurrentUserId();

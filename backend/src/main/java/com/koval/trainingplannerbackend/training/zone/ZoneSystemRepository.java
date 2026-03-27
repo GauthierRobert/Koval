@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/** Spring Data repository for {@link ZoneSystem} documents in the {@code zone_systems} collection. */
 @Repository
 public interface ZoneSystemRepository extends MongoRepository<ZoneSystem, String> {
     List<ZoneSystem> findByCoachId(String coachId);

@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.training.zone;
 
+/** The physiological reference metric used to define training zones (e.g. FTP, threshold pace, CSS). */
 public enum ZoneReferenceType {
     FTP,
     VO2MAX_POWER,

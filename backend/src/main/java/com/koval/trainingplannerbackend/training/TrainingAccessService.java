@@ -8,6 +8,9 @@ import com.koval.trainingplannerbackend.training.received.ReceivedTrainingServic
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+/**
+ * Verifies that a user has access to a training based on ownership, coach relationship, or club membership.
+ */
 @Service
 public class TrainingAccessService {
 
@@ -23,6 +26,21 @@ public class TrainingAccessService {
         this.membershipRepository = membershipRepository;
     }
 
+    /**
+     * Verifies that the given user has access to the specified training.
+     *
+     * <p>Access is granted if any of the following conditions are met:</p>
+     * <ul>
+     *   <li>The user is the training's creator (owner).</li>
+     *   <li>The user is a coach of the training's creator.</li>
+     *   <li>The user is an active member of a club the training belongs to.</li>
+     *   <li>The user has received the training (e.g., assigned by a coach).</li>
+     * </ul>
+     *
+     * @param userId   the ID of the user requesting access
+     * @param training the training to check access for
+     * @throws AccessDeniedException if none of the access conditions are met
+     */
     public void verifyAccess(String userId, Training training) {
         if (userId.equals(training.getCreatedBy())) return;
         if (coachService.isCoachOfAthlete(userId, training.getCreatedBy())) return;

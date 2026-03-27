@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+/** REST API for completed workout sessions: CRUD, FIT file management, analytics, and power curves. */
 @RestController
 @RequestMapping("/api/sessions")
 @CrossOrigin(origins = "*")
@@ -35,24 +36,28 @@ public class SessionController {
         this.powerCurveService = powerCurveService;
     }
 
+    /** Saves a completed workout session with automatic metrics computation and schedule association. */
     @PostMapping
     public ResponseEntity<CompletedSession> save(@RequestBody CompletedSession session) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(sessionService.saveSession(session, userId));
     }
 
+    /** Lists all completed sessions for the authenticated user, most recent first. */
     @GetMapping
     public ResponseEntity<List<CompletedSession>> list() {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(sessionService.listSessions(userId));
     }
 
+    /** Paginated variant of {@link #list()}. */
     @GetMapping(params = "page")
     public ResponseEntity<Page<CompletedSession>> list(Pageable pageable) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(sessionService.listSessions(userId, pageable));
     }
 
+    /** Retrieves a single session by ID (accessible to the owner or their coach). */
     @GetMapping("/{id}")
     public ResponseEntity<CompletedSession> getById(@PathVariable String id) {
         String userId = SecurityUtils.getCurrentUserId();
@@ -61,6 +66,7 @@ public class SessionController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /** Lists sessions within a date range for calendar display. */
     @GetMapping("/calendar")
     public ResponseEntity<List<CompletedSession>> listForCalendar(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
@@ -69,6 +75,7 @@ public class SessionController {
         return ResponseEntity.ok(sessionService.listForCalendar(userId, start, end));
     }
 
+    /** Manually links a completed session to a scheduled workout. */
     @PostMapping("/{sessionId}/link/{scheduledWorkoutId}")
     public ResponseEntity<CompletedSession> linkToSchedule(
             @PathVariable String sessionId,
@@ -78,6 +85,7 @@ public class SessionController {
         return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
     }
 
+    /** Links a completed session to a club training session. */
     @PostMapping("/{sessionId}/link-club-session/{clubSessionId}")
     public ResponseEntity<CompletedSession> linkToClubSession(
             @PathVariable String sessionId,
@@ -87,6 +95,7 @@ public class SessionController {
         return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
     }
 
+    /** Patches session fields (currently supports RPE with automatic TSS fallback). */
     @PatchMapping("/{id}")
     public ResponseEntity<CompletedSession> patch(@PathVariable String id,
             @RequestBody Map<String, Object> body) {
@@ -95,6 +104,7 @@ public class SessionController {
         return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
     }
 
+    /** Deletes a session and its associated FIT file. */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable String id) {
         String userId = SecurityUtils.getCurrentUserId();
@@ -105,6 +115,7 @@ public class SessionController {
 
     // ── PMC endpoint ─────────────────────────────────────────────────────────
 
+    /** Returns PMC data points (CTL, ATL, TSB) for the given date range. */
     @GetMapping("/pmc")
     public ResponseEntity<List<AnalyticsService.PmcDataPoint>> getPmc(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -115,6 +126,7 @@ public class SessionController {
 
     // ── FIT file upload / download ────────────────────────────────────────────
 
+    /** Uploads a FIT file and associates it with a session (replaces any existing file). */
     @PostMapping("/{id}/fit")
     public ResponseEntity<CompletedSession> uploadFit(@PathVariable String id,
             @RequestParam("file") MultipartFile file) throws IOException {
@@ -123,6 +135,7 @@ public class SessionController {
         return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
     }
 
+    /** Downloads the FIT file for a session (accessible to owner or their coach). */
     @GetMapping("/{id}/fit")
     public ResponseEntity<?> downloadFit(@PathVariable String id) throws IOException {
         String userId = SecurityUtils.getCurrentUserId();
@@ -138,6 +151,7 @@ public class SessionController {
 
     // ── Analytics endpoints ─────────────────────────────────────────────
 
+    /** Returns the best power curve across all sessions in the given date range. */
     @GetMapping("/power-curve")
     public ResponseEntity<Map<Integer, Double>> getPowerCurve(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -146,12 +160,14 @@ public class SessionController {
         return ResponseEntity.ok(powerCurveService.getBestPowerCurve(userId, from, to));
     }
 
+    /** Returns the power curve for a single session. */
     @GetMapping("/{id}/power-curve")
     public ResponseEntity<Map<Integer, Double>> getSessionPowerCurve(@PathVariable String id) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(powerCurveService.getSessionPowerCurve(id, userId));
     }
 
+    /** Stores a computed power curve for a session (called after the frontend parses a FIT file). */
     @PutMapping("/{id}/power-curve")
     public ResponseEntity<Void> saveSessionPowerCurve(@PathVariable String id,
                                                        @RequestBody Map<Integer, Double> powerCurve) {
@@ -160,6 +176,7 @@ public class SessionController {
         return ResponseEntity.ok().build();
     }
 
+    /** Aggregates training volume by week or month for the given date range. */
     @GetMapping("/volume")
     public ResponseEntity<List<PowerCurveService.VolumeEntry>> getVolume(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -169,6 +186,7 @@ public class SessionController {
         return ResponseEntity.ok(powerCurveService.computeVolume(userId, from, to, groupBy));
     }
 
+    /** Returns all-time personal power records (best average power by duration). */
     @GetMapping("/personal-records")
     public ResponseEntity<Map<Integer, Double>> getPersonalRecords() {
         String userId = SecurityUtils.getCurrentUserId();

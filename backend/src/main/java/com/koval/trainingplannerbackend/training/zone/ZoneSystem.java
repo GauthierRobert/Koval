@@ -12,6 +12,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A named set of training zones (e.g. "Cycling Power Zones") owned by a coach,
+ * defining intensity boundaries relative to a reference metric like FTP or threshold pace.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

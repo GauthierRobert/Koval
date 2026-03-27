@@ -22,6 +22,9 @@ import java.util.stream.Collectors;
 @Service
 public class TrainingMetricsService {
 
+    private static final int DEFAULT_FTP_PACE_SEC_PER_KM = 300;
+    private static final int DEFAULT_CSS_SEC_PER_100M = 120;
+
     private final UserRepository userRepository;
     private final ZoneSystemService zoneSystemService;
     private final GroupService groupService;
@@ -66,7 +69,10 @@ public class TrainingMetricsService {
             sport = SportType.CYCLING;
 
         MetricsResult result = calculateBlocksMetrics(training, user, sport);
+        applyMetricsResult(training, result);
+    }
 
+    private void applyMetricsResult(Training training, MetricsResult result) {
         training.setEstimatedTss((int) Math.round(result.totalTss()));
 
         if (result.totalDurationSeconds() > 0) {
@@ -88,19 +94,23 @@ public class TrainingMetricsService {
         ZoneSystem zoneSystem = resolveZoneSystem(training, userId);
         if (zoneSystem == null || zoneSystem.getZones() == null || zoneSystem.getZones().isEmpty()) return;
 
-        Map<String, ZoneResolution> zoneMap = zoneSystem.getZones().stream()
-                .filter(z -> z.label() != null)
-                .collect(Collectors.toMap(
-                        z -> z.label().toUpperCase(),
-                        z -> new ZoneResolution((z.low() + z.high()) / 2,
-                                z.label() + " - " + (z.description() != null ? z.description() : "") + " (" + z.low() + "-" + z.high() + "%)"),
-                        (a, _) -> a));
+        Map<String, ZoneResolution> zoneMap = buildZoneMap(zoneSystem);
 
         List<WorkoutElement> resolvedBlocks = training.getBlocks().stream()
                 .map(block -> resolveElementZones(block, zoneMap))
                 .toList();
 
         training.setBlocks(resolvedBlocks);
+    }
+
+    private Map<String, ZoneResolution> buildZoneMap(ZoneSystem zoneSystem) {
+        return zoneSystem.getZones().stream()
+                .filter(z -> z.label() != null)
+                .collect(Collectors.toMap(
+                        z -> z.label().toUpperCase(),
+                        z -> new ZoneResolution((z.low() + z.high()) / 2,
+                                z.label() + " - " + (z.description() != null ? z.description() : "") + " (" + z.low() + "-" + z.high() + "%)"),
+                        (a, _) -> a));
     }
 
     private boolean hasZoneTargetsRecursive(List<WorkoutElement> elements) {
@@ -147,17 +157,17 @@ public class TrainingMetricsService {
                 .flatMap(Optional::stream)
                 .findFirst()
                 .orElse(null));
-
-        // 3. Try coach's default via group membership
     }
 
     // ── Block-level metrics ─────────────────────────────────────────────────
 
     private record MetricsResult(double totalTss, int totalDurationSeconds, int totalDistance) {}
 
+    private record BlockMeasure(int duration, int distance) {}
+
     private MetricsResult calculateBlocksMetrics(Training training, User user, SportType sport) {
-        int ftpPaceSecPerKm = user.getFunctionalThresholdPace() != null ? user.getFunctionalThresholdPace() : 300;
-        int cssSecPer100m = user.getCriticalSwimSpeed() != null ? user.getCriticalSwimSpeed() : 120;
+        int ftpPaceSecPerKm = user.getFunctionalThresholdPace() != null ? user.getFunctionalThresholdPace() : DEFAULT_FTP_PACE_SEC_PER_KM;
+        int cssSecPer100m = user.getCriticalSwimSpeed() != null ? user.getCriticalSwimSpeed() : DEFAULT_CSS_SEC_PER_100M;
 
         int totalDurationSeconds = 0;
         int totalDistance = 0;
@@ -166,27 +176,33 @@ public class TrainingMetricsService {
         List<WorkoutElement> flatBlocks = WorkoutElementFlattener.flatten(training.getBlocks());
         for (WorkoutElement block : flatBlocks) {
             double intensity = getBlockIntensity(block);
-            int blockDuration;
-            int blockDistance;
-
-            if (block.durationSeconds() != null && block.durationSeconds() > 0) {
-                blockDuration = block.durationSeconds();
-                blockDistance = estimateDistance(blockDuration, intensity, sport, ftpPaceSecPerKm, cssSecPer100m);
-            } else if (block.distanceMeters() != null && block.distanceMeters() > 0) {
-                blockDistance = block.distanceMeters();
-                blockDuration = estimateDuration(blockDistance, intensity, sport, ftpPaceSecPerKm, cssSecPer100m);
-            } else {
+            BlockMeasure measure = computeBlockMeasure(block, intensity, sport, ftpPaceSecPerKm, cssSecPer100m);
+            if (measure == null) {
                 continue;
             }
 
-            totalDurationSeconds += blockDuration;
-            totalDistance += blockDistance;
+            totalDurationSeconds += measure.duration();
+            totalDistance += measure.distance();
             if (intensity > 0) {
-                totalTss += TssCalculator.computeTss(blockDuration, intensity / 100.0);
+                totalTss += TssCalculator.computeTss(measure.duration(), intensity / 100.0);
             }
         }
 
         return new MetricsResult(totalTss, totalDurationSeconds, totalDistance);
+    }
+
+    private BlockMeasure computeBlockMeasure(WorkoutElement block, double intensity, SportType sport,
+                                             int ftpPaceSecPerKm, int cssSecPer100m) {
+        if (block.durationSeconds() != null && block.durationSeconds() > 0) {
+            int blockDuration = block.durationSeconds();
+            int blockDistance = estimateDistance(blockDuration, intensity, sport, ftpPaceSecPerKm, cssSecPer100m);
+            return new BlockMeasure(blockDuration, blockDistance);
+        } else if (block.distanceMeters() != null && block.distanceMeters() > 0) {
+            int blockDistance = block.distanceMeters();
+            int blockDuration = estimateDuration(blockDistance, intensity, sport, ftpPaceSecPerKm, cssSecPer100m);
+            return new BlockMeasure(blockDuration, blockDistance);
+        }
+        return null;
     }
 
     private double getBlockIntensity(WorkoutElement block) {

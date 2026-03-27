@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/** Spring Data repository for {@link CompletedSession} documents, including projection queries for external activity IDs. */
 public interface CompletedSessionRepository extends MongoRepository<CompletedSession, String> {
 
     @Query(value = "{ 'userId': ?0, 'stravaActivityId': { $ne: null } }", fields = "{ 'stravaActivityId': 1 }")

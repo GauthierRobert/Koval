@@ -12,6 +12,11 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Manages the lifecycle of received trainings for athletes.
+ * Handles both explicit coach-assigned trainings persisted as {@link ReceivedTraining}
+ * documents and virtual entries derived from {@link ClubTrainingSession} participation.
+ */
 @Service
 public class ReceivedTrainingService {
 
@@ -30,47 +35,107 @@ public class ReceivedTrainingService {
         this.clubRepository = clubRepository;
     }
 
+    /**
+     * Creates {@link ReceivedTraining} records for the given athletes, skipping any
+     * athlete who has already received the specified training. The assigner's display
+     * name is resolved once and shared across all new records.
+     *
+     * @param trainingId  the training to assign
+     * @param athleteIds  the athletes who should receive the training
+     * @param assignedById the user ID of the person assigning the training
+     * @param origin       the origin context (e.g. coach assignment, club session)
+     * @param originId     identifier of the origin entity
+     * @param originName   human-readable name of the origin entity
+     */
     public void createReceivedTrainings(String trainingId,
                                         List<String> athleteIds,
                                         String assignedById,
                                         ReceivedTrainingOrigin origin,
                                         String originId,
                                         String originName) {
-        String assignedByName = userRepository.findById(assignedById)
-                .map(User::getDisplayName)
-                .orElse("Unknown");
-
-        Set<String> alreadyReceived = receivedTrainingRepository
-                .findByTrainingIdAndAthleteIdIn(trainingId, athleteIds)
-                .stream()
-                .map(ReceivedTraining::getAthleteId)
-                .collect(Collectors.toSet());
+        String assignedByName = resolveAssignedByName(assignedById);
+        Set<String> alreadyReceived = findAlreadyReceivedAthleteIds(trainingId, athleteIds);
 
         LocalDateTime now = LocalDateTime.now();
         List<ReceivedTraining> toSave = new ArrayList<>();
         for (String athleteId : athleteIds) {
             if (alreadyReceived.contains(athleteId)) continue;
-
-            ReceivedTraining rt = new ReceivedTraining();
-            rt.setAthleteId(athleteId);
-            rt.setTrainingId(trainingId);
-            rt.setAssignedBy(assignedById);
-            rt.setAssignedByName(assignedByName);
-            rt.setOrigin(origin);
-            rt.setOriginId(originId);
-            rt.setOriginName(originName);
-            rt.setReceivedAt(now);
-            toSave.add(rt);
+            toSave.add(buildNewReceivedTraining(athleteId, trainingId, assignedById, assignedByName, origin, originId, originName, now));
         }
         if (!toSave.isEmpty()) {
             receivedTrainingRepository.saveAll(toSave);
         }
     }
 
+    /**
+     * Returns all trainings received by the given athlete, combining explicit
+     * {@link ReceivedTraining} documents with virtual entries inferred from active
+     * club session participation. Explicit entries take priority when a training
+     * appears in both sources.
+     *
+     * @param athleteId the athlete whose received trainings are requested
+     * @return a list of {@link ReceivedTrainingResponse} in insertion order
+     */
     public List<ReceivedTrainingResponse> getReceivedTrainings(String athleteId) {
-        // Real ReceivedTraining docs — keyed by trainingId so they take priority
-        Map<String, ReceivedTrainingResponse> byTrainingId = new LinkedHashMap<>();
+        Map<String, ReceivedTrainingResponse> byTrainingId = buildExplicitReceivedMap(athleteId);
+        appendVirtualSessionEntries(byTrainingId, athleteId);
+        return new ArrayList<>(byTrainingId.values());
+    }
 
+    /**
+     * Checks whether the athlete has received the specified training, either via an
+     * explicit {@link ReceivedTraining} record or through participation in an active
+     * club session linked to that training.
+     *
+     * @param athleteId  the athlete to check
+     * @param trainingId the training to check
+     * @return {@code true} if the athlete has received or is participating in the training
+     */
+    public boolean hasReceived(String athleteId, String trainingId) {
+        return receivedTrainingRepository.existsByAthleteIdAndTrainingId(athleteId, trainingId)
+                || sessionRepository.existsByParticipantIdsContainingAndLinkedTrainingIdAndCancelledFalse(athleteId, trainingId);
+    }
+
+    // ── Private helpers for createReceivedTrainings ──────────────────────
+
+    private String resolveAssignedByName(String assignedById) {
+        return userRepository.findById(assignedById)
+                .map(User::getDisplayName)
+                .orElse("Unknown");
+    }
+
+    private Set<String> findAlreadyReceivedAthleteIds(String trainingId, List<String> athleteIds) {
+        return receivedTrainingRepository
+                .findByTrainingIdAndAthleteIdIn(trainingId, athleteIds)
+                .stream()
+                .map(ReceivedTraining::getAthleteId)
+                .collect(Collectors.toSet());
+    }
+
+    private ReceivedTraining buildNewReceivedTraining(String athleteId,
+                                                      String trainingId,
+                                                      String assignedById,
+                                                      String assignedByName,
+                                                      ReceivedTrainingOrigin origin,
+                                                      String originId,
+                                                      String originName,
+                                                      LocalDateTime now) {
+        ReceivedTraining rt = new ReceivedTraining();
+        rt.setAthleteId(athleteId);
+        rt.setTrainingId(trainingId);
+        rt.setAssignedBy(assignedById);
+        rt.setAssignedByName(assignedByName);
+        rt.setOrigin(origin);
+        rt.setOriginId(originId);
+        rt.setOriginName(originName);
+        rt.setReceivedAt(now);
+        return rt;
+    }
+
+    // ── Private helpers for getReceivedTrainings ────────────────────────
+
+    private Map<String, ReceivedTrainingResponse> buildExplicitReceivedMap(String athleteId) {
+        Map<String, ReceivedTrainingResponse> byTrainingId = new LinkedHashMap<>();
         List<ReceivedTraining> received = receivedTrainingRepository.findByAthleteId(athleteId);
         for (ReceivedTraining rt : received) {
             byTrainingId.put(rt.getTrainingId(), new ReceivedTrainingResponse(
@@ -82,55 +147,59 @@ public class ReceivedTrainingService {
                     rt.getReceivedAt()
             ));
         }
-
-        // Virtual received trainings from club sessions
-        List<ClubTrainingSession> sessions =
-                sessionRepository.findByParticipantIdsContainingAndLinkedTrainingIdIsNotNullAndCancelledFalse(athleteId);
-
-        if (!sessions.isEmpty()) {
-            // Batch-load club names
-            List<String> clubIds = sessions.stream()
-                    .map(ClubTrainingSession::getClubId)
-                    .distinct()
-                    .toList();
-            Map<String, String> clubNames = clubRepository.findAllById(clubIds).stream()
-                    .collect(Collectors.toMap(Club::getId, Club::getName));
-
-            // Batch-load coach names
-            List<String> coachIds = sessions.stream()
-                    .map(ClubTrainingSession::getResponsibleCoachId)
-                    .filter(Objects::nonNull)
-                    .distinct()
-                    .toList();
-            Map<String, String> coachNames = userRepository.findAllById(coachIds).stream()
-                    .collect(Collectors.toMap(User::getId, User::getDisplayName));
-
-            for (ClubTrainingSession session : sessions) {
-                String trainingId = session.getLinkedTrainingId();
-                // Real entries take priority — skip if already present
-                if (byTrainingId.containsKey(trainingId)) continue;
-
-                String coachName = session.getResponsibleCoachId() != null
-                        ? coachNames.getOrDefault(session.getResponsibleCoachId(), "Unknown")
-                        : null;
-                String clubName = clubNames.getOrDefault(session.getClubId(), "Unknown");
-
-                byTrainingId.put(trainingId, new ReceivedTrainingResponse(
-                        "session:" + session.getId(),
-                        trainingId,
-                        coachName,
-                        ReceivedTrainingOrigin.CLUB_SESSION,
-                        clubName,
-                        session.getScheduledAt()
-                ));
-            }
-        }
-
-        return new ArrayList<>(byTrainingId.values());
+        return byTrainingId;
     }
 
-    public boolean hasReceived(String athleteId, String trainingId) {
-        return receivedTrainingRepository.existsByAthleteIdAndTrainingId(athleteId, trainingId)
-                || sessionRepository.existsByParticipantIdsContainingAndLinkedTrainingIdAndCancelledFalse(athleteId, trainingId);
+    private void appendVirtualSessionEntries(Map<String, ReceivedTrainingResponse> byTrainingId,
+                                             String athleteId) {
+        List<ClubTrainingSession> sessions =
+                sessionRepository.findByParticipantIdsContainingAndLinkedTrainingIdIsNotNullAndCancelledFalse(athleteId);
+        if (sessions.isEmpty()) return;
+
+        Map<String, String> clubNames = batchLoadClubNames(sessions);
+        Map<String, String> coachNames = batchLoadCoachNames(sessions);
+
+        for (ClubTrainingSession session : sessions) {
+            String trainingId = session.getLinkedTrainingId();
+            if (byTrainingId.containsKey(trainingId)) continue;
+            byTrainingId.put(trainingId, toVirtualResponse(session, clubNames, coachNames));
+        }
+    }
+
+    private Map<String, String> batchLoadClubNames(List<ClubTrainingSession> sessions) {
+        List<String> clubIds = sessions.stream()
+                .map(ClubTrainingSession::getClubId)
+                .distinct()
+                .toList();
+        return clubRepository.findAllById(clubIds).stream()
+                .collect(Collectors.toMap(Club::getId, Club::getName));
+    }
+
+    private Map<String, String> batchLoadCoachNames(List<ClubTrainingSession> sessions) {
+        List<String> coachIds = sessions.stream()
+                .map(ClubTrainingSession::getResponsibleCoachId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        return userRepository.findAllById(coachIds).stream()
+                .collect(Collectors.toMap(User::getId, User::getDisplayName));
+    }
+
+    private ReceivedTrainingResponse toVirtualResponse(ClubTrainingSession session,
+                                                       Map<String, String> clubNames,
+                                                       Map<String, String> coachNames) {
+        String coachName = session.getResponsibleCoachId() != null
+                ? coachNames.getOrDefault(session.getResponsibleCoachId(), "Unknown")
+                : null;
+        String clubName = clubNames.getOrDefault(session.getClubId(), "Unknown");
+
+        return new ReceivedTrainingResponse(
+                "session:" + session.getId(),
+                session.getLinkedTrainingId(),
+                coachName,
+                ReceivedTrainingOrigin.CLUB_SESSION,
+                clubName,
+                session.getScheduledAt()
+        );
     }
 }

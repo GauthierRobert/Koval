@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/** Spring Data repository for {@link Group} documents in the {@code groups} collection. */
 @Repository
 public interface GroupRepository extends MongoRepository<Group, String> {
 
