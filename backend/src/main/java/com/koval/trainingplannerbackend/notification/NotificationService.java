@@ -1,14 +1,15 @@
 package com.koval.trainingplannerbackend.notification;
 
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.messaging.*;
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,9 +21,15 @@ public class NotificationService {
     private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
     private final UserRepository userRepository;
+    private final FirebaseConfig fcmConfig;
+    private final RestClient fcmRestClient;
 
-    public NotificationService(UserRepository userRepository) {
+    public NotificationService(UserRepository userRepository,
+                               FirebaseConfig fcmConfig,
+                               RestClient fcmRestClient) {
         this.userRepository = userRepository;
+        this.fcmConfig = fcmConfig;
+        this.fcmRestClient = fcmRestClient;
     }
 
     @Async
@@ -45,8 +52,8 @@ public class NotificationService {
     @Async
     public void sendToUsers(List<String> userIds, String title, String body,
                             Map<String, String> data, String preferenceType) {
-        if (!isFirebaseAvailable()) {
-            log.debug("Firebase not initialized — skipping notification: {}", title);
+        if (!fcmConfig.isAvailable()) {
+            log.debug("FCM not initialized — skipping notification: {}", title);
             return;
         }
 
@@ -75,7 +82,7 @@ public class NotificationService {
 
     private boolean isPreferenceEnabled(User user, String preferenceType) {
         NotificationPreferences prefs = user.getNotificationPreferences();
-        if (prefs == null) return true; // default: all enabled
+        if (prefs == null) return true;
         return switch (preferenceType) {
             case "workoutAssigned" -> prefs.isWorkoutAssigned();
             case "workoutReminder" -> prefs.isWorkoutReminder();
@@ -91,41 +98,56 @@ public class NotificationService {
 
     private void sendToTokens(List<String> tokens, String title, String body,
                               Map<String, String> data, Map<String, List<String>> tokensByUser) {
+        String accessToken;
         try {
-            MulticastMessage message = MulticastMessage.builder()
-                    .setNotification(Notification.builder()
-                            .setTitle(title)
-                            .setBody(body)
-                            .build())
-                    .putAllData(data != null ? data : Map.of())
-                    .addAllTokens(tokens)
-                    .build();
+            accessToken = fcmConfig.getAccessToken();
+        } catch (IOException e) {
+            log.error("Failed to get FCM access token: {}", e.getMessage());
+            return;
+        }
 
-            BatchResponse response = FirebaseMessaging.getInstance().sendEachForMulticast(message);
+        String sendUrl = "/v1/projects/" + fcmConfig.getProjectId() + "/messages:send";
+        int successCount = 0;
+        int failureCount = 0;
+        List<String> staleTokens = new ArrayList<>();
 
-            if (response.getFailureCount() > 0) {
-                List<String> staleTokens = new ArrayList<>();
-                List<SendResponse> responses = response.getResponses();
-                for (int i = 0; i < responses.size(); i++) {
-                    if (!responses.get(i).isSuccessful()) {
-                        MessagingErrorCode errorCode = responses.get(i).getException().getMessagingErrorCode();
-                        if (errorCode == MessagingErrorCode.UNREGISTERED
-                                || errorCode == MessagingErrorCode.INVALID_ARGUMENT) {
-                            staleTokens.add(tokens.get(i));
-                        }
-                        log.warn("FCM send failed for token {}: {}", i, responses.get(i).getException().getMessage());
-                    }
-                }
-                if (!staleTokens.isEmpty()) {
-                    removeStaleTokens(staleTokens, tokensByUser);
+        for (String token : tokens) {
+            Map<String, Object> message = buildMessage(token, title, body, data);
+            try {
+                fcmRestClient.post()
+                        .uri(sendUrl)
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(Map.of("message", message))
+                        .retrieve()
+                        .toBodilessEntity();
+                successCount++;
+            } catch (Exception e) {
+                failureCount++;
+                String errorMsg = e.getMessage();
+                log.warn("FCM send failed for token: {}", errorMsg);
+                if (errorMsg != null && (errorMsg.contains("UNREGISTERED") || errorMsg.contains("INVALID_ARGUMENT"))) {
+                    staleTokens.add(token);
                 }
             }
-
-            log.info("FCM notification sent: {} success, {} failure",
-                    response.getSuccessCount(), response.getFailureCount());
-        } catch (FirebaseMessagingException e) {
-            log.error("Failed to send FCM notification: {}", e.getMessage());
         }
+
+        if (!staleTokens.isEmpty()) {
+            removeStaleTokens(staleTokens, tokensByUser);
+        }
+
+        log.info("FCM notification sent: {} success, {} failure", successCount, failureCount);
+    }
+
+    private Map<String, Object> buildMessage(String token, String title, String body, Map<String, String> data) {
+        Map<String, Object> notification = Map.of("title", title, "body", body);
+        Map<String, Object> message = new HashMap<>();
+        message.put("token", token);
+        message.put("notification", notification);
+        if (data != null && !data.isEmpty()) {
+            message.put("data", data);
+        }
+        return message;
     }
 
     private void removeStaleTokens(List<String> staleTokens, Map<String, List<String>> tokensByUser) {
@@ -176,9 +198,5 @@ public class NotificationService {
         user.setNotificationPreferences(prefs);
         userRepository.save(user);
         return prefs;
-    }
-
-    private boolean isFirebaseAvailable() {
-        return !FirebaseApp.getApps().isEmpty();
     }
 }

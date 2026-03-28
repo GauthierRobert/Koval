@@ -406,51 +406,8 @@
   },
 
   {
-    "_comment": "=== Firebase Admin SDK ===",
-    "_note": "Firebase uses reflection for initialization and messaging"
-  },
-  {
-    "name": "com.google.firebase.FirebaseApp",
-    "allPublicMethods": true,
-    "allPublicConstructors": true
-  },
-  {
-    "name": "com.google.firebase.FirebaseOptions",
-    "allPublicMethods": true,
-    "allPublicConstructors": true
-  },
-  {
-    "name": "com.google.firebase.FirebaseOptions$Builder",
-    "allPublicMethods": true,
-    "allPublicConstructors": true
-  },
-  {
-    "name": "com.google.firebase.messaging.FirebaseMessaging",
-    "allPublicMethods": true
-  },
-  {
-    "name": "com.google.firebase.messaging.MulticastMessage",
-    "allPublicMethods": true,
-    "allPublicConstructors": true
-  },
-  {
-    "name": "com.google.firebase.messaging.MulticastMessage$Builder",
-    "allPublicMethods": true,
-    "allPublicConstructors": true
-  },
-  {
-    "name": "com.google.firebase.messaging.Notification",
-    "allPublicMethods": true,
-    "allPublicConstructors": true
-  },
-  {
-    "name": "com.google.firebase.messaging.Notification$Builder",
-    "allPublicMethods": true,
-    "allPublicConstructors": true
-  },
-  {
-    "name": "com.google.firebase.messaging.BatchResponse",
-    "allPublicMethods": true
+    "_comment": "=== Google Auth (for FCM HTTP v1 API) ===",
+    "_note": "GoogleCredentials uses reflection for service account loading"
   },
   {
     "name": "com.google.auth.oauth2.GoogleCredentials",

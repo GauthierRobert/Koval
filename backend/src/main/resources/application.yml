@@ -74,9 +74,10 @@ jwt:
 cors:
   allowed-origins: ${ALLOWED_ORIGINS:http://localhost:4200,http://localhost:3000}
 
-# Firebase Cloud Messaging
+# Firebase Cloud Messaging (FCM HTTP v1 API)
 firebase:
   service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}
+  project-id: ${FIREBASE_PROJECT_ID:}
 
 # AI debug flags
 app:
