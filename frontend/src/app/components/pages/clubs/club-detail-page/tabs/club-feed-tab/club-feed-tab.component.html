@@ -1,20 +1,128 @@
-<div class="feed-tab">
-  @if (feed$ | async; as feed) {
-    @if (feed.length > 0) {
-      <div class="feed-list">
-        @for (activity of feed; track activity) {
-          <div class="feed-item">
-            <span class="feed-dot" [style.background]="getActivityColor(activity.type)"></span>
-            <span class="feed-text">{{ getActivityText(activity.type, activity.actorName || activity.actorId, activity.targetTitle) }}</span>
-            <span class="feed-time">{{ formatDate(activity.occurredAt) }}</span>
+<div class="feed-layout">
+  <!-- Main feed column -->
+  <div class="feed-main">
+
+    <!-- Announcement composer (coach/admin only) -->
+    @if (isCoachOrAdmin) {
+      <div class="composer" [class.composer--expanded]="composerExpanded">
+        <textarea
+          class="composer-input"
+          [placeholder]="'CLUB_FEED.COMPOSER_PLACEHOLDER' | translate"
+          [(ngModel)]="announcementText"
+          (focus)="composerExpanded = true"
+          rows="1"
+          [style.height]="composerExpanded ? '80px' : '36px'"
+        ></textarea>
+        @if (composerExpanded) {
+          <div class="composer-actions">
+            <button class="composer-cancel" (click)="composerExpanded = false; announcementText = ''">
+              {{ 'CLUB_FEED.CANCEL' | translate }}
+            </button>
+            <button class="composer-submit" [disabled]="!announcementText.trim()" (click)="submitAnnouncement()">
+              {{ 'CLUB_FEED.POST' | translate }}
+            </button>
           </div>
         }
       </div>
+    }
+
+    @if (feedEvents$ | async; as feed) {
+      <!-- Pinned events -->
+      @if (feed.pinned.length > 0) {
+        <div class="pinned-section">
+          @for (event of feed.pinned; track trackByEventId($index, event)) {
+            @switch (event.type) {
+              @case ('SESSION_COMPLETION') {
+                <app-feed-session-completion-card
+                  [event]="event"
+                  [currentUserId]="currentUserId"
+                  (kudosRequested)="onGiveKudos($event)">
+                </app-feed-session-completion-card>
+              }
+              @case ('RACE_COMPLETION') {
+                <app-feed-race-completion-card
+                  [event]="event"
+                  [currentUserId]="currentUserId"
+                  (kudosRequested)="onGiveKudos($event)">
+                </app-feed-race-completion-card>
+              }
+              @case ('NEXT_GOAL') {
+                <app-feed-next-goal-card [event]="event"></app-feed-next-goal-card>
+              }
+            }
+          }
+        </div>
+      }
+
+      <!-- Feed timeline -->
+      @if (feed.items.length > 0) {
+        <div class="feed-timeline">
+          @for (event of feed.items; track trackByEventId($index, event)) {
+            @switch (event.type) {
+              @case ('COACH_ANNOUNCEMENT') {
+                <app-feed-announcement-card [event]="event"></app-feed-announcement-card>
+              }
+              @case ('SESSION_COMPLETION') {
+                <app-feed-session-completion-card
+                  [event]="event"
+                  [currentUserId]="currentUserId"
+                  (kudosRequested)="onGiveKudos($event)">
+                </app-feed-session-completion-card>
+              }
+              @case ('RACE_COMPLETION') {
+                <app-feed-race-completion-card
+                  [event]="event"
+                  [currentUserId]="currentUserId"
+                  (kudosRequested)="onGiveKudos($event)">
+                </app-feed-race-completion-card>
+              }
+              @case ('NEXT_GOAL') {
+                <app-feed-next-goal-card [event]="event"></app-feed-next-goal-card>
+              }
+            }
+          }
+
+          @if (feed.hasMore) {
+            <button class="load-more-btn" (click)="loadMore(feed)">
+              {{ 'CLUB_FEED.LOAD_MORE' | translate }}
+            </button>
+          }
+        </div>
+      }
+
+      @if (feed.pinned.length === 0 && feed.items.length === 0) {
+        <div class="empty-feed">
+          <div class="empty-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
+              <path d="M18 14h-8"/>
+              <path d="M15 18h-5"/>
+              <path d="M10 6h8v4h-8V6Z"/>
+            </svg>
+          </div>
+          <p class="empty-text">{{ 'CLUB_FEED.EMPTY' | translate }}</p>
+          <p class="empty-hint">{{ 'CLUB_FEED.EMPTY_HINT' | translate }}</p>
+        </div>
+      }
     } @else {
-      <div class="empty-tab">
-        <span>📭</span>
-        <p>{{ 'CLUB_FEED.EMPTY_ICON_LABEL' | translate }}</p>
+      <div class="loading-feed">
+        <div class="loading-spinner"></div>
       </div>
     }
-  }
+  </div>
+
+  <!-- Sessions sidebar -->
+  <div class="feed-sidebar">
+    @if (sessions$ | async; as sessions) {
+      <app-feed-sessions-upcoming
+        [sessions]="sessions"
+        [club]="club"
+        [currentUserId]="currentUserId"
+        [weekLabel]="weekLabel"
+        (joinClicked)="onJoinSession($event)"
+        (cancelClicked)="onCancelSession($event)"
+        (weekChange)="onWeekChange($event)">
+      </app-feed-sessions-upcoming>
+    }
+  </div>
 </div>

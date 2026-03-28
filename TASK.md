@@ -114,14 +114,14 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 - In Block Mode, the graphs in analyse workout still follows the unique element value when mouse is hover the graphs and not the block value
 - Display description in a new line in the training lirbary details workout
 - When set have zero rest, the display show a zero as set summary. It must be more clear.
-- 
+- Club feed can be readded but it need to be improve. A void adding everything in it, only usefully information (Fixed next goal with athlète engagements), coach announcement (send notification), Propose a design for that, must I combine both, session list with details in the same page when clicked. I want in the feed that when an athlete as complete a COACH Session, that there is a new fixed feed event until next complete coach session. In this feed event, I want to see live reloading (SSE) of user number and user list (clickable) completing the workout. In this event, I can give Starva Kudos to all athlete that complet thee workout, it is a "like" that automaticcaly gives kudos to athelte that have activity on strava and that is listed in the complete workout event. This kind of event must be also applicable to completed Races. Use Queue or something efficient in that kind of case.
+
 # TO VERIFY
 
 ## TODO
 - When schedule a training in the workout library, no input for schedule date is visible and then no scheduled date is sent.
 - Icon is not found http://localhost:4200/media/assets/leaflet/marker-icon.png
 # Club
-- Club feed can be readded but it need to be improve. A void adding everything in it, only usefully information (Fixed next goal with athlète engagements), coach announcement (send notification), Propose a design for that, must I combine both, session list with details in the same page when clicked. I want in the feed that when an athlete as complete a COACH Session, that there is a new fixed feed event until next complete coach session. In this feed event, I want to see live reloading (SSE) of user number and user list (clickable) completing the workout. In this event, I can give Starva Kudos to all athlete that complet thee workout, it is a "like" that automaticcaly gives kudos to athelte that have activity on strava and that is listed in the complete workout event. This kind of event must be also applicable to completed Races. Use Queue or something efficient in that kind of case.
 - Add car sharing in club. Athlete can propose their car sharing in the club. Athlete can ask for car sharing and other athlete can accept. 
   A car sharing must be link to a club session or a race.  The athlete that propose must specify the number of seats and number of bike place. 
   The athlete that ask must specify if it is only him or also for his bike. Create new club tab for that. 

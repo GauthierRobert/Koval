@@ -26,6 +26,19 @@ spring:
     database: training-planner
     host: localhost
 
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+club-feed:
+  broker:
+    type: ${CLUB_FEED_BROKER_TYPE:none}
+    pubsub:
+      project-id: ${GCP_PROJECT_ID:}
+      topic: club-feed-events
+
 server:
   port: 8080
 

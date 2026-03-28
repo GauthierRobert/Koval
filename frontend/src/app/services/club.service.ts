@@ -204,6 +204,85 @@ export interface ClubInviteCode {
   createdAt: string;
 }
 
+// --- Feed Event Types ---
+export type ClubFeedEventType = 'SESSION_COMPLETION' | 'RACE_COMPLETION' | 'COACH_ANNOUNCEMENT' | 'NEXT_GOAL';
+
+export interface CompletionEntry {
+  userId: string;
+  displayName: string;
+  profilePicture?: string;
+  completedSessionId: string;
+  stravaActivityId?: string;
+  completedAt: string;
+}
+
+export interface EngagedAthlete {
+  userId: string;
+  displayName: string;
+  profilePicture?: string;
+  priority: string;
+  targetTime?: string;
+}
+
+export interface RaceCompletionEntry {
+  userId: string;
+  displayName: string;
+  profilePicture?: string;
+  finishTime?: string;
+  stravaActivityId?: string;
+}
+
+export interface ClubFeedEventResponse {
+  id: string;
+  type: ClubFeedEventType;
+  pinned: boolean;
+  createdAt: string;
+  updatedAt: string;
+  // SESSION_COMPLETION
+  clubSessionId?: string;
+  sessionTitle?: string;
+  sessionSport?: string;
+  sessionScheduledAt?: string;
+  completions?: CompletionEntry[];
+  kudosGivenBy?: string[];
+  // RACE_COMPLETION
+  raceGoalId?: string;
+  raceTitle?: string;
+  raceDate?: string;
+  raceCompletions?: RaceCompletionEntry[];
+  // COACH_ANNOUNCEMENT
+  authorId?: string;
+  authorName?: string;
+  authorProfilePicture?: string;
+  announcementContent?: string;
+  // NEXT_GOAL
+  goalTitle?: string;
+  goalSport?: string;
+  goalDate?: string;
+  goalLocation?: string;
+  engagedAthletes?: EngagedAthlete[];
+}
+
+export interface ClubFeedResponse {
+  pinned: ClubFeedEventResponse[];
+  items: ClubFeedEventResponse[];
+  page: number;
+  hasMore: boolean;
+}
+
+export interface KudosResponse {
+  results: { athleteName: string; stravaActivityId: string; success: boolean; error?: string }[];
+  successCount: number;
+  failCount: number;
+}
+
+export interface CompletionUpdatePayload {
+  feedEventId: string;
+  clubSessionId: string;
+  completionCount: number;
+  latestCompletion: { userId: string; displayName: string; profilePicture?: string };
+}
+
 export interface CreateClubData {
   name: string;
   description?: string;
@@ -293,6 +372,9 @@ export class ClubService {
 
   private inviteCodesSubject = new BehaviorSubject<ClubInviteCode[]>([]);
   inviteCodes$ = this.inviteCodesSubject.asObservable();
+
+  private feedEventsSubject = new BehaviorSubject<ClubFeedResponse | null>(null);
+  feedEvents$ = this.feedEventsSubject.asObservable();
 
   loadUserClubs(): void {
     this.http
@@ -813,6 +895,90 @@ export class ClubService {
     });
   }
 
+  loadFeedEvents(clubId: string, page = 0, size = 20): void {
+    this.http
+      .get<ClubFeedResponse>(`${this.apiUrl}/${clubId}/feed`, {
+        params: { page: page.toString(), size: size.toString() },
+      })
+      .pipe(catchError(() => of(null as ClubFeedResponse | null)))
+      .subscribe((resp) => {
+        this.ngZone.run(() => {
+          if (resp && page > 0) {
+            const current = this.feedEventsSubject.value;
+            if (current) {
+              resp = { ...resp, items: [...current.items, ...resp.items] };
+            }
+          }
+          this.feedEventsSubject.next(resp);
+        });
+      });
+  }
+
+  createAnnouncement(clubId: string, content: string): Observable<ClubFeedEventResponse> {
+    return this.http.post<ClubFeedEventResponse>(`${this.apiUrl}/${clubId}/feed/announcements`, { content });
+  }
+
+  giveKudos(clubId: string, eventId: string): Observable<KudosResponse> {
+    return this.http.post<KudosResponse>(`${this.apiUrl}/${clubId}/feed/${eventId}/kudos`, {});
+  }
+
+  /** Update a feed event in-place (used by SSE updates). */
+  updateFeedEventCompletion(
+    feedEventId: string,
+    completionCount: number,
+    latestCompletion: { userId: string; displayName: string; profilePicture?: string },
+  ): void {
+    const current = this.feedEventsSubject.value;
+    if (!current) return;
+
+    const updateEvent = (event: ClubFeedEventResponse): ClubFeedEventResponse => {
+      if (event.id !== feedEventId) return event;
+      const completions = [...(event.completions ?? [])];
+      if (!completions.find((c) => c.userId === latestCompletion.userId)) {
+        completions.push({
+          userId: latestCompletion.userId,
+          displayName: latestCompletion.displayName,
+          profilePicture: latestCompletion.profilePicture,
+          completedSessionId: '',
+          completedAt: new Date().toISOString(),
+        });
+      }
+      return { ...event, completions };
+    };
+
+    this.feedEventsSubject.next({
+      ...current,
+      pinned: current.pinned.map(updateEvent),
+      items: current.items.map(updateEvent),
+    });
+  }
+
+  /** Add a new feed event from SSE. */
+  addFeedEvent(event: ClubFeedEventResponse): void {
+    const current = this.feedEventsSubject.value;
+    if (!current) return;
+    if (event.pinned) {
+      this.feedEventsSubject.next({ ...current, pinned: [event, ...current.pinned] });
+    } else {
+      this.feedEventsSubject.next({ ...current, items: [event, ...current.items] });
+    }
+  }
+
+  /** Mark kudos as given on a feed event. */
+  markKudosGiven(feedEventId: string, userId: string): void {
+    const current = this.feedEventsSubject.value;
+    if (!current) return;
+    const updateEvent = (event: ClubFeedEventResponse): ClubFeedEventResponse => {
+      if (event.id !== feedEventId) return event;
+      return { ...event, kudosGivenBy: [...(event.kudosGivenBy ?? []), userId] };
+    };
+    this.feedEventsSubject.next({
+      ...current,
+      pinned: current.pinned.map(updateEvent),
+      items: current.items.map(updateEvent),
+    });
+  }
+
   resetDetail(): void {
     this.selectedClubSubject.next(null);
     this.membersSubject.next([]);
@@ -825,5 +991,6 @@ export class ClubService {
     this.groupsSubject.next([]);
     this.recurringTemplatesSubject.next([]);
     this.inviteCodesSubject.next([]);
+    this.feedEventsSubject.next(null);
   }
 }

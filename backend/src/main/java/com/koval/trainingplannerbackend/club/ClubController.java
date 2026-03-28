@@ -212,14 +212,7 @@ public class ClubController {
         return ResponseEntity.ok(clubInviteCodeService.redeemClubInviteCode(userId, req.code()));
     }
 
-    @GetMapping("/{id}/feed")
-    public ResponseEntity<List<ClubActivityResponse>> getActivityFeed(
-            @PathVariable String id,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(clubActivityService.getActivityFeed(userId, id, PageRequest.of(page, size)));
-    }
+    // Feed endpoint moved to ClubFeedController at /api/clubs/{clubId}/feed
 
     @PostMapping("/{id}/sessions")
     public ResponseEntity<ClubTrainingSession> createSession(@PathVariable String id,

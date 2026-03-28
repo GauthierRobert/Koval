@@ -128,6 +128,23 @@ public class StravaApiClient {
     }
 
     /**
+     * Give kudos to a Strava activity on behalf of the authenticated user.
+     */
+    public void giveKudos(User user, String activityId) {
+        String token = ensureValidToken(user);
+        String url = "https://www.strava.com/api/v3/activities/" + activityId + "/kudos";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+
+        try {
+            restTemplate.postForEntity(url, new HttpEntity<>(headers), Void.class);
+        } catch (HttpClientErrorException.TooManyRequests e) {
+            throw new RateLimitException("Strava API rate limit exceeded");
+        }
+    }
+
+    /**
      * Fetch per-second streams for a single activity.
      * Returns a map keyed by stream type (time, watts, heartrate, cadence, velocity_smooth, distance, altitude).
      * Each value is a List of Numbers.

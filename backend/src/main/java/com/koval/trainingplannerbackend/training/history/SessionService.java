@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.training.history;
 
 import com.koval.trainingplannerbackend.auth.UserRepository;
+import com.koval.trainingplannerbackend.club.feed.SessionCompletedEvent;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
 import com.koval.trainingplannerbackend.coach.CoachService;
@@ -9,6 +10,7 @@ import com.mongodb.client.gridfs.model.GridFSFile;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -41,6 +43,7 @@ public class SessionService {
     private final GridFsOperations gridFsOperations;
     private final SessionAssociationService associationService;
     private final ClubTrainingSessionRepository clubTrainingSessionRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public SessionService(CompletedSessionRepository repository,
                           AnalyticsService analyticsService,
@@ -48,7 +51,8 @@ public class SessionService {
                           CoachService coachService,
                           GridFsOperations gridFsOperations,
                           SessionAssociationService associationService,
-                          ClubTrainingSessionRepository clubTrainingSessionRepository) {
+                          ClubTrainingSessionRepository clubTrainingSessionRepository,
+                          ApplicationEventPublisher eventPublisher) {
         this.repository = repository;
         this.analyticsService = analyticsService;
         this.userRepository = userRepository;
@@ -56,6 +60,7 @@ public class SessionService {
         this.gridFsOperations = gridFsOperations;
         this.associationService = associationService;
         this.clubTrainingSessionRepository = clubTrainingSessionRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -68,6 +73,7 @@ public class SessionService {
         CompletedSession saved = repository.save(session);
 
         postSaveSideEffects(saved, userId);
+        eventPublisher.publishEvent(new SessionCompletedEvent(saved));
         return saved;
     }
 
@@ -100,7 +106,9 @@ public class SessionService {
         if (clubSession == null || !clubSession.getParticipantIds().contains(userId)) return null;
 
         session.setClubSessionId(clubSessionId);
-        return repository.save(session);
+        CompletedSession saved = repository.save(session);
+        eventPublisher.publishEvent(new SessionCompletedEvent(saved));
+        return saved;
     }
 
     /**

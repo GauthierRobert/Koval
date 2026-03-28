@@ -28,6 +28,7 @@ public interface CompletedSessionRepository extends MongoRepository<CompletedSes
             String userId, LocalDateTime from, LocalDateTime to);
     Optional<CompletedSession> findByIdAndUserId(String id, String userId);
     Optional<CompletedSession> findByScheduledWorkoutId(String scheduledWorkoutId);
+    List<CompletedSession> findByClubSessionId(String clubSessionId);
     List<CompletedSession> findByUserIdInAndCompletedAtBetween(
             List<String> userIds, LocalDateTime from, LocalDateTime to);
 }

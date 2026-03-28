@@ -34,6 +34,7 @@ public class CompletedSession {
     private List<BlockSummary> blockSummaries;
 
     private String scheduledWorkoutId; // Reference to ScheduledWorkout
+    @Indexed
     private String clubSessionId; // Reference to ClubTrainingSession
     private Double tss;
     private Double intensityFactor;

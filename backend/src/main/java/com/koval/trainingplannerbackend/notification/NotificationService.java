@@ -84,6 +84,7 @@ public class NotificationService {
             case "clubSessionCancelled" -> prefs.isClubSessionCancelled();
             case "waitingListPromoted" -> prefs.isWaitingListPromoted();
             case "planActivated" -> prefs.isPlanActivated();
+            case "clubAnnouncement" -> prefs.isClubAnnouncement();
             default -> true;
         };
     }

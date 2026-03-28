@@ -67,6 +67,9 @@
     </div>
 
     <div class="tab-body">
+      @if (activeTab === 'feed') {
+        <app-club-feed-tab [club]="club"></app-club-feed-tab>
+      }
       @if (activeTab === 'sessions') {
         <app-club-sessions-tab [club]="club" (createAiForSession)="openAiModalForSession($event)"></app-club-sessions-tab>
       }
