@@ -1,0 +1,20 @@
+{
+  "resources": {
+    "includes": [
+      {"pattern": "\\Qprompts/action-training-session.md\\E"},
+      {"pattern": "\\Qprompts/action-zone.md\\E"},
+      {"pattern": "\\Qprompts/analysis.md\\E"},
+      {"pattern": "\\Qprompts/club-management.md\\E"},
+      {"pattern": "\\Qprompts/coach-management.md\\E"},
+      {"pattern": "\\Qprompts/common-rules.md\\E"},
+      {"pattern": "\\Qprompts/general.md\\E"},
+      {"pattern": "\\Qprompts/planner.md\\E"},
+      {"pattern": "\\Qprompts/race-completion.md\\E"},
+      {"pattern": "\\Qprompts/scheduling.md\\E"},
+      {"pattern": "\\Qprompts/training-creation.md\\E"},
+      {"pattern": "\\Qapplication.yml\\E"},
+      {"pattern": "\\Qapplication-prod.yml\\E"},
+      {"pattern": "META-INF/services/.*"}
+    ]
+  }
+}

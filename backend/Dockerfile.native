@@ -1,0 +1,42 @@
+# Stage 1: Build native image with GraalVM
+FROM ghcr.io/graalvm/native-image-community:25 AS builder
+
+WORKDIR /app
+
+# Copy Maven wrapper and pom.xml first for dependency caching
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
+RUN chmod +x mvnw && ./mvnw dependency:resolve -B -q
+
+# Copy source code
+COPY src/ src/
+
+# Build native image using Spring Boot AOT + GraalVM native-maven-plugin
+RUN ./mvnw -Pnative native:compile -DskipTests -B
+
+# Stage 2: Minimal runtime image
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libz-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN groupadd -r app && useradd -r -g app -d /app app
+
+WORKDIR /app
+
+# Copy native binary from builder
+COPY --from=builder /app/target/training-planner-backend ./app
+
+# Copy prompt resources (if not embedded in binary)
+COPY --from=builder /app/src/main/resources/prompts/ ./prompts/
+
+RUN chown -R app:app /app
+
+USER app
+
+EXPOSE 8080
+
+# Native image starts in milliseconds - no JVM flags needed
+ENTRYPOINT ["./app"]

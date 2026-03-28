@@ -1,0 +1,587 @@
+[
+  {
+    "_comment": "=== Spring AI @Tool Service Classes ===",
+    "_note": "Spring AI introspects these via reflection for tool discovery"
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.ai.ContextToolService",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.tools.TrainingToolService",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.zone.ZoneToolService",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.history.HistoryToolService",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.club.tools.ClubToolService",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.ai.action.AIActionToolService",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.ai.action.CreationTrainingToolService",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.race.RaceToolService",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.plan.PlanToolService",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.goal.GoalToolService",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.coach.tools.CoachToolService",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+
+  {
+    "_comment": "=== @Tool Parameter/Return Records ===",
+    "_note": "Records used as tool method params/returns need reflection for JSON schema generation"
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.tools.TrainingRequest",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.tools.WorkoutElementRequest",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.tools.TrainingSummary",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.model.WorkoutElement",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.coach.tools.ScheduleSummary",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.coach.tools.AthleteSummary",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.zone.Zone",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.zone.ZoneSystemSummary",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.race.RaceSummary",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.plan.PlanProgress",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.plan.PlanToolService$PlanSummary",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.goal.GoalToolService$GoalSummary",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.history.HistoryToolService$SessionSummary",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.history.AnalyticsService$PmcDataPoint",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.club.tools.ClubToolService$ClubSessionSummary",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.club.tools.ClubToolService$RecurringTemplateSummary",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.club.tools.ClubToolService$ClubMemberSummary",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.club.tools.ClubToolService$ClubGroupSummary",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.ai.action.AIActionToolService$ActionResult",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+
+  {
+    "_comment": "=== MongoDB @Document Classes ===",
+    "_note": "MongoDB driver needs reflection for document mapping"
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.model.Training",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.received.ReceivedTraining",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.history.CompletedSession",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.history.CompletedSession$BlockSummary",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.group.Group",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.zone.ZoneSystem",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.auth.User",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.ai.ChatHistory",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.coach.ScheduledWorkout",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.coach.InviteCode",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.plan.TrainingPlan",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.race.Race",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.goal.RaceGoal",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.pacing.SimulationRequest",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.club.Club",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.club.session.ClubTrainingSession",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.club.recurring.RecurringSessionTemplate",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.club.membership.ClubMembership",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.club.invite.ClubInviteCode",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.club.group.ClubGroup",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.club.activity.ClubActivity",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+
+  {
+    "_comment": "=== Enum Types ===",
+    "_note": "Enums need reflection for JSON deserialization and MongoDB mapping"
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.model.BlockType",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.model.SportType",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.model.TrainingType",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.zone.ZoneReferenceType",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.received.ReceivedTrainingOrigin",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.ai.agents.AgentType",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.ai.action.AIActionType",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.auth.AuthProvider",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.auth.UserRole",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.plan.PlanStatus",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.coach.ScheduleStatus",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.club.ClubVisibility",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.club.session.OpenToAllDelayUnit",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.club.membership.ClubMemberRole",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.club.membership.ClubMemberStatus",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.club.activity.ClubActivityType",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+
+  {
+    "_comment": "=== Firebase Admin SDK ===",
+    "_note": "Firebase uses reflection for initialization and messaging"
+  },
+  {
+    "name": "com.google.firebase.FirebaseApp",
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.google.firebase.FirebaseOptions",
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.google.firebase.FirebaseOptions$Builder",
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.google.firebase.messaging.FirebaseMessaging",
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.firebase.messaging.MulticastMessage",
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.google.firebase.messaging.MulticastMessage$Builder",
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.google.firebase.messaging.Notification",
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.google.firebase.messaging.Notification$Builder",
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.google.firebase.messaging.BatchResponse",
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.google.auth.oauth2.GoogleCredentials",
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.google.auth.oauth2.ServiceAccountCredentials",
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+
+  {
+    "_comment": "=== JJWT (ServiceLoader pattern) ===",
+    "_note": "jjwt-impl and jjwt-jackson use ServiceLoader, need explicit hints"
+  },
+  {
+    "name": "io.jsonwebtoken.impl.DefaultJwtParser",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.jsonwebtoken.impl.DefaultJwtParserBuilder",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.jsonwebtoken.impl.DefaultJwtBuilder",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.jsonwebtoken.jackson.io.JacksonSerializer",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.jsonwebtoken.jackson.io.JacksonDeserializer",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.jsonwebtoken.impl.security.StandardSecureDigestAlgorithms",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.jsonwebtoken.impl.security.StandardKeyAlgorithms",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.jsonwebtoken.impl.security.StandardEncryptionAlgorithms",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+
+  {
+    "_comment": "=== AI Service Records (Controller DTOs) ===",
+    "_note": "Used in REST request/response serialization"
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.ai.AIController$ChatRequest",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.ai.AIController$ConversationMessage",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.ai.AIController$ChatHistoryDetail",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.ai.AIService$ChatMessageResponse",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.ai.AIService$StreamResponse",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.ai.AIService$PlanTask",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.ai.UsageTracker$UsageSnapshot",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.ai.UserContextResolver$UserContext",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.ai.action.AIActionController$ActionRequest",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.ai.action.AIActionService$ActionContext",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.ai.action.AIActionService$ActionResult",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.config.ErrorResponse",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  }
+]
