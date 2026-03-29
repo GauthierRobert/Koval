@@ -1,4 +1,6 @@
-src/
+target/
 .mvn/
 mvnw
 *.md
+.idea/
+*.iml

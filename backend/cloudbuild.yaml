@@ -1,7 +1,7 @@
 steps:
   # Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/training-planner-backend', '-f', 'backend/Dockerfile', 'backend']
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/training-planner-backend', '.']
 
   # Push to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
