@@ -1,12 +1,20 @@
 <div class="sessions-tab">
-  <div class="tab-header">
-    <h3>{{ 'CLUB_SESSIONS.HEADING' | translate }}</h3>
-    <div class="tab-header-actions">
+  <header class="session-header">
+    <div class="session-header__text">
+      <h1>{{ 'CLUB_SESSIONS.HEADING' | translate }}</h1>
+      <p class="session-header__title">{{ formatWeekRange() }}</p>
+    </div>
+    <div class="session-header__actions">
+      <div class="session-header__nav">
+        <button class="nav-btn" (click)="prevWeek()">&lsaquo;</button>
+        <button class="nav-btn nav-btn--today" (click)="goToday()">{{ 'CLUB_SESSIONS.NAV_TODAY' | translate }}</button>
+        <button class="nav-btn" (click)="nextWeek()">&rsaquo;</button>
+      </div>
       @if (canCreate) {
         <button class="btn-primary" (click)="openForm()">{{ 'CLUB_SESSIONS.BTN_ADD_SESSION' | translate }}</button>
       }
     </div>
-  </div>
+  </header>
 
   <div class="filter-row">
     @if (clubGroups.length > 0) {
@@ -22,12 +30,6 @@
   </div>
 
   @if (sessions$ | async; as sessions) {
-    <div class="calendar-nav">
-      <button class="btn-secondary" (click)="prevWeek()">{{ 'CLUB_SESSIONS.NAV_PREV' | translate }}</button>
-      <button class="btn-secondary" (click)="goToday()">{{ 'CLUB_SESSIONS.NAV_TODAY' | translate }}</button>
-      <span class="calendar-range">{{ formatWeekRange() }}</span>
-      <button class="btn-secondary" (click)="nextWeek()">{{ 'CLUB_SESSIONS.NAV_NEXT' | translate }}</button>
-    </div>
 
     @if (getListDaysWithSessions(applyFilters(sessions)); as days) {
       @if (days.length > 0) {

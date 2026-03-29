@@ -1,12 +1,14 @@
 <div class="open-sessions-tab">
   <!-- Header -->
-  <div class="tab-header">
-    <h3>{{ 'CLUB_OPEN_SESSIONS.HEADING' | translate }}</h3>
-    <div class="tab-header-actions">
-      <div class="week-nav">
-        <button class="btn-ghost" (click)="prevWeek()">&lsaquo;</button>
-        <span class="week-label">{{ weekLabel() }}</span>
-        <button class="btn-ghost" (click)="nextWeek()">&rsaquo;</button>
+  <header class="session-header">
+    <div class="session-header__text">
+      <h1>{{ 'CLUB_OPEN_SESSIONS.HEADING' | translate }}</h1>
+      <p class="session-header__title">{{ weekLabel() }}</p>
+    </div>
+    <div class="session-header__actions">
+      <div class="session-header__nav">
+        <button class="nav-btn" (click)="prevWeek()">&lsaquo;</button>
+        <button class="nav-btn" (click)="nextWeek()">&rsaquo;</button>
       </div>
       @if (canCreate) {
         <button class="btn-primary btn-sm" (click)="openForm()">
@@ -14,7 +16,7 @@
         </button>
       }
     </div>
-  </div>
+  </header>
 
   <div class="filter-row">
     <label class="filter-checkbox">

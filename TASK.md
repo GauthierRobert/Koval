@@ -125,10 +125,14 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 - GPX not well displayed in rides sessions
 # TO VERIFY
 
-## TODO
+## TO FIX
 - When clicking on feed small session card leave or join, all the historic and future sessions appears not only from the week.
+- When clicking a sessio, the particiapant appears, however it was already present; Remove the fixed participant element, and mdofiy existing as a flex wrap container
 - When schedule a training in the workout library, no input for schedule date is visible and then no scheduled date is sent.
 - SnapShot simualtion race instead of save simulation race, it must be an action of user and parameters must be saved (including front end params)
+
+# TO IMPLEMENT
+- In the feed rigth side panel,  add next goal of the club and separate recurring session and open session
 
 # Club
 - Add car sharing in club. Athlete can propose their car sharing in the club. Athlete can ask for car sharing and other athlete can accept. 
