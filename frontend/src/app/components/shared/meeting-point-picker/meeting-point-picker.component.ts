@@ -14,6 +14,8 @@ import {
 import {CommonModule} from '@angular/common';
 import * as L from 'leaflet';
 
+// Reset imagePath to prevent Angular's esbuild builder from prepending /media/
+(L.Icon.Default as any).imagePath = '';
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'assets/leaflet/marker-icon-2x.png',
   iconUrl: 'assets/leaflet/marker-icon.png',

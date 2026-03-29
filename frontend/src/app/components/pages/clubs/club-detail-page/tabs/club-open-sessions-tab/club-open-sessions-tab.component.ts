@@ -1,30 +1,45 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, Input, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, OnInit, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {Router} from '@angular/router';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {ClubDetail, ClubService, ClubTrainingSession, CreateSessionData} from '../../../../../../services/club.service';
+import {
+  ClubDetail,
+  ClubGroup,
+  ClubMember,
+  ClubService,
+  ClubTrainingSession,
+  CreateSessionData,
+  GroupLinkedTraining,
+} from '../../../../../../services/club.service';
 import {AuthService} from '../../../../../../services/auth.service';
-import {SportIconComponent} from '../../../../../shared/sport-icon/sport-icon.component';
+import {TrainingService} from '../../../../../../services/training.service';
 import {MeetingPointPickerComponent} from '../../../../../shared/meeting-point-picker/meeting-point-picker.component';
+import {SessionCardComponent} from '../../../../../shared/session-card/session-card.component';
 
 @Component({
   selector: 'app-club-open-sessions-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, SportIconComponent, MeetingPointPickerComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, MeetingPointPickerComponent, SessionCardComponent],
   templateUrl: './club-open-sessions-tab.component.html',
   styleUrl: './club-open-sessions-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClubOpenSessionsTabComponent implements OnInit {
   @Input() club!: ClubDetail;
+  @Output() createAiForSession = new EventEmitter<ClubTrainingSession>();
 
   private clubService = inject(ClubService);
   private authService = inject(AuthService);
+  private trainingService = inject(TrainingService);
+  private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private translate = inject(TranslateService);
 
   openSessions$ = this.clubService.openSessions$;
   currentUserId: string | null = null;
+  allMembers: ClubMember[] = [];
+  clubGroups: ClubGroup[] = [];
 
   calendarWeekStart: Date = ClubOpenSessionsTabComponent.getMonday(new Date());
   calendarDays: Date[] = [];
@@ -34,8 +49,26 @@ export class ClubOpenSessionsTabComponent implements OnInit {
   form: Record<string, any> = {};
   gpxFile: File | null = null;
 
+  expandedSessionId: string | null = null;
+  showPastSessions = false;
+
+  // Cancel session state
+  showCancelConfirm = false;
+  cancelTargetSession: ClubTrainingSession | null = null;
+  cancelReason = '';
+
   get canCreate(): boolean {
     return this.club?.currentMembershipStatus === 'ACTIVE';
+  }
+
+  get isCoach(): boolean {
+    const role = this.club?.currentMemberRole;
+    return role === 'OWNER' || role === 'COACH';
+  }
+
+  get canManage(): boolean {
+    const role = this.club?.currentMemberRole;
+    return role === 'OWNER' || role === 'ADMIN' || role === 'COACH';
   }
 
   ngOnInit(): void {
@@ -43,8 +76,16 @@ export class ClubOpenSessionsTabComponent implements OnInit {
       this.currentUserId = u?.id ?? null;
       this.cdr.markForCheck();
     });
+    this.clubService.members$.subscribe((members) => {
+      this.allMembers = members;
+      this.cdr.markForCheck();
+    });
+    this.clubService.groups$.subscribe((groups) => {
+      this.clubGroups = groups;
+      this.cdr.markForCheck();
+    });
     this.buildCalendarDays();
-    this.loadOpenSessions();
+    this.loadActivities();
   }
 
   // --- Week navigation ---
@@ -52,13 +93,13 @@ export class ClubOpenSessionsTabComponent implements OnInit {
   prevWeek(): void {
     this.calendarWeekStart = new Date(this.calendarWeekStart.getTime() - 7 * 86400000);
     this.buildCalendarDays();
-    this.loadOpenSessions();
+    this.loadActivities();
   }
 
   nextWeek(): void {
     this.calendarWeekStart = new Date(this.calendarWeekStart.getTime() + 7 * 86400000);
     this.buildCalendarDays();
-    this.loadOpenSessions();
+    this.loadActivities();
   }
 
   private buildCalendarDays(): void {
@@ -68,10 +109,36 @@ export class ClubOpenSessionsTabComponent implements OnInit {
     }
   }
 
-  loadOpenSessions(): void {
+  loadActivities(): void {
     const from = this.calendarWeekStart.toISOString();
     const to = new Date(this.calendarWeekStart.getTime() + 7 * 86400000).toISOString();
-    this.clubService.loadOpenSessions(this.club.id, from, to);
+    this.clubService.loadActivities(this.club.id, from, to);
+  }
+
+  // --- Filters ---
+
+  toggleShowPastSessions(): void {
+    this.showPastSessions = !this.showPastSessions;
+    this.cdr.markForCheck();
+  }
+
+  filterActivities(sessions: ClubTrainingSession[]): ClubTrainingSession[] {
+    // Show OPEN sessions + non-recurring SCHEDULED sessions (coach single sessions)
+    let filtered = sessions.filter(
+      (s) => s.category === 'OPEN' || (s.category === 'SCHEDULED' && !s.recurringTemplateId),
+    );
+
+    // Past sessions filter
+    if (!this.showPastSessions) {
+      const todayMidnight = new Date();
+      todayMidnight.setHours(0, 0, 0, 0);
+      filtered = filtered.filter((s) => {
+        if (!s.scheduledAt) return true;
+        return new Date(s.scheduledAt) >= todayMidnight;
+      });
+    }
+
+    return filtered;
   }
 
   // --- Group sessions by date ---
@@ -86,6 +153,11 @@ export class ClubOpenSessionsTabComponent implements OnInit {
     return Array.from(map.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, sessions]) => ({ date: new Date(key), sessions }));
+  }
+
+  isToday(date: Date): boolean {
+    const now = new Date();
+    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
   }
 
   // --- Form ---
@@ -170,60 +242,115 @@ export class ClubOpenSessionsTabComponent implements OnInit {
 
   private afterSave(): void {
     this.closeForm();
-    this.loadOpenSessions();
+    this.loadActivities();
   }
 
-  // --- Actions ---
+  // --- Card actions ---
 
   joinSession(session: ClubTrainingSession): void {
     this.clubService.joinSession(this.club.id, session.id).subscribe({
-      next: () => this.loadOpenSessions(),
+      next: () => this.loadActivities(),
     });
   }
 
   leaveSession(session: ClubTrainingSession): void {
     this.clubService.cancelSession(this.club.id, session.id).subscribe({
-      next: () => this.loadOpenSessions(),
+      next: () => this.loadActivities(),
     });
   }
 
-  isJoined(session: ClubTrainingSession): boolean {
-    return !!this.currentUserId && session.participantIds.includes(this.currentUserId);
+  editSession(session: ClubTrainingSession): void {
+    this.openForm(session);
   }
 
-  isCreator(session: ClubTrainingSession): boolean {
-    return !!this.currentUserId && session.createdBy === this.currentUserId;
+  onLinkTraining(session: ClubTrainingSession): void {
+    this.createAiForSession.emit(session);
+  }
+
+  unlinkTraining(event: { session: ClubTrainingSession; glt: GroupLinkedTraining }): void {
+    this.clubService.unlinkTrainingFromSession(this.club.id, event.session.id, event.glt.clubGroupId || undefined).subscribe({
+      next: () => {
+        this.loadActivities();
+        this.cdr.markForCheck();
+      },
+      error: () => {},
+    });
+  }
+
+  navigateToTraining(trainingId: string): void {
+    this.trainingService.getTrainingById(trainingId).subscribe((training) => {
+      this.trainingService.selectTraining(training);
+      this.router.navigate(['/trainings']);
+    });
+  }
+
+  toggleDetail(session: ClubTrainingSession): void {
+    this.expandedSessionId = this.expandedSessionId === session.id ? null : session.id;
+  }
+
+  openCancelSessionModal(session: ClubTrainingSession): void {
+    this.cancelTargetSession = session;
+    this.cancelReason = '';
+    this.showCancelConfirm = true;
+    this.cdr.markForCheck();
+  }
+
+  closeCancelSessionModal(): void {
+    this.showCancelConfirm = false;
+    this.cancelTargetSession = null;
+    this.cancelReason = '';
+  }
+
+  confirmCancelSession(): void {
+    if (!this.cancelTargetSession) return;
+    this.clubService.cancelEntireSession(this.club.id, this.cancelTargetSession.id, this.cancelReason || undefined).subscribe({
+      next: () => {
+        this.closeCancelSessionModal();
+        this.loadActivities();
+        this.cdr.markForCheck();
+      },
+      error: () => {},
+    });
   }
 
   removeGpx(): void {
     if (this.editingSession) {
       this.clubService.deleteSessionGpx(this.club.id, this.editingSession.id).subscribe({
-        next: () => this.loadOpenSessions(),
+        next: () => this.loadActivities(),
       });
     }
   }
 
-  // --- Route preview SVG ---
+  // --- GPX actions ---
 
-  getRouteViewBox(session: ClubTrainingSession): string {
-    const coords = session.routeCoordinates;
-    if (!coords?.length) return '0 0 100 100';
-    const lats = coords.map((c) => c.lat);
-    const lons = coords.map((c) => c.lon);
-    const minLat = Math.min(...lats), maxLat = Math.max(...lats);
-    const minLon = Math.min(...lons), maxLon = Math.max(...lons);
-    const padX = (maxLon - minLon) * 0.1 || 0.001;
-    const padY = (maxLat - minLat) * 0.1 || 0.001;
-    return `${minLon - padX} ${minLat - padY} ${maxLon - minLon + 2 * padX} ${maxLat - minLat + 2 * padY}`;
+  downloadGpx(session: ClubTrainingSession): void {
+    this.clubService.downloadSessionGpx(this.club.id, session.id).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = session.gpxFileName ?? 'route.gpx';
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+    });
   }
 
-  getRoutePoints(session: ClubTrainingSession): string {
-    const coords = session.routeCoordinates;
-    if (!coords?.length) return '';
-    const lats = coords.map((c) => c.lat);
-    const maxLat = Math.max(...lats);
-    const minLat = Math.min(...lats);
-    return coords.map((c) => `${c.lon},${maxLat + minLat - c.lat}`).join(' ');
+  async shareGpx(session: ClubTrainingSession): Promise<void> {
+    if (!navigator.share) {
+      this.downloadGpx(session);
+      return;
+    }
+    this.clubService.downloadSessionGpx(this.club.id, session.id).subscribe({
+      next: async (blob) => {
+        const file = new File([blob], session.gpxFileName ?? 'route.gpx', { type: 'application/gpx+xml' });
+        try {
+          await navigator.share({ title: session.title, files: [file] });
+        } catch {
+          // user cancelled share
+        }
+      },
+    });
   }
 
   // --- Helpers ---
@@ -232,6 +359,11 @@ export class ClubOpenSessionsTabComponent implements OnInit {
     const end = new Date(this.calendarWeekStart.getTime() + 6 * 86400000);
     const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
     return `${this.calendarWeekStart.toLocaleDateString(undefined, opts)} – ${end.toLocaleDateString(undefined, opts)}`;
+  }
+
+  /** Check if user can edit/cancel this session (creator or coach/admin) */
+  canEditSession(session: ClubTrainingSession): boolean {
+    return (!!this.currentUserId && session.createdBy === this.currentUserId) || this.canManage;
   }
 
   private static getMonday(d: Date): Date {

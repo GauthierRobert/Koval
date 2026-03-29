@@ -76,7 +76,7 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
             @if (kudosLoading) {
               <span class="spinner-sm"></span>
             }
-            {{ 'CLUB_FEED.GIVE_KUDOS' | translate }}
+            <svg class="strava-logo" viewBox="0 0 24 24" width="14" height="14" fill="white"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg> {{ 'CLUB_FEED.GIVE_KUDOS' | translate }}
           </button>
         } @else {
           <span class="kudos-given">{{ 'CLUB_FEED.KUDOS_GIVEN' | translate }}</span>

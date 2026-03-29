@@ -15,6 +15,8 @@
     "PREV": "Précédent",
     "TODAY": "Aujourd'hui",
     "SEARCH": "Rechercher",
+    "DOWNLOAD": "Télécharger",
+    "SHARE": "Partager",
     "SAVING": "Enregistrement...",
     "SAVED": "Enregistré",
     "GENERATING": "Génération...",
@@ -365,10 +367,11 @@
     "BTN_LEAVE": "Quitter",
     "TAB_FEED": "FIL",
     "TAB_SESSIONS": "SESSIONS",
+    "TAB_RECURRING_SESSIONS": "SESSIONS RECURRENTES",
     "TAB_MEMBERS": "MEMBRES",
     "TAB_STATS": "STATS",
     "TAB_LEADERBOARD": "CLASSEMENT",
-    "TAB_OPEN_SESSIONS": "RIDES",
+    "TAB_OPEN_SESSIONS": "SESSIONS",
     "TAB_RACE_GOALS": "OBJECTIFS COURSE",
     "LOADING": "Chargement du club...",
     "MEMBERSHIP_MEMBER": "MEMBRE",
@@ -501,15 +504,17 @@
     "TG_VIEW_LINK": "Voir →",
     "SHOW_OTHER_GROUPS": "Afficher les sessions des autres groupes",
     "FORM_LABEL_GPX": "Fichier GPX de parcours",
-    "CANCELLED": "ANNULÉ"
+    "CANCELLED": "ANNULÉ",
+    "PROPOSED_BY": "Proposé par {{name}}",
+    "SHOW_PAST": "Afficher les sessions passées"
   },
   "CLUB_OPEN_SESSIONS": {
-    "HEADING": "Sorties Libres",
-    "BTN_PROPOSE_SESSION": "PROPOSER UNE SORTIE",
-    "EMPTY": "Aucune sortie libre cette semaine.",
-    "EMPTY_HINT": "Tout membre peut proposer une sortie vélo, course ou nage.",
-    "FORM_CREATE_TITLE": "Proposer une sortie libre",
-    "FORM_EDIT_TITLE": "Modifier la sortie libre"
+    "HEADING": "Sessions",
+    "BTN_PROPOSE_SESSION": "PROPOSER UNE SESSION",
+    "EMPTY": "Aucune session cette semaine.",
+    "EMPTY_HINT": "Tout membre peut proposer une sortie vélo, course ou nage. Les sessions coach individuelles apparaissent ici aussi.",
+    "FORM_CREATE_TITLE": "Proposer une session",
+    "FORM_EDIT_TITLE": "Modifier la session"
   },
   "SPORTS": {
     "CYCLING": "Cyclisme",
@@ -530,8 +535,8 @@
     "BTN_REJECT": "REFUSER",
     "SECTION_MEMBERS": "Membres",
     "MEMBER_JOINED": "A rejoint le {{date}}",
-    "REMOVE_TAG_TITLE": "Retirer l'étiquette",
-    "TAG_ADD_PLACEHOLDER": "+ Étiquette",
+    "REMOVE_TAG_TITLE": "Retirer le groupe",
+    "TAG_ADD_PLACEHOLDER": "+ Groupe",
     "EMPTY_NO_MEMBERS": "Aucun membre pour l'instant."
   },
   "CLUB_STATS": {

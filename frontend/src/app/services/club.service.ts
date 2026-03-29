@@ -745,6 +745,13 @@ export class ClubService {
       .subscribe((sessions) => this.ngZone.run(() => this.openSessionsSubject.next(sessions)));
   }
 
+  loadActivities(clubId: string, from: string, to: string): void {
+    this.http
+      .get<ClubTrainingSession[]>(`${this.apiUrl}/${clubId}/sessions`, { params: { from, to } })
+      .pipe(catchError(() => of([] as ClubTrainingSession[])))
+      .subscribe((sessions) => this.ngZone.run(() => this.openSessionsSubject.next(sessions)));
+  }
+
   uploadSessionGpx(clubId: string, sessionId: string, file: File): Observable<ClubTrainingSession> {
     const formData = new FormData();
     formData.append('file', file);
@@ -753,6 +760,10 @@ export class ClubService {
 
   deleteSessionGpx(clubId: string, sessionId: string): Observable<ClubTrainingSession> {
     return this.http.delete<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/gpx`);
+  }
+
+  downloadSessionGpx(clubId: string, sessionId: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${clubId}/sessions/${sessionId}/gpx`, { responseType: 'blob' });
   }
 
   loadRecurringTemplates(clubId: string): void {

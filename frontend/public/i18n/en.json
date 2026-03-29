@@ -15,6 +15,8 @@
     "PREV": "Previous",
     "TODAY": "Today",
     "SEARCH": "Search",
+    "DOWNLOAD": "Download",
+    "SHARE": "Share",
     "SAVING": "Saving...",
     "SAVED": "Saved",
     "GENERATING": "Generating...",
@@ -365,10 +367,11 @@
     "BTN_LEAVE": "LEAVE",
     "TAB_FEED": "FEED",
     "TAB_SESSIONS": "SESSIONS",
+    "TAB_RECURRING_SESSIONS": "RECURRING SESSIONS",
     "TAB_MEMBERS": "MEMBERS",
     "TAB_STATS": "STATS",
     "TAB_LEADERBOARD": "LEADERBOARD",
-    "TAB_OPEN_SESSIONS": "RIDES",
+    "TAB_OPEN_SESSIONS": "SESSIONS",
     "TAB_RACE_GOALS": "RACE GOALS",
     "LOADING": "Loading club...",
     "MEMBERSHIP_MEMBER": "MEMBER",
@@ -501,15 +504,17 @@
     "TG_VIEW_LINK": "View →",
     "SHOW_OTHER_GROUPS": "Show other groups' sessions",
     "FORM_LABEL_GPX": "GPX Route File",
-    "CANCELLED": "CANCELLED"
+    "CANCELLED": "CANCELLED",
+    "PROPOSED_BY": "Proposed by {{name}}",
+    "SHOW_PAST": "Show past sessions"
   },
   "CLUB_OPEN_SESSIONS": {
-    "HEADING": "Rides",
+    "HEADING": "Sessions",
     "BTN_PROPOSE_SESSION": "PROPOSE SESSION",
-    "EMPTY": "No open sessions this week.",
-    "EMPTY_HINT": "Any member can propose a group ride, run, or swim.",
-    "FORM_CREATE_TITLE": "Propose Open Session",
-    "FORM_EDIT_TITLE": "Edit Open Session"
+    "EMPTY": "No sessions this week.",
+    "EMPTY_HINT": "Any member can propose a group ride, run, or swim. Coach single sessions also appear here.",
+    "FORM_CREATE_TITLE": "Propose Session",
+    "FORM_EDIT_TITLE": "Edit Session"
   },
   "SPORTS": {
     "CYCLING": "Cycling",
@@ -530,7 +535,7 @@
     "BTN_REJECT": "REJECT",
     "SECTION_MEMBERS": "Members",
     "MEMBER_JOINED": "Joined {{date}}",
-    "REMOVE_TAG_TITLE": "Remove tag",
+    "REMOVE_TAG_TITLE": "Remove Groupe",
     "TAG_ADD_PLACEHOLDER": "+ Tag",
     "EMPTY_NO_MEMBERS": "No members yet."
   },

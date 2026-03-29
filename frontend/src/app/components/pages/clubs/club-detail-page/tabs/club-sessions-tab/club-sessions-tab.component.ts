@@ -1,15 +1,12 @@
 import {
-  AfterViewInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  ElementRef,
   EventEmitter,
   inject,
   Input,
   OnInit,
   Output,
-  ViewChild,
 } from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
@@ -24,27 +21,23 @@ import {
   CreateRecurringSessionData,
   CreateSessionData,
   GroupLinkedTraining,
-  getEffectiveLinkedTrainings,
 } from '../../../../../../services/club.service';
 import {AuthService} from '../../../../../../services/auth.service';
 import {TrainingService} from '../../../../../../services/training.service';
-import {SportIconComponent} from '../../../../../shared/sport-icon/sport-icon.component';
 import {MeetingPoint, MeetingPointPickerComponent} from '../../../../../shared/meeting-point-picker/meeting-point-picker.component';
-
-type ViewMode = 'LIST' | 'CALENDAR';
+import {SessionCardComponent} from '../../../../../shared/session-card/session-card.component';
 
 @Component({
   selector: 'app-club-sessions-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, SportIconComponent, MeetingPointPickerComponent],
+  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, MeetingPointPickerComponent, SessionCardComponent],
   templateUrl: './club-sessions-tab.component.html',
   styleUrl: './club-sessions-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
+export class ClubSessionsTabComponent implements OnInit {
   @Input() club!: ClubDetail;
   @Output() createAiForSession = new EventEmitter<ClubTrainingSession>();
-  @ViewChild('timeGridBody') timeGridBody?: ElementRef<HTMLElement>;
 
   private clubService = inject(ClubService);
   private authService = inject(AuthService);
@@ -56,15 +49,14 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   sessions$ = this.clubService.sessions$;
   currentUserId: string | null = null;
 
-  viewMode: ViewMode = 'LIST';
   calendarWeekStart: Date = ClubSessionsTabComponent.getMonday(new Date());
   calendarDays: Date[] = [];
 
-  // Unified form state
+  // Form state
   isFormOpen = false;
-  isRecurring = false;
   form: Record<string, any> = {};
   clubGroups: ClubGroup[] = [];
+  gpxFile: File | null = null;
 
   // Edit state
   editingSession: ClubTrainingSession | null = null;
@@ -81,38 +73,24 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   cancelMode: 'single' | 'all' = 'single';
 
   coachMembers: ClubMember[] = [];
+  allMembers: ClubMember[] = [];
   expandedSessionId: string | null = null;
-  private allMembers: ClubMember[] = [];
 
   readonly sports = ['CYCLING', 'RUNNING', 'SWIMMING', 'TRIATHLON', 'OTHER'];
   readonly daysOfWeek = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
 
-  // Time-grid constants
-  readonly HOUR_START = 6;
-  readonly HOUR_END = 22;
-  readonly HOUR_HEIGHT_PX = 120;
-  readonly hours = Array.from({ length: 16 }, (_, i) => i + 6);
-
   private static readonly SHOW_OTHER_GROUPS_KEY = 'club-sessions-show-other-groups';
   showOtherGroupSessions = localStorage.getItem(ClubSessionsTabComponent.SHOW_OTHER_GROUPS_KEY) !== 'false';
-
-  private scrolledToCurrentHour = false;
-  private allSessions: ClubTrainingSession[] = [];
-  sessionsAboveCount = 0;
-  sessionsBelowCount = 0;
+  showPastSessions = false;
 
   ngOnInit(): void {
     this.authService.user$.subscribe((u) => {
       this.currentUserId = u?.id ?? null;
       this.cdr.markForCheck();
     });
-    this.sessions$.subscribe((sessions) => {
-      this.allSessions = sessions;
-      this.clearOverlapCache();
-    });
     this.buildCalendarDays();
     if (this.club) {
-      this.clubService.loadRecurringTemplates(this.club.id); // keep for form
+      this.clubService.loadRecurringTemplates(this.club.id);
       this.loadCalendarSessions();
       this.clubService.loadGroups(this.club.id);
       this.clubService.groups$.subscribe((groups) => {
@@ -129,10 +107,6 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
     }
   }
 
-  ngAfterViewInit(): void {
-    this.scrollToCurrentHour();
-  }
-
   get canCreate(): boolean {
     const role = this.club?.currentMemberRole;
     return role === 'OWNER' || role === 'ADMIN' || role === 'COACH';
@@ -143,44 +117,48 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
     return role === 'OWNER' || role === 'COACH';
   }
 
-  // --- List view helpers ---
-
-  getListDaysWithSessions(sessions: ClubTrainingSession[]): Date[] {
-    return this.calendarDays.filter((day) => this.getSessionsForDay(sessions, day).length > 0);
-  }
-
-  getGroupName(groupId: string | undefined): string {
-    if (!groupId) return '';
-    const group = this.clubGroups.find((g) => g.id === groupId);
-    return group?.name ?? '';
-  }
-
-  // --- View toggle ---
-
-  get isMobile(): boolean {
-    return window.innerWidth <= 768;
-  }
+  // --- Filters ---
 
   toggleShowOtherGroupSessions(): void {
     this.showOtherGroupSessions = !this.showOtherGroupSessions;
     localStorage.setItem(ClubSessionsTabComponent.SHOW_OTHER_GROUPS_KEY, String(this.showOtherGroupSessions));
-    this.clearOverlapCache();
     this.cdr.markForCheck();
   }
 
-  filterSessions(sessions: ClubTrainingSession[]): ClubTrainingSession[] {
-    if (this.showOtherGroupSessions) return sessions;
-    const userGroupIds = this.getUserGroupIds();
-    return sessions.filter((s) => !s.clubGroupId || userGroupIds.has(s.clubGroupId));
+  toggleShowPastSessions(): void {
+    this.showPastSessions = !this.showPastSessions;
+    this.cdr.markForCheck();
   }
 
-  setViewMode(mode: ViewMode): void {
-    if (mode === 'CALENDAR' && this.isMobile) return;
-    this.viewMode = mode;
-    if (mode === 'CALENDAR') {
-      this.scrolledToCurrentHour = false;
-      setTimeout(() => this.scrollToCurrentHour(), 50);
+  applyFilters(sessions: ClubTrainingSession[]): ClubTrainingSession[] {
+    let filtered = sessions;
+
+    // Only recurring sessions
+    filtered = filtered.filter((s) => !!s.recurringTemplateId);
+
+    // Group filter
+    if (!this.showOtherGroupSessions) {
+      const userGroupIds = this.getUserGroupIds();
+      filtered = filtered.filter((s) => !s.clubGroupId || userGroupIds.has(s.clubGroupId));
     }
+
+    // Past sessions filter (hide sessions before midnight today)
+    if (!this.showPastSessions) {
+      const todayMidnight = new Date();
+      todayMidnight.setHours(0, 0, 0, 0);
+      filtered = filtered.filter((s) => {
+        if (!s.scheduledAt) return true;
+        return new Date(s.scheduledAt) >= todayMidnight;
+      });
+    }
+
+    return filtered;
+  }
+
+  // --- List view helpers ---
+
+  getListDaysWithSessions(sessions: ClubTrainingSession[]): Date[] {
+    return this.calendarDays.filter((day) => this.getSessionsForDay(sessions, day).length > 0);
   }
 
   // --- Calendar navigation ---
@@ -201,8 +179,6 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
     this.calendarWeekStart = ClubSessionsTabComponent.getMonday(new Date());
     this.buildCalendarDays();
     this.loadCalendarSessions();
-    this.scrolledToCurrentHour = false;
-    setTimeout(() => this.scrollToCurrentHour(), 50);
   }
 
   private buildCalendarDays(): void {
@@ -243,145 +219,13 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
     return `${this.calendarWeekStart.toLocaleDateString('en-US', opts)} - ${end.toLocaleDateString('en-US', opts)}`;
   }
 
-  // --- Time-grid helpers ---
-
-  getSessionTopPx(session: ClubTrainingSession): number {
-    if (!session.scheduledAt) return 0;
-    const d = new Date(session.scheduledAt);
-    const hours = d.getHours();
-    const minutes = d.getMinutes();
-    return (Math.max(hours, this.HOUR_START) - this.HOUR_START) * this.HOUR_HEIGHT_PX + (hours >= this.HOUR_START ? minutes : 0);
-  }
-
-  getSessionHeightPx(session: ClubTrainingSession): number {
-    const dur = session.durationMinutes ?? 60;
-    return Math.max((dur / 60) * this.HOUR_HEIGHT_PX, 28);
-  }
-
-  /**
-   * Computes side-by-side layout for overlapping sessions in a day.
-   * Returns a map of sessionId → { col, totalCols } for CSS positioning.
-   */
-  private overlapCache = new Map<string, Map<string, { col: number; totalCols: number }>>();
-
-  getSessionLayout(sessions: ClubTrainingSession[], session: ClubTrainingSession): { left: string; width: string } {
-    const dayKey = session.scheduledAt?.substring(0, 10) ?? '';
-    if (!this.overlapCache.has(dayKey)) {
-      this.overlapCache.set(dayKey, this.computeOverlapLayout(sessions));
-    }
-    const layout = this.overlapCache.get(dayKey)!.get(session.id);
-    if (!layout || layout.totalCols <= 1) {
-      return { left: '2px', width: 'calc(100% - 4px)' };
-    }
-    const colWidth = 100 / layout.totalCols;
-    return {
-      left: `calc(${layout.col * colWidth}% + 1px)`,
-      width: `calc(${colWidth}% - 2px)`,
-    };
-  }
-
-  private computeOverlapLayout(sessions: ClubTrainingSession[]): Map<string, { col: number; totalCols: number }> {
-    const result = new Map<string, { col: number; totalCols: number }>();
-    if (!sessions.length) return result;
-
-    const items = sessions.map(s => ({
-      id: s.id,
-      top: this.getSessionTopPx(s),
-      bottom: this.getSessionTopPx(s) + this.getSessionHeightPx(s),
-    })).sort((a, b) => a.top - b.top || a.bottom - b.bottom);
-
-    // Greedy column assignment
-    const columns: { id: string; bottom: number }[][] = [];
-    const colMap = new Map<string, number>();
-
-    for (const item of items) {
-      let placed = false;
-      for (let c = 0; c < columns.length; c++) {
-        const col = columns[c];
-        if (col[col.length - 1].bottom <= item.top) {
-          col.push(item);
-          colMap.set(item.id, c);
-          placed = true;
-          break;
-        }
-      }
-      if (!placed) {
-        columns.push([item]);
-        colMap.set(item.id, columns.length - 1);
-      }
-    }
-
-    // Find overlapping groups to determine totalCols per session
-    for (const item of items) {
-      const overlapping = items.filter(
-        other => other.id !== item.id && other.top < item.bottom && other.bottom > item.top
-      );
-      const cols = new Set([colMap.get(item.id)!, ...overlapping.map(o => colMap.get(o.id)!)]);
-      result.set(item.id, { col: colMap.get(item.id)!, totalCols: cols.size });
-    }
-
-    return result;
-  }
-
-  clearOverlapCache(): void {
-    this.overlapCache.clear();
-  }
-
-  formatHourLabel(hour: number): string {
-    if (hour === 0) return '12 AM';
-    if (hour < 12) return `${hour} AM`;
-    if (hour === 12) return '12 PM';
-    return `${hour - 12} PM`;
-  }
-
-  private scrollToCurrentHour(): void {
-    if (this.scrolledToCurrentHour || !this.timeGridBody?.nativeElement) return;
-    const now = new Date();
-    const scrollTo = (Math.max(now.getHours() - 1, this.HOUR_START) - this.HOUR_START) * this.HOUR_HEIGHT_PX;
-    this.timeGridBody.nativeElement.scrollTop = scrollTo;
-    this.scrolledToCurrentHour = true;
-    setTimeout(() => this.onTimeGridScroll(), 0);
-  }
-
-  getCurrentTimeTopPx(): number {
-    const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    if (hours < this.HOUR_START) return 0;
-    return (hours - this.HOUR_START) * this.HOUR_HEIGHT_PX + (minutes / 60) * this.HOUR_HEIGHT_PX;
-  }
-
-  onTimeGridScroll(): void {
-    const el = this.timeGridBody?.nativeElement;
-    if (!el) return;
-
-    const scrollTop = el.scrollTop;
-    const viewportBottom = scrollTop + el.clientHeight;
-
-    let above = 0;
-    let below = 0;
-
-    for (const session of this.allSessions) {
-      const top = this.getSessionTopPx(session);
-      const height = this.getSessionHeightPx(session);
-      if (top + height < scrollTop) above++;
-      else if (top > viewportBottom) below++;
-    }
-
-    if (this.sessionsAboveCount !== above || this.sessionsBelowCount !== below) {
-      this.sessionsAboveCount = above;
-      this.sessionsBelowCount = below;
-      this.cdr.markForCheck();
-    }
-  }
-
-  // --- Unified session form ---
+  // --- Form ---
 
   openForm(): void {
     this.editingSession = null;
     this.editAllFutureMode = false;
+    this.gpxFile = null;
     this.form = { sport: 'CYCLING', title: '', clubGroupId: '', openToAll: false, openToAllDelayValue: 2, openToAllDelayUnit: 'DAYS' };
-    this.isRecurring = false;
     this.isFormOpen = true;
   }
 
@@ -391,8 +235,7 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
     this.editAllFutureMode = false;
   }
 
-  openEditForm(session: ClubTrainingSession, event: Event): void {
-    event.stopPropagation();
+  openEditForm(session: ClubTrainingSession): void {
     if (session.recurringTemplateId) {
       this.pendingEditSession = session;
       this.showRecurringEditChoice = true;
@@ -417,9 +260,10 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   }
 
   private startEditing(session: ClubTrainingSession, allFuture: boolean): void {
+    this.expandedSessionId = null;
     this.editingSession = session;
     this.editAllFutureMode = allFuture;
-    this.isRecurring = false;
+    this.gpxFile = null;
     this.form = {
       title: session.title,
       sport: session.sport || 'CYCLING',
@@ -451,9 +295,22 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
     this.form['meetingPointLon'] = point?.lon ?? null;
   }
 
+  onGpxFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.gpxFile = input.files?.[0] ?? null;
+  }
+
+  removeGpx(): void {
+    if (this.editingSession) {
+      this.clubService.deleteSessionGpx(this.club.id, this.editingSession.id).subscribe({
+        next: () => this.loadCalendarSessions(),
+      });
+    }
+  }
+
   get isFormValid(): boolean {
     if (!this.form['title'] || !this.form['sport']) return false;
-    if (this.isRecurring && (!this.form['dayOfWeek'] || !this.form['timeOfDay'])) return false;
+    if (!this.editingSession && (!this.form['dayOfWeek'] || !this.form['timeOfDay'])) return false;
     return true;
   }
 
@@ -481,16 +338,11 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
           endDate: this.form['endDate'] || undefined,
         };
         this.clubService.updateRecurringTemplateWithInstances(this.club.id, this.editingSession.recurringTemplateId, data).subscribe({
-          next: () => {
-            this.isFormOpen = false;
-            this.editingSession = null;
-            this.editAllFutureMode = false;
-            this.loadCalendarSessions();
-            this.cdr.markForCheck();
-          },
+          next: () => this.finishSave(),
           error: () => {},
         });
       } else {
+        // Edit this instance only
         const data: CreateSessionData = {
           category: 'SCHEDULED',
           title: this.form['title'],
@@ -508,105 +360,130 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
           openToAllDelayValue: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
           openToAllDelayUnit: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
         };
-        this.clubService.updateSession(this.club.id, this.editingSession.id, data).subscribe({
-          next: () => {
-            this.isFormOpen = false;
-            this.editingSession = null;
-            this.editAllFutureMode = false;
-            this.loadCalendarSessions();
-            this.cdr.markForCheck();
-          },
+        const editId = this.editingSession.id;
+        this.clubService.updateSession(this.club.id, editId, data).subscribe({
+          next: () => this.afterSaveSession(editId),
           error: () => {},
         });
       }
       return;
     }
 
-    if (this.isRecurring) {
-      const data: CreateRecurringSessionData = {
-        category: 'SCHEDULED',
-        title: this.form['title'],
-        sport: this.form['sport'],
-        dayOfWeek: this.form['dayOfWeek'],
-        timeOfDay: this.form['timeOfDay'],
-        location: this.form['location'] || undefined,
-        meetingPointLat: this.form['meetingPointLat'] ?? undefined,
-        meetingPointLon: this.form['meetingPointLon'] ?? undefined,
-        description: this.form['description'] || undefined,
-        maxParticipants: this.form['maxParticipants'] || undefined,
-        clubGroupId: this.form['clubGroupId'] || undefined,
-        responsibleCoachId: this.form['responsibleCoachId'] || undefined,
-        openToAll: this.form['clubGroupId'] ? this.form['openToAll'] : undefined,
-        openToAllDelayValue: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
-        openToAllDelayUnit: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
-        endDate: this.form['endDate'] || undefined,
-      };
-      this.clubService.createRecurringTemplate(this.club.id, data).subscribe({
-        next: () => {
-          this.isFormOpen = false;
-          this.cdr.markForCheck();
-        },
-        error: () => {},
+    // Create new recurring session (always recurring)
+    const data: CreateRecurringSessionData = {
+      category: 'SCHEDULED',
+      title: this.form['title'],
+      sport: this.form['sport'],
+      dayOfWeek: this.form['dayOfWeek'],
+      timeOfDay: this.form['timeOfDay'],
+      location: this.form['location'] || undefined,
+      meetingPointLat: this.form['meetingPointLat'] ?? undefined,
+      meetingPointLon: this.form['meetingPointLon'] ?? undefined,
+      description: this.form['description'] || undefined,
+      maxParticipants: this.form['maxParticipants'] || undefined,
+      clubGroupId: this.form['clubGroupId'] || undefined,
+      responsibleCoachId: this.form['responsibleCoachId'] || undefined,
+      openToAll: this.form['clubGroupId'] ? this.form['openToAll'] : undefined,
+      openToAllDelayValue: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
+      openToAllDelayUnit: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
+      endDate: this.form['endDate'] || undefined,
+    };
+    this.clubService.createRecurringTemplate(this.club.id, data).subscribe({
+      next: () => this.finishSave(),
+      error: () => {},
+    });
+  }
+
+  private afterSaveSession(sessionId?: string): void {
+    if (this.gpxFile && sessionId) {
+      this.clubService.uploadSessionGpx(this.club.id, sessionId, this.gpxFile).subscribe({
+        next: () => this.finishSave(),
+        error: () => this.finishSave(),
       });
     } else {
-      const data: CreateSessionData = {
-        category: 'SCHEDULED',
-        title: this.form['title'],
-        sport: this.form['sport'],
-        scheduledAt: this.form['scheduledAt'] || undefined,
-        location: this.form['location'] || undefined,
-        meetingPointLat: this.form['meetingPointLat'] ?? undefined,
-        meetingPointLon: this.form['meetingPointLon'] ?? undefined,
-        description: this.form['description'] || undefined,
-        maxParticipants: this.form['maxParticipants'] || undefined,
-        durationMinutes: this.form['durationMinutes'] || undefined,
-        clubGroupId: this.form['clubGroupId'] || undefined,
-        responsibleCoachId: this.form['responsibleCoachId'] || undefined,
-        openToAll: this.form['clubGroupId'] ? this.form['openToAll'] : undefined,
-        openToAllDelayValue: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
-        openToAllDelayUnit: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
-      };
-      this.clubService.createSession(this.club.id, data).subscribe({
-        next: () => {
-          this.isFormOpen = false;
-          this.cdr.markForCheck();
-        },
-        error: () => {},
-      });
+      this.finishSave();
     }
   }
 
-  // --- Join / Cancel ---
+  private finishSave(): void {
+    this.isFormOpen = false;
+    this.editingSession = null;
+    this.editAllFutureMode = false;
+    this.gpxFile = null;
+    this.loadCalendarSessions();
+    this.cdr.markForCheck();
+  }
 
-  joinSession(session: ClubTrainingSession, event: Event): void {
-    event.stopPropagation();
+  // --- GPX actions ---
+
+  downloadGpx(session: ClubTrainingSession): void {
+    this.clubService.downloadSessionGpx(this.club.id, session.id).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = session.gpxFileName ?? 'route.gpx';
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+    });
+  }
+
+  async shareGpx(session: ClubTrainingSession): Promise<void> {
+    if (!navigator.share) {
+      this.downloadGpx(session);
+      return;
+    }
+    this.clubService.downloadSessionGpx(this.club.id, session.id).subscribe({
+      next: async (blob) => {
+        const file = new File([blob], session.gpxFileName ?? 'route.gpx', { type: 'application/gpx+xml' });
+        try {
+          await navigator.share({ title: session.title, files: [file] });
+        } catch {
+          // user cancelled share
+        }
+      },
+    });
+  }
+
+  // --- Session actions ---
+
+  joinSession(session: ClubTrainingSession): void {
     this.clubService.joinSession(this.club.id, session.id).subscribe({ error: () => {} });
   }
 
-  cancelSession(session: ClubTrainingSession, event: Event): void {
-    event.stopPropagation();
+  cancelParticipation(session: ClubTrainingSession): void {
     this.clubService.cancelSession(this.club.id, session.id).subscribe({ error: () => {} });
   }
 
-  // --- AI Create for session ---
-
-  onAiCreateForSession(session: ClubTrainingSession, event: Event): void {
-    event.stopPropagation();
+  onAiCreateForSession(session: ClubTrainingSession): void {
     this.createAiForSession.emit(session);
   }
 
-  navigateToTraining(trainingId: string, event: Event): void {
-    event.stopPropagation();
+  navigateToTraining(trainingId: string): void {
     this.trainingService.getTrainingById(trainingId).subscribe((training) => {
       this.trainingService.selectTraining(training);
       this.router.navigate(['/trainings']);
     });
   }
 
-  // --- Cancel entire session ---
+  unlinkTraining(session: ClubTrainingSession, glt: GroupLinkedTraining): void {
+    this.clubService.unlinkTrainingFromSession(this.club.id, session.id, glt.clubGroupId || undefined).subscribe({
+      next: () => {
+        this.loadCalendarSessions();
+        this.cdr.markForCheck();
+      },
+      error: () => {},
+    });
+  }
 
-  openCancelSessionModal(session: ClubTrainingSession, event: Event): void {
-    event.stopPropagation();
+  toggleSessionDetail(session: ClubTrainingSession): void {
+    this.expandedSessionId = this.expandedSessionId === session.id ? null : session.id;
+  }
+
+  // --- Cancel session ---
+
+  openCancelSessionModal(session: ClubTrainingSession): void {
     if (session.recurringTemplateId) {
       this.pendingCancelSession = session;
       this.showCancelRecurringChoice = true;
@@ -679,151 +556,15 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
     }
   }
 
-  isCancelled(session: ClubTrainingSession): boolean {
-    return !!session.cancelled;
-  }
+  // --- Helpers ---
 
-  getOpenToAllLabel(session: ClubTrainingSession): string {
-    if (!session.openToAll || !session.scheduledAt) return '';
-    const delay = session.openToAllDelayValue ?? 2;
-    const unit = session.openToAllDelayUnit ?? 'DAYS';
-    const scheduledMs = new Date(session.scheduledAt).getTime();
-    const offsetMs = unit === 'HOURS' ? delay * 3600_000 : delay * 86400_000;
-    const openFromMs = scheduledMs - offsetMs;
-    const nowMs = Date.now();
-    if (nowMs >= openFromMs) return this.translate.instant('CLUB_SESSIONS.OPEN_TO_ALL_OPENED');
-    const remainMs = openFromMs - nowMs;
-    const remainH = Math.ceil(remainMs / 3600_000);
-    if (remainH <= 48) return this.translate.instant('CLUB_SESSIONS.OPEN_TO_ALL_IN_HOURS', { remainH });
-    const remainD = Math.ceil(remainMs / 86400_000);
-    return this.translate.instant('CLUB_SESSIONS.OPEN_TO_ALL_IN_DAYS', { remainD });
-  }
-
-  // --- Status helpers ---
-
-  isParticipant(session: ClubTrainingSession): boolean {
-    return !!this.currentUserId && session.participantIds.includes(this.currentUserId);
-  }
-
-  isFull(session: ClubTrainingSession): boolean {
-    return session.maxParticipants != null && session.participantIds.length >= session.maxParticipants;
-  }
-
-  isOnWaitingList(session: ClubTrainingSession): boolean {
-    return !!this.currentUserId && !!session.waitingList?.some((e) => e.userId === this.currentUserId);
-  }
-
-  getWaitingListPosition(session: ClubTrainingSession): number {
-    if (!this.currentUserId || !session.waitingList) return 0;
-    const idx = session.waitingList.findIndex((e) => e.userId === this.currentUserId);
-    return idx >= 0 ? idx + 1 : 0;
-  }
-
-  getCapacityText(session: ClubTrainingSession): string {
-    if (session.maxParticipants == null)
-      return this.translate.instant('CLUB_SESSIONS.CAPACITY_PARTICIPANTS', { count: session.participantIds.length });
-    return `${session.participantIds.length}/${session.maxParticipants}`;
-  }
-
-  formatDateTime(dateStr: string | undefined): string {
-    if (!dateStr) return '\u2014';
-    return new Date(dateStr).toLocaleString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }
-
-  formatTime(dateStr: string | undefined): string {
-    if (!dateStr) return '';
-    return new Date(dateStr).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-  }
-
-  truncate(text: string | undefined, maxLen: number): string {
-    if (!text) return '';
-    return text.length > maxLen ? text.substring(0, maxLen) + '...' : text;
-  }
-
-  toggleSessionDetail(session: ClubTrainingSession): void {
-    this.expandedSessionId = this.expandedSessionId === session.id ? null : session.id;
-  }
-
-  getParticipantNames(session: ClubTrainingSession): { name: string; initial: string }[] {
-    return session.participantIds.map((id) => {
-      const member = this.allMembers.find((m) => m.userId === id);
-      const name = member?.displayName || id.substring(0, 8);
-      return { name, initial: name.charAt(0).toUpperCase() };
-    });
-  }
-
-  getWaitingListNames(session: ClubTrainingSession): { name: string; initial: string; position: number }[] {
-    return (session.waitingList || []).map((entry, i) => {
-      const member = this.allMembers.find((m) => m.userId === entry.userId);
-      const name = member?.displayName || entry.userId.substring(0, 8);
-      return { name, initial: name.charAt(0).toUpperCase(), position: i + 1 };
-    });
-  }
-
-  // --- Multi-training helpers ---
-
-  getEffectiveLinkedTrainings(session: ClubTrainingSession): GroupLinkedTraining[] {
-    return getEffectiveLinkedTrainings(session);
-  }
-
-  hasAnyLinkedTraining(session: ClubTrainingSession): boolean {
-    return this.getEffectiveLinkedTrainings(session).length > 0;
-  }
-
-  getUserGroupIds(): Set<string> {
+  private getUserGroupIds(): Set<string> {
     if (!this.currentUserId) return new Set();
     return new Set(
       this.clubGroups
         .filter((g) => g.memberIds.includes(this.currentUserId!))
         .map((g) => g.id),
     );
-  }
-
-  unlinkTraining(session: ClubTrainingSession, glt: GroupLinkedTraining, event: Event): void {
-    event.stopPropagation();
-    this.clubService.unlinkTrainingFromSession(this.club.id, session.id, glt.clubGroupId || undefined).subscribe({
-      next: () => {
-        this.loadCalendarSessions();
-        this.cdr.markForCheck();
-      },
-      error: () => {},
-    });
-  }
-
-  canLinkMoreTrainings(session: ClubTrainingSession): boolean {
-    const effective = this.getEffectiveLinkedTrainings(session);
-    // Club-level linked → no more
-    if (effective.some(glt => !glt.clubGroupId)) return false;
-    // No groups exist → can link only if nothing linked yet
-    if (this.clubGroups.length === 0) return effective.length === 0;
-    // All groups linked
-    const linkedGroupIds = new Set(effective.filter(g => g.clubGroupId).map(g => g.clubGroupId));
-    return this.clubGroups.some(g => !linkedGroupIds.has(g.id));
-  }
-
-  isInUserGroup(glt: GroupLinkedTraining): boolean {
-    if (!glt.clubGroupId) return true; // club-level = visible to all
-    return this.getUserGroupIds().has(glt.clubGroupId);
-  }
-
-  getUserLinkedTraining(session: ClubTrainingSession): GroupLinkedTraining | null {
-    const effective = this.getEffectiveLinkedTrainings(session);
-    if (effective.length === 0) return null;
-    const userGroups = this.getUserGroupIds();
-    // Match user's group first
-    const match = effective.find((glt) => glt.clubGroupId && userGroups.has(glt.clubGroupId));
-    if (match) return match;
-    // Fall back to club-level
-    const clubLevel = effective.find((glt) => !glt.clubGroupId);
-    if (clubLevel) return clubLevel;
-    // Last resort
-    return effective[0];
   }
 
   private static getMonday(d: Date): Date {

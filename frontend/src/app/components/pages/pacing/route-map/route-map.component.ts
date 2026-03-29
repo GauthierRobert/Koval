@@ -16,6 +16,8 @@ import {PacingSegment, RouteCoordinate, SegmentRange} from '../../../../services
 import * as L from 'leaflet';
 
 // Fix Leaflet default icon paths for bundled assets
+// Reset imagePath to prevent Angular's esbuild builder from prepending /media/
+(L.Icon.Default as any).imagePath = '';
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'assets/leaflet/marker-icon-2x.png',
   iconUrl: 'assets/leaflet/marker-icon.png',

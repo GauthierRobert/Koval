@@ -119,13 +119,17 @@ _ Training assign should be more clear, on training dashboard do not change, jus
   Open session (three sport, must add rdv point with rdv hours, GPX if applicable.  athlete should also be able to create single session
   (like group ride, zwift ride,... in that case notification is created as well),
   Add GPX linkage functionality to some sessions when group ride (recurring session (always the same GPX), open session or single session)
-
+- Icon is not found http://localhost:4200/media/assets/leaflet/marker-icon.png, marker-shadow.png:1  
+  GET http://localhost:4200/media/assets/leaflet/marker-shadow.png 404 (Not Found)
+  marker-icon-2x.png:1  GET http://localhost:4200/media/assets/leaflet/marker-icon-2x.png 404 (Not Found)
+- GPX not well displayed in rides sessions
 # TO VERIFY
 
 ## TODO
-- When clicking on feed small session card leave or join, all the sessions appears not only from the week.
+- When clicking on feed small session card leave or join, all the historic and future sessions appears not only from the week.
 - When schedule a training in the workout library, no input for schedule date is visible and then no scheduled date is sent.
-- Icon is not found http://localhost:4200/media/assets/leaflet/marker-icon.png
+- SnapShot simualtion race instead of save simulation race, it must be an action of user and parameters must be saved (including front end params)
+
 # Club
 - Add car sharing in club. Athlete can propose their car sharing in the club. Athlete can ask for car sharing and other athlete can accept. 
   A car sharing must be link to a club session or a race.  The athlete that propose must specify the number of seats and number of bike place. 

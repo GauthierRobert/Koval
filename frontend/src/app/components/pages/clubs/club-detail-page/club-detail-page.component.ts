@@ -76,8 +76,8 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
 
   readonly tabs: Array<{ id: TabId; label: string }> = [
     { id: 'feed', label: 'CLUB_DETAIL.TAB_FEED' },
-    { id: 'sessions', label: 'CLUB_DETAIL.TAB_SESSIONS' },
-    { id: 'open-sessions', label: 'CLUB_DETAIL.TAB_OPEN_SESSIONS' },
+    { id: 'open-sessions', label: 'CLUB_DETAIL.TAB_SESSIONS' },
+    { id: 'sessions', label: 'CLUB_DETAIL.TAB_RECURRING_SESSIONS' },
     { id: 'members', label: 'CLUB_DETAIL.TAB_MEMBERS' },
     { id: 'stats', label: 'CLUB_DETAIL.TAB_STATS' },
     { id: 'leaderboard', label: 'CLUB_DETAIL.TAB_LEADERBOARD' },
@@ -135,8 +135,11 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
         break;
       case 'sessions':
         this.clubService.loadRecurringTemplates(this.clubId);
+        this.clubService.loadMembers(this.clubId);
         break;
       case 'open-sessions':
+        this.clubService.loadMembers(this.clubId);
+        this.clubService.loadGroups(this.clubId);
         break;
       case 'members':
         this.clubService.loadMembers(this.clubId);

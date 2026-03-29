@@ -42,6 +42,29 @@
   text-align: center;
 }
 
+/* --- Filters --- */
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.filter-checkbox input[type="checkbox"] {
+  accent-color: var(--accent-color);
+  cursor: pointer;
+}
+
 /* --- Day groups --- */
 .day-group {
   display: flex;
@@ -59,116 +82,9 @@
   border-bottom: 1px solid var(--glass-border);
 }
 
-/* --- Session card --- */
-.sc-card {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  transition: border-color 0.15s;
-}
-
-.sc-card:hover {
-  border-color: var(--accent-muted);
-}
-
-.sc-card.cancelled {
-  opacity: 0.5;
-}
-
-.sc-lead {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.sc-time {
-  font-size: 13px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-primary);
-}
-
-.sc-duration {
-  font-size: 10px;
-  color: var(--text-muted);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  padding: 1px 6px;
-}
-
-.sc-identity {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.sc-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.sc-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.sport-tag {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--accent);
-}
-
-.meta-item {
-  font-size: 10px;
-  color: var(--text-muted);
-}
-
-.gpx-badge {
-  font-size: 9px;
-  font-weight: 600;
-  color: var(--accent);
-  background: var(--accent-muted);
-  padding: 1px 6px;
-  border-radius: var(--radius-sm);
-}
-
-.sc-footer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 2px;
-}
-
-.participant-count {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  font-variant-numeric: tabular-nums;
-}
-
-/* --- Route preview --- */
-.route-preview {
-  width: 100%;
-  height: 60px;
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-}
-
-.route-svg {
-  width: 100%;
-  height: 100%;
+.day-header.today {
+  color: var(--accent-color);
+  border-bottom-color: var(--accent-color);
 }
 
 /* --- Empty state --- */
@@ -196,7 +112,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 1100;
   padding: 16px;
 }
 
@@ -255,7 +171,7 @@
 }
 
 .input:focus {
-  border-color: var(--accent);
+  border-color: var(--accent-color);
 }
 
 textarea.input {
@@ -274,19 +190,31 @@ textarea.input {
   margin-bottom: 4px;
 }
 
+.gpx-badge {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--accent-color);
+  background: var(--accent-subtle);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+}
+
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
 }
 
-.badge-danger {
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--danger);
-  background: var(--danger-muted, rgba(255, 80, 80, 0.1));
-  padding: 1px 6px;
-  border-radius: var(--radius-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.cancel-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+/* --- Responsive --- */
+@media (max-width: 600px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
 }

@@ -16,6 +16,13 @@
     </div>
   </div>
 
+  <div class="filter-row">
+    <label class="filter-checkbox">
+      <input type="checkbox" [checked]="showPastSessions" (change)="toggleShowPastSessions()"/>
+      <span>{{ 'CLUB_SESSIONS.SHOW_PAST' | translate }}</span>
+    </label>
+  </div>
+
   <!-- Create/Edit Form Modal -->
   @if (isFormOpen) {
     <div class="form-overlay" (click)="closeForm()">
@@ -75,7 +82,7 @@
             @if (editingSession?.gpxFileName; as gpxName) {
               <div class="gpx-existing">
                 <span class="gpx-badge">{{ gpxName }}</span>
-                <button class="btn-ghost-sm btn-danger" (click)="removeGpx()">{{ 'COMMON.DELETE' | translate }}</button>
+                <button class="btn-danger" (click)="removeGpx()">{{ 'COMMON.DELETE' | translate }}</button>
               </div>
             }
             <input type="file" accept=".gpx" (change)="onGpxFileSelected($event)" class="file-input" />
@@ -94,73 +101,61 @@
 
   <!-- Sessions List -->
   @if (openSessions$ | async; as sessions) {
-    @if (sessions.length === 0) {
-      <div class="empty-state">
-        <p>{{ 'CLUB_OPEN_SESSIONS.EMPTY' | translate }}</p>
-        <p class="hint">{{ 'CLUB_OPEN_SESSIONS.EMPTY_HINT' | translate }}</p>
-      </div>
-    } @else {
-      @for (group of groupByDay(sessions); track group.date.toISOString()) {
-        <div class="day-group">
-          <div class="day-header">{{ group.date | date:'EEEE, MMM d' }}</div>
-          @for (session of group.sessions; track session.id) {
-            <div class="sc-card" [class.cancelled]="session.cancelled">
-              <div class="sc-lead">
-                <span class="sc-time">{{ session.scheduledAt | date:'HH:mm' }}</span>
-                @if (session.durationMinutes) {
-                  <span class="sc-duration">{{ session.durationMinutes }}min</span>
-                }
-                @if (session.cancelled) {
-                  <span class="badge badge-danger">{{ 'CLUB_SESSIONS.CANCELLED' | translate }}</span>
-                }
-              </div>
-
-              <div class="sc-identity">
-                <span class="sc-title">{{ session.title }}</span>
-              </div>
-
-              <div class="sc-meta">
-                @if (session.sport) {
-                  <app-sport-icon [sport]="$any(session.sport)" [size]="14"></app-sport-icon>
-                  <span class="sport-tag">{{ session.sport }}</span>
-                }
-                @if (session.location) {
-                  <span class="meta-item">{{ session.location }}</span>
-                }
-                @if (session.gpxFileName) {
-                  <span class="gpx-badge">{{ session.gpxFileName }}</span>
-                }
-              </div>
-
-              <!-- Route preview -->
-              @if (session.routeCoordinates?.length) {
-                <div class="route-preview">
-                  <svg [attr.viewBox]="getRouteViewBox(session)" preserveAspectRatio="xMidYMid meet" class="route-svg">
-                    <polyline [attr.points]="getRoutePoints(session)" fill="none" stroke="var(--accent)" stroke-width="0.0003" />
-                  </svg>
-                </div>
-              }
-
-              <div class="sc-footer">
-                <span class="participant-count">
-                  {{ session.participantIds.length }}{{ session.maxParticipants ? '/' + session.maxParticipants : '' }}
-                </span>
-
-                @if (!session.cancelled) {
-                  @if (isJoined(session)) {
-                    <button class="btn-ghost-sm" (click)="leaveSession(session)">{{ 'CLUB_SESSIONS.BTN_CANCEL' | translate }}</button>
-                  } @else {
-                    <button class="btn-primary btn-sm" (click)="joinSession(session)">{{ 'CLUB_SESSIONS.BTN_JOIN' | translate }}</button>
-                  }
-                  @if (isCreator(session)) {
-                    <button class="btn-ghost-sm" (click)="openForm(session)">{{ 'COMMON.EDIT' | translate }}</button>
-                  }
-                }
-              </div>
-            </div>
-          }
+    @if (filterActivities(sessions); as filtered) {
+      @if (filtered.length === 0) {
+        <div class="empty-state">
+          <p>{{ 'CLUB_OPEN_SESSIONS.EMPTY' | translate }}</p>
+          <p class="hint">{{ 'CLUB_OPEN_SESSIONS.EMPTY_HINT' | translate }}</p>
         </div>
+      } @else {
+        @for (group of groupByDay(filtered); track group.date.toISOString()) {
+          <div class="day-group">
+            <div class="day-header" [class.today]="isToday(group.date)">{{ group.date | date:'EEEE, MMM d' }}</div>
+            @for (session of group.sessions; track session.id) {
+              <app-session-card
+                [session]="session"
+                [members]="allMembers"
+                [currentUserId]="currentUserId"
+                [clubGroups]="clubGroups"
+                [clubId]="club.id"
+                [isCoach]="isCoach"
+                [canCreate]="canEditSession(session)"
+                [expandedSessionId]="expandedSessionId"
+                (join)="joinSession($event)"
+                (leave)="leaveSession($event)"
+                (edit)="editSession($event)"
+                (cancelSession)="openCancelSessionModal($event)"
+                (linkTraining)="onLinkTraining($event)"
+                (unlinkTraining)="unlinkTraining($event)"
+                (toggleDetail)="toggleDetail($event)"
+                (navigateToTraining)="navigateToTraining($event)"
+                (downloadGpx)="downloadGpx($event)"
+                (shareGpx)="shareGpx($event)">
+              </app-session-card>
+            }
+          </div>
+        }
       }
     }
   }
 </div>
+
+<!-- Cancel Session Confirmation Modal -->
+@if (showCancelConfirm && cancelTargetSession) {
+  <div class="form-overlay" (click)="closeCancelSessionModal()">
+    <div class="form-modal glass" (click)="$event.stopPropagation()">
+      <h4>{{ 'CLUB_SESSIONS.CANCEL_SESSION_DIALOG_TITLE' | translate }}</h4>
+      <p class="cancel-text">
+        {{ 'CLUB_SESSIONS.CANCEL_SINGLE_BODY' | translate: { title: cancelTargetSession.title } }}
+      </p>
+      <div class="form-group full-width">
+        <label>{{ 'CLUB_SESSIONS.FORM_LABEL_CANCEL_REASON' | translate }}</label>
+        <textarea [(ngModel)]="cancelReason" class="input" rows="2"></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn-ghost" (click)="closeCancelSessionModal()">{{ 'CLUB_SESSIONS.BTN_GO_BACK' | translate }}</button>
+        <button class="btn-danger" (click)="confirmCancelSession()">{{ 'CLUB_SESSIONS.BTN_CANCEL_SESSION_CONFIRM' | translate }}</button>
+      </div>
+    </div>
+  </div>
+}
