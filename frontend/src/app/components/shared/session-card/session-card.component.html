@@ -2,7 +2,6 @@
   class="sc-card"
   [class.sc-card--attending]="isParticipant()"
   [class.sc-card--waiting]="isOnWaitingList()"
-  [class.sc-card--expanded]="isExpanded"
   [class.sc-card--cancelled]="isCancelled()"
   [class.sc-card--has-gpx]="session.routeCoordinates?.length"
   (click)="onCardClick()">
@@ -183,14 +182,6 @@
     <p class="sc-desc">{{ session.description }}</p>
     }
 
-    <!-- Participants (full names flex-wrap) -->
-    @if (session.participantIds.length > 0) {
-    <div class="sc-participants">
-      @for (p of getParticipantNames(); track p.name) {
-      <span class="sc-participant-chip">{{ p.name }}</span>
-      }
-    </div>
-    }
 
     <!-- ZONE 4: Footer -->
     <div class="sc-footer">
@@ -229,7 +220,6 @@
     </div>
 
     <!-- Expandable detail -->
-    @if (isExpanded) {
     <div class="sc-detail">
       <div class="sc-detail__section">
         <div class="sc-detail__title">{{ 'CLUB_SESSIONS.DETAIL_ATTENDING' | translate: { count:
@@ -265,7 +255,6 @@
       </div>
       }
     </div>
-    }
   </div>
 
   <!-- Map side (only when GPX exists) -->

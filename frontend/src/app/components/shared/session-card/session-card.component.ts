@@ -28,7 +28,6 @@ export class SessionCardComponent {
   @Input() clubId = '';
   @Input() isCoach = false;
   @Input() canCreate = false;
-  @Input() expandedSessionId: string | null = null;
 
   @Output() join = new EventEmitter<ClubTrainingSession>();
   @Output() leave = new EventEmitter<ClubTrainingSession>();
@@ -66,11 +65,6 @@ export class SessionCardComponent {
   isCancelled(): boolean {
     return !!this.session.cancelled;
   }
-
-  get isExpanded(): boolean {
-    return this.expandedSessionId === this.session.id;
-  }
-
   // --- Display helpers ---
 
   formatTime(): string {

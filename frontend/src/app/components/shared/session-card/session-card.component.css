@@ -451,28 +451,6 @@
 }
 
 /* ============================================================
-   Participants (flex-wrap chips)
-   ============================================================ */
-
-.sc-participants {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 6px 14px 0;
-}
-
-.sc-participant-chip {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text-muted);
-  background: var(--surface-elevated);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  padding: 2px 8px;
-  white-space: nowrap;
-}
-
-/* ============================================================
    ZONE 4: Footer
    ============================================================ */
 
