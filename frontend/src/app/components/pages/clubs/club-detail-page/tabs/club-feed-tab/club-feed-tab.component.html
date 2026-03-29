@@ -18,7 +18,7 @@
             <button class="composer-cancel" (click)="composerExpanded = false; announcementText = ''">
               {{ 'CLUB_FEED.CANCEL' | translate }}
             </button>
-            <button class="composer-submit" [disabled]="!announcementText.trim()" (click)="submitAnnouncement()">
+            <button class="btn-primary" [disabled]="!announcementText.trim()" (click)="submitAnnouncement()">
               {{ 'CLUB_FEED.POST' | translate }}
             </button>
           </div>

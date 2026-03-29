@@ -91,6 +91,7 @@ public class AIActionToolService {
                 }
             }
             CreateSessionRequest sessionReq = new CreateSessionRequest(
+                    null,
                     sessionTitle != null ? sessionTitle : title,
                     sportType,
                     scheduledDateTime,

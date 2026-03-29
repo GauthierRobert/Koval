@@ -368,6 +368,7 @@
     "TAB_MEMBERS": "MEMBRES",
     "TAB_STATS": "STATS",
     "TAB_LEADERBOARD": "CLASSEMENT",
+    "TAB_OPEN_SESSIONS": "RIDES",
     "TAB_RACE_GOALS": "OBJECTIFS COURSE",
     "LOADING": "Chargement du club...",
     "MEMBERSHIP_MEMBER": "MEMBRE",
@@ -498,7 +499,22 @@
     "OPEN_TO_ALL_IN_DAYS": "Ouvert à tous dans {{remainD}}j",
     "TG_AI_BTN_ADD_TRAINING": "+ entraînement",
     "TG_VIEW_LINK": "Voir →",
-    "SHOW_OTHER_GROUPS": "Afficher les sessions des autres groupes"
+    "SHOW_OTHER_GROUPS": "Afficher les sessions des autres groupes",
+    "FORM_LABEL_GPX": "Fichier GPX de parcours",
+    "CANCELLED": "ANNULÉ"
+  },
+  "CLUB_OPEN_SESSIONS": {
+    "HEADING": "Sorties Libres",
+    "BTN_PROPOSE_SESSION": "PROPOSER UNE SORTIE",
+    "EMPTY": "Aucune sortie libre cette semaine.",
+    "EMPTY_HINT": "Tout membre peut proposer une sortie vélo, course ou nage.",
+    "FORM_CREATE_TITLE": "Proposer une sortie libre",
+    "FORM_EDIT_TITLE": "Modifier la sortie libre"
+  },
+  "SPORTS": {
+    "CYCLING": "Cyclisme",
+    "RUNNING": "Course à pied",
+    "SWIMMING": "Natation"
   },
   "CLUB_MEMBERS": {
     "SECTION_GROUPS": "Groupes",

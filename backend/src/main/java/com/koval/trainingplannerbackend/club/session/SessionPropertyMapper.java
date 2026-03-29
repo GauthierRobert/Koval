@@ -34,6 +34,10 @@ public final class SessionPropertyMapper {
         session.setOpenToAllDelayValue(template.getOpenToAllDelayValue());
         session.setOpenToAllDelayUnit(template.getOpenToAllDelayUnit());
         session.setResponsibleCoachId(template.getResponsibleCoachId());
+        session.setCategory(template.getCategory());
+        session.setGpxData(template.getGpxData());
+        session.setGpxFileName(template.getGpxFileName());
+        session.setRouteCoordinates(template.getRouteCoordinates());
     }
 
     private static List<GroupLinkedTraining> getGroupLinkedTrainings(RecurringSessionTemplate template) {
@@ -68,6 +72,7 @@ public final class SessionPropertyMapper {
         template.setOpenToAllDelayUnit(req.openToAllDelayUnit());
         template.setResponsibleCoachId(req.responsibleCoachId());
         template.setEndDate(req.endDate());
+        template.setCategory(req.category() != null ? req.category() : SessionCategory.SCHEDULED);
     }
 
     public static void applyRequest(CreateSessionRequest req, ClubTrainingSession session) {
@@ -86,5 +91,6 @@ public final class SessionPropertyMapper {
         session.setOpenToAllDelayValue(req.openToAllDelayValue());
         session.setOpenToAllDelayUnit(req.openToAllDelayUnit());
         session.setResponsibleCoachId(req.responsibleCoachId());
+        session.setCategory(req.category() != null ? req.category() : SessionCategory.SCHEDULED);
     }
 }

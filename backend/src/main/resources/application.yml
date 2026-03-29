@@ -34,7 +34,7 @@ spring:
 
 club-feed:
   broker:
-    type: ${CLUB_FEED_BROKER_TYPE:none}
+    type: ${CLUB_FEED_BROKER_TYPE:rabbitmq} # rabbitmq, pubsub, none
     pubsub:
       project-id: ${GCP_PROJECT_ID:}
       topic: club-feed-events

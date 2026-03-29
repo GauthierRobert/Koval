@@ -52,17 +52,18 @@ public class PacingController {
     private final GpxParser gpxParser;
     private final PacingService pacingService;
     private final UserService userService;
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private final ObjectMapper objectMapper;
     private final SimulationRequestRepository simulationRequestRepository;
     private final RaceService raceService;
 
     public PacingController(GpxParser gpxParser, PacingService pacingService,
-                            UserService userService,
+                            UserService userService, ObjectMapper objectMapper,
                             SimulationRequestRepository simulationRequestRepository,
                             RaceService raceService) {
         this.gpxParser = gpxParser;
         this.pacingService = pacingService;
         this.userService = userService;
+        this.objectMapper = objectMapper;
         this.simulationRequestRepository = simulationRequestRepository;
         this.raceService = raceService;
     }
@@ -121,7 +122,7 @@ public class PacingController {
         bikeResult = resampleIfPresent(bikeResult, BIKE_SEGMENT_LENGTH_M);
         runResult = resampleIfPresent(runResult, RUN_SEGMENT_LENGTH_M);
 
-        AthleteProfile profile = OBJECT_MAPPER.readValue(profileJson, AthleteProfile.class);
+        AthleteProfile profile = objectMapper.readValue(profileJson, AthleteProfile.class);
         profile = mergeProfileAndValidate(profile, disc);
 
         PacingPlanResponse plan = pacingService.generatePlan(

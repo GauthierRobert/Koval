@@ -44,6 +44,8 @@
   --info-subtle: color-mix(in srgb, var(--info-color) 8%, transparent);
   --info-border: color-mix(in srgb, var(--info-color) 25%, transparent);
   --info-hover: color-mix(in srgb, var(--info-color) 15%, transparent);
+
+  --on-primary-color: black;
   --on-secondary-color: white;
 
   /* Richer card surface — the "dark blue" of glass elements */
@@ -417,7 +419,7 @@ select option {
 /* --- Buttons --- */
 %btn-base {
   background: none;
-  border: 1px solid var(--glass-border);
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
   padding: 5px 12px;
   font-size: 10px;
@@ -442,13 +444,14 @@ select option {
 
   &:hover:not(:disabled) {
     background: var(--#{$color-prefix}-hover);
-    border-color: var(--#{$color-prefix}-border);
+    border-color: var(--#{$color-prefix}-hover);
   }
 }
 
 .btn-primary {
   @extend %btn-base;
- @include btn-colors(accent);
+  background: var(--primary-color);
+  color: black;
   &:hover:not(:disabled) {
     opacity: 0.85;
   }
@@ -485,7 +488,7 @@ select option {
   &:hover:not(:disabled) {
     background: var(--danger-hover);
     color: var(--danger-color);
-    border-color: var(--danger-border);
+    border-color: var(--danger-hover);
   }
 }
 

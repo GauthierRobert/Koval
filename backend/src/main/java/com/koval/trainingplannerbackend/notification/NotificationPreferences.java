@@ -18,4 +18,5 @@ public class NotificationPreferences {
     private boolean waitingListPromoted = true;
     private boolean planActivated = true;
     private boolean clubAnnouncement = true;
+    private boolean openSessionCreated = true;
 }

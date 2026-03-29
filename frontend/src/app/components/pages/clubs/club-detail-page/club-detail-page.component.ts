@@ -18,11 +18,12 @@ import {ClubMembersTabComponent} from './tabs/club-members-tab/club-members-tab.
 import {ClubStatsTabComponent} from './tabs/club-stats-tab/club-stats-tab.component';
 import {ClubLeaderboardTabComponent} from './tabs/club-leaderboard-tab/club-leaderboard-tab.component';
 import {ClubRaceGoalsTabComponent} from './tabs/club-race-goals-tab/club-race-goals-tab.component';
+import {ClubOpenSessionsTabComponent} from './tabs/club-open-sessions-tab/club-open-sessions-tab.component';
 import {TrainingActionModalComponent} from '../../../shared/training-action-modal/training-action-modal.component';
 import {ActionContext} from '../../../../services/ai-action.service';
 import {map, Observable, Subscription} from 'rxjs';
 
-type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals';
+type TabId = 'feed' | 'sessions' | 'open-sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals';
 
 @Component({
   selector: 'app-club-detail-page',
@@ -37,6 +38,7 @@ type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-g
     ClubStatsTabComponent,
     ClubLeaderboardTabComponent,
     ClubRaceGoalsTabComponent,
+    ClubOpenSessionsTabComponent,
     TrainingActionModalComponent,
   ],
   templateUrl: './club-detail-page.component.html',
@@ -75,6 +77,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   readonly tabs: Array<{ id: TabId; label: string }> = [
     { id: 'feed', label: 'CLUB_DETAIL.TAB_FEED' },
     { id: 'sessions', label: 'CLUB_DETAIL.TAB_SESSIONS' },
+    { id: 'open-sessions', label: 'CLUB_DETAIL.TAB_OPEN_SESSIONS' },
     { id: 'members', label: 'CLUB_DETAIL.TAB_MEMBERS' },
     { id: 'stats', label: 'CLUB_DETAIL.TAB_STATS' },
     { id: 'leaderboard', label: 'CLUB_DETAIL.TAB_LEADERBOARD' },
@@ -132,6 +135,8 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
         break;
       case 'sessions':
         this.clubService.loadRecurringTemplates(this.clubId);
+        break;
+      case 'open-sessions':
         break;
       case 'members':
         this.clubService.loadMembers(this.clubId);

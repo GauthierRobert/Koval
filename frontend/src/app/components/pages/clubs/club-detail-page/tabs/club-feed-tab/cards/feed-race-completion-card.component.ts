@@ -35,7 +35,7 @@ import {ClubFeedEventResponse} from '../../../../../../../services/club.service'
                 @if (c.profilePicture) {
                   <img [src]="c.profilePicture" [alt]="c.displayName" />
                 } @else {
-                  {{ c.displayName?.charAt(0)?.toUpperCase() }}
+                  {{ c.displayName.charAt(0).toUpperCase() }}
                 }
               </div>
               <span class="user-name">{{ c.displayName }}</span>

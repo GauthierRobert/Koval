@@ -62,11 +62,11 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
               <div class="detail-actions">
                 @if (!session.cancelled) {
                   @if (!isJoined(session)) {
-                    <button class="btn-join" (click)="joinClicked.emit(session.id); $event.stopPropagation()">
+                    <button class="btn-primary small" (click)="joinClicked.emit(session.id); $event.stopPropagation()">
                       {{ 'CLUB_FEED.JOIN' | translate }}
                     </button>
                   } @else {
-                    <button class="btn-leave" (click)="cancelClicked.emit(session.id); $event.stopPropagation()">
+                    <button class="btn-ghost small" (click)="cancelClicked.emit(session.id); $event.stopPropagation()">
                       {{ 'CLUB_FEED.CANCEL' | translate }}
                     </button>
                   }
@@ -106,7 +106,7 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
     .detail-desc { font-size: var(--text-xs); color: var(--text-color); margin: 0; line-height: 1.4; }
     .detail-actions { display: flex; gap: var(--space-sm); margin-top: var(--space-xs); }
     .btn-join { padding: 4px 12px; border: none; border-radius: var(--radius-sm); background: var(--primary); color: #000; font-size: 10px; font-weight: 700; cursor: pointer; }
-    .btn-leave { padding: 4px 12px; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); font-size: 10px; font-weight: 600; cursor: pointer; }
+
     .btn-leave:hover { border-color: var(--danger); color: var(--danger); }
     .cancelled-label { font-size: 10px; font-weight: 600; color: var(--danger); }
   `,

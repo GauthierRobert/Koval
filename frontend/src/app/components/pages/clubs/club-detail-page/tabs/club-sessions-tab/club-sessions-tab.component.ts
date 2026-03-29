@@ -215,7 +215,7 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
   private loadCalendarSessions(): void {
     const from = this.calendarWeekStart.toISOString();
     const to = new Date(this.calendarWeekStart.getTime() + 7 * 86400000).toISOString();
-    this.clubService.loadSessionsForRange(this.club.id, from, to);
+    this.clubService.loadSessionsForRange(this.club.id, from, to, 'SCHEDULED');
   }
 
   getSessionsForDay(sessions: ClubTrainingSession[], day: Date): ClubTrainingSession[] {
@@ -463,6 +463,7 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
     if (this.editingSession) {
       if (this.editAllFutureMode && this.editingSession.recurringTemplateId) {
         const data: CreateRecurringSessionData = {
+          category: 'SCHEDULED',
           title: this.form['title'],
           sport: this.form['sport'],
           dayOfWeek: undefined as any,
@@ -491,6 +492,7 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
         });
       } else {
         const data: CreateSessionData = {
+          category: 'SCHEDULED',
           title: this.form['title'],
           sport: this.form['sport'],
           scheduledAt: this.form['scheduledAt'] || undefined,
@@ -522,6 +524,7 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
 
     if (this.isRecurring) {
       const data: CreateRecurringSessionData = {
+        category: 'SCHEDULED',
         title: this.form['title'],
         sport: this.form['sport'],
         dayOfWeek: this.form['dayOfWeek'],
@@ -547,6 +550,7 @@ export class ClubSessionsTabComponent implements OnInit, AfterViewInit {
       });
     } else {
       const data: CreateSessionData = {
+        category: 'SCHEDULED',
         title: this.form['title'],
         sport: this.form['sport'],
         scheduledAt: this.form['scheduledAt'] || undefined,

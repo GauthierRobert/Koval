@@ -79,7 +79,7 @@ public class ClubToolService {
         if (title == null || title.isBlank()) return "Error: title is required.";
         if (scheduledAt == null) return "Error: scheduledAt is required.";
 
-        var req = new CreateSessionRequest(title, sport, scheduledAt, location, null, null, description,
+        var req = new CreateSessionRequest(null, title, sport, scheduledAt, location, null, null, description,
                 null, maxParticipants, durationMinutes, clubGroupId, SecurityUtils.getCurrentUserId(),
                 null, null, null);
         ClubTrainingSession session = sessionService.createSession(userId, clubId, req);
@@ -107,7 +107,7 @@ public class ClubToolService {
         if (dayOfWeek == null) return "Error: dayOfWeek is required.";
         if (timeOfDay == null) return "Error: timeOfDay is required.";
 
-        var req = new CreateRecurringSessionRequest(title, sport, dayOfWeek, timeOfDay, location, null, null, description,
+        var req = new CreateRecurringSessionRequest(null, title, sport, dayOfWeek, timeOfDay, location, null, null, description,
                 null, maxParticipants, durationMinutes, clubGroupId, SecurityUtils.getCurrentUserId(),
                 null, null, null, endDate);
         RecurringSessionTemplate template = recurringService.createTemplate(userId, clubId, req);

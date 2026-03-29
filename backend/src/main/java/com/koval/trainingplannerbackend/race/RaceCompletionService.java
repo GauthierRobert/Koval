@@ -1,6 +1,5 @@
 package com.koval.trainingplannerbackend.race;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,17 +14,18 @@ import java.util.regex.Pattern;
 public class RaceCompletionService {
 
     private static final Logger log = LoggerFactory.getLogger(RaceCompletionService.class);
-    private static final ObjectMapper MAPPER = new ObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private static final Pattern CODE_BLOCK = Pattern.compile("```(?:json)?\\s*\\n(.*?)\\n?```", Pattern.DOTALL);
 
     private final ChatClient raceCompletionClient;
     private final RaceService raceService;
+    private final ObjectMapper objectMapper;
 
     public RaceCompletionService(@Qualifier("raceCompletionClient") ChatClient raceCompletionClient,
-                                  RaceService raceService) {
+                                  RaceService raceService,
+                                  ObjectMapper objectMapper) {
         this.raceCompletionClient = raceCompletionClient;
         this.raceService = raceService;
+        this.objectMapper = objectMapper;
     }
 
     public Race completeRaceDetails(String raceId) {
@@ -38,7 +38,7 @@ public class RaceCompletionService {
 
         try {
             String json = extractJson(response);
-            Race updates = MAPPER.readValue(json, Race.class);
+            Race updates = objectMapper.readValue(json, Race.class);
             return raceService.updateRace(raceId, updates);
         } catch (Exception e) {
             log.error("Failed to parse AI completion response for race {}", raceId, e);

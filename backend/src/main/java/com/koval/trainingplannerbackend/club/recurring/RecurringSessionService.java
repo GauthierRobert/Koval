@@ -5,6 +5,7 @@ import com.koval.trainingplannerbackend.club.activity.ClubActivityType;
 import com.koval.trainingplannerbackend.club.dto.CreateRecurringSessionRequest;
 import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
+import com.koval.trainingplannerbackend.club.session.SessionCategory;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
 import com.koval.trainingplannerbackend.club.session.SessionPropertyMapper;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,12 @@ public class RecurringSessionService {
 
     public RecurringSessionTemplate createTemplate(String userId, String clubId,
                                                     CreateRecurringSessionRequest req) {
-        authorizationService.requireAdminOrCoach(userId, clubId);
+        SessionCategory cat = req.category() != null ? req.category() : SessionCategory.SCHEDULED;
+        if (cat == SessionCategory.OPEN) {
+            authorizationService.requireActiveMember(userId, clubId);
+        } else {
+            authorizationService.requireAdminOrCoach(userId, clubId);
+        }
 
         RecurringSessionTemplate template = new RecurringSessionTemplate();
         template.setClubId(clubId);

@@ -1,7 +1,10 @@
 package com.koval.trainingplannerbackend.club.recurring;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.koval.trainingplannerbackend.club.session.GroupLinkedTraining;
 import com.koval.trainingplannerbackend.club.session.OpenToAllDelayUnit;
+import com.koval.trainingplannerbackend.club.session.SessionCategory;
+import com.koval.trainingplannerbackend.pacing.dto.RouteCoordinate;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
@@ -46,4 +49,11 @@ public class RecurringSessionTemplate {
     private LocalDate endDate;
     private boolean active = true;
     private LocalDateTime createdAt;
+
+    private SessionCategory category = SessionCategory.SCHEDULED;
+
+    @JsonIgnore
+    private byte[] gpxData;
+    private String gpxFileName;
+    private List<RouteCoordinate> routeCoordinates;
 }

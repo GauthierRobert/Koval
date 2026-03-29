@@ -73,6 +73,9 @@
       @if (activeTab === 'sessions') {
         <app-club-sessions-tab [club]="club" (createAiForSession)="openAiModalForSession($event)"></app-club-sessions-tab>
       }
+      @if (activeTab === 'open-sessions') {
+        <app-club-open-sessions-tab [club]="club"></app-club-open-sessions-tab>
+      }
       @if (activeTab === 'members') {
         <app-club-members-tab [club]="club"></app-club-members-tab>
       }

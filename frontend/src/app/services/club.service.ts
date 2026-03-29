@@ -122,6 +122,9 @@ export interface ClubTrainingSession {
   cancelled?: boolean;
   cancellationReason?: string;
   cancelledAt?: string;
+  category?: 'SCHEDULED' | 'OPEN';
+  gpxFileName?: string;
+  routeCoordinates?: { lat: number; lon: number; elevation: number; distance: number }[];
 }
 
 export interface RecurringSessionTemplate {
@@ -146,6 +149,9 @@ export interface RecurringSessionTemplate {
   endDate?: string;
   active: boolean;
   createdAt: string;
+  category?: 'SCHEDULED' | 'OPEN';
+  gpxFileName?: string;
+  routeCoordinates?: { lat: number; lon: number; elevation: number; distance: number }[];
 }
 
 export interface ClubActivity {
@@ -292,6 +298,7 @@ export interface CreateClubData {
 }
 
 export interface CreateSessionData {
+  category?: 'SCHEDULED' | 'OPEN';
   title: string;
   sport?: string;
   scheduledAt?: string;
@@ -310,6 +317,7 @@ export interface CreateSessionData {
 }
 
 export interface CreateRecurringSessionData {
+  category?: 'SCHEDULED' | 'OPEN';
   title: string;
   sport?: string;
   dayOfWeek: string;
@@ -351,6 +359,9 @@ export class ClubService {
 
   private sessionsSubject = new BehaviorSubject<ClubTrainingSession[]>([]);
   sessions$ = this.sessionsSubject.asObservable();
+
+  private openSessionsSubject = new BehaviorSubject<ClubTrainingSession[]>([]);
+  openSessions$ = this.openSessionsSubject.asObservable();
 
   private weeklyStatsSubject = new BehaviorSubject<ClubWeeklyStats | null>(null);
   weeklyStats$ = this.weeklyStatsSubject.asObservable();
@@ -718,11 +729,30 @@ export class ClubService {
       .subscribe((roles) => this.ngZone.run(() => this.myClubRolesSubject.next(roles)));
   }
 
-  loadSessionsForRange(clubId: string, from: string, to: string): void {
+  loadSessionsForRange(clubId: string, from: string, to: string, category?: 'SCHEDULED' | 'OPEN'): void {
+    const params: Record<string, string> = { from, to };
+    if (category) params['category'] = category;
     this.http
-      .get<ClubTrainingSession[]>(`${this.apiUrl}/${clubId}/sessions`, { params: { from, to } })
+      .get<ClubTrainingSession[]>(`${this.apiUrl}/${clubId}/sessions`, { params })
       .pipe(catchError(() => of([] as ClubTrainingSession[])))
       .subscribe((sessions) => this.ngZone.run(() => this.sessionsSubject.next(sessions)));
+  }
+
+  loadOpenSessions(clubId: string, from: string, to: string): void {
+    this.http
+      .get<ClubTrainingSession[]>(`${this.apiUrl}/${clubId}/sessions`, { params: { from, to, category: 'OPEN' } })
+      .pipe(catchError(() => of([] as ClubTrainingSession[])))
+      .subscribe((sessions) => this.ngZone.run(() => this.openSessionsSubject.next(sessions)));
+  }
+
+  uploadSessionGpx(clubId: string, sessionId: string, file: File): Observable<ClubTrainingSession> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/gpx`, formData);
+  }
+
+  deleteSessionGpx(clubId: string, sessionId: string): Observable<ClubTrainingSession> {
+    return this.http.delete<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/gpx`);
   }
 
   loadRecurringTemplates(clubId: string): void {
@@ -985,6 +1015,7 @@ export class ClubService {
     this.pendingSubject.next([]);
     this.feedSubject.next([]);
     this.sessionsSubject.next([]);
+    this.openSessionsSubject.next([]);
     this.weeklyStatsSubject.next(null);
     this.leaderboardSubject.next([]);
     this.raceGoalsSubject.next([]);

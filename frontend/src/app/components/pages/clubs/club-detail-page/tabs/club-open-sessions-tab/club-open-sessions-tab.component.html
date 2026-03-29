@@ -1,0 +1,166 @@
+<div class="open-sessions-tab">
+  <!-- Header -->
+  <div class="tab-header">
+    <h3>{{ 'CLUB_OPEN_SESSIONS.HEADING' | translate }}</h3>
+    <div class="tab-header-actions">
+      <div class="week-nav">
+        <button class="btn-ghost" (click)="prevWeek()">&lsaquo;</button>
+        <span class="week-label">{{ weekLabel() }}</span>
+        <button class="btn-ghost" (click)="nextWeek()">&rsaquo;</button>
+      </div>
+      @if (canCreate) {
+        <button class="btn-primary btn-sm" (click)="openForm()">
+          {{ 'CLUB_OPEN_SESSIONS.BTN_PROPOSE_SESSION' | translate }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Create/Edit Form Modal -->
+  @if (isFormOpen) {
+    <div class="form-overlay" (click)="closeForm()">
+      <div class="form-modal glass" (click)="$event.stopPropagation()">
+        <h4>{{ editingSession ? ('CLUB_OPEN_SESSIONS.FORM_EDIT_TITLE' | translate) : ('CLUB_OPEN_SESSIONS.FORM_CREATE_TITLE' | translate) }}</h4>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>{{ 'CLUB_SESSIONS.FORM_LABEL_TITLE' | translate }}</label>
+            <input type="text" [(ngModel)]="form['title']" class="input" />
+          </div>
+
+          <div class="form-group">
+            <label>{{ 'CLUB_SESSIONS.FORM_LABEL_SPORT' | translate }}</label>
+            <select [(ngModel)]="form['sport']" class="input">
+              <option value="CYCLING">{{ 'SPORTS.CYCLING' | translate }}</option>
+              <option value="RUNNING">{{ 'SPORTS.RUNNING' | translate }}</option>
+              <option value="SWIMMING">{{ 'SPORTS.SWIMMING' | translate }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DATE' | translate }}</label>
+            <input type="datetime-local" [(ngModel)]="form['scheduledAt']" class="input" />
+          </div>
+
+          <div class="form-group">
+            <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DURATION' | translate }}</label>
+            <input type="number" [(ngModel)]="form['durationMinutes']" class="input" placeholder="min" />
+          </div>
+
+          <div class="form-group">
+            <label>{{ 'CLUB_SESSIONS.FORM_LABEL_LOCATION' | translate }}</label>
+            <input type="text" [(ngModel)]="form['location']" class="input" />
+          </div>
+
+          <div class="form-group">
+            <label>{{ 'CLUB_SESSIONS.FORM_LABEL_MAX_PARTICIPANTS' | translate }}</label>
+            <input type="number" [(ngModel)]="form['maxParticipants']" class="input" />
+          </div>
+
+          <div class="form-group full-width">
+            <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DESCRIPTION' | translate }}</label>
+            <textarea [(ngModel)]="form['description']" class="input" rows="3"></textarea>
+          </div>
+
+          <div class="form-group full-width">
+            <app-meeting-point-picker
+              [lat]="form['meetingPointLat']"
+              [lon]="form['meetingPointLon']"
+              (pointChanged)="onMeetingPointSelected($event)">
+            </app-meeting-point-picker>
+          </div>
+
+          <div class="form-group full-width">
+            <label>{{ 'CLUB_SESSIONS.FORM_LABEL_GPX' | translate }}</label>
+            @if (editingSession?.gpxFileName; as gpxName) {
+              <div class="gpx-existing">
+                <span class="gpx-badge">{{ gpxName }}</span>
+                <button class="btn-ghost-sm btn-danger" (click)="removeGpx()">{{ 'COMMON.DELETE' | translate }}</button>
+              </div>
+            }
+            <input type="file" accept=".gpx" (change)="onGpxFileSelected($event)" class="file-input" />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-ghost" (click)="closeForm()">{{ 'COMMON.CANCEL' | translate }}</button>
+          <button class="btn-primary" (click)="save()" [disabled]="!form['title'] || !form['scheduledAt']">
+            {{ (editingSession ? 'COMMON.SAVE' : 'COMMON.CREATE') | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Sessions List -->
+  @if (openSessions$ | async; as sessions) {
+    @if (sessions.length === 0) {
+      <div class="empty-state">
+        <p>{{ 'CLUB_OPEN_SESSIONS.EMPTY' | translate }}</p>
+        <p class="hint">{{ 'CLUB_OPEN_SESSIONS.EMPTY_HINT' | translate }}</p>
+      </div>
+    } @else {
+      @for (group of groupByDay(sessions); track group.date.toISOString()) {
+        <div class="day-group">
+          <div class="day-header">{{ group.date | date:'EEEE, MMM d' }}</div>
+          @for (session of group.sessions; track session.id) {
+            <div class="sc-card" [class.cancelled]="session.cancelled">
+              <div class="sc-lead">
+                <span class="sc-time">{{ session.scheduledAt | date:'HH:mm' }}</span>
+                @if (session.durationMinutes) {
+                  <span class="sc-duration">{{ session.durationMinutes }}min</span>
+                }
+                @if (session.cancelled) {
+                  <span class="badge badge-danger">{{ 'CLUB_SESSIONS.CANCELLED' | translate }}</span>
+                }
+              </div>
+
+              <div class="sc-identity">
+                <span class="sc-title">{{ session.title }}</span>
+              </div>
+
+              <div class="sc-meta">
+                @if (session.sport) {
+                  <app-sport-icon [sport]="$any(session.sport)" [size]="14"></app-sport-icon>
+                  <span class="sport-tag">{{ session.sport }}</span>
+                }
+                @if (session.location) {
+                  <span class="meta-item">{{ session.location }}</span>
+                }
+                @if (session.gpxFileName) {
+                  <span class="gpx-badge">{{ session.gpxFileName }}</span>
+                }
+              </div>
+
+              <!-- Route preview -->
+              @if (session.routeCoordinates?.length) {
+                <div class="route-preview">
+                  <svg [attr.viewBox]="getRouteViewBox(session)" preserveAspectRatio="xMidYMid meet" class="route-svg">
+                    <polyline [attr.points]="getRoutePoints(session)" fill="none" stroke="var(--accent)" stroke-width="0.0003" />
+                  </svg>
+                </div>
+              }
+
+              <div class="sc-footer">
+                <span class="participant-count">
+                  {{ session.participantIds.length }}{{ session.maxParticipants ? '/' + session.maxParticipants : '' }}
+                </span>
+
+                @if (!session.cancelled) {
+                  @if (isJoined(session)) {
+                    <button class="btn-ghost-sm" (click)="leaveSession(session)">{{ 'CLUB_SESSIONS.BTN_CANCEL' | translate }}</button>
+                  } @else {
+                    <button class="btn-primary btn-sm" (click)="joinSession(session)">{{ 'CLUB_SESSIONS.BTN_JOIN' | translate }}</button>
+                  }
+                  @if (isCreator(session)) {
+                    <button class="btn-ghost-sm" (click)="openForm(session)">{{ 'COMMON.EDIT' | translate }}</button>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  }
+</div>

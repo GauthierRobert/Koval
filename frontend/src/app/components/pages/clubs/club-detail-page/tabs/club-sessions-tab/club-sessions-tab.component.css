@@ -264,8 +264,8 @@
 }
 
 .sc-tag--group {
-  background: var(--secondary-color);
-  color: var(--on-secondary-color);;
+  background: var(--primary-color);
+  color: var(--on-primary-color);;
 }
 
 .sc-tag--open {

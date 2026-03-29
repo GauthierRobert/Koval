@@ -39,7 +39,7 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
                 @if (a.profilePicture) {
                   <img [src]="a.profilePicture" [alt]="a.displayName" />
                 } @else {
-                  {{ a.displayName?.charAt(0)?.toUpperCase() }}
+                  {{ a.displayName.charAt(0).toUpperCase() }}
                 }
               </div>
             }

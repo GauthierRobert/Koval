@@ -13,6 +13,7 @@ import com.koval.trainingplannerbackend.club.recurring.RecurringSessionService;
 import com.koval.trainingplannerbackend.club.recurring.RecurringSessionTemplate;
 import com.koval.trainingplannerbackend.club.session.ClubSessionService;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
+import com.koval.trainingplannerbackend.club.session.SessionCategory;
 import com.koval.trainingplannerbackend.club.stats.ClubStatsService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -224,13 +225,14 @@ public class ClubController {
     @GetMapping("/{id}/sessions")
     public ResponseEntity<List<ClubTrainingSession>> listSessions(
             @PathVariable String id,
+            @RequestParam(required = false) SessionCategory category,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
         String userId = SecurityUtils.getCurrentUserId();
         if (from != null && to != null) {
-            return ResponseEntity.ok(clubSessionService.listSessions(userId, id, from, to));
+            return ResponseEntity.ok(clubSessionService.listSessions(userId, id, category, from, to));
         }
-        return ResponseEntity.ok(clubSessionService.listSessions(userId, id));
+        return ResponseEntity.ok(clubSessionService.listSessions(userId, id, category));
     }
 
     @PutMapping("/{id}/sessions/{sessionId}")
@@ -347,5 +349,29 @@ public class ClubController {
             @RequestBody UnlinkTrainingRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(clubSessionService.unlinkTrainingFromSession(userId, id, sessionId, req.clubGroupId()));
+    }
+
+    // --- GPX ---
+
+    @PostMapping("/{id}/sessions/{sessionId}/gpx")
+    public ResponseEntity<ClubTrainingSession> uploadSessionGpx(
+            @PathVariable String id, @PathVariable String sessionId,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(clubSessionService.uploadGpx(userId, id, sessionId, file));
+    }
+
+    @DeleteMapping("/{id}/sessions/{sessionId}/gpx")
+    public ResponseEntity<ClubTrainingSession> deleteSessionGpx(
+            @PathVariable String id, @PathVariable String sessionId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(clubSessionService.deleteGpx(userId, id, sessionId));
+    }
+
+    @GetMapping("/{id}/sessions/{sessionId}/gpx")
+    public ResponseEntity<byte[]> downloadSessionGpx(
+            @PathVariable String id, @PathVariable String sessionId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return clubSessionService.getGpxDownload(userId, id, sessionId);
     }
 }

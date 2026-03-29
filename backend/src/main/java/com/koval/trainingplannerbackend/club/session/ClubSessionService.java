@@ -13,11 +13,17 @@ import com.koval.trainingplannerbackend.club.group.ClubGroup;
 import com.koval.trainingplannerbackend.club.group.ClubGroupRepository;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
 import com.koval.trainingplannerbackend.notification.NotificationService;
+import com.koval.trainingplannerbackend.pacing.gpx.GpxParseResult;
+import com.koval.trainingplannerbackend.pacing.gpx.GpxParser;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.model.Training;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -38,6 +44,7 @@ public class ClubSessionService {
     private final TrainingService trainingService;
     private final NotificationService notificationService;
     private final ClubActivityService activityService;
+    private final GpxParser gpxParser;
 
     public ClubSessionService(ClubTrainingSessionRepository sessionRepository,
                               ClubMembershipRepository membershipRepository,
@@ -46,7 +53,8 @@ public class ClubSessionService {
                               ClubAuthorizationService authorizationService,
                               TrainingService trainingService,
                               NotificationService notificationService,
-                              ClubActivityService activityService) {
+                              ClubActivityService activityService,
+                              GpxParser gpxParser) {
         this.sessionRepository = sessionRepository;
         this.membershipRepository = membershipRepository;
         this.clubRepository = clubRepository;
@@ -55,10 +63,16 @@ public class ClubSessionService {
         this.trainingService = trainingService;
         this.notificationService = notificationService;
         this.activityService = activityService;
+        this.gpxParser = gpxParser;
     }
 
     public ClubTrainingSession createSession(String userId, String clubId, CreateSessionRequest req) {
-        authorizationService.requireAdminOrCoach(userId, clubId);
+        SessionCategory cat = req.category() != null ? req.category() : SessionCategory.SCHEDULED;
+        if (cat == SessionCategory.OPEN) {
+            authorizationService.requireActiveMember(userId, clubId);
+        } else {
+            authorizationService.requireAdminOrCoach(userId, clubId);
+        }
 
         ClubTrainingSession session = new ClubTrainingSession();
         session.setClubId(clubId);
@@ -70,32 +84,46 @@ public class ClubSessionService {
 
         activityService.emitActivity(clubId, ClubActivityType.SESSION_CREATED, userId, session.getId(), session.getTitle());
 
-        // Notify active club members about the new session
+        String prefType = (cat == SessionCategory.OPEN) ? "openSessionCreated" : "clubSessionCreated";
+        String notifPrefix = (cat == SessionCategory.OPEN) ? "Open Session" : "New Session";
         notifyClubMembers(clubId, session,
-                getClubName(clubId) + " — New Session",
+                getClubName(clubId) + " — " + notifPrefix,
                 "\"" + session.getTitle() + "\" — " + formatSessionDate(session),
-                "SESSION_CREATED", "clubSessionCreated");
+                "SESSION_CREATED", prefType);
 
         return session;
     }
 
     public List<ClubTrainingSession> listSessions(String userId, String clubId) {
-        List<ClubTrainingSession> all = sessionRepository.findByClubIdOrderByScheduledAtDesc(clubId);
+        return listSessions(userId, clubId, (SessionCategory) null);
+    }
+
+    public List<ClubTrainingSession> listSessions(String userId, String clubId, SessionCategory category) {
+        List<ClubTrainingSession> all = category != null
+                ? sessionRepository.findByClubIdAndCategoryOrderByScheduledAtDesc(clubId, category)
+                : sessionRepository.findByClubIdOrderByScheduledAtDesc(clubId);
         return filterByGroupVisibility(userId, clubId, all);
     }
 
     public List<ClubTrainingSession> listSessions(String userId, String clubId, LocalDateTime from, LocalDateTime to) {
-        List<ClubTrainingSession> all = sessionRepository.findByClubIdAndScheduledAtBetween(clubId, from, to);
+        return listSessions(userId, clubId, null, from, to);
+    }
+
+    public List<ClubTrainingSession> listSessions(String userId, String clubId, SessionCategory category,
+                                                    LocalDateTime from, LocalDateTime to) {
+        List<ClubTrainingSession> all = category != null
+                ? sessionRepository.findByClubIdAndCategoryAndScheduledAtBetween(clubId, category, from, to)
+                : sessionRepository.findByClubIdAndScheduledAtBetween(clubId, from, to);
         return filterByGroupVisibility(userId, clubId, all);
     }
 
     public ClubTrainingSession cancelEntireSession(String userId, String clubId, String sessionId, String reason) {
-        authorizationService.requireAdminOrCoach(userId, clubId);
         ClubTrainingSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
         if (!session.getClubId().equals(clubId)) {
             throw new IllegalArgumentException("Session does not belong to this club");
         }
+        authorizeSessionModification(userId, clubId, session);
         if (session.isCancelled()) {
             throw new IllegalStateException("Session is already cancelled");
         }
@@ -250,12 +278,12 @@ public class ClubSessionService {
 
     public ClubTrainingSession updateSession(String userId, String clubId, String sessionId,
                                               CreateSessionRequest req) {
-        authorizationService.requireAdminOrCoach(userId, clubId);
         ClubTrainingSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
         if (!session.getClubId().equals(clubId)) {
             throw new IllegalArgumentException("Session does not belong to this club");
         }
+        authorizeSessionModification(userId, clubId, session);
         if (session.isCancelled()) {
             throw new IllegalStateException("Cannot update a cancelled session");
         }
@@ -416,6 +444,62 @@ public class ClubSessionService {
 
     private String formatSessionDate(ClubTrainingSession session) {
         return session.getScheduledAt() != null ? session.getScheduledAt().format(SESSION_DATE_FMT) : "";
+    }
+
+    // --- GPX methods ---
+
+    public ClubTrainingSession uploadGpx(String userId, String clubId, String sessionId, MultipartFile file) {
+        ClubTrainingSession session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        if (!session.getClubId().equals(clubId)) {
+            throw new IllegalArgumentException("Session does not belong to this club");
+        }
+        authorizeSessionModification(userId, clubId, session);
+        try {
+            byte[] gpxBytes = file.getBytes();
+            GpxParseResult result = gpxParser.parseWithCoordinates(new java.io.ByteArrayInputStream(gpxBytes));
+            session.setGpxData(gpxBytes);
+            session.setGpxFileName(file.getOriginalFilename());
+            session.setRouteCoordinates(result.routeCoordinates());
+            return sessionRepository.save(session);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to process GPX file: " + e.getMessage(), e);
+        }
+    }
+
+    public ClubTrainingSession deleteGpx(String userId, String clubId, String sessionId) {
+        ClubTrainingSession session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        if (!session.getClubId().equals(clubId)) {
+            throw new IllegalArgumentException("Session does not belong to this club");
+        }
+        authorizeSessionModification(userId, clubId, session);
+        session.setGpxData(null);
+        session.setGpxFileName(null);
+        session.setRouteCoordinates(null);
+        return sessionRepository.save(session);
+    }
+
+    public ResponseEntity<byte[]> getGpxDownload(String userId, String clubId, String sessionId) {
+        authorizationService.requireActiveMember(userId, clubId);
+        ClubTrainingSession session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        if (session.getGpxData() == null) {
+            return ResponseEntity.notFound().build();
+        }
+        String filename = session.getGpxFileName() != null ? session.getGpxFileName() : "route.gpx";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.APPLICATION_XML)
+                .body(session.getGpxData());
+    }
+
+    private void authorizeSessionModification(String userId, String clubId, ClubTrainingSession session) {
+        if (session.getCategory() == SessionCategory.OPEN && session.getCreatedBy().equals(userId)) {
+            authorizationService.requireActiveMember(userId, clubId);
+        } else {
+            authorizationService.requireAdminOrCoach(userId, clubId);
+        }
     }
 
     void enrichFromLinkedTraining(ClubTrainingSession session) {

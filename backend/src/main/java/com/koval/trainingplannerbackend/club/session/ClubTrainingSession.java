@@ -7,6 +7,9 @@ import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.koval.trainingplannerbackend.pacing.dto.RouteCoordinate;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +52,13 @@ public class ClubTrainingSession {
     private boolean cancelled;
     private String cancellationReason;
     private LocalDateTime cancelledAt;
+
+    private SessionCategory category = SessionCategory.SCHEDULED;
+
+    @JsonIgnore
+    private byte[] gpxData;
+    private String gpxFileName;
+    private List<RouteCoordinate> routeCoordinates;
 
     public LocalDateTime computeOpenToAllFrom() {
         if (!openToAll || scheduledAt == null) return null;

@@ -368,6 +368,7 @@
     "TAB_MEMBERS": "MEMBERS",
     "TAB_STATS": "STATS",
     "TAB_LEADERBOARD": "LEADERBOARD",
+    "TAB_OPEN_SESSIONS": "RIDES",
     "TAB_RACE_GOALS": "RACE GOALS",
     "LOADING": "Loading club...",
     "MEMBERSHIP_MEMBER": "MEMBER",
@@ -498,7 +499,22 @@
     "OPEN_TO_ALL_IN_DAYS": "Open to all in {{remainD}}d",
     "TG_AI_BTN_ADD_TRAINING": "+ training",
     "TG_VIEW_LINK": "View →",
-    "SHOW_OTHER_GROUPS": "Show other groups' sessions"
+    "SHOW_OTHER_GROUPS": "Show other groups' sessions",
+    "FORM_LABEL_GPX": "GPX Route File",
+    "CANCELLED": "CANCELLED"
+  },
+  "CLUB_OPEN_SESSIONS": {
+    "HEADING": "Rides",
+    "BTN_PROPOSE_SESSION": "PROPOSE SESSION",
+    "EMPTY": "No open sessions this week.",
+    "EMPTY_HINT": "Any member can propose a group ride, run, or swim.",
+    "FORM_CREATE_TITLE": "Propose Open Session",
+    "FORM_EDIT_TITLE": "Edit Open Session"
+  },
+  "SPORTS": {
+    "CYCLING": "Cycling",
+    "RUNNING": "Running",
+    "SWIMMING": "Swimming"
   },
   "CLUB_MEMBERS": {
     "SECTION_GROUPS": "Groups",
