@@ -324,7 +324,9 @@ class ClubFlowIntegrationTest extends BaseIntegrationTest {
                         .param("page", "0")
                         .param("size", "50"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$.items").isArray())
+                .andExpect(jsonPath("$.pinned").isArray())
+                .andExpect(jsonPath("$.hasMore").isBoolean());
     }
 
     @Test

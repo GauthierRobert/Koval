@@ -192,11 +192,14 @@
   overflow-x: auto;
 }
 
-.tab-strip-content{
+.tab-strip-content {
   max-width: var(--page-max-width);
   margin: 0 auto;
   width: 100%;
   padding: 0 var(--page-padding);
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .tab-btn {
@@ -308,7 +311,28 @@
   }
 
   .tab-strip {
+    padding: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .tab-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-strip-content {
     padding: var(--space-xs) var(--space-md);
+    gap: 0;
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .tab-btn {
+    padding: 8px 10px;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
   }
 
   .tab-body {

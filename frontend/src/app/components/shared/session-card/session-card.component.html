@@ -112,6 +112,22 @@
     <div class="gpx-row">
       <div class="gpx-actions">
         <span class="gpx-badge">{{ session.gpxFileName }}</span>
+        @if (session.routeCoordinates?.length) {
+        <div class="gpx-meta">
+            <span class="gpx-stat">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round"><polyline
+                points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              {{ getElevationGain() }}m
+            </span>
+          <span class="gpx-stat">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline
+                points="12 5 19 12 12 19"/></svg>
+              {{ getTotalDistanceKm() }}km
+            </span>
+        </div>
+        }
         <button class="gpx-btn" (click)="onDownloadGpx($event)" [title]="'COMMON.DOWNLOAD' | translate">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round">
@@ -131,22 +147,7 @@
           </svg>
         </button>
       </div>
-      @if (session.routeCoordinates?.length) {
-      <div class="gpx-meta">
-            <span class="gpx-stat">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                   stroke-linecap="round" stroke-linejoin="round"><polyline
-                points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-              {{ getElevationGain() }}m
-            </span>
-        <span class="gpx-stat">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                   stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline
-                points="12 5 19 12 12 19"/></svg>
-              {{ getTotalDistanceKm() }}km
-            </span>
-      </div>
-      }
+
     </div>
     }
 
@@ -162,7 +163,7 @@
               [class.sc-linked__btn--dimmed]="!isInUserGroup(glt)"
               (click)="onNavigateToTraining(glt.trainingId, $event)">
         @if (glt.clubGroupName && !session.clubGroupId) {
-        <span class="sc-tag sc-tag--group small">{{ glt.clubGroupName }}</span>
+          <span class="sc-tag sc-tag--group small">{{ glt.clubGroupName }}</span>
         }
         <span
           class="sc-linked__title">{{ glt.trainingTitle || ('CLUB_SESSIONS.LINKED_TRAINING_FALLBACK' | translate) }}</span>
@@ -182,7 +183,41 @@
     <p class="sc-desc">{{ session.description }}</p>
     }
 
-
+    <div class="sc-detail">
+      <div class="sc-detail__section">
+        <div class="sc-detail__title">{{ 'CLUB_SESSIONS.DETAIL_ATTENDING' | translate: { count:
+          session.participantIds.length } }}
+        </div>
+        @if (session.participantIds.length > 0) {
+        <div class="sc-detail__list">
+          @for (p of getParticipantNames(); track p.initial) {
+          <div class="sc-detail__row">
+            <div class="sc-detail__avatar">{{ p.initial }}</div>
+            <span class="sc-detail__name">{{ p.name }}</span>
+          </div>
+          }
+        </div>
+        } @else {
+        <span class="sc-detail__empty">{{ 'CLUB_SESSIONS.DETAIL_NO_ATTENDEES' | translate }}</span>
+        }
+      </div>
+      @if ((session.waitingList?.length || 0) > 0) {
+      <div class="sc-detail__section">
+        <div class="sc-detail__title">{{ 'CLUB_SESSIONS.DETAIL_WAITING_LIST' | translate: { count:
+          session.waitingList!.length } }}
+        </div>
+        <div class="sc-detail__list">
+          @for (w of getWaitingListNames(); track w.position) {
+          <div class="sc-detail__row">
+            <span class="sc-detail__position">#{{ w.position }}</span>
+            <div class="sc-detail__avatar sc-detail__avatar--waiting">{{ w.initial }}</div>
+            <span class="sc-detail__name">{{ w.name }}</span>
+          </div>
+          }
+        </div>
+      </div>
+      }
+    </div>
     <!-- ZONE 4: Footer -->
     <div class="sc-footer">
       <div class="sc-capacity">
@@ -219,42 +254,6 @@
       }
     </div>
 
-    <!-- Expandable detail -->
-    <div class="sc-detail">
-      <div class="sc-detail__section">
-        <div class="sc-detail__title">{{ 'CLUB_SESSIONS.DETAIL_ATTENDING' | translate: { count:
-          session.participantIds.length } }}
-        </div>
-        @if (session.participantIds.length > 0) {
-        <div class="sc-detail__list">
-          @for (p of getParticipantNames(); track p.initial) {
-          <div class="sc-detail__row">
-            <div class="sc-detail__avatar">{{ p.initial }}</div>
-            <span class="sc-detail__name">{{ p.name }}</span>
-          </div>
-          }
-        </div>
-        } @else {
-        <span class="sc-detail__empty">{{ 'CLUB_SESSIONS.DETAIL_NO_ATTENDEES' | translate }}</span>
-        }
-      </div>
-      @if ((session.waitingList?.length || 0) > 0) {
-      <div class="sc-detail__section">
-        <div class="sc-detail__title">{{ 'CLUB_SESSIONS.DETAIL_WAITING_LIST' | translate: { count:
-          session.waitingList!.length } }}
-        </div>
-        <div class="sc-detail__list">
-          @for (w of getWaitingListNames(); track w.position) {
-          <div class="sc-detail__row">
-            <span class="sc-detail__position">#{{ w.position }}</span>
-            <div class="sc-detail__avatar sc-detail__avatar--waiting">{{ w.initial }}</div>
-            <span class="sc-detail__name">{{ w.name }}</span>
-          </div>
-          }
-        </div>
-      </div>
-      }
-    </div>
   </div>
 
   <!-- Map side (only when GPX exists) -->

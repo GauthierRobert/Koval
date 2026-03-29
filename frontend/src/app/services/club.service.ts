@@ -359,6 +359,7 @@ export class ClubService {
 
   private sessionsSubject = new BehaviorSubject<ClubTrainingSession[]>([]);
   sessions$ = this.sessionsSubject.asObservable();
+  private lastSessionsQuery: { clubId: string; from: string; to: string; category?: string } | null = null;
 
   private openSessionsSubject = new BehaviorSubject<ClubTrainingSession[]>([]);
   openSessions$ = this.openSessionsSubject.asObservable();
@@ -509,6 +510,11 @@ export class ClubService {
   }
 
   loadSessions(id: string): void {
+    if (this.lastSessionsQuery?.clubId === id) {
+      const { from, to, category } = this.lastSessionsQuery;
+      this.loadSessionsForRange(id, from, to, category as 'SCHEDULED' | 'OPEN' | undefined);
+      return;
+    }
     this.http
       .get<ClubTrainingSession[]>(`${this.apiUrl}/${id}/sessions`)
       .pipe(catchError(() => of([] as ClubTrainingSession[])))
@@ -730,6 +736,7 @@ export class ClubService {
   }
 
   loadSessionsForRange(clubId: string, from: string, to: string, category?: 'SCHEDULED' | 'OPEN'): void {
+    this.lastSessionsQuery = { clubId, from, to, category };
     const params: Record<string, string> = { from, to };
     if (category) params['category'] = category;
     this.http

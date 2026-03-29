@@ -1,7 +1,9 @@
 package com.koval.trainingplannerbackend.club.tools;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
+import com.koval.trainingplannerbackend.club.ClubService;
 import com.koval.trainingplannerbackend.club.dto.ClubMemberResponse;
+import com.koval.trainingplannerbackend.club.dto.ClubSummaryResponse;
 import com.koval.trainingplannerbackend.club.dto.CreateRecurringSessionRequest;
 import com.koval.trainingplannerbackend.club.dto.CreateSessionRequest;
 import com.koval.trainingplannerbackend.club.group.ClubGroup;
@@ -29,19 +31,33 @@ import java.util.List;
 @Service
 public class ClubToolService {
 
+    private final ClubService clubService;
     private final ClubSessionService sessionService;
     private final RecurringSessionService recurringService;
     private final ClubMembershipService membershipService;
     private final ClubGroupService groupService;
 
-    public ClubToolService(ClubSessionService sessionService,
+    public ClubToolService(ClubService clubService,
+                           ClubSessionService sessionService,
                            RecurringSessionService recurringService,
                            ClubMembershipService membershipService,
                            ClubGroupService groupService) {
+        this.clubService = clubService;
         this.sessionService = sessionService;
         this.recurringService = recurringService;
         this.membershipService = membershipService;
         this.groupService = groupService;
+    }
+
+    // ── List user's clubs ─────────────────────────────────────────────
+
+    @Tool(description = "List all clubs the current user is a member of. Returns club id, name, description, member count, and the user's membership status/role. Use this first to discover which clubs the user belongs to before performing club-specific operations.")
+    public Object listMyClubs(
+            @ToolParam(description = "User ID (from context)") String userId) {
+        List<ClubSummaryResponse> clubs = clubService.getUserClubs(userId);
+        return clubs.stream().map(c -> new MyClubSummary(
+                c.id(), c.name(), c.description(), c.memberCount(), c.membershipStatus()
+        )).toList();
     }
 
     // ── Session listing ──────────────────────────────────────────────
@@ -265,5 +281,9 @@ public class ClubToolService {
     }
 
     public record ClubGroupSummary(String id, String name, int memberCount) {
+    }
+
+    public record MyClubSummary(String id, String name, String description,
+                                int memberCount, String membershipStatus) {
     }
 }

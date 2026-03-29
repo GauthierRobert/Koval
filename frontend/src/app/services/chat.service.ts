@@ -11,6 +11,7 @@ export type AgentType =
   | 'SCHEDULING'
   | 'ANALYSIS'
   | 'COACH_MANAGEMENT'
+  | 'CLUB_MANAGEMENT'
   | 'GENERAL';
 
 export interface ActionStep {

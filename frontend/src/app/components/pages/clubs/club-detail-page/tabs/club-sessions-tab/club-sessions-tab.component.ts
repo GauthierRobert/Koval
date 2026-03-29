@@ -449,11 +449,17 @@ export class ClubSessionsTabComponent implements OnInit {
   // --- Session actions ---
 
   joinSession(session: ClubTrainingSession): void {
-    this.clubService.joinSession(this.club.id, session.id).subscribe({ error: () => {} });
+    this.clubService.joinSession(this.club.id, session.id).subscribe({
+      next: () => this.loadCalendarSessions(),
+      error: () => {},
+    });
   }
 
   cancelParticipation(session: ClubTrainingSession): void {
-    this.clubService.cancelSession(this.club.id, session.id).subscribe({ error: () => {} });
+    this.clubService.cancelSession(this.club.id, session.id).subscribe({
+      next: () => this.loadCalendarSessions(),
+      error: () => {},
+    });
   }
 
   onAiCreateForSession(session: ClubTrainingSession): void {

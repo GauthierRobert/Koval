@@ -35,6 +35,7 @@ export class SettingsComponent implements OnInit {
 
     user$ = this.authService.user$;
     unlinking = false;
+    showConnectedApps = false;
 
     ftp: number | null = null;
     weightKg: number | null = null;
@@ -123,6 +124,12 @@ export class SettingsComponent implements OnInit {
         const m = field.minutes ?? 0;
         const s = field.seconds ?? 0;
         return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    getConnectedCount(user: User): number {
+        if (!user.linkedAccounts) return 0;
+        return [user.linkedAccounts.strava, user.linkedAccounts.google, user.linkedAccounts.garmin, user.linkedAccounts.zwift]
+            .filter(Boolean).length;
     }
 
     canUnlink(user: User, provider: 'strava' | 'google'): boolean {

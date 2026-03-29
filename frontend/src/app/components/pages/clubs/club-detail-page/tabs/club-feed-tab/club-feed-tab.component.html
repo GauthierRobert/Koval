@@ -119,6 +119,7 @@
         [club]="club"
         [currentUserId]="currentUserId"
         [weekLabel]="weekLabel"
+        [raceGoals]="(raceGoals$ | async) ?? []"
         (joinClicked)="onJoinSession($event)"
         (cancelClicked)="onCancelSession($event)"
         (weekChange)="onWeekChange($event)">

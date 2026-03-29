@@ -66,7 +66,7 @@
               </div>
 
               <div class="athletes-section">
-                <div class="athletes-label">{{ 'GROUP_MANAGEMENT.ATHLETES_SECTION_LABEL' | translate: { count: tag.groupAthletes.length } }} <button class="assign-btn" (click)="assignToGroup(tag)" [title]="'GROUP_MANAGEMENT.ASSIGN_TRAINING_TITLE' | translate">{{ 'GROUP_MANAGEMENT.ASSIGN_TRAINING_BTN' | translate }}</button></div>
+                <div class="athletes-label">{{ 'GROUP_MANAGEMENT.ATHLETES_SECTION_LABEL' | translate: { count: tag.groupAthletes.length } }} <button class="btn-primary small" (click)="assignToGroup(tag)" [title]="'GROUP_MANAGEMENT.ASSIGN_TRAINING_TITLE' | translate">{{ 'GROUP_MANAGEMENT.ASSIGN_TRAINING_BTN' | translate }}</button></div>
                 @if (tag.groupAthletes.length === 0) {
                   <div class="no-athletes">{{ 'GROUP_MANAGEMENT.NO_ATHLETES_IN_GROUP' | translate }}</div>
                 }

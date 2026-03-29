@@ -41,6 +41,7 @@ export class AIChatPageComponent implements OnInit, OnDestroy {
     { label: 'AI_CHAT.AGENT_SCHEDULE', value: 'SCHEDULING' },
     { label: 'AI_CHAT.AGENT_ANALYSE', value: 'ANALYSIS' },
     { label: 'AI_CHAT.AGENT_COACH', value: 'COACH_MANAGEMENT' },
+    { label: 'AI_CHAT.AGENT_CLUB', value: 'CLUB_MANAGEMENT' },
   ];
 
   ngOnInit(): void {
@@ -90,6 +91,7 @@ export class AIChatPageComponent implements OnInit, OnDestroy {
       SCHEDULING: 'AI_CHAT.AGENT_SCHEDULE',
       ANALYSIS: 'AI_CHAT.AGENT_ANALYSE',
       COACH_MANAGEMENT: 'AI_CHAT.AGENT_COACH',
+      CLUB_MANAGEMENT: 'AI_CHAT.AGENT_CLUB',
       GENERAL: 'AI_CHAT.AGENT_GENERAL',
     };
     const key = keys[agentType];

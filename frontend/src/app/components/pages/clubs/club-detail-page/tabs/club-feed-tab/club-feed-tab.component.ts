@@ -55,6 +55,7 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
 
   feedEvents$ = this.clubService.feedEvents$;
   sessions$ = this.clubService.sessions$;
+  raceGoals$ = this.clubService.raceGoals$;
 
   currentUserId: string | null = null;
   currentPage = 0;
