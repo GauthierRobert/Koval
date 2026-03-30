@@ -117,16 +117,16 @@ public class AIService {
 
     // ── Internals ───────────────────────────────────────────────────────
 
-    private AgentType resolveAgent(AgentType explicit, String userMessage, String userRole, String lastAgentType) {
-        if (explicit != null) {
-            if (requiresCoachRole(explicit) && !"COACH".equals(userRole)) {
-                log.debug("Downgrading {} to GENERAL for non-coach user (role={})", explicit, userRole);
+    private AgentType resolveAgent(AgentType requestedAgentType, String userMessage, String userRole, String lastAgentType) {
+        if (requestedAgentType != null) {
+            if (requiresCoachRole(requestedAgentType) && !UserContextResolver.COACH_ROLE.equals(userRole)) {
+                log.debug("Downgrading {} to GENERAL for non-coach user (role={})", requestedAgentType, userRole);
                 return AgentType.GENERAL;
             }
-            return explicit;
+            return requestedAgentType;
         }
         AgentType classified = routerService.classify(userMessage, userRole, lastAgentType);
-        if (requiresCoachRole(classified) && !"COACH".equals(userRole)) {
+        if (requiresCoachRole(classified) && !UserContextResolver.COACH_ROLE.equals(userRole)) {
             log.debug("Router classified as {} but user role is {}, falling back to GENERAL", classified, userRole);
             return AgentType.GENERAL;
         }

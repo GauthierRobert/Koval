@@ -64,7 +64,9 @@ public class ContextToolService {
         return Map.of(
                 "displayName", user.getDisplayName() != null ? user.getDisplayName() : "",
                 "role", user.getRole().name(),
-                "ftp", user.getFtp() != null ? user.getFtp() : 250,
+                "funtionalThresholdPower", user.getFtp() != null ? user.getFtp() : 250,
+                "criticalSwimSpeed", user.getCriticalSwimSpeed() != null ? user.getCriticalSwimSpeed() : 120,
+                "funtionalThresholdPace", user.getFunctionalThresholdPace() != null ? user.getFunctionalThresholdPace() : 240,
                 "ctl", user.getCtl() != null ? user.getCtl() : 0,
                 "atl", user.getAtl() != null ? user.getAtl() : 0,
                 "tsb", user.getTsb() != null ? user.getTsb() : 0

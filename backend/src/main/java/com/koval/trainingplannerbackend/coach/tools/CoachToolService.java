@@ -14,8 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * AI-facing tool service for Coach operations.
@@ -80,19 +78,6 @@ public class CoachToolService {
     public List<Group> getAthleteGroupsForCoach(ToolContext context) {
         String coachId = SecurityUtils.getUserId(context);
         return coachService.getAthleteGroupsForCoach(coachId);
-    }
-
-    private List<ScheduleSummary> enrichWithTitles(List<ScheduledWorkout> workouts) {
-        if (workouts.isEmpty()) return List.of();
-
-        List<String> trainingIds = workouts.stream()
-                .map(ScheduledWorkout::getTrainingId).distinct().toList();
-        Map<String, String> titleMap = trainingRepository.findAllById(trainingIds).stream()
-                .collect(Collectors.toMap(Training::getId, Training::getTitle, (a, b) -> a));
-
-        return workouts.stream()
-                .map(sw -> ScheduleSummary.from(sw, titleMap.getOrDefault(sw.getTrainingId(), "Unknown")))
-                .toList();
     }
 
     private String resolveTrainingTitle(String trainingId) {

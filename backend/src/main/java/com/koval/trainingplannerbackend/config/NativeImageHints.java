@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportRuntimeHints;
 
 import com.koval.trainingplannerbackend.ai.ContextToolService;
-import com.koval.trainingplannerbackend.ai.action.AIActionToolService;
+import com.koval.trainingplannerbackend.ai.action.CreationTrainingWithClubSessionToolService;
 import com.koval.trainingplannerbackend.ai.action.CreationTrainingToolService;
 import com.koval.trainingplannerbackend.club.tools.ClubToolService;
 import com.koval.trainingplannerbackend.coach.tools.CoachToolService;
@@ -38,7 +38,7 @@ public class NativeImageHints {
                     ZoneToolService.class,
                     HistoryToolService.class,
                     ClubToolService.class,
-                    AIActionToolService.class,
+                    CreationTrainingWithClubSessionToolService.class,
                     CreationTrainingToolService.class,
                     RaceToolService.class,
                     PlanToolService.class,

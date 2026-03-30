@@ -78,39 +78,39 @@ public class TrainingToolService {
 
     private static String validateElements(List<WorkoutElementRequest> elements, String path) {
         for (int i = 0; i < elements.size(); i++) {
-            WorkoutElementRequest b = elements.get(i);
+            WorkoutElementRequest element = elements.get(i);
             String prefix = path + "[" + i + "]";
-            String error = b.isSet() ? validateSet(b, prefix) : validateLeaf(b, prefix);
+            String error = element.isSet() ? validateSet(element, prefix) : validateLeaf(element, prefix);
             if (error != null) return error;
         }
         return null;
     }
 
-    private static String validateSet(WorkoutElementRequest b, String prefix) {
-        if (b.reps() == null || b.reps() < 1) {
-            return "Error: " + prefix + " is a set but has invalid reps=" + b.reps() + " (must be >= 1).";
+    private static String validateSet(WorkoutElementRequest element, String prefix) {
+        if (element.reps() == null || element.reps() < 1) {
+            return "Error: " + prefix + " is a set but has invalid reps=" + element.reps() + " (must be >= 1).";
         }
-        return validateElements(b.elements(), prefix + ".elements");
+        return validateElements(element.elements(), prefix + ".elements");
     }
 
-    private static String validateLeaf(WorkoutElementRequest b, String prefix) {
-        if (b.type() == null) {
+    private static String validateLeaf(WorkoutElementRequest element, String prefix) {
+        if (element.type() == null) {
             return "Error: " + prefix + " is missing required field 'type'.";
         }
-        if (b.pct() != null && (b.pct() < 0 || b.pct() > MAX_INTENSITY_PERCENT)) {
-            return "Error: " + prefix + " has out-of-range intensity pct=" + b.pct() + " (expected 0-" + MAX_INTENSITY_PERCENT + ").";
+        if (element.pct() != null && (element.pct() < 0 || element.pct() > MAX_INTENSITY_PERCENT)) {
+            return "Error: " + prefix + " has out-of-range intensity pct=" + element.pct() + " (expected 0-" + MAX_INTENSITY_PERCENT + ").";
         }
-        if (b.pctFrom() != null && (b.pctFrom() < 0 || b.pctFrom() > MAX_INTENSITY_PERCENT)) {
-            return "Error: " + prefix + " has out-of-range pctFrom=" + b.pctFrom() + " (expected 0-" + MAX_INTENSITY_PERCENT + ").";
+        if (element.pctFrom() != null && (element.pctFrom() < 0 || element.pctFrom() > MAX_INTENSITY_PERCENT)) {
+            return "Error: " + prefix + " has out-of-range pctFrom=" + element.pctFrom() + " (expected 0-" + MAX_INTENSITY_PERCENT + ").";
         }
-        if (b.pctTo() != null && (b.pctTo() < 0 || b.pctTo() > MAX_INTENSITY_PERCENT)) {
-            return "Error: " + prefix + " has out-of-range pctTo=" + b.pctTo() + " (expected 0-" + MAX_INTENSITY_PERCENT + ").";
+        if (element.pctTo() != null && (element.pctTo() < 0 || element.pctTo() > MAX_INTENSITY_PERCENT)) {
+            return "Error: " + prefix + " has out-of-range pctTo=" + element.pctTo() + " (expected 0-" + MAX_INTENSITY_PERCENT + ").";
         }
-        if (b.dur() != null && b.dur() <= 0) {
-            return "Error: " + prefix + " has invalid duration=" + b.dur() + " (must be > 0).";
+        if (element.dur() != null && element.dur() <= 0) {
+            return "Error: " + prefix + " has invalid duration=" + element.dur() + " (must be > 0).";
         }
-        if (b.dist() != null && b.dist() <= 0) {
-            return "Error: " + prefix + " has invalid distance=" + b.dist() + " (must be > 0).";
+        if (element.dist() != null && element.dist() <= 0) {
+            return "Error: " + prefix + " has invalid distance=" + element.dist() + " (must be > 0).";
         }
         return null;
     }

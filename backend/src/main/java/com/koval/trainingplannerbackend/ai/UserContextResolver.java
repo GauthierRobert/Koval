@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserContextResolver {
 
+    public static final String COACH_ROLE = "COACH";
+
     private static final String DEFAULT_ROLE = "ATHLETE";
     private static final int DEFAULT_FTP = 250;
 

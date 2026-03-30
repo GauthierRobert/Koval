@@ -21,15 +21,15 @@ import java.util.List;
  * AI tool service for one-shot actions: creates a Training + optional ClubTrainingSession atomically.
  */
 @Service
-public class AIActionToolService {
+public class CreationTrainingWithClubSessionToolService {
 
     private final TrainingMapper trainingMapper;
     private final TrainingService trainingService;
     private final ClubSessionService clubSessionService;
 
-    public AIActionToolService(TrainingMapper trainingMapper,
-                               TrainingService trainingService,
-                               ClubSessionService clubSessionService) {
+    public CreationTrainingWithClubSessionToolService(TrainingMapper trainingMapper,
+                                                      TrainingService trainingService,
+                                                      ClubSessionService clubSessionService) {
         this.trainingMapper = trainingMapper;
         this.trainingService = trainingService;
         this.clubSessionService = clubSessionService;

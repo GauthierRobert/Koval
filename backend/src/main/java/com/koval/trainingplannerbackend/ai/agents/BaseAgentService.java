@@ -5,6 +5,7 @@ import com.koval.trainingplannerbackend.ai.AIService.StreamResponse;
 import com.koval.trainingplannerbackend.ai.ConversationSummarizer;
 import com.koval.trainingplannerbackend.ai.UsageTracker;
 import com.koval.trainingplannerbackend.ai.UsageTracker.UsageSnapshot;
+import com.koval.trainingplannerbackend.ai.UserContextResolver;
 import com.koval.trainingplannerbackend.ai.UserContextResolver.UserContext;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystem;
@@ -110,15 +111,7 @@ public abstract class BaseAgentService implements TrainingAgent {
     }
 
     private ChatClient.ChatClientRequestSpec buildPrompt(UserContext ctx, String conversationId) {
-        String context = systemContext(ctx);
-        String summary = conversationSummarizer.getSummaryIfNeeded(conversationId);
-        if (summary != null) {
-            context = context + "\n\nPrevious conversation summary: " + summary;
-        }
-        return chatClient.prompt()
-                .messages(new SystemMessage(context))
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
-                .toolContext(Map.of(SecurityUtils.USER_ID_KEY, ctx.userId()));
+        return buildPrompt(ctx, conversationId, null);
     }
 
     private ChatClient.ChatClientRequestSpec buildPrompt(UserContext ctx, String conversationId,
@@ -128,10 +121,13 @@ public abstract class BaseAgentService implements TrainingAgent {
         if (summary != null) {
             context = context + "\n\nPrevious conversation summary: " + summary;
         }
+        Map<String, Object> toolCtx = toolSink != null
+                ? Map.of(SecurityUtils.USER_ID_KEY, ctx.userId(), "toolSink", toolSink)
+                : Map.of(SecurityUtils.USER_ID_KEY, ctx.userId());
         return chatClient.prompt()
                 .messages(new SystemMessage(context))
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
-                .toolContext(Map.of(SecurityUtils.USER_ID_KEY, ctx.userId(), "toolSink", toolSink));
+                .toolContext(toolCtx);
     }
 
     protected String systemContext(UserContext ctx) {
@@ -155,7 +151,7 @@ public abstract class BaseAgentService implements TrainingAgent {
     }
 
     private String buildDefaultZoneContext(UserContext ctx) {
-        if (!"COACH".equals(ctx.role())) return "";
+        if (!UserContextResolver.COACH_ROLE.equals(ctx.role())) return "";
         List<ZoneSystem> defaults = zoneSystemService.getDefaultZoneSystems(ctx.userId());
         if (defaults.isEmpty()) return "";
 

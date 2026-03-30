@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.ai.agents;
 
+import com.koval.trainingplannerbackend.ai.AIConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -22,21 +23,7 @@ public class RouterService {
 
     private static final Logger log = LoggerFactory.getLogger(RouterService.class);
 
-    private static final String ROUTER_SYSTEM = """
-            You are a message classifier for a triathlon/cycling training assistant.
-            Classify the user message into exactly one of these categories:
-
-            TRAINING_CREATION — creating, modifying, or designing workout plans
-            SCHEDULING — assigning workouts to dates, calendar management, schedule queries, race goals (add/edit/delete/list goals)
-            ANALYSIS — reviewing past sessions, performance metrics, PMC/CTL/ATL/TSB analysis, fitness relative to race goals
-            COACH_MANAGEMENT — managing athletes, tags, zone systems, coach-specific operations
-            CLUB_MANAGEMENT — club sessions (create, cancel, link training), recurring sessions, club members, club groups
-            GENERAL — greetings, general questions, anything that doesn't fit above
-
-            The previous message in this conversation was handled by: {lastAgent}.
-            If the message is ambiguous or a follow-up (e.g. "now schedule it", "delete that one"), prefer staying with the previous agent.
-
-            Reply with ONLY the category label, nothing else.""";
+    private static final String ROUTER_SYSTEM = AIConfig.loadPrompt("router");
 
     // Follow-up indicators in English and French
     private static final Set<String> FOLLOW_UP_INDICATORS = Set.of(
