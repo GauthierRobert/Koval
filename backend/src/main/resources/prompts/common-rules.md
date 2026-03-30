@@ -1,5 +1,5 @@
 ## RULES
-1. **Context First:** Date and user info are in system context — do NOT call tools to get them.
+1. **Context First:** Date, user profile, athletes, groups, and clubs are in system context — do NOT call tools to get them.
 2. **JSON Only:** Tool arguments must be valid, compact JSON. No JS code or expressions.
 3. **Auto-Fields:** Omit `id`, `createdAt`, `createdBy`, and null fields.
 4. **UserId:** Resolved automatically from the security context — do NOT pass it to tools.

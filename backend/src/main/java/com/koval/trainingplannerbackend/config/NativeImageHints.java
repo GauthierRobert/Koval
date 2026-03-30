@@ -6,7 +6,7 @@ import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportRuntimeHints;
 
-import com.koval.trainingplannerbackend.ai.ContextToolService;
+import com.koval.trainingplannerbackend.ai.SchedulingToolService;
 import com.koval.trainingplannerbackend.ai.action.CreationTrainingWithClubSessionToolService;
 import com.koval.trainingplannerbackend.ai.action.CreationTrainingToolService;
 import com.koval.trainingplannerbackend.club.tools.ClubToolService;
@@ -33,7 +33,7 @@ public class NativeImageHints {
         private void registerToolServiceHints(RuntimeHints hints) {
             // All @Tool service classes need full reflection for Spring AI tool discovery
             Class<?>[] toolServices = {
-                    ContextToolService.class,
+                    SchedulingToolService.class,
                     TrainingToolService.class,
                     ZoneToolService.class,
                     HistoryToolService.class,
@@ -75,6 +75,7 @@ public class NativeImageHints {
                     "prompts/general.md",
                     "prompts/planner.md",
                     "prompts/race-completion.md",
+                    "prompts/router.md",
                     "prompts/scheduling.md",
                     "prompts/training-creation.md"
             };

@@ -5,7 +5,6 @@ import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.coach.CoachService;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
-import com.koval.trainingplannerbackend.training.group.Group;
 import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
@@ -58,13 +57,6 @@ public class CoachToolService {
         return result;
     }
 
-    @Tool(description = "List athletes assigned to this coach.")
-    public List<AthleteSummary> getCoachAthletes(ToolContext context) {
-        String coachId = SecurityUtils.getUserId(context);
-        return coachService.getCoachAthletes(coachId).stream()
-                .map(AthleteSummary::from).toList();
-    }
-
     @Tool(description = "List coach's athletes filtered by group.")
     public List<AthleteSummary> getAthletesByGroup(
             @ToolParam(description = "Group ID") String groupId,
@@ -72,12 +64,6 @@ public class CoachToolService {
         String coachId = SecurityUtils.getUserId(context);
         return coachService.getAthletesByGroup(coachId, groupId).stream()
                 .map(AthleteSummary::from).toList();
-    }
-
-    @Tool(description = "List all groups for this coach. Call before getAthletesByGroup.")
-    public List<Group> getAthleteGroupsForCoach(ToolContext context) {
-        String coachId = SecurityUtils.getUserId(context);
-        return coachService.getAthleteGroupsForCoach(coachId);
     }
 
     private String resolveTrainingTitle(String trainingId) {

@@ -4,7 +4,7 @@
     "_note": "Spring AI introspects these via reflection for tool discovery"
   },
   {
-    "name": "com.koval.trainingplannerbackend.ai.ContextToolService",
+    "name": "com.koval.trainingplannerbackend.ai.SchedulingToolService",
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true,
     "allPublicMethods": true
@@ -159,25 +159,25 @@
     "allDeclaredFields": true
   },
   {
-    "name": "com.koval.trainingplannerbackend.club.tools.ClubToolService$ClubSessionSummary",
+    "name": "com.koval.trainingplannerbackend.club.tools.ClubSessionSummary",
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true,
     "allDeclaredFields": true
   },
   {
-    "name": "com.koval.trainingplannerbackend.club.tools.ClubToolService$RecurringTemplateSummary",
+    "name": "com.koval.trainingplannerbackend.club.tools.RecurringTemplateSummary",
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true,
     "allDeclaredFields": true
   },
   {
-    "name": "com.koval.trainingplannerbackend.club.tools.ClubToolService$ClubMemberSummary",
+    "name": "com.koval.trainingplannerbackend.club.tools.ClubMemberSummary",
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true,
     "allDeclaredFields": true
   },
   {
-    "name": "com.koval.trainingplannerbackend.club.tools.ClubToolService$ClubGroupSummary",
+    "name": "com.koval.trainingplannerbackend.club.tools.ClubMemberSummary",
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true,
     "allDeclaredFields": true

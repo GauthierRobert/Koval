@@ -27,13 +27,12 @@ public class AIComplexRequestConfig extends AIConfig {
     @Bean
     public ChatClient trainingCreationClient(AnthropicChatModel chatModel,
                                              ChatMemory chatMemory,
-                                             ContextToolService contextToolService,
                                              TrainingToolService trainingToolService) {
         return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(agentPrompt("training-creation"))
                 .defaultOptions(sonnetOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultToolCallbacks(wrapTools(contextToolService, trainingToolService))
+                .defaultToolCallbacks(wrapTools(trainingToolService))
                 .build();
     }
 
@@ -59,12 +58,11 @@ public class AIComplexRequestConfig extends AIConfig {
 
     @Bean
     public ChatClient actionTrainingCreatorClient(AnthropicChatModel chatModel,
-                                                  ContextToolService contextToolService,
                                                   CreationTrainingToolService creationTrainingToolService) {
         return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(agentPrompt("training-creation"))
                 .defaultOptions(sonnetOptions())
-                .defaultToolCallbacks(wrapTools(contextToolService, creationTrainingToolService))
+                .defaultToolCallbacks(wrapTools(creationTrainingToolService))
                 .build();
     }
 

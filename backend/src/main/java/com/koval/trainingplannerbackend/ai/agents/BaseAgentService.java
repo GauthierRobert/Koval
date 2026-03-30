@@ -6,6 +6,8 @@ import com.koval.trainingplannerbackend.ai.ConversationSummarizer;
 import com.koval.trainingplannerbackend.ai.UsageTracker;
 import com.koval.trainingplannerbackend.ai.UsageTracker.UsageSnapshot;
 import com.koval.trainingplannerbackend.ai.UserContextResolver;
+import com.koval.trainingplannerbackend.ai.UserContextResolver.ClubContext;
+import com.koval.trainingplannerbackend.ai.UserContextResolver.GroupSummary;
 import com.koval.trainingplannerbackend.ai.UserContextResolver.UserContext;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystem;
@@ -136,18 +138,68 @@ public abstract class BaseAgentService implements TrainingAgent {
         LocalDate weekStart = today.with(DayOfWeek.MONDAY);
         LocalDate weekEnd = today.with(DayOfWeek.SUNDAY);
 
-        String base = "role=%s ftp=%sW today=%s(%s) week=%s/%s".formatted(
-                ctx.role(), ctx.ftp(),
+        StringBuilder sb = new StringBuilder();
+
+        // Base profile line
+        sb.append("role=%s ftp=%sW".formatted(ctx.role(), ctx.ftp()));
+        if (ctx.css() != null) sb.append(" css=%ss/100m".formatted(ctx.css()));
+        if (ctx.ftPace() != null) sb.append(" ftPace=%ss/km".formatted(ctx.ftPace()));
+        sb.append(" today=%s(%s) week=%s/%s".formatted(
                 today, dow.getDisplayName(TextStyle.SHORT, Locale.ENGLISH),
-                weekStart, weekEnd);
+                weekStart, weekEnd));
 
-        String zoneContext = buildDefaultZoneContext(ctx);
-        String result = zoneContext.isEmpty() ? base : base + "\n" + zoneContext;
-
-        if (ctx.aiPrePrompt() != null && !ctx.aiPrePrompt().isBlank()) {
-            result += "\n\nCoach's custom instructions:\n" + ctx.aiPrePrompt();
+        // Fitness metrics
+        if (ctx.ctl() != null || ctx.atl() != null || ctx.tsb() != null) {
+            sb.append("\nctl=%.0f atl=%.0f tsb=%.0f".formatted(
+                    ctx.ctl() != null ? ctx.ctl() : 0.0,
+                    ctx.atl() != null ? ctx.atl() : 0.0,
+                    ctx.tsb() != null ? ctx.tsb() : 0.0));
         }
-        return result;
+        if (ctx.displayName() != null) sb.append(" name=").append(ctx.displayName());
+
+        // Athletes (coach-management and scheduling agents)
+        AgentType agent = getAgentType();
+        if (!ctx.athletes().isEmpty()
+                && (agent == AgentType.COACH_MANAGEMENT || agent == AgentType.SCHEDULING)) {
+            sb.append("\n\nAthletes:");
+            for (var a : ctx.athletes()) {
+                sb.append("\n- ").append(a.id()).append(':').append(a.displayName());
+            }
+        }
+
+        // Groups (coach-management and scheduling agents)
+        if (!ctx.athleteGroups().isEmpty()
+                && (agent == AgentType.COACH_MANAGEMENT || agent == AgentType.SCHEDULING)) {
+            sb.append("\n\nGroups:");
+            for (var g : ctx.athleteGroups()) {
+                sb.append("\n- ").append(g.id()).append(':').append(g.name());
+            }
+        }
+
+        // Clubs with groups (club-management agent)
+        if (!ctx.clubs().isEmpty() && agent == AgentType.CLUB_MANAGEMENT) {
+            sb.append("\n\nClubs:");
+            for (ClubContext c : ctx.clubs()) {
+                sb.append("\n- ").append(c.id()).append(":\"").append(c.name()).append('"');
+                if (!c.groups().isEmpty()) {
+                    String groups = c.groups().stream()
+                            .map(g -> g.id() + ":" + g.name())
+                            .collect(Collectors.joining(","));
+                    sb.append(" groups:[").append(groups).append(']');
+                }
+            }
+        }
+
+        // Default zones (any coach agent)
+        String zoneContext = buildDefaultZoneContext(ctx);
+        if (!zoneContext.isEmpty()) sb.append('\n').append(zoneContext);
+
+        // Custom AI instructions
+        if (ctx.aiPrePrompt() != null && !ctx.aiPrePrompt().isBlank()) {
+            sb.append("\n\nCoach's custom instructions:\n").append(ctx.aiPrePrompt());
+        }
+
+        return sb.toString();
     }
 
     private String buildDefaultZoneContext(UserContext ctx) {

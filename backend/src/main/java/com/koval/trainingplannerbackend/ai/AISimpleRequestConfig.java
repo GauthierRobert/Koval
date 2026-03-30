@@ -42,8 +42,7 @@ public class AISimpleRequestConfig extends AIConfig {
     @Bean
     public ChatClient schedulingClient(AnthropicChatModel chatModel,
                                        ChatMemory chatMemory,
-                                       ContextToolService contextToolService,
-                                       TrainingToolService trainingToolService,
+                                       SchedulingToolService schedulingToolService,
                                        CoachToolService coachToolService,
                                        GoalToolService goalToolService,
                                        RaceToolService raceToolService) {
@@ -51,28 +50,26 @@ public class AISimpleRequestConfig extends AIConfig {
                 .defaultSystem(agentPrompt("scheduling"))
                 .defaultOptions(haikuOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultToolCallbacks(wrapTools(contextToolService, coachToolService, goalToolService, raceToolService))
+                .defaultToolCallbacks(wrapTools(schedulingToolService, coachToolService, goalToolService, raceToolService))
                 .build();
     }
 
     @Bean
     public ChatClient analysisClient(AnthropicChatModel chatModel,
                                      ChatMemory chatMemory,
-                                     ContextToolService contextToolService,
                                      HistoryToolService historyToolService,
                                      GoalToolService goalToolService) {
         return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(agentPrompt("analysis"))
                 .defaultOptions(haikuOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultToolCallbacks(wrapTools(contextToolService, historyToolService, goalToolService))
+                .defaultToolCallbacks(wrapTools(historyToolService, goalToolService))
                 .build();
     }
 
     @Bean
     public ChatClient coachManagementClient(AnthropicChatModel chatModel,
                                             ChatMemory chatMemory,
-                                            ContextToolService contextToolService,
                                             CoachToolService coachToolService,
                                             ZoneToolService zoneToolService,
                                             GoalToolService goalToolService) {
@@ -80,34 +77,32 @@ public class AISimpleRequestConfig extends AIConfig {
                 .defaultSystem(agentPrompt("coach-management"))
                 .defaultOptions(haikuOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultToolCallbacks(wrapTools(contextToolService, coachToolService, zoneToolService, goalToolService))
+                .defaultToolCallbacks(wrapTools(coachToolService, zoneToolService, goalToolService))
                 .build();
     }
 
     @Bean
     public ChatClient clubManagementClient(AnthropicChatModel chatModel,
                                             ChatMemory chatMemory,
-                                            ContextToolService contextToolService,
                                             ClubToolService clubToolService,
                                             TrainingToolService trainingToolService) {
         return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(agentPrompt("club-management"))
                 .defaultOptions(haikuOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultToolCallbacks(wrapTools(contextToolService, clubToolService, trainingToolService))
+                .defaultToolCallbacks(wrapTools(clubToolService, trainingToolService))
                 .build();
     }
 
     @Bean
     public ChatClient generalClient(AnthropicChatModel chatModel,
                                     ChatMemory chatMemory,
-                                    ContextToolService contextToolService,
                                     HistoryToolService historyToolService) {
         return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(agentPrompt("general"))
                 .defaultOptions(haikuOptions())
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .defaultToolCallbacks(wrapTools(contextToolService, historyToolService))
+                .defaultToolCallbacks(wrapTools(historyToolService))
                 .build();
     }
 

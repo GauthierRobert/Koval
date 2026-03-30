@@ -2,13 +2,9 @@ package com.koval.trainingplannerbackend.club.tools;
 
 import com.koval.trainingplannerbackend.ai.ToolEventEmitter;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
-import com.koval.trainingplannerbackend.club.ClubService;
 import com.koval.trainingplannerbackend.club.dto.ClubMemberResponse;
-import com.koval.trainingplannerbackend.club.dto.ClubSummaryResponse;
 import com.koval.trainingplannerbackend.club.dto.CreateRecurringSessionRequest;
 import com.koval.trainingplannerbackend.club.dto.CreateSessionRequest;
-import com.koval.trainingplannerbackend.club.group.ClubGroup;
-import com.koval.trainingplannerbackend.club.group.ClubGroupService;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipService;
 import com.koval.trainingplannerbackend.club.recurring.RecurringSessionService;
 import com.koval.trainingplannerbackend.club.recurring.RecurringSessionTemplate;
@@ -32,31 +28,16 @@ import java.util.List;
 @Service
 public class ClubToolService {
 
-    private final ClubService clubService;
     private final ClubSessionService sessionService;
     private final RecurringSessionService recurringService;
     private final ClubMembershipService membershipService;
-    private final ClubGroupService groupService;
 
-    public ClubToolService(ClubService clubService,
-                           ClubSessionService sessionService,
+    public ClubToolService(ClubSessionService sessionService,
                            RecurringSessionService recurringService,
-                           ClubMembershipService membershipService,
-                           ClubGroupService groupService) {
-        this.clubService = clubService;
+                           ClubMembershipService membershipService) {
         this.sessionService = sessionService;
         this.recurringService = recurringService;
         this.membershipService = membershipService;
-        this.groupService = groupService;
-    }
-
-    // ── List user's clubs ─────────────────────────────────────────────
-
-    @Tool(description = "List clubs the user belongs to.")
-    public List<MyClubSummary> listMyClubs(ToolContext context) {
-        String userId = SecurityUtils.getUserId(context);
-        List<ClubSummaryResponse> clubs = clubService.getUserClubs(userId);
-        return clubs.stream().map(MyClubSummary::from).toList();
     }
 
     // ── Session listing ──────────────────────────────────────────────
@@ -229,20 +210,6 @@ public class ClubToolService {
         String userId = SecurityUtils.getUserId(context);
         List<ClubMemberResponse> members = membershipService.getMembers(userId, clubId);
         return members.stream().map(ClubMemberSummary::from).toList();
-    }
-
-    // ── List groups ──────────────────────────────────────────────────
-
-    @Tool(description = "List club groups.")
-    public Object listClubGroups(
-            @ToolParam(description = "Club ID") String clubId,
-            ToolContext context) {
-        String err = requireNonBlank(clubId, "clubId");
-        if (err != null) return err;
-
-        String userId = SecurityUtils.getUserId(context);
-        List<ClubGroup> groups = groupService.listGroups(userId, clubId);
-        return groups.stream().map(ClubGroupSummary::from).toList();
     }
 
     // ── List recurring templates ──────────────────────────────────────
