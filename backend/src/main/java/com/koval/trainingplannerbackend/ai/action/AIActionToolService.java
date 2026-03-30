@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.ai.action;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.club.session.ClubSessionService;
+import org.springframework.ai.chat.model.ToolContext;
 import com.koval.trainingplannerbackend.club.dto.CreateSessionRequest;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.model.Training;
@@ -54,10 +55,11 @@ public class AIActionToolService {
             @ToolParam(description = "Scheduled datetime ISO-8601 (e.g. 2025-06-10T19:00:00), null if unscheduled") String scheduledAt,
             @ToolParam(description = "Club ID from system context — pass null if not in club context") String clubId,
             @ToolParam(description = "Club group ID from system context — pass null if not applicable") String clubGroupId,
-            @ToolParam(description = "Coach group ID from system context — pass null if not applicable") String coachGroupId) {
+            @ToolParam(description = "Coach group ID from system context — pass null if not applicable") String coachGroupId,
+            ToolContext context) {
 
         ActionToolTracker.markCalled();
-        String userId = SecurityUtils.getCurrentUserId();
+        String userId = SecurityUtils.getUserId(context);
 
         // 1. Build and save the Training
         List<String> groupIds = new ArrayList<>();

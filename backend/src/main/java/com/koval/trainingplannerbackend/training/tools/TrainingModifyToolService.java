@@ -52,7 +52,7 @@ public class TrainingModifyToolService {
             @ToolParam(description = "Training ID") String trainingId,
             ToolContext context) {
         ToolEventEmitter.emitToolCall(context, "deleteTraining", "Deleting training...");
-        String userId = SecurityUtils.getCurrentUserId();
+        String userId = SecurityUtils.getUserId(context);
         Training existing = trainingService.getTrainingById(trainingId);
         trainingAccessService.verifyAccess(userId, existing);
         String title = existing.getTitle();

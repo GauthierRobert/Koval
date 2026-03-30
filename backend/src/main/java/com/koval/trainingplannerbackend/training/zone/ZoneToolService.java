@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend.training.zone;
 import com.koval.trainingplannerbackend.ai.action.ActionToolTracker;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.training.model.SportType;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
@@ -29,18 +30,19 @@ public class ZoneToolService {
             @ToolParam(description = "FTP|VO2MAX_POWER|THRESHOLD_PACE|VO2MAX_PACE|CSS|PACE_5K|PACE_10K|PACE_HALF_MARATHON|PACE_MARATHON|CUSTOM") ZoneReferenceType referenceType,
             @ToolParam(description = "Reference name (e.g. 'FTP', 'CSS')") String referenceName,
             @ToolParam(description = "Unit (e.g. 'W', 'sec/km'). Required for CUSTOM.") String referenceUnit,
-            @ToolParam(description = "Zones: label, low (%), high (%), description") List<Zone> zones) {
+            @ToolParam(description = "Zones: label, low (%), high (%), description") List<Zone> zones,
+            ToolContext context) {
 
         ActionToolTracker.markCalled();
-        String coachId = SecurityUtils.getCurrentUserId();
+        String coachId = SecurityUtils.getUserId(context);
         ZoneSystem zoneSystem = buildZoneSystem(coachId, name, sportType, referenceType, referenceName, referenceUnit, zones);
         return zoneSystemService.createZoneSystem(zoneSystem);
     }
 
     /** Lists all zone systems owned by the coach as lightweight summaries. */
     @Tool(description = "List coach's zone systems (summaries).")
-    public List<ZoneSystemSummary> listZoneSystems() {
-        String coachId = SecurityUtils.getCurrentUserId();
+    public List<ZoneSystemSummary> listZoneSystems(ToolContext context) {
+        String coachId = SecurityUtils.getUserId(context);
         return zoneSystemService.getZoneSystemsForCoach(coachId).stream()
                 .map(ZoneSystemSummary::from).toList();
     }
@@ -48,8 +50,9 @@ public class ZoneToolService {
     /** Returns the coach's default zone system for the given sport, or null if none is set. */
     @Tool(description = "Get default zone system for a sport (null if unset).")
     public ZoneSystem getDefaultZoneSystem(
-            @ToolParam(description = "CYCLING|RUNNING|SWIMMING") SportType sportType) {
-        String coachId = SecurityUtils.getCurrentUserId();
+            @ToolParam(description = "CYCLING|RUNNING|SWIMMING") SportType sportType,
+            ToolContext context) {
+        String coachId = SecurityUtils.getUserId(context);
         return zoneSystemService.getDefaultZoneSystem(coachId, sportType).orElse(null);
     }
 

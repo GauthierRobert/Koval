@@ -96,19 +96,24 @@ public class RouterService {
 
     /**
      * Attempts fast classification without an LLM call.
+     * Keyword patterns are checked first so explicit intent ("assign", "create")
+     * overrides follow-up heuristics ("this", "it") that would otherwise
+     * stick to the previous agent.
      * Returns empty if the heuristic is inconclusive.
      */
     private Optional<AgentType> quickClassify(String userMessage, String lastAgentType) {
+        // 1. Keyword patterns first — explicit intent always wins
+        for (var entry : KEYWORD_PATTERNS.entrySet()) {
+            if (entry.getKey().matcher(userMessage).find()) {
+                return Optional.of(entry.getValue());
+            }
+        }
+
+        // 2. Follow-up detection — only if no keyword matched
         if (lastAgentType != null && looksLikeFollowUp(userMessage)) {
             try {
                 return Optional.of(AgentType.valueOf(lastAgentType));
             } catch (IllegalArgumentException ignored) {
-            }
-        }
-
-        for (var entry : KEYWORD_PATTERNS.entrySet()) {
-            if (entry.getKey().matcher(userMessage).find()) {
-                return Optional.of(entry.getValue());
             }
         }
 

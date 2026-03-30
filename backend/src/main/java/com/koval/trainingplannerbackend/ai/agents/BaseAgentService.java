@@ -6,6 +6,7 @@ import com.koval.trainingplannerbackend.ai.ConversationSummarizer;
 import com.koval.trainingplannerbackend.ai.UsageTracker;
 import com.koval.trainingplannerbackend.ai.UsageTracker.UsageSnapshot;
 import com.koval.trainingplannerbackend.ai.UserContextResolver.UserContext;
+import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystem;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystemService;
 import org.springframework.ai.chat.client.ChatClient;
@@ -116,13 +117,21 @@ public abstract class BaseAgentService implements TrainingAgent {
         }
         return chatClient.prompt()
                 .messages(new SystemMessage(context))
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId));
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .toolContext(Map.of(SecurityUtils.USER_ID_KEY, ctx.userId()));
     }
 
     private ChatClient.ChatClientRequestSpec buildPrompt(UserContext ctx, String conversationId,
                                                          Sinks.Many<ServerSentEvent<String>> toolSink) {
-        return buildPrompt(ctx, conversationId)
-                .toolContext(Map.of("toolSink", toolSink));
+        String context = systemContext(ctx);
+        String summary = conversationSummarizer.getSummaryIfNeeded(conversationId);
+        if (summary != null) {
+            context = context + "\n\nPrevious conversation summary: " + summary;
+        }
+        return chatClient.prompt()
+                .messages(new SystemMessage(context))
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .toolContext(Map.of(SecurityUtils.USER_ID_KEY, ctx.userId(), "toolSink", toolSink));
     }
 
     protected String systemContext(UserContext ctx) {

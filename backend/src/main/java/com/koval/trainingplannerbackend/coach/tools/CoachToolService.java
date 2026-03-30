@@ -52,7 +52,7 @@ public class CoachToolService {
             return "Error: scheduledDate is required.";
         }
         ToolEventEmitter.emitToolCall(context, "assignTraining", "Scheduling for " + athleteIds.size() + " athlete(s)...");
-        String coachId = SecurityUtils.getCurrentUserId();
+        String coachId = SecurityUtils.getUserId(context);
         List<ScheduledWorkout> workouts = coachService.assignTraining(coachId, trainingId, athleteIds, scheduledDate, notes, null);
         String title = resolveTrainingTitle(trainingId);
         List<ScheduleSummary> result = workouts.stream().map(sw -> ScheduleSummary.from(sw, title)).toList();
@@ -61,23 +61,24 @@ public class CoachToolService {
     }
 
     @Tool(description = "List athletes assigned to this coach.")
-    public List<AthleteSummary> getCoachAthletes() {
-        String coachId = SecurityUtils.getCurrentUserId();
+    public List<AthleteSummary> getCoachAthletes(ToolContext context) {
+        String coachId = SecurityUtils.getUserId(context);
         return coachService.getCoachAthletes(coachId).stream()
                 .map(AthleteSummary::from).toList();
     }
 
     @Tool(description = "List coach's athletes filtered by group.")
     public List<AthleteSummary> getAthletesByGroup(
-            @ToolParam(description = "Group ID") String groupId) {
-        String coachId = SecurityUtils.getCurrentUserId();
+            @ToolParam(description = "Group ID") String groupId,
+            ToolContext context) {
+        String coachId = SecurityUtils.getUserId(context);
         return coachService.getAthletesByGroup(coachId, groupId).stream()
                 .map(AthleteSummary::from).toList();
     }
 
     @Tool(description = "List all groups for this coach. Call before getAthletesByGroup.")
-    public List<Group> getAthleteGroupsForCoach() {
-        String coachId = SecurityUtils.getCurrentUserId();
+    public List<Group> getAthleteGroupsForCoach(ToolContext context) {
+        String coachId = SecurityUtils.getUserId(context);
         return coachService.getAthleteGroupsForCoach(coachId);
     }
 

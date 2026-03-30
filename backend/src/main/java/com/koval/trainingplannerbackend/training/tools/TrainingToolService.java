@@ -34,8 +34,9 @@ public class TrainingToolService {
     @Tool(description = "List user's training plans (default: 15 most recent).")
     public List<TrainingSummary> listTrainingsByUser(
             @ToolParam(description = "Max results (default 15)", required = false) Integer limit,
-            @ToolParam(description = "Skip count (default 0)", required = false) Integer offset) {
-        String userId = SecurityUtils.getCurrentUserId();
+            @ToolParam(description = "Skip count (default 0)", required = false) Integer offset,
+            ToolContext context) {
+        String userId = SecurityUtils.getUserId(context);
         int effectiveLimit = (limit != null && limit > 0) ? limit : 15;
         int effectiveOffset = (offset != null && offset >= 0) ? offset : 0;
         int page = effectiveOffset / effectiveLimit;
@@ -55,7 +56,7 @@ public class TrainingToolService {
             return validationError;
         }
         ToolEventEmitter.emitToolCall(context, "createTraining", "Creating: " + create.title());
-        String userId = SecurityUtils.getCurrentUserId();
+        String userId = SecurityUtils.getUserId(context);
         Training training = trainingMapper.mapToEntity(create);
         TrainingSummary result = TrainingSummary.from(trainingManagementService.createTraining(training, userId));
         ToolEventEmitter.emitToolResult(context, "createTraining", result.title(), true);

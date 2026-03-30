@@ -48,7 +48,7 @@ public class PlanToolService {
 
         ToolEventEmitter.emitToolCall(context, "createPlan", "Creating plan: " + title);
 
-        String userId = SecurityUtils.getCurrentUserId();
+        String userId = SecurityUtils.getUserId(context);
         TrainingPlan plan = new TrainingPlan();
         plan.setTitle(title);
         plan.setDescription(description);
@@ -105,7 +105,7 @@ public class PlanToolService {
         day.setNotes(notes);
         week.getDays().add(day);
 
-        String userId = SecurityUtils.getCurrentUserId();
+        String userId = SecurityUtils.getUserId(context);
         planService.updatePlan(planId, plan, userId);
         ToolEventEmitter.emitToolResult(context, "addDayToPlan", "Added to week " + weekNumber + " " + dayOfWeek, true);
         return "Added training to week " + weekNumber + ", " + dayOfWeek;
@@ -135,7 +135,7 @@ public class PlanToolService {
         week.setLabel(label);
         if (targetTss != null) week.setTargetTss(targetTss);
 
-        String userId = SecurityUtils.getCurrentUserId();
+        String userId = SecurityUtils.getUserId(context);
         planService.updatePlan(planId, plan, userId);
         ToolEventEmitter.emitToolResult(context, "setWeekLabel", label, true);
         return "Week " + weekNumber + " labeled: " + label;
@@ -149,7 +149,7 @@ public class PlanToolService {
         ToolEventEmitter.emitToolCall(context, "activatePlan", "Activating plan...");
 
         try {
-            String userId = SecurityUtils.getCurrentUserId();
+            String userId = SecurityUtils.getUserId(context);
             TrainingPlan activated = planService.activatePlan(planId, userId);
             int totalDays = activated.getWeeks().stream()
                     .mapToInt(w -> w.getDays().size())
@@ -165,8 +165,8 @@ public class PlanToolService {
     }
 
     @Tool(description = "List training plans for a user. Returns summaries with status and duration.")
-    public List<PlanSummary> listPlans() {
-        String userId = SecurityUtils.getCurrentUserId();
+    public List<PlanSummary> listPlans(ToolContext context) {
+        String userId = SecurityUtils.getUserId(context);
         return planService.listPlans(userId).stream()
                 .map(PlanSummary::from)
                 .toList();

@@ -6,6 +6,7 @@ import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.tools.TrainingMapper;
 import com.koval.trainingplannerbackend.training.tools.TrainingRequest;
 import com.koval.trainingplannerbackend.training.tools.TrainingSummary;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
@@ -22,9 +23,10 @@ public class CreationTrainingToolService {
 
     @Tool(description = "Create a new training workout.")
     public Object createTraining(
-            @ToolParam(description = "Training to create") TrainingRequest create) {
+            @ToolParam(description = "Training to create") TrainingRequest create,
+            ToolContext context) {
         ActionToolTracker.markCalled();
-        String userId = SecurityUtils.getCurrentUserId();
+        String userId = SecurityUtils.getUserId(context);
         Training training = trainingMapper.mapToEntity(create);
         return TrainingSummary.from(trainingService.createTraining(training, userId));
     }

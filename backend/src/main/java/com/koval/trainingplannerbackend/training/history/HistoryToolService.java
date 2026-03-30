@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.training.history;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService.PmcDataPoint;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
@@ -29,8 +30,9 @@ public class HistoryToolService {
     /** Returns the most recent completed sessions for a user, limited to the given count. */
     @Tool(description = "Get recent completed sessions for a user.")
     public List<SessionSummary> getRecentSessions(
-            @ToolParam(description = "Max sessions to return") int limit) {
-        String userId = SecurityUtils.getCurrentUserId();
+            @ToolParam(description = "Max sessions to return") int limit,
+            ToolContext context) {
+        String userId = SecurityUtils.getUserId(context);
         return sessionRepository.findByUserIdOrderByCompletedAtDesc(userId).stream()
                 .limit(limit)
                 .map(SessionSummary::from)
@@ -41,8 +43,9 @@ public class HistoryToolService {
     @Tool(description = "Get a user's completed sessions within a date range.")
     public List<SessionSummary> getSessionsByDateRange(
             @ToolParam(description = "Start date (YYYY-MM-DD, inclusive)") LocalDate from,
-            @ToolParam(description = "End date (YYYY-MM-DD, inclusive)") LocalDate to) {
-        String userId = SecurityUtils.getCurrentUserId();
+            @ToolParam(description = "End date (YYYY-MM-DD, inclusive)") LocalDate to,
+            ToolContext context) {
+        String userId = SecurityUtils.getUserId(context);
         return sessionRepository.findByUserIdAndCompletedAtBetween(
                         userId,
                         LocalDateTime.of(from, LocalTime.MIN),
@@ -55,8 +58,9 @@ public class HistoryToolService {
     @Tool(description = "Get PMC data (CTL, ATL, TSB) for a date range.")
     public List<PmcDataPoint> getPmcData(
             @ToolParam(description = "Start date") LocalDate from,
-            @ToolParam(description = "End date") LocalDate to) {
-        String userId = SecurityUtils.getCurrentUserId();
+            @ToolParam(description = "End date") LocalDate to,
+            ToolContext context) {
+        String userId = SecurityUtils.getUserId(context);
         return analyticsService.generatePmc(userId, from, to);
     }
 

@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.race;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
@@ -29,8 +30,9 @@ public class RaceToolService {
 
     @Tool(description = "Create a race in the catalog (title only, AI completes details).")
     public RaceSummary createRace(
-            @ToolParam(description = "Race title") String title) {
-        String userId = SecurityUtils.getCurrentUserId();
+            @ToolParam(description = "Race title") String title,
+            ToolContext context) {
+        String userId = SecurityUtils.getUserId(context);
         Race race = new Race();
         race.setTitle(title);
         Race savedRace = raceService.createRace(userId, race);

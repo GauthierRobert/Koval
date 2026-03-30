@@ -9,6 +9,7 @@ import com.koval.trainingplannerbackend.coach.ScheduledWorkoutRepository;
 import com.koval.trainingplannerbackend.coach.tools.ScheduleSummary;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
 import com.koval.trainingplannerbackend.training.model.Training;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
@@ -54,34 +55,9 @@ public class ContextToolService {
         );
     }
 
-    @Tool(description = "Scheduled workouts for a user in a date range (max 20).")
-    public List<ScheduleSummary> getUserSchedule(
-            @ToolParam(description = "Start date (YYYY-MM-DD)") LocalDate startDate,
-            @ToolParam(description = "End date (YYYY-MM-DD)") LocalDate endDate) {
-        String userId = SecurityUtils.getCurrentUserId();
-        List<ScheduledWorkout> workouts = scheduledWorkoutRepository
-                .findByAthleteIdAndScheduledDateBetween(userId, startDate, endDate);
-
-        if (workouts.isEmpty()) return List.of();
-
-        // Limit to 20 most recent to control token usage
-        if (workouts.size() > 20) {
-            workouts = workouts.subList(workouts.size() - 20, workouts.size());
-        }
-
-        List<String> trainingIds = workouts.stream()
-                .map(ScheduledWorkout::getTrainingId).distinct().toList();
-        Map<String, String> titleMap = trainingRepository.findAllById(trainingIds).stream()
-                .collect(Collectors.toMap(Training::getId, Training::getTitle, (a, b) -> a));
-
-        return workouts.stream()
-                .map(sw -> ScheduleSummary.from(sw, titleMap.getOrDefault(sw.getTrainingId(), "Unknown")))
-                .toList();
-    }
-
     @Tool(description = "Get user profile: FTP, CTL, ATL, TSB, role, displayName.")
-    public Map<String, Object> getUserProfile() {
-        String userId = SecurityUtils.getCurrentUserId();
+    public Map<String, Object> getUserProfile(ToolContext context) {
+        String userId = SecurityUtils.getUserId(context);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
@@ -99,8 +75,9 @@ public class ContextToolService {
     public ScheduleSummary selfAssignTraining(
             @ToolParam(description = "Training ID") String trainingId,
             @ToolParam(description = "Date (YYYY-MM-DD)") LocalDate scheduledDate,
-            @ToolParam(description = "Notes (optional)") String notes) {
-        String userId = SecurityUtils.getCurrentUserId();
+            @ToolParam(description = "Notes (optional)") String notes,
+            ToolContext context) {
+        String userId = SecurityUtils.getUserId(context);
         ScheduledWorkout sw = coachService.selfAssignTraining(userId, trainingId, scheduledDate, notes);
         String title = trainingRepository.findById(trainingId)
                 .map(Training::getTitle).orElse("Unknown");

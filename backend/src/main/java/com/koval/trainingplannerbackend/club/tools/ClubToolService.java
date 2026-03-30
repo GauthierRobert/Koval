@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.club.tools;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.club.ClubService;
+import org.springframework.ai.chat.model.ToolContext;
 import com.koval.trainingplannerbackend.club.dto.ClubMemberResponse;
 import com.koval.trainingplannerbackend.club.dto.ClubSummaryResponse;
 import com.koval.trainingplannerbackend.club.dto.CreateRecurringSessionRequest;
@@ -52,8 +53,8 @@ public class ClubToolService {
     // ── List user's clubs ─────────────────────────────────────────────
 
     @Tool(description = "List clubs the user belongs to.")
-    public Object listMyClubs() {
-        String userId = SecurityUtils.getCurrentUserId();
+    public Object listMyClubs(ToolContext context) {
+        String userId = SecurityUtils.getUserId(context);
         List<ClubSummaryResponse> clubs = clubService.getUserClubs(userId);
         return clubs.stream().map(c -> new MyClubSummary(
                 c.id(), c.name(), c.description(), c.memberCount(), c.membershipStatus()
@@ -66,11 +67,12 @@ public class ClubToolService {
     public Object listClubSessions(
             @ToolParam(description = "Club ID") String clubId,
             @ToolParam(description = "Start date (YYYY-MM-DD)") LocalDate from,
-            @ToolParam(description = "End date (YYYY-MM-DD)") LocalDate to) {
+            @ToolParam(description = "End date (YYYY-MM-DD)") LocalDate to,
+            ToolContext context) {
         if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
         if (from == null || to == null) return "Error: from and to dates are required.";
 
-        String userId = SecurityUtils.getCurrentUserId();
+        String userId = SecurityUtils.getUserId(context);
         LocalDateTime fromDt = from.atStartOfDay();
         LocalDateTime toDt = to.plusDays(1).atStartOfDay();
         List<ClubTrainingSession> sessions = sessionService.listSessions(userId, clubId, fromDt, toDt);
@@ -89,12 +91,13 @@ public class ClubToolService {
             @ToolParam(description = "Description (optional)") String description,
             @ToolParam(description = "Club group ID to restrict visibility (null = all members)") String clubGroupId,
             @ToolParam(description = "Max participants (null = unlimited)") Integer maxParticipants,
-            @ToolParam(description = "Duration in minutes (optional)") Integer durationMinutes) {
+            @ToolParam(description = "Duration in minutes (optional)") Integer durationMinutes,
+            ToolContext context) {
         if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
         if (title == null || title.isBlank()) return "Error: title is required.";
         if (scheduledAt == null) return "Error: scheduledAt is required.";
 
-        String userId = SecurityUtils.getCurrentUserId();
+        String userId = SecurityUtils.getUserId(context);
         var req = new CreateSessionRequest(null, title, sport, scheduledAt, location, null, null, description,
                 null, maxParticipants, durationMinutes, clubGroupId, userId,
                 null, null, null);
@@ -116,13 +119,14 @@ public class ClubToolService {
             @ToolParam(description = "Description (optional)") String description,
             @ToolParam(description = "Club group ID to restrict visibility (null = all members)") String clubGroupId,
             @ToolParam(description = "Max participants (null = unlimited)") Integer maxParticipants,
-            @ToolParam(description = "Duration in minutes (optional)") Integer durationMinutes) {
+            @ToolParam(description = "Duration in minutes (optional)") Integer durationMinutes,
+            ToolContext context) {
         if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
         if (title == null || title.isBlank()) return "Error: title is required.";
         if (dayOfWeek == null) return "Error: dayOfWeek is required.";
         if (timeOfDay == null) return "Error: timeOfDay is required.";
 
-        String userId = SecurityUtils.getCurrentUserId();
+        String userId = SecurityUtils.getUserId(context);
         var req = new CreateRecurringSessionRequest(null, title, sport, dayOfWeek, timeOfDay, location, null, null, description,
                 null, maxParticipants, durationMinutes, clubGroupId, userId,
                 null, null, null, endDate);
@@ -136,11 +140,12 @@ public class ClubToolService {
     public Object cancelSession(
             @ToolParam(description = "Club ID") String clubId,
             @ToolParam(description = "Session ID to cancel") String sessionId,
-            @ToolParam(description = "Cancellation reason") String reason) {
+            @ToolParam(description = "Cancellation reason") String reason,
+            ToolContext context) {
         if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
         if (sessionId == null || sessionId.isBlank()) return "Error: sessionId is required.";
 
-        String userId = SecurityUtils.getCurrentUserId();
+        String userId = SecurityUtils.getUserId(context);
         sessionService.cancelEntireSession(userId, clubId, sessionId, reason);
         return "Session " + sessionId + " cancelled.";
     }
@@ -151,11 +156,12 @@ public class ClubToolService {
     public Object cancelRecurringSeries(
             @ToolParam(description = "Club ID") String clubId,
             @ToolParam(description = "Recurring template ID") String templateId,
-            @ToolParam(description = "Cancellation reason") String reason) {
+            @ToolParam(description = "Cancellation reason") String reason,
+            ToolContext context) {
         if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
         if (templateId == null || templateId.isBlank()) return "Error: templateId is required.";
 
-        String userId = SecurityUtils.getCurrentUserId();
+        String userId = SecurityUtils.getUserId(context);
         recurringService.cancelFutureInstances(userId, clubId, templateId, reason);
         return "Recurring series " + templateId + " cancelled. All future instances removed.";
     }
@@ -167,12 +173,13 @@ public class ClubToolService {
             @ToolParam(description = "Club ID") String clubId,
             @ToolParam(description = "Session ID") String sessionId,
             @ToolParam(description = "Training ID to link") String trainingId,
-            @ToolParam(description = "Club group ID for group-specific link (null = club-level)") String clubGroupId) {
+            @ToolParam(description = "Club group ID for group-specific link (null = club-level)") String clubGroupId,
+            ToolContext context) {
         if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
         if (sessionId == null || sessionId.isBlank()) return "Error: sessionId is required.";
         if (trainingId == null || trainingId.isBlank()) return "Error: trainingId is required.";
 
-        String userId = SecurityUtils.getCurrentUserId();
+        String userId = SecurityUtils.getUserId(context);
         sessionService.linkTrainingToSession(userId, clubId, sessionId, trainingId, clubGroupId);
         return "Training " + trainingId + " linked to session " + sessionId + ".";
     }
@@ -183,11 +190,12 @@ public class ClubToolService {
     public Object unlinkTrainingFromSession(
             @ToolParam(description = "Club ID") String clubId,
             @ToolParam(description = "Session ID") String sessionId,
-            @ToolParam(description = "Group ID (null = club-level)") String clubGroupId) {
+            @ToolParam(description = "Group ID (null = club-level)") String clubGroupId,
+            ToolContext context) {
         if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
         if (sessionId == null || sessionId.isBlank()) return "Error: sessionId is required.";
 
-        String userId = SecurityUtils.getCurrentUserId();
+        String userId = SecurityUtils.getUserId(context);
         sessionService.unlinkTrainingFromSession(userId, clubId, sessionId, clubGroupId);
         return "Training unlinked from session " + sessionId + ".";
     }
@@ -196,10 +204,11 @@ public class ClubToolService {
 
     @Tool(description = "List active club members.")
     public Object listClubMembers(
-            @ToolParam(description = "Club ID") String clubId) {
+            @ToolParam(description = "Club ID") String clubId,
+            ToolContext context) {
         if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
 
-        String userId = SecurityUtils.getCurrentUserId();
+        String userId = SecurityUtils.getUserId(context);
         List<ClubMemberResponse> members = membershipService.getMembers(userId, clubId);
         return members.stream().map(m -> new ClubMemberSummary(
                 m.userId(), m.displayName(), m.role().name(), m.tags()
@@ -210,10 +219,11 @@ public class ClubToolService {
 
     @Tool(description = "List club groups.")
     public Object listClubGroups(
-            @ToolParam(description = "Club ID") String clubId) {
+            @ToolParam(description = "Club ID") String clubId,
+            ToolContext context) {
         if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
 
-        String userId = SecurityUtils.getCurrentUserId();
+        String userId = SecurityUtils.getUserId(context);
         List<ClubGroup> groups = groupService.listGroups(userId, clubId);
         return groups.stream().map(g -> new ClubGroupSummary(
                 g.getId(), g.getName(), g.getMemberIds().size()
@@ -224,10 +234,11 @@ public class ClubToolService {
 
     @Tool(description = "List recurring session templates for a club.")
     public Object listRecurringTemplates(
-            @ToolParam(description = "Club ID") String clubId) {
+            @ToolParam(description = "Club ID") String clubId,
+            ToolContext context) {
         if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
 
-        String userId = SecurityUtils.getCurrentUserId();
+        String userId = SecurityUtils.getUserId(context);
         List<RecurringSessionTemplate> templates = recurringService.listTemplates(userId, clubId);
         return templates.stream().map(ClubToolService::toTemplateSummary).toList();
     }

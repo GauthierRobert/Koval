@@ -2,12 +2,15 @@ package com.koval.trainingplannerbackend.ai.action;
 
 import com.koval.trainingplannerbackend.ai.UserContextResolver;
 import com.koval.trainingplannerbackend.ai.UserContextResolver.UserContext;
+import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystem;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystemService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 /**
  * Stateless one-shot AI action service.
@@ -53,6 +56,7 @@ public class AIActionService {
             String content = client.prompt()
                     .messages(new SystemMessage(systemContext))
                     .user(userMessage)
+                    .toolContext(Map.of(SecurityUtils.USER_ID_KEY, userId))
                     .call()
                     .content();
 
@@ -69,7 +73,6 @@ public class AIActionService {
 
     private String buildSystemContext(UserContext ctx, ActionContext context) {
         StringBuilder sb = new StringBuilder();
-        sb.append("userId = ").append(ctx.userId()).append("\n");
         sb.append("userRole = ").append(ctx.role()).append("\n");
         sb.append("clubId = ").append(context.clubId() != null ? context.clubId() : "null").append("\n");
         sb.append("clubGroupId = ").append(context.clubGroupId() != null ? context.clubGroupId() : "null").append("\n");
