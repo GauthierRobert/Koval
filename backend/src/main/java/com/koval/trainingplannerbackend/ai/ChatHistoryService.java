@@ -26,6 +26,14 @@ public class ChatHistoryService {
         this.chatMemory = chatMemory;
     }
 
+    /** Returns full, uncompacted messages for frontend display. */
+    private List<Message> getFullMessages(String conversationId) {
+        if (chatMemory instanceof CompactingChatMemory compacting) {
+            return compacting.getFullMessages(conversationId);
+        }
+        return chatMemory.get(conversationId);
+    }
+
     public ChatHistory findOrCreate(String userId, String chatHistoryId) {
         if (chatHistoryId != null && !chatHistoryId.isEmpty()) {
             return chatHistoryRepository.findById(chatHistoryId)
@@ -74,7 +82,7 @@ public class ChatHistoryService {
     }
 
     public List<Message> getMessages(String conversationId) {
-        return chatMemory.get(conversationId);
+        return getFullMessages(conversationId);
     }
 
     public void delete(String chatHistoryId) {

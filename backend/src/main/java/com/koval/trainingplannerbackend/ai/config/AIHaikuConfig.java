@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.ai.config;
 
+import com.koval.trainingplannerbackend.ai.CompactingChatMemory;
 import com.koval.trainingplannerbackend.ai.ConversationSummarizer;
 import com.koval.trainingplannerbackend.ai.logger.UsageTracker;
 import com.koval.trainingplannerbackend.ai.agents.AgentType;
@@ -32,14 +33,15 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AIHaikuConfig extends AIConfig {
 
-    private static final int CHAT_MEMORY_WINDOW_SIZE = 8;
+    private static final int CHAT_MEMORY_WINDOW_SIZE = 20;
 
     @Bean
     public ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository) {
-        return MessageWindowChatMemory.builder()
+        MessageWindowChatMemory windowMemory = MessageWindowChatMemory.builder()
                 .chatMemoryRepository(chatMemoryRepository)
                 .maxMessages(CHAT_MEMORY_WINDOW_SIZE)
                 .build();
+        return new CompactingChatMemory(windowMemory);
     }
 
     @Bean
