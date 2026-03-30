@@ -466,7 +466,7 @@ public class ClubSessionService {
             session.setGpxFileName(file.getOriginalFilename());
             session.setRouteCoordinates(result.routeCoordinates());
             return sessionRepository.save(session);
-        } catch (java.io.IOException | javax.xml.stream.XMLStreamException e) {
+        } catch (java.io.IOException e) {
             throw new IllegalArgumentException("Failed to process GPX file: " + e.getMessage(), e);
         }
     }

@@ -35,6 +35,7 @@ import com.koval.trainingplannerbackend.club.stats.ClubStatsService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -80,7 +81,7 @@ public class ClubController {
 
     // Endpoints
     @PostMapping
-    public ResponseEntity<Club> createClub(@RequestBody CreateClubRequest req) {
+    public ResponseEntity<Club> createClub(@Valid @RequestBody CreateClubRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(clubService.createClub(userId, req));
     }

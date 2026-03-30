@@ -52,17 +52,13 @@ public class ZwiftIntegrationController {
 
         String userId = SecurityUtils.getCurrentUserId();
 
-        try {
-            ZwiftAuthService.ZwiftTokenResponse tokenResponse =
-                    authService.authenticate(request.username(), request.password());
+        ZwiftAuthService.ZwiftTokenResponse tokenResponse =
+                authService.authenticate(request.username(), request.password());
 
-            User user = userService.linkZwift(userId, tokenResponse.zwiftUserId(),
-                    tokenResponse.accessToken(), tokenResponse.refreshToken());
+        User user = userService.linkZwift(userId, tokenResponse.zwiftUserId(),
+                tokenResponse.accessToken(), tokenResponse.refreshToken());
 
-            return ResponseEntity.ok(userService.userToMap(user));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to connect Zwift: " + e.getMessage()));
-        }
+        return ResponseEntity.ok(userService.userToMap(user));
     }
 
     @PostMapping("/import-history")

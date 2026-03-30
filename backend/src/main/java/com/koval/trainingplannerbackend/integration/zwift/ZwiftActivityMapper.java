@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.integration.zwift;
 
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 
+import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -24,7 +25,7 @@ public class ZwiftActivityMapper {
         if (startDate != null) {
             try {
                 session.setCompletedAt(LocalDateTime.ofInstant(Instant.parse(startDate), ZoneOffset.UTC));
-            } catch (Exception ignored) {}
+            } catch (DateTimeException ignored) {}
         }
 
         Number duration = (Number) activity.get("movingTimeInMs");
