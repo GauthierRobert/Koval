@@ -53,11 +53,11 @@ public class ContextToolService {
         );
     }
 
-    @Tool(description = "Scheduled workouts for a user in a date range (max 20 results). Status: PENDING, COMPLETED, SKIPPED.")
+    @Tool(description = "Scheduled workouts for a user in a date range (max 20).")
     public List<ScheduleSummary> getUserSchedule(
             @ToolParam(description = "User ID") String userId,
-            @ToolParam(description = "Start date (YYYY-MM-DD, inclusive)") LocalDate startDate,
-            @ToolParam(description = "End date (YYYY-MM-DD, inclusive)") LocalDate endDate) {
+            @ToolParam(description = "Start date (YYYY-MM-DD)") LocalDate startDate,
+            @ToolParam(description = "End date (YYYY-MM-DD)") LocalDate endDate) {
         List<ScheduledWorkout> workouts = scheduledWorkoutRepository
                 .findByAthleteIdAndScheduledDateBetween(userId, startDate, endDate);
 
@@ -78,10 +78,9 @@ public class ContextToolService {
                 .toList();
     }
 
-    @Tool(description = "Get detailed profile information for a user, FTP, (CTL, ATL, TSB), role, and display name. " +
-                        "Use this to personalize advice and workout recommendations.")
+    @Tool(description = "Get user profile: FTP, CTL, ATL, TSB, role, displayName.")
     public Map<String, Object> getUserProfile(
-            @ToolParam(description = "The user ID to get the profile for") String userId) {
+            @ToolParam(description = "User ID") String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
@@ -95,12 +94,12 @@ public class ContextToolService {
         );
     }
 
-    @Tool(description = "Schedule a training plan for yourself on a specific date. Available to all users regardless of role.")
+    @Tool(description = "Schedule a training for yourself on a date.")
     public ScheduleSummary selfAssignTraining(
-            @ToolParam(description = "The user ID") String userId,
-            @ToolParam(description = "The training ID to schedule") String trainingId,
-            @ToolParam(description = "The date to schedule (YYYY-MM-DD)") LocalDate scheduledDate,
-            @ToolParam(description = "Optional notes") String notes) {
+            @ToolParam(description = "User ID") String userId,
+            @ToolParam(description = "Training ID") String trainingId,
+            @ToolParam(description = "Date (YYYY-MM-DD)") LocalDate scheduledDate,
+            @ToolParam(description = "Notes (optional)") String notes) {
         ScheduledWorkout sw = coachService.selfAssignTraining(userId, trainingId, scheduledDate, notes);
         String title = trainingRepository.findById(trainingId)
                 .map(Training::getTitle).orElse("Unknown");

@@ -244,7 +244,7 @@ public class AIConfig {
         return AnthropicChatOptions.builder()
                 .model(SONNET)
                 .temperature(0.7)
-                .maxTokens(4096)
+                .maxTokens(2048)
                 .cacheOptions(cacheOptions())
                 .build();
     }

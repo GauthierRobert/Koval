@@ -34,11 +34,11 @@ public class TrainingToolService {
     }
 
     /** Lists training plan summaries for a user with pagination support. */
-    @Tool(description = "List training plans created by a specific user. Returns summaries. Use limit/offset for pagination (default: 15 most recent).")
+    @Tool(description = "List user's training plans (default: 15 most recent).")
     public List<TrainingSummary> listTrainingsByUser(
-            @ToolParam(description = "The user ID") String userId,
-            @ToolParam(description = "Max number of trainings to return (default 15)", required = false) Integer limit,
-            @ToolParam(description = "Number of trainings to skip (default 0)", required = false) Integer offset) {
+            @ToolParam(description = "User ID") String userId,
+            @ToolParam(description = "Max results (default 15)", required = false) Integer limit,
+            @ToolParam(description = "Skip count (default 0)", required = false) Integer offset) {
         int effectiveLimit = (limit != null && limit > 0) ? limit : 15;
         int effectiveOffset = (offset != null && offset >= 0) ? offset : 0;
         int page = effectiveOffset / effectiveLimit;
@@ -48,10 +48,10 @@ public class TrainingToolService {
     }
 
     /** Creates a training plan from a validated request and returns its summary. */
-    @Tool(description = "Create a new training workout plan. Returns a summary with the new ID.")
+    @Tool(description = "Create a new training workout plan.")
     public Object createTraining(
-            @ToolParam(description = "The training object to create") TrainingRequest create,
-            @ToolParam(description = "The user ID of the creator") String userId,
+            @ToolParam(description = "Training to create") TrainingRequest create,
+            @ToolParam(description = "Creator user ID") String userId,
             ToolContext context) {
         String validationError = validateTrainingRequest(create);
         if (validationError != null) {
@@ -66,10 +66,10 @@ public class TrainingToolService {
     }
 
     /** Updates an existing training from a validated request and returns its updated summary. */
-    @Tool(description = "Update an existing training plan by its ID. Returns updated summary.")
+    @Tool(description = "Update a training plan by ID.")
     public Object updateTraining(
-            @ToolParam(description = "The training ID to update") String trainingId,
-            @ToolParam(description = "The training fields to update") TrainingRequest updates,
+            @ToolParam(description = "Training ID") String trainingId,
+            @ToolParam(description = "Fields to update") TrainingRequest updates,
             ToolContext context) {
         String validationError = validateTrainingRequest(updates);
         if (validationError != null) {
@@ -95,10 +95,10 @@ public class TrainingToolService {
     }
 
     /** Deletes a training plan after verifying ownership. */
-    @Tool(description = "Delete a training plan by its ID. Only the creator can delete their own training.")
+    @Tool(description = "Delete a training plan by ID (creator only).")
     public String deleteTraining(
-            @ToolParam(description = "The training ID to delete") String trainingId,
-            @ToolParam(description = "The user ID (ownership check)") String userId,
+            @ToolParam(description = "Training ID") String trainingId,
+            @ToolParam(description = "User ID") String userId,
             ToolContext context) {
         ToolEventEmitter.emitToolCall(context, "deleteTraining", "Deleting training...");
         Training existing = trainingManagementService.getTrainingById(trainingId);

@@ -26,10 +26,10 @@ public class HistoryToolService {
     }
 
     /** Returns the most recent completed sessions for a user, limited to the given count. */
-    @Tool(description = "Get a user's most recent completed workout sessions. Returns title, date, duration, avg power/HR, TSS, IF.")
+    @Tool(description = "Get recent completed sessions for a user.")
     public List<SessionSummary> getRecentSessions(
             @ToolParam(description = "User ID") String userId,
-            @ToolParam(description = "Maximum number of sessions to return (e.g. 5, 10)") int limit) {
+            @ToolParam(description = "Max sessions to return") int limit) {
         return sessionRepository.findByUserIdOrderByCompletedAtDesc(userId).stream()
                 .limit(limit)
                 .map(SessionSummary::from)
@@ -51,11 +51,11 @@ public class HistoryToolService {
     }
 
     /** Generates PMC data points (CTL, ATL, TSB) for the given date range. */
-    @Tool(description = "Get Performance Management Chart (PMC) data: CTL (fitness), ATL (fatigue), TSB (form) for a date range.")
+    @Tool(description = "Get PMC data (CTL, ATL, TSB) for a date range.")
     public List<PmcDataPoint> getPmcData(
             @ToolParam(description = "User ID") String userId,
-            @ToolParam(description = "Start date (YYYY-MM-DD)") LocalDate from,
-            @ToolParam(description = "End date (YYYY-MM-DD)") LocalDate to) {
+            @ToolParam(description = "Start date") LocalDate from,
+            @ToolParam(description = "End date") LocalDate to) {
         return analyticsService.generatePmc(userId, from, to);
     }
 

@@ -19,10 +19,10 @@ public class CreationTrainingToolService {
         this.trainingMapper = trainingMapper;
     }
 
-    @Tool(description = "Create a new training workout. Returns a summary with the new ID.")
+    @Tool(description = "Create a new training workout.")
     public Object createTraining(
-            @ToolParam(description = "The training object to create") TrainingRequest create,
-            @ToolParam(description = "The user ID of the creator") String userId) {
+            @ToolParam(description = "Training to create") TrainingRequest create,
+            @ToolParam(description = "Creator user ID") String userId) {
         ActionToolTracker.markCalled();
         Training training = trainingMapper.mapToEntity(create);
         return TrainingSummary.from(trainingService.createTraining(training, userId));

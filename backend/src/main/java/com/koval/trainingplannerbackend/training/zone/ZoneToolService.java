@@ -21,19 +21,15 @@ public class ZoneToolService {
     }
 
     /** Creates a new zone system with the given zones and returns the persisted entity. */
-    @Tool(description = """
-            Create a new training zone system for the coach. \
-            A zone system defines intensity zones (e.g., Z1-Z7) for a specific sport and reference metric. \
-            Each zone has a label, low/high bounds (as % of reference), and an optional description. \
-            Common examples: Coggan power zones (FTP), running pace zones (Threshold Pace), swimming zones (CSS).""")
+    @Tool(description = "Create a zone system defining intensity zones for a sport and reference metric.")
     public ZoneSystem createZoneSystem(
-            @ToolParam(description = "The coach's user ID") String coachId,
-            @ToolParam(description = "Name of the zone system (e.g., 'Coggan Power Zones', '5-Zone Run')") String name,
-            @ToolParam(description = "Sport type: CYCLING, RUNNING, SWIMMING, or BRICK") SportType sportType,
-            @ToolParam(description = "Reference metric: FTP, VO2MAX_POWER, THRESHOLD_PACE, VO2MAX_PACE, CSS, PACE_5K, PACE_10K, PACE_HALF_MARATHON, PACE_MARATHON, or CUSTOM") ZoneReferenceType referenceType,
-            @ToolParam(description = "Human-readable reference name (e.g., 'FTP', 'Threshold Pace', 'CSS')") String referenceName,
-            @ToolParam(description = "Unit of measurement for the reference value (e.g., 'W', 'bpm', 'sec/km', 'sec/100m', 'kg'). Required for CUSTOM reference type, ignored for standard types.") String referenceUnit,
-            @ToolParam(description = "List of zones, each with label (e.g., 'Z1'), low (% lower bound), high (% upper bound), and description") List<Zone> zones) {
+            @ToolParam(description = "Coach user ID") String coachId,
+            @ToolParam(description = "Zone system name") String name,
+            @ToolParam(description = "CYCLING|RUNNING|SWIMMING|BRICK") SportType sportType,
+            @ToolParam(description = "FTP|VO2MAX_POWER|THRESHOLD_PACE|VO2MAX_PACE|CSS|PACE_5K|PACE_10K|PACE_HALF_MARATHON|PACE_MARATHON|CUSTOM") ZoneReferenceType referenceType,
+            @ToolParam(description = "Reference name (e.g. 'FTP', 'CSS')") String referenceName,
+            @ToolParam(description = "Unit (e.g. 'W', 'sec/km'). Required for CUSTOM.") String referenceUnit,
+            @ToolParam(description = "Zones: label, low (%), high (%), description") List<Zone> zones) {
 
         ActionToolTracker.markCalled();
         ZoneSystem zoneSystem = buildZoneSystem(coachId, name, sportType, referenceType, referenceName, referenceUnit, zones);
@@ -41,21 +37,18 @@ public class ZoneToolService {
     }
 
     /** Lists all zone systems owned by the coach as lightweight summaries. */
-    @Tool(description = "List all zone systems owned by the coach. Returns summaries (id, name, sport, reference, zone count). Use getDefaultZoneSystem for full zone details.")
+    @Tool(description = "List coach's zone systems (summaries).")
     public List<ZoneSystemSummary> listZoneSystems(
-            @ToolParam(description = "The coach's user ID") String coachId) {
+            @ToolParam(description = "Coach user ID") String coachId) {
         return zoneSystemService.getZoneSystemsForCoach(coachId).stream()
                 .map(ZoneSystemSummary::from).toList();
     }
 
     /** Returns the coach's default zone system for the given sport, or null if none is set. */
-    @Tool(description = """
-            Get the coach's default zone system for a given sport. \
-            Returns the zone system with all zone definitions and annotations, or null if no default is set. \
-            Use this to resolve which zone system to attach when creating trainings.""")
+    @Tool(description = "Get default zone system for a sport (null if unset).")
     public ZoneSystem getDefaultZoneSystem(
-            @ToolParam(description = "The coach's user ID") String coachId,
-            @ToolParam(description = "Sport type: CYCLING, RUNNING, or SWIMMING") SportType sportType) {
+            @ToolParam(description = "Coach user ID") String coachId,
+            @ToolParam(description = "CYCLING|RUNNING|SWIMMING") SportType sportType) {
         return zoneSystemService.getDefaultZoneSystem(coachId, sportType).orElse(null);
     }
 

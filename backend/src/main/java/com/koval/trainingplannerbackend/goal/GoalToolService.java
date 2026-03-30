@@ -20,19 +20,19 @@ public class GoalToolService {
         this.raceGoalService = raceGoalService;
     }
 
-    @Tool(description = "List all race goals for a user, ordered by race date ascending.")
+    @Tool(description = "List race goals for a user (by date ascending).")
     public List<GoalSummary> listGoals(
-            @ToolParam(description = "Athlete user ID") String userId) {
+            @ToolParam(description = "User ID") String userId) {
         return raceGoalService.getGoalsForAthlete(userId)
                 .stream()
                 .map(GoalSummary::from)
                 .toList();
     }
 
-    @Tool(description = "Delete a race goal by ID.")
+    @Tool(description = "Delete a race goal.")
     public String deleteGoal(
             @ToolParam(description = "Goal ID") String goalId,
-            @ToolParam(description = "Athlete user ID (ownership check)") String userId) {
+            @ToolParam(description = "User ID") String userId) {
         raceGoalService.deleteGoal(goalId, userId);
         return "Goal deleted.";
     }

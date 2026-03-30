@@ -16,20 +16,20 @@ public class RaceToolService {
         this.completionService = completionService;
     }
 
-    @Tool(description = "Search the global race catalog by title and/or sport. Returns matching races with their details.")
+    @Tool(description = "Search race catalog by title and/or sport.")
     public List<RaceSummary> searchRaces(
-            @ToolParam(description = "Search query for race title (optional)") String query,
-            @ToolParam(description = "Sport filter: CYCLING | RUNNING | SWIMMING | TRIATHLON | OTHER (optional)") String sport) {
+            @ToolParam(description = "Title query (optional)") String query,
+            @ToolParam(description = "Sport filter (optional)") String sport) {
         return raceService.searchRaces(query, sport, null)
                 .stream()
                 .map(RaceSummary::from)
                 .toList();
     }
 
-    @Tool(description = "Create a new race in the global catalog. Only title is required — use AI completion to fill the rest.")
+    @Tool(description = "Create a race in the catalog (title only, AI completes details).")
     public RaceSummary createRace(
             @ToolParam(description = "User ID") String userId,
-            @ToolParam(description = "Race title (e.g. 'Ironman Nice', 'Paris-Roubaix')") String title) {
+            @ToolParam(description = "Race title") String title) {
         Race race = new Race();
         race.setTitle(title);
         Race savedRace = raceService.createRace(userId, race);

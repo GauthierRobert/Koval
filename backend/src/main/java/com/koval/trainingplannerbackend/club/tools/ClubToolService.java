@@ -51,9 +51,9 @@ public class ClubToolService {
 
     // ── List user's clubs ─────────────────────────────────────────────
 
-    @Tool(description = "List all clubs the current user is a member of. Returns club id, name, description, member count, and the user's membership status/role. Use this first to discover which clubs the user belongs to before performing club-specific operations.")
+    @Tool(description = "List clubs the user belongs to.")
     public Object listMyClubs(
-            @ToolParam(description = "User ID (from context)") String userId) {
+            @ToolParam(description = "User ID") String userId) {
         List<ClubSummaryResponse> clubs = clubService.getUserClubs(userId);
         return clubs.stream().map(c -> new MyClubSummary(
                 c.id(), c.name(), c.description(), c.memberCount(), c.membershipStatus()
@@ -62,9 +62,9 @@ public class ClubToolService {
 
     // ── Session listing ──────────────────────────────────────────────
 
-    @Tool(description = "List club training sessions in a date range. Returns summaries with id, title, sport, scheduledAt, location, participant count, linked training, and group.")
+    @Tool(description = "List club sessions in a date range.")
     public Object listClubSessions(
-            @ToolParam(description = "User ID (from context)") String userId,
+            @ToolParam(description = "User ID") String userId,
             @ToolParam(description = "Club ID") String clubId,
             @ToolParam(description = "Start date (YYYY-MM-DD)") LocalDate from,
             @ToolParam(description = "End date (YYYY-MM-DD)") LocalDate to) {
@@ -79,9 +79,9 @@ public class ClubToolService {
 
     // ── Create single session ────────────────────────────────────────
 
-    @Tool(description = "Create a single club training session. Returns the created session summary.")
+    @Tool(description = "Create a single club session.")
     public Object createClubSession(
-            @ToolParam(description = "User ID (from context)") String userId,
+            @ToolParam(description = "User ID") String userId,
             @ToolParam(description = "Club ID") String clubId,
             @ToolParam(description = "Session title") String title,
             @ToolParam(description = "Sport: CYCLING, RUNNING, SWIMMING, or BRICK") String sport,
@@ -104,9 +104,9 @@ public class ClubToolService {
 
     // ── Create recurring session ─────────────────────────────────────
 
-    @Tool(description = "Create a recurring session template that auto-generates sessions for the next 4 weeks. Returns the template summary.")
+    @Tool(description = "Create a recurring weekly session (generates 4 weeks).")
     public Object createRecurringSession(
-            @ToolParam(description = "User ID (from context)") String userId,
+            @ToolParam(description = "User ID") String userId,
             @ToolParam(description = "Club ID") String clubId,
             @ToolParam(description = "Session title") String title,
             @ToolParam(description = "Sport: CYCLING, RUNNING, SWIMMING, or BRICK") String sport,
@@ -132,9 +132,9 @@ public class ClubToolService {
 
     // ── Cancel session ───────────────────────────────────────────────
 
-    @Tool(description = "Cancel a club training session with a reason. Notifies all participants.")
+    @Tool(description = "Cancel a club session (notifies participants).")
     public Object cancelSession(
-            @ToolParam(description = "User ID (from context)") String userId,
+            @ToolParam(description = "User ID") String userId,
             @ToolParam(description = "Club ID") String clubId,
             @ToolParam(description = "Session ID to cancel") String sessionId,
             @ToolParam(description = "Cancellation reason") String reason) {
@@ -147,9 +147,9 @@ public class ClubToolService {
 
     // ── Cancel recurring series ──────────────────────────────────────
 
-    @Tool(description = "Cancel all future instances of a recurring session template and deactivate it.")
+    @Tool(description = "Cancel all future instances of a recurring template.")
     public Object cancelRecurringSeries(
-            @ToolParam(description = "User ID (from context)") String userId,
+            @ToolParam(description = "User ID") String userId,
             @ToolParam(description = "Club ID") String clubId,
             @ToolParam(description = "Recurring template ID") String templateId,
             @ToolParam(description = "Cancellation reason") String reason) {
@@ -162,9 +162,9 @@ public class ClubToolService {
 
     // ── Link training to session ─────────────────────────────────────
 
-    @Tool(description = "Link an existing training plan to a club session. Optionally link per club group.")
+    @Tool(description = "Link a training to a club session (optionally per group).")
     public Object linkTrainingToSession(
-            @ToolParam(description = "User ID (from context)") String userId,
+            @ToolParam(description = "User ID") String userId,
             @ToolParam(description = "Club ID") String clubId,
             @ToolParam(description = "Session ID") String sessionId,
             @ToolParam(description = "Training ID to link") String trainingId,
@@ -179,12 +179,12 @@ public class ClubToolService {
 
     // ── Unlink training from session ─────────────────────────────────
 
-    @Tool(description = "Remove a training link from a club session.")
+    @Tool(description = "Remove a training link from a session.")
     public Object unlinkTrainingFromSession(
-            @ToolParam(description = "User ID (from context)") String userId,
+            @ToolParam(description = "User ID") String userId,
             @ToolParam(description = "Club ID") String clubId,
             @ToolParam(description = "Session ID") String sessionId,
-            @ToolParam(description = "Club group ID of the link to remove (null = club-level link)") String clubGroupId) {
+            @ToolParam(description = "Group ID (null = club-level)") String clubGroupId) {
         if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
         if (sessionId == null || sessionId.isBlank()) return "Error: sessionId is required.";
 
@@ -194,9 +194,9 @@ public class ClubToolService {
 
     // ── List members ─────────────────────────────────────────────────
 
-    @Tool(description = "List active members of a club. Returns userId, displayName, role, and group tags.")
+    @Tool(description = "List active club members.")
     public Object listClubMembers(
-            @ToolParam(description = "User ID (from context)") String userId,
+            @ToolParam(description = "User ID") String userId,
             @ToolParam(description = "Club ID") String clubId) {
         if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
 
@@ -208,9 +208,9 @@ public class ClubToolService {
 
     // ── List groups ──────────────────────────────────────────────────
 
-    @Tool(description = "List groups in a club. Returns group id, name, and member count.")
+    @Tool(description = "List club groups.")
     public Object listClubGroups(
-            @ToolParam(description = "User ID (from context)") String userId,
+            @ToolParam(description = "User ID") String userId,
             @ToolParam(description = "Club ID") String clubId) {
         if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
 
@@ -222,9 +222,9 @@ public class ClubToolService {
 
     // ── List recurring templates ──────────────────────────────────────
 
-    @Tool(description = "List active recurring session templates for a club.")
+    @Tool(description = "List recurring session templates for a club.")
     public Object listRecurringTemplates(
-            @ToolParam(description = "User ID (from context)") String userId,
+            @ToolParam(description = "User ID") String userId,
             @ToolParam(description = "Club ID") String clubId) {
         if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
 
