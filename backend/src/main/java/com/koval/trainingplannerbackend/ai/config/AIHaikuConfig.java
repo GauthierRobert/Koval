@@ -1,5 +1,7 @@
-package com.koval.trainingplannerbackend.ai;
+package com.koval.trainingplannerbackend.ai.config;
 
+import com.koval.trainingplannerbackend.ai.ConversationSummarizer;
+import com.koval.trainingplannerbackend.ai.logger.UsageTracker;
 import com.koval.trainingplannerbackend.ai.agents.AgentType;
 import com.koval.trainingplannerbackend.ai.agents.SpecialistAgentService;
 import com.koval.trainingplannerbackend.ai.agents.TrainingAgent;
@@ -28,7 +30,7 @@ import org.springframework.context.annotation.Configuration;
  * management queries, routing, and planning.
  */
 @Configuration
-public class AISimpleRequestConfig extends AIConfig {
+public class AIHaikuConfig extends AIConfig {
 
     private static final int CHAT_MEMORY_WINDOW_SIZE = 8;
 

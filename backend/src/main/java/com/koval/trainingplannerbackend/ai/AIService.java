@@ -6,6 +6,7 @@ import com.koval.trainingplannerbackend.ai.UserContextResolver.UserContext;
 import com.koval.trainingplannerbackend.ai.agents.AgentType;
 import com.koval.trainingplannerbackend.ai.agents.RouterService;
 import com.koval.trainingplannerbackend.ai.agents.TrainingAgent;
+import com.koval.trainingplannerbackend.ai.logger.UsageTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;

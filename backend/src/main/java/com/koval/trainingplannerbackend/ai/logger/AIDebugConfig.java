@@ -1,4 +1,4 @@
-package com.koval.trainingplannerbackend.ai;
+package com.koval.trainingplannerbackend.ai.logger;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.restclient.RestClientCustomizer;
@@ -13,12 +13,6 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 class AIDebugConfig {
-
-    @Bean
-    RestClientCustomizer toolSchemaCompressorCustomizer() {
-        ToolSchemaCompressor compressor = new ToolSchemaCompressor();
-        return builder -> builder.requestInterceptor(compressor);
-    }
 
     @Bean
     @ConditionalOnProperty(name = "app.ai.debug-calls", havingValue = "true")

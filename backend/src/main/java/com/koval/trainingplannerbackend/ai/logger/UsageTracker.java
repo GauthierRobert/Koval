@@ -1,4 +1,4 @@
-package com.koval.trainingplannerbackend.ai;
+package com.koval.trainingplannerbackend.ai.logger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

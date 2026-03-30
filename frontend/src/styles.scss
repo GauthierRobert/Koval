@@ -28,7 +28,7 @@
   --accent-subtle: color-mix(in srgb, var(--accent-color) 8%, transparent);
   --accent-border: color-mix(in srgb, var(--accent-color) 25%, transparent);
   --accent-hover: color-mix(in srgb, var(--accent-color) 15%, transparent);
-  --accent-gradient: linear-gradient(135deg, var(--accent-color), var(#db6412));
+  --accent-gradient: linear-gradient(135deg, var(--accent-color), #db6412);
 
 
   --success-subtle: color-mix(in srgb, var(--success-color) 8%, transparent);

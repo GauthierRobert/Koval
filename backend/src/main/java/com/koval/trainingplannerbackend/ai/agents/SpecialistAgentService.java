@@ -1,7 +1,7 @@
 package com.koval.trainingplannerbackend.ai.agents;
 
 import com.koval.trainingplannerbackend.ai.ConversationSummarizer;
-import com.koval.trainingplannerbackend.ai.UsageTracker;
+import com.koval.trainingplannerbackend.ai.logger.UsageTracker;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystemService;
 import org.springframework.ai.chat.client.ChatClient;
 

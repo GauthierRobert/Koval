@@ -1,4 +1,4 @@
-package com.koval.trainingplannerbackend.ai;
+package com.koval.trainingplannerbackend.ai.logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;

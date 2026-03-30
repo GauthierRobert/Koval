@@ -1,5 +1,6 @@
-package com.koval.trainingplannerbackend.ai;
+package com.koval.trainingplannerbackend.ai.config;
 
+import com.koval.trainingplannerbackend.ai.logger.PromptLogger;
 import com.koval.trainingplannerbackend.ai.toon.ToonToolCallbackProvider;
 import org.springframework.ai.anthropic.AnthropicChatOptions;
 import org.springframework.ai.anthropic.api.AnthropicCacheOptions;
@@ -25,7 +26,7 @@ import java.util.stream.Stream;
  * Shared AI infrastructure: model constants, prompt loading, option builders,
  * tool wrapping.
  * <p>
- * Extended by {@link AISimpleRequestConfig} (Haiku) and {@link AIComplexRequestConfig} (Sonnet).
+ * Extended by {@link AIHaikuConfig} (Haiku) and {@link AISonnetConfig} (Sonnet).
  */
 @Configuration
 public class AIConfig {

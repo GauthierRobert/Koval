@@ -130,9 +130,12 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 # TO VERIFY
 
 ## TO FIX
-- SnapShot simulation race instead of save simulation race, it must be an action of user and parameters must be saved (including front end params)
+- Colour of Zone need to be changed, (in Zone distribution, Zone display in analysis, zone creation,...) must use colour that goes from purple (lowest) to dark red (highest). Default Zone Color must use the same system. You can assuse that the mean of the lowest zone is 0% then purple and the mean of the highest zone is 100% then dark red.
+- Button to switch from % to values in training lib does not work any more. I have this issue when click (maybe not related) : workout-visualization.component.html:221 NG0956: The configured tracking expression (track by identity) caused re-creation of the entire collection of size 6. This is an expensive operation requiring destruction and subsequent creation of DOM nodes, directives, components etc. Please review the "track expression" and make sure that it uniquely identifies items in a collection. Find more at https://v21.angular.dev/errors/NG0956
+- I want that the memory of the conversation is more than 8, but each message need to be compacted in 1 or 2 lines, for instance, i user created I have a huge context with training details, I want Training create : title with id.
 
 # TO IMPLEMENT
+- SnapShot simulation race instead of save simulation race, it must be an action of user and parameters must be saved (including front end params)
 
 # Club
 - Add car sharing in club. Athlete can propose their car sharing in the club. Athlete can ask for car sharing and other athlete can accept. 

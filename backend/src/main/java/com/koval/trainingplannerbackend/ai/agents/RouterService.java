@@ -1,6 +1,6 @@
 package com.koval.trainingplannerbackend.ai.agents;
 
-import com.koval.trainingplannerbackend.ai.AIConfig;
+import com.koval.trainingplannerbackend.ai.config.AIConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
