@@ -6,12 +6,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Activates AI debugging tools:
+ * AI request pipeline configuration:
+ * - Tool schema compression (always active, reduces input tokens)
  * - HTTP-level request/response logging ({@code app.ai.debug-calls=true})
  * - Prompt-level logging ({@code app.ai.log-prompts=true})
  */
 @Configuration
 class AIDebugConfig {
+
+    @Bean
+    RestClientCustomizer toolSchemaCompressorCustomizer() {
+        ToolSchemaCompressor compressor = new ToolSchemaCompressor();
+        return builder -> builder.requestInterceptor(compressor);
+    }
 
     @Bean
     @ConditionalOnProperty(name = "app.ai.debug-calls", havingValue = "true")
