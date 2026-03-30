@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.ai.action;
 
+import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.tools.TrainingMapper;
@@ -21,9 +22,9 @@ public class CreationTrainingToolService {
 
     @Tool(description = "Create a new training workout.")
     public Object createTraining(
-            @ToolParam(description = "Training to create") TrainingRequest create,
-            @ToolParam(description = "Creator user ID") String userId) {
+            @ToolParam(description = "Training to create") TrainingRequest create) {
         ActionToolTracker.markCalled();
+        String userId = SecurityUtils.getCurrentUserId();
         Training training = trainingMapper.mapToEntity(create);
         return TrainingSummary.from(trainingService.createTraining(training, userId));
     }

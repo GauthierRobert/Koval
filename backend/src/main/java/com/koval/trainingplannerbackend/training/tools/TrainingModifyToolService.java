@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.training.tools;
 
 import com.koval.trainingplannerbackend.ai.ToolEventEmitter;
+import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.training.TrainingAccessService;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.model.Training;
@@ -49,9 +50,9 @@ public class TrainingModifyToolService {
     @Tool(description = "Delete a training plan by ID (creator only).")
     public String deleteTraining(
             @ToolParam(description = "Training ID") String trainingId,
-            @ToolParam(description = "User ID") String userId,
             ToolContext context) {
         ToolEventEmitter.emitToolCall(context, "deleteTraining", "Deleting training...");
+        String userId = SecurityUtils.getCurrentUserId();
         Training existing = trainingService.getTrainingById(trainingId);
         trainingAccessService.verifyAccess(userId, existing);
         String title = existing.getTitle();

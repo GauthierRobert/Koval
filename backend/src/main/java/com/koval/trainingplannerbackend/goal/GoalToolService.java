@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.goal;
 
+import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
@@ -21,8 +22,8 @@ public class GoalToolService {
     }
 
     @Tool(description = "List race goals for a user (by date ascending).")
-    public List<GoalSummary> listGoals(
-            @ToolParam(description = "User ID") String userId) {
+    public List<GoalSummary> listGoals() {
+        String userId = SecurityUtils.getCurrentUserId();
         return raceGoalService.getGoalsForAthlete(userId)
                 .stream()
                 .map(GoalSummary::from)
@@ -31,8 +32,8 @@ public class GoalToolService {
 
     @Tool(description = "Delete a race goal.")
     public String deleteGoal(
-            @ToolParam(description = "Goal ID") String goalId,
-            @ToolParam(description = "User ID") String userId) {
+            @ToolParam(description = "Goal ID") String goalId) {
+        String userId = SecurityUtils.getCurrentUserId();
         raceGoalService.deleteGoal(goalId, userId);
         return "Goal deleted.";
     }

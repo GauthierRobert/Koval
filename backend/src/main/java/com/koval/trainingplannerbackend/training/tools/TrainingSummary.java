@@ -12,9 +12,7 @@ public record TrainingSummary(
         String title,
         TrainingType trainingType,
         int durationMinutes,
-        int distance,
-        int blockCount,
-        List<String> tags
+        int distance
 ) {
     public static TrainingSummary from(Training t) {
         int durationMin = t.getEstimatedDurationSeconds() != null
@@ -25,9 +23,7 @@ public record TrainingSummary(
                 t.getTitle(),
                 t.getTrainingType(),
                 durationMin,
-                t.getEstimatedDistance() == null ? 0 : t.getEstimatedDistance(),
-                t.getBlocks() != null ? WorkoutElementFlattener.flatten(t.getBlocks()).size() : 0,
-                t.getGroupIds()
+                t.getEstimatedDistance() == null ? 0 : t.getEstimatedDistance()
         );
     }
 }

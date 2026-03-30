@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.training.tools;
 
 import com.koval.trainingplannerbackend.ai.ToolEventEmitter;
+import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.ai.chat.model.ToolContext;
@@ -32,9 +33,9 @@ public class TrainingToolService {
     /** Lists training plan summaries for a user with pagination support. */
     @Tool(description = "List user's training plans (default: 15 most recent).")
     public List<TrainingSummary> listTrainingsByUser(
-            @ToolParam(description = "User ID") String userId,
             @ToolParam(description = "Max results (default 15)", required = false) Integer limit,
             @ToolParam(description = "Skip count (default 0)", required = false) Integer offset) {
+        String userId = SecurityUtils.getCurrentUserId();
         int effectiveLimit = (limit != null && limit > 0) ? limit : 15;
         int effectiveOffset = (offset != null && offset >= 0) ? offset : 0;
         int page = effectiveOffset / effectiveLimit;
@@ -47,7 +48,6 @@ public class TrainingToolService {
     @Tool(description = "Create a new training workout plan.")
     public Object createTraining(
             @ToolParam(description = "Training to create") TrainingRequest create,
-            @ToolParam(description = "Creator user ID") String userId,
             ToolContext context) {
         String validationError = validateTrainingRequest(create);
         if (validationError != null) {
@@ -55,6 +55,7 @@ public class TrainingToolService {
             return validationError;
         }
         ToolEventEmitter.emitToolCall(context, "createTraining", "Creating: " + create.title());
+        String userId = SecurityUtils.getCurrentUserId();
         Training training = trainingMapper.mapToEntity(create);
         TrainingSummary result = TrainingSummary.from(trainingManagementService.createTraining(training, userId));
         ToolEventEmitter.emitToolResult(context, "createTraining", result.title(), true);

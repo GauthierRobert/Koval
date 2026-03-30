@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.ai;
 
+import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.coach.CoachService;
@@ -55,9 +56,9 @@ public class ContextToolService {
 
     @Tool(description = "Scheduled workouts for a user in a date range (max 20).")
     public List<ScheduleSummary> getUserSchedule(
-            @ToolParam(description = "User ID") String userId,
             @ToolParam(description = "Start date (YYYY-MM-DD)") LocalDate startDate,
             @ToolParam(description = "End date (YYYY-MM-DD)") LocalDate endDate) {
+        String userId = SecurityUtils.getCurrentUserId();
         List<ScheduledWorkout> workouts = scheduledWorkoutRepository
                 .findByAthleteIdAndScheduledDateBetween(userId, startDate, endDate);
 
@@ -79,8 +80,8 @@ public class ContextToolService {
     }
 
     @Tool(description = "Get user profile: FTP, CTL, ATL, TSB, role, displayName.")
-    public Map<String, Object> getUserProfile(
-            @ToolParam(description = "User ID") String userId) {
+    public Map<String, Object> getUserProfile() {
+        String userId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
@@ -96,10 +97,10 @@ public class ContextToolService {
 
     @Tool(description = "Schedule a training for yourself on a date.")
     public ScheduleSummary selfAssignTraining(
-            @ToolParam(description = "User ID") String userId,
             @ToolParam(description = "Training ID") String trainingId,
             @ToolParam(description = "Date (YYYY-MM-DD)") LocalDate scheduledDate,
             @ToolParam(description = "Notes (optional)") String notes) {
+        String userId = SecurityUtils.getCurrentUserId();
         ScheduledWorkout sw = coachService.selfAssignTraining(userId, trainingId, scheduledDate, notes);
         String title = trainingRepository.findById(trainingId)
                 .map(Training::getTitle).orElse("Unknown");

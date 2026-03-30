@@ -131,8 +131,8 @@ public abstract class BaseAgentService implements TrainingAgent {
         LocalDate weekStart = today.with(DayOfWeek.MONDAY);
         LocalDate weekEnd = today.with(DayOfWeek.SUNDAY);
 
-        String base = "userId=%s role=%s ftp=%sW today=%s(%s) week=%s/%s".formatted(
-                ctx.userId(), ctx.role(), ctx.ftp(),
+        String base = "role=%s ftp=%sW today=%s(%s) week=%s/%s".formatted(
+                ctx.role(), ctx.ftp(),
                 today, dow.getDisplayName(TextStyle.SHORT, Locale.ENGLISH),
                 weekStart, weekEnd);
 

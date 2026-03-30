@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.coach.tools;
 
 import com.koval.trainingplannerbackend.ai.ToolEventEmitter;
+import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.coach.CoachService;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
@@ -33,9 +34,8 @@ public class CoachToolService {
 
     @Tool(description = "Assign a training to one or more athletes on a date.")
     public Object assignTraining(
-            @ToolParam(description = "Coach ID") String coachId,
-            @ToolParam(description = "Training ID") String trainingId,
-            @ToolParam(description = "Athlete IDs") List<String> athleteIds,
+            @ToolParam(description = "Training Id") String trainingId,
+            @ToolParam(description = "Athlete Ids") List<String> athleteIds,
             @ToolParam(description = "Date (YYYY-MM-DD)") LocalDate scheduledDate,
             @ToolParam(description = "Notes (optional)") String notes,
             ToolContext context) {
@@ -52,6 +52,7 @@ public class CoachToolService {
             return "Error: scheduledDate is required.";
         }
         ToolEventEmitter.emitToolCall(context, "assignTraining", "Scheduling for " + athleteIds.size() + " athlete(s)...");
+        String coachId = SecurityUtils.getCurrentUserId();
         List<ScheduledWorkout> workouts = coachService.assignTraining(coachId, trainingId, athleteIds, scheduledDate, notes, null);
         String title = resolveTrainingTitle(trainingId);
         List<ScheduleSummary> result = workouts.stream().map(sw -> ScheduleSummary.from(sw, title)).toList();
@@ -59,33 +60,24 @@ public class CoachToolService {
         return result;
     }
 
-    @Tool(description = "Get an athlete's schedule in a date range.")
-    public List<ScheduleSummary> getAthleteSchedule(
-            @ToolParam(description = "Athlete ID") String athleteId,
-            @ToolParam(description = "Start date (YYYY-MM-DD)") LocalDate start,
-            @ToolParam(description = "End date (YYYY-MM-DD)") LocalDate end) {
-        List<ScheduledWorkout> workouts = coachService.getAthleteSchedule(athleteId, start, end);
-        return enrichWithTitles(workouts);
-    }
-
     @Tool(description = "List athletes assigned to this coach.")
-    public List<AthleteSummary> getCoachAthletes(
-            @ToolParam(description = "Coach ID") String coachId) {
+    public List<AthleteSummary> getCoachAthletes() {
+        String coachId = SecurityUtils.getCurrentUserId();
         return coachService.getCoachAthletes(coachId).stream()
                 .map(AthleteSummary::from).toList();
     }
 
     @Tool(description = "List coach's athletes filtered by group.")
     public List<AthleteSummary> getAthletesByGroup(
-            @ToolParam(description = "Coach ID") String coachId,
             @ToolParam(description = "Group ID") String groupId) {
+        String coachId = SecurityUtils.getCurrentUserId();
         return coachService.getAthletesByGroup(coachId, groupId).stream()
                 .map(AthleteSummary::from).toList();
     }
 
     @Tool(description = "List all groups for this coach. Call before getAthletesByGroup.")
-    public List<Group> getAthleteGroupsForCoach(
-            @ToolParam(description = "Coach ID") String coachId) {
+    public List<Group> getAthleteGroupsForCoach() {
+        String coachId = SecurityUtils.getCurrentUserId();
         return coachService.getAthleteGroupsForCoach(coachId);
     }
 

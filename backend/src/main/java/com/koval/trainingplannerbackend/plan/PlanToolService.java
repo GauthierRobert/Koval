@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.plan;
 
 import com.koval.trainingplannerbackend.ai.ToolEventEmitter;
+import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.training.model.SportType;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
@@ -32,7 +33,6 @@ public class PlanToolService {
             @ToolParam(description = "Sport type: CYCLING, RUNNING, SWIMMING, or BRICK") String sportType,
             @ToolParam(description = "Start date in YYYY-MM-DD format (should be a Monday)") LocalDate startDate,
             @ToolParam(description = "Total number of weeks in the plan") int durationWeeks,
-            @ToolParam(description = "User ID of the plan creator") String userId,
             @ToolParam(description = "Optional target FTP at plan completion", required = false) Integer targetFtp,
             @ToolParam(description = "Optional race goal ID this plan targets", required = false) String goalRaceId,
             ToolContext context) {
@@ -48,6 +48,7 @@ public class PlanToolService {
 
         ToolEventEmitter.emitToolCall(context, "createPlan", "Creating plan: " + title);
 
+        String userId = SecurityUtils.getCurrentUserId();
         TrainingPlan plan = new TrainingPlan();
         plan.setTitle(title);
         plan.setDescription(description);
@@ -78,7 +79,6 @@ public class PlanToolService {
             @ToolParam(description = "Day of week: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, or SUNDAY") String dayOfWeek,
             @ToolParam(description = "Training ID to schedule on this day") String trainingId,
             @ToolParam(description = "Optional notes for this day", required = false) String notes,
-            @ToolParam(description = "User ID for ownership check") String userId,
             ToolContext context) {
 
         if (planId == null || planId.isBlank()) {
@@ -105,6 +105,7 @@ public class PlanToolService {
         day.setNotes(notes);
         week.getDays().add(day);
 
+        String userId = SecurityUtils.getCurrentUserId();
         planService.updatePlan(planId, plan, userId);
         ToolEventEmitter.emitToolResult(context, "addDayToPlan", "Added to week " + weekNumber + " " + dayOfWeek, true);
         return "Added training to week " + weekNumber + ", " + dayOfWeek;
@@ -116,7 +117,6 @@ public class PlanToolService {
             @ToolParam(description = "Week number (1-based)") int weekNumber,
             @ToolParam(description = "Label for the week, e.g. 'Build Week 1', 'Recovery'") String label,
             @ToolParam(description = "Target weekly TSS", required = false) Integer targetTss,
-            @ToolParam(description = "User ID for ownership check") String userId,
             ToolContext context) {
 
         ToolEventEmitter.emitToolCall(context, "setWeekLabel", "Labeling week " + weekNumber);
@@ -135,6 +135,7 @@ public class PlanToolService {
         week.setLabel(label);
         if (targetTss != null) week.setTargetTss(targetTss);
 
+        String userId = SecurityUtils.getCurrentUserId();
         planService.updatePlan(planId, plan, userId);
         ToolEventEmitter.emitToolResult(context, "setWeekLabel", label, true);
         return "Week " + weekNumber + " labeled: " + label;
@@ -143,12 +144,12 @@ public class PlanToolService {
     @Tool(description = "Activate a training plan, populating the calendar with scheduled workouts for all planned days. Only works on DRAFT or PAUSED plans.")
     public Object activatePlan(
             @ToolParam(description = "The plan ID to activate") String planId,
-            @ToolParam(description = "User ID for ownership check") String userId,
             ToolContext context) {
 
         ToolEventEmitter.emitToolCall(context, "activatePlan", "Activating plan...");
 
         try {
+            String userId = SecurityUtils.getCurrentUserId();
             TrainingPlan activated = planService.activatePlan(planId, userId);
             int totalDays = activated.getWeeks().stream()
                     .mapToInt(w -> w.getDays().size())
@@ -164,8 +165,8 @@ public class PlanToolService {
     }
 
     @Tool(description = "List training plans for a user. Returns summaries with status and duration.")
-    public List<PlanSummary> listPlans(
-            @ToolParam(description = "User ID") String userId) {
+    public List<PlanSummary> listPlans() {
+        String userId = SecurityUtils.getCurrentUserId();
         return planService.listPlans(userId).stream()
                 .map(PlanSummary::from)
                 .toList();

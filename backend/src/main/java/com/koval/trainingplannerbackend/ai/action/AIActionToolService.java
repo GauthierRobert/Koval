@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.ai.action;
 
+import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.club.session.ClubSessionService;
 import com.koval.trainingplannerbackend.club.dto.CreateSessionRequest;
 import com.koval.trainingplannerbackend.training.TrainingService;
@@ -38,9 +39,8 @@ public class AIActionToolService {
 
     @Tool(description = """
             Create a new training plan and optionally a linked club training session in a single atomic action.
-            Call this exactly ONCE. Pass userId, clubId, clubGroupId, and coachGroupId exactly as provided in the system context.""")
+            Call this exactly ONCE. Pass clubId, clubGroupId, and coachGroupId exactly as provided in the system context.""")
     public ActionResult createTrainingWithClubSession(
-            @ToolParam(description = "User ID — pass exactly from system context") String userId,
             @ToolParam(description = "Sport type: CYCLING|RUNNING|SWIMMING|BRICK") String sportType,
             @ToolParam(description = "Training title") String title,
             @ToolParam(description = "Training description") String description,
@@ -57,6 +57,7 @@ public class AIActionToolService {
             @ToolParam(description = "Coach group ID from system context — pass null if not applicable") String coachGroupId) {
 
         ActionToolTracker.markCalled();
+        String userId = SecurityUtils.getCurrentUserId();
 
         // 1. Build and save the Training
         List<String> groupIds = new ArrayList<>();
