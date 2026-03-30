@@ -40,7 +40,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/strava", "/api/auth/strava/callback",
+                                "/api/auth/google", "/api/auth/google/callback",
+                                "/api/auth/google/mobile-callback",
+                                "/api/auth/dev/login").permitAll()
                         .requestMatchers("/api/integration/strava/webhook").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated())

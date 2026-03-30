@@ -2,6 +2,8 @@ package com.koval.trainingplannerbackend.auth;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +14,6 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,7 +34,7 @@ public class AuthController {
     private final UserService userService;
     private final UserRepository userRepository;
 
-    @Value("${jwt.secret:your-256-bit-secret-key-here-must-be-at-least-32-chars}")
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
     @Value("${jwt.expiration:86400000}")
@@ -184,49 +185,26 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    // --- Current User ---
+    // --- Current User (authenticated via JwtAuthenticationFilter + SecurityConfig) ---
 
     @GetMapping("/me")
-    public ResponseEntity<Map<String, Object>> getCurrentUser(
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        try {
-            String token = authHeader.substring(7);
-            String userId = parseJwtToken(token);
-
-            User user = userService.getUserById(userId);
-            return ResponseEntity.ok(userService.userToMap(user));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+    public ResponseEntity<Map<String, Object>> getCurrentUser() {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userService.getUserById(userId);
+        return ResponseEntity.ok(userService.userToMap(user));
     }
 
     public record RoleRequest(UserRole role) {
     }
 
     @PostMapping("/role")
-    public ResponseEntity<Map<String, Object>> setRole(
-            @RequestBody RoleRequest request,
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        try {
-            String userId = parseJwtToken(authHeader.substring(7));
-            User user = userService.setRole(userId, request.role());
-            return ResponseEntity.ok(userService.userToMap(user));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+    public ResponseEntity<Map<String, Object>> setRole(@RequestBody RoleRequest request) {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userService.setRole(userId, request.role());
+        return ResponseEntity.ok(userService.userToMap(user));
     }
 
-    public record SettingsRequest(Integer ftp, Integer weightKg, Integer functionalThresholdPace,
+    public record SettingsRequest(@Positive Integer ftp, @Positive Integer weightKg, Integer functionalThresholdPace,
             Integer criticalSwimSpeed, Integer pace5k, Integer pace10k,
             Integer paceHalfMarathon, Integer paceMarathon,
             Integer vo2maxPower, Integer vo2maxPace,
@@ -235,145 +213,67 @@ public class AuthController {
     }
 
     @PutMapping("/settings")
-    public ResponseEntity<Map<String, Object>> updateSettings(
-            @RequestBody SettingsRequest request,
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        try {
-            String userId = parseJwtToken(authHeader.substring(7));
-            User user = userService.updateSettings(userId,
-                    request.ftp(), request.weightKg(), request.functionalThresholdPace(),
-                    request.criticalSwimSpeed(), request.pace5k(), request.pace10k(),
-                    request.paceHalfMarathon(), request.paceMarathon(),
-                    request.vo2maxPower(), request.vo2maxPace(),
-                    request.customZoneReferenceValues(),
-                    request.aiPrePrompt(), request.aiPrePromptEnabled());
-            return ResponseEntity.ok(userService.userToMap(user));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<Map<String, Object>> updateSettings(@RequestBody @Valid SettingsRequest request) {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userService.updateSettings(userId,
+                request.ftp(), request.weightKg(), request.functionalThresholdPace(),
+                request.criticalSwimSpeed(), request.pace5k(), request.pace10k(),
+                request.paceHalfMarathon(), request.paceMarathon(),
+                request.vo2maxPower(), request.vo2maxPace(),
+                request.customZoneReferenceValues(),
+                request.aiPrePrompt(), request.aiPrePromptEnabled());
+        return ResponseEntity.ok(userService.userToMap(user));
     }
 
     // --- Account linking (authenticated user connects an additional provider) ---
 
     @PostMapping("/link/strava/callback")
-    public ResponseEntity<Map<String, Object>> linkStrava(
-            @RequestParam String code,
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        try {
-            String userId = parseJwtToken(authHeader.substring(7));
-            StravaOAuthService.StravaTokenResponse tokenResponse = stravaOAuthService.exchangeCodeForToken(code);
-            User user = userService.linkStrava(userId, tokenResponse.getAthleteId(),
-                    tokenResponse.getAccessToken(), tokenResponse.getRefreshToken(), tokenResponse.getExpiresAt());
-            return ResponseEntity.ok(userService.userToMap(user));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to link Strava: " + e.getMessage()));
-        }
+    public ResponseEntity<Map<String, Object>> linkStrava(@RequestParam String code) {
+        String userId = SecurityUtils.getCurrentUserId();
+        StravaOAuthService.StravaTokenResponse tokenResponse = stravaOAuthService.exchangeCodeForToken(code);
+        User user = userService.linkStrava(userId, tokenResponse.getAthleteId(),
+                tokenResponse.getAccessToken(), tokenResponse.getRefreshToken(), tokenResponse.getExpiresAt());
+        return ResponseEntity.ok(userService.userToMap(user));
     }
 
     @PostMapping("/link/google/callback")
     public ResponseEntity<Map<String, Object>> linkGoogle(
             @RequestParam String code,
-            @RequestParam(required = false) String redirectUri,
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        try {
-            String userId = parseJwtToken(authHeader.substring(7));
-            GoogleOAuthService.GoogleUserInfo googleUser = googleOAuthService.exchangeCodeAndGetUserInfo(code, redirectUri);
-            User user = userService.linkGoogle(userId, googleUser.getGoogleId(), googleUser.getEmail());
-            return ResponseEntity.ok(userService.userToMap(user));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to link Google: " + e.getMessage()));
-        }
+            @RequestParam(required = false) String redirectUri) {
+        String userId = SecurityUtils.getCurrentUserId();
+        GoogleOAuthService.GoogleUserInfo googleUser = googleOAuthService.exchangeCodeAndGetUserInfo(code, redirectUri);
+        User user = userService.linkGoogle(userId, googleUser.getGoogleId(), googleUser.getEmail());
+        return ResponseEntity.ok(userService.userToMap(user));
     }
 
     @DeleteMapping("/link/garmin")
-    public ResponseEntity<Map<String, Object>> unlinkGarmin(
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        try {
-            String userId = parseJwtToken(authHeader.substring(7));
-            User user = userService.unlinkGarmin(userId);
-            return ResponseEntity.ok(userService.userToMap(user));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<Map<String, Object>> unlinkGarmin() {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userService.unlinkGarmin(userId);
+        return ResponseEntity.ok(userService.userToMap(user));
     }
 
     @DeleteMapping("/link/zwift")
-    public ResponseEntity<Map<String, Object>> unlinkZwift(
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        try {
-            String userId = parseJwtToken(authHeader.substring(7));
-            User user = userService.unlinkZwift(userId);
-            return ResponseEntity.ok(userService.userToMap(user));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<Map<String, Object>> unlinkZwift() {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userService.unlinkZwift(userId);
+        return ResponseEntity.ok(userService.userToMap(user));
     }
 
     // --- Unlinking ---
 
     @DeleteMapping("/link/strava")
-    public ResponseEntity<Map<String, Object>> unlinkStrava(
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        try {
-            String userId = parseJwtToken(authHeader.substring(7));
-            User user = userService.unlinkStrava(userId);
-            return ResponseEntity.ok(userService.userToMap(user));
-        } catch (IllegalStateException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<Map<String, Object>> unlinkStrava() {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userService.unlinkStrava(userId);
+        return ResponseEntity.ok(userService.userToMap(user));
     }
 
     @DeleteMapping("/link/google")
-    public ResponseEntity<Map<String, Object>> unlinkGoogle(
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        try {
-            String userId = parseJwtToken(authHeader.substring(7));
-            User user = userService.unlinkGoogle(userId);
-            return ResponseEntity.ok(userService.userToMap(user));
-        } catch (IllegalStateException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<Map<String, Object>> unlinkGoogle() {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userService.unlinkGoogle(userId);
+        return ResponseEntity.ok(userService.userToMap(user));
     }
 
     private String generateJwtToken(User user) {
@@ -389,95 +289,52 @@ public class AuthController {
                 .compact();
     }
 
-    private String parseJwtToken(String token) {
-        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-
-        return Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
-    }
-
     public record ZoneReferenceRequest(String zoneSystemId, int value) {}
 
     @PatchMapping("/me/zone-reference")
-    public ResponseEntity<Void> setZoneReference(
-            @RequestBody ZoneReferenceRequest request,
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        try {
-            String userId = parseJwtToken(authHeader.substring(7));
-            userService.setCustomZoneReference(userId, request.zoneSystemId(), request.value());
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<Void> setZoneReference(@RequestBody ZoneReferenceRequest request) {
+        String userId = SecurityUtils.getCurrentUserId();
+        userService.setCustomZoneReference(userId, request.zoneSystemId(), request.value());
+        return ResponseEntity.ok().build();
     }
 
-    public record OnboardingRequest(UserRole role, Integer ftp, Integer weightKg, Integer criticalSwimSpeed,
-            Integer functionalThresholdPace, Boolean cguAccepted) {
+    public record OnboardingRequest(UserRole role, @Positive Integer ftp, @Positive Integer weightKg,
+            Integer criticalSwimSpeed, Integer functionalThresholdPace, Boolean cguAccepted) {
     }
 
     @PostMapping("/onboarding")
-    public ResponseEntity<Map<String, Object>> completeOnboarding(
-            @RequestBody OnboardingRequest request,
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+    public ResponseEntity<Map<String, Object>> completeOnboarding(@RequestBody @Valid OnboardingRequest request) {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userService.getUserById(userId);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (request.role() != null) user.setRole(request.role());
+        if (request.ftp() != null) user.setFtp(request.ftp());
+        if (request.weightKg() != null) user.setWeightKg(request.weightKg());
+        if (request.criticalSwimSpeed() != null) user.setCriticalSwimSpeed(request.criticalSwimSpeed());
+        if (request.functionalThresholdPace() != null) user.setFunctionalThresholdPace(request.functionalThresholdPace());
+        if (Boolean.TRUE.equals(request.cguAccepted())) {
+            user.setCguAcceptedAt(java.time.LocalDateTime.now());
+            user.setCguVersion(CguConstants.CURRENT_VERSION);
         }
+        user.setNeedsOnboarding(false);
 
-        try {
-            String userId = parseJwtToken(authHeader.substring(7));
-            User user = userService.getUserById(userId);
+        userRepository.save(user);
 
-            if (request.role() != null) user.setRole(request.role());
-            if (request.ftp() != null) user.setFtp(request.ftp());
-            if (request.weightKg() != null) user.setWeightKg(request.weightKg());
-            if (request.criticalSwimSpeed() != null) user.setCriticalSwimSpeed(request.criticalSwimSpeed());
-            if (request.functionalThresholdPace() != null) user.setFunctionalThresholdPace(request.functionalThresholdPace());
-            if (Boolean.TRUE.equals(request.cguAccepted())) {
-                user.setCguAcceptedAt(java.time.LocalDateTime.now());
-                user.setCguVersion(CguConstants.CURRENT_VERSION);
-            }
-            user.setNeedsOnboarding(false);
-
-            userRepository.save(user);
-
-            // Re-issue JWT with potentially updated role
-            String jwt = generateJwtToken(user);
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", jwt);
-            response.put("user", userService.userToMap(user));
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        // Re-issue JWT with potentially updated role
+        String jwt = generateJwtToken(user);
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", jwt);
+        response.put("user", userService.userToMap(user));
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/cgu/accept")
-    public ResponseEntity<Map<String, Object>> acceptCgu(
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        try {
-            String userId = parseJwtToken(authHeader.substring(7));
-            User user = userService.getUserById(userId);
-            user.setCguAcceptedAt(java.time.LocalDateTime.now());
-            user.setCguVersion(CguConstants.CURRENT_VERSION);
-            userRepository.save(user);
-            return ResponseEntity.ok(userService.userToMap(user));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<Map<String, Object>> acceptCgu() {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userService.getUserById(userId);
+        user.setCguAcceptedAt(java.time.LocalDateTime.now());
+        user.setCguVersion(CguConstants.CURRENT_VERSION);
+        userRepository.save(user);
+        return ResponseEntity.ok(userService.userToMap(user));
     }
 }

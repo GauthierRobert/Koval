@@ -95,7 +95,7 @@ public class StravaActivitySyncService {
                     if (lapBlocks != null) {
                         session.setBlockSummaries(lapBlocks);
                     }
-                } catch (Exception lapEx) {
+                } catch (RuntimeException lapEx) {
                     log.warn("Failed to fetch laps for Strava activity {}: {}", stravaId, lapEx.getMessage());
                 }
 
@@ -104,12 +104,12 @@ public class StravaActivitySyncService {
                 // Fetch streams and build FIT file (non-fatal if it fails)
                 try {
                     saved = buildAndStoreFit(saved, user);
-                } catch (Exception fitEx) {
+                } catch (RuntimeException fitEx) {
                     log.warn("Failed to build FIT for Strava activity {}: {}", stravaId, fitEx.getMessage());
                 }
 
                 importedSessions.add(saved);
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 log.warn("Failed to import Strava activity {}: {}", stravaId, e.getMessage());
                 skippedErrors++;
             }
@@ -158,7 +158,7 @@ public class StravaActivitySyncService {
             if (lapBlocks != null) {
                 session.setBlockSummaries(lapBlocks);
             }
-        } catch (Exception lapEx) {
+        } catch (RuntimeException lapEx) {
             log.warn("Failed to fetch laps for Strava activity {}: {}", stravaActivityId, lapEx.getMessage());
         }
 
@@ -166,7 +166,7 @@ public class StravaActivitySyncService {
 
         try {
             buildAndStoreFit(saved, user);
-        } catch (Exception fitEx) {
+        } catch (RuntimeException fitEx) {
             log.warn("Failed to build FIT for Strava activity {}: {}", stravaActivityId, fitEx.getMessage());
         }
     }

@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
@@ -101,7 +102,7 @@ public class StravaOAuthService {
             if (athlete != null && athlete.get("email") != null) {
                 tokenResponse.setEmail((String) athlete.get("email"));
             }
-        } catch (Exception e) {
+        } catch (RestClientException e) {
             // Non-critical — proceed without email
         }
     }

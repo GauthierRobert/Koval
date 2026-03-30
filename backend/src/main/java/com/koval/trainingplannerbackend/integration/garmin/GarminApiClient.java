@@ -7,6 +7,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -45,7 +46,7 @@ public class GarminApiClient {
             ResponseEntity<List> response = restTemplate.exchange(
                     url, HttpMethod.GET, new HttpEntity<>(headers), List.class);
             return response.getBody() != null ? response.getBody() : List.of();
-        } catch (Exception e) {
+        } catch (RestClientException e) {
             log.warn("Failed to fetch Garmin activities: {}", e.getMessage());
             return List.of();
         }
@@ -65,7 +66,7 @@ public class GarminApiClient {
             ResponseEntity<Map> response = restTemplate.exchange(
                     url, HttpMethod.GET, new HttpEntity<>(headers), Map.class);
             return response.getBody() != null ? response.getBody() : Map.of();
-        } catch (Exception e) {
+        } catch (RestClientException e) {
             log.warn("Failed to fetch Garmin activity {}: {}", activityId, e.getMessage());
             return Map.of();
         }

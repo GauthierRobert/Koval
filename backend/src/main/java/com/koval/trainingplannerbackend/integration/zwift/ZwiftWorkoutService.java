@@ -13,6 +13,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -69,7 +70,7 @@ public class ZwiftWorkoutService {
                 Thread.startVirtualThread(() -> {
                     try {
                         pushWorkoutToZwift(user, training);
-                    } catch (Exception e) {
+                    } catch (RestClientException e) {
                         log.warn("Auto-sync to Zwift failed for training {}: {}", training.getId(), e.getMessage());
                     }
                 });
@@ -165,11 +166,11 @@ public class ZwiftWorkoutService {
                 restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(zwoXml, headers), String.class);
                 log.info("Pushed workout '{}' to Zwift for user {} (after token refresh)", name, user.getId());
                 return true;
-            } catch (Exception retryEx) {
+            } catch (RestClientException retryEx) {
                 log.warn("Failed to push workout to Zwift after refresh: {}", retryEx.getMessage());
                 return false;
             }
-        } catch (Exception e) {
+        } catch (RestClientException e) {
             log.warn("Failed to push workout '{}' to Zwift: {}", name, e.getMessage());
             return false;
         }

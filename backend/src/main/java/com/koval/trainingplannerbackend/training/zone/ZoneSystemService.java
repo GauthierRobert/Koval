@@ -4,6 +4,9 @@ import com.koval.trainingplannerbackend.club.membership.ClubMemberRole;
 import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
+import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
+import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import com.koval.trainingplannerbackend.training.group.GroupService;
 import com.koval.trainingplannerbackend.training.model.SportType;
 import org.springframework.security.access.AccessDeniedException;
@@ -13,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -67,10 +71,10 @@ public class ZoneSystemService {
      */
     public ZoneSystem updateZoneSystem(String id, ZoneSystem updates) {
         ZoneSystem existing = zoneSystemRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("ZoneSystem not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("ZoneSystem not found: " + id));
 
-        if (!existing.getCoachId().equals(updates.getCoachId())) {
-            throw new IllegalArgumentException("Cannot change coachId of a ZoneSystem");
+        if (!Objects.equals(existing.getCoachId(), updates.getCoachId())) {
+            throw new ValidationException("Cannot change coachId of a ZoneSystem");
         }
 
         applyUpdates(existing, updates);
@@ -112,7 +116,7 @@ public class ZoneSystemService {
      */
     public ZoneSystem getZoneSystemsForCoach(String coachId, String name) {
         return zoneSystemRepository.findByCoachIdAndName(coachId, name).stream().findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("ZoneSystem does not exist for this coach and name"));
+                .orElseThrow(() -> new ResourceNotFoundException("ZoneSystem does not exist for this coach and name"));
     }
 
     /**
@@ -124,7 +128,7 @@ public class ZoneSystemService {
      */
     public ZoneSystem getZoneSystem(String id) {
         return zoneSystemRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("ZoneSystem not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("ZoneSystem not found: " + id));
     }
 
     /**
@@ -243,10 +247,10 @@ public class ZoneSystemService {
      */
     private ZoneSystem getOwnedZoneSystem(String zoneSystemId, String coachId) {
         ZoneSystem zoneSystem = zoneSystemRepository.findById(zoneSystemId)
-                .orElseThrow(() -> new IllegalArgumentException("ZoneSystem not found: " + zoneSystemId));
+                .orElseThrow(() -> new ResourceNotFoundException("ZoneSystem not found: " + zoneSystemId));
 
-        if (!zoneSystem.getCoachId().equals(coachId)) {
-            throw new IllegalArgumentException("ZoneSystem does not belong to this coach");
+        if (!Objects.equals(zoneSystem.getCoachId(), coachId)) {
+            throw new ForbiddenOperationException("ZoneSystem does not belong to this coach");
         }
         return zoneSystem;
     }

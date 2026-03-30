@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
@@ -103,7 +104,7 @@ public class ZwiftAuthService {
             if (profile != null && profile.containsKey("id")) {
                 return String.valueOf(profile.get("id"));
             }
-        } catch (Exception e) {
+        } catch (RestClientException e) {
             log.warn("Failed to fetch Zwift profile: {}", e.getMessage());
         }
         return null;

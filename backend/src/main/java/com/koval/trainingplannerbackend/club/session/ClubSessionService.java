@@ -419,7 +419,7 @@ public class ClubSessionService {
             Training t = trainingService.getTrainingById(glt.getTrainingId());
             glt.setTrainingTitle(t.getTitle());
             glt.setTrainingDescription(t.getDescription());
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             log.warn("Failed to enrich group linked training {}: {}", glt.getTrainingId(), e.getMessage());
         }
     }
@@ -466,7 +466,7 @@ public class ClubSessionService {
             session.setGpxFileName(file.getOriginalFilename());
             session.setRouteCoordinates(result.routeCoordinates());
             return sessionRepository.save(session);
-        } catch (Exception e) {
+        } catch (java.io.IOException | javax.xml.stream.XMLStreamException e) {
             throw new IllegalArgumentException("Failed to process GPX file: " + e.getMessage(), e);
         }
     }
@@ -517,8 +517,6 @@ public class ClubSessionService {
             }
         } catch (IllegalArgumentException e) {
             // Training may have been deleted
-        } catch (Exception e) {
-            log.warn("Failed to enrich session from linked training {}: {}", session.getLinkedTrainingId(), e.getMessage());
         }
     }
 }

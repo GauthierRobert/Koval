@@ -85,7 +85,7 @@ public class RaceController {
     @PostMapping("/{id}/gpx/{discipline}")
     public ResponseEntity<Void> uploadGpx(@PathVariable String id,
                                            @PathVariable String discipline,
-                                           @RequestParam("file") MultipartFile file) {
+                                           @RequestParam("file") MultipartFile file) throws java.io.IOException {
         try {
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest().build();
@@ -94,8 +94,6 @@ public class RaceController {
             return ResponseEntity.ok().build();
         } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
         }
     }
 

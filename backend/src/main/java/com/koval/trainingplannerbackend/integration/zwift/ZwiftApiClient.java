@@ -10,6 +10,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -65,11 +66,11 @@ public class ZwiftApiClient {
                 ResponseEntity<List> response = restTemplate.exchange(
                         url, HttpMethod.GET, new HttpEntity<>(headers), List.class);
                 return response.getBody() != null ? response.getBody() : List.of();
-            } catch (Exception retryEx) {
+            } catch (RestClientException retryEx) {
                 log.warn("Failed to fetch Zwift activities after refresh: {}", retryEx.getMessage());
                 return List.of();
             }
-        } catch (Exception e) {
+        } catch (RestClientException e) {
             log.warn("Failed to fetch Zwift activities: {}", e.getMessage());
             return List.of();
         }
@@ -89,7 +90,7 @@ public class ZwiftApiClient {
             ResponseEntity<byte[]> response = restTemplate.exchange(
                     url, HttpMethod.GET, new HttpEntity<>(headers), byte[].class);
             return response.getBody();
-        } catch (Exception e) {
+        } catch (RestClientException e) {
             log.warn("Failed to fetch Zwift FIT for activity {}: {}", activityId, e.getMessage());
             return null;
         }

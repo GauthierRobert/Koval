@@ -1,5 +1,8 @@
 package com.koval.trainingplannerbackend.goal;
 
+import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
+import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,7 +23,7 @@ public class RaceGoalService {
 
     public RaceGoal createGoal(String athleteId, RaceGoal goal) {
         if (goal.getRaceId() != null && repository.existsByAthleteIdAndRaceId(athleteId, goal.getRaceId())) {
-            throw new IllegalStateException("This race is already in your goals");
+            throw new ValidationException("This race is already in your goals");
         }
         goal.setAthleteId(athleteId);
         goal.setCreatedAt(LocalDateTime.now());
@@ -29,9 +32,9 @@ public class RaceGoalService {
 
     public RaceGoal updateGoal(String id, String athleteId, RaceGoal update) {
         RaceGoal existing = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Goal not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Goal not found"));
         if (!existing.getAthleteId().equals(athleteId)) {
-            throw new IllegalStateException("Not authorized");
+            throw new ForbiddenOperationException("Not authorized");
         }
         update.setId(id);
         update.setAthleteId(athleteId);
@@ -41,9 +44,9 @@ public class RaceGoalService {
 
     public void deleteGoal(String id, String athleteId) {
         RaceGoal existing = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Goal not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Goal not found"));
         if (!existing.getAthleteId().equals(athleteId)) {
-            throw new IllegalStateException("Not authorized");
+            throw new ForbiddenOperationException("Not authorized");
         }
         repository.deleteById(id);
     }

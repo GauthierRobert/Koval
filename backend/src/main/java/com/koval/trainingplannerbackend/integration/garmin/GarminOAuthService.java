@@ -158,7 +158,7 @@ public class GarminOAuthService {
             Mac mac = Mac.getInstance("HmacSHA1");
             mac.init(new SecretKeySpec(signingKey.getBytes(StandardCharsets.UTF_8), "HmacSHA1"));
             return Base64.getEncoder().encodeToString(mac.doFinal(baseString.getBytes(StandardCharsets.UTF_8)));
-        } catch (Exception e) {
+        } catch (java.security.GeneralSecurityException e) {
             throw new RuntimeException("Failed to generate OAuth signature", e);
         }
     }

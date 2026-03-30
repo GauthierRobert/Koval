@@ -320,7 +320,7 @@ public class SessionService {
             try {
                 gridFsOperations.delete(
                         Query.query(Criteria.where("_id").is(new ObjectId(fitFileId))));
-            } catch (Exception e) {
+            } catch (IllegalArgumentException | org.springframework.dao.DataAccessException e) {
                 log.warn("Failed to delete FIT file {}: {}", fitFileId, e.getMessage());
             }
         }
@@ -338,7 +338,7 @@ public class SessionService {
                     session.getTss() != null ? session.getTss().intValue() : null,
                     session.getIntensityFactor(),
                     session.getId());
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             log.warn("Failed to mark scheduled workout {} as completed: {}", scheduledWorkoutId, e.getMessage());
         }
     }
@@ -346,7 +346,7 @@ public class SessionService {
     private boolean isCoachOfOwner(String coachId, String athleteId) {
         try {
             return coachService.isCoachOfAthlete(coachId, athleteId);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             return false;
         }
     }

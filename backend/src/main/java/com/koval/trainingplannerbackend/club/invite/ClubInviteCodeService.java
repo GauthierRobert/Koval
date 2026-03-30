@@ -8,6 +8,8 @@ import com.koval.trainingplannerbackend.club.dto.ClubInviteCodeResponse;
 import com.koval.trainingplannerbackend.club.group.ClubGroup;
 import com.koval.trainingplannerbackend.club.group.ClubGroupRepository;
 import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService;
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
+import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import com.koval.trainingplannerbackend.club.membership.ClubMemberRole;
 import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
@@ -55,9 +57,9 @@ public class ClubInviteCodeService {
 
         if (clubGroupId != null && !clubGroupId.isBlank()) {
             ClubGroup group = clubGroupRepository.findById(clubGroupId)
-                    .orElseThrow(() -> new IllegalArgumentException("Club group not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Club group not found"));
             if (!group.getClubId().equals(clubId)) {
-                throw new IllegalArgumentException("Group does not belong to this club");
+                throw new ValidationException("Group does not belong to this club");
             }
         }
 
@@ -76,16 +78,16 @@ public class ClubInviteCodeService {
 
     public ClubMembership redeemClubInviteCode(String userId, String code) {
         ClubInviteCode inviteCode = clubInviteCodeRepository.findByCode(code.toUpperCase().trim())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid invite code"));
+                .orElseThrow(() -> new ResourceNotFoundException("Invalid invite code"));
 
         if (!inviteCode.isActive()) {
-            throw new IllegalStateException("Invite code is no longer active");
+            throw new ValidationException("Invite code is no longer active");
         }
         if (inviteCode.getExpiresAt() != null && LocalDateTime.now().isAfter(inviteCode.getExpiresAt())) {
-            throw new IllegalStateException("Invite code has expired");
+            throw new ValidationException("Invite code has expired");
         }
         if (inviteCode.getMaxUses() > 0 && inviteCode.getCurrentUses() >= inviteCode.getMaxUses()) {
-            throw new IllegalStateException("Invite code has reached maximum uses");
+            throw new ValidationException("Invite code has reached maximum uses");
         }
 
         String clubId = inviteCode.getClubId();
@@ -158,9 +160,9 @@ public class ClubInviteCodeService {
     public void deactivateClubInviteCode(String userId, String clubId, String codeId) {
         authorizationService.requireAdminOrCoach(userId, clubId);
         ClubInviteCode inviteCode = clubInviteCodeRepository.findById(codeId)
-                .orElseThrow(() -> new IllegalArgumentException("Invite code not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Invite code not found"));
         if (!inviteCode.getClubId().equals(clubId)) {
-            throw new IllegalArgumentException("Invite code does not belong to this club");
+            throw new ValidationException("Invite code does not belong to this club");
         }
         inviteCode.setActive(false);
         clubInviteCodeRepository.save(inviteCode);
@@ -181,12 +183,12 @@ public class ClubInviteCodeService {
                 return code;
             }
         }
-        throw new IllegalStateException("Unable to generate unique invite code after 10 attempts");
+        throw new ValidationException("Unable to generate unique invite code after 10 attempts");
     }
 
     private void incrementMemberCountAndEmitJoined(String clubId, String userId) {
         Club club = clubRepository.findById(clubId)
-                .orElseThrow(() -> new IllegalArgumentException("Club not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Club not found"));
         club.setMemberCount(club.getMemberCount() + 1);
         clubRepository.save(club);
         activityService.emitActivity(clubId, ClubActivityType.MEMBER_JOINED, userId, null, null);

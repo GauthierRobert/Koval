@@ -8,6 +8,8 @@ import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
 import com.koval.trainingplannerbackend.club.session.SessionCategory;
 import com.koval.trainingplannerbackend.club.session.SessionPropertyMapper;
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
+import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -58,7 +60,7 @@ public class RecurringSessionService {
     public RecurringSessionTemplate updateTemplate(String userId, String templateId,
                                                     CreateRecurringSessionRequest req) {
         RecurringSessionTemplate template = templateRepository.findById(templateId)
-                .orElseThrow(() -> new IllegalArgumentException("Template not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Template not found"));
         authorizationService.requireAdminOrCoach(userId, template.getClubId());
 
         SessionPropertyMapper.applyRequest(req, template);
@@ -67,9 +69,9 @@ public class RecurringSessionService {
 
     public int cancelFutureInstances(String userId, String clubId, String templateId, String reason) {
         RecurringSessionTemplate template = templateRepository.findById(templateId)
-                .orElseThrow(() -> new IllegalArgumentException("Template not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Template not found"));
         if (!template.getClubId().equals(clubId)) {
-            throw new IllegalArgumentException("Template does not belong to this club");
+            throw new ValidationException("Template does not belong to this club");
         }
         authorizationService.requireAdminOrCoach(userId, clubId);
 
@@ -101,7 +103,7 @@ public class RecurringSessionService {
 
     public void deactivateTemplate(String userId, String templateId) {
         RecurringSessionTemplate template = templateRepository.findById(templateId)
-                .orElseThrow(() -> new IllegalArgumentException("Template not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Template not found"));
         authorizationService.requireAdminOrCoach(userId, template.getClubId());
         template.setActive(false);
         templateRepository.save(template);
@@ -156,7 +158,7 @@ public class RecurringSessionService {
 
     public void updateFutureInstances(String templateId) {
         RecurringSessionTemplate template = templateRepository.findById(templateId)
-                .orElseThrow(() -> new IllegalArgumentException("Template not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Template not found"));
         List<ClubTrainingSession> futureInstances = sessionRepository
                 .findByRecurringTemplateIdAndScheduledAtAfter(templateId, LocalDateTime.now());
         for (ClubTrainingSession session : futureInstances) {

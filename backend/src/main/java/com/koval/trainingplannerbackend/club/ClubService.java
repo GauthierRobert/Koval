@@ -6,12 +6,14 @@ import com.koval.trainingplannerbackend.club.dto.ClubDetailResponse;
 import com.koval.trainingplannerbackend.club.dto.ClubSummaryResponse;
 import com.koval.trainingplannerbackend.club.dto.CreateClubRequest;
 import com.koval.trainingplannerbackend.club.invite.ClubInviteCodeService;
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.club.membership.ClubMemberRole;
 import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,6 +41,7 @@ public class ClubService {
 
     // --- Club CRUD ---
 
+    @Transactional
     public Club createClub(String userId, CreateClubRequest req) {
         Club club = new Club();
         club.setName(req.name());
@@ -95,7 +98,7 @@ public class ClubService {
 
     public ClubDetailResponse getClubDetail(String clubId, String userId) {
         Club club = clubRepository.findById(clubId)
-                .orElseThrow(() -> new IllegalArgumentException("Club not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Club not found"));
         Optional<ClubMembership> membership = membershipRepository.findByClubIdAndUserId(clubId, userId);
         String membershipStatus = membership.map(m -> m.getStatus().name()).orElse(null);
         ClubMemberRole memberRole = membership.map(ClubMembership::getRole).orElse(null);

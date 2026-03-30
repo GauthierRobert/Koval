@@ -1,6 +1,8 @@
 package com.koval.trainingplannerbackend.club.group;
 
 import com.koval.trainingplannerbackend.club.invite.ClubInviteCodeService;
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
+import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService;
 import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
@@ -30,7 +32,7 @@ public class ClubGroupService {
     public ClubGroup createGroup(String adminId, String clubId, String name) {
         authorizationService.requireAdminOrOwner(adminId, clubId);
         if (clubGroupRepository.findByClubIdAndName(clubId, name).isPresent()) {
-            throw new IllegalStateException("Group with this name already exists in the club");
+            throw new ValidationException("Group with this name already exists in the club");
         }
         ClubGroup group = new ClubGroup();
         group.setClubId(clubId);
@@ -58,9 +60,9 @@ public class ClubGroupService {
         authorizationService.requireAdminOrOwner(adminId, clubId);
         ClubGroup group = requireGroupInClub(clubId, groupId);
         ClubMembership targetMembership = membershipRepository.findByClubIdAndUserId(clubId, targetUserId)
-                .orElseThrow(() -> new IllegalArgumentException("User is not a member of this club"));
+                .orElseThrow(() -> new ResourceNotFoundException("User is not a member of this club"));
         if (targetMembership.getStatus() != ClubMemberStatus.ACTIVE) {
-            throw new IllegalStateException("User must be an active member to be added to a group");
+            throw new ValidationException("User must be an active member to be added to a group");
         }
         if (!group.getMemberIds().contains(targetUserId)) {
             group.getMemberIds().add(targetUserId);
@@ -95,9 +97,9 @@ public class ClubGroupService {
 
     private ClubGroup requireGroupInClub(String clubId, String groupId) {
         ClubGroup group = clubGroupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Group not found"));
         if (!group.getClubId().equals(clubId)) {
-            throw new IllegalArgumentException("Group does not belong to this club");
+            throw new ValidationException("Group does not belong to this club");
         }
         return group;
     }

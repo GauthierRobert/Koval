@@ -72,7 +72,11 @@ public class GoogleOAuthService {
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
         ResponseEntity<Map> tokenResponse = restTemplate.postForEntity(GOOGLE_TOKEN_URL, request, Map.class);
 
-        String accessToken = (String) tokenResponse.getBody().get("access_token");
+        Map tokenBody = tokenResponse.getBody();
+        if (tokenBody == null) {
+            throw new IllegalStateException("Google OAuth token response body is null");
+        }
+        String accessToken = (String) tokenBody.get("access_token");
 
         // Fetch user info
         HttpHeaders userInfoHeaders = new HttpHeaders();
@@ -83,6 +87,9 @@ public class GoogleOAuthService {
                 GOOGLE_USERINFO_URL, HttpMethod.GET, userInfoRequest, Map.class);
 
         Map<String, Object> userInfo = userInfoResponse.getBody();
+        if (userInfo == null) {
+            throw new IllegalStateException("Google OAuth user info response body is null");
+        }
 
         GoogleUserInfo result = new GoogleUserInfo();
         result.setGoogleId(String.valueOf(userInfo.get("id")));

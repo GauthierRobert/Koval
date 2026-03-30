@@ -75,7 +75,7 @@ public class GarminActivitySyncService {
                 CompletedSession session = mapper.map(activity);
                 CompletedSession saved = sessionService.saveSession(session, userId);
                 importedSessions.add(saved);
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 log.warn("Failed to import Garmin activity {}: {}", garminId, e.getMessage());
                 skippedErrors++;
             }

@@ -93,7 +93,7 @@ public class StravaWebhookController {
                 }
                 syncService.importSingleActivity(userOpt.get(), stravaActivityId);
                 log.info("Imported Strava activity {} for athlete {}", stravaActivityId, stravaAthleteId);
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 log.warn("Failed to process Strava webhook for activity {}: {}", stravaActivityId, e.getMessage());
             }
         });

@@ -11,7 +11,11 @@ import com.koval.trainingplannerbackend.club.dto.ClubMemberResponse;
 import com.koval.trainingplannerbackend.club.dto.MyClubRoleEntry;
 import com.koval.trainingplannerbackend.club.group.ClubGroup;
 import com.koval.trainingplannerbackend.club.group.ClubGroupRepository;
+import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
+import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -45,13 +49,14 @@ public class ClubMembershipService {
         this.activityService = activityService;
     }
 
+    @Transactional
     public ClubMembership joinClub(String userId, String clubId) {
         Club club = clubRepository.findById(clubId)
-                .orElseThrow(() -> new IllegalArgumentException("Club not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Club not found"));
 
         Optional<ClubMembership> existing = membershipRepository.findByClubIdAndUserId(clubId, userId);
         if (existing.isPresent()) {
-            throw new IllegalStateException("Already a member or pending");
+            throw new ValidationException("Already a member or pending");
         }
 
         ClubMembership membership = new ClubMembership();
@@ -74,15 +79,15 @@ public class ClubMembershipService {
 
     public void leaveClub(String userId, String clubId) {
         ClubMembership membership = membershipRepository.findByClubIdAndUserId(clubId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("Not a member"));
+                .orElseThrow(() -> new ResourceNotFoundException("Not a member"));
 
         if (membership.getRole() == ClubMemberRole.OWNER) {
-            throw new IllegalStateException("Owner cannot leave the club");
+            throw new ForbiddenOperationException("Owner cannot leave the club");
         }
 
         if (membership.getStatus() == ClubMemberStatus.ACTIVE) {
             Club club = clubRepository.findById(clubId)
-                    .orElseThrow(() -> new IllegalArgumentException("Club not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Club not found"));
             club.setMemberCount(Math.max(0, club.getMemberCount() - 1));
             clubRepository.save(club);
             activityService.emitActivity(clubId, ClubActivityType.MEMBER_LEFT, userId, null, null);
@@ -92,7 +97,7 @@ public class ClubMembershipService {
 
     public ClubMembership approveRequest(String adminId, String membershipId) {
         ClubMembership target = membershipRepository.findById(membershipId)
-                .orElseThrow(() -> new IllegalArgumentException("Membership not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Membership not found"));
         authorizationService.requireAdminOrOwner(adminId, target.getClubId());
 
         target.setStatus(ClubMemberStatus.ACTIVE);
@@ -100,7 +105,7 @@ public class ClubMembershipService {
         membershipRepository.save(target);
 
         Club club = clubRepository.findById(target.getClubId())
-                .orElseThrow(() -> new IllegalArgumentException("Club not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Club not found"));
         club.setMemberCount(club.getMemberCount() + 1);
         clubRepository.save(club);
         activityService.emitActivity(target.getClubId(), ClubActivityType.MEMBER_JOINED, target.getUserId(), null, null);
@@ -109,7 +114,7 @@ public class ClubMembershipService {
 
     public void rejectRequest(String adminId, String membershipId) {
         ClubMembership target = membershipRepository.findById(membershipId)
-                .orElseThrow(() -> new IllegalArgumentException("Membership not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Membership not found"));
         authorizationService.requireAdminOrOwner(adminId, target.getClubId());
         membershipRepository.delete(target);
     }
@@ -161,24 +166,24 @@ public class ClubMembershipService {
 
     public ClubMembership updateMemberRole(String callerId, String clubId, String membershipId, ClubMemberRole newRole) {
         ClubMembership caller = membershipRepository.findByClubIdAndUserId(clubId, callerId)
-                .orElseThrow(() -> new IllegalStateException("Not a member"));
+                .orElseThrow(() -> new ResourceNotFoundException("Not a member"));
         if (caller.getRole() != ClubMemberRole.OWNER && caller.getRole() != ClubMemberRole.ADMIN) {
-            throw new IllegalStateException("Only owner or admin can change member roles");
+            throw new ForbiddenOperationException("Only owner or admin can change member roles");
         }
         if (newRole == ClubMemberRole.OWNER) {
-            throw new IllegalStateException("Cannot promote a member to OWNER");
+            throw new ForbiddenOperationException("Cannot promote a member to OWNER");
         }
         if (newRole == ClubMemberRole.ADMIN && caller.getRole() != ClubMemberRole.OWNER) {
-            throw new IllegalStateException("Only the owner can promote members to ADMIN");
+            throw new ForbiddenOperationException("Only the owner can promote members to ADMIN");
         }
 
         ClubMembership target = membershipRepository.findById(membershipId)
-                .orElseThrow(() -> new IllegalArgumentException("Membership not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Membership not found"));
         if (target.getRole() == ClubMemberRole.OWNER) {
-            throw new IllegalStateException("Cannot change the owner's role");
+            throw new ForbiddenOperationException("Cannot change the owner's role");
         }
         if (target.getRole() == ClubMemberRole.ADMIN && caller.getRole() != ClubMemberRole.OWNER) {
-            throw new IllegalStateException("Only the owner can change an admin's role");
+            throw new ForbiddenOperationException("Only the owner can change an admin's role");
         }
         target.setRole(newRole);
         return membershipRepository.save(target);

@@ -122,7 +122,7 @@ public class NotificationService {
                         .retrieve()
                         .toBodilessEntity();
                 successCount++;
-            } catch (Exception e) {
+            } catch (org.springframework.web.client.RestClientException e) {
                 failureCount++;
                 String errorMsg = e.getMessage();
                 log.warn("FCM send failed for token: {}", errorMsg);

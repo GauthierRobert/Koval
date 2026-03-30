@@ -12,6 +12,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
@@ -121,7 +122,7 @@ public class StravaApiClient {
             return laps != null ? laps : List.of();
         } catch (HttpClientErrorException.TooManyRequests e) {
             throw new RateLimitException("Strava API rate limit exceeded");
-        } catch (Exception e) {
+        } catch (RestClientException e) {
             log.warn("Failed to fetch laps for activity {}: {}", activityId, e.getMessage());
             return List.of();
         }
@@ -178,7 +179,7 @@ public class StravaApiClient {
             return result;
         } catch (HttpClientErrorException.TooManyRequests e) {
             throw new RateLimitException("Strava API rate limit exceeded");
-        } catch (Exception e) {
+        } catch (RestClientException e) {
             log.warn("Failed to fetch streams for activity {}: {}", activityId, e.getMessage());
             return Map.of();
         }

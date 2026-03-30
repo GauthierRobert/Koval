@@ -21,7 +21,7 @@ import java.util.List;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Value("${jwt.secret:training-planner-super-secret-key-must-be-at-least-32-characters}")
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
     @Override
