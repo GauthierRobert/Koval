@@ -32,7 +32,7 @@
                   (change)="selectRpe(session, +$any($event.target).value)" />
                 <div class="rpe-scale">
                   @for (n of rpeValues; track n) {
-                    <span class="rpe-tick"
+                    <span data-testid="rpe-tick" class="rpe-tick"
                       [class.active]="session.rpe === n">{{ n }}</span>
                   }
                 </div>
@@ -42,15 +42,15 @@
           }
         </div>
         <div class="stats-grid">
-          <div class="stat-card glass accent">
+          <div data-testid="stat-card" class="stat-card glass accent">
             <span class="stat-label">TSS</span>
             <span class="stat-value">{{ getTss(session, ftp) ?? '—' }}</span>
           </div>
-          <div class="stat-card glass">
+          <div data-testid="stat-card" class="stat-card glass">
             <span class="stat-label">IF</span>
             <span class="stat-value">{{ getIF(session, ftp) | number:'1.2-2' }}</span>
           </div>
-          <div class="stat-card glass">
+          <div data-testid="stat-card" class="stat-card glass">
             <span class="stat-label">{{ 'SESSION_ANALYSIS.STAT_DURATION' | translate }}</span>
             <span class="stat-value compact">{{ formatTime(session.totalDuration) }}</span>
           </div>
@@ -104,8 +104,8 @@
               }
               @if (session.blockSummaries.length && (zoneBlocks$ | async)?.length) {
                 <div class="view-toggle">
-                  <button class="toggle-pill" [class.active]="blockView === 'planned'" (click)="blockView = 'planned'">{{ 'SESSION_ANALYSIS.TOGGLE_PLANNED' | translate }}</button>
-                  <button class="toggle-pill" [class.active]="blockView === 'interpolated'" (click)="blockView = 'interpolated'">{{ 'SESSION_ANALYSIS.TOGGLE_INTERPOLATED' | translate }}</button>
+                  <button data-testid="block-view-toggle" class="toggle-pill" [class.active]="blockView === 'planned'" (click)="blockView = 'planned'">{{ 'SESSION_ANALYSIS.TOGGLE_PLANNED' | translate }}</button>
+                  <button data-testid="block-view-toggle" class="toggle-pill" [class.active]="blockView === 'interpolated'" (click)="blockView = 'interpolated'">{{ 'SESSION_ANALYSIS.TOGGLE_INTERPOLATED' | translate }}</button>
                 </div>
               }
             </div>
@@ -148,7 +148,7 @@
               <div class="zone-distribution glass">
                 <div class="zone-header">
                   <div class="section-label">{{ 'SESSION_ANALYSIS.ZONE_DISTRIBUTION' | translate }}</div>
-                  <select class="zone-picker" (change)="onZoneSystemChange($any($event.target).value || null)">
+                  <select data-testid="zone-picker" class="zone-picker" (change)="onZoneSystemChange($any($event.target).value || null)">
                     <option [value]="''">{{ 'SESSION_ANALYSIS.ZONE_PICKER_DEFAULT' | translate }}</option>
                     @for (zs of (userZoneSystems$ | async) ?? []; track zs.id) {
                       <option [value]="zs.id">{{ zs.name }}</option>
@@ -157,7 +157,7 @@
                 </div>
                 <div class="zone-bars">
                   @for (zone of zones; track zone.label) {
-                    <div class="zone-row">
+                    <div data-testid="zone-row" class="zone-row">
                       <span class="zone-label" [title]="zone.description">{{ zone.label }}</span>
                       <div class="bar-track">
                         <div class="bar-fill" [style.width.%]="zone.percentage" [style.background]="zone.color"></div>

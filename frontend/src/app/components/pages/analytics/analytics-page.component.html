@@ -2,21 +2,21 @@
   <div class="page-header">
     <h1>{{ 'ANALYTICS.PAGE_TITLE' | translate }}</h1>
     <div class="date-filters">
-      <input type="date" [(ngModel)]="dateFrom" (change)="loadData()" />
+      <input data-testid="analytics-date-from" type="date" [(ngModel)]="dateFrom" (change)="loadData()" />
       <span class="date-sep">—</span>
-      <input type="date" [(ngModel)]="dateTo" (change)="loadData()" />
+      <input data-testid="analytics-date-to" type="date" [(ngModel)]="dateTo" (change)="loadData()" />
     </div>
   </div>
 
   <!-- Tabs -->
   <div class="tabs">
-    <button class="tab" [class.active]="activeTab === 'power-curve'" (click)="setTab('power-curve')">
+    <button data-testid="tab-power-curve" class="tab" [class.active]="activeTab === 'power-curve'" (click)="setTab('power-curve')">
       {{ 'ANALYTICS.TAB_POWER_CURVE' | translate }}
     </button>
-    <button class="tab" [class.active]="activeTab === 'volume'" (click)="setTab('volume')">
+    <button data-testid="tab-volume" class="tab" [class.active]="activeTab === 'volume'" (click)="setTab('volume')">
       {{ 'ANALYTICS.TAB_VOLUME' | translate }}
     </button>
-    <button class="tab" [class.active]="activeTab === 'records'" (click)="setTab('records')">
+    <button data-testid="tab-records" class="tab" [class.active]="activeTab === 'records'" (click)="setTab('records')">
       {{ 'ANALYTICS.TAB_RECORDS' | translate }}
     </button>
   </div>
@@ -52,7 +52,7 @@
   @if (activeTab === 'volume') {
     <div class="tab-content">
       <div class="volume-controls">
-        <select [(ngModel)]="volumeGroupBy" (ngModelChange)="loadData()">
+        <select data-testid="volume-group-by" [(ngModel)]="volumeGroupBy" (ngModelChange)="loadData()">
           <option value="week">{{ 'ANALYTICS.BY_WEEK' | translate }}</option>
           <option value="month">{{ 'ANALYTICS.BY_MONTH' | translate }}</option>
         </select>
@@ -116,7 +116,7 @@
         } @else {
           <div class="records-grid">
             @for (entry of recordEntries(records); track entry.duration) {
-              <div class="record-card glass">
+              <div data-testid="record-card" class="record-card glass">
                 <span class="record-duration">{{ entry.label }}</span>
                 <span class="record-power">{{ entry.power }}W</span>
               </div>

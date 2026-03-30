@@ -420,6 +420,186 @@ export async function deleteScheduledWorkout(
 
 // ---------- Recurring Sessions ----------
 
+// ---------- Sessions / History ----------
+
+export async function createSession(
+  api: APIRequestContext,
+  token: string,
+  data: {
+    title: string;
+    sportType?: string;
+    totalDurationSeconds?: number;
+    avgPower?: number;
+    avgHR?: number;
+    avgCadence?: number;
+    avgSpeed?: number;
+    completedAt?: string;
+    tss?: number;
+    intensityFactor?: number;
+    rpe?: number;
+    blockSummaries?: any[];
+  }
+): Promise<{ id: string; title: string }> {
+  const response = await api.post(`${API_URL}/api/sessions`, {
+    headers: headers(token),
+    data: {
+      title: data.title,
+      sportType: data.sportType ?? 'CYCLING',
+      totalDurationSeconds: data.totalDurationSeconds ?? 3600,
+      avgPower: data.avgPower ?? 200,
+      avgHR: data.avgHR ?? 145,
+      avgCadence: data.avgCadence ?? 85,
+      avgSpeed: data.avgSpeed ?? 8.5,
+      completedAt: data.completedAt ?? new Date().toISOString(),
+      tss: data.tss,
+      intensityFactor: data.intensityFactor,
+      rpe: data.rpe,
+      blockSummaries: data.blockSummaries ?? [],
+    },
+  });
+  if (!response.ok()) {
+    throw new Error(`createSession failed: ${response.status()} ${await response.text()}`);
+  }
+  return response.json();
+}
+
+export async function deleteSession(
+  api: APIRequestContext,
+  token: string,
+  sessionId: string
+): Promise<void> {
+  await api.delete(`${API_URL}/api/sessions/${sessionId}`, {
+    headers: headers(token),
+  });
+}
+
+export async function getSessions(
+  api: APIRequestContext,
+  token: string
+): Promise<any[]> {
+  const response = await api.get(`${API_URL}/api/sessions`, {
+    headers: headers(token),
+  });
+  if (!response.ok()) {
+    throw new Error(`getSessions failed: ${response.status()} ${await response.text()}`);
+  }
+  return response.json();
+}
+
+export async function updateSessionRpe(
+  api: APIRequestContext,
+  token: string,
+  sessionId: string,
+  rpe: number
+): Promise<any> {
+  const response = await api.patch(`${API_URL}/api/sessions/${sessionId}`, {
+    headers: headers(token),
+    data: { rpe },
+  });
+  if (!response.ok()) {
+    throw new Error(`updateSessionRpe failed: ${response.status()} ${await response.text()}`);
+  }
+  return response.json();
+}
+
+export async function getSessionPmc(
+  api: APIRequestContext,
+  token: string,
+  from: string,
+  to: string
+): Promise<any[]> {
+  const response = await api.get(
+    `${API_URL}/api/sessions/pmc?from=${from}&to=${to}`,
+    { headers: headers(token) }
+  );
+  if (!response.ok()) {
+    throw new Error(`getSessionPmc failed: ${response.status()} ${await response.text()}`);
+  }
+  return response.json();
+}
+
+export async function getPowerCurve(
+  api: APIRequestContext,
+  token: string,
+  from: string,
+  to: string
+): Promise<Record<string, number>> {
+  const response = await api.get(
+    `${API_URL}/api/sessions/power-curve?from=${from}&to=${to}`,
+    { headers: headers(token) }
+  );
+  if (!response.ok()) {
+    throw new Error(`getPowerCurve failed: ${response.status()} ${await response.text()}`);
+  }
+  return response.json();
+}
+
+export async function getVolume(
+  api: APIRequestContext,
+  token: string,
+  from: string,
+  to: string,
+  groupBy: 'week' | 'month' = 'week'
+): Promise<any[]> {
+  const response = await api.get(
+    `${API_URL}/api/sessions/volume?from=${from}&to=${to}&groupBy=${groupBy}`,
+    { headers: headers(token) }
+  );
+  if (!response.ok()) {
+    throw new Error(`getVolume failed: ${response.status()} ${await response.text()}`);
+  }
+  return response.json();
+}
+
+export async function getPersonalRecords(
+  api: APIRequestContext,
+  token: string
+): Promise<Record<string, number>> {
+  const response = await api.get(`${API_URL}/api/sessions/personal-records`, {
+    headers: headers(token),
+  });
+  if (!response.ok()) {
+    throw new Error(`getPersonalRecords failed: ${response.status()} ${await response.text()}`);
+  }
+  return response.json();
+}
+
+// ---------- Club Feed ----------
+
+export async function createAnnouncement(
+  api: APIRequestContext,
+  token: string,
+  clubId: string,
+  content: string
+): Promise<any> {
+  const response = await api.post(
+    `${API_URL}/api/clubs/${clubId}/feed/announcements`,
+    { headers: headers(token), data: { content } }
+  );
+  if (!response.ok()) {
+    throw new Error(`createAnnouncement failed: ${response.status()} ${await response.text()}`);
+  }
+  return response.json();
+}
+
+export async function getFeedEvents(
+  api: APIRequestContext,
+  token: string,
+  clubId: string,
+  page: number = 0
+): Promise<{ pinned: any[]; items: any[]; page: number; hasMore: boolean }> {
+  const response = await api.get(
+    `${API_URL}/api/clubs/${clubId}/feed?page=${page}`,
+    { headers: headers(token) }
+  );
+  if (!response.ok()) {
+    throw new Error(`getFeedEvents failed: ${response.status()} ${await response.text()}`);
+  }
+  return response.json();
+}
+
+// ---------- Recurring Sessions ----------
+
 export async function createRecurringTemplate(
   api: APIRequestContext,
   token: string,

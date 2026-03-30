@@ -14,17 +14,17 @@
 
       @if (latestMetrics$ | async; as m) {
         <div class="load-badges">
-          <div class="load-badge ctl">
+          <div data-testid="pmc-ctl-badge" class="load-badge ctl">
             <span class="badge-label">CTL</span>
             <span class="badge-value">{{ m.ctl | number:'1.0-0' }}</span>
             <span class="badge-desc">{{ 'PMC.BADGE_FITNESS' | translate }}</span>
           </div>
-          <div class="load-badge atl">
+          <div data-testid="pmc-atl-badge" class="load-badge atl">
             <span class="badge-label">ATL</span>
             <span class="badge-value">{{ m.atl | number:'1.0-0' }}</span>
             <span class="badge-desc">{{ 'PMC.BADGE_FATIGUE' | translate }}</span>
           </div>
-          <div class="load-badge tsb"
+          <div data-testid="pmc-tsb-badge" class="load-badge tsb"
             [class.positive]="m.tsb >= 0"
             [class.negative]="m.tsb < 0">
             <span class="badge-label">TSB</span>
@@ -34,7 +34,7 @@
         </div>
       }
 
-      <button class="refresh-btn" (click)="loadPmc()" [disabled]="loading">
+      <button data-testid="pmc-refresh-btn" class="refresh-btn" (click)="loadPmc()" [disabled]="loading">
         @if (loading) {
           <span class="loading-dots"><span></span><span></span><span></span></span>
         }
@@ -85,7 +85,7 @@
       </div>
 
       <div class="chart-area">
-        <app-pmc-chart [data]="fullPmcData$ | async" [goals]="displayGoals$ | async"
+        <app-pmc-chart data-testid="pmc-chart" [data]="fullPmcData$ | async" [goals]="displayGoals$ | async"
             (viewRangeChange)="onViewRangeChange($event)"></app-pmc-chart>
       </div>
     </div>

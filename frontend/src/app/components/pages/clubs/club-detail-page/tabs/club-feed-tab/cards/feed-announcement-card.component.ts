@@ -9,7 +9,7 @@ import {ClubFeedEventResponse} from '../../../../../../../services/club.service'
   imports: [CommonModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="feed-card feed-card--announcement">
+    <div data-testid="feed-event" class="feed-card feed-card--announcement">
       <div class="announcement-header">
         <div class="author-avatar">
           @if (event.authorProfilePicture) {

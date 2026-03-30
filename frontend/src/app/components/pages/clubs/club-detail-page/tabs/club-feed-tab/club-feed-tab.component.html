@@ -4,8 +4,9 @@
 
     <!-- Announcement composer (coach/admin only) -->
     @if (isCoachOrAdmin) {
-      <div class="composer" [class.composer--expanded]="composerExpanded">
+      <div data-testid="feed-composer" class="composer" [class.composer--expanded]="composerExpanded">
         <textarea
+          data-testid="feed-composer-input"
           class="composer-input"
           [placeholder]="'CLUB_FEED.COMPOSER_PLACEHOLDER' | translate"
           [(ngModel)]="announcementText"
@@ -18,7 +19,7 @@
             <button class="composer-cancel" (click)="composerExpanded = false; announcementText = ''">
               {{ 'CLUB_FEED.CANCEL' | translate }}
             </button>
-            <button class="btn-primary" [disabled]="!announcementText.trim()" (click)="submitAnnouncement()">
+            <button data-testid="feed-post-btn" class="btn-primary" [disabled]="!announcementText.trim()" (click)="submitAnnouncement()">
               {{ 'CLUB_FEED.POST' | translate }}
             </button>
           </div>
@@ -83,7 +84,7 @@
           }
 
           @if (feed.hasMore) {
-            <button class="load-more-btn" (click)="loadMore(feed)">
+            <button data-testid="feed-load-more" class="load-more-btn" (click)="loadMore(feed)">
               {{ 'CLUB_FEED.LOAD_MORE' | translate }}
             </button>
           }

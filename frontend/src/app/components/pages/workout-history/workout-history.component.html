@@ -5,7 +5,7 @@
     <div class="sidebar-header">
       <h3 class="sidebar-title">{{ 'WORKOUT_HISTORY.SIDEBAR_TITLE' | translate }}</h3>
       <div class="sidebar-actions">
-        <button class="icon-btn strava-btn" (click)="importStravaHistory()" [disabled]="(syncing$ | async) === true"
+        <button data-testid="strava-sync-btn" class="icon-btn strava-btn" (click)="importStravaHistory()" [disabled]="(syncing$ | async) === true"
           [title]="(syncing$ | async) ? ('WORKOUT_HISTORY.BTN_SYNCING' | translate) : ('WORKOUT_HISTORY.BTN_STRAVA_SYNC' | translate)">
           @if ((syncing$ | async) === true) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FC4C02" stroke-width="2.5"
@@ -26,7 +26,7 @@
           </svg>
         </button>
       </div>
-      <input #fitInput type="file" accept=".fit" class="fit-input" (change)="onFileSelected($event)" />
+      <input #fitInput data-testid="fit-upload-input" type="file" accept=".fit" class="fit-input" (change)="onFileSelected($event)" />
     </div>
 
     @if (syncResult$ | async; as result) {
@@ -57,9 +57,9 @@
     <!-- Date range filter -->
     <div class="date-filter-bar">
       <label class="date-label">{{ 'WORKOUT_HISTORY.DATE_FILTER_FROM' | translate }}</label>
-      <input type="date" class="date-input" [ngModel]="dateFrom" (ngModelChange)="onDateFromChange($event)" />
+      <input data-testid="date-from" type="date" class="date-input" [ngModel]="dateFrom" (ngModelChange)="onDateFromChange($event)" />
       <label class="date-label">{{ 'WORKOUT_HISTORY.DATE_FILTER_TO' | translate }}</label>
-      <input type="date" class="date-input" [ngModel]="dateTo" (ngModelChange)="onDateToChange($event)" />
+      <input data-testid="date-to" type="date" class="date-input" [ngModel]="dateTo" (ngModelChange)="onDateToChange($event)" />
     </div>
 
     @if (ftp$ | async; as ftp) {
@@ -74,6 +74,7 @@
 
           @for (session of sessions; track trackSessionById(session)) {
             <div
+              data-testid="session-item"
               class="session-item"
               [class.active]="(historyService.selectedSession$ | async)?.id === session.id"
               (click)="onSelect(session)">

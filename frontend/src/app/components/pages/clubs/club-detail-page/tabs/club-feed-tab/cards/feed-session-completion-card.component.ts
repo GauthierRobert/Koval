@@ -10,7 +10,7 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
   imports: [CommonModule, TranslateModule, SportIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="feed-card feed-card--pinned" [class.feed-card--expanded]="expanded">
+    <div data-testid="feed-event" class="feed-card feed-card--pinned" [class.feed-card--expanded]="expanded">
       <div class="card-pin-badge">{{ 'CLUB_FEED.PINNED' | translate }}</div>
       <div class="card-header">
         <app-sport-icon [sport]="$any(event.sessionSport ?? 'CYCLING')" [size]="20"></app-sport-icon>
@@ -72,7 +72,7 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
 
       <div class="card-actions">
         @if (!hasGivenKudos) {
-          <button class="kudos-btn" [disabled]="kudosLoading" (click)="onGiveKudos()">
+          <button data-testid="feed-kudos-btn" class="kudos-btn" [disabled]="kudosLoading" (click)="onGiveKudos()">
             @if (kudosLoading) {
               <span class="spinner-sm"></span>
             }
