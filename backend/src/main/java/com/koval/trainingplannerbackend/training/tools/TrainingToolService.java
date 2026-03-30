@@ -1,7 +1,6 @@
 package com.koval.trainingplannerbackend.training.tools;
 
 import com.koval.trainingplannerbackend.ai.ToolEventEmitter;
-import com.koval.trainingplannerbackend.training.TrainingAccessService;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.ai.chat.model.ToolContext;
@@ -13,8 +12,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * AI-facing tool service for Training operations.
- * Returns lean summaries to minimize token usage.
+ * AI-facing tool service for creating and listing trainings.
+ * Update/delete operations are in {@link TrainingModifyToolService}.
  */
 @Service
 public class TrainingToolService {
@@ -23,14 +22,11 @@ public class TrainingToolService {
 
     private final TrainingService trainingManagementService;
     private final TrainingMapper trainingMapper;
-    private final TrainingAccessService trainingAccessService;
 
     public TrainingToolService(TrainingService trainingManagementService,
-                               TrainingMapper trainingMapper,
-                               TrainingAccessService trainingAccessService) {
+                               TrainingMapper trainingMapper) {
         this.trainingManagementService = trainingManagementService;
         this.trainingMapper = trainingMapper;
-        this.trainingAccessService = trainingAccessService;
     }
 
     /** Lists training plan summaries for a user with pagination support. */
@@ -65,24 +61,6 @@ public class TrainingToolService {
         return result;
     }
 
-    /** Updates an existing training from a validated request and returns its updated summary. */
-    @Tool(description = "Update a training plan by ID.")
-    public Object updateTraining(
-            @ToolParam(description = "Training ID") String trainingId,
-            @ToolParam(description = "Fields to update") TrainingRequest updates,
-            ToolContext context) {
-        String validationError = validateTrainingRequest(updates);
-        if (validationError != null) {
-            ToolEventEmitter.emitToolResult(context, "updateTraining", "Validation failed", false);
-            return validationError;
-        }
-        ToolEventEmitter.emitToolCall(context, "updateTraining", "Updating: " + updates.title());
-        Training training = trainingMapper.mapToEntity(updates);
-        TrainingSummary result = TrainingSummary.from(trainingManagementService.updateTraining(trainingId, training));
-        ToolEventEmitter.emitToolResult(context, "updateTraining", result.title(), true);
-        return result;
-    }
-
     /** Validates title, blocks, and recursively validates all workout elements. Returns null if valid, error message otherwise. */
     public static String validateTrainingRequest(TrainingRequest request) {
         if (request.title() == null || request.title().isBlank()) {
@@ -92,21 +70,6 @@ public class TrainingToolService {
             return "Error: blocks list is required and cannot be empty.";
         }
         return validateElements(request.blocks(), "block");
-    }
-
-    /** Deletes a training plan after verifying ownership. */
-    @Tool(description = "Delete a training plan by ID (creator only).")
-    public String deleteTraining(
-            @ToolParam(description = "Training ID") String trainingId,
-            @ToolParam(description = "User ID") String userId,
-            ToolContext context) {
-        ToolEventEmitter.emitToolCall(context, "deleteTraining", "Deleting training...");
-        Training existing = trainingManagementService.getTrainingById(trainingId);
-        trainingAccessService.verifyAccess(userId, existing);
-        String title = existing.getTitle();
-        trainingManagementService.deleteTraining(trainingId);
-        ToolEventEmitter.emitToolResult(context, "deleteTraining", title, true);
-        return "Deleted training: " + title;
     }
 
     // ── Private validation helpers ──────────────────────────────────────────
