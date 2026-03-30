@@ -7,7 +7,6 @@ import com.koval.trainingplannerbackend.ai.UsageTracker;
 import com.koval.trainingplannerbackend.ai.UsageTracker.UsageSnapshot;
 import com.koval.trainingplannerbackend.ai.UserContextResolver;
 import com.koval.trainingplannerbackend.ai.UserContextResolver.ClubContext;
-import com.koval.trainingplannerbackend.ai.UserContextResolver.GroupSummary;
 import com.koval.trainingplannerbackend.ai.UserContextResolver.UserContext;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystem;

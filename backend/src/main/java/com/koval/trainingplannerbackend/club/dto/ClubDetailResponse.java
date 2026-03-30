@@ -1,7 +1,7 @@
 package com.koval.trainingplannerbackend.club.dto;
 
-import com.koval.trainingplannerbackend.club.membership.ClubMemberRole;
 import com.koval.trainingplannerbackend.club.ClubVisibility;
+import com.koval.trainingplannerbackend.club.membership.ClubMemberRole;
 
 import java.time.LocalDateTime;
 

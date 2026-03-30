@@ -1,13 +1,13 @@
 package com.koval.trainingplannerbackend.ai;
 
-import com.koval.trainingplannerbackend.ai.action.CreationTrainingWithClubSessionToolService;
-import com.koval.trainingplannerbackend.ai.action.CreationTrainingToolService;
 import com.koval.trainingplannerbackend.ai.agents.AgentType;
 import com.koval.trainingplannerbackend.ai.agents.SpecialistAgentService;
 import com.koval.trainingplannerbackend.ai.agents.TrainingAgent;
-import com.koval.trainingplannerbackend.training.tools.TrainingToolService;
+import com.koval.trainingplannerbackend.ai.tools.action.CreationTrainingToolService;
+import com.koval.trainingplannerbackend.ai.tools.action.CreationTrainingWithClubSessionToolService;
+import com.koval.trainingplannerbackend.ai.tools.training.TrainingToolService;
+import com.koval.trainingplannerbackend.ai.tools.zone.ZoneToolService;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystemService;
-import com.koval.trainingplannerbackend.training.zone.ZoneToolService;
 import org.springframework.ai.anthropic.AnthropicChatModel;
 import org.springframework.ai.anthropic.AnthropicChatOptions;
 import org.springframework.ai.chat.client.ChatClient;

@@ -1,17 +1,17 @@
 package com.koval.trainingplannerbackend.club.session;
 
 import com.koval.trainingplannerbackend.club.Club;
+import com.koval.trainingplannerbackend.club.ClubRepository;
 import com.koval.trainingplannerbackend.club.activity.ClubActivityService;
 import com.koval.trainingplannerbackend.club.activity.ClubActivityType;
-import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService;
-import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
-import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
-import com.koval.trainingplannerbackend.club.ClubRepository;
 import com.koval.trainingplannerbackend.club.dto.CalendarClubSessionResponse;
 import com.koval.trainingplannerbackend.club.dto.CreateSessionRequest;
 import com.koval.trainingplannerbackend.club.group.ClubGroup;
 import com.koval.trainingplannerbackend.club.group.ClubGroupRepository;
+import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService;
+import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
+import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
 import com.koval.trainingplannerbackend.notification.NotificationService;
 import com.koval.trainingplannerbackend.pacing.gpx.GpxParseResult;
 import com.koval.trainingplannerbackend.pacing.gpx.GpxParser;
@@ -28,7 +28,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service

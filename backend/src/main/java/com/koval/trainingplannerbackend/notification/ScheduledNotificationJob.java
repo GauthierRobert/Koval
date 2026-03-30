@@ -1,6 +1,5 @@
 package com.koval.trainingplannerbackend.notification;
 
-import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.coach.ScheduleStatus;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkout;

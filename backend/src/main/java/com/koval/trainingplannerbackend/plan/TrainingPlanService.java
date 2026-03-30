@@ -1,23 +1,22 @@
 package com.koval.trainingplannerbackend.plan;
 
+import com.koval.trainingplannerbackend.ai.tools.plan.PlanProgress;
 import com.koval.trainingplannerbackend.coach.ScheduleStatus;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkoutRepository;
 import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.notification.NotificationService;
+import com.koval.trainingplannerbackend.training.TrainingRepository;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.koval.trainingplannerbackend.training.TrainingRepository;
-
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;

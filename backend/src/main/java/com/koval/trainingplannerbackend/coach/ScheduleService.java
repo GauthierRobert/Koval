@@ -1,5 +1,7 @@
 package com.koval.trainingplannerbackend.coach;
 
+import com.koval.trainingplannerbackend.auth.User;
+import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.club.Club;
 import com.koval.trainingplannerbackend.club.ClubRepository;
 import com.koval.trainingplannerbackend.club.group.ClubGroupRepository;
@@ -8,8 +10,6 @@ import com.koval.trainingplannerbackend.club.membership.ClubMembership;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
-import com.koval.trainingplannerbackend.auth.User;
-import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.notification.NotificationService;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
@@ -20,7 +20,14 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 

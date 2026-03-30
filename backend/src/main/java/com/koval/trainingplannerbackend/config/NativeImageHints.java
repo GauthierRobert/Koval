@@ -1,22 +1,21 @@
 package com.koval.trainingplannerbackend.config;
 
+import com.koval.trainingplannerbackend.ai.tools.action.CreationTrainingToolService;
+import com.koval.trainingplannerbackend.ai.tools.action.CreationTrainingWithClubSessionToolService;
+import com.koval.trainingplannerbackend.ai.tools.club.ClubToolService;
+import com.koval.trainingplannerbackend.ai.tools.coach.CoachToolService;
+import com.koval.trainingplannerbackend.ai.tools.goal.GoalToolService;
+import com.koval.trainingplannerbackend.ai.tools.history.HistoryToolService;
+import com.koval.trainingplannerbackend.ai.tools.plan.PlanToolService;
+import com.koval.trainingplannerbackend.ai.tools.race.RaceToolService;
+import com.koval.trainingplannerbackend.ai.tools.scheduling.SchedulingToolService;
+import com.koval.trainingplannerbackend.ai.tools.training.TrainingToolService;
+import com.koval.trainingplannerbackend.ai.tools.zone.ZoneToolService;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportRuntimeHints;
-
-import com.koval.trainingplannerbackend.ai.SchedulingToolService;
-import com.koval.trainingplannerbackend.ai.action.CreationTrainingWithClubSessionToolService;
-import com.koval.trainingplannerbackend.ai.action.CreationTrainingToolService;
-import com.koval.trainingplannerbackend.club.tools.ClubToolService;
-import com.koval.trainingplannerbackend.coach.tools.CoachToolService;
-import com.koval.trainingplannerbackend.goal.GoalToolService;
-import com.koval.trainingplannerbackend.plan.PlanToolService;
-import com.koval.trainingplannerbackend.race.RaceToolService;
-import com.koval.trainingplannerbackend.training.history.HistoryToolService;
-import com.koval.trainingplannerbackend.training.tools.TrainingToolService;
-import com.koval.trainingplannerbackend.training.zone.ZoneToolService;
 
 @Configuration
 @ImportRuntimeHints(NativeImageHints.Registrar.class)
@@ -48,7 +47,7 @@ public class NativeImageHints {
 
             for (Class<?> toolService : toolServices) {
                 hints.reflection().registerType(toolService,
-                        MemberCategory.DECLARED_FIELDS,
+                        MemberCategory.ACCESS_DECLARED_FIELDS,
                         MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
                         MemberCategory.INVOKE_DECLARED_METHODS,
                         MemberCategory.INVOKE_PUBLIC_METHODS);
@@ -56,7 +55,7 @@ public class NativeImageHints {
                 // Register inner classes (records defined inside tool services)
                 for (Class<?> inner : toolService.getDeclaredClasses()) {
                     hints.reflection().registerType(inner,
-                            MemberCategory.DECLARED_FIELDS,
+                            MemberCategory.ACCESS_DECLARED_FIELDS,
                             MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
                             MemberCategory.INVOKE_DECLARED_METHODS);
                 }

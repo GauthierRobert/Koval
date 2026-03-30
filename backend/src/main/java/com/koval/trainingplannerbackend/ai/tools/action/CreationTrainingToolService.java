@@ -1,0 +1,33 @@
+package com.koval.trainingplannerbackend.ai.tools.action;
+
+import com.koval.trainingplannerbackend.ai.tools.training.TrainingMapper;
+import com.koval.trainingplannerbackend.ai.tools.training.TrainingRequest;
+import com.koval.trainingplannerbackend.ai.tools.training.TrainingSummary;
+import com.koval.trainingplannerbackend.auth.SecurityUtils;
+import com.koval.trainingplannerbackend.training.TrainingService;
+import com.koval.trainingplannerbackend.training.model.Training;
+import org.springframework.ai.chat.model.ToolContext;
+import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.stereotype.Service;
+
+@Service
+public class CreationTrainingToolService {
+    private final TrainingService trainingService;
+    private final TrainingMapper trainingMapper;
+
+    public CreationTrainingToolService(TrainingService trainingService, TrainingMapper trainingMapper) {
+        this.trainingService = trainingService;
+        this.trainingMapper = trainingMapper;
+    }
+
+    @Tool(description = "Create a new training workout.")
+    public Object createTraining(
+            @ToolParam(description = "Training to create") TrainingRequest create,
+            ToolContext context) {
+        ActionToolTracker.markCalled();
+        String userId = SecurityUtils.getUserId(context);
+        Training training = trainingMapper.mapToEntity(create);
+        return TrainingSummary.from(trainingService.createTraining(training, userId));
+    }
+}

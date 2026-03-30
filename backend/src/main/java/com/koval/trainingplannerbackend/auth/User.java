@@ -1,12 +1,11 @@
 package com.koval.trainingplannerbackend.auth;
 
+import com.koval.trainingplannerbackend.notification.NotificationPreferences;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import com.koval.trainingplannerbackend.notification.NotificationPreferences;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

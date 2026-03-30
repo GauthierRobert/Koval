@@ -1,11 +1,11 @@
 package com.koval.trainingplannerbackend.club.feed.broker;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import com.koval.trainingplannerbackend.club.feed.ClubFeedBroadcastMessage;
 import com.koval.trainingplannerbackend.club.feed.ClubFeedBrokerPublisher;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
