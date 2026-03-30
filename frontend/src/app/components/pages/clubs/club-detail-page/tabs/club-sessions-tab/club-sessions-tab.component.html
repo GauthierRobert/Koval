@@ -6,12 +6,12 @@
     </div>
     <div class="session-header__actions">
       <div class="session-header__nav">
-        <button class="nav-btn" (click)="prevWeek()">&lsaquo;</button>
-        <button class="nav-btn nav-btn--today" (click)="goToday()">{{ 'CLUB_SESSIONS.NAV_TODAY' | translate }}</button>
-        <button class="nav-btn" (click)="nextWeek()">&rsaquo;</button>
+        <button class="nav-btn" (click)="prevWeek()" data-testid="sessions-nav-prev">&lsaquo;</button>
+        <button class="nav-btn nav-btn--today" (click)="goToday()" data-testid="sessions-nav-today">{{ 'CLUB_SESSIONS.NAV_TODAY' | translate }}</button>
+        <button class="nav-btn" (click)="nextWeek()" data-testid="sessions-nav-next">&rsaquo;</button>
       </div>
       @if (canCreate) {
-        <button class="btn-primary" (click)="openForm()">{{ 'CLUB_SESSIONS.BTN_ADD_SESSION' | translate }}</button>
+        <button class="btn-primary" (click)="openForm()" data-testid="btn-add-session">{{ 'CLUB_SESSIONS.BTN_ADD_SESSION' | translate }}</button>
       }
     </div>
   </header>
@@ -79,7 +79,7 @@
 <!-- Unified Session Form Modal (always recurring) -->
 @if (isFormOpen) {
   <div class="modal-backdrop" (click)="closeForm()">
-  <div class="modal glass" (click)="$event.stopPropagation()">
+  <div class="modal glass" (click)="$event.stopPropagation()" data-testid="session-form-modal">
     <div class="modal-header">
       <h3>{{ editingSession ? ('CLUB_SESSIONS.FORM_EDIT_TITLE' | translate) : ('CLUB_SESSIONS.FORM_CREATE_TITLE' | translate) }}</h3>
       <button class="close-btn" (click)="closeForm()">&times;</button>
@@ -89,11 +89,11 @@
       <div class="form-row two-col">
         <div class="form-row">
           <label>{{ 'CLUB_SESSIONS.FORM_LABEL_TITLE' | translate }}</label>
-          <input [(ngModel)]="form['title']" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_TITLE' | translate" class="form-input"/>
+          <input [(ngModel)]="form['title']" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_TITLE' | translate" class="form-input" data-testid="form-session-title"/>
         </div>
         <div class="form-row">
           <label>{{ 'CLUB_SESSIONS.FORM_LABEL_SPORT' | translate }}</label>
-          <select [(ngModel)]="form['sport']" class="form-input">
+          <select [(ngModel)]="form['sport']" class="form-input" data-testid="form-session-sport">
             @for (s of sports; track s) {
               <option [value]="s">{{ s }}</option>
             }
@@ -160,7 +160,7 @@
         <div class="form-row two-col">
           <div class="form-row">
             <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DAY_OF_WEEK' | translate }}</label>
-            <select [(ngModel)]="form['dayOfWeek']" class="form-input">
+            <select [(ngModel)]="form['dayOfWeek']" class="form-input" data-testid="form-day-of-week">
               <option value="" disabled>{{ 'CLUB_SESSIONS.FORM_PLACEHOLDER_DAY_OF_WEEK' | translate }}</option>
               @for (d of daysOfWeek; track d) {
                 <option [value]="d">{{ d }}</option>
@@ -169,7 +169,7 @@
           </div>
           <div class="form-row">
             <label>{{ 'CLUB_SESSIONS.FORM_LABEL_TIME' | translate }}</label>
-            <input type="time" [(ngModel)]="form['timeOfDay']" class="form-input"/>
+            <input type="time" [(ngModel)]="form['timeOfDay']" class="form-input" data-testid="form-time-of-day"/>
           </div>
         </div>
         <div class="form-row">
@@ -198,11 +198,11 @@
       <div class="form-row two-col">
         <div class="form-row">
           <label>{{ 'CLUB_SESSIONS.FORM_LABEL_MAX_PARTICIPANTS' | translate }}</label>
-          <input type="number" [(ngModel)]="form['maxParticipants']" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_MAX_PARTICIPANTS' | translate" class="form-input" min="1"/>
+          <input type="number" [(ngModel)]="form['maxParticipants']" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_MAX_PARTICIPANTS' | translate" class="form-input" min="1" data-testid="form-max-participants"/>
         </div>
         <div class="form-row">
           <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DURATION' | translate }}</label>
-          <input type="number" [(ngModel)]="form['durationMinutes']" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_DURATION' | translate" class="form-input" min="15" step="15"/>
+          <input type="number" [(ngModel)]="form['durationMinutes']" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_DURATION' | translate" class="form-input" min="15" step="15" data-testid="form-duration-minutes"/>
         </div>
       </div>
 
@@ -210,7 +210,7 @@
       <div class="form-row two-col">
         <div class="form-row">
           <label>{{ 'CLUB_SESSIONS.FORM_LABEL_LOCATION' | translate }}</label>
-          <input [(ngModel)]="form['location']" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_LOCATION' | translate" class="form-input"/>
+          <input [(ngModel)]="form['location']" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_LOCATION' | translate" class="form-input" data-testid="form-session-location"/>
         </div>
         <div class="form-row">
           <label>{{ 'CLUB_SESSIONS.FORM_LABEL_GPX' | translate }}</label>
@@ -237,12 +237,12 @@
       <!-- Description -->
       <div class="form-row">
         <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DESCRIPTION' | translate }}</label>
-        <textarea [(ngModel)]="form['description']" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_DESCRIPTION' | translate" class="form-input" rows="2"></textarea>
+        <textarea [(ngModel)]="form['description']" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_DESCRIPTION' | translate" class="form-input" rows="2" data-testid="form-session-description"></textarea>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" (click)="closeForm()">{{ 'CLUB_SESSIONS.BTN_CANCEL' | translate }}</button>
-      <button class="btn-primary" (click)="save()" [disabled]="!isFormValid">{{ editingSession ? ('CLUB_SESSIONS.BTN_SAVE' | translate) : ('CLUB_SESSIONS.BTN_CREATE' | translate) }}</button>
+      <button class="btn-secondary" (click)="closeForm()" data-testid="btn-cancel-form">{{ 'CLUB_SESSIONS.BTN_CANCEL' | translate }}</button>
+      <button class="btn-primary" (click)="save()" [disabled]="!isFormValid" data-testid="btn-create-session">{{ editingSession ? ('CLUB_SESSIONS.BTN_SAVE' | translate) : ('CLUB_SESSIONS.BTN_CREATE' | translate) }}</button>
     </div>
   </div>
   </div>
@@ -251,7 +251,7 @@
 <!-- Recurring Edit Choice Dialog -->
 @if (showRecurringEditChoice) {
   <div class="modal-backdrop" (click)="showRecurringEditChoice = false">
-  <div class="modal glass small-modal" (click)="$event.stopPropagation()">
+  <div class="modal glass small-modal" (click)="$event.stopPropagation()" data-testid="recurring-edit-dialog">
     <div class="modal-header">
       <h3>{{ 'CLUB_SESSIONS.RECURRING_EDIT_DIALOG_TITLE' | translate }}</h3>
       <button class="close-btn" (click)="showRecurringEditChoice = false">&times;</button>
@@ -259,8 +259,8 @@
     <div class="modal-body">
       <p class="recurring-choice-text">{{ 'CLUB_SESSIONS.RECURRING_EDIT_PART_OF_SERIES' | translate }}</p>
       <div class="recurring-choice-actions">
-        <button class="btn-primary" (click)="editThisOnly()">{{ 'CLUB_SESSIONS.RECURRING_EDIT_THIS_ONLY' | translate }}</button>
-        <button class="btn-secondary" (click)="editAllFuture()">{{ 'CLUB_SESSIONS.RECURRING_EDIT_ALL_FUTURE' | translate }}</button>
+        <button class="btn-primary" (click)="editThisOnly()" data-testid="btn-edit-this-only">{{ 'CLUB_SESSIONS.RECURRING_EDIT_THIS_ONLY' | translate }}</button>
+        <button class="btn-secondary" (click)="editAllFuture()" data-testid="btn-edit-all-future">{{ 'CLUB_SESSIONS.RECURRING_EDIT_ALL_FUTURE' | translate }}</button>
         <button class="btn-ghost-neutral" (click)="showRecurringEditChoice = false">{{ 'CLUB_SESSIONS.RECURRING_EDIT_BTN_CANCEL' | translate }}</button>
       </div>
     </div>
@@ -271,7 +271,7 @@
 <!-- Cancel Recurring Choice Dialog -->
 @if (showCancelRecurringChoice) {
   <div class="modal-backdrop" (click)="closeCancelRecurringChoice()">
-  <div class="modal glass small-modal" (click)="$event.stopPropagation()">
+  <div class="modal glass small-modal" (click)="$event.stopPropagation()" data-testid="recurring-cancel-dialog">
     <div class="modal-header">
       <h3>{{ 'CLUB_SESSIONS.RECURRING_CANCEL_DIALOG_TITLE' | translate }}</h3>
       <button class="close-btn" (click)="closeCancelRecurringChoice()">&times;</button>
@@ -279,8 +279,8 @@
     <div class="modal-body">
       <p class="recurring-choice-text">{{ 'CLUB_SESSIONS.RECURRING_EDIT_PART_OF_SERIES' | translate }}</p>
       <div class="recurring-choice-actions">
-        <button class="btn-danger" (click)="cancelThisOnly()">{{ 'CLUB_SESSIONS.RECURRING_CANCEL_THIS_ONLY' | translate }}</button>
-        <button class="btn-danger" (click)="cancelAllFuture()">{{ 'CLUB_SESSIONS.RECURRING_CANCEL_ALL_FUTURE' | translate }}</button>
+        <button class="btn-danger" (click)="cancelThisOnly()" data-testid="btn-cancel-this-only">{{ 'CLUB_SESSIONS.RECURRING_CANCEL_THIS_ONLY' | translate }}</button>
+        <button class="btn-danger" (click)="cancelAllFuture()" data-testid="btn-cancel-all-future">{{ 'CLUB_SESSIONS.RECURRING_CANCEL_ALL_FUTURE' | translate }}</button>
         <button class="btn-ghost-neutral" (click)="closeCancelRecurringChoice()">{{ 'CLUB_SESSIONS.RECURRING_CANCEL_GO_BACK' | translate }}</button>
       </div>
     </div>
@@ -291,7 +291,7 @@
 <!-- Cancel Session Confirmation Modal -->
 @if (showCancelConfirm && cancelTargetSession) {
   <div class="modal-backdrop" (click)="closeCancelSessionModal()">
-  <div class="modal glass small-modal" (click)="$event.stopPropagation()">
+  <div class="modal glass small-modal" (click)="$event.stopPropagation()" data-testid="cancel-confirm-modal">
     <div class="modal-header">
       <h3>{{ cancelMode === 'all' ? ('CLUB_SESSIONS.CANCEL_ALL_FUTURE_DIALOG_TITLE' | translate) : ('CLUB_SESSIONS.CANCEL_SESSION_DIALOG_TITLE' | translate) }}</h3>
       <button class="close-btn" (click)="closeCancelSessionModal()">&times;</button>
@@ -309,11 +309,11 @@
       <p class="cancel-warning">{{ 'CLUB_SESSIONS.CANCEL_WARNING' | translate }}</p>
       <div class="form-row">
         <label>{{ 'CLUB_SESSIONS.FORM_LABEL_CANCEL_REASON' | translate }}</label>
-        <textarea [(ngModel)]="cancelReason" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_CANCEL_REASON' | translate" class="form-input" rows="2"></textarea>
+        <textarea [(ngModel)]="cancelReason" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_CANCEL_REASON' | translate" class="form-input" rows="2" data-testid="cancel-reason-textarea"></textarea>
       </div>
       <div class="cancel-confirm-actions">
         <button class="btn-secondary" (click)="closeCancelSessionModal()">{{ 'CLUB_SESSIONS.BTN_GO_BACK' | translate }}</button>
-        <button class="btn-danger" (click)="confirmCancelSession()">{{ cancelMode === 'all' ? ('CLUB_SESSIONS.BTN_CANCEL_ALL_FUTURE_CONFIRM' | translate) : ('CLUB_SESSIONS.BTN_CANCEL_SESSION_CONFIRM' | translate) }}</button>
+        <button class="btn-danger" (click)="confirmCancelSession()" data-testid="btn-confirm-cancel">{{ cancelMode === 'all' ? ('CLUB_SESSIONS.BTN_CANCEL_ALL_FUTURE_CONFIRM' | translate) : ('CLUB_SESSIONS.BTN_CANCEL_SESSION_CONFIRM' | translate) }}</button>
       </div>
     </div>
   </div>

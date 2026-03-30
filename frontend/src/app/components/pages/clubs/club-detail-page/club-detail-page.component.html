@@ -3,7 +3,7 @@
 
     <div class="header glass">
       <div class="header-left">
-        <button class="back-btn" (click)="goBack()">
+        <button class="back-btn" data-testid="back-btn" (click)="goBack()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         @if (!club.logoUrl) {
@@ -36,8 +36,8 @@
       </div>
       @if (canManageInvites(club) && (clubInviteCode$ | async); as code) {
         <div class="header-invite">
-          <span class="invite-code-chip" (click)="copyClubCode(code.code, code.id)">{{ code.code }}</span>
-          <button class="btn-copy" (click)="copyClubCode(code.code, code.id)"
+          <span class="invite-code-chip" data-testid="invite-code-chip" (click)="copyClubCode(code.code, code.id)">{{ code.code }}</span>
+          <button class="btn-copy" data-testid="btn-copy-invite-code" (click)="copyClubCode(code.code, code.id)"
             [class.btn-copied]="copiedClubCodeId === code.id">
             {{ copiedClubCodeId === code.id ? ('CLUB_DETAIL.INVITE_BTN_COPIED' | translate) : ('CLUB_DETAIL.INVITE_BTN_COPY' | translate) }}
           </button>
@@ -45,10 +45,10 @@
       }
       <div class="header-actions">
         @if (!club.currentMembershipStatus) {
-          <button class="btn-join" (click)="join(club)">{{ 'CLUB_DETAIL.BTN_JOIN' | translate }}</button>
+          <button class="btn-join" data-testid="btn-join-club" (click)="join(club)">{{ 'CLUB_DETAIL.BTN_JOIN' | translate }}</button>
         }
         @if (club.currentMembershipStatus && club.currentMemberRole !== 'OWNER') {
-          <button class="btn-leave" (click)="leave(club)">{{ 'CLUB_DETAIL.BTN_LEAVE' | translate }}</button>
+          <button class="btn-leave" data-testid="btn-leave-club" (click)="leave(club)">{{ 'CLUB_DETAIL.BTN_LEAVE' | translate }}</button>
         }
       </div>
     </div>
@@ -58,6 +58,7 @@
       @for (tab of tabs; track tab.id) {
         <button
           class="tab-btn"
+          [attr.data-testid]="'tab-' + tab.id"
           [class.active]="activeTab === tab.id"
           (click)="activateTab(tab.id)">
           {{ tab.label | translate }}

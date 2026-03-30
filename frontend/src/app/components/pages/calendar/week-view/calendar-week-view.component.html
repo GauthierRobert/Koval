@@ -41,24 +41,24 @@
                     <div class="card-actions">
                       @if ($any(group.entry).scheduled.status === 'PENDING') {
                         <button class="btn-complete" [disabled]="isFutureDate($any(group.entry).scheduled.scheduledDate)"
-                          (click)="complete.emit($any(group.entry).scheduled); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_MARK_COMPLETE_TITLE' | translate">
+                          (click)="complete.emit($any(group.entry).scheduled); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_MARK_COMPLETE_TITLE' | translate" data-testid="btn-complete">
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="20 6 9 17 4 12"/>
                           </svg>
                         </button>
-                        <button class="btn-skip" (click)="skip.emit($any(group.entry).scheduled); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_SKIP_TITLE' | translate">
+                        <button class="btn-skip" (click)="skip.emit($any(group.entry).scheduled); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_SKIP_TITLE' | translate" data-testid="btn-skip">
                           <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
                             <polygon points="5 4 15 12 5 20"/>
                             <rect x="17" y="4" width="3" height="16"/>
                           </svg>
                         </button>
-                        <button class="btn-reschedule" (click)="openReschedule($any(group.entry).scheduled, $event)" [title]="'CALENDAR_WEEK.BTN_RESCHEDULE_TITLE' | translate">
+                        <button class="btn-reschedule" (click)="openReschedule($any(group.entry).scheduled, $event)" [title]="'CALENDAR_WEEK.BTN_RESCHEDULE_TITLE' | translate" data-testid="btn-reschedule">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                           </svg>
                         </button>
                       }
-                      <button class="delete-btn" (click)="workoutDeleted.emit($any(group.entry).scheduled); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_REMOVE_TITLE' | translate">&times;</button>
+                      <button class="delete-btn" (click)="workoutDeleted.emit($any(group.entry).scheduled); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_REMOVE_TITLE' | translate" data-testid="btn-delete">&times;</button>
                     </div>
                   </div>
                 </div>
@@ -252,10 +252,10 @@
                   @if (!$any(group.entry).clubSession.cancelled) {
                     <div class="club-session-actions">
                       @if (!$any(group.entry).clubSession.joined && !$any(group.entry).clubSession.onWaitingList) {
-                        <button class="btn-primary small" (click)="joinClubSession.emit($any(group.entry).clubSession)">{{ 'CALENDAR_WEEK.CLUB_SESSION_BTN_JOIN' | translate }}</button>
+                        <button class="btn-primary small" (click)="joinClubSession.emit($any(group.entry).clubSession)" data-testid="btn-join-club-session">{{ 'CALENDAR_WEEK.CLUB_SESSION_BTN_JOIN' | translate }}</button>
                       }
                       @if ($any(group.entry).clubSession.joined || $any(group.entry).clubSession.onWaitingList) {
-                        <button class="btn-ghost small" (click)="cancelClubSession.emit($any(group.entry).clubSession)">
+                        <button class="btn-ghost small" (click)="cancelClubSession.emit($any(group.entry).clubSession)" data-testid="btn-cancel-club-session">
                           {{ $any(group.entry).clubSession.onWaitingList ? ('CALENDAR_WEEK.CLUB_SESSION_BTN_LEAVE_WAITLIST' | translate) : ('CALENDAR_WEEK.CLUB_SESSION_BTN_CANCEL' | translate) }}
                         </button>
                       }
@@ -296,10 +296,10 @@
               @if (!$any(entry).clubSession.cancelled) {
                 <div class="club-session-actions">
                   @if (!$any(entry).clubSession.joined && !$any(entry).clubSession.onWaitingList) {
-                    <button class="btn-primary small" (click)="joinClubSession.emit($any(entry).clubSession)">{{ 'CALENDAR_WEEK.CLUB_SESSION_BTN_JOIN' | translate }}</button>
+                    <button class="btn-primary small" (click)="joinClubSession.emit($any(entry).clubSession)" data-testid="btn-join-club-session">{{ 'CALENDAR_WEEK.CLUB_SESSION_BTN_JOIN' | translate }}</button>
                   }
                   @if ($any(entry).clubSession.joined || $any(entry).clubSession.onWaitingList) {
-                    <button class="btn-ghost small" (click)="cancelClubSession.emit($any(entry).clubSession)">
+                    <button class="btn-ghost small" (click)="cancelClubSession.emit($any(entry).clubSession)" data-testid="btn-cancel-club-session">
                       {{ $any(entry).clubSession.onWaitingList ? ('CALENDAR_WEEK.CLUB_SESSION_BTN_LEAVE_WAITLIST' | translate) : ('CALENDAR_WEEK.CLUB_SESSION_BTN_CANCEL' | translate) }}
                     </button>
                   }
@@ -323,7 +323,7 @@
           </div>
         }
 
-        <button class="add-btn" (click)="addDay.emit(day)" [title]="'CALENDAR_WEEK.BTN_ADD_TRAINING_TITLE' | translate">
+        <button class="add-btn" (click)="addDay.emit(day)" [title]="'CALENDAR_WEEK.BTN_ADD_TRAINING_TITLE' | translate" data-testid="add-training-btn">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>

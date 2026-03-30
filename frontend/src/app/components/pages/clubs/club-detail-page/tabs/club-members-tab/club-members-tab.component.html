@@ -28,8 +28,8 @@
         }
         @if (isAdmin) {
           <div class="tag-create-row">
-            <input class="tag-input" [(ngModel)]="newTagName" [placeholder]="'CLUB_MEMBERS.PLACEHOLDER_GROUP_NAME' | translate" (keyup.enter)="createTag()" />
-            <button class="btn-small" (click)="createTag()">{{ 'CLUB_MEMBERS.BTN_ADD_GROUP' | translate }}</button>
+            <input class="tag-input" data-testid="group-create-input" [(ngModel)]="newTagName" [placeholder]="'CLUB_MEMBERS.PLACEHOLDER_GROUP_NAME' | translate" (keyup.enter)="createTag()" />
+            <button class="btn-small" data-testid="btn-add-group" (click)="createTag()">{{ 'CLUB_MEMBERS.BTN_ADD_GROUP' | translate }}</button>
           </div>
         }
       </div>
@@ -43,7 +43,7 @@
             <h4 class="section-title">{{ 'CLUB_MEMBERS.SECTION_PENDING' | translate }} <span class="badge-count">{{ pending.length }}</span></h4>
             <div class="member-list">
               @for (m of pending; track m.membershipId) {
-                <div class="member-row glass">
+                <div class="member-row glass" data-testid="pending-member-row">
                   @if (m.profilePicture) {
                     <img class="avatar" [src]="m.profilePicture" alt="avatar" />
                   }
@@ -71,13 +71,13 @@
       <div class="members-header-row">
         <h4 class="section-title">{{ 'CLUB_MEMBERS.SECTION_MEMBERS' | translate }}</h4>
         @if (canAssign && members.length > 0) {
-          <button class="ai-btn-corner" (click)="assignToAllMembers(members)">{{ 'CLUB_MEMBERS.BTN_ASSIGN' | translate }}</button>
+          <button class="ai-btn-corner" data-testid="btn-assign-all-members" (click)="assignToAllMembers(members)">{{ 'CLUB_MEMBERS.BTN_ASSIGN' | translate }}</button>
         }
       </div>
       @if (members.length > 0) {
         <div class="member-list">
           @for (m of members; track m.userId) {
-            <div class="member-row glass">
+            <div class="member-row glass" data-testid="member-row">
               @if (m.profilePicture) {
                 <img class="avatar" [src]="m.profilePicture" alt="avatar" />
               }

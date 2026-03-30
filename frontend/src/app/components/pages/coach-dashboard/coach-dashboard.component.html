@@ -1,6 +1,6 @@
 <div class="coach-container">
   <!-- Left sidebar - full height -->
-  <div class="athlete-list glass">
+  <div class="athlete-list glass" data-testid="athlete-list">
     <div class="section-header">
       <h3>{{ 'COACH_DASHBOARD.ATHLETES_HEADING' | translate }}</h3>
     </div>
@@ -8,9 +8,9 @@
     @if (allTags$ | async; as tags) {
       @if (tags.length > 0) {
         <div class="tag-filters">
-          <span class="tag-filter-chip" [class.active]="!activeTagFilter && !activeClubFilter" (click)="setTagFilter(null); setClubFilter(null)">{{ 'COACH_DASHBOARD.ALL_FILTER' | translate: { count: (athletes$ | async)?.length || 0 } }}</span>
+          <span class="tag-filter-chip" data-testid="tag-filter-all" [class.active]="!activeTagFilter && !activeClubFilter" (click)="setTagFilter(null); setClubFilter(null)">{{ 'COACH_DASHBOARD.ALL_FILTER' | translate: { count: (athletes$ | async)?.length || 0 } }}</span>
           @for (tag of tags; track trackTagByName(tag)) {
-            <span class="tag-filter-chip" [class.active]="activeTagFilter === tag.name"
+            <span class="tag-filter-chip" data-testid="tag-filter-chip" [class.active]="activeTagFilter === tag.name"
               (click)="toggleTagFilter(tag.name)">{{ tag.name }} ({{ getTagCount(tag.name) }})</span>
           }
         </div>
@@ -38,7 +38,7 @@
       @if (filtered.length > 0) {
         <div class="athletes">
           @for (athlete of filtered; track trackAthleteById(athlete)) {
-            <div class="athlete-row"
+            <div class="athlete-row" data-testid="athlete-row"
           [class.selected]="selectedAthlete?.id === athlete.id" (click)="selectAthlete(athlete)">
           <div class="info">
               <div class="info-header">
@@ -128,18 +128,18 @@
               </div>
             </div>
             <div class="actions">
-              <button class="share-btn" (click)="openShareModal()">{{ 'COACH_DASHBOARD.SHARE_BTN' | translate }}</button>
-              <button class="ai-btn-corner" (click)="assignWorkout()">{{ 'COACH_DASHBOARD.ASSIGN_BTN' | translate }}</button>
+              <button class="share-btn" data-testid="share-btn" (click)="openShareModal()">{{ 'COACH_DASHBOARD.SHARE_BTN' | translate }}</button>
+              <button class="ai-btn-corner" data-testid="assign-btn" (click)="assignWorkout()">{{ 'COACH_DASHBOARD.ASSIGN_BTN' | translate }}</button>
             </div>
           </div>
 
           <!-- Task 2: Added PMC tab -->
           <div class="physiological-tabs">
-            <div class="tab" [class.active]="activeTab === 'performance'" (click)="activeTab = 'performance'">{{ 'COACH_DASHBOARD.TAB_PERFORMANCE' | translate }}</div>
-            <div class="tab" [class.active]="activeTab === 'physiology'" (click)="activeTab = 'physiology'">{{ 'COACH_DASHBOARD.TAB_PHYSIOLOGY' | translate }}</div>
-            <div class="tab" [class.active]="activeTab === 'history'"    (click)="activeTab = 'history'">{{ 'COACH_DASHBOARD.TAB_HISTORY' | translate }}</div>
-            <div class="tab" [class.active]="activeTab === 'pmc'"        (click)="activeTab = 'pmc'">{{ 'COACH_DASHBOARD.TAB_PMC' | translate }}</div>
-            <div class="tab" [class.active]="activeTab === 'goals'"      (click)="activeTab = 'goals'">{{ 'COACH_DASHBOARD.TAB_GOALS' | translate }}</div>
+            <div class="tab" data-testid="tab-performance" [class.active]="activeTab === 'performance'" (click)="activeTab = 'performance'">{{ 'COACH_DASHBOARD.TAB_PERFORMANCE' | translate }}</div>
+            <div class="tab" data-testid="tab-physiology" [class.active]="activeTab === 'physiology'" (click)="activeTab = 'physiology'">{{ 'COACH_DASHBOARD.TAB_PHYSIOLOGY' | translate }}</div>
+            <div class="tab" data-testid="tab-history" [class.active]="activeTab === 'history'"    (click)="activeTab = 'history'">{{ 'COACH_DASHBOARD.TAB_HISTORY' | translate }}</div>
+            <div class="tab" data-testid="tab-pmc" [class.active]="activeTab === 'pmc'"        (click)="activeTab = 'pmc'">{{ 'COACH_DASHBOARD.TAB_PMC' | translate }}</div>
+            <div class="tab" data-testid="tab-goals" [class.active]="activeTab === 'goals'"      (click)="activeTab = 'goals'">{{ 'COACH_DASHBOARD.TAB_GOALS' | translate }}</div>
           </div>
         </div>
 
@@ -200,12 +200,12 @@
             <div class="section-title">
               {{ 'COACH_DASHBOARD.TECHNICAL_SCHEDULE' | translate }}
               <div class="week-nav">
-                <button class="week-nav-btn" (click)="navigateScheduleWeek(-1)">‹</button>
+                <button class="week-nav-btn" data-testid="schedule-week-prev" (click)="navigateScheduleWeek(-1)">‹</button>
                 <span class="week-label">{{ scheduleWeekLabel }}</span>
-                <button class="week-nav-btn" (click)="navigateScheduleWeek(1)">›</button>
+                <button class="week-nav-btn" data-testid="schedule-week-next" (click)="navigateScheduleWeek(1)">›</button>
               </div>
             </div>
-            <div class="schedule-table">
+            <div class="schedule-table" data-testid="schedule-table">
               <div class="table-header">
                 <span>{{ 'COACH_DASHBOARD.SCHEDULE_COL_DATE' | translate }}</span>
                 <span>{{ 'COACH_DASHBOARD.SCHEDULE_COL_SESSION_TITLE' | translate }}</span>
@@ -217,7 +217,7 @@
               </div>
               @if (athleteSchedule$ | async; as schedule) {
                 @for (workout of schedule; track trackScheduleById(workout)) {
-                  <div class="table-row"
+                  <div class="table-row" data-testid="schedule-row"
                     [class.club-session-row]="workout.isClubSession">
                     <span class="t-date">{{ workout.scheduledDate | date:'MMM d, EEE' }}</span>
                     <span class="t-title">

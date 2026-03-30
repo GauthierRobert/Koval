@@ -12,8 +12,8 @@
       <!-- Tab strip -->
       @if (showTabs) {
         <div class="mode-tabs">
-          <button class="mode-tab" [class.active]="tab === 'ai'" (click)="setTab('ai')">{{ 'TRAINING_ACTION.TAB_CREATE_WITH_AI' | translate }}</button>
-          <button class="mode-tab" [class.active]="tab === 'select'" (click)="setTab('select')">{{ 'TRAINING_ACTION.TAB_SELECT_EXISTING' | translate }}</button>
+          <button class="mode-tab" [class.active]="tab === 'ai'" (click)="setTab('ai')" data-testid="tab-ai">{{ 'TRAINING_ACTION.TAB_CREATE_WITH_AI' | translate }}</button>
+          <button class="mode-tab" [class.active]="tab === 'select'" (click)="setTab('select')" data-testid="tab-select">{{ 'TRAINING_ACTION.TAB_SELECT_EXISTING' | translate }}</button>
         </div>
       }
 
@@ -177,7 +177,7 @@
         @if (showDatePicker) {
           <div class="form-group">
             <label class="field-label">{{ 'TRAINING_ACTION.LABEL_DATE' | translate }}</label>
-            <input type="date" class="field-select" [(ngModel)]="selectedDate" [disabled]="loading" />
+            <input type="date" class="field-select" [(ngModel)]="selectedDate" [disabled]="loading" data-testid="form-date-picker" />
           </div>
         }
 

@@ -3,13 +3,13 @@
     <h1>{{ 'CALENDAR.HEADING' | translate }}</h1>
     <div class="header-right">
       <div class="prefs-wrapper">
-        <button class="prefs-btn" (click)="togglePrefsDropdown()" [title]="'CALENDAR.FILTER_BTN_TITLE' | translate">
+        <button class="prefs-btn" (click)="togglePrefsDropdown()" [title]="'CALENDAR.FILTER_BTN_TITLE' | translate" data-testid="prefs-btn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
           </svg>
         </button>
         @if (showPrefsDropdown) {
-          <div class="prefs-dropdown">
+          <div class="prefs-dropdown" data-testid="prefs-dropdown">
             <div class="prefs-header">{{ 'CALENDAR.PREFS_HEADER' | translate }}</div>
             @if (!myClubRoles.length) {
               <div class="prefs-empty">{{ 'CALENDAR.PREFS_EMPTY' | translate }}</div>
@@ -38,19 +38,19 @@
         }
       </div>
 <div class="view-selector">
-        <button [class.active]="viewMode === 'week'" (click)="setViewMode('week')">{{ 'CALENDAR.VIEW_WEEK' | translate }}</button>
-        <button [class.active]="viewMode === 'month'" (click)="setViewMode('month')">{{ 'CALENDAR.VIEW_MONTH' | translate }}</button>
+        <button [class.active]="viewMode === 'week'" (click)="setViewMode('week')" data-testid="view-selector-week">{{ 'CALENDAR.VIEW_WEEK' | translate }}</button>
+        <button [class.active]="viewMode === 'month'" (click)="setViewMode('month')" data-testid="view-selector-month">{{ 'CALENDAR.VIEW_MONTH' | translate }}</button>
       </div>
       <div class="nav-controls">
-        <button (click)="navigateWeek(-1)">&lt; {{ viewMode === 'week' ? ('CALENDAR.NAV_PREV_WEEK' | translate) : ('CALENDAR.NAV_PREV_MONTH' | translate) }}</button>
-        <button class="today-btn" (click)="goToToday()">{{ 'CALENDAR.NAV_TODAY' | translate }}</button>
+        <button (click)="navigateWeek(-1)" data-testid="nav-btn-prev">&lt; {{ viewMode === 'week' ? ('CALENDAR.NAV_PREV_WEEK' | translate) : ('CALENDAR.NAV_PREV_MONTH' | translate) }}</button>
+        <button class="today-btn" (click)="goToToday()" data-testid="nav-btn-today">{{ 'CALENDAR.NAV_TODAY' | translate }}</button>
         @if (viewMode === 'week') {
           <span class="date-range">{{ startDate | date : 'MMM d' }} - {{ endDate | date : 'MMM d, y' }}</span>
         }
         @if (viewMode === 'month') {
           <span class="date-range">{{ startDate | date : 'MMMM yyyy' }}</span>
         }
-        <button (click)="navigateWeek(1)">{{ viewMode === 'week' ? ('CALENDAR.NAV_NEXT_WEEK' | translate) : ('CALENDAR.NAV_NEXT_MONTH' | translate) }} &gt;</button>
+        <button (click)="navigateWeek(1)" data-testid="nav-btn-next">{{ viewMode === 'week' ? ('CALENDAR.NAV_NEXT_WEEK' | translate) : ('CALENDAR.NAV_NEXT_MONTH' | translate) }} &gt;</button>
       </div>
     </div>
   </div>

@@ -7,11 +7,11 @@
     </div>
     <div class="session-header__actions">
       <div class="session-header__nav">
-        <button class="nav-btn" (click)="prevWeek()">&lsaquo;</button>
-        <button class="nav-btn" (click)="nextWeek()">&rsaquo;</button>
+        <button class="nav-btn" (click)="prevWeek()" data-testid="open-sessions-nav-prev">&lsaquo;</button>
+        <button class="nav-btn" (click)="nextWeek()" data-testid="open-sessions-nav-next">&rsaquo;</button>
       </div>
       @if (canCreate) {
-        <button class="btn-primary btn-sm" (click)="openForm()">
+        <button class="btn-primary btn-sm" (click)="openForm()" data-testid="btn-propose-session">
           {{ 'CLUB_OPEN_SESSIONS.BTN_PROPOSE_SESSION' | translate }}
         </button>
       }
