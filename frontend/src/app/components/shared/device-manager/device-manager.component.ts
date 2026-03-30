@@ -1,12 +1,13 @@
-import {Component, inject} from '@angular/core';
+import {Component, HostListener, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
 import {BluetoothService} from '../../../services/bluetooth.service';
+import {A11yModule} from '@angular/cdk/a11y';
 
 @Component({
   selector: 'app-device-manager',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslateModule, A11yModule],
   templateUrl: './device-manager.component.html',
   styleUrl: './device-manager.component.css'
 })
@@ -36,5 +37,10 @@ export class DeviceManagerComponent {
 
   onClose() {
     this.bluetoothService.toggleDeviceManager(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    this.onClose();
   }
 }

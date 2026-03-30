@@ -1,8 +1,8 @@
 <div class="modal-backdrop" (click)="onBackdropClick()">
-  <div class="modal glass" (click)="$event.stopPropagation()">
+  <div class="modal glass" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="modal-title-memberships" cdkTrapFocus cdkTrapFocusAutoCapture tabindex="-1">
     <div class="modal-header">
-      <h3>{{ 'MEMBERSHIPS.HEADING_MY_MEMBERSHIPS' | translate }}</h3>
-      <button class="close-btn" (click)="closed.emit()">&times;</button>
+      <h3 id="modal-title-memberships">{{ 'MEMBERSHIPS.HEADING_MY_MEMBERSHIPS' | translate }}</h3>
+      <button class="close-btn" (click)="closed.emit()" aria-label="Close">&times;</button>
     </div>
 
     <div class="modal-body">
@@ -19,7 +19,7 @@
         </div>
         @if (message$ | async; as msg) {
           <div
-            class="message"
+            class="message" aria-live="polite"
             [class.success]="(messageType$ | async) === 'success'"
             [class.error]="(messageType$ | async) === 'error'">
             {{ msg }}

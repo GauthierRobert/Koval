@@ -1,19 +1,19 @@
 @if (isOpen) {
   <div class="modal-backdrop" (click)="close()">
-    <div class="modal-panel" (click)="$event.stopPropagation()">
+    <div class="modal-panel" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="modal-title-training-action" cdkTrapFocus cdkTrapFocusAutoCapture tabindex="-1">
 
       <div class="modal-header">
-        <h2 class="modal-title">
+        <h2 class="modal-title" id="modal-title-training-action">
           <span class="ai-icon">✨</span> {{ modalTitle }}
         </h2>
-        <button class="close-btn" (click)="close()" [disabled]="loading">&times;</button>
+        <button class="close-btn" (click)="close()" [disabled]="loading" aria-label="Close">&times;</button>
       </div>
 
       <!-- Tab strip -->
       @if (showTabs) {
-        <div class="mode-tabs">
-          <button class="mode-tab" [class.active]="tab === 'ai'" (click)="setTab('ai')" data-testid="tab-ai">{{ 'TRAINING_ACTION.TAB_CREATE_WITH_AI' | translate }}</button>
-          <button class="mode-tab" [class.active]="tab === 'select'" (click)="setTab('select')" data-testid="tab-select">{{ 'TRAINING_ACTION.TAB_SELECT_EXISTING' | translate }}</button>
+        <div class="mode-tabs" role="tablist">
+          <button class="mode-tab" role="tab" [attr.aria-selected]="tab === 'ai'" data-testid="tab-ai" [class.active]="tab === 'ai'" (click)="setTab('ai')">{{ 'TRAINING_ACTION.TAB_CREATE_WITH_AI' | translate }}</button>
+          <button class="mode-tab" role="tab" [attr.aria-selected]="tab === 'select'" data-testid="tab-select" [class.active]="tab === 'select'" (click)="setTab('select')">{{ 'TRAINING_ACTION.TAB_SELECT_EXISTING' | translate }}</button>
         </div>
       }
 
@@ -47,8 +47,8 @@
 
           @if (showSportSelector) {
             <div class="form-group">
-              <label class="field-label">{{ 'TRAINING_ACTION.LABEL_SPORT' | translate }}</label>
-              <select class="field-select" [(ngModel)]="selectedSport" (ngModelChange)="onSportChange()" [disabled]="loading">
+              <label class="field-label" for="ta-sport">{{ 'TRAINING_ACTION.LABEL_SPORT' | translate }}</label>
+              <select id="ta-sport" class="field-select" [(ngModel)]="selectedSport" (ngModelChange)="onSportChange()" [disabled]="loading">
                 @for (s of sportOptions; track s.value) {
                   <option [ngValue]="s.value">{{ s.label }}</option>
                 }
@@ -58,8 +58,8 @@
 
           @if (filteredZoneSystems.length > 0) {
             <div class="form-group">
-              <label class="field-label">{{ 'TRAINING_ACTION.LABEL_ZONE_SYSTEM' | translate }}</label>
-              <select class="field-select" [(ngModel)]="selectedZoneSystemId" [disabled]="loading">
+              <label class="field-label" for="ta-zone-system">{{ 'TRAINING_ACTION.LABEL_ZONE_SYSTEM' | translate }}</label>
+              <select id="ta-zone-system" class="field-select" [(ngModel)]="selectedZoneSystemId" [disabled]="loading">
                 <option value="">{{ 'TRAINING_ACTION.OPTION_SPORT_DEFAULT' | translate }}</option>
                 @for (z of filteredZoneSystems; track z.id) {
                   <option [value]="z.id">{{ z.name }}</option>
@@ -93,8 +93,9 @@
           }
 
           <div class="form-group">
-            <label class="field-label">{{ 'TRAINING_ACTION.LABEL_PROMPT' | translate }}</label>
+            <label class="field-label" for="ta-prompt">{{ 'TRAINING_ACTION.LABEL_PROMPT' | translate }}</label>
             <textarea
+              id="ta-prompt"
               class="prompt-textarea"
               [(ngModel)]="prompt"
               [placeholder]="'TRAINING_ACTION.PLACEHOLDER_PROMPT' | translate"
@@ -114,6 +115,7 @@
               class="search-input"
               [(ngModel)]="searchQuery"
               [placeholder]="'TRAINING_ACTION.PLACEHOLDER_SEARCH' | translate"
+              [attr.aria-label]="'TRAINING_ACTION.PLACEHOLDER_SEARCH' | translate"
               [disabled]="loading"
             />
           </div>
@@ -176,8 +178,8 @@
         <!-- Date picker -->
         @if (showDatePicker) {
           <div class="form-group">
-            <label class="field-label">{{ 'TRAINING_ACTION.LABEL_DATE' | translate }}</label>
-            <input type="date" class="field-select" [(ngModel)]="selectedDate" [disabled]="loading" data-testid="form-date-picker" />
+            <label class="field-label" for="ta-date">{{ 'TRAINING_ACTION.LABEL_DATE' | translate }}</label>
+            <input id="ta-date" type="date" class="field-select" [(ngModel)]="selectedDate" [disabled]="loading"  data-testid="form-date-picker"/>
           </div>
         }
 
@@ -236,10 +238,10 @@
         }
 
         @if (errorMessage) {
-          <div class="status-message error">{{ errorMessage }}</div>
+          <div class="status-message error" role="alert">{{ errorMessage }}</div>
         }
         @if (successMessage) {
-          <div class="status-message success">{{ successMessage }}</div>
+          <div class="status-message success" role="status">{{ successMessage }}</div>
         }
       </div>
 

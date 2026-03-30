@@ -1,7 +1,8 @@
-import {ChangeDetectionStrategy, Component, DestroyRef, EventEmitter, inject, OnInit, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, DestroyRef, EventEmitter, HostListener, inject, OnInit, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import {A11yModule} from '@angular/cdk/a11y';
 import {BehaviorSubject, forkJoin, of} from 'rxjs';
 import {catchError} from 'rxjs/operators';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -23,7 +24,7 @@ interface ClubWithGroups {
 @Component({
   selector: 'app-memberships-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, A11yModule],
   templateUrl: './memberships-modal.component.html',
   styleUrl: './memberships-modal.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -170,6 +171,11 @@ export class MembershipsModalComponent implements OnInit {
   }
 
   onBackdropClick(): void {
+    this.closed.emit();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
     this.closed.emit();
   }
 }

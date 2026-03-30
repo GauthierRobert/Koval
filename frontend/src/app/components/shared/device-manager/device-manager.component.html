@@ -1,7 +1,7 @@
-    <div class="device-manager glass">
+    <div class="device-manager glass" role="dialog" aria-modal="true" aria-labelledby="modal-title-device-manager" cdkTrapFocus cdkTrapFocusAutoCapture tabindex="-1">
       <div class="header">
-        <h3>{{ 'DEVICE_MANAGER.HEADING_DEVICES' | translate }}</h3>
-        <button class="close-btn" (click)="onClose()">✕</button>
+        <h3 id="modal-title-device-manager">{{ 'DEVICE_MANAGER.HEADING_DEVICES' | translate }}</h3>
+        <button class="close-btn" (click)="onClose()" aria-label="Close">✕</button>
       </div>
 
       <div class="device-list">

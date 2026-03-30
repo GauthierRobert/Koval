@@ -1,7 +1,7 @@
-<div class="settings-modal glass">
+<div class="settings-modal glass" role="dialog" aria-modal="true" aria-labelledby="modal-title-settings" cdkTrapFocus cdkTrapFocusAutoCapture tabindex="-1">
     <div class="header">
-        <h3>{{ 'SETTINGS.TITLE' | translate }}</h3>
-        <button class="close-btn" (click)="close()">&#10005;</button>
+        <h3 id="modal-title-settings">{{ 'SETTINGS.TITLE' | translate }}</h3>
+        <button class="close-btn" (click)="close()" aria-label="Close">&#10005;</button>
     </div>
 
     <div class="modal-body">
@@ -33,11 +33,11 @@
             <div class="card-body">
                 <div class="field-row">
                     <div class="field-info">
-                        <label>{{ 'SETTINGS.FIELD_BODY_WEIGHT_LABEL' | translate }}</label>
+                        <label for="settings-weight">{{ 'SETTINGS.FIELD_BODY_WEIGHT_LABEL' | translate }}</label>
                         <span class="hint">{{ 'SETTINGS.FIELD_BODY_WEIGHT_HINT' | translate }}</span>
                     </div>
                     <div class="field-input ftp-input-group">
-                        <input type="number" [(ngModel)]="weightKg" min="30" max="200" class="value-input numeric" placeholder="—" />
+                        <input id="settings-weight" type="number" [(ngModel)]="weightKg" min="30" max="200" class="value-input numeric" placeholder="—" />
                         <span class="unit">{{ 'SETTINGS.FIELD_BODY_WEIGHT_UNIT' | translate }}</span>
                     </div>
                 </div>
@@ -53,21 +53,21 @@
             <div class="card-body">
                 <div class="field-row">
                     <div class="field-info">
-                        <label>FTP</label>
+                        <label for="settings-ftp">FTP</label>
                         <span class="hint">{{ 'SETTINGS.FIELD_FTP_HINT' | translate }}</span>
                     </div>
                     <div class="field-input ftp-input-group">
-                        <input type="number" [(ngModel)]="ftp" min="50" max="600" class="value-input numeric" placeholder="—" />
+                        <input id="settings-ftp" type="number" [(ngModel)]="ftp" min="50" max="600" class="value-input numeric" placeholder="—" />
                         <span class="unit">{{ 'SETTINGS.FIELD_FTP_UNIT' | translate }}</span>
                     </div>
                 </div>
                 <div class="field-row">
                     <div class="field-info">
-                        <label>{{ 'SETTINGS.FIELD_VO2MAX_POWER_LABEL' | translate }}</label>
+                        <label for="settings-vo2max-power">{{ 'SETTINGS.FIELD_VO2MAX_POWER_LABEL' | translate }}</label>
                         <span class="hint">{{ 'SETTINGS.FIELD_VO2MAX_POWER_HINT' | translate }}</span>
                     </div>
                     <div class="field-input ftp-input-group">
-                        <input type="number" [(ngModel)]="vo2maxPower" min="50" max="800" class="value-input numeric" placeholder="—" />
+                        <input id="settings-vo2max-power" type="number" [(ngModel)]="vo2maxPower" min="50" max="800" class="value-input numeric" placeholder="—" />
                         <span class="unit">{{ 'SETTINGS.FIELD_FTP_UNIT' | translate }}</span>
                     </div>
                 </div>
@@ -90,17 +90,17 @@
                     </div>
                     <div class="field-input pace-input-group">
                         <input type="number" [(ngModel)]="field.minutes" min="0" max="15"
-                            class="value-input pace-part" placeholder="—" />
+                            class="value-input pace-part" placeholder="—" [attr.aria-label]="(field.labelKey | translate) + ' minutes'" />
                         <span class="pace-sep">:</span>
                         <input type="number" [(ngModel)]="field.seconds" min="0" max="59"
-                            class="value-input pace-part" placeholder="00" />
+                            class="value-input pace-part" placeholder="00" [attr.aria-label]="(field.labelKey | translate) + ' seconds'" />
                         <span class="unit">{{ 'SETTINGS.PACE_UNIT_PER_KM' | translate }}</span>
                     </div>
                   </div>
                 }
 
                 <!-- Toggle for secondary run fields -->
-                <div class="toggle-row" (click)="showSecondaryRunning = !showSecondaryRunning">
+                <div class="toggle-row" role="button" tabindex="0" [attr.aria-expanded]="showSecondaryRunning" (click)="showSecondaryRunning = !showSecondaryRunning" (keydown.enter)="showSecondaryRunning = !showSecondaryRunning" (keydown.space)="showSecondaryRunning = !showSecondaryRunning; $event.preventDefault()">
                     <span class="toggle-label">{{ 'SETTINGS.TOGGLE_RACE_PACES' | translate }}</span>
                     <span class="toggle-arrow">{{ showSecondaryRunning ? '▾' : '▸' }}</span>
                 </div>
@@ -115,10 +115,10 @@
                       </div>
                       <div class="field-input pace-input-group">
                           <input type="number" [(ngModel)]="field.minutes" min="0" max="15"
-                              class="value-input pace-part" placeholder="—" />
+                              class="value-input pace-part" placeholder="—" [attr.aria-label]="(field.labelKey | translate) + ' minutes'" />
                           <span class="pace-sep">:</span>
                           <input type="number" [(ngModel)]="field.seconds" min="0" max="59"
-                              class="value-input pace-part" placeholder="00" />
+                              class="value-input pace-part" placeholder="00" [attr.aria-label]="(field.labelKey | translate) + ' seconds'" />
                           <span class="unit">{{ 'SETTINGS.PACE_UNIT_PER_KM' | translate }}</span>
                       </div>
                     </div>
@@ -142,10 +142,10 @@
                     </div>
                     <div class="field-input pace-input-group">
                         <input type="number" [(ngModel)]="field.minutes" min="0" max="10"
-                            class="value-input pace-part" placeholder="—" />
+                            class="value-input pace-part" placeholder="—" [attr.aria-label]="(field.labelKey | translate) + ' minutes'" />
                         <span class="pace-sep">:</span>
                         <input type="number" [(ngModel)]="field.seconds" min="0" max="59"
-                            class="value-input pace-part" placeholder="00" />
+                            class="value-input pace-part" placeholder="00" [attr.aria-label]="(field.labelKey | translate) + ' seconds'" />
                         <span class="unit">{{ 'SETTINGS.PACE_UNIT_PER_100M' | translate }}</span>
                     </div>
                   </div>

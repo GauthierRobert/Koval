@@ -27,22 +27,24 @@
       <button
         class="nav-link nav-dropdown-trigger"
         [class.active]="isClubsOpen"
+        [attr.aria-expanded]="isClubsOpen"
+        aria-haspopup="true"
         (click)="toggleClubs($event)">
         {{ 'TOP_BAR.NAV_CLUBS' | translate }}
         <svg class="dropdown-chevron" [class.open]="isClubsOpen"
-          width="8" height="8" viewBox="0 0 10 6" fill="none">
+          width="8" height="8" viewBox="0 0 10 6" fill="none" aria-hidden="true">
           <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5"
             stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
       @if (isClubsOpen) {
-        <div class="nav-dropdown club-dropdown glass" (click)="$event.stopPropagation()">
+        <div class="nav-dropdown club-dropdown glass" role="menu" (click)="$event.stopPropagation()">
           @if (clubService.userClubs$ | async; as clubs) {
             @if (clubs.length === 0) {
               <div class="club-dropdown-empty">{{ 'TOP_BAR.CLUBS_EMPTY' | translate }}</div>
             }
             @for (club of clubs; track club.id) {
-              <a class="dropdown-item club-dropdown-item"
+              <a class="dropdown-item club-dropdown-item" role="menuitem"
                  (click)="selectClub(club)">
                 <span class="dropdown-label">{{ club.name }}</span>
                 <span class="dropdown-desc">
@@ -55,7 +57,7 @@
             }
           }
           <div class="club-dropdown-sep"></div>
-          <a class="dropdown-item club-dropdown-create" routerLink="/clubs" (click)="closeClubs(); closeMobileMenu()">
+          <a class="dropdown-item club-dropdown-create" role="menuitem" routerLink="/clubs" (click)="closeClubs(); closeMobileMenu()">
             <span class="dropdown-label">{{ 'TOP_BAR.CLUB_LIST_LABEL' | translate }}</span>
             <span class="dropdown-desc">{{ 'TOP_BAR.CLUB_LIST_DESC' | translate }}</span>
           </a>
@@ -68,17 +70,19 @@
       <button
         class="nav-link nav-dropdown-trigger"
         [class.active]="isTrainingOpen"
+        [attr.aria-expanded]="isTrainingOpen"
+        aria-haspopup="true"
         (click)="toggleTraining($event)">
         {{ 'TOP_BAR.NAV_TRAINING' | translate }}
         <svg class="dropdown-chevron" [class.open]="isTrainingOpen"
-          width="8" height="8" viewBox="0 0 10 6" fill="none">
+          width="8" height="8" viewBox="0 0 10 6" fill="none" aria-hidden="true">
           <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5"
             stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
       @if (isTrainingOpen) {
-        <div class="nav-dropdown glass" (click)="$event.stopPropagation()">
-        <a routerLink="/trainings" routerLinkActive="active" class="dropdown-item"
+        <div class="nav-dropdown glass" role="menu" (click)="$event.stopPropagation()">
+        <a routerLink="/trainings" routerLinkActive="active" class="dropdown-item" role="menuitem"
           (click)="closeTraining(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_TRAININGS_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_TRAININGS_DESC' | translate }}</span>
@@ -90,27 +94,27 @@
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PLANS_DESC' | translate }}</span>
         </a>
         -->
-        <a routerLink="/history" routerLinkActive="active" class="dropdown-item"
+        <a routerLink="/history" routerLinkActive="active" class="dropdown-item" role="menuitem"
           (click)="closeTraining(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_HISTORY_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_HISTORY_DESC' | translate }}</span>
         </a>
-        <a routerLink="/calendar" routerLinkActive="active" class="dropdown-item"
+        <a routerLink="/calendar" routerLinkActive="active" class="dropdown-item" role="menuitem"
           (click)="closeTraining(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_CALENDAR_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_CALENDAR_DESC' | translate }}</span>
         </a>
-        <a routerLink="/goals" routerLinkActive="active" class="dropdown-item"
+        <a routerLink="/goals" routerLinkActive="active" class="dropdown-item" role="menuitem"
           (click)="closeTraining(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_GOALS_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_GOALS_DESC' | translate }}</span>
         </a>
-        <a routerLink="/races" routerLinkActive="active" class="dropdown-item"
+        <a routerLink="/races" routerLinkActive="active" class="dropdown-item" role="menuitem"
           (click)="closeTraining(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_RACES_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_RACES_DESC' | translate }}</span>
         </a>
-        <a routerLink="/pacing" routerLinkActive="active" class="dropdown-item"
+        <a routerLink="/pacing" routerLinkActive="active" class="dropdown-item" role="menuitem"
           (click)="closeTraining(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PACING_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PACING_DESC' | translate }}</span>
@@ -124,27 +128,29 @@
       <button
         class="nav-link nav-dropdown-trigger"
         [class.active]="isAnalyticsOpen"
+        [attr.aria-expanded]="isAnalyticsOpen"
+        aria-haspopup="true"
         (click)="toggleAnalytics($event)">
         {{ 'TOP_BAR.NAV_ANALYTICS' | translate }}
         <svg class="dropdown-chevron" [class.open]="isAnalyticsOpen"
-          width="8" height="8" viewBox="0 0 10 6" fill="none">
+          width="8" height="8" viewBox="0 0 10 6" fill="none" aria-hidden="true">
           <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5"
             stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
       @if (isAnalyticsOpen) {
-        <div class="nav-dropdown glass" (click)="$event.stopPropagation()">
-        <a routerLink="/pmc"        routerLinkActive="active" class="dropdown-item"
+        <div class="nav-dropdown glass" role="menu" (click)="$event.stopPropagation()">
+        <a routerLink="/pmc"        routerLinkActive="active" class="dropdown-item" role="menuitem"
           (click)="closeAnalytics(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PMC_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PMC_DESC' | translate }}</span>
         </a>
-        <a routerLink="/analytics" routerLinkActive="active" class="dropdown-item"
+        <a routerLink="/analytics" routerLinkActive="active" class="dropdown-item" role="menuitem"
           (click)="closeAnalytics(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_ANALYTICS_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_ANALYTICS_DESC' | translate }}</span>
         </a>
-        <a routerLink="/physiology" routerLinkActive="active" class="dropdown-item"
+        <a routerLink="/physiology" routerLinkActive="active" class="dropdown-item" role="menuitem"
           (click)="closeAnalytics(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PHYSIOLOGY_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PHYSIOLOGY_DESC' | translate }}</span>
@@ -164,11 +170,11 @@
   </nav>
 
   <div class="right-section">
-    <button class="lang-toggle" (click)="toggleLang()">
+    <button class="lang-toggle" (click)="toggleLang()" [attr.aria-label]="'TOP_BAR.BTN_LANGUAGE_TOGGLE' | translate">
       {{ currentLang === 'en' ? 'FR' : 'EN' }}
     </button>
     <div class="topbar-controls">
-      <button class="device-btn" (click)="toggleMemberships()" [title]="'TOP_BAR.BTN_MY_MEMBERSHIPS_TITLE' | translate">
+      <button class="device-btn" (click)="toggleMemberships()" [title]="'TOP_BAR.BTN_MY_MEMBERSHIPS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_MY_MEMBERSHIPS_TITLE' | translate">
         <svg class="bt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -178,7 +184,7 @@
         </svg>
       </button>
 
-      <button class="device-btn" (click)="showNotifPrefs = !showNotifPrefs" [title]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate">
+      <button class="device-btn" (click)="showNotifPrefs = !showNotifPrefs" [title]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate">
         <svg class="bt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -186,7 +192,7 @@
         </svg>
       </button>
 
-      <button class="device-btn" (click)="toggleSettings()" [title]="'TOP_BAR.BTN_REFERENCE_VALUES_TITLE' | translate">
+      <button class="device-btn" (click)="toggleSettings()" [title]="'TOP_BAR.BTN_REFERENCE_VALUES_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_REFERENCE_VALUES_TITLE' | translate">
         <svg class="bt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3" />
@@ -216,7 +222,7 @@
           <span class="name">{{ u.displayName }}</span>
           <span class="status">{{ u.role }}</span>
         </div>
-        <button class="logout-btn" (click)="logout()" [title]="'TOP_BAR.BTN_LOGOUT_TITLE' | translate">
+        <button class="logout-btn" (click)="logout()" [title]="'TOP_BAR.BTN_LOGOUT_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_LOGOUT_TITLE' | translate">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />

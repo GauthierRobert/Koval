@@ -8,16 +8,17 @@ import {ErrorToastService} from '../../../services/error-toast.service';
   imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="error-toast-container">
+    <div class="error-toast-container" aria-live="assertive" role="alert">
       <div
         *ngFor="let toast of toasts$ | async"
         class="error-toast"
         [class.error]="toast.severity === 'error'"
         [class.warning]="toast.severity === 'warning'"
         [class.info]="toast.severity === 'info'"
+        [class.success]="toast.severity === 'success'"
       >
         <span class="error-toast-message">{{ toast.message }}</span>
-        <button class="error-toast-close" (click)="dismiss(toast.id)">&times;</button>
+        <button class="error-toast-close" (click)="dismiss(toast.id)" aria-label="Close notification">&times;</button>
       </div>
     </div>
   `,
@@ -54,6 +55,10 @@ import {ErrorToastService} from '../../../services/error-toast.service';
 
       .error-toast.info {
         border-left-color: var(--primary, #00c2ff);
+      }
+
+      .error-toast.success {
+        border-left-color: var(--success-color, #34d399);
       }
 
       .error-toast-message {

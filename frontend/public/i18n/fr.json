@@ -72,7 +72,8 @@
     "BTN_REFERENCE_VALUES_TITLE": "Valeurs de référence",
     "BTN_MANAGE_DEVICES_TITLE": "Gérer les appareils",
     "PROFILE_PICTURE_ALT": "Profil",
-    "BTN_LOGOUT_TITLE": "Déconnexion"
+    "BTN_LOGOUT_TITLE": "Déconnexion",
+    "BTN_LANGUAGE_TOGGLE": "Changer de langue"
   },
   "SIDEBAR": {
     "WORKOUTS_TITLE": "SÉANCES",
@@ -226,6 +227,9 @@
     "QUICK_TILE_CALENDAR_SUB": "Voir et planifier tes séances",
     "QUICK_TILE_LIBRARY_TITLE": "Bibliothèque",
     "QUICK_TILE_LIBRARY_SUB": "Parcourir tes séances enregistrées",
+    "QUICK_TILE_ANALYTICS_TITLE": "Analyses",
+    "QUICK_TILE_ANALYTICS_SUB": "Suivre tes performances",
+    "SPORT_CARD_NO_ACTIVITY": "Pas encore d'activité",
     "GREETING_MORNING": "Bonjour",
     "GREETING_AFTERNOON": "Bon après-midi",
     "GREETING_EVENING": "Bonsoir"

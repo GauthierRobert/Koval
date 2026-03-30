@@ -9,10 +9,12 @@ import {
   OnInit,
   Output,
   SimpleChanges,
+  HostListener,
 } from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import {A11yModule} from '@angular/cdk/a11y';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {ActionContext, ActionResult, AIActionService, AIActionType} from '../../../services/ai-action.service';
 import {ClubGroup, ClubService, GroupLinkedTraining} from '../../../services/club.service';
@@ -29,7 +31,7 @@ export type TrainingActionMode = 'session' | 'self-schedule' | 'coach-assign' | 
 @Component({
   selector: 'app-training-action-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, A11yModule],
   templateUrl: './training-action-modal.component.html',
   styleUrl: './training-action-modal.component.css',
 })
@@ -353,6 +355,13 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
   close(): void {
     if (this.loading) return;
     this.closed.emit();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.isOpen && !this.loading) {
+      this.close();
+    }
   }
 
   // --- Private ---

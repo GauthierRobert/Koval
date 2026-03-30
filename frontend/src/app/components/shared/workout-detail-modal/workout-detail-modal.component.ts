@@ -1,7 +1,8 @@
-import {Component, EventEmitter, inject, Input, Output} from '@angular/core';
+import {Component, EventEmitter, HostListener, inject, Input, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
 import {Router, RouterModule} from '@angular/router';
+import {A11yModule} from '@angular/cdk/a11y';
 import {BehaviorSubject, of} from 'rxjs';
 import {catchError, map, startWith, switchMap} from 'rxjs/operators';
 import {TrainingService} from '../../../services/training.service';
@@ -34,7 +35,7 @@ const LOADING_STATE: TrainingState = { training: null, loading: true, error: nul
 @Component({
   selector: 'app-workout-detail-modal',
   standalone: true,
-  imports: [CommonModule, TranslateModule, RouterModule],
+  imports: [CommonModule, TranslateModule, RouterModule, A11yModule],
   templateUrl: './workout-detail-modal.component.html',
   styleUrl: './workout-detail-modal.component.css',
 })
@@ -84,6 +85,13 @@ export class WorkoutDetailModalComponent {
 
   close(): void {
     this.closed.emit();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.workout$.value) {
+      this.close();
+    }
   }
 
   onBackdropClick(event: MouseEvent): void {

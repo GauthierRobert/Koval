@@ -1,14 +1,14 @@
 @if (user$ | async; as user) {
   @if (user.needsCguAcceptance && !user.needsOnboarding) {
     <div class="cgu-overlay">
-      <div class="cgu-card glass">
+      <div class="cgu-card glass" role="dialog" aria-modal="true" aria-labelledby="modal-title-cgu" cdkTrapFocus cdkTrapFocusAutoCapture tabindex="-1">
         <div class="cgu-header">
           <div class="logo-mark"></div>
-          <h2>{{ 'ONBOARDING.CGU_MODAL_TITLE' | translate }}</h2>
+          <h2 id="modal-title-cgu">{{ 'ONBOARDING.CGU_MODAL_TITLE' | translate }}</h2>
           <p class="cgu-desc">{{ 'ONBOARDING.CGU_MODAL_DESC' | translate }}</p>
         </div>
         <div class="cgu-content">
-          <iframe src="/assets/cgu.html" class="cgu-iframe"></iframe>
+          <iframe src="/assets/cgu.html" class="cgu-iframe" title="Terms and conditions"></iframe>
         </div>
         <button class="cgu-accept-btn" (click)="accept()" [disabled]="(accepting$ | async) === true">
           {{ (accepting$ | async) === true ? '...' : ('ONBOARDING.CGU_MODAL_ACCEPT' | translate) }}

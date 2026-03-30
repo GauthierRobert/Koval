@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, Component, HostListener, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {BehaviorSubject} from 'rxjs';
@@ -8,6 +8,7 @@ import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {ZoneService} from '../../../services/zone.service';
 import {ZoneSystem} from '../../../services/zone';
 import {TranslateModule} from '@ngx-translate/core';
+import {A11yModule} from '@angular/cdk/a11y';
 import {environment} from '../../../../environments/environment';
 
 interface PaceField {
@@ -23,7 +24,7 @@ interface PaceField {
 @Component({
     selector: 'app-settings',
     standalone: true,
-    imports: [CommonModule, FormsModule, SportIconComponent, TranslateModule],
+    imports: [CommonModule, FormsModule, SportIconComponent, TranslateModule, A11yModule],
     templateUrl: './settings.component.html',
     styleUrls: ['./settings.component.css'],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -185,6 +186,11 @@ export class SettingsComponent implements OnInit {
 
     close() {
         this.authService.toggleSettings(false);
+    }
+
+    @HostListener('document:keydown.escape')
+    onEscapeKey(): void {
+        this.close();
     }
 
     save() {

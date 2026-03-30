@@ -141,4 +141,13 @@ export class TopBarComponent {
     this.isAnalyticsOpen = false;
   }
 
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.isClubsOpen || this.isTrainingOpen || this.isAnalyticsOpen) {
+      this.isClubsOpen = false;
+      this.isTrainingOpen = false;
+      this.isAnalyticsOpen = false;
+    }
+  }
+
 }

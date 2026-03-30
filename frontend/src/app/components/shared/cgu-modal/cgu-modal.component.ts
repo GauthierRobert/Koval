@@ -1,13 +1,14 @@
-import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {ChangeDetectionStrategy, Component, HostListener, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
+import {A11yModule} from '@angular/cdk/a11y';
 import {AuthService} from '../../../services/auth.service';
 import {BehaviorSubject} from 'rxjs';
 
 @Component({
   selector: 'app-cgu-modal',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslateModule, A11yModule],
   templateUrl: './cgu-modal.component.html',
   styleUrl: './cgu-modal.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {BehaviorSubject} from 'rxjs';
 
-export type ToastSeverity = 'error' | 'warning' | 'info';
+export type ToastSeverity = 'error' | 'warning' | 'info' | 'success';
 
 export interface Toast {
   id: number;

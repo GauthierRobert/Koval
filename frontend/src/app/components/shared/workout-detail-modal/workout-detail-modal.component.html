@@ -1,7 +1,7 @@
 @if (workout$ | async; as workout) {
   <div class="modal-backdrop" (click)="onBackdropClick($event)">
-    <div class="modal-card glass">
-      <button class="close-btn" (click)="close()">&times;</button>
+    <div class="modal-card glass" role="dialog" aria-modal="true" aria-labelledby="modal-title-workout-detail" cdkTrapFocus cdkTrapFocusAutoCapture tabindex="-1">
+      <button class="close-btn" (click)="close()" aria-label="Close">&times;</button>
 
       @if (trainingState$ | async; as state) {
         @if (state.loading) {
@@ -20,7 +20,7 @@
 
         @if (state.training; as training) {
           <div class="modal-header">
-            <h2>{{ training.title }}</h2>
+            <h2 id="modal-title-workout-detail">{{ training.title }}</h2>
             <div class="meta-row">
               <span class="scheduled-date">{{ getFormattedDate(workout) }}</span>
               <span class="status-pill" [class.pending]="workout.status === 'PENDING'"
@@ -59,7 +59,7 @@
 
           @if (getFlatBlocks(training).length) {
             <div class="blocks-section">
-              <button class="toggle-details-btn" (click)="toggleBlockDetails()">
+              <button class="toggle-details-btn" (click)="toggleBlockDetails()" [attr.aria-expanded]="showBlockDetails">
                 <span class="toggle-arrow" [class.open]="showBlockDetails">&#9660;</span>
                 {{ (showBlockDetails ? 'WORKOUT_DETAIL.BTN_HIDE_DETAILS_COUNT' : 'WORKOUT_DETAIL.BTN_SHOW_DETAILS_COUNT') | translate: { count: getFlatBlocks(training).length } }}
               </button>

@@ -134,18 +134,18 @@
           </div>
 
           <!-- Task 2: Added PMC tab -->
-          <div class="physiological-tabs">
-            <div class="tab" data-testid="tab-performance" [class.active]="activeTab === 'performance'" (click)="activeTab = 'performance'">{{ 'COACH_DASHBOARD.TAB_PERFORMANCE' | translate }}</div>
-            <div class="tab" data-testid="tab-physiology" [class.active]="activeTab === 'physiology'" (click)="activeTab = 'physiology'">{{ 'COACH_DASHBOARD.TAB_PHYSIOLOGY' | translate }}</div>
-            <div class="tab" data-testid="tab-history" [class.active]="activeTab === 'history'"    (click)="activeTab = 'history'">{{ 'COACH_DASHBOARD.TAB_HISTORY' | translate }}</div>
-            <div class="tab" data-testid="tab-pmc" [class.active]="activeTab === 'pmc'"        (click)="activeTab = 'pmc'">{{ 'COACH_DASHBOARD.TAB_PMC' | translate }}</div>
-            <div class="tab" data-testid="tab-goals" [class.active]="activeTab === 'goals'"      (click)="activeTab = 'goals'">{{ 'COACH_DASHBOARD.TAB_GOALS' | translate }}</div>
+          <div class="physiological-tabs" role="tablist">
+            <div class="tab" role="tab" id="coach-tab-performance" data-testid="tab-performance" [attr.aria-selected]="activeTab === 'performance'" [class.active]="activeTab === 'performance'" (click)="activeTab = 'performance'" tabindex="0" (keydown.enter)="activeTab = 'performance'">{{ 'COACH_DASHBOARD.TAB_PERFORMANCE' | translate }}</div>
+            <div class="tab" role="tab" id="coach-tab-physiology" data-testid="tab-physiology" [attr.aria-selected]="activeTab === 'physiology'" [class.active]="activeTab === 'physiology'" (click)="activeTab = 'physiology'" tabindex="0" (keydown.enter)="activeTab = 'physiology'">{{ 'COACH_DASHBOARD.TAB_PHYSIOLOGY' | translate }}</div>
+            <div class="tab" role="tab" id="coach-tab-history" data-testid="tab-history" [attr.aria-selected]="activeTab === 'history'" [class.active]="activeTab === 'history'" (click)="activeTab = 'history'" tabindex="0" (keydown.enter)="activeTab = 'history'">{{ 'COACH_DASHBOARD.TAB_HISTORY' | translate }}</div>
+            <div class="tab" role="tab" id="coach-tab-pmc" data-testid="tab-pmc" [attr.aria-selected]="activeTab === 'pmc'" [class.active]="activeTab === 'pmc'" (click)="activeTab = 'pmc'" tabindex="0" (keydown.enter)="activeTab = 'pmc'">{{ 'COACH_DASHBOARD.TAB_PMC' | translate }}</div>
+            <div class="tab" role="tab" id="coach-tab-goals" data-testid="tab-goals" [attr.aria-selected]="activeTab === 'goals'" [class.active]="activeTab === 'goals'" (click)="activeTab = 'goals'" tabindex="0" (keydown.enter)="activeTab = 'goals'">{{ 'COACH_DASHBOARD.TAB_GOALS' | translate }}</div>
           </div>
         </div>
 
         @if (activeTab === 'performance') {
           @if (athleteMetrics$ | async; as metrics) {
-            <div class="metrics-dashboard">
+            <div class="metrics-dashboard" role="tabpanel" aria-labelledby="coach-tab-performance">
               <div class="m-card">
                 <span class="m-label">{{ 'COACH_DASHBOARD.METRIC_FITNESS_CTL' | translate }}</span>
                 <span class="m-value">{{ metrics.ctl | number:'1.1-1' }}</span>
@@ -301,7 +301,9 @@
         }
 
         @if (activeTab === 'physiology') {
-          <app-physiology-page [overrideUser]="selectedAthlete" [embedded]="true"></app-physiology-page>
+          <div role="tabpanel" aria-labelledby="coach-tab-physiology">
+            <app-physiology-page [overrideUser]="selectedAthlete" [embedded]="true"></app-physiology-page>
+          </div>
         }
 
         @if (activeTab === 'history') {

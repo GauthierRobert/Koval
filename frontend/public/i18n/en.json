@@ -72,7 +72,8 @@
     "BTN_REFERENCE_VALUES_TITLE": "Reference Values",
     "BTN_MANAGE_DEVICES_TITLE": "Manage Devices",
     "PROFILE_PICTURE_ALT": "Profile",
-    "BTN_LOGOUT_TITLE": "Logout"
+    "BTN_LOGOUT_TITLE": "Logout",
+    "BTN_LANGUAGE_TOGGLE": "Switch language"
   },
   "SIDEBAR": {
     "WORKOUTS_TITLE": "WORKOUTS",
@@ -226,6 +227,9 @@
     "QUICK_TILE_CALENDAR_SUB": "View and schedule workouts",
     "QUICK_TILE_LIBRARY_TITLE": "Browse Library",
     "QUICK_TILE_LIBRARY_SUB": "Explore saved workouts",
+    "QUICK_TILE_ANALYTICS_TITLE": "Analytics",
+    "QUICK_TILE_ANALYTICS_SUB": "Track your performance",
+    "SPORT_CARD_NO_ACTIVITY": "No activity yet",
     "GREETING_MORNING": "Good morning",
     "GREETING_AFTERNOON": "Good afternoon",
     "GREETING_EVENING": "Good evening"

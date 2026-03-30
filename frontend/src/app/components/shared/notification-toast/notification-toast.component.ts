@@ -12,7 +12,7 @@ import {MessagePayload} from 'firebase/messaging';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="toast-container" *ngIf="visible" (click)="onToastClick()">
+    <div class="toast-container" *ngIf="visible" (click)="onToastClick()" role="status" aria-live="polite">
       <div class="toast" [class.toast-cancelled]="data['type'] === 'SESSION_CANCELLED'">
         <div class="toast-content">
           <strong>{{ title }}</strong>
@@ -21,7 +21,7 @@ import {MessagePayload} from 'firebase/messaging';
             <button class="toast-refuse-btn" (click)="onRefuse($event)">REFUSE SPOT</button>
           </div>
         </div>
-        <button class="toast-close" (click)="dismiss($event)">&times;</button>
+        <button class="toast-close" (click)="dismiss($event)" aria-label="Dismiss notification">&times;</button>
       </div>
     </div>
   `,
