@@ -3,7 +3,6 @@ package com.koval.trainingplannerbackend.coach;
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.auth.UserRole;
-import com.koval.trainingplannerbackend.auth.UserService;
 import com.koval.trainingplannerbackend.club.Club;
 import com.koval.trainingplannerbackend.club.ClubRepository;
 import com.koval.trainingplannerbackend.club.membership.ClubMemberRole;
@@ -19,9 +18,7 @@ import com.koval.trainingplannerbackend.training.received.ReceivedTrainingServic
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.SecureRandom;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,14 +32,8 @@ import java.util.Set;
 @Service
 public class CoachService {
 
-    private static final String CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    private static final int CODE_LENGTH = 8;
-    private static final SecureRandom RANDOM = new SecureRandom();
-
     private final UserRepository userRepository;
-    private final UserService userService;
     private final ScheduledWorkoutRepository scheduledWorkoutRepository;
-    private final InviteCodeRepository inviteCodeRepository;
     private final GroupService groupService;
     private final NotificationService notificationService;
     private final ReceivedTrainingService receivedTrainingService;
@@ -50,18 +41,14 @@ public class CoachService {
     private final ClubRepository clubRepository;
 
     public CoachService(UserRepository userRepository,
-            UserService userService,
             ScheduledWorkoutRepository scheduledWorkoutRepository,
-            InviteCodeRepository inviteCodeRepository,
             GroupService groupService,
             NotificationService notificationService,
             ReceivedTrainingService receivedTrainingService,
             ClubMembershipService clubMembershipService,
             ClubRepository clubRepository) {
         this.userRepository = userRepository;
-        this.userService = userService;
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
-        this.inviteCodeRepository = inviteCodeRepository;
         this.groupService = groupService;
         this.notificationService = notificationService;
         this.receivedTrainingService = receivedTrainingService;
@@ -243,31 +230,6 @@ public class CoachService {
     }
 
     /**
-     * Get an athlete's schedule within a date range.
-     */
-    public List<ScheduledWorkout> getAthleteSchedule(String athleteId, LocalDate start, LocalDate end) {
-        return scheduledWorkoutRepository.findByAthleteIdAndScheduledDateBetween(athleteId, start.minusDays(1),
-                end.plusDays(1));
-    }
-
-    /**
-     * Get all scheduled workouts for an athlete.
-     */
-    public List<ScheduledWorkout> getAthleteSchedule(String athleteId) {
-        return scheduledWorkoutRepository.findByAthleteId(athleteId);
-    }
-
-    /**
-     * Get all athletes for a coach (derived from groups).
-     */
-    public List<User> getCoachAthletes(String coachId) {
-        List<String> athleteIds = groupService.getAthleteIdsForCoach(coachId);
-        if (athleteIds.isEmpty())
-            return List.of();
-        return userRepository.findByIdIn(athleteIds);
-    }
-
-    /**
      * Check whether a coach has access to a given athlete (via groups or clubs).
      */
     public boolean isCoachOfAthlete(String coachId, String athleteId) {
@@ -287,223 +249,5 @@ public class CoachService {
             }
         }
         return false;
-    }
-
-    /**
-     * Remove an athlete from a coach's roster (remove from all coach groups).
-     */
-    public void removeAthlete(String coachId, String athleteId) {
-        groupService.removeAthleteFromAllCoachGroups(coachId, athleteId);
-    }
-
-    /**
-     * Mark a scheduled workout as completed.
-     */
-    public ScheduledWorkout markCompleted(String scheduledWorkoutId, Integer tss, Double intensityFactor,
-            String sessionId) {
-        ScheduledWorkout workout = scheduledWorkoutRepository.findById(scheduledWorkoutId)
-                .orElseThrow(() -> new ResourceNotFoundException("Scheduled workout", scheduledWorkoutId));
-
-        workout.setStatus(ScheduleStatus.COMPLETED);
-        workout.setCompletedAt(LocalDateTime.now());
-        if (tss != null)
-            workout.setTss(tss);
-        if (intensityFactor != null)
-            workout.setIntensityFactor(intensityFactor);
-        if (sessionId != null)
-            workout.setSessionId(sessionId);
-
-        return scheduledWorkoutRepository.save(workout);
-    }
-
-    public ScheduledWorkout markCompleted(String scheduledWorkoutId, Integer tss, Double intensityFactor) {
-        return markCompleted(scheduledWorkoutId, tss, intensityFactor, null);
-    }
-
-    /**
-     * Mark a scheduled workout as skipped.
-     */
-    public ScheduledWorkout markSkipped(String scheduledWorkoutId) {
-        ScheduledWorkout workout = scheduledWorkoutRepository.findById(scheduledWorkoutId)
-                .orElseThrow(() -> new ResourceNotFoundException("Scheduled workout", scheduledWorkoutId));
-
-        workout.setStatus(ScheduleStatus.SKIPPED);
-        return scheduledWorkoutRepository.save(workout);
-    }
-
-    /**
-     * Get athletes filtered by group for a specific coach.
-     */
-    public List<User> getAthletesByGroup(String coachId, String groupId) {
-        Group group = groupService.getGroupById(groupId);
-        if (!coachId.equals(group.getCoachId())) {
-            throw new ForbiddenOperationException("Group does not belong to this coach");
-        }
-        if (group.getAthleteIds().isEmpty())
-            return List.of();
-        return userRepository.findByIdIn(group.getAthleteIds());
-    }
-
-    /**
-     * Get all groups for a coach (Group objects).
-     */
-    public List<Group> getAthleteGroupsForCoach(String coachId) {
-        return groupService.getGroupsForCoach(coachId);
-    }
-
-    /**
-     * Add a group to an athlete. Coach-only. Creates the group if it doesn't exist,
-     * then adds athlete.
-     */
-    public Group addGroupToAthlete(String coachId, String athleteId, String groupName) {
-        User coach = userRepository.findById(coachId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", coachId));
-        if (coach.getRole() != UserRole.COACH) {
-            throw new ForbiddenOperationException("Only coaches can assign groups to athletes");
-        }
-
-        // Verify athlete exists
-        userRepository.findById(athleteId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", athleteId));
-
-        Group group = groupService.getOrCreateGroup(groupName, coachId, 0);
-        return groupService.addAthleteToGroup(group.getId(), athleteId);
-    }
-
-    /**
-     * Remove a group from an athlete by group name. Coach-only.
-     */
-    public Group removeGroupFromAthlete(String coachId, String athleteId, String groupName) {
-        User coach = userRepository.findById(coachId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", coachId));
-        if (coach.getRole() != UserRole.COACH) {
-            throw new ForbiddenOperationException("Only coaches can modify athlete groups");
-        }
-
-        Group group = groupService.getGroupByNameAndCoach(groupName, coachId);
-        return groupService.removeAthleteFromGroup(group.getId(), athleteId);
-    }
-
-    /**
-     * Replace all groups for an athlete under this coach.
-     * Removes athlete from all current coach groups, then adds to specified groups.
-     */
-    public List<Group> setAthleteGroups(String coachId, String athleteId, List<String> groupIds) {
-        User coach = userRepository.findById(coachId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", coachId));
-        if (coach.getRole() != UserRole.COACH) {
-            throw new ForbiddenOperationException("Only coaches can modify athlete groups");
-        }
-
-        // Remove from all current coach groups
-        groupService.removeAthleteFromAllCoachGroups(coachId, athleteId);
-
-        // Add to each specified group
-        List<Group> result = new ArrayList<>();
-        for (String groupId : groupIds) {
-            Group group = groupService.getGroupById(groupId);
-            if (!coachId.equals(group.getCoachId())) {
-                throw new ForbiddenOperationException("Group " + groupId + " does not belong to this coach");
-            }
-            result.add(groupService.addAthleteToGroup(groupId, athleteId));
-        }
-        return result;
-    }
-
-    // --- Invite Code operations ---
-
-    /**
-     * Generate an invite code for a coach. Groups param contains Group document IDs.
-     */
-    public InviteCode generateInviteCode(String coachId, List<String> groupIds, int maxUses, LocalDateTime expiresAt, String customCode) {
-        User coach = userRepository.findById(coachId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", coachId));
-
-        if (coach.getRole() != UserRole.COACH) {
-            throw new ForbiddenOperationException("User is not a coach: " + coachId);
-        }
-
-        InviteCode inviteCode = new InviteCode();
-        inviteCode.setCode(customCode != null && !customCode.isBlank()
-                ? customCode.toUpperCase().trim()
-                : generateUniqueCode());
-        inviteCode.setCoachId(coachId);
-        inviteCode.setGroupIds(groupIds != null ? groupIds : new ArrayList<>());
-        inviteCode.setMaxUses(maxUses);
-        inviteCode.setExpiresAt(expiresAt);
-        inviteCode.setType("GROUP");
-
-        return inviteCodeRepository.save(inviteCode);
-    }
-
-    /**
-     * Redeem an invite code as an athlete.
-     * Multi-coach is now allowed — no "already has a coach" check.
-     */
-    @Transactional
-    public User redeemInviteCode(String athleteId, String code) {
-        User athlete = userService.getUserById(athleteId);
-
-        InviteCode inviteCode = inviteCodeRepository.findByCode(code.toUpperCase().trim())
-                .orElseThrow(() -> new ResourceNotFoundException("Invalid invite code"));
-
-        if (!inviteCode.isActive()) {
-            throw new ValidationException("Invite code is no longer active");
-        }
-
-        if (inviteCode.getExpiresAt() != null && LocalDateTime.now().isAfter(inviteCode.getExpiresAt())) {
-            throw new ValidationException("Invite code has expired");
-        }
-
-        if (inviteCode.getMaxUses() > 0 && inviteCode.getCurrentUses() >= inviteCode.getMaxUses()) {
-            throw new ValidationException("Invite code has reached maximum uses");
-        }
-
-        // Add athlete to each Group referenced by the invite code
-        for (String groupId : inviteCode.getGroupIds()) {
-            groupService.addAthleteToGroup(groupId, athleteId);
-        }
-
-        // Increment usage
-        inviteCode.setCurrentUses(inviteCode.getCurrentUses() + 1);
-        inviteCodeRepository.save(inviteCode);
-
-        return userRepository.findById(athleteId).orElse(athlete);
-    }
-
-    /**
-     * Get all invite codes for a coach.
-     */
-    public List<InviteCode> getInviteCodes(String coachId) {
-        return inviteCodeRepository.findByCoachId(coachId);
-    }
-
-    /**
-     * Deactivate an invite code.
-     */
-    public void deactivateInviteCode(String coachId, String inviteCodeId) {
-        InviteCode inviteCode = inviteCodeRepository.findById(inviteCodeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Invite code", inviteCodeId));
-
-        if (!coachId.equals(inviteCode.getCoachId())) {
-            throw new ForbiddenOperationException("Invite code does not belong to this coach");
-        }
-
-        inviteCode.setActive(false);
-        inviteCodeRepository.save(inviteCode);
-    }
-
-    private String generateUniqueCode() {
-        for (int attempt = 0; attempt < 10; attempt++) {
-            StringBuilder sb = new StringBuilder(CODE_LENGTH);
-            for (int i = 0; i < CODE_LENGTH; i++) {
-                sb.append(CODE_CHARS.charAt(RANDOM.nextInt(CODE_CHARS.length())));
-            }
-            String code = sb.toString();
-            if (inviteCodeRepository.findByCode(code).isEmpty()) {
-                return code;
-            }
-        }
-        throw new ValidationException("Unable to generate unique invite code after 10 attempts");
     }
 }

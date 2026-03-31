@@ -1,9 +1,10 @@
 package com.koval.trainingplannerbackend.integration.zwift;
 
+import com.koval.trainingplannerbackend.auth.AccountLinkingService;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
-import com.koval.trainingplannerbackend.auth.UserService;
+import com.koval.trainingplannerbackend.auth.UserResponseMapper;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.model.Training;
@@ -26,20 +27,23 @@ public class ZwiftIntegrationController {
     private final ZwiftAuthService authService;
     private final ZwiftActivitySyncService syncService;
     private final ZwiftWorkoutService workoutService;
-    private final UserService userService;
+    private final AccountLinkingService accountLinkingService;
+    private final UserResponseMapper userResponseMapper;
     private final UserRepository userRepository;
     private final TrainingService trainingService;
 
     public ZwiftIntegrationController(ZwiftAuthService authService,
                                        ZwiftActivitySyncService syncService,
                                        ZwiftWorkoutService workoutService,
-                                       UserService userService,
+                                       AccountLinkingService accountLinkingService,
+                                       UserResponseMapper userResponseMapper,
                                        UserRepository userRepository,
                                        TrainingService trainingService) {
         this.authService = authService;
         this.syncService = syncService;
         this.workoutService = workoutService;
-        this.userService = userService;
+        this.accountLinkingService = accountLinkingService;
+        this.userResponseMapper = userResponseMapper;
         this.userRepository = userRepository;
         this.trainingService = trainingService;
     }
@@ -55,10 +59,10 @@ public class ZwiftIntegrationController {
         ZwiftAuthService.ZwiftTokenResponse tokenResponse =
                 authService.authenticate(request.username(), request.password());
 
-        User user = userService.linkZwift(userId, tokenResponse.zwiftUserId(),
+        User user = accountLinkingService.linkZwift(userId, tokenResponse.zwiftUserId(),
                 tokenResponse.accessToken(), tokenResponse.refreshToken());
 
-        return ResponseEntity.ok(userService.userToMap(user));
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 
     @PostMapping("/import-history")
@@ -95,7 +99,7 @@ public class ZwiftIntegrationController {
         user.setZwiftAutoSyncWorkouts(enabled);
         userRepository.save(user);
 
-        return ResponseEntity.ok(userService.userToMap(user));
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 
     public record ZwiftLoginRequest(String username, String password) {}

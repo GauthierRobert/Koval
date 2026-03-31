@@ -1,8 +1,9 @@
 package com.koval.trainingplannerbackend.integration.garmin;
 
+import com.koval.trainingplannerbackend.auth.AccountLinkingService;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.User;
-import com.koval.trainingplannerbackend.auth.UserService;
+import com.koval.trainingplannerbackend.auth.UserResponseMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,17 +22,20 @@ public class GarminIntegrationController {
 
     private final GarminOAuthService oauthService;
     private final GarminActivitySyncService syncService;
-    private final UserService userService;
+    private final AccountLinkingService accountLinkingService;
+    private final UserResponseMapper userResponseMapper;
 
     // Temporary store for request token secrets during OAuth flow
     private final Map<String, String> pendingTokenSecrets = new ConcurrentHashMap<>();
 
     public GarminIntegrationController(GarminOAuthService oauthService,
                                         GarminActivitySyncService syncService,
-                                        UserService userService) {
+                                        AccountLinkingService accountLinkingService,
+                                        UserResponseMapper userResponseMapper) {
         this.oauthService = oauthService;
         this.syncService = syncService;
-        this.userService = userService;
+        this.accountLinkingService = accountLinkingService;
+        this.userResponseMapper = userResponseMapper;
     }
 
     /**
@@ -69,10 +73,10 @@ public class GarminIntegrationController {
         GarminOAuthService.GarminAccessToken accessToken =
                 oauthService.exchangeForAccessToken(oauthToken, tokenSecret, verifier);
 
-        User user = userService.linkGarmin(userId, accessToken.userId(),
+        User user = accountLinkingService.linkGarmin(userId, accessToken.userId(),
                 accessToken.accessToken(), accessToken.accessTokenSecret());
 
-        return ResponseEntity.ok(userService.userToMap(user));
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 
     @PostMapping("/import-history")

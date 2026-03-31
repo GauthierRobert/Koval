@@ -32,6 +32,8 @@ public class AuthController {
     private final StravaOAuthService stravaOAuthService;
     private final GoogleOAuthService googleOAuthService;
     private final UserService userService;
+    private final AccountLinkingService accountLinkingService;
+    private final UserResponseMapper userResponseMapper;
     private final UserRepository userRepository;
 
     @Value("${jwt.secret}")
@@ -41,10 +43,13 @@ public class AuthController {
     private long jwtExpiration;
 
     public AuthController(StravaOAuthService stravaOAuthService, GoogleOAuthService googleOAuthService,
-            UserService userService, UserRepository userRepository) {
+            UserService userService, AccountLinkingService accountLinkingService,
+            UserResponseMapper userResponseMapper, UserRepository userRepository) {
         this.stravaOAuthService = stravaOAuthService;
         this.googleOAuthService = googleOAuthService;
         this.userService = userService;
+        this.accountLinkingService = accountLinkingService;
+        this.userResponseMapper = userResponseMapper;
         this.userRepository = userRepository;
     }
 
@@ -63,7 +68,7 @@ public class AuthController {
         try {
             StravaOAuthService.StravaTokenResponse tokenResponse = stravaOAuthService.exchangeCodeForToken(code);
 
-            User user = userService.findOrCreateFromStrava(
+            User user = accountLinkingService.findOrCreateFromStrava(
                     tokenResponse.getAthleteId(),
                     tokenResponse.getDisplayName(),
                     tokenResponse.getProfilePicture(),
@@ -76,7 +81,7 @@ public class AuthController {
 
             Map<String, Object> response = new HashMap<>();
             response.put("token", jwt);
-            response.put("user", userService.userToMap(user));
+            response.put("user", userResponseMapper.userToMap(user));
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -103,7 +108,7 @@ public class AuthController {
         try {
             GoogleOAuthService.GoogleUserInfo googleUser = googleOAuthService.exchangeCodeAndGetUserInfo(code, redirectUri);
 
-            User user = userService.findOrCreateFromGoogle(
+            User user = accountLinkingService.findOrCreateFromGoogle(
                     googleUser.getGoogleId(),
                     googleUser.getName(),
                     googleUser.getEmail(),
@@ -113,7 +118,7 @@ public class AuthController {
 
             Map<String, Object> response = new HashMap<>();
             response.put("token", jwt);
-            response.put("user", userService.userToMap(user));
+            response.put("user", userResponseMapper.userToMap(user));
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -134,7 +139,7 @@ public class AuthController {
             GoogleOAuthService.GoogleUserInfo googleUser =
                     googleOAuthService.exchangeCodeAndGetUserInfo(code, serverCallbackUri);
 
-            User user = userService.findOrCreateFromGoogle(
+            User user = accountLinkingService.findOrCreateFromGoogle(
                     googleUser.getGoogleId(),
                     googleUser.getName(),
                     googleUser.getEmail(),
@@ -181,7 +186,7 @@ public class AuthController {
 
         Map<String, Object> response = new HashMap<>();
         response.put("token", jwt);
-        response.put("user", userService.userToMap(user));
+        response.put("user", userResponseMapper.userToMap(user));
         return ResponseEntity.ok(response);
     }
 
@@ -191,7 +196,7 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> getCurrentUser() {
         String userId = SecurityUtils.getCurrentUserId();
         User user = userService.getUserById(userId);
-        return ResponseEntity.ok(userService.userToMap(user));
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 
     public record RoleRequest(UserRole role) {
@@ -201,7 +206,7 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> setRole(@RequestBody RoleRequest request) {
         String userId = SecurityUtils.getCurrentUserId();
         User user = userService.setRole(userId, request.role());
-        return ResponseEntity.ok(userService.userToMap(user));
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 
     public record SettingsRequest(@Positive Integer ftp, @Positive Integer weightKg, Integer functionalThresholdPace,
@@ -222,7 +227,7 @@ public class AuthController {
                 request.vo2maxPower(), request.vo2maxPace(),
                 request.customZoneReferenceValues(),
                 request.aiPrePrompt(), request.aiPrePromptEnabled());
-        return ResponseEntity.ok(userService.userToMap(user));
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 
     // --- Account linking (authenticated user connects an additional provider) ---
@@ -231,9 +236,9 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> linkStrava(@RequestParam String code) {
         String userId = SecurityUtils.getCurrentUserId();
         StravaOAuthService.StravaTokenResponse tokenResponse = stravaOAuthService.exchangeCodeForToken(code);
-        User user = userService.linkStrava(userId, tokenResponse.getAthleteId(),
+        User user = accountLinkingService.linkStrava(userId, tokenResponse.getAthleteId(),
                 tokenResponse.getAccessToken(), tokenResponse.getRefreshToken(), tokenResponse.getExpiresAt());
-        return ResponseEntity.ok(userService.userToMap(user));
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 
     @PostMapping("/link/google/callback")
@@ -242,22 +247,22 @@ public class AuthController {
             @RequestParam(required = false) String redirectUri) {
         String userId = SecurityUtils.getCurrentUserId();
         GoogleOAuthService.GoogleUserInfo googleUser = googleOAuthService.exchangeCodeAndGetUserInfo(code, redirectUri);
-        User user = userService.linkGoogle(userId, googleUser.getGoogleId(), googleUser.getEmail());
-        return ResponseEntity.ok(userService.userToMap(user));
+        User user = accountLinkingService.linkGoogle(userId, googleUser.getGoogleId(), googleUser.getEmail());
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 
     @DeleteMapping("/link/garmin")
     public ResponseEntity<Map<String, Object>> unlinkGarmin() {
         String userId = SecurityUtils.getCurrentUserId();
-        User user = userService.unlinkGarmin(userId);
-        return ResponseEntity.ok(userService.userToMap(user));
+        User user = accountLinkingService.unlinkGarmin(userId);
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 
     @DeleteMapping("/link/zwift")
     public ResponseEntity<Map<String, Object>> unlinkZwift() {
         String userId = SecurityUtils.getCurrentUserId();
-        User user = userService.unlinkZwift(userId);
-        return ResponseEntity.ok(userService.userToMap(user));
+        User user = accountLinkingService.unlinkZwift(userId);
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 
     // --- Unlinking ---
@@ -265,15 +270,15 @@ public class AuthController {
     @DeleteMapping("/link/strava")
     public ResponseEntity<Map<String, Object>> unlinkStrava() {
         String userId = SecurityUtils.getCurrentUserId();
-        User user = userService.unlinkStrava(userId);
-        return ResponseEntity.ok(userService.userToMap(user));
+        User user = accountLinkingService.unlinkStrava(userId);
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 
     @DeleteMapping("/link/google")
     public ResponseEntity<Map<String, Object>> unlinkGoogle() {
         String userId = SecurityUtils.getCurrentUserId();
-        User user = userService.unlinkGoogle(userId);
-        return ResponseEntity.ok(userService.userToMap(user));
+        User user = accountLinkingService.unlinkGoogle(userId);
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 
     private String generateJwtToken(User user) {
@@ -324,7 +329,7 @@ public class AuthController {
         String jwt = generateJwtToken(user);
         Map<String, Object> response = new HashMap<>();
         response.put("token", jwt);
-        response.put("user", userService.userToMap(user));
+        response.put("user", userResponseMapper.userToMap(user));
         return ResponseEntity.ok(response);
     }
 
@@ -335,6 +340,6 @@ public class AuthController {
         user.setCguAcceptedAt(java.time.LocalDateTime.now());
         user.setCguVersion(CguConstants.CURRENT_VERSION);
         userRepository.save(user);
-        return ResponseEntity.ok(userService.userToMap(user));
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 }

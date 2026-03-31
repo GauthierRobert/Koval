@@ -10,6 +10,7 @@ import com.koval.trainingplannerbackend.club.recurring.RecurringSessionService;
 import com.koval.trainingplannerbackend.club.recurring.RecurringSessionTemplate;
 import com.koval.trainingplannerbackend.club.session.ClubSessionService;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
+import com.koval.trainingplannerbackend.club.session.SessionTrainingLinkService;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
@@ -29,13 +30,16 @@ import java.util.List;
 public class ClubToolService {
 
     private final ClubSessionService sessionService;
+    private final SessionTrainingLinkService trainingLinkService;
     private final RecurringSessionService recurringService;
     private final ClubMembershipService membershipService;
 
     public ClubToolService(ClubSessionService sessionService,
+                           SessionTrainingLinkService trainingLinkService,
                            RecurringSessionService recurringService,
                            ClubMembershipService membershipService) {
         this.sessionService = sessionService;
+        this.trainingLinkService = trainingLinkService;
         this.recurringService = recurringService;
         this.membershipService = membershipService;
     }
@@ -174,7 +178,7 @@ public class ClubToolService {
 
         ToolEventEmitter.emitToolCall(context, "linkTrainingToSession", "Linking training...");
         String userId = SecurityUtils.getUserId(context);
-        sessionService.linkTrainingToSession(userId, clubId, sessionId, trainingId, clubGroupId);
+        trainingLinkService.linkTrainingToSession(userId, clubId, sessionId, trainingId, clubGroupId);
         ToolEventEmitter.emitToolResult(context, "linkTrainingToSession", "Training linked", true);
         return "Training " + trainingId + " linked to session " + sessionId + ".";
     }
@@ -193,7 +197,7 @@ public class ClubToolService {
 
         ToolEventEmitter.emitToolCall(context, "unlinkTrainingFromSession", "Unlinking training...");
         String userId = SecurityUtils.getUserId(context);
-        sessionService.unlinkTrainingFromSession(userId, clubId, sessionId, clubGroupId);
+        trainingLinkService.unlinkTrainingFromSession(userId, clubId, sessionId, clubGroupId);
         ToolEventEmitter.emitToolResult(context, "unlinkTrainingFromSession", "Training unlinked", true);
         return "Training unlinked from session " + sessionId + ".";
     }

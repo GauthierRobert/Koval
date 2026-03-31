@@ -31,6 +31,9 @@ import com.koval.trainingplannerbackend.club.recurring.RecurringSessionTemplate;
 import com.koval.trainingplannerbackend.club.session.ClubSessionService;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
 import com.koval.trainingplannerbackend.club.session.SessionCategory;
+import com.koval.trainingplannerbackend.club.session.SessionGpxService;
+import com.koval.trainingplannerbackend.club.session.SessionParticipationService;
+import com.koval.trainingplannerbackend.club.session.SessionTrainingLinkService;
 import com.koval.trainingplannerbackend.club.stats.ClubStatsService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -55,6 +58,9 @@ public class ClubController {
 
     private final ClubService clubService;
     private final ClubSessionService clubSessionService;
+    private final SessionParticipationService sessionParticipationService;
+    private final SessionGpxService sessionGpxService;
+    private final SessionTrainingLinkService sessionTrainingLinkService;
     private final ClubMembershipService clubMembershipService;
     private final ClubGroupService clubGroupService;
     private final ClubInviteCodeService clubInviteCodeService;
@@ -63,6 +69,9 @@ public class ClubController {
     private final RecurringSessionService recurringSessionService;
 
     public ClubController(ClubService clubService, ClubSessionService clubSessionService,
+                          SessionParticipationService sessionParticipationService,
+                          SessionGpxService sessionGpxService,
+                          SessionTrainingLinkService sessionTrainingLinkService,
                           ClubMembershipService clubMembershipService,
                           ClubGroupService clubGroupService,
                           ClubInviteCodeService clubInviteCodeService,
@@ -71,6 +80,9 @@ public class ClubController {
                           RecurringSessionService recurringSessionService) {
         this.clubService = clubService;
         this.clubSessionService = clubSessionService;
+        this.sessionParticipationService = sessionParticipationService;
+        this.sessionGpxService = sessionGpxService;
+        this.sessionTrainingLinkService = sessionTrainingLinkService;
         this.clubMembershipService = clubMembershipService;
         this.clubGroupService = clubGroupService;
         this.clubInviteCodeService = clubInviteCodeService;
@@ -281,14 +293,14 @@ public class ClubController {
     public ResponseEntity<ClubTrainingSession> joinSession(@PathVariable String id,
                                                             @PathVariable String sessionId) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(clubSessionService.joinSession(userId, sessionId));
+        return ResponseEntity.ok(sessionParticipationService.joinSession(userId, sessionId));
     }
 
     @DeleteMapping("/{id}/sessions/{sessionId}/join")
     public ResponseEntity<ClubTrainingSession> cancelSessionParticipation(@PathVariable String id,
                                                                            @PathVariable String sessionId) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(clubSessionService.cancelSessionParticipation(userId, sessionId));
+        return ResponseEntity.ok(sessionParticipationService.cancelSessionParticipation(userId, sessionId));
     }
 
     @GetMapping("/{id}/stats/weekly")
@@ -366,7 +378,7 @@ public class ClubController {
             @PathVariable String id, @PathVariable String sessionId,
             @RequestBody LinkTrainingRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(clubSessionService.linkTrainingToSession(userId, id, sessionId, req.trainingId(), req.clubGroupId()));
+        return ResponseEntity.ok(sessionTrainingLinkService.linkTrainingToSession(userId, id, sessionId, req.trainingId(), req.clubGroupId()));
     }
 
     @PutMapping("/{id}/sessions/{sessionId}/unlink-training")
@@ -374,7 +386,7 @@ public class ClubController {
             @PathVariable String id, @PathVariable String sessionId,
             @RequestBody UnlinkTrainingRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(clubSessionService.unlinkTrainingFromSession(userId, id, sessionId, req.clubGroupId()));
+        return ResponseEntity.ok(sessionTrainingLinkService.unlinkTrainingFromSession(userId, id, sessionId, req.clubGroupId()));
     }
 
     // --- GPX ---
@@ -384,20 +396,20 @@ public class ClubController {
             @PathVariable String id, @PathVariable String sessionId,
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(clubSessionService.uploadGpx(userId, id, sessionId, file));
+        return ResponseEntity.ok(sessionGpxService.uploadGpx(userId, id, sessionId, file));
     }
 
     @DeleteMapping("/{id}/sessions/{sessionId}/gpx")
     public ResponseEntity<ClubTrainingSession> deleteSessionGpx(
             @PathVariable String id, @PathVariable String sessionId) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(clubSessionService.deleteGpx(userId, id, sessionId));
+        return ResponseEntity.ok(sessionGpxService.deleteGpx(userId, id, sessionId));
     }
 
     @GetMapping("/{id}/sessions/{sessionId}/gpx")
     public ResponseEntity<byte[]> downloadSessionGpx(
             @PathVariable String id, @PathVariable String sessionId) {
         String userId = SecurityUtils.getCurrentUserId();
-        return clubSessionService.getGpxDownload(userId, id, sessionId);
+        return sessionGpxService.getGpxDownload(userId, id, sessionId);
     }
 }
