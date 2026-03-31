@@ -1,0 +1,47 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "resources": {
+        "files": ["/index.html", "/manifest.webmanifest", "/*.css", "/*.js"]
+      }
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": ["/assets/**", "/i18n/*.json"]
+      }
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "api-freshness",
+      "urls": ["/api/auth/**", "/api/notifications/**"],
+      "cacheConfig": {
+        "maxSize": 10,
+        "maxAge": "0u",
+        "strategy": "freshness",
+        "timeout": "5s"
+      }
+    },
+    {
+      "name": "api-performance",
+      "urls": ["/api/**"],
+      "cacheConfig": {
+        "maxSize": 100,
+        "maxAge": "1h",
+        "strategy": "performance"
+      }
+    }
+  ],
+  "navigationUrls": [
+    "/**",
+    "!/**/*.*",
+    "!/**/firebase-cloud-messaging-push-scope/**"
+  ]
+}

@@ -45,7 +45,9 @@ export class NotificationService {
         return;
       }
 
-      const swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      const swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+        scope: '/firebase-cloud-messaging-push-scope',
+      });
 
       const token = await getToken(this.messaging, {
         vapidKey: environment.firebaseVapidKey,
