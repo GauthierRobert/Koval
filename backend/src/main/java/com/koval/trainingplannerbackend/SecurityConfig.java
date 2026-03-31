@@ -37,6 +37,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) ->
+                                response.sendError(401, "Unauthorized")))
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

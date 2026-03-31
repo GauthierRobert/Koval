@@ -158,17 +158,17 @@ class AuthFlowIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("Authenticated request with invalid token returns 403")
-    void invalidToken_returns403() throws Exception {
+    @DisplayName("Authenticated request with invalid token returns 401")
+    void invalidToken_returns401() throws Exception {
         mockMvc.perform(get("/api/trainings")
                         .header("Authorization", "Bearer invalid-token"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("Protected endpoint without auth returns 403")
-    void noAuth_protectedEndpoint_returns403() throws Exception {
+    @DisplayName("Protected endpoint without auth returns 401")
+    void noAuth_protectedEndpoint_returns401() throws Exception {
         mockMvc.perform(get("/api/trainings"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 }

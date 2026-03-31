@@ -11,15 +11,15 @@
     <!-- ZONE 1: Lead -->
     <div class="sc-lead">
       <div class="sc-lead__left">
-        <div class="card-header">
-          <app-sport-icon [sport]="$any(session.sport)" [size]="20"></app-sport-icon>
-          <div class="card-header-info">
-            <span class="card-title" [class.sc-title--cancelled]="isCancelled()">{{ session.title }}</span>
-            <span class="card-subtitle">{{ formatTime() }}</span>
-          </div>
-          @if (session.durationMinutes) {
-          <span class="sc-duration">{{ session.durationMinutes }}min</span>
-          }
+        <app-sport-icon [sport]="$any(session.sport)" [size]="24"></app-sport-icon>
+        <div class="card-header-info">
+          <span class="card-title" [class.sc-title--cancelled]="isCancelled()">{{ session.title }}</span>
+          <span class="card-subtitle">
+            {{ formatTime() }}
+            @if (session.durationMinutes) {
+              <span class="sc-duration">{{ session.durationMinutes }}min</span>
+            }
+          </span>
         </div>
         @if (session.recurringTemplateId) {
         <span class="sc-recurring-icon">
@@ -71,13 +71,13 @@
         }
       </div>
     </div>
-    <!-- Creator -->
-    @if (getCreatorName(); as name) {
-    <span class="sc-creator">{{ 'CLUB_SESSIONS.PROPOSED_BY' | translate: { name } }}</span>
-    }
+
 
     <!-- ZONE 3: Tags -->
     <div class="sc-tags">
+      @if (getCreatorName(); as name) {
+        <span class="sc-creator">{{ 'CLUB_SESSIONS.PROPOSED_BY' | translate: { name } }}</span>
+      }
       @if (session.clubGroupId) {
       <span class="sc-tag sc-tag--group">{{ getGroupName(session.clubGroupId) }}</span>
       }
@@ -107,27 +107,11 @@
       }
     </div>
 
-    <!-- GPX actions + metadata -->
-    @if (session.gpxFileName) {
+    <!-- GPX metadata (only shown when no route/map — stats go on the map overlay when route exists) -->
+    @if (session.gpxFileName && !session.routeCoordinates?.length) {
     <div class="gpx-row">
       <div class="gpx-actions">
         <span class="gpx-badge">{{ session.gpxFileName }}</span>
-        @if (session.routeCoordinates?.length) {
-        <div class="gpx-meta">
-            <span class="gpx-stat">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                   stroke-linecap="round" stroke-linejoin="round"><polyline
-                points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-              {{ getElevationGain() }}m
-            </span>
-          <span class="gpx-stat">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                   stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline
-                points="12 5 19 12 12 19"/></svg>
-              {{ getTotalDistanceKm() }}km
-            </span>
-        </div>
-        }
         <button class="gpx-btn" (click)="onDownloadGpx($event)" [title]="'COMMON.DOWNLOAD' | translate">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round">
@@ -136,18 +120,7 @@
             <line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
         </button>
-        <button class="gpx-btn" (click)="onShareGpx($event)" [title]="'COMMON.SHARE' | translate">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-               stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="18" cy="5" r="3"/>
-            <circle cx="6" cy="12" r="3"/>
-            <circle cx="18" cy="19" r="3"/>
-            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-          </svg>
-        </button>
       </div>
-
     </div>
     }
 
@@ -185,7 +158,7 @@
 
     <div class="sc-detail">
       <div class="sc-detail__section">
-        <div class="sc-detail__title">{{ 'CLUB_SESSIONS.DETAIL_ATTENDING' | translate: { count:
+        <div class="sc-detail__title sc-detail__title--accent">{{ 'CLUB_SESSIONS.DETAIL_ATTENDING' | translate: { count:
           session.participantIds.length } }}
         </div>
         @if (session.participantIds.length > 0) {
@@ -236,17 +209,17 @@
       @if (!isCancelled()) {
       <div class="sc-actions">
         @if (!isParticipant() && !isOnWaitingList()) {
-        <button class="btn-primary btn-sm" (click)="onJoin($event)">
+        <button class="sc-join-btn" (click)="onJoin($event)">
           {{ isFull() ? ('CLUB_SESSIONS.BTN_JOIN_WAITING_LIST' | translate) : ('CLUB_SESSIONS.BTN_JOIN' | translate) }}
         </button>
         }
         @if (isParticipant()) {
-        <button class="btn-ghost btn-sm" (click)="onLeave($event)">
+        <button class="sc-leave-btn" (click)="onLeave($event)">
           {{ 'CLUB_SESSIONS.BTN_REMOVE_PARTICIPATION' | translate }}
         </button>
         }
         @if (isOnWaitingList()) {
-        <button class="btn-ghost btn-sm" (click)="onLeave($event)">
+        <button class="sc-leave-btn" (click)="onLeave($event)">
           {{ 'CLUB_SESSIONS.BTN_LEAVE_WAITING_LIST' | translate }}
         </button>
         }
@@ -260,6 +233,46 @@
   @if (session.routeCoordinates?.length) {
   <div class="sc-card__map">
     <app-route-map [routeCoordinates]="toRouteCoordinates()"></app-route-map>
+
+    <!-- GPX overlay: filename + stats at top, actions at bottom -->
+    <div class="sc-map-overlay-top">
+      @if (session.gpxFileName) {
+        <span class="sc-map-badge">{{ session.gpxFileName }}</span>
+      }
+      <span class="gpx-stat">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round"><polyline
+          points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        {{ getElevationGain() }}m
+      </span>
+      <span class="gpx-stat">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline
+          points="12 5 19 12 12 19"/></svg>
+        {{ getTotalDistanceKm() }}km
+      </span>
+    </div>
+
+    <div class="sc-map-overlay-bottom">
+      <button class="sc-map-btn" (click)="onShareGpx($event)" [title]="'COMMON.SHARE' | translate">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="5" r="3"/>
+          <circle cx="6" cy="12" r="3"/>
+          <circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+      </button>
+      <button class="sc-map-btn" (click)="onDownloadGpx($event)" [title]="'COMMON.DOWNLOAD' | translate">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </button>
+    </div>
   </div>
   }
 </div>

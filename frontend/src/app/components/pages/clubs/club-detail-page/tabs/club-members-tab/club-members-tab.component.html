@@ -89,7 +89,7 @@
                 <div class="member-name-row">
                   <span class="member-name">{{ m.displayName || m.userId }}</span>
                   @for (tagName of (m.tags || []); track tagName) {
-                    <span class="club-tag small">
+                    <span class="club-tag">
                       {{ tagName }}
                       @if (isAdmin) {
                         <button

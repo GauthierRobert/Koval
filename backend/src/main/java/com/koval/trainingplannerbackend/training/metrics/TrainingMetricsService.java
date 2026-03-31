@@ -110,7 +110,7 @@ public class TrainingMetricsService {
                         z -> z.label().toUpperCase(),
                         z -> new ZoneResolution((z.low() + z.high()) / 2,
                                 z.label() + " - " + (z.description() != null ? z.description() : "") + " (" + z.low() + "-" + z.high() + "%)"),
-                        (a, _) -> a));
+                        (a, b) -> a));
     }
 
     private boolean hasZoneTargetsRecursive(List<WorkoutElement> elements) {

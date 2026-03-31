@@ -22,7 +22,16 @@ async function devLogin(
     throw new Error(`devLogin failed: ${response.status()} ${await response.text()}`);
   }
   const body = await response.json();
-  return { id: userId, displayName, role, token: body.token };
+  const token = body.token;
+
+  // Accept CGU so the modal doesn't block tests
+  if (body.user?.needsCguAcceptance) {
+    await apiContext.post(`${API_URL}/api/auth/cgu/accept`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  }
+
+  return { id: userId, displayName, role, token };
 }
 
 export async function loginAsCoach(apiContext: APIRequestContext): Promise<TestUser> {
