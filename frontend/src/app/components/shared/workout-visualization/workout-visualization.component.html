@@ -15,7 +15,7 @@
               </div>
             }
           </div>
-          <button class="btn-primary" (click)="toggleUnits()">
+          <button class="btn-primary" (click)="toggleUnits()" [disabled]="!hasReferenceValue()">
             {{ displayUnit === 'PERCENT' ? '%' : getSportUnit() }}
           </button>
           @if (isOwner()) {
@@ -218,7 +218,7 @@
         <div class="zone-repartition glass">
           <div class="panel-header">{{ 'WORKOUT_VIZ.ZONE_DISTRIBUTION_HEADING' | translate }}</div>
           <div class="zone-bars">
-            @for (zone of getZoneRepartition(); track zone) {
+            @for (zone of getZoneRepartition(); track zone.label) {
               <div class="zone-row">
                 <span class="zone-label">{{ zone.label }}</span>
                 <div class="bar-track">

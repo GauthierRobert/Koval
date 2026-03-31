@@ -74,7 +74,20 @@ export class WorkoutVisualizationComponent {
     }
   }
 
+  hasReferenceValue(): boolean {
+    if (!this.training) return false;
+    const user = this.authService.currentUser;
+    if (this.training.sportType === 'CYCLING') return !!user?.ftp;
+    if (this.training.sportType === 'RUNNING') return !!user?.functionalThresholdPace;
+    if (this.training.sportType === 'SWIMMING') return !!user?.criticalSwimSpeed;
+    return false;
+  }
+
   toggleUnits() {
+    if (!this.hasReferenceValue()) {
+      this.displayUnit = 'PERCENT';
+      return;
+    }
     this.displayUnit = this.displayUnit === 'PERCENT' ? 'ABSOLUTE' : 'PERCENT';
   }
 
