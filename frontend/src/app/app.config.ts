@@ -1,6 +1,7 @@
-import {ApplicationConfig, importProvidersFrom, provideBrowserGlobalErrorListeners} from '@angular/core';
+import {ApplicationConfig, importProvidersFrom, isDevMode, provideBrowserGlobalErrorListeners} from '@angular/core';
 import {provideRouter} from '@angular/router';
 import {provideHttpClient, withInterceptors} from '@angular/common/http';
+import {provideServiceWorker} from '@angular/service-worker';
 import {TranslateModule} from '@ngx-translate/core';
 import {provideTranslateHttpLoader} from '@ngx-translate/http-loader';
 
@@ -18,6 +19,10 @@ export const appConfig: ApplicationConfig = {
         defaultLanguage: 'en'
       })
     ),
-    provideTranslateHttpLoader({prefix: './i18n/', suffix: '.json'})
+    provideTranslateHttpLoader({prefix: './i18n/', suffix: '.json'}),
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
   ]
 };
