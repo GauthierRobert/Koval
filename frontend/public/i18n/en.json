@@ -1145,7 +1145,12 @@
     "BTN_CHANGE": "Change",
     "BTN_EDIT_TITLE": "Edit",
     "BTN_DELETE_TITLE": "Delete",
-    "DELETE_CONFIRM": "Delete \"{{title}}\"?"
+    "DELETE_CONFIRM": "Delete \"{{title}}\"?",
+    "COUNTDOWN_DAYS": "days",
+    "COUNTDOWN_WEEKS": "weeks",
+    "COUNTDOWN_PAST": "past",
+    "SECTION_COUNTDOWN": "COUNTDOWN",
+    "SECTION_DETAILS": "DETAILS"
   },
   "RACES": {
     "PAGE_TITLE": "Races",

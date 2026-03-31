@@ -9,12 +9,12 @@ import {map} from 'rxjs/operators';
 import {CountryFacet, PageResponse, Race, RaceService, SportFacet,} from '../../../services/race.service';
 import {RaceGoalService} from '../../../services/race-goal.service';
 import {AuthService} from '../../../services/auth.service';
-import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
+import {RaceSummaryCardComponent} from '../../shared/race-summary-card/race-summary-card.component';
 
 @Component({
   selector: 'app-races-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, SportIconComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, RaceSummaryCardComponent],
   templateUrl: './races-page.component.html',
   styleUrl: './races-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -354,6 +354,19 @@ export class RacesPageComponent implements OnInit {
         this.cdr.markForCheck();
       },
     });
+  }
+
+  onEditFormChange(form: Partial<Race>): void {
+    this.editForm = form;
+    this.cdr.markForCheck();
+  }
+
+  onGpxFileFromCard(ev: {race: Race; discipline: string; event: Event}): void {
+    this.onGpxFileSelected(ev.event, ev.race, ev.discipline);
+  }
+
+  onLoopsFromCard(ev: {race: Race; discipline: string; event: Event}): void {
+    this.updateLoops(ev.race, ev.discipline, ev.event);
   }
 
   formatDistance(meters?: number): string {

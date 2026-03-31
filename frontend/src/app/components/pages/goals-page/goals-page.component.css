@@ -86,7 +86,7 @@
   cursor: pointer;
   transition: background 0.12s;
   border-bottom: 1px solid var(--surface-elevated);
-  min-height: 52px;
+  min-height: 62px;
 }
 
 .sidebar-goal-item:hover {
@@ -140,12 +140,18 @@
   min-width: 0;
 }
 
-.sidebar-goal-year {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: var(--text-30);
-  letter-spacing: 0.05em;
+.sidebar-priority-mini {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
   flex-shrink: 0;
+  letter-spacing: 0;
 }
 
 .sidebar-goal-row2 {
@@ -162,7 +168,31 @@
 .sidebar-goal-countdown {
   font-size: 0.68rem;
   font-weight: 700;
-  color: var(--accent-color, #ff9d00);
+}
+
+.sidebar-goal-countdown--past {
+  color: var(--text-30);
+  font-weight: 600;
+  font-style: italic;
+}
+
+/* Mini progress bar in sidebar */
+.sidebar-goal-row3 {
+  margin-top: 0.15rem;
+}
+
+.sidebar-mini-progress {
+  height: 2px;
+  background: var(--glass-border);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.sidebar-mini-progress-fill {
+  height: 100%;
+  background: var(--accent-color, #ff9d00);
+  border-radius: 1px;
+  transition: width 0.3s;
 }
 
 .sidebar-empty {
@@ -182,7 +212,7 @@
 
 /* ── Detail: Header ───────────────────────────────────────────────── */
 .detail-header {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .detail-title-row {
@@ -255,12 +285,151 @@
   border-color: rgba(239, 68, 68, 0.3);
 }
 
+/* ── Detail: Section card ────────────────────────────────────────── */
+.detail-section {
+  background: var(--overlay-3);
+  border: 1px solid var(--overlay-8);
+  border-radius: var(--radius-md, 10px);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.detail-section-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-35);
+  margin-bottom: 0.65rem;
+}
+
+/* ── Detail: Countdown Hero ──────────────────────────────────────── */
+.detail-countdown-hero {
+  background: var(--overlay-5);
+  border-color: var(--overlay-12);
+}
+
+.countdown-layout {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.countdown-ring {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--ring-color, var(--accent-color)) 0% var(--progress, 0%),
+    var(--glass-border) var(--progress, 0%) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.countdown-ring-inner {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--surface-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.countdown-days-number {
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.countdown-days-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--text-40);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.countdown-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.countdown-weeks {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-90);
+}
+
+.countdown-date {
+  font-size: 0.82rem;
+  color: var(--text-50);
+}
+
+.countdown-progress-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.progress-bar-track {
+  height: 4px;
+  background: var(--glass-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent-color, #ff9d00);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.progress-label {
+  font-size: 0.68rem;
+  color: var(--text-35);
+  letter-spacing: 0.04em;
+}
+
+/* ── Detail: Past banner ─────────────────────────────────────────── */
+.detail-past-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--overlay-3);
+  border-color: var(--overlay-8);
+}
+
+.past-banner-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-30);
+}
+
+.past-banner-date {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-50);
+}
+
 /* ── Detail: Meta grid ────────────────────────────────────────────── */
 .detail-meta-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 0.75rem;
-  margin-bottom: 1.25rem;
 }
 
 .detail-meta-item {
@@ -268,7 +437,7 @@
   flex-direction: column;
   gap: 0.2rem;
   padding: 0.6rem 0.75rem;
-  background: var(--surface-raised);;
+  background: var(--surface-raised);
   border: 1px solid var(--overlay-8);
   border-radius: 6px;
 }
@@ -291,54 +460,7 @@
   color: var(--accent-color, #ff9d00);
 }
 
-/* ── Detail: Progress ─────────────────────────────────────────────── */
-.detail-progress {
-  margin-bottom: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.progress-bar-track {
-  height: 5px;
-  background: var(--glass-border);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  background: var(--accent-color, #ff9d00);
-  border-radius: 3px;
-  transition: width 0.3s;
-}
-
-.progress-label {
-  font-size: 0.68rem;
-  color: var(--text-35);
-  letter-spacing: 0.04em;
-}
-
-/* ── Detail: Section label ────────────────────────────────────────── */
-.detail-section-label {
-  display: block;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-35);
-  margin-bottom: 0.5rem;
-}
-
 /* ── Detail: Notes ────────────────────────────────────────────────── */
-.detail-notes {
-  margin-bottom: 1.25rem;
-  padding: 0.75rem;
-  background: var(--overlay-3);
-  border-radius: 6px;
-  border: 1px solid var(--overlay-8);
-}
-
 .detail-notes-text {
   font-size: 0.85rem;
   color: var(--text-60);
@@ -347,10 +469,6 @@
 }
 
 /* ── Detail: Race info ────────────────────────────────────────────── */
-.detail-race-info {
-  margin-bottom: 1.25rem;
-}
-
 .detail-race-distances {
   display: flex;
   flex-wrap: wrap;
@@ -377,15 +495,10 @@
 }
 
 /* ── Detail: GPX section ──────────────────────────────────────────── */
-.detail-gpx-section {
+.detail-gpx-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  margin-bottom: 1.25rem;
-}
-
-.detail-gpx-section .detail-section-label {
-  grid-column: 1 / -1;
 }
 
 .detail-gpx-discipline {
@@ -464,13 +577,6 @@
 }
 
 /* ── Detail: Simulate ─────────────────────────────────────────────── */
-.detail-simulate {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
 .btn-simulate {
   background: linear-gradient(135deg, var(--accent-color, #ff9d00), #ff6b00);
   color: #000;
@@ -482,7 +588,6 @@
   letter-spacing: 0.06em;
   cursor: pointer;
   transition: opacity 0.15s;
-  align-self: flex-start;
 }
 
 .btn-simulate:hover { opacity: 0.85; }
@@ -491,6 +596,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  margin-top: 1rem;
 }
 
 .sim-request-item {
@@ -498,7 +604,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.4rem 0.75rem;
-  background: var(--surface-raised);;
+  background: var(--surface-raised);
   border-radius: var(--radius-sm, 6px);
   border: 1px solid var(--overlay-8);
 }
@@ -863,7 +969,7 @@ input[type='date'].form-input::-webkit-calendar-picker-indicator {
     font-size: 1.1rem;
   }
 
-  .detail-gpx-section {
+  .detail-gpx-grid {
     grid-template-columns: 1fr;
   }
 
@@ -889,6 +995,24 @@ input[type='date'].form-input::-webkit-calendar-picker-indicator {
   .detail-actions {
     margin-left: 0;
   }
+
+  .countdown-layout {
+    gap: 1rem;
+  }
+
+  .countdown-ring {
+    width: 80px;
+    height: 80px;
+  }
+
+  .countdown-ring-inner {
+    width: 66px;
+    height: 66px;
+  }
+
+  .countdown-days-number {
+    font-size: 1.4rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -911,5 +1035,11 @@ input[type='date'].form-input::-webkit-calendar-picker-indicator {
 
   .modal-body {
     padding: 1rem;
+  }
+
+  .countdown-layout {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
   }
 }

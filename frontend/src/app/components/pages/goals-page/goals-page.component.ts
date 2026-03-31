@@ -337,6 +337,24 @@ export class GoalsPageComponent implements OnInit {
 
   // ── Discipline helpers ────────────────────────────────────────────
 
+  getUrgencyColor(goal: RaceGoal): string {
+    if (!goal.raceDate || !this.isUpcoming(goal)) return 'var(--text-30)';
+    const days = this.daysUntil(goal.raceDate);
+    if (days <= 14) return 'var(--danger-color)';
+    if (days <= 28) return 'var(--accent-color)';
+    return 'var(--success-color)';
+  }
+
+  getSportColor(sport: string): string {
+    switch (sport?.toUpperCase()) {
+      case 'CYCLING': return 'var(--success-color)';
+      case 'RUNNING': return '#fb923c';
+      case 'SWIMMING': return 'var(--info-text)';
+      case 'TRIATHLON': return 'var(--accent-color)';
+      default: return 'var(--text-30)';
+    }
+  }
+
   formatDistance(meters?: number): string {
     if (!meters) return '';
     if (meters >= 1000) return (meters / 1000).toFixed(1) + ' km';

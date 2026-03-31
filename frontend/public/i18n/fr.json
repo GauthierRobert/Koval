@@ -1145,7 +1145,12 @@
     "BTN_CHANGE": "Changer",
     "BTN_EDIT_TITLE": "Modifier",
     "BTN_DELETE_TITLE": "Supprimer",
-    "DELETE_CONFIRM": "Supprimer \"{{title}}\" ?"
+    "DELETE_CONFIRM": "Supprimer \"{{title}}\" ?",
+    "COUNTDOWN_DAYS": "jours",
+    "COUNTDOWN_WEEKS": "semaines",
+    "COUNTDOWN_PAST": "passé",
+    "SECTION_COUNTDOWN": "COMPTE À REBOURS",
+    "SECTION_DETAILS": "DÉTAILS"
   },
   "RACES": {
     "PAGE_TITLE": "Courses",
