@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.75);
+  background: var(--overlay-backdrop);
   backdrop-filter: blur(4px);
 }
 
@@ -49,7 +49,7 @@
   min-height: 200px;
   max-height: 50vh;
   overflow: auto;
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--glass-border, var(--overlay-8));
   border-radius: var(--radius-sm, 6px);
 }
 

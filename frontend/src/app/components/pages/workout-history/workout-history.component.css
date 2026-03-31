@@ -94,7 +94,7 @@
 
 .sync-result.sync-empty {
   background: var(--surface-elevated);
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--overlay-10);
   color: var(--text-muted);
 }
 
@@ -139,8 +139,8 @@
 }
 
 .date-input {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--overlay-5);
+  border: 1px solid var(--overlay-10);
   border-radius: var(--radius-sm);
   color: var(--text-color, #fff);
   padding: 4px 8px;
@@ -253,7 +253,7 @@
 
 .metric-chip.dur,
 .metric-chip.if {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--overlay-5);
   border: 1px solid var(--glass-border);
   color: var(--text-muted);
 }
@@ -415,7 +415,7 @@
 
 /* ── List toggle button (mobile) ───────────────────────────────────── */
 .list-toggle-btn {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--overlay-8);
   border: 1px solid var(--glass-border);
   border-radius: 8px;
   color: var(--text-muted);
@@ -429,7 +429,7 @@
 }
 
 .list-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--overlay-10);
   color: var(--text-color);
 }
 

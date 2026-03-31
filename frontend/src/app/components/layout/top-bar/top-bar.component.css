@@ -11,7 +11,7 @@
       align-items: center;
       padding: 0 32px;
       border-bottom: 1px solid var(--glass-border);
-      background: rgba(15, 15, 17, 0.98);
+      background: var(--glass-bg);
       position: relative;
       z-index: 1000;
     }
@@ -63,11 +63,11 @@
     }
 
     .nav-link:hover {
-      color: var(--color-white);
+      color: var(--text-color);
     }
 
     .nav-link.active {
-      color: var(--color-white);
+      color: var(--text-color);
     }
 
     .nav-link.active::after {
@@ -115,7 +115,7 @@
       min-width: 220px;
       border-radius: 12px;
       padding: 6px;
-      background: rgba(18, 18, 22, 0.98);
+      background: var(--surface-card);
       border: 1px solid var(--glass-border);
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
       animation: dropdownIn 0.15s cubic-bezier(0.4, 0, 0.2, 1);
@@ -228,8 +228,8 @@
       display: flex;
       align-items: center;
       gap: 4px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--surface-elevated);
+      border: 1px solid var(--glass-border);
       border-radius: 8px;
       padding: 0 10px;
       height: 36px;
@@ -269,8 +269,8 @@
 
     .device-btn {
       position: relative;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--surface-elevated);
+      border: 1px solid var(--glass-border);
       border-radius: 8px;
       width: 36px;
       height: 36px;
@@ -283,8 +283,8 @@
     }
 
     .device-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.2);
+      background: var(--surface-hover);
+      border-color: var(--glass-border);
       color: var(--text-color);
     }
 
@@ -298,7 +298,7 @@
       top: -4px;
       right: -4px;
       background: var(--accent-color);
-      color: var(--color-black);
+      color: var(--on-primary-color);
       font-size: 9px;
       font-weight: 800;
       width: 16px;
@@ -315,7 +315,7 @@
     }
 
     .action-btn {
-      background: rgba(255, 157, 0, 0.08);
+      background: var(--accent-subtle);
       color: var(--accent-color);
       border: 1px solid rgba(255, 157, 0, 0.2);
       padding: 8px 24px;
@@ -339,7 +339,7 @@
       right: 0;
       margin-top: 12px;
       width: 320px;
-      background: rgba(22, 22, 28, 0.97);
+      background: var(--surface-card);
       border: 1px solid var(--glass-border);
       border-radius: 16px;
       padding: 20px;
@@ -410,7 +410,7 @@
 
     .submit-btn {
       background: var(--accent-color);
-      color: var(--color-white);
+      color: var(--on-primary-color);
       border: none;
       padding: 10px 20px;
       border-radius: 6px;
@@ -443,7 +443,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-top: 1px solid var(--glass-border);
     }
 
     .avatar {
@@ -456,7 +456,7 @@
       justify-content: center;
       font-weight: 800;
       font-size: 12px;
-      color: var(--color-black);
+      color: var(--on-primary-color);
     }
 
     .user-info {
@@ -475,7 +475,7 @@
 .logout-btn {
   margin-left: auto;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
   border-radius: 8px;
   padding: 6px;
   color: var(--text-muted);
@@ -489,7 +489,7 @@
 .logout-btn:hover {
   background: var(--glass-border);
   color: var(--danger-color, #ef4444);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--glass-border);
 }
 .status {
   font-size: 10px;
@@ -504,8 +504,8 @@
 
 .lang-toggle {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--text-secondary, #a0a0a0);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -517,8 +517,8 @@
 }
 
 .lang-toggle:hover {
-  color: var(--text-primary, #fff);
-  border-color: rgba(255, 255, 255, 0.4);
+  color: var(--text-color);
+  border-color: var(--accent-color);
 }
 
 /* ─── Hamburger Button ──────────────────────────────────────── */
@@ -537,7 +537,7 @@
 }
 
 .hamburger-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-hover);
 }
 
 /* ─── Mobile Backdrop ───────────────────────────────────────── */
@@ -563,7 +563,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(15, 15, 17, 0.98);
+    background: var(--glass-bg);
     backdrop-filter: blur(20px);
     flex-direction: column;
     padding: 16px;
@@ -586,7 +586,7 @@
   }
 
   .nav-link:hover {
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--surface-elevated);
   }
 
   .nav-link.active::after {
@@ -594,12 +594,12 @@
   }
 
   .nav-link.active {
-    background: rgba(255, 157, 0, 0.08);
+    background: var(--accent-subtle);
     color: var(--accent-color);
   }
 
   .nav-link--coach.active {
-    background: rgba(0, 160, 233, 0.08);
+    background: var(--info-subtle);
     color: var(--secondary-color);
   }
 
@@ -671,7 +671,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--overlay-backdrop);
     z-index: 998;
   }
 }

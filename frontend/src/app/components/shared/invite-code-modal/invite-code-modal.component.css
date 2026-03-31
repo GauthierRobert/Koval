@@ -1,7 +1,7 @@
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.55);
+      background: var(--overlay-backdrop);
       backdrop-filter: blur(6px);
       display: flex;
       align-items: center;
@@ -37,8 +37,8 @@
     .highlight { color: var(--accent-color); }
 
     .close-btn {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--overlay-8);
+      border: 1px solid var(--overlay-10);
       color: var(--text-muted);
       font-size: 18px;
       width: 32px;
@@ -51,7 +51,7 @@
       transition: all 0.2s;
     }
 
-    .close-btn:hover { background: rgba(255, 255, 255, 0.1); color: var(--text-color); }
+    .close-btn:hover { background: var(--overlay-10); color: var(--text-color); }
 
     .modal-body {
       display: flex;
@@ -100,9 +100,9 @@
       font-weight: 700;
       padding: 6px 14px;
       border-radius: 20px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: #bbb;
+      background: var(--overlay-8);
+      border: 1px solid var(--overlay-12);
+      color: var(--text-muted);
       cursor: pointer;
       transition: all 0.2s;
     }
@@ -122,11 +122,11 @@
     .tag-add-inline { display: flex; align-items: center; gap: 6px; }
 
     .tag-input {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: var(--overlay-8);
+      border: 1px solid var(--overlay-12);
       border-radius: 20px;
       padding: 6px 14px;
-      color: var(--color-light-gray);
+      color: var(--text-muted);
       font-size: 12px;
       font-family: inherit;
       width: 120px;
@@ -161,7 +161,7 @@
       padding: 6px 12px;
       border-radius: 20px;
       background: none;
-      border: 1px dashed rgba(255, 255, 255, 0.18);
+      border: 1px dashed var(--overlay-20);
       color: var(--text-muted);
       cursor: pointer;
       transition: all 0.2s;
@@ -170,11 +170,11 @@
     .tag-new-btn:hover { color: var(--accent-color); border-color: var(--accent-color); }
 
     .num-input {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: var(--overlay-8);
+      border: 1px solid var(--overlay-12);
       border-radius: 10px;
       padding: 10px 14px;
-      color: var(--color-light-gray);
+      color: var(--text-muted);
       font-size: 14px;
       font-family: inherit;
       width: 110px;
@@ -186,7 +186,7 @@
 
     .generate-btn {
       background: var(--accent-color);
-      color: var(--color-black);
+      color: var(--on-primary-color);
       border: none;
       padding: 12px 28px;
       border-radius: 10px;
@@ -263,8 +263,8 @@
     }
 
     .toggle-inactive-btn {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--overlay-5);
+      border: 1px solid var(--overlay-10);
       color: var(--text-muted);
       font-size: 9px;
       font-weight: 700;
@@ -276,7 +276,7 @@
     }
 
     .toggle-inactive-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--overlay-10);
       color: var(--text-color);
     }
 
@@ -293,12 +293,12 @@
       padding: 12px 16px;
       border-radius: 12px;
       background: var(--surface-raised);;
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--overlay-8);
       gap: 16px;
       transition: background 0.2s;
     }
 
-    .code-row:hover { background: rgba(255, 255, 255, 0.05); }
+    .code-row:hover { background: var(--overlay-5); }
     .code-row.inactive { opacity: 0.35; }
 
     .code-left {
@@ -382,7 +382,7 @@
       letter-spacing: 1px;
       padding: 4px 10px;
       border-radius: 6px;
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--overlay-5);
       flex-shrink: 0;
     }
 

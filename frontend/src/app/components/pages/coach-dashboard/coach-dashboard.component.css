@@ -103,7 +103,7 @@
 }
 
 .coach-tabs button {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--overlay-5);
   border: 1px solid var(--glass-border);
   color: var(--text-muted);
   padding: var(--space-sm) 14px;
@@ -296,8 +296,8 @@
   padding: 3px 8px;
   border-radius: 10px;
   background: var(--glass-border);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: var(--color-medium-gray);
+  border: 1px solid var(--overlay-15);
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -362,7 +362,7 @@
   justify-content: center;
   font-weight: 800;
   font-size: 18px;
-  color: var(--color-white);
+  color: var(--on-primary-color);
   flex-shrink: 0;
 }
 
@@ -425,7 +425,7 @@
 
 .tag-input {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--overlay-10);
   border-radius: var(--radius-md);
   padding: 2px var(--space-sm);
   color: var(--text-muted);
@@ -468,13 +468,13 @@
 
 .share-btn:hover {
   background: var(--surface-hover);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--overlay-15);
 }
 
 .ai-btn-corner {
   border-radius: var(--space-sm);
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--overlay-5);
   color: var(--text-muted);
   cursor: pointer;
   padding: var(--space-sm) var(--space-md);
@@ -551,7 +551,7 @@
 }
 
 .m-card:hover {
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: var(--overlay-12);
 }
 
 .m-label {
@@ -672,7 +672,7 @@
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--overlay-8);
   color: var(--text-muted);
 }
 
@@ -706,7 +706,7 @@
 }
 
 .table-row:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--overlay-3);
 }
 
 .table-row:last-child {
@@ -816,7 +816,7 @@
   margin-top: var(--space-md);
   padding: var(--card-padding);
   background: var(--surface-raised);;
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--overlay-8);
   border-radius: var(--radius-lg);
 }
 
@@ -899,8 +899,8 @@
 }
 
 .sm-badge.if {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--overlay-5);
+  border: 1px solid var(--overlay-10);
   color: var(--text-muted);
 }
 
@@ -1069,7 +1069,7 @@
 
 .dist-bar-wrap {
   height: 6px;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--overlay-8);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -1134,7 +1134,7 @@
 }
 
 .hist-row:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--overlay-3);
 }
 
 .hist-row.clickable:hover {
@@ -1172,19 +1172,19 @@
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.4);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-40);
+  border-bottom: 1px solid var(--overlay-8);
 }
 
 .goals-table td {
   padding: 0.65rem 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid var(--overlay-5);
+  color: var(--text-80);
   vertical-align: top;
 }
 
 .goals-table tr:last-child td { border-bottom: none; }
-.goals-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+.goals-table tr:hover td { background: var(--overlay-3); }
 
 .goal-priority-dot {
   display: inline-flex;
@@ -1209,14 +1209,14 @@
   padding: 2px 6px;
   border-radius: 10px;
   background: var(--glass-border);
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-60);
 }
 
 .days-badge-coach.past { color: var(--danger-color); background: rgba(239, 68, 68, 0.15); }
 
 .notes-cell {
   max-width: 200px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-45);
   font-size: 0.78rem;
 }
 

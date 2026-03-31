@@ -26,7 +26,7 @@
 
 .date-filters input {
   padding: 0.4rem 0.6rem;
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--border, var(--overlay-10));
   border-radius: 6px;
   background: var(--input-bg, rgba(0, 0, 0, 0.2));
   color: var(--text-primary, #f0f0f0);
@@ -42,7 +42,7 @@
   display: flex;
   gap: 2px;
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-bottom: 1px solid var(--border, var(--overlay-8));
 }
 
 .tab {
@@ -132,7 +132,7 @@
 
 .volume-controls select {
   padding: 0.4rem 0.6rem;
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--border, var(--overlay-10));
   border-radius: 6px;
   background: var(--input-bg, rgba(0, 0, 0, 0.2));
   color: var(--text-primary, #f0f0f0);
@@ -159,14 +159,14 @@
   letter-spacing: 0.5px;
   color: var(--text-tertiary, #707070);
   padding: 0.5rem;
-  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-bottom: 1px solid var(--border, var(--overlay-8));
 }
 
 .volume-table td {
   font-size: 0.8rem;
   color: var(--text-primary, #f0f0f0);
   padding: 0.5rem;
-  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.05));
+  border-bottom: 1px solid var(--border, var(--overlay-5));
 }
 
 /* Records grid */

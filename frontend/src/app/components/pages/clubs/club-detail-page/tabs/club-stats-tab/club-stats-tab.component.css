@@ -117,48 +117,237 @@
   font-weight: 500;
 }
 
-/* ── Attendance table ── */
-.attendance-table {
-  border-radius: var(--radius-lg);
-  padding: 12px;
-  overflow-x: auto;
+/* ── Recurring session cards ── */
+.recurring-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.att-header {
-  display: grid;
-  grid-template-columns: 90px 1fr 40px 70px 140px;
+.recurring-card {
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recurring-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.recurring-title-row {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  padding: 0 4px 8px;
+}
+
+.recurring-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.group-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--accent-color);
+  color: var(--surface-color, #1a1a2e);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.recurring-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.meta-chip {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--surface-raised);
+  color: var(--text-dim);
+}
+
+.meta-chip.capacity {
+  color: var(--accent-color);
+}
+
+/* ── Week columns ── */
+.week-columns {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.week-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: var(--radius-md);
+  background: var(--overlay-3);
+}
+
+.week-label {
   font-size: 9px;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted);
-  opacity: 0.6;
-  border-bottom: 1px solid var(--glass-border);
+  opacity: 0.7;
 }
 
-.att-row {
-  display: grid;
-  grid-template-columns: 90px 1fr 40px 70px 140px;
-  gap: 8px;
-  padding: 8px 4px;
-  align-items: center;
+.week-fill-bar-track {
+  width: 100%;
+  height: 6px;
+  background: var(--overlay-8);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.week-fill-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.week-pct {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.week-count {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.week-empty {
   font-size: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  color: var(--text-muted);
+  opacity: 0.5;
+  padding: 6px 0;
 }
 
-.att-row:last-child {
+.week-cancelled {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--danger-color, #ef4444);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 6px 0;
+}
+
+/* ── Expand toggle ── */
+.expand-toggle {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: color 0.2s;
+}
+
+.expand-toggle:hover {
+  color: var(--accent-color);
+}
+
+.expand-chevron {
+  display: inline-block;
+  transition: transform 0.2s;
+  font-size: 10px;
+}
+
+.expand-chevron.expanded {
+  transform: rotate(180deg);
+}
+
+/* ── Athlete grid ── */
+.athlete-grid {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--glass-border);
+  padding-top: 8px;
+}
+
+.ag-row {
+  display: grid;
+  grid-template-columns: 1fr repeat(4, 50px);
+  gap: 4px;
+  padding: 5px 0;
+  align-items: center;
+  border-bottom: 1px solid var(--overlay-3);
+}
+
+.ag-row:last-child {
   border-bottom: none;
 }
 
-.att-date {
-  font-size: 11px;
-  color: var(--text-dim);
-  font-weight: 500;
+.ag-header-row {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.6;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--glass-border);
 }
 
-.att-title {
+.ag-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ag-week-cell {
+  text-align: center;
+  font-size: 12px;
+}
+
+.ag-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.ag-avatar-placeholder {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.ag-athlete-name {
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-color);
   white-space: nowrap;
@@ -166,104 +355,23 @@
   text-overflow: ellipsis;
 }
 
-.att-sport {
-  display: flex;
-  justify-content: center;
-}
-
-.att-count {
-  font-weight: 600;
-  text-align: center;
-  color: var(--text-dim);
-}
-
-.att-rate-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.att-bar-track {
-  flex: 1;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.att-bar {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.4s ease;
-}
-
-.att-pct {
-  font-size: 11px;
+.presence-check {
+  color: var(--success-color, #34d399);
   font-weight: 700;
-  color: var(--text-dim);
-  min-width: 32px;
-  text-align: right;
+  font-size: 13px;
 }
 
-/* ── Attendees list ── */
-.attendees-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.attendee-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-}
-
-.avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.avatar-placeholder {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--surface-raised);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
+.presence-cross {
+  color: var(--danger-color, #ef4444);
   font-weight: 700;
-  color: var(--text-dim);
+  font-size: 13px;
+  opacity: 0.6;
 }
 
-.attendee-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.attendee-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-color);
-}
-
-.attendee-detail {
-  font-size: 10px;
+.presence-na {
   color: var(--text-muted);
-  font-weight: 500;
-}
-
-.attendee-rate-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 140px;
+  opacity: 0.3;
+  font-size: 12px;
 }
 
 /* ── Trends ── */
@@ -352,7 +460,7 @@
 
 .sport-bar-track {
   height: 8px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--overlay-8);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -428,6 +536,26 @@
   color: var(--secondary-color, #60a5fa);
 }
 
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
 /* ── Empty state ── */
 .empty-tab {
   display: flex;
@@ -459,17 +587,12 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .att-header,
-  .att-row {
-    grid-template-columns: 70px 1fr 30px 50px 110px;
-  }
-
-  .attendee-rate-cell {
-    width: 110px;
-  }
-
   .active-metrics {
     flex-wrap: wrap;
+  }
+
+  .ag-row {
+    grid-template-columns: 1fr repeat(4, 40px);
   }
 }
 
@@ -486,16 +609,20 @@
     grid-template-columns: 1fr 1fr;
   }
 
-  .att-header,
-  .att-row {
-    grid-template-columns: 60px 1fr 60px 80px;
-  }
-
-  .att-sport {
-    display: none;
+  .week-columns {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
   }
 
   .sport-row {
     grid-template-columns: 20px 60px 1fr 36px;
+  }
+
+  .ag-row {
+    grid-template-columns: 1fr repeat(4, 32px);
+  }
+
+  .ag-athlete-name {
+    font-size: 10px;
   }
 }

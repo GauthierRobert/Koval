@@ -10,8 +10,8 @@
   font-weight: 700;
   padding: 5px 12px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  color: #aaa;
+  background: var(--overlay-5);
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
@@ -19,8 +19,8 @@
 }
 
 .filter-pill:hover {
-  background: rgba(255, 255, 255, 0.09);
-  color: #ddd;
+  background: var(--overlay-10);
+  color: var(--text-muted);
 }
 
 .filter-pill.selected {

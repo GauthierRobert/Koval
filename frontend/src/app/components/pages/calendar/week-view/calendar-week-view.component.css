@@ -93,7 +93,7 @@
 
 .workout-card.clickable:hover {
   background: var(--surface-hover);
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: var(--overlay-12);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -386,7 +386,7 @@
 /* ── Add button ────────────────────────────────────────────────────── */
 .add-btn {
   background: var(--surface-elevated);
-  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border: 1px dashed var(--overlay-12);
   border-radius: 6px;
   color: var(--text-muted);
   padding: 4px;
@@ -473,7 +473,7 @@
 .link-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--overlay-backdrop);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -573,7 +573,7 @@
 }
 
 .link-picker-cancel:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--overlay-10);
   color: var(--text-color);
 }
 
@@ -615,7 +615,7 @@
   justify-content: space-between;
   align-items: center;
   padding-top: 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  border-top: 1px solid var(--overlay-5);
   margin-top: 2px;
   font-size: 0.65rem;
   color: var(--text-muted);
@@ -651,7 +651,7 @@
 }
 
 .cs-status-dot--attending { background: var(--accent-color); }
-.cs-status-dot--waiting   { background: rgba(255, 255, 255, 0.3); }
+.cs-status-dot--waiting   { background: var(--overlay-30); }
 
 .linked-training-row {
   display: flex;
@@ -774,7 +774,7 @@
 .reschedule-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--overlay-backdrop);
   z-index: 1000;
   display: flex;
   align-items: center;

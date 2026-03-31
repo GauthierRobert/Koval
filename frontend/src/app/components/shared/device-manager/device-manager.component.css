@@ -7,7 +7,7 @@
       padding: 24px;
       z-index: 3000;
       animation: slideUp 0.3s ease-out;
-      background: rgba(22, 22, 28, 0.97);
+      background: var(--surface-card);
     }
     @keyframes slideUp { from { opacity: 0; transform: translate(-50%, -40%); } }
 
@@ -47,7 +47,7 @@
       color: var(--accent-color);
       border: 1px solid rgba(255, 157, 0, 0.2);
     }
-    .action-btn:hover:not(:disabled) { background: var(--accent-color); color: var(--color-black); }
+    .action-btn:hover:not(:disabled) { background: var(--accent-color); color: var(--on-primary-color); }
     .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .footer-note { font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.4; }

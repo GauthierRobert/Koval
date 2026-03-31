@@ -68,8 +68,8 @@
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--overlay-5);
+  border: 1px solid var(--overlay-10);
   color: var(--text-muted);
   padding: var(--space-xs) 10px;
   border-radius: var(--radius-sm);
@@ -132,7 +132,7 @@
   position: absolute;
   top: calc(100% + var(--space-sm));
   right: 0;
-  background: rgba(22, 22, 28, 0.95);
+  background: var(--surface-card);
   border: 1px solid var(--glass-border);
   border-radius: var(--space-sm);
   padding: 4px;
@@ -163,7 +163,7 @@
 }
 
 .nav-athletes-btn {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--overlay-5);
   border: 1px solid var(--glass-border);
   color: var(--text-color);
   padding: 7px 14px;
@@ -182,8 +182,8 @@
 }
 
 .close-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--overlay-5);
+  border: 1px solid var(--overlay-10);
   color: var(--text-muted);
   width: 28px;
   height: 28px;
@@ -374,8 +374,8 @@
 }
 
 .config-item select {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--overlay-5);
+  border: 1px solid var(--overlay-10);
   color: var(--text-color);
   padding: 6px 10px;
   border-radius: 6px;
@@ -390,8 +390,8 @@
 }
 
 .config-input {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--overlay-5);
+  border: 1px solid var(--overlay-10);
   color: var(--text-color);
   padding: 6px 10px;
   border-radius: 6px;
@@ -509,7 +509,7 @@
   display: grid;
   grid-template-columns: 28px 72px 180px 1fr 36px;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--overlay-8);
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 1px;
@@ -526,7 +526,7 @@
 }
 
 .zone-row:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--overlay-3);
 }
 
 .col-color {
@@ -560,7 +560,7 @@
 
 .zone-input {
   background: var(--surface-elevated);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--overlay-8);
   color: var(--text-color);
   padding: 5px var(--space-sm);
   border-radius: var(--space-xs);
@@ -620,8 +620,8 @@
 }
 
 .row-action:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--overlay-5);
+  border-color: var(--overlay-10);
 }
 
 .row-action.danger:hover {
@@ -632,7 +632,7 @@
 
 .add-zone-row {
   background: none;
-  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border: 1px dashed var(--overlay-8);
   color: var(--text-muted);
   padding: var(--space-sm);
   border-radius: var(--radius-sm);
@@ -718,9 +718,9 @@
   -webkit-appearance: none;
   width: 14px;
   height: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--overlay-20);
   border-radius: 3px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--overlay-5);
   cursor: pointer;
   position: relative;
   transition: all 0.2s;
@@ -760,7 +760,7 @@
 
 .annotations-input {
   background: var(--surface-elevated);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--overlay-8);
   color: var(--text-color);
   padding: 10px 12px;
   border-radius: 6px;

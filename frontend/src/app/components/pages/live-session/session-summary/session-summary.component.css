@@ -13,7 +13,7 @@
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     .summary-card {
-      background: #1a1a1a;
+      background: var(--surface-color);
       width: 90%;
       max-width: 900px;
       padding: 40px;
@@ -24,7 +24,7 @@
 
     .summary-header { text-align: center; margin-bottom: 40px; }
     .summary-header h1 { font-size: 14px; color: var(--accent-color); letter-spacing: 4px; margin-bottom: 8px; font-weight: 800; }
-    .workout-title { font-size: 32px; font-weight: 700; color: var(--color-white); }
+    .workout-title { font-size: 32px; font-weight: 700; color: var(--text-color); }
 
     .top-stats {
       display: grid;
@@ -39,7 +39,7 @@
       text-align: center;
     }
     .stat-item .label { display: block; font-size: 10px; color: rgba(255,255,255,0.5); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
-    .stat-item .value { font-size: 24px; font-weight: 800; color: var(--color-white); }
+    .stat-item .value { font-size: 24px; font-weight: 800; color: var(--text-color); }
     .stat-item .value.hr { color: var(--negative-color); }
 
     .table-container {
@@ -66,7 +66,7 @@
     .summary-table td {
       padding: 15px 20px;
       font-size: 15px;
-      color: var(--color-white);
+      color: var(--text-color);
       border-bottom: 1px solid rgba(255,255,255,0.03);
     }
 
@@ -98,9 +98,9 @@
       display: flex;
       align-items: center;
       gap: 7px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: rgba(255, 255, 255, 0.7);
+      background: var(--overlay-8);
+      border: 1px solid var(--overlay-12);
+      color: var(--text-70);
       padding: 15px 28px;
       font-size: 13px;
       font-weight: 800;
@@ -116,7 +116,7 @@
     }
     .done-btn {
       background: var(--accent-color);
-      color: var(--color-white);
+      color: var(--on-primary-color);
       border: none;
       padding: 15px 60px;
       font-size: 18px;

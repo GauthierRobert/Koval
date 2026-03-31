@@ -15,16 +15,23 @@ import {SportIconComponent} from '../../../../../shared/sport-icon/sport-icon.co
 export class ClubStatsTabComponent {
   private clubService = inject(ClubService);
   extendedStats$ = this.clubService.extendedStats$;
+  expandedTemplates = new Set<string>();
+
+  toggleExpand(templateId: string): void {
+    if (this.expandedTemplates.has(templateId)) {
+      this.expandedTemplates.delete(templateId);
+    } else {
+      this.expandedTemplates.add(templateId);
+    }
+  }
+
+  isExpanded(templateId: string): boolean {
+    return this.expandedTemplates.has(templateId);
+  }
 
   formatHours(h: number): string {
     if (h < 1) return `${Math.round(h * 60)}m`;
     return `${Math.floor(h)}h${Math.round((h % 1) * 60) > 0 ? Math.round((h % 1) * 60) + 'm' : ''}`;
-  }
-
-  formatDate(iso: string): string {
-    if (!iso) return '';
-    const d = new Date(iso);
-    return d.toLocaleDateString(undefined, {weekday: 'short', day: 'numeric', month: 'short'});
   }
 
   getAttendanceColor(rate: number): string {
@@ -33,14 +40,28 @@ export class ClubStatsTabComponent {
     return 'var(--danger-color, #ef4444)';
   }
 
+  getFillColor(pct: number): string {
+    return this.getAttendanceColor(pct / 100);
+  }
+
   getMaxTrend(trends: ClubExtendedStats['weeklyTrends'], key: 'totalTss' | 'totalHours' | 'sessionCount' | 'attendanceRate'): number {
     if (!trends || trends.length === 0) return 1;
     const max = Math.max(...trends.map(t => t[key]));
     return max > 0 ? max : 1;
   }
 
-  sportEntries(dist: Record<string, number>): {sport: string; pct: number}[] {
+  sportEntries(dist: Record<string, number>): {sport: 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK' | 'GYM'; pct: number}[] {
     if (!dist) return [];
-    return Object.entries(dist).map(([sport, pct]) => ({sport, pct}));
+    return Object.entries(dist).map(([sport, pct]) => ({sport: sport as 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK' | 'GYM', pct}));
+  }
+
+  formatDay(day: string): string {
+    if (!day) return '';
+    return day.charAt(0) + day.slice(1).toLowerCase();
+  }
+
+  formatTime(time: string): string {
+    if (!time) return '';
+    return time.substring(0, 5);
   }
 }

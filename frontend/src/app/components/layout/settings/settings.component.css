@@ -10,7 +10,7 @@
     padding: 16px 20px;
     z-index: 3000;
     animation: slideUp 0.3s ease-out;
-    background: rgba(22, 22, 28, 0.97);
+    background: var(--surface-card);
 }
 
 @keyframes slideUp {
@@ -57,13 +57,13 @@ h3 {
 }
 
 .modal-body::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--overlay-10);
     border-radius: 2px;
 }
 
 /* Cards */
 .settings-card {
-    background: rgba(22, 22, 28, 0.6);
+    background: var(--surface-card);
     border: 1px solid var(--glass-border);
     border-radius: 12px;
     overflow: hidden;
@@ -74,7 +74,7 @@ h3 {
     align-items: center;
     gap: 8px;
     padding: 10px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid var(--overlay-8);
 }
 
 .sport-icon {
@@ -104,7 +104,7 @@ h3 {
 }
 
 .field-row:hover {
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--overlay-3);
 }
 
 .field-info {
@@ -132,8 +132,8 @@ h3 {
 }
 
 .value-input {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--overlay-5);
+    border: 1px solid var(--overlay-10);
     border-radius: 6px;
     color: var(--text-color);
     font-weight: 700;
@@ -190,7 +190,7 @@ h3 {
 
 .save-btn {
     background: var(--accent-color);
-    color: var(--color-white);
+    color: var(--on-primary-color);
     border: none;
     padding: 10px 36px;
     border-radius: 8px;
@@ -248,8 +248,8 @@ h3 {
 /* AI Pre-prompt */
 .ai-preprompt-textarea {
     width: 100%;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--overlay-5);
+    border: 1px solid var(--overlay-10);
     border-radius: 6px;
     color: var(--text-color);
     font-family: inherit;
@@ -305,7 +305,7 @@ h3 {
 .ai-toggle-slider {
     position: absolute;
     inset: 0;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--overlay-10);
     border-radius: 9px;
     transition: background 0.2s;
 }
@@ -328,7 +328,7 @@ h3 {
 
 .ai-toggle input:checked + .ai-toggle-slider::before {
     transform: translateX(16px);
-    background: var(--color-white);
+    background: var(--surface-color);
 }
 
 @media (max-width: 480px) {

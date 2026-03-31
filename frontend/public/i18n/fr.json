@@ -74,7 +74,8 @@
     "BTN_MANAGE_DEVICES_TITLE": "Gérer les appareils",
     "PROFILE_PICTURE_ALT": "Profil",
     "BTN_LOGOUT_TITLE": "Déconnexion",
-    "BTN_LANGUAGE_TOGGLE": "Changer de langue"
+    "BTN_LANGUAGE_TOGGLE": "Changer de langue",
+    "BTN_THEME_TOGGLE": "Basculer thème clair/sombre"
   },
   "SIDEBAR": {
     "WORKOUTS_TITLE": "SÉANCES",
@@ -566,14 +567,12 @@
     "ATTENDANCE_RATE": "Taux de présence",
     "CLUB_SESSIONS_THIS_WEEK": "Sessions club",
     "PAST_4_WEEKS": "4 dernières semaines",
-    "RECENT_SESSIONS": "Présence aux dernières sessions",
-    "COL_DATE": "Date",
-    "COL_SESSION": "Session",
-    "COL_SPORT": "Sport",
-    "COL_PARTICIPANTS": "Présents",
-    "COL_ATTENDANCE": "Présence",
-    "TOP_ATTENDEES": "Meilleurs présences (4 sem.)",
-    "SESSIONS_ATTENDED": "sessions",
+    "RECURRING_SESSIONS": "Présence par session récurrente",
+    "ELIGIBLE": "éligibles",
+    "CANCELLED": "Annulée",
+    "SHOW_ATHLETES": "Voir les athlètes",
+    "HIDE_ATHLETES": "Masquer les athlètes",
+    "COL_ATHLETE": "Athlète",
     "SECTION_TRENDS": "Tendances sur 4 semaines",
     "SECTION_SPORT_DISTRIBUTION": "Répartition par sport",
     "SECTION_MOST_ACTIVE": "Membres les plus actifs"

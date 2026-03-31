@@ -343,7 +343,7 @@ textarea::placeholder {
 
 .send-button-technical:not(:disabled):hover {
   background: var(--accent-color);
-  color: var(--color-white);
+  color: var(--on-primary-color);
   border-color: transparent;
 }
 
@@ -454,7 +454,7 @@ textarea::placeholder {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border: 1.5px solid var(--overlay-15);
   border-top-color: var(--accent-color);
   animation: spin 0.7s linear infinite;
 }
@@ -503,7 +503,7 @@ textarea::placeholder {
 .run-parallel-btn {
   align-self: flex-start;
   background: var(--accent-color);
-  color: var(--color-black);
+  color: var(--on-primary-color);
   border: none;
   border-radius: var(--radius-sm);
   padding: 6px 14px;

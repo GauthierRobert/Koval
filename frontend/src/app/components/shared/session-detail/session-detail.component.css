@@ -21,13 +21,13 @@
 .detail-header h1 {
   font-size: 28px;
   font-weight: 700;
-  color: var(--color-white);
+  color: var(--text-color);
   margin: 0 0 6px;
 }
 
 .detail-header .date {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-40);
 }
 
 .top-stats {
@@ -38,7 +38,7 @@
 }
 
 .stat-item {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--overlay-5);
   padding: 18px;
   border-radius: 16px;
   text-align: center;
@@ -47,7 +47,7 @@
 .stat-item .label {
   display: block;
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-50);
   font-weight: 700;
   text-transform: uppercase;
   margin-bottom: 8px;
@@ -56,7 +56,7 @@
 .stat-item .value {
   font-size: 24px;
   font-weight: 800;
-  color: var(--color-white);
+  color: var(--text-color);
 }
 
 .stat-item .value.hr {
@@ -80,9 +80,9 @@
   gap: 6px;
   padding: 6px 14px;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--overlay-15);
   background: transparent;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-50);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -91,7 +91,7 @@
 
 .toggle-btn.active {
   border-color: currentColor;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--overlay-5);
 }
 
 .toggle-btn .dot {
@@ -129,7 +129,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-30);
   font-size: 13px;
 }
 
@@ -137,7 +137,7 @@
   max-height: 350px;
   overflow-y: auto;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--overlay-3);
 }
 
 .summary-table {
@@ -149,10 +149,10 @@
 .summary-table th {
   padding: 14px 18px;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-40);
   text-transform: uppercase;
   font-weight: 700;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--overlay-5);
   position: sticky;
   top: 0;
   background: rgba(26, 26, 26, 0.95);
@@ -161,7 +161,7 @@
 .summary-table td {
   padding: 14px 18px;
   font-size: 14px;
-  color: var(--color-white);
+  color: var(--text-color);
   border-bottom: 1px solid var(--surface-raised);;
 }
 
@@ -171,7 +171,7 @@
   border-radius: 6px;
   font-size: 11px;
   font-weight: 700;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--overlay-10);
   text-transform: uppercase;
 }
 

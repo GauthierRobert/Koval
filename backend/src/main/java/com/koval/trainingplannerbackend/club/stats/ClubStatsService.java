@@ -6,8 +6,12 @@ import com.koval.trainingplannerbackend.club.dto.ClubExtendedStatsResponse;
 import com.koval.trainingplannerbackend.club.dto.ClubRaceGoalResponse;
 import com.koval.trainingplannerbackend.club.dto.ClubWeeklyStatsResponse;
 import com.koval.trainingplannerbackend.club.dto.LeaderboardEntry;
+import com.koval.trainingplannerbackend.club.group.ClubGroup;
+import com.koval.trainingplannerbackend.club.group.ClubGroupRepository;
 import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipService;
+import com.koval.trainingplannerbackend.club.recurring.RecurringSessionTemplate;
+import com.koval.trainingplannerbackend.club.recurring.RecurringSessionTemplateRepository;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
 import com.koval.trainingplannerbackend.goal.RaceGoal;
@@ -20,11 +24,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.WeekFields;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,19 +36,25 @@ public class ClubStatsService {
     private final UserService userService;
     private final ClubMembershipService clubMembershipService;
     private final ClubAuthorizationService authorizationService;
+    private final RecurringSessionTemplateRepository recurringTemplateRepository;
+    private final ClubGroupRepository clubGroupRepository;
 
     public ClubStatsService(ClubTrainingSessionRepository sessionRepository,
                             CompletedSessionRepository completedSessionRepository,
                             RaceGoalRepository raceGoalRepository,
                             UserService userService,
                             ClubMembershipService clubMembershipService,
-                            ClubAuthorizationService authorizationService) {
+                            ClubAuthorizationService authorizationService,
+                            RecurringSessionTemplateRepository recurringTemplateRepository,
+                            ClubGroupRepository clubGroupRepository) {
         this.sessionRepository = sessionRepository;
         this.completedSessionRepository = completedSessionRepository;
         this.raceGoalRepository = raceGoalRepository;
         this.userService = userService;
         this.clubMembershipService = clubMembershipService;
         this.authorizationService = authorizationService;
+        this.recurringTemplateRepository = recurringTemplateRepository;
+        this.clubGroupRepository = clubGroupRepository;
     }
 
     public ClubWeeklyStatsResponse getWeeklyStats(String userId, String clubId) {
@@ -95,7 +101,6 @@ public class ClubStatsService {
         List<Map.Entry<String, Double>> sorted = new ArrayList<>(tssMap.entrySet());
         sorted.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
 
-        // Batch user lookup (N+1 fix)
         List<String> uids = sorted.stream().map(Map.Entry::getKey).toList();
         Map<String, User> userMap = userService.findAllById(uids).stream()
                 .collect(Collectors.toMap(User::getId, u -> u));
@@ -126,8 +131,16 @@ public class ClubStatsService {
         LocalDateTime weekEndDt = weekStartDt.plusDays(7);
 
         // --- Weekly completed sessions ---
-        List<CompletedSession> weeklySessions = completedSessionRepository
-                .findByUserIdInAndCompletedAtBetween(memberIds, weekStartDt, weekEndDt);
+        LocalDateTime fourWeeksAgo = weekStart.minusWeeks(4).atStartOfDay();
+        List<CompletedSession> allCompletedSessions = completedSessionRepository
+                .findByUserIdInAndCompletedAtBetween(memberIds, fourWeeksAgo, weekEndDt);
+
+        // Filter current week for volume stats
+        List<CompletedSession> weeklySessions = allCompletedSessions.stream()
+                .filter(s -> s.getCompletedAt() != null
+                        && !s.getCompletedAt().isBefore(weekStartDt)
+                        && s.getCompletedAt().isBefore(weekEndDt))
+                .toList();
 
         double swimKm = 0, bikeKm = 0, runKm = 0, totalTss = 0;
         long totalDurationSec = 0;
@@ -147,26 +160,26 @@ public class ClubStatsService {
         }
         double totalDurationHours = totalDurationSec / 3600.0;
 
-        // --- Attendance: club sessions past 4 weeks ---
-        LocalDateTime fourWeeksAgo = weekStart.minusWeeks(4).atStartOfDay();
-        List<ClubTrainingSession> clubSessions = sessionRepository
-                .findByClubIdAndScheduledAtBetween(clubId, fourWeeksAgo, weekEndDt)
-                .stream().filter(s -> !s.isCancelled()).toList();
+        // --- Club sessions past 4 weeks ---
+        List<ClubTrainingSession> allClubSessions = sessionRepository
+                .findByClubIdAndScheduledAtBetween(clubId, fourWeeksAgo, weekEndDt);
 
-        // Past sessions only (scheduled before now) for attendance calculation
+        List<ClubTrainingSession> nonCancelledSessions = allClubSessions.stream()
+                .filter(s -> !s.isCancelled()).toList();
+
         LocalDateTime now = LocalDateTime.now();
-        List<ClubTrainingSession> pastClubSessions = clubSessions.stream()
+        List<ClubTrainingSession> pastClubSessions = nonCancelledSessions.stream()
                 .filter(s -> s.getScheduledAt() != null && s.getScheduledAt().isBefore(now))
                 .toList();
 
         // Club sessions this week
-        int clubSessionsThisWeek = (int) clubSessions.stream()
+        int clubSessionsThisWeek = (int) nonCancelledSessions.stream()
                 .filter(s -> s.getScheduledAt() != null
                         && !s.getScheduledAt().isBefore(weekStartDt)
                         && s.getScheduledAt().isBefore(weekEndDt))
                 .count();
 
-        // Attendance rate (average across past sessions)
+        // Overall attendance rate (past sessions)
         double attendanceRate = 0;
         if (!pastClubSessions.isEmpty() && memberCount > 0) {
             attendanceRate = pastClubSessions.stream()
@@ -174,60 +187,133 @@ public class ClubStatsService {
                     .average().orElse(0);
         }
 
-        // Coach name lookup for recent sessions
-        List<String> coachIds = pastClubSessions.stream()
-                .map(ClubTrainingSession::getResponsibleCoachId)
-                .filter(id -> id != null && !id.isBlank())
-                .distinct().toList();
-        Map<String, User> coachMap = userService.findAllById(coachIds).stream()
-                .collect(Collectors.toMap(User::getId, u -> u));
+        // --- Recurring template attendance ---
+        List<RecurringSessionTemplate> templates = recurringTemplateRepository.findByClubId(clubId);
+        Map<String, ClubGroup> groupMap = clubGroupRepository.findByClubId(clubId).stream()
+                .collect(Collectors.toMap(ClubGroup::getId, g -> g));
 
-        // Recent session attendance (last 10 past sessions)
-        List<ClubExtendedStatsResponse.SessionAttendance> recentAttendance = pastClubSessions.stream()
-                .sorted((a, b) -> b.getScheduledAt().compareTo(a.getScheduledAt()))
-                .limit(10)
-                .map(s -> {
-                    String coachName = null;
-                    if (s.getResponsibleCoachId() != null) {
-                        User coach = coachMap.get(s.getResponsibleCoachId());
-                        if (coach != null) coachName = coach.getDisplayName();
-                    }
-                    return new ClubExtendedStatsResponse.SessionAttendance(
-                            s.getId(), s.getTitle(),
-                            s.getScheduledAt() != null ? s.getScheduledAt().toString() : null,
-                            s.getParticipantIds().size(), memberCount,
-                            s.getSport(), coachName);
-                })
-                .toList();
+        // Group all club sessions (including cancelled) by recurringTemplateId
+        Map<String, List<ClubTrainingSession>> sessionsByTemplate = allClubSessions.stream()
+                .filter(s -> s.getRecurringTemplateId() != null)
+                .collect(Collectors.groupingBy(ClubTrainingSession::getRecurringTemplateId));
 
-        // Top attendees (past 4 weeks)
-        Map<String, Integer> attendanceCounts = new LinkedHashMap<>();
-        for (ClubTrainingSession s : pastClubSessions) {
-            for (String pid : s.getParticipantIds()) {
-                attendanceCounts.merge(pid, 1, Integer::sum);
-            }
+        // Build 4 week boundaries
+        DateTimeFormatter weekFmt = DateTimeFormatter.ofPattern("dd MMM");
+        List<LocalDate> weekStarts = new ArrayList<>();
+        for (int w = 3; w >= 0; w--) {
+            weekStarts.add(weekStart.minusWeeks(w));
         }
-        int totalPastSessions = pastClubSessions.size();
 
-        List<String> attendeeIds = new ArrayList<>(attendanceCounts.keySet());
-        Map<String, User> attendeeMap = userService.findAllById(attendeeIds).stream()
+        // Collect all eligible user IDs across all templates for batch lookup
+        Set<String> allEligibleIds = new HashSet<>();
+        List<RecurringTemplateData> templateDataList = new ArrayList<>();
+
+        for (RecurringSessionTemplate template : templates) {
+            List<ClubTrainingSession> templateSessions = sessionsByTemplate.getOrDefault(template.getId(), List.of());
+
+            // Determine eligible members
+            List<String> eligibleIds;
+            String clubGroupName = null;
+            if (template.getClubGroupId() != null) {
+                ClubGroup group = groupMap.get(template.getClubGroupId());
+                if (group != null) {
+                    eligibleIds = group.getMemberIds();
+                    clubGroupName = group.getName();
+                } else {
+                    eligibleIds = memberIds;
+                }
+            } else {
+                eligibleIds = memberIds;
+            }
+
+            allEligibleIds.addAll(eligibleIds);
+            templateDataList.add(new RecurringTemplateData(template, templateSessions, eligibleIds, clubGroupName));
+        }
+
+        // Batch user lookup
+        Map<String, User> eligibleUserMap = userService.findAllById(new ArrayList<>(allEligibleIds)).stream()
                 .collect(Collectors.toMap(User::getId, u -> u));
 
-        List<ClubExtendedStatsResponse.AttendanceRanking> topAttendees = attendanceCounts.entrySet().stream()
-                .sorted((a, b) -> Double.compare(
-                        (double) b.getValue() / totalPastSessions,
-                        (double) a.getValue() / totalPastSessions))
-                .limit(10)
-                .map(e -> {
-                    User u = attendeeMap.get(e.getKey());
-                    return new ClubExtendedStatsResponse.AttendanceRanking(
-                            e.getKey(),
-                            u != null ? u.getDisplayName() : e.getKey(),
-                            u != null ? u.getProfilePicture() : null,
-                            e.getValue(), totalPastSessions,
-                            totalPastSessions > 0 ? (double) e.getValue() / totalPastSessions : 0);
-                })
-                .toList();
+        // Build recurring attendance for each template
+        List<ClubExtendedStatsResponse.RecurringTemplateAttendance> recurringAttendance = new ArrayList<>();
+
+        for (RecurringTemplateData data : templateDataList) {
+            RecurringSessionTemplate template = data.template;
+            List<ClubTrainingSession> templateSessions = data.sessions;
+            List<String> eligibleIds = data.eligibleIds;
+            int eligibleCount = eligibleIds.size();
+
+            // Denominator for fill %
+            Integer maxParticipants = template.getMaxParticipants();
+
+            // Build week attendance
+            List<ClubExtendedStatsResponse.WeekAttendance> weeks = new ArrayList<>();
+            // Track sessions per week for athlete grid
+            List<ClubTrainingSession> weeklySessionSlots = new ArrayList<>();
+
+            for (LocalDate wStart : weekStarts) {
+                LocalDateTime wStartDt = wStart.atStartOfDay();
+                LocalDateTime wEndDt = wStartDt.plusDays(7);
+                String label = wStart.format(weekFmt);
+
+                // Find session for this week (should be 0 or 1)
+                ClubTrainingSession weekSession = templateSessions.stream()
+                        .filter(s -> s.getScheduledAt() != null
+                                && !s.getScheduledAt().isBefore(wStartDt)
+                                && s.getScheduledAt().isBefore(wEndDt))
+                        .findFirst().orElse(null);
+
+                weeklySessionSlots.add(weekSession);
+
+                if (weekSession == null) {
+                    weeks.add(new ClubExtendedStatsResponse.WeekAttendance(
+                            label, null, false, 0, 0, 0));
+                } else {
+                    int participantCount = weekSession.getParticipantIds().size();
+                    int denominator = maxParticipants != null ? maxParticipants : eligibleCount;
+                    double fillPercent = denominator > 0
+                            ? Math.round(participantCount * 1000.0 / denominator) / 10.0
+                            : 0;
+                    weeks.add(new ClubExtendedStatsResponse.WeekAttendance(
+                            label, weekSession.getId(), weekSession.isCancelled(),
+                            participantCount, denominator, fillPercent));
+                }
+            }
+
+            // Build athlete grid (only eligible athletes)
+            List<ClubExtendedStatsResponse.AthletePresence> athleteGrid = new ArrayList<>();
+            for (String athleteId : eligibleIds) {
+                User user = eligibleUserMap.get(athleteId);
+                List<Boolean> weekPresence = new ArrayList<>();
+                for (ClubTrainingSession weekSession : weeklySessionSlots) {
+                    if (weekSession == null || weekSession.isCancelled()) {
+                        weekPresence.add(null);
+                    } else {
+                        weekPresence.add(weekSession.getParticipantIds().contains(athleteId));
+                    }
+                }
+                athleteGrid.add(new ClubExtendedStatsResponse.AthletePresence(
+                        athleteId,
+                        user != null ? user.getDisplayName() : athleteId,
+                        user != null ? user.getProfilePicture() : null,
+                        weekPresence));
+            }
+
+            // Sort athlete grid: most present first
+            athleteGrid.sort((a, b) -> {
+                long aPresent = a.weekPresence().stream().filter(Boolean.TRUE::equals).count();
+                long bPresent = b.weekPresence().stream().filter(Boolean.TRUE::equals).count();
+                return Long.compare(bPresent, aPresent);
+            });
+
+            recurringAttendance.add(new ClubExtendedStatsResponse.RecurringTemplateAttendance(
+                    template.getId(), template.getTitle(), template.getSport(),
+                    template.getDayOfWeek() != null ? template.getDayOfWeek().name() : null,
+                    template.getTimeOfDay() != null ? template.getTimeOfDay().toString() : null,
+                    template.getClubGroupId(), data.clubGroupName,
+                    maxParticipants, eligibleCount,
+                    weeks, athleteGrid));
+        }
 
         // --- Sport distribution (this week) ---
         Map<String, Long> sportCounts = weeklySessions.stream()
@@ -243,20 +329,20 @@ public class ClubStatsService {
         // Avg TSS per member
         double avgTssPerMember = memberCount > 0 ? totalTss / memberCount : 0;
 
-        // --- Weekly trends (past 4 weeks) ---
-        DateTimeFormatter weekFmt = DateTimeFormatter.ofPattern("dd MMM");
+        // --- Weekly trends (past 4 weeks, using pre-fetched data) ---
         List<ClubExtendedStatsResponse.WeeklyTrend> weeklyTrends = new ArrayList<>();
-        for (int w = 3; w >= 0; w--) {
-            LocalDate wStart = weekStart.minusWeeks(w);
+        for (LocalDate wStart : weekStarts) {
             LocalDateTime wStartDt = wStart.atStartOfDay();
             LocalDateTime wEndDt = wStartDt.plusDays(7);
 
-            List<CompletedSession> wSessions = completedSessionRepository
-                    .findByUserIdInAndCompletedAtBetween(memberIds, wStartDt, wEndDt);
+            List<CompletedSession> wSessions = allCompletedSessions.stream()
+                    .filter(s -> s.getCompletedAt() != null
+                            && !s.getCompletedAt().isBefore(wStartDt)
+                            && s.getCompletedAt().isBefore(wEndDt))
+                    .toList();
             double wTss = wSessions.stream().mapToDouble(s -> s.getTss() != null ? s.getTss() : 0).sum();
             double wHours = wSessions.stream().mapToLong(CompletedSession::getTotalDurationSeconds).sum() / 3600.0;
 
-            // Attendance for this week
             List<ClubTrainingSession> wClubSessions = pastClubSessions.stream()
                     .filter(s -> s.getScheduledAt() != null
                             && !s.getScheduledAt().isBefore(wStartDt)
@@ -280,9 +366,9 @@ public class ClubStatsService {
         Map<String, long[]> memberStats = new LinkedHashMap<>();
         for (CompletedSession s : weeklySessions) {
             long[] stats = memberStats.computeIfAbsent(s.getUserId(), k -> new long[3]);
-            stats[0] += s.getTotalDurationSeconds(); // duration
-            stats[1]++; // count
-            stats[2] += Math.round(s.getTss() != null ? s.getTss() : 0); // tss
+            stats[0] += s.getTotalDurationSeconds();
+            stats[1]++;
+            stats[2] += Math.round(s.getTss() != null ? s.getTss() : 0);
         }
         List<String> activeMemberIds = memberStats.entrySet().stream()
                 .sorted((a, b) -> Long.compare(b.getValue()[0], a.getValue()[0]))
@@ -298,7 +384,7 @@ public class ClubStatsService {
                             uid,
                             u != null ? u.getDisplayName() : uid,
                             u != null ? u.getProfilePicture() : null,
-                            Math.round(stats[0] / 360.0) / 10.0, // hours with 1 decimal
+                            Math.round(stats[0] / 360.0) / 10.0,
                             (int) stats[1], stats[2]);
                 })
                 .toList();
@@ -310,10 +396,17 @@ public class ClubStatsService {
                 Math.round(totalTss * 10.0) / 10.0,
                 Math.round(attendanceRate * 1000.0) / 1000.0,
                 clubSessionsThisWeek,
-                recentAttendance, topAttendees,
+                recurringAttendance,
                 sportDistribution, Math.round(avgTssPerMember * 10.0) / 10.0,
                 weeklyTrends, mostActive);
     }
+
+    private record RecurringTemplateData(
+            RecurringSessionTemplate template,
+            List<ClubTrainingSession> sessions,
+            List<String> eligibleIds,
+            String clubGroupName
+    ) {}
 
     public List<ClubRaceGoalResponse> getRaceGoals(String userId, String clubId) {
         authorizationService.requireActiveMember(userId, clubId);
@@ -326,19 +419,16 @@ public class ClubStatsService {
                 .filter(g -> g.getRaceDate() == null || !g.getRaceDate().isBefore(today))
                 .toList();
 
-        // Group goals by race key: raceId if present, else title+date
         Map<String, List<RaceGoal>> goalsByRace = goals.stream()
                 .collect(Collectors.groupingBy(g ->
                         g.getRaceId() != null ? g.getRaceId()
                                 : g.getTitle().toLowerCase().trim() + "|" + g.getRaceDate(),
                         LinkedHashMap::new, Collectors.toList()));
 
-        // Batch-fetch users for participant info
         List<String> athleteIds = goals.stream().map(RaceGoal::getAthleteId).distinct().toList();
         Map<String, User> userMap = userService.findAllById(athleteIds).stream()
                 .collect(Collectors.toMap(User::getId, u -> u));
 
-        // One response per unique race, sorted by date
         return goalsByRace.values().stream().map(raceGoals -> {
             RaceGoal representative = raceGoals.getFirst();
             List<ClubRaceGoalResponse.RaceParticipant> participants = raceGoals.stream()

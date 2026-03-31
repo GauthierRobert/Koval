@@ -1,7 +1,7 @@
 <div class="stats-tab">
   @if (extendedStats$ | async; as stats) {
 
-    <!-- ═══ SECTION 1: WEEKLY VOLUME ═══ -->
+    <!-- SECTION 1: WEEKLY VOLUME -->
     <h4 class="section-title">{{ 'CLUB_STATS.SECTION_THIS_WEEK' | translate }}</h4>
     <div class="stats-grid">
       <div class="stat-card glass">
@@ -37,7 +37,7 @@
     </div>
     <p class="stat-note">{{ 'CLUB_STATS.ACTIVE_MEMBERS_NOTE' | translate: { count: stats.memberCount } }}</p>
 
-    <!-- ═══ SECTION 2: ATTENDANCE ═══ -->
+    <!-- SECTION 2: ATTENDANCE SUMMARY -->
     <h4 class="section-title section-gap">{{ 'CLUB_STATS.SECTION_ATTENDANCE' | translate }}</h4>
     <div class="attendance-summary">
       <div class="att-card glass">
@@ -54,71 +54,110 @@
       </div>
     </div>
 
-    <!-- Recent Session Attendance -->
-    @if (stats.recentSessionAttendance.length > 0) {
-      <h4 class="sub-title">{{ 'CLUB_STATS.RECENT_SESSIONS' | translate }}</h4>
-      <div class="attendance-table glass">
-        <div class="att-header">
-          <span>{{ 'CLUB_STATS.COL_DATE' | translate }}</span>
-          <span>{{ 'CLUB_STATS.COL_SESSION' | translate }}</span>
-          <span>{{ 'CLUB_STATS.COL_SPORT' | translate }}</span>
-          <span>{{ 'CLUB_STATS.COL_PARTICIPANTS' | translate }}</span>
-          <span>{{ 'CLUB_STATS.COL_ATTENDANCE' | translate }}</span>
-        </div>
-        @for (session of stats.recentSessionAttendance; track session.sessionId) {
-          <div class="att-row">
-            <span class="att-date">{{ formatDate(session.scheduledAt) }}</span>
-            <span class="att-title">{{ session.title }}</span>
-            <span class="att-sport">
-              @if (session.sport) {
-                <app-sport-icon [sport]="session.sport" [size]="14"></app-sport-icon>
+    <!-- RECURRING SESSION ATTENDANCE -->
+    @if (stats.recurringAttendance.length > 0) {
+      <h4 class="sub-title">{{ 'CLUB_STATS.RECURRING_SESSIONS' | translate }}</h4>
+      <div class="recurring-list">
+        @for (tmpl of stats.recurringAttendance; track tmpl.templateId) {
+          <div class="recurring-card glass">
+            <!-- Header -->
+            <div class="recurring-header">
+              <div class="recurring-title-row">
+                @if (tmpl.sport) {
+                  <app-sport-icon [sport]="$any(tmpl.sport)" [size]="16"></app-sport-icon>
+                }
+                <span class="recurring-name">{{ tmpl.templateTitle }}</span>
+                @if (tmpl.clubGroupName) {
+                  <span class="group-badge">{{ tmpl.clubGroupName }}</span>
+                }
+              </div>
+              <div class="recurring-meta">
+                @if (tmpl.dayOfWeek) {
+                  <span class="meta-chip">{{ formatDay(tmpl.dayOfWeek) }}</span>
+                }
+                @if (tmpl.timeOfDay) {
+                  <span class="meta-chip">{{ formatTime(tmpl.timeOfDay) }}</span>
+                }
+                <span class="meta-chip">{{ tmpl.eligibleCount }} {{ 'CLUB_STATS.ELIGIBLE' | translate }}</span>
+                @if (tmpl.maxParticipants) {
+                  <span class="meta-chip capacity">max {{ tmpl.maxParticipants }}</span>
+                }
+              </div>
+            </div>
+
+            <!-- Week columns -->
+            <div class="week-columns">
+              @for (week of tmpl.weeks; track week.weekLabel) {
+                <div class="week-col">
+                  <span class="week-label">{{ week.weekLabel }}</span>
+                  @if (!week.sessionId) {
+                    <div class="week-empty">-</div>
+                  } @else if (week.cancelled) {
+                    <div class="week-cancelled">{{ 'CLUB_STATS.CANCELLED' | translate }}</div>
+                  } @else {
+                    <div class="week-fill-bar-track">
+                      <div class="week-fill-bar"
+                        [style.width.%]="week.fillPercent"
+                        [style.background]="getFillColor(week.fillPercent)">
+                      </div>
+                    </div>
+                    <span class="week-pct" [style.color]="getFillColor(week.fillPercent)">{{ week.fillPercent | number:'1.0-0' }}%</span>
+                    <span class="week-count">{{ week.participantCount }}/{{ week.eligibleCount }}</span>
+                  }
+                </div>
               }
-            </span>
-            <span class="att-count">{{ session.participantCount }}/{{ session.memberCount }}</span>
-            <span class="att-rate-cell">
-              <div class="att-bar-track">
-                <div class="att-bar"
-                  [style.width.%]="session.memberCount > 0 ? (session.participantCount / session.memberCount) * 100 : 0"
-                  [style.background]="getAttendanceColor(session.memberCount > 0 ? session.participantCount / session.memberCount : 0)">
-                </div>
-              </div>
-              <span class="att-pct">{{ session.memberCount > 0 ? ((session.participantCount / session.memberCount) * 100 | number:'1.0-0') : 0 }}%</span>
-            </span>
-          </div>
-        }
-      </div>
-    }
+            </div>
 
-    <!-- Top Attendees -->
-    @if (stats.topAttendees.length > 0) {
-      <h4 class="sub-title">{{ 'CLUB_STATS.TOP_ATTENDEES' | translate }}</h4>
-      <div class="attendees-list">
-        @for (a of stats.topAttendees; track a.userId) {
-          <div class="attendee-row glass">
-            @if (a.profilePicture) {
-              <img class="avatar" [src]="a.profilePicture" alt="" />
-            } @else {
-              <div class="avatar-placeholder">{{ (a.displayName || '?').charAt(0).toUpperCase() }}</div>
+            <!-- Expand toggle -->
+            @if (tmpl.athleteGrid.length > 0) {
+              <button class="expand-toggle" (click)="toggleExpand(tmpl.templateId)">
+                <span class="expand-chevron" [class.expanded]="isExpanded(tmpl.templateId)">&#9662;</span>
+                {{ isExpanded(tmpl.templateId) ? ('CLUB_STATS.HIDE_ATHLETES' | translate) : ('CLUB_STATS.SHOW_ATHLETES' | translate) }}
+              </button>
             }
-            <div class="attendee-info">
-              <span class="attendee-name">{{ a.displayName }}</span>
-              <span class="attendee-detail">{{ a.sessionsAttended }}/{{ a.totalSessions }} {{ 'CLUB_STATS.SESSIONS_ATTENDED' | translate }}</span>
-            </div>
-            <div class="attendee-rate-cell">
-              <div class="att-bar-track">
-                <div class="att-bar"
-                  [style.width.%]="a.attendanceRate * 100"
-                  [style.background]="getAttendanceColor(a.attendanceRate)">
+
+            <!-- Athlete grid (expandable) -->
+            @if (isExpanded(tmpl.templateId)) {
+              <div class="athlete-grid">
+                <!-- Header row -->
+                <div class="ag-row ag-header-row">
+                  <span class="ag-name-cell">{{ 'CLUB_STATS.COL_ATHLETE' | translate }}</span>
+                  @for (week of tmpl.weeks; track week.weekLabel) {
+                    <span class="ag-week-cell">{{ week.weekLabel }}</span>
+                  }
                 </div>
+                <!-- Athlete rows -->
+                @for (athlete of tmpl.athleteGrid; track athlete.userId) {
+                  <div class="ag-row">
+                    <span class="ag-name-cell">
+                      @if (athlete.profilePicture) {
+                        <img class="ag-avatar" [src]="athlete.profilePicture" alt="" />
+                      } @else {
+                        <span class="ag-avatar-placeholder">{{ (athlete.displayName || '?').charAt(0).toUpperCase() }}</span>
+                      }
+                      <span class="ag-athlete-name">{{ athlete.displayName }}</span>
+                    </span>
+                    @for (present of athlete.weekPresence; track $index) {
+                      <span class="ag-week-cell">
+                        @if (present === null) {
+                          <span class="presence-na">-</span>
+                        } @else if (present) {
+                          <span class="presence-check">&#10003;</span>
+                        } @else {
+                          <span class="presence-cross">&#10007;</span>
+                        }
+                      </span>
+                    }
+                  </div>
+                }
               </div>
-              <span class="att-pct">{{ a.attendanceRate * 100 | number:'1.0-0' }}%</span>
-            </div>
+            }
           </div>
         }
       </div>
     }
 
-    <!-- ═══ SECTION 3: WEEKLY TRENDS ═══ -->
+    <!-- SECTION 3: WEEKLY TRENDS -->
     @if (stats.weeklyTrends.length > 0) {
       <h4 class="section-title section-gap">{{ 'CLUB_STATS.SECTION_TRENDS' | translate }}</h4>
       <div class="trends-grid">
@@ -182,7 +221,7 @@
       </div>
     }
 
-    <!-- ═══ SECTION 4: SPORT DISTRIBUTION ═══ -->
+    <!-- SECTION 4: SPORT DISTRIBUTION -->
     @if (sportEntries(stats.sportDistribution).length > 0) {
       <h4 class="section-title section-gap">{{ 'CLUB_STATS.SECTION_SPORT_DISTRIBUTION' | translate }}</h4>
       <div class="sport-dist glass">
@@ -199,7 +238,7 @@
       </div>
     }
 
-    <!-- ═══ SECTION 5: MOST ACTIVE MEMBERS ═══ -->
+    <!-- SECTION 5: MOST ACTIVE MEMBERS -->
     @if (stats.mostActiveMembers.length > 0) {
       <h4 class="section-title section-gap">{{ 'CLUB_STATS.SECTION_MOST_ACTIVE' | translate }}</h4>
       <div class="active-list">

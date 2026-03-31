@@ -172,23 +172,34 @@ export interface ClubWeeklyStats {
   memberCount: number;
 }
 
-export interface SessionAttendance {
-  sessionId: string;
-  title: string;
-  scheduledAt: string;
+export interface WeekAttendanceEntry {
+  weekLabel: string;
+  sessionId: string | null;
+  cancelled: boolean;
   participantCount: number;
-  memberCount: number;
-  sport: string;
-  responsibleCoachName?: string;
+  eligibleCount: number;
+  fillPercent: number;
 }
 
-export interface AttendanceRanking {
+export interface AthletePresenceEntry {
   userId: string;
   displayName: string;
-  profilePicture?: string;
-  sessionsAttended: number;
-  totalSessions: number;
-  attendanceRate: number;
+  profilePicture: string | null;
+  weekPresence: (boolean | null)[];
+}
+
+export interface RecurringTemplateAttendance {
+  templateId: string;
+  templateTitle: string;
+  sport: string;
+  dayOfWeek: string;
+  timeOfDay: string;
+  clubGroupId: string | null;
+  clubGroupName: string | null;
+  maxParticipants: number | null;
+  eligibleCount: number;
+  weeks: WeekAttendanceEntry[];
+  athleteGrid: AthletePresenceEntry[];
 }
 
 export interface WeeklyTrend {
@@ -218,8 +229,7 @@ export interface ClubExtendedStats {
   totalTss: number;
   attendanceRate: number;
   clubSessionsThisWeek: number;
-  recentSessionAttendance: SessionAttendance[];
-  topAttendees: AttendanceRanking[];
+  recurringAttendance: RecurringTemplateAttendance[];
   sportDistribution: Record<string, number>;
   avgTssPerMember: number;
   weeklyTrends: WeeklyTrend[];

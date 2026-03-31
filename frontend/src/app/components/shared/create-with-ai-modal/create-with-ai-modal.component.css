@@ -1,7 +1,7 @@
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--overlay-backdrop);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -33,7 +33,7 @@
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #e2e8f0;
+  color: var(--text-color);
   margin: 0;
 }
 
@@ -53,7 +53,7 @@
 }
 
 .close-btn:hover:not(:disabled) {
-  color: #e2e8f0;
+  color: var(--text-color);
 }
 
 /* --- Mode tabs (pill toggle) --- */
@@ -79,7 +79,7 @@
 }
 
 .mode-tab:hover {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .mode-tab.active {
@@ -96,7 +96,7 @@
   flex: 1;
   min-height: 0;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: var(--overlay-15) transparent;
 }
 
 /* --- Session context banner --- */
@@ -112,7 +112,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--text-muted);
   margin-bottom: 6px;
 }
 
@@ -156,16 +156,16 @@
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.06em;
-  color: #94a3b8;
+  color: var(--text-muted);
   text-transform: uppercase;
 }
 
 .field-select,
 .prompt-textarea {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--overlay-5);
+  border: 1px solid var(--overlay-10);
   border-radius: 8px;
-  color: #e2e8f0;
+  color: var(--text-color);
   font-size: 0.875rem;
   padding: 10px 12px;
   font-family: inherit;
@@ -186,8 +186,8 @@
 }
 
 .field-select option {
-  background: #1a1a2e;
-  color: #e2e8f0;
+  background: var(--surface-color);
+  color: var(--text-color);
 }
 
 .status-message {
@@ -246,8 +246,8 @@
 
 .btn-ghost {
   background: transparent;
-  color: #94a3b8;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  border: 1px solid var(--overlay-10);
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 0.85rem;
@@ -256,8 +256,8 @@
 }
 
 .btn-ghost:hover:not(:disabled) {
-  color: #e2e8f0;
-  border-color: rgba(255, 255, 255, 0.25);
+  color: var(--text-color);
+  border-color: var(--overlay-25);
 }
 
 .btn-ghost:disabled {
@@ -275,7 +275,7 @@
   content: '';
   width: 12px;
   height: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid var(--overlay-30);
   border-top-color: white;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -287,10 +287,10 @@
 
 /* --- Select existing tab --- */
 .search-input {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--overlay-5);
+  border: 1px solid var(--overlay-10);
   border-radius: 8px;
-  color: #e2e8f0;
+  color: var(--text-color);
   font-size: 0.875rem;
   padding: 10px 12px;
   font-family: inherit;
@@ -316,7 +316,7 @@
   flex-direction: column;
   gap: 8px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: var(--overlay-15) transparent;
 }
 
 .training-item {
@@ -330,7 +330,7 @@
 
 .training-item:hover {
   background: var(--surface-hover);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--overlay-15);
 }
 
 .training-item.selected {
@@ -348,7 +348,7 @@
 .training-title {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: var(--text-color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

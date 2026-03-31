@@ -16,8 +16,7 @@ public record ClubExtendedStatsResponse(
         // Attendance
         double attendanceRate,
         int clubSessionsThisWeek,
-        List<SessionAttendance> recentSessionAttendance,
-        List<AttendanceRanking> topAttendees,
+        List<RecurringTemplateAttendance> recurringAttendance,
 
         // Training load
         Map<String, Double> sportDistribution,
@@ -27,12 +26,25 @@ public record ClubExtendedStatsResponse(
         // Member highlights
         List<MemberHighlight> mostActiveMembers
 ) {
-    public record SessionAttendance(String sessionId, String title, String scheduledAt,
-                                    int participantCount, int memberCount, String sport,
-                                    String responsibleCoachName) {}
+    public record RecurringTemplateAttendance(
+            String templateId, String templateTitle, String sport,
+            String dayOfWeek, String timeOfDay,
+            String clubGroupId, String clubGroupName,
+            Integer maxParticipants, int eligibleCount,
+            List<WeekAttendance> weeks,
+            List<AthletePresence> athleteGrid
+    ) {}
 
-    public record AttendanceRanking(String userId, String displayName, String profilePicture,
-                                    int sessionsAttended, int totalSessions, double attendanceRate) {}
+    public record WeekAttendance(
+            String weekLabel, String sessionId,
+            boolean cancelled, int participantCount,
+            int eligibleCount, double fillPercent
+    ) {}
+
+    public record AthletePresence(
+            String userId, String displayName, String profilePicture,
+            List<Boolean> weekPresence
+    ) {}
 
     public record WeeklyTrend(String weekLabel, double totalTss, double totalHours,
                               int sessionCount, double attendanceRate) {}

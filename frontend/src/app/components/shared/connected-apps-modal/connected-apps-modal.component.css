@@ -1,7 +1,7 @@
 .apps-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--overlay-backdrop);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -58,7 +58,7 @@
 
 .close-btn:hover {
   color: var(--text-color);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--overlay-8);
 }
 
 .apps-modal__body {
@@ -155,7 +155,7 @@
 /* Auto-sync row */
 .auto-sync-row {
   padding-top: 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--overlay-8);
   margin-top: 4px;
 }
 
@@ -177,7 +177,7 @@
   position: relative;
   width: 34px;
   height: 18px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--overlay-10);
   border-radius: 9px;
   transition: background 0.2s;
   flex-shrink: 0;

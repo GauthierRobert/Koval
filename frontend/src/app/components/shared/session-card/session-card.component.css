@@ -15,7 +15,7 @@
 }
 
 .sc-card:hover {
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--overlay-15);
   transform: translateY(-1px);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
 }
@@ -64,7 +64,7 @@
 }
 
 .sc-card--has-gpx > .sc-card__info {
-  border-right: 1px solid rgba(255, 255, 255, 0.04);
+  border-right: 1px solid var(--overlay-5);
 }
 
 .sc-card--has-gpx > .sc-card__map {
@@ -152,7 +152,7 @@
 }
 
 .sc-status-pill--waiting {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--overlay-8);
   color: var(--text-muted);
   border: 1px solid var(--glass-border);
 }
@@ -256,7 +256,7 @@
 }
 
 .sc-tag--sport {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--overlay-5);
   color: var(--text-muted);
   border: 1px solid var(--glass-border);
 }
@@ -279,7 +279,7 @@
 }
 
 .sc-tag--full {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--overlay-8);
   color: var(--text-muted);
   border: 1px solid var(--glass-border);
 }
@@ -373,8 +373,8 @@
   font-size: 11px;
   font-weight: 700;
   color: var(--text-color);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--overlay-5);
+  border: 1px solid var(--overlay-12);
   border-radius: 20px;
   padding: 4px 10px;
 }
@@ -440,12 +440,12 @@
 }
 
 .sc-linked__btn:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--overlay-8);
+  border-color: var(--overlay-15);
 }
 
 .sc-linked__title {
-  color: white;
+  color: var(--text-color);
   font-size: 11px;
   font-weight: 700;
 }
@@ -472,7 +472,7 @@
   justify-content: space-between;
   padding: 10px 16px;
   margin-top: auto;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--overlay-8);
   gap: 8px;
   font-size: 11px;
   color: var(--text-muted);
@@ -508,7 +508,7 @@
 .sc-detail {
   margin: 4px 16px 0;
   padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--overlay-8);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -669,17 +669,17 @@
   font-size: 9px;
   font-weight: 600;
   color: var(--accent-color);
-  background: rgba(22, 22, 28, 0.85);
+  background: var(--glass-bg);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--overlay-12);
   padding: 3px 10px;
   border-radius: var(--radius-sm);
 }
 
 .sc-map-overlay-top .gpx-stat {
-  background: rgba(22, 22, 28, 0.85);
+  background: var(--glass-bg);
   backdrop-filter: blur(8px);
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: var(--overlay-12);
 }
 
 .sc-map-overlay-bottom {
@@ -698,8 +698,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(22, 22, 28, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--glass-bg);
+  border: 1px solid var(--overlay-12);
   border-radius: 8px;
   color: var(--text-muted);
   cursor: pointer;

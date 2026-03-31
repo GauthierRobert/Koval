@@ -1,7 +1,7 @@
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.6);
+      background: var(--overlay-backdrop);
       backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
@@ -61,11 +61,11 @@
     }
 
     select {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: var(--overlay-8);
+      border: 1px solid var(--overlay-15);
       border-radius: 8px;
       padding: 8px 12px;
-      color: var(--color-light-gray);
+      color: var(--text-muted);
       font-size: 12px;
       font-family: inherit;
       outline: none;
@@ -84,9 +84,9 @@
       font-weight: 700;
       padding: 4px 10px;
       border-radius: 10px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      color: var(--color-medium-gray);
+      background: var(--overlay-8);
+      border: 1px solid var(--overlay-15);
+      color: var(--text-muted);
       cursor: pointer;
       transition: all 0.2s;
     }
@@ -109,7 +109,7 @@
 
     .save-btn {
       background: var(--accent-color);
-      color: var(--color-black);
+      color: var(--on-primary-color);
       border: none;
       padding: 10px 20px;
       border-radius: 8px;

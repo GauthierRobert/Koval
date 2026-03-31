@@ -74,7 +74,8 @@
     "BTN_MANAGE_DEVICES_TITLE": "Manage Devices",
     "PROFILE_PICTURE_ALT": "Profile",
     "BTN_LOGOUT_TITLE": "Logout",
-    "BTN_LANGUAGE_TOGGLE": "Switch language"
+    "BTN_LANGUAGE_TOGGLE": "Switch language",
+    "BTN_THEME_TOGGLE": "Toggle light/dark theme"
   },
   "SIDEBAR": {
     "WORKOUTS_TITLE": "WORKOUTS",
@@ -566,14 +567,12 @@
     "ATTENDANCE_RATE": "Attendance Rate",
     "CLUB_SESSIONS_THIS_WEEK": "Club Sessions",
     "PAST_4_WEEKS": "Past 4 weeks",
-    "RECENT_SESSIONS": "Recent Session Attendance",
-    "COL_DATE": "Date",
-    "COL_SESSION": "Session",
-    "COL_SPORT": "Sport",
-    "COL_PARTICIPANTS": "Present",
-    "COL_ATTENDANCE": "Attendance",
-    "TOP_ATTENDEES": "Top Attendees (4 weeks)",
-    "SESSIONS_ATTENDED": "sessions",
+    "RECURRING_SESSIONS": "Session Attendance by Template",
+    "ELIGIBLE": "eligible",
+    "CANCELLED": "Cancelled",
+    "SHOW_ATHLETES": "Show athletes",
+    "HIDE_ATHLETES": "Hide athletes",
+    "COL_ATHLETE": "Athlete",
     "SECTION_TRENDS": "4-Week Trends",
     "SECTION_SPORT_DISTRIBUTION": "Sport Distribution",
     "SECTION_MOST_ACTIVE": "Most Active Members"

@@ -29,7 +29,7 @@
   display: flex;
   gap: 4px;
   padding: 6px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--overlay-3);
   border-radius: 10px;
   margin-bottom: 2px;
 }
@@ -54,7 +54,7 @@
 
 .tab-btn.active {
   background: var(--accent-color);
-  color: var(--color-white);
+  color: var(--on-primary-color);
   border-color: var(--accent-color);
 }
 
@@ -97,7 +97,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(255, 255, 255, 0.12);
+  background-color: var(--overlay-12);
   transition: 0.4s;
 }
 
@@ -108,7 +108,7 @@
   width: 14px;
   left: 3px;
   bottom: 3px;
-  background-color: var(--color-white);
+  background-color: var(--surface-color);
   transition: 0.4s;
 }
 
@@ -133,7 +133,7 @@ input:checked + .slider:before {
   flex-direction: column;
   gap: 8px;
   padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--overlay-5);
 }
 
 .join-title {
@@ -151,11 +151,11 @@ input:checked + .slider:before {
 
 .join-input {
   flex: 1;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--overlay-8);
+  border: 1px solid var(--overlay-15);
   border-radius: 6px;
   padding: 6px 10px;
-  color: var(--color-light-gray);
+  color: var(--text-muted);
   font-size: 12px;
   font-family: 'SF Mono', 'Fira Code', monospace;
   font-weight: 700;
@@ -176,7 +176,7 @@ input:checked + .slider:before {
 
 .join-btn {
   background: var(--accent-color);
-  color: var(--color-black);
+  color: var(--on-primary-color);
   border: none;
   padding: 6px 12px;
   border-radius: 6px;

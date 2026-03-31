@@ -12,7 +12,7 @@
       align-items: center;
       gap: 24px;
       padding: 48px;
-      background: rgba(22, 22, 28, 0.6);
+      background: var(--surface-card);
       border: 1px solid var(--glass-border);
       border-radius: 24px;
       backdrop-filter: blur(20px);
@@ -57,7 +57,7 @@
       font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.5px;
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--surface-elevated);
       border: 1px solid var(--glass-border);
     }
 
@@ -140,7 +140,7 @@
     }
 
     .auth-btn.google {
-      background: var(--color-white);
+      background: var(--google-white);
       color: var(--color-dark-gray);
       height: 42px;
       width: 207px;
@@ -159,7 +159,7 @@
     .dev-section {
       width: 100%;
       padding-top: 20px;
-      border-top: 1px dashed rgba(255, 255, 255, 0.1);
+      border-top: 1px dashed var(--glass-border);
     }
 
     .dev-label {
@@ -179,10 +179,10 @@
     .dev-input {
       flex: 1;
       background: var(--surface-hover);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid var(--glass-border);
       border-radius: 8px;
       padding: 10px 12px;
-      color: var(--color-light-gray);
+      color: var(--text-muted);
       font-size: 13px;
       font-family: inherit;
       outline: none;
@@ -194,10 +194,10 @@
 
     .dev-select {
       background: var(--surface-hover);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid var(--glass-border);
       border-radius: 8px;
       padding: 10px 8px;
-      color: var(--color-light-gray);
+      color: var(--text-muted);
       font-size: 11px;
       font-weight: 700;
       font-family: inherit;
@@ -206,12 +206,12 @@
     }
 
     .dev-select option {
-      background: #1a1a1e;
+      background: var(--surface-color);
     }
 
     .dev-btn {
       background: var(--dev-accent-color);
-      color: var(--color-black);
+      color: var(--on-primary-color);
       border: none;
       border-radius: 8px;
       padding: 10px 16px;

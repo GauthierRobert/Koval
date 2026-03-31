@@ -124,7 +124,7 @@
 }
 
 .create-input {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--overlay-5);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   color: var(--text-color);
@@ -146,7 +146,7 @@
 
 .create-input:focus {
   border-color: var(--accent-color);
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--overlay-8);
 }
 
 .create-btn {
@@ -251,7 +251,7 @@
 }
 
 .rename-input {
-  background: var(--input-bg, rgba(255, 255, 255, 0.07));
+  background: var(--input-bg, var(--overlay-8));
   border: 1px solid var(--accent-color);
   border-radius: 4px;
   color: var(--text-color);

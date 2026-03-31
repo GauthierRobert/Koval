@@ -43,7 +43,7 @@
   font-size: var(--text-lg);
   font-weight: 800;
   margin: 0;
-  color: var(--color-white);
+  color: var(--text-color);
 }
 
 .session-date {
@@ -111,7 +111,7 @@
   width: 100%;
   height: 4px;
   border-radius: 2px;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--overlay-12);
   outline: none;
   cursor: pointer;
 }
@@ -217,7 +217,7 @@
   gap: 5px;
   padding: 3px 10px;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--overlay-12);
   background: transparent;
   color: var(--text-muted);
   font-size: 11px;
@@ -229,14 +229,14 @@
 
 .zone-chip:hover {
   opacity: 0.8;
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--overlay-20);
 }
 
 .zone-chip--active {
   opacity: 1;
   background: color-mix(in srgb, var(--chip-color, var(--accent-color)) 15%, transparent);
   border-color: color-mix(in srgb, var(--chip-color, var(--accent-color)) 40%, transparent);
-  color: var(--color-white);
+  color: var(--text-color);
 }
 
 .zone-chip--clear {
@@ -284,7 +284,7 @@
 .stat-value {
   font-size: 26px;
   font-weight: 800;
-  color: var(--color-white);
+  color: var(--text-color);
   line-height: 1.1;
 }
 
@@ -388,7 +388,7 @@
   width: 80px;
   height: 3px;
   border-radius: 2px;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--overlay-12);
   outline: none;
   cursor: pointer;
 }
@@ -399,7 +399,7 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: var(--color-white);
+  background: var(--surface-color);
   cursor: pointer;
   border: 2px solid rgba(0, 0, 0, 0.4);
 }
@@ -408,7 +408,7 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: var(--color-white);
+  background: var(--surface-color);
   cursor: pointer;
   border: 2px solid rgba(0, 0, 0, 0.4);
 }
@@ -443,8 +443,8 @@
 }
 
 .toggle-pill.active {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-white);
+  background: var(--overlay-10);
+  color: var(--text-color);
 }
 
 .toggle-pill:hover:not(.active) {
@@ -587,8 +587,8 @@
 
 .zone-picker {
   background: var(--surface-hover);
-  color: var(--color-white);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-color);
+  border: 1px solid var(--overlay-10);
   border-radius: var(--radius-sm);
   padding: 4px 8px;
   font-size: 11px;
@@ -617,7 +617,7 @@
 .zone-label {
   font-size: 11px;
   font-weight: 700;
-  color: var(--color-white);
+  color: var(--text-color);
   min-width: 36px;
 }
 
@@ -646,7 +646,7 @@
 .zone-pct {
   font-size: 11px;
   font-weight: 600;
-  color: var(--color-white);
+  color: var(--text-color);
   min-width: 32px;
   text-align: right;
 }

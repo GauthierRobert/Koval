@@ -10,6 +10,7 @@ import {MembershipsModalComponent} from '../../shared/memberships-modal/membersh
 import {NotificationPreferencesComponent} from '../../shared/notification-preferences/notification-preferences.component';
 import {ConnectedAppsModalComponent} from '../../shared/connected-apps-modal/connected-apps-modal.component';
 import {TranslateService, TranslateModule} from '@ngx-translate/core';
+import {ThemeService} from '../../../services/theme.service';
 
 @Component({
   selector: 'app-top-bar',
@@ -26,6 +27,7 @@ export class TopBarComponent {
   clubService = inject(ClubService);
   private filterService = inject(TrainingFilterService);
   private translateService = inject(TranslateService);
+  themeService = inject(ThemeService);
   currentLang = this.translateService.currentLang || 'en';
 
   toggleLang(): void {

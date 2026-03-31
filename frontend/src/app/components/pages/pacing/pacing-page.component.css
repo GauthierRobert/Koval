@@ -25,7 +25,7 @@
 }
 
 .subtitle {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-50);
   font-size: 13px;
   margin: 4px 0 0;
 }
@@ -90,7 +90,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-80);
   margin: 0;
 }
 
@@ -99,13 +99,13 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-50);
   margin: 4px 0 0;
 }
 
 /* GPX Dropzone */
 .gpx-dropzone {
-  border: 2px dashed rgba(255, 255, 255, 0.15);
+  border: 2px dashed var(--overlay-15);
   border-radius: 10px;
   padding: 24px;
   text-align: center;
@@ -115,7 +115,7 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-50);
   font-size: 13px;
 }
 
@@ -159,16 +159,16 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-50);
 }
 
 .loop-input input {
   width: 50px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--overlay-5);
+  border: 1px solid var(--overlay-10);
   border-radius: 8px;
   padding: 8px 6px;
-  color: #fff;
+  color: var(--text-color);
   font-size: 13px;
   font-family: inherit;
   outline: none;
@@ -198,7 +198,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-50);
 }
 
 /* Discipline Pills */
@@ -212,7 +212,7 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-50);
 }
 
 .pill-group {
@@ -223,10 +223,10 @@
 .pill {
   flex: 1;
   padding: 8px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--overlay-10);
   border-radius: 8px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-60);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -234,7 +234,7 @@
 }
 
 .pill:hover {
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: var(--text-30);
 }
 
 .pill.active {
@@ -260,16 +260,16 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-50);
 }
 
 .field input[type='number'],
 .field select {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--overlay-5);
+  border: 1px solid var(--overlay-10);
   border-radius: 8px;
   padding: 8px 10px;
-  color: #fff;
+  color: var(--text-color);
   font-size: 13px;
   font-family: inherit;
   outline: none;
@@ -311,18 +311,18 @@
   justify-content: center;
   width: 14px;
   height: 14px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--overlay-10);
   border-radius: 50%;
   font-size: 9px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-50);
   cursor: help;
   flex-shrink: 0;
 }
 
 .tooltip-trigger:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: var(--overlay-20);
+  color: var(--text-color);
 }
 
 .tooltip-text {
@@ -333,13 +333,13 @@
   transform: translateX(-50%);
   width: 260px;
   padding: 10px 12px;
-  background: rgba(0, 0, 0, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--overlay-backdrop);
+  border: 1px solid var(--overlay-15);
   border-radius: 8px;
   font-size: 11px;
   font-weight: 400;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-85);
   text-transform: none;
   letter-spacing: normal;
   z-index: 100;
@@ -363,16 +363,16 @@
 .tooltip-table td {
   padding: 3px 4px;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--overlay-10);
 }
 
 .tooltip-table th {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-50);
   font-weight: 600;
 }
 
 .tooltip-table td:first-child {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-70);
   white-space: nowrap;
 }
 
@@ -382,7 +382,7 @@
 
 .field-hint {
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-35);
   font-style: italic;
 }
 
@@ -414,7 +414,7 @@
 
 .generate-hint {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-40);
   font-style: italic;
 }
 
@@ -441,9 +441,9 @@
 
 .clear-btn {
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--overlay-5);
+  color: var(--text-60);
+  border: 1px solid var(--overlay-10);
   border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
@@ -483,7 +483,7 @@
   border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-70);
   letter-spacing: 0.3px;
 }
 
@@ -586,21 +586,21 @@
 .stat-value {
   font-size: 16px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-color);
   white-space: nowrap;
 }
 
 .stat-label {
   font-size: 10px;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-40);
   letter-spacing: 0.5px;
 }
 
 .nutrition-plan {
   margin-top: 6px;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-50);
   padding-top: 6px;
   border-top: 1px solid var(--surface-hover);
   white-space: nowrap;
@@ -610,7 +610,7 @@
 
 .target-basis {
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-40);
   margin-top: 4px;
   font-style: italic;
   white-space: nowrap;
@@ -640,7 +640,7 @@
   align-items: center;
   gap: 2px;
   background: var(--surface-hover);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--overlay-12);
   border-radius: 6px;
   padding: 4px 8px;
   cursor: pointer;
@@ -649,13 +649,13 @@
 }
 
 .metric-toggle:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--overlay-10);
 }
 
 .metric-toggle-label {
   font-size: 10px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-35);
   transition: color 0.15s;
 }
 
@@ -665,7 +665,7 @@
 
 .metric-toggle-divider {
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--overlay-20);
 }
 
 .rp-target.speed {
@@ -680,10 +680,10 @@
 
 .tab-btn {
   padding: 8px 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--overlay-5);
+  border: 1px solid var(--overlay-10);
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-60);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -749,7 +749,7 @@
   justify-content: center;
   padding: 48px;
   text-align: center;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-50);
   border-radius: 12px;
 }
 
@@ -777,7 +777,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-80);
   margin: 0;
 }
 
@@ -807,7 +807,7 @@
   max-height: 400px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: var(--overlay-15) transparent;
 }
 
 .race-plan-list::-webkit-scrollbar {
@@ -819,14 +819,14 @@
 }
 
 .race-plan-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--overlay-15);
   border-radius: 3px;
 }
 
 .race-plan-item {
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  border-left: 3px solid rgba(255, 255, 255, 0.25);
+  border-bottom: 1px solid var(--overlay-5);
+  border-left: 3px solid var(--overlay-25);
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -869,14 +869,14 @@
   border-radius: 6px;
   font-size: 11px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-60);
   flex-shrink: 0;
 }
 
 .rp-terrain {
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-85);
   flex: 1;
 }
 
@@ -907,12 +907,12 @@
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-35);
 }
 
 .rp-stat-value {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--text-75);
 }
 
 .rp-avg-inline {
@@ -920,7 +920,7 @@
   opacity: 0.7;
   font-size: 12px;
   margin-right: 24px;
-  color:white;
+  color: var(--text-color);
 }
 
 .positive {
@@ -959,7 +959,7 @@
 
 .rp-nutrition-text {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-70);
   line-height: 1.4;
 }
 
@@ -967,7 +967,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--overlay-backdrop);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -986,7 +986,7 @@
   flex-direction: column;
   gap: 16px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: var(--overlay-15) transparent;
 }
 
 .modal-header {
@@ -998,7 +998,7 @@
 .modal-close {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-50);
   font-size: 24px;
   cursor: pointer;
   padding: 0 4px;
@@ -1006,7 +1006,7 @@
 }
 
 .modal-close:hover {
-  color: #fff;
+  color: var(--text-color);
 }
 
 .modal-body {
@@ -1148,7 +1148,7 @@
 
 .race-banner-label {
   font-size: 0.68rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-40);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -1160,7 +1160,7 @@
 
 .race-banner-meta {
   font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-50);
 }
 
 .race-banner-gpx {

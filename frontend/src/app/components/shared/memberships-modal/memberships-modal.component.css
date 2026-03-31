@@ -1,7 +1,7 @@
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--overlay-backdrop);
   backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
@@ -163,7 +163,7 @@
   justify-content: space-between;
   padding: 10px 14px;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--overlay-3);
   border: 1px solid var(--glass-border);
 }
 
@@ -173,7 +173,7 @@
   justify-content: space-between;
   padding: 8px 14px 8px 28px;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.01);
+  background: var(--overlay-3);
   border: 1px solid var(--surface-elevated);
 }
 
