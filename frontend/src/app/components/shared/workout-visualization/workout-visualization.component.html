@@ -44,7 +44,7 @@
     @if (!compact) {
     <div class="left-panel">
       <div class="block-steps-list">
-        @for (block of displayBlocks; let i = $index; track block) {
+        @for (block of displayBlocks; let i = $index; track i) {
           @if (isSetElement(block)) {
             <div class="set-wrapper">
               <div class="set-header">
