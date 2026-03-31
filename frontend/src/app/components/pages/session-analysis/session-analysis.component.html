@@ -176,10 +176,31 @@
       <!-- Block breakdown -->
       @if (session.blockSummaries.length || (zoneBlocks$ | async)?.length) {
         <div class="blocks-section glass">
-          <div class="section-label">{{ 'SESSION_ANALYSIS.BLOCK_BREAKDOWN' | translate }}</div>
+          <div class="blocks-section-header">
+            <div class="section-label">{{ 'SESSION_ANALYSIS.BLOCK_BREAKDOWN' | translate }}</div>
+            @if (availableZoneChips$ | async; as chips) {
+              @if (chips.length > 1) {
+                <div class="zone-filter-chips">
+                  @for (chip of chips; track chip.label) {
+                    <button class="zone-chip" [class.zone-chip--active]="isZoneActive(chip.label)"
+                      [style.--chip-color]="chip.color"
+                      (click)="toggleZoneFilter(chip.label)">
+                      <span class="zone-dot" [style.background]="chip.color"></span>
+                      {{ chip.label }}
+                    </button>
+                  }
+                  @if (zoneFilters$.value.size > 0) {
+                    <button class="zone-chip zone-chip--clear" (click)="clearZoneFilters()">
+                      {{ 'SESSION_ANALYSIS.ZONE_FILTER_CLEAR' | translate }}
+                    </button>
+                  }
+                </div>
+              }
+            }
+          </div>
 
           @if (blockView === 'planned' && session.blockSummaries.length) {
-            @if (plannedBlocksWithZones$ | async; as blocksWithZones) {
+            @if (filteredPlannedBlocks$ | async; as blocksWithZones) {
               <div class="blocks-table" [class.blocks-table--run-swim]="session.sportType !== 'CYCLING'">
                 <div class="blocks-header">
                   <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_ZONE' | translate }}</span>
@@ -228,7 +249,7 @@
           }
 
           @if (blockView === 'interpolated' || !session.blockSummaries.length) {
-            @if (zoneBlocks$ | async; as zoneBlocks) {
+            @if (filteredZoneBlocks$ | async; as zoneBlocks) {
               @if (zoneBlocks.length) {
                 <div class="blocks-table">
                   @if (session.sportType === 'CYCLING') {

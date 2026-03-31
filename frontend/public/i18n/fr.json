@@ -68,6 +68,7 @@
     "DROPDOWN_PHYSIOLOGY_LABEL": "PHYSIOLOGIE",
     "DROPDOWN_PHYSIOLOGY_DESC": "Zones & données physiologiques",
     "BTN_MY_MEMBERSHIPS_TITLE": "Mes abonnements",
+    "BTN_CONNECTED_APPS_TITLE": "Applications connectées",
     "BTN_NOTIFICATIONS_TITLE": "Préférences de notification",
     "BTN_REFERENCE_VALUES_TITLE": "Valeurs de référence",
     "BTN_MANAGE_DEVICES_TITLE": "Gérer les appareils",
@@ -395,8 +396,9 @@
     "ACTIVITY_DEFAULT": "{{actorName}} a fait quelque chose",
     "PINNED": "ÉPINGLÉ",
     "ATHLETES_COMPLETED": "{{count}} athlètes ont complété cet entraînement",
-    "GIVE_KUDOS": "Donner des Kudos à tous",
-    "KUDOS_GIVEN": "Kudos envoyés",
+    "GIVE_KUDOS": "Auto-Kudos",
+    "KUDOS_GIVEN": "Auto-Kudos actif",
+    "KUDOS_HINT": "Kudos envoyés maintenant + automatiquement pour les futurs",
     "RACE_COMPLETED": "COURSE TERMINÉE",
     "NEXT_GOAL": "PROCHAIN OBJECTIF",
     "DAYS": "jours",
@@ -438,6 +440,8 @@
     "BTN_JOIN_WAITING_LIST": "REJOINDRE LA LISTE D'ATTENTE",
     "BTN_REMOVE_PARTICIPATION": "Quitter",
     "BTN_LEAVE_WAITING_LIST": "Quitter la liste d'attente",
+    "TOOLTIP_RESTRICTED_TO_GROUP": "Cette session est réservée aux membres du groupe {{group}}",
+    "TOOLTIP_NOT_OPEN_YET": "Cette session est réservée au groupe {{group}} — elle s'ouvrira à tous plus proche de la date",
     "BTN_CANCEL_SESSION": "Annuler la session",
     "DETAIL_ATTENDING": "Inscrits ({{count}})",
     "DETAIL_NO_ATTENDEES": "Personne pour l'instant",
@@ -814,7 +818,8 @@
     "ZONE_BLOCKS_COL_AVG_CAD": "Cad. moy.",
     "ZONE_BLOCKS_COL_AVG_PCT": "Moy. %",
     "ZONE_BLOCKS_COL_AVG_SPEED": "Vitesse moy.",
-    "ZONE_BLOCKS_COL_MAX_SPEED": "Vitesse max."
+    "ZONE_BLOCKS_COL_MAX_SPEED": "Vitesse max.",
+    "ZONE_FILTER_CLEAR": "Effacer"
   },
   "PACING": {
     "PAGE_TITLE": "Allure de course",

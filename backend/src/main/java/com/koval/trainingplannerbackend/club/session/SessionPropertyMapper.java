@@ -67,7 +67,7 @@ public final class SessionPropertyMapper {
         template.setMaxParticipants(req.maxParticipants());
         template.setDurationMinutes(req.durationMinutes());
         template.setClubGroupId(req.clubGroupId());
-        template.setOpenToAll(req.openToAll() == null || req.openToAll());
+        template.setOpenToAll(req.openToAll() != null && req.openToAll());
         template.setOpenToAllDelayValue(req.openToAllDelayValue());
         template.setOpenToAllDelayUnit(req.openToAllDelayUnit());
         template.setResponsibleCoachId(req.responsibleCoachId());

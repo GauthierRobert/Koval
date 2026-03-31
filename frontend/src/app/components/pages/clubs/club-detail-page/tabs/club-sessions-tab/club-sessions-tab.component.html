@@ -130,29 +130,27 @@
       }
 
       <!-- Open to All toggle -->
-      @if (form['clubGroupId']) {
-        <div class="form-row recurring-toggle-row">
-          <label class="toggle-label">
-            <input type="checkbox" [(ngModel)]="form['openToAll']" class="toggle-input"/>
-            <span class="toggle-switch"></span>
-            <span>{{ 'CLUB_SESSIONS.FORM_LABEL_OPEN_TO_ALL' | translate }}</span>
-          </label>
-        </div>
-        @if (form['openToAll']) {
-          <div class="form-row two-col">
-            <div class="form-row">
-              <label>{{ 'CLUB_SESSIONS.FORM_LABEL_OPEN_TO_ALL_DELAY' | translate }}</label>
-              <input type="number" [(ngModel)]="form['openToAllDelayValue']" class="form-input" min="1" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_OPEN_TO_ALL_DELAY' | translate"/>
-            </div>
-            <div class="form-row">
-              <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DELAY_UNIT' | translate }}</label>
-              <select [(ngModel)]="form['openToAllDelayUnit']" class="form-input">
-                <option value="DAYS">{{ 'CLUB_SESSIONS.FORM_DELAY_UNIT_DAYS' | translate }}</option>
-                <option value="HOURS">{{ 'CLUB_SESSIONS.FORM_DELAY_UNIT_HOURS' | translate }}</option>
-              </select>
-            </div>
+      <div class="form-row recurring-toggle-row">
+        <label class="toggle-label">
+          <input type="checkbox" [(ngModel)]="form['openToAll']" class="toggle-input"/>
+          <span class="toggle-switch"></span>
+          <span>{{ 'CLUB_SESSIONS.FORM_LABEL_OPEN_TO_ALL' | translate }}</span>
+        </label>
+      </div>
+      @if (form['openToAll']) {
+        <div class="form-row two-col">
+          <div class="form-row">
+            <label>{{ 'CLUB_SESSIONS.FORM_LABEL_OPEN_TO_ALL_DELAY' | translate }}</label>
+            <input type="number" [(ngModel)]="form['openToAllDelayValue']" class="form-input" min="1" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_OPEN_TO_ALL_DELAY' | translate"/>
           </div>
-        }
+          <div class="form-row">
+            <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DELAY_UNIT' | translate }}</label>
+            <select [(ngModel)]="form['openToAllDelayUnit']" class="form-input">
+              <option value="DAYS">{{ 'CLUB_SESSIONS.FORM_DELAY_UNIT_DAYS' | translate }}</option>
+              <option value="HOURS">{{ 'CLUB_SESSIONS.FORM_DELAY_UNIT_HOURS' | translate }}</option>
+            </select>
+          </div>
+        </div>
       }
 
       <!-- Recurring fields (always shown for create, hidden for edit-this-only) -->

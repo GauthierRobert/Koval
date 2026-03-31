@@ -11,6 +11,7 @@ import com.koval.trainingplannerbackend.club.membership.ClubMembership;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
+import com.koval.trainingplannerbackend.integration.strava.StravaApiClient;
 import com.koval.trainingplannerbackend.notification.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,7 @@ public class ClubFeedService {
     private final UserService userService;
     private final NotificationService notificationService;
     private final ClubFeedSseBroadcaster broadcaster;
+    private final StravaApiClient stravaApiClient;
 
     public ClubFeedService(ClubFeedEventRepository feedEventRepository,
                            ClubTrainingSessionRepository clubSessionRepository,
@@ -41,7 +43,8 @@ public class ClubFeedService {
                            ClubMembershipRepository membershipRepository,
                            UserService userService,
                            NotificationService notificationService,
-                           ClubFeedSseBroadcaster broadcaster) {
+                           ClubFeedSseBroadcaster broadcaster,
+                           StravaApiClient stravaApiClient) {
         this.feedEventRepository = feedEventRepository;
         this.clubSessionRepository = clubSessionRepository;
         this.authorizationService = authorizationService;
@@ -49,6 +52,7 @@ public class ClubFeedService {
         this.userService = userService;
         this.notificationService = notificationService;
         this.broadcaster = broadcaster;
+        this.stravaApiClient = stravaApiClient;
     }
 
     /**
@@ -105,6 +109,11 @@ public class ClubFeedService {
 
         feedEventRepository.save(event);
 
+        // Auto-kudos: if someone already gave kudos, give kudos from them to this new completion
+        if (entry.stravaActivityId() != null && !event.getKudosGivenBy().isEmpty()) {
+            autoGiveKudos(event, entry);
+        }
+
         // Broadcast live update via SSE
         broadcaster.broadcast(clubSession.getClubId(), "completion_update",
                 new CompletionUpdatePayload(
@@ -113,6 +122,31 @@ public class ClubFeedService {
                         event.getCompletions().size(),
                         new CompletionUpdatePayload.LatestCompletion(
                                 entry.userId(), entry.displayName(), entry.profilePicture())));
+    }
+
+    /**
+     * Automatically give Strava kudos from all users who previously clicked "Give Kudos"
+     * to a newly added completion.
+     */
+    private void autoGiveKudos(ClubFeedEvent event, ClubFeedEvent.CompletionEntry newCompletion) {
+        for (String kudosGiverId : event.getKudosGivenBy()) {
+            if (kudosGiverId.equals(newCompletion.userId())) continue; // skip self
+            try {
+                User giver = userService.findById(kudosGiverId).orElse(null);
+                if (giver == null || giver.getStravaRefreshToken() == null) continue;
+                stravaApiClient.giveKudos(giver, newCompletion.stravaActivityId());
+                event.getKudosResults().add(new ClubFeedEvent.KudosResult(
+                        newCompletion.userId(), newCompletion.stravaActivityId(),
+                        kudosGiverId, true, null, LocalDateTime.now()));
+            } catch (Exception e) {
+                log.warn("Auto-kudos failed from {} to activity {}: {}",
+                        kudosGiverId, newCompletion.stravaActivityId(), e.getMessage());
+                event.getKudosResults().add(new ClubFeedEvent.KudosResult(
+                        newCompletion.userId(), newCompletion.stravaActivityId(),
+                        kudosGiverId, false, e.getMessage(), LocalDateTime.now()));
+            }
+        }
+        feedEventRepository.save(event);
     }
 
     /**

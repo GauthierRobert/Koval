@@ -332,9 +332,9 @@ export class ClubSessionsTabComponent implements OnInit {
           maxParticipants: this.form['maxParticipants'] || undefined,
           clubGroupId: this.form['clubGroupId'] || undefined,
           responsibleCoachId: this.form['responsibleCoachId'] || undefined,
-          openToAll: this.form['clubGroupId'] ? this.form['openToAll'] : undefined,
-          openToAllDelayValue: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
-          openToAllDelayUnit: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
+          openToAll: this.form['openToAll'] ?? false,
+          openToAllDelayValue: this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
+          openToAllDelayUnit: this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
           endDate: this.form['endDate'] || undefined,
         };
         this.clubService.updateRecurringTemplateWithInstances(this.club.id, this.editingSession.recurringTemplateId, data).subscribe({
@@ -356,9 +356,9 @@ export class ClubSessionsTabComponent implements OnInit {
           durationMinutes: this.form['durationMinutes'] || undefined,
           clubGroupId: this.form['clubGroupId'] || undefined,
           responsibleCoachId: this.form['responsibleCoachId'] || undefined,
-          openToAll: this.form['clubGroupId'] ? this.form['openToAll'] : undefined,
-          openToAllDelayValue: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
-          openToAllDelayUnit: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
+          openToAll: this.form['openToAll'] ?? false,
+          openToAllDelayValue: this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
+          openToAllDelayUnit: this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
         };
         const editId = this.editingSession.id;
         this.clubService.updateSession(this.club.id, editId, data).subscribe({
@@ -383,9 +383,9 @@ export class ClubSessionsTabComponent implements OnInit {
       maxParticipants: this.form['maxParticipants'] || undefined,
       clubGroupId: this.form['clubGroupId'] || undefined,
       responsibleCoachId: this.form['responsibleCoachId'] || undefined,
-      openToAll: this.form['clubGroupId'] ? this.form['openToAll'] : undefined,
-      openToAllDelayValue: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
-      openToAllDelayUnit: this.form['clubGroupId'] && this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
+      openToAll: this.form['openToAll'] ?? false,
+      openToAllDelayValue: this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
+      openToAllDelayUnit: this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
       endDate: this.form['endDate'] || undefined,
     };
     this.clubService.createRecurringTemplate(this.club.id, data).subscribe({

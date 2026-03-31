@@ -56,6 +56,36 @@ export class SessionCardComponent {
     return !!this.currentUserId && !!this.session.waitingList?.some((e) => e.userId === this.currentUserId);
   }
 
+  isInSessionGroup(): boolean {
+    if (!this.session.clubGroupId || !this.currentUserId) return true;
+    return this.clubGroups
+      .filter((g) => g.id === this.session.clubGroupId)
+      .some((g) => g.memberIds.includes(this.currentUserId!));
+  }
+
+  isOpenToAllNow(): boolean {
+    if (!this.session.openToAll || !this.session.scheduledAt) return false;
+    const delay = this.session.openToAllDelayValue ?? 2;
+    const unit = this.session.openToAllDelayUnit ?? 'DAYS';
+    const scheduledMs = new Date(this.session.scheduledAt).getTime();
+    const offsetMs = unit === 'HOURS' ? delay * 3600_000 : delay * 86400_000;
+    return Date.now() >= scheduledMs - offsetMs;
+  }
+
+  canJoin(): boolean {
+    if (this.isInSessionGroup()) return true;
+    return this.isOpenToAllNow();
+  }
+
+  getCannotJoinReason(): string {
+    if (!this.session.clubGroupId) return '';
+    const groupName = this.getGroupName(this.session.clubGroupId);
+    if (!this.session.openToAll) {
+      return this.translate.instant('CLUB_SESSIONS.TOOLTIP_RESTRICTED_TO_GROUP', { group: groupName });
+    }
+    return this.translate.instant('CLUB_SESSIONS.TOOLTIP_NOT_OPEN_YET', { group: groupName });
+  }
+
   getWaitingListPosition(): number {
     if (!this.currentUserId || !this.session.waitingList) return 0;
     const idx = this.session.waitingList.findIndex((e) => e.userId === this.currentUserId);

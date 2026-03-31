@@ -2,14 +2,12 @@ import {ChangeDetectionStrategy, Component, HostListener, inject, OnInit} from '
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {BehaviorSubject} from 'rxjs';
-import {HttpClient} from '@angular/common/http';
 import {AuthService, User} from '../../../services/auth.service';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {ZoneService} from '../../../services/zone.service';
 import {ZoneSystem} from '../../../services/zone';
 import {TranslateModule} from '@ngx-translate/core';
 import {A11yModule} from '@angular/cdk/a11y';
-import {environment} from '../../../../environments/environment';
 
 interface PaceField {
     key: string;
@@ -30,13 +28,10 @@ interface PaceField {
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsComponent implements OnInit {
-    private http = inject(HttpClient);
     private authService = inject(AuthService);
     private zoneService = inject(ZoneService);
 
     user$ = this.authService.user$;
-    unlinking = false;
-    showConnectedApps = false;
 
     ftp: number | null = null;
     weightKg: number | null = null;
@@ -125,63 +120,6 @@ export class SettingsComponent implements OnInit {
         const m = field.minutes ?? 0;
         const s = field.seconds ?? 0;
         return `${m}:${s.toString().padStart(2, '0')}`;
-    }
-
-    getConnectedCount(user: User): number {
-        if (!user.linkedAccounts) return 0;
-        return [user.linkedAccounts.strava, user.linkedAccounts.google, user.linkedAccounts.garmin, user.linkedAccounts.zwift]
-            .filter(Boolean).length;
-    }
-
-    canUnlink(user: User, provider: 'strava' | 'google'): boolean {
-        if (!user.linkedAccounts) return false;
-        const other = provider === 'strava' ? 'google' : 'strava';
-        return user.linkedAccounts[other] === true;
-    }
-
-    unlinkApp(provider: 'strava' | 'google' | 'garmin' | 'zwift') {
-        this.unlinking = true;
-        let obs;
-        switch (provider) {
-            case 'strava': obs = this.authService.unlinkStrava(); break;
-            case 'google': obs = this.authService.unlinkGoogle(); break;
-            case 'garmin': obs = this.authService.unlinkGarmin(); break;
-            case 'zwift': obs = this.authService.unlinkZwift(); break;
-        }
-        obs.subscribe({
-            next: () => this.unlinking = false,
-            error: () => this.unlinking = false,
-        });
-    }
-
-    connectStrava(): void {
-        this.authService.getStravaAuthUrl().subscribe(({authUrl}) => {
-            // Open in same window — callback will link the account
-            const url = new URL(authUrl);
-            url.searchParams.set('state', 'link');
-            window.open(url.toString(), '_blank', 'width=600,height=700');
-        });
-    }
-
-    connectGoogle(): void {
-        this.authService.getGoogleAuthUrl().subscribe(({authUrl}) => {
-            const url = new URL(authUrl);
-            url.searchParams.set('state', 'link');
-            window.open(url.toString(), '_blank', 'width=600,height=700');
-        });
-    }
-
-    connectGarmin(): void {
-        this.http.get<{authUrl: string}>(`${environment.apiUrl}/api/integration/garmin/auth`).subscribe({
-            next: ({authUrl}) => window.open(authUrl, '_blank', 'width=600,height=700'),
-            error: () => {},
-        });
-    }
-
-    toggleZwiftAutoSync(enabled: boolean): void {
-        this.http.put<any>(`${environment.apiUrl}/api/integration/zwift/auto-sync`, { enabled }).subscribe({
-            next: (user) => this.authService.refreshUser(),
-        });
     }
 
     close() {

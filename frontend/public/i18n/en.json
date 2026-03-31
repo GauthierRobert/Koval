@@ -68,6 +68,7 @@
     "DROPDOWN_PHYSIOLOGY_LABEL": "PHYSIOLOGY",
     "DROPDOWN_PHYSIOLOGY_DESC": "Zones & physiological data",
     "BTN_MY_MEMBERSHIPS_TITLE": "My Memberships",
+    "BTN_CONNECTED_APPS_TITLE": "Connected Apps",
     "BTN_NOTIFICATIONS_TITLE": "Notification Preferences",
     "BTN_REFERENCE_VALUES_TITLE": "Reference Values",
     "BTN_MANAGE_DEVICES_TITLE": "Manage Devices",
@@ -395,8 +396,9 @@
     "ACTIVITY_DEFAULT": "{{actorName}} did something",
     "PINNED": "PINNED",
     "ATHLETES_COMPLETED": "{{count}} athletes completed this workout",
-    "GIVE_KUDOS": "Give Kudos to All",
-    "KUDOS_GIVEN": "Kudos Given",
+    "GIVE_KUDOS": "Auto-Kudos",
+    "KUDOS_GIVEN": "Auto-Kudos Active",
+    "KUDOS_HINT": "Kudos sent now + automatically for future completions",
     "RACE_COMPLETED": "RACE COMPLETED",
     "NEXT_GOAL": "NEXT GOAL",
     "DAYS": "days",
@@ -438,6 +440,8 @@
     "BTN_JOIN_WAITING_LIST": "JOIN WAITING LIST",
     "BTN_REMOVE_PARTICIPATION": "LEAVE",
     "BTN_LEAVE_WAITING_LIST": "LEAVE WAITING LIST",
+    "TOOLTIP_RESTRICTED_TO_GROUP": "This session is restricted to {{group}} members",
+    "TOOLTIP_NOT_OPEN_YET": "This session is reserved for {{group}} members — it will open to all closer to the session time",
     "BTN_CANCEL_SESSION": "Cancel session",
     "DETAIL_ATTENDING": "Attending ({{count}})",
     "DETAIL_NO_ATTENDEES": "No one yet",
@@ -814,7 +818,8 @@
     "ZONE_BLOCKS_COL_AVG_CAD": "Avg Cad",
     "ZONE_BLOCKS_COL_AVG_PCT": "Avg %",
     "ZONE_BLOCKS_COL_AVG_SPEED": "Avg Speed",
-    "ZONE_BLOCKS_COL_MAX_SPEED": "Max Speed"
+    "ZONE_BLOCKS_COL_MAX_SPEED": "Max Speed",
+    "ZONE_FILTER_CLEAR": "Clear"
   },
   "PACING": {
     "PAGE_TITLE": "Race Pacing",

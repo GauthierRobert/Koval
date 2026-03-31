@@ -113,6 +113,7 @@ export class SessionAnalysisComponent implements OnDestroy {
 
     blockView: 'planned' | 'interpolated' = 'interpolated';
     smoothFactor$ = new BehaviorSubject<number>(10);
+    zoneFilters$ = new BehaviorSubject<Set<string>>(new Set());
 
     // ── Zone distribution ────────────────────────────────────────────────
 
@@ -232,6 +233,40 @@ export class SessionAnalysisComponent implements OnDestroy {
     blockColors$: Observable<string[]> = this.plannedBlocksWithZones$.pipe(
         map(blocks => blocks.map(b => b.zoneColor ?? '')),
     );
+
+    // ── Zone filter chips ────────────────────────────────────────────────
+
+    availableZoneChips$: Observable<{label: string; color: string}[]> = this.zoneDistribution$.pipe(
+        map(zones => zones.filter(z => z.seconds > 0).map(z => ({label: z.label, color: z.color}))),
+    );
+
+    filteredZoneBlocks$: Observable<ZoneBlock[]> = combineLatest([this.zoneBlocks$, this.zoneFilters$]).pipe(
+        map(([blocks, filters]) => filters.size === 0 ? blocks : blocks.filter(b => filters.has(b.zoneLabel))),
+    );
+
+    filteredPlannedBlocks$: Observable<(BlockSummary & {zoneLabel?: string; zoneColor?: string; actualSpeedKmh?: number})[]> =
+        combineLatest([this.plannedBlocksWithZones$, this.zoneFilters$]).pipe(
+            map(([blocks, filters]) => filters.size === 0 ? blocks : blocks.filter(b => b.zoneLabel != null && filters.has(b.zoneLabel))),
+        );
+
+    toggleZoneFilter(label: string): void {
+        const current = new Set(this.zoneFilters$.value);
+        if (current.has(label)) {
+            current.delete(label);
+        } else {
+            current.add(label);
+        }
+        this.zoneFilters$.next(current);
+    }
+
+    isZoneActive(label: string): boolean {
+        const filters = this.zoneFilters$.value;
+        return filters.size === 0 || filters.has(label);
+    }
+
+    clearZoneFilters(): void {
+        this.zoneFilters$.next(new Set());
+    }
 
     // ── Helpers ──────────────────────────────────────────────────────────
 

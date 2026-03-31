@@ -8,12 +8,13 @@ import {TrainingFilterService} from '../../../services/training-filter.service';
 import {combineLatest, map} from 'rxjs';
 import {MembershipsModalComponent} from '../../shared/memberships-modal/memberships-modal.component';
 import {NotificationPreferencesComponent} from '../../shared/notification-preferences/notification-preferences.component';
+import {ConnectedAppsModalComponent} from '../../shared/connected-apps-modal/connected-apps-modal.component';
 import {TranslateService, TranslateModule} from '@ngx-translate/core';
 
 @Component({
   selector: 'app-top-bar',
   standalone: true,
-  imports: [CommonModule, RouterModule, MembershipsModalComponent, NotificationPreferencesComponent, TranslateModule],
+  imports: [CommonModule, RouterModule, MembershipsModalComponent, NotificationPreferencesComponent, ConnectedAppsModalComponent, TranslateModule],
   templateUrl: './top-bar.component.html',
   styleUrl: './top-bar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,6 +39,7 @@ export class TopBarComponent {
   isClubsOpen = false;
   showMemberships = false;
   showNotifPrefs = false;
+  showConnectedApps = false;
   mobileMenuOpen = false;
 
   toggleMobileMenu(): void {

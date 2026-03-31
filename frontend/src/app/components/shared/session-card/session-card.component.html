@@ -209,7 +209,11 @@
       @if (!isCancelled()) {
       <div class="sc-actions">
         @if (!isParticipant() && !isOnWaitingList()) {
-        <button class="sc-join-btn" (click)="onJoin($event)">
+        <button class="sc-join-btn"
+                [class.sc-join-btn--disabled]="!canJoin()"
+                [disabled]="!canJoin()"
+                [title]="canJoin() ? '' : getCannotJoinReason()"
+                (click)="onJoin($event)">
           {{ isFull() ? ('CLUB_SESSIONS.BTN_JOIN_WAITING_LIST' | translate) : ('CLUB_SESSIONS.BTN_JOIN' | translate) }}
         </button>
         }

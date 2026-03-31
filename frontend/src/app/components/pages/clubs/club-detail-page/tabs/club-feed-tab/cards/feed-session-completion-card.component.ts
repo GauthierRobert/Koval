@@ -39,6 +39,24 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
         <span class="completion-label">
           {{ 'CLUB_FEED.ATHLETES_COMPLETED' | translate: {count: event.completions?.length ?? 0} }}
         </span>
+        <div class="completion-actions">
+          @if (!hasGivenKudos) {
+            <button data-testid="feed-kudos-btn" class="kudos-btn" [disabled]="kudosLoading"
+              [title]="'CLUB_FEED.KUDOS_HINT' | translate"
+              (click)="onGiveKudos(); $event.stopPropagation()">
+              @if (kudosLoading) {
+                <span class="spinner-sm"></span>
+              }
+              <svg class="strava-logo" viewBox="0 0 24 24" width="14" height="14" fill="white"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+              {{ 'CLUB_FEED.GIVE_KUDOS' | translate }}
+            </button>
+          } @else {
+            <span class="kudos-given" [title]="'CLUB_FEED.KUDOS_HINT' | translate">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              {{ 'CLUB_FEED.KUDOS_GIVEN' | translate }}
+            </span>
+          }
+        </div>
         <svg class="expand-chevron" [class.rotated]="expanded" width="14" height="14" viewBox="0 0 24 24"
              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="6 9 12 15 18 9"/>
@@ -69,19 +87,6 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
           }
         </div>
       }
-
-      <div class="card-actions">
-        @if (!hasGivenKudos) {
-          <button data-testid="feed-kudos-btn" class="kudos-btn" [disabled]="kudosLoading" (click)="onGiveKudos()">
-            @if (kudosLoading) {
-              <span class="spinner-sm"></span>
-            }
-            <svg class="strava-logo" viewBox="0 0 24 24" width="14" height="14" fill="white"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg> {{ 'CLUB_FEED.GIVE_KUDOS' | translate }}
-          </button>
-        } @else {
-          <span class="kudos-given">{{ 'CLUB_FEED.KUDOS_GIVEN' | translate }}</span>
-        }
-      </div>
     </div>
   `,
   styles: `
@@ -109,11 +114,11 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
     .user-name { flex: 1; font-size: var(--text-xs); font-weight: 500; color: var(--text-color); }
     .strava-badge { display: flex; align-items: center; }
     .completion-time { font-size: 9px; color: var(--text-muted); font-family: monospace; }
-    .card-actions { margin-top: var(--space-sm); padding-top: var(--space-sm); border-top: 1px solid var(--glass-border); }
-    .kudos-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 8px; border: none; border-radius: var(--radius-sm); background: #fc4c02; color: #fff; font-size: var(--text-xs); font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .completion-actions { margin-left: auto; flex-shrink: 0; }
+    .kudos-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border: none; border-radius: var(--radius-sm); background: #fc4c02; color: #fff; font-size: var(--text-xs); font-weight: 600; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; }
     .kudos-btn:hover:not(:disabled) { opacity: 0.9; }
     .kudos-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .kudos-given { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 8px; font-size: var(--text-xs); font-weight: 600; color: var(--success); }
+    .kudos-given { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; font-size: var(--text-xs); font-weight: 600; color: var(--success); white-space: nowrap; }
     .spinner-sm { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
   `,

@@ -232,8 +232,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px 0;
+  gap: 12px;
+  padding: 0 16px 8px;
 }
 
 .sc-tag {
@@ -609,9 +609,14 @@
   transition: transform 0.15s, box-shadow 0.15s;
 }
 
-.sc-join-btn:hover {
+.sc-join-btn:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(255, 157, 0, 0.3);
+}
+
+.sc-join-btn--disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .sc-leave-btn {

@@ -191,6 +191,64 @@
   padding: var(--space-md) var(--page-padding);
 }
 
+.blocks-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.blocks-section-header .section-label {
+  margin-bottom: 0;
+}
+
+.zone-filter-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.zone-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  opacity: 0.5;
+}
+
+.zone-chip:hover {
+  opacity: 0.8;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.zone-chip--active {
+  opacity: 1;
+  background: color-mix(in srgb, var(--chip-color, var(--accent-color)) 15%, transparent);
+  border-color: color-mix(in srgb, var(--chip-color, var(--accent-color)) 40%, transparent);
+  color: var(--color-white);
+}
+
+.zone-chip--clear {
+  opacity: 0.7;
+  border-style: dashed;
+  font-size: 10px;
+  padding: 3px 8px;
+}
+
+.zone-chip--clear:hover {
+  opacity: 1;
+}
 
 .stats-grid {
   flex: 3;
