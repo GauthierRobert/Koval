@@ -146,7 +146,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
         this.clubService.loadGroups(this.clubId);
         break;
       case 'stats':
-        this.clubService.loadWeeklyStats(this.clubId);
+        this.clubService.loadExtendedStats(this.clubId);
         break;
       case 'leaderboard':
         this.clubService.loadLeaderboard(this.clubId);

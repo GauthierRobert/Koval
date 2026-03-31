@@ -1,9 +1,10 @@
 .stats-tab {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-sm);
 }
 
+/* ── Section titles ── */
 .section-title {
   font-size: 9px;
   font-weight: 800;
@@ -14,20 +15,34 @@
   margin: 0;
 }
 
+.section-gap {
+  margin-top: var(--space-md);
+}
+
+.sub-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: var(--space-sm) 0 4px;
+}
+
+/* ── Stats grid (6 cards) ── */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
 }
 
 .stat-card {
-  padding: 20px 16px;
+  padding: 16px 12px;
   border-radius: var(--radius-lg);
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   transition: border-color 0.2s, transform 0.15s;
 }
 
@@ -36,12 +51,12 @@
   transform: translateY(-2px);
 }
 
-.stat-icon {
-  font-size: 22px;
+.stat-icon-text {
+  font-size: 20px;
 }
 
 .stat-value {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
   color: var(--accent-color);
   letter-spacing: -0.02em;
@@ -64,6 +79,356 @@
   margin: 0;
 }
 
+/* ── Attendance summary ── */
+.attendance-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.att-card {
+  padding: 20px 16px;
+  border-radius: var(--radius-lg);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.att-value {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--accent-color);
+}
+
+.att-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-color);
+}
+
+.att-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ── Attendance table ── */
+.attendance-table {
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.att-header {
+  display: grid;
+  grid-template-columns: 90px 1fr 40px 70px 140px;
+  gap: 8px;
+  padding: 0 4px 8px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.6;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.att-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 40px 70px 140px;
+  gap: 8px;
+  padding: 8px 4px;
+  align-items: center;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.att-row:last-child {
+  border-bottom: none;
+}
+
+.att-date {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.att-title {
+  font-weight: 600;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.att-sport {
+  display: flex;
+  justify-content: center;
+}
+
+.att-count {
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-dim);
+}
+
+.att-rate-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.att-bar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.att-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.att-pct {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dim);
+  min-width: 32px;
+  text-align: right;
+}
+
+/* ── Attendees list ── */
+.attendees-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.attendee-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+.attendee-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.attendee-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.attendee-detail {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.attendee-rate-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 140px;
+}
+
+/* ── Trends ── */
+.trends-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.trend-card {
+  padding: 14px 12px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trend-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.trend-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 60px;
+}
+
+.trend-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.trend-bar {
+  width: 100%;
+  min-height: 3px;
+  background: var(--accent-color);
+  border-radius: 3px 3px 0 0;
+  opacity: 0.5;
+  transition: height 0.4s ease;
+}
+
+.trend-bar.current-week {
+  opacity: 1;
+}
+
+.trend-val {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* ── Sport distribution ── */
+.sport-dist {
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sport-row {
+  display: grid;
+  grid-template-columns: 20px 80px 1fr 40px;
+  gap: 8px;
+  align-items: center;
+}
+
+.sport-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-color);
+  text-transform: capitalize;
+}
+
+.sport-bar-track {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.sport-bar {
+  height: 100%;
+  background: var(--accent-color);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.sport-pct {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+/* ── Most Active ── */
+.active-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.active-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+}
+
+.active-rank {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--accent-color);
+  width: 20px;
+  text-align: center;
+}
+
+.active-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.active-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.active-metrics {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.metric-chip {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--surface-raised);
+  color: var(--text-dim);
+}
+
+.metric-chip.hours {
+  color: var(--accent-color);
+}
+
+.metric-chip.tss {
+  color: var(--secondary-color, #60a5fa);
+}
+
+/* ── Empty state ── */
 .empty-tab {
   display: flex;
   flex-direction: column;
@@ -84,8 +449,53 @@
   margin: 0;
 }
 
+/* ── Responsive ── */
 @media (max-width: 768px) {
   .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .trends-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .att-header,
+  .att-row {
+    grid-template-columns: 70px 1fr 30px 50px 110px;
+  }
+
+  .attendee-rate-cell {
+    width: 110px;
+  }
+
+  .active-metrics {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .attendance-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .trends-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .att-header,
+  .att-row {
+    grid-template-columns: 60px 1fr 60px 80px;
+  }
+
+  .att-sport {
+    display: none;
+  }
+
+  .sport-row {
+    grid-template-columns: 20px 60px 1fr 36px;
   }
 }

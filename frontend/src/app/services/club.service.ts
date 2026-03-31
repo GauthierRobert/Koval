@@ -172,6 +172,60 @@ export interface ClubWeeklyStats {
   memberCount: number;
 }
 
+export interface SessionAttendance {
+  sessionId: string;
+  title: string;
+  scheduledAt: string;
+  participantCount: number;
+  memberCount: number;
+  sport: string;
+  responsibleCoachName?: string;
+}
+
+export interface AttendanceRanking {
+  userId: string;
+  displayName: string;
+  profilePicture?: string;
+  sessionsAttended: number;
+  totalSessions: number;
+  attendanceRate: number;
+}
+
+export interface WeeklyTrend {
+  weekLabel: string;
+  totalTss: number;
+  totalHours: number;
+  sessionCount: number;
+  attendanceRate: number;
+}
+
+export interface MemberHighlight {
+  userId: string;
+  displayName: string;
+  profilePicture?: string;
+  totalHours: number;
+  sessionCount: number;
+  totalTss: number;
+}
+
+export interface ClubExtendedStats {
+  totalSwimKm: number;
+  totalBikeKm: number;
+  totalRunKm: number;
+  totalSessions: number;
+  memberCount: number;
+  totalDurationHours: number;
+  totalTss: number;
+  attendanceRate: number;
+  clubSessionsThisWeek: number;
+  recentSessionAttendance: SessionAttendance[];
+  topAttendees: AttendanceRanking[];
+  sportDistribution: Record<string, number>;
+  avgTssPerMember: number;
+  weeklyTrends: WeeklyTrend[];
+  mostActiveMembers: MemberHighlight[];
+}
+
 export interface LeaderboardEntry {
   userId: string;
   displayName: string;
@@ -366,6 +420,9 @@ export class ClubService {
 
   private weeklyStatsSubject = new BehaviorSubject<ClubWeeklyStats | null>(null);
   weeklyStats$ = this.weeklyStatsSubject.asObservable();
+
+  private extendedStatsSubject = new BehaviorSubject<ClubExtendedStats | null>(null);
+  extendedStats$ = this.extendedStatsSubject.asObservable();
 
   private leaderboardSubject = new BehaviorSubject<LeaderboardEntry[]>([]);
   leaderboard$ = this.leaderboardSubject.asObservable();
@@ -621,6 +678,13 @@ export class ClubService {
       .get<ClubWeeklyStats>(`${this.apiUrl}/${id}/stats/weekly`)
       .pipe(catchError(() => of(null as ClubWeeklyStats | null)))
       .subscribe((stats) => this.ngZone.run(() => this.weeklyStatsSubject.next(stats)));
+  }
+
+  loadExtendedStats(id: string): void {
+    this.http
+      .get<ClubExtendedStats>(`${this.apiUrl}/${id}/stats/extended`)
+      .pipe(catchError(() => of(null as ClubExtendedStats | null)))
+      .subscribe((stats) => this.ngZone.run(() => this.extendedStatsSubject.next(stats)));
   }
 
   loadLeaderboard(id: string): void {
@@ -1035,6 +1099,7 @@ export class ClubService {
     this.sessionsSubject.next([]);
     this.openSessionsSubject.next([]);
     this.weeklyStatsSubject.next(null);
+    this.extendedStatsSubject.next(null);
     this.leaderboardSubject.next([]);
     this.raceGoalsSubject.next([]);
     this.groupsSubject.next([]);

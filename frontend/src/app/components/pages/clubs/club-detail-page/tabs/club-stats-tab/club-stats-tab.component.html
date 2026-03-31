@@ -1,29 +1,229 @@
 <div class="stats-tab">
-  @if (weeklyStats$ | async; as stats) {
+  @if (extendedStats$ | async; as stats) {
+
+    <!-- ═══ SECTION 1: WEEKLY VOLUME ═══ -->
     <h4 class="section-title">{{ 'CLUB_STATS.SECTION_THIS_WEEK' | translate }}</h4>
     <div class="stats-grid">
       <div class="stat-card glass">
-        <span class="stat-icon">🏊</span>
+        <app-sport-icon sport="SWIMMING" [size]="22" color="var(--accent-color)"></app-sport-icon>
         <div class="stat-value">{{ stats.totalSwimKm | number:'1.1-1' }}</div>
         <div class="stat-label">{{ 'CLUB_STATS.STAT_SWIM_KM' | translate }}</div>
       </div>
       <div class="stat-card glass">
-        <span class="stat-icon">🚴</span>
+        <app-sport-icon sport="CYCLING" [size]="22" color="var(--accent-color)"></app-sport-icon>
         <div class="stat-value">{{ stats.totalBikeKm | number:'1.1-1' }}</div>
         <div class="stat-label">{{ 'CLUB_STATS.STAT_BIKE_KM' | translate }}</div>
       </div>
       <div class="stat-card glass">
-        <span class="stat-icon">🏃</span>
+        <app-sport-icon sport="RUNNING" [size]="22" color="var(--accent-color)"></app-sport-icon>
         <div class="stat-value">{{ stats.totalRunKm | number:'1.1-1' }}</div>
         <div class="stat-label">{{ 'CLUB_STATS.STAT_RUN_KM' | translate }}</div>
       </div>
       <div class="stat-card glass">
-        <span class="stat-icon">💪</span>
-        <div class="stat-value">{{ stats.totalSessions }}</div>
-        <div class="stat-label">{{ 'CLUB_STATS.STAT_SESSIONS' | translate }}</div>
+        <span class="stat-icon-text">⏱</span>
+        <div class="stat-value">{{ formatHours(stats.totalDurationHours) }}</div>
+        <div class="stat-label">{{ 'CLUB_STATS.TOTAL_HOURS' | translate }}</div>
+      </div>
+      <div class="stat-card glass">
+        <span class="stat-icon-text">⚡</span>
+        <div class="stat-value">{{ stats.totalTss | number:'1.0-0' }}</div>
+        <div class="stat-label">{{ 'CLUB_STATS.TOTAL_TSS' | translate }}</div>
+      </div>
+      <div class="stat-card glass">
+        <span class="stat-icon-text">📊</span>
+        <div class="stat-value">{{ stats.avgTssPerMember | number:'1.0-0' }}</div>
+        <div class="stat-label">{{ 'CLUB_STATS.AVG_TSS_MEMBER' | translate }}</div>
       </div>
     </div>
     <p class="stat-note">{{ 'CLUB_STATS.ACTIVE_MEMBERS_NOTE' | translate: { count: stats.memberCount } }}</p>
+
+    <!-- ═══ SECTION 2: ATTENDANCE ═══ -->
+    <h4 class="section-title section-gap">{{ 'CLUB_STATS.SECTION_ATTENDANCE' | translate }}</h4>
+    <div class="attendance-summary">
+      <div class="att-card glass">
+        <div class="att-value" [style.color]="getAttendanceColor(stats.attendanceRate)">
+          {{ stats.attendanceRate * 100 | number:'1.0-0' }}%
+        </div>
+        <div class="att-label">{{ 'CLUB_STATS.ATTENDANCE_RATE' | translate }}</div>
+        <div class="att-sub">{{ 'CLUB_STATS.PAST_4_WEEKS' | translate }}</div>
+      </div>
+      <div class="att-card glass">
+        <div class="att-value">{{ stats.clubSessionsThisWeek }}</div>
+        <div class="att-label">{{ 'CLUB_STATS.CLUB_SESSIONS_THIS_WEEK' | translate }}</div>
+        <div class="att-sub">{{ 'CLUB_STATS.SECTION_THIS_WEEK' | translate }}</div>
+      </div>
+    </div>
+
+    <!-- Recent Session Attendance -->
+    @if (stats.recentSessionAttendance.length > 0) {
+      <h4 class="sub-title">{{ 'CLUB_STATS.RECENT_SESSIONS' | translate }}</h4>
+      <div class="attendance-table glass">
+        <div class="att-header">
+          <span>{{ 'CLUB_STATS.COL_DATE' | translate }}</span>
+          <span>{{ 'CLUB_STATS.COL_SESSION' | translate }}</span>
+          <span>{{ 'CLUB_STATS.COL_SPORT' | translate }}</span>
+          <span>{{ 'CLUB_STATS.COL_PARTICIPANTS' | translate }}</span>
+          <span>{{ 'CLUB_STATS.COL_ATTENDANCE' | translate }}</span>
+        </div>
+        @for (session of stats.recentSessionAttendance; track session.sessionId) {
+          <div class="att-row">
+            <span class="att-date">{{ formatDate(session.scheduledAt) }}</span>
+            <span class="att-title">{{ session.title }}</span>
+            <span class="att-sport">
+              @if (session.sport) {
+                <app-sport-icon [sport]="session.sport" [size]="14"></app-sport-icon>
+              }
+            </span>
+            <span class="att-count">{{ session.participantCount }}/{{ session.memberCount }}</span>
+            <span class="att-rate-cell">
+              <div class="att-bar-track">
+                <div class="att-bar"
+                  [style.width.%]="session.memberCount > 0 ? (session.participantCount / session.memberCount) * 100 : 0"
+                  [style.background]="getAttendanceColor(session.memberCount > 0 ? session.participantCount / session.memberCount : 0)">
+                </div>
+              </div>
+              <span class="att-pct">{{ session.memberCount > 0 ? ((session.participantCount / session.memberCount) * 100 | number:'1.0-0') : 0 }}%</span>
+            </span>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Top Attendees -->
+    @if (stats.topAttendees.length > 0) {
+      <h4 class="sub-title">{{ 'CLUB_STATS.TOP_ATTENDEES' | translate }}</h4>
+      <div class="attendees-list">
+        @for (a of stats.topAttendees; track a.userId) {
+          <div class="attendee-row glass">
+            @if (a.profilePicture) {
+              <img class="avatar" [src]="a.profilePicture" alt="" />
+            } @else {
+              <div class="avatar-placeholder">{{ (a.displayName || '?').charAt(0).toUpperCase() }}</div>
+            }
+            <div class="attendee-info">
+              <span class="attendee-name">{{ a.displayName }}</span>
+              <span class="attendee-detail">{{ a.sessionsAttended }}/{{ a.totalSessions }} {{ 'CLUB_STATS.SESSIONS_ATTENDED' | translate }}</span>
+            </div>
+            <div class="attendee-rate-cell">
+              <div class="att-bar-track">
+                <div class="att-bar"
+                  [style.width.%]="a.attendanceRate * 100"
+                  [style.background]="getAttendanceColor(a.attendanceRate)">
+                </div>
+              </div>
+              <span class="att-pct">{{ a.attendanceRate * 100 | number:'1.0-0' }}%</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ═══ SECTION 3: WEEKLY TRENDS ═══ -->
+    @if (stats.weeklyTrends.length > 0) {
+      <h4 class="section-title section-gap">{{ 'CLUB_STATS.SECTION_TRENDS' | translate }}</h4>
+      <div class="trends-grid">
+        <div class="trend-card glass">
+          <div class="trend-label">{{ 'CLUB_STATS.TOTAL_TSS' | translate }}</div>
+          <div class="trend-bars">
+            @for (w of stats.weeklyTrends; track w.weekLabel) {
+              <div class="trend-col" [title]="w.weekLabel + ': ' + w.totalTss">
+                <div class="trend-bar"
+                  [style.height.%]="(w.totalTss / getMaxTrend(stats.weeklyTrends, 'totalTss')) * 100"
+                  [class.current-week]="$last">
+                </div>
+                <span class="trend-val">{{ w.totalTss | number:'1.0-0' }}</span>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="trend-card glass">
+          <div class="trend-label">{{ 'CLUB_STATS.TOTAL_HOURS' | translate }}</div>
+          <div class="trend-bars">
+            @for (w of stats.weeklyTrends; track w.weekLabel) {
+              <div class="trend-col" [title]="w.weekLabel + ': ' + w.totalHours + 'h'">
+                <div class="trend-bar"
+                  [style.height.%]="(w.totalHours / getMaxTrend(stats.weeklyTrends, 'totalHours')) * 100"
+                  [class.current-week]="$last">
+                </div>
+                <span class="trend-val">{{ w.totalHours | number:'1.0-0' }}h</span>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="trend-card glass">
+          <div class="trend-label">{{ 'CLUB_STATS.STAT_SESSIONS' | translate }}</div>
+          <div class="trend-bars">
+            @for (w of stats.weeklyTrends; track w.weekLabel) {
+              <div class="trend-col" [title]="w.weekLabel + ': ' + w.sessionCount">
+                <div class="trend-bar"
+                  [style.height.%]="(w.sessionCount / getMaxTrend(stats.weeklyTrends, 'sessionCount')) * 100"
+                  [class.current-week]="$last">
+                </div>
+                <span class="trend-val">{{ w.sessionCount }}</span>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="trend-card glass">
+          <div class="trend-label">{{ 'CLUB_STATS.ATTENDANCE_RATE' | translate }}</div>
+          <div class="trend-bars">
+            @for (w of stats.weeklyTrends; track w.weekLabel) {
+              <div class="trend-col" [title]="w.weekLabel + ': ' + (w.attendanceRate * 100 | number:'1.0-0') + '%'">
+                <div class="trend-bar"
+                  [style.height.%]="w.attendanceRate * 100"
+                  [style.background]="getAttendanceColor(w.attendanceRate)"
+                  [class.current-week]="$last">
+                </div>
+                <span class="trend-val">{{ w.attendanceRate * 100 | number:'1.0-0' }}%</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ═══ SECTION 4: SPORT DISTRIBUTION ═══ -->
+    @if (sportEntries(stats.sportDistribution).length > 0) {
+      <h4 class="section-title section-gap">{{ 'CLUB_STATS.SECTION_SPORT_DISTRIBUTION' | translate }}</h4>
+      <div class="sport-dist glass">
+        @for (entry of sportEntries(stats.sportDistribution); track entry.sport) {
+          <div class="sport-row">
+            <app-sport-icon [sport]="entry.sport" [size]="16"></app-sport-icon>
+            <span class="sport-name">{{ entry.sport }}</span>
+            <div class="sport-bar-track">
+              <div class="sport-bar" [style.width.%]="entry.pct"></div>
+            </div>
+            <span class="sport-pct">{{ entry.pct | number:'1.0-0' }}%</span>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ═══ SECTION 5: MOST ACTIVE MEMBERS ═══ -->
+    @if (stats.mostActiveMembers.length > 0) {
+      <h4 class="section-title section-gap">{{ 'CLUB_STATS.SECTION_MOST_ACTIVE' | translate }}</h4>
+      <div class="active-list">
+        @for (m of stats.mostActiveMembers; track m.userId; let i = $index) {
+          <div class="active-row glass">
+            <span class="active-rank">{{ i + 1 }}</span>
+            @if (m.profilePicture) {
+              <img class="avatar" [src]="m.profilePicture" alt="" />
+            } @else {
+              <div class="avatar-placeholder">{{ (m.displayName || '?').charAt(0).toUpperCase() }}</div>
+            }
+            <div class="active-info">
+              <span class="active-name">{{ m.displayName }}</span>
+            </div>
+            <div class="active-metrics">
+              <span class="metric-chip hours">{{ formatHours(m.totalHours) }}</span>
+              <span class="metric-chip sessions">{{ m.sessionCount }} {{ 'CLUB_STATS.STAT_SESSIONS' | translate }}</span>
+              <span class="metric-chip tss">{{ m.totalTss | number:'1.0-0' }} TSS</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
   } @else {
     <div class="empty-tab">
       <span>📊</span>
