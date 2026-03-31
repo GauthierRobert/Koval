@@ -5,7 +5,7 @@ import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.club.ClubService;
 import com.koval.trainingplannerbackend.club.dto.ClubSummaryResponse;
 import com.koval.trainingplannerbackend.club.group.ClubGroupService;
-import com.koval.trainingplannerbackend.coach.CoachService;
+import com.koval.trainingplannerbackend.coach.CoachGroupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -27,16 +27,16 @@ public class UserContextResolver {
     private static final int DEFAULT_FTP = 250;
 
     private final UserRepository userRepository;
-    private final CoachService coachService;
+    private final CoachGroupService coachGroupService;
     private final ClubService clubService;
     private final ClubGroupService clubGroupService;
 
     public UserContextResolver(UserRepository userRepository,
-                               CoachService coachService,
+                               CoachGroupService coachGroupService,
                                ClubService clubService,
                                ClubGroupService clubGroupService) {
         this.userRepository = userRepository;
-        this.coachService = coachService;
+        this.coachGroupService = coachGroupService;
         this.clubService = clubService;
         this.clubGroupService = clubGroupService;
     }
@@ -79,7 +79,7 @@ public class UserContextResolver {
 
     private List<AthleteSummary> resolveAthletes(String coachId) {
         try {
-            return coachService.getCoachAthletes(coachId).stream()
+            return coachGroupService.getCoachAthletes(coachId).stream()
                     .map(u -> new AthleteSummary(u.getId(), u.getDisplayName()))
                     .toList();
         } catch (Exception e) {
@@ -90,7 +90,7 @@ public class UserContextResolver {
 
     private List<GroupSummary> resolveGroups(String coachId) {
         try {
-            return coachService.getAthleteGroupsForCoach(coachId).stream()
+            return coachGroupService.getAthleteGroupsForCoach(coachId).stream()
                     .map(g -> new GroupSummary(g.getId(), g.getName()))
                     .toList();
         } catch (Exception e) {

@@ -12,6 +12,7 @@ import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
 import com.koval.trainingplannerbackend.notification.NotificationService;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
+import com.koval.trainingplannerbackend.coach.ScheduledWorkoutService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
@@ -41,7 +42,7 @@ public class ScheduleService {
 
     private final ScheduledWorkoutRepository scheduledWorkoutRepository;
     private final TrainingRepository trainingRepository;
-    private final CoachService coachService;
+    private final ScheduledWorkoutService scheduledWorkoutService;
     private final CompletedSessionRepository completedSessionRepository;
     private final AnalyticsService analyticsService;
     private final ClubMembershipRepository clubMembershipRepository;
@@ -53,7 +54,7 @@ public class ScheduleService {
 
     public ScheduleService(ScheduledWorkoutRepository scheduledWorkoutRepository,
             TrainingRepository trainingRepository,
-            CoachService coachService,
+            ScheduledWorkoutService scheduledWorkoutService,
             CompletedSessionRepository completedSessionRepository,
             AnalyticsService analyticsService,
             ClubMembershipRepository clubMembershipRepository,
@@ -64,7 +65,7 @@ public class ScheduleService {
             UserRepository userRepository) {
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
         this.trainingRepository = trainingRepository;
-        this.coachService = coachService;
+        this.scheduledWorkoutService = scheduledWorkoutService;
         this.completedSessionRepository = completedSessionRepository;
         this.analyticsService = analyticsService;
         this.clubMembershipRepository = clubMembershipRepository;
@@ -95,7 +96,7 @@ public class ScheduleService {
             boolean isSynthetic = completedSessionRepository.findById(workout.getSessionId())
                     .map(CompletedSession::isSyntheticCompletion).orElse(false);
             if (!isSynthetic) {
-                return coachService.markCompleted(scheduledWorkoutId,
+                return scheduledWorkoutService.markCompleted(scheduledWorkoutId,
                         workout.getTss(), workout.getIntensityFactor(), workout.getSessionId());
             }
             // Delete existing synthetic session before creating a fresh one
@@ -125,7 +126,7 @@ public class ScheduleService {
         CompletedSession saved = completedSessionRepository.save(session);
         analyticsService.recomputeAndSaveUserLoad(workout.getAthleteId());
 
-        ScheduledWorkout result = coachService.markCompleted(scheduledWorkoutId,
+        ScheduledWorkout result = scheduledWorkoutService.markCompleted(scheduledWorkoutId,
                 saved.getTss() != null ? saved.getTss().intValue() : null,
                 saved.getIntensityFactor(),
                 saved.getId());

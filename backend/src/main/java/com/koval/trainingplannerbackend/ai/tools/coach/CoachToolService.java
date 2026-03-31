@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.ai.tools.coach;
 
 import com.koval.trainingplannerbackend.ai.ToolEventEmitter;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
+import com.koval.trainingplannerbackend.coach.CoachGroupService;
 import com.koval.trainingplannerbackend.coach.CoachService;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
@@ -22,10 +23,12 @@ import java.util.List;
 public class CoachToolService {
 
     private final CoachService coachService;
+    private final CoachGroupService coachGroupService;
     private final TrainingRepository trainingRepository;
 
-    public CoachToolService(CoachService coachService, TrainingRepository trainingRepository) {
+    public CoachToolService(CoachService coachService, CoachGroupService coachGroupService, TrainingRepository trainingRepository) {
         this.coachService = coachService;
+        this.coachGroupService = coachGroupService;
         this.trainingRepository = trainingRepository;
     }
 
@@ -62,7 +65,7 @@ public class CoachToolService {
             @ToolParam(description = "Group ID") String groupId,
             ToolContext context) {
         String coachId = SecurityUtils.getUserId(context);
-        return coachService.getAthletesByGroup(coachId, groupId).stream()
+        return coachGroupService.getAthletesByGroup(coachId, groupId).stream()
                 .map(AthleteSummary::from).toList();
     }
 

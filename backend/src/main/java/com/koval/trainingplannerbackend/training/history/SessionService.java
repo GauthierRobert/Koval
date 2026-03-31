@@ -5,6 +5,7 @@ import com.koval.trainingplannerbackend.club.feed.SessionCompletedEvent;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
 import com.koval.trainingplannerbackend.coach.CoachService;
+import com.koval.trainingplannerbackend.coach.ScheduledWorkoutService;
 import com.koval.trainingplannerbackend.training.metrics.TssCalculator;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import org.bson.types.ObjectId;
@@ -40,6 +41,7 @@ public class SessionService {
     private final AnalyticsService analyticsService;
     private final UserRepository userRepository;
     private final CoachService coachService;
+    private final ScheduledWorkoutService scheduledWorkoutService;
     private final GridFsOperations gridFsOperations;
     private final SessionAssociationService associationService;
     private final ClubTrainingSessionRepository clubTrainingSessionRepository;
@@ -49,6 +51,7 @@ public class SessionService {
                           AnalyticsService analyticsService,
                           UserRepository userRepository,
                           CoachService coachService,
+                          ScheduledWorkoutService scheduledWorkoutService,
                           GridFsOperations gridFsOperations,
                           SessionAssociationService associationService,
                           ClubTrainingSessionRepository clubTrainingSessionRepository,
@@ -57,6 +60,7 @@ public class SessionService {
         this.analyticsService = analyticsService;
         this.userRepository = userRepository;
         this.coachService = coachService;
+        this.scheduledWorkoutService = scheduledWorkoutService;
         this.gridFsOperations = gridFsOperations;
         this.associationService = associationService;
         this.clubTrainingSessionRepository = clubTrainingSessionRepository;
@@ -334,7 +338,7 @@ public class SessionService {
 
     private void tryMarkCompleted(String scheduledWorkoutId, CompletedSession session) {
         try {
-            coachService.markCompleted(scheduledWorkoutId,
+            scheduledWorkoutService.markCompleted(scheduledWorkoutId,
                     session.getTss() != null ? session.getTss().intValue() : null,
                     session.getIntensityFactor(),
                     session.getId());

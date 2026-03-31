@@ -26,16 +26,16 @@ import java.util.List;
 public class ScheduleController {
 
     private final ScheduledWorkoutRepository scheduledWorkoutRepository;
-    private final CoachService coachService;
+    private final ScheduledWorkoutService scheduledWorkoutService;
     private final ScheduleService scheduleService;
     private final ClubSessionService clubSessionService;
 
     public ScheduleController(ScheduledWorkoutRepository scheduledWorkoutRepository,
-            CoachService coachService,
+            ScheduledWorkoutService scheduledWorkoutService,
             ScheduleService scheduleService,
             ClubSessionService clubSessionService) {
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
-        this.coachService = coachService;
+        this.scheduledWorkoutService = scheduledWorkoutService;
         this.scheduleService = scheduleService;
         this.clubSessionService = clubSessionService;
     }
@@ -158,7 +158,7 @@ public class ScheduleController {
     @PostMapping("/{id}/skip")
     public ResponseEntity<ScheduledWorkoutResponse> markSkipped(@PathVariable String id) {
         try {
-            ScheduledWorkout updated = coachService.markSkipped(id);
+            ScheduledWorkout updated = scheduledWorkoutService.markSkipped(id);
             return ResponseEntity.ok(scheduleService.enrichSingle(updated));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
