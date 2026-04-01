@@ -18,6 +18,7 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * Sonnet-powered agents for complex creation tasks: training workouts,
@@ -33,7 +34,7 @@ public class AISonnetConfig extends AIConfig {
         return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(agentPrompt("training-creation"))
                 .defaultOptions(sonnetOptions())
-                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).scheduler(Schedulers.boundedElastic()).build())
                 .defaultToolCallbacks(wrapTools(trainingToolService))
                 .build();
     }

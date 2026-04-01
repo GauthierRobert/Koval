@@ -25,6 +25,7 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * Haiku-powered agents for lightweight operations: scheduling, analysis,
@@ -54,7 +55,7 @@ public class AIHaikuConfig extends AIConfig {
         return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(agentPrompt("scheduling"))
                 .defaultOptions(haikuOptions())
-                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).scheduler(Schedulers.boundedElastic()).build())
                 .defaultToolCallbacks(wrapTools(schedulingToolService, coachToolService, goalToolService, raceToolService))
                 .build();
     }
@@ -67,7 +68,7 @@ public class AIHaikuConfig extends AIConfig {
         return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(agentPrompt("analysis"))
                 .defaultOptions(haikuOptions())
-                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).scheduler(Schedulers.boundedElastic()).build())
                 .defaultToolCallbacks(wrapTools(historyToolService, goalToolService))
                 .build();
     }
@@ -81,7 +82,7 @@ public class AIHaikuConfig extends AIConfig {
         return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(agentPrompt("coach-management"))
                 .defaultOptions(haikuOptions())
-                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).scheduler(Schedulers.boundedElastic()).build())
                 .defaultToolCallbacks(wrapTools(coachToolService, zoneToolService, goalToolService))
                 .build();
     }
@@ -94,7 +95,7 @@ public class AIHaikuConfig extends AIConfig {
         return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(agentPrompt("club-management"))
                 .defaultOptions(haikuOptions())
-                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).scheduler(Schedulers.boundedElastic()).build())
                 .defaultToolCallbacks(wrapTools(clubToolService, trainingToolService))
                 .build();
     }
@@ -106,7 +107,7 @@ public class AIHaikuConfig extends AIConfig {
         return withLogging(ChatClient.builder(chatModel))
                 .defaultSystem(agentPrompt("general"))
                 .defaultOptions(haikuOptions())
-                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).scheduler(Schedulers.boundedElastic()).build())
                 .defaultToolCallbacks(wrapTools(historyToolService))
                 .build();
     }
