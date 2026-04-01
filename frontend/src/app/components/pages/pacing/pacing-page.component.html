@@ -32,115 +32,42 @@
   @if (!(pacingPlan$ | async)) {
     <div class="form-panel-wide glass">
 
-    <!-- Row 1: Discipline (left) + Bike Type (right) -->
-    <div class="form-row-2col">
-      <div class="field-group">
-        <label class="field-label">{{ 'PACING.FIELD_DISCIPLINE_LABEL' | translate }}</label>
-        <div class="pill-group">
-          <button class="pill" [class.active]="discipline === 'SWIM'" (click)="discipline = 'SWIM'">{{ 'PACING.DISCIPLINE_SWIM' | translate }}</button>
-          <button class="pill" [class.active]="discipline === 'BIKE'" (click)="discipline = 'BIKE'">{{ 'PACING.DISCIPLINE_BIKE' | translate }}</button>
-          <button class="pill" [class.active]="discipline === 'RUN'" (click)="discipline = 'RUN'">{{ 'PACING.DISCIPLINE_RUN' | translate }}</button>
-          <button class="pill" [class.active]="discipline === 'TRIATHLON'" (click)="discipline = 'TRIATHLON'">{{ 'PACING.DISCIPLINE_TRIATHLON' | translate }}</button>
-        </div>
-      </div>
-      @if (needsBike()) {
-        <div class="field-group">
-          <label class="field-label">{{ 'PACING.FIELD_BIKE_TYPE_LABEL' | translate }}</label>
-          <div class="pill-group">
-            <button class="pill" [class.active]="profile.bikeType === 'TT'" (click)="profile.bikeType = 'TT'">{{ 'PACING.BIKE_TYPE_TT' | translate }}</button>
-            <button class="pill" [class.active]="profile.bikeType === 'ROAD_AERO'" (click)="profile.bikeType = 'ROAD_AERO'">{{ 'PACING.BIKE_TYPE_ROAD_AERO' | translate }}</button>
-            <button class="pill" [class.active]="profile.bikeType === 'ROAD'" (click)="profile.bikeType = 'ROAD'">{{ 'PACING.BIKE_TYPE_ROAD' | translate }}</button>
-          </div>
-        </div>
-      }
-    </div>
+    <!-- Row 1: Discipline + Bike Type -->
+    <app-discipline-selector
+      [discipline]="discipline"
+      [bikeType]="profile.bikeType || 'ROAD_AERO'"
+      [showBikeType]="needsBike()"
+      (disciplineChange)="onDisciplineChange($event)"
+      (bikeTypeChange)="onBikeTypeChange($event)">
+    </app-discipline-selector>
 
-    <!-- Row 2: GPX Upload — Bike left, Run right (hidden when race is linked) -->
+    <!-- Row 2: GPX Upload (hidden when race is linked) -->
     @if ((needsBike() || needsRun()) && !linkedRace) {
       <div class="gpx-row">
-        <!-- Bike GPX (single-discipline BIKE or TRIATHLON) -->
         @if (needsBike()) {
           <div class="gpx-col">
-            <div class="gpx-with-loops">
-              <div class="gpx-dropzone-labeled">
-                <span class="dropzone-label">{{ 'PACING.DROPZONE_LABEL_BIKE' | translate }}</span>
-                <div
-                  class="gpx-dropzone"
-                  [class.dragging]="discipline === 'BIKE' ? isDragging : isDraggingBike"
-                  [class.has-file]="discipline === 'BIKE' ? gpxFile : bikeGpxFile"
-                  (dragover)="onDragOver($event, discipline === 'BIKE' ? 'gpx' : 'bike')"
-                  (dragleave)="onDragLeave(discipline === 'BIKE' ? 'gpx' : 'bike')"
-                  (drop)="onDrop($event, discipline === 'BIKE' ? 'gpx' : 'bike')"
-                  (click)="bikeFileInput.click()"
-                >
-                  <input #bikeFileInput type="file" accept=".gpx" hidden
-                    (change)="onFileSelected($event, discipline === 'BIKE' ? 'gpx' : 'bike')" />
-                  @if (!(discipline === 'BIKE' ? gpxFile : bikeGpxFile)) {
-                    <svg width="24" height="24" viewBox="0 0 24 24"
-                      fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                      <polyline points="17 8 12 3 7 8" />
-                      <line x1="12" y1="3" x2="12" y2="15" />
-                    </svg>
-                  }
-                  @if (!(discipline === 'BIKE' ? gpxFile : bikeGpxFile)) {
-                    <span>{{ 'PACING.DROPZONE_HINT_BIKE' | translate }}</span>
-                  }
-                  @if (discipline === 'BIKE' ? gpxFile : bikeGpxFile) {
-                    <span class="file-name">
-                      {{ discipline === 'BIKE' ? gpxFileName : bikeGpxFileName }}
-                    </span>
-                  }
-                </div>
-              </div>
-              <div class="loop-input">
-                <label>{{ 'PACING.LOOPS_LABEL' | translate }}</label>
-                <input type="number" [(ngModel)]="bikeLoops" min="1" max="50" />
-              </div>
-            </div>
+            <app-gpx-upload-zone
+              [fileName]="discipline === 'BIKE' ? gpxFileName : bikeGpxFileName"
+              [label]="'PACING.DROPZONE_LABEL_BIKE' | translate"
+              [loops]="bikeLoops"
+              [showLoops]="true"
+              [hint]="'PACING.DROPZONE_HINT_BIKE' | translate"
+              (fileSelected)="discipline === 'BIKE' ? onGpxFileSelected($event) : onBikeGpxFileSelected($event)"
+              (loopsChange)="bikeLoops = $event">
+            </app-gpx-upload-zone>
           </div>
         }
-
-        <!-- Run GPX (single-discipline RUN or TRIATHLON) -->
         @if (needsRun()) {
           <div class="gpx-col">
-            <div class="gpx-with-loops">
-              <div class="gpx-dropzone-labeled">
-                <span class="dropzone-label">{{ 'PACING.DROPZONE_LABEL_RUN' | translate }}</span>
-                <div
-                  class="gpx-dropzone"
-                  [class.dragging]="discipline === 'RUN' ? isDragging : isDraggingRun"
-                  [class.has-file]="discipline === 'RUN' ? gpxFile : runGpxFile"
-                  (dragover)="onDragOver($event, discipline === 'RUN' ? 'gpx' : 'run')"
-                  (dragleave)="onDragLeave(discipline === 'RUN' ? 'gpx' : 'run')"
-                  (drop)="onDrop($event, discipline === 'RUN' ? 'gpx' : 'run')"
-                  (click)="runFileInput.click()"
-                >
-                  <input #runFileInput type="file" accept=".gpx" hidden
-                    (change)="onFileSelected($event, discipline === 'RUN' ? 'gpx' : 'run')" />
-                  @if (!(discipline === 'RUN' ? gpxFile : runGpxFile)) {
-                    <svg width="24" height="24" viewBox="0 0 24 24"
-                      fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                      <polyline points="17 8 12 3 7 8" />
-                      <line x1="12" y1="3" x2="12" y2="15" />
-                    </svg>
-                  }
-                  @if (!(discipline === 'RUN' ? gpxFile : runGpxFile)) {
-                    <span>{{ 'PACING.DROPZONE_HINT_RUN' | translate }}</span>
-                  }
-                  @if (discipline === 'RUN' ? gpxFile : runGpxFile) {
-                    <span class="file-name">
-                      {{ discipline === 'RUN' ? gpxFileName : runGpxFileName }}
-                    </span>
-                  }
-                </div>
-              </div>
-              <div class="loop-input">
-                <label>{{ 'PACING.LOOPS_LABEL' | translate }}</label>
-                <input type="number" [(ngModel)]="runLoops" min="1" max="50" />
-              </div>
-            </div>
+            <app-gpx-upload-zone
+              [fileName]="discipline === 'RUN' ? gpxFileName : runGpxFileName"
+              [label]="'PACING.DROPZONE_LABEL_RUN' | translate"
+              [loops]="runLoops"
+              [showLoops]="true"
+              [hint]="'PACING.DROPZONE_HINT_RUN' | translate"
+              (fileSelected)="discipline === 'RUN' ? onGpxFileSelected($event) : onRunGpxFileSelected($event)"
+              (loopsChange)="runLoops = $event">
+            </app-gpx-upload-zone>
           </div>
         }
       </div>
@@ -297,192 +224,46 @@
   <!-- Results View -->
   @if (pacingPlan$ | async; as plan) {
     <div class="results-view">
+
     <!-- Compact Parameter Bar -->
-    <div class="param-bar glass">
-      <div class="param-chips">
-        @if (gpxFileName) {
-          <span class="param-chip">{{ gpxFileName }}</span>
-        }
-        @if (bikeGpxFileName) {
-          <span class="param-chip">{{ 'PACING.PARAM_BIKE_PREFIX' | translate: { name: bikeGpxFileName } }}</span>
-        }
-        @if (runGpxFileName) {
-          <span class="param-chip">{{ 'PACING.PARAM_RUN_PREFIX' | translate: { name: runGpxFileName } }}</span>
-        }
-        @if (bikeLoops > 1 && needsBike()) {
-          <span class="param-chip">{{ 'PACING.PARAM_BIKE_LOOPS' | translate: { count: bikeLoops } }}</span>
-        }
-        @if (runLoops > 1 && needsRun()) {
-          <span class="param-chip">{{ 'PACING.PARAM_RUN_LOOPS' | translate: { count: runLoops } }}</span>
-        }
-        <span class="param-chip">{{ discipline }}</span>
-        @if (needsBike() && profile.ftp) {
-          <span class="param-chip">FTP {{ profile.ftp }}W</span>
-        }
-        @if (needsBike() && profile.weightKg) {
-          <span class="param-chip">{{ profile.weightKg }}kg</span>
-        }
-        @if (needsBike() && targetPowerPct) {
-          <span class="param-chip">Target {{ targetPowerPct }}% FTP ({{ computedPowerWatts() }}W)</span>
-        }
-        @if (needsRun() && targetPacePct) {
-          <span class="param-chip">Pace {{ targetPacePct }}% ({{ computedPaceDisplay() }})</span>
-        }
-        @if (needsSwim() && profile.swimCssSec) {
-          <span class="param-chip">CSS {{ profile.swimCssSec }}s/100m</span>
-        }
-        @if (needsBike() && profile.bikeType) {
-          <span class="param-chip">{{ profile.bikeType }}</span>
-        }
-        @if ((needsBike() || needsRun()) && profile.temperature != null) {
-          <span class="param-chip">{{ profile.temperature }}°C</span>
-        }
-        @if (needsBike() && profile.windSpeed) {
-          <span class="param-chip">Wind {{ profile.windSpeed }}m/s</span>
-        }
-      </div>
-      <div class="param-bar-right">
-        @if (getAvailableTabs(plan).length > 1) {
-          <div class="tab-row">
-            @if (plan.swimSummary) {
-              <button class="tab-btn" [class.active]="activeTab === 'SWIM'" (click)="activeTab = 'SWIM'">{{ 'PACING.DISCIPLINE_SWIM' | translate }}</button>
-            }
-            @if (plan.bikeSegments) {
-              <button class="tab-btn" [class.active]="activeTab === 'BIKE'" (click)="activeTab = 'BIKE'">{{ 'PACING.DISCIPLINE_BIKE' | translate }}</button>
-            }
-            @if (plan.runSegments) {
-              <button class="tab-btn" [class.active]="activeTab === 'RUN'" (click)="activeTab = 'RUN'">{{ 'PACING.DISCIPLINE_RUN' | translate }}</button>
-            }
-          </div>
-        }
-        <div class="param-bar-actions">
-          <button class="modify-btn" (click)="showSettingsModal = true">{{ 'PACING.BTN_MODIFY' | translate }}</button>
-          <button class="clear-btn" (click)="clearPlan()">{{ 'PACING.BTN_CLEAR' | translate }}</button>
-        </div>
-      </div>
-    </div>
+    <app-pacing-parameter-bar
+      [plan]="plan"
+      [gpxFileName]="gpxFileName"
+      [bikeGpxFileName]="bikeGpxFileName"
+      [runGpxFileName]="runGpxFileName"
+      [bikeLoops]="bikeLoops"
+      [runLoops]="runLoops"
+      [discipline]="discipline"
+      [ftp]="profile.ftp"
+      [weightKg]="profile.weightKg"
+      [targetPowerPct]="targetPowerPct"
+      [computedPowerWatts]="computedPowerWatts()"
+      [targetPacePct]="targetPacePct"
+      [computedPaceDisplay]="computedPaceDisplay()"
+      [swimCssSec]="profile.swimCssSec"
+      [bikeType]="profile.bikeType"
+      [temperature]="profile.temperature"
+      [windSpeed]="profile.windSpeed"
+      [activeTab]="activeTab"
+      [availableTabs]="getAvailableTabs(plan)"
+      [needsBike]="needsBike()"
+      [needsRun]="needsRun()"
+      [needsSwim]="needsSwim()"
+      (tabChange)="activeTab = $event"
+      (modify)="showSettingsModal = true"
+      (clear)="clearPlan()">
+    </app-pacing-parameter-bar>
 
     <!-- Summary Cards -->
-    <div class="summary-row">
-      @if (plan.swimSummary; as ss) {
-        <div class="summary-card glass">
-          <span class="summary-label swim">{{ 'PACING.SUMMARY_SWIM_LABEL' | translate }}</span>
-          <div class="summary-body">
-            <div class="summary-stats">
-              <div class="stat">
-                <span class="stat-value">{{ formatDistance(ss.totalDistance) }}</span>
-                <span class="stat-label">{{ 'PACING.STAT_DISTANCE' | translate }}</span>
-              </div>
-              <div class="stat">
-                <span class="stat-value">{{ formatTime(ss.estimatedTotalTime) }}</span>
-                <span class="stat-label">{{ 'PACING.STAT_EST_TIME' | translate }}</span>
-              </div>
-              @if (ss.averagePace) {
-                <div class="stat">
-                  <span class="stat-value">{{ ss.averagePace }}</span>
-                  <span class="stat-label">{{ 'PACING.STAT_PACE_PER_100M' | translate }}</span>
-                </div>
-              }
-            </div>
-            @if (ss.targetBasis) {
-              <div class="target-basis">{{ ss.targetBasis }}</div>
-            }
-          </div>
-        </div>
-      }
-
-      @if (plan.bikeSummary; as bs) {
-        <div class="summary-card glass">
-          <span class="summary-label">{{ 'PACING.SUMMARY_BIKE_LABEL' | translate }}</span>
-          <div class="summary-body">
-            <div class="summary-stats">
-              <div class="stat">
-                <span class="stat-value">{{ formatDistance(bs.totalDistance) }}</span>
-                <span class="stat-label">{{ 'PACING.STAT_DISTANCE' | translate }}</span>
-              </div>
-              <div class="stat">
-                <span class="stat-value">{{ formatTime(bs.estimatedTotalTime) }}</span>
-                <span class="stat-label">{{ 'PACING.STAT_EST_TIME' | translate }}</span>
-              </div>
-              @if (!bikeShowSpeed && bs.averagePower) {
-                <div class="stat">
-                  <span class="stat-value">{{ bs.averagePower }}W</span>
-                  <span class="stat-label">{{ 'PACING.STAT_AVG_POWER' | translate }}</span>
-                </div>
-              }
-              @if (bikeShowSpeed && bs.estimatedTotalTime > 0) {
-                <div class="stat">
-                  <span class="stat-value">{{ (bs.totalDistance / bs.estimatedTotalTime * 3.6).toFixed(1) }} km/h</span>
-                  <span class="stat-label">{{ 'PACING.STAT_AVG_SPEED' | translate }}</span>
-                </div>
-              }
-              <div class="stat">
-                <span class="stat-value">{{ bs.totalCalories }}</span>
-                <span class="stat-label">{{ 'PACING.STAT_CALORIES' | translate }}</span>
-              </div>
-            </div>
-            <div class="summary-footer">
-              <div class="summary-texts">
-                @if (bs.nutritionPlan) {
-                  <div class="nutrition-plan">{{ bs.nutritionPlan }}</div>
-                }
-                @if (bs.targetBasis) {
-                  <div class="target-basis">{{ bs.targetBasis }}</div>
-                }
-              </div>
-              @if (!bikeShowSpeed) {
-                <button class="metric-toggle" (click)="showGroupMean = !showGroupMean"
-                  [title]="showGroupMean ? ('PACING.TOGGLE_SHOW_SEG_POWER_TITLE' | translate) : ('PACING.TOGGLE_SHOW_GROUP_MEAN_TITLE' | translate)">
-                  <span class="metric-toggle-label" [class.active]="!showGroupMean">{{ 'PACING.TOGGLE_SEG' | translate }}</span>
-                  <span class="metric-toggle-divider">/</span>
-                  <span class="metric-toggle-label" [class.active]="showGroupMean">{{ 'PACING.TOGGLE_GROUP' | translate }}</span>
-                </button>
-              }
-              <button class="metric-toggle" (click)="bikeShowSpeed = !bikeShowSpeed"
-                [title]="bikeShowSpeed ? ('PACING.TOGGLE_SWITCH_TO_POWER_TITLE' | translate) : ('PACING.TOGGLE_SWITCH_TO_SPEED_TITLE' | translate)">
-                <span class="metric-toggle-label" [class.active]="!bikeShowSpeed">{{ 'PACING.TOGGLE_POWER_LABEL' | translate }}</span>
-                <span class="metric-toggle-divider">/</span>
-                <span class="metric-toggle-label" [class.active]="bikeShowSpeed">{{ 'PACING.TOGGLE_SPEED_LABEL' | translate }}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      }
-
-      @if (plan.runSummary; as rs) {
-        <div class="summary-card glass">
-          <span class="summary-label run">{{ 'PACING.SUMMARY_RUN_LABEL' | translate }}</span>
-          <div class="summary-body">
-            <div class="summary-stats">
-              <div class="stat">
-                <span class="stat-value">{{ formatDistance(rs.totalDistance) }}</span>
-                <span class="stat-label">{{ 'PACING.STAT_DISTANCE' | translate }}</span>
-              </div>
-              <div class="stat">
-                <span class="stat-value">{{ formatTime(rs.estimatedTotalTime) }}</span>
-                <span class="stat-label">{{ 'PACING.STAT_EST_TIME' | translate }}</span>
-              </div>
-              @if (rs.averagePace) {
-                <div class="stat">
-                  <span class="stat-value">{{ rs.averagePace }}</span>
-                  <span class="stat-label">{{ 'PACING.STAT_AVG_PACE' | translate }}</span>
-                </div>
-              }
-              <div class="stat">
-                <span class="stat-value">{{ rs.totalCalories }}</span>
-                <span class="stat-label">{{ 'PACING.STAT_CALORIES' | translate }}</span>
-              </div>
-            </div>
-            @if (rs.nutritionPlan) {
-              <div class="nutrition-plan">{{ rs.nutritionPlan }}</div>
-            }
-            @if (rs.targetBasis) {
-              <div class="target-basis">{{ rs.targetBasis }}</div>
-            }
-          </div>
-        </div>
-      }
-    </div>
+    <app-pacing-summary-cards
+      [swimSummary]="plan.swimSummary"
+      [bikeSummary]="plan.bikeSummary"
+      [runSummary]="plan.runSummary"
+      [bikeShowSpeed]="bikeShowSpeed"
+      [showGroupMean]="showGroupMean"
+      (bikeShowSpeedChange)="bikeShowSpeed = $event"
+      (showGroupMeanChange)="showGroupMean = $event">
+    </app-pacing-summary-cards>
 
     <!-- Main content: two-column for BIKE/RUN -->
     @if (activeTab !== 'SWIM') {
@@ -605,271 +386,33 @@
   }
 
   <!-- Settings Modal -->
-  @if (showSettingsModal) {
-    <div class="modal-overlay" (click)="closeSettingsModal()">
-      <div class="modal-content glass" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2 class="section-title">{{ 'PACING.MODAL_MODIFY_TITLE' | translate }}</h2>
-        <button class="modal-close" (click)="closeSettingsModal()">&times;</button>
-      </div>
-
-      <div class="modal-body">
-        <!-- GPX Upload: Single dropzone for BIKE or RUN -->
-        @if (discipline === 'BIKE' || discipline === 'RUN') {
-          <div class="gpx-with-loops">
-            <div
-              class="gpx-dropzone"
-              [class.dragging]="isDragging"
-              [class.has-file]="gpxFile"
-              (dragover)="onDragOver($event)"
-              (dragleave)="onDragLeave()"
-              (drop)="onDrop($event)"
-              (click)="modalFileInput.click()"
-            >
-              <input #modalFileInput type="file" accept=".gpx" hidden (change)="onFileSelected($event)" />
-              @if (!gpxFile) {
-                <span>{{ 'PACING.DROPZONE_HINT_GENERIC' | translate }}</span>
-              }
-              @if (gpxFile) {
-                <span class="file-name">{{ gpxFileName }}</span>
-              }
-            </div>
-            <div class="loop-input">
-              <label>{{ 'PACING.LOOPS_LABEL' | translate }}</label>
-              @if (discipline === 'RUN') {
-                <input type="number" [(ngModel)]="runLoops" min="1" max="50" />
-              }
-              @if (discipline === 'BIKE') {
-                <input type="number" [(ngModel)]="bikeLoops" min="1" max="50" />
-              }
-            </div>
-          </div>
-        }
-
-        <!-- GPX Upload: Dual dropzones for TRIATHLON -->
-        @if (discipline === 'TRIATHLON') {
-          <div class="gpx-dual">
-            <div class="gpx-with-loops">
-              <div class="gpx-dropzone-labeled">
-                <span class="dropzone-label">{{ 'PACING.DROPZONE_LABEL_BIKE' | translate }}</span>
-                <div
-                  class="gpx-dropzone"
-                  [class.dragging]="isDraggingBike"
-                  [class.has-file]="bikeGpxFile"
-                  (dragover)="onDragOver($event, 'bike')"
-                  (dragleave)="onDragLeave('bike')"
-                  (drop)="onDrop($event, 'bike')"
-                  (click)="modalBikeFileInput.click()"
-                >
-                  <input #modalBikeFileInput type="file" accept=".gpx" hidden (change)="onFileSelected($event, 'bike')" />
-                  @if (!bikeGpxFile) {
-                    <span>{{ 'PACING.DROPZONE_HINT_BIKE' | translate }}</span>
-                  }
-                  @if (bikeGpxFile) {
-                    <span class="file-name">{{ bikeGpxFileName }}</span>
-                  }
-                </div>
-              </div>
-              <div class="loop-input">
-                <label>{{ 'PACING.LOOPS_LABEL' | translate }}</label>
-                <input type="number" [(ngModel)]="bikeLoops" min="1" max="50" />
-              </div>
-            </div>
-            <div class="gpx-with-loops">
-              <div class="gpx-dropzone-labeled">
-                <span class="dropzone-label">{{ 'PACING.DROPZONE_LABEL_RUN' | translate }}</span>
-                <div
-                  class="gpx-dropzone"
-                  [class.dragging]="isDraggingRun"
-                  [class.has-file]="runGpxFile"
-                  (dragover)="onDragOver($event, 'run')"
-                  (dragleave)="onDragLeave('run')"
-                  (drop)="onDrop($event, 'run')"
-                  (click)="modalRunFileInput.click()"
-                >
-                  <input #modalRunFileInput type="file" accept=".gpx" hidden (change)="onFileSelected($event, 'run')" />
-                  @if (!runGpxFile) {
-                    <span>{{ 'PACING.DROPZONE_HINT_RUN' | translate }}</span>
-                  }
-                  @if (runGpxFile) {
-                    <span class="file-name">{{ runGpxFileName }}</span>
-                  }
-                </div>
-              </div>
-              <div class="loop-input">
-                <label>{{ 'PACING.LOOPS_LABEL' | translate }}</label>
-                <input type="number" [(ngModel)]="runLoops" min="1" max="50" />
-              </div>
-            </div>
-          </div>
-        }
-
-        <!-- No dropzone for SWIM -->
-
-        <div class="modal-grid">
-          <div class="form-col">
-            <div class="field-group">
-              <label class="field-label">{{ 'PACING.FIELD_DISCIPLINE_LABEL' | translate }}</label>
-              <div class="pill-group">
-                <button class="pill" [class.active]="discipline === 'SWIM'" (click)="discipline = 'SWIM'">{{ 'PACING.DISCIPLINE_SWIM' | translate }}</button>
-                <button class="pill" [class.active]="discipline === 'BIKE'" (click)="discipline = 'BIKE'">{{ 'PACING.DISCIPLINE_BIKE' | translate }}</button>
-                <button class="pill" [class.active]="discipline === 'RUN'" (click)="discipline = 'RUN'">{{ 'PACING.DISCIPLINE_RUN' | translate }}</button>
-                <button class="pill" [class.active]="discipline === 'TRIATHLON'" (click)="discipline = 'TRIATHLON'">{{ 'PACING.DISCIPLINE_TRIATHLON' | translate }}</button>
-              </div>
-            </div>
-            @if (needsBike()) {
-              <div class="field-group">
-                <label class="field-label">{{ 'PACING.FIELD_BIKE_TYPE_LABEL' | translate }}</label>
-                <div class="pill-group">
-                  <button class="pill" [class.active]="profile.bikeType === 'TT'" (click)="profile.bikeType = 'TT'">{{ 'PACING.BIKE_TYPE_TT' | translate }}</button>
-                  <button class="pill" [class.active]="profile.bikeType === 'ROAD_AERO'" (click)="profile.bikeType = 'ROAD_AERO'">{{ 'PACING.BIKE_TYPE_ROAD_AERO' | translate }}</button>
-                  <button class="pill" [class.active]="profile.bikeType === 'ROAD'" (click)="profile.bikeType = 'ROAD'">{{ 'PACING.BIKE_TYPE_ROAD' | translate }}</button>
-                </div>
-              </div>
-            }
-          </div>
-
-          <div class="form-col">
-            <h3 class="subsection-title">{{ 'PACING.SECTION_ATHLETE_METRICS' | translate }}</h3>
-            @if (needsBike()) {
-              <div class="field-row">
-                <div class="field">
-                  <label>{{ 'PACING.FIELD_FTP_LABEL' | translate }}</label>
-                  <input type="number" [(ngModel)]="profile.ftp" placeholder="250" min="50" max="500" />
-                </div>
-                <div class="field">
-                  <label>{{ 'PACING.FIELD_WEIGHT_LABEL' | translate }}</label>
-                  <input type="number" [(ngModel)]="profile.weightKg" placeholder="75" min="30" max="200" />
-                </div>
-              </div>
-            }
-            @if (needsRun()) {
-              <div class="field-row">
-                <div class="field">
-                  <label>{{ 'PACING.FIELD_THRESHOLD_PACE_LABEL' | translate }}</label>
-                  <input type="number" [(ngModel)]="profile.thresholdPaceSec" placeholder="270" min="120" max="600" />
-                </div>
-              </div>
-            }
-            @if (needsSwim()) {
-              <div class="field-row">
-                <div class="field">
-                  <label>{{ 'PACING.FIELD_SWIM_CSS_LABEL' | translate }}</label>
-                  <input type="number" [(ngModel)]="profile.swimCssSec" placeholder="95" min="40" max="200" />
-                </div>
-              </div>
-            }
-            <!-- TODO: Re-enable fatigue resistance once backend integrates it -->
-            <div class="field-row">
-              <div class="field">
-                <label>{{ 'PACING.FIELD_NUTRITION_LABEL' | translate }}</label>
-                <select [(ngModel)]="profile.nutritionPreference">
-                  <option value="MIXED">{{ 'PACING.NUTRITION_MIXED' | translate }}</option>
-                  <option value="GELS">{{ 'PACING.NUTRITION_GELS' | translate }}</option>
-                  <option value="DRINK">{{ 'PACING.NUTRITION_DRINK' | translate }}</option>
-                  <option value="SOLID">{{ 'PACING.NUTRITION_SOLID' | translate }}</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-col">
-            <div class="label-with-tooltip">
-              <h3 class="subsection-title">{{ 'PACING.SECTION_RACE_TARGETS' | translate }}</h3>
-              @if (discipline === 'TRIATHLON') {
-                <span class="tooltip-trigger">?
-                <span class="tooltip-text tooltip-wide">
-                  <strong>{{ 'PACING.TOOLTIP_TRIATHLON_TITLE' | translate }}</strong>
-                  <table class="tooltip-table">
-                    <tr><th>{{ 'PACING.TOOLTIP_DISTANCE' | translate }}</th><th>{{ 'PACING.TOOLTIP_BEGINNER' | translate }}</th><th>{{ 'PACING.TOOLTIP_INTERMEDIATE' | translate }}</th><th>{{ 'PACING.TOOLTIP_ELITE' | translate }}</th></tr>
-                    <tr><td>{{ 'PACING.TOOLTIP_SPRINT' | translate }}</td><td>80–85%</td><td>90–95%</td><td>95–105%</td></tr>
-                    <tr><td>{{ 'PACING.TOOLTIP_OLYMPIC' | translate }}</td><td>70–80%</td><td>82–88%</td><td>90–95%</td></tr>
-                    <tr><td>{{ 'PACING.TOOLTIP_70_3' | translate }}</td><td>65–75%</td><td>78–84%</td><td>85–90%</td></tr>
-                    <tr><td>{{ 'PACING.TOOLTIP_IRONMAN' | translate }}</td><td>60–70%</td><td>70–78%</td><td>78–85%</td></tr>
-                  </table>
-                </span>
-                </span>
-              }
-            </div>
-            <div class="field-row">
-              @if (needsBike()) {
-                <div class="field">
-                  <label>{{ 'PACING.FIELD_TARGET_POWER_LABEL' | translate }}</label>
-                  <input type="number" [ngModel]="targetPowerPct" (ngModelChange)="onTargetPowerPctChange($event)" [placeholder]="'PACING.FIELD_HINT_AUTO' | translate" min="30" max="120" />
-                  @if (computedPowerWatts(); as w) {
-                    <span class="field-hint computed">= {{ w }}W</span>
-                  }
-                  @if (!targetPowerPct) {
-                    <span class="field-hint">{{ 'PACING.FIELD_HINT_AUTO' | translate }}</span>
-                  }
-                </div>
-              }
-              @if (needsRun()) {
-                <div class="field">
-                  <label>{{ 'PACING.FIELD_TARGET_PACE_LABEL' | translate }}</label>
-                  <input type="number" [ngModel]="targetPacePct" (ngModelChange)="onTargetPacePctChange($event)" [placeholder]="'PACING.FIELD_HINT_AUTO' | translate" min="80" max="150" />
-                  @if (computedPaceDisplay(); as p) {
-                    <span class="field-hint computed">= {{ p }}</span>
-                  }
-                  @if (!targetPacePct) {
-                    <span class="field-hint">{{ 'PACING.FIELD_HINT_AUTO' | translate }}</span>
-                  }
-                </div>
-              }
-            </div>
-            @if (needsSwim()) {
-              <div class="field-row">
-                <div class="field">
-                  <label>{{ 'PACING.FIELD_SWIM_DISTANCE_LABEL' | translate }}</label>
-                  <input type="number" [(ngModel)]="profile.swimDistanceM" placeholder="1900" min="100" max="10000" />
-                </div>
-                @if (discipline === 'TRIATHLON' || profile.swimDistanceM) {
-                  <div class="field">
-                    <label>{{ 'PACING.FIELD_SWIM_PACE_LABEL' | translate }}</label>
-                    <input type="number" [(ngModel)]="profile.targetSwimPaceSecPer100m" min="40" max="300" />
-                    @if (!profile.targetSwimPaceSecPer100m) {
-                      <span class="field-hint">{{ 'PACING.FIELD_HINT_AUTO' | translate }}</span>
-                    }
-                  </div>
-                }
-              </div>
-            }
-
-            @if (needsBike() || needsRun()) {
-              <h3 class="subsection-title">{{ 'PACING.SECTION_ENVIRONMENT' | translate }}</h3>
-              <div class="field-row">
-                <div class="field">
-                  <label>{{ 'PACING.FIELD_TEMPERATURE_LABEL' | translate }}</label>
-                  <input type="number" [(ngModel)]="profile.temperature" placeholder="20" min="-10" max="50" />
-                </div>
-                @if (needsBike()) {
-                  <div class="field">
-                    <label>{{ 'PACING.FIELD_WIND_SPEED_LABEL' | translate }}</label>
-                    <input type="number" [(ngModel)]="profile.windSpeed" placeholder="0" min="0" max="30" step="0.5" />
-                  </div>
-                }
-              </div>
-            }
-          </div>
-        </div>
-      </div>
-
-      @if (localError$ | async; as err) {
-        <div class="error-msg">{{ err }}</div>
-      }
-
-      <div class="modal-footer">
-        <button class="clear-btn" (click)="closeSettingsModal()">{{ 'PACING.BTN_CANCEL' | translate }}</button>
-        <button class="generate-btn" (click)="regenerate()" [disabled]="(loading$ | async) || !canGenerate()">
-          @if (!(loading$ | async)) {
-            <span>{{ 'PACING.BTN_REGENERATE_PLAN' | translate }}</span>
-          }
-          @if (loading$ | async) {
-            <span>{{ 'PACING.BTN_GENERATING' | translate }}</span>
-          }
-        </button>
-      </div>
-      </div>
-    </div>
-  }
+  <app-pacing-settings-modal
+    [isOpen]="showSettingsModal"
+    [profile]="profile"
+    [discipline]="discipline"
+    [gpxFileName]="gpxFileName"
+    [bikeGpxFileName]="bikeGpxFileName"
+    [runGpxFileName]="runGpxFileName"
+    [bikeLoops]="bikeLoops"
+    [runLoops]="runLoops"
+    [targetPowerPct]="targetPowerPct"
+    [targetPacePct]="targetPacePct"
+    [computedPowerWatts]="computedPowerWatts()"
+    [computedPaceDisplay]="computedPaceDisplay()"
+    [loading]="!!(loading$ | async)"
+    [blockedReason]="getGenerateBlockedReason()"
+    [error]="(localError$ | async) ?? null"
+    (closed)="closeSettingsModal()"
+    (regenerate)="regenerate()"
+    (disciplineChange)="onDisciplineChange($event)"
+    (bikeTypeChange)="onBikeTypeChange($event)"
+    (profileChange)="profile = $event"
+    (targetPowerPctChange)="onTargetPowerPctChange($event)"
+    (targetPacePctChange)="onTargetPacePctChange($event)"
+    (gpxFileSelected)="onGpxFileSelected($event)"
+    (bikeGpxFileSelected)="onBikeGpxFileSelected($event)"
+    (runGpxFileSelected)="onRunGpxFileSelected($event)"
+    (bikeLoopsChange)="bikeLoops = $event"
+    (runLoopsChange)="runLoops = $event">
+  </app-pacing-settings-modal>
 </div>

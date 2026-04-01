@@ -2,7 +2,7 @@ import {ChangeDetectionStrategy, Component, DestroyRef, inject, NgZone, OnInit} 
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
-import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import {TranslateModule} from '@ngx-translate/core';
 import {BehaviorSubject, combineLatest, map, Observable, of} from 'rxjs';
 import {CoachService, ScheduledWorkout} from '../../../services/coach.service';
 import {AuthService, User} from '../../../services/auth.service';
@@ -14,21 +14,22 @@ import {TrainingActionModalComponent} from '../../shared/training-action-modal/t
 import {InviteCodeModalComponent} from '../../shared/invite-code-modal/invite-code-modal.component';
 import {ShareTrainingModalComponent} from '../../shared/share-training-modal/share-training-modal.component';
 import {TrainingService} from '../../../services/training.service';
-import {Training, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS, TrainingType} from '../../../models/training.model';
-import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
+import {Training} from '../../../models/training.model';
 import {PmcChartComponent} from '../../shared/pmc-chart/pmc-chart.component';
-import {SessionAnalysisComponent} from '../session-analysis/session-analysis.component';
 import {SavedSession} from '../../../services/history.service';
-import {daysUntil as sharedDaysUntil, formatTimeHMS} from '../../shared/format/format.utils';
 
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
-import {SessionData, SessionSummary} from '../../../models/session-types.model';
+import {SessionData} from '../../../models/session-types.model';
 import {PhysiologyPageComponent} from '../physiology-page/physiology-page.component';
+import {AthleteListSidebarComponent} from './athlete-list-sidebar/athlete-list-sidebar.component';
+import {CoachPerformanceTabComponent} from './coach-performance-tab/coach-performance-tab.component';
+import {CoachGoalsTabComponent} from './coach-goals-tab/coach-goals-tab.component';
+import {CoachHistoryTabComponent} from './coach-history-tab/coach-history-tab.component';
 
 @Component({
   selector: 'app-coach-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, TrainingActionModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, SportIconComponent, PmcChartComponent, SessionAnalysisComponent, PhysiologyPageComponent],
+  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, TrainingActionModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, PmcChartComponent, PhysiologyPageComponent, AthleteListSidebarComponent, CoachPerformanceTabComponent, CoachGoalsTabComponent, CoachHistoryTabComponent],
   templateUrl: './coach-dashboard.component.html',
   styleUrl: './coach-dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -122,7 +123,6 @@ export class CoachDashboardComponent implements OnInit {
 
   coachTrainings$: Observable<Training[]> = of([]);
 
-  private readonly translate = inject(TranslateService);
   private readonly coachService = inject(CoachService);
   private readonly authService = inject(AuthService);
   private readonly clubService = inject(ClubService);
@@ -200,10 +200,6 @@ export class CoachDashboardComponent implements OnInit {
     });
   }
 
-  getTagCount(tag: string): number {
-    return this.athletesSubject.value.filter(a => a.groups?.includes(tag)).length;
-  }
-
   setTagFilter(tag: string | null) {
     this.activeTagFilter = tag;
     this.tagFilterSubject.next(tag);
@@ -222,8 +218,9 @@ export class CoachDashboardComponent implements OnInit {
     this.setClubFilter(this.activeClubFilter === clubName ? null : clubName);
   }
 
-  getClubCount(clubName: string): number {
-    return this.athletesSubject.value.filter(a => a.clubs?.includes(clubName)).length;
+  clearFilters(): void {
+    this.setTagFilter(null);
+    this.setClubFilter(null);
   }
 
   selectAthlete(athlete: User) {
@@ -327,21 +324,6 @@ export class CoachDashboardComponent implements OnInit {
     return `${y}-${m}-${day}`;
   }
 
-  getWorkoutTitle(workout: ScheduledWorkout): string {
-    return workout.trainingTitle || workout.title || 'W-' + workout.trainingId.substring(0, 8);
-  }
-
-  getWorkoutDuration(workout: ScheduledWorkout): string {
-    if (workout.totalDurationSeconds) {
-      const totalSec = workout.totalDurationSeconds;
-      const h = Math.floor(totalSec / 3600);
-      const m = Math.floor((totalSec % 3600) / 60);
-      const s = totalSec % 60;
-      return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    }
-    return workout.duration || '-';
-  }
-
   removeTag(athlete: User | null, tag: string) {
     if (!athlete) return;
     this.coachService.removeAthleteGroup(athlete.id, tag).subscribe({
@@ -355,14 +337,6 @@ export class CoachDashboardComponent implements OnInit {
         }
       }
     });
-  }
-
-  getTypeColor(type: string): string {
-    return TRAINING_TYPE_COLORS[type as TrainingType] || '#888';
-  }
-
-  getTypeLabel(type: string): string {
-    return TRAINING_TYPE_LABELS[type as TrainingType] || type;
   }
 
   addAthlete() {
@@ -398,33 +372,6 @@ export class CoachDashboardComponent implements OnInit {
     }
   }
 
-  getSportDistribution(sessions: SessionData[]): SessionSummary[] {
-    const map = new Map<string, number>();
-    for (const s of sessions) map.set(s.sportType, (map.get(s.sportType) ?? 0) + 1);
-    return Array.from(map.entries())
-      .map(([sport, count]) => ({ sport, count, pct: Math.round(count / sessions.length * 100) }))
-      .sort((a, b) => b.count - a.count);
-  }
-
-  formatSessionDur(sec: number): string {
-    return formatTimeHMS(sec);
-  }
-
-  getPriorityColor(priority: string): string {
-    return this.raceGoalService.getPriorityColor(priority);
-  }
-
-  daysUntil(dateStr: string): number {
-    return sharedDaysUntil(dateStr);
-  }
-
-  // Task 7: Form condition label
-  getFormCondition(tsb: number): string {
-    if (tsb > 5) return this.translate.instant('COACH_DASHBOARD.CONDITION_FRESH');
-    if (tsb < -10) return this.translate.instant('COACH_DASHBOARD.CONDITION_TIRED');
-    return this.translate.instant('COACH_DASHBOARD.CONDITION_NEUTRAL');
-  }
-
   openSessionAnalysis(session: SessionData): void {
     this.coachService.getSessionById(session.id).subscribe({
       next: (s: any) => this.ngZone.run(() => {
@@ -457,11 +404,5 @@ export class CoachDashboardComponent implements OnInit {
     this.selectedAthleteSessionSubject.next(null);
   }
 
-  trackTagByName(group: Group): string { return group.name; }
-  trackAthleteById(athlete: User): string { return athlete.id; }
   trackByValue(value: string): string { return value; }
-  trackScheduleById(workout: ScheduledWorkout): string { return workout.id; }
-  trackSessionById(s: SessionData): string { return s.id; }
-  trackDistBySport(d: { sport: string }): string { return d.sport; }
-  trackGoalById(goal: RaceGoal): string { return goal.id; }
 }

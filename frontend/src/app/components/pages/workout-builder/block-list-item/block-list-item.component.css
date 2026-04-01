@@ -1,0 +1,106 @@
+:host {
+  display: block;
+}
+
+.block-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid transparent;
+  background: var(--surface-elevated, var(--overlay-3));
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.block-item:hover {
+  background: var(--surface-hover, var(--overlay-8));
+}
+
+.block-item.selected {
+  border-color: var(--accent-color, #ff9d00);
+  background: var(--accent-subtle, rgba(255, 157, 0, 0.08));
+}
+
+.block-item.set-selected {
+  border-color: #a78bfa;
+}
+
+.block-drag-handle {
+  cursor: grab;
+  color: var(--text-dim, #505050);
+  flex-shrink: 0;
+}
+
+.block-color-bar {
+  width: 4px;
+  height: 28px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.block-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.block-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color, #ececf1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.block-meta {
+  font-size: 11px;
+  color: var(--text-muted, #8e8ea0);
+}
+
+.block-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.block-item:hover .block-actions {
+  opacity: 1;
+}
+
+.block-action-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim, #6e6e80);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+}
+
+.block-action-btn:hover {
+  color: var(--text-color, #ececf1);
+  background: var(--glass-border);
+}
+
+.block-action-btn.delete:hover {
+  color: var(--danger-color, #f87171);
+}
+
+/* CDK drag-drop */
+:host.cdk-drag-preview .block-item {
+  background: var(--surface-color, rgba(30, 30, 40, 0.95));
+  border: 1px solid var(--accent-color, #ff9d00);
+  border-radius: var(--radius-sm, 6px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+:host.cdk-drag-placeholder {
+  opacity: 0.3;
+}
+
+:host.cdk-drag-animating {
+  transition: transform 200ms ease;
+}

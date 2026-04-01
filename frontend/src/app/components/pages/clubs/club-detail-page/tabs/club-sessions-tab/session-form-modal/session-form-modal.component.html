@@ -1,0 +1,168 @@
+@if (isOpen) {
+  <div class="modal-backdrop" (click)="close()">
+  <div class="modal glass" (click)="$event.stopPropagation()" data-testid="session-form-modal">
+    <div class="modal-header">
+      <h3>{{ editingSession ? ('CLUB_SESSIONS.FORM_EDIT_TITLE' | translate) : ('CLUB_SESSIONS.FORM_CREATE_TITLE' | translate) }}</h3>
+      <button class="close-btn" (click)="close()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <!-- Title + Sport -->
+      <div class="form-row two-col">
+        <div class="form-row">
+          <label>{{ 'CLUB_SESSIONS.FORM_LABEL_TITLE' | translate }}</label>
+          <input [(ngModel)]="form['title']" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_TITLE' | translate" class="form-input" data-testid="form-session-title"/>
+        </div>
+        <div class="form-row">
+          <label>{{ 'CLUB_SESSIONS.FORM_LABEL_SPORT' | translate }}</label>
+          <select [(ngModel)]="form['sport']" class="form-input" data-testid="form-session-sport">
+            @for (s of sports; track s) {
+              <option [value]="s">{{ s }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- Group + Coach -->
+      @if (clubGroups.length > 0 || coachMembers.length > 0) {
+        <div class="form-row two-col">
+          @if (clubGroups.length > 0) {
+            <div class="form-row">
+              <label>{{ 'CLUB_SESSIONS.FORM_LABEL_GROUP' | translate }}</label>
+              <select [(ngModel)]="form['clubGroupId']" class="form-input">
+                <option value="">{{ 'CLUB_SESSIONS.FORM_GROUP_ALL_MEMBERS' | translate }}</option>
+                @for (g of clubGroups; track g.id) {
+                  <option [value]="g.id">{{ g.name }}</option>
+                }
+              </select>
+            </div>
+          }
+          @if (coachMembers.length > 0) {
+            <div class="form-row">
+              <label>{{ 'CLUB_SESSIONS.FORM_LABEL_RESPONSIBLE_COACH' | translate }}</label>
+              <select [(ngModel)]="form['responsibleCoachId']" class="form-input">
+                <option value="">{{ 'CLUB_SESSIONS.FORM_COACH_NONE' | translate }}</option>
+                @for (m of coachMembers; track m.userId) {
+                  <option [value]="m.userId">{{ m.displayName }}</option>
+                }
+              </select>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Open to All toggle -->
+      <div class="form-row recurring-toggle-row">
+        <label class="toggle-label">
+          <input type="checkbox" [(ngModel)]="form['openToAll']" class="toggle-input"/>
+          <span class="toggle-switch"></span>
+          <span>{{ 'CLUB_SESSIONS.FORM_LABEL_OPEN_TO_ALL' | translate }}</span>
+        </label>
+      </div>
+      @if (form['openToAll']) {
+        <div class="form-row two-col">
+          <div class="form-row">
+            <label>{{ 'CLUB_SESSIONS.FORM_LABEL_OPEN_TO_ALL_DELAY' | translate }}</label>
+            <input type="number" [(ngModel)]="form['openToAllDelayValue']" class="form-input" min="1" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_OPEN_TO_ALL_DELAY' | translate"/>
+          </div>
+          <div class="form-row">
+            <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DELAY_UNIT' | translate }}</label>
+            <select [(ngModel)]="form['openToAllDelayUnit']" class="form-input">
+              <option value="DAYS">{{ 'CLUB_SESSIONS.FORM_DELAY_UNIT_DAYS' | translate }}</option>
+              <option value="HOURS">{{ 'CLUB_SESSIONS.FORM_DELAY_UNIT_HOURS' | translate }}</option>
+            </select>
+          </div>
+        </div>
+      }
+
+      <!-- Recurring fields (always shown for create, hidden for edit-this-only) -->
+      @if (!editingSession) {
+        <div class="form-row two-col">
+          <div class="form-row">
+            <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DAY_OF_WEEK' | translate }}</label>
+            <select [(ngModel)]="form['dayOfWeek']" class="form-input" data-testid="form-day-of-week">
+              <option value="" disabled>{{ 'CLUB_SESSIONS.FORM_PLACEHOLDER_DAY_OF_WEEK' | translate }}</option>
+              @for (d of daysOfWeek; track d) {
+                <option [value]="d">{{ d }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-row">
+            <label>{{ 'CLUB_SESSIONS.FORM_LABEL_TIME' | translate }}</label>
+            <input type="time" [(ngModel)]="form['timeOfDay']" class="form-input" data-testid="form-time-of-day"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>{{ 'CLUB_SESSIONS.FORM_LABEL_END_DATE' | translate }}</label>
+          <input type="date" [(ngModel)]="form['endDate']" class="form-input"/>
+        </div>
+      }
+
+      <!-- Single session edit: Date/Time (only for edit-this-only) -->
+      @if (editingSession && !editAllFutureMode) {
+        <div class="form-row">
+          <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DATE_TIME' | translate }}</label>
+          <input type="datetime-local" [(ngModel)]="form['scheduledAt']" class="form-input"/>
+        </div>
+      }
+
+      <!-- Edit all future: Time only -->
+      @if (editingSession && editAllFutureMode) {
+        <div class="form-row">
+          <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DATE_TIME' | translate }}</label>
+          <input type="datetime-local" [(ngModel)]="form['scheduledAt']" class="form-input"/>
+        </div>
+      }
+
+      <!-- Max participants + Duration -->
+      <div class="form-row two-col">
+        <div class="form-row">
+          <label>{{ 'CLUB_SESSIONS.FORM_LABEL_MAX_PARTICIPANTS' | translate }}</label>
+          <input type="number" [(ngModel)]="form['maxParticipants']" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_MAX_PARTICIPANTS' | translate" class="form-input" min="1" data-testid="form-max-participants"/>
+        </div>
+        <div class="form-row">
+          <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DURATION' | translate }}</label>
+          <input type="number" [(ngModel)]="form['durationMinutes']" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_DURATION' | translate" class="form-input" min="15" step="15" data-testid="form-duration-minutes"/>
+        </div>
+      </div>
+
+      <!-- Location + GPX -->
+      <div class="form-row two-col">
+        <div class="form-row">
+          <label>{{ 'CLUB_SESSIONS.FORM_LABEL_LOCATION' | translate }}</label>
+          <input [(ngModel)]="form['location']" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_LOCATION' | translate" class="form-input" data-testid="form-session-location"/>
+        </div>
+        <div class="form-row">
+          <label>{{ 'CLUB_SESSIONS.FORM_LABEL_GPX' | translate }}</label>
+          @if (editingSession?.gpxFileName; as gpxName) {
+            <div class="gpx-existing">
+              <span class="gpx-badge">{{ gpxName }}</span>
+              <button class="btn-danger btn-sm" (click)="removeGpx()">{{ 'COMMON.DELETE' | translate }}</button>
+            </div>
+          }
+          <input type="file" accept=".gpx" (change)="onGpxFileSelected($event)" class="form-input file-input" />
+        </div>
+      </div>
+
+      <!-- Meeting point -->
+      <div class="form-row">
+        <label>{{ 'CLUB_SESSIONS.FORM_LABEL_MEETING_POINT' | translate }}</label>
+        <app-meeting-point-picker
+          [lat]="form['meetingPointLat']"
+          [lon]="form['meetingPointLon']"
+          (pointChanged)="onMeetingPointChanged($event)"
+        ></app-meeting-point-picker>
+      </div>
+
+      <!-- Description -->
+      <div class="form-row">
+        <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DESCRIPTION' | translate }}</label>
+        <textarea [(ngModel)]="form['description']" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_DESCRIPTION' | translate" class="form-input" rows="2" data-testid="form-session-description"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="close()" data-testid="btn-cancel-form">{{ 'CLUB_SESSIONS.BTN_CANCEL' | translate }}</button>
+      <button class="btn-primary" (click)="save()" [disabled]="!isFormValid" data-testid="btn-create-session">{{ editingSession ? ('CLUB_SESSIONS.BTN_SAVE' | translate) : ('CLUB_SESSIONS.BTN_CREATE' | translate) }}</button>
+    </div>
+  </div>
+  </div>
+}

@@ -1,0 +1,63 @@
+<div class="param-bar glass">
+  <div class="param-chips">
+    @if (gpxFileName) {
+      <span class="param-chip">{{ gpxFileName }}</span>
+    }
+    @if (bikeGpxFileName) {
+      <span class="param-chip">{{ 'PACING.PARAM_BIKE_PREFIX' | translate: { name: bikeGpxFileName } }}</span>
+    }
+    @if (runGpxFileName) {
+      <span class="param-chip">{{ 'PACING.PARAM_RUN_PREFIX' | translate: { name: runGpxFileName } }}</span>
+    }
+    @if (bikeLoops > 1 && needsBike) {
+      <span class="param-chip">{{ 'PACING.PARAM_BIKE_LOOPS' | translate: { count: bikeLoops } }}</span>
+    }
+    @if (runLoops > 1 && needsRun) {
+      <span class="param-chip">{{ 'PACING.PARAM_RUN_LOOPS' | translate: { count: runLoops } }}</span>
+    }
+    <span class="param-chip">{{ discipline }}</span>
+    @if (needsBike && ftp) {
+      <span class="param-chip">FTP {{ ftp }}W</span>
+    }
+    @if (needsBike && weightKg) {
+      <span class="param-chip">{{ weightKg }}kg</span>
+    }
+    @if (needsBike && targetPowerPct) {
+      <span class="param-chip">Target {{ targetPowerPct }}% FTP ({{ computedPowerWatts }}W)</span>
+    }
+    @if (needsRun && targetPacePct) {
+      <span class="param-chip">Pace {{ targetPacePct }}% ({{ computedPaceDisplay }})</span>
+    }
+    @if (needsSwim && swimCssSec) {
+      <span class="param-chip">CSS {{ swimCssSec }}s/100m</span>
+    }
+    @if (needsBike && bikeType) {
+      <span class="param-chip">{{ bikeType }}</span>
+    }
+    @if ((needsBike || needsRun) && temperature != null) {
+      <span class="param-chip">{{ temperature }}&deg;C</span>
+    }
+    @if (needsBike && windSpeed) {
+      <span class="param-chip">Wind {{ windSpeed }}m/s</span>
+    }
+  </div>
+  <div class="param-bar-right">
+    @if (availableTabs.length > 1) {
+      <div class="tab-row">
+        @if (plan.swimSummary) {
+          <button class="tab-btn" [class.active]="activeTab === 'SWIM'" (click)="tabChange.emit('SWIM')">{{ 'PACING.DISCIPLINE_SWIM' | translate }}</button>
+        }
+        @if (plan.bikeSegments) {
+          <button class="tab-btn" [class.active]="activeTab === 'BIKE'" (click)="tabChange.emit('BIKE')">{{ 'PACING.DISCIPLINE_BIKE' | translate }}</button>
+        }
+        @if (plan.runSegments) {
+          <button class="tab-btn" [class.active]="activeTab === 'RUN'" (click)="tabChange.emit('RUN')">{{ 'PACING.DISCIPLINE_RUN' | translate }}</button>
+        }
+      </div>
+    }
+    <div class="param-bar-actions">
+      <button class="modify-btn" (click)="modify.emit()">{{ 'PACING.BTN_MODIFY' | translate }}</button>
+      <button class="clear-btn" (click)="clear.emit()">{{ 'PACING.BTN_CLEAR' | translate }}</button>
+    </div>
+  </div>
+</div>

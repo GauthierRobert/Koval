@@ -1,0 +1,65 @@
+<p class="hint">{{ 'TRAINING_ACTION.HINT_PICK_TRAINING' | translate: { modeHint: mode === 'session' ? ('TRAINING_ACTION.HINT_PICK_TRAINING_SESSION_SUFFIX' | translate) : '' } }}</p>
+
+<div class="form-group">
+  <input
+    type="text"
+    class="search-input"
+    [ngModel]="searchQuery"
+    (ngModelChange)="onSearchChange($event)"
+    [placeholder]="'TRAINING_ACTION.PLACEHOLDER_SEARCH' | translate"
+    [attr.aria-label]="'TRAINING_ACTION.PLACEHOLDER_SEARCH' | translate"
+    [disabled]="loading"
+  />
+</div>
+
+@if (mode === 'session' && sessionAvailableGroups.length > 0) {
+  <div class="form-group">
+    <label class="field-label">{{ 'TRAINING_ACTION.LABEL_LINK_FOR_GROUP' | translate }}</label>
+    <select class="field-select" [ngModel]="selectedGroupId" (ngModelChange)="onGroupChange($event)" [disabled]="loading">
+      @if (sessionShowNoGroupOption) {
+        <option value="">{{ 'TRAINING_ACTION.OPTION_ENTIRE_CLUB' | translate }}</option>
+      }
+      @for (group of sessionAvailableGroups; track group.id) {
+        <option [value]="group.id">{{ group.name }}</option>
+      }
+    </select>
+  </div>
+}
+
+@if (filteredTrainings.length > 0) {
+  <div class="training-list">
+    @for (t of filteredTrainings; track t.id) {
+      <div
+        class="training-item"
+        [class.selected]="selectedTrainingId === t.id"
+        (click)="onSelectTraining(t)"
+      >
+        <div class="training-item-header">
+          <span class="training-title">{{ t.title }}</span>
+          <div class="training-badges">
+            @if (t.sportType) {
+              <span class="badge sport-badge">{{ t.sportType }}</span>
+            }
+            @if (t.trainingType) {
+              <span class="badge type-badge">{{ t.trainingType }}</span>
+            }
+          </div>
+        </div>
+        @if (t.description) {
+          <div class="training-description">{{ t.description }}</div>
+        }
+      </div>
+    }
+  </div>
+}
+
+@if (filteredTrainings.length === 0 && trainings.length > 0) {
+  <div class="empty-state">
+    {{ 'TRAINING_ACTION.EMPTY_NO_MATCH' | translate }}
+  </div>
+}
+@if (trainings.length === 0) {
+  <div class="empty-state">
+    {{ 'TRAINING_ACTION.EMPTY_NO_TRAININGS' | translate }}
+  </div>
+}

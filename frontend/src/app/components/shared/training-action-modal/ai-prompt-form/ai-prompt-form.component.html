@@ -1,0 +1,59 @@
+<p class="hint">{{ 'TRAINING_ACTION.HINT_DESCRIBE_NATURAL' | translate }}</p>
+
+<div class="form-group">
+  <label class="field-label" for="ta-sport">{{ 'TRAINING_ACTION.LABEL_SPORT' | translate }}</label>
+  <select id="ta-sport" class="field-select" [ngModel]="selectedSport" (ngModelChange)="onSportChange($event)" [disabled]="loading">
+    @for (s of sportOptions; track s.value) {
+      <option [ngValue]="s.value">{{ s.label }}</option>
+    }
+  </select>
+</div>
+
+@if (filteredZoneSystems.length > 0) {
+  <div class="form-group">
+    <label class="field-label" for="ta-zone-system">{{ 'TRAINING_ACTION.LABEL_ZONE_SYSTEM' | translate }}</label>
+    <select id="ta-zone-system" class="field-select" [ngModel]="selectedZoneSystemId" (ngModelChange)="onZoneSystemChange($event)" [disabled]="loading">
+      <option value="">{{ 'TRAINING_ACTION.OPTION_SPORT_DEFAULT' | translate }}</option>
+      @for (z of filteredZoneSystems; track z.id) {
+        <option [value]="z.id">{{ z.name }}</option>
+      }
+    </select>
+  </div>
+}
+
+@if (mode === 'session' && sessionAvailableGroups.length > 0) {
+  <div class="form-group">
+    <label class="field-label">{{ 'TRAINING_ACTION.LABEL_LINK_FOR_GROUP' | translate }}</label>
+    <select class="field-select" [ngModel]="selectedGroupId" (ngModelChange)="onGroupChange($event)" [disabled]="loading">
+      @if (sessionShowNoGroupOption) {
+        <option value="">{{ 'TRAINING_ACTION.OPTION_ENTIRE_CLUB' | translate }}</option>
+      }
+      @for (group of sessionAvailableGroups; track group.id) {
+        <option [value]="group.id">{{ group.name }}</option>
+      }
+    </select>
+  </div>
+} @else if (availableGroups.length > 0 && clubId && mode !== 'session') {
+  <div class="form-group">
+    <label class="field-label">{{ 'TRAINING_ACTION.LABEL_CLUB_GROUP' | translate }}</label>
+    <select class="field-select" [ngModel]="selectedGroupId" (ngModelChange)="onGroupChange($event)">
+      <option value="">{{ 'TRAINING_ACTION.OPTION_NO_GROUP' | translate }}</option>
+      @for (group of availableGroups; track group.id) {
+        <option [value]="group.id">{{ group.name }}</option>
+      }
+    </select>
+  </div>
+}
+
+<div class="form-group">
+  <label class="field-label" for="ta-prompt">{{ 'TRAINING_ACTION.LABEL_PROMPT' | translate }}</label>
+  <textarea
+    id="ta-prompt"
+    class="prompt-textarea"
+    [ngModel]="prompt"
+    (ngModelChange)="onPromptChange($event)"
+    [placeholder]="'TRAINING_ACTION.PLACEHOLDER_PROMPT' | translate"
+    rows="4"
+    [disabled]="loading"
+  ></textarea>
+</div>

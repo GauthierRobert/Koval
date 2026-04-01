@@ -1,0 +1,55 @@
+<h3>{{ 'BUILDER.EDIT_SET' | translate }}</h3>
+
+<div class="form-field">
+  <label>{{ 'BUILDER.LABEL' | translate }}</label>
+  <input type="text" [ngModel]="editLabel" (ngModelChange)="editLabel = $event; editLabelChange.emit($event)" placeholder="e.g. 3x Set" />
+</div>
+
+<div class="form-field">
+  <label>{{ 'BUILDER.REPS' | translate }}</label>
+  <input type="number" [ngModel]="editSetReps" (ngModelChange)="editSetReps = $event; editSetRepsChange.emit($event)" min="1" max="50" />
+</div>
+
+<div class="form-field">
+  <label class="passive-rest-toggle">
+    <input type="checkbox" [ngModel]="editSetNoRest" (ngModelChange)="editSetNoRest = $event; editSetNoRestChange.emit($event)" />
+    {{ 'BUILDER.NO_REST' | translate }}
+  </label>
+  <span class="rest-hint">{{ 'BUILDER.NO_REST_HINT' | translate }}</span>
+</div>
+
+@if (!editSetNoRest) {
+  <div class="form-field">
+    <label>{{ 'BUILDER.REST_DURATION' | translate }} (s)</label>
+    <input type="number" [ngModel]="editSetRestDuration" (ngModelChange)="editSetRestDuration = $event; editSetRestDurationChange.emit($event)" min="0" />
+  </div>
+
+  <div class="form-field">
+    <label class="passive-rest-toggle">
+      <input type="checkbox" [ngModel]="editSetPassiveRest" (ngModelChange)="editSetPassiveRest = $event; editSetPassiveRestChange.emit($event)" />
+      {{ 'BUILDER.PASSIVE_REST' | translate }}
+    </label>
+    <span class="rest-hint">{{ editSetPassiveRest ? ('BUILDER.PASSIVE_REST_HINT' | translate) : ('BUILDER.ACTIVE_REST_HINT' | translate) }}</span>
+  </div>
+  @if (!editSetPassiveRest) {
+    <div class="form-field">
+      <label>{{ 'BUILDER.REST_INTENSITY' | translate }} (%)</label>
+      <input type="number" [ngModel]="editSetRestIntensity" (ngModelChange)="editSetRestIntensity = $event; editSetRestIntensityChange.emit($event)" min="1" max="100" />
+    </div>
+  }
+}
+
+<div class="set-contents">
+  <label class="set-contents-label">{{ 'BUILDER.SET_CONTENTS' | translate }}</label>
+  @for (el of setElements; track $index) {
+    <div class="set-element-row">
+      <div class="block-color-bar" [style.background]="blockColor(el)"></div>
+      <span class="set-element-name">{{ el.label || el.type }}</span>
+      <span class="set-element-meta">{{ formatBlockDuration(el) }}</span>
+    </div>
+  }
+</div>
+
+<button class="btn-primary full-width" (click)="update.emit()">{{ 'BUILDER.UPDATE_SET' | translate }}</button>
+<button class="btn-ghost full-width btn-dissociate" (click)="dissociate.emit()" style="margin-top: 0.35rem">{{ 'BUILDER.DISSOCIATE_SET' | translate }}</button>
+<button class="btn-ghost full-width" (click)="deselect.emit()" style="margin-top: 0.35rem">{{ 'BUILDER.DESELECT' | translate }}</button>

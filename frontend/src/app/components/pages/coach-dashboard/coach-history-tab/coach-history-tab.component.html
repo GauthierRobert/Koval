@@ -1,0 +1,41 @@
+@if (selectedAthleteSession$ | async; as analysisSession) {
+  <div class="analysis-back-row">
+    <button class="back-btn" (click)="closeSessionAnalysis.emit()">{{ 'COACH_DASHBOARD.BACK_TO_HISTORY' | translate }}</button>
+  </div>
+  <app-session-analysis [session]="analysisSession"></app-session-analysis>
+} @else {
+  @if (athleteSessions$ | async; as sessions) {
+    @if (sessions.length > 0) {
+      <div class="history-table">
+        <div class="hist-header">
+          <span>{{ 'COACH_DASHBOARD.HISTORY_COL_DATE' | translate }}</span>
+          <span>{{ 'COACH_DASHBOARD.HISTORY_COL_SPORT' | translate }}</span>
+          <span>{{ 'COACH_DASHBOARD.HISTORY_COL_TITLE' | translate }}</span>
+          <span>{{ 'COACH_DASHBOARD.HISTORY_COL_DUR' | translate }}</span>
+          <span>{{ 'COACH_DASHBOARD.HISTORY_COL_PWR' | translate }}</span>
+          <span>{{ 'COACH_DASHBOARD.HISTORY_COL_TSS' | translate }}</span>
+          <span>{{ 'COACH_DASHBOARD.HISTORY_COL_IF' | translate }}</span>
+        </div>
+        @for (s of sessions; track trackSessionById(s)) {
+          <div class="hist-row clickable" (click)="openSessionAnalysis.emit(s)">
+            <span>{{ s.completedAt | date:'MMM d' }}</span>
+            <span><app-sport-icon [sport]="$any(s.sportType)" [size]="12"></app-sport-icon></span>
+            <span class="hist-title">{{ s.title }}</span>
+            <span>{{ formatSessionDur(s.totalDurationSeconds) }}</span>
+            <span>{{ s.avgPower | number:'1.0-0' }}W</span>
+            <span>{{ s.tss | number:'1.0-0' }}</span>
+            <span>{{ s.intensityFactor | number:'1.2-2' }}</span>
+          </div>
+        }
+      </div>
+    }
+    @if (athleteSessionsError$ | async; as hasError) {
+      @if (hasError) {
+        <div class="empty-tab">{{ 'COACH_DASHBOARD.FAILED_LOAD_SESSIONS' | translate }}</div>
+      }
+    }
+    @if (sessions.length === 0 && !(athleteSessionsError$ | async)) {
+      <div class="empty-tab">{{ 'COACH_DASHBOARD.NO_RECORDED_SESSIONS' | translate }}</div>
+    }
+  }
+}

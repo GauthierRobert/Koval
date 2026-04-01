@@ -26,13 +26,16 @@ import {Training, SPORT_OPTIONS, SportFilter} from '../../../models/training.mod
 import {CalendarService} from '../../../services/calendar.service';
 import {CoachService} from '../../../services/coach.service';
 import {AuthService, User} from '../../../services/auth.service';
+import {AiPromptFormComponent} from './ai-prompt-form/ai-prompt-form.component';
+import {TrainingSearchListComponent} from './training-search-list/training-search-list.component';
+import {AthleteTagSelectorComponent} from './athlete-tag-selector/athlete-tag-selector.component';
 
 export type TrainingActionMode = 'session' | 'self-schedule' | 'coach-assign' | 'group-assign';
 
 @Component({
   selector: 'app-training-action-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, A11yModule],
+  imports: [CommonModule, FormsModule, TranslateModule, A11yModule, AiPromptFormComponent, TrainingSearchListComponent, AthleteTagSelectorComponent],
   templateUrl: './training-action-modal.component.html',
   styleUrl: './training-action-modal.component.css',
 })
@@ -157,10 +160,6 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
     return true;
   }
 
-  get showSportSelector(): boolean {
-    return true;
-  }
-
   /** Groups still available for linking (excludes already-linked groups). */
   get sessionAvailableGroups(): ClubGroup[] {
     if (this.mode !== 'session') return this.availableGroups;
@@ -187,16 +186,6 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
     if (this.availableGroups.length === 0) return this.existingLinkedTrainings.length === 0;
     // All groups linked
     return this.sessionAvailableGroups.length > 0 || this.sessionShowNoGroupOption;
-  }
-
-  get filteredTrainings(): Training[] {
-    if (!this.searchQuery.trim()) return this.availableTrainings;
-    const q = this.searchQuery.toLowerCase();
-    return this.availableTrainings.filter(
-      (t) =>
-        t.title?.toLowerCase().includes(q) ||
-        t.description?.toLowerCase().includes(q)
-    );
   }
 
   get canSubmit(): boolean {
@@ -309,10 +298,6 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
 
   // --- Athlete / Tag management (group-assign) ---
 
-  isAthleteSelected(id: string): boolean {
-    return this.selectedAthleteIds.includes(id);
-  }
-
   toggleAthlete(id: string): void {
     const idx = this.selectedAthleteIds.indexOf(id);
     if (idx >= 0) {
@@ -320,10 +305,6 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
     } else {
       this.selectedAthleteIds.push(id);
     }
-  }
-
-  isTagActive(tag: string): boolean {
-    return this.activeTags.has(tag);
   }
 
   toggleTag(tag: string): void {
@@ -463,7 +444,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
           this.completed.emit({ success: true, content: 'Training linked.' });
         });
       },
-      error: (err) => {
+      error: (err: any) => {
         this.ngZone.run(() => {
           this.loading = false;
           this.errorMessage = err?.error?.message ?? this.translate.instant('TRAINING_ACTION.ERROR_FAILED_LINK');

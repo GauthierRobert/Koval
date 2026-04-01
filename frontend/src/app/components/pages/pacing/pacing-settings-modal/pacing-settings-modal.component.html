@@ -1,0 +1,202 @@
+@if (isOpen) {
+  <div class="modal-overlay" (click)="closed.emit()">
+    <div class="modal-content glass" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="section-title">{{ 'PACING.MODAL_MODIFY_TITLE' | translate }}</h2>
+      <button class="modal-close" (click)="closed.emit()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- GPX Upload: Single dropzone for BIKE or RUN -->
+      @if (discipline === 'BIKE' || discipline === 'RUN') {
+        <app-gpx-upload-zone
+          [fileName]="gpxFileName"
+          [label]="''"
+          [loops]="discipline === 'RUN' ? runLoops : bikeLoops"
+          [showLoops]="true"
+          [hint]="'PACING.DROPZONE_HINT_GENERIC' | translate"
+          (fileSelected)="gpxFileSelected.emit($event)"
+          (loopsChange)="discipline === 'RUN' ? runLoopsChange.emit($event) : bikeLoopsChange.emit($event)">
+        </app-gpx-upload-zone>
+      }
+
+      <!-- GPX Upload: Dual dropzones for TRIATHLON -->
+      @if (discipline === 'TRIATHLON') {
+        <div class="gpx-dual">
+          <app-gpx-upload-zone
+            [fileName]="bikeGpxFileName"
+            [label]="'PACING.DROPZONE_LABEL_BIKE' | translate"
+            [loops]="bikeLoops"
+            [showLoops]="true"
+            [hint]="'PACING.DROPZONE_HINT_BIKE' | translate"
+            (fileSelected)="bikeGpxFileSelected.emit($event)"
+            (loopsChange)="bikeLoopsChange.emit($event)">
+          </app-gpx-upload-zone>
+          <app-gpx-upload-zone
+            [fileName]="runGpxFileName"
+            [label]="'PACING.DROPZONE_LABEL_RUN' | translate"
+            [loops]="runLoops"
+            [showLoops]="true"
+            [hint]="'PACING.DROPZONE_HINT_RUN' | translate"
+            (fileSelected)="runGpxFileSelected.emit($event)"
+            (loopsChange)="runLoopsChange.emit($event)">
+          </app-gpx-upload-zone>
+        </div>
+      }
+
+      <!-- No dropzone for SWIM -->
+
+      <div class="modal-grid">
+        <div class="form-col">
+          <app-discipline-selector
+            [discipline]="discipline"
+            [bikeType]="profile.bikeType || 'ROAD_AERO'"
+            [showBikeType]="needsBike()"
+            (disciplineChange)="disciplineChange.emit($event)"
+            (bikeTypeChange)="bikeTypeChange.emit($event)">
+          </app-discipline-selector>
+        </div>
+
+        <div class="form-col">
+          <h3 class="subsection-title">{{ 'PACING.SECTION_ATHLETE_METRICS' | translate }}</h3>
+          @if (needsBike()) {
+            <div class="field-row">
+              <div class="field">
+                <label>{{ 'PACING.FIELD_FTP_LABEL' | translate }}</label>
+                <input type="number" [(ngModel)]="profile.ftp" (ngModelChange)="onProfileFieldChange()" placeholder="250" min="50" max="500" />
+              </div>
+              <div class="field">
+                <label>{{ 'PACING.FIELD_WEIGHT_LABEL' | translate }}</label>
+                <input type="number" [(ngModel)]="profile.weightKg" (ngModelChange)="onProfileFieldChange()" placeholder="75" min="30" max="200" />
+              </div>
+            </div>
+          }
+          @if (needsRun()) {
+            <div class="field-row">
+              <div class="field">
+                <label>{{ 'PACING.FIELD_THRESHOLD_PACE_LABEL' | translate }}</label>
+                <input type="number" [(ngModel)]="profile.thresholdPaceSec" (ngModelChange)="onProfileFieldChange()" placeholder="270" min="120" max="600" />
+              </div>
+            </div>
+          }
+          @if (needsSwim()) {
+            <div class="field-row">
+              <div class="field">
+                <label>{{ 'PACING.FIELD_SWIM_CSS_LABEL' | translate }}</label>
+                <input type="number" [(ngModel)]="profile.swimCssSec" (ngModelChange)="onProfileFieldChange()" placeholder="95" min="40" max="200" />
+              </div>
+            </div>
+          }
+          <!-- TODO: Re-enable fatigue resistance once backend integrates it -->
+          <div class="field-row">
+            <div class="field">
+              <label>{{ 'PACING.FIELD_NUTRITION_LABEL' | translate }}</label>
+              <select [(ngModel)]="profile.nutritionPreference" (ngModelChange)="onProfileFieldChange()">
+                <option value="MIXED">{{ 'PACING.NUTRITION_MIXED' | translate }}</option>
+                <option value="GELS">{{ 'PACING.NUTRITION_GELS' | translate }}</option>
+                <option value="DRINK">{{ 'PACING.NUTRITION_DRINK' | translate }}</option>
+                <option value="SOLID">{{ 'PACING.NUTRITION_SOLID' | translate }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-col">
+          <div class="label-with-tooltip">
+            <h3 class="subsection-title">{{ 'PACING.SECTION_RACE_TARGETS' | translate }}</h3>
+            @if (discipline === 'TRIATHLON') {
+              <span class="tooltip-trigger">?
+              <span class="tooltip-text tooltip-wide">
+                <strong>{{ 'PACING.TOOLTIP_TRIATHLON_TITLE' | translate }}</strong>
+                <table class="tooltip-table">
+                  <tr><th>{{ 'PACING.TOOLTIP_DISTANCE' | translate }}</th><th>{{ 'PACING.TOOLTIP_BEGINNER' | translate }}</th><th>{{ 'PACING.TOOLTIP_INTERMEDIATE' | translate }}</th><th>{{ 'PACING.TOOLTIP_ELITE' | translate }}</th></tr>
+                  <tr><td>{{ 'PACING.TOOLTIP_SPRINT' | translate }}</td><td>80-85%</td><td>90-95%</td><td>95-105%</td></tr>
+                  <tr><td>{{ 'PACING.TOOLTIP_OLYMPIC' | translate }}</td><td>70-80%</td><td>82-88%</td><td>90-95%</td></tr>
+                  <tr><td>{{ 'PACING.TOOLTIP_70_3' | translate }}</td><td>65-75%</td><td>78-84%</td><td>85-90%</td></tr>
+                  <tr><td>{{ 'PACING.TOOLTIP_IRONMAN' | translate }}</td><td>60-70%</td><td>70-78%</td><td>78-85%</td></tr>
+                </table>
+              </span>
+              </span>
+            }
+          </div>
+          <div class="field-row">
+            @if (needsBike()) {
+              <div class="field">
+                <label>{{ 'PACING.FIELD_TARGET_POWER_LABEL' | translate }}</label>
+                <input type="number" [ngModel]="targetPowerPct" (ngModelChange)="targetPowerPctChange.emit($event)" [placeholder]="'PACING.FIELD_HINT_AUTO' | translate" min="30" max="120" />
+                @if (computedPowerWatts; as w) {
+                  <span class="field-hint computed">= {{ w }}W</span>
+                }
+                @if (!targetPowerPct) {
+                  <span class="field-hint">{{ 'PACING.FIELD_HINT_AUTO' | translate }}</span>
+                }
+              </div>
+            }
+            @if (needsRun()) {
+              <div class="field">
+                <label>{{ 'PACING.FIELD_TARGET_PACE_LABEL' | translate }}</label>
+                <input type="number" [ngModel]="targetPacePct" (ngModelChange)="targetPacePctChange.emit($event)" [placeholder]="'PACING.FIELD_HINT_AUTO' | translate" min="80" max="150" />
+                @if (computedPaceDisplay; as p) {
+                  <span class="field-hint computed">= {{ p }}</span>
+                }
+                @if (!targetPacePct) {
+                  <span class="field-hint">{{ 'PACING.FIELD_HINT_AUTO' | translate }}</span>
+                }
+              </div>
+            }
+          </div>
+          @if (needsSwim()) {
+            <div class="field-row">
+              <div class="field">
+                <label>{{ 'PACING.FIELD_SWIM_DISTANCE_LABEL' | translate }}</label>
+                <input type="number" [(ngModel)]="profile.swimDistanceM" (ngModelChange)="onProfileFieldChange()" placeholder="1900" min="100" max="10000" />
+              </div>
+              @if (discipline === 'TRIATHLON' || profile.swimDistanceM) {
+                <div class="field">
+                  <label>{{ 'PACING.FIELD_SWIM_PACE_LABEL' | translate }}</label>
+                  <input type="number" [(ngModel)]="profile.targetSwimPaceSecPer100m" (ngModelChange)="onProfileFieldChange()" min="40" max="300" />
+                  @if (!profile.targetSwimPaceSecPer100m) {
+                    <span class="field-hint">{{ 'PACING.FIELD_HINT_AUTO' | translate }}</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          @if (needsBike() || needsRun()) {
+            <h3 class="subsection-title">{{ 'PACING.SECTION_ENVIRONMENT' | translate }}</h3>
+            <div class="field-row">
+              <div class="field">
+                <label>{{ 'PACING.FIELD_TEMPERATURE_LABEL' | translate }}</label>
+                <input type="number" [(ngModel)]="profile.temperature" (ngModelChange)="onProfileFieldChange()" placeholder="20" min="-10" max="50" />
+              </div>
+              @if (needsBike()) {
+                <div class="field">
+                  <label>{{ 'PACING.FIELD_WIND_SPEED_LABEL' | translate }}</label>
+                  <input type="number" [(ngModel)]="profile.windSpeed" (ngModelChange)="onProfileFieldChange()" placeholder="0" min="0" max="30" step="0.5" />
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (error) {
+      <div class="error-msg">{{ error }}</div>
+    }
+
+    <div class="modal-footer">
+      <button class="clear-btn" (click)="closed.emit()">{{ 'PACING.BTN_CANCEL' | translate }}</button>
+      <button class="generate-btn" (click)="regenerate.emit()" [disabled]="!canGenerate()">
+        @if (!loading) {
+          <span>{{ 'PACING.BTN_REGENERATE_PLAN' | translate }}</span>
+        }
+        @if (loading) {
+          <span>{{ 'PACING.BTN_GENERATING' | translate }}</span>
+        }
+      </button>
+    </div>
+    </div>
+  </div>
+}

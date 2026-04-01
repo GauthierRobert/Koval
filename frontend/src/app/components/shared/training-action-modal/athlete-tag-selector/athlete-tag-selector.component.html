@@ -1,0 +1,39 @@
+<!-- Athlete chip (coach-assign: single pre-selected) -->
+@if (showAthleteChip && preselectedAthletes.length > 0) {
+  <div class="form-group">
+    <label class="field-label">{{ 'TRAINING_ACTION.LABEL_ATHLETE' | translate }}</label>
+    <div class="athlete-chips">
+      @for (a of preselectedAthletes; track a.id) {
+        <span class="athlete-chip">{{ a.displayName }}</span>
+      }
+    </div>
+  </div>
+}
+
+<!-- Tag filter + athlete multi-select (group-assign) -->
+@if (showTagFilter) {
+  <div class="form-group">
+    <label class="field-label">{{ 'TRAINING_ACTION.LABEL_GROUP_FILTER' | translate }}</label>
+    <div class="tag-filter-row">
+      @for (tag of availableTags; track tag) {
+        <span class="modal-tag-chip"
+              [class.active]="isTagActive(tag)"
+              (click)="onToggleTag(tag)">{{ tag }}</span>
+      }
+    </div>
+  </div>
+}
+
+@if (showAthleteSelect && availableAthletes.length > 0) {
+  <div class="form-group">
+    <label class="field-label">{{ 'TRAINING_ACTION.LABEL_ATHLETES' | translate }}</label>
+    <div class="athlete-checkboxes">
+      @for (a of availableAthletes; track a.id) {
+        <label class="checkbox-label">
+          <input type="checkbox" [checked]="isAthleteSelected(a.id)" (change)="onToggleAthlete(a.id)" />
+          <span>{{ a.displayName }}</span>
+        </label>
+      }
+    </div>
+  </div>
+}

@@ -2,16 +2,14 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  DestroyRef,
   EventEmitter,
   inject,
   Input,
   OnInit,
   Output,
 } from '@angular/core';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
+
 import {Router, RouterModule} from '@angular/router';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {
@@ -27,13 +25,14 @@ import {
 import {ClubSessionService} from '../../../../../../services/club-session.service';
 import {AuthService} from '../../../../../../services/auth.service';
 import {TrainingService} from '../../../../../../services/training.service';
-import {MeetingPoint, MeetingPointPickerComponent} from '../../../../../shared/meeting-point-picker/meeting-point-picker.component';
 import {SessionCardComponent} from '../../../../../shared/session-card/session-card.component';
+import {SessionFormModalComponent, SessionFormSaveEvent} from './session-form-modal/session-form-modal.component';
+import {CancelSessionDialogsComponent} from './cancel-session-dialogs/cancel-session-dialogs.component';
 
 @Component({
   selector: 'app-club-sessions-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, MeetingPointPickerComponent, SessionCardComponent],
+  imports: [CommonModule, RouterModule, TranslateModule, SessionCardComponent, SessionFormModalComponent, CancelSessionDialogsComponent],
   templateUrl: './club-sessions-tab.component.html',
   styleUrl: './club-sessions-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -49,7 +48,6 @@ export class ClubSessionsTabComponent implements OnInit {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private translate = inject(TranslateService);
-  private destroyRef = inject(DestroyRef);
 
   sessions$ = this.clubSessionService.sessions$;
   currentUserId: string | null = null;
@@ -59,9 +57,7 @@ export class ClubSessionsTabComponent implements OnInit {
 
   // Form state
   isFormOpen = false;
-  form: Record<string, any> = {};
   clubGroups: ClubGroup[] = [];
-  gpxFile: File | null = null;
 
   // Edit state
   editingSession: ClubTrainingSession | null = null;
@@ -72,7 +68,6 @@ export class ClubSessionsTabComponent implements OnInit {
   // Cancel session state
   showCancelConfirm = false;
   cancelTargetSession: ClubTrainingSession | null = null;
-  cancelReason = '';
   showCancelRecurringChoice = false;
   pendingCancelSession: ClubTrainingSession | null = null;
   cancelMode: 'single' | 'all' = 'single';
@@ -89,7 +84,7 @@ export class ClubSessionsTabComponent implements OnInit {
   showPastSessions = false;
 
   ngOnInit(): void {
-    this.authService.user$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((u) => {
+    this.authService.user$.subscribe((u) => {
       this.currentUserId = u?.id ?? null;
       this.cdr.markForCheck();
     });
@@ -98,11 +93,11 @@ export class ClubSessionsTabComponent implements OnInit {
       this.clubSessionService.loadRecurringTemplates(this.club.id);
       this.loadCalendarSessions();
       this.clubService.loadGroups(this.club.id);
-      this.clubService.groups$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((groups) => {
+      this.clubService.groups$.subscribe((groups) => {
         this.clubGroups = groups;
         this.cdr.markForCheck();
       });
-      this.clubService.members$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((members) => {
+      this.clubService.members$.subscribe((members) => {
         this.coachMembers = members.filter(
           (m) => m.role === 'COACH' || m.role === 'ADMIN' || m.role === 'OWNER',
         );
@@ -229,8 +224,6 @@ export class ClubSessionsTabComponent implements OnInit {
   openForm(): void {
     this.editingSession = null;
     this.editAllFutureMode = false;
-    this.gpxFile = null;
-    this.form = { sport: 'CYCLING', title: '', clubGroupId: '', openToAll: false, openToAllDelayValue: 2, openToAllDelayUnit: 'DAYS' };
     this.isFormOpen = true;
   }
 
@@ -268,106 +261,68 @@ export class ClubSessionsTabComponent implements OnInit {
     this.expandedSessionId = null;
     this.editingSession = session;
     this.editAllFutureMode = allFuture;
-    this.gpxFile = null;
-    this.form = {
-      title: session.title,
-      sport: session.sport || 'CYCLING',
-      scheduledAt: session.scheduledAt ? this.toDatetimeLocal(session.scheduledAt) : '',
-      location: session.location || '',
-      meetingPointLat: session.meetingPointLat ?? null,
-      meetingPointLon: session.meetingPointLon ?? null,
-      description: session.description || '',
-      maxParticipants: session.maxParticipants || '',
-      durationMinutes: session.durationMinutes || '',
-      clubGroupId: session.clubGroupId || '',
-      responsibleCoachId: session.responsibleCoachId || '',
-      openToAll: session.openToAll || false,
-      openToAllDelayValue: session.openToAllDelayValue || 2,
-      openToAllDelayUnit: session.openToAllDelayUnit || 'DAYS',
-    };
     this.isFormOpen = true;
     this.cdr.markForCheck();
   }
 
-  private toDatetimeLocal(isoStr: string): string {
-    const d = new Date(isoStr);
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }
+  onFormSaved(event: SessionFormSaveEvent): void {
+    const form = event.form;
 
-  onMeetingPointChanged(point: MeetingPoint | null): void {
-    this.form['meetingPointLat'] = point?.lat ?? null;
-    this.form['meetingPointLon'] = point?.lon ?? null;
-  }
-
-  onGpxFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.gpxFile = input.files?.[0] ?? null;
-  }
-
-  removeGpx(): void {
-    if (this.editingSession) {
-      this.clubSessionService.deleteSessionGpx(this.club.id, this.editingSession.id).subscribe({
-        next: () => this.loadCalendarSessions(),
-      });
+    // Handle removeGpx action from sub-component
+    if (form['__action'] === 'removeGpx') {
+      if (event.editingSession) {
+        this.clubSessionService.deleteSessionGpx(this.club.id, event.editingSession.id).subscribe({
+          next: () => this.loadCalendarSessions(),
+        });
+      }
+      return;
     }
-  }
 
-  get isFormValid(): boolean {
-    if (!this.form['title'] || !this.form['sport']) return false;
-    if (!this.editingSession && (!this.form['dayOfWeek'] || !this.form['timeOfDay'])) return false;
-    return true;
-  }
-
-  save(): void {
-    if (!this.isFormValid) return;
-
-    if (this.editingSession) {
-      if (this.editAllFutureMode && this.editingSession.recurringTemplateId) {
+    if (event.editingSession) {
+      if (event.editAllFutureMode && event.editingSession.recurringTemplateId) {
         const data: CreateRecurringSessionData = {
           category: 'SCHEDULED',
-          title: this.form['title'],
-          sport: this.form['sport'],
+          title: form['title'],
+          sport: form['sport'],
           dayOfWeek: undefined as any,
-          timeOfDay: this.form['scheduledAt'] ? new Date(this.form['scheduledAt']).toTimeString().slice(0, 5) : undefined as any,
-          location: this.form['location'] || undefined,
-          meetingPointLat: this.form['meetingPointLat'] ?? undefined,
-          meetingPointLon: this.form['meetingPointLon'] ?? undefined,
-          description: this.form['description'] || undefined,
-          maxParticipants: this.form['maxParticipants'] || undefined,
-          clubGroupId: this.form['clubGroupId'] || undefined,
-          responsibleCoachId: this.form['responsibleCoachId'] || undefined,
-          openToAll: this.form['openToAll'] ?? false,
-          openToAllDelayValue: this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
-          openToAllDelayUnit: this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
-          endDate: this.form['endDate'] || undefined,
+          timeOfDay: form['scheduledAt'] ? new Date(form['scheduledAt']).toTimeString().slice(0, 5) : undefined as any,
+          location: form['location'] || undefined,
+          meetingPointLat: form['meetingPointLat'] ?? undefined,
+          meetingPointLon: form['meetingPointLon'] ?? undefined,
+          description: form['description'] || undefined,
+          maxParticipants: form['maxParticipants'] || undefined,
+          clubGroupId: form['clubGroupId'] || undefined,
+          responsibleCoachId: form['responsibleCoachId'] || undefined,
+          openToAll: form['openToAll'] ?? false,
+          openToAllDelayValue: form['openToAll'] ? form['openToAllDelayValue'] : undefined,
+          openToAllDelayUnit: form['openToAll'] ? form['openToAllDelayUnit'] : undefined,
+          endDate: form['endDate'] || undefined,
         };
-        this.clubSessionService.updateRecurringTemplateWithInstances(this.club.id, this.editingSession.recurringTemplateId, data).subscribe({
+        this.clubSessionService.updateRecurringTemplateWithInstances(this.club.id, event.editingSession.recurringTemplateId, data).subscribe({
           next: () => this.finishSave(),
           error: () => {},
         });
       } else {
-        // Edit this instance only
         const data: CreateSessionData = {
           category: 'SCHEDULED',
-          title: this.form['title'],
-          sport: this.form['sport'],
-          scheduledAt: this.form['scheduledAt'] || undefined,
-          location: this.form['location'] || undefined,
-          meetingPointLat: this.form['meetingPointLat'] ?? undefined,
-          meetingPointLon: this.form['meetingPointLon'] ?? undefined,
-          description: this.form['description'] || undefined,
-          maxParticipants: this.form['maxParticipants'] || undefined,
-          durationMinutes: this.form['durationMinutes'] || undefined,
-          clubGroupId: this.form['clubGroupId'] || undefined,
-          responsibleCoachId: this.form['responsibleCoachId'] || undefined,
-          openToAll: this.form['openToAll'] ?? false,
-          openToAllDelayValue: this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
-          openToAllDelayUnit: this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
+          title: form['title'],
+          sport: form['sport'],
+          scheduledAt: form['scheduledAt'] || undefined,
+          location: form['location'] || undefined,
+          meetingPointLat: form['meetingPointLat'] ?? undefined,
+          meetingPointLon: form['meetingPointLon'] ?? undefined,
+          description: form['description'] || undefined,
+          maxParticipants: form['maxParticipants'] || undefined,
+          durationMinutes: form['durationMinutes'] || undefined,
+          clubGroupId: form['clubGroupId'] || undefined,
+          responsibleCoachId: form['responsibleCoachId'] || undefined,
+          openToAll: form['openToAll'] ?? false,
+          openToAllDelayValue: form['openToAll'] ? form['openToAllDelayValue'] : undefined,
+          openToAllDelayUnit: form['openToAll'] ? form['openToAllDelayUnit'] : undefined,
         };
-        const editId = this.editingSession.id;
+        const editId = event.editingSession.id;
         this.clubSessionService.updateSession(this.club.id, editId, data).subscribe({
-          next: () => this.afterSaveSession(editId),
+          next: () => this.afterSaveSession(editId, event.gpxFile),
           error: () => {},
         });
       }
@@ -377,21 +332,21 @@ export class ClubSessionsTabComponent implements OnInit {
     // Create new recurring session (always recurring)
     const data: CreateRecurringSessionData = {
       category: 'SCHEDULED',
-      title: this.form['title'],
-      sport: this.form['sport'],
-      dayOfWeek: this.form['dayOfWeek'],
-      timeOfDay: this.form['timeOfDay'],
-      location: this.form['location'] || undefined,
-      meetingPointLat: this.form['meetingPointLat'] ?? undefined,
-      meetingPointLon: this.form['meetingPointLon'] ?? undefined,
-      description: this.form['description'] || undefined,
-      maxParticipants: this.form['maxParticipants'] || undefined,
-      clubGroupId: this.form['clubGroupId'] || undefined,
-      responsibleCoachId: this.form['responsibleCoachId'] || undefined,
-      openToAll: this.form['openToAll'] ?? false,
-      openToAllDelayValue: this.form['openToAll'] ? this.form['openToAllDelayValue'] : undefined,
-      openToAllDelayUnit: this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
-      endDate: this.form['endDate'] || undefined,
+      title: form['title'],
+      sport: form['sport'],
+      dayOfWeek: form['dayOfWeek'],
+      timeOfDay: form['timeOfDay'],
+      location: form['location'] || undefined,
+      meetingPointLat: form['meetingPointLat'] ?? undefined,
+      meetingPointLon: form['meetingPointLon'] ?? undefined,
+      description: form['description'] || undefined,
+      maxParticipants: form['maxParticipants'] || undefined,
+      clubGroupId: form['clubGroupId'] || undefined,
+      responsibleCoachId: form['responsibleCoachId'] || undefined,
+      openToAll: form['openToAll'] ?? false,
+      openToAllDelayValue: form['openToAll'] ? form['openToAllDelayValue'] : undefined,
+      openToAllDelayUnit: form['openToAll'] ? form['openToAllDelayUnit'] : undefined,
+      endDate: form['endDate'] || undefined,
     };
     this.clubSessionService.createRecurringTemplate(this.club.id, data).subscribe({
       next: () => this.finishSave(),
@@ -399,9 +354,9 @@ export class ClubSessionsTabComponent implements OnInit {
     });
   }
 
-  private afterSaveSession(sessionId?: string): void {
-    if (this.gpxFile && sessionId) {
-      this.clubSessionService.uploadSessionGpx(this.club.id, sessionId, this.gpxFile).subscribe({
+  private afterSaveSession(sessionId: string, gpxFile: File | null): void {
+    if (gpxFile) {
+      this.clubSessionService.uploadSessionGpx(this.club.id, sessionId, gpxFile).subscribe({
         next: () => this.finishSave(),
         error: () => this.finishSave(),
       });
@@ -414,7 +369,6 @@ export class ClubSessionsTabComponent implements OnInit {
     this.isFormOpen = false;
     this.editingSession = null;
     this.editAllFutureMode = false;
-    this.gpxFile = null;
     this.loadCalendarSessions();
     this.cdr.markForCheck();
   }
@@ -501,7 +455,6 @@ export class ClubSessionsTabComponent implements OnInit {
       this.cdr.markForCheck();
     } else {
       this.cancelTargetSession = session;
-      this.cancelReason = '';
       this.cancelMode = 'single';
       this.showCancelConfirm = true;
       this.cdr.markForCheck();
@@ -513,7 +466,6 @@ export class ClubSessionsTabComponent implements OnInit {
     this.showCancelRecurringChoice = false;
     this.cancelTargetSession = this.pendingCancelSession;
     this.pendingCancelSession = null;
-    this.cancelReason = '';
     this.cancelMode = 'single';
     this.showCancelConfirm = true;
     this.cdr.markForCheck();
@@ -524,7 +476,6 @@ export class ClubSessionsTabComponent implements OnInit {
     this.showCancelRecurringChoice = false;
     this.cancelTargetSession = this.pendingCancelSession;
     this.pendingCancelSession = null;
-    this.cancelReason = '';
     this.cancelMode = 'all';
     this.showCancelConfirm = true;
     this.cdr.markForCheck();
@@ -538,15 +489,14 @@ export class ClubSessionsTabComponent implements OnInit {
   closeCancelSessionModal(): void {
     this.showCancelConfirm = false;
     this.cancelTargetSession = null;
-    this.cancelReason = '';
     this.cancelMode = 'single';
   }
 
-  confirmCancelSession(): void {
+  confirmCancelSession(cancelReason: string): void {
     if (!this.cancelTargetSession) return;
     if (this.cancelMode === 'all' && this.cancelTargetSession.recurringTemplateId) {
       this.clubSessionService
-        .cancelRecurringSessions(this.club.id, this.cancelTargetSession.recurringTemplateId, this.cancelReason || undefined)
+        .cancelRecurringSessions(this.club.id, this.cancelTargetSession.recurringTemplateId, cancelReason || undefined)
         .subscribe({
           next: () => {
             this.closeCancelSessionModal();
@@ -556,7 +506,7 @@ export class ClubSessionsTabComponent implements OnInit {
           error: () => {},
         });
     } else {
-      this.clubSessionService.cancelEntireSession(this.club.id, this.cancelTargetSession.id, this.cancelReason || undefined).subscribe({
+      this.clubSessionService.cancelEntireSession(this.club.id, this.cancelTargetSession.id, cancelReason || undefined).subscribe({
         next: () => {
           this.closeCancelSessionModal();
           this.loadCalendarSessions();

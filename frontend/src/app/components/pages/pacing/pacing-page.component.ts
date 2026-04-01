@@ -15,6 +15,11 @@ import {AuthService} from '../../../services/auth.service';
 import {Race, RaceService, SimulationRequest} from '../../../services/race.service';
 import {ElevationChartComponent} from './elevation-chart/elevation-chart.component';
 import {RouteMapComponent} from './route-map/route-map.component';
+import {GpxUploadZoneComponent} from './gpx-upload-zone/gpx-upload-zone.component';
+import {DisciplineSelectorComponent} from './discipline-selector/discipline-selector.component';
+import {PacingParameterBarComponent} from './pacing-parameter-bar/pacing-parameter-bar.component';
+import {PacingSummaryCardsComponent} from './pacing-summary-cards/pacing-summary-cards.component';
+import {PacingSettingsModalComponent} from './pacing-settings-modal/pacing-settings-modal.component';
 import {BehaviorSubject} from 'rxjs';
 
 interface NutritionEvent {
@@ -45,7 +50,18 @@ interface RacePlanGroup {
 @Component({
   selector: 'app-pacing-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, ElevationChartComponent, RouteMapComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TranslateModule,
+    ElevationChartComponent,
+    RouteMapComponent,
+    GpxUploadZoneComponent,
+    DisciplineSelectorComponent,
+    PacingParameterBarComponent,
+    PacingSummaryCardsComponent,
+    PacingSettingsModalComponent,
+  ],
   templateUrl: './pacing-page.component.html',
   styleUrl: './pacing-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -80,11 +96,6 @@ export class PacingPageComponent implements OnInit {
   // Loop counts
   bikeLoops = 1;
   runLoops = 1;
-
-  // Drag state per dropzone
-  isDragging = false;
-  isDraggingBike = false;
-  isDraggingRun = false;
 
   discipline = 'TRIATHLON';
   profile: AthleteProfile = {
@@ -277,34 +288,24 @@ export class PacingPageComponent implements OnInit {
     });
   }
 
-  onFileSelected(event: Event, target: 'gpx' | 'bike' | 'run' = 'gpx'): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.setFile(input.files[0], target);
-    }
+  onGpxFileSelected(file: File): void {
+    this.setFile(file, 'gpx');
   }
 
-  onDragOver(event: DragEvent, target: 'gpx' | 'bike' | 'run' = 'gpx'): void {
-    event.preventDefault();
-    if (target === 'bike') this.isDraggingBike = true;
-    else if (target === 'run') this.isDraggingRun = true;
-    else this.isDragging = true;
+  onBikeGpxFileSelected(file: File): void {
+    this.setFile(file, 'bike');
   }
 
-  onDragLeave(target: 'gpx' | 'bike' | 'run' = 'gpx'): void {
-    if (target === 'bike') this.isDraggingBike = false;
-    else if (target === 'run') this.isDraggingRun = false;
-    else this.isDragging = false;
+  onRunGpxFileSelected(file: File): void {
+    this.setFile(file, 'run');
   }
 
-  onDrop(event: DragEvent, target: 'gpx' | 'bike' | 'run' = 'gpx'): void {
-    event.preventDefault();
-    if (target === 'bike') this.isDraggingBike = false;
-    else if (target === 'run') this.isDraggingRun = false;
-    else this.isDragging = false;
-    if (event.dataTransfer?.files.length) {
-      this.setFile(event.dataTransfer.files[0], target);
-    }
+  onDisciplineChange(value: string): void {
+    this.discipline = value;
+  }
+
+  onBikeTypeChange(value: string): void {
+    this.profile.bikeType = value as 'TT' | 'ROAD_AERO' | 'ROAD';
   }
 
   private setFile(file: File, target: 'gpx' | 'bike' | 'run' = 'gpx'): void {

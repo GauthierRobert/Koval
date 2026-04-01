@@ -43,134 +43,41 @@
 
         <!-- ===== AI TAB ===== -->
         @if (tab === 'ai' && canLinkTraining) {
-          <p class="hint">{{ 'TRAINING_ACTION.HINT_DESCRIBE_NATURAL' | translate }}</p>
-
-          @if (showSportSelector) {
-            <div class="form-group">
-              <label class="field-label" for="ta-sport">{{ 'TRAINING_ACTION.LABEL_SPORT' | translate }}</label>
-              <select id="ta-sport" class="field-select" [(ngModel)]="selectedSport" (ngModelChange)="onSportChange()" [disabled]="loading">
-                @for (s of sportOptions; track s.value) {
-                  <option [ngValue]="s.value">{{ s.label }}</option>
-                }
-              </select>
-            </div>
-          }
-
-          @if (filteredZoneSystems.length > 0) {
-            <div class="form-group">
-              <label class="field-label" for="ta-zone-system">{{ 'TRAINING_ACTION.LABEL_ZONE_SYSTEM' | translate }}</label>
-              <select id="ta-zone-system" class="field-select" [(ngModel)]="selectedZoneSystemId" [disabled]="loading">
-                <option value="">{{ 'TRAINING_ACTION.OPTION_SPORT_DEFAULT' | translate }}</option>
-                @for (z of filteredZoneSystems; track z.id) {
-                  <option [value]="z.id">{{ z.name }}</option>
-                }
-              </select>
-            </div>
-          }
-
-          @if (mode === 'session' && sessionAvailableGroups.length > 0) {
-            <div class="form-group">
-              <label class="field-label">{{ 'TRAINING_ACTION.LABEL_LINK_FOR_GROUP' | translate }}</label>
-              <select class="field-select" [(ngModel)]="selectedGroupId" [disabled]="loading">
-                @if (sessionShowNoGroupOption) {
-                  <option value="">{{ 'TRAINING_ACTION.OPTION_ENTIRE_CLUB' | translate }}</option>
-                }
-                @for (group of sessionAvailableGroups; track group.id) {
-                  <option [value]="group.id">{{ group.name }}</option>
-                }
-              </select>
-            </div>
-          } @else if (availableGroups.length > 0 && clubId && mode !== 'session') {
-            <div class="form-group">
-              <label class="field-label">{{ 'TRAINING_ACTION.LABEL_CLUB_GROUP' | translate }}</label>
-              <select class="field-select" [(ngModel)]="selectedGroupId">
-                <option value="">{{ 'TRAINING_ACTION.OPTION_NO_GROUP' | translate }}</option>
-                @for (group of availableGroups; track group.id) {
-                  <option [value]="group.id">{{ group.name }}</option>
-                }
-              </select>
-            </div>
-          }
-
-          <div class="form-group">
-            <label class="field-label" for="ta-prompt">{{ 'TRAINING_ACTION.LABEL_PROMPT' | translate }}</label>
-            <textarea
-              id="ta-prompt"
-              class="prompt-textarea"
-              [(ngModel)]="prompt"
-              [placeholder]="'TRAINING_ACTION.PLACEHOLDER_PROMPT' | translate"
-              rows="4"
-              [disabled]="loading"
-            ></textarea>
-          </div>
+          <app-ai-prompt-form
+            [prompt]="prompt"
+            [selectedSport]="selectedSport"
+            [sportOptions]="sportOptions"
+            [selectedZoneSystemId]="selectedZoneSystemId"
+            [filteredZoneSystems]="filteredZoneSystems"
+            [availableGroups]="availableGroups"
+            [selectedGroupId]="selectedGroupId"
+            [mode]="mode"
+            [clubId]="clubId"
+            [sessionAvailableGroups]="sessionAvailableGroups"
+            [sessionShowNoGroupOption]="sessionShowNoGroupOption"
+            [loading]="loading"
+            (promptChange)="prompt = $event"
+            (sportChange)="selectedSport = $event; onSportChange()"
+            (zoneSystemChange)="selectedZoneSystemId = $event"
+            (groupChange)="selectedGroupId = $event"
+          />
         }
 
         <!-- ===== SELECT EXISTING TAB ===== -->
         @if (tab === 'select' && canLinkTraining) {
-          <p class="hint">{{ 'TRAINING_ACTION.HINT_PICK_TRAINING' | translate: { modeHint: mode === 'session' ? ('TRAINING_ACTION.HINT_PICK_TRAINING_SESSION_SUFFIX' | translate) : '' } }}</p>
-
-          <div class="form-group">
-            <input
-              type="text"
-              class="search-input"
-              [(ngModel)]="searchQuery"
-              [placeholder]="'TRAINING_ACTION.PLACEHOLDER_SEARCH' | translate"
-              [attr.aria-label]="'TRAINING_ACTION.PLACEHOLDER_SEARCH' | translate"
-              [disabled]="loading"
-            />
-          </div>
-
-          @if (mode === 'session' && sessionAvailableGroups.length > 0) {
-            <div class="form-group">
-              <label class="field-label">{{ 'TRAINING_ACTION.LABEL_LINK_FOR_GROUP' | translate }}</label>
-              <select class="field-select" [(ngModel)]="selectedGroupId" [disabled]="loading">
-                @if (sessionShowNoGroupOption) {
-                  <option value="">{{ 'TRAINING_ACTION.OPTION_ENTIRE_CLUB' | translate }}</option>
-                }
-                @for (group of sessionAvailableGroups; track group.id) {
-                  <option [value]="group.id">{{ group.name }}</option>
-                }
-              </select>
-            </div>
-          }
-
-          @if (filteredTrainings.length > 0) {
-            <div class="training-list">
-              @for (t of filteredTrainings; track t.id) {
-                <div
-                  class="training-item"
-                  [class.selected]="selectedTrainingId === t.id"
-                  (click)="selectTraining(t)"
-                >
-                  <div class="training-item-header">
-                    <span class="training-title">{{ t.title }}</span>
-                    <div class="training-badges">
-                      @if (t.sportType) {
-                        <span class="badge sport-badge">{{ t.sportType }}</span>
-                      }
-                      @if (t.trainingType) {
-                        <span class="badge type-badge">{{ t.trainingType }}</span>
-                      }
-                    </div>
-                  </div>
-                  @if (t.description) {
-                    <div class="training-description">{{ t.description }}</div>
-                  }
-                </div>
-              }
-            </div>
-          }
-
-          @if (filteredTrainings.length === 0 && availableTrainings.length > 0) {
-            <div class="empty-state">
-              {{ 'TRAINING_ACTION.EMPTY_NO_MATCH' | translate }}
-            </div>
-          }
-          @if (availableTrainings.length === 0) {
-            <div class="empty-state">
-              {{ 'TRAINING_ACTION.EMPTY_NO_TRAININGS' | translate }}
-            </div>
-          }
+          <app-training-search-list
+            [trainings]="availableTrainings"
+            [selectedTrainingId]="selectedTrainingId"
+            [searchQuery]="searchQuery"
+            [mode]="mode"
+            [selectedGroupId]="selectedGroupId"
+            [sessionAvailableGroups]="sessionAvailableGroups"
+            [sessionShowNoGroupOption]="sessionShowNoGroupOption"
+            [loading]="loading"
+            (searchChange)="searchQuery = $event"
+            (selectTraining)="selectTraining($event)"
+            (groupChange)="selectedGroupId = $event"
+          />
         }
 
         <!-- ===== SHARED FIELDS (shown on both tabs for non-session modes) ===== -->
@@ -183,45 +90,20 @@
           </div>
         }
 
-        <!-- Athlete chip (coach-assign: single pre-selected) -->
-        @if (showAthleteChip && preselectedAthletes) {
-          <div class="form-group">
-            <label class="field-label">{{ 'TRAINING_ACTION.LABEL_ATHLETE' | translate }}</label>
-            <div class="athlete-chips">
-              @for (a of preselectedAthletes; track a.id) {
-                <span class="athlete-chip">{{ a.displayName }}</span>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Tag filter + athlete multi-select (group-assign) -->
-        @if (showTagFilter) {
-          <div class="form-group">
-            <label class="field-label">{{ 'TRAINING_ACTION.LABEL_GROUP_FILTER' | translate }}</label>
-            <div class="tag-filter-row">
-              @for (tag of availableTags; track tag) {
-                <span class="modal-tag-chip"
-                      [class.active]="isTagActive(tag)"
-                      (click)="toggleTag(tag)">{{ tag }}</span>
-              }
-            </div>
-          </div>
-        }
-
-        @if (showAthleteSelect && availableAthletes.length > 0) {
-          <div class="form-group">
-            <label class="field-label">{{ 'TRAINING_ACTION.LABEL_ATHLETES' | translate }}</label>
-            <div class="athlete-checkboxes">
-              @for (a of availableAthletes; track a.id) {
-                <label class="checkbox-label">
-                  <input type="checkbox" [checked]="isAthleteSelected(a.id)" (change)="toggleAthlete(a.id)" />
-                  <span>{{ a.displayName }}</span>
-                </label>
-              }
-            </div>
-          </div>
-        }
+        <!-- Athlete / Tag selection -->
+        <app-athlete-tag-selector
+          [preselectedAthletes]="preselectedAthletes ?? []"
+          [availableAthletes]="availableAthletes"
+          [availableTags]="availableTags"
+          [selectedAthleteIds]="selectedAthleteIds"
+          [activeTags]="activeTags"
+          [showAthleteChip]="showAthleteChip"
+          [showTagFilter]="showTagFilter"
+          [showAthleteSelect]="showAthleteSelect"
+          [loading]="loading"
+          (toggleAthlete)="toggleAthlete($event)"
+          (toggleTag)="toggleTag($event)"
+        />
 
         <!-- Notes -->
         @if (showNotes) {

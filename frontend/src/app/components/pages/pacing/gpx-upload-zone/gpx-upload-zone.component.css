@@ -1,0 +1,90 @@
+/* GPX Dropzone */
+.gpx-dropzone {
+  border: 2px dashed var(--overlay-15);
+  border-radius: 10px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-50);
+  font-size: 13px;
+}
+
+.gpx-dropzone:hover,
+.gpx-dropzone.dragging {
+  border-color: var(--primary-color, #ff9d00);
+  background: rgba(255, 157, 0, 0.05);
+}
+
+.gpx-dropzone.has-file {
+  border-color: var(--primary-color, #ff9d00);
+  border-style: solid;
+}
+
+.gpx-dropzone .file-name {
+  color: var(--primary-color, #ff9d00);
+  font-weight: 600;
+}
+
+/* GPX with Loops */
+.gpx-with-loops {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.gpx-with-loops .gpx-dropzone,
+.gpx-with-loops .gpx-dropzone-labeled {
+  flex: 1;
+}
+
+.gpx-dropzone-labeled {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dropzone-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-50);
+}
+
+.loop-input {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+  min-width: 56px;
+}
+
+.loop-input label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text-50);
+}
+
+.loop-input input {
+  width: 50px;
+  background: var(--overlay-5);
+  border: 1px solid var(--overlay-10);
+  border-radius: 8px;
+  padding: 8px 6px;
+  color: var(--text-color);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.loop-input input:focus {
+  border-color: var(--primary-color, #ff9d00);
+}

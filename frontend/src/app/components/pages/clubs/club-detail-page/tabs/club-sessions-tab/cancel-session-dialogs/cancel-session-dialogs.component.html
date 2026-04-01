@@ -1,0 +1,71 @@
+<!-- Recurring Edit Choice Dialog -->
+@if (showRecurringEditChoice) {
+  <div class="modal-backdrop" (click)="closeRecurringEditChoice.emit()">
+  <div class="modal glass small-modal" (click)="$event.stopPropagation()" data-testid="recurring-edit-dialog">
+    <div class="modal-header">
+      <h3>{{ 'CLUB_SESSIONS.RECURRING_EDIT_DIALOG_TITLE' | translate }}</h3>
+      <button class="close-btn" (click)="closeRecurringEditChoice.emit()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="recurring-choice-text">{{ 'CLUB_SESSIONS.RECURRING_EDIT_PART_OF_SERIES' | translate }}</p>
+      <div class="recurring-choice-actions">
+        <button class="btn-primary" (click)="editThisOnly.emit()" data-testid="btn-edit-this-only">{{ 'CLUB_SESSIONS.RECURRING_EDIT_THIS_ONLY' | translate }}</button>
+        <button class="btn-secondary" (click)="editAllFuture.emit()" data-testid="btn-edit-all-future">{{ 'CLUB_SESSIONS.RECURRING_EDIT_ALL_FUTURE' | translate }}</button>
+        <button class="btn-ghost-neutral" (click)="closeRecurringEditChoice.emit()">{{ 'CLUB_SESSIONS.RECURRING_EDIT_BTN_CANCEL' | translate }}</button>
+      </div>
+    </div>
+  </div>
+  </div>
+}
+
+<!-- Cancel Recurring Choice Dialog -->
+@if (showCancelRecurringChoice) {
+  <div class="modal-backdrop" (click)="closeCancelRecurringChoice.emit()">
+  <div class="modal glass small-modal" (click)="$event.stopPropagation()" data-testid="recurring-cancel-dialog">
+    <div class="modal-header">
+      <h3>{{ 'CLUB_SESSIONS.RECURRING_CANCEL_DIALOG_TITLE' | translate }}</h3>
+      <button class="close-btn" (click)="closeCancelRecurringChoice.emit()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="recurring-choice-text">{{ 'CLUB_SESSIONS.RECURRING_EDIT_PART_OF_SERIES' | translate }}</p>
+      <div class="recurring-choice-actions">
+        <button class="btn-danger" (click)="cancelThisOnly.emit()" data-testid="btn-cancel-this-only">{{ 'CLUB_SESSIONS.RECURRING_CANCEL_THIS_ONLY' | translate }}</button>
+        <button class="btn-danger" (click)="cancelAllFuture.emit()" data-testid="btn-cancel-all-future">{{ 'CLUB_SESSIONS.RECURRING_CANCEL_ALL_FUTURE' | translate }}</button>
+        <button class="btn-ghost-neutral" (click)="closeCancelRecurringChoice.emit()">{{ 'CLUB_SESSIONS.RECURRING_CANCEL_GO_BACK' | translate }}</button>
+      </div>
+    </div>
+  </div>
+  </div>
+}
+
+<!-- Cancel Session Confirmation Modal -->
+@if (showCancelConfirm && cancelTargetSession) {
+  <div class="modal-backdrop" (click)="onCloseCancelConfirm()">
+  <div class="modal glass small-modal" (click)="$event.stopPropagation()" data-testid="cancel-confirm-modal">
+    <div class="modal-header">
+      <h3>{{ cancelMode === 'all' ? ('CLUB_SESSIONS.CANCEL_ALL_FUTURE_DIALOG_TITLE' | translate) : ('CLUB_SESSIONS.CANCEL_SESSION_DIALOG_TITLE' | translate) }}</h3>
+      <button class="close-btn" (click)="onCloseCancelConfirm()">&times;</button>
+    </div>
+    <div class="modal-body">
+      @if (cancelMode === 'all') {
+        <p class="recurring-choice-text">
+          {{ 'CLUB_SESSIONS.CANCEL_ALL_FUTURE_BODY' | translate: { title: cancelTargetSession.title } }}
+        </p>
+      } @else {
+        <p class="recurring-choice-text">
+          {{ 'CLUB_SESSIONS.CANCEL_SINGLE_BODY' | translate: { title: cancelTargetSession.title } }}
+        </p>
+      }
+      <p class="cancel-warning">{{ 'CLUB_SESSIONS.CANCEL_WARNING' | translate }}</p>
+      <div class="form-row">
+        <label>{{ 'CLUB_SESSIONS.FORM_LABEL_CANCEL_REASON' | translate }}</label>
+        <textarea [(ngModel)]="cancelReason" [placeholder]="'CLUB_SESSIONS.FORM_PLACEHOLDER_CANCEL_REASON' | translate" class="form-input" rows="2" data-testid="cancel-reason-textarea"></textarea>
+      </div>
+      <div class="cancel-confirm-actions">
+        <button class="btn-secondary" (click)="onCloseCancelConfirm()">{{ 'CLUB_SESSIONS.BTN_GO_BACK' | translate }}</button>
+        <button class="btn-danger" (click)="onConfirmCancel()" data-testid="btn-confirm-cancel">{{ cancelMode === 'all' ? ('CLUB_SESSIONS.BTN_CANCEL_ALL_FUTURE_CONFIRM' | translate) : ('CLUB_SESSIONS.BTN_CANCEL_SESSION_CONFIRM' | translate) }}</button>
+      </div>
+    </div>
+  </div>
+  </div>
+}

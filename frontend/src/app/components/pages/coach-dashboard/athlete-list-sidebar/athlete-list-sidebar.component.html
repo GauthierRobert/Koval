@@ -1,0 +1,79 @@
+<div class="athlete-list glass" data-testid="athlete-list">
+  <div class="section-header">
+    <h3>{{ 'COACH_DASHBOARD.ATHLETES_HEADING' | translate }}</h3>
+  </div>
+
+  @if (allTags.length > 0) {
+    <div class="tag-filters">
+      <span class="tag-filter-chip" data-testid="tag-filter-all" [class.active]="!activeTagFilter && !activeClubFilter" (click)="clearFilters.emit()">{{ 'COACH_DASHBOARD.ALL_FILTER' | translate: { count: totalAthleteCount } }}</span>
+      @for (tag of allTags; track trackTagByName(tag)) {
+        <span class="tag-filter-chip" data-testid="tag-filter-chip" [class.active]="activeTagFilter === tag.name"
+          (click)="toggleTagFilter.emit(tag.name)">{{ tag.name }} ({{ getTagCount(tag.name) }})</span>
+      }
+    </div>
+  }
+
+  @if (clubRoles.length > 0) {
+    <div class="club-filters">
+      <div class="filter-section-label">{{ 'COACH_DASHBOARD.CLUBS_FILTER_LABEL' | translate }}</div>
+      <div class="tag-filters">
+        @for (entry of clubRoles; track entry) {
+          <span class="tag-filter-chip"
+            [class.active]="activeClubFilter === entry.clubName"
+            (click)="toggleClubFilter.emit(entry.clubName)">
+            {{ entry.clubName }} ({{ getClubCount(entry.clubName) }})
+          </span>
+        }
+      </div>
+    </div>
+  }
+
+  @if (athletes.length > 0) {
+    <div class="athletes">
+      @for (athlete of athletes; track trackAthleteById(athlete)) {
+        <div class="athlete-row" data-testid="athlete-row"
+      [class.selected]="selectedAthlete?.id === athlete.id" (click)="selectAthlete.emit(athlete)">
+      <div class="info">
+          <div class="info-header">
+            <span class="name">{{ athlete.displayName }}</span>
+            @if ((athlete.groups && athlete.groups.length > 0) || (athlete.clubs && athlete.clubs.length > 0)) {
+              <div class="tag-chips">
+                @for (tag of athlete.groups || []; track trackByValue(tag)) {
+                  <span class="chip tag">{{ tag }}</span>
+                }
+                @for (club of athlete.clubs || []; track trackByValue(club)) {
+                  <span class="chip club">{{ club }}</span>
+                }
+              </div>
+            }
+          </div>
+
+          @if (selectedAthlete?.id === athlete.id && (athleteMetrics$ | async); as m) {
+            <div class="mini-metrics">
+              <span class="chip fitness">{{ 'COACH_DASHBOARD.CHIP_FITNESS' | translate }} {{ m.ctl | number:'1.0-0' }}</span>
+              <span class="chip fatigue">{{ 'COACH_DASHBOARD.CHIP_FATIGUE' | translate }} {{ m.atl | number:'1.0-0' }}</span>
+              <span class="chip form" [class.positive]="m.tsb > 0">{{ 'COACH_DASHBOARD.CHIP_FORM' | translate }} {{ m.tsb > 0 ? '+' : '' }}{{ m.tsb | number:'1.0-0' }}</span>
+            </div>
+          } @else {
+            <div class="mini-metrics">
+              <span class="chip fitness">{{ 'COACH_DASHBOARD.CHIP_FITNESS' | translate }} —</span>
+              <span class="chip fatigue">{{ 'COACH_DASHBOARD.CHIP_FATIGUE' | translate }} —</span>
+              <span class="chip form">{{ 'COACH_DASHBOARD.CHIP_FORM' | translate }} —</span>
+            </div>
+          }
+        </div>
+      </div>
+      }
+    </div>
+  }
+  @if (athletes.length === 0 && activeTagFilter) {
+    <div class="empty-athletes">
+      {{ 'COACH_DASHBOARD.NO_ATHLETES_WITH_TAG' | translate: { tag: activeTagFilter } }}
+    </div>
+  }
+  @if (athletes.length === 0 && !activeTagFilter && allTags.length) {
+    <div class="empty-athletes">
+      {{ 'COACH_DASHBOARD.NO_ATHLETES_YET' | translate }}
+    </div>
+  }
+</div>

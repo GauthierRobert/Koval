@@ -1,0 +1,53 @@
+:host {
+  display: contents;
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.field-select,
+.prompt-textarea {
+  background: var(--overlay-5);
+  border: 1px solid var(--overlay-10);
+  border-radius: 8px;
+  color: var(--text-color);
+  font-size: 0.875rem;
+  padding: 10px 12px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  resize: vertical;
+}
+
+.field-select:focus,
+.prompt-textarea:focus {
+  outline: none;
+  border-color: var(--accent-subtle);
+}
+
+.field-select:disabled,
+.prompt-textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.field-select option {
+  background: var(--surface-color);
+  color: var(--text-color);
+}

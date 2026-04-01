@@ -1,0 +1,211 @@
+/* ── Athlete List (left panel) ── */
+
+:host {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.athlete-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  border-right: 1px solid var(--glass-border);
+  border-top: none;
+  border-bottom: none;
+  border-left: none;
+  overflow-y: auto;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-header h3 {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.add-btn {
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
+  color: var(--accent-color);
+  padding: var(--space-xs) 10px;
+  border-radius: var(--radius-sm);
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-btn:hover {
+  background: var(--accent-hover);
+}
+
+.athletes {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.athlete-row {
+  padding: var(--space-sm) 12px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.athlete-row:hover {
+  background: var(--surface-raised);
+}
+
+.athlete-row.selected {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+}
+
+.info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info .name {
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--text-color);
+}
+
+.mini-metrics {
+  display: flex;
+  gap: 4px;
+}
+
+.chip {
+  font-size: 8px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.fitness {
+  background: rgba(0, 160, 233, 0.12);
+  color: var(--secondary-color);
+}
+
+.fatigue {
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--danger-color);
+}
+
+.form {
+  background: rgba(52, 211, 153, 0.12);
+  color: var(--success-color);
+}
+
+.tag {
+  background: rgba(255, 157, 0, 0.15);
+  color: var(--accent-color);
+}
+
+.tag-chips {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.tag-filters {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.tag-filter-chip {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: var(--glass-border);
+  border: 1px solid var(--overlay-15);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tag-filter-chip:hover {
+  background: var(--accent-subtle);
+  color: var(--accent-color);
+}
+
+.tag-filter-chip.active {
+  background: var(--accent-hover);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.empty-athletes {
+  padding: var(--space-md) 12px;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-align: center;
+  font-style: italic;
+}
+
+/* ── Club Filter ── */
+
+.club-filters {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.filter-section-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.chip.club {
+  background: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  :host {
+    width: 100%;
+    max-height: 200px;
+  }
+
+  .athlete-list {
+    border-right: none;
+    border-bottom: 1px solid var(--glass-border);
+  }
+}

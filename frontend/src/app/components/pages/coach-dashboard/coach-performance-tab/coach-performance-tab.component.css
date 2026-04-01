@@ -1,0 +1,370 @@
+/* ── Metrics Cards ── */
+
+.metrics-dashboard {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+.m-card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  padding: var(--card-padding);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.2s;
+}
+
+.m-card:hover {
+  border-color: var(--overlay-12);
+}
+
+.m-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.m-value {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--text-color);
+  letter-spacing: -0.5px;
+}
+
+.m-trend {
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.m-trend.up {
+  color: var(--success-color);
+}
+
+.m-trend.down {
+  color: var(--danger-color);
+}
+
+.m-meta {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.m-condition {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.m-condition.fresh {
+  color: var(--success-color);
+}
+
+.m-condition.tired {
+  color: var(--danger-color);
+}
+
+.m-condition.neutral {
+  color: var(--accent-color);
+}
+
+/* ── Schedule Table ── */
+
+.technical-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.section-title {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.week-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 10px;
+}
+
+.week-nav-btn {
+  background: none;
+  border: 1px solid var(--glass-border);
+  color: var(--accent-color);
+  border-radius: 4px;
+  padding: 0 6px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.week-nav-btn:hover {
+  background: var(--accent-subtle);
+}
+
+.week-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 120px;
+  text-align: center;
+}
+
+.schedule-table {
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.table-header,
+.table-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 90px 70px 50px 50px 90px;
+  padding: 10px var(--space-md);
+  align-items: center;
+}
+
+.table-header {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.table-row {
+  font-size: var(--text-sm);
+  border-bottom: 1px solid var(--surface-raised);
+  transition: background 0.15s;
+}
+
+.table-row:hover {
+  background: var(--overlay-3);
+}
+
+.table-row:last-child {
+  border: none;
+}
+
+.t-date {
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.t-title {
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.t-dur,
+.t-if,
+.t-tss {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.t-status {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.t-status.pending {
+  color: var(--accent-color);
+}
+
+.schedule-type-badge {
+  font-size: 8px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.empty-row {
+  grid-template-columns: 1fr;
+}
+
+.t-empty {
+  color: var(--text-muted);
+  font-size: 11px;
+  text-align: center;
+  padding: 8px 0;
+}
+
+/* ── Club Session Rows ── */
+
+.club-session-row { border-left: 3px solid #818cf8; }
+
+.club-badge {
+  font-size: 8px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+  margin-left: 6px;
+}
+
+.t-status.club { color: #818cf8; }
+
+/* ── Recent Sessions Mini Table ── */
+
+.coach-sessions-panel {
+  margin-top: var(--space-md);
+  padding: var(--card-padding);
+  background: var(--surface-raised);
+  border: 1px solid var(--overlay-8);
+  border-radius: var(--radius-lg);
+}
+
+.sessions-mini-table {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 10px;
+}
+
+.sm-header {
+  display: grid;
+  grid-template-columns: 24px 1fr 60px 60px;
+  gap: 8px;
+  padding: 4px 6px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.sm-row {
+  display: grid;
+  grid-template-columns: 24px 1fr 60px 60px;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  font-size: 11px;
+  transition: background 0.15s;
+}
+
+.sm-row:hover { background: var(--surface-elevated); }
+
+.sm-sport { display: flex; align-items: center; color: var(--success-color); }
+
+.sm-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sm-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.sm-badge.tss {
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
+  color: var(--accent-color);
+}
+
+.sm-badge.if {
+  background: var(--overlay-5);
+  border: 1px solid var(--overlay-10);
+  color: var(--text-muted);
+}
+
+/* ── Sport Distribution ── */
+
+.sport-dist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dist-row {
+  display: grid;
+  grid-template-columns: 16px 80px 1fr 40px;
+  align-items: center;
+  gap: 10px;
+}
+
+.dist-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.dist-bar-wrap {
+  height: 6px;
+  background: var(--overlay-8);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.dist-bar {
+  height: 100%;
+  background: var(--accent-color);
+  border-radius: 3px;
+  opacity: 0.6;
+  transition: width 0.3s ease;
+}
+
+.dist-pct {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .metrics-dashboard {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .table-header,
+  .table-row {
+    grid-template-columns: 80px 1fr 70px 60px 90px;
+  }
+
+  .table-header span:nth-child(5),
+  .table-row span:nth-child(5) {
+    display: none;
+  }
+
+  .table-header span:nth-child(6),
+  .table-row span:nth-child(6) {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .metrics-dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .sm-header,
+  .sm-row {
+    grid-template-columns: 24px 1fr 50px;
+  }
+}

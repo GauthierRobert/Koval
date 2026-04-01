@@ -14,13 +14,27 @@ import {
   TRAINING_TYPES,
   WorkoutBlock,
 } from '../../../models/training.model';
+import { BlockEditorFormComponent } from './block-editor-form/block-editor-form.component';
+import { SetEditorFormComponent } from './set-editor-form/set-editor-form.component';
+import { BlockListItemComponent } from './block-list-item/block-list-item.component';
+import { SetBlockItemComponent } from './set-block-item/set-block-item.component';
 type SportType = 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK';
 type BlockType = WorkoutBlock['type'];
 
 @Component({
   selector: 'app-workout-builder',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, DragDropModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    TranslateModule,
+    DragDropModule,
+    BlockEditorFormComponent,
+    SetEditorFormComponent,
+    BlockListItemComponent,
+    SetBlockItemComponent,
+  ],
   templateUrl: './workout-builder.component.html',
   styleUrl: './workout-builder.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

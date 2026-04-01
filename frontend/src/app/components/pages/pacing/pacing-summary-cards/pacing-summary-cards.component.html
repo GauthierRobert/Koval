@@ -1,0 +1,120 @@
+<div class="summary-row">
+  @if (swimSummary; as ss) {
+    <div class="summary-card glass">
+      <span class="summary-label swim">{{ 'PACING.SUMMARY_SWIM_LABEL' | translate }}</span>
+      <div class="summary-body">
+        <div class="summary-stats">
+          <div class="stat">
+            <span class="stat-value">{{ formatDistance(ss.totalDistance) }}</span>
+            <span class="stat-label">{{ 'PACING.STAT_DISTANCE' | translate }}</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{ formatTime(ss.estimatedTotalTime) }}</span>
+            <span class="stat-label">{{ 'PACING.STAT_EST_TIME' | translate }}</span>
+          </div>
+          @if (ss.averagePace) {
+            <div class="stat">
+              <span class="stat-value">{{ ss.averagePace }}</span>
+              <span class="stat-label">{{ 'PACING.STAT_PACE_PER_100M' | translate }}</span>
+            </div>
+          }
+        </div>
+        @if (ss.targetBasis) {
+          <div class="target-basis">{{ ss.targetBasis }}</div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (bikeSummary; as bs) {
+    <div class="summary-card glass">
+      <span class="summary-label">{{ 'PACING.SUMMARY_BIKE_LABEL' | translate }}</span>
+      <div class="summary-body">
+        <div class="summary-stats">
+          <div class="stat">
+            <span class="stat-value">{{ formatDistance(bs.totalDistance) }}</span>
+            <span class="stat-label">{{ 'PACING.STAT_DISTANCE' | translate }}</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{ formatTime(bs.estimatedTotalTime) }}</span>
+            <span class="stat-label">{{ 'PACING.STAT_EST_TIME' | translate }}</span>
+          </div>
+          @if (!bikeShowSpeed && bs.averagePower) {
+            <div class="stat">
+              <span class="stat-value">{{ bs.averagePower }}W</span>
+              <span class="stat-label">{{ 'PACING.STAT_AVG_POWER' | translate }}</span>
+            </div>
+          }
+          @if (bikeShowSpeed && bs.estimatedTotalTime > 0) {
+            <div class="stat">
+              <span class="stat-value">{{ (bs.totalDistance / bs.estimatedTotalTime * 3.6).toFixed(1) }} km/h</span>
+              <span class="stat-label">{{ 'PACING.STAT_AVG_SPEED' | translate }}</span>
+            </div>
+          }
+          <div class="stat">
+            <span class="stat-value">{{ bs.totalCalories }}</span>
+            <span class="stat-label">{{ 'PACING.STAT_CALORIES' | translate }}</span>
+          </div>
+        </div>
+        <div class="summary-footer">
+          <div class="summary-texts">
+            @if (bs.nutritionPlan) {
+              <div class="nutrition-plan">{{ bs.nutritionPlan }}</div>
+            }
+            @if (bs.targetBasis) {
+              <div class="target-basis">{{ bs.targetBasis }}</div>
+            }
+          </div>
+          @if (!bikeShowSpeed) {
+            <button class="metric-toggle" (click)="toggleShowGroupMean()"
+              [title]="showGroupMean ? ('PACING.TOGGLE_SHOW_SEG_POWER_TITLE' | translate) : ('PACING.TOGGLE_SHOW_GROUP_MEAN_TITLE' | translate)">
+              <span class="metric-toggle-label" [class.active]="!showGroupMean">{{ 'PACING.TOGGLE_SEG' | translate }}</span>
+              <span class="metric-toggle-divider">/</span>
+              <span class="metric-toggle-label" [class.active]="showGroupMean">{{ 'PACING.TOGGLE_GROUP' | translate }}</span>
+            </button>
+          }
+          <button class="metric-toggle" (click)="toggleBikeShowSpeed()"
+            [title]="bikeShowSpeed ? ('PACING.TOGGLE_SWITCH_TO_POWER_TITLE' | translate) : ('PACING.TOGGLE_SWITCH_TO_SPEED_TITLE' | translate)">
+            <span class="metric-toggle-label" [class.active]="!bikeShowSpeed">{{ 'PACING.TOGGLE_POWER_LABEL' | translate }}</span>
+            <span class="metric-toggle-divider">/</span>
+            <span class="metric-toggle-label" [class.active]="bikeShowSpeed">{{ 'PACING.TOGGLE_SPEED_LABEL' | translate }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (runSummary; as rs) {
+    <div class="summary-card glass">
+      <span class="summary-label run">{{ 'PACING.SUMMARY_RUN_LABEL' | translate }}</span>
+      <div class="summary-body">
+        <div class="summary-stats">
+          <div class="stat">
+            <span class="stat-value">{{ formatDistance(rs.totalDistance) }}</span>
+            <span class="stat-label">{{ 'PACING.STAT_DISTANCE' | translate }}</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{ formatTime(rs.estimatedTotalTime) }}</span>
+            <span class="stat-label">{{ 'PACING.STAT_EST_TIME' | translate }}</span>
+          </div>
+          @if (rs.averagePace) {
+            <div class="stat">
+              <span class="stat-value">{{ rs.averagePace }}</span>
+              <span class="stat-label">{{ 'PACING.STAT_AVG_PACE' | translate }}</span>
+            </div>
+          }
+          <div class="stat">
+            <span class="stat-value">{{ rs.totalCalories }}</span>
+            <span class="stat-label">{{ 'PACING.STAT_CALORIES' | translate }}</span>
+          </div>
+        </div>
+        @if (rs.nutritionPlan) {
+          <div class="nutrition-plan">{{ rs.nutritionPlan }}</div>
+        }
+        @if (rs.targetBasis) {
+          <div class="target-basis">{{ rs.targetBasis }}</div>
+        }
+      </div>
+    </div>
+  }
+</div>

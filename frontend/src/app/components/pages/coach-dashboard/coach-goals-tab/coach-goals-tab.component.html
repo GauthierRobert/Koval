@@ -1,0 +1,49 @@
+@if (athleteGoals$ | async; as goals) {
+  @if (goals.length > 0) {
+    <div class="goals-tab-panel">
+      <div class="section-title">{{ 'COACH_DASHBOARD.RACE_GOALS' | translate }}</div>
+      <table class="goals-table">
+        <thead>
+          <tr>
+            <th>{{ 'COACH_DASHBOARD.GOALS_COL_PRIORITY' | translate }}</th>
+            <th>{{ 'COACH_DASHBOARD.GOALS_COL_RACE' | translate }}</th>
+            <th>{{ 'COACH_DASHBOARD.GOALS_COL_SPORT' | translate }}</th>
+            <th>{{ 'COACH_DASHBOARD.GOALS_COL_DATE' | translate }}</th>
+            <th>{{ 'COACH_DASHBOARD.GOALS_COL_DAYS' | translate }}</th>
+            <th>{{ 'COACH_DASHBOARD.GOALS_COL_DISTANCE' | translate }}</th>
+            <th>{{ 'COACH_DASHBOARD.GOALS_COL_TARGET_TIME' | translate }}</th>
+            <th>{{ 'COACH_DASHBOARD.GOALS_COL_LOCATION' | translate }}</th>
+            <th>{{ 'COACH_DASHBOARD.GOALS_COL_NOTES' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (goal of goals; track trackGoalById(goal)) {
+            <tr>
+              <td>
+                <span class="goal-priority-dot"
+                  [style.background-color]="getPriorityColor(goal.priority)"
+                  [title]="goal.priority === 'A' ? ('COACH_DASHBOARD.GOAL_PRIORITY_A_TITLE' | translate) : goal.priority === 'B' ? ('COACH_DASHBOARD.GOAL_PRIORITY_B_TITLE' | translate) : ('COACH_DASHBOARD.GOAL_PRIORITY_C_TITLE' | translate)">
+                  {{ goal.priority }}
+                </span>
+              </td>
+              <td class="goal-title-cell">{{ goal.title }}</td>
+              <td>{{ goal.sport }}</td>
+              <td>{{ goal.raceDate | date:'MMM d, y' }}</td>
+              <td>
+                <span class="days-badge-coach" [class.past]="daysUntil(goal.raceDate) < 0">
+                  {{ daysUntil(goal.raceDate) < 0 ? ('COACH_DASHBOARD.DAYS_AGO' | translate: { n: daysUntil(goal.raceDate) * -1 }) : ('COACH_DASHBOARD.DAYS_AHEAD' | translate: { n: daysUntil(goal.raceDate) }) }}
+                </span>
+              </td>
+              <td>{{ goal.distance || '—' }}</td>
+              <td>{{ goal.targetTime || '—' }}</td>
+              <td>{{ goal.location || '—' }}</td>
+              <td class="notes-cell">{{ goal.notes || '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <div class="empty-tab">{{ 'COACH_DASHBOARD.EMPTY_RACE_GOALS' | translate }}</div>
+  }
+}

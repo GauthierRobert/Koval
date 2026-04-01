@@ -1,0 +1,21 @@
+<div class="form-row-2col">
+  <div class="field-group">
+    <label class="field-label">{{ 'PACING.FIELD_DISCIPLINE_LABEL' | translate }}</label>
+    <div class="pill-group">
+      <button class="pill" [class.active]="discipline === 'SWIM'" (click)="setDiscipline('SWIM')">{{ 'PACING.DISCIPLINE_SWIM' | translate }}</button>
+      <button class="pill" [class.active]="discipline === 'BIKE'" (click)="setDiscipline('BIKE')">{{ 'PACING.DISCIPLINE_BIKE' | translate }}</button>
+      <button class="pill" [class.active]="discipline === 'RUN'" (click)="setDiscipline('RUN')">{{ 'PACING.DISCIPLINE_RUN' | translate }}</button>
+      <button class="pill" [class.active]="discipline === 'TRIATHLON'" (click)="setDiscipline('TRIATHLON')">{{ 'PACING.DISCIPLINE_TRIATHLON' | translate }}</button>
+    </div>
+  </div>
+  @if (showBikeType) {
+    <div class="field-group">
+      <label class="field-label">{{ 'PACING.FIELD_BIKE_TYPE_LABEL' | translate }}</label>
+      <div class="pill-group">
+        <button class="pill" [class.active]="bikeType === 'TT'" (click)="setBikeType('TT')">{{ 'PACING.BIKE_TYPE_TT' | translate }}</button>
+        <button class="pill" [class.active]="bikeType === 'ROAD_AERO'" (click)="setBikeType('ROAD_AERO')">{{ 'PACING.BIKE_TYPE_ROAD_AERO' | translate }}</button>
+        <button class="pill" [class.active]="bikeType === 'ROAD'" (click)="setBikeType('ROAD')">{{ 'PACING.BIKE_TYPE_ROAD' | translate }}</button>
+      </div>
+    </div>
+  }
+</div>

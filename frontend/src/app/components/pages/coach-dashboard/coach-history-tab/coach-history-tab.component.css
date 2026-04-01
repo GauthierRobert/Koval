@@ -1,0 +1,103 @@
+/* ── History Tab ── */
+
+.history-table {
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.hist-header,
+.hist-row {
+  display: grid;
+  grid-template-columns: 60px 32px 1fr 70px 60px 55px 55px;
+  padding: 10px var(--space-md);
+  align-items: center;
+  gap: 8px;
+}
+
+.hist-header {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.hist-row {
+  font-size: 11px;
+  border-bottom: 1px solid var(--surface-raised);
+  transition: background 0.15s;
+}
+
+.hist-row.clickable {
+  cursor: pointer;
+}
+
+.hist-row:hover {
+  background: var(--overlay-3);
+}
+
+.hist-row.clickable:hover {
+  background: var(--accent-subtle);
+  border-left: 2px solid var(--accent-color);
+}
+
+.hist-row:last-child {
+  border: none;
+}
+
+.hist-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.empty-tab {
+  padding: var(--page-padding);
+  text-align: center;
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+  font-style: italic;
+}
+
+/* ── Session Analysis Back Button ── */
+
+.analysis-back-row {
+  margin-bottom: 0rem;
+}
+
+.back-btn {
+  background: none;
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.back-btn:hover {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+  color: var(--accent-color);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .hist-header,
+  .hist-row {
+    grid-template-columns: 50px 28px 1fr 60px 55px;
+  }
+
+  .hist-header span:nth-child(6),
+  .hist-row span:nth-child(6),
+  .hist-header span:nth-child(7),
+  .hist-row span:nth-child(7) {
+    display: none;
+  }
+}
