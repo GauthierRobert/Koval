@@ -5,8 +5,13 @@ import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.auth.UserRole;
 import com.koval.trainingplannerbackend.club.Club;
 import com.koval.trainingplannerbackend.club.ClubRepository;
+import com.koval.trainingplannerbackend.club.dto.MyClubRoleEntry;
 import com.koval.trainingplannerbackend.club.membership.ClubMemberRole;
+import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
+import com.koval.trainingplannerbackend.club.membership.ClubMembership;
+import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipService;
+import com.koval.trainingplannerbackend.coach.dto.AthleteResponse;
 import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
@@ -20,9 +25,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Service for Coach-specific operations.
@@ -35,24 +43,30 @@ public class CoachService {
     private final UserRepository userRepository;
     private final ScheduledWorkoutRepository scheduledWorkoutRepository;
     private final GroupService groupService;
+    private final CoachGroupService coachGroupService;
     private final NotificationService notificationService;
     private final ReceivedTrainingService receivedTrainingService;
     private final ClubMembershipService clubMembershipService;
+    private final ClubMembershipRepository clubMembershipRepository;
     private final ClubRepository clubRepository;
 
     public CoachService(UserRepository userRepository,
             ScheduledWorkoutRepository scheduledWorkoutRepository,
             GroupService groupService,
+            CoachGroupService coachGroupService,
             NotificationService notificationService,
             ReceivedTrainingService receivedTrainingService,
             ClubMembershipService clubMembershipService,
+            ClubMembershipRepository clubMembershipRepository,
             ClubRepository clubRepository) {
         this.userRepository = userRepository;
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
         this.groupService = groupService;
+        this.coachGroupService = coachGroupService;
         this.notificationService = notificationService;
         this.receivedTrainingService = receivedTrainingService;
         this.clubMembershipService = clubMembershipService;
+        this.clubMembershipRepository = clubMembershipRepository;
         this.clubRepository = clubRepository;
     }
 
@@ -249,5 +263,52 @@ public class CoachService {
             }
         }
         return false;
+    }
+
+    /**
+     * Get all athletes visible to a coach, combining group athletes and club members.
+     */
+    public List<AthleteResponse> getAthletes(String coachId) {
+        List<User> groupAthletes = coachGroupService.getCoachAthletes(coachId);
+        List<Group> coachGroups = groupService.getGroupsForCoach(coachId);
+
+        List<MyClubRoleEntry> myRoles = clubMembershipService.getMyClubRoles(coachId);
+        List<MyClubRoleEntry> coachRoles = myRoles.stream()
+                .filter(r -> r.role() == ClubMemberRole.COACH || r.role() == ClubMemberRole.ADMIN || r.role() == ClubMemberRole.OWNER)
+                .toList();
+
+        Set<String> groupAthleteIds = groupAthletes.stream().map(User::getId).collect(Collectors.toSet());
+        Map<String, List<String>> userClubNames = new HashMap<>();
+
+        for (var role : coachRoles) {
+            List<ClubMembership> members = clubMembershipRepository.findByClubIdAndStatus(role.clubId(), ClubMemberStatus.ACTIVE);
+            for (ClubMembership m : members) {
+                if (!m.getUserId().equals(coachId)) {
+                    userClubNames.computeIfAbsent(m.getUserId(), k -> new ArrayList<>()).add(role.clubName());
+                }
+            }
+        }
+
+        Set<String> clubOnlyIds = new HashSet<>(userClubNames.keySet());
+        clubOnlyIds.removeAll(groupAthleteIds);
+        List<User> clubOnlyUsers = clubOnlyIds.isEmpty() ? List.of() : userRepository.findByIdIn(new ArrayList<>(clubOnlyIds));
+
+        List<AthleteResponse> result = new ArrayList<>();
+
+        for (User athlete : groupAthletes) {
+            List<String> athleteGroupNames = coachGroups.stream()
+                    .filter(group -> group.getAthleteIds().contains(athlete.getId()))
+                    .map(Group::getName)
+                    .toList();
+            result.add(AthleteResponse.from(athlete, athleteGroupNames,
+                    userClubNames.getOrDefault(athlete.getId(), List.of()), true));
+        }
+
+        for (User athlete : clubOnlyUsers) {
+            result.add(AthleteResponse.from(athlete, List.of(),
+                    userClubNames.getOrDefault(athlete.getId(), List.of()), false));
+        }
+
+        return result;
     }
 }

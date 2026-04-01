@@ -310,20 +310,8 @@ public class AuthController {
     @PostMapping("/onboarding")
     public ResponseEntity<Map<String, Object>> completeOnboarding(@RequestBody @Valid OnboardingRequest request) {
         String userId = SecurityUtils.getCurrentUserId();
-        User user = userService.getUserById(userId);
-
-        if (request.role() != null) user.setRole(request.role());
-        if (request.ftp() != null) user.setFtp(request.ftp());
-        if (request.weightKg() != null) user.setWeightKg(request.weightKg());
-        if (request.criticalSwimSpeed() != null) user.setCriticalSwimSpeed(request.criticalSwimSpeed());
-        if (request.functionalThresholdPace() != null) user.setFunctionalThresholdPace(request.functionalThresholdPace());
-        if (Boolean.TRUE.equals(request.cguAccepted())) {
-            user.setCguAcceptedAt(java.time.LocalDateTime.now());
-            user.setCguVersion(CguConstants.CURRENT_VERSION);
-        }
-        user.setNeedsOnboarding(false);
-
-        userRepository.save(user);
+        User user = userService.completeOnboarding(userId, request.role(), request.ftp(), request.weightKg(),
+                request.criticalSwimSpeed(), request.functionalThresholdPace(), request.cguAccepted());
 
         // Re-issue JWT with potentially updated role
         String jwt = generateJwtToken(user);
@@ -336,10 +324,7 @@ public class AuthController {
     @PostMapping("/cgu/accept")
     public ResponseEntity<Map<String, Object>> acceptCgu() {
         String userId = SecurityUtils.getCurrentUserId();
-        User user = userService.getUserById(userId);
-        user.setCguAcceptedAt(java.time.LocalDateTime.now());
-        user.setCguVersion(CguConstants.CURRENT_VERSION);
-        userRepository.save(user);
+        User user = userService.acceptCgu(userId);
         return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 }

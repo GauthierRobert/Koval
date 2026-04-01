@@ -60,17 +60,18 @@ public class NotificationService {
         List<String> allTokens = new ArrayList<>();
         Map<String, List<String>> tokensByUser = new HashMap<>();
 
-        userIds.forEach(userId -> userRepository.findById(userId).ifPresent(user -> {
+        List<User> users = userRepository.findAllById(userIds);
+        for (User user : users) {
             if (preferenceType != null && !isPreferenceEnabled(user, preferenceType)) {
-                log.debug("User {} has {} preference disabled — skipping", userId, preferenceType);
-                return;
+                log.debug("User {} has {} preference disabled — skipping", user.getId(), preferenceType);
+                continue;
             }
             List<String> tokens = user.getFcmTokens();
             if (tokens != null && !tokens.isEmpty()) {
                 allTokens.addAll(tokens);
-                tokensByUser.put(userId, new ArrayList<>(tokens));
+                tokensByUser.put(user.getId(), new ArrayList<>(tokens));
             }
-        }));
+        }
 
         if (allTokens.isEmpty()) {
             log.debug("No FCM tokens found for users {} — skipping notification", userIds);
@@ -151,17 +152,25 @@ public class NotificationService {
     }
 
     private void removeStaleTokens(List<String> staleTokens, Map<String, List<String>> tokensByUser) {
-        for (var entry : tokensByUser.entrySet()) {
-            String userId = entry.getKey();
-            List<String> userTokens = entry.getValue();
+        List<String> affectedUserIds = tokensByUser.entrySet().stream()
+                .filter(e -> e.getValue().stream().anyMatch(staleTokens::contains))
+                .map(Map.Entry::getKey)
+                .toList();
+        if (affectedUserIds.isEmpty()) return;
+
+        List<User> users = userRepository.findAllById(affectedUserIds);
+        List<User> toSave = new ArrayList<>();
+        for (User user : users) {
+            List<String> userTokens = tokensByUser.get(user.getId());
             List<String> toRemove = userTokens.stream().filter(staleTokens::contains).toList();
-            if (!toRemove.isEmpty()) {
-                userRepository.findById(userId).ifPresent(user -> {
-                    user.getFcmTokens().removeAll(toRemove);
-                    userRepository.save(user);
-                    log.info("Removed {} stale FCM tokens from user {}", toRemove.size(), userId);
-                });
+            if (!toRemove.isEmpty() && user.getFcmTokens() != null) {
+                user.getFcmTokens().removeAll(toRemove);
+                toSave.add(user);
+                log.info("Removed {} stale FCM tokens from user {}", toRemove.size(), user.getId());
             }
+        }
+        if (!toSave.isEmpty()) {
+            userRepository.saveAll(toSave);
         }
     }
 

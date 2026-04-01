@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend.coach;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.club.dto.CalendarClubSessionResponse;
 import com.koval.trainingplannerbackend.club.session.ClubSessionService;
+import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,70 +26,24 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class ScheduleController {
 
-    private final ScheduledWorkoutRepository scheduledWorkoutRepository;
     private final ScheduledWorkoutService scheduledWorkoutService;
     private final ScheduleService scheduleService;
     private final ClubSessionService clubSessionService;
 
-    public ScheduleController(ScheduledWorkoutRepository scheduledWorkoutRepository,
-            ScheduledWorkoutService scheduledWorkoutService,
+    public ScheduleController(ScheduledWorkoutService scheduledWorkoutService,
             ScheduleService scheduleService,
             ClubSessionService clubSessionService) {
-        this.scheduledWorkoutRepository = scheduledWorkoutRepository;
         this.scheduledWorkoutService = scheduledWorkoutService;
         this.scheduleService = scheduleService;
         this.clubSessionService = clubSessionService;
     }
 
-    public static class ScheduleRequest {
-        private String trainingId;
-        private LocalDate scheduledDate;
-        private String notes;
-
-        public String getTrainingId() {
-            return trainingId;
-        }
-
-        public void setTrainingId(String trainingId) {
-            this.trainingId = trainingId;
-        }
-
-        public LocalDate getScheduledDate() {
-            return scheduledDate;
-        }
-
-        public void setScheduledDate(LocalDate scheduledDate) {
-            this.scheduledDate = scheduledDate;
-        }
-
-        public String getNotes() {
-            return notes;
-        }
-
-        public void setNotes(String notes) {
-            this.notes = notes;
-        }
-    }
-
     @PostMapping
     public ResponseEntity<ScheduledWorkoutResponse> scheduleWorkout(
-            @RequestBody ScheduleRequest request) {
-        if (request.getScheduledDate() == null) {
-            return ResponseEntity.badRequest().build();
-        }
-
+            @Valid @RequestBody ScheduleRequest request) {
         String userId = SecurityUtils.getCurrentUserId();
-
-        ScheduledWorkout workout = new ScheduledWorkout();
-        workout.setTrainingId(request.getTrainingId());
-        workout.setAthleteId(userId);
-        workout.setAssignedBy(userId);
-        workout.setScheduledDate(request.getScheduledDate());
-        workout.setNotes(request.getNotes());
-        workout.setStatus(ScheduleStatus.PENDING);
-
-        ScheduledWorkout saved = scheduledWorkoutRepository.save(workout);
-        return ResponseEntity.status(HttpStatus.CREATED).body(scheduleService.enrichSingle(saved));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(scheduleService.scheduleWorkout(userId, request));
     }
 
     @GetMapping
@@ -97,72 +52,34 @@ public class ScheduleController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end,
             @RequestParam(defaultValue = "false") boolean includeClubSessions) {
         String userId = SecurityUtils.getCurrentUserId();
-
-        List<ScheduledWorkout> workouts = scheduledWorkoutRepository
-                .findByAthleteIdAndScheduledDateBetween(userId, start.minusDays(1), end.plusDays(1));
-        if (includeClubSessions) {
-            return ResponseEntity.ok(scheduleService.getUnifiedSchedule(workouts, userId, start, end));
-        }
-        return ResponseEntity.ok(scheduleService.enrichList(workouts));
+        return ResponseEntity.ok(scheduleService.getMySchedule(userId, start, end, includeClubSessions));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteScheduledWorkout(@PathVariable String id) {
         String userId = SecurityUtils.getCurrentUserId();
-
-        return scheduledWorkoutRepository.findById(id)
-                .map(workout -> {
-                    if (!userId.equals(workout.getAthleteId())) {
-                        return ResponseEntity.status(403).<Void>build();
-                    }
-                    scheduledWorkoutRepository.deleteById(id);
-                    return ResponseEntity.noContent().<Void>build();
-                })
-                .orElse(ResponseEntity.notFound().build());
+        scheduleService.deleteScheduledWorkout(userId, id);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/complete")
     public ResponseEntity<ScheduledWorkoutResponse> markCompleted(@PathVariable String id) {
         ScheduledWorkout updated = scheduleService.markCompleted(id);
-        if (updated == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(scheduleService.enrichSingle(updated));
     }
 
     @PatchMapping("/{id}/reschedule")
     public ResponseEntity<ScheduledWorkoutResponse> rescheduleWorkout(
             @PathVariable String id,
-            @RequestBody ScheduleRequest body) {
-        LocalDate newDate = body.getScheduledDate();
-        if (newDate == null) {
-            return ResponseEntity.badRequest().build();
-        }
+            @Valid @RequestBody ScheduleRequest body) {
         String userId = SecurityUtils.getCurrentUserId();
-
-        return scheduledWorkoutRepository.findById(id)
-                .map(workout -> {
-                    boolean isOwner = userId.equals(workout.getAthleteId());
-                    boolean isAssigner = userId.equals(workout.getAssignedBy());
-                    if (!isOwner && !isAssigner) {
-                        return ResponseEntity.status(403).<ScheduledWorkoutResponse>build();
-                    }
-                    if (workout.getStatus() != ScheduleStatus.PENDING) {
-                        return ResponseEntity.badRequest().<ScheduledWorkoutResponse>build();
-                    }
-                    workout.setScheduledDate(newDate);
-                    ScheduledWorkout saved = scheduledWorkoutRepository.save(workout);
-                    return ResponseEntity.ok(scheduleService.enrichSingle(saved));
-                })
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(scheduleService.rescheduleWorkout(userId, id, body.scheduledDate()));
     }
 
     @PostMapping("/{id}/skip")
     public ResponseEntity<ScheduledWorkoutResponse> markSkipped(@PathVariable String id) {
-        try {
-            ScheduledWorkout updated = scheduledWorkoutService.markSkipped(id);
-            return ResponseEntity.ok(scheduleService.enrichSingle(updated));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+        ScheduledWorkout updated = scheduledWorkoutService.markSkipped(id);
+        return ResponseEntity.ok(scheduleService.enrichSingle(updated));
     }
 
     @GetMapping("/club-sessions")
