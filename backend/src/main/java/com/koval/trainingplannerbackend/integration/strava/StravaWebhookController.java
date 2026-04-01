@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.integration.strava;
 
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserService;
+import com.koval.trainingplannerbackend.integration.strava.StravaWebhookSubscriptionService.StravaSubscriptionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,14 +30,20 @@ public class StravaWebhookController {
 
     private final StravaActivitySyncService syncService;
     private final UserService userService;
+    private final StravaWebhookSubscriptionService subscriptionService;
     private final String verifyToken;
+    private final String adminSecret;
 
     public StravaWebhookController(StravaActivitySyncService syncService,
                                     UserService userService,
-                                    @Value("${strava.webhook-verify-token:strava-webhook-verify}") String verifyToken) {
+                                    StravaWebhookSubscriptionService subscriptionService,
+                                    @Value("${strava.webhook-verify-token:strava-webhook-verify}") String verifyToken,
+                                    @Value("${admin.secret}") String adminSecret) {
         this.syncService = syncService;
         this.userService = userService;
+        this.subscriptionService = subscriptionService;
         this.verifyToken = verifyToken;
+        this.adminSecret = adminSecret;
     }
 
     /**
@@ -99,5 +107,33 @@ public class StravaWebhookController {
         });
 
         return ResponseEntity.ok().build();
+    }
+
+    /** POST /api/integration/strava/webhook/subscribe — register the webhook with Strava. Call once per environment. */
+    @PostMapping("/subscribe")
+    public ResponseEntity<?> subscribe(@RequestHeader("X-Admin-Secret") String secret) {
+        if (!adminSecret.equals(secret)) {
+            return ResponseEntity.status(403).build();
+        }
+        try {
+            StravaWebhookSubscriptionService.SubscriptionResult result = subscriptionService.createSubscription();
+            log.info("Strava webhook subscription registered: id={}", result.id());
+            return ResponseEntity.ok(Map.of("id", result.id(), "callbackUrl", result.callbackUrl()));
+        } catch (StravaSubscriptionException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /** GET /api/integration/strava/webhook/subscribe — view the current subscription. */
+    @GetMapping("/subscribe")
+    public ResponseEntity<?> viewSubscription(@RequestHeader("X-Admin-Secret") String secret) {
+        if (!adminSecret.equals(secret)) {
+            return ResponseEntity.status(403).build();
+        }
+        try {
+            return ResponseEntity.ok(subscriptionService.viewSubscription());
+        } catch (StravaSubscriptionException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 }

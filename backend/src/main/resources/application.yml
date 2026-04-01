@@ -49,6 +49,10 @@ strava:
   client-secret: ${STRAVA_CLIENT_SECRET:}
   redirect-uri: http://localhost:4200/auth/callback
   webhook-verify-token: ${STRAVA_WEBHOOK_VERIFY_TOKEN:strava-webhook-verify}
+  webhook-callback-url: ${STRAVA_WEBHOOK_CALLBACK_URL:http://localhost:8080/api/integration/strava/webhook}
+
+admin:
+  secret: ${ADMIN_SECRET:change-me-in-prod}
 
 garmin:
   consumer-key: ${GARMIN_CONSUMER_KEY:}
