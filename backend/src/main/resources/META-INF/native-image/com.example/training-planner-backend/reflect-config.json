@@ -1,9 +1,5 @@
 [
   {
-    "_comment": "=== Spring AI @Tool Service Classes ===",
-    "_note": "Spring AI introspects these via reflection for tool discovery"
-  },
-  {
     "name": "com.koval.trainingplannerbackend.ai.tools.scheduling.SchedulingToolService",
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true,
@@ -70,10 +66,6 @@
     "allPublicMethods": true
   },
 
-  {
-    "_comment": "=== @Tool Parameter/Return Records ===",
-    "_note": "Records used as tool method params/returns need reflection for JSON schema generation"
-  },
   {
     "name": "com.koval.trainingplannerbackend.ai.tools.training.TrainingRequest",
     "allDeclaredMethods": true,
@@ -189,10 +181,6 @@
     "allDeclaredFields": true
   },
 
-  {
-    "_comment": "=== MongoDB @Document Classes ===",
-    "_note": "MongoDB driver needs reflection for document mapping"
-  },
   {
     "name": "com.koval.trainingplannerbackend.training.model.Training",
     "allDeclaredMethods": true,
@@ -321,10 +309,6 @@
   },
 
   {
-    "_comment": "=== Enum Types ===",
-    "_note": "Enums need reflection for JSON deserialization and MongoDB mapping"
-  },
-  {
     "name": "com.koval.trainingplannerbackend.training.model.BlockType",
     "allDeclaredFields": true,
     "allDeclaredMethods": true
@@ -406,10 +390,6 @@
   },
 
   {
-    "_comment": "=== Google Auth (for FCM HTTP v1 API) ===",
-    "_note": "GoogleCredentials uses reflection for service account loading"
-  },
-  {
     "name": "com.google.auth.oauth2.GoogleCredentials",
     "allPublicMethods": true,
     "allPublicConstructors": true
@@ -420,10 +400,6 @@
     "allPublicConstructors": true
   },
 
-  {
-    "_comment": "=== JJWT (ServiceLoader pattern) ===",
-    "_note": "jjwt-impl and jjwt-jackson use ServiceLoader, need explicit hints"
-  },
   {
     "name": "io.jsonwebtoken.impl.DefaultJwtParser",
     "allDeclaredMethods": true,
@@ -465,10 +441,6 @@
     "allDeclaredConstructors": true
   },
 
-  {
-    "_comment": "=== AI Service Records (Controller DTOs) ===",
-    "_note": "Used in REST request/response serialization"
-  },
   {
     "name": "com.koval.trainingplannerbackend.ai.AIController$ChatRequest",
     "allDeclaredMethods": true,
