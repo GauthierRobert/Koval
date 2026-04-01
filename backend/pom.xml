@@ -33,10 +33,24 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-anthropic</artifactId>
+            <exclusions>
+                <!-- Spring AI M2 transitively pulls Groovy 5 which breaks GraalVM Community 25's
+                     Groovy polyglot substitution (targets a method removed in Groovy 4+) -->
+                <exclusion>
+                    <groupId>org.apache.groovy</groupId>
+                    <artifactId>groovy</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-chat-memory-repository-mongodb</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.groovy</groupId>
+                    <artifactId>groovy</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -188,22 +202,6 @@
     <profiles>
         <profile>
             <id>native</id>
-            <dependencies>
-                <!-- GraalVM Community 25 has a Groovy polyglot substitution that targets
-                     IndyInterface.invalidateSwitchPoints() which was removed in Groovy 4.x.
-                     Marking Groovy as 'provided' excludes it from the native image classpath
-                     so the substitution processor never finds the class and skips it. -->
-                <dependency>
-                    <groupId>org.apache.groovy</groupId>
-                    <artifactId>groovy</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.codehaus.groovy</groupId>
-                    <artifactId>groovy</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
             <build>
                 <plugins>
                     <plugin>

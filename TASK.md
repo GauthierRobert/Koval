@@ -129,11 +129,11 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 - I want that the memory of the conversation is more than 8, but each message need to be compacted in 1 or 2 lines, for instance, i user created I have a huge context with training details, I want Training create : title with id.
 - Button to switch from % to values in training lib does not work any more. I have this issue when click (maybe not related) : workout-visualization.component.html:221 NG0956: The configured tracking expression (track by identity) caused re-creation of the entire collection of size 6. This is an expensive operation requiring destruction and subsequent creation of DOM nodes, directives, components etc. Please review the "track expression" and make sure that it uniquely identifies items in a collection. Find more at https://v21.angular.dev/errors/NG0956
 - notification.service.ts:64 Failed to get FCM token: AbortError: Failed to execute 'subscribe' on 'PushManager': Subscription failed - no active Service Worker at async _NotificationService.requestPermissionAndRegisterToken (notification.service.ts:52:21)
+- In PWA mobile, User CLub are not updated when user redeem an invite code
 # TO VERIFY
 
 ## TO FIX
 - Language change can be put in the settings modal
-- In PWA mobile, User CLub are not updated when user redeem an invite code
 - 
 
 # TO IMPLEMENT

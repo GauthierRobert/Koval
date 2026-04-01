@@ -14,6 +14,7 @@ import com.koval.trainingplannerbackend.club.group.ClubGroupRepository;
 import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,6 +50,7 @@ public class ClubMembershipService {
         this.activityService = activityService;
     }
 
+    @CacheEvict(value = "userClubs", key = "#userId")
     @Transactional
     public ClubMembership joinClub(String userId, String clubId) {
         Club club = clubRepository.findById(clubId)
@@ -77,6 +79,7 @@ public class ClubMembershipService {
         return membershipRepository.save(membership);
     }
 
+    @CacheEvict(value = "userClubs", key = "#userId")
     public void leaveClub(String userId, String clubId) {
         ClubMembership membership = membershipRepository.findByClubIdAndUserId(clubId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Not a member"));
@@ -95,6 +98,7 @@ public class ClubMembershipService {
         membershipRepository.delete(membership);
     }
 
+    @CacheEvict(value = "userClubs", key = "#userId")
     public ClubMembership approveRequest(String adminId, String membershipId) {
         ClubMembership target = membershipRepository.findById(membershipId)
                 .orElseThrow(() -> new ResourceNotFoundException("Membership not found"));

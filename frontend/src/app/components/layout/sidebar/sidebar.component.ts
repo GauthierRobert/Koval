@@ -5,6 +5,7 @@ import {BehaviorSubject} from 'rxjs';
 import {BluetoothService} from '../../../services/bluetooth.service';
 import {AuthService} from '../../../services/auth.service';
 import {CoachService} from '../../../services/coach.service';
+import {ClubService} from '../../../services/club.service';
 import {TrainingHistoryComponent} from '../training-history/training-history.component';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 
@@ -20,6 +21,7 @@ export class SidebarComponent {
     private bluetoothService = inject(BluetoothService);
     private authService = inject(AuthService);
     private coachService = inject(CoachService);
+    private clubService = inject(ClubService);
     private translate = inject(TranslateService);
 
     user$ = this.authService.user$;
@@ -45,6 +47,7 @@ export class SidebarComponent {
                 this.joiningSubject.next(false);
                 this.inviteCode = '';
                 this.authService.refreshUser();
+                this.clubService.loadUserClubs();
             },
             error: () => {
                 this.joiningSubject.next(false);

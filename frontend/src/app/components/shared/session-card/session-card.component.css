@@ -546,27 +546,6 @@
   gap: 8px;
 }
 
-.sc-detail__avatar {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: rgba(0, 160, 233, 0.12);
-  color: var(--secondary-color);
-  border: 1px solid rgba(0, 160, 233, 0.25);
-  font-size: 10px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.sc-detail__avatar--waiting {
-  background: rgba(0, 160, 233, 0.06);
-  color: var(--secondary-color);
-  opacity: 0.6;
-}
-
 .sc-detail__name {
   font-size: 12px;
   font-weight: 600;

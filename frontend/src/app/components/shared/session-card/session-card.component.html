@@ -165,8 +165,7 @@
         <div class="sc-detail__list">
           @for (p of getParticipantNames(); track p.initial) {
           <div class="sc-detail__row">
-            <div class="sc-detail__avatar">{{ p.initial }}</div>
-            <span class="sc-detail__name">{{ p.name }}</span>
+            <span class="sc-detail__name">&#x2022; {{ p.name }}</span>
           </div>
           }
         </div>
@@ -183,8 +182,7 @@
           @for (w of getWaitingListNames(); track w.position) {
           <div class="sc-detail__row">
             <span class="sc-detail__position">#{{ w.position }}</span>
-            <div class="sc-detail__avatar sc-detail__avatar--waiting">{{ w.initial }}</div>
-            <span class="sc-detail__name">{{ w.name }}</span>
+            <span class="sc-detail__name">&#x2022; {{ w.name }}</span>
           </div>
           }
         </div>
