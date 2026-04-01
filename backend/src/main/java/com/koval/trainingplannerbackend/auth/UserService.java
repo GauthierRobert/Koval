@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend.auth;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -86,6 +87,29 @@ public class UserService {
         if (aiPrePromptEnabled != null) {
             user.setAiPrePromptEnabled(aiPrePromptEnabled);
         }
+        return userRepository.save(user);
+    }
+
+    public User completeOnboarding(String userId, UserRole role, Integer ftp, Integer weightKg,
+            Integer criticalSwimSpeed, Integer functionalThresholdPace, Boolean cguAccepted) {
+        User user = getUserById(userId);
+        if (role != null) user.setRole(role);
+        if (ftp != null) user.setFtp(ftp);
+        if (weightKg != null) user.setWeightKg(weightKg);
+        if (criticalSwimSpeed != null) user.setCriticalSwimSpeed(criticalSwimSpeed);
+        if (functionalThresholdPace != null) user.setFunctionalThresholdPace(functionalThresholdPace);
+        if (Boolean.TRUE.equals(cguAccepted)) {
+            user.setCguAcceptedAt(LocalDateTime.now());
+            user.setCguVersion(CguConstants.CURRENT_VERSION);
+        }
+        user.setNeedsOnboarding(false);
+        return userRepository.save(user);
+    }
+
+    public User acceptCgu(String userId) {
+        User user = getUserById(userId);
+        user.setCguAcceptedAt(LocalDateTime.now());
+        user.setCguVersion(CguConstants.CURRENT_VERSION);
         return userRepository.save(user);
     }
 }

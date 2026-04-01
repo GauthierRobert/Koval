@@ -16,6 +16,9 @@ import com.koval.trainingplannerbackend.coach.ScheduledWorkoutService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
+import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
+import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.stereotype.Service;
 
@@ -85,11 +88,12 @@ public class ScheduleService {
      * recomputed.
      *
      * @param scheduledWorkoutId the scheduled workout to complete
-     * @return the updated {@link ScheduledWorkout}, or {@code null} if not found
+     * @return the updated {@link ScheduledWorkout}
+     * @throws ResourceNotFoundException if the scheduled workout is not found
      */
     public ScheduledWorkout markCompleted(String scheduledWorkoutId) {
-        ScheduledWorkout workout = scheduledWorkoutRepository.findById(scheduledWorkoutId).orElse(null);
-        if (workout == null) return null;
+        ScheduledWorkout workout = scheduledWorkoutRepository.findById(scheduledWorkoutId)
+                .orElseThrow(() -> new ResourceNotFoundException("Scheduled workout", scheduledWorkoutId));
 
         // If a real (non-synthetic) session is already linked, just mark complete
         if (workout.getSessionId() != null) {
@@ -229,11 +233,10 @@ public class ScheduleService {
                 .findByClubIdInAndScheduledAtBetween(clubIds, start.atStartOfDay(), end.plusDays(1).atStartOfDay());
 
         // 5. Pre-fetch groups the athlete belongs to
-        Set<String> athleteGroupIds = new HashSet<>();
-        for (String clubId : clubIds) {
-            clubGroupRepository.findByClubIdAndMemberIdsContaining(clubId, athleteId)
-                    .forEach(g -> athleteGroupIds.add(g.getId()));
-        }
+        Set<String> athleteGroupIds = clubGroupRepository
+                .findByClubIdInAndMemberIdsContaining(clubIds, athleteId).stream()
+                .map(g -> g.getId())
+                .collect(Collectors.toSet());
 
         // 6. Filter to sessions where athlete is a participant
         List<ClubTrainingSession> relevantSessions = sessions.stream()
@@ -264,9 +267,8 @@ public class ScheduleService {
                         .collect(Collectors.toMap(Training::getId, Function.identity()));
 
         // 8. Build clubGroupId → name map
-        Map<String, String> groupNameMap = new HashMap<>();
-        clubIds.forEach(clubId -> clubGroupRepository.findByClubId(clubId)
-                .forEach(g -> groupNameMap.put(g.getId(), g.getName())));
+        Map<String, String> groupNameMap = clubGroupRepository.findByClubIdIn(clubIds).stream()
+                .collect(Collectors.toMap(g -> g.getId(), g -> g.getName()));
 
         // 9. Map each qualifying session to a response
         for (ClubTrainingSession s : relevantSessions) {
@@ -282,5 +284,57 @@ public class ScheduleService {
                 Comparator.nullsLast(Comparator.naturalOrder())));
 
         return result;
+    }
+
+    // --- Controller-delegated operations ---
+
+    public ScheduledWorkoutResponse scheduleWorkout(String userId, ScheduleRequest request) {
+        ScheduledWorkout workout = new ScheduledWorkout();
+        workout.setTrainingId(request.trainingId());
+        workout.setAthleteId(userId);
+        workout.setAssignedBy(userId);
+        workout.setScheduledDate(request.scheduledDate());
+        workout.setNotes(request.notes());
+        workout.setStatus(ScheduleStatus.PENDING);
+
+        ScheduledWorkout saved = scheduledWorkoutRepository.save(workout);
+        return enrichSingle(saved);
+    }
+
+    public List<ScheduledWorkoutResponse> getMySchedule(String userId, LocalDate start, LocalDate end,
+            boolean includeClubSessions) {
+        List<ScheduledWorkout> workouts = scheduledWorkoutRepository
+                .findByAthleteIdAndScheduledDateBetween(userId, start.minusDays(1), end.plusDays(1));
+        if (includeClubSessions) {
+            return getUnifiedSchedule(workouts, userId, start, end);
+        }
+        return enrichList(workouts);
+    }
+
+    public void deleteScheduledWorkout(String userId, String id) {
+        ScheduledWorkout workout = scheduledWorkoutRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Scheduled workout", id));
+        if (!userId.equals(workout.getAthleteId())) {
+            throw new ForbiddenOperationException("Not authorized to delete this workout");
+        }
+        scheduledWorkoutRepository.deleteById(id);
+    }
+
+    public ScheduledWorkoutResponse rescheduleWorkout(String userId, String id, LocalDate newDate) {
+        ScheduledWorkout workout = scheduledWorkoutRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Scheduled workout", id));
+
+        boolean isOwner = userId.equals(workout.getAthleteId());
+        boolean isAssigner = userId.equals(workout.getAssignedBy());
+        if (!isOwner && !isAssigner) {
+            throw new ForbiddenOperationException("Not authorized to reschedule this workout");
+        }
+        if (workout.getStatus() != ScheduleStatus.PENDING) {
+            throw new ValidationException("Only pending workouts can be rescheduled");
+        }
+
+        workout.setScheduledDate(newDate);
+        ScheduledWorkout saved = scheduledWorkoutRepository.save(workout);
+        return enrichSingle(saved);
     }
 }

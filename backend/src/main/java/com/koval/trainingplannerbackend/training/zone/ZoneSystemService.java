@@ -275,14 +275,11 @@ public class ZoneSystemService {
      * excluding the specified user.
      */
     private List<String> findClubCoachIds(List<ClubMembership> memberships, String excludeUserId) {
-        List<String> coachIds = new ArrayList<>();
-        for (ClubMembership membership : memberships) {
-            clubMembershipRepository.findByClubIdAndStatus(membership.getClubId(), ClubMemberStatus.ACTIVE).stream()
-                    .filter(m -> m.getRole() == ClubMemberRole.COACH || m.getRole() == ClubMemberRole.OWNER)
-                    .filter(m -> !m.getUserId().equals(excludeUserId))
-                    .map(ClubMembership::getUserId)
-                    .forEach(coachIds::add);
-        }
-        return coachIds;
+        List<String> clubIds = memberships.stream().map(ClubMembership::getClubId).toList();
+        return clubMembershipRepository.findByClubIdInAndStatus(clubIds, ClubMemberStatus.ACTIVE).stream()
+                .filter(m -> m.getRole() == ClubMemberRole.COACH || m.getRole() == ClubMemberRole.OWNER)
+                .filter(m -> !m.getUserId().equals(excludeUserId))
+                .map(ClubMembership::getUserId)
+                .toList();
     }
 }
