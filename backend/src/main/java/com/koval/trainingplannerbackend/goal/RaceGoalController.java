@@ -28,7 +28,7 @@ public class RaceGoalController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RaceGoal>> getGoals() {
+    public ResponseEntity<List<RaceGoalResponse>> getGoals() {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(service.getGoalsForAthlete(userId));
     }

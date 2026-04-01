@@ -113,7 +113,11 @@
 
 /* ─── Responsive ────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .sport-cards {
-    grid-template-columns: 1fr;
+  .sport-card {
+    padding: var(--space-sm);
+  }
+
+  .sport-duration {
+    font-size: 20px;
   }
 }

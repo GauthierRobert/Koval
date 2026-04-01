@@ -52,11 +52,11 @@ export class GoalsPageComponent implements OnInit {
   );
   selectedRace: Race | null = null;
 
+  readonly isSavingGoal$ = new BehaviorSubject(false);
+
   // GPX upload
   gpxUploading: Record<string, boolean> = {};
 
-  // Race details cache per goal
-  raceCache: Record<string, Race> = {};
   routeCache: Record<string, RouteCoordinate[]> = {};
 
   // Simulation requests per goal
@@ -135,8 +135,8 @@ export class GoalsPageComponent implements OnInit {
 
   selectGoal(goal: RaceGoal): void {
     this.selectedGoalId = goal.id;
-    if (goal.raceId && !this.raceCache[goal.raceId]) {
-      this.loadRaceForGoal(goal);
+    if (goal.race) {
+      this.loadRoutesForGoal(goal.race);
     }
     if (goal.id && !this.simRequestsCache[goal.id]) {
       this.loadSimulationRequests(goal);
@@ -163,7 +163,7 @@ export class GoalsPageComponent implements OnInit {
     this.editingGoal = goal;
     this.form = { ...goal };
     this.formStep = 'details';
-    this.selectedRace = goal.raceId ? this.raceCache[goal.raceId] ?? null : null;
+    this.selectedRace = goal.race ?? null;
     this.isFormOpen = true;
   }
 
@@ -192,17 +192,26 @@ export class GoalsPageComponent implements OnInit {
   }
 
   save(): void {
-    if (!this.form.title) return;
+    if (!this.form.title || this.isSavingGoal$.value) return;
+    this.isSavingGoal$.next(true);
     if (this.editingGoal) {
-      this.raceGoalService.updateGoal(this.editingGoal.id, this.form).subscribe(() => {
-        this.isFormOpen = false;
-        this.cdr.markForCheck();
+      this.raceGoalService.updateGoal(this.editingGoal.id, this.form).subscribe({
+        next: () => {
+          this.isSavingGoal$.next(false);
+          this.isFormOpen = false;
+          this.cdr.markForCheck();
+        },
+        error: () => this.isSavingGoal$.next(false),
       });
     } else {
-      this.raceGoalService.createGoal(this.form).subscribe((created) => {
-        this.isFormOpen = false;
-        if (created.raceId) this.loadRaceForGoal(created);
-        this.cdr.markForCheck();
+      this.raceGoalService.createGoal(this.form).subscribe({
+        next: (created) => {
+          this.isSavingGoal$.next(false);
+          this.isFormOpen = false;
+          if (created.race) this.loadRoutesForGoal(created.race);
+          this.cdr.markForCheck();
+        },
+        error: () => this.isSavingGoal$.next(false),
       });
     }
   }
@@ -215,24 +224,18 @@ export class GoalsPageComponent implements OnInit {
 
   // ── Race / Route Loading ──────────────────────────────────────────
 
-  loadRaceForGoal(goal: RaceGoal): void {
-    if (!goal.raceId) return;
-    this.raceService.getRace(goal.raceId).subscribe({
-      next: (race) => {
-        this.raceCache[goal.raceId!] = race;
-        for (const disc of ['swim', 'bike', 'run']) {
-          if (this.hasGpxForDiscipline(race, disc)) {
-            this.raceService.getRouteCoordinates(race.id, disc).subscribe({
-              next: (coords) => {
-                this.routeCache[race.id + '_' + disc] = coords;
-                this.cdr.markForCheck();
-              },
-            });
-          }
-        }
-        this.cdr.markForCheck();
-      },
-    });
+  loadRoutesForGoal(race: Race): void {
+    for (const disc of ['swim', 'bike', 'run']) {
+      const key = race.id + '_' + disc;
+      if (this.hasGpxForDiscipline(race, disc) && !this.routeCache[key]) {
+        this.raceService.getRouteCoordinates(race.id, disc).subscribe({
+          next: (coords) => {
+            this.routeCache[key] = coords;
+            this.cdr.markForCheck();
+          },
+        });
+      }
+    }
   }
 
   loadSimulationRequests(goal: RaceGoal): void {
@@ -245,8 +248,8 @@ export class GoalsPageComponent implements OnInit {
     });
   }
 
-  getRace(raceId: string): Race | null {
-    return this.raceCache[raceId] ?? null;
+  getRace(goals: RaceGoal[], raceId: string): Race | null {
+    return goals.find((g) => g.raceId === raceId)?.race ?? null;
   }
 
   getRouteCoordsForDiscipline(race: Race, disc: string): RouteCoordinate[] {
@@ -275,19 +278,16 @@ export class GoalsPageComponent implements OnInit {
     this.raceService.uploadGpx(raceId, discipline, file).subscribe({
       next: () => {
         this.gpxUploading[key] = false;
-        this.raceService.getRace(raceId).subscribe({
-          next: (race) => {
-            this.raceCache[raceId] = race;
-            // Reload route coords for the newly uploaded discipline
-            this.raceService.getRouteCoordinates(raceId, discipline).subscribe({
-              next: (coords) => {
-                this.routeCache[raceId + '_' + discipline] = coords;
-                this.cdr.markForCheck();
-              },
-            });
+        // Reload goals so the embedded race reflects the new GPX flags
+        this.raceGoalService.loadGoals();
+        // Reload route coords for the newly uploaded discipline
+        this.raceService.getRouteCoordinates(raceId, discipline).subscribe({
+          next: (coords) => {
+            this.routeCache[key] = coords;
             this.cdr.markForCheck();
           },
         });
+        this.cdr.markForCheck();
       },
       error: () => {
         this.gpxUploading[key] = false;

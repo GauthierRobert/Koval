@@ -11,6 +11,8 @@ import com.koval.trainingplannerbackend.club.membership.ClubMemberRole;
 import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +43,7 @@ public class ClubService {
 
     // --- Club CRUD ---
 
+    @CacheEvict(value = "userClubs", key = "#userId")
     @Transactional
     public Club createClub(String userId, CreateClubRequest req) {
         Club club = new Club();
@@ -71,6 +74,7 @@ public class ClubService {
         return club;
     }
 
+    @Cacheable(value = "userClubs", key = "#userId")
     public List<ClubSummaryResponse> getUserClubs(String userId) {
         List<ClubMembership> memberships = membershipRepository.findByUserId(userId);
         List<String> clubIds = memberships.stream().map(ClubMembership::getClubId).toList();
@@ -86,7 +90,7 @@ public class ClubService {
                     ClubMembership m = membershipByClubId.get(id);
                     return new ClubSummaryResponse(
                             c.getId(), c.getName(), c.getDescription(), c.getLogoUrl(),
-                            c.getVisibility(), c.getMemberCount(),
+                            c.getVisibility(),
                             m.getStatus().name() + "_" + m.getRole().name());
                 })
                 .collect(Collectors.toList());

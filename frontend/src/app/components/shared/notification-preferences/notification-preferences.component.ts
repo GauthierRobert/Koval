@@ -89,7 +89,7 @@ export interface NotificationPreferences {
         max-width: 90vw;
         max-height: 80vh;
         overflow-y: auto;
-        border-radius: 16px;
+        border-radius: var(--radius-lg);
         padding: 1.5rem;
       }
       .notif-prefs-header {
@@ -102,12 +102,12 @@ export interface NotificationPreferences {
         margin: 0;
         font-size: 1.1rem;
         font-weight: 700;
-        color: var(--text-primary, #f0f0f0);
+        color: var(--text-color);
       }
       .close-btn {
         background: none;
         border: none;
-        color: var(--text-tertiary, #707070);
+        color: var(--text-muted);
         font-size: 1.5rem;
         cursor: pointer;
         padding: 0 4px;
@@ -123,17 +123,17 @@ export interface NotificationPreferences {
         align-items: center;
         justify-content: space-between;
         padding: 0.6rem 0.75rem;
-        border-radius: 8px;
-        background: var(--surface-raised);;
+        border-radius: var(--radius-sm);
+        background: var(--surface-raised);
         cursor: pointer;
         transition: background 0.15s;
       }
       .notif-toggle:hover {
-        background: rgba(255, 255, 255, 0.06);
+        background: var(--surface-hover);
       }
       .notif-label {
         font-size: 0.85rem;
-        color: var(--text-primary, #f0f0f0);
+        color: var(--text-color);
         flex: 1;
       }
       .notif-toggle input {
@@ -143,7 +143,7 @@ export interface NotificationPreferences {
         width: 40px;
         height: 22px;
         border-radius: 11px;
-        background: rgba(255, 255, 255, 0.1);
+        background: var(--glass-border);
         position: relative;
         transition: background 0.2s;
         flex-shrink: 0;
@@ -156,18 +156,19 @@ export interface NotificationPreferences {
         width: 18px;
         height: 18px;
         border-radius: 50%;
-        background: #fff;
-        transition: transform 0.2s;
+        background: var(--text-muted);
+        transition: transform 0.2s, background 0.2s;
       }
       input:checked + .toggle-track {
-        background: var(--accent, #6366f1);
+        background: var(--accent-color);
       }
       input:checked + .toggle-track::after {
         transform: translateX(18px);
+        background: var(--on-primary-color);
       }
       .notif-loading {
         text-align: center;
-        color: var(--text-secondary, #a0a0a0);
+        color: var(--text-muted);
         padding: 2rem;
         font-size: 0.85rem;
       }

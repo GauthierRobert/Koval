@@ -23,7 +23,7 @@ import {ClubRaceGoalsTabComponent} from './tabs/club-race-goals-tab/club-race-go
 import {ClubOpenSessionsTabComponent} from './tabs/club-open-sessions-tab/club-open-sessions-tab.component';
 import {TrainingActionModalComponent} from '../../../shared/training-action-modal/training-action-modal.component';
 import {ActionContext} from '../../../../services/ai-action.service';
-import {map, Observable, Subscription} from 'rxjs';
+import {BehaviorSubject, map, Observable, Subscription} from 'rxjs';
 
 type TabId = 'feed' | 'sessions' | 'open-sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals';
 
@@ -74,18 +74,20 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   private subs = new Subscription();
 
   copiedClubCodeId: string | null = null;
+  readonly isJoiningClub$ = new BehaviorSubject(false);
+  readonly isLeavingClub$ = new BehaviorSubject(false);
   clubInviteCode$: Observable<ClubInviteCode | null> = this.clubService.inviteCodes$.pipe(
     map((codes) => codes.find((c) => c.active && !c.clubGroupId) ?? null),
   );
 
-  readonly tabs: Array<{ id: TabId; label: string }> = [
-    { id: 'feed', label: 'CLUB_DETAIL.TAB_FEED' },
-    { id: 'open-sessions', label: 'CLUB_DETAIL.TAB_SESSIONS' },
-    { id: 'sessions', label: 'CLUB_DETAIL.TAB_RECURRING_SESSIONS' },
-    { id: 'members', label: 'CLUB_DETAIL.TAB_MEMBERS' },
-    { id: 'stats', label: 'CLUB_DETAIL.TAB_STATS' },
-    { id: 'leaderboard', label: 'CLUB_DETAIL.TAB_LEADERBOARD' },
-    { id: 'race-goals', label: 'CLUB_DETAIL.TAB_RACE_GOALS' },
+  readonly tabs: Array<{ id: TabId; label: string; shortLabel: string }> = [
+    { id: 'feed', label: 'CLUB_DETAIL.TAB_FEED', shortLabel: 'CLUB_DETAIL.TAB_FEED_SHORT' },
+    { id: 'open-sessions', label: 'CLUB_DETAIL.TAB_SESSIONS', shortLabel: 'CLUB_DETAIL.TAB_SESSIONS_SHORT' },
+    { id: 'sessions', label: 'CLUB_DETAIL.TAB_RECURRING_SESSIONS', shortLabel: 'CLUB_DETAIL.TAB_RECURRING_SESSIONS_SHORT' },
+    { id: 'members', label: 'CLUB_DETAIL.TAB_MEMBERS', shortLabel: 'CLUB_DETAIL.TAB_MEMBERS_SHORT' },
+    { id: 'stats', label: 'CLUB_DETAIL.TAB_STATS', shortLabel: 'CLUB_DETAIL.TAB_STATS_SHORT' },
+    { id: 'leaderboard', label: 'CLUB_DETAIL.TAB_LEADERBOARD', shortLabel: 'CLUB_DETAIL.TAB_LEADERBOARD_SHORT' },
+    { id: 'race-goals', label: 'CLUB_DETAIL.TAB_RACE_GOALS', shortLabel: 'CLUB_DETAIL.TAB_RACE_GOALS_SHORT' },
   ];
 
   ngOnInit(): void {
@@ -167,12 +169,20 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   }
 
   join(club: ClubDetail): void {
-    this.clubService.joinClub(club.id).subscribe({ error: () => {} });
+    this.isJoiningClub$.next(true);
+    this.clubService.joinClub(club.id).subscribe({
+      error: () => this.isJoiningClub$.next(false),
+      complete: () => this.isJoiningClub$.next(false),
+    });
   }
 
   leave(club: ClubDetail): void {
     if (club.currentMemberRole === 'OWNER') return;
-    this.clubService.leaveClub(club.id).subscribe({ error: () => {} });
+    this.isLeavingClub$.next(true);
+    this.clubService.leaveClub(club.id).subscribe({
+      error: () => this.isLeavingClub$.next(false),
+      complete: () => this.isLeavingClub$.next(false),
+    });
   }
 
   goBack(): void {

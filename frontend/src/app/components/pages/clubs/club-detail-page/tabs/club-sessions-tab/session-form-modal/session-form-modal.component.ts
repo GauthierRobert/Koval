@@ -33,6 +33,7 @@ export interface SessionFormSaveEvent {
 })
 export class SessionFormModalComponent implements OnChanges {
   @Input() isOpen = false;
+  @Input() isSaving = false;
   @Input() editingSession: ClubTrainingSession | null = null;
   @Input() editAllFutureMode = false;
   @Input() clubGroups: ClubGroup[] = [];

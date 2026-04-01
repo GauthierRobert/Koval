@@ -227,6 +227,11 @@
 
 /* ── Responsive ────────────────────────────────────────── */
 @media (max-width: 768px) {
+  .races-page {
+    max-width: 100%;
+    padding: var(--space-md);
+  }
+
   .page-header {
     flex-direction: column;
     align-items: flex-start;
@@ -252,10 +257,6 @@
 }
 
 @media (max-width: 480px) {
-  .races-page {
-    padding: var(--space-md);
-  }
-
   .facet-grid {
     grid-template-columns: 1fr 1fr;
   }

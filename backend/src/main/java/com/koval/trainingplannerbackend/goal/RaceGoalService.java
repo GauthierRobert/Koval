@@ -5,10 +5,12 @@ import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundExcept
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import com.koval.trainingplannerbackend.race.Race;
 import com.koval.trainingplannerbackend.race.RaceService;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 public class RaceGoalService {
@@ -21,10 +23,21 @@ public class RaceGoalService {
         this.raceService = raceService;
     }
 
-    public List<RaceGoal> getGoalsForAthlete(String athleteId) {
-        return repository.findByAthleteIdOrderByRaceDateAsc(athleteId);
+    public List<RaceGoalResponse> getGoalsForAthlete(String athleteId) {
+        return repository.findByAthleteIdOrderByRaceDateAsc(athleteId).stream()
+                .map(goal -> {
+                    Race race = null;
+                    if (goal.getRaceId() != null) {
+                        try {
+                            race = raceService.getRaceById(goal.getRaceId());
+                        } catch (NoSuchElementException ignored) {}
+                    }
+                    return RaceGoalResponse.from(goal, race);
+                })
+                .toList();
     }
 
+    @CacheEvict(value = "athleteGoals", key = "#athleteId")
     public RaceGoal createGoal(String athleteId, RaceGoal goal) {
         if (goal.getRaceId() != null && repository.existsByAthleteIdAndRaceId(athleteId, goal.getRaceId())) {
             throw new ValidationException("This race is already in your goals");
@@ -34,6 +47,7 @@ public class RaceGoalService {
         return repository.save(goal);
     }
 
+    @CacheEvict(value = "athleteGoals", key = "#athleteId")
     public RaceGoal updateGoal(String id, String athleteId, RaceGoal update) {
         RaceGoal existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Goal not found"));
@@ -46,6 +60,7 @@ public class RaceGoalService {
         return repository.save(update);
     }
 
+    @CacheEvict(value = "athleteGoals", key = "#athleteId")
     public void deleteGoal(String id, String athleteId) {
         RaceGoal existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Goal not found"));
@@ -55,19 +70,14 @@ public class RaceGoalService {
         repository.deleteById(id);
     }
 
+    @CacheEvict(value = "athleteGoals", key = "#athleteId")
     public RaceGoal linkToRace(String goalId, String athleteId, String raceId) {
         RaceGoal goal = repository.findById(goalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Goal not found"));
         if (!goal.getAthleteId().equals(athleteId)) {
             throw new ForbiddenOperationException("Not authorized");
         }
-
-        Race race = raceService.getRaceById(raceId);
         goal.setRaceId(raceId);
-        if (goal.getSport() == null && race.getSport() != null) goal.setSport(race.getSport());
-        if (goal.getLocation() == null && race.getLocation() != null) goal.setLocation(race.getLocation());
-        if (goal.getDistance() == null && race.getDistance() != null) goal.setDistance(race.getDistance());
-
         return repository.save(goal);
     }
 }

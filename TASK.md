@@ -126,31 +126,13 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 - When schedule a training in the workout library, no input for schedule date is visible and then no scheduled date is sent.
 - When clicking on feed small session card leave or join, all the historic and future sessions appears not only from the week.
 - In the feed right side panel,  add next goal of the club and separate recurring session and open session
-
+- I want that the memory of the conversation is more than 8, but each message need to be compacted in 1 or 2 lines, for instance, i user created I have a huge context with training details, I want Training create : title with id.
+- Button to switch from % to values in training lib does not work any more. I have this issue when click (maybe not related) : workout-visualization.component.html:221 NG0956: The configured tracking expression (track by identity) caused re-creation of the entire collection of size 6. This is an expensive operation requiring destruction and subsequent creation of DOM nodes, directives, components etc. Please review the "track expression" and make sure that it uniquely identifies items in a collection. Find more at https://v21.angular.dev/errors/NG0956
+- notification.service.ts:64 Failed to get FCM token: AbortError: Failed to execute 'subscribe' on 'PushManager': Subscription failed - no active Service Worker at async _NotificationService.requestPermissionAndRegisterToken (notification.service.ts:52:21)
 # TO VERIFY
 
 ## TO FIX
 - Colour of Zone need to be changed, (in Zone distribution, Zone display in analysis, zone creation,...) must use colour that goes from purple (lowest) to dark red (highest). Default Zone Color must use the same system. You can assuse that the mean of the lowest zone is 0% then purple and the mean of the highest zone is 100% then dark red.
-- Button to switch from % to values in training lib does not work any more. I have this issue when click (maybe not related) : workout-visualization.component.html:221 NG0956: The configured tracking expression (track by identity) caused re-creation of the entire collection of size 6. This is an expensive operation requiring destruction and subsequent creation of DOM nodes, directives, components etc. Please review the "track expression" and make sure that it uniquely identifies items in a collection. Find more at https://v21.angular.dev/errors/NG0956
-- I want that the memory of the conversation is more than 8, but each message need to be compacted in 1 or 2 lines, for instance, i user created I have a huge context with training details, I want Training create : title with id.
-
-<meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
-
-notification.service.ts:64 Failed to get FCM token: AbortError: Failed to execute 'subscribe' on 'PushManager': Subscription failed - no active Service Worker
-at async _NotificationService.requestPermissionAndRegisterToken (notification.service.ts:52:21)
-
-
-The PWA setup is broken — here's what's missing:
-
-1. manifest.webmanifest — referenced in index.html but doesn't exist
-2. ngsw-config.json — referenced in angular.json but doesn't exist
-3. assets/icons/ — no icon files (apple-touch-icon points to missing icon-192x192.png)
-
-For iOS specifically, there are additional gaps:
-- No splash screen images (apple-touch-startup-image)
-- Only one apple-touch-icon size (iOS needs multiple: 120, 152, 167, 180px)
-- No apple-mobile-web-app-title meta tag
-
 
 # TO IMPLEMENT
 - SnapShot simulation race instead of save simulation race, it must be an action of user and parameters must be saved (including front end params)

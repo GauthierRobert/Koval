@@ -2,6 +2,8 @@ package com.koval.trainingplannerbackend.training.metrics;
 
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -54,6 +56,7 @@ public class PowerCurveService {
      * @param userId    the owning user identifier
      * @return the session's power curve, or an empty map if unavailable
      */
+    @Cacheable(value = "sessionPowerCurves", key = "#sessionId")
     public Map<Integer, Double> getSessionPowerCurve(String sessionId, String userId) {
         return sessionRepository.findByIdAndUserId(sessionId, userId)
                 .map(s -> s.getPowerCurve() != null ? s.getPowerCurve() : Map.<Integer, Double>of())
@@ -67,6 +70,7 @@ public class PowerCurveService {
      * @param userId     the owning user identifier
      * @param powerCurve map of duration (seconds) to best average power (watts)
      */
+    @CacheEvict(value = "sessionPowerCurves", key = "#sessionId")
     public void savePowerCurve(String sessionId, String userId, Map<Integer, Double> powerCurve) {
         sessionRepository.findByIdAndUserId(sessionId, userId).ifPresent(session -> {
             session.setPowerCurve(powerCurve);

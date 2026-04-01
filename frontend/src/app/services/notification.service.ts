@@ -49,6 +49,22 @@ export class NotificationService {
         scope: '/firebase-cloud-messaging-push-scope',
       });
 
+      const sw = swRegistration.installing ?? swRegistration.waiting ?? swRegistration.active;
+      if (sw && sw.state !== 'activated') {
+        await new Promise<void>((resolve, reject) => {
+          sw.addEventListener('statechange', function handler(e) {
+            const state = (e.target as ServiceWorker).state;
+            if (state === 'activated') {
+              sw.removeEventListener('statechange', handler);
+              resolve();
+            } else if (state === 'redundant') {
+              sw.removeEventListener('statechange', handler);
+              reject(new Error('Service Worker became redundant'));
+            }
+          });
+        });
+      }
+
       const token = await getToken(this.messaging, {
         vapidKey: environment.firebaseVapidKey,
         serviceWorkerRegistration: swRegistration,

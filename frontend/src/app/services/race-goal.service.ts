@@ -4,6 +4,7 @@ import {BehaviorSubject, Observable} from 'rxjs';
 import {filter, map} from 'rxjs/operators';
 import {AuthService} from './auth.service';
 import {environment} from '../../environments/environment';
+import {Race} from './race.service';
 
 export interface RaceGoal {
   id: string;
@@ -17,7 +18,8 @@ export interface RaceGoal {
   notes?: string;
   targetTime?: string;
   createdAt?: string;
-  raceId?: string; // optional reference to Race catalog entry
+  raceId?: string;
+  race?: Race; // full race data embedded by backend (cached)
 }
 
 export const PRIORITY_COLORS: Record<string, string> = {

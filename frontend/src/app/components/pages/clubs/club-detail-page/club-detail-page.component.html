@@ -44,11 +44,19 @@
         </div>
       }
       <div class="header-actions">
+        @let isJoining = isJoiningClub$ | async;
+        @let isLeaving = isLeavingClub$ | async;
         @if (!club.currentMembershipStatus) {
-          <button class="btn-join" data-testid="btn-join-club" (click)="join(club)">{{ 'CLUB_DETAIL.BTN_JOIN' | translate }}</button>
+          <button class="btn-join" data-testid="btn-join-club" (click)="join(club)" [disabled]="isJoining">
+            @if (isJoining) { <span class="btn-spinner"></span> }
+            {{ 'CLUB_DETAIL.BTN_JOIN' | translate }}
+          </button>
         }
         @if (club.currentMembershipStatus && club.currentMemberRole !== 'OWNER') {
-          <button class="btn-leave" data-testid="btn-leave-club" (click)="leave(club)">{{ 'CLUB_DETAIL.BTN_LEAVE' | translate }}</button>
+          <button class="btn-leave" data-testid="btn-leave-club" (click)="leave(club)" [disabled]="isLeaving">
+            @if (isLeaving) { <span class="btn-spinner"></span> }
+            {{ 'CLUB_DETAIL.BTN_LEAVE' | translate }}
+          </button>
         }
       </div>
     </div>
@@ -61,7 +69,8 @@
           [attr.data-testid]="'tab-' + tab.id"
           [class.active]="activeTab === tab.id"
           (click)="activateTab(tab.id)">
-          {{ tab.label | translate }}
+          <span class="tab-label-full">{{ tab.label | translate }}</span>
+          <span class="tab-label-short">{{ tab.shortLabel | translate }}</span>
         </button>
       }
       </div>

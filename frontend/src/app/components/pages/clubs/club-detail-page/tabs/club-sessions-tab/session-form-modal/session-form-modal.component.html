@@ -161,7 +161,10 @@
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" (click)="close()" data-testid="btn-cancel-form">{{ 'CLUB_SESSIONS.BTN_CANCEL' | translate }}</button>
-      <button class="btn-primary" (click)="save()" [disabled]="!isFormValid" data-testid="btn-create-session">{{ editingSession ? ('CLUB_SESSIONS.BTN_SAVE' | translate) : ('CLUB_SESSIONS.BTN_CREATE' | translate) }}</button>
+      <button class="btn-primary" (click)="save()" [disabled]="!isFormValid || isSaving" data-testid="btn-create-session">
+        @if (isSaving) { <span class="btn-spinner"></span> }
+        {{ editingSession ? ('CLUB_SESSIONS.BTN_SAVE' | translate) : ('CLUB_SESSIONS.BTN_CREATE' | translate) }}
+      </button>
     </div>
   </div>
   </div>

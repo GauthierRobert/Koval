@@ -48,9 +48,8 @@
                  (click)="selectClub(club)">
                 <span class="dropdown-label">{{ club.name }}</span>
                 <span class="dropdown-desc">
-                  {{ club.memberCount === 1 ? ('COMMON.MEMBER' | translate) : (club.memberCount + ' ' + ('COMMON.MEMBERS' | translate)) }}
                   @if (getMembershipLabel(club.membershipStatus); as role) {
-                    · {{ role }}
+                    {{ role }}
                   }
                 </span>
               </a>

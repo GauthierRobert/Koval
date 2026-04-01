@@ -9,6 +9,8 @@ import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundExcept
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import com.koval.trainingplannerbackend.training.group.GroupService;
 import com.koval.trainingplannerbackend.training.model.SportType;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -53,6 +55,7 @@ public class ZoneSystemService {
      * @param zoneSystem the zone system to create
      * @return the persisted zone system with generated ID and timestamps
      */
+    @CacheEvict(value = "coachZoneSystems", key = "#zoneSystem.coachId")
     public ZoneSystem createZoneSystem(ZoneSystem zoneSystem) {
         zoneSystem.setCreatedAt(LocalDateTime.now());
         zoneSystem.setUpdatedAt(LocalDateTime.now());
@@ -69,6 +72,7 @@ public class ZoneSystemService {
      * @return the updated and persisted zone system
      * @throws IllegalArgumentException if the zone system is not found or the coach ID differs
      */
+    @CacheEvict(value = "coachZoneSystems", key = "#updates.coachId")
     public ZoneSystem updateZoneSystem(String id, ZoneSystem updates) {
         ZoneSystem existing = zoneSystemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("ZoneSystem not found: " + id));
@@ -90,6 +94,7 @@ public class ZoneSystemService {
      * @param coachId the ID of the coach who must own the zone system
      * @throws IllegalArgumentException if the zone system is not found or does not belong to the coach
      */
+    @CacheEvict(value = "coachZoneSystems", key = "#coachId")
     public void deleteZoneSystem(String id, String coachId) {
         getOwnedZoneSystem(id, coachId);
         zoneSystemRepository.deleteById(id);
@@ -102,6 +107,7 @@ public class ZoneSystemService {
      * @param coachId the coach's user ID
      * @return the list of zone systems owned by the coach
      */
+    @Cacheable(value = "coachZoneSystems", key = "#coachId")
     public List<ZoneSystem> getZoneSystemsForCoach(String coachId) {
         return zoneSystemRepository.findByCoachId(coachId);
     }
@@ -160,6 +166,7 @@ public class ZoneSystemService {
      * @return the updated zone system
      * @throws IllegalArgumentException if the zone system is not found or does not belong to the coach
      */
+    @CacheEvict(value = "coachZoneSystems", key = "#coachId")
     public ZoneSystem setDefaultForSport(String zoneSystemId, String coachId, boolean isDefault) {
         ZoneSystem target = getOwnedZoneSystem(zoneSystemId, coachId);
 

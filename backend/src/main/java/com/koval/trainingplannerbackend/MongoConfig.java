@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend;
 
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -16,6 +17,7 @@ import java.util.List;
  * preventing timezone shifts (e.g. 2025-02-14 stored as 2025-02-13T23:00Z in CET).
  */
 @Configuration
+@EnableCaching
 public class MongoConfig {
 
     @Bean

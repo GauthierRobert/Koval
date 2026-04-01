@@ -3,6 +3,7 @@ import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Router} from '@angular/router';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import {BehaviorSubject} from 'rxjs';
 import {ClubService, ClubSummary, ClubVisibility, CreateClubData,} from '../../../../services/club.service';
 
 @Component({
@@ -19,11 +20,14 @@ export class ClubsListPageComponent implements OnInit {
   private translate = inject(TranslateService);
 
   userClubs$ = this.clubService.userClubs$;
+  readonly publicClubs$ = new BehaviorSubject<ClubSummary[]>([]);
 
-  publicClubs: ClubSummary[] = [];
   isFormOpen = false;
-
   form: Partial<CreateClubData> = this.emptyForm();
+
+  readonly isSavingClub$ = new BehaviorSubject(false);
+  readonly joiningClubId$ = new BehaviorSubject<string | null>(null);
+  readonly leavingClubId$ = new BehaviorSubject<string | null>(null);
 
   readonly visibilityOptions: Array<{ value: ClubVisibility; label: string }> = [
     { value: 'PUBLIC', label: 'CLUBS_LIST.VISIBILITY_PUBLIC' },
@@ -37,7 +41,7 @@ export class ClubsListPageComponent implements OnInit {
 
   loadPublicClubs(): void {
     this.clubService.browsePublicClubs(0).subscribe((clubs) => {
-      this.publicClubs = clubs;
+      this.publicClubs$.next(clubs);
     });
   }
 
@@ -51,14 +55,16 @@ export class ClubsListPageComponent implements OnInit {
   }
 
   save(): void {
-    if (!this.form.name) return;
+    if (!this.form.name || this.isSavingClub$.value) return;
+    this.isSavingClub$.next(true);
     this.clubService.createClub(this.form as CreateClubData).subscribe({
       next: (club: any) => {
+        this.isSavingClub$.next(false);
         this.isFormOpen = false;
         this.loadPublicClubs();
         this.router.navigate(['/clubs', club.id]);
       },
-      error: () => {},
+      error: () => this.isSavingClub$.next(false),
     });
   }
 
@@ -68,17 +74,25 @@ export class ClubsListPageComponent implements OnInit {
 
   join(clubId: string, event: Event): void {
     event.stopPropagation();
+    this.joiningClubId$.next(clubId);
     this.clubService.joinClub(clubId).subscribe({
-      next: () => this.loadPublicClubs(),
-      error: () => {},
+      next: () => {
+        this.joiningClubId$.next(null);
+        this.loadPublicClubs();
+      },
+      error: () => this.joiningClubId$.next(null),
     });
   }
 
   leave(clubId: string, event: Event): void {
     event.stopPropagation();
+    this.leavingClubId$.next(clubId);
     this.clubService.leaveClub(clubId).subscribe({
-      next: () => this.loadPublicClubs(),
-      error: () => {},
+      next: () => {
+        this.leavingClubId$.next(null);
+        this.loadPublicClubs();
+      },
+      error: () => this.leavingClubId$.next(null),
     });
   }
 

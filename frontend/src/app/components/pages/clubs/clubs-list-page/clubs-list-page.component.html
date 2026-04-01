@@ -1,3 +1,7 @@
+@let joiningId = joiningClubId$ | async;
+@let leavingId = leavingClubId$ | async;
+@let isSaving = isSavingClub$ | async;
+
 <div class="page-layout">
 
   <!-- Header bar -->
@@ -43,13 +47,13 @@
                     }
                   </div>
                   @if (!club.membershipStatus?.startsWith('ACTIVE_OWNER')) {
-                    <button class="leave-btn" data-testid="leave-btn" (click)="leave(club.id, $event)">
+                    <button class="leave-btn" data-testid="leave-btn" (click)="leave(club.id, $event)" [disabled]="leavingId === club.id">
+                      @if (leavingId === club.id) { <span class="btn-spinner"></span> }
                       {{ 'CLUBS_LIST.BTN_LEAVE' | translate }}
                     </button>
                   }
                 </div>
                 <div class="card-meta">
-                  <span class="meta-chip">{{ 'CLUBS_LIST.MEMBER_COUNT' | translate: { count: club.memberCount } }}</span>
                   <span class="meta-chip" [class.meta-chip--private]="club.visibility === 'PRIVATE'">
                     {{ club.visibility }}
                   </span>
@@ -82,44 +86,47 @@
       }
     }
 
-    @if (publicClubs.length > 0) {
-      <section data-testid="browse-public-section">
-        <span class="section-label">{{ 'CLUBS_LIST.SECTION_BROWSE_PUBLIC' | translate }}</span>
-        <div class="clubs-grid">
-          @for (club of publicClubs; track club.id) {
-            <div
-              class="club-card glass"
-              data-testid="club-card"
-              (click)="openDetail(club.id)">
-              <div class="card-top">
-                <div class="club-initials">{{ club.name.charAt(0).toUpperCase() }}</div>
-                <div class="club-info">
-                  <span class="club-name">{{ club.name }}</span>
-                  @if (club.description) {
-                    <span class="club-desc">{{ club.description }}</span>
+    @if (publicClubs$ | async; as publicClubs) {
+      @if (publicClubs.length > 0) {
+        <section data-testid="browse-public-section">
+          <span class="section-label">{{ 'CLUBS_LIST.SECTION_BROWSE_PUBLIC' | translate }}</span>
+          <div class="clubs-grid">
+            @for (club of publicClubs; track club.id) {
+              <div
+                class="club-card glass"
+                data-testid="club-card"
+                (click)="openDetail(club.id)">
+                <div class="card-top">
+                  <div class="club-initials">{{ club.name.charAt(0).toUpperCase() }}</div>
+                  <div class="club-info">
+                    <span class="club-name">{{ club.name }}</span>
+                    @if (club.description) {
+                      <span class="club-desc">{{ club.description }}</span>
+                    }
+                  </div>
+                  @if (!club.membershipStatus) {
+                    <button
+                      class="join-btn"
+                      data-testid="join-btn"
+                      (click)="join(club.id, $event)"
+                      [disabled]="joiningId === club.id">
+                      @if (joiningId === club.id) { <span class="btn-spinner"></span> }
+                      {{ 'CLUBS_LIST.BTN_JOIN' | translate }}
+                    </button>
+                  }
+                  @if (club.membershipStatus) {
+                    <span class="meta-chip meta-chip--role">
+                      {{ getMembershipLabel(club.membershipStatus) }}
+                    </span>
                   }
                 </div>
-                @if (!club.membershipStatus) {
-                  <button
-                    class="join-btn"
-                    data-testid="join-btn"
-                    (click)="join(club.id, $event)">
-                    {{ 'CLUBS_LIST.BTN_JOIN' | translate }}
-                  </button>
-                }
-                @if (club.membershipStatus) {
-                  <span class="meta-chip meta-chip--role">
-                    {{ getMembershipLabel(club.membershipStatus) }}
-                  </span>
-                }
+                <div class="card-meta">
+                </div>
               </div>
-              <div class="card-meta">
-                <span class="meta-chip">{{ 'CLUBS_LIST.MEMBER_COUNT' | translate: { count: club.memberCount } }}</span>
-              </div>
-            </div>
-          }
-        </div>
-      </section>
+            }
+          </div>
+        </section>
+      }
     }
 
   </div>
@@ -163,7 +170,10 @@
       </div>
       <div class="modal-footer">
         <button class="btn-secondary" (click)="closeForm()">{{ 'CLUBS_LIST.BTN_CANCEL' | translate }}</button>
-        <button class="btn-primary" (click)="save()" [disabled]="!form.name">{{ 'CLUBS_LIST.BTN_CREATE' | translate }}</button>
+        <button class="btn-primary" (click)="save()" [disabled]="!form.name || isSaving">
+          @if (isSaving) { <span class="btn-spinner"></span> }
+          {{ 'CLUBS_LIST.BTN_CREATE' | translate }}
+        </button>
       </div>
     </div>
   </div>

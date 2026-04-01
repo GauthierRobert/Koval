@@ -9,6 +9,7 @@ import {
   Output,
 } from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {BehaviorSubject} from 'rxjs';
 
 import {Router, RouterModule} from '@angular/router';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
@@ -64,6 +65,8 @@ export class ClubSessionsTabComponent implements OnInit {
   editAllFutureMode = false;
   showRecurringEditChoice = false;
   pendingEditSession: ClubTrainingSession | null = null;
+
+  readonly isSavingSession$ = new BehaviorSubject(false);
 
   // Cancel session state
   showCancelConfirm = false;
@@ -267,6 +270,7 @@ export class ClubSessionsTabComponent implements OnInit {
 
   onFormSaved(event: SessionFormSaveEvent): void {
     const form = event.form;
+    this.isSavingSession$.next(true);
 
     // Handle removeGpx action from sub-component
     if (form['__action'] === 'removeGpx') {
@@ -300,7 +304,7 @@ export class ClubSessionsTabComponent implements OnInit {
         };
         this.clubSessionService.updateRecurringTemplateWithInstances(this.club.id, event.editingSession.recurringTemplateId, data).subscribe({
           next: () => this.finishSave(),
-          error: () => {},
+          error: () => this.isSavingSession$.next(false),
         });
       } else {
         const data: CreateSessionData = {
@@ -323,7 +327,7 @@ export class ClubSessionsTabComponent implements OnInit {
         const editId = event.editingSession.id;
         this.clubSessionService.updateSession(this.club.id, editId, data).subscribe({
           next: () => this.afterSaveSession(editId, event.gpxFile),
-          error: () => {},
+          error: () => this.isSavingSession$.next(false),
         });
       }
       return;
@@ -366,6 +370,7 @@ export class ClubSessionsTabComponent implements OnInit {
   }
 
   private finishSave(): void {
+    this.isSavingSession$.next(false);
     this.isFormOpen = false;
     this.editingSession = null;
     this.editAllFutureMode = false;

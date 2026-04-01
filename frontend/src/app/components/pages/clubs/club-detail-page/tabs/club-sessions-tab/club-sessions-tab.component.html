@@ -78,6 +78,7 @@
 
 <app-session-form-modal
   [isOpen]="isFormOpen"
+  [isSaving]="(isSavingSession$ | async) ?? false"
   [editingSession]="editingSession"
   [editAllFutureMode]="editAllFutureMode"
   [clubGroups]="clubGroups"

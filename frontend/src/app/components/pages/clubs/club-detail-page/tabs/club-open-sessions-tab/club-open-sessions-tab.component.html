@@ -91,9 +91,11 @@
           </div>
         </div>
 
+        @let isSaving = isSavingSession$ | async;
         <div class="form-actions">
           <button class="btn-ghost" (click)="closeForm()">{{ 'COMMON.CANCEL' | translate }}</button>
-          <button class="btn-primary" (click)="save()" [disabled]="!form['title'] || !form['scheduledAt']">
+          <button class="btn-primary" (click)="save()" [disabled]="!form['title'] || !form['scheduledAt'] || isSaving">
+            @if (isSaving) { <span class="btn-spinner"></span> }
             {{ (editingSession ? 'COMMON.SAVE' : 'COMMON.CREATE') | translate }}
           </button>
         </div>

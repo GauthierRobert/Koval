@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.coach;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.goal.RaceGoal;
+import com.koval.trainingplannerbackend.goal.RaceGoalResponse;
 import com.koval.trainingplannerbackend.goal.RaceGoalService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
@@ -56,7 +57,7 @@ public class CoachAnalyticsController {
     }
 
     @GetMapping("/athletes/{athleteId}/goals")
-    public ResponseEntity<List<RaceGoal>> getAthleteGoals(@PathVariable String athleteId) {
+    public ResponseEntity<List<RaceGoalResponse>> getAthleteGoals(@PathVariable String athleteId) {
         String coachId = SecurityUtils.getCurrentUserId();
         if (!coachService.isCoachOfAthlete(coachId, athleteId)) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(raceGoalService.getGoalsForAthlete(athleteId));

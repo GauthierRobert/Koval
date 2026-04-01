@@ -17,7 +17,6 @@ export interface ClubSummary {
   description?: string;
   logoUrl?: string;
   visibility: ClubVisibility;
-  memberCount: number;
   membershipStatus?: string;
 }
 

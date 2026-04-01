@@ -4,6 +4,9 @@ import com.koval.trainingplannerbackend.pacing.dto.RouteCoordinate;
 import com.koval.trainingplannerbackend.pacing.gpx.GpxParseResult;
 import com.koval.trainingplannerbackend.pacing.gpx.GpxParser;
 import org.bson.Document;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -46,6 +49,7 @@ public class RaceService {
         return repository.findAll();
     }
 
+    @Cacheable(value = "races", key = "#id")
     public Race getRaceById(String id) {
         return repository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Race not found"));
@@ -57,6 +61,7 @@ public class RaceService {
         return repository.save(race);
     }
 
+    @CacheEvict(value = "races", key = "#id")
     public Race updateRace(String id, Race updates) {
         Race existing = getRaceById(id);
         mergeIfPresent(updates.getTitle(), existing::setTitle);
@@ -82,6 +87,12 @@ public class RaceService {
         if (value != null) setter.accept(value);
     }
 
+    @Caching(evict = {
+        @CacheEvict(value = "races", key = "#raceId"),
+        @CacheEvict(value = "raceRoutes", allEntries = true),
+        @CacheEvict(value = "raceSportFacets", allEntries = true),
+        @CacheEvict(value = "raceCountryFacets", allEntries = true)
+    })
     public void uploadGpx(String raceId, String discipline, byte[] gpxBytes) {
         Race race = getRaceById(raceId);
         switch (discipline.toLowerCase()) {
@@ -93,6 +104,10 @@ public class RaceService {
         repository.save(race);
     }
 
+    @Caching(evict = {
+        @CacheEvict(value = "races", key = "#raceId"),
+        @CacheEvict(value = "raceRoutes", allEntries = true)
+    })
     public void deleteGpx(String raceId, String discipline) {
         Race race = getRaceById(raceId);
         switch (discipline.toLowerCase()) {
@@ -118,6 +133,7 @@ public class RaceService {
         return gpx;
     }
 
+    @Cacheable(value = "raceRoutes", key = "#raceId + '_' + #discipline")
     public List<RouteCoordinate> getRouteCoordinates(String raceId, String discipline) {
         byte[] gpxBytes = getGpxBytes(raceId, discipline);
         GpxParseResult result = gpxParser.parseWithCoordinates(new ByteArrayInputStream(gpxBytes));
@@ -129,6 +145,7 @@ public class RaceService {
         return gpxParser.parseWithCoordinates(new ByteArrayInputStream(gpxBytes));
     }
 
+    @Cacheable("raceSportFacets")
     public List<RaceController.SportFacet> getSportFacets() {
         Aggregation agg = Aggregation.newAggregation(
                 Aggregation.group("sport")
@@ -149,6 +166,7 @@ public class RaceService {
                 .toList();
     }
 
+    @Cacheable(value = "raceCountryFacets", key = "#sport")
     public List<RaceController.CountryFacet> getCountryFacets(String sport) {
         Aggregation agg = Aggregation.newAggregation(
                 Aggregation.match(org.springframework.data.mongodb.core.query.Criteria.where("sport").regex("^" + sport + "$", "i")),

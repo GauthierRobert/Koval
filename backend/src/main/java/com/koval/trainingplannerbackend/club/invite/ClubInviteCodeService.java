@@ -14,6 +14,9 @@ import com.koval.trainingplannerbackend.club.membership.ClubMemberRole;
 import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -51,6 +54,7 @@ public class ClubInviteCodeService {
         this.activityService = activityService;
     }
 
+    @CacheEvict(value = "clubInviteCodes", key = "#clubId")
     public ClubInviteCode generateInviteCode(String userId, String clubId, String clubGroupId,
                                               int maxUses, LocalDateTime expiresAt) {
         authorizationService.requireAdminOrCoach(userId, clubId);
@@ -76,6 +80,10 @@ public class ClubInviteCodeService {
         return clubInviteCodeRepository.save(inviteCode);
     }
 
+    @Caching(evict = {
+        @CacheEvict(value = "clubInviteCodes", allEntries = true),
+        @CacheEvict(value = "userClubs", key = "#userId")
+    })
     public ClubMembership redeemClubInviteCode(String userId, String code) {
         ClubInviteCode inviteCode = clubInviteCodeRepository.findByCode(code.toUpperCase().trim())
                 .orElseThrow(() -> new ResourceNotFoundException("Invalid invite code"));
@@ -133,6 +141,7 @@ public class ClubInviteCodeService {
         return clubInviteCodeRepository.findByClubId(clubId);
     }
 
+    @Cacheable(value = "clubInviteCodes", key = "#clubId")
     public List<ClubInviteCodeResponse> getClubInviteCodeResponses(String userId, String clubId) {
         List<ClubInviteCode> codes = getClubInviteCodes(userId, clubId);
 
@@ -157,6 +166,7 @@ public class ClubInviteCodeService {
         return toResponse(code, groupName);
     }
 
+    @CacheEvict(value = "clubInviteCodes", key = "#clubId")
     public void deactivateClubInviteCode(String userId, String clubId, String codeId) {
         authorizationService.requireAdminOrCoach(userId, clubId);
         ClubInviteCode inviteCode = clubInviteCodeRepository.findById(codeId)

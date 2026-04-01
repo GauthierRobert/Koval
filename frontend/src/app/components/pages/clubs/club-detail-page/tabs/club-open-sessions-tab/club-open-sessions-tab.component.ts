@@ -2,6 +2,7 @@ import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, Event
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {BehaviorSubject} from 'rxjs';
 import {Router} from '@angular/router';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {
@@ -47,6 +48,8 @@ export class ClubOpenSessionsTabComponent implements OnInit {
 
   calendarWeekStart: Date = ClubOpenSessionsTabComponent.getMonday(new Date());
   calendarDays: Date[] = [];
+
+  readonly isSavingSession$ = new BehaviorSubject(false);
 
   isFormOpen = false;
   editingSession: ClubTrainingSession | null = null;
@@ -230,6 +233,7 @@ export class ClubOpenSessionsTabComponent implements OnInit {
       ? this.clubSessionService.updateSession(this.club.id, this.editingSession.id, data)
       : this.clubSessionService.createSession(this.club.id, data);
 
+    this.isSavingSession$.next(true);
     save$.subscribe({
       next: (session) => {
         if (this.gpxFile) {
@@ -241,10 +245,12 @@ export class ClubOpenSessionsTabComponent implements OnInit {
           this.afterSave();
         }
       },
+      error: () => this.isSavingSession$.next(false),
     });
   }
 
   private afterSave(): void {
+    this.isSavingSession$.next(false);
     this.closeForm();
     this.loadActivities();
   }
