@@ -1,0 +1,63 @@
+:host {
+  display: contents;
+}
+
+.focus-card {
+  flex: 1;
+  min-width: 0;
+  border-radius: var(--radius-xl, 20px);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-label { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: var(--text-dim); }
+
+.focus-sport-badge {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  width: fit-content;
+}
+
+.focus-sport-badge--cycling  { background: rgba(59,130,246,.15); color: var(--metric-fitness); }
+.focus-sport-badge--running  { background: rgba(34,197,94,.15);  color: var(--positive-alt); }
+.focus-sport-badge--swimming { background: rgba(6,182,212,.15);  color: #22d3ee; }
+.focus-sport-badge--brick    { background: rgba(245,158,11,.15); color: #fbbf24; }
+.focus-sport-badge--gym      { background: rgba(168,85,247,.15); color: #c084fc; }
+
+.focus-title { font-size: 1.15rem; font-weight: 700; color: var(--text-color); }
+
+.focus-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.focus-meta-chip {
+  background: var(--surface-elevated, rgba(255,255,255,.06));
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.view-workout-btn {
+  align-self: flex-start;
+  background: var(--accent-gradient);
+  color: var(--color-black, #000);
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s, filter .15s;
+}
+
+.view-workout-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+.focus-rest-label { font-size: 1.1rem; font-weight: 700; color: var(--text-color); }
+.focus-rest-sub   { font-size: var(--text-sm); color: var(--text-dim); line-height: 1.5; }

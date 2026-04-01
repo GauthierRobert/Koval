@@ -40,56 +40,15 @@
       <!-- Today's Focus + Metrics side by side -->
       <div class="focus-metrics-row">
 
-        <div class="focus-card glass">
-          <span class="card-label">{{ 'DASHBOARD.CARD_TODAYS_FOCUS' | translate }}</span>
-          @if (vm.upcoming[0]?.scheduledDate === todayKey) {
-            <div class="focus-sport-badge" [ngClass]="'focus-sport-badge--' + vm.upcoming[0].sportType.toLowerCase()">
-              {{ vm.upcoming[0].sportType }}
-            </div>
-            <div class="focus-title">{{ vm.upcoming[0].trainingTitle || vm.upcoming[0].title || ('DASHBOARD.DEFAULT_WORKOUT_TITLE' | translate) }}</div>
-            <div class="focus-meta">
-              @if (formatScheduleDuration(vm.upcoming[0])) {
-                <span class="focus-meta-chip">{{ formatScheduleDuration(vm.upcoming[0]) }}</span>
-              }
-            </div>
-            <button class="view-workout-btn" (click)="openDetail(vm.upcoming[0])">{{ 'DASHBOARD.BTN_VIEW_WORKOUT' | translate }}</button>
-          } @else {
-            <div class="focus-rest-label">{{ 'DASHBOARD.FOCUS_REST_DAY' | translate }}</div>
-            <div class="focus-rest-sub">{{ 'DASHBOARD.FOCUS_REST_SUB' | translate }}</div>
-          }
-        </div>
+        <app-dashboard-focus-card
+          [upcomingWorkouts]="vm.upcoming"
+          [todayKey]="todayKey"
+          (openDetail)="openDetail($event)">
+        </app-dashboard-focus-card>
 
-        @if (vm.form.ctl != null || vm.form.atl != null || vm.form.tsb != null) {
-          <div class="metrics-panel glass">
-            <span class="card-label">{{ 'DASHBOARD.CARD_PERFORMANCE' | translate }}</span>
-            <div class="mp-row">
-              <span class="mp-big-val fitness">{{ vm.form.ctl != null ? (vm.form.ctl | number:'1.0-0') : '–' }}</span>
-              <span class="mp-big-val fatigue">{{ vm.form.atl != null ? (vm.form.atl | number:'1.0-0') : '–' }}</span>
-              <span class="mp-big-val"
-                [class.form-positive]="vm.form.tsb > 5"
-                [class.form-negative]="vm.form.tsb < -10"
-                [class.form-neutral]="vm.form.tsb >= -10 && vm.form.tsb <= 5">
-                @if (vm.form.tsb != null) {
-                  {{ vm.form.tsb > 0 ? '+' : '' }}{{ vm.form.tsb | number:'1.0-0' }}
-                } @else { – }
-              </span>
-            </div>
-            <div class="mp-row">
-              <div class="mp-meta">
-                <span class="mp-label">{{ 'DASHBOARD.LABEL_FITNESS' | translate }}</span>
-                <span class="mp-sublabel">CTL</span>
-              </div>
-              <div class="mp-meta">
-                <span class="mp-label">{{ 'DASHBOARD.LABEL_FATIGUE' | translate }}</span>
-                <span class="mp-sublabel">ATL</span>
-              </div>
-              <div class="mp-meta">
-                <span class="mp-label">{{ 'DASHBOARD.LABEL_FORM' | translate }}</span>
-                <span class="mp-sublabel">TSB</span>
-              </div>
-            </div>
-          </div>
-        }
+        <app-dashboard-performance-panel
+          [formStats]="vm.form">
+        </app-dashboard-performance-panel>
 
         @if (vm.user?.ftp || vm.user?.functionalThresholdPace || vm.user?.criticalSwimSpeed) {
           <div class="metrics-panel glass">
@@ -138,53 +97,9 @@
         </div>
       }
 
-      <!-- Week TSS summary -->
-      @if (hasAnyActivity(vm.weekMetrics)) {
-        <div class="week-tss-bar">
-          <span class="week-tss-total">{{ 'DASHBOARD.WEEK_TSS_SUMMARY' | translate: { tss: totalWeekTss(vm.weekMetrics) } }}</span>
-          @if (totalPrevTss(vm.weekMetrics) > 0) {
-            <span class="week-tss-vs">
-          <span
-            [class.trend-up]="totalWeekTss(vm.weekMetrics) > totalPrevTss(vm.weekMetrics)"
-            [class.trend-down]="totalWeekTss(vm.weekMetrics) < totalPrevTss(vm.weekMetrics)">
-            {{ totalWeekTss(vm.weekMetrics) >= totalPrevTss(vm.weekMetrics) ? '▲' : '▼' }}
-            {{ (totalWeekTss(vm.weekMetrics) - totalPrevTss(vm.weekMetrics)) | number:'1.0-0' }}
-            {{ 'DASHBOARD.WEEK_TSS_VS_LAST_WEEK' | translate }}
-              </span>
-            </span>
-          }
-        </div>
-      }
-
-      <!-- Sport cards -->
-      <div class="sport-cards">
-        @for (stat of vm.weekMetrics.current; track trackBySport(stat)) {
-          <div
-            class="sport-card glass"
-            [class.dim-card]="stat.sessionCount === 0">
-            <div class="sport-header">
-              <span class="sport-name">{{ stat.sport }}</span>
-              <span class="trend-badge" [ngClass]="getTrendClass(stat, vm.weekMetrics.previous)">
-                {{ getTrend(stat, vm.weekMetrics.previous) }}
-              </span>
-            </div>
-            @if (stat.sessionCount > 0) {
-              <div class="sport-duration">{{ formatDuration(stat.durationSeconds) }}</div>
-              <div class="sport-meta">
-                @if (stat.distanceMeters > 0) {
-                  <span class="meta-dist">
-                    {{ formatDistance(stat.distanceMeters, stat.sport) }}
-                  </span>
-                }
-                <span class="meta-tss">TSS {{ stat.tss | number:'1.0-0' }}</span>
-              </div>
-            } @else {
-              <div class="sport-duration sport-empty">—</div>
-              <div class="sport-meta sport-empty-hint">{{ 'DASHBOARD.SPORT_CARD_NO_ACTIVITY' | translate }}</div>
-            }
-          </div>
-        }
-      </div>
+      <app-dashboard-sport-cards
+        [weekMetrics]="vm.weekMetrics">
+      </app-dashboard-sport-cards>
 
       <!-- Next workout + Latest activity row -->
       @if (vm.upcoming.length > 0 || vm.latestFit) {

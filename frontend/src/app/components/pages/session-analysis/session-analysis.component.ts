@@ -11,9 +11,11 @@ import {ZoneBlock, ZoneSystem, SportType} from '../../../services/zone';
 import {ZoneClassificationService} from '../../../services/zone-classification.service';
 import {ZoneInterpolationService} from '../../../services/zone-interpolation.service';
 import {BlockSummary} from '../../../services/workout-execution.service';
-import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {formatTimeHMS} from '../../shared/format/format.utils';
 import {FitTimeseriesChartComponent} from './fit-timeseries-chart/fit-timeseries-chart.component';
+import {SessionStatsHeaderComponent} from './session-stats-header/session-stats-header.component';
+import {ZoneDistributionPanelComponent, ZoneDistEntry} from './zone-distribution-panel/zone-distribution-panel.component';
+import {BlockBreakdownTableComponent} from './block-breakdown-table/block-breakdown-table.component';
 
 interface FitState {
     loading: boolean;
@@ -22,18 +24,10 @@ interface FitState {
     movingTime: number;
 }
 
-interface ZoneDistEntry {
-    label: string;
-    description: string;
-    color: string;
-    seconds: number;
-    percentage: number;
-}
-
 @Component({
     selector: 'app-session-analysis',
     standalone: true,
-    imports: [CommonModule, TranslateModule, SportIconComponent, FitTimeseriesChartComponent],
+    imports: [CommonModule, TranslateModule, FitTimeseriesChartComponent, SessionStatsHeaderComponent, ZoneDistributionPanelComponent, BlockBreakdownTableComponent],
     templateUrl: './session-analysis.component.html',
     styleUrl: './session-analysis.component.css',
 })

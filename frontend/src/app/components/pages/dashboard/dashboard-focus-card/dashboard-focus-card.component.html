@@ -1,0 +1,18 @@
+<div class="focus-card glass">
+  <span class="card-label">{{ 'DASHBOARD.CARD_TODAYS_FOCUS' | translate }}</span>
+  @if (upcomingWorkouts[0]?.scheduledDate === todayKey) {
+    <div class="focus-sport-badge" [ngClass]="'focus-sport-badge--' + upcomingWorkouts[0].sportType.toLowerCase()">
+      {{ upcomingWorkouts[0].sportType }}
+    </div>
+    <div class="focus-title">{{ upcomingWorkouts[0].trainingTitle || upcomingWorkouts[0].title || ('DASHBOARD.DEFAULT_WORKOUT_TITLE' | translate) }}</div>
+    <div class="focus-meta">
+      @if (formatScheduleDuration(upcomingWorkouts[0])) {
+        <span class="focus-meta-chip">{{ formatScheduleDuration(upcomingWorkouts[0]) }}</span>
+      }
+    </div>
+    <button class="view-workout-btn" (click)="openDetail.emit(upcomingWorkouts[0])">{{ 'DASHBOARD.BTN_VIEW_WORKOUT' | translate }}</button>
+  } @else {
+    <div class="focus-rest-label">{{ 'DASHBOARD.FOCUS_REST_DAY' | translate }}</div>
+    <div class="focus-rest-sub">{{ 'DASHBOARD.FOCUS_REST_SUB' | translate }}</div>
+  }
+</div>

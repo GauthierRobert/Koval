@@ -1,0 +1,23 @@
+<div class="zone-distribution glass">
+  <div class="zone-header">
+    <div class="section-label">{{ 'SESSION_ANALYSIS.ZONE_DISTRIBUTION' | translate }}</div>
+    <select data-testid="zone-picker" class="zone-picker" (change)="onZoneSystemChange($any($event.target).value || null)">
+      <option [value]="''">{{ 'SESSION_ANALYSIS.ZONE_PICKER_DEFAULT' | translate }}</option>
+      @for (zs of userZoneSystems; track zs.id) {
+        <option [value]="zs.id">{{ zs.name }}</option>
+      }
+    </select>
+  </div>
+  <div class="zone-bars">
+    @for (zone of zoneDistribution; track zone.label) {
+      <div data-testid="zone-row" class="zone-row">
+        <span class="zone-label" [title]="zone.description">{{ zone.label }}</span>
+        <div class="bar-track">
+          <div class="bar-fill" [style.width.%]="zone.percentage" [style.background]="zone.color"></div>
+        </div>
+        <span class="zone-time">{{ formatZoneDuration(zone.seconds) }}</span>
+        <span class="zone-pct">{{ zone.percentage }}%</span>
+      </div>
+    }
+  </div>
+</div>

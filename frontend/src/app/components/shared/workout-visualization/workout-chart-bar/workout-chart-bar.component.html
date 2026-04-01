@@ -1,0 +1,52 @@
+<div class="chart-wrapper glass">
+  <div class="y-axis">
+    @for (label of getYAxisLabels(); track label) {
+      <span>{{ label }}%</span>
+    }
+  </div>
+  <div class="chart-area">
+    @for (block of displayFlatBlocks; let i = $index; track i) {
+      <div class="block-bar-wrapper"
+        [style.width.%]="getBlockWidth(block)">
+        <div class="bar-container" [style.height.%]="getBlockHeight(block)">
+          <div class="block-bar" [style.background]="getBlockColor(block)"
+            [style.clip-path]="getBlockClipPath(block)" [attr.data-type]="block.type"></div>
+
+          <div class="block-tooltip glass" [class.tooltip-below]="block.type === 'PAUSE'">
+            <span class="tooltip-label">{{ block.label }}</span>
+            <span class="tooltip-type">{{ block.type }}</span>
+            @if (block.type !== 'FREE' && block.type !== 'PAUSE') {
+              @if (block.type !== 'RAMP') {
+                <span class="tooltip-power">{{ getEffectiveIntensity(block, 'TARGET') |
+                  number:'1.0-0' }}%</span>
+              }
+              @if (block.type === 'RAMP') {
+                <span class="tooltip-power">{{ getEffectiveIntensity(block, 'START') |
+                  number:'1.0-0' }}% &rarr; {{
+                  getEffectiveIntensity(block, 'END') | number:'1.0-0' }}%</span>
+              }
+              @if (block.type !== 'RAMP') {
+                <span class="tooltip-watts">{{
+                  calculateIntensityValue(getEffectiveIntensity(block, 'TARGET')) }}</span>
+              }
+              @if (block.type === 'RAMP') {
+                <span class="tooltip-watts">{{
+                  calculateIntensityValue(getEffectiveIntensity(block, 'START')) }} &rarr; {{
+                  calculateIntensityValue(getEffectiveIntensity(block, 'END'))
+                  }}</span>
+              }
+            }
+            <span class="tooltip-duration">{{ formatBlockDurationOrDistance(block) }}</span>
+          </div>
+
+          @if (getBlockWidth(block) > 2) {
+            <div class="block-label" [class.vertical]="isNarrowBlock(block)">
+              <span class="label-intensity">{{ getDisplayIntensity(block) }}</span>
+              <span class="label-duration">{{ formatBlockDurationOrDistance(block) }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

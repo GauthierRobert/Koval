@@ -1,0 +1,125 @@
+<div class="blocks-section glass">
+  <div class="blocks-section-header">
+    <div class="section-label">{{ 'SESSION_ANALYSIS.BLOCK_BREAKDOWN' | translate }}</div>
+    @if (availableZoneChips.length > 1) {
+      <div class="zone-filter-chips">
+        @for (chip of availableZoneChips; track chip.label) {
+          <button class="zone-chip" [class.zone-chip--active]="isZoneActive(chip.label)"
+            [style.--chip-color]="chip.color"
+            (click)="toggleZoneFilter.emit(chip.label)">
+            <span class="zone-dot" [style.background]="chip.color"></span>
+            {{ chip.label }}
+          </button>
+        }
+        @if (zoneFilters.size > 0) {
+          <button class="zone-chip zone-chip--clear" (click)="clearZoneFilters.emit()">
+            {{ 'SESSION_ANALYSIS.ZONE_FILTER_CLEAR' | translate }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  @if (blockView === 'planned' && plannedBlocks.length) {
+    <div class="blocks-table" [class.blocks-table--run-swim]="sportType !== 'CYCLING'">
+      <div class="blocks-header">
+        <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_ZONE' | translate }}</span>
+        <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_BLOCK' | translate }}</span>
+        <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_TYPE' | translate }}</span>
+        <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_DURATION' | translate }}</span>
+        <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_DISTANCE' | translate }}</span>
+        @if (sportType === 'CYCLING') {
+          <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_TARGET' | translate }}</span>
+          <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_ACTUAL_PWR' | translate }}</span>
+        } @else {
+          <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_AVG_SPEED' | translate }}</span>
+        }
+        <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_HR' | translate }}</span>
+        <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_CAD' | translate }}</span>
+      </div>
+      @for (block of plannedBlocks; track $index) {
+        <div class="blocks-row">
+          <span class="zb-zone">
+            @if (block.zoneColor) {
+              <span class="zone-dot" [style.background]="block.zoneColor"></span>
+            }
+            {{ block.zoneLabel ?? '\u2014' }}
+          </span>
+          <span class="b-label">{{ block.label }}</span>
+          <span class="b-type">{{ block.type }}</span>
+          <span class="b-dur">{{ formatTime(block.durationSeconds) }}</span>
+          <span class="b-dist">{{ formatDistance(block) }}</span>
+          @if (sportType === 'CYCLING') {
+            <span class="b-target">{{ block.targetPower ? (block.targetPower + 'W') : '\u2014' }}</span>
+            <span class="b-actual" [class.above]="block.actualPower > block.targetPower * 1.05"
+              [class.below]="block.targetPower > 0 && block.actualPower < block.targetPower * 0.95">
+              {{ block.actualPower | number:'1.0-0' }}W
+            </span>
+          } @else {
+            <span class="b-actual">
+              {{ block.actualSpeedKmh ? formatSpeed(block.actualSpeedKmh / 3.6, sportType) : '\u2014' }}
+            </span>
+          }
+          <span class="b-hr">{{ block.actualHR | number:'1.0-0' }}</span>
+          <span class="b-cad">{{ block.actualCadence | number:'1.0-0' }}</span>
+        </div>
+      }
+    </div>
+  }
+
+  @if (blockView === 'interpolated' || !plannedBlocks.length) {
+    @if (zoneBlocks.length) {
+      <div class="blocks-table">
+        @if (sportType === 'CYCLING') {
+          <div class="zone-blocks-header zb-cycling">
+            <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_ZONE' | translate }}</span>
+            <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_DESCRIPTION' | translate }}</span>
+            <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_DURATION' | translate }}</span>
+            <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_DISTANCE' | translate }}</span>
+            <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_AVG_PWR' | translate }}</span>
+            <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_MAX_PWR' | translate }}</span>
+            <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_AVG_HR' | translate }}</span>
+            <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_AVG_CAD' | translate }}</span>
+            <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_AVG_PCT' | translate }}</span>
+          </div>
+          @for (zb of zoneBlocks; track zb.startIndex) {
+            <div class="zone-block-row zb-cycling">
+              <span class="zb-zone"><span class="zone-dot" [style.background]="zb.color"></span> {{ zb.zoneLabel }}</span>
+              <span class="zb-desc">{{ zb.zoneDescription }}</span>
+              <span class="zb-dur">{{ formatZoneDuration(zb.durationSeconds) }}</span>
+              <span class="zb-dist">{{ formatZoneDistance(zb.distanceMeters) }}</span>
+              <span class="zb-pwr">{{ zb.avgPower }}W</span>
+              <span class="zb-max">{{ zb.maxPower }}W</span>
+              <span class="zb-hr">{{ zb.avgHR }}</span>
+              <span class="zb-cad">{{ zb.avgCadence }}</span>
+              <span class="zb-pct">{{ zb.avgPercent }}%</span>
+            </div>
+          }
+        } @else {
+          <div class="zone-blocks-header zb-run-swim">
+            <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_ZONE' | translate }}</span>
+            <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_DESCRIPTION' | translate }}</span>
+            <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_DURATION' | translate }}</span>
+            <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_DISTANCE' | translate }}</span>
+            <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_AVG_SPEED' | translate }}</span>
+            <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_MAX_SPEED' | translate }}</span>
+            <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_AVG_HR' | translate }}</span>
+            <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_AVG_PCT' | translate }}</span>
+          </div>
+          @for (zb of zoneBlocks; track zb.startIndex) {
+            <div class="zone-block-row zb-run-swim">
+              <span class="zb-zone"><span class="zone-dot" [style.background]="zb.color"></span> {{ zb.zoneLabel }}</span>
+              <span class="zb-desc">{{ zb.zoneDescription }}</span>
+              <span class="zb-dur">{{ formatZoneDuration(zb.durationSeconds) }}</span>
+              <span class="zb-dist">{{ formatZoneDistance(zb.distanceMeters) }}</span>
+              <span class="zb-spd">{{ zb.avgSpeed }} km/h</span>
+              <span class="zb-max">{{ zb.maxSpeed }} km/h</span>
+              <span class="zb-hr">{{ zb.avgHR }}</span>
+              <span class="zb-pct">{{ zb.avgPercent }}%</span>
+            </div>
+          }
+        }
+      </div>
+    }
+  }
+</div>

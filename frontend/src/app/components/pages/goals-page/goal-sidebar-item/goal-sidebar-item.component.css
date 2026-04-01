@@ -1,0 +1,84 @@
+.sidebar-goal-item {
+  display: flex;
+  align-items: stretch;
+  cursor: pointer;
+  transition: background 0.12s;
+  border-bottom: 1px solid var(--surface-elevated);
+  min-height: 52px;
+}
+
+.sidebar-goal-item:hover {
+  background: var(--overlay-5);
+}
+
+.sidebar-goal-item--selected {
+  background: rgba(255, 157, 0, 0.08);
+  border-left: 2px solid var(--accent-color, #ff9d00);
+}
+
+.sidebar-goal-item--selected:hover {
+  background: rgba(255, 157, 0, 0.12);
+}
+
+.sidebar-goal-item--past {
+  opacity: 0.55;
+}
+
+.sidebar-priority-bar {
+  width: 3px;
+  flex-shrink: 0;
+  border-radius: 0 2px 2px 0;
+}
+
+.sidebar-goal-body {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2rem;
+}
+
+.sidebar-goal-row1 {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.sidebar-goal-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-90);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-goal-year {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-30);
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.sidebar-goal-row2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sidebar-goal-date {
+  font-size: 0.68rem;
+  color: var(--text-40);
+}
+
+.sidebar-goal-countdown {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--accent-color, #ff9d00);
+}

@@ -1,0 +1,62 @@
+:host {
+  display: contents;
+}
+
+.metrics-panel {
+  flex: 0 0 25%;
+  border-radius: var(--radius-xl, 20px);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  justify-content: space-between;
+}
+
+.card-label { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: var(--text-dim); }
+
+.mp-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.mp-big-val {
+  flex: 1;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  text-align: center;
+}
+
+.mp-big-val.fitness       { color: var(--accent-color); }
+.mp-big-val.fatigue       { color: var(--metric-fatigue); }
+.mp-big-val.form-positive,
+.mp-big-val.form-negative,
+.mp-big-val.form-neutral  { color: var(--metric-fitness); }
+
+.mp-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.mp-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.mp-sublabel {
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  opacity: 0.5;
+  text-transform: uppercase;
+}

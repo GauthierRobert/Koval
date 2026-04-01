@@ -1,0 +1,119 @@
+:host {
+  display: contents;
+}
+
+/* ─── Week TSS bar ──────────────────────────────────────────── */
+.week-tss-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.week-tss-total {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.week-tss-vs {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ─── Sport cards ───────────────────────────────────────────── */
+.sport-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.sport-card {
+  padding: var(--card-padding);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  transition: border-color 0.2s;
+}
+
+.sport-card:hover {
+  border-color: var(--accent-color);
+}
+
+.dim-card {
+  opacity: 0.5;
+}
+
+.sport-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sport-name {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.trend-badge {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.sport-duration {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.sport-empty {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.sport-empty-hint {
+  color: var(--text-dim);
+  font-size: var(--text-xs);
+  opacity: 0.7;
+}
+
+.sport-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.meta-dist {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.meta-tss {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--space-xs);
+  background: var(--surface-hover);
+  color: var(--text-muted);
+}
+
+/* ─── Trend colors ──────────────────────────────────────────── */
+.trend-up {
+  color: var(--positive-alt);
+}
+
+.trend-down {
+  color: var(--metric-fatigue);
+}
+
+/* ─── Responsive ────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sport-cards {
+    grid-template-columns: 1fr;
+  }
+}

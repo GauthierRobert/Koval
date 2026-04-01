@@ -19,42 +19,12 @@
               {{ 'GOALS.SECTION_PAST' | translate }}
             </div>
           }
-          <div class="sidebar-goal-item"
-               [class.sidebar-goal-item--selected]="selectedGoalId === goal.id"
-               [class.sidebar-goal-item--past]="!isUpcoming(goal)"
-               (click)="selectGoal(goal)">
-            <div class="sidebar-priority-bar" [style.background]="getPriorityColor(goal.priority)"></div>
-            <div class="sidebar-goal-body">
-              <div class="sidebar-goal-row1">
-                <app-sport-icon [sport]="$any(goal.sport)" [size]="12"></app-sport-icon>
-                <span class="sidebar-goal-title">{{ goal.title }}</span>
-                <span class="sidebar-priority-mini" [style.background]="getPriorityColor(goal.priority)">{{ goal.priority }}</span>
-              </div>
-              <div class="sidebar-goal-row2">
-                @if (goal.raceDate) {
-                  <span class="sidebar-goal-date">{{ formatDate(goal.raceDate) }}</span>
-                }
-                @if (isUpcoming(goal) && goal.raceDate) {
-                  <span class="sidebar-goal-countdown" [style.color]="getUrgencyColor(goal)">
-                    {{ daysUntil(goal.raceDate) }}d
-                  </span>
-                }
-                @if (!isUpcoming(goal) && goal.raceDate) {
-                  <span class="sidebar-goal-countdown sidebar-goal-countdown--past">
-                    {{ 'GOALS.COUNTDOWN_PAST' | translate }}
-                  </span>
-                }
-              </div>
-              <!-- Mini progress bar -->
-              @if (isUpcoming(goal) && goal.createdAt && goal.raceDate) {
-                <div class="sidebar-goal-row3">
-                  <div class="sidebar-mini-progress">
-                    <div class="sidebar-mini-progress-fill" [style.width.%]="getProgressPercent(goal)"></div>
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
+          <app-goal-sidebar-item
+            [goal]="goal"
+            [isSelected]="selectedGoalId === goal.id"
+            [isUpcoming]="isUpcoming(goal)"
+            (select)="selectGoal($event)">
+          </app-goal-sidebar-item>
         }
       } @else {
         <div class="sidebar-empty">{{ 'GOALS.SIDEBAR_EMPTY' | translate }}</div>
@@ -65,7 +35,7 @@
     <div class="goals-detail">
       @if (getSelectedGoal(allGoals); as goal) {
 
-        <!-- Header (no card) -->
+        <!-- Header -->
         <div class="detail-header">
           <div class="detail-title-row">
             <div class="detail-priority-badge" [style.background]="getPriorityColor(goal.priority)">
@@ -83,76 +53,52 @@
           </div>
         </div>
 
-        <!-- Countdown Hero Section -->
-        @if (isUpcoming(goal) && goal.raceDate) {
-          <div class="detail-section detail-countdown-hero">
-            <div class="countdown-layout">
-              <div class="countdown-ring"
-                   [style.--progress.%]="getProgressPercent(goal)"
-                   [style.--ring-color]="getUrgencyColor(goal)">
-                <div class="countdown-ring-inner">
-                  <span class="countdown-days-number" [style.color]="getUrgencyColor(goal)">{{ daysUntil(goal.raceDate) }}</span>
-                  <span class="countdown-days-label">{{ 'GOALS.COUNTDOWN_DAYS' | translate }}</span>
-                </div>
-              </div>
-              <div class="countdown-info">
-                <div class="countdown-weeks">{{ weeksUntil(goal.raceDate) }} {{ 'GOALS.COUNTDOWN_WEEKS' | translate }}</div>
-                <div class="countdown-date">{{ formatDate(goal.raceDate) }}</div>
-                @if (goal.createdAt) {
-                  <div class="countdown-progress-row">
-                    <div class="progress-bar-track">
-                      <div class="progress-bar-fill" [style.width.%]="getProgressPercent(goal)" [style.background]="getUrgencyColor(goal)"></div>
-                    </div>
-                    <span class="progress-label">{{ 'GOALS.PROGRESS_LABEL' | translate: { percent: getProgressPercent(goal) } }}</span>
-                  </div>
-                }
-              </div>
-            </div>
-          </div>
-        }
-
-        <!-- Past race banner -->
-        @if (!isUpcoming(goal) && goal.raceDate) {
-          <div class="detail-section detail-past-banner">
-            <span class="past-banner-label">{{ 'GOALS.COUNTDOWN_PAST' | translate }}</span>
-            <span class="past-banner-date">{{ formatDate(goal.raceDate) }}</span>
-          </div>
-        }
-
         <!-- Meta grid -->
-        <div class="detail-section">
-          <span class="detail-section-label">{{ 'GOALS.SECTION_DETAILS' | translate }}</span>
-          <div class="detail-meta-grid">
-            @if (goal.location) {
-              <div class="detail-meta-item">
-                <span class="detail-meta-label">{{ 'GOALS.META_LOCATION' | translate }}</span>
-                <span class="detail-meta-value">{{ goal.location }}</span>
-              </div>
-            }
-            @if (goal.distance) {
-              <div class="detail-meta-item">
-                <span class="detail-meta-label">{{ 'GOALS.META_DISTANCE' | translate }}</span>
-                <span class="detail-meta-value">{{ goal.distance }}</span>
-              </div>
-            }
-            @if (goal.targetTime) {
-              <div class="detail-meta-item">
-                <span class="detail-meta-label">{{ 'GOALS.META_TARGET_TIME' | translate }}</span>
-                <span class="detail-meta-value accent">{{ goal.targetTime }}</span>
-              </div>
-            }
-            @if (goal.sport) {
-              <div class="detail-meta-item">
-                <span class="detail-meta-label">{{ 'GOALS.META_SPORT' | translate }}</span>
-                <span class="detail-meta-value">{{ goal.sport }}</span>
-              </div>
-            }
-          </div>
+        <div class="detail-meta-grid">
+          @if (goal.raceDate) {
+            <div class="detail-meta-item">
+              <span class="detail-meta-label">{{ 'GOALS.META_DATE' | translate }}</span>
+              <span class="detail-meta-value">{{ formatDate(goal.raceDate) }}</span>
+            </div>
+          }
+          @if (goal.raceDate && isUpcoming(goal)) {
+            <div class="detail-meta-item">
+              <span class="detail-meta-label">{{ 'GOALS.META_COUNTDOWN' | translate }}</span>
+              <span class="detail-meta-value accent">{{ 'GOALS.META_COUNTDOWN_VALUE' | translate: { days: daysUntil(goal.raceDate), weeks: weeksUntil(goal.raceDate) } }}</span>
+            </div>
+          }
+          @if (goal.location) {
+            <div class="detail-meta-item">
+              <span class="detail-meta-label">{{ 'GOALS.META_LOCATION' | translate }}</span>
+              <span class="detail-meta-value">{{ goal.location }}</span>
+            </div>
+          }
+          @if (goal.distance) {
+            <div class="detail-meta-item">
+              <span class="detail-meta-label">{{ 'GOALS.META_DISTANCE' | translate }}</span>
+              <span class="detail-meta-value">{{ goal.distance }}</span>
+            </div>
+          }
+          @if (goal.targetTime) {
+            <div class="detail-meta-item">
+              <span class="detail-meta-label">{{ 'GOALS.META_TARGET_TIME' | translate }}</span>
+              <span class="detail-meta-value accent">{{ goal.targetTime }}</span>
+            </div>
+          }
+          @if (goal.sport) {
+            <div class="detail-meta-item">
+              <span class="detail-meta-label">{{ 'GOALS.META_SPORT' | translate }}</span>
+              <span class="detail-meta-value">{{ goal.sport }}</span>
+            </div>
+          }
         </div>
+
+        <!-- Progress bar (upcoming only) -->
+        <app-goal-countdown-hero [goal]="goal"></app-goal-countdown-hero>
 
         <!-- Notes -->
         @if (goal.notes) {
-          <div class="detail-section">
+          <div class="detail-notes">
             <span class="detail-section-label">{{ 'GOALS.SECTION_NOTES' | translate }}</span>
             <p class="detail-notes-text">{{ goal.notes }}</p>
           </div>
@@ -160,7 +106,7 @@
 
         <!-- Race info (if linked race loaded) -->
         @if (goal.raceId && getRace(goal.raceId); as race) {
-          <div class="detail-section">
+          <div class="detail-race-info">
             <span class="detail-section-label">{{ 'GOALS.SECTION_RACE_INFO' | translate }}</span>
             @if (race.swimDistanceM || race.bikeDistanceM || race.runDistanceM || race.elevationGainM) {
               <div class="detail-race-distances">
@@ -189,59 +135,25 @@
           </div>
 
           <!-- GPX per discipline -->
-          <div class="detail-section">
+          <div class="detail-gpx-section">
             <span class="detail-section-label">{{ 'GOALS.SECTION_GPX_ROUTES' | translate }}</span>
-            <div class="detail-gpx-grid">
-              @for (disc of getGpxDisciplines(race); track disc) {
-                <div class="detail-gpx-discipline">
-                  <div class="gpx-discipline-header">
-                    <span class="gpx-disc-label" [class.gpx-disc-swim]="disc === 'swim'" [class.gpx-disc-bike]="disc === 'bike'" [class.gpx-disc-run]="disc === 'run'">
-                      {{ disc | uppercase }}
-                    </span>
-                    <!-- Has GPX: green chip + re-upload -->
-                    @if (hasGpxForDiscipline(race, disc)) {
-                      <span class="gpx-chip gpx-chip--done">
-                        &#10003; {{ 'GOALS.GPX_UPLOADED' | translate }}
-                        <label class="gpx-reupload" [title]="'GOALS.GPX_REPLACE_TITLE' | translate">
-                          &#8593;
-                          <input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race.id, disc)">
-                        </label>
-                      </span>
-                    }
-                    <!-- No GPX: upload chip -->
-                    @if (!hasGpxForDiscipline(race, disc)) {
-                      <label class="gpx-chip gpx-chip--upload">
-                        @if (!isGpxUploading(race.id, disc)) {
-                          <span>&#8593; {{ 'GOALS.GPX_UPLOAD_LABEL' | translate }}</span>
-                        }
-                        @if (isGpxUploading(race.id, disc)) {
-                          <span>{{ 'GOALS.GPX_UPLOADING' | translate }}</span>
-                        }
-                        <input type="file" accept=".gpx" hidden (change)="onGpxFileSelected($event, race.id, disc)">
-                      </label>
-                    }
-                  </div>
-                  <!-- Map (shown when coords available) -->
-                  @if (getRouteCoordsForDiscipline(race, disc).length > 0) {
-                    <div class="detail-map-container">
-                      <app-route-map
-                        [routeCoordinates]="getRouteCoordsForDiscipline(race, disc)"
-                        [segments]="[]">
-                      </app-route-map>
-                    </div>
-                  }
-                  @if (hasGpxForDiscipline(race, disc) && getRouteCoordsForDiscipline(race, disc).length === 0) {
-                    <div class="detail-map-loading">{{ 'GOALS.MAP_LOADING' | translate }}</div>
-                  }
-                </div>
-              }
-            </div>
+            @for (disc of getGpxDisciplines(race); track disc) {
+              <app-gpx-discipline-uploader
+                [race]="race"
+                [discipline]="disc"
+                [hasGpx]="hasGpxForDiscipline(race, disc)"
+                [isUploading]="isGpxUploading(race.id, disc)"
+                [routeCoords]="getRouteCoordsForDiscipline(race, disc)"
+                (upload)="uploadGpx(race.id, $event.discipline, $event.file)"
+                (reupload)="uploadGpx(race.id, $event.discipline, $event.file)">
+              </app-gpx-discipline-uploader>
+            }
           </div>
         }
 
         <!-- Simulation section -->
         @if (goal.raceId) {
-          <div class="detail-section">
+          <div class="detail-simulate">
             <button class="btn-simulate" (click)="simulateRace(goal)">&#9889; {{ 'GOALS.BTN_SIMULATE_RACE' | translate }}</button>
             @if (getSimRequests(goal.id).length > 0) {
               <div class="sim-history">

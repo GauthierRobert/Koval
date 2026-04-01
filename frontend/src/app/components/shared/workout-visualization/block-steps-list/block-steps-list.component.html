@@ -1,0 +1,94 @@
+<div class="block-steps-list">
+  @for (block of blocks; let i = $index; track i) {
+    @if (isSetElement(block)) {
+      <div class="set-wrapper">
+        <div class="set-header">
+          <span class="set-badge">&times;{{ block.repetitions }}</span>
+          @if (block.restDurationSeconds) {
+            <span class="set-rest">{{ 'WORKOUT_VIZ.SET_REST_LABEL' | translate: { duration: formatDuration(block.restDurationSeconds) } }}</span>
+          } @else if ((block.repetitions ?? 1) > 1) {
+            <span class="set-rest set-no-rest">{{ 'WORKOUT_VIZ.SET_NO_REST_LABEL' | translate }}</span>
+          }
+        </div>
+        <div class="set-children">
+          @for (child of block.elements; track child) {
+            @if (isSetElement(child)) {
+              <div class="set-wrapper nested">
+                <div class="set-header">
+                  <span class="set-badge">&times;{{ child.repetitions }}</span>
+                  @if (child.restDurationSeconds) {
+                    <span class="set-rest">{{ 'WORKOUT_VIZ.SET_REST_LABEL' | translate: { duration: formatDuration(child.restDurationSeconds) } }}</span>
+                  } @else if ((child.repetitions ?? 1) > 1) {
+                    <span class="set-rest set-no-rest">{{ 'WORKOUT_VIZ.SET_NO_REST_LABEL' | translate }}</span>
+                  }
+                </div>
+                <div class="set-children">
+                  @for (leaf of child.elements; track leaf) {
+                    <div class="step-card set-child-card" [class.ramp]="leaf.type === 'RAMP'" [style.border-left-color]="getBlockColor(leaf)">
+                      <span class="step-label">{{ leaf.label }}</span>
+                      <span class="step-duration" [class.estimated]="formatBlockEstimates(leaf).durationEstimated">{{ formatBlockEstimates(leaf).durationEstimated ? '~' : '' }}{{ formatBlockEstimates(leaf).duration }}</span>
+                      <span class="step-separator">|</span>
+                      <span class="step-distance" [class.estimated]="formatBlockEstimates(leaf).distanceEstimated">{{ formatBlockEstimates(leaf).distanceEstimated ? '~' : '' }}{{ formatBlockEstimates(leaf).distance }}</span>
+                      <span class="step-intensity">{{ getBlockIntensityDisplay(leaf) }}</span>
+                      <span class="step-absolute">
+                        @if (leaf.type !== 'FREE' && leaf.type !== 'PAUSE' && leaf.type !== 'RAMP') {
+                          {{ calculateIntensityValue(getEffectiveIntensity(leaf, 'TARGET')) }}
+                        }
+                        @if (leaf.type === 'RAMP') {
+                          {{ calculateIntensityValue(getEffectiveIntensity(leaf, 'START')) }}&rarr;{{ calculateIntensityValue(getEffectiveIntensity(leaf, 'END')) }}
+                        }
+                      </span>
+                      <span class="step-desc">{{ leaf.description ?? '' }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            } @else {
+              <div class="step-card set-child-card" [class.ramp]="child.type === 'RAMP'" [style.border-left-color]="getBlockColor(child)">
+                <span class="step-label">{{ child.label }}</span>
+                <span class="step-duration" [class.estimated]="formatBlockEstimates(child).durationEstimated">{{ formatBlockEstimates(child).durationEstimated ? '~' : '' }}{{ formatBlockEstimates(child).duration }}</span>
+                <span class="step-separator">|</span>
+                <span class="step-distance" [class.estimated]="formatBlockEstimates(child).distanceEstimated">{{ formatBlockEstimates(child).distanceEstimated ? '~' : '' }}{{ formatBlockEstimates(child).distance }}</span>
+                <span class="step-intensity">{{ getBlockIntensityDisplay(child) }}</span>
+                <span class="step-absolute">
+                  @if (child.type !== 'FREE' && child.type !== 'PAUSE' && child.type !== 'RAMP') {
+                    {{ calculateIntensityValue(getEffectiveIntensity(child, 'TARGET')) }}
+                  }
+                  @if (child.type === 'RAMP') {
+                    {{ calculateIntensityValue(getEffectiveIntensity(child, 'START')) }}&rarr;{{ calculateIntensityValue(getEffectiveIntensity(child, 'END')) }}
+                  }
+                </span>
+                <span class="step-desc">{{ child.description ?? '' }}</span>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="step-card" [class.ramp]="block.type === 'RAMP'"
+        [style.border-left-color]="getBlockColor(block)">
+        <span class="step-number">#{{ i + 1 }}</span>
+        <span class="step-label">{{ block.label }}</span>
+        @if (!(formatBlockEstimates(block).durationEstimated && block.type ==='PAUSE')) {
+          <span class="step-duration" [class.estimated]="formatBlockEstimates(block).durationEstimated">{{ formatBlockEstimates(block).durationEstimated ? '~' : '' }}{{ formatBlockEstimates(block).duration }}</span>
+        }
+        <span class="step-separator">|</span>
+        @if (!(formatBlockEstimates(block).distanceEstimated && block.type ==='PAUSE')) {
+          <span class="step-distance" [class.estimated]="formatBlockEstimates(block).distanceEstimated">{{ formatBlockEstimates(block).distanceEstimated ? '~' : '' }}{{ formatBlockEstimates(block).distance }}</span>
+        }
+        <span class="step-intensity">{{ getBlockIntensityDisplay(block) }}</span>
+        @if (block.type !== 'FREE' && block.type !== 'PAUSE') {
+          <span class="step-absolute">
+            @if (block.type !== 'RAMP') {
+              {{ calculateIntensityValue(getEffectiveIntensity(block, 'TARGET')) }}
+            }
+            @if (block.type === 'RAMP') {
+              {{ calculateIntensityValue(getEffectiveIntensity(block, 'START')) }}&rarr;{{ calculateIntensityValue(getEffectiveIntensity(block, 'END')) }}
+            }
+          </span>
+        }
+        <span class="step-desc">{{ block.description ?? '' }}</span>
+      </div>
+    }
+  }
+</div>

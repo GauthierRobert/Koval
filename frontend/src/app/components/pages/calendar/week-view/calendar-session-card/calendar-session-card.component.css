@@ -1,0 +1,194 @@
+:host {
+  display: contents;
+}
+
+/* ── Workout Card ──────────────────────────────────────────────────── */
+.workout-card {
+  background: var(--surface-elevated);
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  position: relative;
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.workout-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  transition: background 0.18s ease;
+}
+
+.workout-card.clickable {
+  cursor: pointer;
+}
+
+.workout-card.clickable:hover {
+  background: var(--surface-hover);
+  border-color: var(--overlay-12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Card kind: Standalone session ─────────────────────────────────── */
+.workout-card--session::before { background: var(--info-color); }
+.workout-card--session {
+  background: var(--info-subtle);
+  border-color: var(--info-border);
+  position: relative;
+}
+.workout-card--session.clickable:hover {
+  background: var(--info-hover);
+}
+
+/* ── Card layout ───────────────────────────────────────────────────── */
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-top-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* ── Hover-to-reveal action buttons ────────────────────────────────── */
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+@media (hover: hover) {
+  .card-actions {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    pointer-events: none;
+  }
+  .workout-card:hover .card-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* ── Session badge ─────────────────────────────────────────────────── */
+.session-badge {
+  font-size: 0.55rem;
+  font-weight: 800;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: color-mix(in srgb, var(--info-color) 15%, transparent);
+  color: var(--info-color);
+}
+
+/* ── Workout info ──────────────────────────────────────────────────── */
+.workout-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.workout-title {
+  font-weight: 800;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  color: var(--text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Metrics row ──────────────────────────────────────────────────── */
+.metrics-row {
+  display: flex;
+  justify-content: space-around;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.25rem 0 0.1rem;
+}
+
+.metric {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.metric-val {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--text-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-unit {
+  font-size: 0.5rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.metric-sep {
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* ── Analysis link ─────────────────────────────────────────────────── */
+.analysis-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--success-color);
+  opacity: 0.7;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.analysis-link:hover {
+  opacity: 1;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .workout-card {
+    padding: 0.5rem;
+  }
+
+  .card-top {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .metrics-row {
+    flex-wrap: wrap;
+  }
+
+  .card-actions {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+}

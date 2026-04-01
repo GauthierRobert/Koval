@@ -1,0 +1,47 @@
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+import { RouterModule } from '@angular/router';
+
+import { ScheduledWorkout } from '../../../../../services/coach.service';
+import { TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS, TrainingType } from '../../../../../models/training.model';
+import { SportIconComponent } from '../../../../shared/sport-icon/sport-icon.component';
+import { CalendarEntry } from '../../calendar.component';
+import { formatTimeHMS } from '../../../../shared/format/format.utils';
+
+@Component({
+  selector: 'app-calendar-workout-card',
+  standalone: true,
+  imports: [CommonModule, RouterModule, SportIconComponent, TranslateModule],
+  templateUrl: './calendar-workout-card.component.html',
+  styleUrl: './calendar-workout-card.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CalendarWorkoutCardComponent {
+  @Input() entry!: CalendarEntry;
+  @Input() isFuture = false;
+
+  @Output() select = new EventEmitter<ScheduledWorkout>();
+  @Output() complete = new EventEmitter<ScheduledWorkout>();
+  @Output() skip = new EventEmitter<ScheduledWorkout>();
+  @Output() delete = new EventEmitter<ScheduledWorkout>();
+  @Output() reschedule = new EventEmitter<{ workout: ScheduledWorkout; event: Event }>();
+  @Output() openAnalysis = new EventEmitter<string>();
+
+  get scheduled(): ScheduledWorkout {
+    return (this.entry as any).scheduled;
+  }
+
+  formatDuration(workout: ScheduledWorkout): string {
+    if (!workout.totalDurationSeconds) return workout.duration || '-';
+    return formatTimeHMS(workout.totalDurationSeconds);
+  }
+
+  getTypeColor(type: string): string {
+    return TRAINING_TYPE_COLORS[type as TrainingType] || '#888';
+  }
+
+  getTypeLabel(type: string): string {
+    return TRAINING_TYPE_LABELS[type as TrainingType] || type;
+  }
+}

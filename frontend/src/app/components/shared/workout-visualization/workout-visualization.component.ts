@@ -8,6 +8,8 @@ import {WorkoutExecutionService} from '../../../services/workout-execution.servi
 import {HttpClient} from '@angular/common/http';
 import {ExportService} from '../../../services/export.service';
 import {TrainingActionModalComponent} from '../training-action-modal/training-action-modal.component';
+import {BlockStepsListComponent} from './block-steps-list/block-steps-list.component';
+import {WorkoutChartBarComponent} from './workout-chart-bar/workout-chart-bar.component';
 import {AuthService} from '../../../services/auth.service';
 import {DurationEstimationService} from '../../../services/duration-estimation.service';
 import {ZoneService} from '../../../services/zone.service';
@@ -18,7 +20,7 @@ import {environment} from '../../../../environments/environment';
 @Component({
   selector: 'app-workout-visualization',
   standalone: true,
-  imports: [CommonModule, TrainingActionModalComponent, TranslateModule],
+  imports: [CommonModule, TrainingActionModalComponent, TranslateModule, BlockStepsListComponent, WorkoutChartBarComponent],
   templateUrl: './workout-visualization.component.html',
   styleUrl: './workout-visualization.component.css'
 })
@@ -32,7 +34,7 @@ export class WorkoutVisualizationComponent {
   private zoneService = inject(ZoneService);
 
   private router = inject(Router);
-  private currentZoneSystem: ZoneSystem | null = null;
+  currentZoneSystem: ZoneSystem | null = null;
   private translate = inject(TranslateService);
 
   ngOnChanges() {

@@ -1,0 +1,25 @@
+<div class="sidebar-goal-item"
+     [class.sidebar-goal-item--selected]="isSelected"
+     [class.sidebar-goal-item--past]="!isUpcoming"
+     (click)="select.emit(goal)">
+  <div class="sidebar-priority-bar" [style.background]="getPriorityColor(goal.priority)"></div>
+  <div class="sidebar-goal-body">
+    <div class="sidebar-goal-row1">
+      <app-sport-icon [sport]="$any(goal.sport)" [size]="12"></app-sport-icon>
+      <span class="sidebar-goal-title">{{ goal.title }}</span>
+      @if (goal.raceDate) {
+        <span class="sidebar-goal-year">{{ goal.raceDate.substring(0, 4) }}</span>
+      }
+    </div>
+    <div class="sidebar-goal-row2">
+      @if (goal.raceDate) {
+        <span class="sidebar-goal-date">{{ formatDate(goal.raceDate) }}</span>
+      }
+      @if (isUpcoming && goal.raceDate) {
+        <span class="sidebar-goal-countdown">
+          {{ daysUntil(goal.raceDate) }}d
+        </span>
+      }
+    </div>
+  </div>
+</div>

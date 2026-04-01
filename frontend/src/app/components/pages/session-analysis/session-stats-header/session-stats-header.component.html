@@ -1,0 +1,80 @@
+<div class="header-stats-row">
+  <div class="header-col glass">
+    <div class="header-info">
+      <div class="header-sport">
+        <app-sport-icon [sport]="session.sportType" [size]="20"></app-sport-icon>
+      </div>
+      <div class="header-title-block">
+        <h1 class="session-title">{{ session.title }}</h1>
+        <span class="session-date">{{ formatDate(session.date) }}</span>
+        @if (session.stravaActivityId) {
+          <a class="strava-attribution"
+            [href]="'https://www.strava.com/activities/' + session.stravaActivityId"
+            target="_blank" rel="noopener noreferrer">
+            <svg class="strava-logo" viewBox="0 0 24 24" width="14" height="14" fill="#FC4C02"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+            <span>Powered by Strava</span>
+          </a>
+        }
+      </div>
+    </div>
+    @if (!session.tss) {
+      <div class="rpe-block">
+        <span class="rpe-label">{{ 'SESSION_ANALYSIS.LABEL_RPE' | translate }}</span>
+        <div class="rpe-slider-wrap">
+          <input type="range" min="1" max="10" step="1"
+            class="rpe-slider"
+            [value]="session.rpe ?? 5"
+            (change)="selectRpe(+$any($event.target).value)" />
+          <div class="rpe-scale">
+            @for (n of rpeValues; track n) {
+              <span data-testid="rpe-tick" class="rpe-tick"
+                [class.active]="session.rpe === n">{{ n }}</span>
+            }
+          </div>
+        </div>
+        <span class="rpe-value" [class.set]="session.rpe">{{ session.rpe ?? '\u2014' }}</span>
+      </div>
+    }
+  </div>
+  <div class="stats-grid">
+    <div data-testid="stat-card" class="stat-card glass accent">
+      <span class="stat-label">TSS</span>
+      <span class="stat-value">{{ tss ?? '\u2014' }}</span>
+    </div>
+    <div data-testid="stat-card" class="stat-card glass">
+      <span class="stat-label">IF</span>
+      <span class="stat-value">{{ intensityFactor | number:'1.2-2' }}</span>
+    </div>
+    <div data-testid="stat-card" class="stat-card glass">
+      <span class="stat-label">{{ 'SESSION_ANALYSIS.STAT_DURATION' | translate }}</span>
+      <span class="stat-value compact">{{ formatTime(session.totalDuration) }}</span>
+    </div>
+    @if (movingTime) {
+      <div class="stat-card glass">
+        <span class="stat-label">{{ 'SESSION_ANALYSIS.STAT_MOVING_TIME' | translate }}</span>
+        <span class="stat-value compact">{{ formatTime(movingTime) }}</span>
+      </div>
+    }
+    @if (session.sportType === 'CYCLING') {
+      <div class="stat-card glass">
+        <span class="stat-label">{{ 'SESSION_ANALYSIS.STAT_AVG_POWER' | translate }}</span>
+        <span class="stat-value">{{ session.avgPower }}<span class="stat-unit">W</span></span>
+      </div>
+    } @else {
+      <div class="stat-card glass">
+        <span class="stat-label">{{ 'SESSION_ANALYSIS.STAT_AVG_SPEED' | translate }}</span>
+        <span class="stat-value">{{ formatSpeed(session.avgSpeed, session.sportType) }}</span>
+      </div>
+    }
+    <div class="stat-card glass">
+      <span class="stat-label">{{ 'SESSION_ANALYSIS.STAT_AVG_HR' | translate }}</span>
+      <span class="stat-value">{{ session.avgHR }}<span class="stat-unit">bpm</span></span>
+    </div>
+    @if (session.sportType !== 'SWIMMING') {
+      <div class="stat-card glass">
+        <span class="stat-label">{{ 'SESSION_ANALYSIS.STAT_AVG_CADENCE' | translate }}</span>
+        <span class="stat-value">{{ session.avgCadence }}<span class="stat-unit">rpm</span></span>
+      </div>
+    }
+  </div>
+</div>

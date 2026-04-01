@@ -13,6 +13,9 @@ import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {WorkoutDetailModalComponent} from '../../shared/workout-detail-modal/workout-detail-modal.component';
 import {daysUntil, formatTrainingDuration} from '../../shared/format/format.utils';
+import {DashboardFocusCardComponent} from './dashboard-focus-card/dashboard-focus-card.component';
+import {DashboardPerformancePanelComponent} from './dashboard-performance-panel/dashboard-performance-panel.component';
+import {DashboardSportCardsComponent} from './dashboard-sport-cards/dashboard-sport-cards.component';
 
 function toDateKey(d: Date): string {
   const y = d.getFullYear();
@@ -78,7 +81,7 @@ function computeWeekMetrics(sessions: SavedSession[]): WeekMetrics {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, SportIconComponent, WorkoutDetailModalComponent, TranslateModule],
+  imports: [CommonModule, RouterModule, SportIconComponent, WorkoutDetailModalComponent, TranslateModule, DashboardFocusCardComponent, DashboardPerformancePanelComponent, DashboardSportCardsComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

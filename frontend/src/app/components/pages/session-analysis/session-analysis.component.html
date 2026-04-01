@@ -3,86 +3,14 @@
     <div class="analysis-page">
 
       <!-- Header + Key metrics -->
-      <div class="header-stats-row">
-        <div class="header-col glass">
-          <div class="header-info">
-            <div class="header-sport">
-              <app-sport-icon [sport]="session.sportType" [size]="20"></app-sport-icon>
-            </div>
-            <div class="header-title-block">
-              <h1 class="session-title">{{ session.title }}</h1>
-              <span class="session-date">{{ formatDate(session.date) }}</span>
-              @if (session.stravaActivityId) {
-                <a class="strava-attribution"
-                  [href]="'https://www.strava.com/activities/' + session.stravaActivityId"
-                  target="_blank" rel="noopener noreferrer">
-                  <svg class="strava-logo" viewBox="0 0 24 24" width="14" height="14" fill="#FC4C02"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
-                  <span>Powered by Strava</span>
-                </a>
-              }
-            </div>
-          </div>
-          @if (!session.tss) {
-            <div class="rpe-block">
-              <span class="rpe-label">{{ 'SESSION_ANALYSIS.LABEL_RPE' | translate }}</span>
-              <div class="rpe-slider-wrap">
-                <input type="range" min="1" max="10" step="1"
-                  class="rpe-slider"
-                  [value]="session.rpe ?? 5"
-                  (change)="selectRpe(session, +$any($event.target).value)" />
-                <div class="rpe-scale">
-                  @for (n of rpeValues; track n) {
-                    <span data-testid="rpe-tick" class="rpe-tick"
-                      [class.active]="session.rpe === n">{{ n }}</span>
-                  }
-                </div>
-              </div>
-              <span class="rpe-value" [class.set]="session.rpe">{{ session.rpe ?? '—' }}</span>
-            </div>
-          }
-        </div>
-        <div class="stats-grid">
-          <div data-testid="stat-card" class="stat-card glass accent">
-            <span class="stat-label">TSS</span>
-            <span class="stat-value">{{ getTss(session, ftp) ?? '—' }}</span>
-          </div>
-          <div data-testid="stat-card" class="stat-card glass">
-            <span class="stat-label">IF</span>
-            <span class="stat-value">{{ getIF(session, ftp) | number:'1.2-2' }}</span>
-          </div>
-          <div data-testid="stat-card" class="stat-card glass">
-            <span class="stat-label">{{ 'SESSION_ANALYSIS.STAT_DURATION' | translate }}</span>
-            <span class="stat-value compact">{{ formatTime(session.totalDuration) }}</span>
-          </div>
-          @if (movingTime$ | async; as mt) {
-            <div class="stat-card glass">
-              <span class="stat-label">{{ 'SESSION_ANALYSIS.STAT_MOVING_TIME' | translate }}</span>
-              <span class="stat-value compact">{{ formatTime(mt) }}</span>
-            </div>
-          }
-          @if (session.sportType === 'CYCLING') {
-            <div class="stat-card glass">
-              <span class="stat-label">{{ 'SESSION_ANALYSIS.STAT_AVG_POWER' | translate }}</span>
-              <span class="stat-value">{{ session.avgPower }}<span class="stat-unit">W</span></span>
-            </div>
-          } @else {
-            <div class="stat-card glass">
-              <span class="stat-label">{{ 'SESSION_ANALYSIS.STAT_AVG_SPEED' | translate }}</span>
-              <span class="stat-value">{{ formatSpeed(session.avgSpeed, session.sportType) }}</span>
-            </div>
-          }
-          <div class="stat-card glass">
-            <span class="stat-label">{{ 'SESSION_ANALYSIS.STAT_AVG_HR' | translate }}</span>
-            <span class="stat-value">{{ session.avgHR }}<span class="stat-unit">bpm</span></span>
-          </div>
-          @if (session.sportType !== 'SWIMMING') {
-            <div class="stat-card glass">
-              <span class="stat-label">{{ 'SESSION_ANALYSIS.STAT_AVG_CADENCE' | translate }}</span>
-              <span class="stat-value">{{ session.avgCadence }}<span class="stat-unit">rpm</span></span>
-            </div>
-          }
-        </div>
-      </div>
+      <app-session-stats-header
+        [session]="session"
+        [tss]="getTss(session, ftp)"
+        [intensityFactor]="getIF(session, ftp)"
+        [ftp]="ftp"
+        [movingTime]="(movingTime$ | async) ?? null"
+        (rpeChanged)="selectRpe(session, $event)">
+      </app-session-stats-header>
 
       <!-- FIT timeseries chart -->
       @if (fitState$ | async; as fit) {
@@ -145,29 +73,12 @@
         @if (!fit.loading && !fit.error && fit.records.length > 0) {
           @if (zoneDistribution$ | async; as zones) {
             @if (zones.length > 0) {
-              <div class="zone-distribution glass">
-                <div class="zone-header">
-                  <div class="section-label">{{ 'SESSION_ANALYSIS.ZONE_DISTRIBUTION' | translate }}</div>
-                  <select data-testid="zone-picker" class="zone-picker" (change)="onZoneSystemChange($any($event.target).value || null)">
-                    <option [value]="''">{{ 'SESSION_ANALYSIS.ZONE_PICKER_DEFAULT' | translate }}</option>
-                    @for (zs of (userZoneSystems$ | async) ?? []; track zs.id) {
-                      <option [value]="zs.id">{{ zs.name }}</option>
-                    }
-                  </select>
-                </div>
-                <div class="zone-bars">
-                  @for (zone of zones; track zone.label) {
-                    <div data-testid="zone-row" class="zone-row">
-                      <span class="zone-label" [title]="zone.description">{{ zone.label }}</span>
-                      <div class="bar-track">
-                        <div class="bar-fill" [style.width.%]="zone.percentage" [style.background]="zone.color"></div>
-                      </div>
-                      <span class="zone-time">{{ formatZoneDuration(zone.seconds) }}</span>
-                      <span class="zone-pct">{{ zone.percentage }}%</span>
-                    </div>
-                  }
-                </div>
-              </div>
+              <app-zone-distribution-panel
+                [zoneDistribution]="zones"
+                [userZoneSystems]="(userZoneSystems$ | async) ?? []"
+                [currentZoneSystemId]="selectedZoneSystemId$.value"
+                (zoneSystemChange)="onZoneSystemChange($event)">
+              </app-zone-distribution-panel>
             }
           }
         }
@@ -175,137 +86,18 @@
 
       <!-- Block breakdown -->
       @if (session.blockSummaries.length || (zoneBlocks$ | async)?.length) {
-        <div class="blocks-section glass">
-          <div class="blocks-section-header">
-            <div class="section-label">{{ 'SESSION_ANALYSIS.BLOCK_BREAKDOWN' | translate }}</div>
-            @if (availableZoneChips$ | async; as chips) {
-              @if (chips.length > 1) {
-                <div class="zone-filter-chips">
-                  @for (chip of chips; track chip.label) {
-                    <button class="zone-chip" [class.zone-chip--active]="isZoneActive(chip.label)"
-                      [style.--chip-color]="chip.color"
-                      (click)="toggleZoneFilter(chip.label)">
-                      <span class="zone-dot" [style.background]="chip.color"></span>
-                      {{ chip.label }}
-                    </button>
-                  }
-                  @if (zoneFilters$.value.size > 0) {
-                    <button class="zone-chip zone-chip--clear" (click)="clearZoneFilters()">
-                      {{ 'SESSION_ANALYSIS.ZONE_FILTER_CLEAR' | translate }}
-                    </button>
-                  }
-                </div>
-              }
-            }
-          </div>
-
-          @if (blockView === 'planned' && session.blockSummaries.length) {
-            @if (filteredPlannedBlocks$ | async; as blocksWithZones) {
-              <div class="blocks-table" [class.blocks-table--run-swim]="session.sportType !== 'CYCLING'">
-                <div class="blocks-header">
-                  <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_ZONE' | translate }}</span>
-                  <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_BLOCK' | translate }}</span>
-                  <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_TYPE' | translate }}</span>
-                  <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_DURATION' | translate }}</span>
-                  <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_DISTANCE' | translate }}</span>
-                  @if (session.sportType === 'CYCLING') {
-                    <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_TARGET' | translate }}</span>
-                    <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_ACTUAL_PWR' | translate }}</span>
-                  } @else {
-                    <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_AVG_SPEED' | translate }}</span>
-                  }
-                  <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_HR' | translate }}</span>
-                  <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_CAD' | translate }}</span>
-                </div>
-                @for (block of blocksWithZones; track $index) {
-                  <div class="blocks-row">
-                    <span class="zb-zone">
-                      @if (block.zoneColor) {
-                        <span class="zone-dot" [style.background]="block.zoneColor"></span>
-                      }
-                      {{ block.zoneLabel ?? '—' }}
-                    </span>
-                    <span class="b-label">{{ block.label }}</span>
-                    <span class="b-type">{{ block.type }}</span>
-                    <span class="b-dur">{{ formatTime(block.durationSeconds) }}</span>
-                    <span class="b-dist">{{ formatDistance(block) }}</span>
-                    @if (session.sportType === 'CYCLING') {
-                      <span class="b-target">{{ block.targetPower ? (block.targetPower + 'W') : '—' }}</span>
-                      <span class="b-actual" [class.above]="block.actualPower > block.targetPower * 1.05"
-                        [class.below]="block.targetPower > 0 && block.actualPower < block.targetPower * 0.95">
-                        {{ block.actualPower | number:'1.0-0' }}W
-                      </span>
-                    } @else {
-                      <span class="b-actual">
-                        {{ block.actualSpeedKmh ? formatSpeed(block.actualSpeedKmh / 3.6, session.sportType) : '—' }}
-                      </span>
-                    }
-                    <span class="b-hr">{{ block.actualHR | number:'1.0-0' }}</span>
-                    <span class="b-cad">{{ block.actualCadence | number:'1.0-0' }}</span>
-                  </div>
-                }
-              </div>
-            }
-          }
-
-          @if (blockView === 'interpolated' || !session.blockSummaries.length) {
-            @if (filteredZoneBlocks$ | async; as zoneBlocks) {
-              @if (zoneBlocks.length) {
-                <div class="blocks-table">
-                  @if (session.sportType === 'CYCLING') {
-                    <div class="zone-blocks-header zb-cycling">
-                      <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_ZONE' | translate }}</span>
-                      <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_DESCRIPTION' | translate }}</span>
-                      <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_DURATION' | translate }}</span>
-                      <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_DISTANCE' | translate }}</span>
-                      <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_AVG_PWR' | translate }}</span>
-                      <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_MAX_PWR' | translate }}</span>
-                      <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_AVG_HR' | translate }}</span>
-                      <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_AVG_CAD' | translate }}</span>
-                      <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_AVG_PCT' | translate }}</span>
-                    </div>
-                    @for (zb of zoneBlocks; track zb.startIndex) {
-                      <div class="zone-block-row zb-cycling">
-                        <span class="zb-zone"><span class="zone-dot" [style.background]="zb.color"></span> {{ zb.zoneLabel }}</span>
-                        <span class="zb-desc">{{ zb.zoneDescription }}</span>
-                        <span class="zb-dur">{{ formatZoneDuration(zb.durationSeconds) }}</span>
-                        <span class="zb-dist">{{ formatZoneDistance(zb.distanceMeters) }}</span>
-                        <span class="zb-pwr">{{ zb.avgPower }}W</span>
-                        <span class="zb-max">{{ zb.maxPower }}W</span>
-                        <span class="zb-hr">{{ zb.avgHR }}</span>
-                        <span class="zb-cad">{{ zb.avgCadence }}</span>
-                        <span class="zb-pct">{{ zb.avgPercent }}%</span>
-                      </div>
-                    }
-                  } @else {
-                    <div class="zone-blocks-header zb-run-swim">
-                      <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_ZONE' | translate }}</span>
-                      <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_DESCRIPTION' | translate }}</span>
-                      <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_DURATION' | translate }}</span>
-                      <span>{{ 'SESSION_ANALYSIS.BLOCKS_COL_DISTANCE' | translate }}</span>
-                      <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_AVG_SPEED' | translate }}</span>
-                      <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_MAX_SPEED' | translate }}</span>
-                      <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_AVG_HR' | translate }}</span>
-                      <span>{{ 'SESSION_ANALYSIS.ZONE_BLOCKS_COL_AVG_PCT' | translate }}</span>
-                    </div>
-                    @for (zb of zoneBlocks; track zb.startIndex) {
-                      <div class="zone-block-row zb-run-swim">
-                        <span class="zb-zone"><span class="zone-dot" [style.background]="zb.color"></span> {{ zb.zoneLabel }}</span>
-                        <span class="zb-desc">{{ zb.zoneDescription }}</span>
-                        <span class="zb-dur">{{ formatZoneDuration(zb.durationSeconds) }}</span>
-                        <span class="zb-dist">{{ formatZoneDistance(zb.distanceMeters) }}</span>
-                        <span class="zb-spd">{{ zb.avgSpeed }} km/h</span>
-                        <span class="zb-max">{{ zb.maxSpeed }} km/h</span>
-                        <span class="zb-hr">{{ zb.avgHR }}</span>
-                        <span class="zb-pct">{{ zb.avgPercent }}%</span>
-                      </div>
-                    }
-                  }
-                </div>
-              }
-            }
-          }
-        </div>
+        <app-block-breakdown-table
+          [blockView]="blockView"
+          [plannedBlocks]="(filteredPlannedBlocks$ | async) ?? []"
+          [zoneBlocks]="(filteredZoneBlocks$ | async) ?? []"
+          [availableZoneChips]="(availableZoneChips$ | async) ?? []"
+          [zoneFilters]="zoneFilters$.value"
+          [ftp]="ftp"
+          [sportType]="session.sportType"
+          (blockViewChange)="blockView = $event"
+          (toggleZoneFilter)="toggleZoneFilter($event)"
+          (clearZoneFilters)="clearZoneFilters()">
+        </app-block-breakdown-table>
       }
 
     </div>

@@ -1,0 +1,40 @@
+<div class="workout-card workout-card--session clickable" (click)="openAnalysis.emit(session.id)">
+  <div class="card-top">
+    <span class="session-badge">{{ 'CALENDAR_WEEK.SESSION_BADGE' | translate }}</span>
+    <div class="card-top-right">
+      @if (session.fitFileId) {
+        <a class="analysis-link" [routerLink]="['/analysis', session.id]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </a>
+      }
+      <div class="card-actions">
+        <button class="btn-primary small" (click)="$event.stopPropagation(); linkToWorkout.emit(session)">{{ 'CALENDAR_WEEK.BTN_LINK_TO_PLAN' | translate }}</button>
+        <button class="btn-ghost small" (click)="$event.stopPropagation(); linkToClubSession.emit(session)">{{ 'CALENDAR_WEEK.BTN_LINK_TO_CLUB' | translate }}</button>
+      </div>
+    </div>
+  </div>
+  <div class="workout-info">
+    <div class="title-row">
+      <app-sport-icon [sport]="session.sportType" [size]="14"></app-sport-icon>
+      <span class="workout-title">{{ session.title }}</span>
+    </div>
+    <div class="metrics-row">
+      <div class="metric">
+        <span class="metric-val">{{ formatSessionDuration(session) }}</span>
+        <span class="metric-unit">{{ 'CALENDAR_WEEK.METRIC_DUR' | translate }}</span>
+      </div>
+      <span class="metric-sep"></span>
+      <div class="metric">
+        <span class="metric-val">{{ session.tss || '&#x2014;' }}</span>
+        <span class="metric-unit">TSS</span>
+      </div>
+      <span class="metric-sep"></span>
+      <div class="metric">
+        <span class="metric-val">{{ session.avgPower | number:'1.0-0' }}W</span>
+        <span class="metric-unit">PWR</span>
+      </div>
+    </div>
+  </div>
+</div>
