@@ -17,11 +17,12 @@ import {
   ClubDetail,
   ClubFeedEventResponse,
   ClubFeedResponse,
-  ClubService,
   ClubTrainingSession,
-} from '../../../../../../services/club.service';
+} from '../../../../../../services/club.service';  // types re-exported from club.service
 import {AuthService} from '../../../../../../services/auth.service';
 import {ClubFeedSseService} from '../../../../../../services/club-feed-sse.service';
+import {ClubFeedService} from '../../../../../../services/club-feed.service';
+import {ClubSessionService} from '../../../../../../services/club-session.service';
 import {FeedSessionCompletionCardComponent} from './cards/feed-session-completion-card.component';
 import {FeedAnnouncementCardComponent} from './cards/feed-announcement-card.component';
 import {FeedNextGoalCardComponent} from './cards/feed-next-goal-card.component';
@@ -48,14 +49,15 @@ import {FeedSessionsUpcomingComponent} from './cards/feed-sessions-upcoming.comp
 export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
   @Input() club!: ClubDetail;
 
-  private clubService = inject(ClubService);
+  private clubFeedService = inject(ClubFeedService);
+  private clubSessionService = inject(ClubSessionService);
   private authService = inject(AuthService);
   private sseService = inject(ClubFeedSseService);
   private cdr = inject(ChangeDetectorRef);
 
-  feedEvents$ = this.clubService.feedEvents$;
-  sessions$ = this.clubService.sessions$;
-  raceGoals$ = this.clubService.raceGoals$;
+  feedEvents$ = this.clubFeedService.feedEvents$;
+  sessions$ = this.clubSessionService.sessions$;
+  raceGoals$ = this.clubFeedService.raceGoals$;
 
   currentUserId: string | null = null;
   currentPage = 0;
@@ -79,7 +81,7 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
     // SSE subscriptions
     this.subs.add(
       this.sseService.onCompletionUpdate$.subscribe((payload) => {
-        this.clubService.updateFeedEventCompletion(
+        this.clubFeedService.updateFeedEventCompletion(
           payload.feedEventId,
           payload.completionCount,
           payload.latestCompletion,
@@ -90,14 +92,14 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
 
     this.subs.add(
       this.sseService.onNewFeedEvent$.subscribe((event) => {
-        this.clubService.addFeedEvent(event);
+        this.clubFeedService.addFeedEvent(event);
         this.cdr.markForCheck();
       }),
     );
 
     this.subs.add(
       this.sseService.onKudosUpdate$.subscribe((payload) => {
-        this.clubService.markKudosGiven(payload.feedEventId, payload.givenByUserId);
+        this.clubFeedService.markKudosGiven(payload.feedEventId, payload.givenByUserId);
         this.cdr.markForCheck();
       }),
     );
@@ -110,7 +112,7 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
         this.club.currentMemberRole === 'ADMIN' ||
         this.club.currentMemberRole === 'COACH';
 
-      this.clubService.loadFeedEvents(this.club.id);
+      this.clubFeedService.loadFeedEvents(this.club.id);
       this.loadSessionsForWeek();
       this.sseService.connect(this.club.id);
     }
@@ -124,7 +126,7 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
   loadMore(feed: ClubFeedResponse): void {
     if (!feed.hasMore) return;
     this.currentPage++;
-    this.clubService.loadFeedEvents(this.club.id, this.currentPage);
+    this.clubFeedService.loadFeedEvents(this.club.id, this.currentPage);
   }
 
   onWeekChange(direction: number): void {
@@ -140,22 +142,22 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   onJoinSession(sessionId: string): void {
-    this.clubService.joinSession(this.club.id, sessionId).subscribe(() => {
+    this.clubSessionService.joinSession(this.club.id, sessionId).subscribe(() => {
       this.loadSessionsForWeek();
     });
   }
 
   onCancelSession(sessionId: string): void {
-    this.clubService.cancelSession(this.club.id, sessionId).subscribe(() => {
+    this.clubSessionService.cancelSession(this.club.id, sessionId).subscribe(() => {
       this.loadSessionsForWeek();
     });
   }
 
   onGiveKudos(eventId: string): void {
-    this.clubService.giveKudos(this.club.id, eventId).subscribe({
+    this.clubFeedService.giveKudos(this.club.id, eventId).subscribe({
       next: () => {
         if (this.currentUserId) {
-          this.clubService.markKudosGiven(eventId, this.currentUserId);
+          this.clubFeedService.markKudosGiven(eventId, this.currentUserId);
         }
         this.cdr.markForCheck();
       },
@@ -165,7 +167,7 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
 
   submitAnnouncement(): void {
     if (!this.announcementText.trim()) return;
-    this.clubService.createAnnouncement(this.club.id, this.announcementText.trim()).subscribe({
+    this.clubFeedService.createAnnouncement(this.club.id, this.announcementText.trim()).subscribe({
       next: () => {
         this.announcementText = '';
         this.composerExpanded = false;
@@ -180,7 +182,7 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
 
   private loadSessionsForWeek(): void {
     const {from, to} = this.getWeekRange();
-    this.clubService.loadSessionsForRange(this.club.id, from, to);
+    this.clubSessionService.loadSessionsForRange(this.club.id, from, to);
   }
 
   private getWeekRange(): {from: string; to: string} {

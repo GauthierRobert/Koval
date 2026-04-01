@@ -1,7 +1,8 @@
 import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
-import {ClubRaceGoalResponse, ClubService} from '../../../../../../services/club.service';
+import {ClubRaceGoalResponse} from '../../../../../../services/club.service';
+import {ClubFeedService} from '../../../../../../services/club-feed.service';
 
 @Component({
   selector: 'app-club-race-goals-tab',
@@ -12,8 +13,8 @@ import {ClubRaceGoalResponse, ClubService} from '../../../../../../services/club
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClubRaceGoalsTabComponent {
-  private clubService = inject(ClubService);
-  raceGoals$ = this.clubService.raceGoals$;
+  private clubFeedService = inject(ClubFeedService);
+  raceGoals$ = this.clubFeedService.raceGoals$;
 
   membersModalGoal: ClubRaceGoalResponse | null = null;
 

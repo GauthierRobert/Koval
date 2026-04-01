@@ -18,6 +18,7 @@ import {A11yModule} from '@angular/cdk/a11y';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {ActionContext, ActionResult, AIActionService, AIActionType} from '../../../services/ai-action.service';
 import {ClubGroup, ClubService, GroupLinkedTraining} from '../../../services/club.service';
+import {ClubSessionService} from '../../../services/club-session.service';
 import {ZoneService} from '../../../services/zone.service';
 import {ZoneSystem} from '../../../services/zone';
 import {TrainingService} from '../../../services/training.service';
@@ -53,6 +54,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
 
   private aiActionService = inject(AIActionService);
   private clubService = inject(ClubService);
+  private clubSessionService = inject(ClubSessionService);
   private zoneService = inject(ZoneService);
   private trainingService = inject(TrainingService);
   private calendarService = inject(CalendarService);
@@ -453,7 +455,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
 
   private submitSessionLink(): void {
     if (!this.clubId || !this.sessionId || !this.selectedTrainingId) return;
-    this.clubService.linkTrainingToSession(this.clubId, this.sessionId, this.selectedTrainingId, this.selectedGroupId || undefined).subscribe({
+    this.clubSessionService.linkTrainingToSession(this.clubId, this.sessionId, this.selectedTrainingId, this.selectedGroupId || undefined).subscribe({
       next: () => {
         this.ngZone.run(() => {
           this.loading = false;

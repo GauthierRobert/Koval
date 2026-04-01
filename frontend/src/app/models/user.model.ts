@@ -1,0 +1,32 @@
+export interface User {
+    id: string;
+    displayName: string;
+    profilePicture: string;
+    role: 'ATHLETE' | 'COACH';
+    hasCoach: boolean;
+    ftp?: number;
+    weightKg?: number;
+    functionalThresholdPace?: number;
+    criticalSwimSpeed?: number;
+    pace5k?: number;
+    pace10k?: number;
+    paceHalfMarathon?: number;
+    paceMarathon?: number;
+    vo2maxPower?: number;
+    vo2maxPace?: number;
+    groups?: string[];
+    clubs?: string[];
+    customZoneReferenceValues?: Record<string, number>;
+    ctl?: number;
+    atl?: number;
+    tsb?: number;
+    needsOnboarding?: boolean;
+    cguAcceptedAt?: string;
+    cguVersion?: string;
+    needsCguAcceptance?: boolean;
+    aiPrePrompt?: string;
+    aiPrePromptEnabled?: boolean;
+    linkedAccounts?: { strava: boolean; google: boolean; garmin: boolean; zwift: boolean };
+    authProvider?: string;
+    zwiftAutoSyncWorkouts?: boolean;
+}

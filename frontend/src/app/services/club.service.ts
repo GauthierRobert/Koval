@@ -3,402 +3,19 @@ import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject, Observable, of} from 'rxjs';
 import {catchError} from 'rxjs/operators';
 import {environment} from '../../environments/environment';
+import {
+  ClubDetail,
+  ClubGroup,
+  ClubInviteCode,
+  ClubMember,
+  ClubMemberRole,
+  ClubSummary,
+  CreateClubData,
+  MyClubRoleEntry,
+} from '../models/club.model';
 
-export type ClubVisibility = 'PUBLIC' | 'PRIVATE';
-export type ClubMemberRole = 'OWNER' | 'ADMIN' | 'COACH' | 'MEMBER';
-export type ClubActivityType =
-  | 'MEMBER_JOINED'
-  | 'MEMBER_LEFT'
-  | 'SESSION_CREATED'
-  | 'SESSION_JOINED'
-  | 'SESSION_CANCELLED'
-  | 'RECURRING_SERIES_CANCELLED'
-  | 'TRAINING_CREATED'
-  | 'RACE_GOAL_ADDED'
-  | 'WAITING_LIST_JOINED';
-
-export interface ClubSummary {
-  id: string;
-  name: string;
-  description?: string;
-  logoUrl?: string;
-  visibility: ClubVisibility;
-  memberCount: number;
-  membershipStatus?: string; // e.g. "ACTIVE_OWNER", "ACTIVE_MEMBER", "PENDING_MEMBER"
-}
-
-export interface ClubDetail {
-  id: string;
-  name: string;
-  description?: string;
-  location?: string;
-  logoUrl?: string;
-  visibility: ClubVisibility;
-  memberCount: number;
-  ownerId: string;
-  currentMembershipStatus?: string;
-  currentMemberRole?: ClubMemberRole;
-  createdAt: string;
-}
-
-export interface ClubMember {
-  membershipId?: string;
-  userId: string;
-  displayName: string;
-  profilePicture?: string;
-  role: ClubMemberRole;
-  joinedAt: string;
-  tags?: string[];
-}
-
-export interface ClubGroup {
-  id: string;
-  clubId: string;
-  name: string;
-  memberIds: string[];
-}
-
-export interface MyClubRoleEntry {
-  clubId: string;
-  clubName: string;
-  role: ClubMemberRole;
-}
-
-export interface WaitingListEntry {
-  userId: string;
-  joinedAt: string;
-}
-
-export interface GroupLinkedTraining {
-  clubGroupId?: string;
-  clubGroupName?: string;
-  trainingId: string;
-  trainingTitle?: string;
-  trainingDescription?: string;
-}
-
-export function getEffectiveLinkedTrainings(session: ClubTrainingSession): GroupLinkedTraining[] {
-  if (session.linkedTrainings && session.linkedTrainings.length > 0) {
-    return session.linkedTrainings;
-  }
-  if (session.linkedTrainingId) {
-    return [
-      {
-        trainingId: session.linkedTrainingId,
-        trainingTitle: session.linkedTrainingTitle,
-        trainingDescription: session.linkedTrainingDescription,
-      },
-    ];
-  }
-  return [];
-}
-
-export interface ClubTrainingSession {
-  id: string;
-  clubId: string;
-  createdBy: string;
-  title: string;
-  sport?: string;
-  scheduledAt?: string;
-  location?: string;
-  meetingPointLat?: number;
-  meetingPointLon?: number;
-  description?: string;
-  linkedTrainingId?: string;
-  linkedTrainings?: GroupLinkedTraining[];
-  participantIds: string[];
-  createdAt: string;
-  recurringTemplateId?: string;
-  clubGroupId?: string;
-  responsibleCoachId?: string;
-  maxParticipants?: number;
-  durationMinutes?: number;
-  linkedTrainingTitle?: string;
-  linkedTrainingDescription?: string;
-  waitingList?: WaitingListEntry[];
-  openToAll?: boolean;
-  openToAllDelayValue?: number;
-  openToAllDelayUnit?: 'HOURS' | 'DAYS';
-  cancelled?: boolean;
-  cancellationReason?: string;
-  cancelledAt?: string;
-  category?: 'SCHEDULED' | 'OPEN';
-  gpxFileName?: string;
-  routeCoordinates?: { lat: number; lon: number; elevation: number; distance: number }[];
-}
-
-export interface RecurringSessionTemplate {
-  id: string;
-  clubId: string;
-  createdBy: string;
-  title: string;
-  sport?: string;
-  dayOfWeek: string;
-  timeOfDay: string;
-  location?: string;
-  meetingPointLat?: number;
-  meetingPointLon?: number;
-  description?: string;
-  linkedTrainingId?: string;
-  maxParticipants?: number;
-  clubGroupId?: string;
-  responsibleCoachId?: string;
-  openToAll?: boolean;
-  openToAllDelayValue?: number;
-  openToAllDelayUnit?: 'HOURS' | 'DAYS';
-  endDate?: string;
-  active: boolean;
-  createdAt: string;
-  category?: 'SCHEDULED' | 'OPEN';
-  gpxFileName?: string;
-  routeCoordinates?: { lat: number; lon: number; elevation: number; distance: number }[];
-}
-
-export interface ClubActivity {
-  id: string;
-  type: ClubActivityType;
-  actorId: string;
-  actorName?: string;
-  targetId?: string;
-  targetTitle?: string;
-  occurredAt: string;
-}
-
-export interface ClubWeeklyStats {
-  totalSwimKm: number;
-  totalBikeKm: number;
-  totalRunKm: number;
-  totalSessions: number;
-  memberCount: number;
-}
-
-export interface WeekAttendanceEntry {
-  weekLabel: string;
-  sessionId: string | null;
-  cancelled: boolean;
-  participantCount: number;
-  eligibleCount: number;
-  fillPercent: number;
-}
-
-export interface AthletePresenceEntry {
-  userId: string;
-  displayName: string;
-  profilePicture: string | null;
-  weekPresence: (boolean | null)[];
-}
-
-export interface RecurringTemplateAttendance {
-  templateId: string;
-  templateTitle: string;
-  sport: string;
-  dayOfWeek: string;
-  timeOfDay: string;
-  clubGroupId: string | null;
-  clubGroupName: string | null;
-  maxParticipants: number | null;
-  eligibleCount: number;
-  weeks: WeekAttendanceEntry[];
-  athleteGrid: AthletePresenceEntry[];
-}
-
-export interface WeeklyTrend {
-  weekLabel: string;
-  totalTss: number;
-  totalHours: number;
-  sessionCount: number;
-  attendanceRate: number;
-}
-
-export interface MemberHighlight {
-  userId: string;
-  displayName: string;
-  profilePicture?: string;
-  totalHours: number;
-  sessionCount: number;
-  totalTss: number;
-}
-
-export interface ClubExtendedStats {
-  totalSwimKm: number;
-  totalBikeKm: number;
-  totalRunKm: number;
-  totalSessions: number;
-  memberCount: number;
-  totalDurationHours: number;
-  totalTss: number;
-  attendanceRate: number;
-  clubSessionsThisWeek: number;
-  recurringAttendance: RecurringTemplateAttendance[];
-  sportDistribution: Record<string, number>;
-  avgTssPerMember: number;
-  weeklyTrends: WeeklyTrend[];
-  mostActiveMembers: MemberHighlight[];
-}
-
-export interface LeaderboardEntry {
-  userId: string;
-  displayName: string;
-  profilePicture?: string;
-  weeklyTss: number;
-  sessionCount: number;
-  rank: number;
-}
-
-export interface ClubRaceGoalResponse {
-  title: string;
-  sport: string;
-  raceDate: string;
-  distance?: string;
-  location?: string;
-  participants: {
-    userId: string;
-    displayName: string;
-    profilePicture: string | null;
-    priority: string;
-    targetTime?: string;
-  }[];
-}
-
-export interface ClubInviteCode {
-  id: string;
-  code: string;
-  clubId: string;
-  createdBy: string;
-  clubGroupId?: string;
-  clubGroupName?: string;
-  maxUses: number;
-  currentUses: number;
-  expiresAt?: string;
-  active: boolean;
-  createdAt: string;
-}
-
-// --- Feed Event Types ---
-export type ClubFeedEventType = 'SESSION_COMPLETION' | 'RACE_COMPLETION' | 'COACH_ANNOUNCEMENT' | 'NEXT_GOAL';
-
-export interface CompletionEntry {
-  userId: string;
-  displayName: string;
-  profilePicture?: string;
-  completedSessionId: string;
-  stravaActivityId?: string;
-  completedAt: string;
-}
-
-export interface EngagedAthlete {
-  userId: string;
-  displayName: string;
-  profilePicture?: string;
-  priority: string;
-  targetTime?: string;
-}
-
-export interface RaceCompletionEntry {
-  userId: string;
-  displayName: string;
-  profilePicture?: string;
-  finishTime?: string;
-  stravaActivityId?: string;
-}
-
-export interface ClubFeedEventResponse {
-  id: string;
-  type: ClubFeedEventType;
-  pinned: boolean;
-  createdAt: string;
-  updatedAt: string;
-  // SESSION_COMPLETION
-  clubSessionId?: string;
-  sessionTitle?: string;
-  sessionSport?: string;
-  sessionScheduledAt?: string;
-  completions?: CompletionEntry[];
-  kudosGivenBy?: string[];
-  // RACE_COMPLETION
-  raceGoalId?: string;
-  raceTitle?: string;
-  raceDate?: string;
-  raceCompletions?: RaceCompletionEntry[];
-  // COACH_ANNOUNCEMENT
-  authorId?: string;
-  authorName?: string;
-  authorProfilePicture?: string;
-  announcementContent?: string;
-  // NEXT_GOAL
-  goalTitle?: string;
-  goalSport?: string;
-  goalDate?: string;
-  goalLocation?: string;
-  engagedAthletes?: EngagedAthlete[];
-}
-
-export interface ClubFeedResponse {
-  pinned: ClubFeedEventResponse[];
-  items: ClubFeedEventResponse[];
-  page: number;
-  hasMore: boolean;
-}
-
-export interface KudosResponse {
-  results: { athleteName: string; stravaActivityId: string; success: boolean; error?: string }[];
-  successCount: number;
-  failCount: number;
-}
-
-export interface CompletionUpdatePayload {
-  feedEventId: string;
-  clubSessionId: string;
-  completionCount: number;
-  latestCompletion: { userId: string; displayName: string; profilePicture?: string };
-}
-
-export interface CreateClubData {
-  name: string;
-  description?: string;
-  location?: string;
-  logoUrl?: string;
-  visibility: ClubVisibility;
-}
-
-export interface CreateSessionData {
-  category?: 'SCHEDULED' | 'OPEN';
-  title: string;
-  sport?: string;
-  scheduledAt?: string;
-  location?: string;
-  meetingPointLat?: number;
-  meetingPointLon?: number;
-  description?: string;
-  linkedTrainingId?: string;
-  maxParticipants?: number;
-  durationMinutes?: number;
-  clubGroupId?: string;
-  responsibleCoachId?: string;
-  openToAll?: boolean;
-  openToAllDelayValue?: number;
-  openToAllDelayUnit?: 'HOURS' | 'DAYS';
-}
-
-export interface CreateRecurringSessionData {
-  category?: 'SCHEDULED' | 'OPEN';
-  title: string;
-  sport?: string;
-  dayOfWeek: string;
-  timeOfDay: string;
-  location?: string;
-  meetingPointLat?: number;
-  meetingPointLon?: number;
-  description?: string;
-  linkedTrainingId?: string;
-  maxParticipants?: number;
-  clubGroupId?: string;
-  responsibleCoachId?: string;
-  openToAll?: boolean;
-  openToAllDelayValue?: number;
-  openToAllDelayUnit?: 'HOURS' | 'DAYS';
-  endDate?: string;
-}
+// Re-export all types from the model for backwards compatibility
+export * from '../models/club.model';
 
 @Injectable({ providedIn: 'root' })
 export class ClubService {
@@ -418,42 +35,16 @@ export class ClubService {
   private pendingSubject = new BehaviorSubject<ClubMember[]>([]);
   pending$ = this.pendingSubject.asObservable();
 
-  private feedSubject = new BehaviorSubject<ClubActivity[]>([]);
-  feed$ = this.feedSubject.asObservable();
-
-  private sessionsSubject = new BehaviorSubject<ClubTrainingSession[]>([]);
-  sessions$ = this.sessionsSubject.asObservable();
-  private lastSessionsQuery: { clubId: string; from: string; to: string; category?: string } | null = null;
-
-  private openSessionsSubject = new BehaviorSubject<ClubTrainingSession[]>([]);
-  openSessions$ = this.openSessionsSubject.asObservable();
-
-  private weeklyStatsSubject = new BehaviorSubject<ClubWeeklyStats | null>(null);
-  weeklyStats$ = this.weeklyStatsSubject.asObservable();
-
-  private extendedStatsSubject = new BehaviorSubject<ClubExtendedStats | null>(null);
-  extendedStats$ = this.extendedStatsSubject.asObservable();
-
-  private leaderboardSubject = new BehaviorSubject<LeaderboardEntry[]>([]);
-  leaderboard$ = this.leaderboardSubject.asObservable();
-
-  private raceGoalsSubject = new BehaviorSubject<ClubRaceGoalResponse[]>([]);
-  raceGoals$ = this.raceGoalsSubject.asObservable();
-
   private groupsSubject = new BehaviorSubject<ClubGroup[]>([]);
   groups$ = this.groupsSubject.asObservable();
 
   private myClubRolesSubject = new BehaviorSubject<MyClubRoleEntry[]>([]);
   myClubRoles$ = this.myClubRolesSubject.asObservable();
 
-  private recurringTemplatesSubject = new BehaviorSubject<RecurringSessionTemplate[]>([]);
-  recurringTemplates$ = this.recurringTemplatesSubject.asObservable();
-
   private inviteCodesSubject = new BehaviorSubject<ClubInviteCode[]>([]);
   inviteCodes$ = this.inviteCodesSubject.asObservable();
 
-  private feedEventsSubject = new BehaviorSubject<ClubFeedResponse | null>(null);
-  feedEvents$ = this.feedEventsSubject.asObservable();
+  // --- Club CRUD ---
 
   loadUserClubs(): void {
     this.http
@@ -490,6 +81,8 @@ export class ClubService {
       .pipe(catchError(() => of(null as ClubDetail | null)))
       .subscribe((club) => this.ngZone.run(() => this.selectedClubSubject.next(club)));
   }
+
+  // --- Membership ---
 
   joinClub(id: string): Observable<void> {
     return new Observable((observer) => {
@@ -569,61 +162,12 @@ export class ClubService {
     });
   }
 
-  loadFeed(id: string): void {
-    this.http
-      .get<ClubActivity[]>(`${this.apiUrl}/${id}/feed`, { params: { page: '0', size: '50' } })
-      .pipe(catchError(() => of([] as ClubActivity[])))
-      .subscribe((feed) => this.ngZone.run(() => this.feedSubject.next(feed)));
-  }
-
-  loadSessions(id: string): void {
-    if (this.lastSessionsQuery?.clubId === id) {
-      const { from, to, category } = this.lastSessionsQuery;
-      this.loadSessionsForRange(id, from, to, category as 'SCHEDULED' | 'OPEN' | undefined);
-      return;
-    }
-    this.http
-      .get<ClubTrainingSession[]>(`${this.apiUrl}/${id}/sessions`)
-      .pipe(catchError(() => of([] as ClubTrainingSession[])))
-      .subscribe((sessions) => this.ngZone.run(() => this.sessionsSubject.next(sessions)));
-  }
-
-  createSession(clubId: string, data: CreateSessionData): Observable<ClubTrainingSession> {
+  updateMemberRole(clubId: string, membershipId: string, role: ClubMemberRole): Observable<void> {
     return new Observable((observer) => {
-      this.http.post<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions`, data).subscribe({
-        next: (session) => {
-          this.ngZone.run(() => {
-            this.loadSessions(clubId);
-            observer.next(session);
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
-  }
-
-  updateSession(clubId: string, sessionId: string, data: CreateSessionData): Observable<ClubTrainingSession> {
-    return new Observable((observer) => {
-      this.http.put<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions/${sessionId}`, data).subscribe({
-        next: (session) => {
-          this.ngZone.run(() => {
-            this.loadSessions(clubId);
-            observer.next(session);
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
-  }
-
-  joinSession(clubId: string, sessionId: string): Observable<void> {
-    return new Observable((observer) => {
-      this.http.post<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/join`, {}).subscribe({
+      this.http.put<void>(`${this.apiUrl}/${clubId}/members/${membershipId}/role`, { role }).subscribe({
         next: () => {
           this.ngZone.run(() => {
-            this.loadSessions(clubId);
+            this.loadMembers(clubId);
             observer.next();
             observer.complete();
           });
@@ -633,83 +177,14 @@ export class ClubService {
     });
   }
 
-  cancelSession(clubId: string, sessionId: string): Observable<void> {
-    return new Observable((observer) => {
-      this.http.delete<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/join`).subscribe({
-        next: () => {
-          this.ngZone.run(() => {
-            this.loadSessions(clubId);
-            observer.next();
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
-  }
-
-  cancelEntireSession(clubId: string, sessionId: string, reason?: string): Observable<void> {
-    return new Observable((observer) => {
-      this.http.put<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/cancel`, { reason: reason || null }).subscribe({
-        next: () => {
-          this.ngZone.run(() => {
-            this.loadSessions(clubId);
-            observer.next();
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
-  }
-
-  cancelRecurringSessions(clubId: string, templateId: string, reason?: string): Observable<{ cancelledCount: number }> {
-    return new Observable((observer) => {
-      this.http
-        .put<{ cancelledCount: number }>(`${this.apiUrl}/${clubId}/recurring-sessions/${templateId}/cancel-future`, {
-          reason: reason || null,
-        })
-        .subscribe({
-          next: (result) => {
-            this.ngZone.run(() => {
-              this.loadSessions(clubId);
-              this.loadRecurringTemplates(clubId);
-              observer.next(result);
-              observer.complete();
-            });
-          },
-          error: (err) => observer.error(err),
-        });
-    });
-  }
-
-  loadWeeklyStats(id: string): void {
+  loadMyClubRoles(): void {
     this.http
-      .get<ClubWeeklyStats>(`${this.apiUrl}/${id}/stats/weekly`)
-      .pipe(catchError(() => of(null as ClubWeeklyStats | null)))
-      .subscribe((stats) => this.ngZone.run(() => this.weeklyStatsSubject.next(stats)));
+      .get<MyClubRoleEntry[]>(`${this.apiUrl}/my-roles`)
+      .pipe(catchError(() => of([] as MyClubRoleEntry[])))
+      .subscribe((roles) => this.ngZone.run(() => this.myClubRolesSubject.next(roles)));
   }
 
-  loadExtendedStats(id: string): void {
-    this.http
-      .get<ClubExtendedStats>(`${this.apiUrl}/${id}/stats/extended`)
-      .pipe(catchError(() => of(null as ClubExtendedStats | null)))
-      .subscribe((stats) => this.ngZone.run(() => this.extendedStatsSubject.next(stats)));
-  }
-
-  loadLeaderboard(id: string): void {
-    this.http
-      .get<LeaderboardEntry[]>(`${this.apiUrl}/${id}/leaderboard`)
-      .pipe(catchError(() => of([] as LeaderboardEntry[])))
-      .subscribe((lb) => this.ngZone.run(() => this.leaderboardSubject.next(lb)));
-  }
-
-  loadRaceGoals(id: string): void {
-    this.http
-      .get<ClubRaceGoalResponse[]>(`${this.apiUrl}/${id}/race-goals`)
-      .pipe(catchError(() => of([] as ClubRaceGoalResponse[])))
-      .subscribe((goals) => this.ngZone.run(() => this.raceGoalsSubject.next(goals)));
-  }
+  // --- Groups ---
 
   getClubGroups(clubId: string): Observable<ClubGroup[]> {
     return this.http
@@ -787,164 +262,15 @@ export class ClubService {
     });
   }
 
-  updateMemberRole(clubId: string, membershipId: string, role: ClubMemberRole): Observable<void> {
-    return new Observable((observer) => {
-      this.http.put<void>(`${this.apiUrl}/${clubId}/members/${membershipId}/role`, { role }).subscribe({
-        next: () => {
-          this.ngZone.run(() => {
-            this.loadMembers(clubId);
-            observer.next();
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+  joinGroupSelf(clubId: string, groupId: string): Observable<ClubGroup> {
+    return this.http.post<ClubGroup>(`${this.apiUrl}/${clubId}/groups/${groupId}/join`, {});
   }
 
-  loadMyClubRoles(): void {
-    this.http
-      .get<MyClubRoleEntry[]>(`${this.apiUrl}/my-roles`)
-      .pipe(catchError(() => of([] as MyClubRoleEntry[])))
-      .subscribe((roles) => this.ngZone.run(() => this.myClubRolesSubject.next(roles)));
+  leaveGroupSelf(clubId: string, groupId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${clubId}/groups/${groupId}/leave`);
   }
 
-  loadSessionsForRange(clubId: string, from: string, to: string, category?: 'SCHEDULED' | 'OPEN'): void {
-    this.lastSessionsQuery = { clubId, from, to, category };
-    const params: Record<string, string> = { from, to };
-    if (category) params['category'] = category;
-    this.http
-      .get<ClubTrainingSession[]>(`${this.apiUrl}/${clubId}/sessions`, { params })
-      .pipe(catchError(() => of([] as ClubTrainingSession[])))
-      .subscribe((sessions) => this.ngZone.run(() => this.sessionsSubject.next(sessions)));
-  }
-
-  loadOpenSessions(clubId: string, from: string, to: string): void {
-    this.http
-      .get<ClubTrainingSession[]>(`${this.apiUrl}/${clubId}/sessions`, { params: { from, to, category: 'OPEN' } })
-      .pipe(catchError(() => of([] as ClubTrainingSession[])))
-      .subscribe((sessions) => this.ngZone.run(() => this.openSessionsSubject.next(sessions)));
-  }
-
-  loadActivities(clubId: string, from: string, to: string): void {
-    this.http
-      .get<ClubTrainingSession[]>(`${this.apiUrl}/${clubId}/sessions`, { params: { from, to } })
-      .pipe(catchError(() => of([] as ClubTrainingSession[])))
-      .subscribe((sessions) => this.ngZone.run(() => this.openSessionsSubject.next(sessions)));
-  }
-
-  uploadSessionGpx(clubId: string, sessionId: string, file: File): Observable<ClubTrainingSession> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/gpx`, formData);
-  }
-
-  deleteSessionGpx(clubId: string, sessionId: string): Observable<ClubTrainingSession> {
-    return this.http.delete<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/gpx`);
-  }
-
-  downloadSessionGpx(clubId: string, sessionId: string): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/${clubId}/sessions/${sessionId}/gpx`, { responseType: 'blob' });
-  }
-
-  loadRecurringTemplates(clubId: string): void {
-    this.http
-      .get<RecurringSessionTemplate[]>(`${this.apiUrl}/${clubId}/recurring-sessions`)
-      .pipe(catchError(() => of([] as RecurringSessionTemplate[])))
-      .subscribe((templates) => this.ngZone.run(() => this.recurringTemplatesSubject.next(templates)));
-  }
-
-  createRecurringTemplate(clubId: string, data: CreateRecurringSessionData): Observable<RecurringSessionTemplate> {
-    return new Observable((observer) => {
-      this.http.post<RecurringSessionTemplate>(`${this.apiUrl}/${clubId}/recurring-sessions`, data).subscribe({
-        next: (template) => {
-          this.ngZone.run(() => {
-            this.loadRecurringTemplates(clubId);
-            this.loadSessions(clubId);
-            observer.next(template);
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
-  }
-
-  updateRecurringTemplate(clubId: string, templateId: string, data: CreateRecurringSessionData): Observable<RecurringSessionTemplate> {
-    return new Observable((observer) => {
-      this.http.put<RecurringSessionTemplate>(`${this.apiUrl}/${clubId}/recurring-sessions/${templateId}`, data).subscribe({
-        next: (template) => {
-          this.ngZone.run(() => {
-            this.loadRecurringTemplates(clubId);
-            observer.next(template);
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
-  }
-
-  updateRecurringTemplateWithInstances(clubId: string, templateId: string, data: CreateRecurringSessionData): Observable<RecurringSessionTemplate> {
-    return new Observable((observer) => {
-      this.http.put<RecurringSessionTemplate>(`${this.apiUrl}/${clubId}/recurring-sessions/${templateId}/with-instances`, data).subscribe({
-        next: (template) => {
-          this.ngZone.run(() => {
-            this.loadRecurringTemplates(clubId);
-            this.loadSessions(clubId);
-            observer.next(template);
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
-  }
-
-  deleteRecurringTemplate(clubId: string, templateId: string): Observable<void> {
-    return new Observable((observer) => {
-      this.http.delete<void>(`${this.apiUrl}/${clubId}/recurring-sessions/${templateId}`).subscribe({
-        next: () => {
-          this.ngZone.run(() => {
-            this.loadRecurringTemplates(clubId);
-            observer.next();
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
-  }
-
-  linkTrainingToSession(clubId: string, sessionId: string, trainingId: string, clubGroupId?: string): Observable<void> {
-    return new Observable((observer) => {
-      this.http.put<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/link-training`, { trainingId, clubGroupId: clubGroupId || null }).subscribe({
-        next: () => {
-          this.ngZone.run(() => {
-            this.loadSessions(clubId);
-            observer.next();
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
-  }
-
-  unlinkTrainingFromSession(clubId: string, sessionId: string, clubGroupId?: string): Observable<void> {
-    return new Observable((observer) => {
-      this.http.put<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/unlink-training`, { clubGroupId: clubGroupId ?? null }).subscribe({
-        next: () => {
-          this.ngZone.run(() => {
-            this.loadSessions(clubId);
-            observer.next();
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
-  }
+  // --- Invite Codes ---
 
   loadInviteCodes(clubId: string): void {
     this.http
@@ -994,14 +320,6 @@ export class ClubService {
     });
   }
 
-  joinGroupSelf(clubId: string, groupId: string): Observable<ClubGroup> {
-    return this.http.post<ClubGroup>(`${this.apiUrl}/${clubId}/groups/${groupId}/join`, {});
-  }
-
-  leaveGroupSelf(clubId: string, groupId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${clubId}/groups/${groupId}/leave`);
-  }
-
   redeemClubInviteCode(code: string): Observable<void> {
     return new Observable((observer) => {
       this.http.post<void>(`${this.apiUrl}/redeem-invite`, { code }).subscribe({
@@ -1017,104 +335,11 @@ export class ClubService {
     });
   }
 
-  loadFeedEvents(clubId: string, page = 0, size = 20): void {
-    this.http
-      .get<ClubFeedResponse>(`${this.apiUrl}/${clubId}/feed`, {
-        params: { page: page.toString(), size: size.toString() },
-      })
-      .pipe(catchError(() => of(null as ClubFeedResponse | null)))
-      .subscribe((resp) => {
-        this.ngZone.run(() => {
-          if (resp && page > 0) {
-            const current = this.feedEventsSubject.value;
-            if (current) {
-              resp = { ...resp, items: [...current.items, ...resp.items] };
-            }
-          }
-          this.feedEventsSubject.next(resp);
-        });
-      });
-  }
-
-  createAnnouncement(clubId: string, content: string): Observable<ClubFeedEventResponse> {
-    return this.http.post<ClubFeedEventResponse>(`${this.apiUrl}/${clubId}/feed/announcements`, { content });
-  }
-
-  giveKudos(clubId: string, eventId: string): Observable<KudosResponse> {
-    return this.http.post<KudosResponse>(`${this.apiUrl}/${clubId}/feed/${eventId}/kudos`, {});
-  }
-
-  /** Update a feed event in-place (used by SSE updates). */
-  updateFeedEventCompletion(
-    feedEventId: string,
-    completionCount: number,
-    latestCompletion: { userId: string; displayName: string; profilePicture?: string },
-  ): void {
-    const current = this.feedEventsSubject.value;
-    if (!current) return;
-
-    const updateEvent = (event: ClubFeedEventResponse): ClubFeedEventResponse => {
-      if (event.id !== feedEventId) return event;
-      const completions = [...(event.completions ?? [])];
-      if (!completions.find((c) => c.userId === latestCompletion.userId)) {
-        completions.push({
-          userId: latestCompletion.userId,
-          displayName: latestCompletion.displayName,
-          profilePicture: latestCompletion.profilePicture,
-          completedSessionId: '',
-          completedAt: new Date().toISOString(),
-        });
-      }
-      return { ...event, completions };
-    };
-
-    this.feedEventsSubject.next({
-      ...current,
-      pinned: current.pinned.map(updateEvent),
-      items: current.items.map(updateEvent),
-    });
-  }
-
-  /** Add a new feed event from SSE. */
-  addFeedEvent(event: ClubFeedEventResponse): void {
-    const current = this.feedEventsSubject.value;
-    if (!current) return;
-    if (event.pinned) {
-      this.feedEventsSubject.next({ ...current, pinned: [event, ...current.pinned] });
-    } else {
-      this.feedEventsSubject.next({ ...current, items: [event, ...current.items] });
-    }
-  }
-
-  /** Mark kudos as given on a feed event. */
-  markKudosGiven(feedEventId: string, userId: string): void {
-    const current = this.feedEventsSubject.value;
-    if (!current) return;
-    const updateEvent = (event: ClubFeedEventResponse): ClubFeedEventResponse => {
-      if (event.id !== feedEventId) return event;
-      return { ...event, kudosGivenBy: [...(event.kudosGivenBy ?? []), userId] };
-    };
-    this.feedEventsSubject.next({
-      ...current,
-      pinned: current.pinned.map(updateEvent),
-      items: current.items.map(updateEvent),
-    });
-  }
-
   resetDetail(): void {
     this.selectedClubSubject.next(null);
     this.membersSubject.next([]);
     this.pendingSubject.next([]);
-    this.feedSubject.next([]);
-    this.sessionsSubject.next([]);
-    this.openSessionsSubject.next([]);
-    this.weeklyStatsSubject.next(null);
-    this.extendedStatsSubject.next(null);
-    this.leaderboardSubject.next([]);
-    this.raceGoalsSubject.next([]);
     this.groupsSubject.next([]);
-    this.recurringTemplatesSubject.next([]);
     this.inviteCodesSubject.next([]);
-    this.feedEventsSubject.next(null);
   }
 }

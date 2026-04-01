@@ -15,6 +15,7 @@ import {CalendarWeekViewComponent} from './week-view/calendar-week-view.componen
 import {CalendarMonthViewComponent} from './month-view/calendar-month-view.component';
 import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
 import {ClubGroup, ClubService, MyClubRoleEntry} from '../../../services/club.service';
+import {ClubSessionService} from '../../../services/club-session.service';
 
 export interface CalendarDay {
   date: Date;
@@ -156,6 +157,7 @@ export class CalendarComponent implements OnInit {
   private readonly historyService = inject(HistoryService);
   private readonly raceGoalService = inject(RaceGoalService);
   private readonly clubService = inject(ClubService);
+  private readonly clubSessionService = inject(ClubSessionService);
   private readonly router = inject(Router);
 
   private userId = '';
@@ -295,11 +297,11 @@ export class CalendarComponent implements OnInit {
   // --- Club session handlers ---
 
   joinClubSession(session: CalendarClubSession): void {
-    this.clubService.joinSession(session.clubId, session.id).subscribe(() => this.reload$.next());
+    this.clubSessionService.joinSession(session.clubId, session.id).subscribe(() => this.reload$.next());
   }
 
   cancelClubSession(session: CalendarClubSession): void {
-    this.clubService.cancelSession(session.clubId, session.id).subscribe(() => this.reload$.next());
+    this.clubSessionService.cancelSession(session.clubId, session.id).subscribe(() => this.reload$.next());
   }
 
   // --- Preferences ---

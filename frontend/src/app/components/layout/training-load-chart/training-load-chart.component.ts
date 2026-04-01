@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ElementRef, Input, OnChanges, ViewChild,} from '@angular/core';
+import {AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, Input, OnChanges, ViewChild,} from '@angular/core';
 import {ScheduledWorkout} from '../../../services/coach.service';
 
 interface DayInfo {
@@ -23,6 +23,7 @@ function getSportColor(sport?: string): string {
     selector: 'app-training-load-chart',
     standalone: true,
     imports: [],
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="load-chart-wrap">
             <span class="load-chart-label">WEEKLY LOAD</span>

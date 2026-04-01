@@ -4,6 +4,7 @@ import {FormsModule} from '@angular/forms';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {ActionContext, ActionResult, AIActionService, AIActionType} from '../../../services/ai-action.service';
 import {ClubGroup, ClubService} from '../../../services/club.service';
+import {ClubSessionService} from '../../../services/club-session.service';
 import {ZoneService} from '../../../services/zone.service';
 import {ZoneSystem} from '../../../services/zone';
 import {TrainingService} from '../../../services/training.service';
@@ -37,6 +38,7 @@ export class CreateWithAiModalComponent implements OnChanges {
 
   private aiActionService = inject(AIActionService);
   private clubService = inject(ClubService);
+  private clubSessionService = inject(ClubSessionService);
   private zoneService = inject(ZoneService);
   private trainingService = inject(TrainingService);
   private translate = inject(TranslateService);
@@ -160,7 +162,7 @@ export class CreateWithAiModalComponent implements OnChanges {
 
     this.patchState({ loading: true, errorMessage: '', aiMessage: '', successMessage: '' });
 
-    this.clubService
+    this.clubSessionService
       .linkTrainingToSession(this.context.clubId, this.context.sessionId, this.selectedTrainingId)
       .subscribe({
         next: () => {

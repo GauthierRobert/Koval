@@ -1,9 +1,10 @@
-import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {BehaviorSubject, combineLatest} from 'rxjs';
-import {map} from 'rxjs/operators';
+import {BehaviorSubject, combineLatest, forkJoin} from 'rxjs';
+import {map, switchMap} from 'rxjs/operators';
 import {Group, GroupService} from '../../../services/group.service';
 import {CoachService, InviteCode} from '../../../services/coach.service';
 import {User} from '../../../services/auth.service';
@@ -47,6 +48,7 @@ export class GroupManagementComponent implements OnInit {
   assigningGroupAthletes: User[] = [];
 
   private translate = inject(TranslateService);
+  private destroyRef = inject(DestroyRef);
 
   constructor(
     private groupService: GroupService,
@@ -59,17 +61,19 @@ export class GroupManagementComponent implements OnInit {
   }
 
   private loadGroups(): void {
-    this.groupService.getGroups().subscribe({
-      next: (groups) => {
+    this.groupService.getGroups().pipe(
+      switchMap((groups) => {
         this.groupsSubject.next(groups);
-        this.coachService.getAthletes().subscribe({
-          next: (athletes) => this.athletesSubject.next(athletes),
-          error: () => {},
+        return forkJoin({
+          athletes: this.coachService.getAthletes(),
+          codes: this.coachService.getInviteCodes(),
         });
-        this.coachService.getInviteCodes().subscribe({
-          next: (codes) => this.inviteCodesSubject.next(codes),
-          error: () => {},
-        });
+      }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: ({ athletes, codes }) => {
+        this.athletesSubject.next(athletes);
+        this.inviteCodesSubject.next(codes);
       },
       error: () => this.groupsSubject.next([]),
     });

@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, interval, Subscription} from 'rxjs';
 import {BluetoothDevice, CharacteristicValueChangedEvent} from '../models/bluetooth-types.model';
+import {parseCadenceData, parseHRData, parsePowerMeterData, parseTrainerData} from './bluetooth-parsers.util';
 
 export interface LiveMetrics {
     power: number;
@@ -192,72 +193,21 @@ export class BluetoothService {
     }
 
     private handleTrainerData(data: DataView) {
-        const flags = data.getUint16(0, true);
-        let offset = 2;
-
-        let speed = 0;
-        if (!(flags & 0x01)) {
-            speed = data.getUint16(offset, true) / 100;
-            offset += 2;
-        }
-
-        let cadence = 0;
-        if (flags & 0x04) {
-            cadence = data.getUint16(offset, true) * 0.5;
-            offset += 2;
-        }
-
-        let power = 0;
-        if (flags & 0x40) {
-            power = data.getInt16(offset, true);
-            offset += 2;
-        }
-
-        const current = this.metricsSubject.value;
-        this.metricsSubject.next({
-            ...current,
-            power: power || current.power,
-            cadence: cadence || current.cadence,
-            speed: speed || current.speed,
-            timestamp: new Date()
-        });
+        this.metricsSubject.next(parseTrainerData(data, this.metricsSubject.value));
     }
 
     private handleHRData(data: DataView) {
-        const flags = data.getUint8(0);
-        const hrValue = (flags & 0x01) ? data.getUint16(1, true) : data.getUint8(1);
-
-        const current = this.metricsSubject.value;
-        this.metricsSubject.next({
-            ...current,
-            heartRate: hrValue,
-            timestamp: new Date()
-        });
+        this.metricsSubject.next(parseHRData(data, this.metricsSubject.value));
     }
 
     private handlePowerMeterData(data: DataView) {
-        // Cycling Power Measurement (0x2A63)
-        const power = data.getInt16(2, true);
-        const current = this.metricsSubject.value;
-        this.metricsSubject.next({
-            ...current,
-            power: power,
-            timestamp: new Date()
-        });
+        this.metricsSubject.next(parsePowerMeterData(data, this.metricsSubject.value));
     }
 
     private handleCadenceData(data: DataView) {
-        // CSC Measurement (0x2A5B)
-        const flags = data.getUint8(0);
-        if (flags & 0x02) { // Crank Revolution Data Present
-            // Simple RPM fallback logic if high-res delta calculation not implemented
-            const rpm = data.getUint16(3, true) / 10;
-            const current = this.metricsSubject.value;
-            this.metricsSubject.next({
-                ...current,
-                cadence: Math.round(rpm),
-                timestamp: new Date()
-            });
+        const updated = parseCadenceData(data, this.metricsSubject.value);
+        if (updated !== this.metricsSubject.value) {
+            this.metricsSubject.next(updated);
         }
     }
 

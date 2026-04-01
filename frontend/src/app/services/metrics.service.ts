@@ -2,12 +2,20 @@ import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {environment} from '../../environments/environment';
+import {
+    computeIF as _computeIF,
+    computeTss as _computeTss,
+    computeTssFromRpe as _computeTssFromRpe,
+    findPeakForm as _findPeakForm,
+    projectPmc as _projectPmc,
+    projectPmcFromSchedule as _projectPmcFromSchedule,
+} from './training-math.util';
 
 // @ts-ignore
 import FitParser from 'fit-file-parser';
 
 export interface PmcDataPoint {
-    date: string;          // ISO date string
+    date: string;
     ctl: number;
     atl: number;
     tsb: number;
@@ -17,25 +25,25 @@ export interface PmcDataPoint {
 }
 
 export interface FitRecord {
-    timestamp: number;     // Unix epoch seconds
-    power: number;         // W (cycling); 0 for running/swimming
-    heartRate: number;     // bpm
-    cadence: number;       // rpm (cycling/running) or spm (swimming)
-    speed: number;         // m/s
-    distance: number;      // m cumulative (running/swimming); 0 for cycling
-    elevation?: number;    // meters (from enhanced_altitude or altitude)
+    timestamp: number;
+    power: number;
+    heartRate: number;
+    cadence: number;
+    speed: number;
+    distance: number;
+    elevation?: number;
 }
 
 export interface FitTimerEvent {
-    timestamp: number;     // Unix epoch seconds
+    timestamp: number;
     type: 'stop' | 'start';
 }
 
 export interface FitParseResult {
     records: FitRecord[];
     timerEvents: FitTimerEvent[];
-    totalTimerTime: number;   // seconds (from session, excludes pauses)
-    totalElapsedTime: number; // seconds (from session, includes pauses)
+    totalTimerTime: number;
+    totalElapsedTime: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -43,24 +51,18 @@ export class MetricsService {
     private readonly apiUrl = `${environment.apiUrl}/api`;
     private http = inject(HttpClient);
 
-    // ── TSS / IF computation ──────────────────────────────────────────────────
+    // ── TSS / IF computation (delegated to training-math.util) ───────────────
 
     computeIF(avgPower: number, ftp: number): number {
-        if (!ftp || ftp <= 0 || !avgPower) return 0;
-        return avgPower / ftp;
+        return _computeIF(avgPower, ftp);
     }
 
     computeTss(durationSeconds: number, avgPower: number, ftp: number): number {
-        if (!ftp || ftp <= 0 || !avgPower || !durationSeconds) return 0;
-        const IF = this.computeIF(avgPower, ftp);
-        return (durationSeconds / 3600) * IF * IF * 100;
+        return _computeTss(durationSeconds, avgPower, ftp);
     }
 
     computeTssFromRpe(durationSeconds: number, rpe: number): number {
-        if (!durationSeconds || !rpe) return 0;
-        // Simple heuristic: (RPE/10)^2 * hours * 100
-        const intensity = rpe / 10;
-        return (durationSeconds / 3600) * intensity * intensity * 100;
+        return _computeTssFromRpe(durationSeconds, rpe);
     }
 
     // ── PMC HTTP calls ────────────────────────────────────────────────────────
@@ -77,76 +79,22 @@ export class MetricsService {
         });
     }
 
-    // ── PMC projection (pure client-side EMA) ────────────────────────────────
+    // ── PMC projection (delegated to training-math.util) ─────────────────────
 
     projectPmc(realData: PmcDataPoint[], dailyTss: number, days: number): PmcDataPoint[] {
-        if (!realData.length) return [];
-        const last = realData[realData.length - 1];
-        const kCTL = 1 - Math.exp(-1 / 42);
-        const kATL = 1 - Math.exp(-1 / 7);
-
-        let ctl = last.ctl;
-        let atl = last.atl;
-        const lastDate = new Date(last.date);
-        const result: PmcDataPoint[] = [];
-
-        for (let i = 1; i <= days; i++) {
-            ctl = ctl + (dailyTss - ctl) * kCTL;
-            atl = atl + (dailyTss - atl) * kATL;
-            const d = new Date(lastDate);
-            d.setDate(d.getDate() + i);
-            result.push({
-                date: d.toISOString().split('T')[0],
-                ctl: Math.round(ctl * 10) / 10,
-                atl: Math.round(atl * 10) / 10,
-                tsb: Math.round((ctl - atl) * 10) / 10,
-                dailyTss,
-                predicted: true,
-            });
-        }
-        return result;
+        return _projectPmc(realData, dailyTss, days);
     }
 
     findPeakForm(data: PmcDataPoint[]): { date: string; tsb: number } | null {
-        if (!data.length) return null;
-        return data.reduce((best, d) => (d.tsb > best.tsb ? d : best), data[0]);
+        return _findPeakForm(data);
     }
 
-    /**
-     * Project PMC forward using per-date TSS from scheduled workouts.
-     * Days with no workout entry use TSS = 0 (natural decay).
-     */
     projectPmcFromSchedule(
         realData: PmcDataPoint[],
         scheduledTss: Map<string, number>,
         days: number,
     ): PmcDataPoint[] {
-        if (!realData.length) return [];
-        const last = realData[realData.length - 1];
-        const kCTL = 1 - Math.exp(-1 / 42);
-        const kATL = 1 - Math.exp(-1 / 7);
-        let ctl = last.ctl;
-        let atl = last.atl;
-        const lastDate = new Date(last.date);
-        const result: PmcDataPoint[] = [];
-
-        for (let i = 1; i <= days; i++) {
-            const d = new Date(lastDate);
-            d.setDate(d.getDate() + i);
-            const dateStr = d.toISOString().split('T')[0];
-            const dayTss = scheduledTss.get(dateStr) ?? 0;
-            ctl = ctl + (dayTss - ctl) * kCTL;
-            atl = atl + (dayTss - atl) * kATL;
-            result.push({
-                date: dateStr,
-                ctl: Math.round(ctl * 10) / 10,
-                atl: Math.round(atl * 10) / 10,
-                tsb: Math.round((ctl - atl) * 10) / 10,
-                dailyTss: dayTss,
-                predicted: true,
-            });
-        }
-        return result;
+        return _projectPmcFromSchedule(realData, scheduledTss, days);
     }
 
     // ── FIT binary upload / download ──────────────────────────────────────────
@@ -188,8 +136,6 @@ export class MetricsService {
                     elevation: r.enhanced_altitude ?? r.altitude ?? undefined,
                 }));
 
-                // Extract timer stop/start events for pause detection
-                // fit-file-parser may return event/event_type as strings or numeric enums
                 const rawEvents = data.events || [];
                 const timerEvents: FitTimerEvent[] = [];
                 for (const e of rawEvents) {

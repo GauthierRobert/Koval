@@ -1,7 +1,8 @@
 import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
-import {ClubService, ClubExtendedStats} from '../../../../../../services/club.service';
+import {ClubExtendedStats} from '../../../../../../services/club.service';
+import {ClubFeedService} from '../../../../../../services/club-feed.service';
 import {SportIconComponent} from '../../../../../shared/sport-icon/sport-icon.component';
 
 @Component({
@@ -13,8 +14,8 @@ import {SportIconComponent} from '../../../../../shared/sport-icon/sport-icon.co
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClubStatsTabComponent {
-  private clubService = inject(ClubService);
-  extendedStats$ = this.clubService.extendedStats$;
+  private clubFeedService = inject(ClubFeedService);
+  extendedStats$ = this.clubFeedService.extendedStats$;
   expandedTemplates = new Set<string>();
 
   toggleExpand(templateId: string): void {

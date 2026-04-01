@@ -1,7 +1,8 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject, OnInit} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
-import {ClubService} from '../../../../../../services/club.service';
+import {ClubFeedService} from '../../../../../../services/club-feed.service';
 import {AuthService} from '../../../../../../services/auth.service';
 
 @Component({
@@ -13,15 +14,16 @@ import {AuthService} from '../../../../../../services/auth.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClubLeaderboardTabComponent implements OnInit {
-  private clubService = inject(ClubService);
+  private clubFeedService = inject(ClubFeedService);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
 
-  leaderboard$ = this.clubService.leaderboard$;
+  leaderboard$ = this.clubFeedService.leaderboard$;
   currentUserId: string | null = null;
 
   ngOnInit(): void {
-    this.authService.user$.subscribe((u) => {
+    this.authService.user$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((u) => {
       this.currentUserId = u?.id ?? null;
       this.cdr.markForCheck();
     });

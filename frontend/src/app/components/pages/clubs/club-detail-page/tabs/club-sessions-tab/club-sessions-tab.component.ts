@@ -2,12 +2,14 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  DestroyRef,
   EventEmitter,
   inject,
   Input,
   OnInit,
   Output,
 } from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Router, RouterModule} from '@angular/router';
@@ -22,6 +24,7 @@ import {
   CreateSessionData,
   GroupLinkedTraining,
 } from '../../../../../../services/club.service';
+import {ClubSessionService} from '../../../../../../services/club-session.service';
 import {AuthService} from '../../../../../../services/auth.service';
 import {TrainingService} from '../../../../../../services/training.service';
 import {MeetingPoint, MeetingPointPickerComponent} from '../../../../../shared/meeting-point-picker/meeting-point-picker.component';
@@ -40,13 +43,15 @@ export class ClubSessionsTabComponent implements OnInit {
   @Output() createAiForSession = new EventEmitter<ClubTrainingSession>();
 
   private clubService = inject(ClubService);
+  private clubSessionService = inject(ClubSessionService);
   private authService = inject(AuthService);
   private trainingService = inject(TrainingService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private translate = inject(TranslateService);
+  private destroyRef = inject(DestroyRef);
 
-  sessions$ = this.clubService.sessions$;
+  sessions$ = this.clubSessionService.sessions$;
   currentUserId: string | null = null;
 
   calendarWeekStart: Date = ClubSessionsTabComponent.getMonday(new Date());
@@ -84,20 +89,20 @@ export class ClubSessionsTabComponent implements OnInit {
   showPastSessions = false;
 
   ngOnInit(): void {
-    this.authService.user$.subscribe((u) => {
+    this.authService.user$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((u) => {
       this.currentUserId = u?.id ?? null;
       this.cdr.markForCheck();
     });
     this.buildCalendarDays();
     if (this.club) {
-      this.clubService.loadRecurringTemplates(this.club.id);
+      this.clubSessionService.loadRecurringTemplates(this.club.id);
       this.loadCalendarSessions();
       this.clubService.loadGroups(this.club.id);
-      this.clubService.groups$.subscribe((groups) => {
+      this.clubService.groups$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((groups) => {
         this.clubGroups = groups;
         this.cdr.markForCheck();
       });
-      this.clubService.members$.subscribe((members) => {
+      this.clubService.members$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((members) => {
         this.coachMembers = members.filter(
           (m) => m.role === 'COACH' || m.role === 'ADMIN' || m.role === 'OWNER',
         );
@@ -191,7 +196,7 @@ export class ClubSessionsTabComponent implements OnInit {
   private loadCalendarSessions(): void {
     const from = this.calendarWeekStart.toISOString();
     const to = new Date(this.calendarWeekStart.getTime() + 7 * 86400000).toISOString();
-    this.clubService.loadSessionsForRange(this.club.id, from, to, 'SCHEDULED');
+    this.clubSessionService.loadSessionsForRange(this.club.id, from, to, 'SCHEDULED');
   }
 
   getSessionsForDay(sessions: ClubTrainingSession[], day: Date): ClubTrainingSession[] {
@@ -302,7 +307,7 @@ export class ClubSessionsTabComponent implements OnInit {
 
   removeGpx(): void {
     if (this.editingSession) {
-      this.clubService.deleteSessionGpx(this.club.id, this.editingSession.id).subscribe({
+      this.clubSessionService.deleteSessionGpx(this.club.id, this.editingSession.id).subscribe({
         next: () => this.loadCalendarSessions(),
       });
     }
@@ -337,7 +342,7 @@ export class ClubSessionsTabComponent implements OnInit {
           openToAllDelayUnit: this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
           endDate: this.form['endDate'] || undefined,
         };
-        this.clubService.updateRecurringTemplateWithInstances(this.club.id, this.editingSession.recurringTemplateId, data).subscribe({
+        this.clubSessionService.updateRecurringTemplateWithInstances(this.club.id, this.editingSession.recurringTemplateId, data).subscribe({
           next: () => this.finishSave(),
           error: () => {},
         });
@@ -361,7 +366,7 @@ export class ClubSessionsTabComponent implements OnInit {
           openToAllDelayUnit: this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
         };
         const editId = this.editingSession.id;
-        this.clubService.updateSession(this.club.id, editId, data).subscribe({
+        this.clubSessionService.updateSession(this.club.id, editId, data).subscribe({
           next: () => this.afterSaveSession(editId),
           error: () => {},
         });
@@ -388,7 +393,7 @@ export class ClubSessionsTabComponent implements OnInit {
       openToAllDelayUnit: this.form['openToAll'] ? this.form['openToAllDelayUnit'] : undefined,
       endDate: this.form['endDate'] || undefined,
     };
-    this.clubService.createRecurringTemplate(this.club.id, data).subscribe({
+    this.clubSessionService.createRecurringTemplate(this.club.id, data).subscribe({
       next: () => this.finishSave(),
       error: () => {},
     });
@@ -396,7 +401,7 @@ export class ClubSessionsTabComponent implements OnInit {
 
   private afterSaveSession(sessionId?: string): void {
     if (this.gpxFile && sessionId) {
-      this.clubService.uploadSessionGpx(this.club.id, sessionId, this.gpxFile).subscribe({
+      this.clubSessionService.uploadSessionGpx(this.club.id, sessionId, this.gpxFile).subscribe({
         next: () => this.finishSave(),
         error: () => this.finishSave(),
       });
@@ -417,7 +422,7 @@ export class ClubSessionsTabComponent implements OnInit {
   // --- GPX actions ---
 
   downloadGpx(session: ClubTrainingSession): void {
-    this.clubService.downloadSessionGpx(this.club.id, session.id).subscribe({
+    this.clubSessionService.downloadSessionGpx(this.club.id, session.id).subscribe({
       next: (blob) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -434,7 +439,7 @@ export class ClubSessionsTabComponent implements OnInit {
       this.downloadGpx(session);
       return;
     }
-    this.clubService.downloadSessionGpx(this.club.id, session.id).subscribe({
+    this.clubSessionService.downloadSessionGpx(this.club.id, session.id).subscribe({
       next: async (blob) => {
         const file = new File([blob], session.gpxFileName ?? 'route.gpx', { type: 'application/gpx+xml' });
         try {
@@ -449,14 +454,14 @@ export class ClubSessionsTabComponent implements OnInit {
   // --- Session actions ---
 
   joinSession(session: ClubTrainingSession): void {
-    this.clubService.joinSession(this.club.id, session.id).subscribe({
+    this.clubSessionService.joinSession(this.club.id, session.id).subscribe({
       next: () => this.loadCalendarSessions(),
       error: () => {},
     });
   }
 
   cancelParticipation(session: ClubTrainingSession): void {
-    this.clubService.cancelSession(this.club.id, session.id).subscribe({
+    this.clubSessionService.cancelSession(this.club.id, session.id).subscribe({
       next: () => this.loadCalendarSessions(),
       error: () => {},
     });
@@ -474,7 +479,7 @@ export class ClubSessionsTabComponent implements OnInit {
   }
 
   unlinkTraining(session: ClubTrainingSession, glt: GroupLinkedTraining): void {
-    this.clubService.unlinkTrainingFromSession(this.club.id, session.id, glt.clubGroupId || undefined).subscribe({
+    this.clubSessionService.unlinkTrainingFromSession(this.club.id, session.id, glt.clubGroupId || undefined).subscribe({
       next: () => {
         this.loadCalendarSessions();
         this.cdr.markForCheck();
@@ -540,7 +545,7 @@ export class ClubSessionsTabComponent implements OnInit {
   confirmCancelSession(): void {
     if (!this.cancelTargetSession) return;
     if (this.cancelMode === 'all' && this.cancelTargetSession.recurringTemplateId) {
-      this.clubService
+      this.clubSessionService
         .cancelRecurringSessions(this.club.id, this.cancelTargetSession.recurringTemplateId, this.cancelReason || undefined)
         .subscribe({
           next: () => {
@@ -551,7 +556,7 @@ export class ClubSessionsTabComponent implements OnInit {
           error: () => {},
         });
     } else {
-      this.clubService.cancelEntireSession(this.club.id, this.cancelTargetSession.id, this.cancelReason || undefined).subscribe({
+      this.clubSessionService.cancelEntireSession(this.club.id, this.cancelTargetSession.id, this.cancelReason || undefined).subscribe({
         next: () => {
           this.closeCancelSessionModal();
           this.loadCalendarSessions();

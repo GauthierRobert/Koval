@@ -11,6 +11,8 @@ import {
   GroupLinkedTraining,
   getEffectiveLinkedTrainings,
 } from '../../../../services/club.service';
+import {ClubSessionService} from '../../../../services/club-session.service';
+import {ClubFeedService} from '../../../../services/club-feed.service';
 import {AuthService} from '../../../../services/auth.service';
 import {ClubFeedTabComponent} from './tabs/club-feed-tab/club-feed-tab.component';
 import {ClubSessionsTabComponent} from './tabs/club-sessions-tab/club-sessions-tab.component';
@@ -49,6 +51,8 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private clubService = inject(ClubService);
+  private clubSessionService = inject(ClubSessionService);
+  private clubFeedService = inject(ClubFeedService);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
   private translate = inject(TranslateService);
@@ -98,6 +102,8 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
         this.loadedTabs.clear();
         this.activeTab = 'feed';
         this.clubService.resetDetail();
+        this.clubSessionService.resetDetail();
+        this.clubFeedService.resetDetail();
         this.clubService.loadClubDetail(this.clubId);
         this.activateTab('feed');
       })
@@ -122,6 +128,8 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.subs.unsubscribe();
     this.clubService.resetDetail();
+    this.clubSessionService.resetDetail();
+    this.clubFeedService.resetDetail();
   }
 
   activateTab(tab: TabId): void {
@@ -134,7 +142,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
         // Feed tab loads its own data via the component
         break;
       case 'sessions':
-        this.clubService.loadRecurringTemplates(this.clubId);
+        this.clubSessionService.loadRecurringTemplates(this.clubId);
         this.clubService.loadMembers(this.clubId);
         break;
       case 'open-sessions':
@@ -146,13 +154,13 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
         this.clubService.loadGroups(this.clubId);
         break;
       case 'stats':
-        this.clubService.loadExtendedStats(this.clubId);
+        this.clubFeedService.loadExtendedStats(this.clubId);
         break;
       case 'leaderboard':
-        this.clubService.loadLeaderboard(this.clubId);
+        this.clubFeedService.loadLeaderboard(this.clubId);
         break;
       case 'race-goals':
-        this.clubService.loadRaceGoals(this.clubId);
+        this.clubFeedService.loadRaceGoals(this.clubId);
         break;
     }
     this.cdr.markForCheck();
@@ -208,7 +216,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
     const monday = this.getMonday(refDate);
     const from = monday.toISOString();
     const to = new Date(monday.getTime() + 7 * 86400000).toISOString();
-    this.clubService.loadSessionsForRange(this.clubId, from, to);
+    this.clubSessionService.loadSessionsForRange(this.clubId, from, to);
     this.aiSessionDate = undefined;
     this.cdr.markForCheck();
   }

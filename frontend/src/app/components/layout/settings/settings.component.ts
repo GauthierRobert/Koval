@@ -1,4 +1,5 @@
-import {ChangeDetectionStrategy, Component, HostListener, inject, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, Component, DestroyRef, HostListener, inject, OnInit} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {BehaviorSubject} from 'rxjs';
@@ -30,6 +31,7 @@ interface PaceField {
 export class SettingsComponent implements OnInit {
     private authService = inject(AuthService);
     private zoneService = inject(ZoneService);
+    private destroyRef = inject(DestroyRef);
 
     user$ = this.authService.user$;
 
@@ -68,11 +70,11 @@ export class SettingsComponent implements OnInit {
     ];
 
     ngOnInit() {
-        this.authService.user$.subscribe(user => {
+        this.authService.user$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
             if (user) this.loadFromUser(user);
         });
 
-        this.zoneService.getMyZoneSystems().subscribe({
+        this.zoneService.getMyZoneSystems().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
             next: (systems) => {
                 this.customZoneSystemsSubject.next(systems.filter(s => s.referenceType === 'CUSTOM'));
             },

@@ -1,4 +1,5 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, OnInit, Output} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, EventEmitter, inject, Input, OnInit, Output} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Router} from '@angular/router';
@@ -12,6 +13,7 @@ import {
   CreateSessionData,
   GroupLinkedTraining,
 } from '../../../../../../services/club.service';
+import {ClubSessionService} from '../../../../../../services/club-session.service';
 import {AuthService} from '../../../../../../services/auth.service';
 import {TrainingService} from '../../../../../../services/training.service';
 import {MeetingPointPickerComponent} from '../../../../../shared/meeting-point-picker/meeting-point-picker.component';
@@ -30,13 +32,15 @@ export class ClubOpenSessionsTabComponent implements OnInit {
   @Output() createAiForSession = new EventEmitter<ClubTrainingSession>();
 
   private clubService = inject(ClubService);
+  private clubSessionService = inject(ClubSessionService);
   private authService = inject(AuthService);
   private trainingService = inject(TrainingService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private translate = inject(TranslateService);
+  private destroyRef = inject(DestroyRef);
 
-  openSessions$ = this.clubService.openSessions$;
+  openSessions$ = this.clubSessionService.openSessions$;
   currentUserId: string | null = null;
   allMembers: ClubMember[] = [];
   clubGroups: ClubGroup[] = [];
@@ -72,15 +76,15 @@ export class ClubOpenSessionsTabComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.authService.user$.subscribe((u) => {
+    this.authService.user$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((u) => {
       this.currentUserId = u?.id ?? null;
       this.cdr.markForCheck();
     });
-    this.clubService.members$.subscribe((members) => {
+    this.clubService.members$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((members) => {
       this.allMembers = members;
       this.cdr.markForCheck();
     });
-    this.clubService.groups$.subscribe((groups) => {
+    this.clubService.groups$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((groups) => {
       this.clubGroups = groups;
       this.cdr.markForCheck();
     });
@@ -112,7 +116,7 @@ export class ClubOpenSessionsTabComponent implements OnInit {
   loadActivities(): void {
     const from = this.calendarWeekStart.toISOString();
     const to = new Date(this.calendarWeekStart.getTime() + 7 * 86400000).toISOString();
-    this.clubService.loadActivities(this.club.id, from, to);
+    this.clubSessionService.loadActivities(this.club.id, from, to);
   }
 
   // --- Filters ---
@@ -223,13 +227,13 @@ export class ClubOpenSessionsTabComponent implements OnInit {
     };
 
     const save$ = this.editingSession
-      ? this.clubService.updateSession(this.club.id, this.editingSession.id, data)
-      : this.clubService.createSession(this.club.id, data);
+      ? this.clubSessionService.updateSession(this.club.id, this.editingSession.id, data)
+      : this.clubSessionService.createSession(this.club.id, data);
 
     save$.subscribe({
       next: (session) => {
         if (this.gpxFile) {
-          this.clubService.uploadSessionGpx(this.club.id, session.id, this.gpxFile).subscribe({
+          this.clubSessionService.uploadSessionGpx(this.club.id, session.id, this.gpxFile).subscribe({
             next: () => this.afterSave(),
             error: () => this.afterSave(),
           });
@@ -248,13 +252,13 @@ export class ClubOpenSessionsTabComponent implements OnInit {
   // --- Card actions ---
 
   joinSession(session: ClubTrainingSession): void {
-    this.clubService.joinSession(this.club.id, session.id).subscribe({
+    this.clubSessionService.joinSession(this.club.id, session.id).subscribe({
       next: () => this.loadActivities(),
     });
   }
 
   leaveSession(session: ClubTrainingSession): void {
-    this.clubService.cancelSession(this.club.id, session.id).subscribe({
+    this.clubSessionService.cancelSession(this.club.id, session.id).subscribe({
       next: () => this.loadActivities(),
     });
   }
@@ -268,7 +272,7 @@ export class ClubOpenSessionsTabComponent implements OnInit {
   }
 
   unlinkTraining(event: { session: ClubTrainingSession; glt: GroupLinkedTraining }): void {
-    this.clubService.unlinkTrainingFromSession(this.club.id, event.session.id, event.glt.clubGroupId || undefined).subscribe({
+    this.clubSessionService.unlinkTrainingFromSession(this.club.id, event.session.id, event.glt.clubGroupId || undefined).subscribe({
       next: () => {
         this.loadActivities();
         this.cdr.markForCheck();
@@ -303,7 +307,7 @@ export class ClubOpenSessionsTabComponent implements OnInit {
 
   confirmCancelSession(): void {
     if (!this.cancelTargetSession) return;
-    this.clubService.cancelEntireSession(this.club.id, this.cancelTargetSession.id, this.cancelReason || undefined).subscribe({
+    this.clubSessionService.cancelEntireSession(this.club.id, this.cancelTargetSession.id, this.cancelReason || undefined).subscribe({
       next: () => {
         this.closeCancelSessionModal();
         this.loadActivities();
@@ -315,7 +319,7 @@ export class ClubOpenSessionsTabComponent implements OnInit {
 
   removeGpx(): void {
     if (this.editingSession) {
-      this.clubService.deleteSessionGpx(this.club.id, this.editingSession.id).subscribe({
+      this.clubSessionService.deleteSessionGpx(this.club.id, this.editingSession.id).subscribe({
         next: () => this.loadActivities(),
       });
     }
@@ -324,7 +328,7 @@ export class ClubOpenSessionsTabComponent implements OnInit {
   // --- GPX actions ---
 
   downloadGpx(session: ClubTrainingSession): void {
-    this.clubService.downloadSessionGpx(this.club.id, session.id).subscribe({
+    this.clubSessionService.downloadSessionGpx(this.club.id, session.id).subscribe({
       next: (blob) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -341,7 +345,7 @@ export class ClubOpenSessionsTabComponent implements OnInit {
       this.downloadGpx(session);
       return;
     }
-    this.clubService.downloadSessionGpx(this.club.id, session.id).subscribe({
+    this.clubSessionService.downloadSessionGpx(this.club.id, session.id).subscribe({
       next: async (blob) => {
         const file = new File([blob], session.gpxFileName ?? 'route.gpx', { type: 'application/gpx+xml' });
         try {

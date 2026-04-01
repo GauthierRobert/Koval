@@ -4,7 +4,7 @@ import {Router} from '@angular/router';
 import {Subscription} from 'rxjs';
 import {filter} from 'rxjs/operators';
 import {NotificationService} from '../../../services/notification.service';
-import {ClubService} from '../../../services/club.service';
+import {ClubSessionService} from '../../../services/club-session.service';
 import {MessagePayload} from 'firebase/messaging';
 
 @Component({
@@ -107,7 +107,7 @@ import {MessagePayload} from 'firebase/messaging';
 })
 export class NotificationToastComponent implements OnInit, OnDestroy {
   private readonly notificationService = inject(NotificationService);
-  private readonly clubService = inject(ClubService);
+  private readonly clubSessionService = inject(ClubSessionService);
   private readonly router = inject(Router);
   private sub: Subscription | null = null;
   private dismissTimer: ReturnType<typeof setTimeout> | null = null;
@@ -150,7 +150,7 @@ export class NotificationToastComponent implements OnInit, OnDestroy {
     const clubId = this.data['clubId'];
     const sessionId = this.data['sessionId'];
     if (clubId && sessionId) {
-      this.clubService.cancelSession(clubId, sessionId).subscribe({ error: () => {} });
+      this.clubSessionService.cancelSession(clubId, sessionId).subscribe({ error: () => {} });
     }
     this.visible = false;
   }

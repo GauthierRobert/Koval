@@ -1,10 +1,11 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject, OnInit} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {BehaviorSubject, debounceTime, distinctUntilChanged, of, switchMap} from 'rxjs';
-import {map, take} from 'rxjs/operators';
+import {filter, map, take} from 'rxjs/operators';
 import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
 import {Race, RaceService, RouteCoordinate, SimulationRequest} from '../../../services/race.service';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
@@ -26,6 +27,7 @@ export class GoalsPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
   private translate = inject(TranslateService);
+  private destroyRef = inject(DestroyRef);
 
   allGoals$ = this.raceGoalService.goals$.pipe(map((goals) => this.sortGoals(goals)));
 
@@ -71,24 +73,22 @@ export class GoalsPageComponent implements OnInit {
     this.raceGoalService.loadGoals();
 
     // Auto-select nearest upcoming goal on first load
-    this.allGoals$.pipe(take(1)).subscribe((goals) => {
+    this.allGoals$.pipe(take(1), takeUntilDestroyed(this.destroyRef)).subscribe((goals) => {
       const upcoming = goals.filter((g) => this.isUpcoming(g));
       const toSelect = upcoming.length > 0 ? upcoming[0] : goals[0] ?? null;
       if (toSelect) this.selectGoal(toSelect);
     });
 
     // Handle raceId query param from /races page "ADD TO MY GOALS"
-    this.route.queryParams.subscribe((params) => {
-      const raceId = params['raceId'];
-      if (raceId) {
-        this.raceService.getRace(raceId).subscribe({
-          next: (race) => {
-            this.openCreate();
-            this.selectRace(race);
-            this.router.navigate([], { replaceUrl: true });
-          },
-        });
-      }
+    this.route.queryParams.pipe(
+      map((params) => params['raceId']),
+      filter((raceId): raceId is string => !!raceId),
+      switchMap((raceId) => this.raceService.getRace(raceId)),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe((race) => {
+      this.openCreate();
+      this.selectRace(race);
+      this.router.navigate([], { replaceUrl: true });
     });
   }
 
@@ -233,7 +233,7 @@ export class GoalsPageComponent implements OnInit {
 
   loadSimulationRequests(goal: RaceGoal): void {
     this.raceService.loadSimulationRequests(goal.id);
-    this.raceService.simulationRequests$.subscribe({
+    this.raceService.simulationRequests$.pipe(take(1), takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (reqs) => {
         this.simRequestsCache[goal.id] = reqs.filter((r) => r.goalId === goal.id);
         this.cdr.markForCheck();

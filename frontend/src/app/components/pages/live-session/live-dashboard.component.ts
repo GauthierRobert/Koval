@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, DestroyRef, ElementRef, inject, OnDestroy, ViewChild} from '@angular/core';
+import {AfterViewInit, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, OnDestroy, ViewChild} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
@@ -17,7 +17,8 @@ import {formatPace, formatTimeMS} from '../../shared/format/format.utils';
   standalone: true,
   imports: [CommonModule, TranslateModule, ZombieGameComponent, SessionSummaryComponent],
   templateUrl: './live-dashboard.component.html',
-  styleUrl: './live-dashboard.component.css'
+  styleUrl: './live-dashboard.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
   private translate = inject(TranslateService);

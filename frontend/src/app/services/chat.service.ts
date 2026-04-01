@@ -5,6 +5,7 @@ import {skip, take} from 'rxjs/operators';
 import {TranslateService} from '@ngx-translate/core';
 import {TrainingService} from './training.service';
 import {environment} from '../../environments/environment';
+import {parseRemainingBuffer, parseSseBuffer} from './sse-parser.util';
 
 export type AgentType =
   | 'TRAINING_CREATION'
@@ -225,86 +226,18 @@ export class ChatService {
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
-        buffer = buffer.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        const { events: sseEvents, remaining } = parseSseBuffer(buffer);
+        buffer = remaining;
 
-        const events = buffer.split('\n\n');
-        buffer = events.pop() || '';
-
-        for (const event of events) {
-          if (!event.trim()) continue;
-
-          const lines = event.split('\n');
-          let eventType = '';
-          const dataLines: string[] = [];
-
-          for (const line of lines) {
-            if (line.startsWith('event:')) {
-              eventType = line.substring(6).trim();
-            } else if (line.startsWith('data:')) {
-              dataLines.push(line.substring(5));
-            } else if (line.startsWith('id:') || line.startsWith('retry:') || line.startsWith(':')) {
-              continue;
-            }
-          }
-
-          const data = dataLines.join('\n');
-
-          if (eventType === 'status') {
-            const statusValue = data.trim() as ActivityStatus;
-            this.ngZone.run(() => this.activityStatusSubject.next(statusValue));
-          } else if (eventType === 'content') {
-            aiMessage.content += data;
-            this.emit();
-          } else if (eventType === 'error') {
-            aiMessage.content = data.trim();
-            this.ngZone.run(() => this.activityStatusSubject.next('error'));
-            this.emitImmediate();
-          } else if (eventType === 'conversation_id') {
-            const conversationId = data.trim();
-            if (conversationId) {
-              this.ngZone.run(() => this.activeChatIdSubject.next(conversationId));
-            }
-          } else if (eventType === 'agent') {
-            const agentLabel = data.trim();
-            aiMessage.agentType = agentLabel;
-            this.ngZone.run(() => this.lastAgentTypeSubject.next(agentLabel));
-            this.emit();
-          } else if (eventType === 'tool_call') {
-            try {
-              const { name, label } = JSON.parse(data);
-              if (!aiMessage.actions) aiMessage.actions = [];
-              aiMessage.actions.push({ name, label, status: 'pending' });
-              this.emit();
-            } catch { /* ignore malformed */ }
-          } else if (eventType === 'tool_result') {
-            try {
-              const { name, label, success } = JSON.parse(data);
-              const step = [...(aiMessage.actions ?? [])].reverse().find(
-                (a) => a.name === name && a.status === 'pending',
-              );
-              if (step) {
-                step.label = label;
-                step.status = success ? 'done' : 'error';
-              }
-              this.emit();
-            } catch { /* ignore malformed */ }
-          }
+        for (const { eventType, data } of sseEvents) {
+          this.handleSseEvent(eventType, data, aiMessage);
         }
       }
 
-      if (buffer.trim()) {
-        const lines = buffer.split('\n');
-        let eventType = '';
-        const dataLines: string[] = [];
-        for (const line of lines) {
-          if (line.startsWith('event:')) eventType = line.substring(6).trim();
-          else if (line.startsWith('data:')) dataLines.push(line.substring(5));
-        }
-        const data = dataLines.join('\n');
-        if (eventType === 'content' && data) {
-          aiMessage.content += data;
-          this.emit();
-        }
+      const remainingEvent = parseRemainingBuffer(buffer);
+      if (remainingEvent && remainingEvent.eventType === 'content') {
+        aiMessage.content += remainingEvent.data;
+        this.emit();
       }
 
       this.emitImmediate();
@@ -332,6 +265,49 @@ export class ChatService {
       this.emit();
     } finally {
       this.setStreaming(-1);
+    }
+  }
+
+  private handleSseEvent(eventType: string, data: string, aiMessage: ChatMessage): void {
+    if (eventType === 'status') {
+      const statusValue = data.trim() as ActivityStatus;
+      this.ngZone.run(() => this.activityStatusSubject.next(statusValue));
+    } else if (eventType === 'content') {
+      aiMessage.content += data;
+      this.emit();
+    } else if (eventType === 'error') {
+      aiMessage.content = data.trim();
+      this.ngZone.run(() => this.activityStatusSubject.next('error'));
+      this.emitImmediate();
+    } else if (eventType === 'conversation_id') {
+      const conversationId = data.trim();
+      if (conversationId) {
+        this.ngZone.run(() => this.activeChatIdSubject.next(conversationId));
+      }
+    } else if (eventType === 'agent') {
+      const agentLabel = data.trim();
+      aiMessage.agentType = agentLabel;
+      this.ngZone.run(() => this.lastAgentTypeSubject.next(agentLabel));
+      this.emit();
+    } else if (eventType === 'tool_call') {
+      try {
+        const { name, label } = JSON.parse(data);
+        if (!aiMessage.actions) aiMessage.actions = [];
+        aiMessage.actions.push({ name, label, status: 'pending' });
+        this.emit();
+      } catch { /* ignore malformed */ }
+    } else if (eventType === 'tool_result') {
+      try {
+        const { name, label, success } = JSON.parse(data);
+        const step = [...(aiMessage.actions ?? [])].reverse().find(
+          (a) => a.name === name && a.status === 'pending',
+        );
+        if (step) {
+          step.label = label;
+          step.status = success ? 'done' : 'error';
+        }
+        this.emit();
+      } catch { /* ignore malformed */ }
     }
   }
 
