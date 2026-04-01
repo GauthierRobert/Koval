@@ -63,6 +63,7 @@
   --dev-accent-color: #f59e0b;
   --google-white: #fff;
   --google-text: #333;
+  --google-border: transparent;
 
   /* Positive/negative sentiment colors (for metrics and comparisons) */
   --positive-color: #2ecc71;
@@ -187,6 +188,8 @@
   --color-medium-gray: #ccc;
   --color-dark-gray: #333;
   --color-very-dark: #1e272e;
+
+  --google-border: #dadce0;
 
   --overlay-3: rgba(0, 0, 0, 0.03);
   --overlay-5: rgba(0, 0, 0, 0.05);

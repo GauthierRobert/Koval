@@ -188,6 +188,22 @@
     <profiles>
         <profile>
             <id>native</id>
+            <dependencies>
+                <!-- GraalVM Community 25 has a Groovy polyglot substitution that targets
+                     IndyInterface.invalidateSwitchPoints() which was removed in Groovy 4.x.
+                     Marking Groovy as 'provided' excludes it from the native image classpath
+                     so the substitution processor never finds the class and skips it. -->
+                <dependency>
+                    <groupId>org.apache.groovy</groupId>
+                    <artifactId>groovy</artifactId>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.codehaus.groovy</groupId>
+                    <artifactId>groovy</artifactId>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
             <build>
                 <plugins>
                     <plugin>

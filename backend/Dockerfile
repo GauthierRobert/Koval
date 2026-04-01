@@ -1,4 +1,4 @@
-FROM ghcr.io/graalvm/native-image-community:25 AS build
+FROM ghcr.io/graalvm/native-image-community:25 AS builder
 RUN microdnf install -y maven findutils
 WORKDIR /app
 COPY pom.xml .
@@ -8,6 +8,6 @@ RUN mvn -Pnative native:compile -DskipTests -q
 
 FROM debian:12-slim
 WORKDIR /app
-COPY --from=build /app/target/training-planner-backend ./app
+COPY --from=builder /app/target/training-planner-backend ./app
 EXPOSE 8080
 ENTRYPOINT ["./app"]

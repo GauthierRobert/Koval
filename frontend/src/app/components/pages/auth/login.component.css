@@ -142,6 +142,7 @@
     .auth-btn.google {
       background: var(--google-white);
       color: var(--color-dark-gray);
+      border: 1px solid var(--google-border);
       height: 42px;
       width: 207px;
       padding: 0;

@@ -13,12 +13,11 @@ import {daysUntil as sharedDaysUntil, weeksUntil as sharedWeeksUntil} from '../.
 import {GoalSidebarItemComponent} from './goal-sidebar-item/goal-sidebar-item.component';
 import {GoalCountdownHeroComponent} from './goal-countdown-hero/goal-countdown-hero.component';
 import {GpxDisciplineUploaderComponent} from './gpx-discipline-uploader/gpx-discipline-uploader.component';
-import {SimulationHistoryListComponent} from './simulation-history-list/simulation-history-list.component';
 
 @Component({
   selector: 'app-goals-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, SportIconComponent, RouteMapComponent, GoalSidebarItemComponent, GoalCountdownHeroComponent, GpxDisciplineUploaderComponent, SimulationHistoryListComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, SportIconComponent, GoalSidebarItemComponent, GoalCountdownHeroComponent, GpxDisciplineUploaderComponent],
   templateUrl: './goals-page.component.html',
   styleUrl: './goals-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
