@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, HostListener, inject, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, HostListener, inject, OnDestroy, OnInit, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {HttpClient} from '@angular/common/http';
@@ -14,7 +14,7 @@ import {environment} from '../../../../environments/environment';
   styleUrl: './connected-apps-modal.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ConnectedAppsModalComponent {
+export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
 
@@ -22,6 +22,22 @@ export class ConnectedAppsModalComponent {
 
   user$ = this.authService.user$;
   unlinking = false;
+
+  private onLinkMessage = (event: MessageEvent) => {
+    if (event.origin !== window.location.origin) return;
+    if (event.data?.type !== 'ACCOUNT_LINKED') return;
+    if (event.data.success) {
+      this.authService.refreshUser();
+    }
+  };
+
+  ngOnInit(): void {
+    window.addEventListener('message', this.onLinkMessage);
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('message', this.onLinkMessage);
+  }
 
   getConnectedCount(user: User): number {
     if (!user.linkedAccounts) return 0;

@@ -132,9 +132,12 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 # TO VERIFY
 
 ## TO FIX
-- Colour of Zone need to be changed, (in Zone distribution, Zone display in analysis, zone creation,...) must use colour that goes from purple (lowest) to dark red (highest). Default Zone Color must use the same system. You can assuse that the mean of the lowest zone is 0% then purple and the mean of the highest zone is 100% then dark red.
+- Language change can be put in the settings modal
+- In PWA mobile, User CLub are not updated when user redeem an invite code
+- 
 
 # TO IMPLEMENT
+- Colour of Zone need to be changed, (in Zone distribution, Zone display in analysis, zone creation,...) must use colour that goes from purple (lowest) to dark red (highest). Default Zone Color must use the same system. You can assuse that the mean of the lowest zone is 0% then purple and the mean of the highest zone is 100% then dark red.
 - SnapShot simulation race instead of save simulation race, it must be an action of user and parameters must be saved (including front end params)
 
 # Club

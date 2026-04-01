@@ -1,7 +1,7 @@
 package com.koval.trainingplannerbackend.ai.tools.goal;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
-import com.koval.trainingplannerbackend.goal.RaceGoal;
+import com.koval.trainingplannerbackend.goal.RaceGoalResponse;
 import com.koval.trainingplannerbackend.goal.RaceGoalService;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
@@ -56,13 +56,13 @@ public class GoalToolService {
             long daysUntil,
             String raceId
     ) {
-        static GoalSummary from(RaceGoal g) {
-            long days = g.getRaceDate() != null ? LocalDate.now().until(g.getRaceDate()).getDays() : -1;
+        static GoalSummary from(RaceGoalResponse g) {
+            long days = g.raceDate() != null ? LocalDate.now().until(g.raceDate()).getDays() : -1;
             return new GoalSummary(
-                    g.getId(), g.getTitle(), g.getSport(),
-                    g.getRaceDate() != null ? g.getRaceDate().toString() : null, g.getPriority(),
-                    g.getDistance(), g.getLocation(), g.getTargetTime(), g.getNotes(),
-                    days, g.getRaceId());
+                    g.id(), g.title(), g.sport(),
+                    g.raceDate() != null ? g.raceDate().toString() : null, g.priority(),
+                    g.distance(), g.location(), g.targetTime(), g.notes(),
+                    days, g.raceId());
         }
     }
 }

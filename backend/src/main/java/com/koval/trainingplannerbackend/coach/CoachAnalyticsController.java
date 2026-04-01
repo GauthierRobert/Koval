@@ -1,7 +1,6 @@
 package com.koval.trainingplannerbackend.coach;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
-import com.koval.trainingplannerbackend.goal.RaceGoal;
 import com.koval.trainingplannerbackend.goal.RaceGoalResponse;
 import com.koval.trainingplannerbackend.goal.RaceGoalService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;

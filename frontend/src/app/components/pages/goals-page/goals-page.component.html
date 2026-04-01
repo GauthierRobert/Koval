@@ -105,7 +105,7 @@
         }
 
         <!-- Race info (if linked race loaded) -->
-        @if (goal.raceId && getRace(goal.raceId); as race) {
+        @if (goal.raceId && getRace(allGoals, goal.raceId); as race) {
           <div class="detail-race-info">
             <span class="detail-section-label">{{ 'GOALS.SECTION_RACE_INFO' | translate }}</span>
             @if (race.swimDistanceM || race.bikeDistanceM || race.runDistanceM || race.elevationGainM) {

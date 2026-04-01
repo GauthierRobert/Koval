@@ -1,12 +1,12 @@
 package com.koval.trainingplannerbackend.club.group;
 
 import com.koval.trainingplannerbackend.club.invite.ClubInviteCodeService;
-import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
-import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService;
 import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
+import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

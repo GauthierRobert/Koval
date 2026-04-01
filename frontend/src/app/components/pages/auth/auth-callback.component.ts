@@ -26,6 +26,26 @@ export class AuthCallbackComponent implements OnInit {
             }
 
             const isGoogle = this.router.url.startsWith('/auth/google');
+            const isLinking = params['state'] === 'link';
+
+            if (isLinking) {
+                const linkHandler = isGoogle
+                    ? this.authService.linkGoogleWithCode(code)
+                    : this.authService.linkStravaWithCode(code);
+
+                linkHandler.subscribe({
+                    next: () => {
+                        window.opener?.postMessage({ type: 'ACCOUNT_LINKED', success: true }, window.location.origin);
+                        window.close();
+                    },
+                    error: (err) => {
+                        window.opener?.postMessage({ type: 'ACCOUNT_LINKED', success: false, error: err?.error?.message ?? 'Linking failed' }, window.location.origin);
+                        window.close();
+                    },
+                });
+                return;
+            }
+
             const handler = isGoogle
                 ? this.authService.handleGoogleCallback(code)
                 : this.authService.handleStravaCallback(code);

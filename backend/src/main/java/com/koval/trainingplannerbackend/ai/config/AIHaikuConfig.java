@@ -2,10 +2,10 @@ package com.koval.trainingplannerbackend.ai.config;
 
 import com.koval.trainingplannerbackend.ai.CompactingChatMemory;
 import com.koval.trainingplannerbackend.ai.ConversationSummarizer;
-import com.koval.trainingplannerbackend.ai.logger.UsageTracker;
 import com.koval.trainingplannerbackend.ai.agents.AgentType;
 import com.koval.trainingplannerbackend.ai.agents.SpecialistAgentService;
 import com.koval.trainingplannerbackend.ai.agents.TrainingAgent;
+import com.koval.trainingplannerbackend.ai.logger.UsageTracker;
 import com.koval.trainingplannerbackend.ai.tools.club.ClubToolService;
 import com.koval.trainingplannerbackend.ai.tools.coach.CoachToolService;
 import com.koval.trainingplannerbackend.ai.tools.goal.GoalToolService;

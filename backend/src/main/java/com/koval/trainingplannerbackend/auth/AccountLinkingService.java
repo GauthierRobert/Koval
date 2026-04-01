@@ -71,6 +71,19 @@ public class AccountLinkingService {
             return userRepository.save(user);
         }
 
+        // Reconcile by email: if a user with the same email exists (e.g. from Strava), link Google to that account
+        if (email != null && !email.isBlank()) {
+            Optional<User> byEmail = userRepository.findByEmail(email);
+            if (byEmail.isPresent()) {
+                User user = byEmail.get();
+                user.setGoogleId(googleId);
+                user.setDisplayName(displayName);
+                user.setProfilePicture(profilePicture);
+                user.setLastLogin(LocalDateTime.now());
+                return userRepository.save(user);
+            }
+        }
+
         User newUser = new User();
         newUser.setGoogleId(googleId);
         newUser.setAuthProvider(AuthProvider.GOOGLE);
@@ -182,7 +195,6 @@ public class AccountLinkingService {
             throw new IllegalStateException("Cannot unlink Google — it's your only login method");
         }
         user.setGoogleId(null);
-        user.setEmail(null);
         if (user.getAuthProvider() == AuthProvider.GOOGLE) {
             user.setAuthProvider(AuthProvider.STRAVA);
         }
