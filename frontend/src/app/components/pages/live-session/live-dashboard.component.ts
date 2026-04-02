@@ -39,6 +39,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
   coachingCue: CoachingCue | null = null;
   coachingFading = false;
   coachingEnabled = this.liveCoachingService.enabled;
+  voiceEnabled = this.liveCoachingService.voiceEnabled;
   private coachingFadeTimer: ReturnType<typeof setTimeout> | null = null;
   private coachingRemoveTimer: ReturnType<typeof setTimeout> | null = null;
   private historyService = inject(HistoryService);
@@ -330,6 +331,11 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
   toggleCoaching() {
     this.liveCoachingService.toggle();
     this.coachingEnabled = this.liveCoachingService.enabled;
+  }
+
+  toggleVoice() {
+    this.liveCoachingService.toggleVoice();
+    this.voiceEnabled = this.liveCoachingService.voiceEnabled;
   }
 
   toggleGame() {

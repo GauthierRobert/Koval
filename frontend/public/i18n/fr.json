@@ -746,7 +746,9 @@
     "BTN_SAVE_SYNC": "ENREGISTRER & SYNC.",
     "BTN_DISCARD": "ABANDONNER",
     "AI_COACH_ON": "COACH IA ON",
-    "AI_COACH_OFF": "COACH IA OFF"
+    "AI_COACH_OFF": "COACH IA OFF",
+    "VOICE_ON": "Coaching vocal actif",
+    "VOICE_OFF": "Coaching vocal inactif"
   },
   "SESSION_SUMMARY": {
     "WORKOUT_COMPLETE": "SÉANCE TERMINÉE",

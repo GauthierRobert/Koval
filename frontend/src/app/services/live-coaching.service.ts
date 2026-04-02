@@ -52,6 +52,11 @@ export class LiveCoachingService {
   );
   enabled$ = this.enabledSubject.asObservable();
 
+  private voiceEnabledSubject = new BehaviorSubject<boolean>(
+    localStorage.getItem('ai-coaching-voice') === 'true',
+  );
+  voiceEnabled$ = this.voiceEnabledSubject.asObservable();
+
   private recentMetrics: LiveMetrics[] = [];
   private metricsSub: Subscription | null = null;
   private blockSub: Subscription | null = null;
@@ -63,6 +68,10 @@ export class LiveCoachingService {
     return this.enabledSubject.value;
   }
 
+  get voiceEnabled(): boolean {
+    return this.voiceEnabledSubject.value;
+  }
+
   toggle(): void {
     const next = !this.enabledSubject.value;
     this.enabledSubject.next(next);
@@ -72,6 +81,33 @@ export class LiveCoachingService {
     } else if (!next) {
       this.stop();
     }
+  }
+
+  toggleVoice(): void {
+    const next = !this.voiceEnabledSubject.value;
+    this.voiceEnabledSubject.next(next);
+    localStorage.setItem('ai-coaching-voice', String(next));
+  }
+
+  private speak(text: string): void {
+    if (!this.voiceEnabledSubject.value) return;
+    if (!('speechSynthesis' in window)) return;
+
+    // Cancel any ongoing speech to avoid overlap
+    speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.05;
+    utterance.pitch = 1.0;
+    utterance.volume = 0.9;
+
+    // Prefer an English voice if available (coaching cues are in English)
+    const voices = speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.lang.startsWith('en') && v.localService) ||
+                      voices.find(v => v.lang.startsWith('en'));
+    if (preferred) utterance.voice = preferred;
+
+    speechSynthesis.speak(utterance);
   }
 
   start(): void {
@@ -125,6 +161,7 @@ export class LiveCoachingService {
     }
     this.recentMetrics = [];
     this.cueSubject.next(null);
+    if ('speechSynthesis' in window) speechSynthesis.cancel();
   }
 
   private async requestCue(triggerType: string): Promise<void> {
@@ -165,9 +202,11 @@ export class LiveCoachingService {
     try {
       const message = await this.fetchCoachingCue(request);
       if (message && message.trim()) {
+        const trimmed = message.trim();
+        this.speak(trimmed);
         this.ngZone.run(() => {
           this.cueSubject.next({
-            message: message.trim(),
+            message: trimmed,
             timestamp: new Date(),
             triggerType: triggerType as CoachingCue['triggerType'],
           });

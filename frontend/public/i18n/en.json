@@ -746,7 +746,9 @@
     "BTN_SAVE_SYNC": "SAVE & SYNC",
     "BTN_DISCARD": "DISCARD",
     "AI_COACH_ON": "AI COACH ON",
-    "AI_COACH_OFF": "AI COACH OFF"
+    "AI_COACH_OFF": "AI COACH OFF",
+    "VOICE_ON": "Voice coaching on",
+    "VOICE_OFF": "Voice coaching off"
   },
   "SESSION_SUMMARY": {
     "WORKOUT_COMPLETE": "WORKOUT COMPLETE",

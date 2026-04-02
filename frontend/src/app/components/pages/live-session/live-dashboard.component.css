@@ -126,6 +126,24 @@
     }
     .coaching-toggle:hover { transform: scale(1.03); }
 
+    .voice-toggle {
+      background: var(--surface-hover);
+      border: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: all 0.2s;
+    }
+    .voice-toggle.active {
+      background: rgba(0, 194, 255, 0.12);
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+    .voice-toggle:hover { transform: scale(1.03); }
+
     .coaching-banner {
       display: flex;
       align-items: center;
