@@ -63,7 +63,7 @@ public class UserResponseMapper {
         linkedAccounts.put("zwift", user.getZwiftUserId() != null);
         map.put("linkedAccounts", linkedAccounts);
         map.put("authProvider", user.getAuthProvider() != null ? user.getAuthProvider().name() : null);
-        map.put("zwiftAutoSyncWorkouts", user.isZwiftAutoSyncWorkouts());
+        map.put("zwiftAutoSyncWorkouts", Boolean.TRUE.equals(user.getZwiftAutoSyncWorkouts()));
 
         if (user.isCoach()) {
             List<String> athleteIds = groupService.getAthleteIdsForCoach(user.getId());

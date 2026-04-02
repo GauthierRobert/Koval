@@ -62,7 +62,7 @@ public class User {
     private String zwiftAccessToken;
     private String zwiftRefreshToken;
     private LocalDateTime zwiftLastSyncAt;
-    private boolean zwiftAutoSyncWorkouts = false;
+    private Boolean zwiftAutoSyncWorkouts = false;
 
     public User() {
         this.createdAt = LocalDateTime.now();

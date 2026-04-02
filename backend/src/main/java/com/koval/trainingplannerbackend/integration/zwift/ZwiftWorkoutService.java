@@ -64,7 +64,7 @@ public class ZwiftWorkoutService {
         if (!"CYCLING".equals(training.getSportType())) return;
 
         userRepository.findById(userId).ifPresent(user -> {
-            if (user.isZwiftAutoSyncWorkouts()
+            if (Boolean.TRUE.equals(user.getZwiftAutoSyncWorkouts())
                     && user.getZwiftAccessToken() != null
                     && user.getZwiftUserId() != null) {
                 Thread.startVirtualThread(() -> {
