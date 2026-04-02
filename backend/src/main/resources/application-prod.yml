@@ -10,19 +10,25 @@ spring:
           max-tokens: 4096
 
 strava:
-  client-id: ${STRAVA_CLIENT_ID}
-  client-secret: ${STRAVA_CLIENT_SECRET}
-  redirect-uri: ${STRAVA_REDIRECT_URI}
-  webhook-verify-token: ${STRAVA_WEBHOOK_VERIFY_TOKEN}
-  webhook-callback-url: ${STRAVA_WEBHOOK_CALLBACK_URL}
+  client-id: ${STRAVA_CLIENT_ID:}
+  client-secret: ${STRAVA_CLIENT_SECRET:}
+  redirect-uri: ${STRAVA_REDIRECT_URI:}
+  webhook-verify-token: ${STRAVA_WEBHOOK_VERIFY_TOKEN:}
+  webhook-callback-url: ${STRAVA_WEBHOOK_CALLBACK_URL:}
 
 admin:
-  secret: ${ADMIN_SECRET}
+  secret: ${ADMIN_SECRET:}
 
 garmin:
-  consumer-key: ${GARMIN_CONSUMER_KEY}
-  consumer-secret: ${GARMIN_CONSUMER_SECRET}
-  redirect-uri: ${GARMIN_REDIRECT_URI}
+  consumer-key: ${GARMIN_CONSUMER_KEY:}
+  consumer-secret: ${GARMIN_CONSUMER_SECRET:}
+  redirect-uri: ${GARMIN_REDIRECT_URI:}
+
+club-feed:
+  broker:
+    type: ${CLUB_FEED_BROKER_TYPE:pubsub}
+    pubsub:
+      project-id: ${GCP_PROJECT_ID:}
 
 zwift:
   enabled: ${ZWIFT_ENABLED:false}

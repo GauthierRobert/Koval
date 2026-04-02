@@ -40,6 +40,8 @@ jobs:
           image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           env_vars: |
             SPRING_PROFILES_ACTIVE=prod
+            CLUB_FEED_BROKER_TYPE=pubsub
+            GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}
           secrets: |
             ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest
             JWT_SECRET=JWT_SECRET:latest
@@ -48,10 +50,18 @@ jobs:
             STRAVA_CLIENT_ID=STRAVA_CLIENT_ID:latest
             STRAVA_CLIENT_SECRET=STRAVA_CLIENT_SECRET:latest
             STRAVA_REDIRECT_URI=STRAVA_REDIRECT_URI:latest
+            STRAVA_WEBHOOK_VERIFY_TOKEN=STRAVA_WEBHOOK_VERIFY_TOKEN:latest
+            STRAVA_WEBHOOK_CALLBACK_URL=STRAVA_WEBHOOK_CALLBACK_URL:latest
             GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID:latest
             GOOGLE_CLIENT_SECRET=GOOGLE_CLIENT_SECRET:latest
             GOOGLE_REDIRECT_URI=GOOGLE_REDIRECT_URI:latest
             GOOGLE_MOBILE_CALLBACK_URI=GOOGLE_MOBILE_CALLBACK_URI:latest
+            ADMIN_SECRET=ADMIN_SECRET:latest
+            GARMIN_CONSUMER_KEY=GARMIN_CONSUMER_KEY:latest
+            GARMIN_CONSUMER_SECRET=GARMIN_CONSUMER_SECRET:latest
+            GARMIN_REDIRECT_URI=GARMIN_REDIRECT_URI:latest
+            FIREBASE_SERVICE_ACCOUNT_JSON=FIREBASE_SERVICE_ACCOUNT_JSON:latest
+            FIREBASE_PROJECT_ID=FIREBASE_PROJECT_ID:latest
           flags: --allow-unauthenticated --port=8080
 
   frontend:
