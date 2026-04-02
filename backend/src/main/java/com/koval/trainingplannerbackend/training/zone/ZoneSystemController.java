@@ -5,7 +5,6 @@ import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRole;
 import com.koval.trainingplannerbackend.auth.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,7 +23,6 @@ import java.util.Set;
 /** REST API for training zone system management (coach CRUD, athlete/club discovery). */
 @RestController
 @RequestMapping("/api/zones")
-@CrossOrigin(origins = "*")
 public class ZoneSystemController {
 
     private final ZoneSystemService zoneSystemService;

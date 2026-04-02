@@ -15,6 +15,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +32,14 @@ public class StravaApiClient {
 
     private final StravaOAuthService stravaOAuthService;
     private final UserRepository userRepository;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+
+    {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(java.time.Duration.ofSeconds(5));
+        factory.setReadTimeout(java.time.Duration.ofSeconds(10));
+        restTemplate = new RestTemplate(factory);
+    }
 
     public StravaApiClient(StravaOAuthService stravaOAuthService, UserRepository userRepository) {
         this.stravaOAuthService = stravaOAuthService;

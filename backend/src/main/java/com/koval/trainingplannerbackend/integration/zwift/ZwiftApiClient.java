@@ -13,6 +13,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+
 import java.util.List;
 import java.util.Map;
 
@@ -28,7 +30,14 @@ public class ZwiftApiClient {
 
     private final ZwiftAuthService zwiftAuthService;
     private final UserRepository userRepository;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+
+    {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(java.time.Duration.ofSeconds(5));
+        factory.setReadTimeout(java.time.Duration.ofSeconds(15));
+        restTemplate = new RestTemplate(factory);
+    }
 
     public ZwiftApiClient(ZwiftAuthService zwiftAuthService, UserRepository userRepository) {
         this.zwiftAuthService = zwiftAuthService;

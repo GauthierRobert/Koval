@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend.coach;
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.auth.UserRole;
+import com.koval.trainingplannerbackend.config.audit.AuditLog;
 import com.koval.trainingplannerbackend.club.Club;
 import com.koval.trainingplannerbackend.club.ClubRepository;
 import com.koval.trainingplannerbackend.club.dto.MyClubRoleEntry;
@@ -73,6 +74,7 @@ public class CoachService {
     /**
      * Assign a training to one or more athletes.
      */
+    @AuditLog(action = "ASSIGN_TRAINING")
     @Transactional
     public List<ScheduledWorkout> assignTraining(
             String coachId,

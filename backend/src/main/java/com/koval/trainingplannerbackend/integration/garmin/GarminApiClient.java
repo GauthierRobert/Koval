@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+
 import java.util.List;
 import java.util.Map;
 
@@ -23,7 +25,14 @@ public class GarminApiClient {
     private static final String BASE_URL = "https://apis.garmin.com";
 
     private final GarminOAuthService oauthService;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+
+    {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(java.time.Duration.ofSeconds(5));
+        factory.setReadTimeout(java.time.Duration.ofSeconds(10));
+        restTemplate = new RestTemplate(factory);
+    }
 
     public GarminApiClient(GarminOAuthService oauthService) {
         this.oauthService = oauthService;
