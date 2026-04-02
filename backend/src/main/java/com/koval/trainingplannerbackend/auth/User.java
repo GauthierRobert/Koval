@@ -77,7 +77,7 @@ public class User {
     private Integer vo2maxPower;   // Watts (VO2MAX_POWER reference)
     private Integer vo2maxPace;    // Seconds per km (VO2MAX_PACE reference)
 
-    private boolean needsOnboarding = false;
+    private Boolean needsOnboarding = false;
 
     private LocalDateTime cguAcceptedAt;
     private String cguVersion;

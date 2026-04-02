@@ -47,7 +47,7 @@ public class UserResponseMapper {
         map.put("tsb", user.getTsb());
 
         map.put("customZoneReferenceValues", user.getCustomZoneReferenceValues());
-        map.put("needsOnboarding", user.isNeedsOnboarding());
+        map.put("needsOnboarding", Boolean.TRUE.equals(user.getNeedsOnboarding()));
 
         // CGU acceptance
         map.put("cguAcceptedAt", user.getCguAcceptedAt());
