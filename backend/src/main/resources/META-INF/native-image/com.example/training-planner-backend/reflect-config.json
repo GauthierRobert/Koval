@@ -390,6 +390,22 @@
   },
 
   {
+    "name": "org.springframework.amqp.core.Queue",
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "org.springframework.amqp.core.FanoutExchange",
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "org.springframework.amqp.core.Binding",
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+
+  {
     "name": "com.google.auth.oauth2.GoogleCredentials",
     "allPublicMethods": true,
     "allPublicConstructors": true

@@ -25,7 +25,7 @@ final class PacingUtils {
         if (km >= 10) {
             return (int) Math.round(km) + "km";
         }
-        return String.format("%.1fkm", km);
+        return String.format(java.util.Locale.US, "%.1fkm", km);
     }
 
     static String fuelSuggestion(String sport, String preference) {

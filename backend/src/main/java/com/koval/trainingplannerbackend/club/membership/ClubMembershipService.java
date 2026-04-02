@@ -98,7 +98,7 @@ public class ClubMembershipService {
         membershipRepository.delete(membership);
     }
 
-    @CacheEvict(value = "userClubs", key = "#userId")
+    @CacheEvict(value = "userClubs", key = "#adminId")
     public ClubMembership approveRequest(String adminId, String membershipId) {
         ClubMembership target = membershipRepository.findById(membershipId)
                 .orElseThrow(() -> new ResourceNotFoundException("Membership not found"));

@@ -37,11 +37,6 @@ public class TrainingMapper {
             training.setEstimatedTss(request.tss());
         }
 
-        // Swim-specific: pool length
-        if (training instanceof SwimmingTraining swim && request.poolLength() != null) {
-            swim.setPoolLengthMeters(request.poolLength());
-        }
-
         // Block mapping
         if (request.blocks() != null && !request.blocks().isEmpty()) {
             training.setBlocks(request.blocks().stream()

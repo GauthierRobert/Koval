@@ -24,7 +24,5 @@ public record TrainingRequest(
     @JsonPropertyDescription("Ordered workout elements (blocks or sets)")
     List<WorkoutElementRequest> blocks,
     @JsonPropertyDescription("Group IDs (COACH only, when requested)")
-    List<String> groupIds,
-    @JsonPropertyDescription("Pool length in meters (25 or 50). SWIMMING only. Null for open water.")
-    Integer poolLength
+    List<String> groupIds
 ) {}
