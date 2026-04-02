@@ -1,4 +1,4 @@
-import {AfterViewInit, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, OnDestroy, ViewChild} from '@angular/core';
+import {AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, ElementRef, inject, OnDestroy, ViewChild} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
@@ -10,6 +10,7 @@ import {SessionSummaryComponent} from './session-summary/session-summary.compone
 import {PipService} from '../../../services/pip.service';
 import {HistoryService} from '../../../services/history.service';
 import {AuthService} from '../../../services/auth.service';
+import {LiveCoachingService, CoachingCue} from '../../../services/live-coaching.service';
 import {formatPace, formatTimeMS} from '../../shared/format/format.utils';
 
 @Component({
@@ -26,6 +27,8 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
   private bluetoothService = inject(BluetoothService);
   private trainingService = inject(TrainingService);
   private authService = inject(AuthService);
+  private liveCoachingService = inject(LiveCoachingService);
+  private cdr = inject(ChangeDetectorRef);
 
   state$ = this.executionService.state$;
   metrics$ = this.bluetoothService.metrics$;
@@ -33,6 +36,11 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
   showGame = false;
   isPipActive = false;
   showExitConfirm = false;
+  coachingCue: CoachingCue | null = null;
+  coachingFading = false;
+  coachingEnabled = this.liveCoachingService.enabled;
+  private coachingFadeTimer: ReturnType<typeof setTimeout> | null = null;
+  private coachingRemoveTimer: ReturnType<typeof setTimeout> | null = null;
   private historyService = inject(HistoryService);
   private pipService = inject(PipService);
   private destroyRef = inject(DestroyRef);
@@ -83,6 +91,30 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     this.pipService.onStop.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.stopWorkout();
     });
+
+    // AI coaching cues
+    this.liveCoachingService.cue$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(cue => {
+      if (this.coachingFadeTimer) clearTimeout(this.coachingFadeTimer);
+      if (this.coachingRemoveTimer) clearTimeout(this.coachingRemoveTimer);
+
+      if (cue) {
+        this.coachingCue = cue;
+        this.coachingFading = false;
+        this.coachingFadeTimer = setTimeout(() => {
+          this.coachingFading = true;
+          this.cdr.markForCheck();
+        }, 6000);
+        this.coachingRemoveTimer = setTimeout(() => {
+          this.coachingCue = null;
+          this.cdr.markForCheck();
+        }, 7000);
+      } else {
+        this.coachingCue = null;
+      }
+      this.cdr.markForCheck();
+    });
+
+    this.liveCoachingService.start();
   }
 
   resizeCanvas() {
@@ -185,6 +217,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
+    this.liveCoachingService.stop();
   }
 
   formatTime(seconds: number | undefined): string {
@@ -292,6 +325,11 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
 
   skipBlock() {
     this.executionService.skipBlock();
+  }
+
+  toggleCoaching() {
+    this.liveCoachingService.toggle();
+    this.coachingEnabled = this.liveCoachingService.enabled;
   }
 
   toggleGame() {

@@ -744,7 +744,9 @@
     "STOP_CONFIRM_DESC": "La séance est maintenant en pause. Choisis comment continuer :",
     "BTN_RESUME_CONFIRM": "REPRENDRE",
     "BTN_SAVE_SYNC": "ENREGISTRER & SYNC.",
-    "BTN_DISCARD": "ABANDONNER"
+    "BTN_DISCARD": "ABANDONNER",
+    "AI_COACH_ON": "COACH IA ON",
+    "AI_COACH_OFF": "COACH IA OFF"
   },
   "SESSION_SUMMARY": {
     "WORKOUT_COMPLETE": "SÉANCE TERMINÉE",

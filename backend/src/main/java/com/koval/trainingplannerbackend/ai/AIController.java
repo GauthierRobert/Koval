@@ -29,10 +29,13 @@ public class AIController {
 
     private final AIService aiService;
     private final ChatHistoryService chatHistoryService;
+    private final LiveCoachingService liveCoachingService;
 
-    public AIController(AIService aiService, ChatHistoryService chatHistoryService) {
+    public AIController(AIService aiService, ChatHistoryService chatHistoryService,
+                        LiveCoachingService liveCoachingService) {
         this.aiService = aiService;
         this.chatHistoryService = chatHistoryService;
+        this.liveCoachingService = liveCoachingService;
     }
 
     // ── Chat ────────────────────────────────────────────────────────────
@@ -67,6 +70,15 @@ public class AIController {
         var streamResponse = aiService.chatStream(msg, userId, request.chatHistoryId(), agentType);
         response.setHeader("X-Chat-History-Id", streamResponse.chatHistoryId());
         return streamResponse.events();
+    }
+
+    // ── Live Coaching ────────────────────────────────────────────────────
+
+    @PostMapping(value = "/coaching/cue", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> coachingCue(
+            @RequestBody LiveCoachingService.CoachingRequest request) {
+        SecurityUtils.getCurrentUserId(); // ensure authenticated
+        return liveCoachingService.coach(request);
     }
 
     // ── Planner ─────────────────────────────────────────────────────────

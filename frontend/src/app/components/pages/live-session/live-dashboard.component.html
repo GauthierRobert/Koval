@@ -3,6 +3,9 @@
   <div class="top-bar">
     <div class="workout-title">{{ state.training?.title }}</div>
     <div class="top-controls">
+      <button class="coaching-toggle" [class.active]="coachingEnabled" (click)="toggleCoaching()">
+        {{ coachingEnabled ? ('LIVE_SESSION.AI_COACH_ON' | translate) : ('LIVE_SESSION.AI_COACH_OFF' | translate) }}
+      </button>
       <button class="stop-btn" (click)="stopWorkout()">{{ 'LIVE_SESSION.STOP_WORKOUT_BTN' | translate }}</button>
     </div>
   </div>
@@ -125,6 +128,14 @@
         </app-zombie-game>
       }
     </div>
+
+    <!-- AI Coaching Banner -->
+    @if (coachingCue) {
+      <div class="coaching-banner" [class.coaching-fade-out]="coachingFading">
+        <span class="coaching-icon">AI</span>
+        <span class="coaching-text">{{ coachingCue.message }}</span>
+      </div>
+    }
 
     <!-- Controls -->
     <div class="controls">

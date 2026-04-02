@@ -113,6 +113,19 @@ public class AIHaikuConfig extends AIConfig {
     }
 
     @Bean
+    public ChatClient liveCoachingClient(AnthropicChatModel chatModel) {
+        return withLogging(ChatClient.builder(chatModel))
+                .defaultSystem(loadPrompt("live-coaching"))
+                .defaultOptions(AnthropicChatOptions.builder()
+                        .model(HAIKU)
+                        .temperature(0.7)
+                        .maxTokens(60)
+                        .cacheOptions(cacheOptions())
+                        .build())
+                .build();
+    }
+
+    @Bean
     public ChatClient routerClient(AnthropicChatModel chatModel) {
         return withLogging(ChatClient.builder(chatModel))
                 .defaultOptions(AnthropicChatOptions.builder()

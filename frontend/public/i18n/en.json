@@ -744,7 +744,9 @@
     "STOP_CONFIRM_DESC": "The workout is now paused. Choose how to proceed:",
     "BTN_RESUME_CONFIRM": "RESUME",
     "BTN_SAVE_SYNC": "SAVE & SYNC",
-    "BTN_DISCARD": "DISCARD"
+    "BTN_DISCARD": "DISCARD",
+    "AI_COACH_ON": "AI COACH ON",
+    "AI_COACH_OFF": "AI COACH OFF"
   },
   "SESSION_SUMMARY": {
     "WORKOUT_COMPLETE": "WORKOUT COMPLETE",
