@@ -16,12 +16,14 @@ class WorkoutElementFlattenerTest {
     private static WorkoutElement leaf(BlockType type, int durationSeconds, int intensity, String label) {
         return new WorkoutElement(null, null, null, null,
                 type, durationSeconds, null, label, null,
-                intensity, null, null, null, null, null);
+                intensity, null, null, null, null, null,
+                null, null, null, null);
     }
 
     private static WorkoutElement set(int reps, List<WorkoutElement> children, Integer restDur) {
         return new WorkoutElement(reps, children, restDur, null,
-                null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null);
     }
 
     // ── Tests ────────────────────────────────────────────────────────────────
@@ -129,7 +131,8 @@ class WorkoutElementFlattenerTest {
     void restIntensityUsedInPause() {
         var children = List.of(leaf(BlockType.INTERVAL, 30, 120, "Sprint"));
         var setWithRestIntensity = new WorkoutElement(2, children, 60, 50,
-                null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null);
         List<WorkoutElement> flat = WorkoutElementFlattener.flatten(List.of(setWithRestIntensity));
         assertEquals(3, flat.size()); // 2 intervals + 1 pause
         assertEquals(BlockType.PAUSE, flat.get(1).type());

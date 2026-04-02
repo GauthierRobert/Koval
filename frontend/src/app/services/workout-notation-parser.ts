@@ -30,7 +30,7 @@
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type BlockType = 'WARMUP' | 'STEADY' | 'INTERVAL' | 'COOLDOWN' | 'RAMP' | 'FREE' | 'PAUSE';
+export type BlockType = 'WARMUP' | 'STEADY' | 'INTERVAL' | 'COOLDOWN' | 'RAMP' | 'FREE' | 'PAUSE' | 'TRANSITION';
 
 export interface WorkoutBlock {
   type: BlockType;

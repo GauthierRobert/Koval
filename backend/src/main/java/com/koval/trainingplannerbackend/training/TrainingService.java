@@ -72,6 +72,11 @@ public class TrainingService {
             return element;
         }
 
+        // Preserve TRANSITION blocks — they intentionally have no intensity
+        if (element.type() == BlockType.TRANSITION) {
+            return element;
+        }
+
         if (!isPositive(element.intensityEnd()) && !isPositive(element.intensityStart())
                 && !isPositive(element.intensityTarget())) {
             return element.updateType(BlockType.PAUSE);

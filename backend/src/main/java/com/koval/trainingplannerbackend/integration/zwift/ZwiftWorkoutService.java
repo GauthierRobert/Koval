@@ -135,6 +135,8 @@ public class ZwiftWorkoutService {
             }
             case FREE -> "<FreeRide Duration=\"%d\" Cadence=\"85\"><textevent timeoffset=\"10\" message=\"%s - Ride by feel\"/></FreeRide>"
                     .formatted(duration, label);
+            case TRANSITION -> "<FreeRide Duration=\"%d\" Cadence=\"0\"><textevent timeoffset=\"0\" message=\"TRANSITION: %s\"/></FreeRide>"
+                    .formatted(duration, label);
             case STEADY, INTERVAL -> {
                 double power = (block.intensityTarget() != null ? block.intensityTarget() : 75) / 100.0;
                 int cadence = block.cadenceTarget() != null ? block.cadenceTarget() : 90;
@@ -200,7 +202,8 @@ public class ZwiftWorkoutService {
                     if (r < reps - 1 && el.restDurationSeconds() != null && el.restDurationSeconds() > 0) {
                         result.add(new WorkoutElement(null, null, null, null,
                                 BlockType.PAUSE, el.restDurationSeconds(), null, "Rest", null,
-                                0, null, null, null, null, null));
+                                0, null, null, null, null, null,
+                                null, null, null, null));
                     }
                 }
             } else {

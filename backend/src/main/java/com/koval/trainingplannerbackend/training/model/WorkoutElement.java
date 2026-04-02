@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * A single element of a structured workout: either a leaf block (with type, duration, intensity)
@@ -62,7 +63,21 @@ public record WorkoutElement(
         String zoneTarget,
 
         @JsonPropertyDescription("Resolved display label (e.g. 'Z3 - Tempo (75-90%)'). Filled during enrichment, null on save.")
-        String zoneLabel
+        String zoneLabel,
+
+        // --- SWIM-SPECIFIC FIELDS ---
+        @JsonPropertyDescription("Stroke type for swim blocks: FREESTYLE, BACKSTROKE, BREASTSTROKE, BUTTERFLY, IM, KICK, PULL, DRILL, CHOICE.")
+        StrokeType strokeType,
+
+        @JsonPropertyDescription("Swim equipment: PADDLES, PULL_BUOY, FINS, SNORKEL, BAND, KICKBOARD.")
+        Set<SwimEquipment> equipment,
+
+        @JsonPropertyDescription("Send-off interval (sec). Swimmer leaves every N seconds; rest = sendOff - swim time.")
+        Integer sendOffSeconds,
+
+        // --- TRANSITION FIELDS ---
+        @JsonPropertyDescription("Transition type for TRANSITION blocks: T1 (swim-to-bike) or T2 (bike-to-run).")
+        TransitionType transitionType
 ) {
 
     /**
@@ -75,9 +90,9 @@ public record WorkoutElement(
     /** Returns a copy of this element with the given {@link BlockType}, preserving all other fields. */
     public WorkoutElement updateType(BlockType type) {
         return new WorkoutElement(repetitions, elements, restDurationSeconds, restIntensity,
-                type, this.durationSeconds(), this.distanceMeters(), this.label(), this.description,
-                this.intensityTarget(), this.intensityStart(), this.intensityEnd(), this.cadenceTarget(),
-                this.zoneTarget(), this.zoneLabel());
+                type, durationSeconds, distanceMeters, label, description,
+                intensityTarget, intensityStart, intensityEnd, cadenceTarget,
+                zoneTarget, zoneLabel, strokeType, equipment, sendOffSeconds, transitionType);
     }
 
     /** Returns a copy of this set element with the given child elements. */
@@ -85,13 +100,14 @@ public record WorkoutElement(
         return new WorkoutElement(repetitions, newElements, restDurationSeconds, restIntensity,
                 type, durationSeconds, distanceMeters, label, description,
                 intensityTarget, intensityStart, intensityEnd, cadenceTarget,
-                zoneTarget, zoneLabel);
+                zoneTarget, zoneLabel, strokeType, equipment, sendOffSeconds, transitionType);
     }
 
     /** Returns a copy with the zone target resolved to a numeric intensity and display label. */
     public WorkoutElement withResolvedIntensity(Integer resolvedIntensity, String resolvedZoneLabel) {
         return new WorkoutElement(repetitions, elements, restDurationSeconds, restIntensity,
                 type, durationSeconds, distanceMeters, label, description,
-                resolvedIntensity, intensityStart, intensityEnd, cadenceTarget, zoneTarget, resolvedZoneLabel);
+                resolvedIntensity, intensityStart, intensityEnd, cadenceTarget,
+                zoneTarget, resolvedZoneLabel, strokeType, equipment, sendOffSeconds, transitionType);
     }
 }

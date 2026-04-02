@@ -45,7 +45,8 @@ public final class WorkoutElementFlattener {
                 result.add(new WorkoutElement(
                         null, null, null, null,
                         BlockType.PAUSE, element.restDurationSeconds(), null,
-                        "Rest", null, restIntensity, null, null, null, null, null));
+                        "Rest", null, restIntensity, null, null, null, null, null,
+                        null, null, null, null));
             }
         }
     }

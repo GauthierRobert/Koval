@@ -77,6 +77,11 @@ export class ExportService {
             <textevent timeoffset="10" message="${this.escapeXML(block.label)} - Ride by feel"/>
         </FreeRide>`;
 
+            case 'TRANSITION':
+                return `<FreeRide Duration="${duration}" Cadence="0">
+            <textevent timeoffset="0" message="TRANSITION: ${this.escapeXML(block.label)}"/>
+        </FreeRide>`;
+
             case 'STEADY':
             case 'INTERVAL':
             default:
