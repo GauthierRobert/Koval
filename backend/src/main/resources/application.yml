@@ -15,6 +15,12 @@ spring:
         initial-interval: 2s
         multiplier: 2
         max-interval: 10s
+    mcp:
+      server:
+        name: koval-training-planner
+        version: 1.0.0
+        type: SYNC
+        sse-message-endpoint: /mcp/messages
     chat:
       memory:
         repository:
