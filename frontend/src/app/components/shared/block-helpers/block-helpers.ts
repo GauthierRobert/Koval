@@ -20,6 +20,7 @@ export function getMaxIntensity(training: Training): number {
 export function getBlockHeight(block: WorkoutBlock, maxI: number): number {
   if (block.type === 'PAUSE') return 100;
   if (block.type === 'FREE') return (65 / maxI) * 100;
+  if (block.type === 'TRANSITION') return (30 / maxI) * 100;
   const intensity =
     block.type === 'RAMP'
       ? Math.max(block.intensityStart || 0, block.intensityEnd || 0)
@@ -40,6 +41,7 @@ export function getBlockClipPath(block: WorkoutBlock, maxI: number): string {
 export function getBlockColor(block: WorkoutBlock): string {
   if (block.type === 'PAUSE') return '#636e72';
   if (block.type === 'FREE') return '#636e72';
+  if (block.type === 'TRANSITION') return '#fd79a8';
   if (block.type === 'WARMUP') return 'rgba(9, 132, 227, 0.6)';
   if (block.type === 'COOLDOWN') return 'rgba(108, 92, 231, 0.6)';
   const intensity =
@@ -57,6 +59,7 @@ export function getBlockColor(block: WorkoutBlock): string {
 export function getDisplayIntensity(block: WorkoutBlock): string {
   if (block.type === 'PAUSE') return 'PAUSE';
   if (block.type === 'FREE') return 'FREE';
+  if (block.type === 'TRANSITION') return block.transitionType ?? 'T';
   if (block.type === 'RAMP') return `${block.intensityStart}%-${block.intensityEnd}%`;
   return `${block.intensityTarget}%`;
 }

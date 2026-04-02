@@ -43,6 +43,7 @@ export class WorkoutChartBarComponent {
     const maxI = this.getMaxIntensity();
     if (block.type === 'PAUSE') return 100;
     if (block.type === 'FREE') return (65 / maxI) * 100;
+    if (block.type === 'TRANSITION') return (30 / maxI) * 100;
 
     const target = this.getEffectiveIntensity(block, 'TARGET');
     const start = this.getEffectiveIntensity(block, 'START');
@@ -55,6 +56,7 @@ export class WorkoutChartBarComponent {
   getBlockColor(block: WorkoutBlock): string {
     if (block.type === 'PAUSE') return '#636e72';
     if (block.type === 'FREE') return '#636e72';
+    if (block.type === 'TRANSITION') return '#fd79a8';
     if (block.type === 'WARMUP') return 'rgba(9, 132, 227, 0.6)';
     if (block.type === 'COOLDOWN') return 'rgba(108, 92, 231, 0.6)';
 
@@ -140,6 +142,7 @@ export class WorkoutChartBarComponent {
     if (block.zoneTarget) return block.zoneTarget;
     if (block.type === 'PAUSE') return this.translate.instant('WORKOUT_VIZ.INTENSITY_PAUSE');
     if (block.type === 'FREE') return this.translate.instant('WORKOUT_VIZ.INTENSITY_FREE');
+    if (block.type === 'TRANSITION') return block.transitionType ?? 'T';
     if (block.type === 'RAMP') {
       return `${block.intensityStart || 0}% → ${block.intensityEnd || 0}%`;
     }
@@ -149,6 +152,7 @@ export class WorkoutChartBarComponent {
   getDisplayIntensity(block: WorkoutBlock): string {
     if (block.type === 'PAUSE') return this.translate.instant('WORKOUT_VIZ.INTENSITY_PAUSE').toUpperCase();
     if (block.type === 'FREE') return this.translate.instant('WORKOUT_VIZ.INTENSITY_FREE').toUpperCase();
+    if (block.type === 'TRANSITION') return block.transitionType ?? 'T';
 
     const start = this.getEffectiveIntensity(block, 'START');
     const end = this.getEffectiveIntensity(block, 'END');

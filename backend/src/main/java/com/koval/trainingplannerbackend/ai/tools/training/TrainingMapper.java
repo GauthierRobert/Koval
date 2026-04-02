@@ -8,6 +8,7 @@ import com.koval.trainingplannerbackend.training.model.SwimmingTraining;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.model.TrainingType;
 import com.koval.trainingplannerbackend.training.model.WorkoutElement;
+import com.koval.trainingplannerbackend.training.model.TransitionType;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -36,6 +37,11 @@ public class TrainingMapper {
             training.setEstimatedTss(request.tss());
         }
 
+        // Swim-specific: pool length
+        if (training instanceof SwimmingTraining swim && request.poolLength() != null) {
+            swim.setPoolLengthMeters(request.poolLength());
+        }
+
         // Block mapping
         if (request.blocks() != null && !request.blocks().isEmpty()) {
             training.setBlocks(request.blocks().stream()
@@ -61,7 +67,8 @@ public class TrainingMapper {
                 .map(this::mapElement)
                 .toList();
         return new WorkoutElement(b.reps(), children, b.restDur(), b.restPct(),
-                null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null);
     }
 
     /**
@@ -69,7 +76,8 @@ public class TrainingMapper {
      */
     private WorkoutElement block(WorkoutElementRequest b) {
         return new WorkoutElement(null, null, null, null,
-                b.type(), b.dur(), b.dist(), b.label(), b.desc(), b.pct(), b.pctFrom(), b.pctTo(), b.cad(), b.zone(), null);
+                b.type(), b.dur(), b.dist(), b.label(), b.desc(), b.pct(), b.pctFrom(), b.pctTo(), b.cad(), b.zone(), null,
+                b.stroke(), b.equip(), b.sendOff(), b.transition());
     }
 
     private static <T extends Enum<T>> T safeValueOf(Class<T> enumType, String value, T fallback) {

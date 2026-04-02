@@ -89,7 +89,7 @@ export class WorkoutBuilderComponent implements OnInit {
   editSetRestIntensity = 60;
   editSetPassiveRest = false;
 
-  readonly BLOCK_TYPES: BlockType[] = ['WARMUP', 'STEADY', 'INTERVAL', 'RAMP', 'COOLDOWN', 'FREE', 'PAUSE'];
+  readonly BLOCK_TYPES: BlockType[] = ['WARMUP', 'STEADY', 'INTERVAL', 'RAMP', 'COOLDOWN', 'FREE', 'PAUSE', 'TRANSITION'];
   readonly SPORT_TYPES: SportType[] = ['CYCLING', 'RUNNING', 'SWIMMING', 'BRICK'];
   readonly TRAINING_TYPES = TRAINING_TYPES;
 

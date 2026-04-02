@@ -1,6 +1,6 @@
 package com.koval.trainingplannerbackend.training.model;
 
-/** The kind of segment within a structured workout (warmup, steady-state, interval, etc.). */
+/** The kind of segment within a structured workout (warmup, steady-state, interval, transition, etc.). */
 public enum BlockType {
     WARMUP,
     STEADY,
@@ -8,5 +8,6 @@ public enum BlockType {
     COOLDOWN,
     RAMP,
     FREE,
-    PAUSE
+    PAUSE,
+    TRANSITION
 }

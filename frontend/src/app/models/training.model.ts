@@ -52,6 +52,21 @@ export const TRAINING_TYPE_LABELS: Record<TrainingType, string> = {
     TEST: 'Test',
 };
 
+export type StrokeType =
+    | 'FREESTYLE'
+    | 'BACKSTROKE'
+    | 'BREASTSTROKE'
+    | 'BUTTERFLY'
+    | 'IM'
+    | 'KICK'
+    | 'PULL'
+    | 'DRILL'
+    | 'CHOICE';
+
+export type SwimEquipment = 'PADDLES' | 'PULL_BUOY' | 'FINS' | 'SNORKEL' | 'BAND' | 'KICKBOARD';
+
+export type TransitionType = 'T1' | 'T2';
+
 export interface WorkoutBlock {
     // Set fields (non-null when this is a repeatable group)
     repetitions?: number;
@@ -60,7 +75,7 @@ export interface WorkoutBlock {
     restIntensity?: number;
 
     // Leaf fields (single block)
-    type: 'WARMUP' | 'STEADY' | 'INTERVAL' | 'COOLDOWN' | 'RAMP' | 'FREE' | 'PAUSE';
+    type: 'WARMUP' | 'STEADY' | 'INTERVAL' | 'COOLDOWN' | 'RAMP' | 'FREE' | 'PAUSE' | 'TRANSITION';
     durationSeconds?: number;
     distanceMeters?: number;
     intensityTarget?: number;
@@ -72,6 +87,14 @@ export interface WorkoutBlock {
     label: string;
     description?: string;
     zoneLabel?: string;
+
+    // Swim-specific fields
+    strokeType?: StrokeType;
+    equipment?: SwimEquipment[];
+    sendOffSeconds?: number;
+
+    // Transition fields (TRANSITION blocks only)
+    transitionType?: TransitionType;
 }
 
 /** Alias for clarity — WorkoutBlock is now a recursive WorkoutElement. */
@@ -112,6 +135,11 @@ function flattenElement(element: WorkoutBlock, result: WorkoutBlock[]): void {
             });
         }
     }
+}
+
+/** Returns true when the block is a transition (T1/T2). */
+export function isTransition(block: WorkoutBlock): boolean {
+    return block.type === 'TRANSITION';
 }
 
 export interface Training {

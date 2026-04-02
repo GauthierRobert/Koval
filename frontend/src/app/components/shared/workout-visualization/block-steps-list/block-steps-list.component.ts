@@ -40,6 +40,7 @@ export class BlockStepsListComponent {
   getBlockColor(block: WorkoutBlock): string {
     if (block.type === 'PAUSE') return '#636e72';
     if (block.type === 'FREE') return '#636e72';
+    if (block.type === 'TRANSITION') return '#fd79a8';
     if (block.type === 'WARMUP') return 'rgba(9, 132, 227, 0.6)';
     if (block.type === 'COOLDOWN') return 'rgba(108, 92, 231, 0.6)';
 
@@ -60,6 +61,7 @@ export class BlockStepsListComponent {
   getDisplayIntensity(block: WorkoutBlock): string {
     if (block.type === 'PAUSE') return this.translate.instant('WORKOUT_VIZ.INTENSITY_PAUSE').toUpperCase();
     if (block.type === 'FREE') return this.translate.instant('WORKOUT_VIZ.INTENSITY_FREE').toUpperCase();
+    if (block.type === 'TRANSITION') return block.transitionType ?? 'T';
 
     const start = this.getEffectiveIntensity(block, 'START');
     const end = this.getEffectiveIntensity(block, 'END');
@@ -192,6 +194,7 @@ export class BlockStepsListComponent {
     if (block.zoneTarget) return block.zoneTarget;
     if (block.type === 'PAUSE') return this.translate.instant('WORKOUT_VIZ.INTENSITY_PAUSE');
     if (block.type === 'FREE') return this.translate.instant('WORKOUT_VIZ.INTENSITY_FREE');
+    if (block.type === 'TRANSITION') return block.transitionType ?? 'T';
     if (block.type === 'RAMP') {
       return `${block.intensityStart || 0}% → ${block.intensityEnd || 0}%`;
     }
