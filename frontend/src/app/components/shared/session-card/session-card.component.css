@@ -427,7 +427,7 @@
   min-width: 0;
   padding: 8px 10px;
   background: var(--surface-elevated);
-  border: 1px solid var(--glass-border);
+  border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
   text-align: left;
@@ -538,6 +538,7 @@
   flex-direction: row;
   flex-wrap: wrap;
   gap: 8px;
+  min-height: 40px;
 }
 
 .sc-detail__row {
@@ -564,6 +565,7 @@
   color: var(--text-dim);
   font-style: normal;
   padding: 8px 0;
+  min-height: 40px;
 }
 
 /* ============================================================
@@ -705,7 +707,9 @@
   }
 
   .sc-card--has-gpx > .sc-card__map {
-    min-height: 200px;
+    flex: 0 0 auto;
+    height: 220px;
+    min-height: 220px;
     border-radius: 0 0 var(--radius-md) var(--radius-md);
   }
 

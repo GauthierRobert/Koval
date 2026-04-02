@@ -48,6 +48,14 @@ export class ClubSessionService {
       .subscribe((sessions) => this.ngZone.run(() => this.sessionsSubject.next(sessions)));
   }
 
+  getSessionsForClub(clubId: string, from: string, to: string, category?: 'SCHEDULED' | 'OPEN'): Observable<ClubTrainingSession[]> {
+    const params: Record<string, string> = { from, to };
+    if (category) params['category'] = category;
+    return this.http
+      .get<ClubTrainingSession[]>(`${this.apiUrl}/${clubId}/sessions`, { params })
+      .pipe(catchError(() => of([] as ClubTrainingSession[])));
+  }
+
   loadOpenSessions(clubId: string, from: string, to: string): void {
     this.http
       .get<ClubTrainingSession[]>(`${this.apiUrl}/${clubId}/sessions`, { params: { from, to, category: 'OPEN' } })

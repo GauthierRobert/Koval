@@ -169,9 +169,6 @@
   </nav>
 
   <div class="right-section">
-    <button class="lang-toggle" (click)="toggleLang()" [attr.aria-label]="'TOP_BAR.BTN_LANGUAGE_TOGGLE' | translate">
-      {{ currentLang === 'en' ? 'FR' : 'EN' }}
-    </button>
     <div class="topbar-controls">
       <button class="device-btn" (click)="themeService.toggle()" [attr.aria-label]="'TOP_BAR.BTN_THEME_TOGGLE' | translate">
         @if ((themeService.theme$ | async) === 'dark') {

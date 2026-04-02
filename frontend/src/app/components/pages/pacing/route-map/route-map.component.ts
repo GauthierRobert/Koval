@@ -70,6 +70,17 @@ export class RouteMapComponent implements AfterViewInit, OnChanges, OnDestroy {
       this.map?.invalidateSize();
     });
     this.resizeObserver.observe(this.mapContainer.nativeElement);
+    // Leaflet needs a valid container size at init. If the container was 0-sized
+    // (e.g. mobile stacked layout not yet painted), re-invalidate after layout settles.
+    setTimeout(() => {
+      if (this.map) {
+        this.map.invalidateSize();
+        if (this.routeCoordinates?.length) {
+          const bounds = L.latLngBounds(this.routeCoordinates.map(c => [c.lat, c.lon] as L.LatLngTuple));
+          this.map.fitBounds(bounds, { padding: [30, 30] });
+        }
+      }
+    }, 200);
   }
 
   ngOnChanges(changes: SimpleChanges): void {

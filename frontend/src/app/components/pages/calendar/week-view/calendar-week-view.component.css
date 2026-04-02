@@ -60,31 +60,22 @@
   min-height: 0;
 }
 
-/* ── Workout Card ──────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   CARD BASE — inspired by reference: left accent, pill + action, title, metrics
+   ══════════════════════════════════════════════════════════════════════ */
 .workout-card {
+  --card-color: var(--text-muted);
   background: var(--surface-elevated);
-  padding: 0.5rem 0.6rem;
+  padding: 0.55rem 0.65rem;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.5rem;
   position: relative;
   border: 1px solid var(--glass-border);
-  overflow: hidden;
-  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-}
-
-/* Top-bar accent via ::before */
-.workout-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  border-radius: 8px 8px 0 0;
-  background: transparent;
-  transition: background 0.18s ease;
+  border-left: 3.5px solid var(--card-color);
+  overflow: visible;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 
 .workout-card.clickable {
@@ -93,87 +84,85 @@
 
 .workout-card.clickable:hover {
   background: var(--surface-hover);
-  border-color: var(--overlay-12);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
 }
 
-/* ── Card kind: Completed ──────────────────────────────────────────── */
-.workout-card--completed::before { background: var(--success-color); }
+/* ── Scheduled (pending) — accent/orange ─────────────────────────── */
+.workout-card:not(.workout-card--completed):not(.workout-card--skipped):not(.workout-card--fused):not(.workout-card--session):not(.workout-card--club-session) {
+  --card-color: var(--accent-color);
+}
+
+/* ── Completed — green ───────────────────────────────────────────── */
 .workout-card--completed {
+  --card-color: var(--success-color);
   background: var(--success-subtle);
-  border-color: var(--success-border);
 }
 .workout-card--completed.clickable:hover {
   background: var(--success-hover);
 }
 
-/* ── Card kind: Skipped ────────────────────────────────────────────── */
-.workout-card--skipped::before { background: color-mix(in srgb, var(--danger-color) 40%, transparent); }
+/* ── Skipped — muted red ─────────────────────────────────────────── */
 .workout-card--skipped {
+  --card-color: var(--danger-color);
   background: var(--danger-subtle);
-  border-color: var(--danger-border);
   opacity: 0.6;
 }
 
-/* ── Card kind: Fused ──────────────────────────────────────────────── */
-.workout-card--fused::before { background: var(--success-color); }
+/* ── Fused (completed with plan) — green ─────────────────────────── */
 .workout-card--fused {
+  --card-color: var(--success-color);
   background: var(--success-subtle);
-  border-color: var(--success-border);
 }
 .workout-card--fused.clickable:hover {
   background: var(--success-hover);
 }
 
-/* ── Card kind: Standalone session ─────────────────────────────────── */
-.workout-card--session::before { background: var(--info-color); }
+/* ── Standalone session — cyan/info ──────────────────────────────── */
 .workout-card--session {
+  --card-color: var(--info-color);
   background: var(--info-subtle);
-  border-color: var(--info-border);
-  position: relative;
 }
 .workout-card--session.clickable:hover {
   background: var(--info-hover);
 }
 
-/* ── Card kind: Club session ───────────────────────────────────────── */
+/* ── Club session — primary/accent ───────────────────────────────── */
 .workout-card--club-session {
-  background: var(--info-subtle);
-  border-color: var(--info-border);
+  --card-color: var(--accent-color);
+  background: var(--accent-subtle);
 }
 
-.workout-card--cs-attending::before { background: var(--accent-color); }
 .workout-card--cs-attending {
+  --card-color: var(--accent-color);
   background: var(--accent-subtle);
-  border-color: var(--accent-border);
 }
 
-.workout-card--cs-waiting::before { background: color-mix(in srgb, var(--accent-color) 50%, transparent); }
 .workout-card--cs-waiting {
+  --card-color: var(--accent-color);
   background: var(--accent-subtle);
-  border-color: var(--accent-border);
   opacity: 0.85;
 }
 
 .workout-card--club-session.not-joined {
+  --card-color: var(--text-dim);
   background: var(--surface-elevated);
-  border-color: var(--glass-border);
   opacity: 0.75;
 }
-.workout-card--club-session.not-joined::before { background: transparent; }
 
-.workout-card--club-session.cancelled::before { background: color-mix(in srgb, var(--danger-color) 30%, transparent); }
 .workout-card--club-session.cancelled {
+  --card-color: var(--danger-color);
   opacity: 0.55;
   background: var(--danger-subtle);
-  border-color: var(--danger-border);
 }
 
-/* ── Card layout ───────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   CARD TOP ROW — pill left, actions right
+   ══════════════════════════════════════════════════════════════════════ */
 .card-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 4px;
 }
 
 .card-top-left {
@@ -191,7 +180,53 @@
   flex-shrink: 0;
 }
 
-/* ── Hover-to-reveal action buttons ────────────────────────────────── */
+/* ── Type pill (tag) — uses card color ───────────────────────────── */
+.type-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: var(--card-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--card-color) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--card-color) 25%, transparent);
+}
+
+.type-dot {
+  display: none; /* replaced by pill color */
+}
+
+/* ── Status badge — uses card color ──────────────────────────────── */
+.status-badge {
+  font-size: 0.52rem;
+  font-weight: 800;
+  padding: 0.12rem 0.4rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: color-mix(in srgb, var(--card-color) 12%, transparent);
+  color: var(--card-color);
+  border: 1px solid color-mix(in srgb, var(--card-color) 25%, transparent);
+}
+
+.workout-card--completed .status-badge {
+  background: color-mix(in srgb, var(--success-color) 12%, transparent);
+  color: var(--success-color);
+  border-color: color-mix(in srgb, var(--success-color) 25%, transparent);
+}
+
+.workout-card--skipped .status-badge {
+  background: color-mix(in srgb, var(--danger-color) 12%, transparent);
+  color: var(--danger-color);
+  border-color: color-mix(in srgb, var(--danger-color) 25%, transparent);
+}
+
+/* ── Hover-to-reveal action buttons ──────────────────────────────── */
 .card-actions {
   display: flex;
   align-items: center;
@@ -210,53 +245,45 @@
   }
 }
 
-/* ── Type indicator (dot + label) ──────────────────────────────────── */
-.type-indicator {
-  display: inline-flex;
+/* ── Action buttons — outlined style like reference "LEAVE" ──────── */
+.btn-complete,
+.btn-skip {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.58rem;
-  font-weight: 700;
+  justify-content: center;
+  border-radius: 4px;
+  border: 1px solid color-mix(in srgb, var(--card-color) 40%, transparent);
+  cursor: pointer;
+  transition: all 0.15s;
+  background: transparent;
+}
+
+.btn-complete {
+  color: var(--card-color);
+}
+
+.btn-complete:hover {
+  background: color-mix(in srgb, var(--card-color) 15%, transparent);
+}
+
+.btn-complete:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-skip {
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  white-space: nowrap;
+  border-color: var(--overlay-12);
 }
 
-.type-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
+.btn-skip:hover {
+  color: var(--text-color);
+  border-color: var(--overlay-30);
 }
 
-/* ── Status badge (subtle tint) ────────────────────────────────────── */
-.status-badge {
-  font-size: 0.55rem;
-  font-weight: 800;
-  padding: 0.1rem 0.35rem;
-  border-radius: 3px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.workout-card--completed .status-badge {
-  background: color-mix(in srgb, var(--success-color) 15%, transparent);
-  color: var(--success-color);
-}
-
-.workout-card--skipped .status-badge {
-  background: color-mix(in srgb, var(--danger-color) 15%, transparent);
-  color: var(--danger-color);
-}
-
-.workout-time {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  font-weight: 600;
-}
-
-/* ── Delete button ─────────────────────────────────────────────────── */
 .delete-btn {
   background: none;
   border: none;
@@ -270,8 +297,8 @@
   align-items: center;
   justify-content: center;
   line-height: 1;
-  opacity: 0.4;
-  transition: opacity 0.2s, color 0.2s;
+  opacity: 0.35;
+  transition: opacity 0.15s, color 0.15s;
 }
 
 .delete-btn:hover {
@@ -279,7 +306,91 @@
   color: var(--danger-color);
 }
 
-/* ── Workout info ──────────────────────────────────────────────────── */
+.btn-reschedule {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  width: 18px;
+  height: 18px;
+  line-height: 1;
+  opacity: 0.35;
+  transition: opacity 0.15s, color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-reschedule:hover {
+  opacity: 1;
+  color: var(--card-color);
+}
+
+/* ── Link dropdown (single button → two options) ─────────────────── */
+.link-dropdown-wrapper {
+  position: relative;
+}
+
+.btn-link-icon {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  border: 1px solid color-mix(in srgb, var(--card-color) 40%, transparent);
+  background: transparent;
+  color: var(--card-color);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-link-icon:hover {
+  background: color-mix(in srgb, var(--card-color) 15%, transparent);
+}
+
+.link-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 100;
+  background: var(--surface-color);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  min-width: 140px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.link-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-color);
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s;
+}
+
+.link-dropdown-item:hover {
+  background: color-mix(in srgb, var(--card-color) 12%, transparent);
+  color: var(--card-color);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   CARD BODY — bold title + icon metrics
+   ══════════════════════════════════════════════════════════════════════ */
 .workout-info {
   display: flex;
   flex-direction: column;
@@ -296,39 +407,40 @@
 
 .workout-title {
   font-weight: 800;
-  font-size: 0.75rem;
-  line-height: 1.2;
+  font-size: 0.72rem;
+  line-height: 1.25;
   color: var(--text-color);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
 }
 
-/* ── Metrics row (inline with dot separators) ──────────────────────── */
+/* ── Metrics row — icon-style like reference ─────────────────────── */
 .metrics-row {
   display: flex;
-  justify-content: space-around;
-  align-items: baseline;
-  gap: 0.35rem;
-  padding: 0.25rem 0 0.1rem;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.2rem 0 0;
 }
 
 .metric {
   display: flex;
-  align-items: baseline;
-  gap: 2px;
+  align-items: center;
+  gap: 3px;
 }
 
 .metric-val {
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: var(--text-color);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
 
 .metric-unit {
-  font-size: 0.5rem;
-  color: var(--text-muted);
+  font-size: 0.48rem;
+  color: var(--text-dim);
   text-transform: uppercase;
   font-weight: 700;
 }
@@ -342,48 +454,237 @@
   align-self: center;
 }
 
-/* ── Action buttons ────────────────────────────────────────────────── */
-.btn-complete,
-.btn-skip {
-  width: 18px;
-  height: 18px;
-  padding: 0;
+/* ── Analysis link ───────────────────────────────────────────────── */
+.analysis-link {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
+  color: var(--card-color);
+  opacity: 0.7;
+  text-decoration: none;
+  transition: opacity 0.15s;
 }
 
-.btn-complete {
-  background: var(--accent-color);
-  color: var(--color-black);
-}
-
-.btn-complete:hover {
-  filter: brightness(1.2);
-}
-
-.btn-complete:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-  filter: none;
-}
-
-.btn-skip {
-  background: none;
-  color: var(--text-muted);
-  opacity: 0.4;
-}
-
-.btn-skip:hover {
+.analysis-link:hover {
   opacity: 1;
-  color: var(--text-color);
 }
 
-/* ── Add button ────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   FUSED CARD (completed with plan)
+   ══════════════════════════════════════════════════════════════════════ */
+.fused-badge {
+  font-size: 0.52rem;
+  font-weight: 800;
+  padding: 0.12rem 0.4rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: color-mix(in srgb, var(--success-color) 12%, transparent);
+  color: var(--success-color);
+  border: 1px solid color-mix(in srgb, var(--success-color) 25%, transparent);
+}
+
+.fused-metrics { display: flex; align-items: flex-start; gap: 0.4rem; }
+.fused-col { flex: 1; display: flex; flex-direction: column; gap: 0.2rem; }
+.fused-label {
+  font-size: 0.46rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+}
+.fused-col--actual .fused-label { color: var(--success-color); }
+.fused-divider { width: 1px; background: var(--glass-border); align-self: stretch; margin: 0.15rem 0; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   SESSION BADGE
+   ══════════════════════════════════════════════════════════════════════ */
+.session-badge {
+  font-size: 0.52rem;
+  font-weight: 800;
+  padding: 0.12rem 0.4rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: color-mix(in srgb, var(--info-color) 12%, transparent);
+  color: var(--info-color);
+  border: 1px solid color-mix(in srgb, var(--info-color) 25%, transparent);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   CLUB SESSION
+   ══════════════════════════════════════════════════════════════════════ */
+.club-session-badge {
+  font-size: 0.52rem;
+  font-weight: 800;
+  padding: 0.12rem 0.4rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: color-mix(in srgb, var(--card-color) 12%, transparent);
+  color: var(--card-color);
+  border: 1px solid color-mix(in srgb, var(--card-color) 25%, transparent);
+  white-space: nowrap;
+}
+
+.club-session-time {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.club-session-location {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.58rem;
+  color: var(--text-muted);
+}
+
+.club-session-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 4px;
+  border-top: 1px solid var(--overlay-5);
+  margin-top: 2px;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.club-session-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.club-session-count {
+  font-weight: 800;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.club-session-actions {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.cs-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cs-status-dot--attending { background: var(--accent-color); }
+.cs-status-dot--waiting   { background: var(--overlay-30); }
+
+.linked-training-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.62rem;
+  color: var(--card-color);
+  opacity: 0.85;
+  overflow: hidden;
+}
+
+.linked-training-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.linked-training-compact {
+  font-size: 0.58rem;
+  color: var(--card-color);
+  opacity: 0.8;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Cancelled ───────────────────────────────────────────────────── */
+.cancelled-badge {
+  font-size: 0.52rem;
+  font-weight: 800;
+  padding: 0.12rem 0.4rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--danger-color) 12%, transparent);
+  color: var(--danger-color);
+  border: 1px solid color-mix(in srgb, var(--danger-color) 25%, transparent);
+  letter-spacing: 0.5px;
+}
+
+.title-cancelled {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.cancellation-reason {
+  font-size: 0.62rem;
+  font-style: italic;
+  color: var(--danger-color);
+  opacity: 0.8;
+  padding: 2px 0;
+}
+
+/* ── Club session row ────────────────────────────────────────────── */
+.club-session-row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.club-session-row .workout-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.workout-card--compact .club-session-footer {
+  display: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   GOAL PILL
+   ══════════════════════════════════════════════════════════════════════ */
+.goal-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1.5px solid;
+  font-size: 0.78rem;
+  margin-bottom: 4px;
+  cursor: default;
+  overflow: hidden;
+  order: -1;
+}
+
+.goal-pill-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.goal-pill-priority {
+  font-weight: 800;
+  font-size: 0.72rem;
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   ADD BUTTON + REST DAY
+   ══════════════════════════════════════════════════════════════════════ */
 .add-btn {
   background: var(--surface-elevated);
   border: 1px dashed var(--overlay-12);
@@ -394,7 +695,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
 .add-btn:hover {
@@ -403,7 +704,6 @@
   background: var(--accent-subtle);
 }
 
-/* ── Rest day ──────────────────────────────────────────────────────── */
 .rest-day {
   flex: 1;
   display: flex;
@@ -418,59 +718,11 @@
   transform: rotate(180deg);
 }
 
-/* ── Analysis link ─────────────────────────────────────────────────── */
-.analysis-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--success-color);
-  opacity: 0.7;
-  text-decoration: none;
-  transition: opacity 0.2s;
-}
-
-.analysis-link:hover {
-  opacity: 1;
-}
-
-/* ── Fused card internals ──────────────────────────────────────────── */
-.fused-badge {
-  font-size: 0.55rem;
-  font-weight: 800;
-  padding: 0.1rem 0.35rem;
-  border-radius: 3px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  background: color-mix(in srgb, var(--success-color) 15%, transparent);
-  color: var(--success-color);
-}
-
-.fused-metrics { display: flex; align-items: flex-start; gap: 0.4rem; }
-.fused-col { flex: 1; display: flex; flex-direction: column; gap: 0.2rem; }
-.fused-label {
-  font-size: 0.48rem;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--text-dim);
-}
-.fused-col--actual .fused-label { color: var(--success-color); }
-.fused-divider { width: 1px; background: var(--glass-border); align-self: stretch; margin: 0.15rem 0; }
-
-/* ── Session badge ─────────────────────────────────────────────────── */
-.session-badge {
-  font-size: 0.55rem;
-  font-weight: 800;
-  padding: 0.1rem 0.35rem;
-  border-radius: 3px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  background: color-mix(in srgb, var(--info-color) 15%, transparent);
-  color: var(--info-color);
-}
-
-/* ── Link picker modal ─────────────────────────────────────────────── */
-.link-modal-overlay {
+/* ══════════════════════════════════════════════════════════════════════
+   MODALS (reschedule + link picker)
+   ══════════════════════════════════════════════════════════════════════ */
+.link-modal-overlay,
+.reschedule-overlay {
   position: fixed;
   inset: 0;
   background: var(--overlay-backdrop);
@@ -481,12 +733,12 @@
   backdrop-filter: blur(2px);
 }
 
-.link-modal {
+.link-modal,
+.reschedule-modal {
   background: var(--surface-color);
-  border: 1px solid var(--info-border);
+  border: 1px solid var(--glass-border);
   border-radius: 14px;
   padding: 1.5rem;
-  width: 420px;
   max-width: 90vw;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
   display: flex;
@@ -494,13 +746,17 @@
   gap: 1rem;
 }
 
+.link-modal { width: 420px; }
+.reschedule-modal { width: 320px; align-items: center; }
+
 .link-modal-header {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.link-modal-title {
+.link-modal-title,
+.reschedule-title {
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 1px;
@@ -577,233 +833,6 @@
   color: var(--text-color);
 }
 
-/* ── Club session internals ────────────────────────────────────────── */
-.club-session-badge {
-  font-size: 0.55rem;
-  font-weight: 800;
-  padding: 0.1rem 0.35rem;
-  border-radius: 3px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  background: color-mix(in srgb, var(--info-color) 15%, transparent);
-  color: var(--info-color);
-  white-space: nowrap;
-}
-
-.workout-card--cs-attending .club-session-badge {
-  background: color-mix(in srgb, var(--accent-color) 15%, transparent);
-  color: var(--accent-color);
-}
-
-.club-session-time {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.club-session-location {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.6rem;
-  color: var(--text-muted);
-}
-
-.club-session-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 4px;
-  border-top: 1px solid var(--overlay-5);
-  margin-top: 2px;
-  font-size: 0.65rem;
-  color: var(--text-muted);
-}
-
-.club-session-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.club-session-count {
-  font-weight: 800;
-  color: var(--text-color);
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.club-session-actions {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  flex-shrink: 0;
-}
-
-/* Status dots for club sessions */
-.cs-status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.cs-status-dot--attending { background: var(--accent-color); }
-.cs-status-dot--waiting   { background: var(--overlay-30); }
-
-.linked-training-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.65rem;
-  color: var(--accent-color);
-  opacity: 0.85;
-  overflow: hidden;
-}
-
-.linked-training-title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: 700;
-}
-
-.linked-training-compact {
-  font-size: 0.6rem;
-  color: var(--accent-color);
-  opacity: 0.8;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* ── Cancelled club session ────────────────────────────────────────── */
-.cancelled-badge {
-  font-size: 0.55rem;
-  font-weight: 800;
-  padding: 0.1rem 0.4rem;
-  border-radius: 4px;
-  background: rgba(239, 68, 68, 0.15);
-  color: var(--danger-color);
-  letter-spacing: 0.5px;
-}
-
-.title-cancelled {
-  text-decoration: line-through;
-  opacity: 0.7;
-}
-
-.cancellation-reason {
-  font-size: 0.65rem;
-  font-style: italic;
-  color: var(--danger-color);
-  opacity: 0.8;
-  padding: 2px 0;
-}
-
-/* ── Club session row ──────────────────────────────────────────────── */
-.club-session-row {
-  display: flex;
-  gap: 0.4rem;
-}
-
-.club-session-row .workout-card {
-  flex: 1;
-  min-width: 0;
-}
-
-.workout-card--compact .club-session-footer {
-  display: none;
-}
-
-/* ── Goal pill ─────────────────────────────────────────────────────── */
-.goal-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1.5px solid;
-  font-size: 0.78rem;
-  margin-bottom: 4px;
-  cursor: default;
-  overflow: hidden;
-  order: -1;
-}
-
-.goal-pill-title {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: 700;
-}
-
-.goal-pill-priority {
-  font-weight: 800;
-  font-size: 0.72rem;
-  flex-shrink: 0;
-}
-
-/* ── Reschedule button ─────────────────────────────────────────────── */
-.btn-reschedule {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 0;
-  width: 18px;
-  height: 18px;
-  line-height: 1;
-  opacity: 0.4;
-  transition: opacity 0.2s, color 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-reschedule:hover {
-  opacity: 1;
-  color: var(--accent-color);
-}
-
-/* ── Reschedule modal ──────────────────────────────────────────────── */
-.reschedule-overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--overlay-backdrop);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(2px);
-}
-
-.reschedule-modal {
-  background: var(--surface-color);
-  border: 1px solid var(--accent-border);
-  border-radius: 14px;
-  padding: 1.5rem;
-  width: 320px;
-  max-width: 90vw;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-  align-items: center;
-}
-
-.reschedule-title {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  color: var(--text-color);
-  text-transform: uppercase;
-}
-
 .reschedule-workout-name {
   font-size: 13px;
   font-weight: 700;
@@ -828,7 +857,9 @@
   border-color: var(--accent-color);
 }
 
-/* ── Responsive: Tablet & large phones ─────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   .calendar-grid {
     grid-template-columns: 1fr;

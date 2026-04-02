@@ -16,6 +16,7 @@ import {daysUntil, formatTrainingDuration} from '../../shared/format/format.util
 import {DashboardFocusCardComponent} from './dashboard-focus-card/dashboard-focus-card.component';
 import {DashboardPerformancePanelComponent} from './dashboard-performance-panel/dashboard-performance-panel.component';
 import {DashboardSportCardsComponent} from './dashboard-sport-cards/dashboard-sport-cards.component';
+import {DashboardClubCardsComponent} from './dashboard-club-cards/dashboard-club-cards.component';
 
 function toDateKey(d: Date): string {
   const y = d.getFullYear();
@@ -81,7 +82,7 @@ function computeWeekMetrics(sessions: SavedSession[]): WeekMetrics {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, SportIconComponent, WorkoutDetailModalComponent, TranslateModule, DashboardFocusCardComponent, DashboardPerformancePanelComponent, DashboardSportCardsComponent],
+  imports: [CommonModule, RouterModule, SportIconComponent, WorkoutDetailModalComponent, TranslateModule, DashboardFocusCardComponent, DashboardPerformancePanelComponent, DashboardSportCardsComponent, DashboardClubCardsComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

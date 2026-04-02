@@ -51,6 +51,17 @@ export class CalendarWeekViewComponent {
   clubSessionLinkSession: SavedSession | null = null;
   nearbyClubSessions$: Observable<CalendarClubSession[]> = of([]);
 
+  linkDropdownSessionId: string | null = null;
+
+  toggleLinkDropdown(session: SavedSession, event: Event): void {
+    event.stopPropagation();
+    this.linkDropdownSessionId = this.linkDropdownSessionId === session.id ? null : session.id;
+  }
+
+  closeLinkDropdown(): void {
+    this.linkDropdownSessionId = null;
+  }
+
   private readonly calendarService = inject(CalendarService);
   private readonly raceGoalService = inject(RaceGoalService);
 

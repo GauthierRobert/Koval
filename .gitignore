@@ -46,6 +46,7 @@ Thumbs.db
 /mongo-data/
 setup-gcp.sh
 .claude
+.superpowers
 platform-tools
 google-services.json
 firebase-sa-key.json

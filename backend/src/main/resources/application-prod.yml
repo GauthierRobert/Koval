@@ -25,7 +25,7 @@ garmin:
   redirect-uri: ${GARMIN_REDIRECT_URI}
 
 zwift:
-  enabled: ${ZWIFT_ENABLED}
+  enabled: ${ZWIFT_ENABLED:false}
 
 google:
   redirect-uri: ${GOOGLE_REDIRECT_URI:}

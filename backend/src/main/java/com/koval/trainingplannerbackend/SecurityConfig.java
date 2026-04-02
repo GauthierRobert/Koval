@@ -65,6 +65,7 @@ public class SecurityConfig {
         configuration.addExposedHeader("Content-Disposition");
         configuration.addExposedHeader("X-Chat-History-Id");
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(86400L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

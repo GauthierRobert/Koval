@@ -161,9 +161,29 @@
                       </svg>
                     </a>
                   }
-                  <div class="card-actions">
-                    <button class="btn-primary small" (click)="$event.stopPropagation(); openLinkPicker($any(group.entry).session)">{{ 'CALENDAR_WEEK.BTN_LINK_TO_PLAN' | translate }}</button>
-                    <button class="btn-ghost small" (click)="$event.stopPropagation(); openClubSessionLinkPicker($any(group.entry).session)">{{ 'CALENDAR_WEEK.BTN_LINK_TO_CLUB' | translate }}</button>
+                  <div class="link-dropdown-wrapper">
+                    <button class="btn-link-icon" (click)="toggleLinkDropdown($any(group.entry).session, $event)" [title]="'CALENDAR_WEEK.BTN_LINK' | translate">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                      </svg>
+                    </button>
+                    @if (linkDropdownSessionId === $any(group.entry).session.id) {
+                      <div class="link-dropdown">
+                        <button class="link-dropdown-item" (click)="$event.stopPropagation(); closeLinkDropdown(); openLinkPicker($any(group.entry).session)">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                          </svg>
+                          {{ 'CALENDAR_WEEK.BTN_LINK_TO_PLAN' | translate }}
+                        </button>
+                        <button class="link-dropdown-item" (click)="$event.stopPropagation(); closeLinkDropdown(); openClubSessionLinkPicker($any(group.entry).session)">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                          </svg>
+                          {{ 'CALENDAR_WEEK.BTN_LINK_TO_CLUB' | translate }}
+                        </button>
+                      </div>
+                    }
                   </div>
                 </div>
               </div>

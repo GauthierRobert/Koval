@@ -7,7 +7,7 @@ import {AuthService, User} from '../../../services/auth.service';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {ZoneService} from '../../../services/zone.service';
 import {ZoneSystem} from '../../../services/zone';
-import {TranslateModule} from '@ngx-translate/core';
+import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {A11yModule} from '@angular/cdk/a11y';
 
 interface PaceField {
@@ -31,6 +31,7 @@ interface PaceField {
 export class SettingsComponent implements OnInit {
     private authService = inject(AuthService);
     private zoneService = inject(ZoneService);
+    private translateService = inject(TranslateService);
     private destroyRef = inject(DestroyRef);
 
     user$ = this.authService.user$;
@@ -43,6 +44,13 @@ export class SettingsComponent implements OnInit {
     isCoach = false;
     saving = false;
     saved = false;
+    currentLang = this.translateService.currentLang || 'en';
+
+    setLang(lang: string): void {
+        this.currentLang = lang;
+        this.translateService.use(lang);
+        localStorage.setItem('lang', lang);
+    }
 
     showSecondaryRunning = false;
     private customZoneSystemsSubject = new BehaviorSubject<ZoneSystem[]>([]);
