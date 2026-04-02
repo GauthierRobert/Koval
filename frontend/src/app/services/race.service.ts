@@ -107,6 +107,10 @@ export class RaceService {
     return this.http.post<Race>(`${this.apiUrl}/${raceId}/ai-complete`, {});
   }
 
+  webSearch(query: string): Observable<Race> {
+    return this.http.post<Race>(`${this.apiUrl}/web-search`, { query });
+  }
+
   uploadGpx(raceId: string, discipline: string, file: File): Observable<void> {
     const formData = new FormData();
     formData.append('file', file);

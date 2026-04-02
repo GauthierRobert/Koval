@@ -63,6 +63,9 @@ public class RaceService {
 
     @CacheEvict(value = "races", key = "#id")
     public Race updateRace(String id, Race updates) {
+        validateLoops(updates.getSwimGpxLoops());
+        validateLoops(updates.getBikeGpxLoops());
+        validateLoops(updates.getRunGpxLoops());
         Race existing = getRaceById(id);
         mergeIfPresent(updates.getTitle(), existing::setTitle);
         mergeIfPresent(updates.getSport(), existing::setSport);
@@ -85,6 +88,12 @@ public class RaceService {
 
     private <T> void mergeIfPresent(T value, java.util.function.Consumer<T> setter) {
         if (value != null) setter.accept(value);
+    }
+
+    private void validateLoops(Integer loops) {
+        if (loops != null && loops < 1) {
+            throw new IllegalArgumentException("Loop count must be at least 1");
+        }
     }
 
     @Caching(evict = {

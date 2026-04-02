@@ -151,7 +151,9 @@ export class RacesPageComponent implements OnInit {
         priority: 'A',
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe();
+      .subscribe({
+        error: () => {},
+      });
   }
 
   toggleCreateRace(): void {

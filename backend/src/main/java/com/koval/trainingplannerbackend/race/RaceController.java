@@ -34,19 +34,26 @@ public class RaceController {
 
     private final RaceService raceService;
     private final RaceCompletionService completionService;
+    private final WebSearchRaceService webSearchService;
 
-    public RaceController(RaceService raceService, RaceCompletionService completionService) {
+    public RaceController(RaceService raceService, RaceCompletionService completionService, WebSearchRaceService webSearchService) {
         this.raceService = raceService;
         this.completionService = completionService;
+        this.webSearchService = webSearchService;
     }
 
     @GetMapping
     public ResponseEntity<List<RaceSummary>> searchRaces(
             @RequestParam(value = "q", required = false) String query,
             @RequestParam(value = "sport", required = false) String sport,
-            @RequestParam(value = "region", required = false) String region) {
+            @RequestParam(value = "region", required = false) String region,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "50") int size) {
+        int safeSize = Math.min(Math.max(size, 1), 100);
         List<RaceSummary> summaries = raceService.searchRaces(query, sport, region)
                 .stream()
+                .skip((long) page * safeSize)
+                .limit(safeSize)
                 .map(RaceSummary::from)
                 .toList();
         return ResponseEntity.ok(summaries);
@@ -165,6 +172,16 @@ public class RaceController {
         }
     }
 
+    @PostMapping("/web-search")
+    public ResponseEntity<RaceSummary> webSearch(@RequestBody WebSearchRequest request) {
+        if (request.query() == null || request.query().isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+        Race result = webSearchService.searchRaceDetails(request.query().trim());
+        return ResponseEntity.ok(RaceSummary.from(result));
+    }
+
+    public record WebSearchRequest(String query) {}
     public record SportFacet(String sport, long raceCount, int countryCount) {}
     public record CountryFacet(String country, long raceCount) {}
 
