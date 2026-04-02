@@ -4,7 +4,6 @@ import com.koval.trainingplannerbackend.ai.tools.plan.PlanProgress;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,7 +17,6 @@ import java.util.List;
 
 // @RestController //TODO temporary — plans disabled
 @RequestMapping("/api/plans")
-@CrossOrigin(origins = "*")
 public class TrainingPlanController {
 
     private final TrainingPlanService planService;

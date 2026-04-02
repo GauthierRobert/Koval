@@ -3,7 +3,6 @@ package com.koval.trainingplannerbackend.coach;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.training.group.Group;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,7 +17,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/coach")
-@CrossOrigin(origins = "*")
 public class CoachGroupController {
 
     private final CoachGroupService coachGroupService;

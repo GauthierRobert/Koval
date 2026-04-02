@@ -9,7 +9,6 @@ import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundExcept
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -21,7 +20,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/integration/zwift")
-@CrossOrigin(origins = "*")
 public class ZwiftIntegrationController {
 
     private final ZwiftAuthService authService;

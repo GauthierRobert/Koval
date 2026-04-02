@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.ai;
 
 import com.koval.trainingplannerbackend.ai.agents.AgentType;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
+import com.koval.trainingplannerbackend.config.audit.AuditLog;
 import com.koval.trainingplannerbackend.config.exceptions.RateLimitException;
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,18 +30,22 @@ public class AIController {
 
     private final AIService aiService;
     private final ChatHistoryService chatHistoryService;
+    private final AiRateLimiter rateLimiter;
 
-    public AIController(AIService aiService, ChatHistoryService chatHistoryService) {
+    public AIController(AIService aiService, ChatHistoryService chatHistoryService, AiRateLimiter rateLimiter) {
         this.aiService = aiService;
         this.chatHistoryService = chatHistoryService;
+        this.rateLimiter = rateLimiter;
     }
 
     // ── Chat ────────────────────────────────────────────────────────────
 
+    @AuditLog(action = "AI_CHAT")
     @PostMapping("/chat")
     public ResponseEntity<?> chat(@RequestBody ChatRequest request) {
         validateMessage(request.message());
         String userId = SecurityUtils.getCurrentUserId();
+        rateLimiter.checkLimit(userId);
         AgentType agentType = parseAgentType(request.agentType());
         try {
             var response = aiService.chat(request.message(), userId, request.chatHistoryId(), agentType);
@@ -63,6 +68,7 @@ public class AIController {
             return Flux.just(ServerSentEvent.<String>builder().event("error").data(errMsg).build());
         }
         String userId = SecurityUtils.getCurrentUserId();
+        rateLimiter.checkLimit(userId);
         AgentType agentType = parseAgentType(request.agentType());
         var streamResponse = aiService.chatStream(msg, userId, request.chatHistoryId(), agentType);
         response.setHeader("X-Chat-History-Id", streamResponse.chatHistoryId());
@@ -71,10 +77,12 @@ public class AIController {
 
     // ── Planner ─────────────────────────────────────────────────────────
 
+    @AuditLog(action = "AI_PLAN")
     @PostMapping("/plan")
     public ResponseEntity<?> plan(@RequestBody ChatRequest request) {
         validateMessage(request.message());
-        SecurityUtils.getCurrentUserId(); // audit: ensure authenticated
+        String planUserId = SecurityUtils.getCurrentUserId();
+        rateLimiter.checkLimit(planUserId);
         try {
             return ResponseEntity.ok(aiService.plan(request.message()));
         } catch (RuntimeException ex) {
