@@ -57,8 +57,8 @@ public class PubSubFeedConsumer {
         };
 
         subscriber = Subscriber.newBuilder(subscriptionName, receiver).build();
-        subscriber.startAsync().awaitRunning();
-        log.info("Pub/Sub subscriber started on: {}", subscriptionName);
+        subscriber.startAsync();
+        log.info("Pub/Sub subscriber starting async on: {}", subscriptionName);
     }
 
     @PreDestroy
