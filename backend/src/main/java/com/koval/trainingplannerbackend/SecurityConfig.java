@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend;
 
 import com.koval.trainingplannerbackend.auth.JwtAuthenticationFilter;
+import com.koval.trainingplannerbackend.auth.apikey.ApiKeyAuthFilter;
 import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -23,12 +24,15 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ApiKeyAuthFilter apiKeyAuthFilter;
 
     @Value("${cors.allowed-origins:http://localhost:4200,http://localhost:3000}")
     private String allowedOriginsRaw;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+                          ApiKeyAuthFilter apiKeyAuthFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.apiKeyAuthFilter = apiKeyAuthFilter;
     }
 
     @Bean
@@ -50,6 +54,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/integration/strava/webhook").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated())
+                .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
