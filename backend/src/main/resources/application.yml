@@ -117,3 +117,5 @@ management:
   health:
     rabbit:
       enabled: false
+    mongodb:
+      enabled: false

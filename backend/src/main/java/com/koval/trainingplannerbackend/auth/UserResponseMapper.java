@@ -47,7 +47,7 @@ public class UserResponseMapper {
         map.put("tsb", user.getTsb());
 
         map.put("customZoneReferenceValues", user.getCustomZoneReferenceValues());
-        map.put("needsOnboarding", Boolean.TRUE.equals(user.getNeedsOnboarding()));
+        map.put("needsOnboarding", user.getNeedsOnboarding());
 
         // CGU acceptance
         map.put("cguAcceptedAt", user.getCguAcceptedAt());
@@ -63,13 +63,13 @@ public class UserResponseMapper {
         linkedAccounts.put("zwift", user.getZwiftUserId() != null);
         map.put("linkedAccounts", linkedAccounts);
         map.put("authProvider", user.getAuthProvider() != null ? user.getAuthProvider().name() : null);
-        map.put("zwiftAutoSyncWorkouts", Boolean.TRUE.equals(user.getZwiftAutoSyncWorkouts()));
+        map.put("zwiftAutoSyncWorkouts", user.getZwiftAutoSyncWorkouts());
 
         if (user.isCoach()) {
             List<String> athleteIds = groupService.getAthleteIdsForCoach(user.getId());
             map.put("athleteCount", athleteIds.size());
             map.put("aiPrePrompt", user.getAiPrePrompt());
-            map.put("aiPrePromptEnabled", user.isAiPrePromptEnabled());
+            map.put("aiPrePromptEnabled", user.getAiPrePromptEnabled());
         }
         return map;
     }

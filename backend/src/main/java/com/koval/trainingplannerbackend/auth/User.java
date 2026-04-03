@@ -89,7 +89,7 @@ public class User {
     private String cguVersion;
 
     private String aiPrePrompt;
-    private boolean aiPrePromptEnabled = false;
+    private Boolean aiPrePromptEnabled = false;
 
     private Map<String, Integer> customZoneReferenceValues = new HashMap<>();
 

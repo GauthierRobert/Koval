@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend.integration.zwift;
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.training.model.BlockType;
+import com.koval.trainingplannerbackend.training.model.SportType;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.model.WorkoutElement;
 import org.slf4j.Logger;
@@ -47,7 +48,7 @@ public class ZwiftWorkoutService {
             return false;
         }
 
-        if (!"CYCLING".equals(training.getSportType())) {
+        if (!SportType.CYCLING.equals(training.getSportType())) {
             log.debug("Skipping non-cycling training {} for Zwift push", training.getId());
             return false;
         }
@@ -61,12 +62,12 @@ public class ZwiftWorkoutService {
      * Called after training creation/assignment if user has zwiftAutoSyncWorkouts enabled.
      */
     public void autoSyncIfEnabled(String userId, Training training) {
-        if (!"CYCLING".equals(training.getSportType())) return;
+        if (!SportType.CYCLING.equals(training.getSportType())) return;
 
         userRepository.findById(userId).ifPresent(user -> {
             if (Boolean.TRUE.equals(user.getZwiftAutoSyncWorkouts())
-                    && user.getZwiftAccessToken() != null
-                    && user.getZwiftUserId() != null) {
+                && user.getZwiftAccessToken() != null
+                && user.getZwiftUserId() != null) {
                 Thread.startVirtualThread(() -> {
                     try {
                         pushWorkoutToZwift(user, training);

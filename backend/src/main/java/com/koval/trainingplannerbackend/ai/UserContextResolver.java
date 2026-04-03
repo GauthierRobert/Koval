@@ -51,7 +51,7 @@ public class UserContextResolver {
 
         String role = user.getRole().name();
         int ftp = user.getFtp() != null ? user.getFtp() : DEFAULT_FTP;
-        String aiPrePrompt = user.isAiPrePromptEnabled() ? user.getAiPrePrompt() : null;
+        String aiPrePrompt = Boolean.TRUE.equals(user.getAiPrePromptEnabled()) ? user.getAiPrePrompt() : null;
 
         // Full profile fields
         String displayName = user.getDisplayName();
