@@ -238,7 +238,7 @@ public abstract class BaseAgentService implements TrainingAgent {
         if (ex instanceof WebClientRequestException) return true;
         if (ex instanceof SocketException) return true;
         Throwable cause = ex.getCause();
-        return cause instanceof SocketException || cause instanceof java.io.IOException;
+        return cause instanceof java.io.IOException;
     }
 
     private String streamErrorMessage(Throwable ex) {

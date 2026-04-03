@@ -85,14 +85,14 @@ public class NotificationService {
         NotificationPreferences prefs = user.getNotificationPreferences();
         if (prefs == null) return true;
         return switch (preferenceType) {
-            case "workoutAssigned" -> prefs.isWorkoutAssigned();
-            case "workoutReminder" -> prefs.isWorkoutReminder();
-            case "workoutCompletedCoach" -> prefs.isWorkoutCompletedCoach();
-            case "clubSessionCreated" -> prefs.isClubSessionCreated();
-            case "clubSessionCancelled" -> prefs.isClubSessionCancelled();
-            case "waitingListPromoted" -> prefs.isWaitingListPromoted();
-            case "planActivated" -> prefs.isPlanActivated();
-            case "clubAnnouncement" -> prefs.isClubAnnouncement();
+            case "workoutAssigned" -> prefs.workoutAssigned();
+            case "workoutReminder" -> prefs.workoutReminder();
+            case "workoutCompletedCoach" -> prefs.workoutCompletedCoach();
+            case "clubSessionCreated" -> prefs.clubSessionCreated();
+            case "clubSessionCancelled" -> prefs.clubSessionCancelled();
+            case "waitingListPromoted" -> prefs.waitingListPromoted();
+            case "planActivated" -> prefs.planActivated();
+            case "clubAnnouncement" -> prefs.clubAnnouncement();
             default -> true;
         };
     }

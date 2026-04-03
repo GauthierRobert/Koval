@@ -1,22 +1,32 @@
 package com.koval.trainingplannerbackend.notification;
 
-import lombok.Getter;
-import lombok.Setter;
-
 /**
  * Embedded document holding per-user notification preferences.
  */
-@Getter
-@Setter
-public class NotificationPreferences {
+public record NotificationPreferences(
+        Boolean workoutAssigned,
+        Boolean workoutReminder,
+        Boolean workoutCompletedCoach,
+        Boolean clubSessionCreated,
+        Boolean clubSessionCancelled,
+        Boolean waitingListPromoted,
+        Boolean planActivated,
+        Boolean clubAnnouncement,
+        Boolean openSessionCreated
+) {
+    public NotificationPreferences {
+        workoutAssigned = workoutAssigned != null ? workoutAssigned : true;
+        workoutReminder = workoutReminder != null ? workoutReminder : true;
+        workoutCompletedCoach = workoutCompletedCoach != null ? workoutCompletedCoach : true;
+        clubSessionCreated = clubSessionCreated != null ? clubSessionCreated : true;
+        clubSessionCancelled = clubSessionCancelled != null ? clubSessionCancelled : true;
+        waitingListPromoted = waitingListPromoted != null ? waitingListPromoted : true;
+        planActivated = planActivated != null ? planActivated : true;
+        clubAnnouncement = clubAnnouncement != null ? clubAnnouncement : true;
+        openSessionCreated = openSessionCreated != null ? openSessionCreated : true;
+    }
 
-    private boolean workoutAssigned = true;
-    private boolean workoutReminder = true;
-    private boolean workoutCompletedCoach = true;
-    private boolean clubSessionCreated = true;
-    private boolean clubSessionCancelled = true;
-    private boolean waitingListPromoted = true;
-    private boolean planActivated = true;
-    private boolean clubAnnouncement = true;
-    private boolean openSessionCreated = true;
+    public NotificationPreferences() {
+        this(true, true, true, true, true, true, true, true, true);
+    }
 }
