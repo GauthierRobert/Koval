@@ -72,7 +72,7 @@ public class FirebaseConfig {
     }
 
     public String getProjectId() {
-        return projectId;
+        return projectId != null ? projectId.strip() : projectId;
     }
 
     public String getAccessToken() throws IOException {

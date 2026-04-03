@@ -56,7 +56,7 @@ public class SecurityConfig {
                                 "/api/auth/google", "/api/auth/google/callback",
                                 "/api/auth/google/mobile-callback",
                                 "/api/auth/dev/login").permitAll()
-                        .requestMatchers("/api/integration/strava/webhook").permitAll()
+                        .requestMatchers("/api/integration/strava/webhook", "/api/integration/strava/webhook/**").permitAll()
                         .requestMatchers("/.well-known/oauth-authorization-server",
                                 "/.well-known/oauth-protected-resource",
                                 "/.well-known/oauth-protected-resource/**",

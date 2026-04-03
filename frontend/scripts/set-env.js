@@ -88,8 +88,11 @@ const envProd = `export const environment = {
 };
 `;
 
-// --- firebase-messaging-sw.js ---
-const sw = `/* eslint-disable no-undef */
+// --- custom-sw.js (ngsw + Firebase messaging combined) ---
+const sw = `/* Import Angular service worker */
+importScripts('./ngsw-worker.js');
+
+/* Firebase messaging for push notifications */
 importScripts('https://www.gstatic.com/firebasejs/11.0.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/11.0.0/firebase-messaging-compat.js');
 
@@ -120,6 +123,6 @@ messaging.onBackgroundMessage((payload) => {
 const envsDir = path.join(frontendDir, 'src', 'environments');
 fs.writeFileSync(path.join(envsDir, 'environment.ts'), envDev);
 fs.writeFileSync(path.join(envsDir, 'environment.prod.ts'), envProd);
-fs.writeFileSync(path.join(frontendDir, 'src', 'firebase-messaging-sw.js'), sw);
+fs.writeFileSync(path.join(frontendDir, 'src', 'custom-sw.js'), sw);
 
 console.log('Environment files generated from .env');

@@ -106,10 +106,17 @@ export class AuthService {
 
     // --- Session management ---
 
-    logout() {
+    async logout() {
         this.notificationService.unregisterToken();
         localStorage.removeItem('token');
         localStorage.removeItem(this.UI_MODE_KEY);
+
+        // Clear service worker caches to prevent stale data from previous user
+        if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.filter(k => k.startsWith('ngsw:')).map(k => caches.delete(k)));
+        }
+
         window.location.href = '/login';
     }
 
