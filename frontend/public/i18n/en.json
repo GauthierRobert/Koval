@@ -132,7 +132,23 @@
     "UNLINK_DISABLED_HINT": "Cannot unlink your only login method",
     "BTN_SAVE_SETTINGS": "SAVE SETTINGS",
     "BTN_SAVING": "SAVING...",
-    "BTN_SAVED": "SAVED"
+    "BTN_SAVED": "SAVED",
+    "SECTION_MCP_CLIENTS": "Connected AI Assistants",
+    "MCP_CLIENTS_HINT": "Manage AI assistants connected to your account via MCP (e.g. Claude Desktop).",
+    "BTN_VIEW_MCP_CLIENTS": "Manage connections"
+  },
+  "OAUTH_CLIENTS": {
+    "TITLE": "Connected Applications",
+    "DESCRIPTION": "AI assistants connected to your Koval account via MCP protocol.",
+    "SETUP_TITLE": "Setup",
+    "SETUP_TEXT": "Add this to your Claude Desktop configuration — authentication is handled automatically:",
+    "SECTION_CLIENTS": "Connected Clients",
+    "EMPTY_STATE": "No connected applications. When you connect an AI assistant like Claude Desktop, it will appear here.",
+    "CREATED": "Connected",
+    "LAST_USED": "Last used",
+    "NEVER_USED": "Never used",
+    "BTN_REVOKE": "Revoke",
+    "BTN_REVOKING": "Revoking..."
   },
   "TRAINING_HISTORY": {
     "META_BLOCKS": "blocks",

@@ -132,7 +132,23 @@
     "UNLINK_DISABLED_HINT": "Impossible de dissocier votre seule méthode de connexion",
     "BTN_SAVE_SETTINGS": "ENREGISTRER",
     "BTN_SAVING": "ENREGISTREMENT...",
-    "BTN_SAVED": "ENREGISTRÉ"
+    "BTN_SAVED": "ENREGISTRÉ",
+    "SECTION_MCP_CLIENTS": "Assistants IA connectés",
+    "MCP_CLIENTS_HINT": "Gérez les assistants IA connectés à votre compte via MCP (ex. Claude Desktop).",
+    "BTN_VIEW_MCP_CLIENTS": "Gérer les connexions"
+  },
+  "OAUTH_CLIENTS": {
+    "TITLE": "Applications connectées",
+    "DESCRIPTION": "Assistants IA connectés à votre compte Koval via le protocole MCP.",
+    "SETUP_TITLE": "Configuration",
+    "SETUP_TEXT": "Ajoutez ceci à votre configuration Claude Desktop — l'authentification est gérée automatiquement :",
+    "SECTION_CLIENTS": "Clients connectés",
+    "EMPTY_STATE": "Aucune application connectée. Quand vous connectez un assistant IA comme Claude Desktop, il apparaîtra ici.",
+    "CREATED": "Connecté le",
+    "LAST_USED": "Dernière utilisation",
+    "NEVER_USED": "Jamais utilisé",
+    "BTN_REVOKE": "Révoquer",
+    "BTN_REVOKING": "Révocation..."
   },
   "TRAINING_HISTORY": {
     "META_BLOCKS": "blocs",

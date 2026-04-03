@@ -1,5 +1,5 @@
-import {Component} from '@angular/core';
-import {Router} from '@angular/router';
+import {Component, OnInit} from '@angular/core';
+import {ActivatedRoute, Router} from '@angular/router';
 import {AuthService} from '../../../services/auth.service';
 import {TranslateModule} from '@ngx-translate/core';
 
@@ -10,8 +10,21 @@ import {TranslateModule} from '@ngx-translate/core';
     templateUrl: './login.component.html',
     styleUrl: './login.component.css',
 })
-export class LoginComponent {
-    constructor(private authService: AuthService, private router: Router) { }
+export class LoginComponent implements OnInit {
+    constructor(
+        private authService: AuthService,
+        private router: Router,
+        private route: ActivatedRoute,
+    ) {}
+
+    ngOnInit(): void {
+        this.route.queryParams.subscribe(params => {
+            const returnTo = params['returnTo'];
+            if (returnTo) {
+                localStorage.setItem('oauth_return_to', returnTo);
+            }
+        });
+    }
 
     loginWithStrava() {
         this.authService.getStravaAuthUrl().subscribe(res => {
