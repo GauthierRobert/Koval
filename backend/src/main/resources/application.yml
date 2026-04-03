@@ -119,3 +119,6 @@ management:
       enabled: false
     mongodb:
       enabled: false
+
+oauth:
+  issuer: ${OAUTH_ISSUER:http://localhost:8080}
