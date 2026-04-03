@@ -9,82 +9,108 @@
     <span>{{ 'CALENDAR_MONTH.DAY_SUN' | translate }}</span>
   </div>
   <div class="month-body">
-    @for (day of days; track trackByDay(day)) {
-      <div class="month-cell glass" [class.today]="day.isToday"
-        [class.other-month]="day.date.getMonth() !== startDate.getMonth()">
-        <div class="cell-header">
-          <span class="cell-day">{{ day.date | date : 'd' }}</span>
-          <button class="cell-add-bar" (click)="addDay.emit(day)" [title]="'CALENDAR_MONTH.BTN_ADD_TRAINING_TITLE' | translate">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-          </button>
+    @for (row of rows; track row) {
+      <div class="month-week-row">
+        <!-- Plan banners spanning day cells -->
+        <div class="banner-area">
+          @for (seg of bannersByRow.get(row) || []; track seg.planId + '-' + seg.weekNumber) {
+            <a class="plan-banner-segment"
+               [routerLink]="['/plans', seg.planId]"
+               [class.is-start]="seg.isStart"
+               [class.is-end]="seg.isEnd"
+               [style.grid-column]="seg.startCol + ' / span ' + seg.spanCols"
+               [style.--sport-bg]="sportColor(seg.sportType).bg"
+               [style.--sport-border]="sportColor(seg.sportType).border"
+               [style.--sport-text]="sportColor(seg.sportType).text"
+               [title]="seg.title">
+              @if (seg.isStart) {
+                <span class="banner-title">{{ seg.title }}</span>
+              }
+              <span class="banner-week">W{{ seg.weekNumber }}</span>
+            </a>
+          }
         </div>
-        <div class="cell-workouts">
-          @for (entry of entriesByDay.get(day.key) || []; track trackByEntry(entry)) {
-
-            @if (entry.kind === 'scheduled') {
-              <div class="mini-card"
-            [class.mini-card--completed]="entry.scheduled.status === 'COMPLETED'"
-            [class.mini-card--skipped]="entry.scheduled.status === 'SKIPPED'"
-            (click)="workoutSelected.emit(entry.scheduled)"
-            [style.border-left]="'2px solid ' + (entry.scheduled.trainingType ? getTypeColor(entry.scheduled.trainingType) : 'var(--accent-color)')">
-            <app-sport-icon [sport]="entry.scheduled.sportType" [size]="10"></app-sport-icon>
-            <span class="mini-title">{{ entry.scheduled.trainingTitle || entry.scheduled.title || ('CALENDAR_MONTH.WORKOUT_FALLBACK_TITLE' | translate) }}</span>
-              <span class="mini-tss">{{ entry.scheduled.tss || 0 }}</span>
-              @if (entry.scheduled.status === 'PENDING') {
-                <button class="btn-reschedule-mini" (click)="openReschedule(entry.scheduled, $event)" [title]="'CALENDAR_MONTH.BTN_ADD_TRAINING_TITLE' | translate">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        <!-- Day cells -->
+        <div class="day-cells">
+          @for (day of getRowDays(row); track trackByDay(day)) {
+            <div class="month-cell glass" [class.today]="day.isToday"
+              [class.other-month]="day.date.getMonth() !== startDate.getMonth()">
+              <div class="cell-header">
+                <span class="cell-day">{{ day.date | date : 'd' }}</span>
+                <button class="cell-add-bar" (click)="addDay.emit(day)" [title]="'CALENDAR_MONTH.BTN_ADD_TRAINING_TITLE' | translate">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                   </svg>
                 </button>
-              }
-            </div>
-            }
+              </div>
+              <div class="cell-workouts">
+                @for (entry of entriesByDay.get(day.key) || []; track trackByEntry(entry)) {
 
-            @if (entry.kind === 'fused') {
-              <div class="mini-card mini-card--fused"
-            (click)="workoutSelected.emit(entry.scheduled)"
-            [style.border-left]="'2px solid #34d399'">
-            <app-sport-icon [sport]="entry.scheduled.sportType" [size]="10"></app-sport-icon>
-            <span class="mini-title">{{ entry.scheduled.trainingTitle || ('CALENDAR_MONTH.WORKOUT_FALLBACK_TITLE' | translate) }}</span>
-              <span class="mini-tss">{{ entry.session.tss || 0 }}</span>
-            </div>
-            }
+                  @if (entry.kind === 'scheduled') {
+                    <div class="mini-card"
+                  [class.mini-card--completed]="entry.scheduled.status === 'COMPLETED'"
+                  [class.mini-card--skipped]="entry.scheduled.status === 'SKIPPED'"
+                  (click)="workoutSelected.emit(entry.scheduled)"
+                  [style.border-left]="'2px solid ' + (entry.scheduled.trainingType ? getTypeColor(entry.scheduled.trainingType) : 'var(--accent-color)')">
+                  <app-sport-icon [sport]="entry.scheduled.sportType" [size]="10"></app-sport-icon>
+                  <span class="mini-title">{{ entry.scheduled.trainingTitle || entry.scheduled.title || ('CALENDAR_MONTH.WORKOUT_FALLBACK_TITLE' | translate) }}</span>
+                    <span class="mini-tss">{{ entry.scheduled.tss || 0 }}</span>
+                    @if (entry.scheduled.status === 'PENDING') {
+                      <button class="btn-reschedule-mini" (click)="openReschedule(entry.scheduled, $event)" [title]="'CALENDAR_MONTH.BTN_ADD_TRAINING_TITLE' | translate">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                      </button>
+                    }
+                  </div>
+                  }
 
-            @if (entry.kind === 'standalone') {
-              <div class="mini-card mini-card--session"
-            (click)="sessionSelected.emit(entry.session)"
-            style="border-left: 2px solid #0891b2">
-            <app-sport-icon [sport]="entry.session.sportType" [size]="10"></app-sport-icon>
-            <span class="mini-title">{{ entry.session.title }}</span>
-              <span class="mini-tss">{{ entry.session.tss || 0 }}</span>
-            </div>
-            }
+                  @if (entry.kind === 'fused') {
+                    <div class="mini-card mini-card--fused"
+                  (click)="workoutSelected.emit(entry.scheduled)"
+                  [style.border-left]="'2px solid #34d399'">
+                  <app-sport-icon [sport]="entry.scheduled.sportType" [size]="10"></app-sport-icon>
+                  <span class="mini-title">{{ entry.scheduled.trainingTitle || ('CALENDAR_MONTH.WORKOUT_FALLBACK_TITLE' | translate) }}</span>
+                    <span class="mini-tss">{{ entry.session.tss || 0 }}</span>
+                  </div>
+                  }
 
-            @if (entry.kind === 'club-session') {
-              <div class="mini-card mini-card--club-session"
-            [class.mini-card--cs-attending]="entry.clubSession.joined"
-            [class.mini-card--cs-waiting]="entry.clubSession.onWaitingList"
-            [class.not-joined]="!entry.clubSession.joined && !entry.clubSession.onWaitingList"
-            [class.mini-card--cancelled]="entry.clubSession.cancelled"
-            [style.border-left]="entry.clubSession.cancelled ? '2px solid #ef4444' : (entry.clubSession.joined ? '2px solid var(--accent-color)' : (entry.clubSession.onWaitingList ? '2px solid rgba(255,255,255,0.2)' : '2px solid var(--club-session-color)'))">
-            <app-sport-icon [sport]="$any(entry.clubSession.sport)" [size]="10"></app-sport-icon>
-            <span class="mini-title" [class.title-cancelled]="entry.clubSession.cancelled">{{ entry.clubSession.title }}</span>
-              <span class="mini-cs-time">{{ entry.clubSession.scheduledAt | date:'HH:mm' }}</span>
-              <span class="mini-club-name">{{ entry.clubSession.clubName }}</span>
-            </div>
-            }
+                  @if (entry.kind === 'standalone') {
+                    <div class="mini-card mini-card--session"
+                  (click)="sessionSelected.emit(entry.session)"
+                  style="border-left: 2px solid #0891b2">
+                  <app-sport-icon [sport]="entry.session.sportType" [size]="10"></app-sport-icon>
+                  <span class="mini-title">{{ entry.session.title }}</span>
+                    <span class="mini-tss">{{ entry.session.tss || 0 }}</span>
+                  </div>
+                  }
 
-          }
+                  @if (entry.kind === 'club-session') {
+                    <div class="mini-card mini-card--club-session"
+                  [class.mini-card--cs-attending]="entry.clubSession.joined"
+                  [class.mini-card--cs-waiting]="entry.clubSession.onWaitingList"
+                  [class.not-joined]="!entry.clubSession.joined && !entry.clubSession.onWaitingList"
+                  [class.mini-card--cancelled]="entry.clubSession.cancelled"
+                  [style.border-left]="entry.clubSession.cancelled ? '2px solid #ef4444' : (entry.clubSession.joined ? '2px solid var(--accent-color)' : (entry.clubSession.onWaitingList ? '2px solid rgba(255,255,255,0.2)' : '2px solid var(--club-session-color)'))">
+                  <app-sport-icon [sport]="$any(entry.clubSession.sport)" [size]="10"></app-sport-icon>
+                  <span class="mini-title" [class.title-cancelled]="entry.clubSession.cancelled">{{ entry.clubSession.title }}</span>
+                    <span class="mini-cs-time">{{ entry.clubSession.scheduledAt | date:'HH:mm' }}</span>
+                    <span class="mini-club-name">{{ entry.clubSession.clubName }}</span>
+                  </div>
+                  }
 
-          @for (goal of goalsByDay.get(day.key) || []; track goal.id) {
-            <div class="goal-pill" [style.background-color]="getPriorityColor(goal.priority) + '22'"
-              [style.border-color]="getPriorityColor(goal.priority) + '66'"
-              [title]="goal.title">
-              <app-sport-icon [sport]="$any(goal.sport)" [size]="12"></app-sport-icon>
-              <span class="goal-pill-title">{{ goal.title }}</span>
-              <span class="goal-pill-priority" [style.color]="getPriorityColor(goal.priority)">{{ goal.priority }}</span>
+                }
+
+                @for (goal of goalsByDay.get(day.key) || []; track goal.id) {
+                  <div class="goal-pill" [style.background-color]="getPriorityColor(goal.priority) + '22'"
+                    [style.border-color]="getPriorityColor(goal.priority) + '66'"
+                    [title]="goal.title">
+                    <app-sport-icon [sport]="$any(goal.sport)" [size]="12"></app-sport-icon>
+                    <span class="goal-pill-title">{{ goal.title }}</span>
+                    <span class="goal-pill-priority" [style.color]="getPriorityColor(goal.priority)">{{ goal.priority }}</span>
+                  </div>
+                }
+              </div>
             </div>
           }
         </div>

@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -62,7 +63,12 @@ public class TrainingPlanService {
     }
 
     public List<TrainingPlan> listPlans(String userId) {
-        return planRepository.findByCreatedByOrderByCreatedAtDesc(userId);
+        List<TrainingPlan> created = planRepository.findByCreatedByOrderByCreatedAtDesc(userId);
+        List<TrainingPlan> assigned = planRepository.findByAthleteIdsContaining(userId);
+        Map<String, TrainingPlan> merged = new LinkedHashMap<>();
+        for (TrainingPlan p : created) merged.put(p.getId(), p);
+        for (TrainingPlan p : assigned) merged.putIfAbsent(p.getId(), p);
+        return new ArrayList<>(merged.values());
     }
 
     public List<TrainingPlan> listPlansByAthlete(String athleteId) {
@@ -164,13 +170,18 @@ public class TrainingPlanService {
         return planRepository.save(existing);
     }
 
+    public TrainingPlan activatePlan(String planId, String userId, LocalDate startDate) {
+        return activatePlan(planId, userId, startDate, null);
+    }
+
     /**
      * Activates a plan, creating scheduled workouts in the calendar.
      * If {@code startDate} is provided, it overrides any existing start date on the plan,
      * enabling plans to be reused as templates with different start dates.
+     * If {@code newAthleteIds} is provided and non-empty, it replaces the plan's athleteIds.
      */
     @Transactional
-    public TrainingPlan activatePlan(String planId, String userId, LocalDate startDate) {
+    public TrainingPlan activatePlan(String planId, String userId, LocalDate startDate, List<String> newAthleteIds) {
         TrainingPlan plan = getPlan(planId);
         verifyOwnership(plan, userId);
 
@@ -181,6 +192,10 @@ public class TrainingPlanService {
         // Apply start date if provided, otherwise use existing
         if (startDate != null) {
             plan.setStartDate(startDate);
+        }
+        // Apply athlete IDs override if provided
+        if (newAthleteIds != null && !newAthleteIds.isEmpty()) {
+            plan.setAthleteIds(newAthleteIds);
         }
         if (plan.getStartDate() == null) {
             throw new ForbiddenOperationException("A start date is required to activate the plan");

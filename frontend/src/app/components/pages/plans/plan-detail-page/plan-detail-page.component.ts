@@ -5,6 +5,9 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { PlanService } from '../../../../services/plan.service';
 import { TrainingService } from '../../../../services/training.service';
+import { AuthService } from '../../../../services/auth.service';
+import { CoachService } from '../../../../services/coach.service';
+import { User } from '../../../../models/user.model';
 import { SportIconComponent } from '../../../shared/sport-icon/sport-icon.component';
 import { WorkoutPickerModalComponent } from '../workout-picker-modal/workout-picker-modal.component';
 import { DAY_LABELS, DayOfWeek, PlanAnalytics, PlanDay, PlanWeek, PlanWeekAnalytics, TrainingPlan } from '../../../../models/plan.model';
@@ -24,6 +27,8 @@ export class PlanDetailPageComponent implements OnInit {
   private router = inject(Router);
   private planService = inject(PlanService);
   private trainingService = inject(TrainingService);
+  private authService = inject(AuthService);
+  private coachService = inject(CoachService);
 
   plan$ = this.planService.selectedPlan$;
   progress$ = this.planService.progress$;
@@ -62,6 +67,11 @@ export class PlanDetailPageComponent implements OnInit {
   // Activation dialog state
   activationStartDate = '';
 
+  // Coach athlete assignment
+  isCoach = false;
+  athletes: User[] = [];
+  selectedAthleteIds: string[] = [];
+
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -69,6 +79,12 @@ export class PlanDetailPageComponent implements OnInit {
       this.planService.loadPlan(id);
       this.planService.loadProgress(id);
       this.planService.loadAnalytics(id);
+    }
+    this.isCoach = this.authService.isCoach();
+    if (this.isCoach) {
+      this.coachService.getAthletes().subscribe((athletes) => {
+        this.athletes = athletes;
+      });
     }
   }
 
@@ -159,8 +175,22 @@ export class PlanDetailPageComponent implements OnInit {
   showConfirm(action: 'delete' | 'activate' | 'pause' | 'complete'): void {
     if (action === 'activate') {
       this.activationStartDate = this.getNextMonday();
+      this.selectedAthleteIds = [];
     }
     this.confirmAction = action;
+  }
+
+  toggleAthlete(athleteId: string): void {
+    const idx = this.selectedAthleteIds.indexOf(athleteId);
+    if (idx >= 0) {
+      this.selectedAthleteIds.splice(idx, 1);
+    } else {
+      this.selectedAthleteIds.push(athleteId);
+    }
+  }
+
+  isAthleteSelected(athleteId: string): boolean {
+    return this.selectedAthleteIds.includes(athleteId);
   }
 
   private getNextMonday(): string {
@@ -184,9 +214,15 @@ export class PlanDetailPageComponent implements OnInit {
         });
         break;
       case 'activate':
-        this.planService.activatePlan(plan.id, this.activationStartDate).subscribe({
-          next: () => this.planService.loadProgress(plan.id),
-        });
+        this.planService
+          .activatePlan(
+            plan.id,
+            this.activationStartDate,
+            this.selectedAthleteIds.length ? this.selectedAthleteIds : undefined
+          )
+          .subscribe({
+            next: () => this.planService.loadProgress(plan.id),
+          });
         break;
       case 'pause':
         this.planService.pausePlan(plan.id).subscribe({

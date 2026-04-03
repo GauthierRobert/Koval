@@ -4,7 +4,7 @@ WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -q
 COPY src ./src
-RUN mvn -Pnative native:compile -DskipTests -q
+RUN mvn -Pnative native:compile -DskipTests -q -Dspring.profiles.active=prod
 
 FROM debian:12-slim
 WORKDIR /app

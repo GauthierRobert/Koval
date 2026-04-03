@@ -11,6 +11,7 @@ import com.google.pubsub.v1.TopicName;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +22,7 @@ import java.util.UUID;
 
 @Configuration
 @ConditionalOnProperty(name = "club-feed.broker.type", havingValue = "pubsub")
+@ImportRuntimeHints(PubSubNativeHints.class)
 public class PubSubFeedConfig {
 
     private static final Logger log = LoggerFactory.getLogger(PubSubFeedConfig.class);

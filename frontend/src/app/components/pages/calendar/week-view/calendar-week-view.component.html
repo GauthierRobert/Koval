@@ -1,3 +1,13 @@
+@for (vp of visiblePlans; track vp.id) {
+  <a class="week-plan-banner" [routerLink]="['/plans', vp.id]"
+     [style.--sport-bg]="sportColor(vp.sportType).bg"
+     [style.--sport-border]="sportColor(vp.sportType).border"
+     [style.--sport-text]="sportColor(vp.sportType).text">
+    <span class="week-banner-title">{{ vp.title }}</span>
+    <span class="week-banner-meta">W{{ vp.currentWeek }}/{{ vp.totalWeeks }}@if (vp.weekLabel) { &middot; {{ vp.weekLabel }} }</span>
+  </a>
+}
+
 <div class="calendar-grid">
   @for (day of days; track trackByDay(day)) {
     <div class="day-column glass" [class.today]="day.isToday">

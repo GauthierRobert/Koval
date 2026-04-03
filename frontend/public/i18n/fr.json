@@ -252,6 +252,14 @@
     "GREETING_MORNING": "Bonjour",
     "GREETING_AFTERNOON": "Bon après-midi",
     "GREETING_EVENING": "Bonsoir",
+    "MY_CLUBS_TITLE": "MES CLUBS",
+    "CLUBS_NO_UPCOMING": "Aucune séance à venir",
+    "CLUBS_JOIN_SESSION": "Rejoindre",
+    "CLUBS_ATTENDING": "Inscrit",
+    "CLUBS_LEAVE": "Se désinscrire",
+    "CLUBS_WAITLIST": "Liste d'attente #{{position}}",
+    "CLUBS_JOIN_WAITLIST": "Rejoindre la liste d'attente",
+    "CLUBS_VIEW_CLUB": "Voir le club",
     "CARD_ACTIVE_PLAN": "PLAN ACTIF",
     "ACTIVE_PLAN_WEEK": "Semaine {{current}} sur {{total}}",
     "ACTIVE_PLAN_REMAINING": "{{count}} séances restantes cette semaine",
@@ -1158,7 +1166,9 @@
     "ACTIVATE_DIALOG_TITLE": "Activer le plan",
     "ACTIVATE_DIALOG_BODY": "Choisissez le lundi de début de votre plan. Les entraînements seront programmés à partir de cette date.",
     "ACTIVATE_DIALOG_START_DATE": "Date de début",
-    "ACTIVATE_DIALOG_BTN": "Activer"
+    "ACTIVATE_DIALOG_BTN": "Activer",
+    "ACTIVATE_DIALOG_ATHLETES": "Attribuer à des athlètes",
+    "ACTIVATE_DIALOG_NO_ATHLETES": "Aucun athlète dans votre liste"
   },
   "GOALS": {
     "SIDEBAR_TITLE": "Objectifs",

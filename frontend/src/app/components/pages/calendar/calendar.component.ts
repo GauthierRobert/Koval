@@ -18,7 +18,6 @@ import {ClubGroup, ClubService, MyClubRoleEntry} from '../../../services/club.se
 import {ClubSessionService} from '../../../services/club-session.service';
 import {PlanService} from '../../../services/plan.service';
 import {TrainingPlan} from '../../../models/plan.model';
-import {RouterLink} from '@angular/router';
 
 export interface CalendarDay {
   date: Date;
@@ -48,6 +47,20 @@ export interface VisiblePlan {
   weekLabel: string | null;
   sportType: string;
 }
+
+export interface PlanBannerSegment {
+  planId: string;
+  title: string;
+  sportType: string;
+  startCol: number;   // 1-7 (CSS grid 1-based)
+  spanCols: number;
+  row: number;        // 0-5 (which week-row in month grid)
+  isStart: boolean;   // plan starts in this row → left rounded corner
+  isEnd: boolean;     // plan ends in this row → right rounded corner
+  weekNumber: number;
+  weekLabel: string | null;
+}
+export type BannersByRow = Map<number, PlanBannerSegment[]>;
 
 const DAYS_IN_WEEK = 7;
 
@@ -129,7 +142,6 @@ function buildEntriesByDay(scheduled: ScheduledWorkout[], sessions: SavedSession
   imports: [
     CommonModule,
     TranslateModule,
-    RouterLink,
     TrainingActionModalComponent,
     WorkoutDetailModalComponent,
     CalendarWeekViewComponent,
@@ -142,6 +154,7 @@ function buildEntriesByDay(scheduled: ScheduledWorkout[], sessions: SavedSession
 export class CalendarComponent implements OnInit {
   readonly emptyMap: WorkoutsByDay = new Map();
   readonly emptyGoalsMap: GoalsByDay = new Map();
+  readonly emptyBannersMap: BannersByRow = new Map();
 
   weekDays: CalendarDay[] = [];
   monthDays: CalendarDay[] = [];
@@ -153,6 +166,7 @@ export class CalendarComponent implements OnInit {
   scheduleByDay$!: Observable<WorkoutsByDay>;
   goalsByDay$!: Observable<GoalsByDay>;
   visiblePlans$!: Observable<VisiblePlan[]>;
+  bannersByRow$!: Observable<BannersByRow>;
 
   isScheduleModalOpen = false;
   selectedDate: string | null = null;
@@ -239,6 +253,10 @@ export class CalendarComponent implements OnInit {
     );
     this.visiblePlans$ = combineLatest([this.planService.plans$, this.reload$]).pipe(
       map(([plans]) => this.computeVisiblePlans(plans))
+    );
+
+    this.bannersByRow$ = combineLatest([this.planService.plans$, this.reload$]).pipe(
+      map(([plans]) => this.computeBannerSegments(plans, this.monthDays))
     );
 
     this.raceGoalService.loadGoals();
@@ -390,6 +408,61 @@ export class CalendarComponent implements OnInit {
       }
     });
     this.clubService.loadMyClubRoles();
+  }
+
+  private computeBannerSegments(plans: TrainingPlan[], monthDays: CalendarDay[]): BannersByRow {
+    if (!monthDays.length) return new Map();
+
+    const result: BannersByRow = new Map();
+    const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+    const eligiblePlans = plans.filter(
+      (p) => (p.status === 'ACTIVE' || p.status === 'COMPLETED' || p.status === 'PAUSED') && p.startDate
+    );
+
+    for (const plan of eligiblePlans) {
+      const planStart = new Date(plan.startDate);
+      const planEnd = new Date(planStart);
+      planEnd.setDate(planStart.getDate() + plan.durationWeeks * 7 - 1);
+
+      for (let row = 0; row < 6; row++) {
+        const rowStart = monthDays[row * 7].date;
+        const rowEnd = monthDays[row * 7 + 6].date;
+
+        if (planStart > rowEnd || planEnd < rowStart) continue;
+
+        const segStart = planStart > rowStart ? planStart : rowStart;
+        const segEnd = planEnd < rowEnd ? planEnd : rowEnd;
+
+        const startCol = Math.round((segStart.getTime() - rowStart.getTime()) / MS_PER_DAY) + 1;
+        const spanCols = Math.round((segEnd.getTime() - segStart.getTime()) / MS_PER_DAY) + 1;
+
+        const isStart = planStart >= rowStart && planStart <= rowEnd;
+        const isEnd = planEnd >= rowStart && planEnd <= rowEnd;
+
+        const daysSincePlanStart = Math.floor((segStart.getTime() - planStart.getTime()) / MS_PER_DAY);
+        const weekNumber = Math.floor(daysSincePlanStart / 7) + 1;
+        const week = plan.weeks?.find((w) => w.weekNumber === weekNumber);
+
+        const seg: PlanBannerSegment = {
+          planId: plan.id,
+          title: plan.title,
+          sportType: plan.sportType,
+          startCol,
+          spanCols,
+          row,
+          isStart,
+          isEnd,
+          weekNumber,
+          weekLabel: week?.label ?? null,
+        };
+
+        if (!result.has(row)) result.set(row, []);
+        result.get(row)!.push(seg);
+      }
+    }
+
+    return result;
   }
 
   private computeVisiblePlans(plans: TrainingPlan[]): VisiblePlan[] {

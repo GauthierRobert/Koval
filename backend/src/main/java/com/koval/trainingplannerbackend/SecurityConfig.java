@@ -27,6 +27,9 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins:http://localhost:4200,http://localhost:3000}")
     private String allowedOriginsRaw;
 
+    @Value("${oauth.issuer:http://localhost:8080}")
+    private String issuer;
+
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
@@ -38,8 +41,14 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) ->
-                                response.sendError(401, "Unauthorized")))
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            String path = request.getServletPath();
+                            if (path.startsWith("/mcp")) {
+                                response.setHeader("WWW-Authenticate",
+                                        "Bearer resource_metadata=\"" + issuer + "/.well-known/oauth-protected-resource\"");
+                            }
+                            response.sendError(401, "Unauthorized");
+                        }))
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
@@ -49,6 +58,8 @@ public class SecurityConfig {
                                 "/api/auth/dev/login").permitAll()
                         .requestMatchers("/api/integration/strava/webhook").permitAll()
                         .requestMatchers("/.well-known/oauth-authorization-server",
+                                "/.well-known/oauth-protected-resource",
+                                "/.well-known/oauth-protected-resource/**",
                                 "/oauth/register", "/oauth/authorize", "/oauth/token").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated())

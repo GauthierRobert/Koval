@@ -787,6 +787,44 @@
   opacity: 0.85;
 }
 
+/* ── Athlete picker ──────────────────────────────────────── */
+
+.athlete-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 160px;
+  overflow-y: auto;
+  padding: 8px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+}
+
+.athlete-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.athlete-checkbox input[type='checkbox'] {
+  accent-color: var(--accent-color);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.athlete-picker-empty {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 /* ── Animations ──────────────────────────────────────────── */
 @keyframes fadeIn {
   from { opacity: 0; }

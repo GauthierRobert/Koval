@@ -1166,7 +1166,9 @@
     "ACTIVATE_DIALOG_TITLE": "Activate Plan",
     "ACTIVATE_DIALOG_BODY": "Choose the Monday your plan starts. Workouts will be scheduled from this date.",
     "ACTIVATE_DIALOG_START_DATE": "Start Date",
-    "ACTIVATE_DIALOG_BTN": "Activate"
+    "ACTIVATE_DIALOG_BTN": "Activate",
+    "ACTIVATE_DIALOG_ATHLETES": "Assign to Athletes",
+    "ACTIVATE_DIALOG_NO_ATHLETES": "No athletes in your roster yet"
   },
   "GOALS": {
     "SIDEBAR_TITLE": "Goals",

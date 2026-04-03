@@ -1,9 +1,9 @@
 package com.koval.trainingplannerbackend.notification;
 
 import com.google.auth.oauth2.GoogleCredentials;
-import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Configuration
+@ImportRuntimeHints(FirebaseNativeHints.class)
 public class FirebaseConfig {
 
     private static final Logger log = LoggerFactory.getLogger(FirebaseConfig.class);
@@ -31,15 +32,16 @@ public class FirebaseConfig {
     @Value("${firebase.project-id:}")
     private String projectId;
 
-    private GoogleCredentials credentials;
-    private boolean available;
+    private volatile GoogleCredentials credentials;
+    private volatile Boolean available;
 
-    @PostConstruct
-    public void init() {
+    private synchronized void ensureInitialized() {
+        if (available != null) return;
         try {
             InputStream credentialsStream = resolveCredentials();
             if (credentialsStream == null) {
                 log.warn("Firebase credentials not configured — push notifications disabled");
+                available = false;
                 return;
             }
             try (credentialsStream) {
@@ -50,6 +52,7 @@ public class FirebaseConfig {
             }
         } catch (IOException e) {
             log.error("Failed to initialize FCM credentials: {}", e.getMessage());
+            available = false;
         }
     }
 
@@ -64,6 +67,7 @@ public class FirebaseConfig {
     }
 
     public boolean isAvailable() {
+        ensureInitialized();
         return available;
     }
 
@@ -72,6 +76,7 @@ public class FirebaseConfig {
     }
 
     public String getAccessToken() throws IOException {
+        ensureInitialized();
         credentials.refreshIfExpired();
         return credentials.getAccessToken().getTokenValue();
     }

@@ -1,18 +1,20 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, inject, Input, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
+import {RouterLink} from '@angular/router';
 import {ScheduledWorkout} from '../../../../services/coach.service';
 import {SavedSession} from '../../../../services/history.service';
 import {TRAINING_TYPE_COLORS, TrainingType} from '../../../../models/training.model';
+import {SPORT_BANNER_COLORS} from '../../../../models/plan.model';
 import {SportIconComponent} from '../../../shared/sport-icon/sport-icon.component';
-import {CalendarDay, CalendarEntry, EntriesByDay, GoalsByDay} from '../calendar.component';
+import {BannersByRow, CalendarDay, CalendarEntry, EntriesByDay, GoalsByDay} from '../calendar.component';
 import {RaceGoalService} from '../../../../services/race-goal.service';
 import {CalendarClubSession} from '../../../../services/calendar.service';
 
 @Component({
   selector: 'app-calendar-month-view',
   standalone: true,
-  imports: [CommonModule, SportIconComponent, TranslateModule],
+  imports: [CommonModule, RouterLink, SportIconComponent, TranslateModule],
   templateUrl: './calendar-month-view.component.html',
   styleUrl: './calendar-month-view.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,6 +26,9 @@ export class CalendarMonthViewComponent {
   @Input() entriesByDay: EntriesByDay = new Map();
   @Input() startDate!: Date;
   @Input() goalsByDay: GoalsByDay = new Map();
+  @Input() bannersByRow: BannersByRow = new Map();
+
+  readonly rows = [0, 1, 2, 3, 4, 5];
 
   private raceGoalService = inject(RaceGoalService);
 
@@ -55,6 +60,14 @@ export class CalendarMonthViewComponent {
 
   getTypeColor(type: string): string {
     return TRAINING_TYPE_COLORS[type as TrainingType] || '#888';
+  }
+
+  getRowDays(row: number): CalendarDay[] {
+    return this.days.slice(row * 7, row * 7 + 7);
+  }
+
+  sportColor(sportType: string): { bg: string; border: string; text: string } {
+    return SPORT_BANNER_COLORS[sportType] ?? { bg: 'rgba(255,157,0,0.15)', border: '#ff9d00', text: '#ff9d00' };
   }
 
   trackByDay(day: CalendarDay): string { return day.key; }

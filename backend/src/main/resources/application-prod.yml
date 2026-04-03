@@ -2,6 +2,10 @@ spring:
   mongodb:
     uri: ${MONGODB_URI}
 
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+
   ai:
     anthropic:
       chat:
@@ -26,7 +30,7 @@ garmin:
 
 club-feed:
   broker:
-    type: ${CLUB_FEED_BROKER_TYPE:pubsub}
+    type: pubsub
     pubsub:
       project-id: ${GCP_PROJECT_ID:}
 
@@ -53,4 +57,4 @@ logging:
     org.springframework.ai.anthropic.api.AnthropicApi: WARN
     org.springframework.ai.anthropic: WARN
     org.springframework.ai: WARN
-    com.example.trainingplannerbackend: INFO
+    com.koval.trainingplannerbackend: INFO

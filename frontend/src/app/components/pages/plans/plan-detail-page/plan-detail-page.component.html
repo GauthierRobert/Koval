@@ -247,6 +247,24 @@
             <label>{{ 'PLANS.ACTIVATE_DIALOG_START_DATE' | translate }}</label>
             <input type="date" [(ngModel)]="activationStartDate" class="form-input" />
           </div>
+          @if (isCoach && athletes.length) {
+            <div class="form-row">
+              <label>{{ 'PLANS.ACTIVATE_DIALOG_ATHLETES' | translate }}</label>
+              <div class="athlete-picker">
+                @for (athlete of athletes; track athlete.id) {
+                  <label class="athlete-checkbox">
+                    <input type="checkbox"
+                      [checked]="isAthleteSelected(athlete.id)"
+                      (change)="toggleAthlete(athlete.id)" />
+                    <span>{{ athlete.displayName }}</span>
+                  </label>
+                }
+                @if (!athletes.length) {
+                  <span class="athlete-picker-empty">{{ 'PLANS.ACTIVATE_DIALOG_NO_ATHLETES' | translate }}</span>
+                }
+              </div>
+            </div>
+          }
           <div class="confirm-actions">
             <button class="btn-secondary" (click)="closeConfirm()">{{ 'COMMON.CANCEL' | translate }}</button>
             <button class="btn-primary" (click)="executeConfirmedAction(plan)" [disabled]="!activationStartDate">

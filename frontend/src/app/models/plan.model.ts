@@ -88,6 +88,13 @@ export interface ActivePlanSummary {
   weekActualTss: number | null;
 }
 
+export const SPORT_BANNER_COLORS: Record<string, { bg: string; border: string; text: string }> = {
+  CYCLING:  { bg: 'rgba(34, 197, 94, 0.15)', border: '#22c55e', text: '#22c55e' },
+  RUNNING:  { bg: 'rgba(239, 68, 68, 0.15)', border: '#ef4444', text: '#ef4444' },
+  SWIMMING: { bg: 'rgba(59, 130, 246, 0.15)', border: '#3b82f6', text: '#3b82f6' },
+  BRICK:    { bg: 'rgba(255, 157, 0, 0.15)', border: '#ff9d00', text: '#ff9d00' },
+};
+
 export const PLAN_STATUS_COLORS: Record<PlanStatus, string> = {
   DRAFT: '#6b7280',
   ACTIVE: '#22c55e',

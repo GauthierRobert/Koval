@@ -113,9 +113,11 @@ export class PlanService {
     });
   }
 
-  activatePlan(id: string, startDate: string): Observable<TrainingPlan> {
+  activatePlan(id: string, startDate: string, athleteIds?: string[]): Observable<TrainingPlan> {
     return new Observable((observer) => {
-      this.http.post<TrainingPlan>(`${this.apiUrl}/${id}/activate`, { startDate }).subscribe({
+      const body: { startDate: string; athleteIds?: string[] } = { startDate };
+      if (athleteIds && athleteIds.length) body.athleteIds = athleteIds;
+      this.http.post<TrainingPlan>(`${this.apiUrl}/${id}/activate`, body).subscribe({
         next: (activated) => {
           this.ngZone.run(() => {
             const plans = this.plansSubject.value.map((p) => (p.id === id ? activated : p));

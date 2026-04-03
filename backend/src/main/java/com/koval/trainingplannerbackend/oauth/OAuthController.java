@@ -29,6 +29,19 @@ public class OAuthController {
         this.oAuthService = oAuthService;
     }
 
+    /**
+     * OAuth 2.0 Protected Resource Metadata (RFC 9728 / MCP OAuth 2.1).
+     * Tells MCP clients which authorization server protects this resource.
+     * Must be public (no auth required).
+     */
+    @GetMapping({"/.well-known/oauth-protected-resource", "/.well-known/oauth-protected-resource/**"})
+    public Map<String, Object> protectedResourceMetadata() {
+        Map<String, Object> meta = new LinkedHashMap<>();
+        meta.put("resource", issuer);
+        meta.put("authorization_servers", List.of(issuer));
+        return meta;
+    }
+
     @GetMapping("/.well-known/oauth-authorization-server")
     public Map<String, Object> metadata() {
         Map<String, Object> meta = new LinkedHashMap<>();

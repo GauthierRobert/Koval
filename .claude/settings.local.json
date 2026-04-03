@@ -83,7 +83,8 @@
       "Bash(grep -rn --include=\"*.css\" \"background.*#[01][0-9a-f]\\\\{3,5\\\\}\" .)",
       "Bash(npm ls:*)",
       "Bash(git add:*)",
-      "Bash(git commit -m ':*)"
+      "Bash(git commit -m ':*)",
+      "Bash(mvn dependency:build-classpath -DincludeArtifactIds=spring-context -q)"
     ]
   }
 }

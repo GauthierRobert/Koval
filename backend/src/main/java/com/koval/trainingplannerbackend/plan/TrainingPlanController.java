@@ -65,14 +65,21 @@ public class TrainingPlanController {
     }
 
     @PostMapping("/{id}/activate")
+    @SuppressWarnings("unchecked")
     public ResponseEntity<TrainingPlan> activatePlan(@PathVariable String id,
-                                                      @RequestBody(required = false) Map<String, String> body) {
+                                                      @RequestBody(required = false) Map<String, Object> body) {
         String userId = SecurityUtils.getCurrentUserId();
         LocalDate startDate = null;
-        if (body != null && body.containsKey("startDate")) {
-            startDate = LocalDate.parse(body.get("startDate"));
+        List<String> athleteIds = null;
+        if (body != null) {
+            if (body.containsKey("startDate")) {
+                startDate = LocalDate.parse((String) body.get("startDate"));
+            }
+            if (body.containsKey("athleteIds")) {
+                athleteIds = (List<String>) body.get("athleteIds");
+            }
         }
-        return ResponseEntity.ok(planService.activatePlan(id, userId, startDate));
+        return ResponseEntity.ok(planService.activatePlan(id, userId, startDate, athleteIds));
     }
 
     @PostMapping("/{id}/pause")

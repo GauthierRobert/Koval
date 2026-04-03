@@ -11,9 +11,10 @@ import {SavedSession} from '../../../../services/history.service';
 import {TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS, TrainingType} from '../../../../models/training.model';
 import {SportIconComponent} from '../../../shared/sport-icon/sport-icon.component';
 import {TrainingLoadChartComponent} from '../../../layout/training-load-chart/training-load-chart.component';
-import {CalendarDay, CalendarEntry, EntriesByDay, GoalsByDay, toDateKey, WorkoutsByDay} from '../calendar.component';
+import {CalendarDay, CalendarEntry, EntriesByDay, GoalsByDay, toDateKey, VisiblePlan, WorkoutsByDay} from '../calendar.component';
 import {RaceGoalService} from '../../../../services/race-goal.service';
 import {formatTimeHMS} from '../../../shared/format/format.utils';
+import {SPORT_BANNER_COLORS} from '../../../../models/plan.model';
 
 @Component({
   selector: 'app-calendar-week-view',
@@ -31,6 +32,7 @@ export class CalendarWeekViewComponent {
   @Input() entriesByDay: EntriesByDay = new Map();
   @Input() workoutsByDay: WorkoutsByDay = new Map();
   @Input() goalsByDay: GoalsByDay = new Map();
+  @Input() visiblePlans: VisiblePlan[] = [];
 
   @Output() addDay = new EventEmitter<CalendarDay>();
   @Output() workoutSelected = new EventEmitter<ScheduledWorkout>();
@@ -107,6 +109,10 @@ export class CalendarWeekViewComponent {
         this.clubSessionLinkSession = null;
         this.linked.emit();
       });
+  }
+
+  sportColor(sportType: string): { bg: string; border: string; text: string } {
+    return SPORT_BANNER_COLORS[sportType] ?? { bg: 'rgba(255,157,0,0.15)', border: '#ff9d00', text: '#ff9d00' };
   }
 
   formatDuration(workout: ScheduledWorkout): string {
