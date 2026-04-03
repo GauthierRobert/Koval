@@ -156,9 +156,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'api-keys',
+    path: 'oauth-clients',
     loadComponent: () =>
-      import('./components/pages/api-keys/api-keys.component').then((m) => m.ApiKeysComponent),
+      import('./components/pages/oauth-clients/oauth-clients.component').then(
+        (m) => m.OAuthClientsComponent,
+      ),
     canActivate: [authGuard],
   },
   {

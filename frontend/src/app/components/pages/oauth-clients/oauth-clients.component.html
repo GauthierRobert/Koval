@@ -1,0 +1,49 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1 class="page-title">{{ 'OAUTH_CLIENTS.TITLE' | translate }}</h1>
+    <p class="page-subtitle">{{ 'OAUTH_CLIENTS.DESCRIPTION' | translate }}</p>
+  </div>
+
+  <!-- Setup Instructions -->
+  <section class="card setup-section">
+    <h2 class="section-label">{{ 'OAUTH_CLIENTS.SETUP_TITLE' | translate }}</h2>
+    <p class="setup-text">{{ 'OAUTH_CLIENTS.SETUP_TEXT' | translate }}</p>
+    <pre class="code-block"><code>{{'{'}}"mcpServers": {{'{'}}{{'\\n'}}  "koval": {{'{'}}{{'\\n'}}    "url": "https://your-domain.com/mcp/sse"{{'\\n'}}  {{'}'}}{{'\\n'}}{{'}'}}</code></pre>
+  </section>
+
+  <!-- Connected Clients -->
+  <section class="card clients-section">
+    <h2 class="section-label">{{ 'OAUTH_CLIENTS.SECTION_CLIENTS' | translate }}</h2>
+    @if ((clients$ | async); as clients) {
+      @if (clients.length === 0) {
+        <p class="empty-state">{{ 'OAUTH_CLIENTS.EMPTY_STATE' | translate }}</p>
+      } @else {
+        <div class="clients-list">
+          @for (client of clients; track client.id) {
+            <div class="client-row">
+              <div class="client-info">
+                <span class="client-name">{{ client.clientName }}</span>
+                <code class="client-id">{{ client.clientIdPrefix }}...</code>
+              </div>
+              <div class="client-meta">
+                <span class="client-date">{{ 'OAUTH_CLIENTS.CREATED' | translate }} {{ formatDate(client.createdAt) }}</span>
+                @if (client.lastUsedAt) {
+                  <span class="client-date">{{ 'OAUTH_CLIENTS.LAST_USED' | translate }} {{ formatDate(client.lastUsedAt) }}</span>
+                } @else {
+                  <span class="client-date">{{ 'OAUTH_CLIENTS.NEVER_USED' | translate }}</span>
+                }
+              </div>
+              <button
+                class="btn btn-danger btn-sm"
+                [disabled]="(revoking$ | async) === client.id"
+                (click)="revokeClient(client)"
+              >
+                {{ (revoking$ | async) === client.id ? ('OAUTH_CLIENTS.BTN_REVOKING' | translate) : ('OAUTH_CLIENTS.BTN_REVOKE' | translate) }}
+              </button>
+            </div>
+          }
+        </div>
+      }
+    }
+  </section>
+</div>
