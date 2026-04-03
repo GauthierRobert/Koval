@@ -7,15 +7,12 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
-import org.springframework.boot.amqp.autoconfigure.RabbitAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 
 @Configuration
 @ConditionalOnProperty(name = "club-feed.broker.type", havingValue = "rabbitmq")
-@Import(RabbitAutoConfiguration.class)
 public class RabbitMqFeedConfig {
 
     public static final String FANOUT_EXCHANGE = "club-feed-fanout";
