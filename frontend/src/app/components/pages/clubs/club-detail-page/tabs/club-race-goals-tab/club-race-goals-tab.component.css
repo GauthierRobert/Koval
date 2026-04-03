@@ -315,8 +315,7 @@
   color: var(--text-muted);
 }
 
-.empty-tab span {
-  font-size: 28px;
+.empty-tab svg {
   opacity: 0.6;
 }
 
