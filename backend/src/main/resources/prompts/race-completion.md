@@ -6,7 +6,7 @@ swimDistanceM (meters, null if not applicable),
 bikeDistanceM (meters, null if not applicable),
 runDistanceM (meters, null if not applicable),
 elevationGainM (total elevation gain in meters, null if unknown),
-description (3-10 sentence description of the race),
+description (2-3 paragraphs separated by \n\n: first paragraph is a general overview, second covers the course and key highlights, optional third covers the race history or culture),
 website (official website URL, null if unknown),
 scheduledDate (next upcoming edition date in YYYY-MM-DD format, null if unknown).
 Return ONLY valid JSON. No markdown, no explanation.

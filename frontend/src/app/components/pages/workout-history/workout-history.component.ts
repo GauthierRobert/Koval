@@ -52,18 +52,20 @@ export class WorkoutHistoryComponent implements OnInit {
 
     ngOnInit(): void {
         const sessionId = this.route.snapshot.paramMap.get('sessionId');
-        if (sessionId) {
-            this.historyService.sessions$.pipe(
-                filter(sessions => sessions.length > 0),
-                take(1),
-                takeUntilDestroyed(this.destroyRef),
-            ).subscribe(sessions => {
+        this.historyService.sessions$.pipe(
+            filter(sessions => sessions.length > 0),
+            take(1),
+            takeUntilDestroyed(this.destroyRef),
+        ).subscribe(sessions => {
+            if (sessionId) {
                 const match = sessions.find(s => s.id === sessionId);
-                if (match) {
-                    this.historyService.selectSession(match);
-                }
-            });
-        }
+                if (match) this.historyService.selectSession(match);
+            } else {
+                this.historyService.selectedSession$.pipe(take(1)).subscribe(current => {
+                    if (!current) this.historyService.selectSession(sessions[0]);
+                });
+            }
+        });
     }
 
     // Filters — labels translated via instant (language known at component init)

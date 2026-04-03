@@ -21,7 +21,7 @@
   <div class="rc-stats">
     @if (race.scheduledDate) {
       <span class="rc-chip" [class.rc-chip--accent]="!isPast()">
-        {{ race.scheduledDate | date:'mediumDate':'UTC' }}
+        {{ race.scheduledDate | date:'mediumDate' }}
       </span>
     }
     @if (race.location) {
@@ -155,7 +155,11 @@
       } @else {
         <!-- Read-only expanded: description + website + GPX management -->
         @if (race.description) {
-          <p class="rc-desc">{{ race.description }}</p>
+          <div class="rc-desc">
+            @for (para of descriptionParagraphs(race.description); track $index) {
+              <p>{{ para }}</p>
+            }
+          </div>
         }
         @if (race.website) {
           <a class="rc-website" [href]="race.website" target="_blank" rel="noopener"

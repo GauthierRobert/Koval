@@ -62,46 +62,44 @@
       <input data-testid="date-to" type="date" class="date-input" [ngModel]="dateTo" (ngModelChange)="onDateToChange($event)" />
     </div>
 
-    @if (ftp$ | async; as ftp) {
-      @if (filteredSessions$ | async; as sessions) {
-        <div class="session-list">
-          @if (sessions.length === 0) {
-            <div class="empty-state">
-              <p>{{ 'WORKOUT_HISTORY.EMPTY_NO_ACTIVITIES' | translate }}</p>
-              <p class="empty-hint">{{ 'WORKOUT_HISTORY.EMPTY_HINT_UPLOAD' | translate }}</p>
-            </div>
-          }
+    @if (filteredSessions$ | async; as sessions) {
+      <div class="session-list">
+        @if (sessions.length === 0) {
+          <div class="empty-state">
+            <p>{{ 'WORKOUT_HISTORY.EMPTY_NO_ACTIVITIES' | translate }}</p>
+            <p class="empty-hint">{{ 'WORKOUT_HISTORY.EMPTY_HINT_UPLOAD' | translate }}</p>
+          </div>
+        }
 
-          @for (session of sessions; track trackSessionById(session)) {
-            <div
-              data-testid="session-item"
-              class="session-item"
-              [class.active]="(historyService.selectedSession$ | async)?.id === session.id"
-              (click)="onSelect(session)">
-          <div class="item-sport">
-            <app-sport-icon [sport]="session.sportType" [size]="18"></app-sport-icon>
-          </div>
-          <div class="item-info">
-            <span class="item-title">{{ session.title }}</span>
-            <span class="item-date">{{ formatDate(session.date) }}</span>
-            <div class="item-metrics">
-              <span class="metric-chip tss">{{ getTss(session, ftp) }} TSS</span>
-              <span class="metric-chip dur">{{ formatTime(session.totalDuration) }}</span>
-              <span class="metric-chip if">{{ getIF(session, ftp) | number:'1.2-2' }} IF</span>
+        @for (session of sessions; track trackSessionById(session)) {
+          <div
+            data-testid="session-item"
+            class="session-item"
+            [class.active]="(historyService.selectedSession$ | async)?.id === session.id"
+            (click)="onSelect(session)">
+            <div class="item-sport">
+              <app-sport-icon [sport]="session.sportType" [size]="18"></app-sport-icon>
             </div>
-          </div>
-          <button class="dl-btn" (click)="downloadFit($event, session)" [title]="'WORKOUT_HISTORY.DOWNLOAD_FIT_TITLE' | translate">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-          </button>
+            <div class="item-info">
+              <span class="item-title">{{ session.title }}</span>
+              <span class="item-date">{{ formatDate(session.date) }}</span>
+              <div class="item-metrics">
+                <span class="metric-chip tss">{{ getTss(session, ftp$ | async) }} TSS</span>
+                <span class="metric-chip dur">{{ formatTime(session.totalDuration) }}</span>
+                <span class="metric-chip if">{{ getIF(session, ftp$ | async) | number:'1.2-2' }} IF</span>
+              </div>
             </div>
-          }
-        </div>
-      }
+            <button class="dl-btn" (click)="downloadFit($event, session)" [title]="'WORKOUT_HISTORY.DOWNLOAD_FIT_TITLE' | translate">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+            </button>
+          </div>
+        }
+      </div>
     }
   </aside>
 

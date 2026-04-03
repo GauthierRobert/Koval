@@ -95,4 +95,8 @@ export class RaceSummaryCardComponent {
   onEditFormFieldChange(field: string, value: any): void {
     this.editFormChange.emit({...this.editForm, [field]: value});
   }
+
+  descriptionParagraphs(desc: string): string[] {
+    return desc.split(/\n\n+/).map(p => p.trim()).filter(p => p.length > 0);
+  }
 }

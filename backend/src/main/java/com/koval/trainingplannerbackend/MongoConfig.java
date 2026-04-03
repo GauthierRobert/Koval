@@ -4,6 +4,7 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 
 import java.time.LocalDate;
@@ -26,7 +27,8 @@ public class MongoConfig {
                 new LocalDateToDateConverter(),
                 new DateToLocalDateConverter(),
                 new LocalDateTimeToDateConverter(),
-                new DateToLocalDateTimeConverter()
+                new DateToLocalDateTimeConverter(),
+                new IntegerToBooleanConverter()
         ));
     }
 
@@ -55,6 +57,14 @@ public class MongoConfig {
         @Override
         public LocalDateTime convert(Date source) {
             return LocalDateTime.ofInstant(source.toInstant(), ZoneOffset.UTC);
+        }
+    }
+
+    @ReadingConverter
+    static class IntegerToBooleanConverter implements Converter<Integer, Boolean> {
+        @Override
+        public Boolean convert(Integer source) {
+            return source != 0;
         }
     }
 }

@@ -61,7 +61,11 @@ public class RaceService {
         return repository.save(race);
     }
 
-    @CacheEvict(value = "races", key = "#id")
+    @Caching(evict = {
+            @CacheEvict(value = "races", key = "#raceId"),
+            @CacheEvict(value = "raceSportFacets", allEntries = true),
+            @CacheEvict(value = "raceCountryFacets", allEntries = true)
+    })
     public Race updateRace(String id, Race updates) {
         validateLoops(updates.getSwimGpxLoops());
         validateLoops(updates.getBikeGpxLoops());

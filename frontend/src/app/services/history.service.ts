@@ -78,6 +78,13 @@ export class HistoryService {
                 }));
                 parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
                 this.sessionsSubject.next(parsed);
+
+                // Keep selected session in sync with refreshed data (e.g. after FIT upload sets fitFileId)
+                const current = this.selectedSessionSubject.value;
+                if (current) {
+                    const refreshed = parsed.find(s => s.id === current.id);
+                    if (refreshed) this.selectedSessionSubject.next(refreshed);
+                }
             },
             error: () => {
                 // Error toast shown by interceptor
@@ -120,6 +127,7 @@ export class HistoryService {
                     fitFileId: saved.fitFileId ?? undefined,
                 };
                 this.sessionsSubject.next([session, ...this.sessionsSubject.value]);
+                this.selectedSessionSubject.next(session);
 
                 // Use provided fitBuffer (manual import), otherwise generate from per-second history
                 let bufferToUpload: ArrayBuffer | null = fitBuffer ?? null;

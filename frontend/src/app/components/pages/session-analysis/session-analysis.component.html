@@ -1,6 +1,6 @@
 @if (session$ | async; as session) {
-  @if (ftp$ | async; as ftp) {
-    <div class="analysis-page">
+  @let ftp = (ftp$ | async);
+  <div class="analysis-page">
 
       <!-- Header + Key metrics -->
       <app-session-stats-header
@@ -100,6 +100,5 @@
         </app-block-breakdown-table>
       }
 
-    </div>
-  }
+  </div>
 }
