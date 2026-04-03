@@ -1,13 +1,13 @@
 ---
 name: mcp-server-development
-description: Use when writing or modifying MCP (Model Context Protocol) server tools, adapters, configuration, or API key infrastructure. Enforces quality tool descriptions, lean summaries, proper auth context, and consistent patterns for exposing app capabilities to external AI clients (Claude Desktop, ChatGPT).
+description: Use when writing or modifying MCP (Model Context Protocol) server tools, adapters, configuration, or OAuth 2.1 infrastructure. Enforces quality tool descriptions, lean summaries, proper auth context, and consistent patterns for exposing app capabilities to external AI clients (Claude Desktop, ChatGPT).
 ---
 
 # MCP Server Development Standards
 
 ## Overview
 
-The MCP server is embedded in the Spring Boot backend using `spring-ai-starter-mcp-server-webmvc`. It exposes the app's capabilities as MCP tools that external AI clients (Claude Desktop, ChatGPT) can call. Authentication uses personal API keys (`koval_...` prefix). Tool adapters live in `com.koval.trainingplannerbackend.mcp/` and delegate to existing business services.
+The MCP server is embedded in the Spring Boot backend using `spring-ai-starter-mcp-server-webmvc`. It exposes the app's capabilities as MCP tools that external AI clients (Claude Desktop, ChatGPT) can call. Authentication uses OAuth 2.1 (Authorization Code + PKCE) — clients register dynamically and authenticate via standard OAuth flow. Tool adapters live in `com.koval.trainingplannerbackend.mcp/` and delegate to existing business services.
 
 ## Architecture
 
@@ -19,7 +19,7 @@ External AI Client (Claude Desktop / ChatGPT)
 │  Spring AI MCP Server (WebMVC)  │
 │  /mcp/sse  /mcp/messages        │
 ├─────────────────────────────────┤
-│  ApiKeyAuthFilter               │  ← Validates koval_... API keys
+│  JwtAuthenticationFilter        │  ← Validates JWT (issued by OAuth token endpoint)
 ├─────────────────────────────────┤
 │  McpServerConfig                │  ← Registers all tool providers
 ├─────────────────────────────────┤
@@ -36,7 +36,7 @@ External AI Client (Claude Desktop / ChatGPT)
 | Package | Purpose |
 |---------|---------|
 | `mcp/` | MCP tool adapters + server config |
-| `auth/apikey/` | API key document, repo, service, controller, filter |
+| `oauth/` | OAuth 2.1 server: client registration, authorization, token exchange |
 | `ai/tools/` | Internal AI tools (use ToolContext — NOT for MCP) |
 
 ## MCP Tool Adapter Pattern
@@ -48,7 +48,7 @@ MCP tool adapters are **thin wrappers** that delegate to existing business servi
 1. **Delegate to business services, not AI tool services** — AI tools depend on `ToolContext`; MCP tools use `SecurityUtils.getCurrentUserId()` directly
 2. **One adapter class per domain** — `McpTrainingTools`, `McpSchedulingTools`, etc.
 3. **`@Service` + `@Tool` annotations** — same as internal AI tools, but without `ToolContext` parameters
-4. **Auth via SecurityContext** — `SecurityUtils.getCurrentUserId()` is populated by `ApiKeyAuthFilter`
+4. **Auth via SecurityContext** — `SecurityUtils.getCurrentUserId()` is populated by `JwtAuthenticationFilter`
 5. **No ToolEventEmitter calls** — MCP tools don't emit SSE tool events
 6. **Return lean summary records** — never expose full MongoDB documents with internal fields
 
@@ -129,7 +129,7 @@ public record McpTrainingSummary(String id, String title, String sport, String t
 - **Static `from()` factory** for entity → summary mapping
 - **Enums as Strings** — external clients can't deserialize Java enums
 - **Null-safe** — always handle nullable fields with ternary or Optional
-- **No internal fields** — never expose `createdBy`, `keyHash`, internal timestamps
+- **No internal fields** — never expose `createdBy`, internal timestamps
 - **Include enough context** — MCP consumers can't look at the frontend for details
 
 ### Error Returns
@@ -142,32 +142,24 @@ if (title == null || title.isBlank()) return "Error: title is required.";
 
 For domain errors, let exceptions propagate — `GlobalExceptionHandler` returns structured error responses.
 
-## API Key Infrastructure
+## OAuth 2.1 Authentication
 
-### Security Model
+### Flow
 
-- Keys have `koval_` prefix + 40 random hex chars
-- Only the SHA-256 hash is stored in MongoDB (never plaintext)
-- First 14 chars stored as `prefix` for display: `koval_abcdef12...`
-- Max 5 active keys per user
-- `lastUsedAt` updated on each validation
+1. Client calls `GET /.well-known/oauth-authorization-server` for endpoint discovery
+2. Client calls `POST /oauth/register` to get `client_id` + `client_secret`
+3. Client opens browser to `GET /oauth/authorize` with PKCE challenge
+4. User authenticates (auto-approved if already logged in)
+5. Client exchanges auth code at `POST /oauth/token` for a JWT
+6. All MCP requests use `Authorization: Bearer <JWT>`
 
-### ApiKeyAuthFilter
+### Key Details
 
-- Runs **before** `JwtAuthenticationFilter` in the security chain
-- Only activates when token starts with `koval_`
-- Sets `SecurityContextHolder` with user's ID and role
-- Non-API-key tokens fall through to JWT filter (backwards compatible)
-
-### Key Management Endpoints
-
-All under `/api/auth/api-keys` (JWT-authenticated, not API-key-authenticated):
-
-| Method | Path | Purpose |
-|--------|------|---------|
-| POST | `/api/auth/api-keys` | Generate new key (returns plaintext once) |
-| GET | `/api/auth/api-keys` | List keys (prefix + name only) |
-| DELETE | `/api/auth/api-keys/{id}` | Revoke key |
+- Dynamic client registration (no manual setup needed)
+- PKCE (S256) for authorization code security
+- JWT tokens (same format as login JWTs, 24h expiry)
+- Client secrets hashed with SHA-256 in MongoDB
+- Authorization codes expire after 5 minutes, single-use
 
 ## Configuration
 
@@ -214,14 +206,13 @@ public ToolCallbackProvider mcpTools(McpTrainingTools training, ...) {
 {
   "mcpServers": {
     "koval": {
-      "url": "https://your-domain.com/mcp/sse",
-      "headers": {
-        "Authorization": "Bearer koval_<your-api-key>"
-      }
+      "url": "https://your-domain.com/mcp/sse"
     }
   }
 }
 ```
+
+No API key or headers needed — Claude Desktop handles OAuth automatically via the discovery endpoint.
 
 ## Anti-Patterns
 
