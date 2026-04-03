@@ -52,6 +52,42 @@ export interface PlanProgress {
   currentWeek: number;
 }
 
+export interface PlanWeekAnalytics {
+  weekNumber: number;
+  label: string | null;
+  targetTss: number | null;
+  actualTss: number;
+  workoutsCompleted: number;
+  workoutsTotal: number;
+  adherencePercent: number;
+}
+
+export interface PlanAnalytics {
+  planId: string;
+  planTitle: string;
+  status: string;
+  currentWeek: number;
+  totalWeeks: number;
+  overallCompletionPercent: number;
+  overallAdherencePercent: number;
+  totalTargetTss: number;
+  totalActualTss: number;
+  weeklyBreakdown: PlanWeekAnalytics[];
+}
+
+export interface ActivePlanSummary {
+  planId: string;
+  title: string;
+  status: string;
+  currentWeek: number;
+  totalWeeks: number;
+  weekLabel: string | null;
+  completionPercent: number;
+  weekWorkoutsRemaining: number;
+  weekTargetTss: number | null;
+  weekActualTss: number | null;
+}
+
 export const PLAN_STATUS_COLORS: Record<PlanStatus, string> = {
   DRAFT: '#6b7280',
   ACTIVE: '#22c55e',

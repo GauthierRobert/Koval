@@ -86,13 +86,11 @@
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_TRAININGS_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_TRAININGS_DESC' | translate }}</span>
         </a>
-        <!-- TODO temporary — plans disabled
-        <a routerLink="/plans" routerLinkActive="active" class="dropdown-item"
+        <a routerLink="/plans" routerLinkActive="active" class="dropdown-item" role="menuitem"
           (click)="closeTraining(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PLANS_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PLANS_DESC' | translate }}</span>
         </a>
-        -->
         <a routerLink="/history" routerLinkActive="active" class="dropdown-item" role="menuitem"
           (click)="closeTraining(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_HISTORY_LABEL' | translate }}</span>

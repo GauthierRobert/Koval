@@ -31,10 +31,6 @@
           </select>
         </div>
         <div class="form-row">
-          <label>{{ 'PLANS.FIELD_START_DATE' | translate }}</label>
-          <input type="date" [(ngModel)]="newStartDate" />
-        </div>
-        <div class="form-row">
           <label>{{ 'PLANS.FIELD_DURATION' | translate }}</label>
           <input type="number" [(ngModel)]="newDurationWeeks" min="1" max="52" />
         </div>
@@ -49,11 +45,23 @@
   <div class="plans-grid">
     @if (plans$ | async; as plans) {
       @if (plans.length === 0 && !showCreateForm) {
-        <div class="empty-state">
-          <div class="empty-icon">📋</div>
-          <h3>{{ 'PLANS.EMPTY_TITLE' | translate }}</h3>
-          <p>{{ 'PLANS.EMPTY_MESSAGE' | translate }}</p>
-        </div>
+        @if (loading$ | async) {
+          <div class="loading-state">
+            <div class="loading-spinner"></div>
+          </div>
+        } @else {
+          <div class="empty-state">
+            <div class="empty-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+                <rect x="9" y="3" width="6" height="4" rx="1"/>
+                <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+              </svg>
+            </div>
+            <h3>{{ 'PLANS.EMPTY_TITLE' | translate }}</h3>
+            <p>{{ 'PLANS.EMPTY_MESSAGE' | translate }}</p>
+          </div>
+        }
       }
       @for (plan of plans; track plan.id) {
         <div class="plan-card glass" (click)="openPlan(plan)">
@@ -62,8 +70,12 @@
               <app-sport-icon [sport]="plan.sportType" [size]="20"></app-sport-icon>
               <h3 class="plan-title">{{ plan.title }}</h3>
             </div>
-            <span class="status-badge" [style.background]="statusColor(plan.status)">
-              {{ plan.status }}
+            <span class="status-badge" [class]="'status-badge ' + statusClass(plan.status)">
+              @if (plan.status === 'DRAFT') {
+                {{ 'PLANS.TEMPLATE_BADGE' | translate }}
+              } @else {
+                {{ plan.status }}
+              }
             </span>
           </div>
           @if (plan.description) {
@@ -73,12 +85,8 @@
             <span class="meta-item">{{ plan.durationWeeks }}w</span>
             <span class="meta-sep">·</span>
             <span class="meta-item">{{ workoutCount(plan) }} workouts</span>
-            @if (plan.startDate) {
-              <span class="meta-sep">·</span>
-              <span class="meta-item">{{ formatDate(plan.startDate) }}</span>
-            }
           </div>
-          <button class="btn-delete" (click)="deletePlan($event, plan)" [title]="'COMMON.DELETE' | translate">
+          <button class="btn-delete" (click)="confirmDelete($event, plan)" [title]="'COMMON.DELETE' | translate">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
             </svg>
@@ -88,3 +96,22 @@
     }
   </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+@if (planToDelete) {
+  <div class="modal-backdrop" (click)="cancelDelete()">
+    <div class="modal glass small-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ 'PLANS.CONFIRM_DELETE_TITLE' | translate }}</h3>
+        <button class="close-btn" (click)="cancelDelete()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="confirm-text">{{ 'PLANS.CONFIRM_DELETE_BODY' | translate }}</p>
+        <div class="confirm-actions">
+          <button class="btn-secondary" (click)="cancelDelete()">{{ 'COMMON.CANCEL' | translate }}</button>
+          <button class="btn-danger" (click)="deletePlan()">{{ 'PLANS.CONFIRM_DELETE_BTN' | translate }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

@@ -1,4 +1,4 @@
-package com.koval.trainingplannerbackend.ai.tools.plan;
+package com.koval.trainingplannerbackend.plan;
 
 public record PlanProgress(
         String planId,

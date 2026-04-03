@@ -14,6 +14,10 @@ import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationExce
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import com.koval.trainingplannerbackend.notification.NotificationService;
+import com.koval.trainingplannerbackend.plan.PlanDay;
+import com.koval.trainingplannerbackend.plan.PlanWeek;
+import com.koval.trainingplannerbackend.plan.TrainingPlan;
+import com.koval.trainingplannerbackend.plan.TrainingPlanRepository;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
@@ -25,6 +29,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -42,6 +47,7 @@ public class ScheduleService {
 
     private final ScheduledWorkoutRepository scheduledWorkoutRepository;
     private final TrainingRepository trainingRepository;
+    private final TrainingPlanRepository planRepository;
     private final ScheduledWorkoutService scheduledWorkoutService;
     private final CompletedSessionRepository completedSessionRepository;
     private final AnalyticsService analyticsService;
@@ -54,6 +60,7 @@ public class ScheduleService {
 
     public ScheduleService(ScheduledWorkoutRepository scheduledWorkoutRepository,
             TrainingRepository trainingRepository,
+            TrainingPlanRepository planRepository,
             ScheduledWorkoutService scheduledWorkoutService,
             CompletedSessionRepository completedSessionRepository,
             AnalyticsService analyticsService,
@@ -65,6 +72,7 @@ public class ScheduleService {
             UserRepository userRepository) {
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
         this.trainingRepository = trainingRepository;
+        this.planRepository = planRepository;
         this.scheduledWorkoutService = scheduledWorkoutService;
         this.completedSessionRepository = completedSessionRepository;
         this.analyticsService = analyticsService;
@@ -95,7 +103,7 @@ public class ScheduleService {
         // If a real (non-synthetic) session is already linked, just mark complete
         if (workout.getSessionId() != null) {
             boolean isSynthetic = completedSessionRepository.findById(workout.getSessionId())
-                    .map(CompletedSession::isSyntheticCompletion).orElse(false);
+                    .map(CompletedSession::getSyntheticCompletion).orElse(false);
             if (!isSynthetic) {
                 return scheduledWorkoutService.markCompleted(scheduledWorkoutId,
                         workout.getTss(), workout.getIntensityFactor(), workout.getSessionId());
@@ -161,7 +169,8 @@ public class ScheduleService {
 
     /**
      * Enrich a list of scheduled workouts with training metadata (title, type,
-     * duration, sport, estimated TSS/IF).
+     * duration, sport, estimated TSS/IF) and plan context (plan title, week number,
+     * week label) when the workout belongs to a training plan.
      */
     public List<ScheduledWorkoutResponse> enrichList(List<ScheduledWorkout> workouts) {
         if (workouts.isEmpty())
@@ -175,6 +184,9 @@ public class ScheduleService {
         Map<String, Training> trainingsMap = trainingRepository.findAllById(trainingIds).stream()
                 .collect(Collectors.toMap(Training::getId, Function.identity()));
 
+        // Batch-resolve plan context for plan-sourced workouts
+        Map<String, PlanWeekInfo> planWeekIndex = buildPlanWeekIndex(workouts);
+
         return workouts.stream()
                 .map(sw -> {
                     Training t = trainingsMap.get(sw.getTrainingId());
@@ -184,19 +196,42 @@ public class ScheduleService {
                     var sport = t != null ? t.getSportType() : null;
                     Integer estimatedTss = t != null ? t.getEstimatedTss() : null;
                     Double estimatedIf = t != null ? t.getEstimatedIf() : null;
-                    return ScheduledWorkoutResponse.from(sw, title, type, duration, sport, estimatedTss, estimatedIf);
+                    PlanWeekInfo pwi = planWeekIndex.get(sw.getId());
+                    return ScheduledWorkoutResponse.from(sw, title, type, duration, sport, estimatedTss, estimatedIf,
+                            pwi != null ? pwi.planId() : null,
+                            pwi != null ? pwi.planTitle() : null,
+                            pwi != null ? pwi.weekNumber() : null,
+                            pwi != null ? pwi.weekLabel() : null);
                 })
                 .toList();
     }
 
     /**
-     * Enrich a single scheduled workout with training metadata.
+     * Enrich a single scheduled workout with training metadata and plan context.
      */
     public ScheduledWorkoutResponse enrichSingle(ScheduledWorkout sw) {
-        return trainingRepository.findById(sw.getTrainingId())
-                .map(t -> ScheduledWorkoutResponse.from(sw, t.getTitle(), t.getTrainingType(),
-                        t.getEstimatedDurationSeconds(), t.getSportType(), t.getEstimatedTss(), t.getEstimatedIf()))
-                .orElse(ScheduledWorkoutResponse.from(sw, null, null, null, null, null, null));
+        Training t = sw.getTrainingId() != null ? trainingRepository.findById(sw.getTrainingId()).orElse(null) : null;
+        String planId = null, planTitle = null, weekLabel = null;
+        Integer weekNumber = null;
+
+        if (sw.getPlanId() != null) {
+            PlanWeekInfo pwi = resolvePlanWeekInfo(sw.getPlanId(), sw.getId());
+            if (pwi != null) {
+                planId = pwi.planId();
+                planTitle = pwi.planTitle();
+                weekNumber = pwi.weekNumber();
+                weekLabel = pwi.weekLabel();
+            }
+        }
+
+        return ScheduledWorkoutResponse.from(sw,
+                t != null ? t.getTitle() : null,
+                t != null ? t.getTrainingType() : null,
+                t != null ? t.getEstimatedDurationSeconds() : null,
+                t != null ? t.getSportType() : null,
+                t != null ? t.getEstimatedTss() : null,
+                t != null ? t.getEstimatedIf() : null,
+                planId, planTitle, weekNumber, weekLabel);
     }
 
     /**
@@ -315,6 +350,63 @@ public class ScheduleService {
             throw new ForbiddenOperationException("Not authorized to delete this workout");
         }
         scheduledWorkoutRepository.deleteById(id);
+    }
+
+    // --- Plan context resolution helpers ---
+
+    /**
+     * Lightweight holder for plan context associated with a scheduled workout.
+     */
+    private record PlanWeekInfo(String planId, String planTitle, int weekNumber, String weekLabel) {}
+
+    /**
+     * Batch-builds a map from scheduledWorkoutId to plan context by collecting
+     * distinct planIds from the workouts, fetching plans, and walking their
+     * week/day structure once.
+     */
+    private Map<String, PlanWeekInfo> buildPlanWeekIndex(List<ScheduledWorkout> workouts) {
+        List<String> planIds = workouts.stream()
+                .map(ScheduledWorkout::getPlanId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        if (planIds.isEmpty()) return Map.of();
+
+        Map<String, TrainingPlan> plansMap = planRepository.findAllById(planIds).stream()
+                .collect(Collectors.toMap(TrainingPlan::getId, Function.identity()));
+
+        Map<String, PlanWeekInfo> index = new HashMap<>();
+        for (TrainingPlan plan : plansMap.values()) {
+            for (PlanWeek week : plan.getWeeks()) {
+                for (PlanDay day : week.getDays()) {
+                    if (day.getScheduledWorkoutId() != null) {
+                        index.put(day.getScheduledWorkoutId(),
+                                new PlanWeekInfo(plan.getId(), plan.getTitle(), week.getWeekNumber(), week.getLabel()));
+                    }
+                }
+            }
+        }
+        return index;
+    }
+
+    /**
+     * Resolves plan context for a single scheduled workout by fetching its plan
+     * and walking the week/day structure.
+     */
+    private PlanWeekInfo resolvePlanWeekInfo(String planId, String scheduledWorkoutId) {
+        return planRepository.findById(planId)
+                .map(plan -> {
+                    for (PlanWeek week : plan.getWeeks()) {
+                        for (PlanDay day : week.getDays()) {
+                            if (scheduledWorkoutId.equals(day.getScheduledWorkoutId())) {
+                                return new PlanWeekInfo(plan.getId(), plan.getTitle(), week.getWeekNumber(), week.getLabel());
+                            }
+                        }
+                    }
+                    return new PlanWeekInfo(plan.getId(), plan.getTitle(), 0, null);
+                })
+                .orElse(null);
     }
 
     public ScheduledWorkoutResponse rescheduleWorkout(String userId, String id, LocalDate newDate) {

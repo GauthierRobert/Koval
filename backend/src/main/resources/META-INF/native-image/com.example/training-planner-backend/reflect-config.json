@@ -48,12 +48,6 @@
     "allPublicMethods": true
   },
   {
-    "name": "com.koval.trainingplannerbackend.ai.tools.plan.PlanToolService",
-    "allDeclaredMethods": true,
-    "allDeclaredConstructors": true,
-    "allPublicMethods": true
-  },
-  {
     "name": "com.koval.trainingplannerbackend.ai.tools.goal.GoalToolService",
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true,
@@ -121,13 +115,31 @@
     "allDeclaredFields": true
   },
   {
-    "name": "com.koval.trainingplannerbackend.ai.tools.plan.PlanProgress",
+    "name": "com.koval.trainingplannerbackend.plan.PlanProgress",
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true,
     "allDeclaredFields": true
   },
   {
-    "name": "com.koval.trainingplannerbackend.ai.tools.plan.PlanToolService$PlanSummary",
+    "name": "com.koval.trainingplannerbackend.plan.PlanAnalytics",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.plan.PlanWeekAnalytics",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.plan.ActivePlanSummary",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.plan.AthletePlanSummary",
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true,
     "allDeclaredFields": true

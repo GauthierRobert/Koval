@@ -80,6 +80,38 @@
       <!-- My Clubs -->
       <app-dashboard-club-cards></app-dashboard-club-cards>
 
+      <!-- Active Plan Card -->
+      @if (vm.activePlan; as plan) {
+        <div class="active-plan-card glass" (click)="navigateToPlan(plan.planId)">
+          <div class="active-plan-header">
+            <span class="active-plan-label">{{ 'DASHBOARD.CARD_ACTIVE_PLAN' | translate }}</span>
+            <span class="active-plan-percent">{{ plan.completionPercent | number:'1.0-0' }}%</span>
+          </div>
+          <div class="active-plan-title-row">
+            <span class="active-plan-title">{{ plan.title }}</span>
+          </div>
+          <div class="active-plan-week">
+            {{ 'DASHBOARD.ACTIVE_PLAN_WEEK' | translate: { current: plan.currentWeek, total: plan.totalWeeks } }}
+            @if (plan.weekLabel) {
+              <span class="active-plan-phase"> — {{ plan.weekLabel }}</span>
+            }
+          </div>
+          <div class="active-plan-progress-bar">
+            <div class="active-plan-progress-fill" [style.width.%]="plan.completionPercent"></div>
+          </div>
+          <div class="active-plan-stats">
+            <span class="active-plan-stat">
+              {{ 'DASHBOARD.ACTIVE_PLAN_REMAINING' | translate: { count: plan.weekWorkoutsRemaining } }}
+            </span>
+            @if (plan.weekTargetTss) {
+              <span class="active-plan-stat">
+                {{ 'DASHBOARD.ACTIVE_PLAN_TSS' | translate: { actual: (plan.weekActualTss ?? 0 | number:'1.0-0'), target: (plan.weekTargetTss | number:'1.0-0') } }}
+              </span>
+            }
+          </div>
+        </div>
+      }
+
       <!-- Next Race Goal -->
       @if (vm.nextGoal; as goal) {
         <div class="next-goal-card glass" [routerLink]="['/goals']"

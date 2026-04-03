@@ -160,6 +160,37 @@
   color: var(--danger-color);
 }
 
+/* ── Plan badge ───────────────────────────────────────────────────── */
+.plan-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  letter-spacing: 0.2px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.plan-badge-title {
+  color: var(--accent-color);
+  opacity: 0.7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.plan-badge-sep {
+  flex-shrink: 0;
+  opacity: 0.4;
+}
+
+.plan-badge-week {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
 /* ── Workout info ──────────────────────────────────────────────────── */
 .workout-info {
   display: flex;

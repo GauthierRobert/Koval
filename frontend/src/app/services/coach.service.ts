@@ -5,6 +5,7 @@ import {catchError} from 'rxjs/operators';
 import {User} from './auth.service';
 import {Group} from './group.service';
 import {PmcDataPoint} from './metrics.service';
+import {PlanAnalytics, PlanProgress} from '../models/plan.model';
 import {environment} from '../../environments/environment';
 
 export interface InviteCode {
@@ -42,6 +43,21 @@ export interface ScheduledWorkout {
     isClubSession?: boolean;
     clubName?: string;
     clubGroupName?: string;
+    planId?: string;
+    planTitle?: string;
+    weekNumber?: number;
+    weekLabel?: string;
+}
+
+export interface AthletePlanSummary {
+    planId: string;
+    planTitle: string;
+    status: string;
+    sportType: string;
+    durationWeeks: number;
+    currentWeek: number;
+    progress: PlanProgress;
+    analytics: PlanAnalytics;
 }
 
 @Injectable({
@@ -148,5 +164,11 @@ export class CoachService {
                 params: { from, to },
             })
             .pipe(catchError(() => of([] as PmcDataPoint[])));
+    }
+
+    getAthletePlans(athleteId: string): Observable<AthletePlanSummary[]> {
+        return this.http
+            .get<AthletePlanSummary[]>(`${this.apiUrl}/athlete/${athleteId}/plans`)
+            .pipe(catchError(() => of([] as AthletePlanSummary[])));
     }
 }

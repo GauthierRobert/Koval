@@ -10,6 +10,7 @@ import {HistoryService, SavedSession} from '../../../services/history.service';
 import {MetricsService, PmcDataPoint} from '../../../services/metrics.service';
 import {CoachService, ScheduledWorkout} from '../../../services/coach.service';
 import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
+import {PlanService} from '../../../services/plan.service';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {WorkoutDetailModalComponent} from '../../shared/workout-detail-modal/workout-detail-modal.component';
 import {daysUntil, formatTrainingDuration} from '../../shared/format/format.utils';
@@ -94,6 +95,7 @@ export class DashboardComponent {
   private metricsService = inject(MetricsService);
   private raceGoalService = inject(RaceGoalService);
   private coachService = inject(CoachService);
+  private planService = inject(PlanService);
   private router = inject(Router);
   private translate = inject(TranslateService);
 
@@ -164,6 +166,8 @@ export class DashboardComponent {
     }),
   );
 
+  activePlan$ = this.planService.activePlan$;
+
   vm$ = combineLatest({
     overdue: this.overdueWorkouts$,
     upcoming: this.upcomingWorkouts$,
@@ -173,6 +177,7 @@ export class DashboardComponent {
     nextGoal: this.raceGoalService.nextGoal$,
     reminders: this.sessionReminders$,
     user: this.authService.user$,
+    activePlan: this.activePlan$,
   });
 
   selectedScheduledWorkout: ScheduledWorkout | null = null;
@@ -204,6 +209,10 @@ export class DashboardComponent {
 
   navigateToLinkTraining(session: any): void {
     this.router.navigate(['/clubs', session.clubId]);
+  }
+
+  navigateToPlan(planId: string): void {
+    this.router.navigate(['/plans', planId]);
   }
 
   openAnalysis(session: SavedSession): void {

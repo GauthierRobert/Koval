@@ -721,6 +721,93 @@
   border-radius: 4px;
 }
 
+/* ─── Active Plan Card ─────────────────────────────────────── */
+.active-plan-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: var(--card-padding);
+  border-radius: var(--radius-lg);
+  border-left: 3px solid var(--accent-color);
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.active-plan-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-color);
+  background: var(--surface-elevated);
+}
+
+.active-plan-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.active-plan-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-color);
+  opacity: 0.9;
+}
+
+.active-plan-percent {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+.active-plan-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.active-plan-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.active-plan-week {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.active-plan-phase {
+  color: var(--text-dim);
+}
+
+.active-plan-progress-bar {
+  height: 4px;
+  background: var(--overlay-8);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.active-plan-progress-fill {
+  height: 100%;
+  background: var(--accent-gradient);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.active-plan-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.active-plan-stat {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
 /* ─── Header avatar image ───────────────────────────────────── */
 .header-avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
 

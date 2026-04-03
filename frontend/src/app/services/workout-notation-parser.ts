@@ -117,7 +117,13 @@ class NotationParser {
 
     if (/[a-zA-Z]/.test(c)) {
       let s = this.pos;
-      while (this.pos < this.input.length && /[a-zA-Z]/.test(this.input[this.pos])) this.pos++;
+      const startsLower = /[a-z]/.test(c);
+      this.pos++;
+      while (this.pos < this.input.length && /[a-zA-Z]/.test(this.input[this.pos])) {
+        // Break at lowercase→uppercase boundary so "minP" → "min" + "P"
+        if (startsLower && /[A-Z]/.test(this.input[this.pos])) break;
+        this.pos++;
+      }
       this.current = { type: 'IDENT', value: this.input.slice(s, this.pos) };
       return;
     }

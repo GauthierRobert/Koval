@@ -1,0 +1,34 @@
+@if (isOpen) {
+  <div class="modal-backdrop" (click)="close()">
+    <div class="modal glass" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ 'PLANS.SELECT_WORKOUT' | translate }} — {{ 'PLANS.WEEK' | translate }} {{ weekNumber }}, {{ DAY_LABELS[dayOfWeek] }}</h3>
+        <button class="close-btn" (click)="close()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <app-training-search-list
+          [trainings]="trainings"
+          [selectedTrainingId]="selectedTrainingId"
+          [searchQuery]="searchQuery"
+          (searchChange)="onSearchChange($event)"
+          (selectTraining)="onSelectTraining($event)"
+        ></app-training-search-list>
+
+        <div class="form-row">
+          <label>{{ 'PLANS.DAY_NOTES_PLACEHOLDER' | translate }}</label>
+          <textarea class="form-input" [(ngModel)]="notes" rows="2"
+            [placeholder]="'PLANS.DAY_NOTES_PLACEHOLDER' | translate"></textarea>
+        </div>
+
+        <div class="modal-actions">
+          @if (currentTrainingId) {
+            <button class="btn-danger-outline" (click)="removeWorkout()">{{ 'PLANS.REMOVE_WORKOUT' | translate }}</button>
+          }
+          <div class="spacer"></div>
+          <button class="btn-secondary" (click)="close()">{{ 'COMMON.CANCEL' | translate }}</button>
+          <button class="btn-primary" (click)="confirm()" [disabled]="!selectedTrainingId">{{ 'COMMON.CONFIRM' | translate }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

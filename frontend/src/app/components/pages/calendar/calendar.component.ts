@@ -16,6 +16,9 @@ import {CalendarMonthViewComponent} from './month-view/calendar-month-view.compo
 import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
 import {ClubGroup, ClubService, MyClubRoleEntry} from '../../../services/club.service';
 import {ClubSessionService} from '../../../services/club-session.service';
+import {PlanService} from '../../../services/plan.service';
+import {TrainingPlan} from '../../../models/plan.model';
+import {RouterLink} from '@angular/router';
 
 export interface CalendarDay {
   date: Date;
@@ -36,6 +39,15 @@ export interface ClubCalendarPreferences {
 export type EntriesByDay = Map<string, CalendarEntry[]>;
 export type WorkoutsByDay = Map<string, ScheduledWorkout[]>;
 export type GoalsByDay = Map<string, RaceGoal[]>;
+
+export interface VisiblePlan {
+  id: string;
+  title: string;
+  currentWeek: number;
+  totalWeeks: number;
+  weekLabel: string | null;
+  sportType: string;
+}
 
 const DAYS_IN_WEEK = 7;
 
@@ -117,6 +129,7 @@ function buildEntriesByDay(scheduled: ScheduledWorkout[], sessions: SavedSession
   imports: [
     CommonModule,
     TranslateModule,
+    RouterLink,
     TrainingActionModalComponent,
     WorkoutDetailModalComponent,
     CalendarWeekViewComponent,
@@ -139,6 +152,7 @@ export class CalendarComponent implements OnInit {
   entriesByDay$!: Observable<EntriesByDay>;
   scheduleByDay$!: Observable<WorkoutsByDay>;
   goalsByDay$!: Observable<GoalsByDay>;
+  visiblePlans$!: Observable<VisiblePlan[]>;
 
   isScheduleModalOpen = false;
   selectedDate: string | null = null;
@@ -158,6 +172,7 @@ export class CalendarComponent implements OnInit {
   private readonly raceGoalService = inject(RaceGoalService);
   private readonly clubService = inject(ClubService);
   private readonly clubSessionService = inject(ClubSessionService);
+  private readonly planService = inject(PlanService);
   private readonly router = inject(Router);
 
   private userId = '';
@@ -222,6 +237,10 @@ export class CalendarComponent implements OnInit {
         return byDay;
       })
     );
+    this.visiblePlans$ = combineLatest([this.planService.plans$, this.reload$]).pipe(
+      map(([plans]) => this.computeVisiblePlans(plans))
+    );
+
     this.raceGoalService.loadGoals();
     this.loadClubPrefsData();
   }
@@ -371,6 +390,36 @@ export class CalendarComponent implements OnInit {
       }
     });
     this.clubService.loadMyClubRoles();
+  }
+
+  private computeVisiblePlans(plans: TrainingPlan[]): VisiblePlan[] {
+    const viewStart = this.startDate;
+    const viewEnd = this.endDate;
+    if (!viewStart || !viewEnd) return [];
+
+    return plans
+      .filter(p => p.status === 'ACTIVE' || p.status === 'COMPLETED' || p.status === 'PAUSED')
+      .filter(p => {
+        if (!p.startDate) return false;
+        const planStart = new Date(p.startDate);
+        const planEnd = new Date(planStart);
+        planEnd.setDate(planEnd.getDate() + p.durationWeeks * 7 - 1);
+        return planStart <= viewEnd && planEnd >= viewStart;
+      })
+      .map(p => {
+        const planStart = new Date(p.startDate);
+        const daysSinceStart = Math.floor((viewStart.getTime() - planStart.getTime()) / (1000 * 60 * 60 * 24));
+        const currentWeek = Math.max(1, Math.min(p.durationWeeks, Math.floor(daysSinceStart / 7) + 1));
+        const week = p.weeks?.find(w => w.weekNumber === currentWeek);
+        return {
+          id: p.id,
+          title: p.title,
+          currentWeek,
+          totalWeeks: p.durationWeeks,
+          weekLabel: week?.label ?? null,
+          sportType: p.sportType,
+        };
+      });
   }
 
   private startDateKey(): string {

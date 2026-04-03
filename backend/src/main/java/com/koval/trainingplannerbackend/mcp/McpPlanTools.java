@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.mcp;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
+import com.koval.trainingplannerbackend.plan.PlanAnalytics;
 import com.koval.trainingplannerbackend.plan.PlanDay;
 import com.koval.trainingplannerbackend.plan.PlanWeek;
 import com.koval.trainingplannerbackend.plan.TrainingPlan;
@@ -94,11 +95,12 @@ public class McpPlanTools {
         return "Added training to week " + weekNumber + ", " + dayOfWeek;
     }
 
-    @Tool(description = "Activate a training plan, creating scheduled workouts in the calendar for all planned days. Only works on DRAFT or PAUSED plans.")
+    @Tool(description = "Activate a training plan, creating scheduled workouts in the calendar for all planned days. Only works on DRAFT or PAUSED plans. Requires a start date.")
     public Object activatePlan(
-            @ToolParam(description = "Plan ID to activate") String planId) {
+            @ToolParam(description = "Plan ID to activate") String planId,
+            @ToolParam(description = "Start date in YYYY-MM-DD format (should be a Monday)") LocalDate startDate) {
         String userId = SecurityUtils.getCurrentUserId();
-        TrainingPlan activated = planService.activatePlan(planId, userId);
+        TrainingPlan activated = planService.activatePlan(planId, userId, startDate);
         int totalDays = activated.getWeeks().stream().mapToInt(w -> w.getDays().size()).sum();
         return "Plan activated! " + totalDays + " workouts scheduled starting " + activated.getStartDate();
     }
@@ -107,6 +109,12 @@ public class McpPlanTools {
     public Object getPlanProgress(
             @ToolParam(description = "Plan ID") String planId) {
         return planService.getProgress(planId);
+    }
+
+    @Tool(description = "Get detailed analytics for a training plan including weekly TSS adherence (actual vs target), completion rates per week, and overall adherence percentage.")
+    public PlanAnalytics getPlanAnalytics(
+            @ToolParam(description = "Plan ID") String planId) {
+        return planService.getAnalytics(planId);
     }
 
     public record PlanSummary(String id, String title, String sport, String status,

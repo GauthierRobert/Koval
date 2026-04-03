@@ -31,10 +31,16 @@ public record ScheduledWorkoutResponse(
         String sessionId,
         boolean isClubSession,
         String clubName,
-        String clubGroupName) {
+        String clubGroupName,
+        // Plan context fields
+        String planId,
+        String planTitle,
+        Integer weekNumber,
+        String weekLabel) {
 
     public static ScheduledWorkoutResponse from(ScheduledWorkout sw, String trainingTitle, TrainingType trainingType,
-            Integer totalDurationSeconds, SportType sportType, Integer estimatedTss, Double estimatedIf) {
+            Integer totalDurationSeconds, SportType sportType, Integer estimatedTss, Double estimatedIf,
+            String planId, String planTitle, Integer weekNumber, String weekLabel) {
         return new ScheduledWorkoutResponse(
                 sw.getId(),
                 sw.getTrainingId(),
@@ -52,7 +58,8 @@ public record ScheduledWorkoutResponse(
                 totalDurationSeconds,
                 sportType,
                 sw.getSessionId(),
-                false, null, null);
+                false, null, null,
+                planId, planTitle, weekNumber, weekLabel);
     }
 
     public static ScheduledWorkoutResponse fromClubSession(
@@ -95,7 +102,8 @@ public record ScheduledWorkoutResponse(
                 duration,
                 sport,
                 null,
-                true, clubName, clubGroupName);
+                true, clubName, clubGroupName,
+                null, null, null, null);
     }
 
 }

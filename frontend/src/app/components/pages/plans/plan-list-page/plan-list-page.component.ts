@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { PlanService } from '../../../../services/plan.service';
 import { SportIconComponent } from '../../../shared/sport-icon/sport-icon.component';
-import { DAY_LABELS, PLAN_STATUS_COLORS, PlanSportType, PlanStatus, TrainingPlan } from '../../../../models/plan.model';
+import { PlanSportType, PlanStatus, TrainingPlan } from '../../../../models/plan.model';
 
 @Component({
   selector: 'app-plan-list-page',
@@ -20,17 +20,20 @@ export class PlanListPageComponent {
   private router = inject(Router);
 
   plans$ = this.planService.plans$;
+  loading$ = this.planService.loading$;
 
   // Create form
   showCreateForm = false;
   newTitle = '';
   newDescription = '';
   newSport: PlanSportType = 'CYCLING';
-  newStartDate = '';
   newDurationWeeks = 4;
 
-  statusColor(status: PlanStatus): string {
-    return PLAN_STATUS_COLORS[status] ?? '#6b7280';
+  // Delete confirmation
+  planToDelete: TrainingPlan | null = null;
+
+  statusClass(status: PlanStatus): string {
+    return 'status-' + status.toLowerCase();
   }
 
   workoutCount(plan: TrainingPlan): number {
@@ -43,14 +46,6 @@ export class PlanListPageComponent {
 
   toggleCreateForm(): void {
     this.showCreateForm = !this.showCreateForm;
-    if (this.showCreateForm && !this.newStartDate) {
-      // Default to next Monday
-      const today = new Date();
-      const daysUntilMonday = ((8 - today.getDay()) % 7) || 7;
-      const nextMonday = new Date(today);
-      nextMonday.setDate(today.getDate() + daysUntilMonday);
-      this.newStartDate = nextMonday.toISOString().split('T')[0];
-    }
   }
 
   createPlan(): void {
@@ -61,7 +56,6 @@ export class PlanListPageComponent {
         title: this.newTitle.trim(),
         description: this.newDescription.trim(),
         sportType: this.newSport,
-        startDate: this.newStartDate,
         durationWeeks: this.newDurationWeeks,
         weeks: Array.from({ length: this.newDurationWeeks }, (_, i) => ({
           weekNumber: i + 1,
@@ -79,17 +73,19 @@ export class PlanListPageComponent {
       });
   }
 
-  deletePlan(event: Event, plan: TrainingPlan): void {
+  confirmDelete(event: Event, plan: TrainingPlan): void {
     event.stopPropagation();
-    this.planService.deletePlan(plan.id).subscribe();
+    this.planToDelete = plan;
   }
 
-  formatDate(dateStr: string): string {
-    if (!dateStr) return '';
-    return new Date(dateStr).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+  cancelDelete(): void {
+    this.planToDelete = null;
   }
+
+  deletePlan(): void {
+    if (!this.planToDelete) return;
+    this.planService.deletePlan(this.planToDelete.id).subscribe();
+    this.planToDelete = null;
+  }
+
 }

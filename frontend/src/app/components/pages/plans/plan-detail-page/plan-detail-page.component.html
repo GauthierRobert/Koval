@@ -3,40 +3,70 @@
     <!-- Header -->
     <div class="plan-header">
       <a routerLink="/plans" class="back-link">&larr; {{ 'PLANS.BACK_TO_PLANS' | translate }}</a>
-      <div class="header-row">
-        <div class="header-left">
-          <div class="title-row">
-            <app-sport-icon [sport]="plan.sportType" [size]="24"></app-sport-icon>
-            <h1>{{ plan.title }}</h1>
-            <span class="status-badge" [style.background]="STATUS_COLORS[plan.status]">{{ plan.status }}</span>
-          </div>
-          @if (plan.description) {
-            <p class="description">{{ plan.description }}</p>
-          }
-          <div class="meta-row">
-            <span>{{ plan.durationWeeks }} {{ 'PLANS.WEEKS' | translate }}</span>
-            @if (plan.startDate) {
-              <span class="meta-sep">·</span>
-              <span>{{ 'PLANS.STARTS' | translate }} {{ plan.startDate }}</span>
+
+      @if (!editingMeta) {
+        <div class="header-row">
+          <div class="header-left">
+            <div class="title-row">
+              <app-sport-icon [sport]="plan.sportType" [size]="24"></app-sport-icon>
+              <h1>{{ plan.title }}</h1>
+              <span class="status-badge" [class]="'status-' + plan.status.toLowerCase()">{{ plan.status }}</span>
+              @if (isEditable(plan)) {
+                <button class="btn-edit-inline" (click)="startEditMeta(plan)" [title]="'PLANS.EDIT' | translate">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+              }
+            </div>
+            @if (plan.description) {
+              <p class="description">{{ plan.description }}</p>
             }
+            <div class="meta-row">
+              <span>{{ plan.durationWeeks }} {{ 'PLANS.WEEKS' | translate }}</span>
+              @if ((plan.status === 'ACTIVE' || plan.status === 'COMPLETED') && plan.startDate) {
+                <span class="meta-sep">·</span>
+                <span>{{ 'PLANS.STARTS' | translate }} {{ plan.startDate }}</span>
+              }
+            </div>
+          </div>
+          <div class="header-actions">
+            @if (plan.status === 'DRAFT' || plan.status === 'PAUSED') {
+              <button class="btn-activate" (click)="showConfirm('activate')">
+                {{ 'PLANS.BTN_ACTIVATE' | translate }}
+              </button>
+            }
+            @if (plan.status === 'ACTIVE') {
+              <button class="btn-complete" (click)="showConfirm('complete')">
+                {{ 'PLANS.BTN_COMPLETE' | translate }}
+              </button>
+              <button class="btn-pause" (click)="showConfirm('pause')">
+                {{ 'PLANS.BTN_PAUSE' | translate }}
+              </button>
+            }
+            <button class="btn-delete" (click)="showConfirm('delete')">
+              {{ 'COMMON.DELETE' | translate }}
+            </button>
           </div>
         </div>
-        <div class="header-actions">
-          @if (plan.status === 'DRAFT' || plan.status === 'PAUSED') {
-            <button class="btn-activate" (click)="activatePlan(plan)">
-              {{ 'PLANS.BTN_ACTIVATE' | translate }}
-            </button>
-          }
-          @if (plan.status === 'ACTIVE') {
-            <button class="btn-pause" (click)="pausePlan(plan)">
-              {{ 'PLANS.BTN_PAUSE' | translate }}
-            </button>
-          }
-          <button class="btn-delete" (click)="deletePlan(plan)">
-            {{ 'COMMON.DELETE' | translate }}
-          </button>
+      } @else {
+        <!-- Inline metadata editing -->
+        <div class="meta-edit-form glass">
+          <div class="form-row">
+            <label>{{ 'PLANS.FIELD_TITLE' | translate }}</label>
+            <input type="text" [(ngModel)]="editTitle" class="form-input" />
+          </div>
+          <div class="form-row">
+            <label>{{ 'PLANS.FIELD_DESCRIPTION' | translate }}</label>
+            <textarea [(ngModel)]="editDescription" rows="2" class="form-input"></textarea>
+          </div>
+          <div class="form-actions">
+            <button class="btn-secondary" (click)="cancelMetaEdit()">{{ 'COMMON.CANCEL' | translate }}</button>
+            <button class="btn-primary" (click)="saveMetaEdit(plan)" [disabled]="!editTitle.trim()">{{ 'PLANS.SAVE' | translate }}</button>
+          </div>
         </div>
-      </div>
+      }
     </div>
 
     <!-- Progress bar -->
@@ -57,44 +87,211 @@
       </div>
     }
 
-    <!-- Week-by-week timeline -->
-    @if (trainingMap$ | async; as trainingMap) {
-      <div class="weeks-timeline">
-        @for (week of plan.weeks; track week.weekNumber) {
-          <div class="week-row" [class.current-week]="isCurrentWeek(plan.startDate, week.weekNumber)">
-            <div class="week-header">
-              <span class="week-number">{{ 'PLANS.WEEK' | translate }} {{ week.weekNumber }}</span>
-              @if (week.label) {
-                <span class="week-label">{{ week.label }}</span>
-              }
-              @if (week.targetTss) {
-                <span class="week-tss">{{ week.targetTss }} TSS</span>
-              }
-              @if (isCurrentWeek(plan.startDate, week.weekNumber)) {
-                <span class="current-badge">{{ 'PLANS.CURRENT' | translate }}</span>
-              }
+    <!-- Analytics Section -->
+    @if (analytics$ | async; as analytics) {
+      @if (plan.status === 'ACTIVE' || plan.status === 'COMPLETED') {
+        <div class="analytics-section glass">
+          <h2 class="analytics-title">{{ 'PLANS.ANALYTICS' | translate }}</h2>
+
+          <!-- Overall Stats -->
+          <div class="analytics-stats">
+            <div class="analytics-stat">
+              <span class="analytics-stat-value">{{ analytics.overallCompletionPercent }}%</span>
+              <span class="analytics-stat-label">{{ 'PLANS.ANALYTICS_COMPLETION' | translate }}</span>
             </div>
-            <div class="week-days">
-              @for (day of DAYS; track day) {
-                <div class="day-slot" [class.has-workout]="getTrainingForDay(week, day)">
-                  <span class="day-label">{{ DAY_LABELS[day] }}</span>
-                  <span class="day-date">{{ computeDate(plan.startDate, week.weekNumber, day) }}</span>
-                  @if (getTrainingForDay(week, day); as planDay) {
-                    <div class="day-workout">
-                      {{ getTrainingTitle(planDay.trainingId, trainingMap) }}
-                    </div>
-                    @if (planDay.notes) {
-                      <div class="day-notes">{{ planDay.notes }}</div>
-                    }
-                  } @else {
-                    <div class="day-rest">{{ 'PLANS.REST' | translate }}</div>
-                  }
-                </div>
-              }
+            <div class="analytics-stat">
+              <span class="analytics-stat-value">{{ analytics.overallAdherencePercent }}%</span>
+              <span class="analytics-stat-label">{{ 'PLANS.ANALYTICS_ADHERENCE' | translate }}</span>
+            </div>
+            <div class="analytics-stat">
+              <span class="analytics-stat-value">{{ analytics.totalActualTss }}</span>
+              <span class="analytics-stat-label">{{ 'PLANS.ANALYTICS_ACTUAL_TSS' | translate }}</span>
+            </div>
+            <div class="analytics-stat">
+              <span class="analytics-stat-value">{{ analytics.totalTargetTss }}</span>
+              <span class="analytics-stat-label">{{ 'PLANS.ANALYTICS_TARGET_TSS' | translate }}</span>
             </div>
           </div>
-        }
-      </div>
+
+          <!-- Weekly Breakdown -->
+          <div class="analytics-weekly">
+            <h3 class="analytics-subtitle">{{ 'PLANS.ANALYTICS_WEEKLY_BREAKDOWN' | translate }}</h3>
+            @for (week of analytics.weeklyBreakdown; track week.weekNumber) {
+              <div class="analytics-week-row" [class.analytics-current-week]="week.weekNumber === analytics.currentWeek">
+                <div class="analytics-week-info">
+                  <span class="analytics-week-number">{{ 'PLANS.WEEK' | translate }} {{ week.weekNumber }}</span>
+                  @if (week.label) {
+                    <span class="analytics-week-label">{{ week.label }}</span>
+                  }
+                  @if (week.weekNumber === analytics.currentWeek) {
+                    <span class="current-badge">{{ 'PLANS.CURRENT' | translate }}</span>
+                  }
+                  <span class="analytics-week-workouts">{{ week.workoutsCompleted }}/{{ week.workoutsTotal }} {{ 'PLANS.ANALYTICS_WORKOUTS' | translate }}</span>
+                </div>
+                <div class="analytics-bar-container">
+                  <div class="analytics-bar-track" [style.width.%]="tssBarWidth(week, maxTss(analytics))">
+                    <div class="analytics-bar-fill"
+                      [style.width.%]="tssFilledWidth(week)"
+                      [style.background]="adherenceColor(week.adherencePercent)">
+                    </div>
+                  </div>
+                  <span class="analytics-bar-value">{{ week.actualTss }}@if (week.targetTss) { / {{ week.targetTss }} } TSS</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    }
+
+    <!-- Week-by-week timeline -->
+    @if (trainingMap$ | async; as trainingMap) {
+      @if (trainings$ | async; as allTrainings) {
+        <div class="weeks-timeline">
+          @for (week of plan.weeks; track week.weekNumber) {
+            <div class="week-row" [class.current-week]="isCurrentWeek(plan.startDate, week.weekNumber)">
+              <div class="week-header">
+                @if (editingWeek !== week.weekNumber) {
+                  <span class="week-number">{{ 'PLANS.WEEK' | translate }} {{ week.weekNumber }}</span>
+                  @if (week.label) {
+                    <span class="week-label">{{ week.label }}</span>
+                  }
+                  @if (week.targetTss) {
+                    <span class="week-tss">{{ week.targetTss }} TSS</span>
+                  }
+                  @if (isCurrentWeek(plan.startDate, week.weekNumber)) {
+                    <span class="current-badge">{{ 'PLANS.CURRENT' | translate }}</span>
+                  }
+                  @if (isEditable(plan)) {
+                    <button class="btn-edit-week" (click)="startEditWeek(week)" [title]="'PLANS.EDIT' | translate">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                  }
+                } @else {
+                  <span class="week-number">{{ 'PLANS.WEEK' | translate }} {{ week.weekNumber }}</span>
+                  <input type="text" [(ngModel)]="editWeekLabel" class="inline-input label-input"
+                    [placeholder]="'PLANS.EDIT_WEEK_LABEL_PLACEHOLDER' | translate"
+                    (keydown.enter)="saveWeekEdit(plan)" />
+                  <input type="number" [(ngModel)]="editWeekTss" class="inline-input tss-input"
+                    [placeholder]="'PLANS.EDIT_WEEK_TSS_PLACEHOLDER' | translate"
+                    (keydown.enter)="saveWeekEdit(plan)" />
+                  <button class="btn-inline-save" (click)="saveWeekEdit(plan)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  </button>
+                  <button class="btn-inline-cancel" (click)="cancelWeekEdit()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                }
+              </div>
+              <div class="week-days">
+                @for (day of DAYS; track day) {
+                  <div class="day-slot" [class.has-workout]="getTrainingForDay(week, day)"
+                    [class.editable]="isEditable(plan)"
+                    (click)="openWorkoutPicker(plan, week, day)">
+                    <span class="day-label">{{ DAY_LABELS[day] }}</span>
+                    <span class="day-date">{{ computeDate(plan.startDate, week.weekNumber, day) }}</span>
+                    @if (getTrainingForDay(week, day); as planDay) {
+                      <div class="day-workout">
+                        {{ getTrainingTitle(planDay.trainingId, trainingMap) }}
+                      </div>
+                      @if (planDay.notes) {
+                        <div class="day-notes">{{ planDay.notes }}</div>
+                      }
+                    } @else {
+                      @if (isEditable(plan)) {
+                        <div class="day-add-hint">+</div>
+                      } @else {
+                        <div class="day-rest">{{ 'PLANS.REST' | translate }}</div>
+                      }
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Workout Picker Modal -->
+        <app-workout-picker-modal
+          [isOpen]="pickerOpen"
+          [weekNumber]="pickerWeekNumber"
+          [dayOfWeek]="pickerDayOfWeek"
+          [trainings]="allTrainings"
+          [currentTrainingId]="pickerCurrentTrainingId"
+          [currentNotes]="pickerCurrentNotes"
+          (confirmed)="onPickerConfirmed(plan, $event)"
+          (closed)="pickerOpen = false"
+        ></app-workout-picker-modal>
+      }
     }
   </div>
+
+  <!-- Activation Dialog (specialized) -->
+  @if (confirmAction === 'activate') {
+    <div class="modal-backdrop" (click)="closeConfirm()">
+      <div class="modal glass small-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ 'PLANS.ACTIVATE_DIALOG_TITLE' | translate }}</h3>
+          <button class="close-btn" (click)="closeConfirm()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="confirm-text">{{ 'PLANS.ACTIVATE_DIALOG_BODY' | translate }}</p>
+          <div class="form-row">
+            <label>{{ 'PLANS.ACTIVATE_DIALOG_START_DATE' | translate }}</label>
+            <input type="date" [(ngModel)]="activationStartDate" class="form-input" />
+          </div>
+          <div class="confirm-actions">
+            <button class="btn-secondary" (click)="closeConfirm()">{{ 'COMMON.CANCEL' | translate }}</button>
+            <button class="btn-primary" (click)="executeConfirmedAction(plan)" [disabled]="!activationStartDate">
+              {{ 'PLANS.ACTIVATE_DIALOG_BTN' | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Generic Confirmation Dialog (delete/pause/complete) -->
+  @if (confirmAction && confirmAction !== 'activate') {
+    <div class="modal-backdrop" (click)="closeConfirm()">
+      <div class="modal glass small-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          @switch (confirmAction) {
+            @case ('delete') { <h3>{{ 'PLANS.CONFIRM_DELETE_TITLE' | translate }}</h3> }
+            @case ('pause') { <h3>{{ 'PLANS.CONFIRM_PAUSE_TITLE' | translate }}</h3> }
+            @case ('complete') { <h3>{{ 'PLANS.CONFIRM_COMPLETE_TITLE' | translate }}</h3> }
+          }
+          <button class="close-btn" (click)="closeConfirm()">&times;</button>
+        </div>
+        <div class="modal-body">
+          @switch (confirmAction) {
+            @case ('delete') { <p class="confirm-text">{{ 'PLANS.CONFIRM_DELETE_BODY' | translate }}</p> }
+            @case ('pause') { <p class="confirm-text">{{ 'PLANS.CONFIRM_PAUSE_BODY' | translate }}</p> }
+            @case ('complete') { <p class="confirm-text">{{ 'PLANS.CONFIRM_COMPLETE_BODY' | translate }}</p> }
+          }
+          <div class="confirm-actions">
+            <button class="btn-secondary" (click)="closeConfirm()">{{ 'COMMON.CANCEL' | translate }}</button>
+            @switch (confirmAction) {
+              @case ('delete') {
+                <button class="btn-danger" (click)="executeConfirmedAction(plan)">{{ 'PLANS.CONFIRM_DELETE_BTN' | translate }}</button>
+              }
+              @case ('pause') {
+                <button class="btn-warning" (click)="executeConfirmedAction(plan)">{{ 'PLANS.CONFIRM_PAUSE_BTN' | translate }}</button>
+              }
+              @case ('complete') {
+                <button class="btn-primary" (click)="executeConfirmedAction(plan)">{{ 'PLANS.CONFIRM_COMPLETE_BTN' | translate }}</button>
+              }
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
 }

@@ -3,6 +3,8 @@ package com.koval.trainingplannerbackend.coach;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
+import com.koval.trainingplannerbackend.plan.AthletePlanSummary;
+import com.koval.trainingplannerbackend.plan.TrainingPlanService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,13 +26,16 @@ public class CoachScheduleController {
     private final ScheduledWorkoutService scheduledWorkoutService;
     private final ScheduleService scheduleService;
     private final ClubTrainingSessionRepository clubSessionRepository;
+    private final TrainingPlanService trainingPlanService;
 
     public CoachScheduleController(ScheduledWorkoutService scheduledWorkoutService,
                                    ScheduleService scheduleService,
-                                   ClubTrainingSessionRepository clubSessionRepository) {
+                                   ClubTrainingSessionRepository clubSessionRepository,
+                                   TrainingPlanService trainingPlanService) {
         this.scheduledWorkoutService = scheduledWorkoutService;
         this.scheduleService = scheduleService;
         this.clubSessionRepository = clubSessionRepository;
+        this.trainingPlanService = trainingPlanService;
     }
 
     public record CompletionRequest(Integer tss, Double intensityFactor) {}
@@ -63,6 +68,11 @@ public class CoachScheduleController {
     @PostMapping("/schedule/{id}/skip")
     public ResponseEntity<ScheduledWorkout> markSkipped(@PathVariable String id) {
         return ResponseEntity.ok(scheduledWorkoutService.markSkipped(id));
+    }
+
+    @GetMapping("/athlete/{athleteId}/plans")
+    public ResponseEntity<List<AthletePlanSummary>> getAthletePlans(@PathVariable String athleteId) {
+        return ResponseEntity.ok(trainingPlanService.listPlansByAthleteWithProgress(athleteId));
     }
 
     @GetMapping("/session-reminders")

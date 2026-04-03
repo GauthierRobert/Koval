@@ -2,7 +2,9 @@ package com.koval.trainingplannerbackend.ai.tools.plan;
 
 import com.koval.trainingplannerbackend.ai.ToolEventEmitter;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
+import com.koval.trainingplannerbackend.plan.PlanAnalytics;
 import com.koval.trainingplannerbackend.plan.PlanDay;
+import com.koval.trainingplannerbackend.plan.PlanProgress;
 import com.koval.trainingplannerbackend.plan.PlanWeek;
 import com.koval.trainingplannerbackend.plan.TrainingPlan;
 import com.koval.trainingplannerbackend.plan.TrainingPlanService;
@@ -30,12 +32,11 @@ public class PlanToolService {
         this.planService = planService;
     }
 
-    @Tool(description = "Create a new multi-week training plan (periodization). Returns the plan with its ID. The plan starts in DRAFT status — call activatePlan to populate the calendar.")
+    @Tool(description = "Create a new multi-week training plan template (periodization). Returns the plan with its ID. The plan starts in DRAFT status — add workouts with addDayToPlan, then call activatePlan with a start date to populate the calendar.")
     public Object createPlan(
             @ToolParam(description = "Plan title, e.g. '8-Week FTP Builder'") String title,
             @ToolParam(description = "Plan description with periodization rationale") String description,
             @ToolParam(description = "Sport type: CYCLING, RUNNING, SWIMMING, or BRICK") String sportType,
-            @ToolParam(description = "Start date in YYYY-MM-DD format (should be a Monday)") LocalDate startDate,
             @ToolParam(description = "Total number of weeks in the plan") int durationWeeks,
             @ToolParam(description = "Optional target FTP at plan completion", required = false) Integer targetFtp,
             @ToolParam(description = "Optional race goal ID this plan targets", required = false) String goalRaceId,
@@ -57,7 +58,6 @@ public class PlanToolService {
         plan.setTitle(title);
         plan.setDescription(description);
         plan.setSportType(SportType.fromString(sportType));
-        plan.setStartDate(startDate);
         plan.setDurationWeeks(durationWeeks);
         plan.setTargetFtp(targetFtp);
         plan.setGoalRaceId(goalRaceId);
@@ -145,16 +145,17 @@ public class PlanToolService {
         return "Week " + weekNumber + " labeled: " + label;
     }
 
-    @Tool(description = "Activate a training plan, populating the calendar with scheduled workouts for all planned days. Only works on DRAFT or PAUSED plans.")
+    @Tool(description = "Activate a training plan, populating the calendar with scheduled workouts for all planned days. Only works on DRAFT or PAUSED plans. Requires a startDate (the Monday the plan begins).")
     public Object activatePlan(
             @ToolParam(description = "The plan ID to activate") String planId,
+            @ToolParam(description = "Start date in YYYY-MM-DD format (should be a Monday). Required for activation.") LocalDate startDate,
             ToolContext context) {
 
         ToolEventEmitter.emitToolCall(context, "activatePlan", "Activating plan...");
 
         try {
             String userId = SecurityUtils.getUserId(context);
-            TrainingPlan activated = planService.activatePlan(planId, userId);
+            TrainingPlan activated = planService.activatePlan(planId, userId, startDate);
             int totalDays = activated.getWeeks().stream()
                     .mapToInt(w -> w.getDays().size())
                     .sum();
@@ -185,6 +186,18 @@ public class PlanToolService {
         ToolEventEmitter.emitToolResult(context, "getPlanProgress",
                 progress.completionPercent() + "% complete", true);
         return progress;
+    }
+
+    @Tool(description = "Get detailed analytics for a training plan including weekly TSS adherence (actual vs target), completion rates per week, and overall adherence percentage. Use this to answer questions like 'Am I on track with my plan?'")
+    public Object getPlanAnalytics(
+            @ToolParam(description = "The plan ID") String planId,
+            ToolContext context) {
+        ToolEventEmitter.emitToolCall(context, "getPlanAnalytics", "Analyzing plan...");
+        PlanAnalytics analytics = planService.getAnalytics(planId);
+        ToolEventEmitter.emitToolResult(context, "getPlanAnalytics",
+                String.format("%.0f%% adherence, %d/%d TSS", analytics.overallAdherencePercent(),
+                        analytics.totalActualTss(), analytics.totalTargetTss()), true);
+        return analytics;
     }
 
     // ── Summary record ──────────────────────────────────────────────────

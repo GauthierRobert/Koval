@@ -40,9 +40,9 @@ public class NativeImageHints {
                     CreationTrainingWithClubSessionToolService.class,
                     CreationTrainingToolService.class,
                     RaceToolService.class,
-                    PlanToolService.class,
                     GoalToolService.class,
-                    CoachToolService.class
+                    CoachToolService.class,
+                    PlanToolService.class
             };
 
             for (Class<?> toolService : toolServices) {

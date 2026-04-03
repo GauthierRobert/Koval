@@ -1,0 +1,35 @@
+@if (plans$ | async; as plans) {
+  @if (plans.length > 0) {
+    <div class="plans-tab-panel">
+      <div class="section-title">{{ 'COACH_DASHBOARD.PLANS_TITLE' | translate }}</div>
+      <div class="plans-list">
+        @for (plan of plans; track trackByPlanId(plan)) {
+          <div class="plan-row" (click)="openPlan(plan)">
+            <div class="plan-left">
+              <app-sport-icon [sport]="$any(plan.sportType)" [size]="18"></app-sport-icon>
+              <div class="plan-info">
+                <span class="plan-title">{{ plan.planTitle }}</span>
+                <span class="plan-week-label">
+                  {{ 'COACH_DASHBOARD.PLANS_WEEK_OF' | translate: { current: plan.currentWeek, total: plan.durationWeeks } }}
+                </span>
+              </div>
+            </div>
+            <div class="plan-right">
+              @if (adherencePercent(plan) !== null) {
+                <span class="adherence-chip">{{ adherencePercent(plan) | number:'1.0-0' }}% {{ 'COACH_DASHBOARD.PLANS_ADHERENCE' | translate }}</span>
+              }
+              <span class="status-badge" [style.background]="statusColor(plan.status)">
+                {{ plan.status }}
+              </span>
+            </div>
+            <div class="plan-progress-bar">
+              <div class="plan-progress-fill" [style.width.%]="plan.progress.completionPercent"></div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  } @else {
+    <div class="empty-tab">{{ 'COACH_DASHBOARD.PLANS_EMPTY' | translate }}</div>
+  }
+}

@@ -48,7 +48,7 @@ public class ClubTrainingSession {
     private String linkedTrainingDescription;
     private List<GroupLinkedTraining> linkedTrainings = new ArrayList<>();
     private List<WaitingListEntry> waitingList = new ArrayList<>();
-    private Boolean cancelled;
+    private Boolean cancelled = false;
     private String cancellationReason;
     private LocalDateTime cancelledAt;
 

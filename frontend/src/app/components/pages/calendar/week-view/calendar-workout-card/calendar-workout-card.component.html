@@ -47,6 +47,15 @@
     </div>
   </div>
   <div class="workout-info">
+    @if (scheduled.planTitle) {
+      <div class="plan-badge">
+        <span class="plan-badge-title">{{ scheduled.planTitle }}</span>
+        @if (scheduled.weekLabel || scheduled.weekNumber) {
+          <span class="plan-badge-sep">&middot;</span>
+          <span class="plan-badge-week">{{ scheduled.weekLabel || (('CALENDAR_WEEK.PLAN_WEEK' | translate) + ' ' + scheduled.weekNumber) }}</span>
+        }
+      </div>
+    }
     <div class="title-row">
       <app-sport-icon [sport]="scheduled.sportType" [size]="14"></app-sport-icon>
       <span class="workout-title">

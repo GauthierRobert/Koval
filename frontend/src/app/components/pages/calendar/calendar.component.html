@@ -55,6 +55,30 @@
     </div>
   </div>
 
+  @if (visiblePlans$ | async; as vplans) {
+    @for (vp of vplans; track vp.id) {
+      <a class="plan-banner" [routerLink]="['/plans', vp.id]">
+        <div class="plan-banner-left">
+          <svg class="plan-banner-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+          </svg>
+          <span class="plan-banner-title">{{ vp.title }}</span>
+        </div>
+        <div class="plan-banner-right">
+          <span class="plan-banner-week">{{ 'CALENDAR.PLAN_WEEK' | translate }} {{ vp.currentWeek }}/{{ vp.totalWeeks }}</span>
+          @if (vp.weekLabel) {
+            <span class="plan-banner-sep">&middot;</span>
+            <span class="plan-banner-label">{{ vp.weekLabel }}</span>
+          }
+          <svg class="plan-banner-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </div>
+      </a>
+    }
+  }
+
   @if (entriesByDay$ | async; as ebd) {
     @if (viewMode === 'week') {
       <app-calendar-week-view

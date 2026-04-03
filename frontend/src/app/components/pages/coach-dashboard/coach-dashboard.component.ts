@@ -25,11 +25,12 @@ import {AthleteListSidebarComponent} from './athlete-list-sidebar/athlete-list-s
 import {CoachPerformanceTabComponent} from './coach-performance-tab/coach-performance-tab.component';
 import {CoachGoalsTabComponent} from './coach-goals-tab/coach-goals-tab.component';
 import {CoachHistoryTabComponent} from './coach-history-tab/coach-history-tab.component';
+import {CoachPlansTabComponent} from './coach-plans-tab/coach-plans-tab.component';
 
 @Component({
   selector: 'app-coach-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, TrainingActionModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, PmcChartComponent, PhysiologyPageComponent, AthleteListSidebarComponent, CoachPerformanceTabComponent, CoachGoalsTabComponent, CoachHistoryTabComponent],
+  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, TrainingActionModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, PmcChartComponent, PhysiologyPageComponent, AthleteListSidebarComponent, CoachPerformanceTabComponent, CoachGoalsTabComponent, CoachHistoryTabComponent, CoachPlansTabComponent],
   templateUrl: './coach-dashboard.component.html',
   styleUrl: './coach-dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,7 +42,7 @@ export class CoachDashboardComponent implements OnInit {
   isShareModalOpen = false;
   trainingToShare: Training | null = null;
   activeTagFilter: string | null = null;
-  activeTab: 'performance' | 'physiology' | 'history' | 'pmc' | 'goals' = 'performance';
+  activeTab: 'performance' | 'physiology' | 'history' | 'pmc' | 'goals' | 'plans' = 'performance';
 
   scheduleWeekStart: Date = this.getMondayOfWeek(new Date());
   scheduleWeekEnd: Date = this.getSundayOfWeek(new Date());

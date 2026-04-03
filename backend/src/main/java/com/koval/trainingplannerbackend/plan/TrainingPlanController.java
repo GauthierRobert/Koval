@@ -1,6 +1,5 @@
 package com.koval.trainingplannerbackend.plan;
 
-import com.koval.trainingplannerbackend.ai.tools.plan.PlanProgress;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,10 +11,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
-// @RestController //TODO temporary — plans disabled
+@RestController
 @RequestMapping("/api/plans")
 public class TrainingPlanController {
 
@@ -38,6 +40,14 @@ public class TrainingPlanController {
         return ResponseEntity.ok(planService.listPlans(userId));
     }
 
+    @GetMapping("/active")
+    public ResponseEntity<ActivePlanSummary> getActivePlan() {
+        String userId = SecurityUtils.getCurrentUserId();
+        ActivePlanSummary summary = planService.getActivePlan(userId);
+        if (summary == null) return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(summary);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getPlan(@PathVariable String id,
                                      @RequestParam(defaultValue = "false") boolean populate) {
@@ -55,9 +65,14 @@ public class TrainingPlanController {
     }
 
     @PostMapping("/{id}/activate")
-    public ResponseEntity<TrainingPlan> activatePlan(@PathVariable String id) {
+    public ResponseEntity<TrainingPlan> activatePlan(@PathVariable String id,
+                                                      @RequestBody(required = false) Map<String, String> body) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(planService.activatePlan(id, userId));
+        LocalDate startDate = null;
+        if (body != null && body.containsKey("startDate")) {
+            startDate = LocalDate.parse(body.get("startDate"));
+        }
+        return ResponseEntity.ok(planService.activatePlan(id, userId, startDate));
     }
 
     @PostMapping("/{id}/pause")
@@ -66,9 +81,20 @@ public class TrainingPlanController {
         return ResponseEntity.ok(planService.pausePlan(id, userId));
     }
 
+    @PostMapping("/{id}/complete")
+    public ResponseEntity<TrainingPlan> completePlan(@PathVariable String id) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(planService.completePlan(id, userId));
+    }
+
     @GetMapping("/{id}/progress")
     public ResponseEntity<PlanProgress> getProgress(@PathVariable String id) {
         return ResponseEntity.ok(planService.getProgress(id));
+    }
+
+    @GetMapping("/{id}/analytics")
+    public ResponseEntity<PlanAnalytics> getAnalytics(@PathVariable String id) {
+        return ResponseEntity.ok(planService.getAnalytics(id));
     }
 
     @DeleteMapping("/{id}")

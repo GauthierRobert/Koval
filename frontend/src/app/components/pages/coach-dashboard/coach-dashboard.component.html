@@ -70,6 +70,7 @@
             <div class="tab" role="tab" id="coach-tab-history" data-testid="tab-history" [attr.aria-selected]="activeTab === 'history'" [class.active]="activeTab === 'history'" (click)="activeTab = 'history'" tabindex="0" (keydown.enter)="activeTab = 'history'">{{ 'COACH_DASHBOARD.TAB_HISTORY' | translate }}</div>
             <div class="tab" role="tab" id="coach-tab-pmc" data-testid="tab-pmc" [attr.aria-selected]="activeTab === 'pmc'" [class.active]="activeTab === 'pmc'" (click)="activeTab = 'pmc'" tabindex="0" (keydown.enter)="activeTab = 'pmc'">{{ 'COACH_DASHBOARD.TAB_PMC' | translate }}</div>
             <div class="tab" role="tab" id="coach-tab-goals" data-testid="tab-goals" [attr.aria-selected]="activeTab === 'goals'" [class.active]="activeTab === 'goals'" (click)="activeTab = 'goals'" tabindex="0" (keydown.enter)="activeTab = 'goals'">{{ 'COACH_DASHBOARD.TAB_GOALS' | translate }}</div>
+            <div class="tab" role="tab" id="coach-tab-plans" data-testid="tab-plans" [attr.aria-selected]="activeTab === 'plans'" [class.active]="activeTab === 'plans'" (click)="activeTab = 'plans'" tabindex="0" (keydown.enter)="activeTab = 'plans'">{{ 'COACH_DASHBOARD.TAB_PLANS' | translate }}</div>
           </div>
         </div>
 
@@ -127,6 +128,12 @@
           <app-coach-goals-tab
             [athleteGoals$]="athleteGoals$">
           </app-coach-goals-tab>
+        }
+
+        @if (activeTab === 'plans') {
+          <app-coach-plans-tab
+            [athleteId]="selectedAthlete!.id">
+          </app-coach-plans-tab>
         }
 
       </div>
