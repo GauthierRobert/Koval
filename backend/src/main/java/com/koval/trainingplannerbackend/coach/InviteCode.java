@@ -22,7 +22,7 @@ public class InviteCode {
     private int maxUses; // 0 = unlimited
     private int currentUses;
     private LocalDateTime expiresAt; // nullable = never expires
-    private boolean active = true;
+    private Boolean active = true;
     private LocalDateTime createdAt;
     private String type = "GROUP";
 
@@ -52,8 +52,8 @@ public class InviteCode {
     public LocalDateTime getExpiresAt() { return expiresAt; }
     public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
 
-    public boolean isActive() { return active; }
-    public void setActive(boolean active) { this.active = active; }
+    public Boolean getActive() { return active; }
+    public void setActive(Boolean active) { this.active = active; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

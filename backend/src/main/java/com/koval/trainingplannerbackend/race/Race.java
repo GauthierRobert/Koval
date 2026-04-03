@@ -48,5 +48,5 @@ public class Race {
 
     private String createdBy;    // userId
     private LocalDateTime createdAt;
-    private boolean verified;
+    private Boolean verified;
 }

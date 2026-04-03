@@ -40,7 +40,7 @@ public record ClubFeedEventResponse(
 
     public static ClubFeedEventResponse from(ClubFeedEvent e) {
         return new ClubFeedEventResponse(
-                e.getId(), e.getType(), e.isPinned(), e.getCreatedAt(), e.getUpdatedAt(),
+                e.getId(), e.getType(), Boolean.TRUE.equals(e.getPinned()), e.getCreatedAt(), e.getUpdatedAt(),
                 e.getClubSessionId(), e.getSessionTitle(), e.getSessionSport(), e.getSessionScheduledAt(),
                 e.getCompletions(), e.getKudosGivenBy(),
                 e.getRaceGoalId(), e.getRaceTitle(), e.getRaceDate(), e.getRaceCompletions(),

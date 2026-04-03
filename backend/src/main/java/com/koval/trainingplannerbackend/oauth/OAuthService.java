@@ -107,7 +107,7 @@ public class OAuthService {
         AuthorizationCode authCode = codeRepository.findByCodeHash(sha256(code))
                 .orElseThrow(() -> new IllegalArgumentException("Invalid authorization code"));
 
-        if (authCode.isUsed()) {
+        if (Boolean.TRUE.equals(authCode.getUsed())) {
             throw new IllegalArgumentException("Authorization code already used");
         }
 

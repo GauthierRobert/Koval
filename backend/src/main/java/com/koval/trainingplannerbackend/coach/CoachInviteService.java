@@ -73,7 +73,7 @@ public class CoachInviteService {
         InviteCode inviteCode = inviteCodeRepository.findByCode(code.toUpperCase().trim())
                 .orElseThrow(() -> new ResourceNotFoundException("Invalid invite code"));
 
-        if (!inviteCode.isActive()) {
+        if (!Boolean.TRUE.equals(inviteCode.getActive())) {
             throw new ValidationException("Invite code is no longer active");
         }
 

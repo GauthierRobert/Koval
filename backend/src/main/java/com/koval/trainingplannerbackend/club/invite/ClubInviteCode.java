@@ -29,7 +29,7 @@ public class ClubInviteCode {
     private int maxUses; // 0 = unlimited
     private int currentUses;
     private LocalDateTime expiresAt; // null = never expires
-    private boolean active = true;
+    private Boolean active = true;
     private LocalDateTime createdAt;
     private String type = "CLUB";
 }

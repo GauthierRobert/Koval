@@ -38,7 +38,7 @@ public class ClubTrainingSession {
     private LocalDateTime createdAt;
     private String recurringTemplateId;
     private String clubGroupId;
-    private boolean openToAll;
+    private Boolean openToAll;
     private Integer openToAllDelayValue;
     private OpenToAllDelayUnit openToAllDelayUnit;
     private String responsibleCoachId;
@@ -48,7 +48,7 @@ public class ClubTrainingSession {
     private String linkedTrainingDescription;
     private List<GroupLinkedTraining> linkedTrainings = new ArrayList<>();
     private List<WaitingListEntry> waitingList = new ArrayList<>();
-    private boolean cancelled;
+    private Boolean cancelled;
     private String cancellationReason;
     private LocalDateTime cancelledAt;
 
@@ -60,7 +60,7 @@ public class ClubTrainingSession {
     private List<RouteCoordinate> routeCoordinates;
 
     public LocalDateTime computeOpenToAllFrom() {
-        if (!openToAll || scheduledAt == null) return null;
+        if (!Boolean.TRUE.equals(openToAll) || scheduledAt == null) return null;
         int delay = openToAllDelayValue != null ? openToAllDelayValue : 2;
         OpenToAllDelayUnit unit = openToAllDelayUnit != null ? openToAllDelayUnit : OpenToAllDelayUnit.DAYS;
         return switch (unit) {

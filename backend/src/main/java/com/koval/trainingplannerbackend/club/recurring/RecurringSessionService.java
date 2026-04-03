@@ -83,7 +83,7 @@ public class RecurringSessionService {
         List<ClubTrainingSession> toSave = new ArrayList<>();
         int cancelledCount = 0;
         for (ClubTrainingSession session : futureInstances) {
-            if (!session.isCancelled()) {
+            if (!Boolean.TRUE.equals(session.getCancelled())) {
                 session.setCancelled(true);
                 session.setCancellationReason(reason);
                 session.setCancelledAt(LocalDateTime.now());

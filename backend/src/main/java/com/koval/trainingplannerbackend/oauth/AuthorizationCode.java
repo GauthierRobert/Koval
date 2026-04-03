@@ -27,5 +27,5 @@ public class AuthorizationCode {
     @Indexed(expireAfter = "0s")
     private Instant expiresAt;
 
-    private boolean used;
+    private Boolean used;
 }

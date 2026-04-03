@@ -14,7 +14,7 @@ public record RecurringTemplateSummary(String id, String title, String sport,
         return new RecurringTemplateSummary(
                 t.getId(), t.getTitle(), t.getSport(),
                 t.getDayOfWeek(), t.getTimeOfDay(),
-                t.getLocation(), t.isActive(),
+                t.getLocation(), Boolean.TRUE.equals(t.getActive()),
                 t.getClubGroupId(), t.getDurationMinutes()
         );
     }

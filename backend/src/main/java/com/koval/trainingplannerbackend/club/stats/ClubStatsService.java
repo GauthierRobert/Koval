@@ -170,7 +170,7 @@ public class ClubStatsService {
                 .findByClubIdAndScheduledAtBetween(clubId, fourWeeksAgo, weekEndDt);
 
         List<ClubTrainingSession> nonCancelledSessions = allClubSessions.stream()
-                .filter(s -> !s.isCancelled()).toList();
+                .filter(s -> !Boolean.TRUE.equals(s.getCancelled())).toList();
 
         LocalDateTime now = LocalDateTime.now();
         List<ClubTrainingSession> pastClubSessions = nonCancelledSessions.stream()
@@ -280,7 +280,7 @@ public class ClubStatsService {
                             ? Math.round(participantCount * 1000.0 / denominator) / 10.0
                             : 0;
                     weeks.add(new ClubExtendedStatsResponse.WeekAttendance(
-                            label, weekSession.getId(), weekSession.isCancelled(),
+                            label, weekSession.getId(), Boolean.TRUE.equals(weekSession.getCancelled()),
                             participantCount, denominator, fillPercent));
                 }
             }
@@ -291,7 +291,7 @@ public class ClubStatsService {
                 User user = eligibleUserMap.get(athleteId);
                 List<Boolean> weekPresence = new ArrayList<>();
                 for (ClubTrainingSession weekSession : weeklySessionSlots) {
-                    if (weekSession == null || weekSession.isCancelled()) {
+                    if (weekSession == null || Boolean.TRUE.equals(weekSession.getCancelled())) {
                         weekPresence.add(null);
                     } else {
                         weekPresence.add(weekSession.getParticipantIds().contains(athleteId));

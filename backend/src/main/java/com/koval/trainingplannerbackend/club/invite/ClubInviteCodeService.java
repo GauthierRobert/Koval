@@ -88,7 +88,7 @@ public class ClubInviteCodeService {
         ClubInviteCode inviteCode = clubInviteCodeRepository.findByCode(code.toUpperCase().trim())
                 .orElseThrow(() -> new ResourceNotFoundException("Invalid invite code"));
 
-        if (!inviteCode.isActive()) {
+        if (!Boolean.TRUE.equals(inviteCode.getActive())) {
             throw new ValidationException("Invite code is no longer active");
         }
         if (inviteCode.getExpiresAt() != null && LocalDateTime.now().isAfter(inviteCode.getExpiresAt())) {
@@ -215,7 +215,7 @@ public class ClubInviteCodeService {
                 code.getClubGroupId(), groupName,
                 code.getMaxUses(), code.getCurrentUses(),
                 code.getExpiresAt() != null ? code.getExpiresAt().toString() : null,
-                code.isActive(),
+                Boolean.TRUE.equals(code.getActive()),
                 code.getCreatedAt() != null ? code.getCreatedAt().toString() : null);
     }
 }

@@ -38,7 +38,7 @@ public class SessionTrainingLinkService {
         authorizationService.requireAdminOrCoach(userId, clubId);
         ClubTrainingSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
-        if (session.isCancelled()) {
+        if (Boolean.TRUE.equals(session.getCancelled())) {
             throw new IllegalStateException("Cannot link training to a cancelled session");
         }
 
@@ -78,7 +78,7 @@ public class SessionTrainingLinkService {
         if (!session.getClubId().equals(clubId)) {
             throw new IllegalArgumentException("Session does not belong to this club");
         }
-        if (session.isCancelled()) {
+        if (Boolean.TRUE.equals(session.getCancelled())) {
             throw new IllegalStateException("Cannot unlink training from a cancelled session");
         }
 

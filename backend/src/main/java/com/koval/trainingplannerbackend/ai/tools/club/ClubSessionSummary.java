@@ -26,7 +26,7 @@ public record ClubSessionSummary(String id, String title, String sport,
                 s.getScheduledAt(), s.getLocation(),
                 s.getParticipantIds().size(), s.getMaxParticipants(),
                 linkedTitle, s.getClubGroupId(),
-                s.isCancelled(), s.getDurationMinutes()
+                Boolean.TRUE.equals(s.getCancelled()), s.getDurationMinutes()
         );
     }
 }

@@ -40,7 +40,7 @@ public class CompletedSession {
     private Double intensityFactor;
     private String fitFileId; // GridFS ObjectId; null when no FIT stored
     private Integer rpe;
-    private boolean syntheticCompletion; // true when created from planned data via COMPLETE button
+    private Boolean syntheticCompletion; // true when created from planned data via COMPLETE button
 
     private Integer movingTimeSeconds; // excludes pauses; null if unknown
     private Double totalDistance; // meters

@@ -112,7 +112,7 @@ public class ClubSessionService {
             throw new IllegalArgumentException("Session does not belong to this club");
         }
         authorizeSessionModification(userId, clubId, session);
-        if (session.isCancelled()) {
+        if (Boolean.TRUE.equals(session.getCancelled())) {
             throw new IllegalStateException("Session is already cancelled");
         }
         session.setCancelled(true);
@@ -146,7 +146,7 @@ public class ClubSessionService {
             throw new IllegalArgumentException("Session does not belong to this club");
         }
         authorizeSessionModification(userId, clubId, session);
-        if (session.isCancelled()) {
+        if (Boolean.TRUE.equals(session.getCancelled())) {
             throw new IllegalStateException("Cannot update a cancelled session");
         }
         String previousLinkedTrainingId = session.getLinkedTrainingId();
@@ -221,7 +221,7 @@ public class ClubSessionService {
                 groupNameMap.get(s.getClubGroupId()),
                 joined, onWaitingList, waitingListPosition,
                 s.computeOpenToAllFrom(),
-                s.isCancelled(), s.getCancellationReason(),
+                Boolean.TRUE.equals(s.getCancelled()), s.getCancellationReason(),
                 resolved != null ? resolved.getTrainingId() : null,
                 resolved != null ? resolved.getTrainingTitle() : null,
                 resolved != null ? resolved.getTrainingDescription() : null,

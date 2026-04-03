@@ -24,7 +24,7 @@ public record RaceSummary(
                 r.getScheduledDate(),
                 r.getSwimGpx() != null, r.getBikeGpx() != null, r.getRunGpx() != null,
                 r.getSwimGpxLoops(), r.getBikeGpxLoops(), r.getRunGpxLoops(),
-                r.getCreatedBy(), r.isVerified()
+                r.getCreatedBy(), Boolean.TRUE.equals(r.getVerified())
         );
     }
 }

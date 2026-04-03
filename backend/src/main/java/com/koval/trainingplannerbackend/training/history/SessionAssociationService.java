@@ -103,7 +103,7 @@ public class SessionAssociationService {
         scheduledWorkoutRepository.findById(scheduledWorkoutId).ifPresent(sw -> {
             if (sw.getSessionId() != null) {
                 sessionRepository.findById(sw.getSessionId()).ifPresent(existing -> {
-                    if (existing.isSyntheticCompletion()) {
+                    if (Boolean.TRUE.equals(existing.getSyntheticCompletion())) {
                         sessionRepository.delete(existing);
                         sw.setSessionId(null);
                         scheduledWorkoutRepository.save(sw);

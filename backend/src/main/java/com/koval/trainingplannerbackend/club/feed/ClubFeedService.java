@@ -70,7 +70,7 @@ public class ClubFeedService {
         List<ClubFeedEventResponse> items = feedEventRepository
                 .findByClubIdOrderByCreatedAtDesc(clubId, PageRequest.of(page, size))
                 .stream()
-                .filter(e -> !e.isPinned()) // exclude pinned from timeline
+                .filter(e -> !Boolean.TRUE.equals(e.getPinned())) // exclude pinned from timeline
                 .map(ClubFeedEventResponse::from)
                 .toList();
 
@@ -102,7 +102,7 @@ public class ClubFeedService {
         event.setUpdatedAt(LocalDateTime.now());
 
         // Pin this event and unpin previous
-        if (!event.isPinned()) {
+        if (!Boolean.TRUE.equals(event.getPinned())) {
             unpinPrevious(clubSession.getClubId(), ClubFeedEventType.SESSION_COMPLETION);
             event.setPinned(true);
         }

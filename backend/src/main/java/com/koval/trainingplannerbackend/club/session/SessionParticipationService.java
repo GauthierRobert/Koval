@@ -37,7 +37,7 @@ public class SessionParticipationService {
     public ClubTrainingSession joinSession(String userId, String sessionId) {
         ClubTrainingSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
-        if (session.isCancelled()) {
+        if (Boolean.TRUE.equals(session.getCancelled())) {
             throw new IllegalStateException("Cannot join a cancelled session");
         }
         if (session.getClubGroupId() != null && !session.getClubGroupId().isBlank()) {

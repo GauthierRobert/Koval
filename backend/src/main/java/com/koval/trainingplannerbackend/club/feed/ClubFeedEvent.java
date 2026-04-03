@@ -27,7 +27,7 @@ public class ClubFeedEvent {
     private String id;
     private String clubId;
     private ClubFeedEventType type;
-    private boolean pinned;
+    private Boolean pinned;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

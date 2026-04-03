@@ -81,7 +81,9 @@
       "Bash(sed -i 's/color:white;/color: var\\(--text-color\\);/g' components/pages/pacing/pacing-page.component.css)",
       "Bash(sort -t: -k2 -nr)",
       "Bash(grep -rn --include=\"*.css\" \"background.*#[01][0-9a-f]\\\\{3,5\\\\}\" .)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)"
     ]
   }
 }

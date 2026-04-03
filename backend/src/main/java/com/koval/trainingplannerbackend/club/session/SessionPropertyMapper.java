@@ -30,7 +30,7 @@ public final class SessionPropertyMapper {
         session.setMaxParticipants(template.getMaxParticipants());
         session.setDurationMinutes(template.getDurationMinutes());
         session.setClubGroupId(template.getClubGroupId());
-        session.setOpenToAll(template.isOpenToAll());
+        session.setOpenToAll(template.getOpenToAll());
         session.setOpenToAllDelayValue(template.getOpenToAllDelayValue());
         session.setOpenToAllDelayUnit(template.getOpenToAllDelayUnit());
         session.setResponsibleCoachId(template.getResponsibleCoachId());

@@ -42,12 +42,12 @@ public class RecurringSessionTemplate {
     private Integer maxParticipants;
     private Integer durationMinutes;
     private String clubGroupId;
-    private boolean openToAll;
+    private Boolean openToAll;
     private Integer openToAllDelayValue;
     private OpenToAllDelayUnit openToAllDelayUnit;
     private String responsibleCoachId;
     private LocalDate endDate;
-    private boolean active = true;
+    private Boolean active = true;
     private LocalDateTime createdAt;
 
     private SessionCategory category = SessionCategory.SCHEDULED;
