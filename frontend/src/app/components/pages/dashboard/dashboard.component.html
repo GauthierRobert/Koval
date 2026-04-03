@@ -131,11 +131,6 @@
         </div>
         </div>
       }
-
-      <app-dashboard-sport-cards
-        [weekMetrics]="vm.weekMetrics">
-      </app-dashboard-sport-cards>
-
       <!-- Next workout + Latest activity row -->
       @if (vm.upcoming.length > 0 || vm.latestFit) {
         <div class="workout-row">
@@ -185,6 +180,9 @@
           }
         </div>
       }
+      <app-dashboard-sport-cards
+        [weekMetrics]="vm.weekMetrics">
+      </app-dashboard-sport-cards>
 
       <!-- Quick Actions — always visible -->
       <div class="quick-actions-section">

@@ -397,11 +397,24 @@
     "MEMBERSHIP_MEMBER": "MEMBER",
     "MEMBERSHIP_PENDING": "PENDING"
   },
+  "CLUB_JOIN": {
+    "TITLE_JOINING": "JOINING CLUB",
+    "MSG_JOINING": "Redeeming your invite link...",
+    "TITLE_SUCCESS": "YOU'RE IN!",
+    "MSG_SUCCESS": "You've successfully joined the club. Redirecting...",
+    "BTN_GO_TO_CLUB": "GO TO CLUB",
+    "TITLE_ALREADY_MEMBER": "ALREADY A MEMBER",
+    "MSG_ALREADY_MEMBER": "You're already a member of this club.",
+    "BTN_VIEW_CLUBS": "VIEW MY CLUBS",
+    "TITLE_ERROR": "COULDN'T JOIN",
+    "ERROR_NO_CODE": "No invite code provided.",
+    "ERROR_GENERIC": "Something went wrong. The invite link may be expired or invalid."
+  },
   "CLUB_DETAIL": {
     "LOGO_ALT": "Club logo",
     "HEADER_MEMBER_COUNT": "{{count}} members",
-    "INVITE_BTN_COPY": "COPY",
-    "INVITE_BTN_COPIED": "COPIED",
+    "INVITE_BTN_COPY": "COPY LINK",
+    "INVITE_BTN_COPIED": "COPIED!",
     "BTN_JOIN": "JOIN",
     "BTN_LEAVE": "LEAVE",
     "TAB_FEED": "FEED",

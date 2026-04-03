@@ -66,6 +66,13 @@ export class AuthCallbackComponent implements OnInit {
                         return;
                     }
 
+                    const postLoginRedirect = localStorage.getItem('post_login_redirect');
+                    if (postLoginRedirect) {
+                        localStorage.removeItem('post_login_redirect');
+                        this.router.navigateByUrl(postLoginRedirect);
+                        return;
+                    }
+
                     this.router.navigate(['/']);
                 },
                 error: () => this.router.navigate(['/login'])

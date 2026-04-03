@@ -12,7 +12,7 @@ RUN chmod +x mvnw && ./mvnw dependency:resolve -B -q
 COPY src/ src/
 
 # Build native image using Spring Boot AOT + GraalVM native-maven-plugin
-RUN ./mvnw -Pnative native:compile -DskipTests -B
+RUN ./mvnw -Pnative native:compile -DskipTests -B -Dspring.profiles.active=prod
 
 # Stage 2: Minimal runtime image
 FROM debian:bookworm-slim
@@ -39,4 +39,6 @@ USER app
 EXPOSE 8080
 
 # Native image starts in milliseconds - no JVM flags needed
+ENV SPRING_PROFILES_ACTIVE=prod
+
 ENTRYPOINT ["./app"]

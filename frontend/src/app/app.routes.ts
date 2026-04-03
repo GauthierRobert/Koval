@@ -171,6 +171,14 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'clubs/join/:code',
+    loadComponent: () =>
+      import('./components/pages/clubs/club-join-page/club-join-page.component').then(
+        (m) => m.ClubJoinPageComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
     path: 'clubs/:id',
     loadComponent: () =>
       import('./components/pages/clubs/club-detail-page/club-detail-page.component').then(

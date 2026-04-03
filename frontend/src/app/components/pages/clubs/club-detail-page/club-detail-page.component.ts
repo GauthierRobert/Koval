@@ -252,8 +252,9 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
     return role === 'OWNER' || role === 'ADMIN' || role === 'COACH';
   }
 
-  copyClubCode(code: string, codeId: string): void {
-    navigator.clipboard.writeText(code).then(() => {
+  copyClubInviteLink(code: string, codeId: string): void {
+    const link = `${window.location.origin}/clubs/join/${code}`;
+    navigator.clipboard.writeText(link).then(() => {
       this.copiedClubCodeId = codeId;
       this.cdr.markForCheck();
       setTimeout(() => {

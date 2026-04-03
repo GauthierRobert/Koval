@@ -103,7 +103,7 @@
 
 /* Set wrapper (nested blocks) */
 .set-wrapper {
-  border: 1px solid var(--overlay-10);
+  border: none;
   border-radius: 6px;
   padding: 6px;
   background: var(--overlay-3);

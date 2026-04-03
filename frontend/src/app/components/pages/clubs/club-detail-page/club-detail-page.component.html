@@ -36,8 +36,8 @@
       </div>
       @if (canManageInvites(club) && (clubInviteCode$ | async); as code) {
         <div class="header-invite">
-          <span class="invite-code-chip" data-testid="invite-code-chip" (click)="copyClubCode(code.code, code.id)">{{ code.code }}</span>
-          <button class="btn-copy" data-testid="btn-copy-invite-code" (click)="copyClubCode(code.code, code.id)"
+          <span class="invite-code-chip" data-testid="invite-code-chip" (click)="copyClubInviteLink(code.code, code.id)">{{ code.code }}</span>
+          <button class="btn-copy" data-testid="btn-copy-invite-code" (click)="copyClubInviteLink(code.code, code.id)"
             [class.btn-copied]="copiedClubCodeId === code.id">
             {{ copiedClubCodeId === code.id ? ('CLUB_DETAIL.INVITE_BTN_COPIED' | translate) : ('CLUB_DETAIL.INVITE_BTN_COPY' | translate) }}
           </button>

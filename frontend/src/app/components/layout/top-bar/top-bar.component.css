@@ -270,7 +270,7 @@
     .device-btn {
       position: relative;
       background: var(--surface-elevated);
-      border: 1px solid var(--glass-border);
+      border: none;
       border-radius: 8px;
       width: 36px;
       height: 36px;

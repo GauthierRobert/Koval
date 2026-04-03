@@ -14,14 +14,6 @@
 }
 
 /* ─── Header bar ───────────────────────────────────────────── */
-.header {
-  padding: var(--space-sm) var(--page-padding);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--glass-border);
-  flex-shrink: 0;
-}
 
 .header-left {
   display: flex;

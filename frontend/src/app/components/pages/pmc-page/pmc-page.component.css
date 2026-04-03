@@ -90,19 +90,7 @@
   min-width: 0;
 }
 
-/* ── Header bar — matches coach .header ────────────────── */
-.header {
-  padding: var(--space-sm) var(--page-padding);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--glass-border);
-  border-radius: 0;
-  border-top: none;
-  border-left: none;
-  border-right: none;
-  flex-shrink: 0;
-}
+/* ── Header bar ── */
 
 .header-left { display: flex; align-items: center; gap: 12px; }
 .header-info { display: flex; flex-direction: column; gap: 2px; }

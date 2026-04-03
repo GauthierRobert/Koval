@@ -1,0 +1,49 @@
+<div class="join-container">
+  <div class="join-card glass">
+
+    @if (state === 'loading') {
+      <div class="join-icon">
+        <div class="spinner"></div>
+      </div>
+      <h2>{{ 'CLUB_JOIN.TITLE_JOINING' | translate }}</h2>
+      <p class="subtitle">{{ 'CLUB_JOIN.MSG_JOINING' | translate }}</p>
+    }
+
+    @if (state === 'success') {
+      <div class="join-icon success-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <h2>{{ 'CLUB_JOIN.TITLE_SUCCESS' | translate }}</h2>
+      <p class="subtitle">{{ 'CLUB_JOIN.MSG_SUCCESS' | translate }}</p>
+      <button class="btn-primary" (click)="goToClub()">{{ 'CLUB_JOIN.BTN_GO_TO_CLUB' | translate }}</button>
+    }
+
+    @if (state === 'already_member') {
+      <div class="join-icon info-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+      </div>
+      <h2>{{ 'CLUB_JOIN.TITLE_ALREADY_MEMBER' | translate }}</h2>
+      <p class="subtitle">{{ 'CLUB_JOIN.MSG_ALREADY_MEMBER' | translate }}</p>
+      <button class="btn-primary" (click)="goToClubs()">{{ 'CLUB_JOIN.BTN_VIEW_CLUBS' | translate }}</button>
+    }
+
+    @if (state === 'error') {
+      <div class="join-icon error-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      <h2>{{ 'CLUB_JOIN.TITLE_ERROR' | translate }}</h2>
+      <p class="subtitle">{{ errorMessage }}</p>
+      <button class="btn-primary" (click)="goToClubs()">{{ 'CLUB_JOIN.BTN_VIEW_CLUBS' | translate }}</button>
+    }
+
+  </div>
+</div>

@@ -11,6 +11,15 @@ export type ClubActivityType =
   | 'RACE_GOAL_ADDED'
   | 'WAITING_LIST_JOINED';
 
+export interface ClubMembership {
+  id: string;
+  clubId: string;
+  userId: string;
+  role: ClubMemberRole;
+  status: string;
+  joinedAt?: string;
+}
+
 export interface ClubSummary {
   id: string;
   name: string;

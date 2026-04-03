@@ -46,7 +46,7 @@ export interface MeetingPoint {
     .picker-wrapper { display: flex; flex-direction: column; gap: 4px; }
     .picker-map {
       width: 100%;
-      height: 180px;
+      height: 300px;
       border-radius: 8px;
       overflow: hidden;
       background: #1a1a2e;
@@ -93,7 +93,7 @@ export class MeetingPointPickerComponent implements AfterViewInit, OnChanges, On
   ngAfterViewInit(): void {
     const center: L.LatLngExpression = this.lat != null && this.lon != null
       ? [this.lat, this.lon]
-      : [48.8566, 2.3522]; // Default: Paris
+      : [50.8503, 4.3517]; // Default: Brussels
     const zoom = this.lat != null ? 14 : 5;
 
     this.map = L.map(this.mapContainer.nativeElement, {

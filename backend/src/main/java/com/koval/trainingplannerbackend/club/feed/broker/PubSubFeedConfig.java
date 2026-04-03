@@ -54,7 +54,8 @@ public class PubSubFeedConfig {
      * Auto-deletes after 1 day of inactivity if shutdown cleanup is missed.
      */
     @Bean
-    ProjectSubscriptionName clubFeedSubscriptionName(TopicName clubFeedTopicName) throws IOException {
+    ProjectSubscriptionName
+    clubFeedSubscriptionName(TopicName clubFeedTopicName) throws IOException {
         ProjectSubscriptionName subName = ProjectSubscriptionName.of(projectId, subscriptionId);
         subscriptionAdminClient = SubscriptionAdminClient.create();
 

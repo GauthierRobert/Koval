@@ -9,6 +9,7 @@ import {
   ClubInviteCode,
   ClubMember,
   ClubMemberRole,
+  ClubMembership,
   ClubSummary,
   CreateClubData,
   MyClubRoleEntry,
@@ -320,13 +321,13 @@ export class ClubService {
     });
   }
 
-  redeemClubInviteCode(code: string): Observable<void> {
+  redeemClubInviteCode(code: string): Observable<ClubMembership> {
     return new Observable((observer) => {
-      this.http.post<void>(`${this.apiUrl}/redeem-invite`, { code }).subscribe({
-        next: () => {
+      this.http.post<ClubMembership>(`${this.apiUrl}/redeem-invite`, { code }).subscribe({
+        next: (membership) => {
           this.ngZone.run(() => {
             this.loadUserClubs();
-            observer.next();
+            observer.next(membership);
             observer.complete();
           });
         },

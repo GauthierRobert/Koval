@@ -241,7 +241,7 @@ select option {
 
 .glass {
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  border: none;
   border-radius: 12px;
 }
 
@@ -344,6 +344,15 @@ select option {
 }
 
 /* ── Global Utility Classes ── */
+
+/* Header bar */
+.header {
+  padding: var(--space-sm) var(--page-padding);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
 
 /* Page layout */
 .page {

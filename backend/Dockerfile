@@ -4,10 +4,12 @@ WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -q
 COPY src ./src
-RUN mvn -Pnative native:compile -DskipTests -q -Dspring.profiles.active=prod
+ENV SPRING_PROFILES_ACTIVE=prod
+RUN mvn -Pnative native:compile -DskipTests -q
 
 FROM debian:12-slim
 WORKDIR /app
 COPY --from=builder /app/target/training-planner-backend ./app
 EXPOSE 8080
+ENV SPRING_PROFILES_ACTIVE=prod
 ENTRYPOINT ["./app"]

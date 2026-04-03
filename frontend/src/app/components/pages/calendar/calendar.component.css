@@ -16,12 +16,8 @@
 }
 
 .header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   flex-wrap: wrap;
   gap: 10px;
-  flex-shrink: 0;
   padding: 0.5rem 0;
 }
 
