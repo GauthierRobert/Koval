@@ -150,3 +150,271 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 ## Later
 
 - Remove the dev connector
+
+## Temp plan
+
+
+     Google Calendar-style Plan Banners + Coach Plan Assignment
+
+     Context
+
+     Plans currently show as a flat banner above the calendar grid. The user wants:
+     1. Spanning banners inside the month grid — like Google Calendar multi-day events that span across day cells
+     2. Week view banners — spanning across all 7 day columns
+     3. Sport-based colors — CYCLING=green, RUNNING=red, SWIMMING=blue, BRICK=accent/orange
+     4. Multiple plans visible simultaneously
+     5. Coaches can assign plans to athletes with athlete picker in activation dialog
+
+     ---
+     Phase 1: Backend — Coach Plan Assignment
+
+     1a. Athletes see assigned plans in their plan list
+
+     File: backend/.../plan/TrainingPlanService.java
+
+     Update listPlans(userId) to merge plans created by user AND plans where user is in athleteIds:
+     public List<TrainingPlan> listPlans(String userId) {
+         List<TrainingPlan> created = planRepository.findByCreatedByOrderByCreatedAtDesc(userId);
+         List<TrainingPlan> assigned = planRepository.findByAthleteIdsContaining(userId);
+         // Merge, deduplicate by ID, preserve createdAt order
+     }
+
+     This ensures athletes see coach-assigned plan banners on their calendar automatically.
+
+     1b. Activation endpoint accepts athleteIds
+
+     File: backend/.../plan/TrainingPlanController.java
+
+     Change activatePlan body from Map<String, String> to Map<String, Object> to accept both startDate and athleteIds:
+     if (body.containsKey("athleteIds")) {
+         athleteIds = (List<String>) body.get("athleteIds");
+     }
+
+     File: backend/.../plan/TrainingPlanService.java
+
+     Add List<String> athleteIds parameter to activatePlan(). If provided, set on plan before the existing iteration loop (which already handles multiple athletes).
+
+     ---
+     Phase 2: Banner Data Model + Computation
+
+     2a. Data structures
+
+     File: frontend/.../calendar/calendar.component.ts
+
+     Add PlanBannerSegment interface:
+     export interface PlanBannerSegment {
+       planId: string;
+       title: string;
+       sportType: string;
+       startCol: number;   // 1-7 (CSS grid 1-based)
+       spanCols: number;
+       row: number;        // 0-5 (which week-row)
+       isStart: boolean;   // left rounded corner
+       isEnd: boolean;     // right rounded corner
+       weekNumber: number;
+       weekLabel: string | null;
+     }
+     export type BannersByRow = Map<number, PlanBannerSegment[]>;
+
+     2b. Sport color constants
+
+     File: frontend/.../models/plan.model.ts
+
+     Add:
+     export const SPORT_BANNER_COLORS: Record<string, { bg: string; border: string; text: string }> = {
+       CYCLING:  { bg: 'rgba(34, 197, 94, 0.15)', border: '#22c55e', text: '#22c55e' },
+       RUNNING:  { bg: 'rgba(239, 68, 68, 0.15)', border: '#ef4444', text: '#ef4444' },
+       SWIMMING: { bg: 'rgba(59, 130, 246, 0.15)', border: '#3b82f6', text: '#3b82f6' },
+       BRICK:    { bg: 'rgba(255, 157, 0, 0.15)', border: '#ff9d00', text: '#ff9d00' },
+     };
+
+     2c. Computation logic
+
+     File: frontend/.../calendar/calendar.component.ts
+
+     Add computeBannerSegments(plans, monthDays) method:
+     - For each ACTIVE/COMPLETED/PAUSED plan with startDate:
+       - Compute planEnd = startDate + durationWeeks*7 - 1
+       - For each of the 6 month grid rows (row 0-5):
+           - Row covers monthDays[row*7] to monthDays[row*7+6]
+         - If plan overlaps this row: compute startCol, spanCols, isStart, isEnd
+         - Derive weekNumber from plan start date vs row start date
+
+     Add bannersByRow$ observable (derived from planService.plans$ + reload$).
+
+     Remove the old visiblePlans$ and the flat banner HTML from calendar.component.html.
+
+     ---
+     Phase 3: Month View — Row-based Grid with Spanning Banners
+
+     3a. Restructure month grid to row-based layout
+
+     File: frontend/.../month-view/calendar-month-view.component.html
+
+     Change from flat 42-cell grid to 6 explicit week-rows:
+     <div class="month-body">
+       @for (row of rows; track row) {
+         <div class="month-week-row">
+           <!-- Banner area: CSS grid 7 cols, banners span across -->
+           <div class="banner-area">
+             @for (seg of bannersByRow.get(row) || []; track seg.planId) {
+               <a class="plan-banner-segment"
+                  [routerLink]="['/plans', seg.planId]"
+                  [class.is-start]="seg.isStart" [class.is-end]="seg.isEnd"
+                  [style.grid-column]="seg.startCol + ' / span ' + seg.spanCols"
+                  [style.--sport-bg]="sportColor(seg.sportType).bg"
+                  [style.--sport-border]="sportColor(seg.sportType).border"
+                  [style.--sport-text]="sportColor(seg.sportType).text">
+                 @if (seg.isStart) { <span class="banner-title">{{ seg.title }}</span> }
+                 <span class="banner-week">W{{ seg.weekNumber }}</span>
+               </a>
+             }
+           </div>
+           <!-- Day cells: same 7-col grid as before -->
+           <div class="day-cells">
+             @for (day of getRowDays(row); track trackByDay(day)) {
+               <!-- existing .month-cell content -->
+             }
+           </div>
+         </div>
+       }
+     </div>
+
+     3b. New inputs and helpers
+
+     File: frontend/.../month-view/calendar-month-view.component.ts
+
+     Add:
+     - @Input() bannersByRow: BannersByRow = new Map();
+     - rows = [0, 1, 2, 3, 4, 5];
+     - getRowDays(row: number): CalendarDay[] — returns this.days.slice(row*7, row*7+7)
+     - sportColor(sportType: string) — returns SPORT_BANNER_COLORS[sportType]
+
+     3c. CSS for row-based layout + banners
+
+     File: frontend/.../month-view/calendar-month-view.component.css
+
+     Key changes:
+     - .month-body becomes display: flex; flex-direction: column; (no longer a flat grid)
+     - .month-week-row is display: flex; flex-direction: column; flex: 1;
+     - .banner-area is display: grid; grid-template-columns: repeat(7, 1fr); with minimal height
+     - .day-cells is display: grid; grid-template-columns: repeat(7, 1fr); flex: 1;
+     - .plan-banner-segment styled with sport color CSS custom properties, 18px height, rounded corners on start/end
+
+     3d. Wire up in parent
+
+     File: frontend/.../calendar/calendar.component.html
+
+     - Remove the old flat plan-banner section (the @if (visiblePlans$) block)
+     - Pass [bannersByRow] to <app-calendar-month-view>
+     - Keep visiblePlans for week view (see Phase 4)
+
+     ---
+     Phase 4: Week View Banner
+
+     4a. Add plan banners to week view
+
+     File: frontend/.../week-view/calendar-week-view.component.ts
+
+     Add @Input() visiblePlans: VisiblePlan[] = []; and sport color helper.
+
+     File: frontend/.../week-view/calendar-week-view.component.html
+
+     Add banner row above .calendar-grid:
+     @for (vp of visiblePlans; track vp.id) {
+       <a class="week-plan-banner" [routerLink]="['/plans', vp.id]"
+          [style.--sport-bg]="..." [style.--sport-border]="...">
+         {{ vp.title }} — W{{ vp.currentWeek }}/{{ vp.totalWeeks }}
+         @if (vp.weekLabel) { · {{ vp.weekLabel }} }
+       </a>
+     }
+
+     File: frontend/.../week-view/calendar-week-view.component.css
+
+     Add .week-plan-banner styles: full-width, sport-colored, 20px height, clickable.
+
+     4b. Wire up in parent
+
+     File: frontend/.../calendar/calendar.component.html
+
+     Pass [visiblePlans] to <app-calendar-week-view>. The existing visiblePlans$ computation stays but is only used for week view now.
+
+     ---
+     Phase 5: Coach Athlete Picker in Activation Dialog
+
+     5a. Frontend service update
+
+     File: frontend/.../services/plan.service.ts
+
+     Update activatePlan(id, startDate, athleteIds?) to send athleteIds in body when provided.
+
+     5b. Plan detail page — athlete selection
+
+     File: frontend/.../plans/plan-detail-page/plan-detail-page.component.ts
+
+     - Inject CoachService, AuthService
+     - Add isCoach, athletes[], selectedAthleteIds[] state
+     - Load athletes on init if user is COACH
+     - Pass selectedAthleteIds to planService.activatePlan() in executeConfirmedAction
+
+     File: frontend/.../plans/plan-detail-page/plan-detail-page.component.html
+
+     In activation dialog, after the start date field, add (coach only):
+     - Existing AthleteTagSelectorComponent for multi-select
+     - Or simple checkbox list of athletes with group tags
+
+     File: frontend/.../plans/plan-detail-page/plan-detail-page.component.css
+
+     Add styles for athlete selector within the activation dialog.
+
+     5c. Show assigned athletes on plan detail
+
+     When plan.athleteIds.length > 0, show athlete badges below the plan metadata.
+
+     ---
+     Files Summary
+
+     ┌─────────────────────────────────────────────────────────────────────┬────────────────────────────────────────────────────────────────────────────────┐
+     │                                File                                 │                                     Change                                     │
+     ├─────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┤
+     │ backend/.../plan/TrainingPlanService.java                           │ listPlans includes assigned plans, activatePlan accepts athleteIds             │
+     ├─────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┤
+     │ backend/.../plan/TrainingPlanController.java                        │ Activation endpoint accepts athleteIds in body                                 │
+     ├─────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┤
+     │ frontend/.../models/plan.model.ts                                   │ SPORT_BANNER_COLORS constant                                                   │
+     ├─────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┤
+     │ frontend/.../calendar/calendar.component.ts                         │ PlanBannerSegment, BannersByRow, computeBannerSegments(), bannersByRow$        │
+     ├─────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┤
+     │ frontend/.../calendar/calendar.component.html                       │ Remove flat banner, pass bannersByRow to month view, visiblePlans to week view │
+     ├─────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┤
+     │ frontend/.../calendar/calendar.component.css                        │ Remove old plan-banner styles                                                  │
+     ├─────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┤
+     │ frontend/.../month-view/calendar-month-view.component.ts            │ Add bannersByRow input, getRowDays(), sportColor(), rows                       │
+     ├─────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┤
+     │ frontend/.../month-view/calendar-month-view.component.html          │ Restructure to 6 week-rows with banner area + day cells                        │
+     ├─────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┤
+     │ frontend/.../month-view/calendar-month-view.component.css           │ Row-based layout, banner-area grid, sport-colored segments                     │
+     ├─────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┤
+     │ frontend/.../week-view/calendar-week-view.component.ts              │ Add visiblePlans input                                                         │
+     ├─────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┤
+     │ frontend/.../week-view/calendar-week-view.component.html            │ Add banner row above grid                                                      │
+     ├─────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┤
+     │ frontend/.../week-view/calendar-week-view.component.css             │ Week banner styles                                                             │
+     ├─────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┤
+     │ frontend/.../services/plan.service.ts                               │ activatePlan accepts optional athleteIds                                       │
+     ├─────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┤
+     │ frontend/.../plans/plan-detail-page/plan-detail-page.component.ts   │ Coach detection, athlete loading, selection state                              │
+     ├─────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┤
+     │ frontend/.../plans/plan-detail-page/plan-detail-page.component.html │ Athlete picker in activation dialog                                            │
+     ├─────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┤
+     │ frontend/public/i18n/en.json, fr.json                               │ Banner labels, athlete assignment labels                                       │
+     └─────────────────────────────────────────────────────────────────────┴────────────────────────────────────────────────────────────────────────────────┘
+
+     Verification
+
+     1. Month view: Create/activate a 4-week CYCLING plan starting mid-month → green banner spans across day cells, wrapping to next rows
+     2. Multiple plans: Activate a RUNNING plan overlapping → red banner stacks below green one
+     3. Week view: Navigate to a week within an active plan → sport-colored banner across top
+     4. Coach assignment: As coach, activate a plan with 2 athletes selected → workouts appear on both athletes' calendars
+     5. Athlete view: Log in as athlete → plan banner appears on their calendar
+     6. Build: npm run build passes
