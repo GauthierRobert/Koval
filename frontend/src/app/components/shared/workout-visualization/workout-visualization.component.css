@@ -5,6 +5,27 @@
       flex-direction: column;
       gap: 8px;
       overflow: hidden;
+      position: relative;
+    }
+
+    /* Ambient inner glow */
+    .viz-container::before {
+      content: '';
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: oklch(0.75 0.18 65 / 0.05);
+      filter: blur(80px);
+      top: -80px;
+      right: -60px;
+      pointer-events: none;
+      animation: orbFloat3 18s ease-in-out infinite;
+    }
+
+    @keyframes orbFloat3 {
+      0%, 100% { transform: translate(0, 0) scale(0.95); }
+      50% { transform: translate(15px, -25px) scale(1.1); }
     }
 
     .header {
@@ -14,12 +35,15 @@
     }
 
     .header h1 {
-      font-size: 20px;
-      margin: 0;
       font-family: var(--font-display);
+      font-size: var(--text-3xl);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0;
       background: var(--accent-gradient);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      animation: fadeInUp 0.5s var(--ease-out-expo) backwards;
     }
 
     .action-buttons {
