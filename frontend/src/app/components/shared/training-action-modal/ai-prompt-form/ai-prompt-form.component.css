@@ -31,7 +31,7 @@
   font-size: 0.875rem;
   padding: 10px 12px;
   font-family: inherit;
-  transition: border-color 0.2s;
+  transition: border-color 0.25s var(--ease-spring-gentle);
   resize: vertical;
 }
 

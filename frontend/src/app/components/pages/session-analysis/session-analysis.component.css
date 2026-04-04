@@ -486,7 +486,7 @@
 
 .blocks-row {
   border-radius: var(--radius-sm);
-  transition: background 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .blocks-table--run-swim .blocks-header,
@@ -543,7 +543,7 @@
 
 .zone-block-row {
   border-radius: var(--radius-sm);
-  transition: background 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .zone-block-row:hover {
@@ -727,6 +727,7 @@
 }
 
 .not-found h2 {
+  font-family: var(--font-display);
   margin-bottom: 8px;
 }
 
