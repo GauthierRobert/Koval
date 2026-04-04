@@ -5,6 +5,7 @@ import com.koval.trainingplannerbackend.ai.ConversationSummarizer;
 import com.koval.trainingplannerbackend.ai.agents.AgentType;
 import com.koval.trainingplannerbackend.ai.agents.SpecialistAgentService;
 import com.koval.trainingplannerbackend.ai.agents.TrainingAgent;
+import com.koval.trainingplannerbackend.ai.anonymization.AnonymizationService;
 import com.koval.trainingplannerbackend.ai.logger.UsageTracker;
 import com.koval.trainingplannerbackend.ai.tools.club.ClubToolService;
 import com.koval.trainingplannerbackend.ai.tools.coach.CoachToolService;
@@ -142,39 +143,44 @@ public class AIHaikuConfig extends AIConfig {
     public TrainingAgent schedulingAgent(@Qualifier("schedulingClient") ChatClient chatClient,
                                          ZoneSystemService zoneSystemService,
                                          UsageTracker usageTracker,
-                                         ConversationSummarizer conversationSummarizer) {
-        return new SpecialistAgentService(AgentType.SCHEDULING, chatClient, zoneSystemService, usageTracker, conversationSummarizer);
+                                         ConversationSummarizer conversationSummarizer,
+                                         AnonymizationService anonymizationService) {
+        return new SpecialistAgentService(AgentType.SCHEDULING, chatClient, zoneSystemService, usageTracker, conversationSummarizer, anonymizationService);
     }
 
     @Bean
     public TrainingAgent analysisAgent(@Qualifier("analysisClient") ChatClient chatClient,
                                        ZoneSystemService zoneSystemService,
                                        UsageTracker usageTracker,
-                                       ConversationSummarizer conversationSummarizer) {
-        return new SpecialistAgentService(AgentType.ANALYSIS, chatClient, zoneSystemService, usageTracker, conversationSummarizer);
+                                       ConversationSummarizer conversationSummarizer,
+                                       AnonymizationService anonymizationService) {
+        return new SpecialistAgentService(AgentType.ANALYSIS, chatClient, zoneSystemService, usageTracker, conversationSummarizer, anonymizationService);
     }
 
     @Bean
     public TrainingAgent coachManagementAgent(@Qualifier("coachManagementClient") ChatClient chatClient,
                                               ZoneSystemService zoneSystemService,
                                               UsageTracker usageTracker,
-                                              ConversationSummarizer conversationSummarizer) {
-        return new SpecialistAgentService(AgentType.COACH_MANAGEMENT, chatClient, zoneSystemService, usageTracker, conversationSummarizer);
+                                              ConversationSummarizer conversationSummarizer,
+                                              AnonymizationService anonymizationService) {
+        return new SpecialistAgentService(AgentType.COACH_MANAGEMENT, chatClient, zoneSystemService, usageTracker, conversationSummarizer, anonymizationService);
     }
 
     @Bean
     public TrainingAgent clubManagementAgent(@Qualifier("clubManagementClient") ChatClient chatClient,
                                              ZoneSystemService zoneSystemService,
                                              UsageTracker usageTracker,
-                                             ConversationSummarizer conversationSummarizer) {
-        return new SpecialistAgentService(AgentType.CLUB_MANAGEMENT, chatClient, zoneSystemService, usageTracker, conversationSummarizer);
+                                             ConversationSummarizer conversationSummarizer,
+                                             AnonymizationService anonymizationService) {
+        return new SpecialistAgentService(AgentType.CLUB_MANAGEMENT, chatClient, zoneSystemService, usageTracker, conversationSummarizer, anonymizationService);
     }
 
     @Bean
     public TrainingAgent generalAgent(@Qualifier("generalClient") ChatClient chatClient,
                                       ZoneSystemService zoneSystemService,
                                       UsageTracker usageTracker,
-                                      ConversationSummarizer conversationSummarizer) {
-        return new SpecialistAgentService(AgentType.GENERAL, chatClient, zoneSystemService, usageTracker, conversationSummarizer);
+                                      ConversationSummarizer conversationSummarizer,
+                                      AnonymizationService anonymizationService) {
+        return new SpecialistAgentService(AgentType.GENERAL, chatClient, zoneSystemService, usageTracker, conversationSummarizer, anonymizationService);
     }
 }

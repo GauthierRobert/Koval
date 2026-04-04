@@ -1,6 +1,8 @@
 package com.koval.trainingplannerbackend.ai.tools.coach;
 
 import com.koval.trainingplannerbackend.ai.ToolEventEmitter;
+import com.koval.trainingplannerbackend.ai.anonymization.AnonymizationContext;
+import com.koval.trainingplannerbackend.ai.anonymization.AnonymizationService;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.coach.CoachGroupService;
 import com.koval.trainingplannerbackend.coach.CoachService;
@@ -53,7 +55,10 @@ public class CoachToolService {
         }
         ToolEventEmitter.emitToolCall(context, "assignTraining", "Scheduling for " + athleteIds.size() + " athlete(s)...");
         String coachId = SecurityUtils.getUserId(context);
-        List<ScheduledWorkout> workouts = coachService.assignTraining(coachId, trainingId, athleteIds, scheduledDate, notes, null);
+        // De-anonymize athlete aliases (e.g. "Athlete-1") back to real IDs
+        AnonymizationContext anonCtx = AnonymizationService.fromToolContext(context.getContext());
+        List<String> realAthleteIds = anonCtx != null ? anonCtx.deAnonymizeAll(athleteIds) : athleteIds;
+        List<ScheduledWorkout> workouts = coachService.assignTraining(coachId, trainingId, realAthleteIds, scheduledDate, notes, null);
         String title = resolveTrainingTitle(trainingId);
         List<ScheduleSummary> result = workouts.stream().map(sw -> ScheduleSummary.from(sw, title)).toList();
         ToolEventEmitter.emitToolResult(context, "assignTraining", "Assigned to " + result.size() + " athlete(s)", true);
@@ -65,8 +70,18 @@ public class CoachToolService {
             @ToolParam(description = "Group ID") String groupId,
             ToolContext context) {
         String coachId = SecurityUtils.getUserId(context);
-        return coachGroupService.getAthletesByGroup(coachId, groupId).stream()
-                .map(AthleteSummary::from).toList();
+        AnonymizationContext anonCtx = AnonymizationService.fromToolContext(context.getContext());
+        // De-anonymize group alias back to real ID
+        String realGroupId = anonCtx != null ? anonCtx.deAnonymize(groupId) : groupId;
+        return coachGroupService.getAthletesByGroup(coachId, realGroupId).stream()
+                .map(u -> {
+                    // Anonymize athlete identity in the response
+                    if (anonCtx != null) {
+                        String alias = anonCtx.anonymizeAthlete(u.getId());
+                        return new AthleteSummary(alias, alias);
+                    }
+                    return AthleteSummary.from(u);
+                }).toList();
     }
 
     private String resolveTrainingTitle(String trainingId) {
