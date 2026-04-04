@@ -9,12 +9,15 @@
     flex-direction: column;
     padding: 16px 20px;
     z-index: 3000;
-    animation: slideUp 0.3s ease-out;
+    animation: slideUp 0.35s var(--ease-spring);
     background: var(--surface-card);
+    box-shadow: var(--shadow-elevated);
+    border-radius: 20px;
 }
 
 @keyframes slideUp {
-    from { opacity: 0; transform: translate(-50%, -40%); }
+    from { opacity: 0; transform: translate(-50%, -45%) scale(0.97); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 /* Header */
@@ -25,10 +28,11 @@
 
 h3 {
     margin: 0;
+    font-family: var(--font-display);
     font-size: 14px;
     font-weight: 700;
     color: var(--text-color);
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
 }
 
 .close-btn {
@@ -61,8 +65,9 @@ h3 {
 /* Cards */
 .settings-card {
     background: var(--surface-card);
-    border: 1px solid var(--glass-border);
-    border-radius: 12px;
+    box-shadow: var(--shadow-glass);
+    border: none;
+    border-radius: 14px;
     overflow: hidden;
 }
 

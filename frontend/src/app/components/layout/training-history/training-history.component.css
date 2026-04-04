@@ -24,7 +24,7 @@
   padding: 6px 8px;
   border-radius: 10px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s var(--ease-spring-gentle);
   position: relative;
 }
 
