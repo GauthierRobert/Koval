@@ -126,7 +126,7 @@
   background: var(--accent-color);
   cursor: pointer;
   border: 2px solid #000;
-  box-shadow: 0 0 4px rgba(255, 157, 0, 0.5);
+  box-shadow: var(--shadow-glow-accent);
 }
 
 .rpe-slider::-moz-range-thumb {
@@ -136,7 +136,7 @@
   background: var(--accent-color);
   cursor: pointer;
   border: 2px solid #000;
-  box-shadow: 0 0 4px rgba(255, 157, 0, 0.5);
+  box-shadow: var(--shadow-glow-accent);
 }
 
 .rpe-scale {
@@ -404,7 +404,7 @@
   background: var(--accent-color);
   cursor: pointer;
   border: none;
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-sm);
 }
 
 .smooth-slider::-moz-range-thumb {
@@ -414,7 +414,7 @@
   background: var(--accent-color);
   cursor: pointer;
   border: none;
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-sm);
 }
 
 .smooth-value {
