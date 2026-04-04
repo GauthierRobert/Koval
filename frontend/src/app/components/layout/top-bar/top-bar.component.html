@@ -1,4 +1,7 @@
-<header class="top-bar glass" [class.disabled]="!(user$ | async)">
+<header class="top-bar" [class.disabled]="!(user$ | async)">
+  <!-- Glass layer -->
+  <div class="top-bar-glass"></div>
+
   <div class="brand" routerLink="/dashboard" style="cursor: pointer">
     <img src="/assets/logo.svg" alt="Koval Logo" class="logo-img" />
     <span class="app-title desktop-only">Koval <span class="accent">TRAINING</span></span>
@@ -20,7 +23,10 @@
   </button>
 
   <nav class="nav-links" [class.nav-open]="mobileMenuOpen">
-    <a routerLink="/dashboard" routerLinkActive="active" class="nav-link" (click)="closeMobileMenu()">{{ 'TOP_BAR.NAV_DASHBOARD' | translate }}</a>
+    <a routerLink="/dashboard" routerLinkActive="active" class="nav-link" (click)="closeMobileMenu()">
+      <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      {{ 'TOP_BAR.NAV_DASHBOARD' | translate }}
+    </a>
 
     <!-- Clubs dropdown -->
     <div class="nav-dropdown-wrapper">
@@ -30,6 +36,7 @@
         [attr.aria-expanded]="isClubsOpen"
         aria-haspopup="true"
         (click)="toggleClubs($event)">
+        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         {{ 'TOP_BAR.NAV_CLUBS' | translate }}
         <svg class="dropdown-chevron" [class.open]="isClubsOpen"
           width="8" height="8" viewBox="0 0 10 6" fill="none" aria-hidden="true">
@@ -38,7 +45,7 @@
         </svg>
       </button>
       @if (isClubsOpen) {
-        <div class="nav-dropdown club-dropdown glass" role="menu" (click)="$event.stopPropagation()">
+        <div class="nav-dropdown club-dropdown" role="menu" (click)="$event.stopPropagation()">
           @if (clubService.userClubs$ | async; as clubs) {
             @if (clubs.length === 0) {
               <div class="club-dropdown-empty">{{ 'TOP_BAR.CLUBS_EMPTY' | translate }}</div>
@@ -72,6 +79,7 @@
         [attr.aria-expanded]="isTrainingOpen"
         aria-haspopup="true"
         (click)="toggleTraining($event)">
+        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
         {{ 'TOP_BAR.NAV_TRAINING' | translate }}
         <svg class="dropdown-chevron" [class.open]="isTrainingOpen"
           width="8" height="8" viewBox="0 0 10 6" fill="none" aria-hidden="true">
@@ -80,7 +88,7 @@
         </svg>
       </button>
       @if (isTrainingOpen) {
-        <div class="nav-dropdown glass" role="menu" (click)="$event.stopPropagation()">
+        <div class="nav-dropdown" role="menu" (click)="$event.stopPropagation()">
         <a routerLink="/trainings" routerLinkActive="active" class="dropdown-item" role="menuitem"
           (click)="closeTraining(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_TRAININGS_LABEL' | translate }}</span>
@@ -128,6 +136,7 @@
         [attr.aria-expanded]="isAnalyticsOpen"
         aria-haspopup="true"
         (click)="toggleAnalytics($event)">
+        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
         {{ 'TOP_BAR.NAV_ANALYTICS' | translate }}
         <svg class="dropdown-chevron" [class.open]="isAnalyticsOpen"
           width="8" height="8" viewBox="0 0 10 6" fill="none" aria-hidden="true">
@@ -136,7 +145,7 @@
         </svg>
       </button>
       @if (isAnalyticsOpen) {
-        <div class="nav-dropdown glass" role="menu" (click)="$event.stopPropagation()">
+        <div class="nav-dropdown" role="menu" (click)="$event.stopPropagation()">
         <a routerLink="/pmc"        routerLinkActive="active" class="dropdown-item" role="menuitem"
           (click)="closeAnalytics(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PMC_LABEL' | translate }}</span>
@@ -159,18 +168,24 @@
     <!-- Coach-only tabs -->
     @if (isCoach$ | async) {
       <div class="nav-sep"></div>
-      <a routerLink="/coach"  routerLinkActive="active" class="nav-link nav-link--coach" (click)="closeMobileMenu()">{{ 'TOP_BAR.NAV_COACHING' | translate }}</a>
+      <a routerLink="/coach"  routerLinkActive="active" class="nav-link nav-link--coach" (click)="closeMobileMenu()">
+        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        {{ 'TOP_BAR.NAV_COACHING' | translate }}
+      </a>
       <a routerLink="/groups" routerLinkActive="active" class="nav-link nav-link--coach" (click)="closeMobileMenu()">{{ 'TOP_BAR.NAV_GROUPS' | translate }}</a>
       <a routerLink="/zones"  routerLinkActive="active" class="nav-link nav-link--coach" (click)="closeMobileMenu()">{{ 'TOP_BAR.NAV_ZONES' | translate }}</a>
-      <a routerLink="/chat"   routerLinkActive="active" class="nav-link nav-link--coach" (click)="closeMobileMenu()">{{ 'TOP_BAR.NAV_ASSISTANT' | translate }}</a>
+      <a routerLink="/chat"   routerLinkActive="active" class="nav-link nav-link--coach" (click)="closeMobileMenu()">
+        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        {{ 'TOP_BAR.NAV_ASSISTANT' | translate }}
+      </a>
     }
   </nav>
 
   <div class="right-section">
     <div class="topbar-controls">
-      <button class="device-btn" (click)="themeService.toggle()" [attr.aria-label]="'TOP_BAR.BTN_THEME_TOGGLE' | translate">
+      <button class="control-btn" (click)="themeService.toggle()" [attr.aria-label]="'TOP_BAR.BTN_THEME_TOGGLE' | translate">
         @if ((themeService.theme$ | async) === 'dark') {
-          <svg class="bt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <circle cx="12" cy="12" r="5"/>
             <line x1="12" y1="1" x2="12" y2="3"/>
             <line x1="12" y1="21" x2="12" y2="23"/>
@@ -182,14 +197,13 @@
             <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
           </svg>
         } @else {
-          <svg class="bt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
           </svg>
         }
       </button>
-      <button class="device-btn" (click)="toggleMemberships()" [title]="'TOP_BAR.BTN_MY_MEMBERSHIPS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_MY_MEMBERSHIPS_TITLE' | translate">
-        <svg class="bt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
+      <button class="control-btn" (click)="toggleMemberships()" [title]="'TOP_BAR.BTN_MY_MEMBERSHIPS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_MY_MEMBERSHIPS_TITLE' | translate">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
           <circle cx="9" cy="7" r="4" />
           <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -197,54 +211,42 @@
         </svg>
       </button>
 
-      <button class="device-btn" (click)="showConnectedApps = !showConnectedApps" [title]="'TOP_BAR.BTN_CONNECTED_APPS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_CONNECTED_APPS_TITLE' | translate">
-        <svg class="bt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
+      <button class="control-btn" (click)="showConnectedApps = !showConnectedApps" [title]="'TOP_BAR.BTN_CONNECTED_APPS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_CONNECTED_APPS_TITLE' | translate">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
           <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
         </svg>
       </button>
 
-      <button class="device-btn" (click)="showNotifPrefs = !showNotifPrefs" [title]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate">
-        <svg class="bt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
+      <button class="control-btn" (click)="showNotifPrefs = !showNotifPrefs" [title]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.73 21a2 2 0 0 1-3.46 0" />
         </svg>
       </button>
 
-      <button class="device-btn" (click)="toggleSettings()" [title]="'TOP_BAR.BTN_REFERENCE_VALUES_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_REFERENCE_VALUES_TITLE' | translate">
-        <svg class="bt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
+      <button class="control-btn" (click)="toggleSettings()" [title]="'TOP_BAR.BTN_REFERENCE_VALUES_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_REFERENCE_VALUES_TITLE' | translate">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <circle cx="12" cy="12" r="3" />
           <path
             d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
         </svg>
       </button>
-
-      <!-- TODO Disable temporary - Bluetooth device manager button -->
-      <!-- <button class="device-btn" (click)="toggleDevices()" [title]="'TOP_BAR.BTN_MANAGE_DEVICES_TITLE' | translate">
-        <svg class="bt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <path d="M6.5 6.5l11 11L12 23V1l5.5 5.5-11 11" />
-        </svg>
-        @if ((connectedCount$ | async)! > 0) {
-          <span class="device-badge">{{ connectedCount$ | async }}</span>
-        }
-      </button> -->
     </div>
 
     @if (user$ | async; as u) {
-      <div class="user-profile">
+      <div class="user-pill">
         @if (u.profilePicture) {
           <img class="avatar-img" [src]="u.profilePicture" [alt]="'TOP_BAR.PROFILE_PICTURE_ALT' | translate" />
+        } @else {
+          <div class="avatar">{{ u.displayName?.charAt(0)?.toUpperCase() ?? 'U' }}</div>
         }
-        <div class="user-info">
+        <div class="user-info desktop-only">
           <span class="name">{{ u.displayName }}</span>
           <span class="status">{{ u.role }}</span>
         </div>
         <button class="logout-btn" (click)="logout()" [title]="'TOP_BAR.BTN_LOGOUT_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_LOGOUT_TITLE' | translate">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
             <polyline points="16 17 21 12 16 7" />
