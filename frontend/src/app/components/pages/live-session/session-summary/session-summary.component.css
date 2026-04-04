@@ -24,7 +24,7 @@
 
     .summary-header { text-align: center; margin-bottom: 40px; }
     .summary-header h1 { font-size: 14px; color: var(--accent-color); letter-spacing: 4px; margin-bottom: 8px; font-weight: 800; font-family: var(--font-display); }
-    .workout-title { font-size: 32px; font-weight: 700; color: var(--text-color); }
+    .workout-title { font-size: 32px; font-weight: 700; color: var(--text-color); font-family: var(--font-display); }
 
     .top-stats {
       display: grid;
@@ -39,7 +39,7 @@
       text-align: center;
     }
     .stat-item .label { display: block; font-size: 10px; color: rgba(255,255,255,0.5); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
-    .stat-item .value { font-size: 24px; font-weight: 800; color: var(--text-color); }
+    .stat-item .value { font-size: 24px; font-weight: 800; color: var(--text-color); font-family: var(--font-display); }
     .stat-item .value.hr { color: var(--negative-color); }
 
     .table-container {
@@ -73,7 +73,7 @@
     .block-type {
       display: inline-block;
       padding: 4px 10px;
-      border-radius: 6px;
+      border-radius: var(--radius-pill);
       font-size: 11px;
       font-weight: 700;
       background: rgba(255,255,255,0.1);
@@ -106,7 +106,7 @@
       font-weight: 800;
       border-radius: 40px;
       cursor: pointer;
-      transition: 0.2s;
+      transition: all 0.25s var(--ease-spring-gentle);
       letter-spacing: 0.5px;
     }
     .fit-btn:hover {
@@ -123,8 +123,8 @@
       font-weight: 800;
       border-radius: 40px;
       cursor: pointer;
-      transition: 0.2s;
-      box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+      transition: all 0.25s var(--ease-spring-gentle);
+      box-shadow: var(--shadow-glass);
     }
     .done-btn:hover { transform: translateY(-2px); filter: brightness(1.2); }
 
