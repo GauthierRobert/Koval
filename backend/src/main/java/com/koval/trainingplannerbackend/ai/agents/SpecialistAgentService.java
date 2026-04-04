@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.ai.agents;
 
 import com.koval.trainingplannerbackend.ai.ConversationSummarizer;
+import com.koval.trainingplannerbackend.ai.anonymization.AnonymizationService;
 import com.koval.trainingplannerbackend.ai.logger.UsageTracker;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystemService;
 import org.springframework.ai.chat.client.ChatClient;
@@ -17,8 +18,9 @@ public class SpecialistAgentService extends BaseAgentService {
                                   ChatClient chatClient,
                                   ZoneSystemService zoneSystemService,
                                   UsageTracker usageTracker,
-                                  ConversationSummarizer conversationSummarizer) {
-        super(chatClient, zoneSystemService, usageTracker, conversationSummarizer);
+                                  ConversationSummarizer conversationSummarizer,
+                                  AnonymizationService anonymizationService) {
+        super(chatClient, zoneSystemService, usageTracker, conversationSummarizer, anonymizationService);
         this.agentType = agentType;
     }
 
