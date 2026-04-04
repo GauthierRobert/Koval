@@ -8,7 +8,7 @@
   border-radius: var(--radius-sm, 6px);
   padding: 4px;
   background: rgba(139, 92, 246, 0.04);
-  transition: border-color 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .set-group.selected {
@@ -39,7 +39,7 @@
   border: 1px solid transparent;
   background: var(--surface-elevated, var(--overlay-3));
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .block-drag-handle {
@@ -79,7 +79,7 @@
   display: flex;
   gap: 2px;
   opacity: 0;
-  transition: opacity 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .block-action-btn {
@@ -127,7 +127,7 @@
   background: var(--surface-raised);
   border: 1px solid var(--surface-elevated);
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .set-child-item:hover {
@@ -143,7 +143,7 @@
   display: flex;
   gap: 2px;
   opacity: 0;
-  transition: opacity 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
   flex-shrink: 0;
 }
 

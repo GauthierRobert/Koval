@@ -11,9 +11,10 @@
   flex-direction: column;
   gap: 0.65rem;
   position: relative;
-  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
+  border: none;
   overflow: hidden;
-  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  transition: background 0.25s var(--ease-spring-gentle), border-color 0.25s var(--ease-spring-gentle), box-shadow 0.25s var(--ease-spring-gentle);
 }
 
 .workout-card::before {
@@ -35,7 +36,7 @@
 .workout-card.clickable:hover {
   background: var(--surface-hover);
   border-color: var(--overlay-12);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-glass);
 }
 
 /* ── Card kind: Completed ──────────────────────────────────────────── */
@@ -207,6 +208,7 @@
 }
 
 .workout-title {
+  font-family: var(--font-display);
   font-weight: 800;
   font-size: 0.75rem;
   line-height: 1.2;
@@ -266,7 +268,7 @@
   border-radius: 4px;
   border: none;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .btn-complete {
@@ -325,7 +327,7 @@
   color: var(--success-color);
   opacity: 0.7;
   text-decoration: none;
-  transition: opacity 0.2s;
+  transition: opacity 0.25s var(--ease-spring-gentle);
 }
 
 .analysis-link:hover {

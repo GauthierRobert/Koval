@@ -33,7 +33,7 @@
   height: 30px;
   border-radius: var(--radius-sm, 6px);
   color: var(--text-muted, #8e8ea0);
-  transition: color 0.15s, background 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
   text-decoration: none;
 }
 
@@ -66,6 +66,7 @@
   font-weight: 800;
   letter-spacing: 0.5px;
   color: var(--text-color, #ececf1);
+  font-family: var(--font-display);
 }
 
 .banner-title .dim {
@@ -94,7 +95,7 @@
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  transition: filter 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .btn-primary:hover {
@@ -121,7 +122,7 @@
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .btn-ghost:hover {
@@ -138,7 +139,7 @@
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .btn-set:hover {
@@ -166,6 +167,7 @@
   letter-spacing: 1px;
   color: var(--text-muted, #8e8ea0);
   margin: 0 0 0.75rem;
+  font-family: var(--font-display);
 }
 
 /* ─── Left: Metadata panel ────────────────────────────────── */
@@ -208,7 +210,7 @@
   color: var(--text-color, #ececf1);
   font-size: 13px;
   box-sizing: border-box;
-  transition: border-color 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .form-field input:focus,
@@ -248,6 +250,7 @@
   font-size: 1.1rem;
   font-weight: 800;
   color: var(--accent-color, #ff9d00);
+  font-family: var(--font-display);
 }
 
 .metric-label {
@@ -350,7 +353,7 @@
   border: 1px solid transparent;
   background: var(--surface-elevated, var(--overlay-3));
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .block-item:hover {
@@ -403,7 +406,7 @@
   display: flex;
   gap: 2px;
   opacity: 0;
-  transition: opacity 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .block-item:hover .block-actions {
@@ -451,7 +454,7 @@
   border: 1px solid var(--glass-border, var(--overlay-8));
   color: var(--text-muted, #8e8ea0);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .type-chip:hover {
@@ -585,7 +588,7 @@
   border-radius: var(--radius-sm, 6px);
   padding: 4px;
   background: rgba(139, 92, 246, 0.04);
-  transition: border-color 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .set-group.selected {
@@ -631,7 +634,7 @@
   background: var(--surface-raised);;
   border: 1px solid var(--surface-elevated);
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .set-child-item:hover {
@@ -647,7 +650,7 @@
   display: flex;
   gap: 2px;
   opacity: 0;
-  transition: opacity 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
   flex-shrink: 0;
 }
 

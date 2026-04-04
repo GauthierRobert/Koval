@@ -5,7 +5,7 @@
   padding: 24px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s var(--ease-spring-gentle);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -82,7 +82,7 @@
   font-family: inherit;
   outline: none;
   text-align: center;
-  transition: border-color 0.2s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .loop-input input:focus {

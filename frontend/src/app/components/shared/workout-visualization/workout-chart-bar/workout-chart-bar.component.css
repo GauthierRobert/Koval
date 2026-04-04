@@ -43,7 +43,7 @@
   min-width: 2px;
   border-radius: 4px 4px 0 0;
   position: relative;
-  transition: transform 0.2s, filter 0.2s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .bar-container:hover .block-bar {
@@ -67,12 +67,12 @@
   z-index: 100;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.2s;
+  transition: all 0.25s var(--ease-spring-gentle);
   display: flex;
   flex-direction: column;
   gap: 4px;
   pointer-events: none;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-elevated);
 }
 
 .block-tooltip.tooltip-below {
@@ -132,12 +132,12 @@
 
 .block-bar[data-type="WARMUP"] {
   border: 2px solid var(--chart-warmup);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px) saturate(1.4);
 }
 
 .block-bar[data-type="COOLDOWN"] {
   border: 2px solid var(--block-cooldown);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px) saturate(1.4);
 }
 
 .block-label {

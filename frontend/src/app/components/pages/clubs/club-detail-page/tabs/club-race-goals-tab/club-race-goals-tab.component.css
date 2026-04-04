@@ -26,7 +26,7 @@
   gap: 12px;
   padding: 10px 14px;
   border-radius: var(--radius-md);
-  transition: border-color 0.15s, transform 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .goal-row:hover {
@@ -58,6 +58,7 @@
 }
 
 .goal-title {
+  font-family: var(--font-display);
   font-size: 13px;
   font-weight: 700;
   color: var(--text-color);
@@ -166,7 +167,7 @@
   padding: 3px 10px;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
   white-space: nowrap;
 }
 
@@ -186,18 +187,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px) saturate(1.4);
 }
 
 .modal-panel {
   background: var(--surface-color, #1e1e2e);
-  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-elevated);
+  border: none;
   border-radius: var(--radius-lg);
   width: 520px;
   max-height: 70vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
 
 .modal-header {
@@ -208,6 +209,7 @@
 }
 
 .modal-title {
+  font-family: var(--font-display);
   font-size: 15px;
   font-weight: 800;
   color: var(--text-color);
@@ -250,7 +252,7 @@
   gap: 10px;
   padding: 8px 8px;
   border-radius: var(--radius-sm);
-  transition: background 0.12s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .modal-member-row:hover {

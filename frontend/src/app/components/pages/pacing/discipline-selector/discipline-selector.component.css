@@ -28,13 +28,13 @@
   flex: 1;
   padding: 8px 12px;
   border: 1px solid var(--overlay-10);
-  border-radius: 8px;
+  border-radius: var(--radius-pill);
   background: transparent;
   color: var(--text-60);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .pill:hover {

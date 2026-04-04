@@ -2,7 +2,7 @@
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.9);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px) saturate(1.4);
       z-index: 3000;
       display: flex;
       align-items: center;
@@ -19,11 +19,11 @@
       padding: 40px;
       border-radius: 24px;
       border: 1px solid rgba(255,255,255,0.1);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      box-shadow: var(--shadow-glass);
     }
 
     .summary-header { text-align: center; margin-bottom: 40px; }
-    .summary-header h1 { font-size: 14px; color: var(--accent-color); letter-spacing: 4px; margin-bottom: 8px; font-weight: 800; }
+    .summary-header h1 { font-size: 14px; color: var(--accent-color); letter-spacing: 4px; margin-bottom: 8px; font-weight: 800; font-family: var(--font-display); }
     .workout-title { font-size: 32px; font-weight: 700; color: var(--text-color); }
 
     .top-stats {

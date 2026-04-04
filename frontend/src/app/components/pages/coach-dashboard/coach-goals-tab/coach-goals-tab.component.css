@@ -11,6 +11,7 @@
   display: flex;
   justify-content: space-between;
   padding: 0 4px;
+  font-family: var(--font-display);
 }
 
 .goals-table {

@@ -19,7 +19,7 @@
 .rc-card:hover {
   border-color: var(--overlay-15);
   transform: translateY(-1px);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-elevated);
 }
 
 .rc-card--expanded {
@@ -45,6 +45,7 @@
 }
 
 .rc-title {
+  font-family: var(--font-display);
   font-size: 0.9rem;
   font-weight: 700;
   color: var(--text-color);

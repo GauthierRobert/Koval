@@ -6,7 +6,9 @@
   align-items: center;
   justify-content: center;
   background: var(--overlay-backdrop);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  animation: overlayFadeIn 0.25s var(--ease-out-expo);
 }
 
 .cgu-card {
@@ -17,6 +19,7 @@
   border-radius: var(--radius-md, 12px);
   padding: 1.5rem;
   gap: 1rem;
+  animation: cardSlideUp 0.35s var(--ease-spring);
 }
 
 .cgu-header {
@@ -25,6 +28,7 @@
 
 .cgu-header h2 {
   margin: 0.5rem 0 0.25rem;
+  font-family: var(--font-display);
   font-size: 1.25rem;
   color: var(--text-color, #ececf1);
 }
@@ -65,7 +69,7 @@
   width: 100%;
   padding: 12px;
   border: none;
-  border-radius: var(--radius-sm, 6px);
+  border-radius: var(--radius-pill);
   background: var(--accent-color, #ff9d00);
   color: #000;
   font-weight: 700;

@@ -18,6 +18,7 @@
 }
 
 .page-header h1 {
+  font-family: var(--font-display);
   font-size: 24px;
   font-weight: 700;
   color: var(--primary-color, #ff9d00);
@@ -110,7 +111,7 @@
   padding: 24px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s var(--ease-spring-gentle);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -173,7 +174,7 @@
   font-family: inherit;
   outline: none;
   text-align: center;
-  transition: border-color 0.2s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .loop-input input:focus {
@@ -224,13 +225,13 @@
   flex: 1;
   padding: 8px 12px;
   border: 1px solid var(--overlay-10);
-  border-radius: 8px;
+  border-radius: var(--radius-pill);
   background: transparent;
   color: var(--text-60);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .pill:hover {
@@ -479,8 +480,9 @@
 .param-chip {
   padding: 4px 10px;
   background: var(--surface-hover);
-  border: 1px solid var(--glass-border);
-  border-radius: 6px;
+  box-shadow: var(--shadow-glass);
+  border: none;
+  border-radius: var(--radius-pill);
   font-size: 11px;
   font-weight: 600;
   color: var(--text-70);
@@ -505,7 +507,7 @@
   background: var(--primary-color, #ff9d00);
   color: #000;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-pill);
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
@@ -519,7 +521,7 @@
 .param-bar-actions .clear-btn {
   padding: 6px 12px;
   font-size: 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-pill);
 }
 
 /* ========== Summary Cards ========== */
@@ -584,6 +586,7 @@
 }
 
 .stat-value {
+  font-family: var(--font-display);
   font-size: 16px;
   font-weight: 700;
   color: var(--text-color);
@@ -645,7 +648,7 @@
   padding: 4px 8px;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .metric-toggle:hover {
@@ -656,7 +659,7 @@
   font-size: 10px;
   font-weight: 600;
   color: var(--text-35);
-  transition: color 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .metric-toggle-label.active {
@@ -682,12 +685,12 @@
   padding: 8px 20px;
   background: var(--overlay-5);
   border: 1px solid var(--overlay-10);
-  border-radius: 8px;
+  border-radius: var(--radius-pill);
   color: var(--text-60);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .tab-btn.active {
@@ -754,6 +757,7 @@
 }
 
 .swim-panel h3 {
+  font-family: var(--font-display);
   color: var(--metric-fitness);
   font-size: 16px;
   margin-bottom: 8px;
@@ -828,7 +832,7 @@
   border-bottom: 1px solid var(--overlay-5);
   border-left: 3px solid var(--overlay-25);
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .race-plan-item:last-child {
@@ -972,7 +976,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px) saturate(1.4);
 }
 
 .modal-content {

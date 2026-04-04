@@ -9,6 +9,7 @@
   letter-spacing: 1px;
   color: var(--text-muted);
   margin-bottom: 1rem;
+  font-family: var(--font-display);
 }
 
 .plans-list {
@@ -56,6 +57,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-family: var(--font-display);
 }
 
 .plan-week-label {

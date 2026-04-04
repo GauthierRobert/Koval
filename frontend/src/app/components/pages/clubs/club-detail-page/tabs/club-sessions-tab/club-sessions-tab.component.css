@@ -17,6 +17,7 @@
 }
 
 .session-header h1 {
+  font-family: var(--font-display);
   margin: 0 0 6px;
   font-size: 11px;
   font-weight: 800;
@@ -26,6 +27,7 @@
 }
 
 .session-header__title {
+  font-family: var(--font-display);
   margin: 0;
   font-size: 24px;
   font-weight: 700;
@@ -59,7 +61,7 @@
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
   font-family: inherit;
 }
 
@@ -167,7 +169,7 @@
   position: fixed;
   inset: 0;
   background: var(--overlay-backdrop);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px) saturate(1.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -195,6 +197,7 @@
 }
 
 .modal-header h3 {
+  font-family: var(--font-display);
   margin: 0;
   font-size: 14px;
   font-weight: 800;
@@ -209,7 +212,7 @@
   cursor: pointer;
   padding: 4px;
   border-radius: var(--radius-sm);
-  transition: background 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .close-btn:hover {
@@ -259,7 +262,7 @@
   font-size: 13px;
   width: 100%;
   box-sizing: border-box;
-  transition: border-color 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .form-input:focus {
@@ -302,7 +305,7 @@
   background: var(--overlay-10);
   border: 1px solid var(--glass-border);
   border-radius: 10px;
-  transition: all 0.2s;
+  transition: all 0.25s var(--ease-spring-gentle);
   flex-shrink: 0;
 }
 
@@ -315,7 +318,7 @@
   height: 14px;
   border-radius: 50%;
   background: var(--text-muted);
-  transition: all 0.2s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .toggle-input:checked + .toggle-switch {
