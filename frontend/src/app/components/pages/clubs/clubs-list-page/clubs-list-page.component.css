@@ -38,6 +38,7 @@
 }
 
 .header-title {
+  font-family: var(--font-display);
   font-size: var(--text-sm);
   font-weight: 800;
   letter-spacing: 1px;

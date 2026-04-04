@@ -12,9 +12,10 @@
 }
 
 .page-header h1 {
-  font-size: 2rem;
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: -0.01em;
 }
 
 .accent { color: var(--accent-color, #ff9d00); }
@@ -88,15 +89,15 @@
   padding: 1.25rem;
   border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
-  border: 1px solid var(--glass-border);
+  transition: all 0.25s var(--ease-spring-gentle);
+  box-shadow: var(--shadow-glass);
+  border: none;
   text-align: center;
 }
 
 .facet-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--accent-color, #ff9d00);
-  box-shadow: 0 4px 20px rgba(255, 157, 0, 0.1);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-elevated), 0 0 0 1px var(--accent-border);
 }
 
 .facet-card--country { padding: 1rem; }

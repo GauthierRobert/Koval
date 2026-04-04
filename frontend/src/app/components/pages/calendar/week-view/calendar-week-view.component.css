@@ -12,10 +12,10 @@
   padding: 4px 12px;
   background: var(--sport-bg, rgba(255,157,0,0.15));
   border-left: 3px solid var(--sport-border, #ff9d00);
-  border-radius: 4px;
+  border-radius: 6px;
   text-decoration: none;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: all 0.2s var(--ease-spring-gentle);
   min-height: 24px;
 }
 

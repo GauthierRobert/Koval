@@ -22,6 +22,7 @@
 }
 
 .header h1 {
+  font-family: var(--font-display);
   font-size: var(--text-2xl);
   margin: 0;
   font-weight: 800;
@@ -64,7 +65,7 @@
   font-size: var(--text-xs);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s var(--ease-spring-gentle);
 }
 
 .overdue-chip:hover {
@@ -75,7 +76,7 @@
   display: flex;
   background: var(--surface-elevated);
   padding: 3px;
-  border-radius: 8px;
+  border-radius: var(--radius-pill);
   border: 1px solid var(--glass-border);
 }
 
@@ -88,7 +89,7 @@
   font-weight: 700;
   font-size: 11px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s var(--ease-spring-gentle);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -96,6 +97,7 @@
 .view-selector button.active {
   background: var(--accent-color);
   color: var(--color-black);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .nav-controls {
@@ -104,7 +106,7 @@
   gap: 1rem;
   background: var(--surface-elevated);
   padding: 0.4rem 1rem;
-  border-radius: 8px;
+  border-radius: var(--radius-pill);
   border: 1px solid var(--glass-border);
 }
 
@@ -139,12 +141,12 @@
   color: var(--accent-color);
   border: 1px solid rgba(255, 157, 0, 0.25);
   padding: 4px 12px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.5px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s var(--ease-spring-gentle);
   width: auto !important;
 }
 
@@ -182,11 +184,11 @@
   margin-top: 6px;
   background: var(--surface-color);
   border: 1px solid var(--glass-border);
-  border-radius: 10px;
+  border-radius: 14px;
   padding: 12px;
   min-width: 240px;
   z-index: 100;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-elevated);
   display: flex;
   flex-direction: column;
   gap: 8px;
