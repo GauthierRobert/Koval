@@ -1,5 +1,7 @@
 package com.koval.trainingplannerbackend.notification;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auth.oauth2.GoogleCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,14 +40,27 @@ public class FirebaseConfig {
     private synchronized void ensureInitialized() {
         if (available != null) return;
         try {
-            InputStream credentialsStream = resolveCredentials();
-            if (credentialsStream == null) {
+            byte[] credentialsBytes = resolveCredentialsBytes();
+            if (credentialsBytes == null) {
                 log.warn("Firebase credentials not configured — push notifications disabled");
                 available = false;
                 return;
             }
-            try (credentialsStream) {
-                credentials = GoogleCredentials.fromStream(credentialsStream)
+            // Auto-derive project ID from service account JSON if not explicitly set
+            if (projectId == null || projectId.isBlank()) {
+                try {
+                    JsonNode json = new ObjectMapper().readTree(credentialsBytes);
+                    JsonNode pid = json.get("project_id");
+                    if (pid != null && !pid.asText().isBlank()) {
+                        projectId = pid.asText();
+                        log.info("Derived Firebase project ID from service account: {}", projectId);
+                    }
+                } catch (IOException e) {
+                    log.warn("Could not parse project_id from service account JSON: {}", e.getMessage());
+                }
+            }
+            try (InputStream stream = new ByteArrayInputStream(credentialsBytes)) {
+                credentials = GoogleCredentials.fromStream(stream)
                         .createScoped(List.of(FCM_SCOPE));
                 available = true;
                 log.info("FCM credentials initialized successfully");
@@ -56,12 +71,14 @@ public class FirebaseConfig {
         }
     }
 
-    private InputStream resolveCredentials() throws IOException {
+    private byte[] resolveCredentialsBytes() throws IOException {
         if (serviceAccountJson != null && !serviceAccountJson.isBlank()) {
-            return new ByteArrayInputStream(serviceAccountJson.getBytes(StandardCharsets.UTF_8));
+            return serviceAccountJson.getBytes(StandardCharsets.UTF_8);
         }
         if (serviceAccountPath != null && !serviceAccountPath.isBlank()) {
-            return new FileInputStream(serviceAccountPath);
+            try (InputStream is = new FileInputStream(serviceAccountPath)) {
+                return is.readAllBytes();
+            }
         }
         return null;
     }

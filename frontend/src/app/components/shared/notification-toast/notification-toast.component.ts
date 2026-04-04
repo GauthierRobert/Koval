@@ -1,7 +1,7 @@
-import {Component, inject, OnDestroy, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, NgZone, OnDestroy, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {Router} from '@angular/router';
-import {Subscription} from 'rxjs';
+import {BehaviorSubject, Subscription} from 'rxjs';
 import {filter} from 'rxjs/operators';
 import {NotificationService} from '../../../services/notification.service';
 import {ClubSessionService} from '../../../services/club-session.service';
@@ -11,19 +11,24 @@ import {MessagePayload} from 'firebase/messaging';
   selector: 'app-notification-toast',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="toast-container" *ngIf="visible" (click)="onToastClick()" role="status" aria-live="polite">
-      <div class="toast" [class.toast-cancelled]="data['type'] === 'SESSION_CANCELLED'">
-        <div class="toast-content">
-          <strong>{{ title }}</strong>
-          <span>{{ body }}</span>
-          <div class="toast-actions" *ngIf="data['type'] === 'WAITING_LIST_PROMOTED'">
-            <button class="toast-refuse-btn" (click)="onRefuse($event)">REFUSE SPOT</button>
+    @if (visible$ | async) {
+      <div class="toast-container" (click)="onToastClick()" role="status" aria-live="polite">
+        <div class="toast" [class.toast-cancelled]="data['type'] === 'SESSION_CANCELLED'">
+          <div class="toast-content">
+            <strong>{{ title }}</strong>
+            <span>{{ body }}</span>
+            @if (data['type'] === 'WAITING_LIST_PROMOTED') {
+              <div class="toast-actions">
+                <button class="toast-refuse-btn" (click)="onRefuse($event)">REFUSE SPOT</button>
+              </div>
+            }
           </div>
+          <button class="toast-close" (click)="dismiss($event)" aria-label="Dismiss notification">&times;</button>
         </div>
-        <button class="toast-close" (click)="dismiss($event)" aria-label="Dismiss notification">&times;</button>
       </div>
-    </div>
+    }
   `,
   styles: [
     `
@@ -109,10 +114,11 @@ export class NotificationToastComponent implements OnInit, OnDestroy {
   private readonly notificationService = inject(NotificationService);
   private readonly clubSessionService = inject(ClubSessionService);
   private readonly router = inject(Router);
+  private readonly ngZone = inject(NgZone);
   private sub: Subscription | null = null;
   private dismissTimer: ReturnType<typeof setTimeout> | null = null;
 
-  visible = false;
+  visible$ = new BehaviorSubject<boolean>(false);
   title = '';
   body = '';
   data: Record<string, string> = {};
@@ -124,16 +130,16 @@ export class NotificationToastComponent implements OnInit, OnDestroy {
         this.title = payload.notification?.title || 'Notification';
         this.body = payload.notification?.body || '';
         this.data = (payload.data as Record<string, string>) || {};
-        this.visible = true;
+        this.ngZone.run(() => this.visible$.next(true));
 
         if (this.dismissTimer) clearTimeout(this.dismissTimer);
         const timeout = this.data['type'] === 'WAITING_LIST_PROMOTED' ? 15000 : 5000;
-        this.dismissTimer = setTimeout(() => (this.visible = false), timeout);
+        this.dismissTimer = setTimeout(() => this.ngZone.run(() => this.visible$.next(false)), timeout);
       });
   }
 
   onToastClick(): void {
-    this.visible = false;
+    this.visible$.next(false);
     const type = this.data['type'];
     if (type === 'TRAINING_ASSIGNED') {
       this.router.navigate(['/calendar']);
@@ -152,12 +158,12 @@ export class NotificationToastComponent implements OnInit, OnDestroy {
     if (clubId && sessionId) {
       this.clubSessionService.cancelSession(clubId, sessionId).subscribe({ error: () => {} });
     }
-    this.visible = false;
+    this.visible$.next(false);
   }
 
   dismiss(event: Event): void {
     event.stopPropagation();
-    this.visible = false;
+    this.visible$.next(false);
   }
 
   ngOnDestroy(): void {

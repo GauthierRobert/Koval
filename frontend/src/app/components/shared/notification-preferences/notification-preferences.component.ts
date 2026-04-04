@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, inject, NgZone, OnInit, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, inject, isDevMode, NgZone, OnInit, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {HttpClient} from '@angular/common/http';
@@ -69,6 +69,14 @@ export interface NotificationPreferences {
           </div>
         } @else {
           <div class="notif-loading">{{ 'NOTIFICATIONS.LOADING' | translate }}</div>
+        }
+
+        @if (isDev) {
+          <div class="test-section">
+            <button class="test-btn" (click)="sendTest()" [disabled]="testSending$ | async">
+              {{ (testSending$ | async) ? 'Sending...' : 'Send Test Notification' }}
+            </button>
+          </div>
         }
       </div>
     </div>
@@ -172,6 +180,31 @@ export interface NotificationPreferences {
         padding: 2rem;
         font-size: 0.85rem;
       }
+      .test-section {
+        margin-top: 1.25rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--glass-border);
+      }
+      .test-btn {
+        width: 100%;
+        padding: 0.6rem;
+        border: 1px dashed var(--accent-color);
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: var(--accent-color);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
+      }
+      .test-btn:hover:not(:disabled) {
+        background: var(--accent-color);
+        color: var(--on-primary-color);
+      }
+      .test-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     `,
   ],
 })
@@ -182,6 +215,8 @@ export class NotificationPreferencesComponent implements OnInit {
   private readonly ngZone = inject(NgZone);
   private readonly apiUrl = `${environment.apiUrl}/api/notifications`;
 
+  readonly isDev = isDevMode();
+  testSending$ = new BehaviorSubject<boolean>(false);
   prefs$ = new BehaviorSubject<NotificationPreferences | null>(null);
 
   ngOnInit(): void {
@@ -204,5 +239,13 @@ export class NotificationPreferencesComponent implements OnInit {
 
   save(prefs: NotificationPreferences): void {
     this.http.put<NotificationPreferences>(`${this.apiUrl}/preferences`, prefs).subscribe();
+  }
+
+  sendTest(): void {
+    this.testSending$.next(true);
+    this.http.post(`${this.apiUrl}/test`, {}).subscribe({
+      next: () => this.ngZone.run(() => this.testSending$.next(false)),
+      error: () => this.ngZone.run(() => this.testSending$.next(false)),
+    });
   }
 }

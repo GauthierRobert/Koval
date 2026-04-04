@@ -20,7 +20,7 @@ export const appConfig: ApplicationConfig = {
       })
     ),
     provideTranslateHttpLoader({prefix: './i18n/', suffix: '.json'}),
-    provideServiceWorker('ngsw-worker.js', {
+    provideServiceWorker('custom-sw.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',
     }),

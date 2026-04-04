@@ -26,7 +26,7 @@
                 "input": "public"
               },
               {
-                "glob": "firebase-messaging-sw.js",
+                "glob": "custom-sw.js",
                 "input": "src",
                 "output": "/"
               },

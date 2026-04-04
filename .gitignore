@@ -58,3 +58,4 @@ frontend/.env
 frontend/src/environments/environment.ts
 frontend/src/environments/environment.prod.ts
 frontend/src/firebase-messaging-sw.js
+frontend/src/custom-sw.js

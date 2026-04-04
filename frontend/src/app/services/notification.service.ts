@@ -1,4 +1,4 @@
-import {inject, Injectable} from '@angular/core';
+import {inject, Injectable, NgZone} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject} from 'rxjs';
 import {environment} from '../../environments/environment';
@@ -10,6 +10,7 @@ import {getMessaging, getToken, MessagePayload, Messaging, onMessage} from 'fire
 })
 export class NotificationService {
   private readonly http = inject(HttpClient);
+  private readonly ngZone = inject(NgZone);
   private readonly apiUrl = `${environment.apiUrl}/api/notifications`;
 
   private app: FirebaseApp | null = null;
@@ -25,7 +26,7 @@ export class NotificationService {
       this.messaging = getMessaging(this.app);
 
       onMessage(this.messaging, (payload) => {
-        this.foregroundMessageSubject.next(payload);
+        this.ngZone.run(() => this.foregroundMessageSubject.next(payload));
       });
     } catch (e) {
       console.warn('Firebase messaging init failed:', e);
@@ -45,25 +46,13 @@ export class NotificationService {
         return;
       }
 
-      const swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-        scope: '/firebase-cloud-messaging-push-scope',
-      });
-
-      const sw = swRegistration.installing ?? swRegistration.waiting ?? swRegistration.active;
-      if (sw && sw.state !== 'activated') {
-        await new Promise<void>((resolve, reject) => {
-          sw.addEventListener('statechange', function handler(e) {
-            const state = (e.target as ServiceWorker).state;
-            if (state === 'activated') {
-              sw.removeEventListener('statechange', handler);
-              resolve();
-            } else if (state === 'redundant') {
-              sw.removeEventListener('statechange', handler);
-              reject(new Error('Service Worker became redundant'));
-            }
-          });
-        });
+      // Reuse the Angular-registered custom-sw.js (which includes Firebase messaging).
+      // In dev mode, Angular's SW is disabled, so register it manually.
+      let swRegistration = await navigator.serviceWorker.getRegistration('/');
+      if (!swRegistration) {
+        swRegistration = await navigator.serviceWorker.register('/custom-sw.js');
       }
+      await navigator.serviceWorker.ready;
 
       const token = await getToken(this.messaging, {
         vapidKey: environment.firebaseVapidKey,
