@@ -75,7 +75,7 @@
       justify-content: center;
       z-index: 20;
     }
-    .game-overlay h2 { font-size: 48px; font-weight: 800; color: var(--negative-color); margin-bottom: 10px; }
+    .game-overlay h2 { font-size: 48px; font-weight: 800; color: var(--negative-color); margin-bottom: 10px; font-family: var(--font-display); }
     .game-overlay button {
       background: var(--surface-color);
       color: black;
