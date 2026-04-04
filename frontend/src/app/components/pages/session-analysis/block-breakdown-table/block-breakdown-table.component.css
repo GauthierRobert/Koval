@@ -43,7 +43,7 @@
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
   opacity: 0.5;
 }
 
@@ -109,7 +109,7 @@
 
 .blocks-row {
   border-radius: var(--radius-sm);
-  transition: background 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .blocks-table--run-swim .blocks-header,
@@ -166,7 +166,7 @@
 
 .zone-block-row {
   border-radius: var(--radius-sm);
-  transition: background 0.15s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .zone-block-row:hover {

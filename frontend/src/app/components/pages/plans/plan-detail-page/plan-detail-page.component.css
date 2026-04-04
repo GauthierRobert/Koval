@@ -34,6 +34,7 @@
 }
 
 .title-row h1 {
+  font-family: var(--font-display);
   font-size: var(--text-2xl);
   font-weight: 700;
   color: var(--text-color);
@@ -368,10 +369,12 @@
   padding: var(--space-md);
   background: var(--surface-elevated);
   border-radius: var(--radius-md);
-  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
+  border: none;
 }
 
 .analytics-stat-value {
+  font-family: var(--font-display);
   font-size: var(--text-xl);
   font-weight: 700;
   color: var(--accent-color);
@@ -480,10 +483,11 @@
 }
 
 .week-row {
-  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
+  border: none;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  transition: border-color 0.15s ease;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .week-row.current-week {
@@ -685,7 +689,7 @@
   position: fixed;
   inset: 0;
   background: var(--overlay-backdrop);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px) saturate(1.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -717,6 +721,7 @@
 }
 
 .modal-header h3 {
+  font-family: var(--font-display);
   margin: 0;
   font-size: var(--text-base);
   font-weight: 800;
