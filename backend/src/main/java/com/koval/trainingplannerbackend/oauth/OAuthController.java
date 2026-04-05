@@ -109,7 +109,7 @@ public class OAuthController {
                     + (codeChallengeMethod != null ? "&code_challenge_method=" + encode(codeChallengeMethod) : "")
                     + (state != null ? "&state=" + encode(state) : "");
 
-            String frontendLoginUrl = issuer.replace("api.", "app.").replace(":8080", ":4200")
+            String frontendLoginUrl = issuer.replace("api.", "").replace(":8080", ":4200")
                     + "/login?returnTo=" + encode(authorizeUrl);
 
             return ResponseEntity.status(HttpStatus.FOUND)
