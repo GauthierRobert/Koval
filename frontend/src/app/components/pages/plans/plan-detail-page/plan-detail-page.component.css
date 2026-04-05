@@ -702,7 +702,7 @@
 .close-btn {
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: var(--text-dim);
   font-size: 18px;
   cursor: pointer;
   padding: var(--space-xs);
