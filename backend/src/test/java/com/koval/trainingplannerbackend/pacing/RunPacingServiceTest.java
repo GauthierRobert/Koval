@@ -23,7 +23,7 @@ class RunPacingServiceTest {
     private AthleteProfile profile(Integer thresholdPace, Integer targetPace, Double temp, Double fatigue) {
         return new AthleteProfile(
                 250, 75, thresholdPace, 90,
-                fatigue, "MIXED", temp, 0.0,
+                fatigue, "MIXED",
                 null, targetPace,
                 null, null, "ROAD_AERO"
         );
@@ -159,19 +159,6 @@ class RunPacingServiceTest {
 
             assertTrue(segments.get(2).cumulativeFatigue() > segments.get(0).cumulativeFatigue(),
                     "Fatigue should accumulate over distance");
-        }
-
-        @Test
-        void heatPenalty_slowsDown() {
-            var course = List.of(flat(0, 10000));
-            AthleteProfile cool = profile(null, 300, 15.0, 0.5);
-            AthleteProfile hot = profile(null, 300, 35.0, 0.5);
-
-            List<PacingSegment> coolSegs = service.generateSegments(course, cool, 0.0);
-            List<PacingSegment> hotSegs = service.generateSegments(course, hot, 0.0);
-
-            assertTrue(hotSegs.get(0).estimatedSegmentTime() > coolSegs.get(0).estimatedSegmentTime(),
-                    "Hot conditions should produce slower times");
         }
 
         @Test

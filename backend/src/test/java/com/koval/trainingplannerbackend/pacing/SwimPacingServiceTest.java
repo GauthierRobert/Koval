@@ -20,7 +20,7 @@ class SwimPacingServiceTest {
     private AthleteProfile profile(Integer swimDist, Integer css, Integer targetPace) {
         return new AthleteProfile(
                 250, 75, 300, css,
-                0.5, "MIXED", 20.0, 0.0,
+                0.5, "MIXED",
                 null, null,
                 swimDist, targetPace, "ROAD_AERO"
         );

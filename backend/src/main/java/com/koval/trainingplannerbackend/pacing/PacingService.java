@@ -39,7 +39,6 @@ public class PacingService {
         AthleteProfile effectiveProfile = new AthleteProfile(
                 profile.ftp(), profile.weightKg(), profile.thresholdPaceSec(), profile.swimCssSec(),
                 profile.fatigueResistance(), profile.nutritionPreference(),
-                profile.temperature(), profile.windSpeed(),
                 bikeTarget.power(), runTarget.pace(),
                 profile.swimDistanceM(), profile.targetSwimPaceSecPer100m(),
                 profile.bikeType()

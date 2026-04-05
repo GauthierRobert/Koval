@@ -225,7 +225,7 @@ public class PacingController {
         AthleteProfile defaults = new AthleteProfile(
                 user.getFtp(), user.getWeightKg(),
                 user.getFunctionalThresholdPace(), user.getCriticalSwimSpeed(),
-                0.5, "MIXED", 20.0, 0.0, null, null, null, null, "ROAD_AERO"
+                0.5, "MIXED", null, null, null, null, "ROAD_AERO"
         );
 
         return ResponseEntity.ok(defaults);

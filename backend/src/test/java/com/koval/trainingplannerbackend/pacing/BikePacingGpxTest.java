@@ -58,7 +58,7 @@ class BikePacingGpxTest {
     private PacingResult runPacing(List<CourseSegment> course, String bikeType) {
         AthleteProfile baseProfile = new AthleteProfile(
                 FTP, WEIGHT_KG, null, null,
-                0.5, "MIXED", 20.0, 0.0,
+                0.5, "MIXED",
                 null, null, null, null, bikeType
         );
 
@@ -66,7 +66,7 @@ class BikePacingGpxTest {
 
         AthleteProfile profile = new AthleteProfile(
                 FTP, WEIGHT_KG, null, null,
-                0.5, "MIXED", 20.0, 0.0,
+                0.5, "MIXED",
                 target.power(), null, null, null, bikeType
         );
 
