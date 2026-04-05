@@ -188,11 +188,25 @@
   font-weight: 600;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
+  .blocks-section {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .blocks-table,
+  .blocks-table--run-swim {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .blocks-header,
-  .blocks-row {
-    grid-template-columns: 2fr 1fr 1fr 1fr;
-    font-size: 10px;
-    gap: 4px;
+  .blocks-row,
+  .blocks-table--run-swim .blocks-header,
+  .blocks-table--run-swim .blocks-row,
+  .zone-blocks-header.zb-cycling,
+  .zone-block-row.zb-cycling,
+  .zone-blocks-header.zb-run-swim,
+  .zone-block-row.zb-run-swim {
+    min-width: 600px;
   }
 }

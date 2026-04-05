@@ -10,6 +10,7 @@
   height: 100%;
   width: 100%;
   background: var(--bg-color);
+  position: relative;
 }
 
 /* ─── Left sidebar ───────────────────────────────────────────── */
@@ -20,6 +21,14 @@
   flex-direction: column;
   box-shadow: 1px 0 0 var(--glass-border);
   overflow: hidden;
+  transition: width 0.3s var(--ease-spring-gentle), opacity 0.3s;
+}
+
+.history-sidebar.desktop-collapsed {
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: none;
 }
 
 .sidebar-header {
@@ -408,6 +417,40 @@
   cursor: not-allowed;
 }
 
+/* ── Sidebar collapse toggle (desktop) ─────────────────────────────── */
+.sidebar-toggle {
+  position: absolute;
+  left: 300px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 24px;
+  height: 48px;
+  background: var(--surface-card, var(--glass-bg));
+  border: 1px solid var(--glass-border);
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: left 0.3s var(--ease-spring-gentle), background 0.15s, color 0.15s;
+}
+
+.sidebar-toggle:hover {
+  background: var(--surface-hover);
+  color: var(--text-color);
+}
+
+.sidebar-toggle.collapsed {
+  left: 0;
+}
+
+/* ── Visibility helpers ────────────────────────────────────────────── */
+.desktop-only { display: flex; }
+.mobile-only { display: none; }
+
 /* ── List toggle button (mobile) ───────────────────────────────────── */
 .list-toggle-btn {
   background: var(--overlay-8);
@@ -441,6 +484,9 @@
     overflow: hidden;
   }
 
+  .desktop-only { display: none; }
+  .mobile-only { display: flex; }
+
   .history-sidebar {
     width: 100%;
     max-height: 40vh;
@@ -448,6 +494,12 @@
     border-bottom: 1px solid var(--glass-border);
     transition: max-height 0.3s ease, border-bottom 0.3s ease;
     flex-shrink: 0;
+  }
+
+  .history-sidebar.desktop-collapsed {
+    width: 100%;
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .history-sidebar.collapsed {

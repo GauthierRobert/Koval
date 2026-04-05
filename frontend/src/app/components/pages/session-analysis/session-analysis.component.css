@@ -1,8 +1,14 @@
+:host {
+  display: block;
+  overflow-x: hidden;
+}
+
 .analysis-page {
   padding: var(--page-padding);
   display: flex;
   flex-direction: column;
   gap: 20px;
+  max-width: 100%;
 }
 
 .header-stats-row {
@@ -671,6 +677,34 @@
   }
 }
 
+@media (max-width: 600px) {
+  .chart-section {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .chart-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .chart-controls {
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .smooth-control {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .smooth-slider {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
 @media (max-width: 480px) {
   .analysis-page {
     padding: var(--space-md);
@@ -712,10 +746,45 @@
     font-size: 10px;
     gap: 4px;
   }
+}
 
-  .chart-controls {
-    flex-wrap: wrap;
-    gap: 8px;
+/* ── Mobile landscape: chart takes over ─────────────────── */
+@media (orientation: landscape) and (max-height: 500px) {
+  :host {
+    overflow: hidden;
+  }
+
+  .analysis-page {
+    padding: 0;
+    gap: 0;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .analysis-page > app-session-stats-header,
+  .analysis-page > app-zone-distribution-panel,
+  .analysis-page > app-block-breakdown-table {
+    display: none;
+  }
+
+  .chart-section {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    border-radius: 0;
+    margin: 0;
+    padding: 8px 12px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chart-header-row {
+    flex-shrink: 0;
+  }
+
+  .chart-header-row .section-label {
+    display: none;
   }
 }
 

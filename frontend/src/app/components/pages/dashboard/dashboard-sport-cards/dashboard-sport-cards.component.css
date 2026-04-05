@@ -4,6 +4,7 @@
 
 /* ─── Week TSS bar ──────────────────────────────────────────── */
 .week-tss-bar {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -22,6 +23,7 @@
 
 /* ─── Sport cards ───────────────────────────────────────────── */
 .sport-cards {
+  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;

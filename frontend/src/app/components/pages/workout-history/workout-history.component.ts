@@ -45,6 +45,11 @@ export class WorkoutHistoryComponent implements OnInit {
 
     sessions$ = this.historyService.sessions$;
     mobileListOpen = true;
+    sidebarCollapsed = false;
+
+    toggleSidebar(): void {
+      this.sidebarCollapsed = !this.sidebarCollapsed;
+    }
 
     toggleMobileList(): void {
       this.mobileListOpen = !this.mobileListOpen;

@@ -6,7 +6,7 @@
     </div>
     <div class="clubs-grid">
       @for (item of clubs; track trackByClubId($index, item); let i = $index) {
-        <div class="club-card glass" (click)="navigateToClub(item.club.id)"
+        <div class="club-card glass glow-card" (click)="navigateToClub(item.club.id)"
           [style.border-left-color]="getClubColor(i)">
 
           <div class="card-body">

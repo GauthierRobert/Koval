@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ElementRef, Input, OnChanges, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, ViewChild} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FitRecord} from '../../../../services/metrics.service';
 import {BlockSummary} from '../../../../services/workout-execution.service';
@@ -65,7 +65,7 @@ import {ZoneBlock} from '../../../../services/zone';
         .chart-toggles { display: flex; gap: 8px; padding: 0 4px; flex-wrap: wrap; }
         .toggle-btn {
             display: flex; align-items: center; gap: 5px;
-            background: rgba(255,255,255,0.04);
+            background: var(--overlay-5);
             border: none;
             color: var(--text-muted);
             padding: 4px 10px; border-radius: 6px;
@@ -73,15 +73,15 @@ import {ZoneBlock} from '../../../../services/zone';
             cursor: pointer; transition: all 0.15s;
         }
         .toggle-btn.active {
-            background: rgba(255,255,255,0.08);
-            color: #fff;
+            background: var(--overlay-10, rgba(0,0,0,0.1));
+            color: var(--text-color);
         }
         .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
         .dot.power { background: var(--accent-color, #ff9d00); }
         .dot.hr { background: #e74c3c; }
         .dot.cad { background: #3b82f6; }
         .dot.blocks { background: #2ecc71; }
-        .toggle-sep { width: 1px; height: 16px; background: rgba(255,255,255,0.1); margin: 0 2px; }
+        .toggle-sep { width: 1px; height: 16px; background: var(--overlay-10); margin: 0 2px; }
         .charts-stack { position: relative; display: flex; flex-direction: column; gap: 4px; }
         .mc { width: 100%; display: block; cursor: crosshair; }
         .primary-h { height: 150px; }
@@ -91,19 +91,28 @@ import {ZoneBlock} from '../../../../services/zone';
         .xaxis-h { height: 22px; cursor: default; }
         .tt {
             position: absolute; z-index: 10; pointer-events: none;
-            background: rgba(32, 34, 52, 0.97);
-            border: 1px solid rgba(255,255,255,0.22);
+            background: var(--surface-card, rgba(32, 34, 52, 0.97));
+            border: 1px solid var(--glass-border, rgba(255,255,255,0.22));
             border-radius: 8px; padding: 8px 10px;
             min-width: 120px; white-space: nowrap;
         }
-        .tt-hdr { color: rgba(255,255,255,0.8); font: 9px monospace; }
-        .tt-sep { height: 1px; background: rgba(255,255,255,0.15); margin: 5px 0; }
+        .tt-hdr { color: var(--text-80); font: 9px monospace; }
+        .tt-sep { height: 1px; background: var(--overlay-15); margin: 5px 0; }
         .tt-row { display: flex; justify-content: space-between; gap: 16px; line-height: 17px; }
-        .tt-lbl { color: rgba(255,255,255,0.65); font: 9px monospace; }
+        .tt-lbl { color: var(--text-muted); font: 9px monospace; }
         .tt-val { font: bold 10px monospace; text-align: right; }
+
+        @media (orientation: landscape) and (max-height: 500px) {
+            .primary-h { height: 40vh; }
+            .hr-h { height: 25vh; }
+            .cad-h { height: 25vh; }
+            .elev-h { height: 20vh; }
+            .chart-toggles { gap: 4px; }
+            .toggle-btn { padding: 2px 8px; font-size: 9px; }
+        }
     `],
 })
-export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
+export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, OnDestroy {
     @Input() records: FitRecord[] = [];
     @Input() ftp: number | null = null;
     @Input() sportType = 'CYCLING';
@@ -133,10 +142,67 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
     private ready = false;
     private readonly ML = 48;
     private readonly MR = 48;
+    private resizeObserver: ResizeObserver | null = null;
+
+    // Canvas-safe colors resolved from CSS variables
+    private _accentRgb: [number, number, number] = [255, 157, 0];
+    private _accentHex = 'rgb(255,157,0)';
+    private _textAlpha40 = 'rgba(200,200,200,0.4)';
+    private _textAlpha30 = 'rgba(200,200,200,0.3)';
+    private _gridAlpha15 = 'rgba(200,200,200,0.15)';
+    private _gridAlpha12 = 'rgba(200,200,200,0.12)';
+    private _crosshairAlpha = 'rgba(200,200,200,0.25)';
+    private _dotStroke = 'rgba(255,255,255,0.8)';
 
     get isCycling(): boolean { return this.sportType === 'CYCLING'; }
     get primaryLabel(): string { return this.isCycling ? 'Power' : 'Speed'; }
     private get cadUnit(): string { return this.sportType === 'RUNNING' ? 'spm' : 'rpm'; }
+
+    /** Convert any CSS color (including oklch) to [r, g, b]. */
+    private cssToRgb(css: string): [number, number, number] {
+        const ctx = document.createElement('canvas').getContext('2d')!;
+        ctx.fillStyle = css;
+        const out = ctx.fillStyle; // '#rrggbb' or 'rgba(r, g, b, a)'
+        if (out.startsWith('#')) {
+            return [
+                parseInt(out.slice(1, 3), 16),
+                parseInt(out.slice(3, 5), 16),
+                parseInt(out.slice(5, 7), 16),
+            ];
+        }
+        const m = out.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+        return m ? [+m[1], +m[2], +m[3]] : [255, 157, 0];
+    }
+
+    /** Build canvas-safe theme colors from CSS custom properties. */
+    private resolveThemeColors(): void {
+        const s = getComputedStyle(document.documentElement);
+        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+        const raw = s.getPropertyValue('--accent-color').trim();
+        this._accentRgb = raw ? this.cssToRgb(raw) : [255, 157, 0];
+        this._accentHex = `rgb(${this._accentRgb.join(',')})`;
+        if (isDark) {
+            this._textAlpha40 = 'rgba(255,255,255,0.4)';
+            this._textAlpha30 = 'rgba(255,255,255,0.3)';
+            this._gridAlpha15 = 'rgba(255,255,255,0.15)';
+            this._gridAlpha12 = 'rgba(255,255,255,0.12)';
+            this._crosshairAlpha = 'rgba(255,255,255,0.25)';
+            this._dotStroke = 'rgba(255,255,255,0.8)';
+        } else {
+            this._textAlpha40 = 'rgba(0,0,0,0.45)';
+            this._textAlpha30 = 'rgba(0,0,0,0.35)';
+            this._gridAlpha15 = 'rgba(0,0,0,0.12)';
+            this._gridAlpha12 = 'rgba(0,0,0,0.08)';
+            this._crosshairAlpha = 'rgba(0,0,0,0.2)';
+            this._dotStroke = 'rgba(0,0,0,0.6)';
+        }
+    }
+
+    /** Return the accent color with fractional alpha (0–1). */
+    private accentAlpha(a: number): string {
+        const [r, g, b] = this._accentRgb;
+        return `rgba(${r},${g},${b},${a})`;
+    }
 
     private getCad(r: FitRecord): number {
         return this.sportType === 'RUNNING' ? r.cadence * 2 : r.cadence;
@@ -149,6 +215,14 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
     ngAfterViewInit(): void {
         this.ready = true;
         this.drawAll();
+        this.resizeObserver = new ResizeObserver(() => {
+            if (this.ready) this.drawAll();
+        });
+        this.resizeObserver.observe(this.stackRef.nativeElement);
+    }
+
+    ngOnDestroy(): void {
+        this.resizeObserver?.disconnect();
     }
 
     ngOnChanges(): void {
@@ -236,7 +310,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
     private drawCrosshair(ctx: CanvasRenderingContext2D, x: number, top: number, bottom: number): void {
         if (this.hoverIdx === null) return;
         ctx.save();
-        ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+        ctx.strokeStyle = this._crosshairAlpha;
         ctx.lineWidth = 1;
         ctx.setLineDash([]);
         ctx.beginPath();
@@ -251,7 +325,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         ctx.arc(x, y, 4, 0, Math.PI * 2);
         ctx.fillStyle = color;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+        ctx.strokeStyle = this._dotStroke;
         ctx.lineWidth = 1.5;
         ctx.stroke();
     }
@@ -260,7 +334,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         if (!this.blockSummaries.length || this.showBlocks) return;
         ctx.save();
         ctx.setLineDash([4, 4]);
-        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.strokeStyle = this._gridAlpha12;
         ctx.lineWidth = 1;
         let acc = 0;
         for (let i = 0; i < this.blockSummaries.length - 1; i++) {
@@ -280,6 +354,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
     // ── Draw All ─────────────────────────────────────────────────────────
 
     drawAll(): void {
+        this.resolveThemeColors();
         this.drawPrimary();
         this.drawHR();
         this.drawCadence();
@@ -294,7 +369,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         if (!s) return;
         const { ctx, W, H, cW, xOf, xOfT, mT, mB } = s;
         const mL = this.ML, mR = this.MR;
-        const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#ff9d00';
+        const accent = this._accentHex;
         const n = this.records.length;
         const t0 = this.records[0].timestamp;
         const totalSec = this.records[n - 1].timestamp - t0 || n;
@@ -320,9 +395,11 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
                 const x1 = xOf(b.startIndex), x2 = xOf(b.endIndex);
                 const val = this.isCycling ? b.avgPower : b.avgSpeed;
                 const y = yOf(val);
-                ctx.fillStyle = b.color + '40';
+                const [br, bg, bb] = this.cssToRgb(b.color);
+                const hb = `rgb(${br},${bg},${bb})`;
+                ctx.fillStyle = `rgba(${br},${bg},${bb},0.25)`;
                 ctx.fillRect(x1, y, x2 - x1, bottom - y);
-                ctx.strokeStyle = b.color;
+                ctx.strokeStyle = hb;
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.moveTo(x1, y); ctx.lineTo(x2, y);
@@ -339,12 +416,13 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
                 if (b.targetPower > 0) {
                     const yt = yOf(b.targetPower);
                     ctx.save(); ctx.setLineDash([3, 3]);
-                    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1;
+                    ctx.strokeStyle = this._gridAlpha15; ctx.lineWidth = 1;
                     ctx.beginPath(); ctx.moveTo(x1, yt); ctx.lineTo(x2, yt); ctx.stroke();
                     ctx.restore();
                 }
-                const bColor = this.blockColors[bi] || accent;
-                ctx.fillStyle = bColor + '40';
+                const [cr, cg, cb] = this.cssToRgb(this.blockColors[bi] || accent);
+                const bColor = `rgb(${cr},${cg},${cb})`;
+                ctx.fillStyle = `rgba(${cr},${cg},${cb},0.25)`;
                 ctx.fillRect(x1, y, x2 - x1, bottom - y);
                 ctx.strokeStyle = bColor; ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke();
@@ -356,10 +434,10 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
                 if (this.ftp) {
                     const fy = yOf(this.ftp);
                     ctx.save(); ctx.setLineDash([4, 4]);
-                    ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1;
+                    ctx.strokeStyle = this._gridAlpha15; ctx.lineWidth = 1;
                     ctx.beginPath(); ctx.moveTo(mL, fy); ctx.lineTo(W - mR, fy); ctx.stroke();
                     ctx.restore();
-                    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                    ctx.fillStyle = this._textAlpha30;
                     ctx.font = '9px monospace'; ctx.textAlign = 'left';
                     ctx.fillText('FTP', mL + 2, fy - 3);
                 }
@@ -370,7 +448,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
                     ctx.lineTo(xOf(n - 1), bottom);
                     ctx.closePath();
                     const g = ctx.createLinearGradient(0, top, 0, bottom);
-                    g.addColorStop(0, accent + '80'); g.addColorStop(1, accent + '08');
+                    g.addColorStop(0, this.accentAlpha(0.5)); g.addColorStop(1, this.accentAlpha(0.03));
                     ctx.fillStyle = g; ctx.fill();
                     ctx.beginPath();
                     ctx.moveTo(xOf(0), yOf(sm[0]));
@@ -387,7 +465,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
                     ctx.lineTo(xOf(n - 1), bottom);
                     ctx.closePath();
                     const g = ctx.createLinearGradient(0, top, 0, bottom);
-                    g.addColorStop(0, accent + '80'); g.addColorStop(1, accent + '08');
+                    g.addColorStop(0, this.accentAlpha(0.5)); g.addColorStop(1, this.accentAlpha(0.03));
                     ctx.fillStyle = g; ctx.fill();
                     ctx.beginPath();
                     ctx.moveTo(xOf(0), yOf(sm[0]));
@@ -398,7 +476,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         }
 
         // Y-axis labels
-        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.fillStyle = this._textAlpha40;
         ctx.font = '9px monospace';
         ctx.textAlign = 'right';
         if (this.isCycling) {
@@ -618,7 +696,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         const cW = W - mL - mR;
 
         const tick = this.pickTickInterval(totalSec);
-        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.fillStyle = this._textAlpha40;
         ctx.font = '9px monospace';
         ctx.textAlign = 'center';
         for (let s = 0; s <= totalSec; s += tick) {
@@ -630,7 +708,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         if (this.hoverIdx !== null) {
             const hx = mL + ((this.records[this.hoverIdx].timestamp - t0) / totalSec) * cW;
             ctx.save();
-            ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+            ctx.strokeStyle = this._crosshairAlpha;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(hx, 0); ctx.lineTo(hx, 4);
@@ -689,7 +767,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit {
         if (this.hoverIdx === null) { this.ttRows = []; return; }
         const rec = this.records[this.hoverIdx];
         const t0 = this.records[0].timestamp;
-        const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#ff9d00';
+        const accent = this._accentHex;
 
         // Block context
         let blockLabel: string | null = null;
