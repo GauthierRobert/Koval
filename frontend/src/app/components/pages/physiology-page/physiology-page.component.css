@@ -347,6 +347,10 @@
 
 /* ── Responsive ────────────────────────────────────────── */
 @media (max-width: 768px) {
+  .physiology-page {
+    max-width: 100%;
+  }
+
   .phys-stats {
     flex-direction: column;
   }

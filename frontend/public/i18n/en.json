@@ -1019,7 +1019,8 @@
     "NO_PEAK_MSG": "Adjust projection to find a peak form window.",
     "HEADER_TITLE": "PERFORMANCE",
     "HEADER_TITLE_DIM": "MANAGEMENT",
-    "HEADER_SUBTITLE": "Training load, fitness & form tracking"
+    "HEADER_SUBTITLE": "Training load, fitness & form tracking",
+    "MOBILE_CHART_HINT": "Opens in landscape view"
   },
   "PHYSIOLOGY": {
     "PAGE_TITLE": "PHYSIOLOGY",

@@ -1019,7 +1019,8 @@
     "NO_PEAK_MSG": "Ajuste la projection pour trouver une fenêtre de forme optimale.",
     "HEADER_TITLE": "GESTION DE LA",
     "HEADER_TITLE_DIM": "PERFORMANCE",
-    "HEADER_SUBTITLE": "Charge d'entraînement, forme & suivi de la condition"
+    "HEADER_SUBTITLE": "Charge d'entraînement, forme & suivi de la condition",
+    "MOBILE_CHART_HINT": "S'ouvre en vue paysage"
   },
   "PHYSIOLOGY": {
     "PAGE_TITLE": "PHYSIOLOGIE",

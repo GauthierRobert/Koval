@@ -40,8 +40,8 @@ function getSportColor(sport?: string): string {
     `,
     styles: [`
         :host { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-        .pmc-chart-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-        .pmc-canvas { width: 100%; flex: 1; min-height: 320px; display: block; cursor: crosshair; }
+        .pmc-chart-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; touch-action: none; }
+        .pmc-canvas { width: 100%; flex: 1; min-height: 320px; display: block; cursor: crosshair; touch-action: none; }
     `],
 })
 export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
@@ -70,9 +70,22 @@ export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
     private readonly MIN_VISIBLE_DAYS = 7;
     private readonly MAX_VISIBLE_DAYS = 365;
 
+    // Touch state
+    private isTouchDragging = false;
+    private touchStartX = 0;
+    private touchStartViewStartDate = '';
+    private touchStartViewEndDate = '';
+    private isPinching = false;
+    private pinchStartDist = 0;
+    private pinchStartSpan = 0;
+    private pinchMidX = 0;
+
     // Bound listeners for cleanup
     private wheelHandler = (e: WheelEvent) => this.onWheel(e);
     private mouseUpHandler = (e: MouseEvent) => this.onMouseUp(e);
+    private touchStartHandler = (e: TouchEvent) => this.onTouchStart(e);
+    private touchMoveHandler = (e: TouchEvent) => this.onTouchMove(e);
+    private touchEndHandler = (e: TouchEvent) => this.onTouchEnd(e);
 
     // ── Date helpers ──────────────────────────────────────────────────────
     private dateToDays(date: string): number {
@@ -101,6 +114,9 @@ export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
         const canvas = this.canvasRef?.nativeElement;
         if (canvas) {
             canvas.addEventListener('wheel', this.wheelHandler, { passive: false });
+            canvas.addEventListener('touchstart', this.touchStartHandler, { passive: false });
+            canvas.addEventListener('touchmove', this.touchMoveHandler, { passive: false });
+            canvas.addEventListener('touchend', this.touchEndHandler);
         }
         document.addEventListener('mouseup', this.mouseUpHandler);
         this.draw();
@@ -128,6 +144,9 @@ export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
         const canvas = this.canvasRef?.nativeElement;
         if (canvas) {
             canvas.removeEventListener('wheel', this.wheelHandler);
+            canvas.removeEventListener('touchstart', this.touchStartHandler);
+            canvas.removeEventListener('touchmove', this.touchMoveHandler);
+            canvas.removeEventListener('touchend', this.touchEndHandler);
         }
         document.removeEventListener('mouseup', this.mouseUpHandler);
     }
@@ -216,6 +235,123 @@ export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
             this.dragMoved = false;
             const canvas = this.canvasRef?.nativeElement;
             if (canvas) canvas.style.cursor = 'crosshair';
+        }
+    }
+
+    // ── Touch handlers ───────────────────────────────────────────────────
+    private onTouchStart(event: TouchEvent): void {
+        if (!this.viewStartDate) return;
+        if (event.touches.length === 2) {
+            // Pinch zoom start
+            event.preventDefault();
+            this.isPinching = true;
+            this.isTouchDragging = false;
+            const t = event.touches;
+            this.pinchStartDist = Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
+            this.pinchStartSpan = this.dateToDays(this.viewEndDate) - this.dateToDays(this.viewStartDate);
+            this.pinchMidX = (t[0].clientX + t[1].clientX) / 2;
+            this.touchStartViewStartDate = this.viewStartDate;
+            this.touchStartViewEndDate = this.viewEndDate;
+        } else if (event.touches.length === 1) {
+            // Single finger pan start
+            event.preventDefault();
+            this.isTouchDragging = false;
+            this.isPinching = false;
+            this.touchStartX = event.touches[0].clientX;
+            this.touchStartViewStartDate = this.viewStartDate;
+            this.touchStartViewEndDate = this.viewEndDate;
+        }
+    }
+
+    private onTouchMove(event: TouchEvent): void {
+        if (!this.viewStartDate) return;
+        const canvas = this.canvasRef?.nativeElement;
+        if (!canvas) return;
+
+        if (this.isPinching && event.touches.length === 2) {
+            // Pinch zoom
+            event.preventDefault();
+            const t = event.touches;
+            const dist = Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
+            const scale = this.pinchStartDist / dist;
+            let newSpan = Math.round(this.pinchStartSpan * scale);
+            newSpan = Math.min(this.MAX_VISIBLE_DAYS, Math.max(this.MIN_VISIBLE_DAYS, newSpan));
+
+            const rect = canvas.getBoundingClientRect();
+            const cursorFrac = (this.pinchMidX - rect.left) / rect.width;
+            const origStart = this.dateToDays(this.touchStartViewStartDate);
+            const origEnd = this.dateToDays(this.touchStartViewEndDate);
+            const anchorD = origStart + cursorFrac * (origEnd - origStart);
+
+            const newStart = Math.round(anchorD - cursorFrac * newSpan);
+            this.viewStartDate = this.daysToDate(newStart);
+            this.viewEndDate = this.daysToDate(newStart + newSpan);
+            this.emitViewRange();
+            this.draw();
+            return;
+        }
+
+        if (event.touches.length === 1 && !this.isPinching) {
+            // Single finger pan + tooltip
+            event.preventDefault();
+            const touch = event.touches[0];
+            const dx = touch.clientX - this.touchStartX;
+
+            if (!this.isTouchDragging && Math.abs(dx) > 5) {
+                this.isTouchDragging = true;
+                this.hoverIdx = null;
+            }
+
+            if (this.isTouchDragging) {
+                const rect = canvas.getBoundingClientRect();
+                const span = this.dateToDays(this.touchStartViewEndDate) - this.dateToDays(this.touchStartViewStartDate);
+                const daysShift = Math.round(-(dx / rect.width) * span);
+                this.viewStartDate = this.addDaysToDate(this.touchStartViewStartDate, daysShift);
+                this.viewEndDate = this.addDaysToDate(this.touchStartViewEndDate, daysShift);
+                this.emitViewRange();
+                this.draw();
+            } else {
+                // Show tooltip at touch position
+                this.updateHoverFromClientX(touch.clientX, canvas);
+            }
+        }
+    }
+
+    private onTouchEnd(event: TouchEvent): void {
+        if (event.touches.length < 2) this.isPinching = false;
+        if (event.touches.length === 0) {
+            this.isTouchDragging = false;
+            this.hoverIdx = null;
+            this.draw();
+        }
+    }
+
+    private updateHoverFromClientX(clientX: number, canvas: HTMLCanvasElement): void {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const mouseX = (clientX - rect.left) * scaleX;
+
+        const vis = this.visibleIndices;
+        if (!vis) return;
+
+        const points = this.data!;
+        const mL = this.ML;
+        const cW = canvas.width - this.ML - this.MR;
+        const viewStartDays = this.dateToDays(this.viewStartDate);
+        const viewSpan = this.dateToDays(this.viewEndDate) - viewStartDays;
+        if (viewSpan <= 0) return;
+
+        const cursorDays = viewStartDays + ((mouseX - mL) / cW) * viewSpan;
+        let bestIdx = vis.start;
+        let bestDist = Math.abs(this.dateToDays(points[vis.start].date) - cursorDays);
+        for (let i = vis.start + 1; i <= vis.end; i++) {
+            const dist = Math.abs(this.dateToDays(points[i].date) - cursorDays);
+            if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+        }
+
+        if (bestIdx !== this.hoverIdx) {
+            this.hoverIdx = bestIdx;
+            this.draw();
         }
     }
 
