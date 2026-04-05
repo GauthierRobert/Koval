@@ -60,7 +60,7 @@ export class AuthCallbackComponent implements OnInit {
                     const returnTo = localStorage.getItem('oauth_return_to');
                     if (returnTo) {
                         localStorage.removeItem('oauth_return_to');
-                        const token = localStorage.getItem('auth_token');
+                        const token = localStorage.getItem('token');
                         const separator = returnTo.includes('?') ? '&' : '?';
                         window.location.href = returnTo + separator + 'token=' + encodeURIComponent(token || '');
                         return;
