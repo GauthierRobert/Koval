@@ -21,7 +21,7 @@
   "dataGroups": [
     {
       "name": "api-freshness",
-      "urls": ["/api/auth/**", "/api/notifications/**", "/api/clubs/**", "/api/coach/**", "/api/trainings/**", "/api/groups/**"],
+      "urls": ["/api/auth/**", "/api/notifications/**", "/api/clubs/**", "/api/coach/**", "/api/trainings", "/api/trainings/**", "/api/groups/**"],
       "cacheConfig": {
         "maxSize": 50,
         "maxAge": "0u",
