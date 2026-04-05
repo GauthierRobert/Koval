@@ -166,39 +166,6 @@
   grid-column: 1 / -1;
 }
 
-/* Buttons */
-.btn-primary {
-  background: var(--accent-color, #ff9d00);
-  color: #000;
-  border: none;
-  padding: 0.5rem 1.25rem;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  font-size: 0.8rem;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: opacity 0.15s;
-  white-space: nowrap;
-}
-
-.btn-primary:hover { opacity: 0.85; }
-.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.btn-secondary {
-  background: var(--glass-border);
-  color: var(--text-70);
-  border: 1px solid var(--overlay-15);
-  padding: 0.5rem 1.25rem;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  font-size: 0.8rem;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.btn-secondary:hover { background: var(--overlay-12); }
-
 .form-input {
   background: var(--overlay-5);
   border: 1px solid var(--overlay-12);

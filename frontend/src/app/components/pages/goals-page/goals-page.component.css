@@ -684,38 +684,6 @@
   color: #a78bfa;
 }
 
-/* ── Shared buttons ───────────────────────────────────────────────── */
-.btn-primary {
-  background: var(--accent-color, #ff9d00);
-  color: #000;
-  border: none;
-  padding: 0.5rem 1.25rem;
-  border-radius: var(--radius-sm, 6px);
-  font-weight: 700;
-  font-size: 0.8rem;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-
-.btn-primary:hover { opacity: 0.85; }
-.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.btn-secondary {
-  background: var(--glass-border);
-  color: var(--text-70);
-  border: 1px solid var(--overlay-15);
-  padding: 0.5rem 1.25rem;
-  border-radius: var(--radius-sm, 6px);
-  font-weight: 600;
-  font-size: 0.8rem;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.btn-secondary:hover { background: var(--overlay-12); }
-
 .btn-sm {
   background: var(--glass-border);
   border: none;
