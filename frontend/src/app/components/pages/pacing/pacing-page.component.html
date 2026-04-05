@@ -84,7 +84,7 @@
 
       <!-- ▌ GPX UPLOAD — span 6 (conditional) -->
       @if ((needsBike() || needsRun()) && !linkedRace) {
-        <div class="bento-card glow-card gpx-card" [class.bento-12]="needsBike() && needsRun()" [class.bento-6]="!(needsBike() && needsRun())">
+        <div class="bento-card glow-card gpx-card bento-6">
           <span class="card-label">{{ 'PACING.SECTION_GPX_UPLOAD' | translate: { default: 'COURSE GPX' } }}</span>
           <div class="gpx-grid">
             @if (needsBike()) {
@@ -114,7 +114,7 @@
       }
 
       <!-- ▌ RACE TARGETS — span 6 -->
-      <div class="bento-card glow-card targets-card" [class.bento-6]="(needsBike() || needsRun()) && !linkedRace" [class.bento-8]="!((needsBike() || needsRun()) && !linkedRace)">
+      <div class="bento-card bento-6 glow-card targets-card">
         <div class="card-label-row">
           <span class="card-label">{{ 'PACING.SECTION_RACE_TARGETS' | translate }}</span>
           @if (discipline === 'TRIATHLON') {
@@ -175,27 +175,8 @@
         </div>
       </div>
 
-      <!-- ▌ ENVIRONMENT — span 4 -->
-      @if (needsBike() || needsRun()) {
-        <div class="bento-card bento-4 glow-card env-card">
-          <span class="card-label">{{ 'PACING.SECTION_ENVIRONMENT' | translate }}</span>
-          <div class="env-fields">
-            <div class="pf-field">
-              <label>{{ 'PACING.FIELD_TEMPERATURE_LABEL' | translate }}</label>
-              <input type="number" [(ngModel)]="profile.temperature" placeholder="20" min="-10" max="50" />
-            </div>
-            @if (needsBike()) {
-              <div class="pf-field">
-                <label>{{ 'PACING.FIELD_WIND_SPEED_LABEL' | translate }}</label>
-                <input type="number" [(ngModel)]="profile.windSpeed" placeholder="0" min="0" max="30" step="0.5" />
-              </div>
-            }
-          </div>
-        </div>
-      }
-
-      <!-- ▌ NUTRITION — span 4 -->
-      <div class="bento-card bento-4 glow-card nutrition-card">
+      <!-- ▌ NUTRITION — span 6 -->
+      <div class="bento-card bento-6 glow-card nutrition-card">
         <span class="card-label">{{ 'PACING.SECTION_NUTRITION' | translate }}</span>
         <div class="pf-field">
           <label>{{ 'PACING.FIELD_NUTRITION_LABEL' | translate }}</label>
@@ -208,8 +189,8 @@
         </div>
       </div>
 
-      <!-- ▌ GENERATE — span 4 -->
-      <div class="bento-card bento-4 generate-card" [class.ai-glow]="(loading$ | async)">
+      <!-- ▌ GENERATE — span 6 -->
+      <div class="bento-card bento-6 generate-card" [class.ai-glow]="(loading$ | async)">
         @if (localError$ | async; as err) {
           <div class="gen-error">{{ err }}</div>
         }
@@ -252,8 +233,6 @@
       [computedPaceDisplay]="computedPaceDisplay()"
       [swimCssSec]="profile.swimCssSec"
       [bikeType]="profile.bikeType"
-      [temperature]="profile.temperature"
-      [windSpeed]="profile.windSpeed"
       [activeTab]="activeTab"
       [availableTabs]="getAvailableTabs(plan)"
       [needsBike]="needsBike()"

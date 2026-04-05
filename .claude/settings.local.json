@@ -84,7 +84,9 @@
       "Bash(npm ls:*)",
       "Bash(git add:*)",
       "Bash(git commit -m ':*)",
-      "Bash(mvn dependency:build-classpath -DincludeArtifactIds=spring-context -q)"
+      "Bash(mvn dependency:build-classpath -DincludeArtifactIds=spring-context -q)",
+      "Read(//c/Users/gauth/.claude/**)",
+      "Bash(curl:*)"
     ]
   }
 }

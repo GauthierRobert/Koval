@@ -12,9 +12,9 @@
         (rpeChanged)="selectRpe(session, $event)">
       </app-session-stats-header>
 
-      <!-- FIT timeseries chart -->
+      <!-- FIT timeseries chart (desktop) -->
       @if (fitState$ | async; as fit) {
-        <div class="chart-section glass">
+        <div class="chart-section glass desktop-only">
           <div class="chart-header-row">
             <div class="section-label">{{ 'SESSION_ANALYSIS.CHART_FIT_TIME_SERIES' | translate }}</div>
             <div class="chart-controls">
@@ -69,6 +69,22 @@
           }
         </div>
 
+        <!-- Mobile chart button -->
+        @if (!fit.loading && !fit.error && fit.records.length > 0) {
+          <div class="mobile-chart-cta mobile-only">
+            <button class="open-chart-btn" (click)="mobileChartOpen = true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+              {{ 'SESSION_ANALYSIS.CHART_FIT_TIME_SERIES' | translate }}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/>
+              </svg>
+            </button>
+            <p class="open-chart-hint">{{ 'SESSION_ANALYSIS.MOBILE_CHART_HINT' | translate }}</p>
+          </div>
+        }
+
         <!-- Zone Distribution -->
         @if (!fit.loading && !fit.error && fit.records.length > 0) {
           @if (zoneDistribution$ | async; as zones) {
@@ -101,4 +117,60 @@
       }
 
   </div>
+
+  <!-- Mobile fullscreen landscape chart overlay -->
+  @if (mobileChartOpen) {
+    @if (fitState$ | async; as fit) {
+      <div class="mobile-chart-overlay">
+        <button class="mobile-chart-close" (click)="mobileChartOpen = false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+        <div class="mobile-chart-content">
+          <div class="chart-controls">
+            @if (blockView === 'interpolated' || !session.blockSummaries.length) {
+              @if ((zoneBlocks$ | async)?.length) {
+                <div class="smooth-control">
+                  <span class="smooth-label">{{ 'SESSION_ANALYSIS.SMOOTH_LABEL' | translate }}</span>
+                  <input type="range" min="1" max="30" step="1"
+                    class="smooth-slider"
+                    [value]="smoothFactor$.value"
+                    (input)="smoothFactor$.next(+$any($event.target).value)" />
+                  <span class="smooth-value">{{ smoothFactor$.value }}</span>
+                </div>
+              }
+            }
+            @if (session.blockSummaries.length && (zoneBlocks$ | async)?.length) {
+              <div class="view-toggle">
+                <button class="toggle-pill" [class.active]="blockView === 'planned'" (click)="blockView = 'planned'">{{ 'SESSION_ANALYSIS.TOGGLE_PLANNED' | translate }}</button>
+                <button class="toggle-pill" [class.active]="blockView === 'interpolated'" (click)="blockView = 'interpolated'">{{ 'SESSION_ANALYSIS.TOGGLE_INTERPOLATED' | translate }}</button>
+              </div>
+            }
+          </div>
+          <app-fit-timeseries-chart [records]="fit.records"
+            [ftp]="ftp" [sportType]="session.sportType" [blockSummaries]="session.blockSummaries"
+            [blockColors]="(blockColors$ | async) ?? []"
+            [zoneBlocks]="(blockView === 'interpolated' ? (zoneBlocks$ | async) : null) ?? []">
+          </app-fit-timeseries-chart>
+
+          <!-- Zone steps in landscape overlay -->
+          @if (session.blockSummaries.length || (zoneBlocks$ | async)?.length) {
+            <app-block-breakdown-table
+              [blockView]="blockView"
+              [plannedBlocks]="(filteredPlannedBlocks$ | async) ?? []"
+              [zoneBlocks]="(filteredZoneBlocks$ | async) ?? []"
+              [availableZoneChips]="(availableZoneChips$ | async) ?? []"
+              [zoneFilters]="zoneFilters$.value"
+              [ftp]="ftp"
+              [sportType]="session.sportType"
+              (blockViewChange)="blockView = $event"
+              (toggleZoneFilter)="toggleZoneFilter($event)"
+              (clearZoneFilters)="clearZoneFilters()">
+            </app-block-breakdown-table>
+          }
+        </div>
+      </div>
+    }
+  }
 }

@@ -109,7 +109,7 @@ class BikePacingService {
      */
     List<PacingSegment> generateSegments(List<CourseSegment> course, AthleteProfile profile) {
         int ftp = profile.ftp();
-        BikeEnvironment env = new BikeEnvironment(profile.weightKg(), profile.windSpeed(), getBikeAero(profile.bikeType()));
+        BikeEnvironment env = new BikeEnvironment(profile.weightKg(), 0.0, getBikeAero(profile.bikeType()));
         double gtp = profile.targetPowerWatts();
 
         double[] powers = allocateRawPowers(course, gtp, env);

@@ -34,12 +34,6 @@
     @if (needsBike && bikeType) {
       <span class="param-chip">{{ bikeType }}</span>
     }
-    @if ((needsBike || needsRun) && temperature != null) {
-      <span class="param-chip">{{ temperature }}&deg;C</span>
-    }
-    @if (needsBike && windSpeed) {
-      <span class="param-chip">Wind {{ windSpeed }}m/s</span>
-    }
   </div>
   <div class="param-bar-right">
     @if (availableTabs.length > 1) {

@@ -661,6 +661,95 @@
   text-align: right;
 }
 
+/* ── Mobile chart CTA ─────────────────────────────────── */
+.mobile-chart-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 16px;
+}
+
+.open-chart-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 157, 0, 0.25);
+  background: rgba(255, 157, 0, 0.08);
+  color: var(--accent-color);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.25s var(--ease-spring-gentle);
+}
+
+.open-chart-btn:hover {
+  background: rgba(255, 157, 0, 0.16);
+  border-color: var(--accent-color);
+}
+
+.open-chart-hint {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+/* ── Mobile fullscreen landscape overlay ──────────────── */
+.mobile-chart-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: var(--bg-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-chart-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10001;
+  background: var(--overlay-8);
+  border: 1px solid var(--glass-border);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-color);
+  transition: background 0.2s;
+}
+
+.mobile-chart-close:hover {
+  background: var(--overlay-12);
+}
+
+.mobile-chart-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 8px 12px;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) and (orientation: portrait) {
+  .mobile-chart-overlay {
+    transform: rotate(90deg);
+    transform-origin: top left;
+    width: 100vh;
+    height: 100vw;
+    top: 0;
+    left: 100vw;
+  }
+}
+
 @media (max-width: 768px) {
   .header-stats-row {
     flex-direction: column;
@@ -745,46 +834,6 @@
     grid-template-columns: 2fr 1fr 1fr 1fr;
     font-size: 10px;
     gap: 4px;
-  }
-}
-
-/* ── Mobile landscape: chart takes over ─────────────────── */
-@media (orientation: landscape) and (max-height: 500px) {
-  :host {
-    overflow: hidden;
-  }
-
-  .analysis-page {
-    padding: 0;
-    gap: 0;
-    height: 100vh;
-    overflow: hidden;
-  }
-
-  .analysis-page > app-session-stats-header,
-  .analysis-page > app-zone-distribution-panel,
-  .analysis-page > app-block-breakdown-table {
-    display: none;
-  }
-
-  .chart-section {
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-    border-radius: 0;
-    margin: 0;
-    padding: 8px 12px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .chart-header-row {
-    flex-shrink: 0;
-  }
-
-  .chart-header-row .section-label {
-    display: none;
   }
 }
 

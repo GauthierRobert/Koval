@@ -27,8 +27,6 @@ export class PacingParameterBarComponent {
   @Input() computedPaceDisplay: string | null = null;
   @Input() swimCssSec: number | undefined;
   @Input() bikeType: string | undefined;
-  @Input() temperature: number | undefined;
-  @Input() windSpeed: number | undefined;
   @Input() activeTab = 'BIKE';
   @Input() availableTabs: string[] = [];
   @Input() needsBike = false;

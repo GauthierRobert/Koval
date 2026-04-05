@@ -11,8 +11,6 @@ export interface AthleteProfile {
   swimCssSec?: number;
   fatigueResistance?: number;
   nutritionPreference?: 'GELS' | 'DRINK' | 'SOLID' | 'MIXED';
-  temperature?: number;
-  windSpeed?: number;
   targetPowerWatts?: number;
   targetPaceSecPerKm?: number;
   swimDistanceM?: number;

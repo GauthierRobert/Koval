@@ -18,7 +18,6 @@ class RunPacingService {
     private static final double DOWNHILL_FACTOR = 0.02;
     /** Cap downhill benefit at 6% to prevent unrealistic speeds on steep descents. */
     private static final double DOWNHILL_CAP = 0.06;
-    private static final double HEAT_FACTOR = 0.015;
 
     /** Cumulative fatigue degradation per running hour. */
     private static final double FATIGUE_RATE_PER_HOUR = 0.15;
@@ -72,13 +71,6 @@ class RunPacingService {
 
     List<PacingSegment> generateSegments(List<CourseSegment> course, AthleteProfile profile, double startFatigue) {
         double targetPace = profile.targetPaceSecPerKm();
-        double temp = profile.temperature() != null ? profile.temperature() : 20.0;
-
-        // Heat penalty applied to targetPace upfront so Phase A adjusts relative to it
-        // and Phase B normalizes back — proportional heat effect without double-counting.
-        if (temp > 20.0) {
-            targetPace *= (1.0 + (temp - 20.0) * HEAT_FACTOR);
-        }
 
         // Phase A — Raw slope-adjusted paces (gradient only, no heat)
         double[] segPaces = new double[course.size()];

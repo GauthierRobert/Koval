@@ -163,21 +163,6 @@
             </div>
           }
 
-          @if (needsBike() || needsRun()) {
-            <h3 class="subsection-title">{{ 'PACING.SECTION_ENVIRONMENT' | translate }}</h3>
-            <div class="field-row">
-              <div class="field">
-                <label>{{ 'PACING.FIELD_TEMPERATURE_LABEL' | translate }}</label>
-                <input type="number" [(ngModel)]="profile.temperature" (ngModelChange)="onProfileFieldChange()" placeholder="20" min="-10" max="50" />
-              </div>
-              @if (needsBike()) {
-                <div class="field">
-                  <label>{{ 'PACING.FIELD_WIND_SPEED_LABEL' | translate }}</label>
-                  <input type="number" [(ngModel)]="profile.windSpeed" (ngModelChange)="onProfileFieldChange()" placeholder="0" min="0" max="30" step="0.5" />
-                </div>
-              }
-            </div>
-          }
         </div>
       </div>
     </div>

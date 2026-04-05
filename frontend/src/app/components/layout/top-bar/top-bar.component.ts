@@ -111,6 +111,7 @@ export class TopBarComponent {
 
   selectClub(club: ClubSummary) {
     this.isClubsOpen = false;
+    this.closeMobileMenu();
     this.filterService.setContext(`club:${club.id}`);
     this.router.navigate(['/clubs', club.id]);
   }

@@ -11,8 +11,6 @@ public record AthleteProfile(
         /** Fatigue resistance factor (0.0–1.0). Used in RunPacingService to scale fatigue degradation. Default: 0.5. */
         Double fatigueResistance,
         String nutritionPreference,
-        Double temperature,
-        Double windSpeed,
         Integer targetPowerWatts,
         Integer targetPaceSecPerKm,
         Integer swimDistanceM,
@@ -31,8 +29,6 @@ public record AthleteProfile(
                 swimCssSec != null ? swimCssSec : defaultSwimCss,
                 fatigueResistance != null ? fatigueResistance : 0.5,
                 nutritionPreference != null ? nutritionPreference : "MIXED",
-                temperature != null ? temperature : 20.0,
-                windSpeed != null ? windSpeed : 0.0,
                 targetPowerWatts,
                 targetPaceSecPerKm,
                 swimDistanceM,

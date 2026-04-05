@@ -26,6 +26,8 @@ export class AnalyticsPageComponent implements OnInit {
   dateFrom = '';
   dateTo = '';
   volumeGroupBy: 'week' | 'month' = 'week';
+  mobileChartOpen = false;
+  mobileChartType: 'power-curve' | 'volume' = 'power-curve';
 
   readonly DURATION_LABELS = DURATION_LABELS;
 

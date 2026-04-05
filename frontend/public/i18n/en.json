@@ -893,7 +893,8 @@
     "ZONE_BLOCKS_COL_AVG_PCT": "Avg %",
     "ZONE_BLOCKS_COL_AVG_SPEED": "Avg Speed",
     "ZONE_BLOCKS_COL_MAX_SPEED": "Max Speed",
-    "ZONE_FILTER_CLEAR": "Clear"
+    "ZONE_FILTER_CLEAR": "Clear",
+    "MOBILE_CHART_HINT": "Opens in landscape view"
   },
   "PACING": {
     "PAGE_TITLE": "Race Pacing",
@@ -1067,7 +1068,8 @@
     "NO_POWER_DATA_DESC": "Upload FIT files with power data to see your power curve",
     "NO_VOLUME_DATA": "No training volume data for this period",
     "NO_RECORDS": "No personal records yet",
-    "NO_RECORDS_DESC": "Complete sessions with power data to build your records"
+    "NO_RECORDS_DESC": "Complete sessions with power data to build your records",
+    "MOBILE_CHART_HINT": "Opens in landscape view"
   },
   "BUILDER": {
     "CREATE_TITLE": "Create Workout",

@@ -15,7 +15,6 @@
 
 .feed-sidebar {
   position: sticky;
-  top: var(--space-md);
   display: flex;
   flex-direction: column;
   gap: var(--space-md);

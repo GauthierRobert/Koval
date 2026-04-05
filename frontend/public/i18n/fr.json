@@ -893,7 +893,8 @@
     "ZONE_BLOCKS_COL_AVG_PCT": "Moy. %",
     "ZONE_BLOCKS_COL_AVG_SPEED": "Vitesse moy.",
     "ZONE_BLOCKS_COL_MAX_SPEED": "Vitesse max.",
-    "ZONE_FILTER_CLEAR": "Effacer"
+    "ZONE_FILTER_CLEAR": "Effacer",
+    "MOBILE_CHART_HINT": "S'ouvre en vue paysage"
   },
   "PACING": {
     "PAGE_TITLE": "Allure de course",
@@ -1067,7 +1068,8 @@
     "NO_POWER_DATA_DESC": "Importez des fichiers FIT avec données de puissance pour voir votre courbe",
     "NO_VOLUME_DATA": "Aucune donnée de volume pour cette période",
     "NO_RECORDS": "Aucun record personnel",
-    "NO_RECORDS_DESC": "Complétez des séances avec données de puissance pour construire vos records"
+    "NO_RECORDS_DESC": "Complétez des séances avec données de puissance pour construire vos records",
+    "MOBILE_CHART_HINT": "S'ouvre en vue paysage"
   },
   "BUILDER": {
     "CREATE_TITLE": "Créer un entraînement",

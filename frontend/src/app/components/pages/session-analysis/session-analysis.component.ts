@@ -106,6 +106,7 @@ export class SessionAnalysisComponent implements OnDestroy {
     );
 
     blockView: 'planned' | 'interpolated' = 'interpolated';
+    mobileChartOpen = false;
     smoothFactor$ = new BehaviorSubject<number>(10);
     zoneFilters$ = new BehaviorSubject<Set<string>>(new Set());
 

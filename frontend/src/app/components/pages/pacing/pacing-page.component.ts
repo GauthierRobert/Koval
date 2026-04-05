@@ -102,8 +102,6 @@ export class PacingPageComponent implements OnInit {
     // TODO: Re-enable fatigue resistance once backend integrates it
     fatigueResistance: 0.5,
     nutritionPreference: 'MIXED',
-    temperature: 20,
-    windSpeed: 0,
     bikeType: 'ROAD_AERO',
   };
 
