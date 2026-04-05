@@ -20,6 +20,7 @@ spring:
         name: koval-training-planner
         version: 1.0.0
         type: SYNC
+        sse-endpoint: /mcp/sse
         sse-message-endpoint: /mcp/messages
     chat:
       memory:

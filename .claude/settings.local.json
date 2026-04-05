@@ -86,7 +86,11 @@
       "Bash(git commit -m ':*)",
       "Bash(mvn dependency:build-classpath -DincludeArtifactIds=spring-context -q)",
       "Read(//c/Users/gauth/.claude/**)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(java -version)",
+      "Bash(unzip -o __TRACKED_VAR__/.m2/repository/org/springframework/ai/spring-ai-autoconfigure-mcp-server-common/2.0.0-M2/spring-ai-autoconfigure-mcp-server-common-2.0.0-M2.jar -d /tmp/mcp-common)",
+      "Read(//tmp/mcp-common/org/springframework/ai/mcp/server/common/autoconfigure/properties/**)"
     ]
   }
 }
