@@ -1,0 +1,399 @@
+// ═══════════════════════════════════════════════════════════════
+// KOVAL DESIGN SYSTEM — BUTTONS
+// Single source of truth for all button styles.
+// Import this partial in styles.scss.
+// ═══════════════════════════════════════════════════════════════
+
+// ── Design Tokens ──────────────────────────────────────────────
+$btn-radius:      var(--radius-pill);
+$btn-radius-sm:   var(--radius-sm);
+$btn-padding:     7px 18px;
+$btn-padding-sm:  4px 12px;
+$btn-padding-lg:  10px 28px;
+$btn-font-size:   10px;
+$btn-font-sm:     9px;
+$btn-font-lg:     12px;
+$btn-weight:      700;
+$btn-weight-bold: 800;
+$btn-spacing:     0.06em;
+$btn-transition:  all var(--transition-base);
+$btn-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+// ── Base ───────────────────────────────────────────────────────
+%btn-base {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: $btn-radius;
+  padding: $btn-padding;
+  font-size: $btn-font-size;
+  font-weight: $btn-weight;
+  letter-spacing: $btn-spacing;
+  cursor: pointer;
+  transition: $btn-transition;
+  box-shadow: $btn-inner-light;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  text-decoration: none;
+  line-height: 1.4;
+
+  &.small {
+    padding: $btn-padding-sm;
+    font-size: $btn-font-sm;
+  }
+
+  &.large {
+    padding: $btn-padding-lg;
+    font-size: $btn-font-lg;
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+}
+
+// ── Color mixin ────────────────────────────────────────────────
+@mixin btn-colors($color-prefix) {
+  color: var(--#{$color-prefix}-color);
+
+  &:hover:not(:disabled) {
+    background: var(--#{$color-prefix}-hover);
+    border-color: var(--#{$color-prefix}-hover);
+  }
+}
+
+// ── Semantic mixin (filled tint bg + colored text) ─────────────
+@mixin btn-tint($color-prefix) {
+  background: var(--#{$color-prefix}-subtle);
+  color: var(--#{$color-prefix}-color);
+  border: 1px solid var(--#{$color-prefix}-border);
+
+  &:hover:not(:disabled) {
+    background: var(--#{$color-prefix}-hover);
+    border-color: var(--#{$color-prefix}-color);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PRIMARY BUTTONS
+// ═══════════════════════════════════════════════════════════════
+
+.btn-primary {
+  @extend %btn-base;
+  background: var(--primary-color);
+  color: var(--on-primary-color);
+
+  &:hover:not(:disabled) {
+    opacity: 0.85;
+  }
+}
+
+.btn-primary-gradient {
+  @extend %btn-base;
+  background: var(--accent-gradient);
+  color: var(--on-primary-color);
+  box-shadow: $btn-inner-light;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px oklch(0.75 0.18 65 / 0.3);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECONDARY / GHOST BUTTONS
+// ═══════════════════════════════════════════════════════════════
+
+.btn-secondary {
+  @extend %btn-base;
+  color: var(--text-color);
+
+  &:hover:not(:disabled) {
+    background: var(--surface-hover);
+  }
+}
+
+.btn-ghost {
+  @extend %btn-base;
+  color: var(--text-muted);
+
+  &:hover:not(:disabled) {
+    background: var(--surface-hover);
+    color: var(--text-color);
+  }
+}
+
+.btn-ghost-danger {
+  @extend %btn-base;
+  color: var(--text-muted);
+
+  &:hover:not(:disabled) {
+    background: var(--danger-hover);
+    color: var(--danger-color);
+    border-color: var(--danger-hover);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SEMANTIC BUTTONS (success, danger, info)
+// ═══════════════════════════════════════════════════════════════
+
+.btn-success {
+  @extend %btn-base;
+  @include btn-colors(success);
+}
+
+.btn-info {
+  @extend %btn-base;
+  @include btn-colors(info);
+}
+
+.btn-danger {
+  @extend %btn-base;
+  @include btn-colors(danger);
+}
+
+// ── Filled semantic variants ───────────────────────────────────
+
+.btn-approve {
+  @extend %btn-base;
+  @include btn-tint(success);
+  font-weight: $btn-weight-bold;
+}
+
+.btn-reject {
+  @extend %btn-base;
+  @include btn-tint(danger);
+  font-weight: $btn-weight-bold;
+}
+
+.btn-accent-subtle {
+  @extend %btn-base;
+  @include btn-tint(accent);
+  font-weight: $btn-weight-bold;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ICON BUTTONS (square, minimal)
+// ═══════════════════════════════════════════════════════════════
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-dim);
+  transition: $btn-transition;
+
+  &:hover {
+    background: var(--overlay-8);
+    color: var(--text-color);
+    transform: translateY(-1px);
+  }
+
+  &--danger:hover {
+    background: var(--danger-subtle);
+    color: var(--danger-color);
+  }
+
+  &--sm {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLOSE BUTTON (modal/overlay dismiss)
+// ═══════════════════════════════════════════════════════════════
+
+.btn-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  line-height: 1;
+  transition: $btn-transition;
+
+  &:hover {
+    color: var(--text-color);
+    background: var(--overlay-8);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BACK BUTTON (navigation)
+// ═══════════════════════════════════════════════════════════════
+
+.btn-back {
+  background: var(--overlay-5);
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: $btn-transition;
+
+  &:hover {
+    background: var(--overlay-10);
+    color: var(--accent-color);
+    transform: translateX(-2px);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COPY BUTTON (clipboard actions with state)
+// ═══════════════════════════════════════════════════════════════
+
+.btn-copy {
+  background: none;
+  border: 1px solid var(--glass-border);
+  border-radius: $btn-radius;
+  padding: $btn-padding-sm;
+  font-size: $btn-font-sm;
+  font-weight: $btn-weight-bold;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: $btn-transition;
+
+  &:hover {
+    background: var(--overlay-8);
+    color: var(--text-color);
+  }
+
+  &.copied {
+    color: var(--success-color);
+    border-color: var(--success-border);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TOGGLE PILL (segmented control item)
+// ═══════════════════════════════════════════════════════════════
+
+.btn-toggle {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: $btn-font-sm;
+  font-weight: $btn-weight;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  border-radius: $btn-radius;
+  cursor: pointer;
+  transition: $btn-transition;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--text-color);
+    background: var(--overlay-5);
+  }
+
+  &.active {
+    color: var(--on-primary-color);
+    background: var(--accent-color);
+    box-shadow: 0 2px 12px oklch(0.75 0.18 65 / 0.25), $btn-inner-light;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PREMIUM / CTA BUTTON
+// ═══════════════════════════════════════════════════════════════
+
+.premium-button {
+  background: var(--accent-gradient);
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  border-radius: $btn-radius;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-spring-gentle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+@media (hover: hover) {
+  .premium-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px oklch(0.75 0.18 65 / 0.35);
+  }
+}
+
+@media (hover: none) {
+  .premium-button:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BUTTON SPINNER (loading state)
+// ═══════════════════════════════════════════════════════════════
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 5px;
+  opacity: 0.75;
+  flex-shrink: 0;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MOBILE TOUCH TARGETS
+// ═══════════════════════════════════════════════════════════════
+
+@media (max-width: 768px) {
+  .btn-primary,
+  .btn-primary-gradient,
+  .btn-secondary,
+  .btn-success,
+  .btn-info,
+  .btn-danger,
+  .btn-ghost,
+  .btn-ghost-danger,
+  .btn-approve,
+  .btn-reject,
+  .premium-button {
+    min-height: var(--touch-target-min);
+  }
+}

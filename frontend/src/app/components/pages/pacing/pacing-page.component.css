@@ -1,9 +1,10 @@
 .pacing-page {
-  padding: 24px;
-  max-width: 1600px;
+  padding: var(--page-padding);
+  max-width: 1200px;
   margin: 0 auto;
   height: 100%;
   overflow-y: auto;
+  position: relative;
 }
 
 .pacing-page.results-active {
@@ -11,307 +12,213 @@
   padding: 0;
 }
 
-.page-header {
-  padding: 12px 24px;
-  margin-bottom: 0;
-  max-width: 900px;
+/* ═══ FORM HEADER ════════════════════════════════════════════ */
+.form-header {
+  padding: 0 0 var(--space-lg);
+  position: relative;
 }
 
-.page-header h1 {
+.form-title {
   font-family: var(--font-display);
-  font-size: 24px;
+  font-size: var(--text-4xl);
   font-weight: 700;
-  color: var(--primary-color, #ff9d00);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
   margin: 0;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.subtitle {
-  color: var(--text-50);
-  font-size: 13px;
-  margin: 4px 0 0;
-}
-
-/* ========== Wide Form (initial, no results) ========== */
-.form-panel-wide {
-  padding: 24px;
-  border-radius: 12px;
-  max-width: 900px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* GPX Row: Bike left, Run right */
-.gpx-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.gpx-col {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Discipline + Bike Type side by side */
-.form-row-2col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  align-items: start;
-}
-
-/* Stacked form sections */
-.form-section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.form-fields-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.form-fields-row .field {
-  flex: 1;
-  min-width: 120px;
-}
-
-.form-col {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.section-title {
+.form-subtitle {
+  color: var(--text-muted);
   font-size: 14px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-80);
-  margin: 0;
+  margin: 6px 0 0;
+  line-height: 1.5;
 }
 
-.subsection-title {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-50);
-  margin: 4px 0 0;
-}
-
-/* GPX Dropzone */
-.gpx-dropzone {
-  border: 2px dashed var(--overlay-15);
-  border-radius: 10px;
-  padding: 24px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.25s var(--ease-spring-gentle);
+/* ═══ RACE BANNER ════════════════════════════════════════════ */
+.race-banner {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  color: var(--text-50);
-  font-size: 13px;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: var(--space-md);
 }
 
-.gpx-dropzone:hover,
-.gpx-dropzone.dragging {
-  border-color: var(--primary-color, #ff9d00);
-  background: rgba(255, 157, 0, 0.05);
-}
-
-.gpx-dropzone.has-file {
-  border-color: var(--primary-color, #ff9d00);
-  border-style: solid;
-}
-
-.gpx-dropzone .file-name {
-  color: var(--primary-color, #ff9d00);
-  font-weight: 600;
-}
-
-/* GPX with Loops */
-.gpx-with-loops {
+.race-banner-content {
   display: flex;
-  gap: 10px;
-  align-items: stretch;
-}
-
-.gpx-with-loops .gpx-dropzone,
-.gpx-with-loops .gpx-dropzone-labeled {
-  flex: 1;
-}
-
-.loop-input {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  justify-content: center;
-  min-width: 56px;
-}
-
-.loop-input label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  color: var(--text-50);
-}
-
-.loop-input input {
-  width: 50px;
-  background: var(--overlay-5);
-  border: 1px solid var(--overlay-10);
-  border-radius: 8px;
-  padding: 8px 6px;
-  color: var(--text-color);
-  font-size: 13px;
-  font-family: inherit;
-  outline: none;
-  text-align: center;
-  transition: all 0.25s var(--ease-spring-gentle);
-}
-
-.loop-input input:focus {
-  border-color: var(--primary-color, #ff9d00);
-}
-
-/* Dual GPX dropzones (triathlon) */
-.gpx-dual {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.gpx-dropzone-labeled {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.dropzone-label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-50);
-}
-
-/* Discipline Pills */
-.field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.field-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-50);
-}
-
-.pill-group {
-  display: flex;
-  gap: 6px;
-}
-
-.pill {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid var(--overlay-10);
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--text-60);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s var(--ease-spring-gentle);
-}
-
-.pill:hover {
-  border-color: var(--text-30);
-}
-
-.pill.active {
-  background: var(--primary-color, #ff9d00);
-  color: #000;
-  border-color: var(--primary-color, #ff9d00);
-}
-
-/* Fields */
-.field-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  align-items: center;
   gap: 12px;
 }
 
-.field {
+.race-banner-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-color);
+}
+
+.race-banner-title {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.race-banner-meta {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.race-banner-gpx {
+  display: flex;
+  gap: 6px;
+}
+
+.gpx-indicator {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  letter-spacing: 0.08em;
+}
+
+.gpx-indicator.swim { background: var(--info-subtle); color: var(--info-text); }
+.gpx-indicator.bike { background: var(--success-subtle); color: var(--success-color); }
+.gpx-indicator.run { background: var(--accent-subtle); color: var(--accent-color); }
+
+/* ═══ CARD LABELS ════════════════════════════════════════════ */
+.card-label {
+  display: block;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: var(--space-md);
+}
+
+.card-label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--space-md);
+}
+
+.card-label-row .card-label {
+  margin-bottom: 0;
+}
+
+/* ═══ DISCIPLINE HERO ════════════════════════════════════════ */
+.discipline-hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* ═══ ATHLETE PROFILE CARD ═══════════════════════════════════ */
+.profile-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-fields,
+.targets-fields,
+.env-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.pf-field {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.field label {
-  font-size: 11px;
+.pf-field label {
+  font-size: 10px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
-  color: var(--text-50);
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
 }
 
-.field input[type='number'],
-.field select {
+.pf-field input[type='number'],
+.pf-field select {
   background: var(--overlay-5);
   border: 1px solid var(--overlay-10);
-  border-radius: 8px;
-  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
   color: var(--text-color);
-  font-size: 13px;
+  font-size: 14px;
   font-family: inherit;
+  font-weight: 600;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.25s var(--ease-spring-gentle);
+  -moz-appearance: textfield;
 }
 
-.field input:focus,
-.field select:focus {
-  border-color: var(--primary-color, #ff9d00);
+.pf-field input:focus,
+.pf-field select:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent-color) 12%, transparent);
 }
 
-.field input[type='range'] {
-  width: 100%;
-  accent-color: var(--primary-color, #ff9d00);
+.pf-field input::-webkit-inner-spin-button,
+.pf-field input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
 }
 
-.range-value {
-  font-size: 12px;
-  color: var(--primary-color, #ff9d00);
-  text-align: center;
-}
-
-.field select {
+.pf-field select {
   appearance: none;
   cursor: pointer;
 }
 
-/* Tooltip */
-.label-with-tooltip {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.field-hint {
+  font-size: 10px;
+  color: var(--text-35);
+  font-style: italic;
 }
 
+.field-hint.computed {
+  color: var(--accent-color);
+  font-style: normal;
+  font-weight: 700;
+  font-family: var(--font-display);
+}
+
+/* ═══ GPX CARD ═══════════════════════════════════════════════ */
+.gpx-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.gpx-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  flex: 1;
+}
+
+/* ═══ TARGETS CARD ═══════════════════════════════════════════ */
+.targets-card {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tooltip */
 .tooltip-trigger {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   background: var(--overlay-10);
   border-radius: 50%;
   font-size: 9px;
@@ -319,6 +226,7 @@
   color: var(--text-50);
   cursor: help;
   flex-shrink: 0;
+  transition: all 0.2s var(--ease-spring-gentle);
 }
 
 .tooltip-trigger:hover {
@@ -332,11 +240,13 @@
   bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  width: 260px;
-  padding: 10px 12px;
-  background: var(--overlay-backdrop);
-  border: 1px solid var(--overlay-15);
-  border-radius: 8px;
+  width: 280px;
+  padding: 12px 14px;
+  background: var(--surface-card);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  box-shadow: var(--shadow-elevated);
+  border-radius: 14px;
   font-size: 11px;
   font-weight: 400;
   line-height: 1.5;
@@ -348,7 +258,7 @@
 }
 
 .tooltip-text.tooltip-wide {
-  width: 360px;
+  width: 380px;
   left: 0;
   transform: none;
 }
@@ -362,14 +272,14 @@
 
 .tooltip-table th,
 .tooltip-table td {
-  padding: 3px 4px;
+  padding: 4px 6px;
   text-align: left;
-  border-bottom: 1px solid var(--overlay-10);
+  border-bottom: 1px solid var(--overlay-8);
 }
 
 .tooltip-table th {
   color: var(--text-50);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .tooltip-table td:first-child {
@@ -381,63 +291,67 @@
   display: block;
 }
 
-.field-hint {
-  font-size: 10px;
-  color: var(--text-35);
-  font-style: italic;
-}
-
-.field-hint.computed {
-  color: var(--primary-color, #ff9d00);
-  font-style: normal;
-  font-weight: 600;
-}
-
-/* Error */
-.error-msg {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 8px;
-  padding: 10px 12px;
-  color: var(--danger-color);
-  font-size: 13px;
-  margin-top: 12px;
-}
-
-/* Actions */
-.form-actions {
+/* ═══ GENERATE CARD ══════════════════════════════════════════ */
+.generate-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  margin-top: 16px;
+  justify-content: center;
+  gap: 12px;
+  min-height: 160px;
 }
 
-.generate-hint {
-  font-size: 12px;
-  color: var(--text-40);
-  font-style: italic;
+.gen-error {
+  background: var(--danger-subtle);
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  color: var(--danger-color);
+  font-size: 11px;
+  font-weight: 600;
+  width: 100%;
+  text-align: center;
 }
 
 .generate-btn {
-  padding: 12px 40px;
-  background: var(--primary-color, #ff9d00);
-  color: #000;
+  width: 100%;
+  padding: 16px 32px;
+  background: var(--accent-gradient);
+  color: var(--on-primary-color);
   border: none;
-  border-radius: 10px;
-  font-size: 13px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-display);
+  font-size: 15px;
   font-weight: 700;
+  letter-spacing: 0.04em;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: all 0.3s var(--ease-spring-gentle);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
 .generate-btn:hover:not(:disabled) {
-  opacity: 0.9;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px oklch(0.75 0.18 65 / 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.generate-btn:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .generate-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+}
+
+.generate-hint {
+  font-size: 11px;
+  color: var(--text-40);
+  font-style: italic;
+  text-align: center;
 }
 
 .clear-btn {
@@ -445,10 +359,23 @@
   background: var(--overlay-5);
   color: var(--text-60);
   border: 1px solid var(--overlay-10);
-  border-radius: 10px;
+  border-radius: var(--radius-pill);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.25s var(--ease-spring-gentle);
+}
+
+/* ═══ RESPONSIVE ═════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .form-title {
+    font-size: var(--text-3xl);
+  }
+
+  .race-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 /* ========== Compact Parameter Bar (results view) ========== */

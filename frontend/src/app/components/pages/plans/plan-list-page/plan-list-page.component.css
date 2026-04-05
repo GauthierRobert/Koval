@@ -107,41 +107,6 @@
   margin-top: var(--space-md);
 }
 
-.btn-primary,
-.btn-secondary {
-  padding: var(--space-sm) var(--space-md);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-
-.btn-primary {
-  background: var(--accent-color);
-  color: #fff;
-}
-
-.btn-primary:hover {
-  opacity: 0.85;
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: transparent;
-  color: var(--text-muted);
-  border: 1px solid var(--glass-border);
-}
-
-.btn-secondary:hover {
-  background: var(--surface-hover);
-}
-
 /* ── Plan cards grid ─────────────────────────────────── */
 .plans-grid {
   display: grid;

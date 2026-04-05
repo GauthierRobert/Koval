@@ -1,81 +1,103 @@
 <div class="page-layout">
   @if (selectedClub$ | async; as club) {
 
-    <div class="header glass">
-      <div class="header-left">
-        <button class="back-btn" data-testid="back-btn" (click)="goBack()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        @if (!club.logoUrl) {
-          <div class="club-avatar">{{ club.name.charAt(0).toUpperCase() }}</div>
-        }
-        @if (club.logoUrl) {
-          <img class="club-avatar-img" [src]="club.logoUrl" [alt]="'CLUB_DETAIL.LOGO_ALT' | translate" />
-        }
-        <div class="header-info">
-          <span class="header-title">{{ club.name | uppercase }}</span>
-          @if (club.description) {
-            <span class="header-subtitle">{{ club.description }}</span>
+    <!-- Ambient depth -->
+    <div class="ambient-orbs">
+      <div class="orb orb--accent"></div>
+      <div class="orb orb--secondary"></div>
+    </div>
+
+    <!-- ═══ CLUB HERO BANNER ═══ -->
+    <div class="club-hero animate-in">
+      <div class="hero-glass"></div>
+      <div class="hero-content">
+        <div class="hero-left">
+          <button class="back-btn" data-testid="back-btn" (click)="goBack()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          @if (!club.logoUrl) {
+            <div class="club-avatar">{{ club.name.charAt(0).toUpperCase() }}</div>
           }
-        </div>
-      </div>
-      <div class="header-badges">
-        <span class="h-badge">{{ 'CLUB_DETAIL.HEADER_MEMBER_COUNT' | translate: { count: club.memberCount } }}</span>
-        @if (club.location) {
-          <span class="h-badge">{{ club.location }}</span>
-        }
-        <span class="h-badge" [class.h-badge--private]="club.visibility === 'PRIVATE'">{{ club.visibility }}</span>
-        @if (club.currentMembershipStatus) {
-          <span class="h-badge h-badge--role">
-            {{ getMembershipLabel(club.currentMembershipStatus) }}
-            @if (club.currentMemberRole) {
-              <span> · {{ club.currentMemberRole }}</span>
+          @if (club.logoUrl) {
+            <img class="club-avatar-img" [src]="club.logoUrl" [alt]="'CLUB_DETAIL.LOGO_ALT' | translate" />
+          }
+          <div class="hero-info">
+            <h1 class="club-name">{{ club.name }}</h1>
+            @if (club.description) {
+              <p class="club-desc">{{ club.description }}</p>
             }
-          </span>
-        }
-      </div>
-      @if (canManageInvites(club) && (clubInviteCode$ | async); as code) {
-        <div class="header-invite">
-          <span class="invite-code-chip" data-testid="invite-code-chip" (click)="copyClubInviteLink(code.code, code.id)">{{ code.code }}</span>
-          <button class="btn-copy" data-testid="btn-copy-invite-code" (click)="copyClubInviteLink(code.code, code.id)"
-            [class.btn-copied]="copiedClubCodeId === code.id">
-            {{ copiedClubCodeId === code.id ? ('CLUB_DETAIL.INVITE_BTN_COPIED' | translate) : ('CLUB_DETAIL.INVITE_BTN_COPY' | translate) }}
-          </button>
+          </div>
         </div>
-      }
-      <div class="header-actions">
-        @let isJoining = isJoiningClub$ | async;
-        @let isLeaving = isLeavingClub$ | async;
-        @if (!club.currentMembershipStatus) {
-          <button class="btn-join" data-testid="btn-join-club" (click)="join(club)" [disabled]="isJoining">
-            @if (isJoining) { <span class="btn-spinner"></span> }
-            {{ 'CLUB_DETAIL.BTN_JOIN' | translate }}
-          </button>
-        }
-        @if (club.currentMembershipStatus && club.currentMemberRole !== 'OWNER') {
-          <button class="btn-leave" data-testid="btn-leave-club" (click)="leave(club)" [disabled]="isLeaving">
-            @if (isLeaving) { <span class="btn-spinner"></span> }
-            {{ 'CLUB_DETAIL.BTN_LEAVE' | translate }}
+
+        <div class="hero-right">
+          <div class="hero-badges">
+            <span class="badge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              {{ 'CLUB_DETAIL.HEADER_MEMBER_COUNT' | translate: { count: club.memberCount } }}
+            </span>
+            @if (club.location) {
+              <span class="badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                {{ club.location }}
+              </span>
+            }
+            <span class="badge" [class.badge--private]="club.visibility === 'PRIVATE'">{{ club.visibility }}</span>
+            @if (club.currentMembershipStatus) {
+              <span class="badge badge--role">
+                {{ getMembershipLabel(club.currentMembershipStatus) }}
+                @if (club.currentMemberRole) {
+                  <span> · {{ club.currentMemberRole }}</span>
+                }
+              </span>
+            }
+          </div>
+
+          <div class="hero-actions">
+            @if (canManageInvites(club) && (clubInviteCode$ | async); as code) {
+              <div class="invite-chip">
+                <span class="invite-code" data-testid="invite-code-chip" (click)="copyClubInviteLink(code.code, code.id)">{{ code.code }}</span>
+                <button class="btn-copy" data-testid="btn-copy-invite-code" (click)="copyClubInviteLink(code.code, code.id)"
+                  [class.btn-copied]="copiedClubCodeId === code.id">
+                  {{ copiedClubCodeId === code.id ? ('CLUB_DETAIL.INVITE_BTN_COPIED' | translate) : ('CLUB_DETAIL.INVITE_BTN_COPY' | translate) }}
+                </button>
+              </div>
+            }
+            @let isJoining = isJoiningClub$ | async;
+            @let isLeaving = isLeavingClub$ | async;
+            @if (!club.currentMembershipStatus) {
+              <button class="btn-join" data-testid="btn-join-club" (click)="join(club)" [disabled]="isJoining">
+                @if (isJoining) { <span class="btn-spinner"></span> }
+                {{ 'CLUB_DETAIL.BTN_JOIN' | translate }}
+              </button>
+            }
+            @if (club.currentMembershipStatus && club.currentMemberRole !== 'OWNER') {
+              <button class="btn-leave" data-testid="btn-leave-club" (click)="leave(club)" [disabled]="isLeaving">
+                @if (isLeaving) { <span class="btn-spinner"></span> }
+                {{ 'CLUB_DETAIL.BTN_LEAVE' | translate }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB STRIP ═══ -->
+    <div class="tab-strip">
+      <div class="tab-strip-inner">
+        @for (tab of tabs; track tab.id) {
+          <button
+            class="tab-pill"
+            [attr.data-testid]="'tab-' + tab.id"
+            [class.active]="activeTab === tab.id"
+            (click)="activateTab(tab.id)">
+            <span class="tab-label-full">{{ tab.label | translate }}</span>
+            <span class="tab-label-short">{{ tab.shortLabel | translate }}</span>
           </button>
         }
       </div>
     </div>
 
-    <div class="tab-strip glass">
-      <div class="tab-strip-content">
-      @for (tab of tabs; track tab.id) {
-        <button
-          class="tab-btn"
-          [attr.data-testid]="'tab-' + tab.id"
-          [class.active]="activeTab === tab.id"
-          (click)="activateTab(tab.id)">
-          <span class="tab-label-full">{{ tab.label | translate }}</span>
-          <span class="tab-label-short">{{ tab.shortLabel | translate }}</span>
-        </button>
-      }
-      </div>
-    </div>
-
+    <!-- ═══ TAB BODY ═══ -->
     <div class="tab-body">
       @if (activeTab === 'feed') {
         <app-club-feed-tab [club]="club"></app-club-feed-tab>
@@ -114,7 +136,7 @@
 
   } @else {
     <div class="loading-state">
-      <div class="loading-spinner"></div>
+      <div class="loading-spinner ai-generating"></div>
       <span>{{ 'CLUB_DETAIL.LOADING' | translate }}</span>
     </div>
   }

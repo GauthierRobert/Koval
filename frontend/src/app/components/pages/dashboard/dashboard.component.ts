@@ -99,6 +99,7 @@ export class DashboardComponent {
   private router = inject(Router);
   private translate = inject(TranslateService);
 
+  readonly todayDate = new Date();
   readonly todayKey = toDateKey(new Date());
   private readonly sevenDaysAgoKey = toDateKey(subDays(new Date(), 7));
   private readonly fourteenDaysAhead = toDateKey(subDays(new Date(), -14));

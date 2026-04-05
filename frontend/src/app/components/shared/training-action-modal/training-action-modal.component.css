@@ -49,12 +49,12 @@
 .close-btn {
   background: none;
   border: none;
-  color: #64748b;
+  color: var(--text-dim);
   font-size: 1.4rem;
   cursor: pointer;
   line-height: 1;
   padding: 0 4px;
-  transition: color 0.2s;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
 .close-btn:hover:not(:disabled) {
@@ -230,39 +230,6 @@
   gap: 10px;
   padding: 16px 24px 20px;
   border-top: 1px solid var(--glass-border);
-}
-
-.btn-primary {
-  border: none;
-  padding: 8px 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.btn-primary:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.btn-ghost {
-  background: transparent;
-  color: var(--text-muted);
-  border: 1px solid var(--overlay-10);
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: color 0.2s, border-color 0.2s;
-}
-
-.btn-ghost:hover:not(:disabled) {
-  color: var(--text-color);
-  border-color: var(--overlay-25);
-}
-
-.btn-ghost:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 .spinner {

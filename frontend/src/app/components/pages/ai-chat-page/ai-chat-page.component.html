@@ -1,4 +1,10 @@
 <div class="chat-page-layout">
+  <!-- Ambient depth -->
+  <div class="ambient-orbs">
+    <div class="orb orb--accent"></div>
+    <div class="orb orb--secondary"></div>
+  </div>
+
   <!-- Sidebar/History -->
   <div class="chat-sidebar glass" [class.sidebar-open]="chatSidebarOpen">
     <div class="sidebar-header">
@@ -51,9 +57,10 @@
     <div class="messages-container" #scrollMe (scroll)="onScroll()">
       @if (messages?.length === 0 && !streaming) {
         <div class="welcome-overlay">
+          <div class="welcome-glow"></div>
           <h1>{{ 'AI_CHAT.WELCOME_HEADING' | translate }}</h1>
           <p>{{ 'AI_CHAT.WELCOME_SUBHEADING' | translate }}</p>
-          <div class="suggestion-grid">
+          <div class="suggestion-grid stagger-children">
             <button (click)="quickSendKey('AI_CHAT.SUGGESTION_SWEET_SPOT_PROMPT')">{{ 'AI_CHAT.SUGGESTION_SWEET_SPOT' | translate }}</button>
             <button (click)="quickSendKey('AI_CHAT.SUGGESTION_FITNESS_CHECK_PROMPT')">{{ 'AI_CHAT.SUGGESTION_FITNESS_CHECK' | translate }}</button>
             <button (click)="quickSendKey('AI_CHAT.SUGGESTION_GROUP_VO2MAX_PROMPT')">{{ 'AI_CHAT.SUGGESTION_GROUP_VO2MAX' | translate }}</button>
@@ -133,7 +140,7 @@
 
       @if (streaming) {
         <div class="message-wrapper ai">
-          <div class="message-bubble glass typing">
+          <div class="message-bubble glass typing ai-glow">
             <span class="analyzing">{{ activityStatus === 'in_progress' ? ('AI_CHAT.STATUS_PROCESSING' | translate) : ('AI_CHAT.STATUS_GENERATING' | translate) }}</span>
             <div class="dots"><span>.</span><span>.</span><span>.</span></div>
           </div>
