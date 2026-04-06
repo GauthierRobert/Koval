@@ -176,13 +176,14 @@
 }
 
 .chart-section {
-  padding: var(--space-md) var(--page-padding);
+  padding: 0;
 }
 
 .chart-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: var(--space-md) var(--page-padding);
 }
 
 .chart-header-row .section-label {
@@ -679,13 +680,14 @@
 
 @media (max-width: 600px) {
   .chart-section {
-    padding: var(--space-sm) var(--space-md);
+    padding: 0;
   }
 
   .chart-header-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+    padding: var(--space-sm) var(--space-md);
   }
 
   .chart-controls {

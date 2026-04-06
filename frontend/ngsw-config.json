@@ -21,21 +21,12 @@
   "dataGroups": [
     {
       "name": "api-freshness",
-      "urls": ["/api/auth/**", "/api/notifications/**", "/api/clubs/**", "/api/coach/**", "/api/trainings", "/api/trainings/**", "/api/groups/**"],
-      "cacheConfig": {
-        "maxSize": 50,
-        "maxAge": "0u",
-        "strategy": "freshness",
-        "timeout": "5s"
-      }
-    },
-    {
-      "name": "api-performance",
       "urls": ["/api/**"],
       "cacheConfig": {
         "maxSize": 100,
-        "maxAge": "1h",
-        "strategy": "performance"
+        "maxAge": "1d",
+        "strategy": "freshness",
+        "timeout": "5s"
       }
     }
   ],

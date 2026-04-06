@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, ViewChild} from '@angular/core';
+import {AfterViewChecked, AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, ViewChild} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FitRecord} from '../../../../services/metrics.service';
 import {BlockSummary} from '../../../../services/workout-execution.service';
@@ -78,7 +78,7 @@ import {ZoneBlock} from '../../../../services/zone';
     `,
     styles: [`
         .chart-wrap { display: flex; flex-direction: column; gap: 8px; }
-        .chart-toggles { display: flex; gap: 8px; padding: 0 4px; flex-wrap: wrap; }
+        .chart-toggles { display: flex; gap: 8px; padding: 0 var(--page-padding); flex-wrap: wrap; }
         .toggle-btn {
             display: flex; align-items: center; gap: 5px;
             background: var(--overlay-5);
@@ -105,10 +105,10 @@ import {ZoneBlock} from '../../../../services/zone';
             -webkit-user-select: none; user-select: none;
             -webkit-touch-callout: none;
         }
-        .primary-h { flex: 3 1 0; min-height: 90px; }
-        .hr-h { flex: 2 1 0; min-height: 60px; }
-        .cad-h { flex: 2 1 0; min-height: 60px; }
-        .elev-h { flex: 1 1 0; min-height: 48px; }
+        .primary-h { flex: 6 1 0; min-height: 250px; }
+        .hr-h { flex: 2.8 1 0; min-height: 100px; }
+        .cad-h { flex: 2.8 1 0; min-height: 100px; }
+        .elev-h { flex: 1.4 1 0; min-height: 80px; }
         .xaxis-h { flex: 0 0 22px; height: 22px; cursor: default; }
         .tt {
             position: absolute; z-index: 10; pointer-events: none;
@@ -127,14 +127,14 @@ import {ZoneBlock} from '../../../../services/zone';
             .chart-wrap { min-height: 90vh; }
             .chart-toggles { gap: 4px; }
             .toggle-btn { padding: 3px 8px; font-size: 9px; }
-            .primary-h { min-height: 240px; }
-            .hr-h { min-height: 140px; }
-            .cad-h { min-height: 140px; }
+            .primary-h { min-height: 350px; }
+            .hr-h { min-height: 160px; }
+            .cad-h { min-height: 160px; }
             .elev-h { min-height: 100px; }
         }
     `],
 })
-export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, OnDestroy {
+export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, AfterViewChecked, OnDestroy {
     @Input() records: FitRecord[] = [];
     @Input() ftp: number | null = null;
     @Input() sportType = 'CYCLING';
@@ -163,6 +163,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
     _hasElevation = false;
     private ready = false;
     private resizeObserver: ResizeObserver | null = null;
+    private observedCanvases = new Set<HTMLCanvasElement>();
 
     /** Side margins shrink on narrow viewports so the plot keeps usable width on phones. */
     private margins(W: number): { mL: number; mR: number } {
@@ -239,13 +240,44 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
 
     ngAfterViewInit(): void {
         this.ready = true;
-        this.drawAll();
-        // Re-draw after the first paint so canvases pick up their flex-resolved size.
-        requestAnimationFrame(() => this.drawAll());
         this.resizeObserver = new ResizeObserver(() => {
             if (this.ready) this.drawAll();
         });
-        this.resizeObserver.observe(this.stackRef.nativeElement);
+        this.syncObservedCanvases();
+        this.drawAll();
+        // Re-draw after the first paint so canvases pick up their flex-resolved size.
+        requestAnimationFrame(() => this.drawAll());
+    }
+
+    ngAfterViewChecked(): void {
+        // Conditional canvases (@if showHR / showCadence / _hasElevation) mount/unmount;
+        // re-attach the ResizeObserver so size changes on any visible canvas trigger a redraw.
+        if (this.ready) this.syncObservedCanvases();
+    }
+
+    private syncObservedCanvases(): void {
+        if (!this.resizeObserver) return;
+        const current: HTMLCanvasElement[] = [
+            this.pRef?.nativeElement,
+            this.hrRef?.nativeElement,
+            this.cadRef?.nativeElement,
+            this.elRef?.nativeElement,
+            this.xRef?.nativeElement,
+        ].filter((c): c is HTMLCanvasElement => !!c);
+
+        const currentSet = new Set(current);
+        for (const c of this.observedCanvases) {
+            if (!currentSet.has(c)) {
+                this.resizeObserver.unobserve(c);
+                this.observedCanvases.delete(c);
+            }
+        }
+        for (const c of current) {
+            if (!this.observedCanvases.has(c)) {
+                this.resizeObserver.observe(c);
+                this.observedCanvases.add(c);
+            }
+        }
     }
 
     ngOnDestroy(): void {
@@ -817,6 +849,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
 
         // Block context
         let blockLabel: string | null = null;
+        let blockDuration: number | null = null;
         let bp: number | null = null, bpMax: number | null = null;
         let bhr: number | null = null, bcad: number | null = null;
         if (this.useZB) {
@@ -827,6 +860,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
                 bhr = zb.avgHR;
                 bcad = this.getCadBlock(zb.avgCadence);
                 blockLabel = `${zb.zoneLabel} · ${zb.zoneDescription}`;
+                blockDuration = this.records[zb.endIndex].timestamp - this.records[zb.startIndex].timestamp;
             }
         } else if (this.usePB) {
             const elapsed = rec.timestamp - t0;
@@ -838,6 +872,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
                     bhr = b.actualHR;
                     bcad = this.getCadBlock(b.actualCadence);
                     blockLabel = b.label;
+                    blockDuration = b.durationSeconds;
                     break;
                 }
                 acc += b.durationSeconds;
@@ -846,17 +881,22 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
         const inBlock = (this.useZB || this.usePB) && bp !== null;
 
         // Header
-        if (blockLabel) {
-            this.ttHeader = blockLabel;
-        } else {
-            const elapsed = rec.timestamp - t0;
-            const m = Math.floor(elapsed / 60);
-            const s = elapsed % 60;
-            this.ttHeader = `${m}:${String(s).padStart(2, '0')}`;
-        }
+        const elapsed = rec.timestamp - t0;
+        const em = Math.floor(elapsed / 60);
+        const es = elapsed % 60;
+        const elapsedStr = `${em}:${String(es).padStart(2, '0')}`;
+        this.ttHeader = blockLabel ?? elapsedStr;
 
         // Rows
         const rows: Array<{ label: string; value: string; color: string }> = [];
+        if (blockLabel) {
+            rows.push({ label: 'Time', value: elapsedStr, color: 'var(--text-color)' });
+        }
+        if (inBlock && blockDuration != null) {
+            const dm = Math.floor(blockDuration / 60);
+            const ds = Math.round(blockDuration % 60);
+            rows.push({ label: 'Duration', value: `${dm}:${String(ds).padStart(2, '0')}`, color: 'var(--text-color)' });
+        }
         if (this.showPrimary) {
             if (inBlock) {
                 if (this.isCycling) {
