@@ -30,19 +30,35 @@ import {ZoneBlock} from '../../../../services/zone';
             <div class="charts-stack" #stack (mouseleave)="onMouseLeave()">
                 @if (showPrimary) {
                     <canvas #primaryCanvas class="mc primary-h"
-                        (mousemove)="onHover($event)"></canvas>
+                        (mousemove)="onHover($event)"
+                        (touchstart)="onTouch($event)"
+                        (touchmove)="onTouch($event)"
+                        (touchend)="onMouseLeave()"
+                        (touchcancel)="onMouseLeave()"></canvas>
                 }
                 @if (showHR) {
                     <canvas #hrCanvas class="mc hr-h"
-                        (mousemove)="onHover($event)"></canvas>
+                        (mousemove)="onHover($event)"
+                        (touchstart)="onTouch($event)"
+                        (touchmove)="onTouch($event)"
+                        (touchend)="onMouseLeave()"
+                        (touchcancel)="onMouseLeave()"></canvas>
                 }
                 @if (showCadence) {
                     <canvas #cadCanvas class="mc cad-h"
-                        (mousemove)="onHover($event)"></canvas>
+                        (mousemove)="onHover($event)"
+                        (touchstart)="onTouch($event)"
+                        (touchmove)="onTouch($event)"
+                        (touchend)="onMouseLeave()"
+                        (touchcancel)="onMouseLeave()"></canvas>
                 }
                 @if (_hasElevation) {
                     <canvas #elevCanvas class="mc elev-h"
-                        (mousemove)="onHover($event)"></canvas>
+                        (mousemove)="onHover($event)"
+                        (touchstart)="onTouch($event)"
+                        (touchmove)="onTouch($event)"
+                        (touchend)="onMouseLeave()"
+                        (touchcancel)="onMouseLeave()"></canvas>
                 }
                 <canvas #xCanvas class="mc xaxis-h"></canvas>
                 @if (hoverIdx !== null) {
@@ -83,7 +99,12 @@ import {ZoneBlock} from '../../../../services/zone';
         .dot.blocks { background: #2ecc71; }
         .toggle-sep { width: 1px; height: 16px; background: var(--overlay-10); margin: 0 2px; }
         .charts-stack { position: relative; display: flex; flex-direction: column; gap: 4px; min-height: 0; }
-        .mc { width: 100%; display: block; cursor: crosshair; min-height: 0; }
+        .mc {
+            width: 100%; display: block; cursor: crosshair; min-height: 0;
+            touch-action: none;
+            -webkit-user-select: none; user-select: none;
+            -webkit-touch-callout: none;
+        }
         .primary-h { flex: 3 1 0; min-height: 90px; }
         .hr-h { flex: 2 1 0; min-height: 60px; }
         .cad-h { flex: 2 1 0; min-height: 60px; }
@@ -103,13 +124,13 @@ import {ZoneBlock} from '../../../../services/zone';
         .tt-val { font: bold 10px monospace; text-align: right; }
 
         @media (max-width: 768px) {
-            .chart-wrap { min-height: 70vh; }
+            .chart-wrap { min-height: 90vh; }
             .chart-toggles { gap: 4px; }
             .toggle-btn { padding: 3px 8px; font-size: 9px; }
-            .primary-h { min-height: 120px; }
-            .hr-h { min-height: 70px; }
-            .cad-h { min-height: 70px; }
-            .elev-h { min-height: 50px; }
+            .primary-h { min-height: 240px; }
+            .hr-h { min-height: 140px; }
+            .cad-h { min-height: 140px; }
+            .elev-h { min-height: 100px; }
         }
     `],
 })
@@ -243,19 +264,32 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
 
     onHover(event: MouseEvent): void {
         const canvas = event.target as HTMLCanvasElement;
+        this.computeHoverAt(canvas, event.clientX, event.clientY);
+    }
+
+    onTouch(event: TouchEvent): void {
+        if (event.cancelable) event.preventDefault();
+        const touch = event.touches[0];
+        if (!touch) return;
+        const canvas = event.currentTarget as HTMLCanvasElement;
+        this.computeHoverAt(canvas, touch.clientX, touch.clientY);
+    }
+
+    private computeHoverAt(canvas: HTMLCanvasElement | null, clientX: number, clientY: number): void {
         if (!canvas || this.records.length < 2) return;
 
         const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const mouseX = (event.clientX - rect.left) * scaleX;
+        // Coordinates are in CSS pixels; initCanvas() draws in CSS pixels via setTransform(dpr,...).
+        const cssW = rect.width;
+        const x = clientX - rect.left;
 
         const n = this.records.length;
         const t0 = this.records[0].timestamp;
         const totalSec = this.records[n - 1].timestamp - t0 || n;
-        const { mL, mR } = this.margins(canvas.width);
-        const cW = canvas.width - mL - mR;
+        const { mL, mR } = this.margins(cssW);
+        const cW = cssW - mL - mR;
 
-        const targetT = t0 + ((mouseX - mL) / cW) * totalSec;
+        const targetT = t0 + ((x - mL) / cW) * totalSec;
         let lo = 0, hi = n - 1;
         while (lo < hi) {
             const mid = (lo + hi) >> 1;
@@ -267,10 +301,10 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
 
         // Tooltip position relative to stack
         const stackRect = this.stackRef.nativeElement.getBoundingClientRect();
-        const rawX = event.clientX - stackRect.left + 14;
+        const rawX = clientX - stackRect.left + 14;
         const stackW = stackRect.width;
         this.ttX = rawX + 160 > stackW ? rawX - 174 : rawX;
-        this.ttY = event.clientY - stackRect.top - 10;
+        this.ttY = clientY - stackRect.top - 10;
 
         this.hoverIdx = idx;
         this.buildTooltip();
@@ -298,9 +332,13 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
     } | null {
         const c = ref?.nativeElement;
         if (!c) return null;
-        const W = (c.width = c.offsetWidth || 600);
-        const H = (c.height = c.offsetHeight || 100);
+        const dpr = window.devicePixelRatio || 1;
+        const W = c.offsetWidth || 600;
+        const H = c.offsetHeight || 100;
+        c.width = Math.round(W * dpr);
+        c.height = Math.round(H * dpr);
         const ctx = c.getContext('2d')!;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, W, H);
         if (!this.records.length) return null;
 
@@ -688,9 +726,13 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
     private drawXAxis(): void {
         const c = this.xRef?.nativeElement;
         if (!c || !this.records.length) return;
-        const W = (c.width = c.offsetWidth || 600);
-        const H = (c.height = c.offsetHeight || 22);
+        const dpr = window.devicePixelRatio || 1;
+        const W = c.offsetWidth || 600;
+        const H = c.offsetHeight || 22;
+        c.width = Math.round(W * dpr);
+        c.height = Math.round(H * dpr);
         const ctx = c.getContext('2d')!;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, W, H);
 
         const { mL, mR } = this.margins(W);
