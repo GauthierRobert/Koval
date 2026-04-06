@@ -82,13 +82,13 @@ import {ZoneBlock} from '../../../../services/zone';
         .dot.cad { background: #3b82f6; }
         .dot.blocks { background: #2ecc71; }
         .toggle-sep { width: 1px; height: 16px; background: var(--overlay-10); margin: 0 2px; }
-        .charts-stack { position: relative; display: flex; flex-direction: column; gap: 4px; }
-        .mc { width: 100%; display: block; cursor: crosshair; }
-        .primary-h { height: 150px; }
-        .hr-h { height: 80px; }
-        .cad-h { height: 80px; }
-        .elev-h { height: 60px; }
-        .xaxis-h { height: 22px; cursor: default; }
+        .charts-stack { position: relative; display: flex; flex-direction: column; gap: 4px; min-height: 0; }
+        .mc { width: 100%; display: block; cursor: crosshair; min-height: 0; }
+        .primary-h { flex: 3 1 0; min-height: 90px; }
+        .hr-h { flex: 2 1 0; min-height: 60px; }
+        .cad-h { flex: 2 1 0; min-height: 60px; }
+        .elev-h { flex: 1 1 0; min-height: 48px; }
+        .xaxis-h { flex: 0 0 22px; height: 22px; cursor: default; }
         .tt {
             position: absolute; z-index: 10; pointer-events: none;
             background: var(--surface-card, rgba(32, 34, 52, 0.97));
@@ -102,13 +102,14 @@ import {ZoneBlock} from '../../../../services/zone';
         .tt-lbl { color: var(--text-muted); font: 9px monospace; }
         .tt-val { font: bold 10px monospace; text-align: right; }
 
-        @media (orientation: landscape) and (max-height: 500px) {
-            .primary-h { height: 40vh; }
-            .hr-h { height: 25vh; }
-            .cad-h { height: 25vh; }
-            .elev-h { height: 20vh; }
+        @media (max-width: 768px) {
+            .chart-wrap { min-height: 70vh; }
             .chart-toggles { gap: 4px; }
-            .toggle-btn { padding: 2px 8px; font-size: 9px; }
+            .toggle-btn { padding: 3px 8px; font-size: 9px; }
+            .primary-h { min-height: 120px; }
+            .hr-h { min-height: 70px; }
+            .cad-h { min-height: 70px; }
+            .elev-h { min-height: 50px; }
         }
     `],
 })
@@ -140,9 +141,12 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
 
     _hasElevation = false;
     private ready = false;
-    private readonly ML = 48;
-    private readonly MR = 48;
     private resizeObserver: ResizeObserver | null = null;
+
+    /** Side margins shrink on narrow viewports so the plot keeps usable width on phones. */
+    private margins(W: number): { mL: number; mR: number } {
+        return W < 500 ? { mL: 28, mR: 16 } : { mL: 48, mR: 48 };
+    }
 
     // Canvas-safe colors resolved from CSS variables
     private _accentRgb: [number, number, number] = [255, 157, 0];
@@ -215,6 +219,8 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
     ngAfterViewInit(): void {
         this.ready = true;
         this.drawAll();
+        // Re-draw after the first paint so canvases pick up their flex-resolved size.
+        requestAnimationFrame(() => this.drawAll());
         this.resizeObserver = new ResizeObserver(() => {
             if (this.ready) this.drawAll();
         });
@@ -246,9 +252,10 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
         const n = this.records.length;
         const t0 = this.records[0].timestamp;
         const totalSec = this.records[n - 1].timestamp - t0 || n;
-        const cW = canvas.width - this.ML - this.MR;
+        const { mL, mR } = this.margins(canvas.width);
+        const cW = canvas.width - mL - mR;
 
-        const targetT = t0 + ((mouseX - this.ML) / cW) * totalSec;
+        const targetT = t0 + ((mouseX - mL) / cW) * totalSec;
         let lo = 0, hi = n - 1;
         while (lo < hi) {
             const mid = (lo + hi) >> 1;
@@ -287,7 +294,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
     private initCanvas(ref: ElementRef<HTMLCanvasElement> | undefined): {
         ctx: CanvasRenderingContext2D; W: number; H: number; cW: number;
         xOf: (i: number) => number; xOfT: (sec: number) => number;
-        mT: number; mB: number;
+        mT: number; mB: number; mL: number; mR: number;
     } | null {
         const c = ref?.nativeElement;
         if (!c) return null;
@@ -297,14 +304,15 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
         ctx.clearRect(0, 0, W, H);
         if (!this.records.length) return null;
 
-        const mL = this.ML, mR = this.MR, mT = 6, mB = 6;
+        const { mL, mR } = this.margins(W);
+        const mT = 6, mB = 6;
         const cW = W - mL - mR;
         const t0 = this.records[0].timestamp;
         const n = this.records.length;
         const totalSec = this.records[n - 1].timestamp - t0 || n;
         const xOf = (i: number) => mL + ((this.records[i].timestamp - t0) / totalSec) * cW;
         const xOfT = (sec: number) => mL + (sec / totalSec) * cW;
-        return { ctx, W, H, cW, xOf, xOfT, mT, mB };
+        return { ctx, W, H, cW, xOf, xOfT, mT, mB, mL, mR };
     }
 
     private drawCrosshair(ctx: CanvasRenderingContext2D, x: number, top: number, bottom: number): void {
@@ -367,8 +375,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
     private drawPrimary(): void {
         const s = this.initCanvas(this.pRef);
         if (!s) return;
-        const { ctx, W, H, cW, xOf, xOfT, mT, mB } = s;
-        const mL = this.ML, mR = this.MR;
+        const { ctx, W, H, cW, xOf, xOfT, mT, mB, mL, mR } = s;
         const accent = this._accentHex;
         const n = this.records.length;
         const t0 = this.records[0].timestamp;
@@ -507,8 +514,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
     private drawHR(): void {
         const s = this.initCanvas(this.hrRef);
         if (!s) return;
-        const { ctx, W, H, cW, xOf, xOfT, mT, mB } = s;
-        const mL = this.ML, mR = this.MR;
+        const { ctx, W, H, cW, xOf, xOfT, mT, mB, mL, mR } = s;
         const n = this.records.length;
         const t0 = this.records[0].timestamp;
         const totalSec = this.records[n - 1].timestamp - t0 || n;
@@ -562,8 +568,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
     private drawCadence(): void {
         const s = this.initCanvas(this.cadRef);
         if (!s) return;
-        const { ctx, W, H, cW, xOf, xOfT, mT, mB } = s;
-        const mL = this.ML, mR = this.MR;
+        const { ctx, W, H, cW, xOf, xOfT, mT, mB, mL, mR } = s;
         const n = this.records.length;
         const t0 = this.records[0].timestamp;
         const totalSec = this.records[n - 1].timestamp - t0 || n;
@@ -619,8 +624,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
     private drawElevation(): void {
         const s = this.initCanvas(this.elRef);
         if (!s) return;
-        const { ctx, W, H, cW, xOf, xOfT, mT, mB } = s;
-        const mL = this.ML;
+        const { ctx, W, H, cW, xOf, xOfT, mT, mB, mL } = s;
         const chartH = H - mT - mB;
         const top = mT, bottom = mT + chartH;
 
@@ -689,7 +693,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, On
         const ctx = c.getContext('2d')!;
         ctx.clearRect(0, 0, W, H);
 
-        const mL = this.ML, mR = this.MR;
+        const { mL, mR } = this.margins(W);
         const n = this.records.length;
         const t0 = this.records[0].timestamp;
         const totalSec = this.records[n - 1].timestamp - t0 || n;
