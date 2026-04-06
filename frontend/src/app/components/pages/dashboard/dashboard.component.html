@@ -37,7 +37,7 @@
       <div class="bento-grid stagger-children">
 
         <!-- ▌ Hero: Today's Focus — spans 8 cols -->
-        <div class="bento-card bento-8 bento-tall inner-glow glow-card focus-hero">
+        <div class="bento-card bento-8 inner-glow glow-card focus-hero">
           <app-dashboard-focus-card
             [upcomingWorkouts]="vm.upcoming"
             [todayKey]="todayKey"
@@ -46,7 +46,7 @@
         </div>
 
         <!-- ▌ Performance Metrics — spans 4 cols -->
-        <div class="bento-card bento-4 bento-tall perf-tile">
+        <div class="bento-card bento-4 perf-tile">
           <app-dashboard-performance-panel
             [formStats]="vm.form">
           </app-dashboard-performance-panel>
@@ -132,9 +132,9 @@
           </div>
         }
 
-        <!-- ▌ Latest Activity — spans 6 cols -->
+        <!-- ▌ Latest Activity — spans 6 cols when next workout shown, otherwise 8 to fill the row -->
         @if (vm.latestFit; as fit) {
-          <div class="bento-card bento-6 glow-card latest-tile">
+          <div class="bento-card glow-card latest-tile" [class.bento-6]="vm.upcoming.length > 0" [class.bento-8]="vm.upcoming.length === 0">
             <div class="latest-header">
               <span class="tile-label">{{ 'DASHBOARD.CARD_LATEST_ACTIVITY' | translate }}</span>
               <span class="latest-badge">{{ 'DASHBOARD.LATEST_ACTIVITY_BADGE' | translate }}</span>
