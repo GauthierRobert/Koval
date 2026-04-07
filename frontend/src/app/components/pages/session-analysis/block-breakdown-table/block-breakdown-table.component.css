@@ -207,6 +207,23 @@
   .zone-block-row.zb-cycling,
   .zone-blocks-header.zb-run-swim,
   .zone-block-row.zb-run-swim {
-    min-width: 600px;
+    min-width: 520px;
+  }
+
+  /* Drop the description column on mobile — it's redundant with the zone label
+     and eats horizontal space. */
+  .zone-blocks-header.zb-cycling,
+  .zone-block-row.zb-cycling {
+    grid-template-columns: 56px 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  }
+
+  .zone-blocks-header.zb-run-swim,
+  .zone-block-row.zb-run-swim {
+    grid-template-columns: 56px 1fr 1fr 1fr 1fr 1fr 1fr;
+  }
+
+  .zb-desc,
+  .zone-blocks-header > span:nth-child(2) {
+    display: none;
   }
 }

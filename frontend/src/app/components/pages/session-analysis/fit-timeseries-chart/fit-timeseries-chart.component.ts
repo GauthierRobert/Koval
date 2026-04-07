@@ -1,4 +1,4 @@
-import {AfterViewChecked, AfterViewInit, Component, ElementRef, inject, Input, NgZone, OnChanges, OnDestroy, ViewChild} from '@angular/core';
+import {AfterViewChecked, AfterViewInit, ChangeDetectorRef, Component, ElementRef, inject, Input, NgZone, OnChanges, OnDestroy, ViewChild} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FitRecord} from '../../../../services/metrics.service';
 import {BlockSummary} from '../../../../services/workout-execution.service';
@@ -162,6 +162,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     private _primaryMax = 0;
     private ready = false;
     private readonly zone = inject(NgZone);
+    private readonly cdr = inject(ChangeDetectorRef);
     private resizeObserver: ResizeObserver | null = null;
     private observedCanvases = new Set<HTMLCanvasElement>();
 
@@ -346,18 +347,20 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
                     this.touchGesture = 'scrub';
                 } else {
                     this.touchGesture = 'scroll';
-                    this.zone.run(() => this.onMouseLeave());
+                    this.onMouseLeave();
+                    this.cdr.detectChanges();
                     return;
                 }
             }
         }
 
-        // touchmove is registered via native addEventListener (passive: false), so it
-        // fires outside the Angular zone. Run inside the zone so ttX/ttY/ttRows updates
-        // trigger change detection — otherwise the tooltip stays stuck on first sample.
+        // touchmove is registered via native addEventListener (passive: false) to allow
+        // preventDefault during scrub. The app is zoneless, so NgZone.run() does NOT
+        // trigger CD — we must call detectChanges() explicitly so ttX/ttY/ttRows render.
         // Update on every event (even while undecided) so tiny movements still track.
         this.isTouchHover = true;
-        this.zone.run(() => this.computeHoverAt(this.touchCanvas!, touch.clientX, touch.clientY));
+        this.computeHoverAt(this.touchCanvas, touch.clientX, touch.clientY);
+        this.cdr.detectChanges();
 
         if (this.touchGesture === 'scrub' && event.cancelable) {
             event.preventDefault();
@@ -427,19 +430,14 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         // The .tt element uses transform: translate(-50%, -100%), so ttX/ttY mark the
         // anchor point (bottom-center of the tooltip). Clamp X to keep it on-screen.
         this.ttX = Math.max(8, Math.min(stackW - 8, lineXInStack));
-        if (this.isTouchHover) {
-            // On touch, anchor the tooltip just above the finger so it visually
-            // tracks the touch point instead of jumping to the curve value.
-            const touchYInStack = clientY - stackRect.top;
-            this.ttY = Math.max(60, Math.min(stackRect.height - 8, touchYInStack - 18));
-        } else if (this.showPrimary && this.pRef?.nativeElement && this._primaryMax > 0) {
+        if (this.showPrimary && this.pRef?.nativeElement && this._primaryMax > 0) {
             // Anchor 10px above the bar/curve top at this sample, matching drawPrimary's yOf.
             const pRect = this.pRef.nativeElement.getBoundingClientRect();
             const mT = 6, mB = 6;
             const chartH = pRect.height - mT - mB;
             const val = this.hoverPrimaryValue(idx, t0);
             const yLocal = mT + chartH * (1 - val / this._primaryMax);
-            this.ttY = (pRect.top - stackRect.top) + yLocal - 10;
+            this.ttY = (pRect.top - stackRect.top) + yLocal - 50;
         } else {
             const anchorRect = (this.showPrimary && this.pRef?.nativeElement)
                 ? this.pRef.nativeElement.getBoundingClientRect()
