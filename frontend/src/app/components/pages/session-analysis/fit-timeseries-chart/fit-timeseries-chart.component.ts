@@ -158,6 +158,8 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     ttRows: Array<{ label: string; value: string; color: string }> = [];
 
     _hasElevation = false;
+    /** Max value (W or km/h) used by drawPrimary's yOf — cached so the tooltip can follow the curve. */
+    private _primaryMax = 0;
     private ready = false;
     private resizeObserver: ResizeObserver | null = null;
     private observedCanvases = new Set<HTMLCanvasElement>();
@@ -401,8 +403,8 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
             ? lo - 1 : lo;
 
         // Tooltip position relative to stack: anchor horizontally to the scrub line
-        // (the matched sample's x in stack-local coordinates) and vertically above the
-        // primary (power) canvas so the finger never occludes it.
+        // (the matched sample's x in stack-local coordinates) and vertically just above
+        // the power curve/block at the hovered sample.
         const stackRect = this.stackRef.nativeElement.getBoundingClientRect();
         const stackW = stackRect.width;
         const sampleX = mL + ((this.records[idx].timestamp - t0) / totalSec) * cW;
@@ -410,10 +412,20 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         // The .tt element uses transform: translate(-50%, -100%), so ttX/ttY mark the
         // anchor point (bottom-center of the tooltip). Clamp X to keep it on-screen.
         this.ttX = Math.max(8, Math.min(stackW - 8, lineXInStack));
-        const anchorRect = (this.showPrimary && this.pRef?.nativeElement)
-            ? this.pRef.nativeElement.getBoundingClientRect()
-            : rect;
-        this.ttY = (anchorRect.top - stackRect.top) - 8;
+        if (this.showPrimary && this.pRef?.nativeElement && this._primaryMax > 0) {
+            // Anchor 10px above the bar/curve top at this sample, matching drawPrimary's yOf.
+            const pRect = this.pRef.nativeElement.getBoundingClientRect();
+            const mT = 6, mB = 6;
+            const chartH = pRect.height - mT - mB;
+            const val = this.hoverPrimaryValue(idx, t0);
+            const yLocal = mT + chartH * (1 - val / this._primaryMax);
+            this.ttY = (pRect.top - stackRect.top) + yLocal - 10;
+        } else {
+            const anchorRect = (this.showPrimary && this.pRef?.nativeElement)
+                ? this.pRef.nativeElement.getBoundingClientRect()
+                : rect;
+            this.ttY = (anchorRect.top - stackRect.top) - 8;
+        }
 
         this.hoverIdx = idx;
         this.buildTooltip();
@@ -536,11 +548,13 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
             const sm = this.rollingAvg(this.records.map(r => r.power), 5);
             maxP = Math.max(this.ftp ? this.ftp * 1.5 : 0, ...sm) || 1;
             yOf = (v) => top + chartH * (1 - v / maxP);
+            this._primaryMax = maxP;
         } else {
             const sp = this.records.map(r => (r.speed || 0) * 3.6);
             const sm = this.rollingAvg(sp, 5);
             maxS = Math.max(...sm.filter(v => v > 0), 1);
             yOf = (v) => top + chartH * (1 - v / maxS);
+            this._primaryMax = maxS;
         }
 
         // ── Render modes ─────────────────────────────────
