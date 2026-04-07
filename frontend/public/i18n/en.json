@@ -894,7 +894,8 @@
     "ZONE_BLOCKS_COL_AVG_SPEED": "Avg Speed",
     "ZONE_BLOCKS_COL_MAX_SPEED": "Max Speed",
     "ZONE_FILTER_CLEAR": "Clear",
-    "MOBILE_CHART_HINT": "Opens in landscape view"
+    "MOBILE_CHART_HINT": "Opens in landscape view",
+    "POWER_CURVE_TITLE": "POWER CURVE"
   },
   "PACING": {
     "PAGE_TITLE": "Race Pacing",

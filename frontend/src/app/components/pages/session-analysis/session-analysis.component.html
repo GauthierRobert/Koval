@@ -81,6 +81,12 @@
               </app-zone-distribution-panel>
             }
           }
+
+          <!-- Power curve (cycling only, hidden when no power data) -->
+          <app-power-curve-chart
+            [sessionId]="session.id"
+            [sportType]="session.sportType">
+          </app-power-curve-chart>
         }
       }
 

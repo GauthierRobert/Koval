@@ -16,6 +16,7 @@ import {FitTimeseriesChartComponent} from './fit-timeseries-chart/fit-timeseries
 import {SessionStatsHeaderComponent} from './session-stats-header/session-stats-header.component';
 import {ZoneDistributionPanelComponent, ZoneDistEntry} from './zone-distribution-panel/zone-distribution-panel.component';
 import {BlockBreakdownTableComponent} from './block-breakdown-table/block-breakdown-table.component';
+import {PowerCurveChartComponent} from './power-curve-chart/power-curve-chart.component';
 
 interface FitState {
     loading: boolean;
@@ -27,7 +28,7 @@ interface FitState {
 @Component({
     selector: 'app-session-analysis',
     standalone: true,
-    imports: [CommonModule, TranslateModule, FitTimeseriesChartComponent, SessionStatsHeaderComponent, ZoneDistributionPanelComponent, BlockBreakdownTableComponent],
+    imports: [CommonModule, TranslateModule, FitTimeseriesChartComponent, SessionStatsHeaderComponent, ZoneDistributionPanelComponent, BlockBreakdownTableComponent, PowerCurveChartComponent],
     templateUrl: './session-analysis.component.html',
     styleUrl: './session-analysis.component.css',
 })

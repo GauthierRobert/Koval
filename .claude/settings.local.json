@@ -93,7 +93,8 @@
       "Read(//tmp/mcp-common/org/springframework/ai/mcp/server/common/autoconfigure/properties/**)",
       "Bash(unzip -o /c/Users/gauth/.m2/repository/org/springframework/ai/spring-ai-autoconfigure-mcp-server-common/2.0.0-M2/spring-ai-autoconfigure-mcp-server-common-2.0.0-M2.jar -d /tmp/mcp-common)",
       "Bash(unzip -o /c/Users/gauth/.m2/repository/org/springframework/ai/spring-ai-autoconfigure-mcp-server-webmvc/2.0.0-M2/spring-ai-autoconfigure-mcp-server-webmvc-2.0.0-M2.jar -d /tmp/mcp-webmvc)",
-      "Read(//tmp/mcp-webmvc/org/springframework/ai/mcp/server/webmvc/**)"
+      "Read(//tmp/mcp-webmvc/org/springframework/ai/mcp/server/webmvc/**)",
+      "Bash(mvn -o clean compile)"
     ]
   }
 }

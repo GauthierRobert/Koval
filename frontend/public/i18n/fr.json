@@ -894,7 +894,8 @@
     "ZONE_BLOCKS_COL_AVG_SPEED": "Vitesse moy.",
     "ZONE_BLOCKS_COL_MAX_SPEED": "Vitesse max.",
     "ZONE_FILTER_CLEAR": "Effacer",
-    "MOBILE_CHART_HINT": "S'ouvre en vue paysage"
+    "MOBILE_CHART_HINT": "S'ouvre en vue paysage",
+    "POWER_CURVE_TITLE": "COURBE DE PUISSANCE"
   },
   "PACING": {
     "PAGE_TITLE": "Allure de course",

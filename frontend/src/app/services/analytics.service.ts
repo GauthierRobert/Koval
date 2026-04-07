@@ -1,6 +1,6 @@
 import { inject, Injectable, NgZone } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface VolumeEntry {
@@ -71,5 +71,15 @@ export class AnalyticsService {
       next: (data) => this.ngZone.run(() => this.personalRecordsSubject.next(data)),
       error: () => {},
     });
+  }
+
+  /**
+   * Fetch the mean-maximal power curve for a single session. The backend computes the curve
+   * once from the stored FIT file and serves it from cache thereafter; the response carries
+   * a 30-day private Cache-Control so subsequent visits hit the browser cache directly.
+   * Returns an empty object for non-cycling sessions or sessions without power data.
+   */
+  getSessionPowerCurve(sessionId: string): Observable<Record<number, number>> {
+    return this.http.get<Record<number, number>>(`${this.apiUrl}/${sessionId}/power-curve`);
   }
 }

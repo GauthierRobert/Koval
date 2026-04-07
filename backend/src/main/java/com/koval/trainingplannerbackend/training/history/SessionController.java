@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -140,6 +139,10 @@ public class SessionController {
             @RequestParam("file") MultipartFile file) throws IOException {
         String userId = SecurityUtils.getCurrentUserId();
         CompletedSession result = sessionService.uploadFitFile(id, userId, file.getInputStream());
+        if (result != null) {
+            // FIT file changed → previously cached/persisted curve is stale, force recompute on next access.
+            powerCurveService.invalidateSessionPowerCurve(id);
+        }
         return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
     }
 
@@ -168,20 +171,18 @@ public class SessionController {
         return ResponseEntity.ok(powerCurveService.getBestPowerCurve(userId, from, to));
     }
 
-    /** Returns the power curve for a single session. */
+    /**
+     * Returns the power curve for a single session, computed server-side from the stored
+     * FIT file. Once a curve is computed it is immutable for the lifetime of that FIT file,
+     * so we tell the browser to cache the response privately for 30 days.
+     */
     @GetMapping("/{id}/power-curve")
     public ResponseEntity<Map<Integer, Double>> getSessionPowerCurve(@PathVariable String id) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(powerCurveService.getSessionPowerCurve(id, userId));
-    }
-
-    /** Stores a computed power curve for a session (called after the frontend parses a FIT file). */
-    @PutMapping("/{id}/power-curve")
-    public ResponseEntity<Void> saveSessionPowerCurve(@PathVariable String id,
-                                                       @RequestBody Map<Integer, Double> powerCurve) {
-        String userId = SecurityUtils.getCurrentUserId();
-        powerCurveService.savePowerCurve(id, userId, powerCurve);
-        return ResponseEntity.ok().build();
+        Map<Integer, Double> curve = powerCurveService.getSessionPowerCurve(id, userId);
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(Duration.ofDays(30)).cachePrivate())
+                .body(curve);
     }
 
     /** Aggregates training volume by week or month for the given date range. */
