@@ -15,21 +15,23 @@ description: Use ONLY when the user is a COACH and asks to review their athletes
 
 ## Workflow
 
+**Step 0 — Load coach profile.** Read `coach-profile.md` if present. Pull the coach's configured `overreachTsb` (default `-25`), `detrainedTsb` (default `+25`) and `missedSessionAlertN` (default `7` days) — use these instead of the hardcoded values below. Also honour the configured `language` and `voice` when writing the action items. If missing, suggest running `koval-coach-onboarding` once and proceed with defaults.
+
 1. Call `getMyProfile` — confirm the user is a COACH. Abort otherwise.
 2. Call `listAthletes` to get the coach's athlete roster.
 3. For each athlete (in parallel batches of 3-5 to keep latency reasonable):
    - `getAthleteProfile(athleteId)` → name, FTP, current CTL/ATL/TSB
    - `getAthletePmc(athleteId, from=today-14d, to=today)` → for last-week TSS sum and form trend
    - `getAthleteRecentSessions(athleteId, limit=3)` → most recent 3 sessions
-4. Compute per-athlete flags:
-   - **🔴 Overreached**: TSB < -25
-   - **🟡 Inactive**: no sessions in the last 7 days
-   - **🟡 Detraining**: TSB > +25
+4. Compute per-athlete flags (thresholds from `coach-profile.md`, defaults shown):
+   - **🔴 Overreached**: TSB < `overreachTsb` (default -25)
+   - **🟡 Inactive**: no sessions in the last `missedSessionAlertN` days (default 7)
+   - **🟡 Detraining**: TSB > `detrainedTsb` (default +25)
    - **🟢 OK**: everything else
 5. Render a dashboard table sorted by severity (red → yellow → green).
 
 ## Output format
-
+[koval-plan-my-week.md](koval-plan-my-week.md)
 ```
 ## Squad review — week of <monday>
 

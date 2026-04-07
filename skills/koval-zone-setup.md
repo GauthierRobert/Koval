@@ -35,6 +35,7 @@ description: Use during onboarding or when the user asks to set up, configure, o
    - Running (threshold pace): equivalent 7-zone system based on % of threshold pace
    - Swimming (CSS): 5-zone CSS system
 7. **Confirm** with `listZoneSystems` and a one-line summary.
+8. **Suggest follow-up:** *"Want me to capture the rest of your training preferences now (available days, goals, voice)?"* → hand off to `koval-athlete-onboarding` so the new athlete ends up with a full profile, not just zones.
 
 ## Output format
 

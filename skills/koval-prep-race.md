@@ -13,6 +13,8 @@ description: Use when the user asks Claude to prepare for a race, build a taper,
 
 ## Workflow
 
+**Step 0 — Load athlete profile.** Read `athlete-profile.md` if present. Honour `availableDays`, `restDays`, `maxSessionMinutes`, `forbiddenEfforts` and `neverInclude` when laying out the taper. Apply the configured `voice`, `language` and `prescriptionUnit` to every session created. If missing, suggest running `koval-athlete-onboarding` once and proceed with defaults.
+
 1. **Find the goal**:
    - Call `listGoals` and pick the closest A-priority goal in the future, OR ask the user which goal if there are multiple.
    - Call `getGoal(goalId)` for full detail.

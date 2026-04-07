@@ -63,7 +63,7 @@ import {ErrorToastService} from '../../../services/error-toast.service';
 
       .error-toast-message {
         flex: 1;
-        color: var(--text-primary, #eeeef8);
+        color: var(--text-color);
         font-size: 13px;
         line-height: 1.4;
       }
@@ -71,7 +71,7 @@ import {ErrorToastService} from '../../../services/error-toast.service';
       .error-toast-close {
         background: none;
         border: none;
-        color: var(--text-muted, #404060);
+        color: var(--text-muted);
         font-size: 18px;
         cursor: pointer;
         padding: 0 4px;
@@ -80,7 +80,7 @@ import {ErrorToastService} from '../../../services/error-toast.service';
       }
 
       .error-toast-close:hover {
-        color: var(--text-secondary, #8080a0);
+        color: var(--text-color);
       }
 
       @keyframes slideUp {

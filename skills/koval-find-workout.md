@@ -13,6 +13,8 @@ description: Use when the user wants to find or pick a workout from their librar
 
 ## Workflow
 
+**Step 0 — Load athlete profile.** Read `athlete-profile.md` if present. Use `favouriteSessionTypes`, `avoid`, `forbiddenEfforts`, `maxSessionMinutes`, `structurePreference` (structured vs free) and `environment` to bias the search filters and to filter out candidates the athlete shouldn't do. If missing, suggest running `koval-athlete-onboarding` once and proceed with defaults.
+
 1. **Parse the request** for filters:
    - `query` → keyword from the title (sweet spot, threshold, VO2, recovery, endurance, etc.)
    - `sport` → CYCLING / RUNNING / SWIMMING / BRICK

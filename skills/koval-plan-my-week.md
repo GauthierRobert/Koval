@@ -13,15 +13,20 @@ description: Use when the user asks Claude to plan, build or schedule their trai
 
 ## Workflow
 
+**Step 0 — Load athlete profile.** Read `athlete-profile.md` if it exists in the skills folder. Use `availableDays`, `restDays`, `longSessionDay`, `maxSessionMinutes` (weekday/weekend), `neverInclude`, `forbiddenEfforts`, `prescriptionUnit`, `defaultZoneSystem` and the `voice` block to constrain everything below. If the file is missing, mention it once and suggest running `koval-athlete-onboarding` first — then proceed with sensible defaults.
+
 1. **Gather context** (parallel reads):
    - `getMyProfile` — sport focus, FTP/CSS, role
    - `getPmcData` for last 14 days — current CTL/ATL/TSB to calibrate intensity
    - `listGoals` — upcoming A/B priority races or fitness goals
    - `getRecentSessions` with `limit=7` — what they've actually done lately
-2. **Decide volume + intensity** based on TSB:
-   - TSB > +5 (fresh): 1 hard session + 1 tempo + 3-4 endurance, total 6-8h
-   - TSB -10 to +5 (neutral): 1 hard + 1 tempo + 2-3 endurance + 1 recovery
-   - TSB < -10 (fatigued): scale back — recovery / endurance only, no VO2
+2. **Decide volume + intensity** based on TSB **and** the athlete profile. Read `weeklyHours`, `maxHardDaysPerWeek`, `favouriteSessionTypes`, `avoid`, `forbiddenEfforts` and `sleepBaseline` from `athlete-profile.md` first — those set the **ceiling**. TSB then sets the **fill** within that ceiling:
+   - **TSB > +5 (fresh):** fill the athlete's full `weeklyHours` budget. Up to `maxHardDaysPerWeek` hard sessions (1 VO2/threshold + 1 tempo if the budget allows two), the rest endurance. Pick session types from `favouriteSessionTypes` first.
+   - **TSB -10 to +5 (neutral):** target ~85% of `weeklyHours`. One hard + one tempo *if* `maxHardDaysPerWeek >= 2`, otherwise one hard only. Add a recovery day.
+   - **TSB < -10 (fatigued):** target ~60% of `weeklyHours`. Recovery + endurance only — no VO2, no threshold, regardless of what's in `favouriteSessionTypes`.
+   - **Sleep baseline = poor:** drop one intensity day from whichever bucket above and replace it with endurance.
+   - Never schedule a session type listed in `avoid` or `forbiddenEfforts`.
+   - If no profile exists, fall back to: fresh = 6-8h / 1 hard + 1 tempo + 3-4 endurance; neutral = 1 hard + 1 tempo + 2-3 endurance + 1 recovery; fatigued = recovery/endurance only.
 3. **Pick or build sessions**:
    - For each planned slot, first try `searchTrainings(query, sport, minDurationMin, maxDurationMin)` to find an existing template in the user's library
    - If nothing fits, call `createTraining` with a properly structured `TrainingRequest` (warmup → main blocks → cooldown). Use percentages of FTP / threshold pace / CSS, never absolute watts.

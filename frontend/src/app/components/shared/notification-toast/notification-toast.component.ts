@@ -61,17 +61,17 @@ import {MessagePayload} from 'firebase/messaging';
         flex: 1;
       }
       .toast-content strong {
-        color: var(--text-primary, #eeeef8);
+        color: var(--text-color);
         font-size: 14px;
       }
       .toast-content span {
-        color: var(--text-secondary, #8080a0);
+        color: var(--text-muted);
         font-size: 13px;
       }
       .toast-close {
         background: none;
         border: none;
-        color: var(--text-muted, #404060);
+        color: var(--text-muted);
         font-size: 18px;
         cursor: pointer;
         padding: 0 4px;
