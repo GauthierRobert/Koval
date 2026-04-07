@@ -1,4 +1,4 @@
-import {AfterViewChecked, AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, ViewChild} from '@angular/core';
+import {AfterViewChecked, AfterViewInit, Component, ElementRef, inject, Input, NgZone, OnChanges, OnDestroy, ViewChild} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FitRecord} from '../../../../services/metrics.service';
 import {BlockSummary} from '../../../../services/workout-execution.service';
@@ -161,6 +161,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     /** Max value (W or km/h) used by drawPrimary's yOf — cached so the tooltip can follow the curve. */
     private _primaryMax = 0;
     private ready = false;
+    private readonly zone = inject(NgZone);
     private resizeObserver: ResizeObserver | null = null;
     private observedCanvases = new Set<HTMLCanvasElement>();
 
@@ -348,7 +349,10 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
 
         if (this.touchGesture === 'scrub') {
             if (event.cancelable) event.preventDefault();
-            this.computeHoverAt(this.touchCanvas, touch.clientX, touch.clientY);
+            // touchmove is registered via native addEventListener (passive: false), so it
+            // fires outside the Angular zone. Run inside the zone so ttX/ttY/ttRows updates
+            // trigger change detection — otherwise the tooltip stays stuck on first sample.
+            this.zone.run(() => this.computeHoverAt(this.touchCanvas!, touch.clientX, touch.clientY));
         }
     }
 
@@ -359,11 +363,14 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
             this.cadRef?.nativeElement,
             this.elRef?.nativeElement,
         ];
-        for (const c of canvases) {
-            if (!c) continue;
-            c.removeEventListener('touchmove', this.touchMoveListener);
-            c.addEventListener('touchmove', this.touchMoveListener, { passive: false });
-        }
+        // Outside the zone: we re-enter explicitly in handleTouchMove only when scrubbing.
+        this.zone.runOutsideAngular(() => {
+            for (const c of canvases) {
+                if (!c) continue;
+                c.removeEventListener('touchmove', this.touchMoveListener);
+                c.addEventListener('touchmove', this.touchMoveListener, { passive: false });
+            }
+        });
     }
 
     private unregisterTouchMoveListeners(): void {
