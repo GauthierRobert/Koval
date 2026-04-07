@@ -70,6 +70,22 @@ public class RaceGoalService {
         repository.deleteById(id);
     }
 
+    /** Get a single race goal by id, scoped to the owning athlete. */
+    public RaceGoalResponse getGoal(String id, String athleteId) {
+        RaceGoal goal = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Goal not found"));
+        if (!goal.getAthleteId().equals(athleteId)) {
+            throw new ForbiddenOperationException("Not authorized");
+        }
+        Race race = null;
+        if (goal.getRaceId() != null) {
+            try {
+                race = raceService.getRaceById(goal.getRaceId());
+            } catch (NoSuchElementException ignored) {}
+        }
+        return RaceGoalResponse.from(goal, race);
+    }
+
     @CacheEvict(value = "athleteGoals", key = "#athleteId")
     public RaceGoal linkToRace(String goalId, String athleteId, String raceId) {
         RaceGoal goal = repository.findById(goalId)

@@ -68,6 +68,29 @@ public class McpSchedulingTools {
         return ScheduleSummary.from(sw, resolveTitle(sw.getTrainingId()));
     }
 
+    @Tool(description = "Move a scheduled workout to a different date. The status (PENDING/COMPLETED/SKIPPED) is preserved.")
+    public ScheduleSummary rescheduleWorkout(
+            @ToolParam(description = "Scheduled workout ID") String scheduledWorkoutId,
+            @ToolParam(description = "New date (YYYY-MM-DD)") LocalDate newDate) {
+        if (newDate == null) return null;
+        ScheduledWorkout sw = scheduledWorkoutService.reschedule(scheduledWorkoutId, newDate);
+        return ScheduleSummary.from(sw, resolveTitle(sw.getTrainingId()));
+    }
+
+    @Tool(description = "Permanently delete a scheduled workout from the calendar (un-assign). Use this when the user wants to cancel a planned session entirely. To just record skipping it, use markSkipped instead.")
+    public String unassignWorkout(
+            @ToolParam(description = "Scheduled workout ID to remove") String scheduledWorkoutId) {
+        scheduledWorkoutService.deleteScheduledWorkout(scheduledWorkoutId);
+        return "Scheduled workout removed.";
+    }
+
+    @Tool(description = "Get full detail of a single scheduled workout: id, training id, resolved training title, scheduled date, status, notes.")
+    public ScheduleSummary getScheduledWorkoutDetail(
+            @ToolParam(description = "Scheduled workout ID") String scheduledWorkoutId) {
+        ScheduledWorkout sw = scheduledWorkoutService.getScheduledWorkout(scheduledWorkoutId);
+        return ScheduleSummary.from(sw, resolveTitle(sw.getTrainingId()));
+    }
+
     private String resolveTitle(String trainingId) {
         if (trainingId == null) return "Unknown";
         try {

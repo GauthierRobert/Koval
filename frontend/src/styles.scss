@@ -659,6 +659,7 @@ textarea:focus-visible {
 @media (max-width: 768px) {
   :root {
     --page-padding: 16px;
+    --page-max-width: 100%;
     --sidebar-width: 0px;
     --topbar-height: 56px;
     --card-padding: 12px;

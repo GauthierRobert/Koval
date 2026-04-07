@@ -65,4 +65,22 @@ public class ScheduledWorkoutService {
         workout.setStatus(ScheduleStatus.SKIPPED);
         return scheduledWorkoutRepository.save(workout);
     }
+
+    /** Fetch a single scheduled workout by id, throwing if not found. */
+    public ScheduledWorkout getScheduledWorkout(String scheduledWorkoutId) {
+        return scheduledWorkoutRepository.findById(scheduledWorkoutId)
+                .orElseThrow(() -> new ResourceNotFoundException("Scheduled workout", scheduledWorkoutId));
+    }
+
+    /** Move a scheduled workout to a different date. */
+    public ScheduledWorkout reschedule(String scheduledWorkoutId, LocalDate newDate) {
+        ScheduledWorkout workout = getScheduledWorkout(scheduledWorkoutId);
+        workout.setScheduledDate(newDate);
+        return scheduledWorkoutRepository.save(workout);
+    }
+
+    /** Permanently delete a scheduled workout (un-assigning it from the calendar). */
+    public void deleteScheduledWorkout(String scheduledWorkoutId) {
+        scheduledWorkoutRepository.deleteById(scheduledWorkoutId);
+    }
 }

@@ -84,6 +84,10 @@ npm run watch              # Watch mode build
 - System prompt includes `{userId}`, `{userRole}`, and `{userFtp}` for context-aware execution
 - Usage metadata tracking: input/output tokens and cache performance metrics
 
+**MCP Server + End-User Skills:**
+- The backend also exposes ~70 tools via the **MCP server** (`spring-ai-starter-mcp-server-webmvc`) for external Claude clients (Claude Desktop, Claude.ai). Adapters live in `backend/src/main/java/com/koval/trainingplannerbackend/mcp/` — see `.claude/skills/mcp-server-development/SKILL.md` for conventions.
+- Top-level **`skills/`** directory contains end-user-facing skill markdown files (`koval-analyze-last-ride.md`, `koval-form-check.md`, `koval-plan-my-week.md`, etc.) that ride on top of the MCP tools. These are NOT developer skills — they are distributed alongside the MCP connector to Claude Desktop / Claude.ai users so Claude knows which tools to chain for common workflows. See `skills/README.md`.
+
 ### Frontend Structure
 
 **Component Architecture** (under `src/app/components`):

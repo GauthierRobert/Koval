@@ -214,6 +214,18 @@ public ToolCallbackProvider mcpTools(McpTrainingTools training, ...) {
 
 No API key or headers needed — Claude Desktop handles OAuth automatically via the discovery endpoint.
 
+## Markdown Rendering Tools
+
+Most MCP adapters return JSON records. The exception is **`McpAnalyticsTools`**, which returns ready-to-paste markdown (bar charts, sparklines, tables, week grids) so end-user skills don't have to format anything.
+
+**Convention:**
+- Adapter lives at `mcp/McpAnalyticsTools.java`, all tools return `String`
+- Pure-Java rendering helpers live in `mcp/render/MarkdownChartRenderer.java` (no Spring deps, static methods, unicode block chars `█▉▊▋▌▍▎▏` for bars and `▁▂▃▄▅▆▇█` for sparklines)
+- Each render tool delegates to an existing analytics service (`PowerCurveService`, `AnalyticsService`, `SessionService`, `ScheduledWorkoutService`) for data and only adds formatting
+- **Zero new business logic** in the renderer or the adapter
+
+When adding a new "report"-style tool, follow this split: data lives in the service, formatting lives in `MarkdownChartRenderer`, and the adapter is the thin glue. Do not put rendering logic in any other `Mcp*Tools` adapter — those stay pure JSON.
+
 ## Anti-Patterns
 
 | Don't | Do Instead |

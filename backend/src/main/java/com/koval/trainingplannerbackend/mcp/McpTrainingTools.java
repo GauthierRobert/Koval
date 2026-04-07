@@ -5,9 +5,11 @@ import com.koval.trainingplannerbackend.ai.tools.training.TrainingToolService;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.training.TrainingAccessService;
 import com.koval.trainingplannerbackend.training.TrainingService;
+import com.koval.trainingplannerbackend.training.metrics.TrainingMetricsService;
 import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -22,13 +24,16 @@ public class McpTrainingTools {
 
     private final TrainingService trainingService;
     private final TrainingAccessService trainingAccessService;
+    private final TrainingMetricsService trainingMetricsService;
     private final com.koval.trainingplannerbackend.ai.tools.training.TrainingMapper trainingMapper;
 
     public McpTrainingTools(TrainingService trainingService,
                             TrainingAccessService trainingAccessService,
+                            TrainingMetricsService trainingMetricsService,
                             com.koval.trainingplannerbackend.ai.tools.training.TrainingMapper trainingMapper) {
         this.trainingService = trainingService;
         this.trainingAccessService = trainingAccessService;
+        this.trainingMetricsService = trainingMetricsService;
         this.trainingMapper = trainingMapper;
     }
 
@@ -75,6 +80,64 @@ public class McpTrainingTools {
         return McpTrainingSummary.from(trainingService.updateTraining(trainingId, training));
     }
 
+    @Tool(description = "Search the user's training workouts by title substring (case-insensitive), sport, and duration window. All filters are optional — pass null to skip a filter. Returns matching summaries (id, title, sport, type, duration, TSS).")
+    public List<McpTrainingSummary> searchTrainings(
+            @ToolParam(description = "Title substring to match (case-insensitive). Pass null or empty to skip.") String query,
+            @ToolParam(description = "Sport filter: CYCLING, RUNNING, SWIMMING, BRICK. Null = any.") String sport,
+            @ToolParam(description = "Minimum duration in minutes. Null = no minimum.") Integer minDurationMin,
+            @ToolParam(description = "Maximum duration in minutes. Null = no maximum.") Integer maxDurationMin) {
+        String userId = SecurityUtils.getCurrentUserId();
+        String q = (query != null && !query.isBlank()) ? query.toLowerCase() : null;
+        String s = (sport != null && !sport.isBlank()) ? sport.toUpperCase() : null;
+        return trainingService.listTrainingsByUser(userId).stream()
+                .filter(t -> q == null || (t.getTitle() != null && t.getTitle().toLowerCase().contains(q)))
+                .filter(t -> s == null || (t.getSportType() != null && t.getSportType().name().equals(s)))
+                .filter(t -> {
+                    if (minDurationMin == null && maxDurationMin == null) return true;
+                    Integer secs = t.getEstimatedDurationSeconds();
+                    if (secs == null) return false;
+                    int mins = secs / 60;
+                    if (minDurationMin != null && mins < minDurationMin) return false;
+                    if (maxDurationMin != null && mins > maxDurationMin) return false;
+                    return true;
+                })
+                .map(McpTrainingSummary::from)
+                .toList();
+    }
+
+    @Tool(description = "Clone an existing training workout into a new training owned by the current user. Useful for reusing a structured workout as a template. The clone keeps all blocks but gets a new title and a fresh ID.")
+    public McpTrainingSummary cloneTraining(
+            @ToolParam(description = "Source training ID") String trainingId,
+            @ToolParam(description = "Title for the new clone (defaults to '<original> (copy)')") String newTitle) {
+        String userId = SecurityUtils.getCurrentUserId();
+        Training source = trainingService.getTrainingById(trainingId);
+        trainingAccessService.verifyAccess(userId, source);
+        Training copy;
+        try {
+            copy = source.getClass().getDeclaredConstructor().newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Failed to instantiate training subclass " + source.getClass().getSimpleName(), e);
+        }
+        BeanUtils.copyProperties(source, copy);
+        copy.setId(null);
+        copy.setTitle((newTitle != null && !newTitle.isBlank()) ? newTitle : source.getTitle() + " (copy)");
+        return McpTrainingSummary.from(trainingService.createTraining(copy, userId));
+    }
+
+    @Tool(description = "Estimate training metrics (TSS, IF, duration in seconds, distance) for an existing training without persisting any change. Uses the user's current FTP/CSS/threshold to compute intensity.")
+    public TrainingMetricsEstimate estimateTrainingMetrics(
+            @ToolParam(description = "Training ID to estimate") String trainingId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        Training training = trainingService.getTrainingById(trainingId);
+        trainingAccessService.verifyAccess(userId, training);
+        trainingMetricsService.calculateTrainingMetrics(training, userId);
+        return new TrainingMetricsEstimate(
+                training.getId(), training.getTitle(),
+                training.getEstimatedTss(), training.getEstimatedIf(),
+                training.getEstimatedDurationSeconds(),
+                training.getEstimatedDistance());
+    }
+
     @Tool(description = "Delete a training workout by ID. Only the creator can delete their own trainings.")
     public String deleteTraining(
             @ToolParam(description = "The training ID to delete") String trainingId) {
@@ -85,6 +148,10 @@ public class McpTrainingTools {
         trainingService.deleteTraining(trainingId);
         return "Deleted training: " + title;
     }
+
+    public record TrainingMetricsEstimate(String trainingId, String title, Integer estimatedTss,
+                                           Double estimatedIf, Integer estimatedDurationSeconds,
+                                           Integer estimatedDistance) {}
 
     /** Richer summary for MCP consumers who don't have system prompt context. */
     public record McpTrainingSummary(String id, String title, String sport, String type,

@@ -1,14 +1,19 @@
 package com.koval.trainingplannerbackend.mcp;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
+import com.koval.trainingplannerbackend.club.ClubService;
+import com.koval.trainingplannerbackend.club.dto.ClubDetailResponse;
 import com.koval.trainingplannerbackend.club.dto.ClubMemberResponse;
 import com.koval.trainingplannerbackend.club.dto.CreateRecurringSessionRequest;
 import com.koval.trainingplannerbackend.club.dto.CreateSessionRequest;
+import com.koval.trainingplannerbackend.club.feed.ClubFeedService;
+import com.koval.trainingplannerbackend.club.feed.dto.ClubFeedResponse;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipService;
 import com.koval.trainingplannerbackend.club.recurring.RecurringSessionService;
 import com.koval.trainingplannerbackend.club.recurring.RecurringSessionTemplate;
 import com.koval.trainingplannerbackend.club.session.ClubSessionService;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
+import com.koval.trainingplannerbackend.club.session.SessionParticipationService;
 import com.koval.trainingplannerbackend.club.session.SessionTrainingLinkService;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
@@ -30,15 +35,24 @@ public class McpClubTools {
     private final SessionTrainingLinkService trainingLinkService;
     private final RecurringSessionService recurringService;
     private final ClubMembershipService membershipService;
+    private final ClubService clubService;
+    private final SessionParticipationService participationService;
+    private final ClubFeedService feedService;
 
     public McpClubTools(ClubSessionService sessionService,
                         SessionTrainingLinkService trainingLinkService,
                         RecurringSessionService recurringService,
-                        ClubMembershipService membershipService) {
+                        ClubMembershipService membershipService,
+                        ClubService clubService,
+                        SessionParticipationService participationService,
+                        ClubFeedService feedService) {
         this.sessionService = sessionService;
         this.trainingLinkService = trainingLinkService;
         this.recurringService = recurringService;
         this.membershipService = membershipService;
+        this.clubService = clubService;
+        this.participationService = participationService;
+        this.feedService = feedService;
     }
 
     @Tool(description = "List club training sessions in a date range. Returns scheduled group workouts with title, sport, date/time, and participant info.")
@@ -119,6 +133,44 @@ public class McpClubTools {
         if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
         String userId = SecurityUtils.getCurrentUserId();
         return membershipService.getMembers(userId, clubId);
+    }
+
+    @Tool(description = "Get full detail of a single club: name, description, location, logo, visibility, member count, owner, and the current user's membership status/role within it.")
+    public ClubDetailResponse getClub(
+            @ToolParam(description = "Club ID") String clubId) {
+        if (clubId == null || clubId.isBlank()) throw new IllegalArgumentException("clubId is required.");
+        String userId = SecurityUtils.getCurrentUserId();
+        return clubService.getClubDetail(clubId, userId);
+    }
+
+    @Tool(description = "Join a club training session as a participant. If the session is full the user is added to the waiting list and will be auto-promoted when a spot opens.")
+    public String joinClubSession(
+            @ToolParam(description = "Club ID (used for authorization context)") String clubId,
+            @ToolParam(description = "Session ID to join") String sessionId) {
+        if (sessionId == null || sessionId.isBlank()) return "Error: sessionId is required.";
+        String userId = SecurityUtils.getCurrentUserId();
+        ClubTrainingSession s = participationService.joinSession(userId, sessionId);
+        return "Joined session '" + s.getTitle() + "'.";
+    }
+
+    @Tool(description = "Leave a club training session (or remove yourself from its waiting list).")
+    public String leaveClubSession(
+            @ToolParam(description = "Club ID (used for authorization context)") String clubId,
+            @ToolParam(description = "Session ID to leave") String sessionId) {
+        if (sessionId == null || sessionId.isBlank()) return "Error: sessionId is required.";
+        String userId = SecurityUtils.getCurrentUserId();
+        participationService.cancelSessionParticipation(userId, sessionId);
+        return "Left session.";
+    }
+
+    @Tool(description = "Get the recent activity feed for a club: pinned events first then chronological. Items include session created/joined, member joined, training shared, etc.")
+    public ClubFeedResponse getClubFeed(
+            @ToolParam(description = "Club ID") String clubId,
+            @ToolParam(description = "Page size (default 20, max 100)") Integer limit) {
+        if (clubId == null || clubId.isBlank()) throw new IllegalArgumentException("clubId is required.");
+        String userId = SecurityUtils.getCurrentUserId();
+        int size = (limit != null && limit > 0) ? Math.min(limit, 100) : 20;
+        return feedService.getFeed(userId, clubId, 0, size);
     }
 
     @Tool(description = "Link a training workout to a club session so participants can follow the structured workout.")

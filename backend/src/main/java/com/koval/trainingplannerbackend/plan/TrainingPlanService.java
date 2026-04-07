@@ -398,6 +398,60 @@ public class TrainingPlanService {
                 totalTargetTss, totalActualTss, weeklyBreakdown);
     }
 
+    /**
+     * Resume a paused plan back to ACTIVE without recreating any scheduled workouts.
+     * Use {@link #activatePlan(String, String, java.time.LocalDate)} if you also need
+     * to repopulate the calendar with future days.
+     */
+    @Transactional
+    public TrainingPlan resumePlan(String planId, String userId) {
+        TrainingPlan plan = getPlan(planId);
+        verifyOwnership(plan, userId);
+        if (plan.getStatus() != PlanStatus.PAUSED) {
+            throw new ForbiddenOperationException("Only paused plans can be resumed");
+        }
+        plan.setStatus(PlanStatus.ACTIVE);
+        return planRepository.save(plan);
+    }
+
+    /**
+     * Clone an existing plan as a new DRAFT, copying its title, weeks structure and
+     * sport but giving it a new title and clearing activation state. Useful for
+     * reusing a plan as a template.
+     */
+    @Transactional
+    public TrainingPlan clonePlan(String planId, String newTitle, LocalDate newStartDate, String userId) {
+        TrainingPlan source = getPlan(planId);
+        TrainingPlan copy = new TrainingPlan();
+        copy.setTitle(newTitle != null && !newTitle.isBlank() ? newTitle : source.getTitle() + " (copy)");
+        copy.setDescription(source.getDescription());
+        copy.setSportType(source.getSportType());
+        copy.setStartDate(newStartDate);
+        copy.setDurationWeeks(source.getDurationWeeks());
+        copy.setTargetFtp(source.getTargetFtp());
+        copy.setGoalRaceId(source.getGoalRaceId());
+
+        List<PlanWeek> weeksCopy = new ArrayList<>();
+        for (PlanWeek w : source.getWeeks()) {
+            PlanWeek wc = new PlanWeek();
+            wc.setWeekNumber(w.getWeekNumber());
+            wc.setLabel(w.getLabel());
+            wc.setTargetTss(w.getTargetTss());
+            List<PlanDay> daysCopy = new ArrayList<>();
+            for (PlanDay d : w.getDays()) {
+                PlanDay dc = new PlanDay();
+                dc.setDayOfWeek(d.getDayOfWeek());
+                dc.setTrainingId(d.getTrainingId());
+                dc.setNotes(d.getNotes());
+                daysCopy.add(dc);
+            }
+            wc.setDays(daysCopy);
+            weeksCopy.add(wc);
+        }
+        copy.setWeeks(weeksCopy);
+        return createPlan(copy, userId);
+    }
+
     public void deletePlan(String planId, String userId) {
         TrainingPlan plan = getPlan(planId);
         verifyOwnership(plan, userId);
