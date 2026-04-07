@@ -31,34 +31,30 @@ import {ZoneBlock} from '../../../../services/zone';
                 @if (showPrimary) {
                     <canvas #primaryCanvas class="mc primary-h"
                         (mousemove)="onHover($event)"
-                        (touchstart)="onTouch($event)"
-                        (touchmove)="onTouch($event)"
-                        (touchend)="onMouseLeave()"
-                        (touchcancel)="onMouseLeave()"></canvas>
+                        (touchstart)="onTouchStart($event)"
+                        (touchend)="onTouchEnd()"
+                        (touchcancel)="onTouchEnd()"></canvas>
                 }
                 @if (showHR) {
                     <canvas #hrCanvas class="mc hr-h"
                         (mousemove)="onHover($event)"
-                        (touchstart)="onTouch($event)"
-                        (touchmove)="onTouch($event)"
-                        (touchend)="onMouseLeave()"
-                        (touchcancel)="onMouseLeave()"></canvas>
+                        (touchstart)="onTouchStart($event)"
+                        (touchend)="onTouchEnd()"
+                        (touchcancel)="onTouchEnd()"></canvas>
                 }
                 @if (showCadence) {
                     <canvas #cadCanvas class="mc cad-h"
                         (mousemove)="onHover($event)"
-                        (touchstart)="onTouch($event)"
-                        (touchmove)="onTouch($event)"
-                        (touchend)="onMouseLeave()"
-                        (touchcancel)="onMouseLeave()"></canvas>
+                        (touchstart)="onTouchStart($event)"
+                        (touchend)="onTouchEnd()"
+                        (touchcancel)="onTouchEnd()"></canvas>
                 }
                 @if (_hasElevation) {
                     <canvas #elevCanvas class="mc elev-h"
                         (mousemove)="onHover($event)"
-                        (touchstart)="onTouch($event)"
-                        (touchmove)="onTouch($event)"
-                        (touchend)="onMouseLeave()"
-                        (touchcancel)="onMouseLeave()"></canvas>
+                        (touchstart)="onTouchStart($event)"
+                        (touchend)="onTouchEnd()"
+                        (touchcancel)="onTouchEnd()"></canvas>
                 }
                 <canvas #xCanvas class="mc xaxis-h"></canvas>
                 @if (hoverIdx !== null) {
@@ -101,7 +97,7 @@ import {ZoneBlock} from '../../../../services/zone';
         .charts-stack { position: relative; display: flex; flex-direction: column; gap: 4px; min-height: 0; }
         .mc {
             width: 100%; display: block; cursor: crosshair; min-height: 0;
-            touch-action: none;
+            touch-action: pan-y;
             -webkit-user-select: none; user-select: none;
             -webkit-touch-callout: none;
         }
@@ -116,6 +112,7 @@ import {ZoneBlock} from '../../../../services/zone';
             border: 1px solid var(--glass-border, rgba(255,255,255,0.22));
             border-radius: 8px; padding: 8px 10px;
             min-width: 120px; white-space: nowrap;
+            transform: translate(-50%, -100%);
         }
         .tt-hdr { color: var(--text-80); font: 9px monospace; }
         .tt-sep { height: 1px; background: var(--overlay-15); margin: 5px 0; }
@@ -244,6 +241,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
             if (this.ready) this.drawAll();
         });
         this.syncObservedCanvases();
+        this.registerTouchMoveListeners();
         this.drawAll();
         // Re-draw after the first paint so canvases pick up their flex-resolved size.
         requestAnimationFrame(() => this.drawAll());
@@ -252,7 +250,10 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     ngAfterViewChecked(): void {
         // Conditional canvases (@if showHR / showCadence / _hasElevation) mount/unmount;
         // re-attach the ResizeObserver so size changes on any visible canvas trigger a redraw.
-        if (this.ready) this.syncObservedCanvases();
+        if (this.ready) {
+            this.syncObservedCanvases();
+            this.registerTouchMoveListeners();
+        }
     }
 
     private syncObservedCanvases(): void {
@@ -282,6 +283,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
 
     ngOnDestroy(): void {
         this.resizeObserver?.disconnect();
+        this.unregisterTouchMoveListeners();
     }
 
     ngOnChanges(): void {
@@ -299,12 +301,79 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         this.computeHoverAt(canvas, event.clientX, event.clientY);
     }
 
-    onTouch(event: TouchEvent): void {
-        if (event.cancelable) event.preventDefault();
+    private touchStartX = 0;
+    private touchStartY = 0;
+    private touchGesture: 'undecided' | 'scrub' | 'scroll' = 'undecided';
+    private touchCanvas: HTMLCanvasElement | null = null;
+    private readonly touchMoveListener = (e: TouchEvent) => this.handleTouchMove(e);
+
+    onTouchStart(event: TouchEvent): void {
         const touch = event.touches[0];
         if (!touch) return;
         const canvas = event.currentTarget as HTMLCanvasElement;
+        this.touchStartX = touch.clientX;
+        this.touchStartY = touch.clientY;
+        this.touchGesture = 'undecided';
+        this.touchCanvas = canvas;
+        // Show tooltip immediately on tap.
         this.computeHoverAt(canvas, touch.clientX, touch.clientY);
+    }
+
+    onTouchEnd(): void {
+        this.touchGesture = 'undecided';
+        this.touchCanvas = null;
+        this.onMouseLeave();
+    }
+
+    private handleTouchMove(event: TouchEvent): void {
+        const touch = event.touches[0];
+        if (!touch || !this.touchCanvas) return;
+
+        if (this.touchGesture === 'undecided') {
+            const dx = touch.clientX - this.touchStartX;
+            const dy = touch.clientY - this.touchStartY;
+            const adx = Math.abs(dx);
+            const ady = Math.abs(dy);
+            if (adx < 8 && ady < 8) return; // not enough movement to decide
+            if (adx > ady) {
+                this.touchGesture = 'scrub';
+            } else {
+                this.touchGesture = 'scroll';
+                this.onMouseLeave();
+                return;
+            }
+        }
+
+        if (this.touchGesture === 'scrub') {
+            if (event.cancelable) event.preventDefault();
+            this.computeHoverAt(this.touchCanvas, touch.clientX, touch.clientY);
+        }
+    }
+
+    private registerTouchMoveListeners(): void {
+        const canvases: (HTMLCanvasElement | undefined)[] = [
+            this.pRef?.nativeElement,
+            this.hrRef?.nativeElement,
+            this.cadRef?.nativeElement,
+            this.elRef?.nativeElement,
+        ];
+        for (const c of canvases) {
+            if (!c) continue;
+            c.removeEventListener('touchmove', this.touchMoveListener);
+            c.addEventListener('touchmove', this.touchMoveListener, { passive: false });
+        }
+    }
+
+    private unregisterTouchMoveListeners(): void {
+        const canvases: (HTMLCanvasElement | undefined)[] = [
+            this.pRef?.nativeElement,
+            this.hrRef?.nativeElement,
+            this.cadRef?.nativeElement,
+            this.elRef?.nativeElement,
+        ];
+        for (const c of canvases) {
+            c?.removeEventListener('touchmove', this.touchMoveListener);
+        }
     }
 
     private computeHoverAt(canvas: HTMLCanvasElement | null, clientX: number, clientY: number): void {
@@ -331,12 +400,20 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         const idx = (lo > 0 && Math.abs(this.records[lo - 1].timestamp - targetT) < Math.abs(this.records[lo].timestamp - targetT))
             ? lo - 1 : lo;
 
-        // Tooltip position relative to stack
+        // Tooltip position relative to stack: anchor horizontally to the scrub line
+        // (the matched sample's x in stack-local coordinates) and vertically above the
+        // primary (power) canvas so the finger never occludes it.
         const stackRect = this.stackRef.nativeElement.getBoundingClientRect();
-        const rawX = clientX - stackRect.left + 14;
         const stackW = stackRect.width;
-        this.ttX = rawX + 160 > stackW ? rawX - 174 : rawX;
-        this.ttY = clientY - stackRect.top - 10;
+        const sampleX = mL + ((this.records[idx].timestamp - t0) / totalSec) * cW;
+        const lineXInStack = (rect.left - stackRect.left) + sampleX;
+        // The .tt element uses transform: translate(-50%, -100%), so ttX/ttY mark the
+        // anchor point (bottom-center of the tooltip). Clamp X to keep it on-screen.
+        this.ttX = Math.max(8, Math.min(stackW - 8, lineXInStack));
+        const anchorRect = (this.showPrimary && this.pRef?.nativeElement)
+            ? this.pRef.nativeElement.getBoundingClientRect()
+            : rect;
+        this.ttY = (anchorRect.top - stackRect.top) - 8;
 
         this.hoverIdx = idx;
         this.buildTooltip();
