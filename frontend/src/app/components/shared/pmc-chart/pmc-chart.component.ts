@@ -40,8 +40,8 @@ function getSportColor(sport?: string): string {
     `,
     styles: [`
         :host { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-        .pmc-chart-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; touch-action: none; }
-        .pmc-canvas { width: 100%; flex: 1; min-height: 320px; display: block; cursor: crosshair; touch-action: none; }
+        .pmc-chart-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; touch-action: pan-y; }
+        .pmc-canvas { width: 100%; flex: 1; min-height: 320px; display: block; cursor: crosshair; touch-action: pan-y; }
     `],
 })
 export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
@@ -73,6 +73,8 @@ export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
     // Touch state
     private isTouchDragging = false;
     private touchStartX = 0;
+    private touchStartY = 0;
+    private touchGesture: 'undecided' | 'pan' | 'scroll' = 'undecided';
     private touchStartViewStartDate = '';
     private touchStartViewEndDate = '';
     private isPinching = false;
@@ -242,10 +244,11 @@ export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
     private onTouchStart(event: TouchEvent): void {
         if (!this.viewStartDate) return;
         if (event.touches.length === 2) {
-            // Pinch zoom start
+            // Pinch zoom start — always claim the gesture, two fingers is unambiguous.
             event.preventDefault();
             this.isPinching = true;
             this.isTouchDragging = false;
+            this.touchGesture = 'pan';
             const t = event.touches;
             this.pinchStartDist = Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
             this.pinchStartSpan = this.dateToDays(this.viewEndDate) - this.dateToDays(this.viewStartDate);
@@ -253,11 +256,13 @@ export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
             this.touchStartViewStartDate = this.viewStartDate;
             this.touchStartViewEndDate = this.viewEndDate;
         } else if (event.touches.length === 1) {
-            // Single finger pan start
-            event.preventDefault();
+            // Single finger: don't claim the gesture yet — wait for the move direction
+            // so vertical swipes can scroll the page.
             this.isTouchDragging = false;
             this.isPinching = false;
+            this.touchGesture = 'undecided';
             this.touchStartX = event.touches[0].clientX;
+            this.touchStartY = event.touches[0].clientY;
             this.touchStartViewStartDate = this.viewStartDate;
             this.touchStartViewEndDate = this.viewEndDate;
         }
@@ -292,12 +297,31 @@ export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
         }
 
         if (event.touches.length === 1 && !this.isPinching) {
-            // Single finger pan + tooltip
-            event.preventDefault();
             const touch = event.touches[0];
             const dx = touch.clientX - this.touchStartX;
+            const dy = touch.clientY - this.touchStartY;
+            const adx = Math.abs(dx);
+            const ady = Math.abs(dy);
 
-            if (!this.isTouchDragging && Math.abs(dx) > 5) {
+            // Decide what the user is doing once movement passes a small threshold.
+            if (this.touchGesture === 'undecided') {
+                if (adx < 8 && ady < 8) return;
+                if (adx > ady) {
+                    this.touchGesture = 'pan';
+                } else {
+                    this.touchGesture = 'scroll';
+                    this.hoverIdx = null;
+                    this.draw();
+                    return;
+                }
+            }
+
+            if (this.touchGesture === 'scroll') return;
+
+            // Horizontal gesture: claim the event, pan + tooltip.
+            if (event.cancelable) event.preventDefault();
+
+            if (!this.isTouchDragging && adx > 5) {
                 this.isTouchDragging = true;
                 this.hoverIdx = null;
             }
@@ -321,6 +345,7 @@ export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
         if (event.touches.length < 2) this.isPinching = false;
         if (event.touches.length === 0) {
             this.isTouchDragging = false;
+            this.touchGesture = 'undecided';
             this.hoverIdx = null;
             this.draw();
         }
