@@ -1,4 +1,4 @@
-import {AfterViewChecked, AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, ViewChild} from '@angular/core';
+import {AfterViewChecked, AfterViewInit, Component, ElementRef, inject, Input, NgZone, OnChanges, OnDestroy, ViewChild} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FitRecord} from '../../../../services/metrics.service';
 import {BlockSummary} from '../../../../services/workout-execution.service';
@@ -158,7 +158,10 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     ttRows: Array<{ label: string; value: string; color: string }> = [];
 
     _hasElevation = false;
+    /** Max value (W or km/h) used by drawPrimary's yOf — cached so the tooltip can follow the curve. */
+    private _primaryMax = 0;
     private ready = false;
+    private readonly zone = inject(NgZone);
     private resizeObserver: ResizeObserver | null = null;
     private observedCanvases = new Set<HTMLCanvasElement>();
 
@@ -346,7 +349,10 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
 
         if (this.touchGesture === 'scrub') {
             if (event.cancelable) event.preventDefault();
-            this.computeHoverAt(this.touchCanvas, touch.clientX, touch.clientY);
+            // touchmove is registered via native addEventListener (passive: false), so it
+            // fires outside the Angular zone. Run inside the zone so ttX/ttY/ttRows updates
+            // trigger change detection — otherwise the tooltip stays stuck on first sample.
+            this.zone.run(() => this.computeHoverAt(this.touchCanvas!, touch.clientX, touch.clientY));
         }
     }
 
@@ -357,11 +363,14 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
             this.cadRef?.nativeElement,
             this.elRef?.nativeElement,
         ];
-        for (const c of canvases) {
-            if (!c) continue;
-            c.removeEventListener('touchmove', this.touchMoveListener);
-            c.addEventListener('touchmove', this.touchMoveListener, { passive: false });
-        }
+        // Outside the zone: we re-enter explicitly in handleTouchMove only when scrubbing.
+        this.zone.runOutsideAngular(() => {
+            for (const c of canvases) {
+                if (!c) continue;
+                c.removeEventListener('touchmove', this.touchMoveListener);
+                c.addEventListener('touchmove', this.touchMoveListener, { passive: false });
+            }
+        });
     }
 
     private unregisterTouchMoveListeners(): void {
@@ -401,8 +410,8 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
             ? lo - 1 : lo;
 
         // Tooltip position relative to stack: anchor horizontally to the scrub line
-        // (the matched sample's x in stack-local coordinates) and vertically above the
-        // primary (power) canvas so the finger never occludes it.
+        // (the matched sample's x in stack-local coordinates) and vertically just above
+        // the power curve/block at the hovered sample.
         const stackRect = this.stackRef.nativeElement.getBoundingClientRect();
         const stackW = stackRect.width;
         const sampleX = mL + ((this.records[idx].timestamp - t0) / totalSec) * cW;
@@ -410,10 +419,20 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         // The .tt element uses transform: translate(-50%, -100%), so ttX/ttY mark the
         // anchor point (bottom-center of the tooltip). Clamp X to keep it on-screen.
         this.ttX = Math.max(8, Math.min(stackW - 8, lineXInStack));
-        const anchorRect = (this.showPrimary && this.pRef?.nativeElement)
-            ? this.pRef.nativeElement.getBoundingClientRect()
-            : rect;
-        this.ttY = (anchorRect.top - stackRect.top) - 8;
+        if (this.showPrimary && this.pRef?.nativeElement && this._primaryMax > 0) {
+            // Anchor 10px above the bar/curve top at this sample, matching drawPrimary's yOf.
+            const pRect = this.pRef.nativeElement.getBoundingClientRect();
+            const mT = 6, mB = 6;
+            const chartH = pRect.height - mT - mB;
+            const val = this.hoverPrimaryValue(idx, t0);
+            const yLocal = mT + chartH * (1 - val / this._primaryMax);
+            this.ttY = (pRect.top - stackRect.top) + yLocal - 10;
+        } else {
+            const anchorRect = (this.showPrimary && this.pRef?.nativeElement)
+                ? this.pRef.nativeElement.getBoundingClientRect()
+                : rect;
+            this.ttY = (anchorRect.top - stackRect.top) - 8;
+        }
 
         this.hoverIdx = idx;
         this.buildTooltip();
@@ -536,11 +555,13 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
             const sm = this.rollingAvg(this.records.map(r => r.power), 5);
             maxP = Math.max(this.ftp ? this.ftp * 1.5 : 0, ...sm) || 1;
             yOf = (v) => top + chartH * (1 - v / maxP);
+            this._primaryMax = maxP;
         } else {
             const sp = this.records.map(r => (r.speed || 0) * 3.6);
             const sm = this.rollingAvg(sp, 5);
             maxS = Math.max(...sm.filter(v => v > 0), 1);
             yOf = (v) => top + chartH * (1 - v / maxS);
+            this._primaryMax = maxS;
         }
 
         // ── Render modes ─────────────────────────────────
