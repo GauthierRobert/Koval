@@ -301,6 +301,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
 
     onHover(event: MouseEvent): void {
         const canvas = event.target as HTMLCanvasElement;
+        this.isTouchHover = false;
         this.computeHoverAt(canvas, event.clientX, event.clientY);
     }
 
@@ -308,6 +309,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     private touchStartY = 0;
     private touchGesture: 'undecided' | 'scrub' | 'scroll' = 'undecided';
     private touchCanvas: HTMLCanvasElement | null = null;
+    private isTouchHover = false;
     private readonly touchMoveListener = (e: TouchEvent) => this.handleTouchMove(e);
 
     onTouchStart(event: TouchEvent): void {
@@ -318,6 +320,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         this.touchStartY = touch.clientY;
         this.touchGesture = 'undecided';
         this.touchCanvas = canvas;
+        this.isTouchHover = true;
         // Show tooltip immediately on tap.
         this.computeHoverAt(canvas, touch.clientX, touch.clientY);
     }
@@ -325,6 +328,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     onTouchEnd(): void {
         this.touchGesture = 'undecided';
         this.touchCanvas = null;
+        this.isTouchHover = false;
         this.onMouseLeave();
     }
 
@@ -337,22 +341,26 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
             const dy = touch.clientY - this.touchStartY;
             const adx = Math.abs(dx);
             const ady = Math.abs(dy);
-            if (adx < 8 && ady < 8) return; // not enough movement to decide
-            if (adx > ady) {
-                this.touchGesture = 'scrub';
-            } else {
-                this.touchGesture = 'scroll';
-                this.onMouseLeave();
-                return;
+            if (adx >= 4 || ady >= 4) {
+                if (adx >= ady) {
+                    this.touchGesture = 'scrub';
+                } else {
+                    this.touchGesture = 'scroll';
+                    this.zone.run(() => this.onMouseLeave());
+                    return;
+                }
             }
         }
 
-        if (this.touchGesture === 'scrub') {
-            if (event.cancelable) event.preventDefault();
-            // touchmove is registered via native addEventListener (passive: false), so it
-            // fires outside the Angular zone. Run inside the zone so ttX/ttY/ttRows updates
-            // trigger change detection — otherwise the tooltip stays stuck on first sample.
-            this.zone.run(() => this.computeHoverAt(this.touchCanvas!, touch.clientX, touch.clientY));
+        // touchmove is registered via native addEventListener (passive: false), so it
+        // fires outside the Angular zone. Run inside the zone so ttX/ttY/ttRows updates
+        // trigger change detection — otherwise the tooltip stays stuck on first sample.
+        // Update on every event (even while undecided) so tiny movements still track.
+        this.isTouchHover = true;
+        this.zone.run(() => this.computeHoverAt(this.touchCanvas!, touch.clientX, touch.clientY));
+
+        if (this.touchGesture === 'scrub' && event.cancelable) {
+            event.preventDefault();
         }
     }
 
@@ -419,7 +427,12 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         // The .tt element uses transform: translate(-50%, -100%), so ttX/ttY mark the
         // anchor point (bottom-center of the tooltip). Clamp X to keep it on-screen.
         this.ttX = Math.max(8, Math.min(stackW - 8, lineXInStack));
-        if (this.showPrimary && this.pRef?.nativeElement && this._primaryMax > 0) {
+        if (this.isTouchHover) {
+            // On touch, anchor the tooltip just above the finger so it visually
+            // tracks the touch point instead of jumping to the curve value.
+            const touchYInStack = clientY - stackRect.top;
+            this.ttY = Math.max(60, Math.min(stackRect.height - 8, touchYInStack - 18));
+        } else if (this.showPrimary && this.pRef?.nativeElement && this._primaryMax > 0) {
             // Anchor 10px above the bar/curve top at this sample, matching drawPrimary's yOf.
             const pRect = this.pRef.nativeElement.getBoundingClientRect();
             const mT = 6, mB = 6;
