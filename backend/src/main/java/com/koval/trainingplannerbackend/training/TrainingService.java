@@ -30,16 +30,18 @@ public class TrainingService {
     private final TrainingMetricsService metricsService;
     private final ClubMembershipRepository membershipRepository;
     private final ZwiftWorkoutService zwiftWorkoutService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     public TrainingService(TrainingRepository trainingRepository,
                            TrainingMetricsService metricsService,
                            ClubMembershipRepository membershipRepository,
-                           ZwiftWorkoutService zwiftWorkoutService) {
+                           ZwiftWorkoutService zwiftWorkoutService,
+                           ObjectMapper objectMapper) {
         this.trainingRepository = trainingRepository;
         this.metricsService = metricsService;
         this.membershipRepository = membershipRepository;
         this.zwiftWorkoutService = zwiftWorkoutService;
+        this.objectMapper = objectMapper;
     }
 
     /**

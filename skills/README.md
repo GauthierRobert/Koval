@@ -28,6 +28,7 @@ All output is **markdown only** (unicode bar charts, sparklines, tables) — no 
 | [koval-coach-onboarding](koval-coach-onboarding.md) | "set up my coaching profile" (COACH only) | Structured interview to capture the coach's periodization, volume, intensity distribution, signature workouts, voice and rules — saved as `coach-profile.md` and consumed by every other coach skill |
 | [koval-coach-weekly-review](koval-coach-weekly-review.md) | "review my athletes" (COACH only) | Athlete dashboard: TSB, 7d TSS, last session, alerts on overreach / inactivity |
 | [koval-find-workout](koval-find-workout.md) | "find me a sweet spot workout" | Searches your library by sport / duration / title and offers to schedule one |
+| [koval-create-workout](koval-create-workout.md) | "create a 5x5 VO2 workout", "build me a 90min Z2 ride" | Expert workout designer — bike/run/swim/tri rules, computes TSS, persists via `createTraining` |
 | [koval-zone-setup](koval-zone-setup.md) | "set up my zones" | Onboarding: capture FTP, create personalised zone systems |
 | [koval-athlete-onboarding](koval-athlete-onboarding.md) | "set up my athlete profile", "onboard me" | Structured interview to capture the athlete's goals, availability, workout style, recovery rules and voice — saved as `athlete-profile.md` and consumed by every other athlete skill |
 
