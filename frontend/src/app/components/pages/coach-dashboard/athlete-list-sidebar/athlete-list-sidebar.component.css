@@ -210,3 +210,49 @@
     border-bottom: 1px solid var(--glass-border);
   }
 }
+
+.section-header-actions { margin-left: auto; }
+.multi-select-toggle {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: inherit;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.multi-select-toggle.active,
+.multi-select-toggle:hover {
+  background: rgba(94, 177, 255, 0.15);
+  border-color: var(--accent, #5eb1ff);
+}
+.bulk-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  margin: 8px 0;
+  background: rgba(94, 177, 255, 0.08);
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+}
+.bulk-count { font-size: 12px; opacity: .85; }
+.bulk-assign-btn {
+  background: var(--accent, #5eb1ff);
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.athlete-row.multi-selected {
+  background: rgba(94, 177, 255, 0.1);
+  border-left: 3px solid var(--accent, #5eb1ff);
+}
+.athlete-multi-checkbox {
+  margin-right: 8px;
+  cursor: pointer;
+}

@@ -73,6 +73,14 @@ public class ClubSessionController {
         return ResponseEntity.ok(clubSessionService.updateSession(userId, id, sessionId, req));
     }
 
+    @PostMapping("/{id}/sessions/{sessionId}/duplicate")
+    public ResponseEntity<ClubTrainingSession> duplicateSession(@PathVariable String id,
+                                                                 @PathVariable String sessionId,
+                                                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime newScheduledAt) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(clubSessionService.duplicateSession(userId, id, sessionId, newScheduledAt));
+    }
+
     @PutMapping("/{id}/sessions/{sessionId}/cancel")
     public ResponseEntity<ClubTrainingSession> cancelEntireSession(@PathVariable String id,
                                                                      @PathVariable String sessionId,

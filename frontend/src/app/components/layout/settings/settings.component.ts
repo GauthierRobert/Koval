@@ -2,7 +2,6 @@ import {ChangeDetectionStrategy, Component, DestroyRef, HostListener, inject, On
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
-import {Router} from '@angular/router';
 import {BehaviorSubject} from 'rxjs';
 import {AuthService, User} from '../../../services/auth.service';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
@@ -35,7 +34,6 @@ export class SettingsComponent implements OnInit {
     private zoneService = inject(ZoneService);
     private translateService = inject(TranslateService);
     themeService = inject(ThemeService);
-    private router = inject(Router);
     private destroyRef = inject(DestroyRef);
 
     user$ = this.authService.user$;
@@ -134,11 +132,6 @@ export class SettingsComponent implements OnInit {
         const m = field.minutes ?? 0;
         const s = field.seconds ?? 0;
         return `${m}:${s.toString().padStart(2, '0')}`;
-    }
-
-    openConnectedApps(): void {
-        this.close();
-        this.router.navigate(['/oauth-clients']);
     }
 
     close() {

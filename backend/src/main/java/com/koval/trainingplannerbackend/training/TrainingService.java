@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.training;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Optional.ofNullable;
@@ -28,6 +30,7 @@ public class TrainingService {
     private final TrainingMetricsService metricsService;
     private final ClubMembershipRepository membershipRepository;
     private final ZwiftWorkoutService zwiftWorkoutService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public TrainingService(TrainingRepository trainingRepository,
                            TrainingMetricsService metricsService,
@@ -37,6 +40,30 @@ public class TrainingService {
         this.metricsService = metricsService;
         this.membershipRepository = membershipRepository;
         this.zwiftWorkoutService = zwiftWorkoutService;
+    }
+
+    /**
+     * Duplicate an existing training. The copy is owned by {@code userId}, has a fresh
+     * id, a "(copy)" suffix on the title, and is detached from any club assignments.
+     */
+    public Training duplicateTraining(String trainingId, String userId) {
+        Training source = getTrainingById(trainingId);
+        Training copy;
+        try {
+            // JSON round-trip handles polymorphism (CyclingTraining, RunningTraining, etc.)
+            String json = objectMapper.writeValueAsString(source);
+            copy = objectMapper.readValue(json, Training.class);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to clone training: " + e.getMessage(), e);
+        }
+        copy.setId(null);
+        copy.setCreatedBy(userId);
+        copy.setCreatedAt(LocalDateTime.now());
+        copy.setTitle(source.getTitle() + " (copy)");
+        copy.setClubIds(new ArrayList<>());
+        copy.setClubGroupIds(new ArrayList<>());
+        copy.setGroupIds(new ArrayList<>());
+        return trainingRepository.save(copy);
     }
 
     /**

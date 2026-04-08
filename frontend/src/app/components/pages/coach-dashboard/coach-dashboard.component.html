@@ -7,13 +7,18 @@
     [activeTagFilter]="activeTagFilter"
     [activeClubFilter]="activeClubFilter"
     [selectedAthlete]="selectedAthlete"
+    [multiSelectMode]="multiSelectMode"
+    [multiSelectedIds]="multiSelectedIds"
     [athleteMetrics$]="athleteMetrics$"
     [totalAthleteCount]="(athletes$ | async)?.length || 0"
     (selectAthlete)="selectAthlete($event)"
     (toggleTagFilter)="toggleTagFilter($event)"
     (toggleClubFilter)="toggleClubFilter($event)"
     (addAthlete)="addAthlete()"
-    (clearFilters)="clearFilters()">
+    (clearFilters)="clearFilters()"
+    (toggleMultiSelect)="toggleMultiSelectMode()"
+    (toggleAthleteSelection)="toggleAthleteSelection($event)"
+    (bulkAssign)="bulkAssign()">
   </app-athlete-list-sidebar>
 
   <!-- Right area: always visible, contains header + tabs -->
@@ -155,7 +160,7 @@
 </div>
 
 <app-training-action-modal [isOpen]="isScheduleModalOpen" mode="coach-assign"
-  [preselectedAthletes]="selectedAthlete ? [selectedAthlete] : undefined"
+  [preselectedAthletes]="bulkAssignAthletes.length > 0 ? bulkAssignAthletes : (selectedAthlete ? [selectedAthlete] : undefined)"
   (closed)="isScheduleModalOpen = false" (completed)="onScheduled()"></app-training-action-modal>
 
 <app-invite-code-modal [isOpen]="isInviteCodeModalOpen" [availableTags]="(allTags$ | async) || []"

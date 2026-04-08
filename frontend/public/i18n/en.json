@@ -1,4 +1,10 @@
 {
+  "INSTALL_BANNER": {
+    "TITLE": "Install Koval",
+    "MESSAGE": "Install the app for a faster, full-screen experience.",
+    "INSTALL": "Install",
+    "DISMISS": "Not now"
+  },
   "COMMON": {
     "CANCEL": "Cancel",
     "SAVE": "Save",
@@ -69,6 +75,7 @@
     "DROPDOWN_PHYSIOLOGY_DESC": "Zones & physiological data",
     "BTN_MY_MEMBERSHIPS_TITLE": "My Memberships",
     "BTN_CONNECTED_APPS_TITLE": "Connected Apps",
+    "BTN_AI_ASSISTANTS_TITLE": "AI Assistants",
     "BTN_NOTIFICATIONS_TITLE": "Notification Preferences",
     "BTN_REFERENCE_VALUES_TITLE": "Reference Values",
     "BTN_MANAGE_DEVICES_TITLE": "Manage Devices",
@@ -136,10 +143,7 @@
     "UNLINK_DISABLED_HINT": "Cannot unlink your only login method",
     "BTN_SAVE_SETTINGS": "SAVE SETTINGS",
     "BTN_SAVING": "SAVING...",
-    "BTN_SAVED": "SAVED",
-    "SECTION_MCP_CLIENTS": "Connected AI Assistants",
-    "MCP_CLIENTS_HINT": "Manage AI assistants connected to your account via MCP (e.g. Claude Desktop).",
-    "BTN_VIEW_MCP_CLIENTS": "Manage connections"
+    "BTN_SAVED": "SAVED"
   },
   "OAUTH_CLIENTS": {
     "TITLE": "Connected Applications",
@@ -152,7 +156,12 @@
     "LAST_USED": "Last used",
     "NEVER_USED": "Never used",
     "BTN_REVOKE": "Revoke",
-    "BTN_REVOKING": "Revoking..."
+    "BTN_REVOKING": "Revoking...",
+    "SKILLS_TITLE": "Koval Skills",
+    "SKILLS_DESCRIPTION": "Skill playbooks that tell Claude which Koval MCP tools to chain for common workflows. Download the package and drop the .md files into your Claude Desktop or Claude.ai skills folder.",
+    "SKILLS_EMPTY": "No skills available.",
+    "BTN_DOWNLOAD_ALL": "Download all (.zip)",
+    "BTN_DOWNLOAD": "Download"
   },
   "TRAINING_HISTORY": {
     "META_BLOCKS": "blocks",
@@ -502,6 +511,7 @@
     "TOOLTIP_RESTRICTED_TO_GROUP": "This session is restricted to {{group}} members",
     "TOOLTIP_NOT_OPEN_YET": "This session is reserved for {{group}} members — it will open to all closer to the session time",
     "BTN_CANCEL_SESSION": "Cancel session",
+    "BTN_DUPLICATE_SESSION": "Duplicate session",
     "DETAIL_ATTENDING": "Attending ({{count}})",
     "DETAIL_NO_ATTENDEES": "No one yet",
     "DETAIL_WAITING_LIST": "Waiting List ({{count}})",
@@ -653,6 +663,25 @@
     "ATHLETES_HEADING": "ATHLETES",
     "CLUBS_FILTER_LABEL": "CLUBS",
     "ALL_FILTER": "All ({{count}})",
+    "BULK_SELECT": "Select",
+    "BULK_CANCEL": "Cancel",
+    "BULK_SELECTED_COUNT": "{{count}} selected",
+    "BULK_ASSIGN_ACTION": "Assign workout",
+    "IMPORT_CSV": "Import CSV",
+    "IMPORT_CSV_BTN": "Import CSV",
+    "IMPORT_CSV_TITLE": "Import athletes from CSV",
+    "IMPORT_CSV_DESC": "CSV columns: email, firstName, lastName, groupName",
+    "IMPORT_CSV_INSTRUCTIONS": "Upload a CSV file containing athlete emails and (optional) group assignment. Athletes must already be registered.",
+    "IMPORT_CSV_PICK_FILE": "Choose file",
+    "IMPORT_CSV_UPLOAD": "Upload",
+    "IMPORT_CSV_UPLOADING": "Uploading…",
+    "IMPORT_CSV_PROCESSED": "Processed",
+    "IMPORT_CSV_ADDED": "Added",
+    "IMPORT_CSV_SKIPPED": "Skipped",
+    "IMPORT_CSV_ERRORS": "Errors",
+    "IMPORT_CSV_EMAIL": "Email",
+    "IMPORT_CSV_REASON": "Reason",
+    "IMPORT_CSV_RESULT": "Created {{created}}, skipped {{skipped}}, errors {{errors}}",
     "NO_ATHLETES_WITH_TAG": "No athletes with tag \"{{tag}}\"",
     "NO_ATHLETES_YET": "No athletes registered yet",
     "HEADER_TITLE": "COACH",
@@ -848,6 +877,12 @@
     "IMPORT_ERROR": "Could not parse FIT file. Make sure it contains a valid session.",
     "DATE_FILTER_FROM": "From",
     "DATE_FILTER_TO": "To",
+    "FILTER_DURATION_MIN": "Min duration (min)",
+    "FILTER_DURATION_MAX": "Max duration (min)",
+    "FILTER_TSS_MIN": "Min TSS",
+    "FILTER_TSS_MAX": "Max TSS",
+    "BTN_EXPORT_CSV": "Export CSV",
+    "EXPORT_CSV_TITLE": "Export filtered sessions as CSV",
     "SPORT_FILTER_ALL": "ALL",
     "SPORT_FILTER_BIKE": "Bike",
     "SPORT_FILTER_RUN": "Run",
@@ -1247,6 +1282,7 @@
     "BTN_SAVE": "SAVE",
     "BTN_CHANGE": "Change",
     "BTN_EDIT_TITLE": "Edit",
+    "BTN_DUPLICATE_TITLE": "Duplicate",
     "BTN_DELETE_TITLE": "Delete",
     "DELETE_CONFIRM": "Delete \"{{title}}\"?",
     "COUNTDOWN_DAYS": "days",
@@ -1589,5 +1625,12 @@
     "CLUB_SESSION_CANCELLED": "Club session cancelled",
     "WAITING_LIST_PROMOTED": "Waiting list promotion",
     "PLAN_ACTIVATED": "Training plan activated"
+  },
+  "NOTIFICATION_CENTER": {
+    "TITLE": "Notifications",
+    "EMPTY": "No notifications yet",
+    "MARK_ALL_READ": "Mark all read",
+    "DELETE": "Delete",
+    "PREFERENCES": "Notification preferences"
   }
 }

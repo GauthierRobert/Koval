@@ -54,6 +54,14 @@ export class TrainingHistoryComponent {
         });
     }
 
+    onDuplicate(event: Event, training: Training): void {
+        event.stopPropagation();
+        this.trainingService.duplicateTraining(training.id).subscribe({
+            next: (copy) => this.trainingService.selectTraining(copy),
+            error: (err) => console.error('Failed to duplicate training', err),
+        });
+    }
+
     getDuration(training: Training): string {
         if (!training.blocks || training.blocks.length === 0) return '';
         const totalSec =

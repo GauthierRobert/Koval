@@ -426,6 +426,16 @@ export class ClubSessionsTabComponent implements OnInit {
     });
   }
 
+  duplicateSession(session: ClubTrainingSession): void {
+    this.clubSessionService.duplicateSession(this.club.id, session.id).subscribe({
+      next: () => {
+        this.loadCalendarSessions();
+        this.cdr.markForCheck();
+      },
+      error: (err) => console.error('Failed to duplicate session', err),
+    });
+  }
+
   onAiCreateForSession(session: ClubTrainingSession): void {
     this.createAiForSession.emit(session);
   }

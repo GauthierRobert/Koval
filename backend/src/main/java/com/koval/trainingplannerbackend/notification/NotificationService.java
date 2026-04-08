@@ -23,13 +23,16 @@ public class NotificationService {
     private final UserRepository userRepository;
     private final FirebaseConfig fcmConfig;
     private final RestClient fcmRestClient;
+    private final NotificationRepository notificationRepository;
 
     public NotificationService(UserRepository userRepository,
                                FirebaseConfig fcmConfig,
-                               RestClient fcmRestClient) {
+                               RestClient fcmRestClient,
+                               NotificationRepository notificationRepository) {
         this.userRepository = userRepository;
         this.fcmConfig = fcmConfig;
         this.fcmRestClient = fcmRestClient;
+        this.notificationRepository = notificationRepository;
     }
 
     @Async
@@ -52,20 +55,22 @@ public class NotificationService {
     @Async
     public void sendToUsers(List<String> userIds, String title, String body,
                             Map<String, String> data, String preferenceType) {
-        if (!fcmConfig.isAvailable()) {
-            log.debug("FCM not initialized — skipping notification: {}", title);
-            return;
-        }
-
         List<String> allTokens = new ArrayList<>();
         Map<String, List<String>> tokensByUser = new HashMap<>();
 
         List<User> users = userRepository.findAllById(userIds);
+        String type = data != null ? data.getOrDefault("type", preferenceType) : preferenceType;
+
         for (User user : users) {
             if (preferenceType != null && !isPreferenceEnabled(user, preferenceType)) {
                 log.debug("User {} has {} preference disabled — skipping", user.getId(), preferenceType);
                 continue;
             }
+
+            // Persist in-app notification regardless of FCM availability so users
+            // see history even when push delivery fails.
+            persistNotification(user.getId(), type, title, body, data);
+
             List<String> tokens = user.getFcmTokens();
             if (tokens != null && !tokens.isEmpty()) {
                 allTokens.addAll(tokens);
@@ -73,12 +78,27 @@ public class NotificationService {
             }
         }
 
+        if (!fcmConfig.isAvailable()) {
+            log.debug("FCM not initialized — persisted only: {}", title);
+            return;
+        }
         if (allTokens.isEmpty()) {
-            log.debug("No FCM tokens found for users {} — skipping notification", userIds);
+            log.debug("No FCM tokens found for users {} — persisted only", userIds);
             return;
         }
 
         sendToTokens(allTokens, title, body, data, tokensByUser);
+    }
+
+    private void persistNotification(String userId, String type, String title, String body,
+                                     Map<String, String> data) {
+        try {
+            Notification notification = new Notification(userId, type, title, body, data);
+            notificationRepository.save(notification);
+        } catch (Exception e) {
+            // Persistence must never block FCM dispatch.
+            log.warn("Failed to persist notification for user {}: {}", userId, e.getMessage());
+        }
     }
 
     private boolean isPreferenceEnabled(User user, String preferenceType) {
@@ -207,5 +227,51 @@ public class NotificationService {
         user.setNotificationPreferences(prefs);
         userRepository.save(user);
         return prefs;
+    }
+
+    // -------- Notification center (in-app history) --------
+
+    public org.springframework.data.domain.Page<Notification> listNotifications(String userId,
+                                                                                 org.springframework.data.domain.Pageable pageable) {
+        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+    }
+
+    public long countUnread(String userId) {
+        return notificationRepository.countByUserIdAndReadFalse(userId);
+    }
+
+    public void markRead(String userId, String notificationId) {
+        notificationRepository.findById(notificationId).ifPresent(n -> {
+            if (!n.getUserId().equals(userId)) {
+                throw new IllegalStateException("Notification does not belong to user");
+            }
+            if (!n.isRead()) {
+                n.setRead(true);
+                n.setReadAt(java.time.Instant.now());
+                notificationRepository.save(n);
+            }
+        });
+    }
+
+    public int markAllRead(String userId) {
+        List<Notification> unread = notificationRepository.findByUserIdAndReadFalse(userId);
+        java.time.Instant now = java.time.Instant.now();
+        for (Notification n : unread) {
+            n.setRead(true);
+            n.setReadAt(now);
+        }
+        if (!unread.isEmpty()) {
+            notificationRepository.saveAll(unread);
+        }
+        return unread.size();
+    }
+
+    public void deleteNotification(String userId, String notificationId) {
+        notificationRepository.findById(notificationId).ifPresent(n -> {
+            if (!n.getUserId().equals(userId)) {
+                throw new IllegalStateException("Notification does not belong to user");
+            }
+            notificationRepository.deleteById(notificationId);
+        });
     }
 }

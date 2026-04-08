@@ -11,6 +11,7 @@ import com.koval.trainingplannerbackend.ai.tools.race.RaceToolService;
 import com.koval.trainingplannerbackend.ai.tools.scheduling.SchedulingToolService;
 import com.koval.trainingplannerbackend.ai.tools.training.TrainingToolService;
 import com.koval.trainingplannerbackend.ai.tools.zone.ZoneToolService;
+import com.koval.trainingplannerbackend.club.feed.ClubFeedBroadcastMessage;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -26,7 +27,16 @@ public class NativeImageHints {
         @Override
         public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
             registerToolServiceHints(hints);
+            registerSerializationHints(hints);
             registerResourceHints(hints);
+        }
+
+        private void registerSerializationHints(RuntimeHints hints) {
+            // Records serialized via Jackson (e.g. Pub/Sub broker payloads) need reflection
+            hints.reflection().registerType(ClubFeedBroadcastMessage.class,
+                    MemberCategory.ACCESS_DECLARED_FIELDS,
+                    MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+                    MemberCategory.INVOKE_DECLARED_METHODS);
         }
 
         private void registerToolServiceHints(RuntimeHints hints) {
@@ -82,6 +92,9 @@ public class NativeImageHints {
             for (String prompt : prompts) {
                 hints.resources().registerPattern(prompt);
             }
+
+            // Koval skill markdown files served by SkillController
+            hints.resources().registerPattern("skills/*.md");
         }
     }
 }

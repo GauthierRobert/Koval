@@ -530,3 +530,22 @@
         animation: overlayFadeIn 0.2s var(--ease-out-expo);
       }
     }
+
+    .notif-bell {
+      position: relative;
+    }
+    .notif-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      background: #e94e4e;
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 8px;
+      min-width: 14px;
+      text-align: center;
+      pointer-events: none;
+    }

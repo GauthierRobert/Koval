@@ -1,0 +1,16 @@
+@if (installable$ | async) {
+  <div class="install-banner">
+    <div class="install-banner__content">
+      <strong class="install-banner__title">{{ 'INSTALL_BANNER.TITLE' | translate }}</strong>
+      <span class="install-banner__message">{{ 'INSTALL_BANNER.MESSAGE' | translate }}</span>
+    </div>
+    <div class="install-banner__actions">
+      <button type="button" class="install-banner__btn install-banner__btn--primary" (click)="install()">
+        {{ 'INSTALL_BANNER.INSTALL' | translate }}
+      </button>
+      <button type="button" class="install-banner__btn" (click)="dismiss()">
+        {{ 'INSTALL_BANNER.DISMISS' | translate }}
+      </button>
+    </div>
+  </div>
+}

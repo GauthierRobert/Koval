@@ -25,6 +25,15 @@
             <line x1="12" y1="3" x2="12" y2="15" />
           </svg>
         </button>
+        <button class="icon-btn" (click)="exportCsv()"
+          [title]="'WORKOUT_HISTORY.EXPORT_CSV_TITLE' | translate">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+        </button>
       </div>
       <input #fitInput data-testid="fit-upload-input" type="file" accept=".fit" class="fit-input" (change)="onFileSelected($event)" />
     </div>
@@ -60,6 +69,18 @@
       <input data-testid="date-from" type="date" class="date-input" [ngModel]="dateFrom" (ngModelChange)="onDateFromChange($event)" />
       <label class="date-label">{{ 'WORKOUT_HISTORY.DATE_FILTER_TO' | translate }}</label>
       <input data-testid="date-to" type="date" class="date-input" [ngModel]="dateTo" (ngModelChange)="onDateToChange($event)" />
+    </div>
+
+    <!-- Duration & TSS range filter -->
+    <div class="date-filter-bar">
+      <label class="date-label">{{ 'WORKOUT_HISTORY.FILTER_DURATION_MIN' | translate }}</label>
+      <input type="number" min="0" class="date-input num-input" [ngModel]="durationMin" (ngModelChange)="onDurationMinChange($event)" />
+      <label class="date-label">{{ 'WORKOUT_HISTORY.FILTER_DURATION_MAX' | translate }}</label>
+      <input type="number" min="0" class="date-input num-input" [ngModel]="durationMax" (ngModelChange)="onDurationMaxChange($event)" />
+      <label class="date-label">{{ 'WORKOUT_HISTORY.FILTER_TSS_MIN' | translate }}</label>
+      <input type="number" min="0" class="date-input num-input" [ngModel]="tssMin" (ngModelChange)="onTssMinChange($event)" />
+      <label class="date-label">{{ 'WORKOUT_HISTORY.FILTER_TSS_MAX' | translate }}</label>
+      <input type="number" min="0" class="date-input num-input" [ngModel]="tssMax" (ngModelChange)="onTssMaxChange($event)" />
     </div>
 
     @if (historyService.loading$ | async) {

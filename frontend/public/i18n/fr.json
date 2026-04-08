@@ -1,4 +1,10 @@
 {
+  "INSTALL_BANNER": {
+    "TITLE": "Installer Koval",
+    "MESSAGE": "Installez l'application pour une expérience plus rapide et plein écran.",
+    "INSTALL": "Installer",
+    "DISMISS": "Plus tard"
+  },
   "COMMON": {
     "CANCEL": "Annuler",
     "SAVE": "Enregistrer",
@@ -69,6 +75,7 @@
     "DROPDOWN_PHYSIOLOGY_DESC": "Zones & données physiologiques",
     "BTN_MY_MEMBERSHIPS_TITLE": "Mes abonnements",
     "BTN_CONNECTED_APPS_TITLE": "Applications connectées",
+    "BTN_AI_ASSISTANTS_TITLE": "Assistants IA",
     "BTN_NOTIFICATIONS_TITLE": "Préférences de notification",
     "BTN_REFERENCE_VALUES_TITLE": "Valeurs de référence",
     "BTN_MANAGE_DEVICES_TITLE": "Gérer les appareils",
@@ -136,10 +143,7 @@
     "UNLINK_DISABLED_HINT": "Impossible de dissocier votre seule méthode de connexion",
     "BTN_SAVE_SETTINGS": "ENREGISTRER",
     "BTN_SAVING": "ENREGISTREMENT...",
-    "BTN_SAVED": "ENREGISTRÉ",
-    "SECTION_MCP_CLIENTS": "Assistants IA connectés",
-    "MCP_CLIENTS_HINT": "Gérez les assistants IA connectés à votre compte via MCP (ex. Claude Desktop).",
-    "BTN_VIEW_MCP_CLIENTS": "Gérer les connexions"
+    "BTN_SAVED": "ENREGISTRÉ"
   },
   "OAUTH_CLIENTS": {
     "TITLE": "Applications connectées",
@@ -152,7 +156,12 @@
     "LAST_USED": "Dernière utilisation",
     "NEVER_USED": "Jamais utilisé",
     "BTN_REVOKE": "Révoquer",
-    "BTN_REVOKING": "Révocation..."
+    "BTN_REVOKING": "Révocation...",
+    "SKILLS_TITLE": "Skills Koval",
+    "SKILLS_DESCRIPTION": "Playbooks indiquant à Claude quels outils MCP Koval enchaîner pour les workflows courants. Téléchargez le package et déposez les fichiers .md dans votre dossier de skills Claude Desktop ou Claude.ai.",
+    "SKILLS_EMPTY": "Aucun skill disponible.",
+    "BTN_DOWNLOAD_ALL": "Tout télécharger (.zip)",
+    "BTN_DOWNLOAD": "Télécharger"
   },
   "TRAINING_HISTORY": {
     "META_BLOCKS": "blocs",
@@ -502,6 +511,7 @@
     "TOOLTIP_RESTRICTED_TO_GROUP": "Cette session est réservée aux membres du groupe {{group}}",
     "TOOLTIP_NOT_OPEN_YET": "Cette session est réservée au groupe {{group}} — elle s'ouvrira à tous plus proche de la date",
     "BTN_CANCEL_SESSION": "Annuler la session",
+    "BTN_DUPLICATE_SESSION": "Dupliquer la session",
     "DETAIL_ATTENDING": "Inscrits ({{count}})",
     "DETAIL_NO_ATTENDEES": "Personne pour l'instant",
     "DETAIL_WAITING_LIST": "Liste d'attente ({{count}})",
@@ -650,6 +660,25 @@
     "MODAL_RACING_PLURAL": "{{count}} membres en course"
   },
   "COACH_DASHBOARD": {
+    "BULK_SELECT": "Sélectionner",
+    "BULK_CANCEL": "Annuler",
+    "BULK_SELECTED_COUNT": "{{count}} sélectionné(s)",
+    "BULK_ASSIGN_ACTION": "Assigner un entraînement",
+    "IMPORT_CSV": "Importer CSV",
+    "IMPORT_CSV_BTN": "Importer CSV",
+    "IMPORT_CSV_TITLE": "Importer des athlètes depuis un CSV",
+    "IMPORT_CSV_DESC": "Colonnes CSV : email, firstName, lastName, groupName",
+    "IMPORT_CSV_INSTRUCTIONS": "Téléversez un fichier CSV contenant les emails des athlètes et (optionnel) le groupe. Les athlètes doivent être déjà inscrits.",
+    "IMPORT_CSV_PICK_FILE": "Choisir un fichier",
+    "IMPORT_CSV_UPLOAD": "Téléverser",
+    "IMPORT_CSV_UPLOADING": "Téléversement…",
+    "IMPORT_CSV_PROCESSED": "Traités",
+    "IMPORT_CSV_ADDED": "Ajoutés",
+    "IMPORT_CSV_SKIPPED": "Ignorés",
+    "IMPORT_CSV_ERRORS": "Erreurs",
+    "IMPORT_CSV_EMAIL": "Email",
+    "IMPORT_CSV_REASON": "Raison",
+    "IMPORT_CSV_RESULT": "Créés {{created}}, ignorés {{skipped}}, erreurs {{errors}}",
     "ATHLETES_HEADING": "ATHLÈTES",
     "CLUBS_FILTER_LABEL": "CLUBS",
     "ALL_FILTER": "Tous ({{count}})",
@@ -848,6 +877,12 @@
     "IMPORT_ERROR": "Impossible de lire le fichier FIT. Vérifie qu'il contient une session valide.",
     "DATE_FILTER_FROM": "Du",
     "DATE_FILTER_TO": "Au",
+    "FILTER_DURATION_MIN": "Durée min (min)",
+    "FILTER_DURATION_MAX": "Durée max (min)",
+    "FILTER_TSS_MIN": "TSS min",
+    "FILTER_TSS_MAX": "TSS max",
+    "BTN_EXPORT_CSV": "Exporter CSV",
+    "EXPORT_CSV_TITLE": "Exporter les sessions filtrées en CSV",
     "SPORT_FILTER_ALL": "TOUS",
     "SPORT_FILTER_BIKE": "Vélo",
     "SPORT_FILTER_RUN": "Course",
@@ -1247,6 +1282,7 @@
     "BTN_SAVE": "ENREGISTRER",
     "BTN_CHANGE": "Changer",
     "BTN_EDIT_TITLE": "Modifier",
+    "BTN_DUPLICATE_TITLE": "Dupliquer",
     "BTN_DELETE_TITLE": "Supprimer",
     "DELETE_CONFIRM": "Supprimer \"{{title}}\" ?",
     "COUNTDOWN_DAYS": "jours",
@@ -1589,5 +1625,12 @@
     "CLUB_SESSION_CANCELLED": "Session de club annulée",
     "WAITING_LIST_PROMOTED": "Promotion de la liste d'attente",
     "PLAN_ACTIVATED": "Plan d'entraînement activé"
+  },
+  "NOTIFICATION_CENTER": {
+    "TITLE": "Notifications",
+    "EMPTY": "Aucune notification",
+    "MARK_ALL_READ": "Tout marquer comme lu",
+    "DELETE": "Supprimer",
+    "PREFERENCES": "Préférences de notifications"
   }
 }

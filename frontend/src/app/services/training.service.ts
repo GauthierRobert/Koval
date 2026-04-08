@@ -123,6 +123,15 @@ export class TrainingService {
         );
     }
 
+    duplicateTraining(id: string): Observable<Training> {
+        return this.http.post<Training>(`${this.apiUrl}/${id}/duplicate`, {}).pipe(
+            tap(copy => {
+                const current = this.trainingsSubject.value;
+                this.trainingsSubject.next([...current, copy]);
+            })
+        );
+    }
+
     removeTrainingLocally(id: string): void {
         const current = this.trainingsSubject.value.filter((t) => t.id !== id);
         this.trainingsSubject.next(current);

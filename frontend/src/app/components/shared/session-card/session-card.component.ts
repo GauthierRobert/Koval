@@ -33,6 +33,7 @@ export class SessionCardComponent {
   @Output() leave = new EventEmitter<ClubTrainingSession>();
   @Output() edit = new EventEmitter<ClubTrainingSession>();
   @Output() cancelSession = new EventEmitter<ClubTrainingSession>();
+  @Output() duplicateSession = new EventEmitter<ClubTrainingSession>();
   @Output() linkTraining = new EventEmitter<ClubTrainingSession>();
   @Output() unlinkTraining = new EventEmitter<{ session: ClubTrainingSession; glt: GroupLinkedTraining }>();
   @Output() toggleDetail = new EventEmitter<ClubTrainingSession>();
@@ -240,6 +241,11 @@ export class SessionCardComponent {
   onCancelSession(event: Event): void {
     event.stopPropagation();
     this.cancelSession.emit(this.session);
+  }
+
+  onDuplicateSession(event: Event): void {
+    event.stopPropagation();
+    this.duplicateSession.emit(this.session);
   }
 
   onUnlinkTraining(glt: GroupLinkedTraining, event: Event): void {

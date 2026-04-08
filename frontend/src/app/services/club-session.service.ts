@@ -100,6 +100,23 @@ export class ClubSessionService {
     });
   }
 
+  duplicateSession(clubId: string, sessionId: string, newScheduledAt?: string): Observable<ClubTrainingSession> {
+    const url = `${this.apiUrl}/${clubId}/sessions/${sessionId}/duplicate` +
+      (newScheduledAt ? `?newScheduledAt=${encodeURIComponent(newScheduledAt)}` : '');
+    return new Observable((observer) => {
+      this.http.post<ClubTrainingSession>(url, {}).subscribe({
+        next: (session) => {
+          this.ngZone.run(() => {
+            this.loadSessions(clubId);
+            observer.next(session);
+            observer.complete();
+          });
+        },
+        error: (err) => observer.error(err),
+      });
+    });
+  }
+
   joinSession(clubId: string, sessionId: string): Observable<void> {
     return new Observable((observer) => {
       this.http.post<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/join`, {}).subscribe({

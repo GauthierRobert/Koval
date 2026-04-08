@@ -21,6 +21,8 @@ export class AthleteListSidebarComponent {
   @Input() activeTagFilter: string | null = null;
   @Input() activeClubFilter: string | null = null;
   @Input() selectedAthlete: User | null = null;
+  @Input() multiSelectMode = false;
+  @Input() multiSelectedIds: ReadonlySet<string> = new Set();
   @Input() athleteMetrics$!: Observable<{
     ctl: number;
     atl: number;
@@ -35,6 +37,21 @@ export class AthleteListSidebarComponent {
   @Output() toggleClubFilter = new EventEmitter<string>();
   @Output() addAthlete = new EventEmitter<void>();
   @Output() clearFilters = new EventEmitter<void>();
+  @Output() toggleMultiSelect = new EventEmitter<void>();
+  @Output() toggleAthleteSelection = new EventEmitter<User>();
+  @Output() bulkAssign = new EventEmitter<void>();
+
+  isSelected(athleteId: string): boolean {
+    return this.multiSelectedIds.has(athleteId);
+  }
+
+  onAthleteRowClick(athlete: User): void {
+    if (this.multiSelectMode) {
+      this.toggleAthleteSelection.emit(athlete);
+    } else {
+      this.selectAthlete.emit(athlete);
+    }
+  }
 
   getTagCount(tag: string): number {
     return this.athletes.length

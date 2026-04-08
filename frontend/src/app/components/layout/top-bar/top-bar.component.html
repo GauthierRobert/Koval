@@ -1,3 +1,5 @@
+<app-install-banner></app-install-banner>
+
 <header class="top-bar" [class.disabled]="!(user$ | async)">
   <!-- Glass layer -->
   <div class="top-bar-glass"></div>
@@ -165,19 +167,45 @@
       }
     </div>
 
-    <!-- Coach-only tabs -->
+    <!-- Coach-only dropdown -->
     @if (isCoach$ | async) {
       <div class="nav-sep"></div>
-      <a routerLink="/coach"  routerLinkActive="active" class="nav-link nav-link--coach" (click)="closeMobileMenu()">
-        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        {{ 'TOP_BAR.NAV_COACHING' | translate }}
-      </a>
-      <a routerLink="/groups" routerLinkActive="active" class="nav-link nav-link--coach" (click)="closeMobileMenu()">{{ 'TOP_BAR.NAV_GROUPS' | translate }}</a>
-      <a routerLink="/zones"  routerLinkActive="active" class="nav-link nav-link--coach" (click)="closeMobileMenu()">{{ 'TOP_BAR.NAV_ZONES' | translate }}</a>
-      <a routerLink="/chat"   routerLinkActive="active" class="nav-link nav-link--coach" (click)="closeMobileMenu()">
-        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        {{ 'TOP_BAR.NAV_ASSISTANT' | translate }}
-      </a>
+      <div class="nav-dropdown-wrapper">
+        <button
+          class="nav-link nav-link--coach nav-dropdown-trigger"
+          [class.active]="isCoachingOpen"
+          [attr.aria-expanded]="isCoachingOpen"
+          aria-haspopup="true"
+          (click)="toggleCoaching($event)">
+          <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          {{ 'TOP_BAR.NAV_COACHING' | translate }}
+          <svg class="dropdown-chevron" [class.open]="isCoachingOpen"
+            width="8" height="8" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+            <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        @if (isCoachingOpen) {
+          <div class="nav-dropdown" role="menu" (click)="$event.stopPropagation()">
+            <a routerLink="/coach" routerLinkActive="active" class="dropdown-item" role="menuitem"
+              (click)="closeCoaching(); closeMobileMenu()">
+              <span class="dropdown-label">{{ 'TOP_BAR.NAV_COACHING' | translate }}</span>
+            </a>
+            <a routerLink="/groups" routerLinkActive="active" class="dropdown-item" role="menuitem"
+              (click)="closeCoaching(); closeMobileMenu()">
+              <span class="dropdown-label">{{ 'TOP_BAR.NAV_GROUPS' | translate }}</span>
+            </a>
+            <a routerLink="/zones" routerLinkActive="active" class="dropdown-item" role="menuitem"
+              (click)="closeCoaching(); closeMobileMenu()">
+              <span class="dropdown-label">{{ 'TOP_BAR.NAV_ZONES' | translate }}</span>
+            </a>
+            <a routerLink="/chat" routerLinkActive="active" class="dropdown-item" role="menuitem"
+              (click)="closeCoaching(); closeMobileMenu()">
+              <span class="dropdown-label">{{ 'TOP_BAR.NAV_ASSISTANT' | translate }}</span>
+            </a>
+          </div>
+        }
+      </div>
     }
 
     <!-- Mobile-only controls -->
@@ -205,10 +233,21 @@
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
           </svg>
         </button>
-        <button class="control-btn" (click)="showNotifPrefs = !showNotifPrefs; closeMobileMenu()" [attr.aria-label]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate">
+        <button class="control-btn" (click)="goToAiAssistants()" [attr.aria-label]="'TOP_BAR.BTN_AI_ASSISTANTS_TITLE' | translate">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8L12 3z"/>
+            <path d="M19 14l.9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14z"/>
+          </svg>
+        </button>
+        <button class="control-btn notif-bell" (click)="toggleNotifCenter(); closeMobileMenu()" [attr.aria-label]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
           </svg>
+          @if ((unreadNotifications$ | async) ?? 0; as unread) {
+            @if (unread > 0) {
+              <span class="notif-badge">{{ unread > 99 ? '99+' : unread }}</span>
+            }
+          }
         </button>
         <button class="control-btn" (click)="toggleSettings(); closeMobileMenu()" [attr.aria-label]="'TOP_BAR.BTN_REFERENCE_VALUES_TITLE' | translate">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -256,11 +295,23 @@
         </svg>
       </button>
 
-      <button class="control-btn" (click)="showNotifPrefs = !showNotifPrefs" [title]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate">
+      <button class="control-btn" (click)="goToAiAssistants()" [title]="'TOP_BAR.BTN_AI_ASSISTANTS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_AI_ASSISTANTS_TITLE' | translate">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8L12 3z"/>
+          <path d="M19 14l.9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14z"/>
+        </svg>
+      </button>
+
+      <button class="control-btn notif-bell" (click)="toggleNotifCenter()" [title]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.73 21a2 2 0 0 1-3.46 0" />
         </svg>
+        @if ((unreadNotifications$ | async) ?? 0; as unread) {
+          @if (unread > 0) {
+            <span class="notif-badge">{{ unread > 99 ? '99+' : unread }}</span>
+          }
+        }
       </button>
 
       <button class="control-btn" (click)="toggleSettings()" [title]="'TOP_BAR.BTN_REFERENCE_VALUES_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_REFERENCE_VALUES_TITLE' | translate">
@@ -311,6 +362,9 @@
 @if (isAnalyticsOpen) {
   <div class="popup-overlay" (click)="closeAnalytics()"></div>
 }
+@if (isCoachingOpen) {
+  <div class="popup-overlay" (click)="closeCoaching()"></div>
+}
 
 @if (showMemberships) {
   <app-memberships-modal (closed)="showMemberships = false"></app-memberships-modal>
@@ -318,6 +372,10 @@
 
 @if (showNotifPrefs) {
   <app-notification-preferences (close)="showNotifPrefs = false"></app-notification-preferences>
+}
+
+@if (showNotifCenter) {
+  <app-notification-center (close)="showNotifCenter = false" (openPrefs)="showNotifCenter = false; showNotifPrefs = true"></app-notification-center>
 }
 
 @if (showConnectedApps) {

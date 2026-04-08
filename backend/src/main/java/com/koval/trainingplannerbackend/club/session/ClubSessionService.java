@@ -82,6 +82,68 @@ public class ClubSessionService {
         return session;
     }
 
+    /**
+     * Duplicate an existing session within the same club. The copy keeps all session
+     * properties (linked trainings, location, group, capacity) but resets participants,
+     * waiting list, and cancellation. The new {@code scheduledAt} defaults to the
+     * original time + 7 days when {@code newScheduledAt} is null.
+     */
+    public ClubTrainingSession duplicateSession(String userId, String clubId, String sessionId,
+                                                LocalDateTime newScheduledAt) {
+        ClubTrainingSession source = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        if (!source.getClubId().equals(clubId)) {
+            throw new IllegalArgumentException("Session does not belong to this club");
+        }
+        SessionCategory cat = source.getCategory() != null ? source.getCategory() : SessionCategory.SCHEDULED;
+        if (cat == SessionCategory.OPEN) {
+            authorizationService.requireActiveMember(userId, clubId);
+        } else {
+            authorizationService.requireAdminOrCoach(userId, clubId);
+        }
+
+        ClubTrainingSession copy = new ClubTrainingSession();
+        copy.setClubId(clubId);
+        copy.setCreatedBy(userId);
+        copy.setCreatedAt(LocalDateTime.now());
+        copy.setTitle(source.getTitle());
+        copy.setSport(source.getSport());
+        copy.setScheduledAt(newScheduledAt != null ? newScheduledAt
+                : (source.getScheduledAt() != null ? source.getScheduledAt().plusDays(7) : LocalDateTime.now().plusDays(7)));
+        copy.setLocation(source.getLocation());
+        copy.setMeetingPointLat(source.getMeetingPointLat());
+        copy.setMeetingPointLon(source.getMeetingPointLon());
+        copy.setDescription(source.getDescription());
+        copy.setLinkedTrainingId(source.getLinkedTrainingId());
+        copy.setLinkedTrainingTitle(source.getLinkedTrainingTitle());
+        copy.setLinkedTrainingDescription(source.getLinkedTrainingDescription());
+        copy.setLinkedTrainings(source.getLinkedTrainings() != null
+                ? new java.util.ArrayList<>(source.getLinkedTrainings())
+                : new java.util.ArrayList<>());
+        copy.setClubGroupId(source.getClubGroupId());
+        copy.setOpenToAll(source.getOpenToAll());
+        copy.setOpenToAllDelayValue(source.getOpenToAllDelayValue());
+        copy.setOpenToAllDelayUnit(source.getOpenToAllDelayUnit());
+        copy.setResponsibleCoachId(source.getResponsibleCoachId());
+        copy.setMaxParticipants(source.getMaxParticipants());
+        copy.setDurationMinutes(source.getDurationMinutes());
+        copy.setCategory(cat);
+        copy.setGpxFileName(source.getGpxFileName());
+        copy.setRouteCoordinates(source.getRouteCoordinates());
+        copy.setGpxData(source.getGpxData());
+        // Reset run-time state
+        copy.setParticipantIds(new java.util.ArrayList<>());
+        copy.setWaitingList(new java.util.ArrayList<>());
+        copy.setCancelled(false);
+        copy.setCancellationReason(null);
+        copy.setCancelledAt(null);
+        copy.setRecurringTemplateId(null);
+
+        ClubTrainingSession saved = sessionRepository.save(copy);
+        activityService.emitActivity(clubId, ClubActivityType.SESSION_CREATED, userId, saved.getId(), saved.getTitle());
+        return saved;
+    }
+
     public List<ClubTrainingSession> listSessions(String userId, String clubId) {
         return listSessions(userId, clubId, (SessionCategory) null);
     }

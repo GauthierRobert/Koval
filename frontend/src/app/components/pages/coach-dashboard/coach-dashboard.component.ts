@@ -37,6 +37,9 @@ import {CoachPlansTabComponent} from './coach-plans-tab/coach-plans-tab.componen
 })
 export class CoachDashboardComponent implements OnInit {
   selectedAthlete: User | null = null;
+  multiSelectMode = false;
+  multiSelectedIds = new Set<string>();
+  bulkAssignAthletes: User[] = [];
   isScheduleModalOpen = false;
   isInviteCodeModalOpen = false;
   isShareModalOpen = false;
@@ -363,11 +366,43 @@ export class CoachDashboardComponent implements OnInit {
 
   assignWorkout() {
     if (!this.selectedAthlete) return;
+    this.bulkAssignAthletes = [];
+    this.isScheduleModalOpen = true;
+  }
+
+  toggleMultiSelectMode(): void {
+    this.multiSelectMode = !this.multiSelectMode;
+    if (!this.multiSelectMode) {
+      this.multiSelectedIds = new Set();
+    }
+  }
+
+  toggleAthleteSelection(athlete: User): void {
+    const next = new Set(this.multiSelectedIds);
+    if (next.has(athlete.id)) {
+      next.delete(athlete.id);
+    } else {
+      next.add(athlete.id);
+    }
+    this.multiSelectedIds = next;
+  }
+
+  bulkAssign(): void {
+    if (this.multiSelectedIds.size === 0) return;
+    const athletes = this.athletesSubject.value.filter(a => this.multiSelectedIds.has(a.id));
+    if (athletes.length === 0) return;
+    this.bulkAssignAthletes = athletes;
     this.isScheduleModalOpen = true;
   }
 
   onScheduled() {
     this.isScheduleModalOpen = false;
+    if (this.bulkAssignAthletes.length > 0) {
+      // Refresh schedule for the currently focused athlete (if any).
+      this.bulkAssignAthletes = [];
+      this.multiSelectedIds = new Set();
+      this.multiSelectMode = false;
+    }
     if (this.selectedAthlete) {
       this.loadAthleteSchedule(this.selectedAthlete.id);
     }

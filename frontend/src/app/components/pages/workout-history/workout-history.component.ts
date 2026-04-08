@@ -15,6 +15,7 @@ import {formatTimeText} from '../../shared/format/format.utils';
 
 import {BlockSummary, SessionSummary} from '../../../services/workout-execution.service';
 import {FitExportService} from '../../../services/fit-export.service';
+import {CsvExportService} from '../../../services/csv-export.service';
 import {AuthService} from '../../../services/auth.service';
 import {MetricsService} from '../../../services/metrics.service';
 import {StravaSyncService} from '../../../services/strava-sync.service';
@@ -37,6 +38,7 @@ export class WorkoutHistoryComponent implements OnInit {
 
     historyService = inject(HistoryService);
     private fitExport = inject(FitExportService);
+    private csvExport = inject(CsvExportService);
     private translate = inject(TranslateService);
     private authService = inject(AuthService);
     private metricsService = inject(MetricsService);
@@ -87,18 +89,33 @@ export class WorkoutHistoryComponent implements OnInit {
     private sportFilterSubject = new BehaviorSubject<SportFilter>(null);
     private dateFromSubject = new BehaviorSubject<string>('');
     private dateToSubject = new BehaviorSubject<string>('');
+    private durationMinSubject = new BehaviorSubject<number | null>(null);
+    private durationMaxSubject = new BehaviorSubject<number | null>(null);
+    private tssMinSubject = new BehaviorSubject<number | null>(null);
+    private tssMaxSubject = new BehaviorSubject<number | null>(null);
 
     activeSportFilter: SportFilter = null;
     dateFrom = '';
     dateTo = '';
+    durationMin: number | null = null;
+    durationMax: number | null = null;
+    tssMin: number | null = null;
+    tssMax: number | null = null;
+
+    ftp$ = this.authService.user$.pipe(map((u) => u?.ftp ?? null));
 
     filteredSessions$ = combineLatest([
         this.historyService.sessions$,
         this.sportFilterSubject,
         this.dateFromSubject,
         this.dateToSubject,
+        this.durationMinSubject,
+        this.durationMaxSubject,
+        this.tssMinSubject,
+        this.tssMaxSubject,
+        this.ftp$,
     ]).pipe(
-        map(([sessions, sport, from, to]) => {
+        map(([sessions, sport, from, to, durMin, durMax, tssMin, tssMax, ftp]) => {
             let filtered = sessions;
             if (sport) {
                 filtered = filtered.filter(s => s.sportType === sport);
@@ -110,6 +127,23 @@ export class WorkoutHistoryComponent implements OnInit {
             if (to) {
                 const toDate = new Date(to + 'T23:59:59');
                 filtered = filtered.filter(s => new Date(s.date) <= toDate);
+            }
+            if (durMin != null) {
+                const minSec = durMin * 60;
+                filtered = filtered.filter(s => (s.totalDuration ?? 0) >= minSec);
+            }
+            if (durMax != null) {
+                const maxSec = durMax * 60;
+                filtered = filtered.filter(s => (s.totalDuration ?? 0) <= maxSec);
+            }
+            if (tssMin != null || tssMax != null) {
+                filtered = filtered.filter(s => {
+                    const tss = this.getTss(s, ftp);
+                    if (tss == null) return false;
+                    if (tssMin != null && tss < tssMin) return false;
+                    if (tssMax != null && tss > tssMax) return false;
+                    return true;
+                });
             }
             return filtered;
         })
@@ -130,7 +164,25 @@ export class WorkoutHistoryComponent implements OnInit {
         this.dateToSubject.next(value);
     }
 
-    ftp$ = this.authService.user$.pipe(map((u) => u?.ftp ?? null));
+    onDurationMinChange(value: number | null): void {
+        this.durationMin = value;
+        this.durationMinSubject.next(value != null && !isNaN(value) ? value : null);
+    }
+
+    onDurationMaxChange(value: number | null): void {
+        this.durationMax = value;
+        this.durationMaxSubject.next(value != null && !isNaN(value) ? value : null);
+    }
+
+    onTssMinChange(value: number | null): void {
+        this.tssMin = value;
+        this.tssMinSubject.next(value != null && !isNaN(value) ? value : null);
+    }
+
+    onTssMaxChange(value: number | null): void {
+        this.tssMax = value;
+        this.tssMaxSubject.next(value != null && !isNaN(value) ? value : null);
+    }
 
     syncing$ = this.stravaSyncService.syncing$;
     syncResult$ = this.stravaSyncService.lastResult$;
@@ -152,6 +204,12 @@ export class WorkoutHistoryComponent implements OnInit {
 
     importStravaHistory(): void {
         this.stravaSyncService.importHistory().subscribe();
+    }
+
+    exportCsv(): void {
+        combineLatest([this.filteredSessions$, this.ftp$]).pipe(take(1)).subscribe(([sessions, ftp]) => {
+            this.csvExport.exportSessions(sessions, ftp);
+        });
     }
 
     onSelect(session: SavedSession): void {

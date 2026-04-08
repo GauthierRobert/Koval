@@ -6,9 +6,12 @@ import {BluetoothService} from '../../../services/bluetooth.service';
 import {AuthService} from '../../../services/auth.service';
 import {ClubService, ClubSummary} from '../../../services/club.service';
 import {TrainingFilterService} from '../../../services/training-filter.service';
-import {combineLatest, map} from 'rxjs';
+import {combineLatest, filter, map} from 'rxjs';
 import {MembershipsModalComponent} from '../../shared/memberships-modal/memberships-modal.component';
 import {NotificationPreferencesComponent} from '../../shared/notification-preferences/notification-preferences.component';
+import {NotificationCenterComponent} from '../../shared/notification-center/notification-center.component';
+import {InstallBannerComponent} from '../../shared/install-banner/install-banner.component';
+import {NotificationCenterService} from '../../../services/notification-center.service';
 import {ConnectedAppsModalComponent} from '../../shared/connected-apps-modal/connected-apps-modal.component';
 import {TranslateService, TranslateModule} from '@ngx-translate/core';
 import {ThemeService} from '../../../services/theme.service';
@@ -17,7 +20,7 @@ import {ResponsiveService} from '../../../services/responsive.service';
 @Component({
   selector: 'app-top-bar',
   standalone: true,
-  imports: [CommonModule, RouterModule, MembershipsModalComponent, NotificationPreferencesComponent, ConnectedAppsModalComponent, TranslateModule],
+  imports: [CommonModule, RouterModule, MembershipsModalComponent, NotificationPreferencesComponent, NotificationCenterComponent, InstallBannerComponent, ConnectedAppsModalComponent, TranslateModule],
   templateUrl: './top-bar.component.html',
   styleUrl: './top-bar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,7 +34,9 @@ export class TopBarComponent {
   private translateService = inject(TranslateService);
   themeService = inject(ThemeService);
   private responsive = inject(ResponsiveService);
+  notificationCenter = inject(NotificationCenterService);
   private destroyRef = inject(DestroyRef);
+  unreadNotifications$ = this.notificationCenter.unreadCount$;
   currentLang = this.translateService.currentLang || 'en';
 
   constructor() {
@@ -43,6 +48,10 @@ export class TopBarComponent {
           this.mobileMenuOpen = false;
         }
       });
+    // Initial unread badge value once the user is authenticated.
+    this.authService.user$
+      .pipe(filter(u => !!u), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.notificationCenter.refreshUnreadCount());
   }
 
   toggleLang(): void {
@@ -54,10 +63,24 @@ export class TopBarComponent {
   isAnalyticsOpen = false;
   isTrainingOpen = false;
   isClubsOpen = false;
+  isCoachingOpen = false;
   showMemberships = false;
   showNotifPrefs = false;
+  showNotifCenter = false;
   showConnectedApps = false;
   mobileMenuOpen = false;
+
+  goToAiAssistants(): void {
+    this.closeMobileMenu();
+    this.router.navigate(['/oauth-clients']);
+  }
+
+  toggleNotifCenter(): void {
+    this.showNotifCenter = !this.showNotifCenter;
+    if (this.showNotifCenter && this.authService.isAuthenticated()) {
+      this.notificationCenter.refreshUnreadCount();
+    }
+  }
 
   toggleMobileMenu(): void {
     this.mobileMenuOpen = !this.mobileMenuOpen;
@@ -65,6 +88,7 @@ export class TopBarComponent {
       this.isClubsOpen = false;
       this.isTrainingOpen = false;
       this.isAnalyticsOpen = false;
+      this.isCoachingOpen = false;
     }
   }
 
@@ -73,6 +97,7 @@ export class TopBarComponent {
     this.isClubsOpen = false;
     this.isTrainingOpen = false;
     this.isAnalyticsOpen = false;
+    this.isCoachingOpen = false;
   }
 
   user$ = this.authService.user$;
@@ -109,8 +134,23 @@ export class TopBarComponent {
     if (this.isClubsOpen) {
       this.isTrainingOpen = false;
       this.isAnalyticsOpen = false;
+      this.isCoachingOpen = false;
       this.clubService.loadUserClubs();
     }
+  }
+
+  toggleCoaching(event: Event) {
+    event.stopPropagation();
+    this.isCoachingOpen = !this.isCoachingOpen;
+    if (this.isCoachingOpen) {
+      this.isTrainingOpen = false;
+      this.isAnalyticsOpen = false;
+      this.isClubsOpen = false;
+    }
+  }
+
+  closeCoaching() {
+    this.isCoachingOpen = false;
   }
 
   closeClubs() {
@@ -137,7 +177,7 @@ export class TopBarComponent {
   toggleTraining(event: Event) {
     event.stopPropagation();
     this.isTrainingOpen = !this.isTrainingOpen;
-    if (this.isTrainingOpen) { this.isAnalyticsOpen = false; this.isClubsOpen = false; }
+    if (this.isTrainingOpen) { this.isAnalyticsOpen = false; this.isClubsOpen = false; this.isCoachingOpen = false; }
   }
 
   closeTraining() {
@@ -147,7 +187,7 @@ export class TopBarComponent {
   toggleAnalytics(event: Event) {
     event.stopPropagation();
     this.isAnalyticsOpen = !this.isAnalyticsOpen;
-    if (this.isAnalyticsOpen) { this.isTrainingOpen = false; this.isClubsOpen = false; }
+    if (this.isAnalyticsOpen) { this.isTrainingOpen = false; this.isClubsOpen = false; this.isCoachingOpen = false; }
   }
 
   closeAnalytics() {
@@ -156,10 +196,11 @@ export class TopBarComponent {
 
   @HostListener('document:keydown.escape')
   onEscapeKey(): void {
-    if (this.isClubsOpen || this.isTrainingOpen || this.isAnalyticsOpen) {
+    if (this.isClubsOpen || this.isTrainingOpen || this.isAnalyticsOpen || this.isCoachingOpen) {
       this.isClubsOpen = false;
       this.isTrainingOpen = false;
       this.isAnalyticsOpen = false;
+      this.isCoachingOpen = false;
     }
   }
 

@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -23,11 +25,14 @@ public class CoachController {
 
     private final CoachService coachService;
     private final CoachGroupService coachGroupService;
+    private final AthleteImportService athleteImportService;
 
     public CoachController(CoachService coachService,
-                           CoachGroupService coachGroupService) {
+                           CoachGroupService coachGroupService,
+                           AthleteImportService athleteImportService) {
         this.coachService = coachService;
         this.coachGroupService = coachGroupService;
+        this.athleteImportService = athleteImportService;
     }
 
     public record AssignmentRequest(
@@ -87,6 +92,13 @@ public class CoachController {
         int end = Math.min(start + pageable.getPageSize(), all.size());
         List<AthleteResponse> pageContent = start >= all.size() ? List.of() : all.subList(start, end);
         return ResponseEntity.ok(new PageImpl<>(pageContent, pageable, all.size()));
+    }
+
+    @PostMapping("/athletes/import")
+    public ResponseEntity<AthleteImportService.ImportResult> importAthletes(
+            @RequestParam("file") MultipartFile file) {
+        String coachId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(athleteImportService.importFromCsv(file, coachId));
     }
 
     @DeleteMapping("/athletes/{athleteId}")

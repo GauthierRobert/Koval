@@ -7,6 +7,7 @@ import com.koval.trainingplannerbackend.ai.agents.AgentType;
 import com.koval.trainingplannerbackend.ai.agents.RouterService;
 import com.koval.trainingplannerbackend.ai.agents.TrainingAgent;
 import com.koval.trainingplannerbackend.ai.logger.UsageTracker;
+import io.micrometer.core.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -54,6 +55,7 @@ public class AIService {
 
     // ── Synchronous chat ────────────────────────────────────────────────
 
+    @Timed(value = "ai.chat", description = "Time spent in synchronous AI chat call")
     public ChatMessageResponse chat(String userMessage, String userId, String chatHistoryId, AgentType agentType) {
         UserContext ctx = userContextResolver.resolve(userId);
         ChatHistory chatHistory = chatHistoryService.findOrCreate(userId, chatHistoryId);
@@ -72,6 +74,7 @@ public class AIService {
 
     // ── Streaming chat ──────────────────────────────────────────────────
 
+    @Timed(value = "ai.chat.stream", description = "Time to assemble AI streaming response")
     public StreamResponse chatStream(String userMessage, String userId, String chatHistoryId, AgentType agentType) {
         UserContext ctx = userContextResolver.resolve(userId);
         ChatHistory chatHistory = chatHistoryService.findOrCreate(userId, chatHistoryId);

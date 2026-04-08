@@ -8,7 +8,48 @@
   <section class="card setup-section">
     <h2 class="section-label">{{ 'OAUTH_CLIENTS.SETUP_TITLE' | translate }}</h2>
     <p class="setup-text">{{ 'OAUTH_CLIENTS.SETUP_TEXT' | translate }}</p>
-  <pre class="code-block"><code>{{'{'}}"mcpServers": {{'{'}}{{'\\n'}}  "koval": {{'{'}}{{'\\n'}}    "url": "https://api.koval-sky.com/mcp/sse"{{'\\n'}}  {{'}'}}{{'\\n'}}{{'}'}}</code></pre>
+    @if (isProduction) {
+      <pre class="code-block"><code>{{ mcpUrl }}</code></pre>
+    } @else {
+      <pre class="code-block"><code>{{ '{' }}
+  "mcpServers": {{ '{' }}
+    "koval": {{ '{' }}
+      "url": "{{ mcpUrl }}"
+    {{ '}' }}
+  {{ '}' }}
+{{ '}' }}</code></pre>
+    }
+  </section>
+
+  <!-- Koval Skills -->
+  <section class="card skills-section">
+    <div class="skills-header">
+      <h2 class="section-label">{{ 'OAUTH_CLIENTS.SKILLS_TITLE' | translate }}</h2>
+      <a class="btn btn-primary btn-sm" [href]="skillsZipUrl" download>
+        {{ 'OAUTH_CLIENTS.BTN_DOWNLOAD_ALL' | translate }}
+      </a>
+    </div>
+    <p class="skills-description">{{ 'OAUTH_CLIENTS.SKILLS_DESCRIPTION' | translate }}</p>
+
+    @if ((skills$ | async); as skills) {
+      @if (skills.length === 0) {
+        <p class="empty-state">{{ 'OAUTH_CLIENTS.SKILLS_EMPTY' | translate }}</p>
+      } @else {
+        <div class="skills-list">
+          @for (skill of skills; track skill.filename) {
+            <div class="skill-row">
+              <div class="skill-info">
+                <span class="skill-name">{{ skill.name }}</span>
+                <span class="skill-description">{{ skill.description }}</span>
+              </div>
+              <a class="btn btn-ghost btn-sm" [href]="skillDownloadUrl(skill.filename)" download>
+                {{ 'OAUTH_CLIENTS.BTN_DOWNLOAD' | translate }}
+              </a>
+            </div>
+          }
+        </div>
+      }
+    }
   </section>
 
   <!-- Connected Clients -->

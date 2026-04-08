@@ -51,6 +51,7 @@
                     (leave)="cancelParticipation($event)"
                     (edit)="openEditForm($event)"
                     (cancelSession)="openCancelSessionModal($event)"
+                    (duplicateSession)="duplicateSession($event)"
                     (linkTraining)="onAiCreateForSession($event)"
                     (unlinkTraining)="unlinkTraining($event.session, $event.glt)"
                     (toggleDetail)="toggleSessionDetail($event)"

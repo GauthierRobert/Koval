@@ -1,7 +1,21 @@
 <div class="athlete-list glass" data-testid="athlete-list">
   <div class="section-header">
     <h3>{{ 'COACH_DASHBOARD.ATHLETES_HEADING' | translate }}</h3>
+    <div class="section-header-actions">
+      <button class="multi-select-toggle" type="button" [class.active]="multiSelectMode" (click)="toggleMultiSelect.emit()" [attr.aria-pressed]="multiSelectMode">
+        {{ multiSelectMode ? ('COACH_DASHBOARD.BULK_CANCEL' | translate) : ('COACH_DASHBOARD.BULK_SELECT' | translate) }}
+      </button>
+    </div>
   </div>
+
+  @if (multiSelectMode && multiSelectedIds.size > 0) {
+    <div class="bulk-action-bar">
+      <span class="bulk-count">{{ 'COACH_DASHBOARD.BULK_SELECTED_COUNT' | translate: { count: multiSelectedIds.size } }}</span>
+      <button class="bulk-assign-btn" type="button" (click)="bulkAssign.emit()">
+        {{ 'COACH_DASHBOARD.BULK_ASSIGN_ACTION' | translate }}
+      </button>
+    </div>
+  }
 
   @if (allTags.length > 0) {
     <div class="tag-filters">
@@ -32,7 +46,12 @@
     <div class="athletes">
       @for (athlete of athletes; track trackAthleteById(athlete)) {
         <div class="athlete-row" data-testid="athlete-row"
-      [class.selected]="selectedAthlete?.id === athlete.id" (click)="selectAthlete.emit(athlete)">
+      [class.selected]="selectedAthlete?.id === athlete.id"
+      [class.multi-selected]="isSelected(athlete.id)"
+      (click)="onAthleteRowClick(athlete)">
+      @if (multiSelectMode) {
+        <input type="checkbox" class="athlete-multi-checkbox" [checked]="isSelected(athlete.id)" (click)="$event.stopPropagation()" (change)="toggleAthleteSelection.emit(athlete)" />
+      }
       <div class="info">
           <div class="info-header">
             <span class="name">{{ athlete.displayName }}</span>

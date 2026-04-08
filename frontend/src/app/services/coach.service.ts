@@ -49,6 +49,19 @@ export interface ScheduledWorkout {
     weekLabel?: string;
 }
 
+export interface ImportRowError {
+    row: number;
+    email: string;
+    reason: string;
+}
+
+export interface AthleteImportResult {
+    processed: number;
+    added: number;
+    skipped: number;
+    errors: ImportRowError[];
+}
+
 export interface AthletePlanSummary {
     planId: string;
     planTitle: string;
@@ -164,6 +177,12 @@ export class CoachService {
                 params: { from, to },
             })
             .pipe(catchError(() => of([] as PmcDataPoint[])));
+    }
+
+    importAthletes(file: File): Observable<AthleteImportResult> {
+        const formData = new FormData();
+        formData.append('file', file);
+        return this.http.post<AthleteImportResult>(`${this.apiUrl}/athletes/import`, formData);
     }
 
     getAthletePlans(athleteId: string): Observable<AthletePlanSummary[]> {

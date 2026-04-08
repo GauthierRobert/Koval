@@ -112,7 +112,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus,metrics
   endpoint:
     health:
       show-details: when-authorized
@@ -121,6 +121,13 @@ management:
       enabled: false
     mongodb:
       enabled: false
+  metrics:
+    tags:
+      application: training-planner-ai
+  prometheus:
+    metrics:
+      export:
+        enabled: true
 
 oauth:
   issuer: ${OAUTH_ISSUER:http://localhost:8080}

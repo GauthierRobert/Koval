@@ -2,7 +2,9 @@ import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { OAuthClientItem, OAuthClientService } from '../../../services/oauth-client.service';
+import { SkillsService, SkillSummary } from '../../../services/skills.service';
 import { BehaviorSubject } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-oauth-clients',
@@ -14,12 +16,23 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class OAuthClientsComponent implements OnInit {
   private oauthClientService = inject(OAuthClientService);
+  private skillsService = inject(SkillsService);
 
   clients$ = this.oauthClientService.clients$;
   revoking$ = new BehaviorSubject<string | null>(null);
 
+  skills$ = new BehaviorSubject<SkillSummary[]>([]);
+
+  readonly mcpUrl = `${environment.apiUrl}/mcp/sse`;
+  readonly isProduction = environment.production;
+  readonly skillsZipUrl = this.skillsService.getZipUrl();
+
   ngOnInit(): void {
     this.oauthClientService.loadClients();
+    this.skillsService.getSkills().subscribe({
+      next: (skills) => this.skills$.next(skills),
+      error: () => this.skills$.next([]),
+    });
   }
 
   revokeClient(client: OAuthClientItem): void {
@@ -28,6 +41,10 @@ export class OAuthClientsComponent implements OnInit {
       next: () => this.revoking$.next(null),
       error: () => this.revoking$.next(null),
     });
+  }
+
+  skillDownloadUrl(filename: string): string {
+    return this.skillsService.getDownloadUrl(filename);
   }
 
   formatDate(date: string | null): string {

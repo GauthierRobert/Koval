@@ -59,6 +59,16 @@ public class TrainingController {
         return ResponseEntity.ok(training);
     }
 
+    /** Duplicates a training, returning a fresh copy owned by the current user. */
+    @PostMapping("/{id}/duplicate")
+    public ResponseEntity<Training> duplicateTraining(@PathVariable String id) {
+        String userId = SecurityUtils.getCurrentUserId();
+        Training source = trainingService.getTrainingById(id);
+        trainingAccessService.verifyAccess(userId, source);
+        Training copy = trainingService.duplicateTraining(id, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(copy);
+    }
+
     /** Updates an existing training (partial update: only non-null fields are applied). */
     @PutMapping("/{id}")
     public ResponseEntity<Training> updateTraining(@PathVariable String id,

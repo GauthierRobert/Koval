@@ -62,6 +62,7 @@ public class SecurityConfig {
                                 "/.well-known/oauth-protected-resource/**",
                                 "/oauth/register", "/oauth/authorize", "/oauth/token").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/skills", "/api/skills/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
