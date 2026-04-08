@@ -1,9 +1,11 @@
-import {ChangeDetectionStrategy, Component, HostListener, inject, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject, OnInit} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
 import {BehaviorSubject, combineLatest, Observable} from 'rxjs';
 import {filter, map, shareReplay, startWith, switchMap, tap} from 'rxjs/operators';
 import {Router} from '@angular/router';
+import {ResponsiveService} from '../../../services/responsive.service';
 
 import {CalendarClubSession, CalendarService} from '../../../services/calendar.service';
 import {AuthService} from '../../../services/auth.service';
@@ -188,20 +190,29 @@ export class CalendarComponent implements OnInit {
   private readonly clubSessionService = inject(ClubSessionService);
   private readonly planService = inject(PlanService);
   private readonly router = inject(Router);
+  private readonly responsive = inject(ResponsiveService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   private userId = '';
   private savedWeekDate: Date | null = null;
   private savedMonthDate: Date | null = null;
 
-  isMobile = window.innerWidth <= 768;
+  isMobile = false;
 
-  @HostListener('window:resize')
-  onResize(): void {
-    const wasMobile = this.isMobile;
-    this.isMobile = window.innerWidth <= 768;
-    if (this.isMobile && !wasMobile && this.viewMode === 'month') {
-      this.setViewMode('week');
-    }
+  constructor() {
+    // BreakpointObserver emits synchronously on subscribe with the current state,
+    // so isMobile is populated before ngOnInit runs.
+    this.responsive.isMobile$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((isMobile) => {
+        const wasMobile = this.isMobile;
+        this.isMobile = isMobile;
+        if (this.isMobile && !wasMobile && this.viewMode === 'month') {
+          this.setViewMode('week');
+        }
+        this.cdr.markForCheck();
+      });
   }
 
   ngOnInit(): void {

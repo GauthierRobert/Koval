@@ -9,6 +9,7 @@ import {filter, map, take} from 'rxjs/operators';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {SessionAnalysisComponent} from '../session-analysis/session-analysis.component';
 import {FilterPillsComponent} from '../../shared/filter-pills/filter-pills.component';
+import {SkeletonComponent} from '../../shared/skeleton/skeleton.component';
 import {HistoryService, SavedSession} from '../../../services/history.service';
 import {formatTimeText} from '../../shared/format/format.utils';
 
@@ -26,7 +27,7 @@ type SportFilter = string | null;
 @Component({
     selector: 'app-workout-history',
     standalone: true,
-    imports: [CommonModule, FormsModule, TranslateModule, SportIconComponent, SessionAnalysisComponent, FilterPillsComponent],
+    imports: [CommonModule, FormsModule, TranslateModule, SportIconComponent, SessionAnalysisComponent, FilterPillsComponent, SkeletonComponent],
     templateUrl: './workout-history.component.html',
     styleUrl: './workout-history.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,

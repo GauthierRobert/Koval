@@ -19,7 +19,7 @@
           (click)="loadConversation(h.id); chatSidebarOpen = false"
         >
           <span class="history-title">{{ h.title || ('AI_CHAT.HISTORY_ITEM_UNTITLED' | translate) }}</span>
-          <button class="delete-btn" (click)="deleteConversation(h.id, $event)">&times;</button>
+          <button class="delete-btn" (click)="deleteConversation(h.id, $event)" [attr.aria-label]="'AI_CHAT.BTN_DELETE_CONVERSATION' | translate">&times;</button>
         </div>
       }
     </div>
@@ -46,7 +46,7 @@
         </div>
       </div>
       <div class="header-right">
-        <button class="mobile-sidebar-toggle mobile-only" (click)="chatSidebarOpen = !chatSidebarOpen">&#9776;</button>
+        <button class="mobile-sidebar-toggle mobile-only" (click)="chatSidebarOpen = !chatSidebarOpen" [attr.aria-label]="'AI_CHAT.BTN_TOGGLE_SIDEBAR' | translate" [attr.aria-expanded]="chatSidebarOpen">&#9776;</button>
       </div>
     </div>
 

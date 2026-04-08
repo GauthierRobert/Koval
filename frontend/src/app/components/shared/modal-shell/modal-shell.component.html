@@ -1,0 +1,38 @@
+<div class="modal-shell-backdrop" (click)="onBackdropClick()">
+  <div
+    class="modal-shell-panel glass"
+    [class]="'size-' + size"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="title || null"
+    cdkTrapFocus
+    cdkTrapFocusAutoCapture
+    (click)="onPanelClick($event)"
+  >
+    @if (title || showCloseButton) {
+      <header class="modal-shell-header">
+        @if (title) {
+          <h2 class="modal-shell-title">{{ title }}</h2>
+        } @else {
+          <span></span>
+        }
+        @if (showCloseButton) {
+          <button
+            type="button"
+            class="modal-shell-close"
+            (click)="closed.emit()"
+            [attr.aria-label]="'COMMON.CLOSE' | translate"
+          >&times;</button>
+        }
+      </header>
+    }
+
+    <div class="modal-shell-body">
+      <ng-content></ng-content>
+    </div>
+
+    <div class="modal-shell-footer">
+      <ng-content select="[modal-footer]"></ng-content>
+    </div>
+  </div>
+</div>

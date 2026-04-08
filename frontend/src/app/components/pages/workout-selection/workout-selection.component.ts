@@ -1,4 +1,4 @@
-import {Component, HostListener, inject, OnInit} from '@angular/core';
+import {Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {TrainingService} from '../../../services/training.service';
@@ -42,10 +42,6 @@ export class WorkoutSelectionComponent implements OnInit {
 
   showAiModal = false;
   mobileListOpen = true;
-
-  get isMobile(): boolean {
-    return window.innerWidth <= 768;
-  }
 
   toggleMobileList(): void {
     this.mobileListOpen = !this.mobileListOpen;

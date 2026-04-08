@@ -40,6 +40,9 @@ export class HistoryService {
     private selectedSessionSubject = new BehaviorSubject<SavedSession | null>(null);
     selectedSession$ = this.selectedSessionSubject.asObservable();
 
+    private loadingSubject = new BehaviorSubject<boolean>(true);
+    loading$ = this.loadingSubject.asObservable();
+
     constructor() {
         this.authService.user$.pipe(
             filter((u) => !!u),
@@ -52,6 +55,7 @@ export class HistoryService {
     }
 
     private loadSessions(): void {
+        this.loadingSubject.next(true);
         this.http.get<any[]>(this.apiUrl).subscribe({
             next: (sessions) => {
                 const parsed: SavedSession[] = sessions.map((s) => ({
@@ -85,9 +89,11 @@ export class HistoryService {
                     const refreshed = parsed.find(s => s.id === current.id);
                     if (refreshed) this.selectedSessionSubject.next(refreshed);
                 }
+                this.loadingSubject.next(false);
             },
             error: () => {
                 // Error toast shown by interceptor
+                this.loadingSubject.next(false);
             },
         });
     }

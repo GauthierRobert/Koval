@@ -195,6 +195,40 @@
             </section>
           }
         }
+        <!-- Appearance -->
+        <section class="settings-card">
+            <div class="card-header">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+                </svg>
+                <h2>{{ 'SETTINGS.SECTION_APPEARANCE' | translate }}</h2>
+            </div>
+            <div class="card-body">
+                @if (themeService.mode$ | async; as mode) {
+                <div class="lang-options" role="radiogroup" [attr.aria-label]="'SETTINGS.SECTION_APPEARANCE' | translate">
+                    <button class="lang-option" role="radio"
+                            [attr.aria-checked]="mode === 'dark'"
+                            [class.active]="mode === 'dark'"
+                            (click)="themeService.setMode('dark')">
+                        {{ 'SETTINGS.THEME_DARK' | translate }}
+                    </button>
+                    <button class="lang-option" role="radio"
+                            [attr.aria-checked]="mode === 'light'"
+                            [class.active]="mode === 'light'"
+                            (click)="themeService.setMode('light')">
+                        {{ 'SETTINGS.THEME_LIGHT' | translate }}
+                    </button>
+                    <button class="lang-option" role="radio"
+                            [attr.aria-checked]="mode === 'system'"
+                            [class.active]="mode === 'system'"
+                            (click)="themeService.setMode('system')">
+                        {{ 'SETTINGS.THEME_SYSTEM' | translate }}
+                    </button>
+                </div>
+                }
+            </div>
+        </section>
+
         <!-- Language -->
         <section class="settings-card">
             <div class="card-header">

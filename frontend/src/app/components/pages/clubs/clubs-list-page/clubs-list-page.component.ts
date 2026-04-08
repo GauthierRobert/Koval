@@ -5,11 +5,12 @@ import {Router} from '@angular/router';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {BehaviorSubject} from 'rxjs';
 import {ClubService, ClubSummary, ClubVisibility, CreateClubData,} from '../../../../services/club.service';
+import {SkeletonComponent} from '../../../shared/skeleton/skeleton.component';
 
 @Component({
   selector: 'app-clubs-list-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, SkeletonComponent],
   templateUrl: './clubs-list-page.component.html',
   styleUrl: './clubs-list-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,6 +21,7 @@ export class ClubsListPageComponent implements OnInit {
   private translate = inject(TranslateService);
 
   userClubs$ = this.clubService.userClubs$;
+  userClubsLoading$ = this.clubService.userClubsLoading$;
   readonly publicClubs$ = new BehaviorSubject<ClubSummary[]>([]);
 
   isFormOpen = false;

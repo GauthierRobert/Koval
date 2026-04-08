@@ -21,7 +21,9 @@
   <!-- Body -->
   <div class="page-body">
 
-    @if (userClubs$ | async; as userClubs) {
+    @if (userClubsLoading$ | async) {
+      <app-skeleton variant="card" [rows]="4" rowHeight="120px"></app-skeleton>
+    } @else if (userClubs$ | async; as userClubs) {
       @if (userClubs.length > 0) {
         <section data-testid="your-clubs-section">
           <span class="section-label">{{ 'CLUBS_LIST.SECTION_YOUR_CLUBS' | translate }}</span>

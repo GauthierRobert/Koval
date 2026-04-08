@@ -6,11 +6,12 @@ import {BehaviorSubject, combineLatest, map, Observable} from 'rxjs';
 import {CoachService, InviteCode} from '../../../services/coach.service';
 import {AuthService} from '../../../services/auth.service';
 import {Group, GroupService} from '../../../services/group.service';
+import {ModalShellComponent} from '../modal-shell/modal-shell.component';
 
 @Component({
   selector: 'app-invite-code-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, ModalShellComponent],
   templateUrl: './invite-code-modal.component.html',
   styleUrl: './invite-code-modal.component.css',
 })

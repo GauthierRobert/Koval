@@ -38,6 +38,9 @@ export class RaceGoalService {
   private goalsSubject = new BehaviorSubject<RaceGoal[]>([]);
   goals$ = this.goalsSubject.asObservable();
 
+  private loadingSubject = new BehaviorSubject<boolean>(true);
+  loading$ = this.loadingSubject.asObservable();
+
   nextGoal$: Observable<RaceGoal | null> = this.goals$.pipe(
     map((goals) => {
       const today = new Date().toISOString().split('T')[0];
@@ -51,9 +54,13 @@ export class RaceGoalService {
   }
 
   loadGoals(): void {
+    this.loadingSubject.next(true);
     this.http.get<RaceGoal[]>(this.apiUrl).subscribe({
-      next: (goals) => this.ngZone.run(() => this.goalsSubject.next(goals)),
-      error: () => {},
+      next: (goals) => this.ngZone.run(() => {
+        this.goalsSubject.next(goals);
+        this.loadingSubject.next(false);
+      }),
+      error: () => this.ngZone.run(() => this.loadingSubject.next(false)),
     });
   }
 

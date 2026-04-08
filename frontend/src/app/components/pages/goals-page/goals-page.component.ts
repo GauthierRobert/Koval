@@ -13,11 +13,12 @@ import {daysUntil as sharedDaysUntil, weeksUntil as sharedWeeksUntil} from '../.
 import {GoalSidebarItemComponent} from './goal-sidebar-item/goal-sidebar-item.component';
 import {GoalCountdownHeroComponent} from './goal-countdown-hero/goal-countdown-hero.component';
 import {GpxDisciplineUploaderComponent} from './gpx-discipline-uploader/gpx-discipline-uploader.component';
+import {SkeletonComponent} from '../../shared/skeleton/skeleton.component';
 
 @Component({
   selector: 'app-goals-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, SportIconComponent, GoalSidebarItemComponent, GoalCountdownHeroComponent, GpxDisciplineUploaderComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, SportIconComponent, GoalSidebarItemComponent, GoalCountdownHeroComponent, GpxDisciplineUploaderComponent, SkeletonComponent],
   templateUrl: './goals-page.component.html',
   styleUrl: './goals-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,6 +32,7 @@ export class GoalsPageComponent implements OnInit {
   private translate = inject(TranslateService);
 
   allGoals$ = this.raceGoalService.goals$.pipe(map((goals) => this.sortGoals(goals)));
+  loading$ = this.raceGoalService.loading$;
 
   // Selected goal (sidebar selection)
   selectedGoalId: string | null = null;

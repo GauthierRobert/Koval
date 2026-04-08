@@ -5,11 +5,12 @@ import {TranslateModule} from '@ngx-translate/core';
 import {TrainingService} from '../../../services/training.service';
 import {Training} from '../../../models/training.model';
 import {Group} from '../../../services/group.service';
+import {ModalShellComponent} from '../modal-shell/modal-shell.component';
 
 @Component({
   selector: 'app-share-training-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, ModalShellComponent],
   templateUrl: './share-training-modal.component.html',
   styleUrl: './share-training-modal.component.css'
 })

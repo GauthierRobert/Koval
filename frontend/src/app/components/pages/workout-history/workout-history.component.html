@@ -62,7 +62,9 @@
       <input data-testid="date-to" type="date" class="date-input" [ngModel]="dateTo" (ngModelChange)="onDateToChange($event)" />
     </div>
 
-    @if (filteredSessions$ | async; as sessions) {
+    @if (historyService.loading$ | async) {
+      <app-skeleton [rows]="6"></app-skeleton>
+    } @else if (filteredSessions$ | async; as sessions) {
       <div class="session-list">
         @if (sessions.length === 0) {
           <div class="empty-state">

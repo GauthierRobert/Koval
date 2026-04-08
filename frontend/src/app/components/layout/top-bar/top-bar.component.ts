@@ -1,4 +1,5 @@
-import {ChangeDetectionStrategy, Component, HostListener, inject} from '@angular/core';
+import {ChangeDetectionStrategy, Component, DestroyRef, HostListener, inject} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {Router, RouterModule} from '@angular/router';
 import {BluetoothService} from '../../../services/bluetooth.service';
@@ -11,6 +12,7 @@ import {NotificationPreferencesComponent} from '../../shared/notification-prefer
 import {ConnectedAppsModalComponent} from '../../shared/connected-apps-modal/connected-apps-modal.component';
 import {TranslateService, TranslateModule} from '@ngx-translate/core';
 import {ThemeService} from '../../../services/theme.service';
+import {ResponsiveService} from '../../../services/responsive.service';
 
 @Component({
   selector: 'app-top-bar',
@@ -28,7 +30,20 @@ export class TopBarComponent {
   private filterService = inject(TrainingFilterService);
   private translateService = inject(TranslateService);
   themeService = inject(ThemeService);
+  private responsive = inject(ResponsiveService);
+  private destroyRef = inject(DestroyRef);
   currentLang = this.translateService.currentLang || 'en';
+
+  constructor() {
+    // Auto-close mobile menu when leaving the mobile breakpoint
+    this.responsive.isMobile$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((isMobile) => {
+        if (!isMobile && this.mobileMenuOpen) {
+          this.mobileMenuOpen = false;
+        }
+      });
+  }
 
   toggleLang(): void {
     this.currentLang = this.currentLang === 'en' ? 'fr' : 'en';
@@ -58,13 +73,6 @@ export class TopBarComponent {
     this.isClubsOpen = false;
     this.isTrainingOpen = false;
     this.isAnalyticsOpen = false;
-  }
-
-  @HostListener('window:resize')
-  onResize(): void {
-    if (window.innerWidth > 768 && this.mobileMenuOpen) {
-      this.mobileMenuOpen = false;
-    }
   }
 
   user$ = this.authService.user$;

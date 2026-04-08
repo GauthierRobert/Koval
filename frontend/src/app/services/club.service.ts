@@ -27,6 +27,9 @@ export class ClubService {
   private userClubsSubject = new BehaviorSubject<ClubSummary[]>([]);
   userClubs$ = this.userClubsSubject.asObservable();
 
+  private userClubsLoadingSubject = new BehaviorSubject<boolean>(true);
+  userClubsLoading$ = this.userClubsLoadingSubject.asObservable();
+
   private selectedClubSubject = new BehaviorSubject<ClubDetail | null>(null);
   selectedClub$ = this.selectedClubSubject.asObservable();
 
@@ -48,10 +51,14 @@ export class ClubService {
   // --- Club CRUD ---
 
   loadUserClubs(): void {
+    this.userClubsLoadingSubject.next(true);
     this.http
       .get<ClubSummary[]>(this.apiUrl)
       .pipe(catchError(() => of([] as ClubSummary[])))
-      .subscribe((clubs) => this.ngZone.run(() => this.userClubsSubject.next(clubs)));
+      .subscribe((clubs) => this.ngZone.run(() => {
+        this.userClubsSubject.next(clubs);
+        this.userClubsLoadingSubject.next(false);
+      }));
   }
 
   browsePublicClubs(page = 0): Observable<ClubSummary[]> {

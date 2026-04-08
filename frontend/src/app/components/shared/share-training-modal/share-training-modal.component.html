@@ -1,50 +1,45 @@
-    @if (isOpen) {
-      <div class="modal-backdrop" (click)="close()">
-        <div class="modal-card glass" (click)="$event.stopPropagation()">
-          <div class="modal-header">
-            <h2>{{ 'SHARE_TRAINING.HEADING_SHARE' | translate }} <span class="highlight">{{ 'SHARE_TRAINING.HEADING_TRAINING' | translate }}</span></h2>
-            <button class="close-btn" (click)="close()">&times;</button>
-          </div>
+@if (isOpen) {
+  <app-modal-shell
+    [title]="('SHARE_TRAINING.HEADING_SHARE' | translate) + ' ' + ('SHARE_TRAINING.HEADING_TRAINING' | translate)"
+    size="md"
+    (closed)="close()"
+  >
+    <div class="field">
+      <label>{{ 'SHARE_TRAINING.LABEL_TRAINING' | translate }}</label>
+      <select [(ngModel)]="selectedTrainingId" (ngModelChange)="onTrainingSelected()">
+        <option value="" disabled>{{ 'SHARE_TRAINING.SELECT_TRAINING_PLACEHOLDER' | translate }}</option>
+        @for (t of allTrainings; track t.id) {
+          <option [value]="t.id">{{ t.title }}</option>
+        }
+      </select>
+    </div>
 
-          <div class="modal-body">
-            <div class="field">
-              <label>{{ 'SHARE_TRAINING.LABEL_TRAINING' | translate }}</label>
-              <select [(ngModel)]="selectedTrainingId" (ngModelChange)="onTrainingSelected()">
-                <option value="" disabled>{{ 'SHARE_TRAINING.SELECT_TRAINING_PLACEHOLDER' | translate }}</option>
-                @for (t of allTrainings; track t.id) {
-                  <option [value]="t.id">{{ t.title }}</option>
-                }
-              </select>
-            </div>
-
-            @if (activeTraining) {
-              <div class="field">
-                <label>{{ 'SHARE_TRAINING.LABEL_SHARE_WITH_TAGS' | translate }}</label>
-                <div class="tag-selector">
-                  @for (tag of availableTags; track tag.id) {
-                    <span
-                      class="tag-chip"
-                      [class.selected]="selectedTagIds.includes(tag.id)"
-                      (click)="toggleTag(tag)"
-                    >{{ tag.name }}</span>
-                  }
-                </div>
-                @if (availableTags.length === 0) {
-                  <div class="hint">
-                    {{ 'SHARE_TRAINING.HINT_NO_TAGS' | translate }}
-                  </div>
-                }
-              </div>
-            }
-
-            <button
-              class="save-btn"
-              (click)="save()"
-              [disabled]="saving || !activeTraining"
-            >
-              {{ (saving ? 'SHARE_TRAINING.BTN_SAVING' : 'SHARE_TRAINING.BTN_SAVE') | translate }}
-            </button>
-          </div>
+    @if (activeTraining) {
+      <div class="field">
+        <label>{{ 'SHARE_TRAINING.LABEL_SHARE_WITH_TAGS' | translate }}</label>
+        <div class="tag-selector">
+          @for (tag of availableTags; track tag.id) {
+            <span
+              class="tag-chip"
+              [class.selected]="selectedTagIds.includes(tag.id)"
+              (click)="toggleTag(tag)"
+            >{{ tag.name }}</span>
+          }
         </div>
+        @if (availableTags.length === 0) {
+          <div class="hint">
+            {{ 'SHARE_TRAINING.HINT_NO_TAGS' | translate }}
+          </div>
+        }
       </div>
     }
+
+    <button
+      class="save-btn"
+      (click)="save()"
+      [disabled]="saving || !activeTraining"
+    >
+      {{ (saving ? 'SHARE_TRAINING.BTN_SAVING' : 'SHARE_TRAINING.BTN_SAVE') | translate }}
+    </button>
+  </app-modal-shell>
+}

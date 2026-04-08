@@ -1,11 +1,9 @@
     @if (isOpen) {
-      <div class="modal-backdrop" (click)="close()">
-      <div class="modal-card glass" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h2>{{ 'INVITE_CODE.HEADING_INVITE' | translate }} <span class="highlight">{{ 'INVITE_CODE.HEADING_CODES' | translate }}</span></h2>
-          <button class="close-btn" (click)="close()">&times;</button>
-        </div>
-
+      <app-modal-shell
+        [title]="('INVITE_CODE.HEADING_INVITE' | translate) + ' ' + ('INVITE_CODE.HEADING_CODES' | translate)"
+        size="md"
+        (closed)="close()"
+      >
         <div class="modal-body">
           <!-- Generate new code -->
           <div class="generate-section">
@@ -100,6 +98,5 @@
             </div>
           }
         </div>
-      </div>
-    </div>
+      </app-modal-shell>
     }

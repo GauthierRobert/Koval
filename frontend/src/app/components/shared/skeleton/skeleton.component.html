@@ -1,0 +1,5 @@
+<div class="skeleton-wrap" [class.variant-card]="variant === 'card'" aria-hidden="true">
+  @for (i of rowsArray; track i) {
+    <div class="skeleton-row" [style.height]="rowHeight"></div>
+  }
+</div>

@@ -8,6 +8,7 @@ import {AuthService, User} from '../../../services/auth.service';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {ZoneService} from '../../../services/zone.service';
 import {ZoneSystem} from '../../../services/zone';
+import {ThemeService} from '../../../services/theme.service';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {A11yModule} from '@angular/cdk/a11y';
 
@@ -33,6 +34,7 @@ export class SettingsComponent implements OnInit {
     private authService = inject(AuthService);
     private zoneService = inject(ZoneService);
     private translateService = inject(TranslateService);
+    themeService = inject(ThemeService);
     private router = inject(Router);
     private destroyRef = inject(DestroyRef);
 
