@@ -49,6 +49,22 @@ public class RaceService {
         return repository.findAll();
     }
 
+    public Page<Race> searchRaces(String query, String sport, String region, Pageable pageable) {
+        if (query != null && !query.isBlank() && sport != null && !sport.isBlank()) {
+            return repository.findByTitleContainingIgnoreCaseAndSportIgnoreCase(query.trim(), sport.trim(), pageable);
+        }
+        if (query != null && !query.isBlank()) {
+            return repository.findByTitleContainingIgnoreCase(query.trim(), pageable);
+        }
+        if (sport != null && !sport.isBlank()) {
+            return repository.findBySportIgnoreCase(sport.trim(), pageable);
+        }
+        if (region != null && !region.isBlank()) {
+            return repository.findByCountryIgnoreCaseOrRegionIgnoreCase(region.trim(), region.trim(), pageable);
+        }
+        return repository.findAll(pageable);
+    }
+
     @Cacheable(value = "races", key = "#id")
     public Race getRaceById(String id) {
         return repository.findById(id)

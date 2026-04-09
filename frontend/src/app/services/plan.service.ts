@@ -1,7 +1,7 @@
 import { inject, Injectable, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { filter } from 'rxjs/operators';
+import { filter, tap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
 import { ActivePlanSummary, PlanAnalytics, PlanProgress, TrainingPlan } from '../models/plan.model';
@@ -53,21 +53,21 @@ export class PlanService {
   loadPlan(id: string): void {
     this.http.get<TrainingPlan>(`${this.apiUrl}/${id}`).subscribe({
       next: (plan) => this.ngZone.run(() => this.selectedPlanSubject.next(plan)),
-      error: () => {},
+      error: (err) => console.error('Failed to load plan', err),
     });
   }
 
   loadProgress(planId: string): void {
     this.http.get<PlanProgress>(`${this.apiUrl}/${planId}/progress`).subscribe({
       next: (p) => this.ngZone.run(() => this.progressSubject.next(p)),
-      error: () => {},
+      error: (err) => console.error('Failed to load plan progress', err),
     });
   }
 
   loadAnalytics(planId: string): void {
     this.http.get<PlanAnalytics>(`${this.apiUrl}/${planId}/analytics`).subscribe({
       next: (a) => this.ngZone.run(() => this.analyticsSubject.next(a)),
-      error: () => {},
+      error: (err) => console.error('Failed to load plan analytics', err),
     });
   }
 
@@ -82,105 +82,75 @@ export class PlanService {
   }
 
   createPlan(plan: Partial<TrainingPlan>): Observable<TrainingPlan> {
-    return new Observable((observer) => {
-      this.http.post<TrainingPlan>(this.apiUrl, plan).subscribe({
-        next: (created) => {
-          this.ngZone.run(() => {
-            this.plansSubject.next([created, ...this.plansSubject.value]);
-          });
-          observer.next(created);
-          observer.complete();
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+    return this.http.post<TrainingPlan>(this.apiUrl, plan).pipe(
+      tap((created) => {
+        this.ngZone.run(() => {
+          this.plansSubject.next([created, ...this.plansSubject.value]);
+        });
+      }),
+    );
   }
 
   updatePlan(id: string, updates: Partial<TrainingPlan>): Observable<TrainingPlan> {
-    return new Observable((observer) => {
-      this.http.put<TrainingPlan>(`${this.apiUrl}/${id}`, updates).subscribe({
-        next: (updated) => {
-          this.ngZone.run(() => {
-            const plans = this.plansSubject.value.map((p) => (p.id === id ? updated : p));
-            this.plansSubject.next(plans);
-            this.selectedPlanSubject.next(updated);
-          });
-          observer.next(updated);
-          observer.complete();
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+    return this.http.put<TrainingPlan>(`${this.apiUrl}/${id}`, updates).pipe(
+      tap((updated) => {
+        this.ngZone.run(() => {
+          const plans = this.plansSubject.value.map((p) => (p.id === id ? updated : p));
+          this.plansSubject.next(plans);
+          this.selectedPlanSubject.next(updated);
+        });
+      }),
+    );
   }
 
   activatePlan(id: string, startDate: string, athleteIds?: string[]): Observable<TrainingPlan> {
-    return new Observable((observer) => {
-      const body: { startDate: string; athleteIds?: string[] } = { startDate };
-      if (athleteIds && athleteIds.length) body.athleteIds = athleteIds;
-      this.http.post<TrainingPlan>(`${this.apiUrl}/${id}/activate`, body).subscribe({
-        next: (activated) => {
-          this.ngZone.run(() => {
-            const plans = this.plansSubject.value.map((p) => (p.id === id ? activated : p));
-            this.plansSubject.next(plans);
-            this.selectedPlanSubject.next(activated);
-          });
-          observer.next(activated);
-          observer.complete();
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+    const body: { startDate: string; athleteIds?: string[] } = { startDate };
+    if (athleteIds && athleteIds.length) body.athleteIds = athleteIds;
+    return this.http.post<TrainingPlan>(`${this.apiUrl}/${id}/activate`, body).pipe(
+      tap((activated) => {
+        this.ngZone.run(() => {
+          const plans = this.plansSubject.value.map((p) => (p.id === id ? activated : p));
+          this.plansSubject.next(plans);
+          this.selectedPlanSubject.next(activated);
+        });
+      }),
+    );
   }
 
   pausePlan(id: string): Observable<TrainingPlan> {
-    return new Observable((observer) => {
-      this.http.post<TrainingPlan>(`${this.apiUrl}/${id}/pause`, {}).subscribe({
-        next: (paused) => {
-          this.ngZone.run(() => {
-            const plans = this.plansSubject.value.map((p) => (p.id === id ? paused : p));
-            this.plansSubject.next(plans);
-            this.selectedPlanSubject.next(paused);
-          });
-          observer.next(paused);
-          observer.complete();
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+    return this.http.post<TrainingPlan>(`${this.apiUrl}/${id}/pause`, {}).pipe(
+      tap((paused) => {
+        this.ngZone.run(() => {
+          const plans = this.plansSubject.value.map((p) => (p.id === id ? paused : p));
+          this.plansSubject.next(plans);
+          this.selectedPlanSubject.next(paused);
+        });
+      }),
+    );
   }
 
   completePlan(id: string): Observable<TrainingPlan> {
-    return new Observable((observer) => {
-      this.http.post<TrainingPlan>(`${this.apiUrl}/${id}/complete`, {}).subscribe({
-        next: (completed) => {
-          this.ngZone.run(() => {
-            const plans = this.plansSubject.value.map((p) => (p.id === id ? completed : p));
-            this.plansSubject.next(plans);
-            this.selectedPlanSubject.next(completed);
-          });
-          observer.next(completed);
-          observer.complete();
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+    return this.http.post<TrainingPlan>(`${this.apiUrl}/${id}/complete`, {}).pipe(
+      tap((completed) => {
+        this.ngZone.run(() => {
+          const plans = this.plansSubject.value.map((p) => (p.id === id ? completed : p));
+          this.plansSubject.next(plans);
+          this.selectedPlanSubject.next(completed);
+        });
+      }),
+    );
   }
 
   deletePlan(id: string): Observable<void> {
-    return new Observable((observer) => {
-      this.http.delete<void>(`${this.apiUrl}/${id}`).subscribe({
-        next: () => {
-          this.ngZone.run(() => {
-            this.plansSubject.next(this.plansSubject.value.filter((p) => p.id !== id));
-            if (this.selectedPlanSubject.value?.id === id) {
-              this.selectedPlanSubject.next(null);
-            }
-          });
-          observer.next();
-          observer.complete();
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+      tap(() => {
+        this.ngZone.run(() => {
+          this.plansSubject.next(this.plansSubject.value.filter((p) => p.id !== id));
+          if (this.selectedPlanSubject.value?.id === id) {
+            this.selectedPlanSubject.next(null);
+          }
+        });
+      }),
+    );
   }
 }

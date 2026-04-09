@@ -17,4 +17,12 @@ public interface RaceRepository extends MongoRepository<Race, String> {
     List<Race> findByCountryIgnoreCaseOrRegionIgnoreCase(String country, String region);
 
     Page<Race> findBySportIgnoreCaseAndCountryIgnoreCase(String sport, String country, Pageable pageable);
+
+    Page<Race> findByTitleContainingIgnoreCase(String query, Pageable pageable);
+
+    Page<Race> findBySportIgnoreCase(String sport, Pageable pageable);
+
+    Page<Race> findByTitleContainingIgnoreCaseAndSportIgnoreCase(String query, String sport, Pageable pageable);
+
+    Page<Race> findByCountryIgnoreCaseOrRegionIgnoreCase(String country, String region, Pageable pageable);
 }

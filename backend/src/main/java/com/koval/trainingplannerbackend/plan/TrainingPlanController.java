@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/plans")
@@ -65,20 +64,11 @@ public class TrainingPlanController {
     }
 
     @PostMapping("/{id}/activate")
-    @SuppressWarnings("unchecked")
     public ResponseEntity<TrainingPlan> activatePlan(@PathVariable String id,
-                                                      @RequestBody(required = false) Map<String, Object> body) {
+                                                      @RequestBody(required = false) ActivatePlanRequest body) {
         String userId = SecurityUtils.getCurrentUserId();
-        LocalDate startDate = null;
-        List<String> athleteIds = null;
-        if (body != null) {
-            if (body.containsKey("startDate")) {
-                startDate = LocalDate.parse((String) body.get("startDate"));
-            }
-            if (body.containsKey("athleteIds")) {
-                athleteIds = (List<String>) body.get("athleteIds");
-            }
-        }
+        LocalDate startDate = body != null ? body.startDate() : null;
+        List<String> athleteIds = body != null ? body.athleteIds() : null;
         return ResponseEntity.ok(planService.activatePlan(id, userId, startDate, athleteIds));
     }
 

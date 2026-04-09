@@ -41,19 +41,15 @@ public class RaceController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RaceSummary>> searchRaces(
+    public ResponseEntity<Page<RaceSummary>> searchRaces(
             @RequestParam(value = "q", required = false) String query,
             @RequestParam(value = "sport", required = false) String sport,
             @RequestParam(value = "region", required = false) String region,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "50") int size) {
         int safeSize = Math.min(Math.max(size, 1), 100);
-        List<RaceSummary> summaries = raceService.searchRaces(query, sport, region)
-                .stream()
-                .skip((long) page * safeSize)
-                .limit(safeSize)
-                .map(RaceSummary::from)
-                .toList();
+        Page<RaceSummary> summaries = raceService.searchRaces(query, sport, region, PageRequest.of(page, safeSize))
+                .map(RaceSummary::from);
         return ResponseEntity.ok(summaries);
     }
 

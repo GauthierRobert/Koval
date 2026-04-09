@@ -1,4 +1,5 @@
-import {ChangeDetectionStrategy, Component} from '@angular/core';
+import {ChangeDetectionStrategy, Component, DestroyRef, inject} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {RouterOutlet} from '@angular/router';
 import {WorkoutExecutionService} from './services/workout-execution.service';
@@ -43,6 +44,8 @@ export class AppComponent {
   showDeviceManager$: Observable<boolean>;
   showSettings$: Observable<boolean>;
 
+  private destroyRef = inject(DestroyRef);
+
   constructor(
     private trainingService: TrainingService,
     private executionService: WorkoutExecutionService,
@@ -67,7 +70,10 @@ export class AppComponent {
 
     // Auto-register for push notifications when user logs in
     this.authService.user$
-      .pipe(filter((u) => u !== null))
+      .pipe(
+        filter((u) => u !== null),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe(() => {
         this.notificationService.requestPermissionAndRegisterToken();
       });

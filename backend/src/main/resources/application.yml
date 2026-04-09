@@ -1,4 +1,8 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 15MB
   application:
     name: training-planner-backend
   ai:
@@ -60,7 +64,7 @@ strava:
   webhook-callback-url: ${STRAVA_WEBHOOK_CALLBACK_URL:http://localhost:8080/api/integration/strava/webhook}
 
 admin:
-  secret: ${ADMIN_SECRET:change-me-in-prod}
+  secret: ${ADMIN_SECRET}
 
 garmin:
   consumer-key: ${GARMIN_CONSUMER_KEY:}

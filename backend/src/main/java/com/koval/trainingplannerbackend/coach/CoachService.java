@@ -91,9 +91,9 @@ public class CoachService {
         }
 
         // Verify all athletes belong to this coach via groups
-        List<String> coachAthleteIds = groupService.getAthleteIdsForCoach(coachId);
+        Set<String> coachAthleteIds = new HashSet<>(groupService.getAthleteIdsForCoach(coachId));
 
-        List<ScheduledWorkout> assignments = new ArrayList<>();
+        List<ScheduledWorkout> workoutsToSave = new ArrayList<>();
         for (String athleteId : athleteIds) {
             if (!coachAthleteIds.contains(athleteId)) {
                 throw new ValidationException("Athlete " + athleteId + " is not assigned to coach " + coachId);
@@ -107,8 +107,9 @@ public class CoachService {
             workout.setNotes(notes);
             workout.setStatus(ScheduleStatus.PENDING);
 
-            assignments.add(scheduledWorkoutRepository.save(workout));
+            workoutsToSave.add(workout);
         }
+        List<ScheduledWorkout> assignments = scheduledWorkoutRepository.saveAll(workoutsToSave);
 
         // Create ReceivedTraining entries
         String originId = groupId;

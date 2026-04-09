@@ -31,6 +31,9 @@ google:
   client-secret: test-google-client-secret
   redirect-uri: http://localhost:4200/auth/google/callback
 
+admin:
+  secret: test-admin-secret
+
 cors:
   allowed-origins: http://localhost:4200
 

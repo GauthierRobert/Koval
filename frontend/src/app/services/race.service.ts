@@ -1,7 +1,7 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject, Observable} from 'rxjs';
-import {tap} from 'rxjs/operators';
+import {map, tap} from 'rxjs/operators';
 import {environment} from '../../environments/environment';
 import {AthleteProfile, PacingPlanResponse} from './pacing.service';
 
@@ -86,7 +86,8 @@ export class RaceService {
     if (query) params['q'] = query;
     if (sport) params['sport'] = sport;
     if (region) params['region'] = region;
-    return this.http.get<Race[]>(this.apiUrl, { params }).pipe(
+    return this.http.get<{ content: Race[] }>(this.apiUrl, { params }).pipe(
+      map((page) => page.content),
       tap((races) => this.searchResultsSubject.next(races)),
     );
   }
