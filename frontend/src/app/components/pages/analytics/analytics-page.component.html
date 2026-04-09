@@ -44,6 +44,36 @@
               }
             </div>
           </div>
+          <!-- Fatigue Resistance Index card -->
+          @if (computeFri(data); as fri) {
+            <div class="fri-card glass">
+              <div class="fri-header">
+                <span class="fri-label">{{ 'ANALYTICS.FRI_TITLE' | translate }}</span>
+                <span class="fri-badge" [style.background]="fri.color">
+                  @switch (fri.level) {
+                    @case ('excellent') { {{ 'ANALYTICS.FRI_EXCELLENT_LABEL' | translate }} }
+                    @case ('good') { {{ 'ANALYTICS.FRI_GOOD_LABEL' | translate }} }
+                    @case ('moderate') { {{ 'ANALYTICS.FRI_MODERATE_LABEL' | translate }} }
+                    @case ('developing') { {{ 'ANALYTICS.FRI_DEVELOPING_LABEL' | translate }} }
+                  }
+                </span>
+              </div>
+              <div class="fri-value" [style.color]="fri.color">{{ fri.ratio }}</div>
+              <div class="fri-detail">
+                <span>{{ 'ANALYTICS.FRI_5MIN' | translate }}: {{ fri.power5min }}W</span>
+                <span class="fri-sep">/</span>
+                <span>{{ 'ANALYTICS.FRI_60MIN' | translate }}: {{ fri.power60min }}W</span>
+              </div>
+              <div class="fri-interpretation">
+                @switch (fri.level) {
+                  @case ('excellent') { {{ 'ANALYTICS.FRI_EXCELLENT' | translate }} }
+                  @case ('good') { {{ 'ANALYTICS.FRI_GOOD' | translate }} }
+                  @case ('moderate') { {{ 'ANALYTICS.FRI_MODERATE' | translate }} }
+                  @case ('developing') { {{ 'ANALYTICS.FRI_DEVELOPING' | translate }} }
+                }
+              </div>
+            </div>
+          }
           <!-- Mobile button -->
           <div class="mobile-chart-cta mobile-only">
             <button class="open-chart-btn" (click)="mobileChartType = 'power-curve'; mobileChartOpen = true">

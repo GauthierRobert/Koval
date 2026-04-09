@@ -96,4 +96,32 @@ export class AnalyticsPageComponent implements OnInit {
   recordEntries(data: Record<number, number>): { duration: number; label: string; power: number }[] {
     return this.powerCurveEntries(data);
   }
+
+  // FRI helpers
+  computeFri(
+    data: Record<number, number>,
+  ): { ratio: number; power5min: number; power60min: number; level: string; color: string } | null {
+    const p5 = data[300];
+    const p60 = data[3600];
+    if (!p5 || !p60 || p5 <= 0 || p60 <= 0) return null;
+    // Variability guard: reject flat curves (Z2-only riding)
+    if (p5 / p60 < 1.2) return null;
+    const ratio = Math.round((p60 / p5) * 1000) / 1000;
+    let level: string;
+    let color: string;
+    if (ratio >= 0.8) {
+      level = 'excellent';
+      color = 'var(--success-color)';
+    } else if (ratio >= 0.75) {
+      level = 'good';
+      color = 'var(--success-color)';
+    } else if (ratio >= 0.7) {
+      level = 'moderate';
+      color = 'oklch(0.75 0.16 75)';
+    } else {
+      level = 'developing';
+      color = 'var(--danger-color)';
+    }
+    return { ratio, power5min: Math.round(p5), power60min: Math.round(p60), level, color };
+  }
 }

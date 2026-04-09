@@ -1120,7 +1120,18 @@
     "NO_VOLUME_DATA": "Aucune donnée de volume pour cette période",
     "NO_RECORDS": "Aucun record personnel",
     "NO_RECORDS_DESC": "Complétez des séances avec données de puissance pour construire vos records",
-    "MOBILE_CHART_HINT": "S'ouvre en vue paysage"
+    "MOBILE_CHART_HINT": "S'ouvre en vue paysage",
+    "FRI_TITLE": "Indice de résistance à la fatigue",
+    "FRI_5MIN": "Meilleur 5 min",
+    "FRI_60MIN": "Meilleur 60 min",
+    "FRI_EXCELLENT_LABEL": "Excellent",
+    "FRI_GOOD_LABEL": "Bon",
+    "FRI_MODERATE_LABEL": "Modéré",
+    "FRI_DEVELOPING_LABEL": "En développement",
+    "FRI_EXCELLENT": "Résistance à la fatigue d'élite — idéal pour le triathlon longue distance",
+    "FRI_GOOD": "Bon profil d'endurance — adapté au format half-distance",
+    "FRI_MODERATE": "Typique du cycliste entraîné — plus de sorties longues amélioreront ce score",
+    "FRI_DEVELOPING": "Profil orienté sprint — privilégiez les sorties longues en endurance"
   },
   "BUILDER": {
     "CREATE_TITLE": "Créer un entraînement",
