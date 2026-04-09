@@ -31,19 +31,8 @@
             <p>{{ 'ANALYTICS.NO_POWER_DATA_DESC' | translate }}</p>
           </div>
         } @else {
-          <!-- Desktop chart -->
-          <div class="chart-container glass desktop-only">
-            <h3>{{ 'ANALYTICS.POWER_CURVE_TITLE' | translate }}</h3>
-            <div class="bar-chart">
-              @for (entry of powerCurveEntries(data); track entry.duration) {
-                <div class="bar-col">
-                  <span class="bar-value">{{ entry.power }}W</span>
-                  <div class="bar" [style.height.%]="barHeight(entry.power, maxPower(data))"></div>
-                  <span class="bar-label">{{ entry.label }}</span>
-                </div>
-              }
-            </div>
-          </div>
+          <!-- Desktop curve chart -->
+          <app-power-curve-chart class="desktop-only" [data]="data"></app-power-curve-chart>
           <!-- Fatigue Resistance Index card -->
           @if (computeFri(data); as fri) {
             <div class="fri-card glass">
@@ -198,17 +187,7 @@
       @if (mobileChartType === 'power-curve') {
         @if (powerCurve$ | async; as data) {
           <h3 class="mobile-chart-title">{{ 'ANALYTICS.POWER_CURVE_TITLE' | translate }}</h3>
-          <div class="mobile-chart-scroll">
-            <div class="bar-chart mobile-bar-chart">
-              @for (entry of powerCurveEntries(data); track entry.duration) {
-                <div class="bar-col">
-                  <span class="bar-value">{{ entry.power }}W</span>
-                  <div class="bar" [style.height.%]="barHeight(entry.power, maxPower(data))"></div>
-                  <span class="bar-label">{{ entry.label }}</span>
-                </div>
-              }
-            </div>
-          </div>
+          <app-power-curve-chart [data]="data"></app-power-curve-chart>
         }
       }
       @if (mobileChartType === 'volume') {

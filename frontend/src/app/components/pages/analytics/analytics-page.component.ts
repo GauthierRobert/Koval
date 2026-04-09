@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { AnalyticsService, DURATION_LABELS, VolumeEntry } from '../../../services/analytics.service';
+import { PowerCurveChartComponent } from '../session-analysis/power-curve-chart/power-curve-chart.component';
 
 type Tab = 'power-curve' | 'volume' | 'records';
 
 @Component({
   selector: 'app-analytics-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, PowerCurveChartComponent],
   templateUrl: './analytics-page.component.html',
   styleUrl: './analytics-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
