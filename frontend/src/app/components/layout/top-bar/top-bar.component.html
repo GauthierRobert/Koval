@@ -328,7 +328,7 @@
         @if (u.profilePicture) {
           <img class="avatar-img" [src]="u.profilePicture" [alt]="'TOP_BAR.PROFILE_PICTURE_ALT' | translate" />
         } @else {
-          <div class="avatar">{{ u.displayName?.charAt(0)?.toUpperCase() ?? 'U' }}</div>
+          <div class="avatar">{{ u.displayName.charAt(0).toUpperCase() }}</div>
         }
         <div class="user-info desktop-only">
           <span class="name">{{ u.displayName }}</span>

@@ -162,3 +162,30 @@
     width: 100%;
   }
 }
+
+@media (max-width: 480px) {
+  .decoupling-panel {
+    padding: var(--space-sm) var(--space-sm);
+  }
+
+  .seg-col.seg-name {
+    width: 56px;
+  }
+
+  .seg-header .seg-col {
+    font-size: 8px;
+  }
+
+  .seg-row .seg-col {
+    font-size: 11px;
+  }
+
+  .seg-header,
+  .seg-row {
+    gap: 4px;
+  }
+
+  .seg-col.seg-eff {
+    width: 44px;
+  }
+}

@@ -20,6 +20,11 @@ import {ZoneBlock} from '../../../../services/zone';
                 <button class="toggle-btn" [class.active]="showCadence" (click)="toggle('showCadence')">
                     <span class="dot cad"></span> Cadence
                 </button>
+                @if (sportType !== 'SWIMMING') {
+                    <button class="toggle-btn" [class.active]="showEfficiency" (click)="toggle('showEfficiency')">
+                        <span class="dot eff"></span> Efficiency
+                    </button>
+                }
                 @if (zoneBlocks.length > 0 || blockSummaries.length > 0) {
                     <span class="toggle-sep"></span>
                     <button class="toggle-btn" [class.active]="showBlocks" (click)="toggle('showBlocks')">
@@ -37,6 +42,13 @@ import {ZoneBlock} from '../../../../services/zone';
                 }
                 @if (showHR) {
                     <canvas #hrCanvas class="mc hr-h"
+                        (mousemove)="onHover($event)"
+                        (touchstart)="onTouchStart($event)"
+                        (touchend)="onTouchEnd()"
+                        (touchcancel)="onTouchEnd()"></canvas>
+                }
+                @if (showEfficiency) {
+                    <canvas #effCanvas class="mc eff-h"
                         (mousemove)="onHover($event)"
                         (touchstart)="onTouchStart($event)"
                         (touchend)="onTouchEnd()"
@@ -92,6 +104,7 @@ import {ZoneBlock} from '../../../../services/zone';
         .dot.power { background: var(--accent-color, #ff9d00); }
         .dot.hr { background: #e74c3c; }
         .dot.cad { background: #3b82f6; }
+        .dot.eff { background: #a855f7; }
         .dot.blocks { background: #2ecc71; }
         .toggle-sep { width: 1px; height: 16px; background: var(--overlay-10); margin: 0 2px; }
         .charts-stack { position: relative; display: flex; flex-direction: column; gap: 4px; min-height: 0; }
@@ -104,6 +117,7 @@ import {ZoneBlock} from '../../../../services/zone';
         .primary-h { flex: 6 1 0; min-height: 250px; }
         .hr-h { flex: 2.8 1 0; min-height: 100px; }
         .cad-h { flex: 2.8 1 0; min-height: 100px; }
+        .eff-h { flex: 2 1 0; min-height: 80px; }
         .elev-h { flex: 1.4 1 0; min-height: 80px; }
         .xaxis-h { flex: 0 0 22px; height: 22px; cursor: default; }
         .tt {
@@ -127,6 +141,7 @@ import {ZoneBlock} from '../../../../services/zone';
             .primary-h { min-height: 350px; }
             .hr-h { min-height: 160px; }
             .cad-h { min-height: 160px; }
+            .eff-h { min-height: 100px; }
             .elev-h { min-height: 100px; }
         }
     `],
@@ -143,12 +158,14 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     @ViewChild('primaryCanvas') pRef?: ElementRef<HTMLCanvasElement>;
     @ViewChild('hrCanvas') hrRef?: ElementRef<HTMLCanvasElement>;
     @ViewChild('cadCanvas') cadRef?: ElementRef<HTMLCanvasElement>;
+    @ViewChild('effCanvas') effRef?: ElementRef<HTMLCanvasElement>;
     @ViewChild('elevCanvas') elRef?: ElementRef<HTMLCanvasElement>;
     @ViewChild('xCanvas') xRef?: ElementRef<HTMLCanvasElement>;
 
     showPrimary = true;
     showHR = true;
     showCadence = false;
+    showEfficiency = false;
     showBlocks = false;
 
     hoverIdx: number | null = null;
@@ -160,6 +177,8 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     _hasElevation = false;
     /** Max value (W or km/h) used by drawPrimary's yOf — cached so the tooltip can follow the curve. */
     private _primaryMax = 0;
+    /** Downsampled records (30s buckets) used for raw-mode line drawing to avoid canvas perf issues. */
+    private _ds: FitRecord[] = [];
     private ready = false;
     private readonly zone = inject(NgZone);
     private readonly cdr = inject(ChangeDetectorRef);
@@ -265,6 +284,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         const current: HTMLCanvasElement[] = [
             this.pRef?.nativeElement,
             this.hrRef?.nativeElement,
+            this.effRef?.nativeElement,
             this.cadRef?.nativeElement,
             this.elRef?.nativeElement,
             this.xRef?.nativeElement,
@@ -292,10 +312,11 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
 
     ngOnChanges(): void {
         this.updateHasElevation();
+        this._ds = this.downsample(this.records, 30);
         if (this.ready) setTimeout(() => this.drawAll(), 0);
     }
 
-    toggle(prop: 'showPrimary' | 'showHR' | 'showCadence' | 'showBlocks'): void {
+    toggle(prop: 'showPrimary' | 'showHR' | 'showCadence' | 'showEfficiency' | 'showBlocks'): void {
         this[prop] = !this[prop];
         setTimeout(() => this.drawAll(), 0);
     }
@@ -371,6 +392,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         const canvases: (HTMLCanvasElement | undefined)[] = [
             this.pRef?.nativeElement,
             this.hrRef?.nativeElement,
+            this.effRef?.nativeElement,
             this.cadRef?.nativeElement,
             this.elRef?.nativeElement,
         ];
@@ -388,6 +410,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         const canvases: (HTMLCanvasElement | undefined)[] = [
             this.pRef?.nativeElement,
             this.hrRef?.nativeElement,
+            this.effRef?.nativeElement,
             this.cadRef?.nativeElement,
             this.elRef?.nativeElement,
         ];
@@ -542,6 +565,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         this.resolveThemeColors();
         this.drawPrimary();
         this.drawHR();
+        this.drawEfficiency();
         this.drawCadence();
         this.drawElevation();
         this.drawXAxis();
@@ -563,14 +587,12 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         let maxP = 1, maxS = 1;
         let yOf: (v: number) => number;
         if (this.isCycling) {
-            const sm = this.rollingAvg(this.records.map(r => r.power), 5);
-            maxP = Math.max(this.ftp ? this.ftp * 1.5 : 0, ...sm) || 1;
+            maxP = Math.max(this.ftp ? this.ftp * 1.5 : 0, ...this.records.map(r => r.power)) || 1;
             yOf = (v) => top + chartH * (1 - v / maxP);
             this._primaryMax = maxP;
         } else {
             const sp = this.records.map(r => (r.speed || 0) * 3.6);
-            const sm = this.rollingAvg(sp, 5);
-            maxS = Math.max(...sm.filter(v => v > 0), 1);
+            maxS = Math.max(...sp.filter(v => v > 0), 1);
             yOf = (v) => top + chartH * (1 - v / maxS);
             this._primaryMax = maxS;
         }
@@ -615,8 +637,10 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
                 acc += b.durationSeconds;
             }
         } else {
+            const ds = this._ds;
+            const dsX = (i: number) => xOfT(ds[i].timestamp - t0);
             if (this.isCycling) {
-                const sm = this.rollingAvg(this.records.map(r => r.power), 5);
+                const vals = ds.map(r => r.power);
                 if (this.ftp) {
                     const fy = yOf(this.ftp);
                     ctx.save(); ctx.setLineDash([4, 4]);
@@ -627,35 +651,34 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
                     ctx.font = '9px monospace'; ctx.textAlign = 'left';
                     ctx.fillText('FTP', mL + 2, fy - 3);
                 }
-                if (sm.length > 1) {
+                if (vals.length > 1) {
                     ctx.beginPath();
-                    ctx.moveTo(xOf(0), bottom);
-                    sm.forEach((p, i) => ctx.lineTo(xOf(i), yOf(p)));
-                    ctx.lineTo(xOf(n - 1), bottom);
+                    ctx.moveTo(dsX(0), bottom);
+                    vals.forEach((p, i) => ctx.lineTo(dsX(i), yOf(p)));
+                    ctx.lineTo(dsX(ds.length - 1), bottom);
                     ctx.closePath();
                     const g = ctx.createLinearGradient(0, top, 0, bottom);
                     g.addColorStop(0, this.accentAlpha(0.5)); g.addColorStop(1, this.accentAlpha(0.03));
                     ctx.fillStyle = g; ctx.fill();
                     ctx.beginPath();
-                    ctx.moveTo(xOf(0), yOf(sm[0]));
-                    sm.forEach((p, i) => ctx.lineTo(xOf(i), yOf(p)));
+                    ctx.moveTo(dsX(0), yOf(vals[0]));
+                    vals.forEach((p, i) => ctx.lineTo(dsX(i), yOf(p)));
                     ctx.strokeStyle = accent; ctx.lineWidth = 2; ctx.stroke();
                 }
             } else {
-                const sp = this.records.map(r => (r.speed || 0) * 3.6);
-                const sm = this.rollingAvg(sp, 5);
-                if (sm.length > 1) {
+                const vals = ds.map(r => (r.speed || 0) * 3.6);
+                if (vals.length > 1) {
                     ctx.beginPath();
-                    ctx.moveTo(xOf(0), bottom);
-                    sm.forEach((v, i) => ctx.lineTo(xOf(i), yOf(v)));
-                    ctx.lineTo(xOf(n - 1), bottom);
+                    ctx.moveTo(dsX(0), bottom);
+                    vals.forEach((v, i) => ctx.lineTo(dsX(i), yOf(v)));
+                    ctx.lineTo(dsX(ds.length - 1), bottom);
                     ctx.closePath();
                     const g = ctx.createLinearGradient(0, top, 0, bottom);
                     g.addColorStop(0, this.accentAlpha(0.5)); g.addColorStop(1, this.accentAlpha(0.03));
                     ctx.fillStyle = g; ctx.fill();
                     ctx.beginPath();
-                    ctx.moveTo(xOf(0), yOf(sm[0]));
-                    sm.forEach((v, i) => ctx.lineTo(xOf(i), yOf(v)));
+                    ctx.moveTo(dsX(0), yOf(vals[0]));
+                    vals.forEach((v, i) => ctx.lineTo(dsX(i), yOf(v)));
                     ctx.strokeStyle = accent; ctx.lineWidth = 2; ctx.stroke();
                 }
             }
@@ -715,12 +738,14 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
                 dur: b.durationSeconds, v: b.actualHR,
             })), color);
         } else {
+            const ds = this._ds;
             ctx.beginPath();
             let first = true;
-            this.records.forEach((r, i) => {
+            ds.forEach((r, i) => {
                 if (!r.heartRate) return;
-                if (first) { ctx.moveTo(xOf(i), yOf(r.heartRate)); first = false; }
-                else ctx.lineTo(xOf(i), yOf(r.heartRate));
+                const x = xOfT(r.timestamp - t0);
+                if (first) { ctx.moveTo(x, yOf(r.heartRate)); first = false; }
+                else ctx.lineTo(x, yOf(r.heartRate));
             });
             ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
         }
@@ -739,6 +764,97 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
             this.drawCrosshair(ctx, hx, top, bottom);
             const hr = this.hoverHR(this.hoverIdx, t0);
             if (hr) this.drawDot(ctx, hx, yOf(hr), color);
+        }
+    }
+
+    // ── Efficiency (Power/HR or Speed/HR) ─────────────────────────────────
+
+    /** Cached smoothed efficiency values – recomputed each drawAll(). */
+    private _effSmoothed: number[] = [];
+    private _effMin = 0;
+    private _effMax = 1;
+
+    private drawEfficiency(): void {
+        // Compute efficiency from downsampled data (already 30s-averaged, no extra smoothing needed).
+        this._effSmoothed = [];
+        if (this.sportType === 'SWIMMING' || this._ds.length < 2) return;
+
+        const ds = this._ds;
+        const t0 = this.records[0].timestamp;
+        this._effSmoothed = ds.map(r => {
+            if (r.heartRate <= 0) return NaN;
+            const metric = this.isCycling ? r.power : (r.speed || 0) * 3.6;
+            return metric > 0 ? metric / r.heartRate : NaN;
+        });
+
+        const valid = this._effSmoothed.filter(v => !isNaN(v));
+        if (valid.length < 2) return;
+        this._effMin = Math.min(...valid) * 0.95;
+        this._effMax = Math.max(...valid) * 1.05;
+
+        const s = this.initCanvas(this.effRef);
+        if (!s) return;
+        const { ctx, W, H, xOfT, mT, mB, mL, mR } = s;
+        const chartH = H - mT - mB;
+        const top = mT, bottom = mT + chartH;
+        const range = this._effMax - this._effMin || 1;
+        const yOf = (v: number) => top + chartH * (1 - (v - this._effMin) / range);
+        const color = '#a855f7';
+
+        // Filled area
+        ctx.beginPath();
+        let started = false;
+        let lastX = mL;
+        this._effSmoothed.forEach((v, i) => {
+            if (isNaN(v)) return;
+            const x = xOfT(ds[i].timestamp - t0);
+            if (!started) { ctx.moveTo(x, bottom); ctx.lineTo(x, yOf(v)); started = true; }
+            else ctx.lineTo(x, yOf(v));
+            lastX = x;
+        });
+        if (started) {
+            ctx.lineTo(lastX, bottom);
+            ctx.closePath();
+            const g = ctx.createLinearGradient(0, top, 0, bottom);
+            g.addColorStop(0, 'rgba(168,85,247,0.35)');
+            g.addColorStop(1, 'rgba(168,85,247,0.03)');
+            ctx.fillStyle = g;
+            ctx.fill();
+        }
+
+        // Line
+        ctx.beginPath();
+        let first = true;
+        this._effSmoothed.forEach((v, i) => {
+            if (isNaN(v)) return;
+            const x = xOfT(ds[i].timestamp - t0);
+            if (first) { ctx.moveTo(x, yOf(v)); first = false; }
+            else ctx.lineTo(x, yOf(v));
+        });
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Y-axis labels (right side)
+        ctx.fillStyle = color;
+        ctx.font = '9px monospace';
+        ctx.textAlign = 'left';
+        const mid = (this._effMin + this._effMax) / 2;
+        [this._effMax, mid, this._effMin].forEach(v =>
+            ctx.fillText(v.toFixed(2), W - mR + 4, yOf(v) + 4));
+
+        // Hover
+        if (this.hoverIdx !== null) {
+            const hx = xOfT(this.records[this.hoverIdx].timestamp - t0);
+            this.drawCrosshair(ctx, hx, top, bottom);
+            // Find nearest downsampled point for the efficiency value
+            const hoverT = this.records[this.hoverIdx].timestamp;
+            let nearest = 0;
+            for (let i = 1; i < ds.length; i++) {
+                if (Math.abs(ds[i].timestamp - hoverT) < Math.abs(ds[nearest].timestamp - hoverT)) nearest = i;
+            }
+            const v = this._effSmoothed[nearest];
+            if (!isNaN(v)) this.drawDot(ctx, hx, yOf(v), color);
         }
     }
 
@@ -769,13 +885,15 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
                 dur: b.durationSeconds, v: this.getCadBlock(b.actualCadence),
             })), color);
         } else {
+            const ds = this._ds;
             ctx.beginPath();
             let first = true;
-            this.records.forEach((r, i) => {
+            ds.forEach((r) => {
                 if (!r.cadence) return;
                 const c = this.getCad(r);
-                if (first) { ctx.moveTo(xOf(i), yOf(c)); first = false; }
-                else ctx.lineTo(xOf(i), yOf(c));
+                const x = xOfT(r.timestamp - t0);
+                if (first) { ctx.moveTo(x, yOf(c)); first = false; }
+                else ctx.lineTo(x, yOf(c));
             });
             ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
         }
@@ -807,6 +925,8 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         const chartH = H - mT - mB;
         const top = mT, bottom = mT + chartH;
 
+        const ds = this._ds;
+        const t0 = this.records[0].timestamp;
         const elevs = this.records.filter(r => r.elevation != null).map(r => r.elevation!);
         if (elevs.length < 2) return;
         const minE = Math.min(...elevs) - 5;
@@ -818,9 +938,9 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         ctx.beginPath();
         let started = false;
         let lastX = mL;
-        this.records.forEach((r, i) => {
+        ds.forEach((r) => {
             if (r.elevation == null) return;
-            const x = xOf(i);
+            const x = xOfT(r.timestamp - t0);
             if (!started) { ctx.moveTo(x, bottom); ctx.lineTo(x, yOf(r.elevation)); started = true; }
             else ctx.lineTo(x, yOf(r.elevation));
             lastX = x;
@@ -835,9 +955,9 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         // Top edge
         ctx.beginPath();
         let first = true;
-        this.records.forEach((r, i) => {
+        ds.forEach((r) => {
             if (r.elevation == null) return;
-            const x = xOf(i);
+            const x = xOfT(r.timestamp - t0);
             if (first) { ctx.moveTo(x, yOf(r.elevation)); first = false; }
             else ctx.lineTo(x, yOf(r.elevation));
         });
@@ -1028,6 +1148,18 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
             const cad = inBlock ? bcad : this.getCad(rec);
             if (cad) rows.push({ label: inBlock ? 'Avg Cad' : 'Cadence', value: `${Math.round(cad)} ${this.cadUnit}`, color: '#3b82f6' });
         }
+        if (this.showEfficiency && this._effSmoothed.length > 0 && this.hoverIdx !== null) {
+            const hoverT = this.records[this.hoverIdx].timestamp;
+            const ds = this._ds;
+            let nearest = 0;
+            for (let i = 1; i < ds.length; i++) {
+                if (Math.abs(ds[i].timestamp - hoverT) < Math.abs(ds[nearest].timestamp - hoverT)) nearest = i;
+            }
+            const eff = this._effSmoothed[nearest];
+            if (!isNaN(eff)) {
+                rows.push({ label: 'Eff.', value: eff.toFixed(2), color: '#a855f7' });
+            }
+        }
         if (this._hasElevation && rec.elevation != null) {
             rows.push({ label: 'Elevation', value: `${Math.round(rec.elevation)}m`, color: '#4caf50' });
         }
@@ -1083,18 +1215,41 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
 
     // ── Utilities ────────────────────────────────────────────────────────
 
-    private rollingAvg(data: number[], window: number): number[] {
-        return data.map((_, i) => {
-            const start = Math.max(0, i - Math.floor(window / 2));
-            const end = Math.min(data.length, i + Math.ceil(window / 2));
-            const slice = data.slice(start, end);
-            return slice.reduce((a, b) => a + b, 0) / slice.length;
-        });
-    }
-
     private pickTickInterval(totalSec: number): number {
         const targets = [60, 300, 600, 900, 1800, 3600];
         const desired = totalSec / 8;
         return targets.reduce((a, b) => Math.abs(a - desired) < Math.abs(b - desired) ? a : b);
+    }
+
+    /** Downsample records into fixed-duration buckets by averaging all fields. */
+    private downsample(records: FitRecord[], bucketSec: number): FitRecord[] {
+        if (records.length < 2) return [...records];
+        const result: FitRecord[] = [];
+        const t0 = records[0].timestamp;
+        let bStart = 0;
+        for (let i = 1; i <= records.length; i++) {
+            if (i < records.length && records[i].timestamp - records[bStart].timestamp < bucketSec) continue;
+            const slice = records.slice(bStart, i);
+            const n = slice.length;
+            let power = 0, hr = 0, cad = 0, speed = 0, elev = 0, elevCount = 0;
+            for (const r of slice) {
+                power += r.power;
+                hr += r.heartRate;
+                cad += r.cadence;
+                speed += r.speed;
+                if (r.elevation != null) { elev += r.elevation; elevCount++; }
+            }
+            result.push({
+                timestamp: slice[Math.floor(n / 2)].timestamp,
+                power: power / n,
+                heartRate: hr / n,
+                cadence: cad / n,
+                speed: speed / n,
+                distance: slice[n - 1].distance,
+                elevation: elevCount > 0 ? elev / elevCount : undefined as any,
+            });
+            bStart = i;
+        }
+        return result;
     }
 }
