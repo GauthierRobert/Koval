@@ -210,7 +210,7 @@ public class PowerCurveService {
                 long sum = cum[i + dur] - cum[i];
                 if (sum > best) best = sum;
             }
-            if (best > 0) curve.put(dur, (double) best / dur);
+            if (best > 0) curve.put(dur, Math.round((double) best / dur * 10.0) / 10.0);
         }
         return curve;
     }
