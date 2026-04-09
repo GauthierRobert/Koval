@@ -936,7 +936,16 @@
     "ZONE_BLOCKS_COL_MAX_SPEED": "Max Speed",
     "ZONE_FILTER_CLEAR": "Clear",
     "MOBILE_CHART_HINT": "Opens in landscape view",
-    "POWER_CURVE_TITLE": "POWER CURVE"
+    "POWER_CURVE_TITLE": "POWER CURVE",
+    "DECOUPLING_TITLE": "AEROBIC DECOUPLING",
+    "DECOUPLING_GOOD": "Good aerobic efficiency",
+    "DECOUPLING_MODERATE": "Moderate cardiac drift",
+    "DECOUPLING_HIGH": "Significant cardiac drift",
+    "DECOUPLING_SEGMENT": "Segment",
+    "DECOUPLING_AVG_POWER": "Avg Power",
+    "DECOUPLING_AVG_SPEED": "Avg Speed",
+    "DECOUPLING_AVG_HR": "Avg HR",
+    "DECOUPLING_EFFICIENCY": "Pw:HR"
   },
   "PACING": {
     "PAGE_TITLE": "Race Pacing",

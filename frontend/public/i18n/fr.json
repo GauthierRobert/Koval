@@ -936,7 +936,16 @@
     "ZONE_BLOCKS_COL_MAX_SPEED": "Vitesse max.",
     "ZONE_FILTER_CLEAR": "Effacer",
     "MOBILE_CHART_HINT": "S'ouvre en vue paysage",
-    "POWER_CURVE_TITLE": "COURBE DE PUISSANCE"
+    "POWER_CURVE_TITLE": "COURBE DE PUISSANCE",
+    "DECOUPLING_TITLE": "DECOUPLAGE AEROBIE",
+    "DECOUPLING_GOOD": "Bonne efficacite aerobie",
+    "DECOUPLING_MODERATE": "Derive cardiaque moderee",
+    "DECOUPLING_HIGH": "Derive cardiaque significative",
+    "DECOUPLING_SEGMENT": "Segment",
+    "DECOUPLING_AVG_POWER": "Puis. moy.",
+    "DECOUPLING_AVG_SPEED": "Vitesse moy.",
+    "DECOUPLING_AVG_HR": "FC moy.",
+    "DECOUPLING_EFFICIENCY": "Pw:FC"
   },
   "PACING": {
     "PAGE_TITLE": "Allure de course",

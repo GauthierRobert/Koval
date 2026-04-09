@@ -82,6 +82,12 @@
             }
           }
 
+          <!-- Aerobic Decoupling gauge -->
+          <app-decoupling-gauge
+            [records]="fit.records"
+            [sportType]="session.sportType">
+          </app-decoupling-gauge>
+
           <!-- Power curve (cycling only, hidden when no power data) -->
           <app-power-curve-chart
             [sessionId]="session.id"

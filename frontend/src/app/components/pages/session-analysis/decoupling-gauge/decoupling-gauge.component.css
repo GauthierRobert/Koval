@@ -1,0 +1,164 @@
+.decoupling-panel {
+  padding: var(--space-md) var(--page-padding);
+}
+
+.section-label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.gauge-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-lg);
+}
+
+/* ── SVG gauge ── */
+
+.gauge-wrapper {
+  position: relative;
+  width: 200px;
+  flex-shrink: 0;
+}
+
+.gauge-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.arc-zone {
+  fill: none;
+  stroke-width: 14;
+  stroke-linecap: round;
+  opacity: 0.25;
+}
+
+.arc-green {
+  stroke: var(--success-color);
+}
+
+.arc-amber {
+  stroke: oklch(0.75 0.16 75);
+}
+
+.arc-red {
+  stroke: var(--danger-color);
+}
+
+.needle-dot {
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.4));
+  transition: cx 0.4s var(--ease-spring-gentle), cy 0.4s var(--ease-spring-gentle);
+}
+
+.needle-inner {
+  fill: var(--bg-color);
+}
+
+.scale-label {
+  font-size: 9px;
+  fill: var(--text-dim);
+  text-anchor: middle;
+  font-family: var(--font-body);
+}
+
+.gauge-center {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.gauge-value {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.gauge-label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+/* ── Segment table ── */
+
+.segments-table {
+  flex: 1;
+  min-width: 0;
+  margin-top: var(--space-sm);
+}
+
+.seg-header,
+.seg-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 5px 0;
+}
+
+.seg-header {
+  border-bottom: 1px solid var(--overlay-10);
+}
+
+.seg-header .seg-col {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.seg-row .seg-col {
+  font-size: 12px;
+  color: var(--text-color);
+}
+
+.seg-col.seg-name {
+  width: 72px;
+  flex-shrink: 0;
+  font-weight: 600;
+}
+
+.seg-col.seg-metric,
+.seg-col.seg-hr {
+  flex: 1;
+  text-align: right;
+}
+
+.seg-col.seg-eff {
+  width: 56px;
+  text-align: right;
+  font-weight: 700;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 768px) {
+  .gauge-layout {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .gauge-wrapper {
+    width: 180px;
+  }
+
+  .segments-table {
+    width: 100%;
+  }
+}
