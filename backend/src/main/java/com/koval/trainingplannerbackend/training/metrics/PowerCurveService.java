@@ -79,9 +79,12 @@ public class PowerCurveService {
      */
     @Cacheable(value = "sessionPowerCurves", key = "#sessionId", unless = "#result.size() == 0")
     public Map<Integer, Double> getSessionPowerCurve(String sessionId, String userId) {
+        // Always return a LinkedHashMap so SpEL can reflectively resolve size().
+        // Map.of() returns ImmutableCollections$Map0 whose methods are inaccessible
+        // via reflection on Java 25+ (non-exported internal class).
         return sessionRepository.findByIdAndUserId(sessionId, userId)
                 .map(this::ensureSessionCurve)
-                .orElse(Map.of());
+                .orElseGet(LinkedHashMap::new);
     }
 
     /**
@@ -161,15 +164,15 @@ public class PowerCurveService {
      * without a FIT file, or sessions whose FIT contains no power data.
      */
     private Map<Integer, Double> ensureSessionCurve(CompletedSession session) {
-        if (!isCycling(session)) return Map.of();
+        if (!isCycling(session)) return new LinkedHashMap<>();
 
         Map<Integer, Double> existing = session.getPowerCurve();
         if (existing != null && !existing.isEmpty()) return existing;
 
-        if (session.getFitFileId() == null) return Map.of();
+        if (session.getFitFileId() == null) return new LinkedHashMap<>();
 
         Map<Integer, Double> curve = computePowerCurveFromFit(session.getFitFileId());
-        if (curve.isEmpty()) return Map.of();
+        if (curve.isEmpty()) return new LinkedHashMap<>();
 
         session.setPowerCurve(curve);
         sessionRepository.save(session);
@@ -180,14 +183,14 @@ public class PowerCurveService {
         try {
             GridFSFile gridFile = gridFsOperations.findOne(
                     Query.query(Criteria.where("_id").is(new ObjectId(fitFileId))));
-            if (gridFile == null) return Map.of();
+            if (gridFile == null) return new LinkedHashMap<>();
             GridFsResource resource = gridFsOperations.getResource(gridFile);
             byte[] bytes = resource.getInputStream().readAllBytes();
             List<Integer> samples = FitPowerExtractor.extractPower(bytes);
             return computeMeanMaxCurve(samples);
         } catch (Exception e) {
             log.warn("Failed to compute power curve for fitFileId={}: {}", fitFileId, e.getMessage());
-            return Map.of();
+            return new LinkedHashMap<>();
         }
     }
 
@@ -198,7 +201,7 @@ public class PowerCurveService {
      */
     static Map<Integer, Double> computeMeanMaxCurve(List<Integer> samples) {
         int n = samples.size();
-        if (n == 0) return Map.of();
+        if (n == 0) return new LinkedHashMap<>();
         long[] cum = new long[n + 1];
         for (int i = 0; i < n; i++) cum[i + 1] = cum[i] + samples.get(i);
 
