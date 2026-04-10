@@ -52,6 +52,9 @@ public class ClubFeedEvent {
     private String authorProfilePicture;
     private String announcementContent;
 
+    // --- Comments ---
+    private List<CommentEntry> comments = new ArrayList<>();
+
     // --- NEXT_GOAL fields ---
     private String goalTitle;
     private String goalSport;
@@ -90,4 +93,12 @@ public class ClubFeedEvent {
             String profilePicture,
             String priority,
             String targetTime) {}
+
+    public record CommentEntry(
+            String id,
+            String userId,
+            String displayName,
+            String profilePicture,
+            String content,
+            LocalDateTime createdAt) {}
 }

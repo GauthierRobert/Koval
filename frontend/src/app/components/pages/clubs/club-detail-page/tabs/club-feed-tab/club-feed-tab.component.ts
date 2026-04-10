@@ -103,6 +103,13 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
         this.cdr.markForCheck();
       }),
     );
+
+    this.subs.add(
+      this.sseService.onCommentUpdate$.subscribe((payload) => {
+        this.clubFeedService.updateFeedEventComment(payload.feedEventId, payload.comment);
+        this.cdr.markForCheck();
+      }),
+    );
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -171,6 +178,15 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
       next: () => {
         this.announcementText = '';
         this.composerExpanded = false;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  onCommentSubmitted(ev: {eventId: string; content: string}): void {
+    this.clubFeedService.addComment(this.club.id, ev.eventId, ev.content).subscribe({
+      next: (comment) => {
+        this.clubFeedService.updateFeedEventComment(ev.eventId, comment);
         this.cdr.markForCheck();
       },
     });

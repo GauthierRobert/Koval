@@ -36,7 +36,9 @@ public record ClubFeedEventResponse(
         String goalSport,
         LocalDate goalDate,
         String goalLocation,
-        List<ClubFeedEvent.EngagedAthlete> engagedAthletes) {
+        List<ClubFeedEvent.EngagedAthlete> engagedAthletes,
+        // COMMENTS
+        List<ClubFeedEvent.CommentEntry> comments) {
 
     public static ClubFeedEventResponse from(ClubFeedEvent e) {
         return new ClubFeedEventResponse(
@@ -45,6 +47,7 @@ public record ClubFeedEventResponse(
                 e.getCompletions(), e.getKudosGivenBy(),
                 e.getRaceGoalId(), e.getRaceTitle(), e.getRaceDate(), e.getRaceCompletions(),
                 e.getAuthorId(), e.getAuthorName(), e.getAuthorProfilePicture(), e.getAnnouncementContent(),
-                e.getGoalTitle(), e.getGoalSport(), e.getGoalDate(), e.getGoalLocation(), e.getEngagedAthletes());
+                e.getGoalTitle(), e.getGoalSport(), e.getGoalDate(), e.getGoalLocation(), e.getEngagedAthletes(),
+                e.getComments());
     }
 }

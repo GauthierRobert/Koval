@@ -10,6 +10,7 @@ import {
   ClubFeedResponse,
   ClubRaceGoalResponse,
   ClubWeeklyStats,
+  FeedCommentEntry,
   KudosResponse,
   LeaderboardEntry,
 } from '../models/club.model';
@@ -147,6 +148,30 @@ export class ClubFeedService {
       if (event.id !== feedEventId) return event;
       return { ...event, kudosGivenBy: [...(event.kudosGivenBy ?? []), userId] };
     };
+    this.feedEventsSubject.next({
+      ...current,
+      pinned: current.pinned.map(updateEvent),
+      items: current.items.map(updateEvent),
+    });
+  }
+
+  addComment(clubId: string, eventId: string, content: string): Observable<FeedCommentEntry> {
+    return this.http.post<FeedCommentEntry>(`${this.apiUrl}/${clubId}/feed/${eventId}/comments`, { content });
+  }
+
+  updateFeedEventComment(feedEventId: string, comment: FeedCommentEntry): void {
+    const current = this.feedEventsSubject.value;
+    if (!current) return;
+
+    const updateEvent = (event: ClubFeedEventResponse): ClubFeedEventResponse => {
+      if (event.id !== feedEventId) return event;
+      const comments = [...(event.comments ?? [])];
+      if (!comments.find((c) => c.id === comment.id)) {
+        comments.push(comment);
+      }
+      return { ...event, comments };
+    };
+
     this.feedEventsSubject.next({
       ...current,
       pinned: current.pinned.map(updateEvent),

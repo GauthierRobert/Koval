@@ -1,7 +1,7 @@
 import {inject, Injectable, NgZone} from '@angular/core';
 import {Subject} from 'rxjs';
 import {environment} from '../../environments/environment';
-import {ClubFeedEventResponse, CompletionUpdatePayload} from './club.service';
+import {ClubFeedEventResponse, CommentUpdatePayload, CompletionUpdatePayload} from './club.service';
 
 export interface KudosUpdatePayload {
   feedEventId: string;
@@ -24,6 +24,9 @@ export class ClubFeedSseService {
 
   private kudosUpdateSubject = new Subject<KudosUpdatePayload>();
   onKudosUpdate$ = this.kudosUpdateSubject.asObservable();
+
+  private commentUpdateSubject = new Subject<CommentUpdatePayload>();
+  onCommentUpdate$ = this.commentUpdateSubject.asObservable();
 
   connect(clubId: string): void {
     this.disconnect();
@@ -113,6 +116,9 @@ export class ClubFeedSseService {
             break;
           case 'kudos_update':
             this.kudosUpdateSubject.next(parsed);
+            break;
+          case 'comment_update':
+            this.commentUpdateSubject.next(parsed);
             break;
         }
       });

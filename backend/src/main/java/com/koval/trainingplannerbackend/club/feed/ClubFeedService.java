@@ -18,9 +18,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import com.koval.trainingplannerbackend.club.feed.dto.CommentUpdatePayload;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -184,6 +187,36 @@ public class ClubFeedService {
         }
 
         return response;
+    }
+
+    /**
+     * Add a comment to a feed event.
+     */
+    public ClubFeedEvent.CommentEntry addComment(String userId, String clubId, String feedEventId, String content) {
+        authorizationService.requireActiveMember(userId, clubId);
+
+        ClubFeedEvent event = feedEventRepository.findById(feedEventId)
+                .filter(e -> clubId.equals(e.getClubId()))
+                .orElseThrow(() -> new IllegalArgumentException("Feed event not found"));
+
+        User author = userService.findById(userId).orElseThrow();
+
+        ClubFeedEvent.CommentEntry comment = new ClubFeedEvent.CommentEntry(
+                UUID.randomUUID().toString(),
+                userId,
+                author.getDisplayName(),
+                author.getProfilePicture(),
+                content,
+                LocalDateTime.now());
+
+        event.getComments().add(comment);
+        event.setUpdatedAt(LocalDateTime.now());
+        feedEventRepository.save(event);
+
+        broadcaster.broadcast(clubId, "comment_update",
+                new CommentUpdatePayload(feedEventId, comment));
+
+        return comment;
     }
 
     // --- Private helpers ---
