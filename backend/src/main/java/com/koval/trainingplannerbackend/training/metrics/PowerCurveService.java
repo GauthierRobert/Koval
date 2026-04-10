@@ -77,7 +77,7 @@ public class PowerCurveService {
      * @param sessionId the completed session identifier
      * @param userId    the owning user identifier
      */
-    @Cacheable(value = "sessionPowerCurves", key = "#sessionId", unless = "#result.size() == 0")
+    @Cacheable(value = "sessionPowerCurves", key = "#sessionId")
     public Map<Integer, Double> getSessionPowerCurve(String sessionId, String userId) {
         return sessionRepository.findByIdAndUserId(sessionId, userId)
                 .map(this::ensureSessionCurve)
