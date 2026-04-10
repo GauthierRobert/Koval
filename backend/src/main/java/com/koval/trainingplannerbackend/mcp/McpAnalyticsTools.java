@@ -13,6 +13,7 @@ import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSession.BlockSummary;
 import com.koval.trainingplannerbackend.training.history.SessionService;
 import com.koval.trainingplannerbackend.training.metrics.PowerCurveService;
+import com.koval.trainingplannerbackend.training.metrics.PowerCurveService.FriResult;
 import com.koval.trainingplannerbackend.training.metrics.PowerCurveService.VolumeEntry;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
@@ -195,6 +196,33 @@ public class McpAnalyticsTools {
         return sb.toString();
     }
 
+    @Tool(description = "Render a Fatigue Resistance Index (FRI) report: the ratio of 60-minute best power to 5-minute best power from the power curve. FRI indicates how well an athlete sustains power over long durations — crucial for long-course triathlon. Typical range: 0.65-0.85. Values above 0.80 indicate excellent fatigue resistance. Requires maximal efforts at both durations (rejects flat/Z2-only curves).")
+    public String renderFriReport(
+            @ToolParam(description = "Start date inclusive (YYYY-MM-DD)") LocalDate from,
+            @ToolParam(description = "End date inclusive (YYYY-MM-DD)") LocalDate to) {
+        String userId = SecurityUtils.getCurrentUserId();
+        Map<Integer, Double> curve = powerCurveService.getBestPowerCurve(userId, from, to);
+        FriResult fri = PowerCurveService.computeFri(curve);
+        if (fri == null) {
+            Double p5 = curve.get(300);
+            Double p60 = curve.get(3600);
+            if (p60 == null || p60 <= 0) {
+                return "_Cannot compute Fatigue Resistance Index: no 60-minute power data in this range. " +
+                       "Ensure the date range includes rides of at least 60 minutes with power data._";
+            }
+            return "_Cannot compute Fatigue Resistance Index: the power curve is too flat (no maximal short efforts). " +
+                   "FRI requires genuine hard efforts at 5 minutes, not just Zone-2 riding._";
+        }
+
+        LinkedHashMap<String, String> table = new LinkedHashMap<>();
+        table.put("FRI (60min / 5min)", MarkdownChartRenderer.formatValue(fri.fri()));
+        table.put("5-min best power", MarkdownChartRenderer.formatValue(fri.power5min()) + " W");
+        table.put("60-min best power", MarkdownChartRenderer.formatValue(fri.power60min()) + " W");
+        table.put("Rating", interpretFri(fri.level()));
+        return MarkdownChartRenderer.kvTable(
+                "Fatigue Resistance Index " + from + " → " + to, table);
+    }
+
     // ── Helpers ────────────────────────────────────────────────────
 
     private String resolveTitle(String trainingId) {
@@ -224,5 +252,15 @@ public class McpAnalyticsTools {
         if (tsb < 5) return "Neutral";
         if (tsb < 25) return "Fresh / race-ready";
         return "Detrained — increase load";
+    }
+
+    private static String interpretFri(String level) {
+        return switch (level) {
+            case "excellent" -> "Excellent — elite fatigue resistance, strong for long-course triathlon";
+            case "good" -> "Good — solid endurance profile, well-suited for half-distance";
+            case "moderate" -> "Moderate — typical trained cyclist, more long rides will improve this";
+            case "developing" -> "Developing — sprint-oriented profile, prioritize longer steady rides";
+            default -> level;
+        };
     }
 }

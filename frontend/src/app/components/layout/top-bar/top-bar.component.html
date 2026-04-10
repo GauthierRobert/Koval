@@ -153,10 +153,20 @@
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PMC_LABEL' | translate }}</span>
           <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PMC_DESC' | translate }}</span>
         </a>
-        <a routerLink="/analytics" routerLinkActive="active" class="dropdown-item" role="menuitem"
+        <a routerLink="/analytics/power-curve" routerLinkActive="active" class="dropdown-item" role="menuitem"
           (click)="closeAnalytics(); closeMobileMenu()">
-          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_ANALYTICS_LABEL' | translate }}</span>
-          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_ANALYTICS_DESC' | translate }}</span>
+          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_POWER_CURVE_LABEL' | translate }}</span>
+          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_POWER_CURVE_DESC' | translate }}</span>
+        </a>
+        <a routerLink="/analytics/volume" routerLinkActive="active" class="dropdown-item" role="menuitem"
+          (click)="closeAnalytics(); closeMobileMenu()">
+          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_VOLUME_LABEL' | translate }}</span>
+          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_VOLUME_DESC' | translate }}</span>
+        </a>
+        <a routerLink="/analytics/records" routerLinkActive="active" class="dropdown-item" role="menuitem"
+          (click)="closeAnalytics(); closeMobileMenu()">
+          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_RECORDS_LABEL' | translate }}</span>
+          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_RECORDS_DESC' | translate }}</span>
         </a>
         <a routerLink="/physiology" routerLinkActive="active" class="dropdown-item" role="menuitem"
           (click)="closeAnalytics(); closeMobileMenu()">

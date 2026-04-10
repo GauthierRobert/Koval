@@ -1,0 +1,44 @@
+.analytics-page { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.page-header h1 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: var(--text-primary, #f0f0f0); margin: 0; }
+.date-filters { display: flex; align-items: center; gap: 0.5rem; }
+.date-filters input { padding: 0.4rem 0.6rem; border: 1px solid var(--border, var(--overlay-10)); border-radius: 6px; background: var(--input-bg, rgba(0, 0, 0, 0.2)); color: var(--text-primary, #f0f0f0); font-size: 0.8rem; }
+.date-sep { color: var(--text-tertiary, #707070); }
+.empty-state { text-align: center; padding: 4rem 2rem; }
+.empty-state h3 { color: var(--text-primary, #f0f0f0); margin: 0 0 0.5rem; }
+.empty-state p { color: var(--text-secondary, #a0a0a0); font-size: 0.85rem; }
+
+/* Mobile chart CTA */
+.mobile-chart-cta { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 16px; }
+.open-chart-btn { display: flex; align-items: center; gap: 10px; padding: 14px 24px; border-radius: var(--radius-pill); border: 1px solid rgba(255, 157, 0, 0.25); background: rgba(255, 157, 0, 0.08); color: var(--accent-color); font-size: 12px; font-weight: 800; letter-spacing: 0.08em; cursor: pointer; transition: all 0.25s var(--ease-spring-gentle); }
+.open-chart-btn:hover { background: rgba(255, 157, 0, 0.16); border-color: var(--accent-color); }
+.open-chart-hint { font-size: 10px; color: var(--text-dim); margin: 0; }
+
+/* Mobile fullscreen overlay */
+.mobile-chart-overlay { position: fixed; inset: 0; z-index: 10000; background: var(--bg-color); display: flex; flex-direction: column; }
+.mobile-chart-close { position: absolute; top: 12px; right: 12px; z-index: 10001; background: var(--overlay-8); border: 1px solid var(--glass-border); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-color); transition: background 0.2s; }
+.mobile-chart-close:hover { background: var(--overlay-12); }
+.mobile-chart-content { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 16px; overflow: hidden; }
+.mobile-chart-title { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin: 0 0 12px; text-align: center; flex-shrink: 0; }
+
+@media (max-width: 768px) and (orientation: portrait) {
+  .mobile-chart-overlay { transform: rotate(90deg); transform-origin: top left; width: 100vh; height: 100vw; top: 0; left: 100vw; }
+}
+
+/* FRI Card */
+.fri-card { padding: 1.25rem 1.5rem; border-radius: 12px; margin-top: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+.fri-header { display: flex; align-items: center; gap: 0.75rem; }
+.fri-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-tertiary, #707070); }
+.fri-badge { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 999px; color: #000; text-transform: uppercase; }
+.fri-value { font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; line-height: 1; }
+.fri-detail { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; font-weight: 600; color: var(--text-primary, #f0f0f0); font-family: 'JetBrains Mono', monospace; }
+.fri-sep { color: var(--text-tertiary, #707070); }
+.fri-interpretation { font-size: 0.75rem; color: var(--text-secondary, #a0a0a0); text-align: center; margin-top: 0.25rem; line-height: 1.4; }
+
+@media (max-width: 768px) {
+  .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .date-filters { flex-wrap: wrap; }
+  .analytics-page { padding: 1.5rem 1rem; }
+  .fri-card { padding: 1rem; }
+  .fri-value { font-size: 1.8rem; }
+}

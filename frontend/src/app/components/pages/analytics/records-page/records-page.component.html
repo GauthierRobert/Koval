@@ -1,0 +1,23 @@
+<div class="analytics-page">
+  <div class="page-header">
+    <h1>{{ 'ANALYTICS.TAB_RECORDS' | translate }}</h1>
+  </div>
+
+  @if (personalRecords$ | async; as records) {
+    @if (recordEntries(records).length === 0) {
+      <div class="empty-state">
+        <h3>{{ 'ANALYTICS.NO_RECORDS' | translate }}</h3>
+        <p>{{ 'ANALYTICS.NO_RECORDS_DESC' | translate }}</p>
+      </div>
+    } @else {
+      <div class="records-grid">
+        @for (entry of recordEntries(records); track entry.duration) {
+          <div data-testid="record-card" class="record-card glass">
+            <span class="record-duration">{{ entry.label }}</span>
+            <span class="record-power">{{ entry.power }}W</span>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

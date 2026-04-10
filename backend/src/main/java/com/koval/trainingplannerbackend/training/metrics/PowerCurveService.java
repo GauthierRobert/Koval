@@ -101,6 +101,35 @@ public class PowerCurveService {
         return getBestPowerCurve(userId, LocalDate.of(2020, 1, 1), LocalDate.now());
     }
 
+    // ── Fatigue Resistance Index ─────────────────────────────────────
+
+    /** Fatigue Resistance Index: ratio of 60-min to 5-min best power. */
+    public record FriResult(double fri, double power5min, double power60min, String level) {}
+
+    /**
+     * Compute the Fatigue Resistance Index from a power curve map.
+     * Returns {@code null} when the data is insufficient or misleading:
+     * <ul>
+     *   <li>Missing or zero 300s (5-min) or 3600s (60-min) entry.</li>
+     *   <li>Flat curve (5-min power less than 20 % above 60-min power) — indicates
+     *       no genuine maximal efforts, e.g. only Zone-2 rides.</li>
+     * </ul>
+     */
+    public static FriResult computeFri(Map<Integer, Double> curve) {
+        Double p5 = curve.get(300);
+        Double p60 = curve.get(3600);
+        if (p5 == null || p60 == null || p5 <= 0 || p60 <= 0) return null;
+        // Variability guard: reject flat curves (Z2-only riding)
+        if (p5 / p60 < 1.2) return null;
+        double fri = Math.round((p60 / p5) * 1000.0) / 1000.0;
+        String level;
+        if (fri >= 0.80) level = "excellent";
+        else if (fri >= 0.75) level = "good";
+        else if (fri >= 0.70) level = "moderate";
+        else level = "developing";
+        return new FriResult(fri, p5, p60, level);
+    }
+
     // ── Volume aggregation ──────────────────────────────────────────
 
     /**
@@ -181,7 +210,7 @@ public class PowerCurveService {
                 long sum = cum[i + dur] - cum[i];
                 if (sum > best) best = sum;
             }
-            if (best > 0) curve.put(dur, (double) best / dur);
+            if (best > 0) curve.put(dur, Math.round((double) best / dur * 10.0) / 10.0);
         }
         return curve;
     }

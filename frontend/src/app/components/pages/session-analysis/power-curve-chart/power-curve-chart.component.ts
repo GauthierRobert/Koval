@@ -112,8 +112,11 @@ export class PowerCurveChartComponent implements OnDestroy {
     private zone = inject(NgZone);
     private injector = inject(Injector);
 
-    sessionId = input.required<string>();
+    /** Session ID to fetch curve from backend. Ignored when `data` is provided. */
+    sessionId = input<string | null>(null);
     sportType = input<string | null>(null);
+    /** Direct data injection — when provided, the component renders this instead of fetching. */
+    data = input<Record<number, number> | null>(null);
 
     canvasRef = viewChild<ElementRef<HTMLCanvasElement>>('canvas');
     stackRef = viewChild<ElementRef<HTMLDivElement>>('stack');
@@ -126,8 +129,16 @@ export class PowerCurveChartComponent implements OnDestroy {
     ttPower = signal('');
 
     // ── Data ─────────────────────────────────────────────────────────────
-    private state$ = toObservable(computed(() => ({id: this.sessionId(), sport: this.sportType()}))).pipe(
-        switchMap(({id, sport}) => {
+    private state$ = toObservable(computed(() => ({
+        id: this.sessionId(),
+        sport: this.sportType(),
+        direct: this.data(),
+    }))).pipe(
+        switchMap(({id, sport, direct}) => {
+            // Direct data takes precedence over session fetch.
+            if (direct) {
+                return of<CurveState>({loading: false, points: this.toPoints(direct)});
+            }
             if (!id || (sport && sport !== 'CYCLING')) {
                 return of<CurveState>({loading: false, points: []});
             }

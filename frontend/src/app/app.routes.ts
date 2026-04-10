@@ -92,9 +92,30 @@ export const routes: Routes = [
   },
   {
     path: 'analytics',
+    redirectTo: 'analytics/power-curve',
+    pathMatch: 'full',
+  },
+  {
+    path: 'analytics/power-curve',
     loadComponent: () =>
-      import('./components/pages/analytics/analytics-page.component').then(
-        (m) => m.AnalyticsPageComponent,
+      import('./components/pages/analytics/power-curve-page/power-curve-page.component').then(
+        (m) => m.PowerCurvePageComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'analytics/volume',
+    loadComponent: () =>
+      import('./components/pages/analytics/volume-page/volume-page.component').then(
+        (m) => m.VolumePageComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'analytics/records',
+    loadComponent: () =>
+      import('./components/pages/analytics/records-page/records-page.component').then(
+        (m) => m.RecordsPageComponent,
       ),
     canActivate: [authGuard],
   },

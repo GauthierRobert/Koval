@@ -31,19 +31,38 @@
             <p>{{ 'ANALYTICS.NO_POWER_DATA_DESC' | translate }}</p>
           </div>
         } @else {
-          <!-- Desktop chart -->
-          <div class="chart-container glass desktop-only">
-            <h3>{{ 'ANALYTICS.POWER_CURVE_TITLE' | translate }}</h3>
-            <div class="bar-chart">
-              @for (entry of powerCurveEntries(data); track entry.duration) {
-                <div class="bar-col">
-                  <span class="bar-value">{{ entry.power }}W</span>
-                  <div class="bar" [style.height.%]="barHeight(entry.power, maxPower(data))"></div>
-                  <span class="bar-label">{{ entry.label }}</span>
-                </div>
-              }
+          <!-- Desktop curve chart -->
+          <app-power-curve-chart class="desktop-only" [data]="data"></app-power-curve-chart>
+          <!-- Fatigue Resistance Index card -->
+          @if (computeFri(data); as fri) {
+            <div class="fri-card glass">
+              <div class="fri-header">
+                <span class="fri-label">{{ 'ANALYTICS.FRI_TITLE' | translate }}</span>
+                <span class="fri-badge" [style.background]="fri.color">
+                  @switch (fri.level) {
+                    @case ('excellent') { {{ 'ANALYTICS.FRI_EXCELLENT_LABEL' | translate }} }
+                    @case ('good') { {{ 'ANALYTICS.FRI_GOOD_LABEL' | translate }} }
+                    @case ('moderate') { {{ 'ANALYTICS.FRI_MODERATE_LABEL' | translate }} }
+                    @case ('developing') { {{ 'ANALYTICS.FRI_DEVELOPING_LABEL' | translate }} }
+                  }
+                </span>
+              </div>
+              <div class="fri-value" [style.color]="fri.color">{{ fri.ratio }}</div>
+              <div class="fri-detail">
+                <span>{{ 'ANALYTICS.FRI_5MIN' | translate }}: {{ fri.power5min }}W</span>
+                <span class="fri-sep">/</span>
+                <span>{{ 'ANALYTICS.FRI_60MIN' | translate }}: {{ fri.power60min }}W</span>
+              </div>
+              <div class="fri-interpretation">
+                @switch (fri.level) {
+                  @case ('excellent') { {{ 'ANALYTICS.FRI_EXCELLENT' | translate }} }
+                  @case ('good') { {{ 'ANALYTICS.FRI_GOOD' | translate }} }
+                  @case ('moderate') { {{ 'ANALYTICS.FRI_MODERATE' | translate }} }
+                  @case ('developing') { {{ 'ANALYTICS.FRI_DEVELOPING' | translate }} }
+                }
+              </div>
             </div>
-          </div>
+          }
           <!-- Mobile button -->
           <div class="mobile-chart-cta mobile-only">
             <button class="open-chart-btn" (click)="mobileChartType = 'power-curve'; mobileChartOpen = true">
@@ -168,17 +187,7 @@
       @if (mobileChartType === 'power-curve') {
         @if (powerCurve$ | async; as data) {
           <h3 class="mobile-chart-title">{{ 'ANALYTICS.POWER_CURVE_TITLE' | translate }}</h3>
-          <div class="mobile-chart-scroll">
-            <div class="bar-chart mobile-bar-chart">
-              @for (entry of powerCurveEntries(data); track entry.duration) {
-                <div class="bar-col">
-                  <span class="bar-value">{{ entry.power }}W</span>
-                  <div class="bar" [style.height.%]="barHeight(entry.power, maxPower(data))"></div>
-                  <span class="bar-label">{{ entry.label }}</span>
-                </div>
-              }
-            </div>
-          </div>
+          <app-power-curve-chart [data]="data"></app-power-curve-chart>
         }
       }
       @if (mobileChartType === 'volume') {

@@ -1,0 +1,84 @@
+<div class="analytics-page">
+  <div class="page-header">
+    <h1>{{ 'ANALYTICS.POWER_CURVE_TITLE' | translate }}</h1>
+    <div class="date-filters">
+      <input data-testid="analytics-date-from" type="date" [(ngModel)]="dateFrom" (change)="loadData()" />
+      <span class="date-sep">—</span>
+      <input data-testid="analytics-date-to" type="date" [(ngModel)]="dateTo" (change)="loadData()" />
+    </div>
+  </div>
+
+  @if (powerCurve$ | async; as data) {
+    @if (powerCurveEntries(data).length === 0) {
+      <div class="empty-state">
+        <h3>{{ 'ANALYTICS.NO_POWER_DATA' | translate }}</h3>
+        <p>{{ 'ANALYTICS.NO_POWER_DATA_DESC' | translate }}</p>
+      </div>
+    } @else {
+      <!-- Desktop curve chart -->
+      <app-power-curve-chart class="desktop-only" [data]="data"></app-power-curve-chart>
+
+      <!-- Fatigue Resistance Index card -->
+      @if (computeFri(data); as fri) {
+        <div class="fri-card glass">
+          <div class="fri-header">
+            <span class="fri-label">{{ 'ANALYTICS.FRI_TITLE' | translate }}</span>
+            <span class="fri-badge" [style.background]="fri.color">
+              @switch (fri.level) {
+                @case ('excellent') { {{ 'ANALYTICS.FRI_EXCELLENT_LABEL' | translate }} }
+                @case ('good') { {{ 'ANALYTICS.FRI_GOOD_LABEL' | translate }} }
+                @case ('moderate') { {{ 'ANALYTICS.FRI_MODERATE_LABEL' | translate }} }
+                @case ('developing') { {{ 'ANALYTICS.FRI_DEVELOPING_LABEL' | translate }} }
+              }
+            </span>
+          </div>
+          <div class="fri-value" [style.color]="fri.color">{{ fri.ratio }}</div>
+          <div class="fri-detail">
+            <span>{{ 'ANALYTICS.FRI_5MIN' | translate }}: {{ fri.power5min }}W</span>
+            <span class="fri-sep">/</span>
+            <span>{{ 'ANALYTICS.FRI_60MIN' | translate }}: {{ fri.power60min }}W</span>
+          </div>
+          <div class="fri-interpretation">
+            @switch (fri.level) {
+              @case ('excellent') { {{ 'ANALYTICS.FRI_EXCELLENT' | translate }} }
+              @case ('good') { {{ 'ANALYTICS.FRI_GOOD' | translate }} }
+              @case ('moderate') { {{ 'ANALYTICS.FRI_MODERATE' | translate }} }
+              @case ('developing') { {{ 'ANALYTICS.FRI_DEVELOPING' | translate }} }
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Mobile button -->
+      <div class="mobile-chart-cta mobile-only">
+        <button class="open-chart-btn" (click)="mobileChartOpen = true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
+          </svg>
+          {{ 'ANALYTICS.POWER_CURVE_TITLE' | translate }}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/>
+          </svg>
+        </button>
+        <p class="open-chart-hint">{{ 'ANALYTICS.MOBILE_CHART_HINT' | translate }}</p>
+      </div>
+    }
+  }
+</div>
+
+<!-- Mobile fullscreen landscape chart overlay -->
+@if (mobileChartOpen) {
+  <div class="mobile-chart-overlay">
+    <button class="mobile-chart-close" (click)="mobileChartOpen = false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="mobile-chart-content">
+      @if (powerCurve$ | async; as data) {
+        <h3 class="mobile-chart-title">{{ 'ANALYTICS.POWER_CURVE_TITLE' | translate }}</h3>
+        <app-power-curve-chart [data]="data"></app-power-curve-chart>
+      }
+    </div>
+  </div>
+}
