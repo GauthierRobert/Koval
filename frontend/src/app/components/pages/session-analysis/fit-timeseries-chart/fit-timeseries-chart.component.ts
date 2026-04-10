@@ -781,6 +781,8 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
 
         const ds = this._ds;
         const t0 = this.records[0].timestamp;
+        const n = this.records.length;
+        const totalSec = this.records[n - 1].timestamp - t0 || n;
         this._effSmoothed = ds.map(r => {
             if (r.heartRate <= 0) return NaN;
             const metric = this.isCycling ? r.power : (r.speed || 0) * 3.6;
@@ -794,46 +796,63 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
 
         const s = this.initCanvas(this.effRef);
         if (!s) return;
-        const { ctx, W, H, xOfT, mT, mB, mL, mR } = s;
+        const { ctx, W, H, xOf, xOfT, mT, mB, mL, mR } = s;
         const chartH = H - mT - mB;
         const top = mT, bottom = mT + chartH;
         const range = this._effMax - this._effMin || 1;
         const yOf = (v: number) => top + chartH * (1 - (v - this._effMin) / range);
         const color = '#a855f7';
 
-        // Filled area
-        ctx.beginPath();
-        let started = false;
-        let lastX = mL;
-        this._effSmoothed.forEach((v, i) => {
-            if (isNaN(v)) return;
-            const x = xOfT(ds[i].timestamp - t0);
-            if (!started) { ctx.moveTo(x, bottom); ctx.lineTo(x, yOf(v)); started = true; }
-            else ctx.lineTo(x, yOf(v));
-            lastX = x;
-        });
-        if (started) {
-            ctx.lineTo(lastX, bottom);
-            ctx.closePath();
-            const g = ctx.createLinearGradient(0, top, 0, bottom);
-            g.addColorStop(0, 'rgba(168,85,247,0.35)');
-            g.addColorStop(1, 'rgba(168,85,247,0.03)');
-            ctx.fillStyle = g;
-            ctx.fill();
-        }
+        const effOfBlock = (power: number, speed: number, hr: number): number => {
+            if (hr <= 0) return NaN;
+            const metric = this.isCycling ? power : speed * 3.6;
+            return metric > 0 ? metric / hr : NaN;
+        };
 
-        // Line
-        ctx.beginPath();
-        let first = true;
-        this._effSmoothed.forEach((v, i) => {
-            if (isNaN(v)) return;
-            const x = xOfT(ds[i].timestamp - t0);
-            if (first) { ctx.moveTo(x, yOf(v)); first = false; }
-            else ctx.lineTo(x, yOf(v));
-        });
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+        if (this.useZB) {
+            this.drawSteppedLine(ctx, xOf, yOf, this.zoneBlocks.map(b => ({
+                s: b.startIndex, e: b.endIndex, v: effOfBlock(b.avgPower, b.avgSpeed, b.avgHR),
+            })), color);
+        } else if (this.usePB) {
+            this.drawSteppedBlockLine(ctx, xOfT, yOf, this.blockSummaries.map(b => {
+                const speed = b.distanceMeters && b.durationSeconds > 0 ? b.distanceMeters / b.durationSeconds : 0;
+                return { dur: b.durationSeconds, v: effOfBlock(b.actualPower, speed, b.actualHR) };
+            }), color);
+        } else {
+            // Filled area
+            ctx.beginPath();
+            let started = false;
+            let lastX = mL;
+            this._effSmoothed.forEach((v, i) => {
+                if (isNaN(v)) return;
+                const x = xOfT(ds[i].timestamp - t0);
+                if (!started) { ctx.moveTo(x, bottom); ctx.lineTo(x, yOf(v)); started = true; }
+                else ctx.lineTo(x, yOf(v));
+                lastX = x;
+            });
+            if (started) {
+                ctx.lineTo(lastX, bottom);
+                ctx.closePath();
+                const g = ctx.createLinearGradient(0, top, 0, bottom);
+                g.addColorStop(0, 'rgba(168,85,247,0.35)');
+                g.addColorStop(1, 'rgba(168,85,247,0.03)');
+                ctx.fillStyle = g;
+                ctx.fill();
+            }
+
+            // Line
+            ctx.beginPath();
+            let first = true;
+            this._effSmoothed.forEach((v, i) => {
+                if (isNaN(v)) return;
+                const x = xOfT(ds[i].timestamp - t0);
+                if (first) { ctx.moveTo(x, yOf(v)); first = false; }
+                else ctx.lineTo(x, yOf(v));
+            });
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
 
         // Y-axis labels (right side)
         ctx.fillStyle = color;
@@ -843,17 +862,13 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         [this._effMax, mid, this._effMin].forEach(v =>
             ctx.fillText(v.toFixed(2), W - mR + 4, yOf(v) + 4));
 
+        this.drawBlockBounds(ctx, xOfT, top, bottom, totalSec);
+
         // Hover
         if (this.hoverIdx !== null) {
             const hx = xOfT(this.records[this.hoverIdx].timestamp - t0);
             this.drawCrosshair(ctx, hx, top, bottom);
-            // Find nearest downsampled point for the efficiency value
-            const hoverT = this.records[this.hoverIdx].timestamp;
-            let nearest = 0;
-            for (let i = 1; i < ds.length; i++) {
-                if (Math.abs(ds[i].timestamp - hoverT) < Math.abs(ds[nearest].timestamp - hoverT)) nearest = i;
-            }
-            const v = this._effSmoothed[nearest];
+            const v = this.hoverEfficiency(this.hoverIdx, t0);
             if (!isNaN(v)) this.drawDot(ctx, hx, yOf(v), color);
         }
     }
@@ -1149,15 +1164,9 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
             if (cad) rows.push({ label: inBlock ? 'Avg Cad' : 'Cadence', value: `${Math.round(cad)} ${this.cadUnit}`, color: '#3b82f6' });
         }
         if (this.showEfficiency && this._effSmoothed.length > 0 && this.hoverIdx !== null) {
-            const hoverT = this.records[this.hoverIdx].timestamp;
-            const ds = this._ds;
-            let nearest = 0;
-            for (let i = 1; i < ds.length; i++) {
-                if (Math.abs(ds[i].timestamp - hoverT) < Math.abs(ds[nearest].timestamp - hoverT)) nearest = i;
-            }
-            const eff = this._effSmoothed[nearest];
+            const eff = this.hoverEfficiency(this.hoverIdx, t0);
             if (!isNaN(eff)) {
-                rows.push({ label: 'Eff.', value: eff.toFixed(2), color: '#a855f7' });
+                rows.push({ label: inBlock ? 'Avg Eff.' : 'Eff.', value: eff.toFixed(2), color: '#a855f7' });
             }
         }
         if (this._hasElevation && rec.elevation != null) {
@@ -1211,6 +1220,32 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
             if (pb) return this.getCadBlock(pb.actualCadence);
         }
         return this.getCad(this.records[idx]);
+    }
+
+    private hoverEfficiency(idx: number, t0: number): number {
+        const effOf = (power: number, speed: number, hr: number): number => {
+            if (hr <= 0) return NaN;
+            const metric = this.isCycling ? power : speed * 3.6;
+            return metric > 0 ? metric / hr : NaN;
+        };
+        if (this.useZB) {
+            const zb = this.zoneBlocks.find(b => idx >= b.startIndex && idx <= b.endIndex);
+            if (zb) return effOf(zb.avgPower, zb.avgSpeed, zb.avgHR);
+        } else if (this.usePB) {
+            const pb = this.findPlannedBlock(idx, t0);
+            if (pb) {
+                const speed = pb.distanceMeters && pb.durationSeconds > 0 ? pb.distanceMeters / pb.durationSeconds : 0;
+                return effOf(pb.actualPower, speed, pb.actualHR);
+            }
+        }
+        // Raw: find nearest downsampled point
+        const hoverT = this.records[idx].timestamp;
+        const ds = this._ds;
+        let nearest = 0;
+        for (let i = 1; i < ds.length; i++) {
+            if (Math.abs(ds[i].timestamp - hoverT) < Math.abs(ds[nearest].timestamp - hoverT)) nearest = i;
+        }
+        return this._effSmoothed[nearest];
     }
 
     // ── Utilities ────────────────────────────────────────────────────────

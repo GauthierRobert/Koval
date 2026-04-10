@@ -95,6 +95,22 @@ public class NativeImageHints {
 
             // Koval skill markdown files served by SkillController
             hints.resources().registerPattern("skills/*.md");
+            String[] skills = {
+                    "skills/koval-analyze-last-ride.md",
+                    "skills/koval-athlete-onboarding.md",
+                    "skills/koval-coach-onboarding.md",
+                    "skills/koval-coach-weekly-review.md",
+                    "skills/koval-create-workout.md",
+                    "skills/koval-find-workout.md",
+                    "skills/koval-form-check.md",
+                    "skills/koval-plan-my-week.md",
+                    "skills/koval-power-curve-report.md",
+                    "skills/koval-prep-race.md",
+                    "skills/koval-zone-setup.md"
+            };
+            for (String skill : skills) {
+                hints.resources().registerPattern(skill);
+            }
         }
     }
 }
