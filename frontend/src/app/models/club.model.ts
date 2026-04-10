@@ -304,6 +304,15 @@ export interface RaceCompletionEntry {
   stravaActivityId?: string;
 }
 
+export interface FeedCommentEntry {
+  id: string;
+  userId: string;
+  displayName: string;
+  profilePicture?: string;
+  content: string;
+  createdAt: string;
+}
+
 export interface ClubFeedEventResponse {
   id: string;
   type: ClubFeedEventType;
@@ -333,6 +342,8 @@ export interface ClubFeedEventResponse {
   goalDate?: string;
   goalLocation?: string;
   engagedAthletes?: EngagedAthlete[];
+  // COMMENTS
+  comments?: FeedCommentEntry[];
 }
 
 export interface ClubFeedResponse {
@@ -353,6 +364,11 @@ export interface CompletionUpdatePayload {
   clubSessionId: string;
   completionCount: number;
   latestCompletion: { userId: string; displayName: string; profilePicture?: string };
+}
+
+export interface CommentUpdatePayload {
+  feedEventId: string;
+  comment: FeedCommentEntry;
 }
 
 export interface CreateClubData {

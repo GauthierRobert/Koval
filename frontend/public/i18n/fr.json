@@ -488,7 +488,11 @@
     "POST": "Publier",
     "LOAD_MORE": "Charger plus",
     "EMPTY": "Aucune activité dans le fil",
-    "EMPTY_HINT": "Complétez des entraînements, publiez des annonces et engagez-vous avec votre club"
+    "EMPTY_HINT": "Complétez des entraînements, publiez des annonces et engagez-vous avec votre club",
+    "COMMENT_PLACEHOLDER": "Écrire un commentaire...",
+    "COMMENT_POST": "Publier",
+    "COMMENT_COUNT": "{{count}} commentaires",
+    "COMMENT_COUNT_ONE": "1 commentaire"
   },
   "CLUB_SESSIONS": {
     "HEADING": "Sessions Hebdo",

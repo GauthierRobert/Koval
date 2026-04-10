@@ -37,14 +37,16 @@
                 <app-feed-session-completion-card
                   [event]="event"
                   [currentUserId]="currentUserId"
-                  (kudosRequested)="onGiveKudos($event)">
+                  (kudosRequested)="onGiveKudos($event)"
+                  (commentSubmitted)="onCommentSubmitted($event)">
                 </app-feed-session-completion-card>
               }
               @case ('RACE_COMPLETION') {
                 <app-feed-race-completion-card
                   [event]="event"
                   [currentUserId]="currentUserId"
-                  (kudosRequested)="onGiveKudos($event)">
+                  (kudosRequested)="onGiveKudos($event)"
+                  (commentSubmitted)="onCommentSubmitted($event)">
                 </app-feed-race-completion-card>
               }
               @case ('NEXT_GOAL') {
@@ -61,20 +63,26 @@
           @for (event of feed.items; track trackByEventId($index, event)) {
             @switch (event.type) {
               @case ('COACH_ANNOUNCEMENT') {
-                <app-feed-announcement-card [event]="event"></app-feed-announcement-card>
+                <app-feed-announcement-card
+                  [event]="event"
+                  [currentUserId]="currentUserId"
+                  (commentSubmitted)="onCommentSubmitted($event)">
+                </app-feed-announcement-card>
               }
               @case ('SESSION_COMPLETION') {
                 <app-feed-session-completion-card
                   [event]="event"
                   [currentUserId]="currentUserId"
-                  (kudosRequested)="onGiveKudos($event)">
+                  (kudosRequested)="onGiveKudos($event)"
+                  (commentSubmitted)="onCommentSubmitted($event)">
                 </app-feed-session-completion-card>
               }
               @case ('RACE_COMPLETION') {
                 <app-feed-race-completion-card
                   [event]="event"
                   [currentUserId]="currentUserId"
-                  (kudosRequested)="onGiveKudos($event)">
+                  (kudosRequested)="onGiveKudos($event)"
+                  (commentSubmitted)="onCommentSubmitted($event)">
                 </app-feed-race-completion-card>
               }
               @case ('NEXT_GOAL') {

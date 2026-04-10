@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.club.feed;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
+import com.koval.trainingplannerbackend.club.feed.dto.AddCommentRequest;
 import com.koval.trainingplannerbackend.club.feed.dto.ClubFeedEventResponse;
 import com.koval.trainingplannerbackend.club.feed.dto.ClubFeedResponse;
 import com.koval.trainingplannerbackend.club.feed.dto.CreateAnnouncementRequest;
@@ -61,5 +62,14 @@ public class ClubFeedController {
             @PathVariable String eventId) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(kudosService.giveKudosToAll(userId, eventId));
+    }
+
+    @PostMapping("/{eventId}/comments")
+    public ResponseEntity<ClubFeedEvent.CommentEntry> addComment(
+            @PathVariable String clubId,
+            @PathVariable String eventId,
+            @RequestBody AddCommentRequest req) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(feedService.addComment(userId, clubId, eventId, req.content()));
     }
 }

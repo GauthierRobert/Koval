@@ -488,7 +488,11 @@
     "POST": "Post",
     "LOAD_MORE": "Load more",
     "EMPTY": "No feed activity yet",
-    "EMPTY_HINT": "Complete workouts, post announcements, and engage with your club"
+    "EMPTY_HINT": "Complete workouts, post announcements, and engage with your club",
+    "COMMENT_PLACEHOLDER": "Write a comment...",
+    "COMMENT_POST": "Post",
+    "COMMENT_COUNT": "{{count}} comments",
+    "COMMENT_COUNT_ONE": "1 comment"
   },
   "CLUB_SESSIONS": {
     "HEADING": "Weekly Sessions",
