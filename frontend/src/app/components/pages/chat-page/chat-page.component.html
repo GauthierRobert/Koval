@@ -1,0 +1,54 @@
+<div class="chat-page">
+  <aside class="chat-sidebar">
+    <header class="chat-sidebar-header">
+      <h1 class="chat-sidebar-title">Messages</h1>
+    </header>
+    <div class="chat-sidebar-search">
+      <input
+        type="text"
+        placeholder="Search conversations..."
+        [(ngModel)]="searchText"
+        (ngModelChange)="chatRoomService.loadMyRooms()" />
+    </div>
+    <div class="chat-sidebar-list">
+      @if (groupedRooms$ | async; as groups) {
+        @for (group of groups; track trackGroup($index, group)) {
+          <div class="room-group">
+            <div class="room-group-label">{{ group.label }}</div>
+            @for (room of group.rooms; track trackById($index, room)) {
+              <button
+                type="button"
+                class="room-entry"
+                [class.active]="(activeRoomId$ | async) === room.id"
+                (click)="selectRoom(room)">
+                <div class="room-entry-main">
+                  <span class="room-entry-title">{{ room.title }}</span>
+                  @if (room.lastMessagePreview) {
+                    <span class="room-entry-preview">{{ room.lastMessagePreview }}</span>
+                  }
+                </div>
+                @if (room.unreadCount > 0) {
+                  <span class="room-unread-badge">{{ room.unreadCount }}</span>
+                }
+              </button>
+            }
+          </div>
+        }
+        @if (groups.length === 0) {
+          <div class="chat-sidebar-empty">No conversations yet.</div>
+        }
+      }
+    </div>
+  </aside>
+
+  <main class="chat-main">
+    @if (activeRoomId$ | async; as roomId) {
+      <app-chat-message-panel [roomId]="roomId"></app-chat-message-panel>
+    } @else {
+      <div class="chat-main-empty">
+        <h2>Select a conversation</h2>
+        <p>Pick a chat from the sidebar to start messaging.</p>
+      </div>
+    }
+  </main>
+</div>

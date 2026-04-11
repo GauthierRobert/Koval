@@ -1,0 +1,64 @@
+@if (roomDetail$ | async; as detail) {
+  @if (showHeader) {
+    <header class="chat-panel-header">
+      <h2 class="chat-panel-title">{{ detail.title }}</h2>
+      @if (detail.joinable && !detail.currentUserIsMember) {
+        <button class="btn-join" (click)="chatRoomService.joinRoom(detail.id).subscribe()">Join</button>
+      }
+    </header>
+  }
+
+  <div class="chat-panel-body" #scrollContainer>
+    @if (messages$ | async; as messages) {
+      @for (msg of messages; track trackById($index, msg)) {
+        <div class="chat-message" [class.own]="isOwnMessage(msg)">
+          @if (!isOwnMessage(msg)) {
+            <div class="chat-message-avatar">
+              @if (msg.senderProfilePicture) {
+                <img [src]="msg.senderProfilePicture" [alt]="msg.senderDisplayName" />
+              } @else {
+                <span>{{ msg.senderDisplayName.charAt(0).toUpperCase() }}</span>
+              }
+            </div>
+          }
+          <div class="chat-message-bubble">
+            @if (!isOwnMessage(msg)) {
+              <div class="chat-message-author">{{ msg.senderDisplayName }}</div>
+            }
+            @if (msg.deleted) {
+              <div class="chat-message-deleted"><em>message deleted</em></div>
+            } @else {
+              <div class="chat-message-text">{{ msg.content }}</div>
+            }
+            <div class="chat-message-time">{{ msg.createdAt | date: 'shortTime' }}</div>
+          </div>
+        </div>
+      }
+      @if (messages.length === 0) {
+        <div class="chat-empty-state">No messages yet. Say hi!</div>
+      }
+    }
+  </div>
+
+  @if (detail.currentUserIsMember) {
+    <footer class="chat-panel-composer">
+      <textarea
+        class="chat-composer-input"
+        rows="1"
+        placeholder="Type a message..."
+        [(ngModel)]="draft"
+        (keydown)="onKeydown($event)">
+      </textarea>
+      <button
+        class="chat-composer-send"
+        [disabled]="!draft.trim() || sending"
+        (click)="send()">
+        Send
+      </button>
+    </footer>
+  } @else if (!detail.joinable) {
+    <footer class="chat-panel-composer locked">
+      <span>You are not a member of this chat.</span>
+    </footer>
+  }
+}

@@ -1,5 +1,9 @@
 package com.koval.trainingplannerbackend.club;
 
+import com.koval.trainingplannerbackend.chat.ChatMemberRole;
+import com.koval.trainingplannerbackend.chat.ChatRoom;
+import com.koval.trainingplannerbackend.chat.ChatRoomService;
+import com.koval.trainingplannerbackend.chat.MembershipSource;
 import com.koval.trainingplannerbackend.club.activity.ClubActivityService;
 import com.koval.trainingplannerbackend.club.activity.ClubActivityType;
 import com.koval.trainingplannerbackend.club.dto.ClubDetailResponse;
@@ -30,15 +34,18 @@ public class ClubService {
     private final ClubMembershipRepository membershipRepository;
     private final ClubActivityService clubActivityService;
     private final ClubInviteCodeService clubInviteCodeService;
+    private final ChatRoomService chatRoomService;
 
     public ClubService(ClubRepository clubRepository,
                        ClubMembershipRepository membershipRepository,
                        ClubActivityService clubActivityService,
-                       ClubInviteCodeService clubInviteCodeService) {
+                       ClubInviteCodeService clubInviteCodeService,
+                       ChatRoomService chatRoomService) {
         this.clubRepository = clubRepository;
         this.membershipRepository = membershipRepository;
         this.clubActivityService = clubActivityService;
         this.clubInviteCodeService = clubInviteCodeService;
+        this.chatRoomService = chatRoomService;
     }
 
     // --- Club CRUD ---
@@ -70,6 +77,10 @@ public class ClubService {
 
         // Auto-generate default invite code for the club
         clubInviteCodeService.generateInviteCode(userId, club.getId(), null, 0, null);
+
+        // Provision the club chat room and auto-join the owner as admin.
+        ChatRoom clubRoom = chatRoomService.getOrCreateClubRoom(club.getId());
+        chatRoomService.ensureMembership(clubRoom, userId, MembershipSource.AUTO, ChatMemberRole.ADMIN);
 
         return club;
     }

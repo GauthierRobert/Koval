@@ -120,6 +120,9 @@
       @if (activeTab === 'race-goals') {
         <app-club-race-goals-tab></app-club-race-goals-tab>
       }
+      @if (activeTab === 'chat') {
+        <app-club-chat-tab [clubId]="clubId"></app-club-chat-tab>
+      }
     </div>
 
     <app-training-action-modal
