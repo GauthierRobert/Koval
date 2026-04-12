@@ -77,6 +77,18 @@ export const routes: Routes = [
     canActivate: [authGuard, coachGuard],
   },
   {
+    path: 'messages',
+    loadComponent: () =>
+      import('./components/pages/chat-page/chat-page.component').then((m) => m.ChatPageComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'messages/:roomId',
+    loadComponent: () =>
+      import('./components/pages/chat-page/chat-page.component').then((m) => m.ChatPageComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'analysis/:sessionId',
     loadComponent: () =>
       import('./components/pages/workout-history/workout-history.component').then(

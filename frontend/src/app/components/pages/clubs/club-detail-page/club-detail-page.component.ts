@@ -21,11 +21,12 @@ import {ClubStatsTabComponent} from './tabs/club-stats-tab/club-stats-tab.compon
 import {ClubLeaderboardTabComponent} from './tabs/club-leaderboard-tab/club-leaderboard-tab.component';
 import {ClubRaceGoalsTabComponent} from './tabs/club-race-goals-tab/club-race-goals-tab.component';
 import {ClubOpenSessionsTabComponent} from './tabs/club-open-sessions-tab/club-open-sessions-tab.component';
+import {ClubChatTabComponent} from './tabs/club-chat-tab/club-chat-tab.component';
 import {TrainingActionModalComponent} from '../../../shared/training-action-modal/training-action-modal.component';
 import {ActionContext} from '../../../../services/ai-action.service';
 import {BehaviorSubject, map, Observable, Subscription} from 'rxjs';
 
-type TabId = 'feed' | 'sessions' | 'open-sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals';
+type TabId = 'feed' | 'sessions' | 'open-sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals' | 'chat';
 
 @Component({
   selector: 'app-club-detail-page',
@@ -41,6 +42,7 @@ type TabId = 'feed' | 'sessions' | 'open-sessions' | 'members' | 'stats' | 'lead
     ClubLeaderboardTabComponent,
     ClubRaceGoalsTabComponent,
     ClubOpenSessionsTabComponent,
+    ClubChatTabComponent,
     TrainingActionModalComponent,
   ],
   templateUrl: './club-detail-page.component.html',
@@ -88,6 +90,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
     { id: 'stats', label: 'CLUB_DETAIL.TAB_STATS', shortLabel: 'CLUB_DETAIL.TAB_STATS_SHORT' },
     { id: 'leaderboard', label: 'CLUB_DETAIL.TAB_LEADERBOARD', shortLabel: 'CLUB_DETAIL.TAB_LEADERBOARD_SHORT' },
     { id: 'race-goals', label: 'CLUB_DETAIL.TAB_RACE_GOALS', shortLabel: 'CLUB_DETAIL.TAB_RACE_GOALS_SHORT' },
+    { id: 'chat', label: 'CLUB_DETAIL.TAB_CHAT', shortLabel: 'CLUB_DETAIL.TAB_CHAT_SHORT' },
   ];
 
   ngOnInit(): void {
@@ -163,6 +166,9 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
         break;
       case 'race-goals':
         this.clubFeedService.loadRaceGoals(this.clubId);
+        break;
+      case 'chat':
+        // The embedded chat component resolves the room itself on first render.
         break;
     }
     this.cdr.markForCheck();

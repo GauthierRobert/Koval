@@ -1,5 +1,9 @@
 package com.koval.trainingplannerbackend.club.group;
 
+import com.koval.trainingplannerbackend.chat.ChatMembershipService;
+import com.koval.trainingplannerbackend.chat.ChatRoom;
+import com.koval.trainingplannerbackend.chat.ChatRoomScope;
+import com.koval.trainingplannerbackend.chat.ChatRoomService;
 import com.koval.trainingplannerbackend.club.invite.ClubInviteCodeService;
 import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService;
 import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
@@ -9,7 +13,9 @@ import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundExcept
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class ClubGroupService {
@@ -18,15 +24,21 @@ public class ClubGroupService {
     private final ClubMembershipRepository membershipRepository;
     private final ClubAuthorizationService authorizationService;
     private final ClubInviteCodeService inviteCodeService;
+    private final ChatRoomService chatRoomService;
+    private final ChatMembershipService chatMembershipService;
 
     public ClubGroupService(ClubGroupRepository clubGroupRepository,
                             ClubMembershipRepository membershipRepository,
                             ClubAuthorizationService authorizationService,
-                            ClubInviteCodeService inviteCodeService) {
+                            ClubInviteCodeService inviteCodeService,
+                            ChatRoomService chatRoomService,
+                            ChatMembershipService chatMembershipService) {
         this.clubGroupRepository = clubGroupRepository;
         this.membershipRepository = membershipRepository;
         this.authorizationService = authorizationService;
         this.inviteCodeService = inviteCodeService;
+        this.chatRoomService = chatRoomService;
+        this.chatMembershipService = chatMembershipService;
     }
 
     public ClubGroup createGroup(String adminId, String clubId, String name) {
@@ -42,6 +54,9 @@ public class ClubGroupService {
 
         inviteCodeService.generateInviteCode(adminId, clubId, group.getId(), 0, null);
 
+        // Provision the group's chat room (empty initially — members are added as they join the group).
+        chatRoomService.getOrCreateGroupRoom(clubId, group.getId());
+
         return group;
     }
 
@@ -54,6 +69,8 @@ public class ClubGroupService {
         authorizationService.requireAdminOrOwner(adminId, clubId);
         ClubGroup group = requireGroupInClub(clubId, groupId);
         clubGroupRepository.delete(group);
+        // Archive the group chat room so it disappears from sidebars but messages are preserved.
+        chatRoomService.archiveByParent(ChatRoomScope.GROUP, clubId, groupId);
     }
 
     public ClubGroup addMemberToGroup(String adminId, String clubId, String groupId, String targetUserId) {
@@ -68,6 +85,7 @@ public class ClubGroupService {
             group.getMemberIds().add(targetUserId);
             clubGroupRepository.save(group);
         }
+        syncGroupChatMembers(clubId, group);
         return group;
     }
 
@@ -75,7 +93,9 @@ public class ClubGroupService {
         authorizationService.requireAdminOrOwner(adminId, clubId);
         ClubGroup group = requireGroupInClub(clubId, groupId);
         group.getMemberIds().remove(targetUserId);
-        return clubGroupRepository.save(group);
+        clubGroupRepository.save(group);
+        syncGroupChatMembers(clubId, group);
+        return group;
     }
 
     public ClubGroup joinGroupSelf(String userId, String clubId, String groupId) {
@@ -85,6 +105,7 @@ public class ClubGroupService {
             group.getMemberIds().add(userId);
             clubGroupRepository.save(group);
         }
+        syncGroupChatMembers(clubId, group);
         return group;
     }
 
@@ -92,7 +113,19 @@ public class ClubGroupService {
         authorizationService.requireActiveMember(userId, clubId);
         ClubGroup group = requireGroupInClub(clubId, groupId);
         group.getMemberIds().remove(userId);
-        return clubGroupRepository.save(group);
+        clubGroupRepository.save(group);
+        syncGroupChatMembers(clubId, group);
+        return group;
+    }
+
+    /**
+     * Push the group's memberIds to the chat room, creating it lazily if needed.
+     * Reconciles AUTO members only — SELF_JOINED is not applicable for GROUP scope.
+     */
+    private void syncGroupChatMembers(String clubId, ClubGroup group) {
+        ChatRoom room = chatRoomService.getOrCreateGroupRoom(clubId, group.getId());
+        Set<String> expected = new HashSet<>(group.getMemberIds());
+        chatMembershipService.syncAutoMembers(room.getId(), expected);
     }
 
     private ClubGroup requireGroupInClub(String clubId, String groupId) {
