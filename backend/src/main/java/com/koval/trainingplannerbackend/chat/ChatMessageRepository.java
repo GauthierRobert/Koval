@@ -15,8 +15,5 @@ public interface ChatMessageRepository extends MongoRepository<ChatMessage, Stri
     /** Keyset pagination: messages strictly older than {@code before}, latest first. */
     List<ChatMessage> findByRoomIdAndCreatedAtLessThanOrderByCreatedAtDesc(String roomId, Instant before, Pageable pageable);
 
-    /** Unread count for a single room (all messages strictly after lastReadAt). */
-    long countByRoomIdAndCreatedAtGreaterThan(String roomId, Instant after);
-
     Optional<ChatMessage> findFirstByRoomIdAndClientNonce(String roomId, String clientNonce);
 }

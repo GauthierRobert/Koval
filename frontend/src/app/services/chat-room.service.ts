@@ -37,6 +37,11 @@ export class ChatRoomService {
   private activeRoomDetailSubject = new BehaviorSubject<ChatRoomDetail | null>(null);
   activeRoomDetail$: Observable<ChatRoomDetail | null> = this.activeRoomDetailSubject.asObservable();
 
+  /** Sync snapshot for infinite-scroll to read oldest message timestamp. */
+  get activeRoomMessagesSnapshot(): ChatMessage[] {
+    return this.activeRoomMessagesSubject.value;
+  }
+
   constructor() {
     // Merge live SSE events into the observed state. Because there is a single
     // per-user SSE connection, every message for every room flows through here.
@@ -92,6 +97,18 @@ export class ChatRoomService {
   postMessage(roomId: string, content: string): Observable<ChatMessage> {
     const body: PostMessageRequest = { content, clientNonce: this.makeNonce() };
     return this.http.post<ChatMessage>(`${this.apiUrl}/rooms/${roomId}/messages`, body);
+  }
+
+  deleteMessage(messageId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/messages/${messageId}`).pipe(
+      tap(() => {
+        // Mark the message as deleted in the local state.
+        const msgs = this.activeRoomMessagesSubject.value.map((m) =>
+          m.id === messageId ? { ...m, deleted: true, content: '' } : m,
+        );
+        this.activeRoomMessagesSubject.next(msgs);
+      }),
+    );
   }
 
   joinRoom(roomId: string): Observable<void> {

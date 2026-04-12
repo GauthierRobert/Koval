@@ -2,13 +2,16 @@
   <aside class="chat-sidebar">
     <header class="chat-sidebar-header">
       <h1 class="chat-sidebar-title">Messages</h1>
+      <button class="btn-new-dm" title="New direct message" (click)="openNewDmDialog()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
     </header>
     <div class="chat-sidebar-search">
       <input
         type="text"
         placeholder="Search conversations..."
         [(ngModel)]="searchText"
-        (ngModelChange)="chatRoomService.loadMyRooms()" />
+        (ngModelChange)="onSearchChange($event)" />
     </div>
     <div class="chat-sidebar-list">
       @if (groupedRooms$ | async; as groups) {
@@ -47,8 +50,30 @@
     } @else {
       <div class="chat-main-empty">
         <h2>Select a conversation</h2>
-        <p>Pick a chat from the sidebar to start messaging.</p>
+        <p>Pick a chat from the sidebar or start a new direct message.</p>
       </div>
     }
   </main>
 </div>
+
+<!-- New DM dialog -->
+@if (showNewDmDialog) {
+  <div class="dm-dialog-backdrop" (click)="closeNewDmDialog()">
+    <div class="dm-dialog" (click)="$event.stopPropagation()">
+      <h3>New direct message</h3>
+      <p class="dm-dialog-hint">Enter the user ID of the person you want to message.</p>
+      <input
+        class="dm-dialog-input"
+        type="text"
+        placeholder="User ID"
+        [(ngModel)]="newDmUserId"
+        (keydown.enter)="startDm()" />
+      <div class="dm-dialog-actions">
+        <button class="btn-cancel" (click)="closeNewDmDialog()">Cancel</button>
+        <button class="btn-start" [disabled]="!newDmUserId.trim() || newDmLoading" (click)="startDm()">
+          {{ newDmLoading ? 'Starting…' : 'Start chat' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

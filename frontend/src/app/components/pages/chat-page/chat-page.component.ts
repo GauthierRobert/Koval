@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription, map } from 'rxjs';
+import { Subscription, map, combineLatest, BehaviorSubject, Observable } from 'rxjs';
 import { ChatRoomService } from '../../../services/chat-room.service';
 import { ChatRoomScope, ChatRoomSummary } from '../../../models/chat.models';
 import { ChatMessagePanelComponent } from './chat-message-panel/chat-message-panel.component';
@@ -12,10 +12,6 @@ interface RoomGroup {
   rooms: ChatRoomSummary[];
 }
 
-/**
- * Top-level chat page: sidebar of the user's rooms grouped by scope, plus the active
- * room's message panel. Mounted at routes {@code /messages} and {@code /messages/:roomId}.
- */
 @Component({
   selector: 'app-chat-page',
   standalone: true,
@@ -28,17 +24,28 @@ export class ChatPageComponent implements OnInit, OnDestroy {
   readonly chatRoomService = inject(ChatRoomService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly cdr = inject(ChangeDetectorRef);
 
-  readonly groupedRooms$ = this.chatRoomService.rooms$.pipe(map((rooms) => this.groupRooms(rooms)));
   readonly activeRoomId$ = this.chatRoomService.activeRoomId$;
 
   searchText = '';
+  showNewDmDialog = false;
+  newDmUserId = '';
+  newDmLoading = false;
+
+  /** Emit whenever the user types in the search box (purely client-side filter). */
+  private readonly searchSubject = new BehaviorSubject('');
+  readonly groupedRooms$: Observable<RoomGroup[]> = combineLatest([
+    this.chatRoomService.rooms$,
+    this.searchSubject,
+  ]).pipe(
+    map(([rooms, search]) => this.groupRooms(rooms, search)),
+  );
+
   private subs = new Subscription();
 
   ngOnInit(): void {
-    // Initializing is idempotent — it also ensures the SSE stream is running.
     this.chatRoomService.initialize();
-
     this.subs.add(
       this.route.paramMap.subscribe((params) => {
         const roomId = params.get('roomId');
@@ -51,8 +58,41 @@ export class ChatPageComponent implements OnInit, OnDestroy {
     this.subs.unsubscribe();
   }
 
+  onSearchChange(text: string): void {
+    this.searchSubject.next(text.trim().toLowerCase());
+  }
+
   selectRoom(room: ChatRoomSummary): void {
     this.router.navigate(['/messages', room.id]);
+  }
+
+  openNewDmDialog(): void {
+    this.showNewDmDialog = true;
+    this.newDmUserId = '';
+    this.cdr.markForCheck();
+  }
+
+  closeNewDmDialog(): void {
+    this.showNewDmDialog = false;
+    this.cdr.markForCheck();
+  }
+
+  startDm(): void {
+    const id = this.newDmUserId.trim();
+    if (!id || this.newDmLoading) return;
+    this.newDmLoading = true;
+    this.chatRoomService.openDirectWith(id).subscribe({
+      next: (detail) => {
+        this.showNewDmDialog = false;
+        this.newDmLoading = false;
+        this.router.navigate(['/messages', detail.id]);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.newDmLoading = false;
+        this.cdr.markForCheck();
+      },
+    });
   }
 
   trackById(_index: number, room: ChatRoomSummary): string {
@@ -63,8 +103,7 @@ export class ChatPageComponent implements OnInit, OnDestroy {
     return group.label;
   }
 
-  private groupRooms(rooms: ChatRoomSummary[]): RoomGroup[] {
-    const filter = this.searchText.trim().toLowerCase();
+  private groupRooms(rooms: ChatRoomSummary[], filter: string): RoomGroup[] {
     const filtered = filter
       ? rooms.filter((r) => r.title.toLowerCase().includes(filter))
       : rooms;

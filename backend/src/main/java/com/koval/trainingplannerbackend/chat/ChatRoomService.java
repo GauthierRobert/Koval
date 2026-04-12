@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -38,20 +39,20 @@ public class ChatRoomService {
 
     private final ChatRoomRepository roomRepository;
     private final ChatRoomMembershipRepository membershipRepository;
-    private final ChatMessageRepository messageRepository;
+    private final ChatMessageCustomRepository messageCustomRepository;
     private final ClubRepository clubRepository;
     private final ClubGroupRepository clubGroupRepository;
     private final UserService userService;
 
     public ChatRoomService(ChatRoomRepository roomRepository,
                            ChatRoomMembershipRepository membershipRepository,
-                           ChatMessageRepository messageRepository,
+                           ChatMessageCustomRepository messageCustomRepository,
                            ClubRepository clubRepository,
                            ClubGroupRepository clubGroupRepository,
                            UserService userService) {
         this.roomRepository = roomRepository;
         this.membershipRepository = membershipRepository;
-        this.messageRepository = messageRepository;
+        this.messageCustomRepository = messageCustomRepository;
         this.clubRepository = clubRepository;
         this.clubGroupRepository = clubGroupRepository;
         this.userService = userService;
@@ -268,14 +269,24 @@ public class ChatRoomService {
         List<ChatRoom> rooms = new ArrayList<>();
         roomRepository.findAllById(membershipByRoom.keySet()).forEach(rooms::add);
 
+        // Batch unread counts: skip rooms where lastMessageAt <= lastReadAt (guaranteed 0),
+        // then query the rest in a single aggregation instead of N separate count queries.
+        Map<String, Instant> needsCount = new HashMap<>();
+        for (ChatRoom room : rooms) {
+            if (room.isArchived()) continue;
+            ChatRoomMembership m = membershipByRoom.get(room.getId());
+            Instant lastRead = m.getLastReadAt() != null ? m.getLastReadAt() : Instant.EPOCH;
+            if (room.getLastMessageAt() != null && room.getLastMessageAt().isAfter(lastRead)) {
+                needsCount.put(room.getId(), lastRead);
+            }
+        }
+        Map<String, Long> unreadCounts = messageCustomRepository.batchUnreadCounts(needsCount);
+
         List<ChatRoomSummaryResponse> out = new ArrayList<>();
         for (ChatRoom room : rooms) {
             if (room.isArchived()) continue;
             ChatRoomMembership m = membershipByRoom.get(room.getId());
-            long unread = messageRepository.countByRoomIdAndCreatedAtGreaterThan(
-                    room.getId(),
-                    m.getLastReadAt() != null ? m.getLastReadAt() : Instant.EPOCH
-            );
+            long unread = unreadCounts.getOrDefault(room.getId(), 0L);
             String otherUserId = otherUserIdForDirect(room, userId);
             String title = displayTitleFor(room, userId);
             out.add(new ChatRoomSummaryResponse(
