@@ -26,27 +26,31 @@ import java.util.List;
 public class ChatController {
 
     private final ChatRoomService chatRoomService;
+    private final ChatMembershipService chatMembershipService;
+    private final ChatQueryService chatQueryService;
     private final ChatMessageService chatMessageService;
     private final ChatAuthorizationService chatAuthorizationService;
 
     public ChatController(ChatRoomService chatRoomService,
+                          ChatMembershipService chatMembershipService,
+                          ChatQueryService chatQueryService,
                           ChatMessageService chatMessageService,
                           ChatAuthorizationService chatAuthorizationService) {
         this.chatRoomService = chatRoomService;
+        this.chatMembershipService = chatMembershipService;
+        this.chatQueryService = chatQueryService;
         this.chatMessageService = chatMessageService;
         this.chatAuthorizationService = chatAuthorizationService;
     }
 
     @GetMapping("/rooms")
     public ResponseEntity<List<ChatRoomSummaryResponse>> listMyRooms() {
-        String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(chatRoomService.listMyRooms(userId));
+        return ResponseEntity.ok(chatQueryService.listMyRooms(SecurityUtils.getCurrentUserId()));
     }
 
     @GetMapping("/rooms/{roomId}")
     public ResponseEntity<ChatRoomResponse> getRoom(@PathVariable String roomId) {
-        String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(chatRoomService.getRoomDetail(userId, roomId));
+        return ResponseEntity.ok(chatQueryService.getRoomDetail(SecurityUtils.getCurrentUserId(), roomId));
     }
 
     @GetMapping("/rooms/by-parent")
@@ -55,8 +59,8 @@ public class ChatController {
             @RequestParam String clubId,
             @RequestParam(required = false) String refId) {
         String userId = SecurityUtils.getCurrentUserId();
-        return chatRoomService.findByParent(scope, clubId, refId)
-                .map(room -> ResponseEntity.ok(chatRoomService.getRoomDetail(userId, room.getId())))
+        return chatQueryService.findByParent(scope, clubId, refId)
+                .map(room -> ResponseEntity.ok(chatQueryService.getRoomDetail(userId, room.getId())))
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -65,57 +69,44 @@ public class ChatController {
             @PathVariable String roomId,
             @RequestParam(required = false) String before,
             @RequestParam(required = false) Integer size) {
-        String userId = SecurityUtils.getCurrentUserId();
         Instant parsed = null;
         if (before != null && !before.isBlank()) {
-            try {
-                parsed = Instant.parse(before);
-            } catch (DateTimeParseException e) {
-                return ResponseEntity.badRequest().build();
-            }
+            try { parsed = Instant.parse(before); }
+            catch (DateTimeParseException e) { return ResponseEntity.badRequest().build(); }
         }
-        return ResponseEntity.ok(chatMessageService.getPage(userId, roomId, parsed, size));
+        return ResponseEntity.ok(chatMessageService.getPage(SecurityUtils.getCurrentUserId(), roomId, parsed, size));
     }
 
     @PostMapping("/rooms/{roomId}/messages")
     public ResponseEntity<ChatMessageResponse> postMessage(
-            @PathVariable String roomId,
-            @RequestBody PostMessageRequest req) {
-        String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(chatMessageService.post(userId, roomId, req.content(), req.clientNonce()));
+            @PathVariable String roomId, @RequestBody PostMessageRequest req) {
+        return ResponseEntity.ok(chatMessageService.post(SecurityUtils.getCurrentUserId(), roomId, req.content(), req.clientNonce()));
     }
 
     @PostMapping("/rooms/{roomId}/join")
     public ResponseEntity<Void> join(@PathVariable String roomId) {
         String userId = SecurityUtils.getCurrentUserId();
-        // Permission check happens inside joinRoom via the joinable flag;
-        // additional club-level check delegated to ChatAuthorizationService.
         ChatRoom room = chatAuthorizationService.requireRoom(roomId);
         chatAuthorizationService.requireCanJoinRoom(userId, room);
-        chatRoomService.joinRoom(userId, roomId);
+        chatMembershipService.joinRoom(userId, roomId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/rooms/{roomId}/leave")
     public ResponseEntity<Void> leave(@PathVariable String roomId) {
-        String userId = SecurityUtils.getCurrentUserId();
-        chatRoomService.leaveRoom(userId, roomId);
+        chatMembershipService.leaveRoom(SecurityUtils.getCurrentUserId(), roomId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/rooms/{roomId}/mute")
-    public ResponseEntity<Void> mute(
-            @PathVariable String roomId,
-            @RequestBody MembershipUpdateRequest req) {
-        String userId = SecurityUtils.getCurrentUserId();
-        chatRoomService.setMuted(userId, roomId, Boolean.TRUE.equals(req.muted()));
+    public ResponseEntity<Void> mute(@PathVariable String roomId, @RequestBody MembershipUpdateRequest req) {
+        chatMembershipService.setMuted(SecurityUtils.getCurrentUserId(), roomId, Boolean.TRUE.equals(req.muted()));
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/rooms/{roomId}/read")
     public ResponseEntity<Void> markRead(@PathVariable String roomId) {
-        String userId = SecurityUtils.getCurrentUserId();
-        chatRoomService.markRead(userId, roomId);
+        chatMembershipService.markRead(SecurityUtils.getCurrentUserId(), roomId);
         return ResponseEntity.noContent().build();
     }
 
@@ -124,13 +115,12 @@ public class ChatController {
         String userId = SecurityUtils.getCurrentUserId();
         chatAuthorizationService.requireCanDirectMessage(userId, req.otherUserId());
         ChatRoom room = chatRoomService.getOrCreateDirectRoom(userId, req.otherUserId());
-        return ResponseEntity.ok(chatRoomService.getRoomDetail(userId, room.getId()));
+        return ResponseEntity.ok(chatQueryService.getRoomDetail(userId, room.getId()));
     }
 
     @DeleteMapping("/messages/{messageId}")
     public ResponseEntity<Void> deleteMessage(@PathVariable String messageId) {
-        String userId = SecurityUtils.getCurrentUserId();
-        chatMessageService.softDelete(userId, messageId);
+        chatMessageService.softDelete(SecurityUtils.getCurrentUserId(), messageId);
         return ResponseEntity.noContent().build();
     }
 }

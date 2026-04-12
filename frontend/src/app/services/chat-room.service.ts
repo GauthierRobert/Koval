@@ -1,54 +1,40 @@
-import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
-import { environment } from '../../environments/environment';
-import {
-  ChatMessage,
-  ChatRoomDetail,
-  ChatRoomScope,
-  ChatRoomSummary,
-  CreateDirectRoomRequest,
-  PostMessageRequest,
-} from '../models/chat.models';
+import { ChatMessage, ChatRoomDetail, ChatRoomSummary } from '../models/chat.models';
+import { ChatApiService } from './chat-api.service';
 import { ChatSseService } from './chat-sse.service';
 
 /**
- * State and HTTP client for the human-to-human chat feature.
+ * Global state facade for the chat feature. Delegates all HTTP to {@link ChatApiService}
+ * and merges SSE events from {@link ChatSseService} into its observables.
  *
- * This is distinct from {@code ChatService} (the AI assistant chat) — do not confuse the two.
- * The SSE stream from {@link ChatSseService} feeds into this service's observables so
- * components don't need to subscribe to two sources.
+ * Used by {@link ChatMessagePanelComponent} (the /messages page).
+ * {@link EmbeddedChatComponent} uses {@link ChatApiService} directly for isolated state.
  */
 @Injectable({ providedIn: 'root' })
 export class ChatRoomService {
-  private readonly http = inject(HttpClient);
+  private readonly api = inject(ChatApiService);
   private readonly sse = inject(ChatSseService);
-  private readonly apiUrl = `${environment.apiUrl}/api/chat`;
 
   private roomsSubject = new BehaviorSubject<ChatRoomSummary[]>([]);
-  rooms$: Observable<ChatRoomSummary[]> = this.roomsSubject.asObservable();
+  rooms$ = this.roomsSubject.asObservable();
 
   private activeRoomIdSubject = new BehaviorSubject<string | null>(null);
-  activeRoomId$: Observable<string | null> = this.activeRoomIdSubject.asObservable();
+  activeRoomId$ = this.activeRoomIdSubject.asObservable();
 
   private activeRoomMessagesSubject = new BehaviorSubject<ChatMessage[]>([]);
-  activeRoomMessages$: Observable<ChatMessage[]> = this.activeRoomMessagesSubject.asObservable();
+  activeRoomMessages$ = this.activeRoomMessagesSubject.asObservable();
 
   private activeRoomDetailSubject = new BehaviorSubject<ChatRoomDetail | null>(null);
-  activeRoomDetail$: Observable<ChatRoomDetail | null> = this.activeRoomDetailSubject.asObservable();
+  activeRoomDetail$ = this.activeRoomDetailSubject.asObservable();
 
-  /** Sync snapshot for infinite-scroll to read oldest message timestamp. */
-  get activeRoomMessagesSnapshot(): ChatMessage[] {
-    return this.activeRoomMessagesSubject.value;
-  }
+  get activeRoomMessagesSnapshot(): ChatMessage[] { return this.activeRoomMessagesSubject.value; }
+  get activeRoomDetailSnapshot(): ChatRoomDetail | null { return this.activeRoomDetailSubject.value; }
 
   constructor() {
-    // Merge live SSE events into the observed state. Because there is a single
-    // per-user SSE connection, every message for every room flows through here.
     this.sse.onChatMessage$.subscribe((msg) => this.handleIncomingMessage(msg));
   }
 
-  /** Call once on app start / login to prime the room list and connect the SSE stream. */
   initialize(): void {
     this.loadMyRooms();
     this.sse.connect();
@@ -63,7 +49,7 @@ export class ChatRoomService {
   }
 
   loadMyRooms(): void {
-    this.http.get<ChatRoomSummary[]>(`${this.apiUrl}/rooms`).subscribe({
+    this.api.getRooms().subscribe({
       next: (rooms) => this.roomsSubject.next(rooms),
       error: () => this.roomsSubject.next([]),
     });
@@ -73,36 +59,31 @@ export class ChatRoomService {
     this.activeRoomIdSubject.next(roomId);
     this.activeRoomMessagesSubject.next([]);
     this.activeRoomDetailSubject.next(null);
-    this.http.get<ChatRoomDetail>(`${this.apiUrl}/rooms/${roomId}`).subscribe({
-      next: (detail) => this.activeRoomDetailSubject.next(detail),
-    });
-    this.http.get<ChatMessage[]>(`${this.apiUrl}/rooms/${roomId}/messages`).subscribe({
-      next: (messages) => this.activeRoomMessagesSubject.next(messages),
+    this.api.getRoom(roomId).subscribe({ next: (d) => this.activeRoomDetailSubject.next(d) });
+    this.api.getMessages(roomId).subscribe({
+      next: (msgs) => this.activeRoomMessagesSubject.next(msgs),
       error: () => this.activeRoomMessagesSubject.next([]),
     });
     this.markRead(roomId);
   }
 
   loadOlderMessages(roomId: string, before: string): Observable<ChatMessage[]> {
-    const url = `${this.apiUrl}/rooms/${roomId}/messages?before=${encodeURIComponent(before)}`;
-    return this.http.get<ChatMessage[]>(url).pipe(
+    return this.api.getMessages(roomId, before).pipe(
       tap((older) => {
-        if (this.activeRoomIdSubject.value !== roomId) return;
-        // Backend returns oldest-first, so prepend older batch to the head.
-        this.activeRoomMessagesSubject.next([...older, ...this.activeRoomMessagesSubject.value]);
+        if (this.activeRoomIdSubject.value === roomId) {
+          this.activeRoomMessagesSubject.next([...older, ...this.activeRoomMessagesSubject.value]);
+        }
       }),
     );
   }
 
   postMessage(roomId: string, content: string): Observable<ChatMessage> {
-    const body: PostMessageRequest = { content, clientNonce: this.makeNonce() };
-    return this.http.post<ChatMessage>(`${this.apiUrl}/rooms/${roomId}/messages`, body);
+    return this.api.postMessage(roomId, content);
   }
 
   deleteMessage(messageId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/messages/${messageId}`).pipe(
+    return this.api.deleteMessage(messageId).pipe(
       tap(() => {
-        // Mark the message as deleted in the local state.
         const msgs = this.activeRoomMessagesSubject.value.map((m) =>
           m.id === messageId ? { ...m, deleted: true, content: '' } : m,
         );
@@ -112,13 +93,11 @@ export class ChatRoomService {
   }
 
   joinRoom(roomId: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/rooms/${roomId}/join`, {}).pipe(
-      tap(() => this.loadMyRooms()),
-    );
+    return this.api.joinRoom(roomId).pipe(tap(() => this.loadMyRooms()));
   }
 
   leaveRoom(roomId: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/rooms/${roomId}/leave`, {}).pipe(
+    return this.api.leaveRoom(roomId).pipe(
       tap(() => {
         this.roomsSubject.next(this.roomsSubject.value.filter((r) => r.id !== roomId));
         if (this.activeRoomIdSubject.value === roomId) {
@@ -131,57 +110,35 @@ export class ChatRoomService {
   }
 
   setMuted(roomId: string, muted: boolean): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/rooms/${roomId}/mute`, { muted }).pipe(
-      tap(() => {
-        this.roomsSubject.next(
-          this.roomsSubject.value.map((r) => (r.id === roomId ? { ...r, muted } : r)),
-        );
-      }),
+    return this.api.setMuted(roomId, muted).pipe(
+      tap(() => this.roomsSubject.next(
+        this.roomsSubject.value.map((r) => r.id === roomId ? { ...r, muted } : r),
+      )),
     );
   }
 
   markRead(roomId: string): void {
-    this.http.post<void>(`${this.apiUrl}/rooms/${roomId}/read`, {}).subscribe({
-      next: () => {
-        this.roomsSubject.next(
-          this.roomsSubject.value.map((r) => (r.id === roomId ? { ...r, unreadCount: 0 } : r)),
-        );
-      },
+    this.api.markRead(roomId).subscribe({
+      next: () => this.roomsSubject.next(
+        this.roomsSubject.value.map((r) => r.id === roomId ? { ...r, unreadCount: 0 } : r),
+      ),
     });
   }
 
   openDirectWith(otherUserId: string): Observable<ChatRoomDetail> {
-    const body: CreateDirectRoomRequest = { otherUserId };
-    return this.http.post<ChatRoomDetail>(`${this.apiUrl}/rooms/direct`, body).pipe(
-      tap((detail) => {
-        // The new DM room may not yet be in the list.
-        this.loadMyRooms();
-        this.openRoom(detail.id);
-      }),
+    return this.api.createDirect(otherUserId).pipe(
+      tap((detail) => { this.loadMyRooms(); this.openRoom(detail.id); }),
     );
   }
 
-  findRoomByParent(
-    scope: ChatRoomScope,
-    clubId: string,
-    refId?: string,
-  ): Observable<ChatRoomDetail> {
-    let url = `${this.apiUrl}/rooms/by-parent?scope=${scope}&clubId=${encodeURIComponent(clubId)}`;
-    if (refId) url += `&refId=${encodeURIComponent(refId)}`;
-    return this.http.get<ChatRoomDetail>(url);
-  }
-
-  // ---------- internal ----------
+  // --- SSE handler ---
 
   private handleIncomingMessage(msg: ChatMessage): void {
-    // Append to active room if it's currently open.
     if (this.activeRoomIdSubject.value === msg.roomId) {
       this.activeRoomMessagesSubject.next([...this.activeRoomMessagesSubject.value, msg]);
-      // Mark as read in the background so the unread badge doesn't flash up.
       this.markRead(msg.roomId);
     }
 
-    // Update the room summary (last message + unread count).
     const rooms = this.roomsSubject.value;
     const idx = rooms.findIndex((r) => r.id === msg.roomId);
     if (idx >= 0) {
@@ -199,12 +156,7 @@ export class ChatRoomService {
       next.unshift(updated);
       this.roomsSubject.next(next);
     } else {
-      // New room we didn't know about (e.g., someone just DM'd us). Refresh.
       this.loadMyRooms();
     }
-  }
-
-  private makeNonce(): string {
-    return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   }
 }

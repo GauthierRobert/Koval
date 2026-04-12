@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend.club.membership;
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserService;
 import com.koval.trainingplannerbackend.chat.ChatMemberRole;
+import com.koval.trainingplannerbackend.chat.ChatMembershipService;
 import com.koval.trainingplannerbackend.chat.ChatRoom;
 import com.koval.trainingplannerbackend.chat.ChatRoomService;
 import com.koval.trainingplannerbackend.chat.MembershipSource;
@@ -40,6 +41,7 @@ public class ClubMembershipService {
     private final ClubAuthorizationService authorizationService;
     private final ClubActivityService activityService;
     private final ChatRoomService chatRoomService;
+    private final ChatMembershipService chatMembershipService;
 
     public ClubMembershipService(ClubRepository clubRepository,
                                  ClubMembershipRepository membershipRepository,
@@ -47,7 +49,8 @@ public class ClubMembershipService {
                                  UserService userService,
                                  ClubAuthorizationService authorizationService,
                                  ClubActivityService activityService,
-                                 ChatRoomService chatRoomService) {
+                                 ChatRoomService chatRoomService,
+                                 ChatMembershipService chatMembershipService) {
         this.clubRepository = clubRepository;
         this.membershipRepository = membershipRepository;
         this.clubGroupRepository = clubGroupRepository;
@@ -55,6 +58,7 @@ public class ClubMembershipService {
         this.authorizationService = authorizationService;
         this.activityService = activityService;
         this.chatRoomService = chatRoomService;
+        this.chatMembershipService = chatMembershipService;
     }
 
     @CacheEvict(value = "userClubs", key = "#userId")
@@ -82,7 +86,7 @@ public class ClubMembershipService {
             activityService.emitActivity(clubId, ClubActivityType.MEMBER_JOINED, userId, null, null);
             // Auto-join the club chat room on immediate activation.
             ChatRoom clubRoom = chatRoomService.getOrCreateClubRoom(clubId);
-            chatRoomService.ensureMembership(clubRoom, userId, MembershipSource.AUTO, ChatMemberRole.MEMBER);
+            chatMembershipService.ensureMembership(clubRoom, userId, MembershipSource.AUTO, ChatMemberRole.MEMBER);
         } else {
             membership.setStatus(ClubMemberStatus.PENDING);
         }
@@ -107,7 +111,7 @@ public class ClubMembershipService {
         }
         membershipRepository.delete(membership);
         // Soft-leave every chat room in this club so lastReadAt is preserved on rejoin.
-        chatRoomService.deactivateAllForUserInClub(clubId, userId);
+        chatMembershipService.deactivateAllForUserInClub(clubId, userId);
     }
 
     @CacheEvict(value = "userClubs", key = "#adminId")
@@ -127,7 +131,7 @@ public class ClubMembershipService {
         activityService.emitActivity(target.getClubId(), ClubActivityType.MEMBER_JOINED, target.getUserId(), null, null);
         // Add the newly approved member to the club chat room.
         ChatRoom clubRoom = chatRoomService.getOrCreateClubRoom(target.getClubId());
-        chatRoomService.ensureMembership(clubRoom, target.getUserId(), MembershipSource.AUTO, ChatMemberRole.MEMBER);
+        chatMembershipService.ensureMembership(clubRoom, target.getUserId(), MembershipSource.AUTO, ChatMemberRole.MEMBER);
         return target;
     }
 

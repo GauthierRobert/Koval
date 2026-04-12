@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.club.group;
 
+import com.koval.trainingplannerbackend.chat.ChatMembershipService;
 import com.koval.trainingplannerbackend.chat.ChatRoom;
 import com.koval.trainingplannerbackend.chat.ChatRoomScope;
 import com.koval.trainingplannerbackend.chat.ChatRoomService;
@@ -24,17 +25,20 @@ public class ClubGroupService {
     private final ClubAuthorizationService authorizationService;
     private final ClubInviteCodeService inviteCodeService;
     private final ChatRoomService chatRoomService;
+    private final ChatMembershipService chatMembershipService;
 
     public ClubGroupService(ClubGroupRepository clubGroupRepository,
                             ClubMembershipRepository membershipRepository,
                             ClubAuthorizationService authorizationService,
                             ClubInviteCodeService inviteCodeService,
-                            ChatRoomService chatRoomService) {
+                            ChatRoomService chatRoomService,
+                            ChatMembershipService chatMembershipService) {
         this.clubGroupRepository = clubGroupRepository;
         this.membershipRepository = membershipRepository;
         this.authorizationService = authorizationService;
         this.inviteCodeService = inviteCodeService;
         this.chatRoomService = chatRoomService;
+        this.chatMembershipService = chatMembershipService;
     }
 
     public ClubGroup createGroup(String adminId, String clubId, String name) {
@@ -121,7 +125,7 @@ public class ClubGroupService {
     private void syncGroupChatMembers(String clubId, ClubGroup group) {
         ChatRoom room = chatRoomService.getOrCreateGroupRoom(clubId, group.getId());
         Set<String> expected = new HashSet<>(group.getMemberIds());
-        chatRoomService.syncAutoMembers(room.getId(), expected);
+        chatMembershipService.syncAutoMembers(room.getId(), expected);
     }
 
     private ClubGroup requireGroupInClub(String clubId, String groupId) {

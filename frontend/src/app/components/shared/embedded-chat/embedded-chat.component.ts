@@ -2,7 +2,6 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  ElementRef,
   inject,
   Input,
   OnChanges,
@@ -12,32 +11,50 @@ import {
   ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../services/auth.service';
+import { ChatApiService } from '../../../services/chat-api.service';
 import { ChatSseService } from '../../../services/chat-sse.service';
-import { ChatMessage, ChatRoomDetail, ChatRoomScope, PostMessageRequest } from '../../../models/chat.models';
+import { ChatMessage, ChatRoomDetail, ChatRoomScope } from '../../../models/chat.models';
+import { ChatMessageListComponent } from '../chat-message-list/chat-message-list.component';
 
 /**
- * Self-contained embedded chat that does NOT share state with the global
- * {@link ChatRoomService}. This prevents state pollution when multiple
- * embedded chats or the main chat page are mounted simultaneously.
- *
- * Inputs:
- *  - scope: CLUB, GROUP, etc.
- *  - clubId: the owning club
- *  - refId: optional parent entity id (omit for CLUB scope)
- *  - showHeader: whether to display the room title bar
+ * Self-contained embedded chat with **isolated** state (no singleton dependency).
+ * Resolves the chat room from a parent entity scope, then delegates all rendering
+ * to the shared {@link ChatMessageListComponent}.
  */
 @Component({
   selector: 'app-embedded-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ChatMessageListComponent],
+  template: `
+    @if (loading) {
+      <div class="embedded-loading">Loading chat…</div>
+    } @else if (!roomDetail) {
+      <div class="embedded-loading">Chat is not available yet.</div>
+    } @else {
+      <app-chat-message-list
+        #messageList
+        [messages]="messages"
+        [roomDetail]="roomDetail"
+        [showHeader]="showHeader"
+        [loadingOlder]="loadingOlder"
+        [sending]="sending"
+        [currentUserId]="authService.currentUser?.id ?? null"
+        (sendMessage)="onSend($event)"
+        (deleteMsg)="onDelete($event)"
+        (scrolledNearTop)="onLoadOlder()"
+        (joinRoom)="api.joinRoom(roomDetail!.id).subscribe()"
+        (leaveRoom)="api.leaveRoom(roomDetail!.id).subscribe()"
+        (toggleMute)="api.setMuted(roomDetail!.id, !roomDetail!.currentUserMuted).subscribe()">
+      </app-chat-message-list>
+    }
+  `,
+  styles: [`
+    :host { display: block; height: 100%; min-height: 480px; }
+    .embedded-loading { padding: 24px; color: var(--text-muted, rgba(255, 255, 255, 0.5)); text-align: center; font-size: 0.9rem; margin: auto; }
+  `],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './embedded-chat.component.html',
-  styleUrl: './embedded-chat.component.css',
 })
 export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
   @Input({ required: true }) scope!: ChatRoomScope;
@@ -45,38 +62,28 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
   @Input() refId?: string;
   @Input() showHeader = false;
 
-  @ViewChild('scrollContainer') private scrollContainer?: ElementRef<HTMLElement>;
+  @ViewChild('messageList') private messageList?: ChatMessageListComponent;
 
-  private readonly http = inject(HttpClient);
-  private readonly authService = inject(AuthService);
+  readonly api = inject(ChatApiService);
+  readonly authService = inject(AuthService);
   private readonly sse = inject(ChatSseService);
   private readonly cdr = inject(ChangeDetectorRef);
-  private readonly apiUrl = `${environment.apiUrl}/api/chat`;
 
   roomDetail: ChatRoomDetail | null = null;
   messages: ChatMessage[] = [];
   loading = true;
-  draft = '';
   sending = false;
   loadingOlder = false;
   private roomId: string | null = null;
-  private nearBottom = true;
   private subs = new Subscription();
-
-  private static readonly SCROLL_BOTTOM_THRESHOLD = 80;
-  private static readonly SCROLL_TOP_THRESHOLD = 60;
-  private static readonly GROUP_GAP_MS = 5 * 60 * 1000;
 
   ngOnInit(): void {
     this.resolveRoom();
-    // Listen to SSE messages for this specific room only.
     this.subs.add(
       this.sse.onChatMessage$.subscribe((msg) => {
         if (msg.roomId === this.roomId) {
           this.messages = [...this.messages, msg];
-          if (this.nearBottom) {
-            requestAnimationFrame(() => this.scrollToBottom());
-          }
+          this.messageList?.scrollToBottomIfNeeded();
           this.cdr.markForCheck();
         }
       }),
@@ -89,106 +96,39 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  ngOnDestroy(): void {
-    this.subs.unsubscribe();
-  }
+  ngOnDestroy(): void { this.subs.unsubscribe(); }
 
-  trackById(_index: number, msg: ChatMessage): string {
-    return msg.id;
-  }
-
-  isOwnMessage(msg: ChatMessage): boolean {
-    return msg.senderId === this.authService.currentUser?.id;
-  }
-
-  isGroupStart(msg: ChatMessage, index: number): boolean {
-    if (msg.type === 'SYSTEM') return false;
-    if (index === 0) return true;
-    const prev = this.messages[index - 1];
-    if (prev.type === 'SYSTEM') return true;
-    if (prev.senderId !== msg.senderId) return true;
-    return new Date(msg.createdAt).getTime() - new Date(prev.createdAt).getTime() > EmbeddedChatComponent.GROUP_GAP_MS;
-  }
-
-  isNewDay(msg: ChatMessage, index: number): boolean {
-    if (index === 0) return true;
-    const prev = this.messages[index - 1];
-    return new Date(prev.createdAt).toDateString() !== new Date(msg.createdAt).toDateString();
-  }
-
-  formatDate(isoDate: string): string {
-    const d = new Date(isoDate);
-    const today = new Date();
-    if (d.toDateString() === today.toDateString()) return 'Today';
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
-    return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-  }
-
-  send(): void {
-    const text = this.draft.trim();
-    if (!text || !this.roomId || this.sending) return;
+  onSend(text: string): void {
+    if (!this.roomId) return;
     this.sending = true;
-    const body: PostMessageRequest = { content: text, clientNonce: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}` };
-    this.http.post<ChatMessage>(`${this.apiUrl}/rooms/${this.roomId}/messages`, body).subscribe({
+    this.api.postMessage(this.roomId, text).subscribe({
+      next: () => { this.sending = false; this.cdr.markForCheck(); },
+      error: () => { this.sending = false; this.cdr.markForCheck(); },
+    });
+  }
+
+  onDelete(messageId: string): void {
+    this.api.deleteMessage(messageId).subscribe({
       next: () => {
-        this.draft = '';
-        this.sending = false;
-        this.nearBottom = true;
-        requestAnimationFrame(() => this.scrollToBottom());
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.sending = false;
+        this.messages = this.messages.map((m) => m.id === messageId ? { ...m, deleted: true, content: '' } : m);
         this.cdr.markForCheck();
       },
     });
   }
 
-  deleteMessage(messageId: string): void {
-    this.http.delete<void>(`${this.apiUrl}/messages/${messageId}`).subscribe({
-      next: () => {
-        this.messages = this.messages.map((m) =>
-          m.id === messageId ? { ...m, deleted: true, content: '' } : m,
-        );
+  onLoadOlder(): void {
+    if (this.loadingOlder || !this.roomId || this.messages.length === 0) return;
+    this.loadingOlder = true;
+    const prevHeight = this.messageList?.scrollHeight ?? 0;
+    this.api.getMessages(this.roomId, this.messages[0].createdAt).subscribe({
+      next: (older) => {
+        this.messages = [...older, ...this.messages];
+        this.messageList?.preserveScrollAfterPrepend(prevHeight);
+        this.loadingOlder = false;
         this.cdr.markForCheck();
       },
+      error: () => { this.loadingOlder = false; this.cdr.markForCheck(); },
     });
-  }
-
-  onKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      this.send();
-    }
-  }
-
-  onScroll(): void {
-    const el = this.scrollContainer?.nativeElement;
-    if (!el) return;
-    this.nearBottom =
-      el.scrollHeight - el.scrollTop - el.clientHeight < EmbeddedChatComponent.SCROLL_BOTTOM_THRESHOLD;
-    if (el.scrollTop < EmbeddedChatComponent.SCROLL_TOP_THRESHOLD && !this.loadingOlder && this.roomId && this.messages.length > 0) {
-      this.loadingOlder = true;
-      const oldest = this.messages[0];
-      const prevHeight = el.scrollHeight;
-      const url = `${this.apiUrl}/rooms/${this.roomId}/messages?before=${encodeURIComponent(oldest.createdAt)}`;
-      this.http.get<ChatMessage[]>(url).subscribe({
-        next: (older) => {
-          this.messages = [...older, ...this.messages];
-          requestAnimationFrame(() => {
-            el.scrollTop = el.scrollHeight - prevHeight;
-          });
-          this.loadingOlder = false;
-          this.cdr.markForCheck();
-        },
-        error: () => {
-          this.loadingOlder = false;
-          this.cdr.markForCheck();
-        },
-      });
-    }
   }
 
   private resolveRoom(): void {
@@ -196,36 +136,21 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
     this.roomId = null;
     this.messages = [];
     this.roomDetail = null;
-    let url = `${this.apiUrl}/rooms/by-parent?scope=${this.scope}&clubId=${encodeURIComponent(this.clubId)}`;
-    if (this.refId) url += `&refId=${encodeURIComponent(this.refId)}`;
-    this.http.get<ChatRoomDetail>(url).subscribe({
+    this.api.findByParent(this.scope, this.clubId, this.refId).subscribe({
       next: (detail) => {
         this.roomId = detail.id;
         this.roomDetail = detail;
         this.loading = false;
         this.cdr.markForCheck();
-        this.loadMessages();
+        this.api.getMessages(detail.id).subscribe({
+          next: (msgs) => {
+            this.messages = msgs;
+            this.cdr.markForCheck();
+            requestAnimationFrame(() => this.messageList?.scrollToBottomIfNeeded());
+          },
+        });
       },
-      error: () => {
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
+      error: () => { this.loading = false; this.cdr.markForCheck(); },
     });
-  }
-
-  private loadMessages(): void {
-    if (!this.roomId) return;
-    this.http.get<ChatMessage[]>(`${this.apiUrl}/rooms/${this.roomId}/messages`).subscribe({
-      next: (msgs) => {
-        this.messages = msgs;
-        this.cdr.markForCheck();
-        requestAnimationFrame(() => this.scrollToBottom());
-      },
-    });
-  }
-
-  private scrollToBottom(): void {
-    const el = this.scrollContainer?.nativeElement;
-    if (el) el.scrollTop = el.scrollHeight;
   }
 }

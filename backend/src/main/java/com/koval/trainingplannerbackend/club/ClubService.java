@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.club;
 
 import com.koval.trainingplannerbackend.chat.ChatMemberRole;
+import com.koval.trainingplannerbackend.chat.ChatMembershipService;
 import com.koval.trainingplannerbackend.chat.ChatRoom;
 import com.koval.trainingplannerbackend.chat.ChatRoomService;
 import com.koval.trainingplannerbackend.chat.MembershipSource;
@@ -35,17 +36,20 @@ public class ClubService {
     private final ClubActivityService clubActivityService;
     private final ClubInviteCodeService clubInviteCodeService;
     private final ChatRoomService chatRoomService;
+    private final ChatMembershipService chatMembershipService;
 
     public ClubService(ClubRepository clubRepository,
                        ClubMembershipRepository membershipRepository,
                        ClubActivityService clubActivityService,
                        ClubInviteCodeService clubInviteCodeService,
-                       ChatRoomService chatRoomService) {
+                       ChatRoomService chatRoomService,
+                       ChatMembershipService chatMembershipService) {
         this.clubRepository = clubRepository;
         this.membershipRepository = membershipRepository;
         this.clubActivityService = clubActivityService;
         this.clubInviteCodeService = clubInviteCodeService;
         this.chatRoomService = chatRoomService;
+        this.chatMembershipService = chatMembershipService;
     }
 
     // --- Club CRUD ---
@@ -80,7 +84,7 @@ public class ClubService {
 
         // Provision the club chat room and auto-join the owner as admin.
         ChatRoom clubRoom = chatRoomService.getOrCreateClubRoom(club.getId());
-        chatRoomService.ensureMembership(clubRoom, userId, MembershipSource.AUTO, ChatMemberRole.ADMIN);
+        chatMembershipService.ensureMembership(clubRoom, userId, MembershipSource.AUTO, ChatMemberRole.ADMIN);
 
         return club;
     }
