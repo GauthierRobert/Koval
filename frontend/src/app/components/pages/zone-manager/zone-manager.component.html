@@ -46,6 +46,9 @@
             <div class="system-card-meta">
               <span class="meta-badge">{{ system.referenceType }}</span>
               <span class="meta-count">{{ 'ZONE_MANAGER.ZONE_COUNT_BADGE' | translate: { count: system.zones.length } }}</span>
+              @if (system.systemGenerated) {
+                <span class="auto-badge">{{ 'ZONE_MANAGER.AUTO_GENERATED_BADGE' | translate }}</span>
+              }
               @if (system.defaultForSport) {
                 <span class="default-badge">{{ 'ZONE_MANAGER.DEFAULT_BADGE' | translate }}</span>
               }
@@ -128,7 +131,11 @@
               <span>✓ {{ 'ZONE_MANAGER.BTN_SAVED' | translate }}</span>
             }
           </button>
-          <button class="delete-btn" (click)="deleteSystem()" [disabled]="deleting">{{ 'ZONE_MANAGER.BTN_DELETE' | translate }}</button>
+          @if (!editingSystem.systemGenerated) {
+            <button class="delete-btn" (click)="deleteSystem()" [disabled]="deleting">{{ 'ZONE_MANAGER.BTN_DELETE' | translate }}</button>
+          } @else {
+            <span class="auto-hint">{{ 'ZONE_MANAGER.AUTO_GENERATED_HINT' | translate }}</span>
+          }
         </div>
       </div>
 

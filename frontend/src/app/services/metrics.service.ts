@@ -67,16 +67,16 @@ export class MetricsService {
 
     // ── PMC HTTP calls ────────────────────────────────────────────────────────
 
-    getPmc(from: string, to: string): Observable<PmcDataPoint[]> {
-        return this.http.get<PmcDataPoint[]>(`${this.apiUrl}/sessions/pmc`, {
-            params: { from, to },
-        });
+    getPmc(from: string, to: string, forecastDays = 0): Observable<PmcDataPoint[]> {
+        const params: Record<string, string> = { from, to };
+        if (forecastDays > 0) params['forecastDays'] = String(forecastDays);
+        return this.http.get<PmcDataPoint[]>(`${this.apiUrl}/sessions/pmc`, { params });
     }
 
-    getAthletePmc(athleteId: string, from: string, to: string): Observable<PmcDataPoint[]> {
-        return this.http.get<PmcDataPoint[]>(`${this.apiUrl}/coach/athletes/${athleteId}/pmc`, {
-            params: { from, to },
-        });
+    getAthletePmc(athleteId: string, from: string, to: string, forecastDays = 0): Observable<PmcDataPoint[]> {
+        const params: Record<string, string> = { from, to };
+        if (forecastDays > 0) params['forecastDays'] = String(forecastDays);
+        return this.http.get<PmcDataPoint[]>(`${this.apiUrl}/coach/athletes/${athleteId}/pmc`, { params });
     }
 
     // ── PMC projection (delegated to training-math.util) ─────────────────────

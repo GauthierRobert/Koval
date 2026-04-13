@@ -107,7 +107,7 @@ export class ZoneManagerComponent implements OnInit {
   }
 
   loadZoneSystems() {
-    this.zoneService.getCoachZoneSystems().subscribe({
+    this.zoneService.getMyZoneSystems().subscribe({
       next: (systems) => this.zoneSystemsSubject.next(systems),
       error: (err) => console.error('Failed to load zone systems', err),
     });

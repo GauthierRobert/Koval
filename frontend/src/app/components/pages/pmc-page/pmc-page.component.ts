@@ -77,10 +77,14 @@ export class PmcPageComponent implements OnInit {
         this.scheduledTssMap$,
         this.projectionDays$,
     ]).pipe(
-        map(([real, scheduledMap, days]) => [
-            ...real,
-            ...this.metricsService.projectPmcFromSchedule(real, scheduledMap, days),
-        ]),
+        map(([real, scheduledMap, days]) => {
+            // If server already provided predicted points (coach view), use them directly
+            if (real.some(d => d.predicted)) return real;
+            return [
+                ...real,
+                ...this.metricsService.projectPmcFromSchedule(real, scheduledMap, days),
+            ];
+        }),
     );
 
     peakForm$: Observable<{ date: string; tsb: number } | null> = this.fullPmcData$.pipe(
@@ -129,7 +133,7 @@ export class PmcPageComponent implements OnInit {
             const to = new Date(now); to.setDate(to.getDate() + 90);
             const fromStr = from.toISOString().split('T')[0];
             const toStr = to.toISOString().split('T')[0];
-            this.coachService.getAthletePmc(this.athleteId, fromStr, toStr).subscribe({
+            this.coachService.getAthletePmc(this.athleteId, fromStr, toStr, 90).subscribe({
                 next: (data) => {
                     this.pmcDataSubject.next(data);
                     this.loadedFrom = fromStr;

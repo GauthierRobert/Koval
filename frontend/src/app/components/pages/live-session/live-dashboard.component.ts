@@ -7,6 +7,7 @@ import {BluetoothService} from '../../../services/bluetooth.service';
 import {TrainingService} from '../../../services/training.service';
 import {ZombieGameComponent} from './zombie-game/zombie-game.component';
 import {SessionSummaryComponent} from './session-summary/session-summary.component';
+import {WorkoutFeedbackModalComponent} from '../../shared/workout-feedback-modal/workout-feedback-modal.component';
 import {PipService} from '../../../services/pip.service';
 import {HistoryService} from '../../../services/history.service';
 import {AuthService} from '../../../services/auth.service';
@@ -15,7 +16,7 @@ import {formatPace, formatTimeMS} from '../../shared/format/format.utils';
 @Component({
   selector: 'app-live-dashboard',
   standalone: true,
-  imports: [CommonModule, TranslateModule, ZombieGameComponent, SessionSummaryComponent],
+  imports: [CommonModule, TranslateModule, ZombieGameComponent, SessionSummaryComponent, WorkoutFeedbackModalComponent],
   templateUrl: './live-dashboard.component.html',
   styleUrl: './live-dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,6 +34,8 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
   showGame = false;
   isPipActive = false;
   showExitConfirm = false;
+  showFeedbackModal = false;
+  feedbackSessionId: string | null = null;
   private historyService = inject(HistoryService);
   private pipService = inject(PipService);
   private destroyRef = inject(DestroyRef);
@@ -337,8 +340,23 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
   }
 
   closeSummary() {
-    this.executionService.updateState({
-      finalSummary: null
-    });
+    // Get the saved session ID from the history service before clearing the summary
+    const savedSession = this.historyService.selectedSession$;
+    savedSession.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(s => {
+      if (s) {
+        this.feedbackSessionId = s.id;
+      }
+    }).unsubscribe();
+
+    this.executionService.updateState({ finalSummary: null });
+
+    if (this.feedbackSessionId) {
+      this.showFeedbackModal = true;
+    }
+  }
+
+  onFeedbackDone(): void {
+    this.showFeedbackModal = false;
+    this.feedbackSessionId = null;
   }
 }

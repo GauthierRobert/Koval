@@ -221,4 +221,16 @@ export class AuthService {
             tap(user => this.userSubject.next(user))
         );
     }
+
+    generateCalendarFeedToken(): Observable<User> {
+        return this.http.post<User>(`${this.apiUrl}/calendar-feed-token`, {}).pipe(
+            tap(user => this.userSubject.next(user))
+        );
+    }
+
+    revokeCalendarFeedToken(): Observable<User> {
+        return this.http.delete<User>(`${this.apiUrl}/calendar-feed-token`).pipe(
+            tap(user => this.userSubject.next(user))
+        );
+    }
 }

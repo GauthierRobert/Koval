@@ -48,10 +48,15 @@ public abstract class Training {
     private String createdBy; // User ID of creator
     private List<String> groupIds = new ArrayList<>(); // ID list of coach Group IDs
 
+    private RatingStats ratingStats;
+
     // Club linking — a training can belong to multiple clubs
     @Indexed
     private List<String> clubIds = new ArrayList<>();
     private List<String> clubGroupIds = new ArrayList<>(); // Optional: club groups within clubs
+
+    public record RatingStats(double avgDifficulty, double avgEnjoyment, int totalRatings) {
+    }
 
     /** Adds the given club ID to this training's club list (idempotent, null-safe). */
     public void addClubId(String clubId) {

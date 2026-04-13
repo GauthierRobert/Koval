@@ -97,6 +97,9 @@ public class User {
 
     private NotificationPreferences notificationPreferences = new NotificationPreferences();
 
+    @Indexed(unique = true, sparse = true)
+    private String calendarFeedToken;
+
     // Helper methods
     public boolean isCoach() {
         return this.role == UserRole.COACH;

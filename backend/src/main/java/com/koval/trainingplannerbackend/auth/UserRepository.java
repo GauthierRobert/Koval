@@ -28,4 +28,6 @@ public interface UserRepository extends MongoRepository<User, String> {
     List<User> findByRole(UserRole role);
 
     List<User> findByIdIn(List<String> ids);
+
+    Optional<User> findByCalendarFeedToken(String calendarFeedToken);
 }

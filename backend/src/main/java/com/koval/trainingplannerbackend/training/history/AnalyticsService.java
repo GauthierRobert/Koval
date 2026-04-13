@@ -173,6 +173,42 @@ public class AnalyticsService {
         return collectPmcWindow(state, from, to, dailyTssMap);
     }
 
+    /**
+     * Generate PMC data points with forecast: actual data up to today, then projected
+     * values using the forecastTssMap with predicted=true.
+     */
+    public List<PmcDataPoint> generatePmc(String userId, LocalDate from, LocalDate to,
+                                          Map<LocalDate, Map<String, Double>> forecastTssMap) {
+        List<CompletedSession> sessions = sessionRepository.findByUserIdOrderByCompletedAtAsc(userId);
+        Map<LocalDate, Map<String, Double>> actualTssMap = buildDailyTssMap(sessions);
+
+        LocalDate startDate = determineEmaStartDate(sessions, from);
+        EmaState warmup = runEma(new EmaState(0, 0), startDate, from.minusDays(1), actualTssMap);
+
+        LocalDate today = LocalDate.now();
+        LocalDate actualEnd = to.isBefore(today) ? to : today;
+
+        List<PmcDataPoint> result = new ArrayList<>(collectPmcWindow(warmup, from, actualEnd, actualTssMap));
+
+        if (to.isAfter(today)) {
+            EmaState forecastState = runEma(warmup, from, actualEnd, actualTssMap);
+            LocalDate cursor = actualEnd.plusDays(1);
+            while (!cursor.isAfter(to)) {
+                Map<String, Double> sports = forecastTssMap.getOrDefault(cursor, Map.of());
+                double dailyTss = sports.values().stream().mapToDouble(Double::doubleValue).sum();
+                forecastState = forecastState.step(dailyTss);
+                result.add(new PmcDataPoint(cursor,
+                        Math.round(forecastState.ctl() * 10.0) / 10.0,
+                        Math.round(forecastState.atl() * 10.0) / 10.0,
+                        Math.round((forecastState.ctl() - forecastState.atl()) * 10.0) / 10.0,
+                        dailyTss, sports, true));
+                cursor = cursor.plusDays(1);
+            }
+        }
+
+        return result;
+    }
+
     private LocalDate determineEmaStartDate(List<CompletedSession> sessions, LocalDate from) {
         // Start EMA from the earliest session or from 'from' date, whichever is earlier
         LocalDate startDate = sessions.isEmpty() ? from : sessions.get(0).getCompletedAt().toLocalDate();

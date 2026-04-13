@@ -63,6 +63,7 @@ public class SecurityConfig {
                                 "/oauth/register", "/oauth/authorize", "/oauth/token").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/skills", "/api/skills/**").permitAll()
+                        .requestMatchers("/api/ical/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -34,13 +34,19 @@ public class SessionController {
     private final SessionService sessionService;
     private final AnalyticsService analyticsService;
     private final PowerCurveService powerCurveService;
+    private final FeedbackService feedbackService;
+    private final ForecastTssService forecastTssService;
 
     public SessionController(SessionService sessionService,
                              AnalyticsService analyticsService,
-                             PowerCurveService powerCurveService) {
+                             PowerCurveService powerCurveService,
+                             FeedbackService feedbackService,
+                             ForecastTssService forecastTssService) {
         this.sessionService = sessionService;
         this.analyticsService = analyticsService;
         this.powerCurveService = powerCurveService;
+        this.feedbackService = feedbackService;
+        this.forecastTssService = forecastTssService;
     }
 
     /** Saves a completed workout session with automatic metrics computation and schedule association. */
@@ -120,14 +126,36 @@ public class SessionController {
                 : ResponseEntity.notFound().build();
     }
 
+    // ── Feedback endpoint ──────────────────────────────────────────────────────
+
+    public record FeedbackRequest(Integer difficultyRating, Integer enjoymentRating, String notes) {}
+
+    /** Submits post-workout feedback (difficulty, enjoyment, notes) for a completed session. */
+    @PostMapping("/{id}/feedback")
+    public ResponseEntity<CompletedSession> submitFeedback(@PathVariable String id,
+                                                           @RequestBody FeedbackRequest request) {
+        String userId = SecurityUtils.getCurrentUserId();
+        CompletedSession.Feedback feedback = new CompletedSession.Feedback(
+                request.difficultyRating(), request.enjoymentRating(), request.notes());
+        return ResponseEntity.ok(feedbackService.submitFeedback(id, userId, feedback));
+    }
+
     // ── PMC endpoint ─────────────────────────────────────────────────────────
 
-    /** Returns PMC data points (CTL, ATL, TSB) for the given date range. */
+    /** Returns PMC data points (CTL, ATL, TSB) for the given date range, optionally with forecast. */
     @GetMapping("/pmc")
     public ResponseEntity<List<AnalyticsService.PmcDataPoint>> getPmc(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(defaultValue = "0") int forecastDays) {
         String userId = SecurityUtils.getCurrentUserId();
+        if (forecastDays > 0) {
+            LocalDate forecastEnd = LocalDate.now().plusDays(forecastDays);
+            LocalDate effectiveTo = to.isAfter(forecastEnd) ? to : forecastEnd;
+            var forecastMap = forecastTssService.buildForecastTssMap(
+                    userId, LocalDate.now().plusDays(1), effectiveTo);
+            return ResponseEntity.ok(analyticsService.generatePmc(userId, from, effectiveTo, forecastMap));
+        }
         return ResponseEntity.ok(analyticsService.generatePmc(userId, from, to));
     }
 

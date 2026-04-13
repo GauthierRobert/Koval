@@ -114,6 +114,13 @@
     "SECTION_CUSTOM_ZONES": "Zones personnalisées",
     "SECTION_LANGUAGE": "Langue",
     "SECTION_APPEARANCE": "Apparence",
+    "SECTION_CALENDAR_SUBSCRIPTION": "Abonnement Calendrier",
+    "CALENDAR_SUBSCRIPTION_HINT": "Ajoutez cette URL comme abonnement dans Google Calendar, Apple Calendar ou Outlook.",
+    "CALENDAR_GENERATE_HINT": "Générez un lien pour synchroniser votre planning avec une application de calendrier externe.",
+    "CALENDAR_GENERATE": "Générer le lien",
+    "CALENDAR_COPY": "Copier",
+    "CALENDAR_COPIED": "Copié !",
+    "CALENDAR_REVOKE": "Révoquer le lien",
     "THEME_DARK": "Sombre",
     "THEME_LIGHT": "Clair",
     "THEME_SYSTEM": "Système",
@@ -1380,6 +1387,8 @@
     "SPORT_ZONES_OPTION": "Zones {{sport}}",
     "ZONE_COUNT_BADGE": "{{count}} zones",
     "DEFAULT_BADGE": "DÉFAUT",
+    "AUTO_GENERATED_BADGE": "AUTO",
+    "AUTO_GENERATED_HINT": "Généré automatiquement depuis vos seuils",
     "EMPTY_NO_SYSTEMS": "Aucun système de zones",
     "EMPTY_HINT_CREATE": "Clique sur + NOUVEAU pour en créer un",
     "LABEL_SPORT": "SPORT",
@@ -1596,6 +1605,8 @@
     "STAT_TSS": "TSS",
     "STAT_IF": "IF",
     "STAT_BLOCKS": "Blocs",
+    "STAT_DIFFICULTY": "Difficulté",
+    "STAT_ENJOYMENT": "Plaisir",
     "ZONE_DISTRIBUTION_HEADING": "Répartition des zones",
     "INTENSITY_PAUSE": "Pause",
     "INTENSITY_FREE": "Libre"
@@ -1643,7 +1654,10 @@
     "TABLE_COL_ACTUAL": "Réel",
     "TABLE_COL_DELTA": "Écart",
     "TABLE_COL_HR": "FC",
-    "TABLE_COL_CADENCE": "Cadence"
+    "TABLE_COL_CADENCE": "Cadence",
+    "FEEDBACK_HEADING": "Retour de l'athlète",
+    "FEEDBACK_DIFFICULTY": "Difficulté",
+    "FEEDBACK_ENJOYMENT": "Plaisir"
   },
   "NOTIFICATIONS": {
     "TITLE": "Préférences de notification",
@@ -1662,5 +1676,15 @@
     "MARK_ALL_READ": "Tout marquer comme lu",
     "DELETE": "Supprimer",
     "PREFERENCES": "Préférences de notifications"
+  },
+  "FEEDBACK": {
+    "TITLE": "Comment était ton entraînement ?",
+    "DIFFICULTY_LABEL": "Difficulté",
+    "ENJOYMENT_LABEL": "Plaisir",
+    "NOTES_LABEL": "Notes",
+    "NOTES_PLACEHOLDER": "Tes impressions sur la séance...",
+    "BTN_SKIP": "Passer",
+    "BTN_SUBMIT": "Envoyer",
+    "BTN_SAVING": "Envoi..."
   }
 }

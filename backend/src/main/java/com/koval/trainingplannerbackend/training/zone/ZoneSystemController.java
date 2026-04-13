@@ -105,9 +105,8 @@ public class ZoneSystemController {
         List<ZoneSystem> result = new ArrayList<>();
         Set<String> existingIds = new HashSet<>();
 
-        if (user.getRole() == UserRole.COACH) {
-            addWithoutDuplicates(result, zoneSystemService.getZoneSystemsForCoach(userId), existingIds);
-        }
+        // Include self-owned zones (coach-created or system-generated for any user)
+        addWithoutDuplicates(result, zoneSystemService.getZoneSystemsForCoach(userId), existingIds);
         addWithoutDuplicates(result, zoneSystemService.getZoneSystemsForAthlete(userId), existingIds);
         addWithoutDuplicates(result, zoneSystemService.getZoneSystemsFromClubCoaches(userId), existingIds);
 

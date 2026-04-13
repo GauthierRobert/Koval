@@ -159,5 +159,14 @@
     <app-session-summary [summary]="state.finalSummary" (close)="closeSummary()">
     </app-session-summary>
   }
+
+  <!-- Post-Session Feedback Modal -->
+  @if (showFeedbackModal && feedbackSessionId) {
+    <app-workout-feedback-modal
+      [sessionId]="feedbackSessionId"
+      (submitted)="onFeedbackDone()"
+      (closed)="onFeedbackDone()">
+    </app-workout-feedback-modal>
+  }
   </div>
 }

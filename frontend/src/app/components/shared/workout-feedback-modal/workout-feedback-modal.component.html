@@ -1,0 +1,48 @@
+<app-modal-shell [title]="'FEEDBACK.TITLE' | translate" size="sm" (closed)="skip()">
+  <div class="feedback-body">
+    <!-- Difficulty Rating -->
+    <div class="rating-group">
+      <label class="rating-label">{{ 'FEEDBACK.DIFFICULTY_LABEL' | translate }}</label>
+      <div class="rating-dots">
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <button class="dot" [class.active]="difficultyRating >= i" (click)="setDifficulty(i)">
+            {{ i }}
+          </button>
+        }
+      </div>
+      <span class="rating-hint">{{ difficultyLabels[difficultyRating - 1] }}</span>
+    </div>
+
+    <!-- Enjoyment Rating -->
+    <div class="rating-group">
+      <label class="rating-label">{{ 'FEEDBACK.ENJOYMENT_LABEL' | translate }}</label>
+      <div class="rating-dots">
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <button class="dot" [class.active]="enjoymentRating >= i" (click)="setEnjoyment(i)">
+            {{ i }}
+          </button>
+        }
+      </div>
+      <span class="rating-hint">{{ enjoymentLabels[enjoymentRating - 1] }}</span>
+    </div>
+
+    <!-- Notes -->
+    <div class="notes-group">
+      <label class="rating-label">{{ 'FEEDBACK.NOTES_LABEL' | translate }}</label>
+      <textarea
+        class="notes-input"
+        [(ngModel)]="notes"
+        [placeholder]="'FEEDBACK.NOTES_PLACEHOLDER' | translate"
+        rows="3">
+      </textarea>
+    </div>
+
+    <!-- Actions -->
+    <div class="feedback-actions">
+      <button class="skip-btn" (click)="skip()">{{ 'FEEDBACK.BTN_SKIP' | translate }}</button>
+      <button class="submit-btn" (click)="submit()" [disabled]="saving">
+        {{ saving ? ('FEEDBACK.BTN_SAVING' | translate) : ('FEEDBACK.BTN_SUBMIT' | translate) }}
+      </button>
+    </div>
+  </div>
+</app-modal-shell>

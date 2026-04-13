@@ -6,6 +6,7 @@ import com.koval.trainingplannerbackend.goal.RaceGoalService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
+import com.koval.trainingplannerbackend.training.history.ForecastTssService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,15 +26,18 @@ public class CoachAnalyticsController {
     private final CompletedSessionRepository sessionRepository;
     private final AnalyticsService analyticsService;
     private final RaceGoalService raceGoalService;
+    private final ForecastTssService forecastTssService;
 
     public CoachAnalyticsController(CoachService coachService,
                                     CompletedSessionRepository sessionRepository,
                                     AnalyticsService analyticsService,
-                                    RaceGoalService raceGoalService) {
+                                    RaceGoalService raceGoalService,
+                                    ForecastTssService forecastTssService) {
         this.coachService = coachService;
         this.sessionRepository = sessionRepository;
         this.analyticsService = analyticsService;
         this.raceGoalService = raceGoalService;
+        this.forecastTssService = forecastTssService;
     }
 
     @GetMapping("/athletes/{athleteId}/sessions")
@@ -47,9 +51,17 @@ public class CoachAnalyticsController {
     public ResponseEntity<List<AnalyticsService.PmcDataPoint>> getAthletePmc(
             @PathVariable String athleteId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(defaultValue = "0") int forecastDays) {
         String coachId = SecurityUtils.getCurrentUserId();
         if (!coachService.isCoachOfAthlete(coachId, athleteId)) return ResponseEntity.notFound().build();
+        if (forecastDays > 0) {
+            LocalDate forecastEnd = LocalDate.now().plusDays(forecastDays);
+            LocalDate effectiveTo = to.isAfter(forecastEnd) ? to : forecastEnd;
+            var forecastMap = forecastTssService.buildForecastTssMap(
+                    athleteId, LocalDate.now().plusDays(1), effectiveTo);
+            return ResponseEntity.ok(analyticsService.generatePmc(athleteId, from, effectiveTo, forecastMap));
+        }
         return ResponseEntity.ok(analyticsService.generatePmc(athleteId, from, to));
     }
 

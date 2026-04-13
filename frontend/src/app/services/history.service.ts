@@ -9,6 +9,12 @@ import {FitExportService} from './fit-export.service';
 import {MetricsService} from './metrics.service';
 import {environment} from '../../environments/environment';
 
+export interface SessionFeedback {
+    difficultyRating?: number;
+    enjoymentRating?: number;
+    notes?: string;
+}
+
 export interface SavedSession extends SessionSummary {
     id: string;
     date: Date;
@@ -21,6 +27,7 @@ export interface SavedSession extends SessionSummary {
     scheduledWorkoutId?: string;
     clubSessionId?: string;
     stravaActivityId?: string;
+    feedback?: SessionFeedback;
 }
 
 @Injectable({
@@ -79,6 +86,7 @@ export class HistoryService {
                     scheduledWorkoutId: s.scheduledWorkoutId ?? undefined,
                     clubSessionId: s.clubSessionId ?? undefined,
                     stravaActivityId: s.stravaActivityId ?? undefined,
+                    feedback: s.feedback ?? undefined,
                 }));
                 parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
                 this.sessionsSubject.next(parsed);
@@ -162,6 +170,12 @@ export class HistoryService {
                 this.sessionsSubject.next([session, ...this.sessionsSubject.value]);
             },
         });
+    }
+
+    submitFeedback(sessionId: string, feedback: SessionFeedback): Observable<any> {
+        return this.http.post(`${this.apiUrl}/${sessionId}/feedback`, feedback).pipe(
+            tap(() => this.loadSessions()),
+        );
     }
 
     deleteSession(id: string): void {

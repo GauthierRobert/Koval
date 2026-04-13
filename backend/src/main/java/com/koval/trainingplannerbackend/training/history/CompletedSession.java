@@ -55,6 +55,11 @@ public class CompletedSession {
     @Indexed(unique = true, sparse = true)
     private String zwiftActivityId;
 
+    private Feedback feedback;
+
+    public record Feedback(Integer difficultyRating, Integer enjoymentRating, String notes) {
+    }
+
     public record BlockSummary(
             String label,
             String type,

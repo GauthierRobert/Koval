@@ -697,6 +697,22 @@
   letter-spacing: 0.5px;
 }
 
+.auto-badge {
+  font-size: 8px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+  letter-spacing: 0.5px;
+}
+
+.auto-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 /* ── Default toggle checkbox ── */
 
 .config-default {

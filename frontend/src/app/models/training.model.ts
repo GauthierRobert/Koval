@@ -160,6 +160,11 @@ export interface Training {
     createdAt?: string;
     clubIds?: string[];
     clubGroupIds?: string[];
+    ratingStats?: {
+        avgDifficulty: number;
+        avgEnjoyment: number;
+        totalRatings: number;
+    };
     _receivedMeta?: {
         assignedByName?: string;
         origin: 'COACH_GROUP' | 'CLUB' | 'CLUB_SESSION';

@@ -325,4 +325,18 @@ public class AuthController {
         User user = userService.acceptCgu(userId);
         return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
+
+    @PostMapping("/calendar-feed-token")
+    public ResponseEntity<Map<String, Object>> generateCalendarFeedToken() {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userService.generateCalendarFeedToken(userId);
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
+    }
+
+    @DeleteMapping("/calendar-feed-token")
+    public ResponseEntity<Map<String, Object>> revokeCalendarFeedToken() {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userService.revokeCalendarFeedToken(userId);
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
+    }
 }

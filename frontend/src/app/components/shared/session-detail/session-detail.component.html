@@ -84,4 +84,23 @@
       </table>
     </div>
   }
+
+  @if (session.feedback) {
+    <div class="feedback-section">
+      <h3>{{ 'SESSION_DETAIL.FEEDBACK_HEADING' | translate }}</h3>
+      <div class="feedback-stats">
+        <div class="stat-item">
+          <span class="label">{{ 'SESSION_DETAIL.FEEDBACK_DIFFICULTY' | translate }}</span>
+          <span class="value">{{ session.feedback.difficultyRating }}/5</span>
+        </div>
+        <div class="stat-item">
+          <span class="label">{{ 'SESSION_DETAIL.FEEDBACK_ENJOYMENT' | translate }}</span>
+          <span class="value">{{ session.feedback.enjoymentRating }}/5</span>
+        </div>
+      </div>
+      @if (session.feedback.notes) {
+        <p class="feedback-notes">{{ session.feedback.notes }}</p>
+      }
+    </div>
+  }
 </div>

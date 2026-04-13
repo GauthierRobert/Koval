@@ -32,6 +32,7 @@ public class ZoneSystem {
     private String referenceUnit;
     private List<Zone> zones = new ArrayList<>();
     private Boolean defaultForSport = false;
+    private Boolean systemGenerated = false;
     private String annotations;
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();

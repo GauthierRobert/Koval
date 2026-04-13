@@ -10,6 +10,7 @@ import {ZoneSystem} from '../../../services/zone';
 import {ThemeService} from '../../../services/theme.service';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {A11yModule} from '@angular/cdk/a11y';
+import {environment} from '../../../../environments/environment';
 
 interface PaceField {
     key: string;
@@ -47,6 +48,10 @@ export class SettingsComponent implements OnInit {
     saving = false;
     saved = false;
     currentLang = this.translateService.currentLang || 'en';
+
+    calendarFeedUrl: string | null = null;
+    feedCopied = false;
+    generatingFeed = false;
 
     setLang(lang: string): void {
         this.currentLang = lang;
@@ -99,6 +104,9 @@ export class SettingsComponent implements OnInit {
         this.isCoach = user.role === 'COACH';
         this.aiPrePrompt = user.aiPrePrompt ?? '';
         this.aiPrePromptEnabled = user.aiPrePromptEnabled ?? false;
+        this.calendarFeedUrl = user.calendarFeedToken
+            ? `${environment.apiUrl}/api/ical/${user.calendarFeedToken}`
+            : null;
 
         for (const field of [...this.allRunFields, ...this.swimFields]) {
             const val = (user as any)[field.key] as number | undefined;
@@ -179,5 +187,29 @@ export class SettingsComponent implements OnInit {
                 this.saving = false;
             }
         });
+    }
+
+    generateFeedToken(): void {
+        this.generatingFeed = true;
+        this.authService.generateCalendarFeedToken()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: () => this.generatingFeed = false,
+                error: () => this.generatingFeed = false,
+            });
+    }
+
+    revokeFeedToken(): void {
+        this.authService.revokeCalendarFeedToken()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe();
+    }
+
+    copyFeedUrl(): void {
+        if (this.calendarFeedUrl) {
+            navigator.clipboard.writeText(this.calendarFeedUrl);
+            this.feedCopied = true;
+            setTimeout(() => this.feedCopied = false, 2000);
+        }
     }
 }

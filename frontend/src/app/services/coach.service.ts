@@ -171,11 +171,11 @@ export class CoachService {
         return this.http.get<any>(`${environment.apiUrl}/api/sessions/${sessionId}`);
     }
 
-    getAthletePmc(athleteId: string, from: string, to: string): Observable<PmcDataPoint[]> {
+    getAthletePmc(athleteId: string, from: string, to: string, forecastDays = 0): Observable<PmcDataPoint[]> {
+        const params: Record<string, string> = { from, to };
+        if (forecastDays > 0) params['forecastDays'] = String(forecastDays);
         return this.http
-            .get<PmcDataPoint[]>(`${this.apiUrl}/athletes/${athleteId}/pmc`, {
-                params: { from, to },
-            })
+            .get<PmcDataPoint[]>(`${this.apiUrl}/athletes/${athleteId}/pmc`, { params })
             .pipe(catchError(() => of([] as PmcDataPoint[])));
     }
 

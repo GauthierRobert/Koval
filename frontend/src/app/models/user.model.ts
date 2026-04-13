@@ -29,4 +29,5 @@ export interface User {
     linkedAccounts?: { strava: boolean; google: boolean; garmin: boolean; zwift: boolean };
     authProvider?: string;
     zwiftAutoSyncWorkouts?: boolean;
+    calendarFeedToken?: string;
 }

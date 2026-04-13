@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.auth;
 
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
+import com.koval.trainingplannerbackend.training.zone.ZoneAutoGenerationService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -12,9 +13,11 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final ZoneAutoGenerationService zoneAutoGenerationService;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, ZoneAutoGenerationService zoneAutoGenerationService) {
         this.userRepository = userRepository;
+        this.zoneAutoGenerationService = zoneAutoGenerationService;
     }
 
     public User getUserById(String userId) {
@@ -87,7 +90,9 @@ public class UserService {
         if (aiPrePromptEnabled != null) {
             user.setAiPrePromptEnabled(aiPrePromptEnabled);
         }
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+        zoneAutoGenerationService.generateZonesForUser(saved);
+        return saved;
     }
 
     public User completeOnboarding(String userId, UserRole role, Integer ftp, Integer weightKg,
@@ -103,7 +108,9 @@ public class UserService {
             user.setCguVersion(CguConstants.CURRENT_VERSION);
         }
         user.setNeedsOnboarding(false);
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+        zoneAutoGenerationService.generateZonesForUser(saved);
+        return saved;
     }
 
     public User acceptCgu(String userId) {
@@ -111,5 +118,21 @@ public class UserService {
         user.setCguAcceptedAt(LocalDateTime.now());
         user.setCguVersion(CguConstants.CURRENT_VERSION);
         return userRepository.save(user);
+    }
+
+    public User generateCalendarFeedToken(String userId) {
+        User user = getUserById(userId);
+        user.setCalendarFeedToken(java.util.UUID.randomUUID().toString());
+        return userRepository.save(user);
+    }
+
+    public User revokeCalendarFeedToken(String userId) {
+        User user = getUserById(userId);
+        user.setCalendarFeedToken(null);
+        return userRepository.save(user);
+    }
+
+    public Optional<User> findByCalendarFeedToken(String token) {
+        return userRepository.findByCalendarFeedToken(token);
     }
 }

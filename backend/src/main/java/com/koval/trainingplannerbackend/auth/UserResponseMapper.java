@@ -64,6 +64,7 @@ public class UserResponseMapper {
         map.put("linkedAccounts", linkedAccounts);
         map.put("authProvider", user.getAuthProvider() != null ? user.getAuthProvider().name() : null);
         map.put("zwiftAutoSyncWorkouts", user.getZwiftAutoSyncWorkouts());
+        map.put("calendarFeedToken", user.getCalendarFeedToken());
 
         if (user.isCoach()) {
             List<String> athleteIds = groupService.getAthleteIdsForCoach(user.getId());

@@ -83,6 +83,16 @@
           <span class="label">{{ 'WORKOUT_VIZ.STAT_BLOCKS' | translate }}</span>
           <span class="value">{{ displayFlatBlocks.length }}</span>
         </div>
+        @if (training.ratingStats?.totalRatings) {
+          <div class="stat">
+            <span class="label">{{ 'WORKOUT_VIZ.STAT_DIFFICULTY' | translate }}</span>
+            <span class="value">{{ training.ratingStats.avgDifficulty | number:'1.1-1' }}/5</span>
+          </div>
+          <div class="stat">
+            <span class="label">{{ 'WORKOUT_VIZ.STAT_ENJOYMENT' | translate }}</span>
+            <span class="value">{{ training.ratingStats.avgEnjoyment | number:'1.1-1' }}/5</span>
+          </div>
+        }
       </div>
 
       @if (getZoneRepartition().length > 0) {

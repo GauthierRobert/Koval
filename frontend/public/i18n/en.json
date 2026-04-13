@@ -114,6 +114,13 @@
     "SECTION_CUSTOM_ZONES": "Custom Zones",
     "SECTION_LANGUAGE": "Language",
     "SECTION_APPEARANCE": "Appearance",
+    "SECTION_CALENDAR_SUBSCRIPTION": "Calendar Subscription",
+    "CALENDAR_SUBSCRIPTION_HINT": "Add this URL as a calendar subscription in Google Calendar, Apple Calendar, or Outlook.",
+    "CALENDAR_GENERATE_HINT": "Generate a link to sync your training schedule with external calendar apps.",
+    "CALENDAR_GENERATE": "Generate Link",
+    "CALENDAR_COPY": "Copy",
+    "CALENDAR_COPIED": "Copied!",
+    "CALENDAR_REVOKE": "Revoke Link",
     "THEME_DARK": "Dark",
     "THEME_LIGHT": "Light",
     "THEME_SYSTEM": "System",
@@ -1380,6 +1387,8 @@
     "SPORT_ZONES_OPTION": "{{sport}} Zones",
     "ZONE_COUNT_BADGE": "{{count}} zones",
     "DEFAULT_BADGE": "DEFAULT",
+    "AUTO_GENERATED_BADGE": "AUTO",
+    "AUTO_GENERATED_HINT": "Auto-generated from your thresholds",
     "EMPTY_NO_SYSTEMS": "No zone systems",
     "EMPTY_HINT_CREATE": "Click + NEW to create one",
     "LABEL_SPORT": "SPORT",
@@ -1596,6 +1605,8 @@
     "STAT_TSS": "TSS",
     "STAT_IF": "IF",
     "STAT_BLOCKS": "Blocks",
+    "STAT_DIFFICULTY": "Difficulty",
+    "STAT_ENJOYMENT": "Enjoyment",
     "ZONE_DISTRIBUTION_HEADING": "Zone Distribution",
     "INTENSITY_PAUSE": "Pause",
     "INTENSITY_FREE": "Free"
@@ -1643,7 +1654,10 @@
     "TABLE_COL_ACTUAL": "Actual",
     "TABLE_COL_DELTA": "Delta",
     "TABLE_COL_HR": "HR",
-    "TABLE_COL_CADENCE": "Cadence"
+    "TABLE_COL_CADENCE": "Cadence",
+    "FEEDBACK_HEADING": "Athlete Feedback",
+    "FEEDBACK_DIFFICULTY": "Difficulty",
+    "FEEDBACK_ENJOYMENT": "Enjoyment"
   },
   "NOTIFICATIONS": {
     "TITLE": "Notification Preferences",
@@ -1662,5 +1676,15 @@
     "MARK_ALL_READ": "Mark all read",
     "DELETE": "Delete",
     "PREFERENCES": "Notification preferences"
+  },
+  "FEEDBACK": {
+    "TITLE": "How was your workout?",
+    "DIFFICULTY_LABEL": "Difficulty",
+    "ENJOYMENT_LABEL": "Enjoyment",
+    "NOTES_LABEL": "Notes",
+    "NOTES_PLACEHOLDER": "Any thoughts on the workout...",
+    "BTN_SKIP": "Skip",
+    "BTN_SUBMIT": "Submit",
+    "BTN_SAVING": "Saving..."
   }
 }
