@@ -1,5 +1,5 @@
 <div class="history-container">
-  <div class="history-list">
+  <div class="history-list stagger-children">
     @for (training of filteredTrainings$ | async; track training.id) {
       <div class="history-item"
         [class.selected]="(selectedTraining$ | async)?.id === training.id" (click)="onSelect(training)">
@@ -58,6 +58,11 @@
             <button class="delete-btn" [title]="'TRAINING_HISTORY.BTN_DELETE_TITLE' | translate" (click)="onDelete($event, training)">&times;</button>
           </div>
         }
+      </div>
+    } @empty {
+      <div class="empty-list">
+        <p>{{ 'TRAINING_HISTORY.EMPTY_NO_TRAININGS' | translate }}</p>
+        <p class="empty-hint">{{ 'TRAINING_HISTORY.EMPTY_HINT' | translate }}</p>
       </div>
     }
   </div>

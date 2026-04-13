@@ -9,10 +9,16 @@
   -webkit-backdrop-filter: blur(24px) saturate(1.4);
 }
 
+.sidebar-header {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--glass-border);
+}
+
 .sidebar-title {
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--text-muted);
   margin: 0;
   flex: 1;

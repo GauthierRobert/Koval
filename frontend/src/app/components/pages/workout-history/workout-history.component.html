@@ -86,7 +86,7 @@
     @if (historyService.loading$ | async) {
       <app-skeleton [rows]="6"></app-skeleton>
     } @else if (filteredSessions$ | async; as sessions) {
-      <div class="session-list">
+      <div class="session-list stagger-children">
         @if (sessions.length === 0) {
           <div class="empty-state">
             <p>{{ 'WORKOUT_HISTORY.EMPTY_NO_ACTIVITIES' | translate }}</p>
