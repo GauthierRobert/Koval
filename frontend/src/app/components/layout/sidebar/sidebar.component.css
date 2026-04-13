@@ -207,11 +207,10 @@ input:checked + .slider:before {
 @media (max-width: 768px) {
   .sidebar {
     width: 100%;
-    max-height: 40vh;
+    flex: 1;
+    min-height: 0;
     border-right: none;
-    border-bottom: 1px solid var(--glass-border);
     overflow: hidden;
-    transition: max-height 0.3s ease;
   }
 
   .sidebar-content {
@@ -221,9 +220,7 @@ input:checked + .slider:before {
   }
 }
 
-:host.collapsed .sidebar {
-  max-height: 0;
-  border-bottom: none;
-  overflow: hidden;
+:host.mobile-detail-active {
+  display: none;
 }
 

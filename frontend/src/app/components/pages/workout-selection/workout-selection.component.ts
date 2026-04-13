@@ -1,4 +1,5 @@
-import {Component, inject, OnInit} from '@angular/core';
+import {Component, DestroyRef, inject, OnInit} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {TrainingService} from '../../../services/training.service';
@@ -13,8 +14,9 @@ import {
   TrainingType,
 } from '../../../models/training.model';
 import {combineLatest, Observable} from 'rxjs';
-import {filter, map, take} from 'rxjs/operators';
+import {distinctUntilChanged, filter, map, pairwise, take} from 'rxjs/operators';
 import {RouterModule} from '@angular/router';
+import {ResponsiveService} from '../../../services/responsive.service';
 import {WorkoutVisualizationComponent} from '../../shared/workout-visualization/workout-visualization.component';
 import {SidebarComponent} from '../../layout/sidebar/sidebar.component';
 import {FilterPillOption, FilterPillsComponent} from '../../shared/filter-pills/filter-pills.component';
@@ -39,12 +41,15 @@ export class WorkoutSelectionComponent implements OnInit {
   private trainingService = inject(TrainingService);
   filterService = inject(TrainingFilterService);
   private translate = inject(TranslateService);
+  private responsive = inject(ResponsiveService);
+  private destroyRef = inject(DestroyRef);
 
   showAiModal = false;
   mobileListOpen = true;
+  private isMobile = false;
 
-  toggleMobileList(): void {
-    this.mobileListOpen = !this.mobileListOpen;
+  showMobileList(): void {
+    this.mobileListOpen = true;
   }
 
   sourceOptions$: Observable<FilterPillOption[]> = this.trainingService.receivedTrainings$.pipe(
@@ -81,6 +86,22 @@ export class WorkoutSelectionComponent implements OnInit {
 
   ngOnInit(): void {
     this.trainingService.loadReceivedTrainings();
+
+    this.responsive.isMobile$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((mobile) => {
+      this.isMobile = mobile;
+      if (!mobile) this.mobileListOpen = true;
+    });
+
+    // Switch to detail view when a training is selected on mobile
+    this.selectedTraining$.pipe(
+      distinctUntilChanged((a, b) => a?.id === b?.id),
+      pairwise(),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(([prev, curr]) => {
+      if (this.isMobile && curr && prev?.id !== curr.id) {
+        this.mobileListOpen = false;
+      }
+    });
 
     // Auto-select first training if none is selected
     combineLatest([this.filterService.filteredTrainings$, this.selectedTraining$]).pipe(
