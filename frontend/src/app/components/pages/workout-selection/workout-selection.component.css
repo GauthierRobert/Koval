@@ -316,25 +316,60 @@
   color: var(--text-color);
 }
 
+/* ── Utility: visibility ──────────────────────────────────────────── */
+.mobile-only { display: none; }
+.desktop-only { display: flex; }
+
 /* ── Responsive: Tablet & large phones ─────────────────────────────── */
 @media (max-width: 768px) {
+  .mobile-only { display: flex; }
+  .desktop-only { display: none !important; }
+
   .selection-layout {
     flex-direction: column;
     height: 100%;
     overflow: hidden;
   }
 
+  /* Main always renders, order -1 puts it above the sidebar */
   .selection-main {
     width: 100%;
-    flex: 1;
-    min-height: 0;
     display: flex;
     flex-direction: column;
     height: auto;
     overflow: hidden;
+    order: -1;
   }
 
+  /* ── List mode (mobileListOpen = true) ─────────────── */
+  /* Show header + filters, hide content area */
   .selection-main.mobile-list-active {
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+
+  .selection-main.mobile-list-active .content-area {
+    display: none;
+  }
+
+  /* Hide back button in list mode */
+  .selection-main.mobile-list-active .list-toggle-btn {
+    display: none;
+  }
+
+  /* ── Detail mode (mobileListOpen = false) ──────────── */
+  /* Show content + back button, hide filters & create buttons */
+  .selection-main:not(.mobile-list-active) {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .selection-main:not(.mobile-list-active) .filter-bar {
+    display: none;
+  }
+
+  .selection-main:not(.mobile-list-active) .tab-btn--ai,
+  .selection-main:not(.mobile-list-active) .tab-btn--manual {
     display: none;
   }
 

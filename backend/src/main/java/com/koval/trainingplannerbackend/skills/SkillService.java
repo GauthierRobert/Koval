@@ -1,5 +1,8 @@
 package com.koval.trainingplannerbackend.skills;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -18,9 +21,28 @@ import java.util.zip.ZipOutputStream;
 @Service
 public class SkillService {
 
+    private static final Logger log = LoggerFactory.getLogger(SkillService.class);
+
     private static final String SKILLS_PATTERN = "classpath:/skills/*.md";
     private static final String NAME_KEY = "name:";
     private static final String DESC_KEY = "description:";
+
+    /** Explicit list of skill files — used as fallback when classpath scanning
+     *  returns nothing (e.g. GraalVM native image). Keep in sync with the
+     *  skills/ directory and NativeImageHints. */
+    private static final String[] KNOWN_SKILLS = {
+            "koval-analyze-last-ride.md",
+            "koval-athlete-onboarding.md",
+            "koval-coach-onboarding.md",
+            "koval-coach-weekly-review.md",
+            "koval-create-workout.md",
+            "koval-find-workout.md",
+            "koval-form-check.md",
+            "koval-plan-my-week.md",
+            "koval-power-curve-report.md",
+            "koval-prep-race.md",
+            "koval-zone-setup.md"
+    };
 
     private final ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
 
@@ -56,6 +78,7 @@ public class SkillService {
         List<SkillSummary> summaries = new ArrayList<>();
         Map<String, Resource> resources = new java.util.LinkedHashMap<>();
 
+        // Try wildcard classpath scanning first (works on JVM, may fail in native image)
         try {
             Resource[] found = resolver.getResources(SKILLS_PATTERN);
             for (Resource res : found) {
@@ -67,7 +90,23 @@ public class SkillService {
                 resources.put(filename, res);
             }
         } catch (IOException e) {
-            throw new IllegalStateException("Failed to load skill resources", e);
+            log.warn("Wildcard classpath scanning for skills failed: {}", e.getMessage());
+        }
+
+        // Fallback: load each known skill individually (reliable in native images)
+        if (summaries.isEmpty()) {
+            log.info("Falling back to explicit skill file loading");
+            for (String filename : KNOWN_SKILLS) {
+                Resource res = new ClassPathResource("skills/" + filename);
+                if (!res.exists()) continue;
+                try {
+                    String content = new String(res.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+                    summaries.add(parseFrontmatter(filename, content));
+                    resources.put(filename, res);
+                } catch (IOException e) {
+                    log.warn("Failed to load skill {}: {}", filename, e.getMessage());
+                }
+            }
         }
 
         summaries.sort((a, b) -> a.filename().compareTo(b.filename()));

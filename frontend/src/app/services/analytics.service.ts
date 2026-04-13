@@ -9,6 +9,8 @@ export interface VolumeEntry {
   totalDurationSeconds: number;
   totalDistanceMeters: number;
   sportTss: Record<string, number>;
+  sportDurationSeconds: Record<string, number>;
+  sportDistanceMeters: Record<string, number>;
 }
 
 /** Duration label for power curve display */

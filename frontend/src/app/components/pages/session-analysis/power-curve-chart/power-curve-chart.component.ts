@@ -93,7 +93,7 @@ interface CurveState {
             border: 1px solid var(--glass-border, rgba(255,255,255,0.22));
             border-radius: 8px; padding: 8px 10px;
             min-width: 110px; white-space: nowrap;
-            transform: translate(-50%, -100%);
+            transform: translate(var(--tt-tx, -50%), -100%);
         }
         .tt-hdr { color: var(--text-80); font: 9px monospace; }
         .tt-sep { height: 1px; background: var(--overlay-15); margin: 5px 0; }
@@ -307,7 +307,21 @@ export class PowerCurveChartComponent implements OnDestroy {
         const yLocal = mT + cH * (1 - p.power / maxPower);
         const ttYInStack = (rect.top - stackRect.top) + yLocal - 30;
 
-        this.ttX.set(Math.max(8, Math.min(stackRect.width - 8, lineXInStack)));
+        const ttWidth = 130; // approximate tooltip width
+        let posX = lineXInStack;
+        let ttTx = '-50%'; // default: centered
+        if (posX + ttWidth / 2 > stackRect.width - 4) {
+            // Near right edge: anchor right
+            posX = Math.min(posX, stackRect.width - 4);
+            ttTx = '-100%';
+        } else if (posX - ttWidth / 2 < 4) {
+            // Near left edge: anchor left
+            posX = Math.max(posX, 4);
+            ttTx = '0%';
+        }
+        const stackEl = this.stackRef()?.nativeElement;
+        if (stackEl) stackEl.style.setProperty('--tt-tx', ttTx);
+        this.ttX.set(posX);
         this.ttY.set(Math.max(8, ttYInStack));
         this.ttHeader.set(p.label);
         this.ttPower.set(Math.round(p.power).toString());
@@ -363,12 +377,18 @@ export class PowerCurveChartComponent implements OnDestroy {
             ctx.fillText(`${Math.round(v)}W`, mL - 6, y);
         }
 
-        // ── X labels (one per curve point) ──────────────────────────────
+        // ── X labels (skip overlapping ones) ────────────────────────────
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
+        const labelPad = 6;
+        let lastLabelRight = -Infinity;
         for (const p of points) {
             const x = mL + this.xRatio(p.duration, points) * cW;
+            const labelW = ctx.measureText(p.label).width;
+            const labelLeft = x - labelW / 2;
+            if (labelLeft < lastLabelRight + labelPad) continue;
             ctx.fillText(p.label, x, mT + cH + 4);
+            lastLabelRight = x + labelW / 2;
         }
 
         // ── Filled area under curve ──────────────────────────────────────
@@ -460,7 +480,7 @@ export class PowerCurveChartComponent implements OnDestroy {
     }
 
     private margins(W: number): {mL: number; mR: number} {
-        return W < 500 ? {mL: 36, mR: 12} : {mL: 48, mR: 16};
+        return W < 500 ? {mL: 36, mR: 24} : {mL: 48, mR: 28};
     }
 
     private marginsY(): {mT: number; mB: number} {

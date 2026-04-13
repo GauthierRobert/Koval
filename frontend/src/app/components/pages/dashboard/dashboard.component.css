@@ -156,56 +156,52 @@
   flex: 1;
 }
 
-/* ─── Thresholds tile ─────────────────────────────────────── */
-.thresholds-tile {
+/* ─── Volume chart tile ──────────────────────────────────── */
+.volume-chart-tile {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-xs);
 }
 
-.threshold-values {
+.volume-header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  flex: 1;
 }
 
-.threshold-item {
-  flex: 1;
+.volume-header .metric-toggle {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   gap: 4px;
+  padding: 3px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
 }
 
-.threshold-val {
-  font-family: var(--font-display);
-  font-size: var(--text-3xl);
+.volume-header .toggle-btn {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  background: transparent;
+  color: rgba(255,255,255,0.4);
+  transition: all 0.2s ease;
 }
 
-.threshold-val.cycling { color: var(--accent-color); }
-.threshold-val.running { color: var(--danger-color); }
-.threshold-val.swimming { color: var(--secondary-color); }
-
-.threshold-meta {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  opacity: 0.7;
+.volume-header .toggle-btn.active {
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.9);
 }
 
-.threshold-unit {
-  font-size: 8px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-  opacity: 0.5;
-  text-transform: uppercase;
+.volume-header .toggle-btn:hover:not(.active) {
+  color: rgba(255,255,255,0.6);
+}
+
+.volume-chart-tile app-dashboard-volume-chart {
+  display: flex;
+  height: 220px;
 }
 
 /* ─── Active Plan tile ────────────────────────────────────── */
@@ -490,6 +486,10 @@
 }
 
 @media (max-width: 768px) {
+  .volume-chart-tile app-dashboard-volume-chart {
+    height: 220px;
+  }
+
   .hub-greeting { flex-direction: column; gap: 4px; }
   .greeting-text, .greeting-name { font-size: var(--text-2xl); }
   .greeting-date { margin-left: 0; }
@@ -501,7 +501,6 @@
 
 @media (max-width: 600px) {
   .quick-actions-grid { grid-template-columns: 1fr; }
-  .threshold-val { font-size: var(--text-2xl); }
 }
 
 @media (max-width: 480px) {

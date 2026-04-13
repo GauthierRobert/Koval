@@ -135,14 +135,13 @@ import {ZoneBlock} from '../../../../services/zone';
         .tt-val { font: bold 10px monospace; text-align: right; }
 
         @media (max-width: 768px) {
-            .chart-wrap { min-height: 90vh; }
             .chart-toggles { gap: 4px; }
             .toggle-btn { padding: 3px 8px; font-size: 9px; }
-            .primary-h { min-height: 350px; }
-            .hr-h { min-height: 160px; }
-            .cad-h { min-height: 160px; }
-            .eff-h { min-height: 100px; }
-            .elev-h { min-height: 100px; }
+            .primary-h { min-height: 200px; }
+            .hr-h { min-height: 120px; }
+            .cad-h { min-height: 120px; }
+            .eff-h { min-height: 80px; }
+            .elev-h { min-height: 70px; }
         }
     `],
 })

@@ -11,6 +11,7 @@ import {MetricsService, PmcDataPoint} from '../../../services/metrics.service';
 import {CoachService, ScheduledWorkout} from '../../../services/coach.service';
 import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
 import {PlanService} from '../../../services/plan.service';
+import {AnalyticsService, VolumeEntry} from '../../../services/analytics.service';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {WorkoutDetailModalComponent} from '../../shared/workout-detail-modal/workout-detail-modal.component';
 import {daysUntil, formatTrainingDuration} from '../../shared/format/format.utils';
@@ -18,6 +19,7 @@ import {DashboardFocusCardComponent} from './dashboard-focus-card/dashboard-focu
 import {DashboardPerformancePanelComponent} from './dashboard-performance-panel/dashboard-performance-panel.component';
 import {DashboardSportCardsComponent} from './dashboard-sport-cards/dashboard-sport-cards.component';
 import {DashboardClubCardsComponent} from './dashboard-club-cards/dashboard-club-cards.component';
+import {DashboardVolumeChartComponent} from './dashboard-volume-chart/dashboard-volume-chart.component';
 
 function toDateKey(d: Date): string {
   const y = d.getFullYear();
@@ -83,7 +85,7 @@ function computeWeekMetrics(sessions: SavedSession[]): WeekMetrics {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, SportIconComponent, WorkoutDetailModalComponent, TranslateModule, DashboardFocusCardComponent, DashboardPerformancePanelComponent, DashboardSportCardsComponent, DashboardClubCardsComponent],
+  imports: [CommonModule, RouterModule, SportIconComponent, WorkoutDetailModalComponent, TranslateModule, DashboardFocusCardComponent, DashboardPerformancePanelComponent, DashboardSportCardsComponent, DashboardClubCardsComponent, DashboardVolumeChartComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -96,6 +98,7 @@ export class DashboardComponent {
   private raceGoalService = inject(RaceGoalService);
   private coachService = inject(CoachService);
   private planService = inject(PlanService);
+  private analyticsService = inject(AnalyticsService);
   private router = inject(Router);
   private translate = inject(TranslateService);
 
@@ -167,6 +170,17 @@ export class DashboardComponent {
     }),
   );
 
+  volume$ = this.authService.user$.pipe(
+    filter((u) => !!u),
+    switchMap(() => {
+      const to = new Date();
+      const from = subDays(to, 70); // ~10 weeks
+      this.analyticsService.loadVolume(toDateKey(from), toDateKey(to), 'week');
+      return this.analyticsService.volume$;
+    }),
+    startWith([] as VolumeEntry[]),
+  );
+
   activePlan$ = this.planService.activePlan$;
 
   vm$ = combineLatest({
@@ -179,8 +193,10 @@ export class DashboardComponent {
     reminders: this.sessionReminders$,
     user: this.authService.user$,
     activePlan: this.activePlan$,
+    volume: this.volume$,
   });
 
+  volumeMetric: 'time' | 'tss' | 'distance' = 'time';
   selectedScheduledWorkout: ScheduledWorkout | null = null;
 
   formatDuration(s: number): string {
@@ -281,18 +297,6 @@ export class DashboardComponent {
 
   trackBySport(stat: SportStats): string {
     return stat.sport;
-  }
-
-  formatPace(secondsPerKm: number): string {
-    const m = Math.floor(secondsPerKm / 60);
-    const s = Math.floor(secondsPerKm % 60);
-    return `${m}:${String(s).padStart(2, '0')}`;
-  }
-
-  formatSwimPace(secondsPer100m: number): string {
-    const m = Math.floor(secondsPer100m / 60);
-    const s = Math.floor(secondsPer100m % 60);
-    return `${m}:${String(s).padStart(2, '0')}`;
   }
 
   get greeting(): string {

@@ -136,7 +136,9 @@ public class PowerCurveService {
      * Aggregated training volume for a single time period (week or month).
      */
     public record VolumeEntry(String period, double totalTss, long totalDurationSeconds,
-                              double totalDistanceMeters, Map<String, Double> sportTss) {
+                              double totalDistanceMeters, Map<String, Double> sportTss,
+                              Map<String, Long> sportDurationSeconds,
+                              Map<String, Double> sportDistanceMeters) {
     }
 
     /** Aggregate training volume by week or month. */
@@ -259,18 +261,23 @@ public class PowerCurveService {
         long totalDuration = 0;
         double totalDistance = 0;
         Map<String, Double> sportTss = new HashMap<>();
+        Map<String, Long> sportDuration = new HashMap<>();
+        Map<String, Double> sportDistance = new HashMap<>();
 
         for (CompletedSession s : sessions) {
             double tss = s.getTss() != null ? s.getTss() : 0;
             totalTss += tss;
             totalDuration += s.getTotalDurationSeconds();
-            totalDistance += s.getTotalDistance() != null ? s.getTotalDistance() : 0;
+            double dist = s.getTotalDistance() != null ? s.getTotalDistance() : 0;
+            totalDistance += dist;
             String sport = s.getSportType() != null ? s.getSportType() : "CYCLING";
             sportTss.merge(sport, tss, Double::sum);
+            sportDuration.merge(sport, (long) s.getTotalDurationSeconds(), Long::sum);
+            sportDistance.merge(sport, dist, Double::sum);
         }
 
         return new VolumeEntry(period, Math.round(totalTss * 10.0) / 10.0,
-                totalDuration, totalDistance, sportTss);
+                totalDuration, totalDistance, sportTss, sportDuration, sportDistance);
     }
 
     private int getIsoWeek(LocalDate date) {

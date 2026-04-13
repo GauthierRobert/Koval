@@ -52,33 +52,9 @@
           </app-dashboard-performance-panel>
         </div>
 
-        <!-- ▌ Thresholds tile — spans 4 cols -->
-        @if (vm.user?.ftp || vm.user?.functionalThresholdPace || vm.user?.criticalSwimSpeed) {
-          <div class="bento-card bento-4 thresholds-tile">
-            <span class="tile-label">{{ 'DASHBOARD.CARD_THRESHOLDS' | translate }}</span>
-            <div class="threshold-values">
-              <div class="threshold-item">
-                <span class="threshold-val counter-value swimming">{{ vm.user?.criticalSwimSpeed ? formatSwimPace(vm.user!.criticalSwimSpeed!) : '–' }}</span>
-                <span class="threshold-meta">{{ 'DASHBOARD.LABEL_SWIM' | translate }}</span>
-                <span class="threshold-unit">{{ 'DASHBOARD.LABEL_SWIM_UNIT' | translate }}</span>
-              </div>
-              <div class="threshold-item">
-                <span class="threshold-val counter-value cycling">{{ vm.user?.ftp ?? '–' }}</span>
-                <span class="threshold-meta">{{ 'DASHBOARD.LABEL_BIKE' | translate }}</span>
-                <span class="threshold-unit">{{ 'DASHBOARD.LABEL_BIKE_UNIT' | translate }}</span>
-              </div>
-              <div class="threshold-item">
-                <span class="threshold-val counter-value running">{{ vm.user?.functionalThresholdPace ? formatPace(vm.user!.functionalThresholdPace!) : '–' }}</span>
-                <span class="threshold-meta">{{ 'DASHBOARD.LABEL_RUN' | translate }}</span>
-                <span class="threshold-unit">{{ 'DASHBOARD.LABEL_RUN_UNIT' | translate }}</span>
-              </div>
-            </div>
-          </div>
-        }
-
-        <!-- ▌ Active Plan — spans 4 or 8 cols -->
+        <!-- ▌ Active Plan — spans 8 cols -->
         @if (vm.activePlan; as plan) {
-          <div class="bento-card glow-card" [class]="vm.user?.ftp ? 'bento-4' : 'bento-8'" (click)="navigateToPlan(plan.planId)" style="cursor:pointer;">
+          <div class="bento-card bento-8 glow-card" (click)="navigateToPlan(plan.planId)" style="cursor:pointer;">
             <span class="tile-label accent">{{ 'DASHBOARD.CARD_ACTIVE_PLAN' | translate }}</span>
             <div class="plan-title-row">
               <span class="plan-title">{{ plan.title }}</span>
@@ -157,6 +133,19 @@
           </div>
         }
 
+        <!-- ▌ Volume Chart — full width -->
+        <div class="bento-card bento-full volume-chart-tile">
+          <div class="volume-header">
+            <span class="tile-label">{{ 'DASHBOARD.CARD_VOLUME' | translate }}</span>
+            <div class="metric-toggle">
+              <button class="toggle-btn" [class.active]="volumeMetric === 'time'" (click)="volumeMetric = 'time'">Time</button>
+              <button class="toggle-btn" [class.active]="volumeMetric === 'tss'" (click)="volumeMetric = 'tss'">TSS</button>
+              <button class="toggle-btn" [class.active]="volumeMetric === 'distance'" (click)="volumeMetric = 'distance'">Distance</button>
+            </div>
+          </div>
+          <app-dashboard-volume-chart [data]="vm.volume" [metric]="volumeMetric"></app-dashboard-volume-chart>
+        </div>
+
         <!-- ▌ Sport Cards — each spans 4 cols -->
         <app-dashboard-sport-cards
           [weekMetrics]="vm.weekMetrics">
@@ -231,14 +220,6 @@
             <div class="skeleton" style="width: 100%; height: 40px;"></div>
             <div class="skeleton" style="width: 100%; height: 40px;"></div>
             <div class="skeleton" style="width: 100%; height: 40px;"></div>
-          </div>
-        </div>
-        <div class="bento-card bento-4">
-          <div class="skeleton" style="width: 80px; height: 12px; margin-bottom: 16px;"></div>
-          <div style="display: flex; justify-content: space-around;">
-            <div class="skeleton" style="width: 50px; height: 36px;"></div>
-            <div class="skeleton" style="width: 50px; height: 36px;"></div>
-            <div class="skeleton" style="width: 50px; height: 36px;"></div>
           </div>
         </div>
         <div class="bento-card bento-4">
