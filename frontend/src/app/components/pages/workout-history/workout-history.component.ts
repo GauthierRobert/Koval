@@ -6,6 +6,7 @@ import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {ActivatedRoute} from '@angular/router';
 import {BehaviorSubject, combineLatest} from 'rxjs';
 import {filter, map, take} from 'rxjs/operators';
+import {ResponsiveService} from '../../../services/responsive.service';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {SessionAnalysisComponent} from '../session-analysis/session-analysis.component';
 import {FilterPillsComponent} from '../../shared/filter-pills/filter-pills.component';
@@ -44,21 +45,27 @@ export class WorkoutHistoryComponent implements OnInit {
     private metricsService = inject(MetricsService);
     private route = inject(ActivatedRoute);
     private destroyRef = inject(DestroyRef);
+    private responsive = inject(ResponsiveService);
     stravaSyncService = inject(StravaSyncService);
 
     sessions$ = this.historyService.sessions$;
     mobileListOpen = true;
     sidebarCollapsed = false;
+    private isMobile = false;
 
     toggleSidebar(): void {
       this.sidebarCollapsed = !this.sidebarCollapsed;
     }
 
-    toggleMobileList(): void {
-      this.mobileListOpen = !this.mobileListOpen;
+    showMobileList(): void {
+      this.mobileListOpen = true;
     }
 
     ngOnInit(): void {
+        this.responsive.isMobile$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((mobile) => {
+            this.isMobile = mobile;
+            if (!mobile) this.mobileListOpen = true;
+        });
         const sessionId = this.route.snapshot.paramMap.get('sessionId');
         this.historyService.sessions$.pipe(
             filter(sessions => sessions.length > 0),
@@ -214,6 +221,7 @@ export class WorkoutHistoryComponent implements OnInit {
 
     onSelect(session: SavedSession): void {
         this.historyService.selectSession(session);
+        if (this.isMobile) this.mobileListOpen = false;
     }
 
     downloadFit(event: Event, session: SavedSession) {

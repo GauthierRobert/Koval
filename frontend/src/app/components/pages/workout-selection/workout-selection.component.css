@@ -334,6 +334,10 @@
     overflow: hidden;
   }
 
+  .selection-main.mobile-list-active {
+    display: none;
+  }
+
   .content-area {
     width: 100%;
     flex: 1;
