@@ -39,11 +39,15 @@
             </div>
           </div>
           @if (!fit.loading && !fit.error && fit.records.length > 0) {
-            <app-fit-timeseries-chart [records]="fit.records"
-              [ftp]="ftp" [sportType]="session.sportType" [blockSummaries]="session.blockSummaries"
-              [blockColors]="(blockColors$ | async) ?? []"
-              [zoneBlocks]="(blockView === 'interpolated' ? (zoneBlocks$ | async) : null) ?? []">
-            </app-fit-timeseries-chart>
+            <app-mobile-chart-container [title]="'SESSION_ANALYSIS.CHART_FIT_TIME_SERIES' | translate">
+              <ng-template>
+                <app-fit-timeseries-chart [records]="fit.records"
+                  [ftp]="ftp" [sportType]="session.sportType" [blockSummaries]="session.blockSummaries"
+                  [blockColors]="(blockColors$ | async) ?? []"
+                  [zoneBlocks]="(blockView === 'interpolated' ? (zoneBlocks$ | async) : null) ?? []">
+                </app-fit-timeseries-chart>
+              </ng-template>
+            </app-mobile-chart-container>
           }
           @if (!fit.loading && !fit.error && fit.records.length === 0) {
             <div class="no-fit-msg">
@@ -73,26 +77,38 @@
         @if (!fit.loading && !fit.error && fit.records.length > 0) {
           @if (zoneDistribution$ | async; as zones) {
             @if (zones.length > 0) {
-              <app-zone-distribution-panel
-                [zoneDistribution]="zones"
-                [userZoneSystems]="(userZoneSystems$ | async) ?? []"
-                [currentZoneSystemId]="selectedZoneSystemId$.value"
-                (zoneSystemChange)="onZoneSystemChange($event)">
-              </app-zone-distribution-panel>
+              <app-mobile-chart-container [title]="'SESSION_ANALYSIS.ZONE_DISTRIBUTION' | translate">
+                <ng-template>
+                  <app-zone-distribution-panel
+                    [zoneDistribution]="zones"
+                    [userZoneSystems]="(userZoneSystems$ | async) ?? []"
+                    [currentZoneSystemId]="selectedZoneSystemId$.value"
+                    (zoneSystemChange)="onZoneSystemChange($event)">
+                  </app-zone-distribution-panel>
+                </ng-template>
+              </app-mobile-chart-container>
             }
           }
 
           <!-- Aerobic Decoupling gauge -->
-          <app-decoupling-gauge
-            [records]="fit.records"
-            [sportType]="session.sportType">
-          </app-decoupling-gauge>
+          <app-mobile-chart-container [title]="'SESSION_ANALYSIS.DECOUPLING_TITLE' | translate">
+            <ng-template>
+              <app-decoupling-gauge
+                [records]="fit.records"
+                [sportType]="session.sportType">
+              </app-decoupling-gauge>
+            </ng-template>
+          </app-mobile-chart-container>
 
           <!-- Power curve (cycling only, hidden when no power data) -->
-          <app-power-curve-chart
-            [sessionId]="session.id"
-            [sportType]="session.sportType">
-          </app-power-curve-chart>
+          <app-mobile-chart-container [title]="'SESSION_ANALYSIS.POWER_CURVE_TITLE' | translate">
+            <ng-template>
+              <app-power-curve-chart
+                [sessionId]="session.id"
+                [sportType]="session.sportType">
+              </app-power-curve-chart>
+            </ng-template>
+          </app-mobile-chart-container>
         }
       }
 

@@ -14,6 +14,7 @@ import {
 import {AuthService} from '../../../services/auth.service';
 import {Race, RaceService, SimulationRequest} from '../../../services/race.service';
 import {ElevationChartComponent} from './elevation-chart/elevation-chart.component';
+import {MobileChartContainerComponent} from '../../shared/mobile-chart-container/mobile-chart-container.component';
 import {RouteMapComponent} from './route-map/route-map.component';
 import {GpxUploadZoneComponent} from './gpx-upload-zone/gpx-upload-zone.component';
 import {DisciplineSelectorComponent} from './discipline-selector/discipline-selector.component';
@@ -61,6 +62,7 @@ interface RacePlanGroup {
     PacingParameterBarComponent,
     PacingSummaryCardsComponent,
     PacingSettingsModalComponent,
+    MobileChartContainerComponent,
   ],
   templateUrl: './pacing-page.component.html',
   styleUrl: './pacing-page.component.css',
