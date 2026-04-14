@@ -120,11 +120,7 @@
                   <div class="section-title">{{ 'COACH_DASHBOARD.PMC_90_DAYS' | translate }}</div>
                   <button class="view-pmc-btn" (click)="viewAthletePmc(selectedAthlete!.id)">{{ 'COACH_DASHBOARD.VIEW_FULL_PMC' | translate }}</button>
                 </div>
-                <app-mobile-chart-container [title]="'COACH_DASHBOARD.PMC_90_DAYS' | translate">
-                  <ng-template>
-                    <app-pmc-chart [data]="pmcData" [goals]="athleteGoals$ | async"></app-pmc-chart>
-                  </ng-template>
-                </app-mobile-chart-container>
+                <app-pmc-chart [data]="pmcData" [goals]="athleteGoals$ | async"></app-pmc-chart>
               </div>
             }
             @if (pmcData.length === 0) {

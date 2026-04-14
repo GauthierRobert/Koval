@@ -143,11 +143,7 @@
               <button class="toggle-btn" [class.active]="volumeMetric === 'distance'" (click)="volumeMetric = 'distance'">Distance</button>
             </div>
           </div>
-          <app-mobile-chart-container [title]="'DASHBOARD.CARD_VOLUME' | translate">
-            <ng-template>
-              <app-dashboard-volume-chart [data]="vm.volume" [metric]="volumeMetric"></app-dashboard-volume-chart>
-            </ng-template>
-          </app-mobile-chart-container>
+          <app-dashboard-volume-chart [data]="vm.volume" [metric]="volumeMetric"></app-dashboard-volume-chart>
         </div>
 
         <!-- ▌ Sport Cards — each spans 4 cols -->

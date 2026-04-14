@@ -21,24 +21,32 @@
         <h3>{{ 'ANALYTICS.NO_VOLUME_DATA' | translate }}</h3>
       </div>
     } @else {
-      <app-mobile-chart-container [title]="'ANALYTICS.VOLUME_TITLE' | translate"
-                                  [hint]="'ANALYTICS.MOBILE_CHART_HINT' | translate">
-        <ng-template>
-          <div class="chart-container glass">
-            <div class="mobile-chart-scroll">
-              <div class="bar-chart volume-chart">
-                @for (entry of entries; track entry.period) {
-                  <div class="bar-col">
-                    <span class="bar-value">{{ entry.totalTss | number:'1.0-0' }}</span>
-                    <div class="bar volume-bar" [style.height.%]="volumeBarHeight(entry.totalTss, maxVolumeTss(entries))"></div>
-                    <span class="bar-label">{{ entry.period }}</span>
-                  </div>
-                }
-              </div>
+      <!-- Desktop chart -->
+      <div class="chart-container glass desktop-only">
+        <div class="bar-chart volume-chart">
+          @for (entry of entries; track entry.period) {
+            <div class="bar-col">
+              <span class="bar-value">{{ entry.totalTss | number:'1.0-0' }}</span>
+              <div class="bar volume-bar" [style.height.%]="volumeBarHeight(entry.totalTss, maxVolumeTss(entries))"></div>
+              <span class="bar-label">{{ entry.period }}</span>
             </div>
-          </div>
-        </ng-template>
-      </app-mobile-chart-container>
+          }
+        </div>
+      </div>
+
+      <!-- Mobile button -->
+      <div class="mobile-chart-cta mobile-only">
+        <button class="open-chart-btn" (click)="mobileChartOpen = true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
+          </svg>
+          {{ 'ANALYTICS.VOLUME_TITLE' | translate }}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/>
+          </svg>
+        </button>
+        <p class="open-chart-hint">{{ 'ANALYTICS.MOBILE_CHART_HINT' | translate }}</p>
+      </div>
 
       <!-- Volume stats table -->
       <div class="volume-table glass">
@@ -66,3 +74,30 @@
     }
   }
 </div>
+
+<!-- Mobile fullscreen landscape chart overlay -->
+@if (mobileChartOpen) {
+  <div class="mobile-chart-overlay">
+    <button class="mobile-chart-close" (click)="mobileChartOpen = false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="mobile-chart-content">
+      @if (volume$ | async; as entries) {
+        <h3 class="mobile-chart-title">{{ 'ANALYTICS.VOLUME_TITLE' | translate }}</h3>
+        <div class="mobile-chart-scroll">
+          <div class="bar-chart mobile-bar-chart volume-chart">
+            @for (entry of entries; track entry.period) {
+              <div class="bar-col">
+                <span class="bar-value">{{ entry.totalTss | number:'1.0-0' }}</span>
+                <div class="bar volume-bar" [style.height.%]="volumeBarHeight(entry.totalTss, maxVolumeTss(entries))"></div>
+                <span class="bar-label">{{ entry.period }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}

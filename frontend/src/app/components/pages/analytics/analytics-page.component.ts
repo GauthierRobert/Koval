@@ -4,14 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { AnalyticsService, DURATION_LABELS, VolumeEntry } from '../../../services/analytics.service';
 import { PowerCurveChartComponent } from '../session-analysis/power-curve-chart/power-curve-chart.component';
-import { MobileChartContainerComponent } from '../../shared/mobile-chart-container/mobile-chart-container.component';
 
 type Tab = 'power-curve' | 'volume' | 'records';
 
 @Component({
   selector: 'app-analytics-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, PowerCurveChartComponent, MobileChartContainerComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, PowerCurveChartComponent],
   templateUrl: './analytics-page.component.html',
   styleUrl: './analytics-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,6 +27,8 @@ export class AnalyticsPageComponent implements OnInit {
   dateFrom = '';
   dateTo = '';
   volumeGroupBy: 'week' | 'month' = 'week';
+  mobileChartOpen = false;
+  mobileChartType: 'power-curve' | 'volume' = 'power-curve';
 
   readonly DURATION_LABELS = DURATION_LABELS;
 

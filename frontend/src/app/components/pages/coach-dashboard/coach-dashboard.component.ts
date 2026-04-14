@@ -16,7 +16,6 @@ import {ShareTrainingModalComponent} from '../../shared/share-training-modal/sha
 import {TrainingService} from '../../../services/training.service';
 import {Training} from '../../../models/training.model';
 import {PmcChartComponent} from '../../shared/pmc-chart/pmc-chart.component';
-import {MobileChartContainerComponent} from '../../shared/mobile-chart-container/mobile-chart-container.component';
 import {SavedSession} from '../../../services/history.service';
 
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
@@ -31,7 +30,7 @@ import {CoachPlansTabComponent} from './coach-plans-tab/coach-plans-tab.componen
 @Component({
   selector: 'app-coach-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, TrainingActionModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, PmcChartComponent, MobileChartContainerComponent, PhysiologyPageComponent, AthleteListSidebarComponent, CoachPerformanceTabComponent, CoachGoalsTabComponent, CoachHistoryTabComponent, CoachPlansTabComponent],
+  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, TrainingActionModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, PmcChartComponent, PhysiologyPageComponent, AthleteListSidebarComponent, CoachPerformanceTabComponent, CoachGoalsTabComponent, CoachHistoryTabComponent, CoachPlansTabComponent],
   templateUrl: './coach-dashboard.component.html',
   styleUrl: './coach-dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

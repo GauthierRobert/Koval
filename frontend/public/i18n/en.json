@@ -5,11 +5,6 @@
     "INSTALL": "Install",
     "DISMISS": "Not now"
   },
-  "MOBILE_CHART": {
-    "OPEN": "Open chart",
-    "HINT": "Tap to view fullscreen",
-    "CLOSE": "Close"
-  },
   "COMMON": {
     "CANCEL": "Cancel",
     "SAVE": "Save",
@@ -370,8 +365,7 @@
     "LINK_PICKER_BTN_CANCEL": "Cancel",
     "SESSION_FALLBACK_TITLE": "Session #",
     "WORKOUT_FALLBACK_TITLE": "Workout",
-    "PLAN_WEEK": "Week",
-    "TRAINING_LOAD_TITLE": "Weekly training load"
+    "PLAN_WEEK": "Week"
   },
   "CALENDAR_MONTH": {
     "DAY_MON": "MON",

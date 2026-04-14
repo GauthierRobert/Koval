@@ -4,12 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { AnalyticsService, DURATION_LABELS } from '../../../../services/analytics.service';
 import { PowerCurveChartComponent } from '../../session-analysis/power-curve-chart/power-curve-chart.component';
-import { MobileChartContainerComponent } from '../../../shared/mobile-chart-container/mobile-chart-container.component';
 
 @Component({
   selector: 'app-power-curve-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, PowerCurveChartComponent, MobileChartContainerComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, PowerCurveChartComponent],
   templateUrl: './power-curve-page.component.html',
   styleUrl: './power-curve-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -22,6 +21,7 @@ export class PowerCurvePageComponent implements OnInit {
 
   dateFrom = '';
   dateTo = '';
+  mobileChartOpen = false;
 
   readonly DURATION_LABELS = DURATION_LABELS;
 

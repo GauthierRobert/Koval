@@ -11,7 +11,6 @@ import {SavedSession} from '../../../../services/history.service';
 import {TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS, TrainingType} from '../../../../models/training.model';
 import {SportIconComponent} from '../../../shared/sport-icon/sport-icon.component';
 import {TrainingLoadChartComponent} from '../../../layout/training-load-chart/training-load-chart.component';
-import {MobileChartContainerComponent} from '../../../shared/mobile-chart-container/mobile-chart-container.component';
 import {CalendarDay, CalendarEntry, EntriesByDay, GoalsByDay, toDateKey, VisiblePlan, WorkoutsByDay} from '../calendar.component';
 import {RaceGoalService} from '../../../../services/race-goal.service';
 import {formatTimeHMS} from '../../../shared/format/format.utils';
@@ -20,7 +19,7 @@ import {SPORT_BANNER_COLORS} from '../../../../models/plan.model';
 @Component({
   selector: 'app-calendar-week-view',
   standalone: true,
-  imports: [CommonModule, RouterModule, SportIconComponent, TrainingLoadChartComponent, MobileChartContainerComponent, TranslateModule],
+  imports: [CommonModule, RouterModule, SportIconComponent, TrainingLoadChartComponent, TranslateModule],
   templateUrl: './calendar-week-view.component.html',
   styleUrl: './calendar-week-view.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

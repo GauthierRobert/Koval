@@ -5,11 +5,6 @@
     "INSTALL": "Installer",
     "DISMISS": "Plus tard"
   },
-  "MOBILE_CHART": {
-    "OPEN": "Ouvrir le graphique",
-    "HINT": "Toucher pour voir en plein écran",
-    "CLOSE": "Fermer"
-  },
   "COMMON": {
     "CANCEL": "Annuler",
     "SAVE": "Enregistrer",
@@ -370,8 +365,7 @@
     "LINK_PICKER_BTN_CANCEL": "Annuler",
     "SESSION_FALLBACK_TITLE": "Session n°",
     "WORKOUT_FALLBACK_TITLE": "Séance",
-    "PLAN_WEEK": "Semaine",
-    "TRAINING_LOAD_TITLE": "Charge d'entraînement hebdo"
+    "PLAN_WEEK": "Semaine"
   },
   "CALENDAR_MONTH": {
     "DAY_MON": "LUN",
