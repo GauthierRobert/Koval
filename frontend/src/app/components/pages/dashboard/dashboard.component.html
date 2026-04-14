@@ -36,20 +36,13 @@
       <!-- ═══ BENTO GRID ═══ -->
       <div class="bento-grid stagger-children">
 
-        <!-- ▌ Hero: Today's Focus — spans 8 cols -->
-        <div class="bento-card bento-8 inner-glow glow-card focus-hero">
+        <!-- ▌ Hero: Today's Focus — full width -->
+        <div class="bento-card bento-full inner-glow glow-card focus-hero">
           <app-dashboard-focus-card
             [upcomingWorkouts]="vm.upcoming"
             [todayKey]="todayKey"
             (openDetail)="openDetail($event)">
           </app-dashboard-focus-card>
-        </div>
-
-        <!-- ▌ Performance Metrics — spans 4 cols -->
-        <div class="bento-card bento-4 perf-tile">
-          <app-dashboard-performance-panel
-            [formStats]="vm.form">
-          </app-dashboard-performance-panel>
         </div>
 
         <!-- ▌ Active Plan — spans 8 cols -->
@@ -108,12 +101,11 @@
           </div>
         }
 
-        <!-- ▌ Latest Activity — spans 6 cols when next workout shown, otherwise 8 to fill the row -->
+        <!-- ▌ Latest Activity — spans 8 cols -->
         @if (vm.latestFit; as fit) {
-          <div class="bento-card glow-card latest-tile" [class.bento-6]="vm.upcoming.length > 0" [class.bento-8]="vm.upcoming.length === 0">
+          <div class="bento-card bento-8 glow-card latest-tile">
             <div class="latest-header">
               <span class="tile-label">{{ 'DASHBOARD.CARD_LATEST_ACTIVITY' | translate }}</span>
-              <span class="latest-badge">{{ 'DASHBOARD.LATEST_ACTIVITY_BADGE' | translate }}</span>
             </div>
             <div class="latest-body">
               <app-sport-icon [sport]="fit.sportType" [size]="20"></app-sport-icon>
@@ -133,6 +125,13 @@
           </div>
         }
 
+        <!-- ▌ Performance Metrics — spans 4 cols, next to Latest Activity -->
+        <div class="bento-card bento-4 perf-tile">
+          <app-dashboard-performance-panel
+            [formStats]="vm.form">
+          </app-dashboard-performance-panel>
+        </div>
+
         <!-- ▌ Volume Chart — full width -->
         <div class="bento-card bento-full volume-chart-tile">
           <div class="volume-header">
@@ -144,6 +143,13 @@
             </div>
           </div>
           <app-dashboard-volume-chart [data]="vm.volume" [metric]="volumeMetric"></app-dashboard-volume-chart>
+        </div>
+
+        <!-- ▌ Performance Metrics — spans 4 cols -->
+        <div class="bento-card bento-4 perf-tile">
+          <app-dashboard-performance-panel
+            [formStats]="vm.form">
+          </app-dashboard-performance-panel>
         </div>
 
         <!-- ▌ Sport Cards — each spans 4 cols -->

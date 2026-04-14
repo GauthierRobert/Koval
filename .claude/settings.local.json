@@ -96,7 +96,8 @@
       "Read(//tmp/mcp-webmvc/org/springframework/ai/mcp/server/webmvc/**)",
       "Bash(mvn -o clean compile)",
       "Bash(mvn -q -DskipTests compile)",
-      "Bash(mvn -DskipTests compile)"
+      "Bash(mvn -DskipTests compile)",
+      "Bash(mvn -q compile)"
     ]
   }
 }

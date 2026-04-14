@@ -262,6 +262,16 @@ public class SessionService {
         // Estimate per-block distance when not provided
         analyticsService.computeBlockDistances(session);
 
+        // Roll block distances up to session total when not already set
+        if (session.getTotalDistance() == null && session.getBlockSummaries() != null) {
+            double sum = session.getBlockSummaries().stream()
+                    .map(CompletedSession.BlockSummary::distanceMeters)
+                    .filter(java.util.Objects::nonNull)
+                    .mapToDouble(Double::doubleValue)
+                    .sum();
+            if (sum > 0) session.setTotalDistance(sum);
+        }
+
         // Auto-associate to a scheduled workout if none provided
         if (session.getScheduledWorkoutId() == null) {
             associationService.tryAutoAssociate(session, userId);

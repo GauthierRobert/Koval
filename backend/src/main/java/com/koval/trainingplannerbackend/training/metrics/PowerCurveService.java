@@ -268,7 +268,7 @@ public class PowerCurveService {
             double tss = s.getTss() != null ? s.getTss() : 0;
             totalTss += tss;
             totalDuration += s.getTotalDurationSeconds();
-            double dist = s.getTotalDistance() != null ? s.getTotalDistance() : 0;
+            double dist = sessionDistance(s);
             totalDistance += dist;
             String sport = s.getSportType() != null ? s.getSportType() : "CYCLING";
             sportTss.merge(sport, tss, Double::sum);
@@ -278,6 +278,16 @@ public class PowerCurveService {
 
         return new VolumeEntry(period, Math.round(totalTss * 10.0) / 10.0,
                 totalDuration, totalDistance, sportTss, sportDuration, sportDistance);
+    }
+
+    private double sessionDistance(CompletedSession s) {
+        if (s.getTotalDistance() != null && s.getTotalDistance() > 0) return s.getTotalDistance();
+        if (s.getBlockSummaries() == null) return 0;
+        return s.getBlockSummaries().stream()
+                .map(CompletedSession.BlockSummary::distanceMeters)
+                .filter(java.util.Objects::nonNull)
+                .mapToDouble(Double::doubleValue)
+                .sum();
     }
 
     private int getIsoWeek(LocalDate date) {

@@ -173,7 +173,8 @@
   display: flex;
   gap: 4px;
   padding: 3px;
-  background: rgba(255,255,255,0.04);
+  background: var(--overlay-5);
+  border: 1px solid var(--glass-border);
   border-radius: 8px;
 }
 
@@ -186,17 +187,17 @@
   letter-spacing: 0.5px;
   cursor: pointer;
   background: transparent;
-  color: rgba(255,255,255,0.4);
+  color: var(--text-dim);
   transition: all 0.2s ease;
 }
 
 .volume-header .toggle-btn.active {
-  background: rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.9);
+  background: var(--accent-color);
+  color: #000;
 }
 
 .volume-header .toggle-btn:hover:not(.active) {
-  color: rgba(255,255,255,0.6);
+  color: var(--text-color);
 }
 
 .volume-chart-tile app-dashboard-volume-chart {
@@ -415,7 +416,7 @@
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: var(--accent-color);
+  color: var(--text-color);
   background: none;
   border: none;
   cursor: pointer;

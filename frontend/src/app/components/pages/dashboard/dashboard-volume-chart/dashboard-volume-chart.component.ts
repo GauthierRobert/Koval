@@ -43,8 +43,8 @@ const SPORT_LABELS: Record<string, string> = {
     </div>
   `,
   styles: [`
-    :host { display: block; height: 100%; overflow: hidden; }
-    .volume-chart-wrap { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+    :host { display: block; width: 100%; height: 100%; overflow: hidden; }
+    .volume-chart-wrap { display: flex; flex-direction: column; width: 100%; height: 100%; overflow: hidden; flex: 1; }
     .volume-canvas { width: 100%; flex: 1; min-height: 0; display: block; cursor: crosshair; }
   `],
 })
@@ -55,6 +55,7 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
   @ViewChild('canvas') private canvasRef!: ElementRef<HTMLCanvasElement>;
   private ready = false;
   private ro: ResizeObserver | null = null;
+  private themeObserver: MutationObserver | null = null;
   private hoverIdx: number | null = null;
 
   private readonly ML = 50;
@@ -66,6 +67,8 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
     this.ready = true;
     this.ro = new ResizeObserver(() => this.draw());
     this.ro.observe(this.canvasRef.nativeElement);
+    this.themeObserver = new MutationObserver(() => this.draw());
+    this.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     this.draw();
   }
 
@@ -75,6 +78,7 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
 
   ngOnDestroy(): void {
     this.ro?.disconnect();
+    this.themeObserver?.disconnect();
   }
 
   onMouseMove(event: MouseEvent): void {
@@ -162,9 +166,39 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
     return bestDist < step * 0.7 ? bestIdx : null;
   }
 
+  private themeRgb: [number, number, number] = [255, 255, 255];
+  private themeBgRgb: [number, number, number] = [16, 16, 22];
+
+  private refreshThemeColors(): void {
+    const styles = getComputedStyle(this.canvasRef.nativeElement);
+    this.themeRgb = this.parseColor(styles.getPropertyValue('--text-color').trim()) ?? [255, 255, 255];
+    this.themeBgRgb = this.parseColor(styles.getPropertyValue('--bg-color').trim()) ?? [16, 16, 22];
+  }
+
+  private fg(alpha: number): string {
+    const [r, g, b] = this.themeRgb;
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
+  private parseColor(raw: string): [number, number, number] | null {
+    if (!raw) return null;
+    const hex = raw.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    if (hex) {
+      const h = hex[1].length === 3
+        ? hex[1].split('').map(c => c + c).join('')
+        : hex[1];
+      return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+    }
+    const rgb = raw.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+    if (rgb) return [parseInt(rgb[1]), parseInt(rgb[2]), parseInt(rgb[3])];
+    return null;
+  }
+
   private draw(): void {
     const canvas = this.canvasRef?.nativeElement;
     if (!canvas) return;
+
+    this.refreshThemeColors();
 
     const dpr = window.devicePixelRatio || 1;
     const cssW = canvas.offsetWidth;
@@ -208,7 +242,7 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
 
     // Grid lines
     const gridCount = 4;
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.strokeStyle = this.fg(0.12);
     ctx.lineWidth = 1;
     ctx.setLineDash([]);
     for (let g = 0; g <= gridCount; g++) {
@@ -219,7 +253,7 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
       ctx.lineTo(cssW - MR, y);
       ctx.stroke();
 
-      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.fillStyle = this.fg(0.55);
       ctx.font = '10px monospace';
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
@@ -256,7 +290,7 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
     }
 
     // X labels
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fillStyle = this.fg(0.6);
     ctx.font = '10px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
@@ -269,7 +303,7 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
       const hi = this.hoverIdx;
       const x = toX(hi);
 
-      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+      ctx.strokeStyle = this.fg(0.4);
       ctx.lineWidth = 1;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
@@ -323,8 +357,9 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
     let ty = this.MT + 8;
     if (ty + boxH > cssH - this.MB) ty = cssH - this.MB - boxH - 4;
 
-    ctx.fillStyle = 'rgba(16, 16, 22, 0.92)';
-    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    const [br, bg, bb] = this.themeBgRgb;
+    ctx.fillStyle = `rgba(${br},${bg},${bb},0.95)`;
+    ctx.strokeStyle = this.fg(0.2);
     ctx.lineWidth = 1;
     this.roundRect(ctx, tx, ty, boxW, boxH, 8);
     ctx.fill();
@@ -339,7 +374,7 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
         ctx.arc(tx + padding + dotR, curY + lineH / 2, dotR, 0, Math.PI * 2);
         ctx.fill();
       }
-      ctx.fillStyle = line.color ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.95)';
+      ctx.fillStyle = line.color ? this.fg(0.75) : this.fg(0.95);
       ctx.font = line.color ? '11px monospace' : 'bold 11px monospace';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
@@ -351,7 +386,7 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
   }
 
   private drawEmpty(ctx: CanvasRenderingContext2D, w: number, h: number): void {
-    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.fillStyle = this.fg(0.35);
     ctx.font = '12px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
