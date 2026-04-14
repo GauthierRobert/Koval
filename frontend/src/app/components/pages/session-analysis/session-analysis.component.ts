@@ -18,6 +18,7 @@ import {ZoneDistributionPanelComponent, ZoneDistEntry} from './zone-distribution
 import {BlockBreakdownTableComponent} from './block-breakdown-table/block-breakdown-table.component';
 import {PowerCurveChartComponent} from './power-curve-chart/power-curve-chart.component';
 import {DecouplingGaugeComponent} from './decoupling-gauge/decoupling-gauge.component';
+import {MobileChartContainerComponent} from '../../shared/mobile-chart-container/mobile-chart-container.component';
 
 interface FitState {
     loading: boolean;
@@ -29,7 +30,7 @@ interface FitState {
 @Component({
     selector: 'app-session-analysis',
     standalone: true,
-    imports: [CommonModule, TranslateModule, FitTimeseriesChartComponent, SessionStatsHeaderComponent, ZoneDistributionPanelComponent, BlockBreakdownTableComponent, PowerCurveChartComponent, DecouplingGaugeComponent],
+    imports: [CommonModule, TranslateModule, FitTimeseriesChartComponent, SessionStatsHeaderComponent, ZoneDistributionPanelComponent, BlockBreakdownTableComponent, PowerCurveChartComponent, DecouplingGaugeComponent, MobileChartContainerComponent],
     templateUrl: './session-analysis.component.html',
     styleUrl: './session-analysis.component.css',
 })

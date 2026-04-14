@@ -73,9 +73,9 @@
       }
     </aside>
 
-    <!-- ── Right main area (hidden on mobile) ── -->
-    <div class="main-area desktop-only">
-      <div class="header glass">
+    <!-- ── Right main area ── -->
+    <div class="main-area">
+      <div class="header glass desktop-only-header">
         <div class="header-left">
           <div class="header-info">
             <span class="header-title">{{ 'PMC.HEADER_TITLE' | translate }} <span class="dim">{{ 'PMC.HEADER_TITLE_DIM' | translate }}</span></span>
@@ -84,40 +84,16 @@
         </div>
       </div>
 
-      <div class="chart-area">
-        <app-pmc-chart data-testid="pmc-chart" [data]="fullPmcData$ | async" [goals]="displayGoals$ | async"
-            (viewRangeChange)="onViewRangeChange($event)"></app-pmc-chart>
-      </div>
-    </div>
-
-    <!-- ── Mobile chart button ── -->
-    <div class="mobile-chart-cta mobile-only">
-      <button class="open-chart-btn" (click)="mobileChartOpen = true">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
-        </svg>
-        {{ 'PMC.HEADER_TITLE' | translate }}
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/>
-        </svg>
-      </button>
-      <p class="open-chart-hint">{{ 'PMC.MOBILE_CHART_HINT' | translate }}</p>
+      <app-mobile-chart-container [title]="'PMC.HEADER_TITLE' | translate"
+                                  [hint]="'PMC.MOBILE_CHART_HINT' | translate">
+        <ng-template>
+          <div class="chart-area">
+            <app-pmc-chart data-testid="pmc-chart" [data]="fullPmcData$ | async" [goals]="displayGoals$ | async"
+                (viewRangeChange)="onViewRangeChange($event)"></app-pmc-chart>
+          </div>
+        </ng-template>
+      </app-mobile-chart-container>
     </div>
 
   </div>
 </div>
-
-<!-- ── Mobile fullscreen landscape chart overlay ── -->
-@if (mobileChartOpen) {
-  <div class="mobile-chart-overlay">
-    <button class="mobile-chart-close" (click)="mobileChartOpen = false">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-    <div class="mobile-chart-content">
-      <app-pmc-chart [data]="fullPmcData$ | async" [goals]="displayGoals$ | async"
-          (viewRangeChange)="onViewRangeChange($event)"></app-pmc-chart>
-    </div>
-  </div>
-}

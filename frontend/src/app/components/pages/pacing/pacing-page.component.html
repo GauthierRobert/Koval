@@ -269,13 +269,17 @@
         }
       </div>
       <div class="detail-column">
-        <app-elevation-chart
-          [segments]="getActiveSegments(plan)"
-          [highlightedRange]="highlightedRange$ | async"
-          [showSpeed]="bikeShowSpeed && activeTab === 'BIKE'"
-          [groupMeanPowers]="showGroupMean && activeTab === 'BIKE' ? getGroupMeanPowers(getActiveSegments(plan)) : null"
-          (segmentHovered)="onSegmentHover($event)">
-        </app-elevation-chart>
+        <app-mobile-chart-container [title]="'PACING.RACE_PLAN_TITLE' | translate">
+          <ng-template>
+            <app-elevation-chart
+              [segments]="getActiveSegments(plan)"
+              [highlightedRange]="highlightedRange$ | async"
+              [showSpeed]="bikeShowSpeed && activeTab === 'BIKE'"
+              [groupMeanPowers]="showGroupMean && activeTab === 'BIKE' ? getGroupMeanPowers(getActiveSegments(plan)) : null"
+              (segmentHovered)="onSegmentHover($event)">
+            </app-elevation-chart>
+          </ng-template>
+        </app-mobile-chart-container>
         <div class="race-plan glass">
           <div class="race-plan-header">
             <h3 class="race-plan-title">{{ 'PACING.RACE_PLAN_TITLE' | translate }}</h3>

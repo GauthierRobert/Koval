@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { AnalyticsService, VolumeEntry } from '../../../../services/analytics.service';
+import { MobileChartContainerComponent } from '../../../shared/mobile-chart-container/mobile-chart-container.component';
 
 @Component({
   selector: 'app-volume-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, MobileChartContainerComponent],
   templateUrl: './volume-page.component.html',
   styleUrl: './volume-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -21,7 +22,6 @@ export class VolumePageComponent implements OnInit {
   dateFrom = '';
   dateTo = '';
   volumeGroupBy: 'week' | 'month' = 'week';
-  mobileChartOpen = false;
 
   ngOnInit(): void {
     const to = new Date();

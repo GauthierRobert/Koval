@@ -366,7 +366,11 @@
   }
 </div>
 
-<app-training-load-chart [workoutsByDay]="workoutsByDay" [days]="days"></app-training-load-chart>
+<app-mobile-chart-container [title]="'CALENDAR_WEEK.TRAINING_LOAD_TITLE' | translate">
+  <ng-template>
+    <app-training-load-chart [workoutsByDay]="workoutsByDay" [days]="days"></app-training-load-chart>
+  </ng-template>
+</app-mobile-chart-container>
 
 @if (rescheduleTarget) {
   <div class="reschedule-overlay" (click)="cancelReschedule()">

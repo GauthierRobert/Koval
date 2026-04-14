@@ -10,12 +10,13 @@ import {MetricsService, PmcDataPoint} from '../../../services/metrics.service';
 import {CalendarService} from '../../../services/calendar.service';
 import {CoachService} from '../../../services/coach.service';
 import {PmcChartComponent} from '../../shared/pmc-chart/pmc-chart.component';
+import {MobileChartContainerComponent} from '../../shared/mobile-chart-container/mobile-chart-container.component';
 import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
 
 @Component({
     selector: 'app-pmc-page',
     standalone: true,
-    imports: [CommonModule, TranslateModule, PmcChartComponent],
+    imports: [CommonModule, TranslateModule, PmcChartComponent, MobileChartContainerComponent],
     templateUrl: './pmc-page.component.html',
     styleUrl: './pmc-page.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -98,7 +99,6 @@ export class PmcPageComponent implements OnInit {
 
     loading = false;
     error = false;
-    mobileChartOpen = false;
 
     ngOnInit(): void {
         this.athleteId = this.route.snapshot.queryParamMap.get('athleteId');
