@@ -21,7 +21,6 @@ export class PowerCurvePageComponent implements OnInit {
 
   dateFrom = '';
   dateTo = '';
-  mobileChartOpen = false;
 
   readonly DURATION_LABELS = DURATION_LABELS;
 

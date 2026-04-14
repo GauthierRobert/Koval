@@ -2,15 +2,17 @@ import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { AnalyticsService, DURATION_LABELS, VolumeEntry } from '../../../services/analytics.service';
+import { AnalyticsService, DURATION_LABELS } from '../../../services/analytics.service';
 import { PowerCurveChartComponent } from '../session-analysis/power-curve-chart/power-curve-chart.component';
+import { DashboardVolumeChartComponent } from '../dashboard/dashboard-volume-chart/dashboard-volume-chart.component';
 
 type Tab = 'power-curve' | 'volume' | 'records';
+type VolumeMetric = 'time' | 'tss' | 'distance';
 
 @Component({
   selector: 'app-analytics-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, PowerCurveChartComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, PowerCurveChartComponent, DashboardVolumeChartComponent],
   templateUrl: './analytics-page.component.html',
   styleUrl: './analytics-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,8 +29,7 @@ export class AnalyticsPageComponent implements OnInit {
   dateFrom = '';
   dateTo = '';
   volumeGroupBy: 'week' | 'month' = 'week';
-  mobileChartOpen = false;
-  mobileChartType: 'power-curve' | 'volume' = 'power-curve';
+  volumeMetric: VolumeMetric = 'time';
 
   readonly DURATION_LABELS = DURATION_LABELS;
 
@@ -71,15 +72,6 @@ export class AnalyticsPageComponent implements OnInit {
 
   barHeight(power: number, max: number): number {
     return max > 0 ? (power / max) * 100 : 0;
-  }
-
-  // Volume helpers
-  maxVolumeTss(entries: VolumeEntry[]): number {
-    return entries.length > 0 ? Math.max(...entries.map((e) => e.totalTss)) : 1;
-  }
-
-  volumeBarHeight(tss: number, max: number): number {
-    return max > 0 ? (tss / max) * 100 : 0;
   }
 
   formatDuration(seconds: number): string {

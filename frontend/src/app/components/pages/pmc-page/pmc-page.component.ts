@@ -98,7 +98,6 @@ export class PmcPageComponent implements OnInit {
 
     loading = false;
     error = false;
-    mobileChartOpen = false;
 
     ngOnInit(): void {
         this.athleteId = this.route.snapshot.queryParamMap.get('athleteId');

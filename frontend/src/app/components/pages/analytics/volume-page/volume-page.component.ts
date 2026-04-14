@@ -2,12 +2,15 @@ import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { AnalyticsService, VolumeEntry } from '../../../../services/analytics.service';
+import { AnalyticsService } from '../../../../services/analytics.service';
+import { DashboardVolumeChartComponent } from '../../dashboard/dashboard-volume-chart/dashboard-volume-chart.component';
+
+type VolumeMetric = 'time' | 'tss' | 'distance';
 
 @Component({
   selector: 'app-volume-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, DashboardVolumeChartComponent],
   templateUrl: './volume-page.component.html',
   styleUrl: './volume-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -21,7 +24,7 @@ export class VolumePageComponent implements OnInit {
   dateFrom = '';
   dateTo = '';
   volumeGroupBy: 'week' | 'month' = 'week';
-  mobileChartOpen = false;
+  volumeMetric: VolumeMetric = 'time';
 
   ngOnInit(): void {
     const to = new Date();
@@ -34,14 +37,6 @@ export class VolumePageComponent implements OnInit {
 
   loadData(): void {
     this.analyticsService.loadVolume(this.dateFrom, this.dateTo, this.volumeGroupBy);
-  }
-
-  maxVolumeTss(entries: VolumeEntry[]): number {
-    return entries.length > 0 ? Math.max(...entries.map((e) => e.totalTss)) : 1;
-  }
-
-  volumeBarHeight(tss: number, max: number): number {
-    return max > 0 ? (tss / max) * 100 : 0;
   }
 
   formatDuration(seconds: number): string {
