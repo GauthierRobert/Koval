@@ -120,14 +120,14 @@
           <app-dashboard-volume-chart [data]="vm.volume" [metric]="volumeMetric"></app-dashboard-volume-chart>
         </div>
 
-        <!-- ▌ Performance Metrics — spans 4 cols -->
-        <div class="bento-card bento-4 perf-tile">
+        <!-- ▌ Performance Metrics — spans 3 cols (sits on the same row as the 3 sport cards) -->
+        <div class="bento-card bento-3 perf-tile">
           <app-dashboard-performance-panel
             [formStats]="vm.form">
           </app-dashboard-performance-panel>
         </div>
 
-        <!-- ▌ Sport Cards — each spans 4 cols -->
+        <!-- ▌ Sport Cards — each spans 3 cols so perf + 3 sports fill one 12-col row -->
         <app-dashboard-sport-cards
           [weekMetrics]="vm.weekMetrics">
         </app-dashboard-sport-cards>

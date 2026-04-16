@@ -68,7 +68,14 @@ export class DecouplingGaugeComponent {
     private computeDecoupling(): DecouplingResult | null {
         if (this.sportType === 'SWIMMING') return null;
 
-        const usePower = this.sportType === 'CYCLING';
+        // Prefer power only if the session actually contains power data (cycling w/
+        // a power meter). Otherwise fall back to speed — this makes the gauge work
+        // for running and for power-less cycling sessions.
+        const hasPower =
+            this.sportType === 'CYCLING' &&
+            this.records.some((r) => r.power > 0);
+        const usePower = hasPower;
+
         const filtered = this.records.filter((r) => {
             if (r.heartRate <= 0) return false;
             return usePower ? r.power > 0 : r.speed > 0;
@@ -86,6 +93,7 @@ export class DecouplingGaugeComponent {
         if (segmentSize < MIN_RECORDS / 2) return null;
 
         const segments: DecouplingSegment[] = [];
+        const rawEfficiencies: number[] = [];
         const segmentLabels =
             segmentCount === 2
                 ? ['1st half', '2nd half']
@@ -104,18 +112,29 @@ export class DecouplingGaugeComponent {
             }
             const avgMetric = metricSum / slice.length;
             const avgHR = hrSum / slice.length;
-            const efficiency = avgHR > 0 ? avgMetric / avgHR : 0;
+            // Raw efficiency kept unrounded for decoupling % computation — for
+            // running, speed (m/s) / HR is ~0.02, so rounding to 2 decimals
+            // collapses segments to identical values and masks the drift.
+            const rawEfficiency = avgHR > 0 ? avgMetric / avgHR : 0;
+            rawEfficiencies.push(rawEfficiency);
+
+            // Display values: power as W, speed as km/h. Efficiency display
+            // precision scales with the metric's magnitude.
+            const displayMetric = usePower ? avgMetric : avgMetric * 3.6;
+            const metricDecimals = usePower ? 0 : 1;
+            const efficiencyDecimals = usePower ? 2 : 4;
+            const pow = (n: number) => Math.pow(10, n);
 
             segments.push({
                 label: segmentLabels[i],
-                avgMetric: Math.round(usePower ? avgMetric : avgMetric * 3.6 * 10) / (usePower ? 1 : 10),
+                avgMetric: Math.round(displayMetric * pow(metricDecimals)) / pow(metricDecimals),
                 avgHR: Math.round(avgHR),
-                efficiency: Math.round(efficiency * 100) / 100,
+                efficiency: Math.round(rawEfficiency * pow(efficiencyDecimals)) / pow(efficiencyDecimals),
             });
         }
 
-        const first = segments[0].efficiency;
-        const last = segments[segments.length - 1].efficiency;
+        const first = rawEfficiencies[0];
+        const last = rawEfficiencies[rawEfficiencies.length - 1];
         const decouplingPct = first > 0 ? ((first - last) / first) * 100 : 0;
         const rounded = Math.round(decouplingPct * 10) / 10;
         const abs = Math.abs(rounded);

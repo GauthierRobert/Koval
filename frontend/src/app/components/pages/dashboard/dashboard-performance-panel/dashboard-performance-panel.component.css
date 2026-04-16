@@ -29,11 +29,11 @@
   text-align: center;
 }
 
-.mp-big-val.fitness       { color: var(--accent-color); }
-.mp-big-val.fatigue       { color: var(--metric-fatigue); }
-.mp-big-val.form-positive,
-.mp-big-val.form-negative,
-.mp-big-val.form-neutral  { color: var(--metric-fitness); }
+.mp-big-val.fitness       { color: var(--text-color); }
+.mp-big-val.fatigue       { color: var(--text-muted); }
+.mp-big-val.form-positive { color: var(--positive-alt); }
+.mp-big-val.form-negative { color: var(--danger-color); }
+.mp-big-val.form-neutral  { color: var(--text-color); }
 
 .mp-meta {
   flex: 1;

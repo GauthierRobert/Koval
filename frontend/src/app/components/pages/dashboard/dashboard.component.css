@@ -63,7 +63,7 @@
 
 .reminder-icon {
   font-size: 16px;
-  color: #eab308;
+  color: var(--accent-color);
   flex-shrink: 0;
 }
 
@@ -87,9 +87,9 @@
 }
 
 .reminder-action {
-  background: rgba(234, 179, 8, 0.15);
-  border: 1px solid rgba(234, 179, 8, 0.3);
-  color: #eab308;
+  background: var(--accent-subtle);
+  border: 1px solid transparent;
+  color: var(--accent-color);
   padding: 5px 14px;
   border-radius: var(--radius-pill);
   font-size: 9px;
@@ -101,8 +101,8 @@
 }
 
 .reminder-action:hover {
-  background: rgba(234, 179, 8, 0.25);
-  border-color: #eab308;
+  background: var(--accent-hover);
+  border-color: var(--accent-color);
 }
 
 /* ─── Body ────────────────────────────────────────────────── */
@@ -174,7 +174,6 @@
   gap: 4px;
   padding: 3px;
   background: var(--overlay-5);
-  border: 1px solid var(--glass-border);
   border-radius: 8px;
 }
 
@@ -255,7 +254,7 @@
 
 /* ─── Goal tile ───────────────────────────────────────────── */
 .goal-tile {
-  border-left: 3px solid var(--goal-color, var(--accent-color));
+  /* no border at rest — bento-card hover adds depth */
 }
 
 .goal-body {

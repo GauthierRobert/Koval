@@ -417,6 +417,14 @@ body:has([data-theme="light"])::after {
   .bento-full, .bento-8, .bento-6, .bento-4, .bento-3 { grid-column: span 1; }
 }
 
+/* ── Dashboard: flat at rest, depth on hover ── */
+.dashboard-layout .bento-card::before { display: none; }
+.dashboard-layout .glass { box-shadow: none; }
+
+@media (hover: hover) {
+  .dashboard-layout .bento-card:hover::before { display: block; }
+}
+
 select option {
   background: var(--surface-color);
   color: var(--text-color);

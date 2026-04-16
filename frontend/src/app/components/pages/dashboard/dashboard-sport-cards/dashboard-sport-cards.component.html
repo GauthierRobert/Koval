@@ -1,5 +1,33 @@
 @if (weekMetrics) {
-  <!-- Week TSS summary -->
+  <!-- Sport cards — each spans 3 cols so they share a row with the perf tile -->
+  @for (stat of weekMetrics.current; track trackBySport(stat)) {
+    <div
+      class="bento-card bento-3 sport-card"
+      [class.dim-card]="stat.sessionCount === 0">
+      <div class="sport-header">
+        <span class="sport-name">{{ stat.sport }}</span>
+        <span class="trend-badge" [ngClass]="getTrendClass(stat, weekMetrics.previous)">
+          {{ getTrend(stat, weekMetrics.previous) }}
+        </span>
+      </div>
+      @if (stat.sessionCount > 0) {
+        <div class="sport-duration">{{ formatDuration(stat.durationSeconds) }}</div>
+        <div class="sport-meta">
+          @if (stat.distanceMeters > 0) {
+            <span class="meta-dist">
+              {{ formatDistance(stat.distanceMeters, stat.sport) }}
+            </span>
+          }
+          <span class="meta-tss">TSS {{ stat.tss | number:'1.0-0' }}</span>
+        </div>
+      } @else {
+        <div class="sport-duration sport-empty">—</div>
+        <div class="sport-meta sport-empty-hint">{{ 'DASHBOARD.SPORT_CARD_NO_ACTIVITY' | translate }}</div>
+      }
+    </div>
+  }
+
+  <!-- Week TSS summary — must come AFTER the cards so it doesn't break the shared row -->
   @if (hasAnyActivity(weekMetrics)) {
     <div class="week-tss-bar">
       <span class="week-tss-total">{{ 'DASHBOARD.WEEK_TSS_SUMMARY' | translate: { tss: totalWeekTss(weekMetrics) } }}</span>
@@ -16,34 +44,4 @@
       }
     </div>
   }
-
-  <!-- Sport cards -->
-  <div class="sport-cards">
-    @for (stat of weekMetrics.current; track trackBySport(stat)) {
-      <div
-        class="sport-card glass"
-        [class.dim-card]="stat.sessionCount === 0">
-        <div class="sport-header">
-          <span class="sport-name">{{ stat.sport }}</span>
-          <span class="trend-badge" [ngClass]="getTrendClass(stat, weekMetrics.previous)">
-            {{ getTrend(stat, weekMetrics.previous) }}
-          </span>
-        </div>
-        @if (stat.sessionCount > 0) {
-          <div class="sport-duration">{{ formatDuration(stat.durationSeconds) }}</div>
-          <div class="sport-meta">
-            @if (stat.distanceMeters > 0) {
-              <span class="meta-dist">
-                {{ formatDistance(stat.distanceMeters, stat.sport) }}
-              </span>
-            }
-            <span class="meta-tss">TSS {{ stat.tss | number:'1.0-0' }}</span>
-          </div>
-        } @else {
-          <div class="sport-duration sport-empty">—</div>
-          <div class="sport-meta sport-empty-hint">{{ 'DASHBOARD.SPORT_CARD_NO_ACTIVITY' | translate }}</div>
-        }
-      </div>
-    }
-  </div>
 }

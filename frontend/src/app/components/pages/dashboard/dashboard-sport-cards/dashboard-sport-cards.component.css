@@ -22,28 +22,18 @@
 }
 
 /* ─── Sport cards ───────────────────────────────────────────── */
-.sport-cards {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-
+/* Each card is now a direct child of .bento-grid (bento-card bento-3), so the
+ * bento-card class provides padding / radius / glass background. This class
+ * only adds the internal column layout. */
 .sport-card {
-  padding: var(--card-padding);
-  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  transition: border-color 0.25s var(--ease-spring-gentle);
-}
-
-.sport-card:hover {
-  border-color: var(--accent-color);
+  justify-content: center;
 }
 
 .dim-card {
-  opacity: 0.5;
+  opacity: 0.45;
 }
 
 .sport-header {
@@ -99,9 +89,10 @@
   font-size: var(--text-xs);
   font-weight: 700;
   padding: 2px 7px;
-  border-radius: var(--space-xs);
-  background: var(--surface-hover);
+  border-radius: var(--radius-sm);
+  background: var(--overlay-5);
   color: var(--text-muted);
+  letter-spacing: 0.04em;
 }
 
 /* ─── Trend colors ──────────────────────────────────────────── */

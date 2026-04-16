@@ -19,7 +19,6 @@ export interface ClubWithNextSession {
   waitlistPosition?: number;
 }
 
-const CLUB_COLORS = ['#ff9d00', '#6c5ce7', '#e17055', '#00b894', '#3498db', '#fd79a8'];
 
 @Component({
   selector: 'app-dashboard-club-cards',
@@ -63,7 +62,7 @@ export class DashboardClubCardsComponent implements OnInit {
         future.setDate(future.getDate() + 14);
         const to = future.toISOString();
 
-        const requests = clubs.map((club, i) =>
+        const requests = clubs.map(club =>
           this.clubSessionService.getSessionsForClub(club.id, from, to, 'SCHEDULED').pipe(
             map(sessions => {
               const nextSession = sessions
@@ -73,15 +72,13 @@ export class DashboardClubCardsComponent implements OnInit {
                 club,
                 nextSession,
                 ...this.getSessionStatus(nextSession),
-                color: CLUB_COLORS[i % CLUB_COLORS.length],
-              } as ClubWithNextSession & { color: string };
+              } as ClubWithNextSession;
             }),
             catchError(() => of({
               club,
               nextSession: null,
               status: 'no-session' as SessionStatus,
-              color: CLUB_COLORS[i % CLUB_COLORS.length],
-            } as ClubWithNextSession & { color: string })),
+            } as ClubWithNextSession)),
           ),
         );
         return forkJoin(requests);
@@ -111,10 +108,6 @@ export class DashboardClubCardsComponent implements OnInit {
     }
 
     return { status: 'not-joined' };
-  }
-
-  getClubColor(index: number): string {
-    return CLUB_COLORS[index % CLUB_COLORS.length];
   }
 
   getClubInitials(name: string): string {
