@@ -27,7 +27,7 @@ public class Notification {
     private Map<String, String> data;
 
     @Indexed
-    private boolean read;
+    private Boolean read;
 
     private Instant readAt;
 

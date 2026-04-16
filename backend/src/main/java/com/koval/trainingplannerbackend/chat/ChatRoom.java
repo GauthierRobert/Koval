@@ -54,7 +54,7 @@ public class ChatRoom {
     private String title;
 
     /** True for OBJECTIVE rooms — any active club member can call join. */
-    private boolean joinable;
+    private Boolean joinable;
 
     private Instant lastMessageAt;
     private String lastMessagePreview;
@@ -62,5 +62,5 @@ public class ChatRoom {
 
     private Instant createdAt;
     private String createdBy;
-    private boolean archived;
+    private Boolean archived;
 }
