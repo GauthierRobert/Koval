@@ -35,7 +35,7 @@ public class ChatMembershipService {
         Optional<ChatRoomMembership> existing = membershipRepository.findByRoomIdAndUserId(room.getId(), userId);
         if (existing.isPresent()) {
             ChatRoomMembership m = existing.get();
-            if (!m.isActive()) {
+            if (!m.getActive()) {
                 m.setActive(true);
                 m.setJoinedAt(Instant.now());
             }
@@ -73,7 +73,7 @@ public class ChatMembershipService {
             ChatRoomMembership existing = byUser.get(userId);
             if (existing == null) {
                 ensureMembership(room, userId, MembershipSource.AUTO, ChatMemberRole.MEMBER);
-            } else if (!existing.isActive()) {
+            } else if (!existing.getActive()) {
                 existing.setActive(true);
                 existing.setJoinedAt(Instant.now());
                 if (existing.getSource() == null) existing.setSource(MembershipSource.AUTO);
@@ -83,7 +83,7 @@ public class ChatMembershipService {
 
         Set<String> expectedSet = new HashSet<>(expectedUserIds);
         for (ChatRoomMembership m : all) {
-            if (m.getSource() == MembershipSource.AUTO && m.isActive() && !expectedSet.contains(m.getUserId())) {
+            if (m.getSource() == MembershipSource.AUTO && m.getActive() && !expectedSet.contains(m.getUserId())) {
                 m.setActive(false);
                 membershipRepository.save(m);
             }
@@ -94,7 +94,7 @@ public class ChatMembershipService {
     @Transactional
     public void deactivateAllForUserInClub(String clubId, String userId) {
         for (ChatRoomMembership m : membershipRepository.findByClubIdAndUserId(clubId, userId)) {
-            if (m.isActive()) {
+            if (m.getActive()) {
                 m.setActive(false);
                 membershipRepository.save(m);
             }

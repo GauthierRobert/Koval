@@ -29,7 +29,7 @@ public class ChatMessage {
     private String content;
     private Instant createdAt;
     private Instant editedAt;
-    private boolean deleted;
+    private Boolean deleted;
 
     /** Optional idempotency key so retries from the client don't duplicate messages. */
     private String clientNonce;

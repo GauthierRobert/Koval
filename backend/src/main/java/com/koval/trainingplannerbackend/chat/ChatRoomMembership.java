@@ -34,11 +34,11 @@ public class ChatRoomMembership {
 
     private Instant joinedAt;
     private Instant lastReadAt;
-    private boolean muted;
+    private Boolean muted;
 
     private ChatMemberRole role;
     private MembershipSource source;
 
     /** Soft-leave: stays false when the user leaves so lastReadAt is preserved across rejoin. */
-    private boolean active;
+    private Boolean active;
 }

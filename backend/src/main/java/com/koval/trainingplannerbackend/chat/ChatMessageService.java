@@ -140,10 +140,10 @@ public class ChatMessageService {
                 m.getSenderId(),
                 sender != null ? sender.getDisplayName() : m.getSenderId(),
                 sender != null ? sender.getProfilePicture() : null,
-                m.isDeleted() ? "" : m.getContent(),
+                m.getDeleted() ? "" : m.getContent(),
                 m.getCreatedAt(),
                 m.getEditedAt(),
-                m.isDeleted(),
+                m.getDeleted(),
                 m.getType()
         );
     }
