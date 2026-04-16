@@ -448,6 +448,10 @@
     "TAB_RACE_GOALS_SHORT": "GOALS",
     "TAB_CHAT": "CHAT",
     "TAB_CHAT_SHORT": "CHAT",
+    "CHAT_BADGE_CLUB": "Club",
+    "CHAT_BADGE_GROUP": "Group",
+    "CHAT_BADGE_OBJECTIVE": "Objective",
+    "CHAT_BACK_TO_ROOMS": "Rooms",
     "LOADING": "Loading club...",
     "MEMBERSHIP_MEMBER": "MEMBER",
     "MEMBERSHIP_PENDING": "PENDING"
@@ -659,6 +663,7 @@
     "DAYS_TO_GO": "{{days}}d to go",
     "BTN_VIEW_MEMBERS_SINGULAR": "View {{count}} member",
     "BTN_VIEW_MEMBERS_PLURAL": "View {{count}} members",
+    "BTN_ADD_RACE": "+ Add to my goals",
     "EMPTY_NO_GOALS": "No race goals from club members yet.",
     "MODAL_RACING_SINGULAR": "{{count}} member racing",
     "MODAL_RACING_PLURAL": "{{count}} members racing"

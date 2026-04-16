@@ -66,9 +66,10 @@ export class ChatApiService {
     return this.http.post<ChatRoomDetail>(`${this.base}/rooms/direct`, { otherUserId });
   }
 
-  findByParent(scope: ChatRoomScope, clubId: string, refId?: string): Observable<ChatRoomDetail> {
+  findByParent(scope: ChatRoomScope, clubId: string, refId?: string, title?: string): Observable<ChatRoomDetail> {
     let url = `${this.base}/rooms/by-parent?scope=${scope}&clubId=${encodeURIComponent(clubId)}`;
     if (refId) url += `&refId=${encodeURIComponent(refId)}`;
+    if (title) url += `&title=${encodeURIComponent(title)}`;
     return this.http.get<ChatRoomDetail>(url);
   }
 }

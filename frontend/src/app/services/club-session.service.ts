@@ -1,7 +1,7 @@
 import {inject, Injectable, NgZone} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject, Observable, of} from 'rxjs';
-import {catchError} from 'rxjs/operators';
+import {catchError, tap} from 'rxjs/operators';
 import {environment} from '../../environments/environment';
 import {
   ClubTrainingSession,
@@ -68,6 +68,13 @@ export class ClubSessionService {
       .get<ClubTrainingSession[]>(`${this.apiUrl}/${clubId}/sessions`, { params: { from, to } })
       .pipe(catchError(() => of([] as ClubTrainingSession[])))
       .subscribe((sessions) => this.ngZone.run(() => this.openSessionsSubject.next(sessions)));
+  }
+
+  private patchSession(updated: ClubTrainingSession): void {
+    const patch = (list: ClubTrainingSession[]) =>
+      list.map((s) => (s.id === updated.id ? updated : s));
+    this.sessionsSubject.next(patch(this.sessionsSubject.value));
+    this.openSessionsSubject.next(patch(this.openSessionsSubject.value));
   }
 
   createSession(clubId: string, data: CreateSessionData): Observable<ClubTrainingSession> {
@@ -196,34 +203,21 @@ export class ClubSessionService {
     return this.http.get(`${this.apiUrl}/${clubId}/sessions/${sessionId}/gpx`, { responseType: 'blob' });
   }
 
-  linkTrainingToSession(clubId: string, sessionId: string, trainingId: string, clubGroupId?: string): Observable<void> {
-    return new Observable((observer) => {
-      this.http.put<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/link-training`, { trainingId, clubGroupId: clubGroupId || null }).subscribe({
-        next: () => {
-          this.ngZone.run(() => {
-            this.loadSessions(clubId);
-            observer.next();
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+  linkTrainingToSession(clubId: string, sessionId: string, trainingId: string, clubGroupId?: string): Observable<ClubTrainingSession> {
+    return this.http
+      .put<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/link-training`, {
+        trainingId,
+        clubGroupId: clubGroupId || null,
+      })
+      .pipe(tap((session) => this.ngZone.run(() => this.patchSession(session))));
   }
 
-  unlinkTrainingFromSession(clubId: string, sessionId: string, clubGroupId?: string): Observable<void> {
-    return new Observable((observer) => {
-      this.http.put<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/unlink-training`, { clubGroupId: clubGroupId ?? null }).subscribe({
-        next: () => {
-          this.ngZone.run(() => {
-            this.loadSessions(clubId);
-            observer.next();
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+  unlinkTrainingFromSession(clubId: string, sessionId: string, clubGroupId?: string): Observable<ClubTrainingSession> {
+    return this.http
+      .put<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/unlink-training`, {
+        clubGroupId: clubGroupId ?? null,
+      })
+      .pipe(tap((session) => this.ngZone.run(() => this.patchSession(session))));
   }
 
   // --- Recurring Templates ---
@@ -301,5 +295,6 @@ export class ClubSessionService {
     this.sessionsSubject.next([]);
     this.openSessionsSubject.next([]);
     this.recurringTemplatesSubject.next([]);
+    this.lastSessionsQuery = null;
   }
 }

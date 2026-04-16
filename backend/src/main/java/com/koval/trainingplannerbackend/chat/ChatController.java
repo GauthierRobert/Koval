@@ -57,11 +57,30 @@ public class ChatController {
     public ResponseEntity<ChatRoomResponse> findByParent(
             @RequestParam ChatRoomScope scope,
             @RequestParam String clubId,
-            @RequestParam(required = false) String refId) {
+            @RequestParam(required = false) String refId,
+            @RequestParam(required = false) String title) {
         String userId = SecurityUtils.getCurrentUserId();
-        return chatQueryService.findByParent(scope, clubId, refId)
-                .map(room -> ResponseEntity.ok(chatQueryService.getRoomDetail(userId, room.getId())))
-                .orElse(ResponseEntity.notFound().build());
+        switch (scope) {
+            case CLUB -> {
+                ChatRoom room = chatRoomService.ensureClubRoomForMember(userId, clubId);
+                return ResponseEntity.ok(chatQueryService.getRoomDetail(userId, room.getId()));
+            }
+            case GROUP -> {
+                if (refId == null) return ResponseEntity.badRequest().build();
+                ChatRoom room = chatRoomService.ensureGroupRoomForMember(userId, clubId, refId);
+                return ResponseEntity.ok(chatQueryService.getRoomDetail(userId, room.getId()));
+            }
+            case OBJECTIVE -> {
+                if (refId == null) return ResponseEntity.badRequest().build();
+                ChatRoom room = chatRoomService.ensureObjectiveRoomForMember(userId, clubId, refId, title);
+                return ResponseEntity.ok(chatQueryService.getRoomDetail(userId, room.getId()));
+            }
+            default -> {
+                return chatQueryService.findByParent(scope, clubId, refId)
+                        .map(room -> ResponseEntity.ok(chatQueryService.getRoomDetail(userId, room.getId())))
+                        .orElse(ResponseEntity.notFound().build());
+            }
+        }
     }
 
     @GetMapping("/rooms/{roomId}/messages")

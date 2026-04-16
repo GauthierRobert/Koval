@@ -78,7 +78,14 @@ export class ChatRoomService {
   }
 
   postMessage(roomId: string, content: string): Observable<ChatMessage> {
-    return this.api.postMessage(roomId, content);
+    return this.api.postMessage(roomId, content).pipe(
+      tap((msg) => {
+        if (this.activeRoomIdSubject.value !== roomId) return;
+        const current = this.activeRoomMessagesSubject.value;
+        if (current.some((m) => m.id === msg.id)) return;
+        this.activeRoomMessagesSubject.next([...current, msg]);
+      }),
+    );
   }
 
   deleteMessage(messageId: string): Observable<void> {
@@ -135,7 +142,10 @@ export class ChatRoomService {
 
   private handleIncomingMessage(msg: ChatMessage): void {
     if (this.activeRoomIdSubject.value === msg.roomId) {
-      this.activeRoomMessagesSubject.next([...this.activeRoomMessagesSubject.value, msg]);
+      const current = this.activeRoomMessagesSubject.value;
+      if (!current.some((m) => m.id === msg.id)) {
+        this.activeRoomMessagesSubject.next([...current, msg]);
+      }
       this.markRead(msg.roomId);
     }
 

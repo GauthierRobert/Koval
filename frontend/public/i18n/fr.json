@@ -448,6 +448,10 @@
     "TAB_RACE_GOALS_SHORT": "OBJS.",
     "TAB_CHAT": "CHAT",
     "TAB_CHAT_SHORT": "CHAT",
+    "CHAT_BADGE_CLUB": "Club",
+    "CHAT_BADGE_GROUP": "Groupe",
+    "CHAT_BADGE_OBJECTIVE": "Objectif",
+    "CHAT_BACK_TO_ROOMS": "Salons",
     "LOADING": "Chargement du club...",
     "MEMBERSHIP_MEMBER": "MEMBRE",
     "MEMBERSHIP_PENDING": "EN ATTENTE"
@@ -659,6 +663,7 @@
     "DAYS_TO_GO": "{{days}}j restants",
     "BTN_VIEW_MEMBERS_SINGULAR": "Voir {{count}} membre",
     "BTN_VIEW_MEMBERS_PLURAL": "Voir {{count}} membres",
+    "BTN_ADD_RACE": "+ Ajouter à mes objectifs",
     "EMPTY_NO_GOALS": "Aucun objectif de course des membres du club pour l'instant.",
     "MODAL_RACING_SINGULAR": "{{count}} membre en course",
     "MODAL_RACING_PLURAL": "{{count}} membres en course"

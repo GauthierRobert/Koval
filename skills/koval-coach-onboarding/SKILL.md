@@ -19,6 +19,8 @@ description: Use ONLY when the user is a COACH and asks to set up, configure, cu
 
 Produce (or update) a `coach-profile` document that captures **how this specific coach prescribes training**, so every other coach skill (`koval-plan-my-week`, `koval-find-workout`, `koval-coach-weekly-review`, training creation flows, club session creation) can read it and generate trainings that match the coach's voice and rules — instead of falling back to generic Coggan defaults.
 
+The canonical schema for the output file ships with this skill at `resources/coach-profile.template.md`. Treat it as the source of truth for section names and ordering.
+
 ## Workflow
 
 1. **Gate + context** (parallel):
@@ -90,83 +92,13 @@ Produce (or update) a `coach-profile` document that captures **how this specific
    - If any are missing and the coach gave custom bounds in Group 5, call `createZoneSystem(...)` to materialise them.
    - Otherwise hand off to `koval-zone-setup` for that sport before continuing.
 
-5. **Compile the profile** into the structure below and save it as `coach-profile.md` in the user's skills folder (same directory this skill lives in). Also store a one-line digest in conversation memory so subsequent skills can detect it.
+5. **Compile the profile** into the structure shipped at `resources/coach-profile.template.md` and save it as `coach-profile.md` in the user's skills folder (same directory this skill lives in). Copy the headings verbatim, fill in every placeholder, and write `_(using defaults)_` in any group the coach chose to skip. Also store a one-line digest in conversation memory so subsequent skills can detect it.
 
 6. **Show the result** to the coach as a markdown card and ask: *"Want to tweak anything? Tell me a section name (e.g. 'change Group 4') or say 'looks good' to lock it in."*
 
 ## Output format — `coach-profile.md`
 
-```markdown
----
-name: koval-coach-profile
-description: Personalised coaching rules for <Coach Name>. Loaded automatically by every Koval coach skill (training creation, plan building, athlete review, club session creation) so generated workouts match this coach's philosophy, volume targets, intensity distribution, recovery rules and voice. Re-run koval-coach-onboarding to update.
----
-
-# Coach Profile — <Coach Name>
-
-_Last updated: <YYYY-MM-DD>_
-
-## Identity
-- **Sports:** <…>
-- **Athlete level:** <…>
-- **Roster size:** <N>
-- **Coaching mode:** <1:1 / club / both>
-
-## Philosophy
-- **Periodization:** <model>
-- **Intensity distribution:** <%Z1-2 / %Z3 / %Z4+>
-- **Deload cadence:** every <N> weeks at <X>% volume
-- **Prescription unit:** <time | TSS>
-
-## Volume & week shape
-- **Weekly hours:** <range>
-- **Max session length:** <hh:mm>
-- **Hard days / week:** max <N>, min <N> easy days between
-- **Rest day:** <day>
-- **Long session day:** <day>
-
-## Default workout templates
-- **Warmup:** <…>
-- **Cooldown:** <…>
-- **Threshold:** <…>
-- **VO2max:** <…>
-- **Sweet spot:** <…>
-- **Endurance:** <…>
-- **Signature drill:** <name + structure>
-
-## Targets & zones
-- **Prescription style:** <% FTP / watts / RPE / HR / mix>
-- **Default zone system:** <name> (id: <…>)
-- **Cadence targets:** <when / how>
-- **Sport-specific:** <pace / HR / CSS notes>
-
-## Recovery & monitoring
-- **Overreach TSB threshold:** <value>
-- **Detrained TSB threshold:** <value>
-- **Missed-session alert:** after <N> consecutive
-- **Required logs:** <RPE / notes / sleep / HRV>
-
-## Voice & communication
-- **Title format:** <pattern>
-- **Description style:** <terse / detailed / motivational / data>
-- **Language:** <…>
-- **Signature cues:** <list>
-- **Never include:** <list>
-
-## Club & group context
-- **Clubs:** <names>
-- **Groups:** <names>
-- **Default visibility:** <private / athletes / club / public>
-
-## How other skills should use this
-Any Koval coach skill that creates a `Training`, `ScheduledWorkout`, `ClubSession` or `Plan` MUST:
-1. Read this file first.
-2. Use the templates above as building blocks (warmup, cooldown, signature drills).
-3. Respect the volume, hard-day, intensity-distribution and rest rules.
-4. Apply the title format, description style, language and signature cues.
-5. Honour the "never include" list.
-6. Use the default zone system unless the coach explicitly overrides per request.
-```
+The output file follows the exact schema in `resources/coach-profile.template.md`. Open the template, copy its structure verbatim, then fill in each placeholder.
 
 ## Edge cases
 - **User isn't a coach** → role gate message, do not run.

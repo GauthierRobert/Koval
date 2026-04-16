@@ -19,6 +19,8 @@ description: Use the first time a user connects to Koval, when their FTP / thres
 
 Produce (or update) an `athlete-profile.md` file that captures **how this specific athlete actually trains and lives** — available days, max session length, goals, preferred workout style, recovery rules, voice — so every other Koval athlete skill can read it and generate plans that fit the athlete's real schedule and preferences instead of falling back to defaults.
 
+The canonical schema for the output file ships with this skill at `resources/athlete-profile.template.md`. Treat it as the source of truth for section names and ordering.
+
 ## Workflow
 
 1. **Gate + context** (parallel reads):
@@ -85,74 +87,13 @@ Produce (or update) an `athlete-profile.md` file that captures **how this specif
    - If no default zone system exists for the athlete's primary sport → `createZoneSystem(...)` with Coggan defaults, or hand to `koval-zone-setup`.
    - Everything else (available days, voice, never-include, sleep quality…) lives **only** in `athlete-profile.md` — the MCP `User` model has no free-form preferences field.
 
-6. **Compile + save** the profile as `athlete-profile.md` in the same skills folder this skill lives in (mirrors how `koval-coach-onboarding.md` writes `coach-profile.md`).
+6. **Compile + save** the profile as `athlete-profile.md` in the same skills folder this skill lives in. Use `resources/athlete-profile.template.md` as the structural template — copy the headings verbatim, fill in every placeholder, and write `_(using defaults)_` in any group the athlete chose to skip.
 
 7. **Show the result** as a markdown card and ask: *"Want to tweak anything? Tell me a section name (e.g. 'change Group 3') or say 'looks good' to lock it in."*
 
 ## Output format — `athlete-profile.md`
 
-```markdown
----
-name: koval-athlete-profile
-description: Personalised training preferences for <Athlete Name>. Loaded automatically by every Koval athlete skill (koval-plan-my-week, koval-find-workout, koval-prep-race, koval-analyze-last-ride, koval-form-check) so generated plans match this athlete's real-world availability, goals, recovery rules and voice. Re-run koval-athlete-onboarding to update.
----
-
-# Athlete Profile — <Athlete Name>
-
-_Last updated: <YYYY-MM-DD>_
-
-## Identity
-- **Sports:** <…>
-- **Level:** <beginner / intermediate / competitive / elite>
-- **Age / category:** <…>
-- **Coached by:** <coach name | self-coached>
-
-## Goals
-- **3-month focus:** <…>
-- **A-priority event:** <name, date>
-- **Definition of a good week:** <…>
-
-## Weekly availability
-- **Hours / week:** <range>
-- **Available days:** <Mon, Tue, …>
-- **Long session day(s):** <…>
-- **Rest day(s):** <…>
-- **Max session length:** weekday <hh:mm> · weekend <hh:mm>
-- **Time of day:** <morning / lunch / evening>
-
-## Workout style
-- **Environment:** <indoor / outdoor / mix per sport>
-- **Structure preference:** <structured intervals / free / mix>
-- **Favourite session types:** <…>
-- **Avoid:** <…>
-
-## Body, recovery & constraints
-- **Injuries / limitations:** <…>
-- **Forbidden efforts:** <…>
-- **Sleep baseline:** <good / variable / poor>
-- **Logs after sessions:** <RPE / sleep / HRV / notes>
-
-## Targets & data
-- **Prescription unit:** <% FTP / watts / HR / RPE / pace>
-- **Load metric:** <TSS / hours / km>
-- **Default zone system:** <name> (id: <…>)
-
-## Voice & communication
-- **Description style:** <terse / detailed / motivational / data>
-- **Language:** <…>
-- **Coaching tone:** <firm / encouraging / data-driven / playful>
-- **Never include:** <list>
-
-## How other skills should use this
-Any Koval athlete skill that creates a `Training`, `ScheduledWorkout` or `Plan`, or that proposes a week / taper / workout selection, MUST:
-1. Read this file first.
-2. Only schedule sessions on **available days**; respect **rest days** and **long session day**.
-3. Never exceed **max session length** for the weekday/weekend in question.
-4. Honour the **never include** list and **forbidden efforts** absolutely.
-5. Use the **prescription unit**, **load metric** and **default zone system** specified here.
-6. Write descriptions in the configured **style**, **language** and **tone**.
-7. Bias intensity decisions on the **sleep baseline** (poor sleep → push hard sessions back).
-```
+The output file follows the exact schema in `resources/athlete-profile.template.md`. Open the template, copy its structure verbatim, then fill in each placeholder.
 
 ## Edge cases
 - **Role is COACH** → bounce to `koval-coach-onboarding`.

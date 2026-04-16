@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public record ClubRaceGoalResponse(
+        String raceId,
         String title,
         String sport,
         LocalDate raceDate,

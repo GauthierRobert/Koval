@@ -248,6 +248,7 @@ export interface LeaderboardEntry {
 }
 
 export interface ClubRaceGoalResponse {
+  raceId?: string;
   title: string;
   sport: string;
   raceDate: string;

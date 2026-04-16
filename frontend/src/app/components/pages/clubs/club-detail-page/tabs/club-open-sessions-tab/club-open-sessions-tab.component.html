@@ -8,6 +8,7 @@
     <div class="session-header__actions">
       <div class="session-header__nav">
         <button class="nav-btn" (click)="prevWeek()" data-testid="open-sessions-nav-prev">&lsaquo;</button>
+        <button class="nav-btn nav-btn--today" (click)="goToday()" data-testid="open-sessions-nav-today">{{ 'CLUB_SESSIONS.NAV_TODAY' | translate }}</button>
         <button class="nav-btn" (click)="nextWeek()" data-testid="open-sessions-nav-next">&rsaquo;</button>
       </div>
       @if (canCreate) {
@@ -114,7 +115,7 @@
       } @else {
         @for (group of groupByDay(filtered); track group.date.toISOString()) {
           <div class="day-group">
-            <div class="day-header" [class.today]="isToday(group.date)">{{ group.date | date:'EEEE, MMM d' }}</div>
+            <div class="day-header" [class.today]="isToday(group.date)">{{ formatDayHeader(group.date) }}</div>
             @for (session of group.sessions; track session.id) {
               <app-session-card
                 [session]="session"

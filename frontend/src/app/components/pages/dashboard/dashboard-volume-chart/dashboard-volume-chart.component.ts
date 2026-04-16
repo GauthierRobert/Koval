@@ -284,8 +284,8 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
         const y = toY(stacks[i][si].top);
         i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
       }
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = this.hexToRgba(color, 0.7);
+      ctx.lineWidth = 1;
       ctx.stroke();
     }
 

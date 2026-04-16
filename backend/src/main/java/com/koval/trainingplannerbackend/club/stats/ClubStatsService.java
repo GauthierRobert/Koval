@@ -449,6 +449,7 @@ public class ClubStatsService {
                     .toList();
 
             return new ClubRaceGoalResponse(
+                    representative.getRaceId(),
                     representative.getTitle(),
                     representative.getSport(),
                     representative.getRaceDate(),

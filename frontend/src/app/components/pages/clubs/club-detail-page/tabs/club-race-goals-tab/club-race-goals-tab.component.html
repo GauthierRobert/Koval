@@ -40,6 +40,14 @@
                     ? ('CLUB_RACE_GOALS.BTN_VIEW_MEMBERS_SINGULAR' | translate: { count: item.participants.length })
                     : ('CLUB_RACE_GOALS.BTN_VIEW_MEMBERS_PLURAL' | translate: { count: item.participants.length }) }}
                 </button>
+                @if (!isParticipant(item, currentUserId$ | async)) {
+                  <button
+                    class="add-to-goals-btn"
+                    [disabled]="isAdding(item)"
+                    (click)="addToMyGoals(item)">
+                    {{ 'CLUB_RACE_GOALS.BTN_ADD_RACE' | translate }}
+                  </button>
+                }
               </div>
             </div>
           </div>

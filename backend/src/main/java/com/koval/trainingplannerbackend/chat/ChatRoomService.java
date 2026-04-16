@@ -3,6 +3,9 @@ package com.koval.trainingplannerbackend.chat;
 import com.koval.trainingplannerbackend.club.ClubRepository;
 import com.koval.trainingplannerbackend.club.group.ClubGroup;
 import com.koval.trainingplannerbackend.club.group.ClubGroupRepository;
+import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService;
+import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,15 +25,62 @@ public class ChatRoomService {
     private final ChatMembershipService membershipService;
     private final ClubRepository clubRepository;
     private final ClubGroupRepository clubGroupRepository;
+    private final ClubAuthorizationService clubAuthorizationService;
 
     public ChatRoomService(ChatRoomRepository roomRepository,
                            ChatMembershipService membershipService,
                            ClubRepository clubRepository,
-                           ClubGroupRepository clubGroupRepository) {
+                           ClubGroupRepository clubGroupRepository,
+                           ClubAuthorizationService clubAuthorizationService) {
         this.roomRepository = roomRepository;
         this.membershipService = membershipService;
         this.clubRepository = clubRepository;
         this.clubGroupRepository = clubGroupRepository;
+        this.clubAuthorizationService = clubAuthorizationService;
+    }
+
+    /**
+     * Lazy-create the CLUB room for a requesting active member and ensure their chat membership.
+     * Covers legacy clubs that predate the auto-create hooks in ClubService / ClubMembershipService.
+     */
+    @Transactional
+    public ChatRoom ensureClubRoomForMember(String userId, String clubId) {
+        clubAuthorizationService.requireActiveMember(userId, clubId);
+        ChatRoom room = getOrCreateClubRoom(clubId);
+        membershipService.ensureMembership(room, userId, MembershipSource.AUTO, ChatMemberRole.MEMBER);
+        return room;
+    }
+
+    /**
+     * Lazy-create the GROUP room for a club member who belongs to the group, and ensure membership.
+     * Covers legacy groups that predate the auto-create hooks in {@code ClubGroupService}.
+     */
+    @Transactional
+    public ChatRoom ensureGroupRoomForMember(String userId, String clubId, String groupId) {
+        clubAuthorizationService.requireActiveMember(userId, clubId);
+        ClubGroup group = clubGroupRepository.findById(groupId)
+                .orElseThrow(() -> new ResourceNotFoundException("Group not found"));
+        if (!clubId.equals(group.getClubId())) {
+            throw new ForbiddenOperationException("Group does not belong to this club");
+        }
+        if (!group.getMemberIds().contains(userId)) {
+            throw new ForbiddenOperationException("Not a member of this group");
+        }
+        ChatRoom room = getOrCreateGroupRoom(clubId, groupId);
+        membershipService.ensureMembership(room, userId, MembershipSource.AUTO, ChatMemberRole.MEMBER);
+        return room;
+    }
+
+    /**
+     * Lazy-create the OBJECTIVE room for any active club member. Anyone in the club may chat
+     * about a shared race objective; engagement on the goal is independent of chat membership.
+     */
+    @Transactional
+    public ChatRoom ensureObjectiveRoomForMember(String userId, String clubId, String objectiveKey, String title) {
+        clubAuthorizationService.requireActiveMember(userId, clubId);
+        ChatRoom room = getOrCreateObjectiveRoom(clubId, objectiveKey, title);
+        membershipService.ensureMembership(room, userId, MembershipSource.AUTO, ChatMemberRole.MEMBER);
+        return room;
     }
 
     @Transactional

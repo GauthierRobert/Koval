@@ -18,6 +18,7 @@ import {NotificationToastComponent} from './components/shared/notification-toast
 import {ErrorToastComponent} from './components/shared/error-toast/error-toast.component';
 import {CguModalComponent} from './components/shared/cgu-modal/cgu-modal.component';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import {ChatSseService} from './services/chat-sse.service';
 
 @Component({
   selector: 'app-root',
@@ -53,6 +54,7 @@ export class AppComponent {
     private authService: AuthService,
     private notificationService: NotificationService,
     private translate: TranslateService,
+    private chatSse: ChatSseService,
   ) {
     this.selectedTraining$ = this.trainingService.selectedTraining$;
     this.executionState$ = this.executionService.state$;
@@ -77,5 +79,10 @@ export class AppComponent {
       .subscribe(() => {
         this.notificationService.requestPermissionAndRegisterToken();
       });
+
+    // Keep the chat SSE channel open for any chat surface (club tab, /messages, etc.).
+    this.authService.user$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((u) => (u ? this.chatSse.connect() : this.chatSse.disconnect()));
   }
 }

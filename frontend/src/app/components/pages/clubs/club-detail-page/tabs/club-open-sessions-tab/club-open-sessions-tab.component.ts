@@ -109,6 +109,12 @@ export class ClubOpenSessionsTabComponent implements OnInit {
     this.loadActivities();
   }
 
+  goToday(): void {
+    this.calendarWeekStart = ClubOpenSessionsTabComponent.getMonday(new Date());
+    this.buildCalendarDays();
+    this.loadActivities();
+  }
+
   private buildCalendarDays(): void {
     this.calendarDays = [];
     for (let i = 0; i < 7; i++) {
@@ -165,6 +171,10 @@ export class ClubOpenSessionsTabComponent implements OnInit {
   isToday(date: Date): boolean {
     const now = new Date();
     return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
+  }
+
+  formatDayHeader(date: Date): string {
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   }
 
   // --- Form ---
@@ -368,7 +378,7 @@ export class ClubOpenSessionsTabComponent implements OnInit {
   weekLabel(): string {
     const end = new Date(this.calendarWeekStart.getTime() + 6 * 86400000);
     const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
-    return `${this.calendarWeekStart.toLocaleDateString(undefined, opts)} – ${end.toLocaleDateString(undefined, opts)}`;
+    return `${this.calendarWeekStart.toLocaleDateString('en-US', opts)} - ${end.toLocaleDateString('en-US', opts)}`;
   }
 
   /** Check if user can edit/cancel this session (creator or coach/admin) */

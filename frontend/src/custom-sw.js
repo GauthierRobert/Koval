@@ -1,5 +1,9 @@
-/* Import Angular service worker */
-importScripts('./ngsw-worker.js');
+/* Import Angular service worker (only present in production builds) */
+try {
+  importScripts('./ngsw-worker.js');
+} catch (e) {
+  /* ngsw-worker.js not available in dev mode — ignore */
+}
 
 /* Firebase messaging for push notifications */
 importScripts('https://www.gstatic.com/firebasejs/11.0.0/firebase-app-compat.js');

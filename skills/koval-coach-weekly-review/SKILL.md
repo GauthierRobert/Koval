@@ -31,7 +31,7 @@ description: Use ONLY when the user is a COACH and asks to review their athletes
 5. Render a dashboard table sorted by severity (red → yellow → green).
 
 ## Output format
-[koval-plan-my-week.md](koval-plan-my-week.md)
+
 ```
 ## Squad review — week of <monday>
 

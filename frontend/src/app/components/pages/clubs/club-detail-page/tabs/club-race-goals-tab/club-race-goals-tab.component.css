@@ -4,6 +4,32 @@
   gap: var(--space-md);
 }
 
+.add-to-goals-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.2s var(--ease-spring-gentle), border-color 0.2s var(--ease-spring-gentle);
+}
+
+.add-to-goals-btn:hover:not(:disabled) {
+  color: var(--text-color);
+  border-color: var(--text-muted);
+}
+
+.add-to-goals-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .section-title {
   font-size: 9px;
   font-weight: 800;

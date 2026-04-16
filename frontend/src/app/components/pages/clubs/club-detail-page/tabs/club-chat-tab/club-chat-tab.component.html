@@ -1,0 +1,38 @@
+@if (targets$ | async; as targets) {
+  <div class="chat-tab" [class.is-chat-view]="view === 'chat'">
+    <div class="chat-tab__rooms">
+      @for (target of targets; track trackByKey($index, target)) {
+        <button
+          type="button"
+          class="room-chip"
+          [class.is-active]="selected?.key === target.key"
+          (click)="selectTarget(target)">
+          <span class="room-chip__badge" [attr.data-scope]="target.badge">
+            @switch (target.badge) {
+              @case ('CLUB') { {{ 'CLUB_DETAIL.CHAT_BADGE_CLUB' | translate }} }
+              @case ('GROUP') { {{ 'CLUB_DETAIL.CHAT_BADGE_GROUP' | translate }} }
+              @case ('OBJECTIVE') { {{ 'CLUB_DETAIL.CHAT_BADGE_OBJECTIVE' | translate }} }
+            }
+          </span>
+          <span class="room-chip__title">{{ target.title }}</span>
+        </button>
+      }
+    </div>
+
+    @if (selected) {
+      <div class="chat-tab__panel">
+        <button type="button" class="chat-tab__back" (click)="backToList()">
+          <span aria-hidden="true">←</span>
+          <span>{{ 'CLUB_DETAIL.CHAT_BACK_TO_ROOMS' | translate }}</span>
+        </button>
+        <app-embedded-chat
+          [scope]="selected.scope"
+          [clubId]="clubId"
+          [refId]="selected.refId"
+          [title]="selected.title"
+          [showHeader]="true">
+        </app-embedded-chat>
+      </div>
+    }
+  </div>
+}

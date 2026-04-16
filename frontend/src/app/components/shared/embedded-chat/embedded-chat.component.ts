@@ -60,6 +60,7 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
   @Input({ required: true }) scope!: ChatRoomScope;
   @Input({ required: true }) clubId!: string;
   @Input() refId?: string;
+  @Input() title?: string;
   @Input() showHeader = false;
 
   @ViewChild('messageList') private messageList?: ChatMessageListComponent;
@@ -81,17 +82,17 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
     this.resolveRoom();
     this.subs.add(
       this.sse.onChatMessage$.subscribe((msg) => {
-        if (msg.roomId === this.roomId) {
-          this.messages = [...this.messages, msg];
-          this.messageList?.scrollToBottomIfNeeded();
-          this.cdr.markForCheck();
-        }
+        if (msg.roomId !== this.roomId) return;
+        if (this.messages.some((m) => m.id === msg.id)) return;
+        this.messages = [...this.messages, msg];
+        this.messageList?.scrollToBottomIfNeeded();
+        this.cdr.markForCheck();
       }),
     );
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if ((changes['scope'] || changes['clubId'] || changes['refId']) && this.scope && this.clubId) {
+    if ((changes['scope'] || changes['clubId'] || changes['refId'] || changes['title']) && this.scope && this.clubId) {
       this.resolveRoom();
     }
   }
@@ -102,7 +103,14 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
     if (!this.roomId) return;
     this.sending = true;
     this.api.postMessage(this.roomId, text).subscribe({
-      next: () => { this.sending = false; this.cdr.markForCheck(); },
+      next: (msg) => {
+        if (!this.messages.some((m) => m.id === msg.id)) {
+          this.messages = [...this.messages, msg];
+          this.messageList?.scrollToBottomIfNeeded();
+        }
+        this.sending = false;
+        this.cdr.markForCheck();
+      },
       error: () => { this.sending = false; this.cdr.markForCheck(); },
     });
   }
@@ -136,7 +144,7 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
     this.roomId = null;
     this.messages = [];
     this.roomDetail = null;
-    this.api.findByParent(this.scope, this.clubId, this.refId).subscribe({
+    this.api.findByParent(this.scope, this.clubId, this.refId, this.title).subscribe({
       next: (detail) => {
         this.roomId = detail.id;
         this.roomDetail = detail;

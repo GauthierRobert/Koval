@@ -71,6 +71,15 @@
   background: var(--accent-subtle);
 }
 
+.nav-btn--today {
+  width: auto;
+  padding: 0 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 /* --- Filters --- */
 .filter-row {
   display: flex;
