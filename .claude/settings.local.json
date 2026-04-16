@@ -106,7 +106,9 @@
       "Bash(git reset *)",
       "Bash(node skills/package-skills.mjs)",
       "Bash(unzip -l skills/dist/koval-analyze-last-ride.zip)",
-      "Bash(unzip -l skills/dist/koval-athlete-onboarding.zip)"
+      "Bash(unzip -l skills/dist/koval-athlete-onboarding.zip)",
+      "Bash(export PATH=\"$JAVA_HOME/bin:$PATH\")",
+      "Bash(mvn -q -o compile)"
     ]
   }
 }

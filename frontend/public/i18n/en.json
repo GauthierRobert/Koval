@@ -162,7 +162,7 @@
     "BTN_REVOKE": "Revoke",
     "BTN_REVOKING": "Revoking...",
     "SKILLS_TITLE": "Koval Skills",
-    "SKILLS_DESCRIPTION": "Skill playbooks that tell Claude which Koval MCP tools to chain for common workflows. Download the package and drop the .md files into your Claude Desktop or Claude.ai skills folder.",
+    "SKILLS_DESCRIPTION": "Skill playbooks that tell Claude which Koval MCP tools to chain for common workflows. Download the package, unzip it, and drop each skill folder into your Claude Desktop or Claude.ai skills directory.",
     "SKILLS_EMPTY": "No skills available.",
     "BTN_DOWNLOAD_ALL": "Download all (.zip)",
     "BTN_DOWNLOAD": "Download"

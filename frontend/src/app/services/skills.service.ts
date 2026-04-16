@@ -18,8 +18,8 @@ export class SkillsService {
     return this.http.get<SkillSummary[]>(this.apiUrl);
   }
 
-  getDownloadUrl(filename: string): string {
-    return `${this.apiUrl}/${filename}`;
+  getDownloadUrl(skillName: string): string {
+    return `${this.apiUrl}/${skillName}.zip`;
   }
 
   getZipUrl(): string {

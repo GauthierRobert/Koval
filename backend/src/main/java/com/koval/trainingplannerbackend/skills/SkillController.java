@@ -1,7 +1,6 @@
 package com.koval.trainingplannerbackend.skills;
 
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,19 +31,19 @@ public class SkillController {
     public void downloadAll(HttpServletResponse response) throws IOException {
         response.setContentType("application/zip");
         response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"koval-skills.zip\"");
-        skillService.writeZip(response.getOutputStream());
+        skillService.writeAllSkillsZip(response.getOutputStream());
         response.flushBuffer();
     }
 
-    @GetMapping("/{filename:.+\\.md}")
-    public ResponseEntity<Resource> downloadOne(@PathVariable String filename) {
-        Resource resource = skillService.getSkillResource(filename);
-        if (resource == null) {
+    @GetMapping("/{skillName:[a-zA-Z0-9-]+}.zip")
+    public ResponseEntity<byte[]> downloadOne(@PathVariable String skillName) {
+        byte[] zip = skillService.getSkillZip(skillName);
+        if (zip == null) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType("text/markdown"))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                .body(resource);
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + skillName + ".zip\"")
+                .body(zip);
     }
 }

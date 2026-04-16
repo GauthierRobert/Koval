@@ -162,7 +162,7 @@
     "BTN_REVOKE": "Révoquer",
     "BTN_REVOKING": "Révocation...",
     "SKILLS_TITLE": "Skills Koval",
-    "SKILLS_DESCRIPTION": "Playbooks indiquant à Claude quels outils MCP Koval enchaîner pour les workflows courants. Téléchargez le package et déposez les fichiers .md dans votre dossier de skills Claude Desktop ou Claude.ai.",
+    "SKILLS_DESCRIPTION": "Playbooks indiquant à Claude quels outils MCP Koval enchaîner pour les workflows courants. Téléchargez le package, décompressez-le, puis déposez chaque dossier de skill dans votre répertoire de skills Claude Desktop ou Claude.ai.",
     "SKILLS_EMPTY": "Aucun skill disponible.",
     "BTN_DOWNLOAD_ALL": "Tout télécharger (.zip)",
     "BTN_DOWNLOAD": "Télécharger"

@@ -93,22 +93,24 @@ public class NativeImageHints {
                 hints.resources().registerPattern(prompt);
             }
 
-            // Koval skill markdown files served by SkillController
-            hints.resources().registerPattern("skills/*.md");
-            String[] skills = {
-                    "skills/koval-analyze-last-ride.md",
-                    "skills/koval-athlete-onboarding.md",
-                    "skills/koval-coach-onboarding.md",
-                    "skills/koval-coach-weekly-review.md",
-                    "skills/koval-create-workout.md",
-                    "skills/koval-find-workout.md",
-                    "skills/koval-form-check.md",
-                    "skills/koval-plan-my-week.md",
-                    "skills/koval-power-curve-report.md",
-                    "skills/koval-prep-race.md",
-                    "skills/koval-zone-setup.md"
+            // Koval skill folders served by SkillController. Each skill has a SKILL.md
+            // at the root and optional resources/ assets — register all of them.
+            String[] skillResources = {
+                    "skills/koval-analyze-last-ride/SKILL.md",
+                    "skills/koval-athlete-onboarding/SKILL.md",
+                    "skills/koval-athlete-onboarding/resources/athlete-profile.template.md",
+                    "skills/koval-coach-onboarding/SKILL.md",
+                    "skills/koval-coach-onboarding/resources/coach-profile.template.md",
+                    "skills/koval-coach-weekly-review/SKILL.md",
+                    "skills/koval-create-workout/SKILL.md",
+                    "skills/koval-find-workout/SKILL.md",
+                    "skills/koval-form-check/SKILL.md",
+                    "skills/koval-plan-my-week/SKILL.md",
+                    "skills/koval-power-curve-report/SKILL.md",
+                    "skills/koval-prep-race/SKILL.md",
+                    "skills/koval-zone-setup/SKILL.md"
             };
-            for (String skill : skills) {
+            for (String skill : skillResources) {
                 hints.resources().registerPattern(skill);
             }
         }

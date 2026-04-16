@@ -190,7 +190,13 @@
                 <targetPath>skills</targetPath>
                 <includes>
                     <include>*.md</include>
+                    <include>*/SKILL.md</include>
+                    <include>*/resources/**</include>
                 </includes>
+                <excludes>
+                    <exclude>dist/**</exclude>
+                    <exclude>node_modules/**</exclude>
+                </excludes>
             </resource>
         </resources>
         <plugins>

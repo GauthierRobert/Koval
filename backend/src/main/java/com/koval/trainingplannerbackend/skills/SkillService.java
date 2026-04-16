@@ -8,11 +8,13 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -23,48 +25,72 @@ public class SkillService {
 
     private static final Logger log = LoggerFactory.getLogger(SkillService.class);
 
-    private static final String SKILLS_PATTERN = "classpath:/skills/*.md";
+    private static final String SKILL_ENTRY_PATTERN = "classpath:/skills/*/SKILL.md";
+    private static final String SKILL_ASSETS_PATTERN = "classpath:/skills/%s/**";
     private static final String NAME_KEY = "name:";
     private static final String DESC_KEY = "description:";
 
-    /** Explicit list of skill files — used as fallback when classpath scanning
-     *  returns nothing (e.g. GraalVM native image). Keep in sync with the
-     *  skills/ directory and NativeImageHints. */
+    /** Explicit list of skill folder names — used as fallback when classpath scanning
+     *  returns nothing (e.g. GraalVM native image). Keep in sync with the skills/
+     *  directory and NativeImageHints. Optional resources/ files for a skill must also
+     *  be listed in KNOWN_SKILL_ASSETS. */
     private static final String[] KNOWN_SKILLS = {
-            "koval-analyze-last-ride.md",
-            "koval-athlete-onboarding.md",
-            "koval-coach-onboarding.md",
-            "koval-coach-weekly-review.md",
-            "koval-create-workout.md",
-            "koval-find-workout.md",
-            "koval-form-check.md",
-            "koval-plan-my-week.md",
-            "koval-power-curve-report.md",
-            "koval-prep-race.md",
-            "koval-zone-setup.md"
+            "koval-analyze-last-ride",
+            "koval-athlete-onboarding",
+            "koval-coach-onboarding",
+            "koval-coach-weekly-review",
+            "koval-create-workout",
+            "koval-find-workout",
+            "koval-form-check",
+            "koval-plan-my-week",
+            "koval-power-curve-report",
+            "koval-prep-race",
+            "koval-zone-setup"
     };
+
+    private static final Map<String, String[]> KNOWN_SKILL_ASSETS = Map.of(
+            "koval-athlete-onboarding", new String[]{"resources/athlete-profile.template.md"},
+            "koval-coach-onboarding", new String[]{"resources/coach-profile.template.md"}
+    );
 
     private final ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
 
     private volatile List<SkillSummary> cachedSummaries;
-    private volatile Map<String, Resource> cachedResources;
+    private volatile Map<String, List<SkillFile>> cachedFiles;
 
     public List<SkillSummary> listSkills() {
         ensureLoaded();
         return cachedSummaries;
     }
 
-    public Resource getSkillResource(String filename) {
+    /** Returns a zip of the named skill (folder layout: {@code <skillName>/SKILL.md} + resources),
+     *  or {@code null} when the skill does not exist. */
+    public byte[] getSkillZip(String skillName) {
         ensureLoaded();
-        return cachedResources.get(filename);
+        List<SkillFile> files = cachedFiles.get(skillName);
+        if (files == null) return null;
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            writeFilesAsZip(out, files);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to build zip for skill " + skillName, e);
+        }
     }
 
-    public void writeZip(OutputStream out) throws IOException {
+    public void writeAllSkillsZip(OutputStream out) throws IOException {
         ensureLoaded();
+        List<SkillFile> all = new ArrayList<>();
+        for (List<SkillFile> files : cachedFiles.values()) {
+            all.addAll(files);
+        }
+        writeFilesAsZip(out, all);
+    }
+
+    private void writeFilesAsZip(OutputStream out, List<SkillFile> files) throws IOException {
         try (ZipOutputStream zip = new ZipOutputStream(out)) {
-            for (Map.Entry<String, Resource> entry : cachedResources.entrySet()) {
-                zip.putNextEntry(new ZipEntry(entry.getKey()));
-                try (var in = entry.getValue().getInputStream()) {
+            for (SkillFile file : files) {
+                zip.putNextEntry(new ZipEntry(file.entryName()));
+                try (var in = file.resource().getInputStream()) {
                     in.transferTo(zip);
                 }
                 zip.closeEntry();
@@ -76,54 +102,103 @@ public class SkillService {
         if (cachedSummaries != null) return;
 
         List<SkillSummary> summaries = new ArrayList<>();
-        Map<String, Resource> resources = new java.util.LinkedHashMap<>();
+        Map<String, List<SkillFile>> filesBySkill = new LinkedHashMap<>();
 
-        // Try wildcard classpath scanning first (works on JVM, may fail in native image)
+        // Wildcard scanning first (JVM). May fail in native image.
         try {
-            Resource[] found = resolver.getResources(SKILLS_PATTERN);
-            for (Resource res : found) {
-                String filename = res.getFilename();
-                if (filename == null || !filename.endsWith(".md")) continue;
-                String content = new String(res.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-                SkillSummary summary = parseFrontmatter(filename, content);
-                summaries.add(summary);
-                resources.put(filename, res);
+            Resource[] skillMds = resolver.getResources(SKILL_ENTRY_PATTERN);
+            for (Resource md : skillMds) {
+                String skillName = extractSkillNameFromUri(md);
+                if (skillName == null) continue;
+                try {
+                    SkillSummary summary = buildSummary(skillName, md);
+                    List<SkillFile> files = collectSkillFilesByScan(skillName);
+                    summaries.add(summary);
+                    filesBySkill.put(skillName, files);
+                } catch (IOException e) {
+                    log.warn("Failed to load skill {}: {}", skillName, e.getMessage());
+                }
             }
         } catch (IOException e) {
             log.warn("Wildcard classpath scanning for skills failed: {}", e.getMessage());
         }
 
-        // Fallback: load each known skill individually (reliable in native images)
+        // Fallback: explicit per-skill loading (reliable in native image).
         if (summaries.isEmpty()) {
             log.info("Falling back to explicit skill file loading");
-            for (String filename : KNOWN_SKILLS) {
-                Resource res = new ClassPathResource("skills/" + filename);
-                if (!res.exists()) continue;
+            for (String skillName : KNOWN_SKILLS) {
+                Resource md = new ClassPathResource("skills/" + skillName + "/SKILL.md");
+                if (!md.exists()) continue;
                 try {
-                    String content = new String(res.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-                    summaries.add(parseFrontmatter(filename, content));
-                    resources.put(filename, res);
+                    summaries.add(buildSummary(skillName, md));
+                    filesBySkill.put(skillName, collectSkillFilesFromKnown(skillName, md));
                 } catch (IOException e) {
-                    log.warn("Failed to load skill {}: {}", filename, e.getMessage());
+                    log.warn("Failed to load skill {}: {}", skillName, e.getMessage());
                 }
             }
         }
 
         summaries.sort((a, b) -> a.filename().compareTo(b.filename()));
         this.cachedSummaries = Collections.unmodifiableList(summaries);
-        this.cachedResources = Collections.unmodifiableMap(resources);
+        this.cachedFiles = Collections.unmodifiableMap(filesBySkill);
     }
 
-    private SkillSummary parseFrontmatter(String filename, String content) {
-        String name = filename.replace(".md", "");
+    private SkillSummary buildSummary(String skillName, Resource skillMd) throws IOException {
+        String content = new String(skillMd.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        return parseFrontmatter(skillName, content);
+    }
+
+    private List<SkillFile> collectSkillFilesByScan(String skillName) throws IOException {
+        List<SkillFile> out = new ArrayList<>();
+        Resource[] assets = resolver.getResources(String.format(SKILL_ASSETS_PATTERN, skillName));
+        String prefix = "/skills/" + skillName + "/";
+        for (Resource asset : assets) {
+            if (!asset.isReadable()) continue;
+            String uri = asset.getURI().toString();
+            int idx = uri.indexOf(prefix);
+            if (idx < 0) continue;
+            String rel = uri.substring(idx + prefix.length());
+            if (rel.isEmpty() || rel.endsWith("/")) continue;
+            out.add(new SkillFile(skillName + "/" + rel, asset));
+        }
+        out.sort((a, b) -> a.entryName().compareTo(b.entryName()));
+        return out;
+    }
+
+    private List<SkillFile> collectSkillFilesFromKnown(String skillName, Resource skillMd) {
+        List<SkillFile> out = new ArrayList<>();
+        out.add(new SkillFile(skillName + "/SKILL.md", skillMd));
+        String[] extra = KNOWN_SKILL_ASSETS.getOrDefault(skillName, new String[0]);
+        for (String rel : extra) {
+            Resource res = new ClassPathResource("skills/" + skillName + "/" + rel);
+            if (res.exists()) out.add(new SkillFile(skillName + "/" + rel, res));
+        }
+        return out;
+    }
+
+    private String extractSkillNameFromUri(Resource skillMd) {
+        try {
+            String uri = skillMd.getURI().toString();
+            int end = uri.lastIndexOf("/SKILL.md");
+            if (end < 0) return null;
+            int start = uri.lastIndexOf('/', end - 1);
+            if (start < 0) return null;
+            return uri.substring(start + 1, end);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private SkillSummary parseFrontmatter(String skillName, String content) {
+        String name = skillName;
         String description = "";
 
         if (!content.startsWith("---")) {
-            return new SkillSummary(filename, name, description);
+            return new SkillSummary(skillName, name, description);
         }
 
         int end = content.indexOf("\n---", 3);
-        if (end < 0) return new SkillSummary(filename, name, description);
+        if (end < 0) return new SkillSummary(skillName, name, description);
 
         String frontmatter = content.substring(3, end);
         StringBuilder descBuilder = new StringBuilder();
@@ -141,7 +216,6 @@ public class SkillService {
                 String first = line.substring(DESC_KEY.length()).trim();
                 if (!first.isEmpty()) descBuilder.append(first);
             } else if (inDescription && rawLine.startsWith(" ")) {
-                // YAML continuation line
                 if (descBuilder.length() > 0) descBuilder.append(' ');
                 descBuilder.append(line);
             } else if (line.contains(":")) {
@@ -150,6 +224,8 @@ public class SkillService {
         }
 
         description = descBuilder.toString().trim();
-        return new SkillSummary(filename, name, description);
+        return new SkillSummary(skillName, name, description);
     }
+
+    private record SkillFile(String entryName, Resource resource) {}
 }
