@@ -65,7 +65,7 @@ public class ChatQueryService {
             ChatRoomMembership m = membershipByRoom.get(room.getId());
             out.add(new ChatRoomSummaryResponse(
                     room.getId(), room.getScope(), room.getClubId(), room.getScopeRefId(),
-                    displayTitleFor(room, userId), room.isJoinable(), m.isMuted(),
+                    displayTitleFor(room, userId), room.isJoinable(), m.getMuted(),
                     room.getLastMessageAt(), room.getLastMessagePreview(), room.getLastMessageSenderId(),
                     unreadCounts.getOrDefault(room.getId(), 0L),
                     otherUserIdForDirect(room, userId)
@@ -87,8 +87,8 @@ public class ChatQueryService {
                 room.getId(), room.getScope(), room.getClubId(), room.getScopeRefId(),
                 displayTitleFor(room, userId), room.isJoinable(), room.isArchived(),
                 room.getCreatedAt(), room.getCreatedBy(), room.getLastMessageAt(),
-                maybe.map(ChatRoomMembership::isActive).orElse(false),
-                maybe.map(ChatRoomMembership::isMuted).orElse(false),
+                maybe.map(ChatRoomMembership::getActive).orElse(false),
+                maybe.map(ChatRoomMembership::getMuted).orElse(false),
                 maybe.map(ChatRoomMembership::getLastReadAt).orElse(null),
                 otherUserIdForDirect(room, userId)
         );

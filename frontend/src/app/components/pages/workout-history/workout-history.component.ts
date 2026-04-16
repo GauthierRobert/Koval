@@ -10,6 +10,7 @@ import {ResponsiveService} from '../../../services/responsive.service';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {SessionAnalysisComponent} from '../session-analysis/session-analysis.component';
 import {FilterPillsComponent} from '../../shared/filter-pills/filter-pills.component';
+import {ModalShellComponent} from '../../shared/modal-shell/modal-shell.component';
 import {SkeletonComponent} from '../../shared/skeleton/skeleton.component';
 import {HistoryService, SavedSession} from '../../../services/history.service';
 import {formatTimeText} from '../../shared/format/format.utils';
@@ -29,7 +30,7 @@ type SportFilter = string | null;
 @Component({
     selector: 'app-workout-history',
     standalone: true,
-    imports: [CommonModule, FormsModule, TranslateModule, SportIconComponent, SessionAnalysisComponent, FilterPillsComponent, SkeletonComponent],
+    imports: [CommonModule, FormsModule, TranslateModule, SportIconComponent, SessionAnalysisComponent, FilterPillsComponent, ModalShellComponent, SkeletonComponent],
     templateUrl: './workout-history.component.html',
     styleUrl: './workout-history.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -108,6 +109,36 @@ export class WorkoutHistoryComponent implements OnInit {
     durationMax: number | null = null;
     tssMin: number | null = null;
     tssMax: number | null = null;
+
+    filtersOpen = false;
+
+    get activeAdvancedFilterCount(): number {
+        let n = 0;
+        if (this.dateFrom) n++;
+        if (this.dateTo) n++;
+        if (this.durationMin != null) n++;
+        if (this.durationMax != null) n++;
+        if (this.tssMin != null) n++;
+        if (this.tssMax != null) n++;
+        return n;
+    }
+
+    openFilters(): void {
+        this.filtersOpen = true;
+    }
+
+    closeFilters(): void {
+        this.filtersOpen = false;
+    }
+
+    resetAdvancedFilters(): void {
+        this.onDateFromChange('');
+        this.onDateToChange('');
+        this.onDurationMinChange(null);
+        this.onDurationMaxChange(null);
+        this.onTssMinChange(null);
+        this.onTssMaxChange(null);
+    }
 
     ftp$ = this.authService.user$.pipe(map((u) => u?.ftp ?? null));
 

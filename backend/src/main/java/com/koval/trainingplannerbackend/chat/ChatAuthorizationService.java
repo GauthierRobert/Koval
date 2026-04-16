@@ -37,7 +37,7 @@ public class ChatAuthorizationService {
     public ChatRoomMembership requireRoomAccess(String userId, String roomId) {
         ChatRoomMembership m = membershipRepository.findByRoomIdAndUserId(roomId, userId)
                 .orElseThrow(() -> new ForbiddenOperationException("Not a member of this chat room"));
-        if (!m.isActive()) throw new ForbiddenOperationException("Not an active member of this chat room");
+        if (!m.getActive()) throw new ForbiddenOperationException("Not an active member of this chat room");
         return m;
     }
 

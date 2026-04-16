@@ -54,33 +54,28 @@
       </div>
     }
 
-    <!-- Sport filter pills -->
+    <!-- Sport filter pills + advanced filter toggle -->
     <div class="filter-bar">
       <app-filter-pills
         [options]="sportOptions"
         [selected]="activeSportFilter"
         (selectionChange)="setSportFilter($event)">
       </app-filter-pills>
-    </div>
-
-    <!-- Date range filter -->
-    <div class="date-filter-bar">
-      <label class="date-label">{{ 'WORKOUT_HISTORY.DATE_FILTER_FROM' | translate }}</label>
-      <input data-testid="date-from" type="date" class="date-input" [ngModel]="dateFrom" (ngModelChange)="onDateFromChange($event)" />
-      <label class="date-label">{{ 'WORKOUT_HISTORY.DATE_FILTER_TO' | translate }}</label>
-      <input data-testid="date-to" type="date" class="date-input" [ngModel]="dateTo" (ngModelChange)="onDateToChange($event)" />
-    </div>
-
-    <!-- Duration & TSS range filter -->
-    <div class="date-filter-bar">
-      <label class="date-label">{{ 'WORKOUT_HISTORY.FILTER_DURATION_MIN' | translate }}</label>
-      <input type="number" min="0" class="date-input num-input" [ngModel]="durationMin" (ngModelChange)="onDurationMinChange($event)" />
-      <label class="date-label">{{ 'WORKOUT_HISTORY.FILTER_DURATION_MAX' | translate }}</label>
-      <input type="number" min="0" class="date-input num-input" [ngModel]="durationMax" (ngModelChange)="onDurationMaxChange($event)" />
-      <label class="date-label">{{ 'WORKOUT_HISTORY.FILTER_TSS_MIN' | translate }}</label>
-      <input type="number" min="0" class="date-input num-input" [ngModel]="tssMin" (ngModelChange)="onTssMinChange($event)" />
-      <label class="date-label">{{ 'WORKOUT_HISTORY.FILTER_TSS_MAX' | translate }}</label>
-      <input type="number" min="0" class="date-input num-input" [ngModel]="tssMax" (ngModelChange)="onTssMaxChange($event)" />
+      <button
+        type="button"
+        class="filters-btn"
+        [class.has-active]="activeAdvancedFilterCount > 0"
+        (click)="openFilters()"
+        [title]="'WORKOUT_HISTORY.BTN_FILTERS' | translate">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+        </svg>
+        <span class="filters-btn-label">{{ 'WORKOUT_HISTORY.BTN_FILTERS' | translate }}</span>
+        @if (activeAdvancedFilterCount > 0) {
+          <span class="filters-badge">{{ activeAdvancedFilterCount }}</span>
+        }
+      </button>
     </div>
 
     @if (historyService.loading$ | async) {
@@ -172,3 +167,63 @@
     }
   </main>
 </div>
+
+@if (filtersOpen) {
+  <app-modal-shell
+    [title]="'WORKOUT_HISTORY.FILTERS_TITLE' | translate"
+    size="sm"
+    (closed)="closeFilters()">
+    <div class="filters-modal-body">
+      <div class="filters-group">
+        <span class="filters-group-label">{{ 'WORKOUT_HISTORY.FILTERS_DATE_RANGE' | translate }}</span>
+        <div class="filters-row">
+          <label class="filters-field">
+            <span>{{ 'WORKOUT_HISTORY.DATE_FILTER_FROM' | translate }}</span>
+            <input data-testid="date-from" type="date" class="date-input" [ngModel]="dateFrom" (ngModelChange)="onDateFromChange($event)" />
+          </label>
+          <label class="filters-field">
+            <span>{{ 'WORKOUT_HISTORY.DATE_FILTER_TO' | translate }}</span>
+            <input data-testid="date-to" type="date" class="date-input" [ngModel]="dateTo" (ngModelChange)="onDateToChange($event)" />
+          </label>
+        </div>
+      </div>
+
+      <div class="filters-group">
+        <span class="filters-group-label">{{ 'WORKOUT_HISTORY.FILTERS_DURATION_RANGE' | translate }}</span>
+        <div class="filters-row">
+          <label class="filters-field">
+            <span>{{ 'WORKOUT_HISTORY.FILTER_DURATION_MIN' | translate }}</span>
+            <input type="number" min="0" class="date-input" [ngModel]="durationMin" (ngModelChange)="onDurationMinChange($event)" />
+          </label>
+          <label class="filters-field">
+            <span>{{ 'WORKOUT_HISTORY.FILTER_DURATION_MAX' | translate }}</span>
+            <input type="number" min="0" class="date-input" [ngModel]="durationMax" (ngModelChange)="onDurationMaxChange($event)" />
+          </label>
+        </div>
+      </div>
+
+      <div class="filters-group">
+        <span class="filters-group-label">{{ 'WORKOUT_HISTORY.FILTERS_TSS_RANGE' | translate }}</span>
+        <div class="filters-row">
+          <label class="filters-field">
+            <span>{{ 'WORKOUT_HISTORY.FILTER_TSS_MIN' | translate }}</span>
+            <input type="number" min="0" class="date-input" [ngModel]="tssMin" (ngModelChange)="onTssMinChange($event)" />
+          </label>
+          <label class="filters-field">
+            <span>{{ 'WORKOUT_HISTORY.FILTER_TSS_MAX' | translate }}</span>
+            <input type="number" min="0" class="date-input" [ngModel]="tssMax" (ngModelChange)="onTssMaxChange($event)" />
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div modal-footer class="filters-modal-footer">
+      <button type="button" class="filters-reset-btn" (click)="resetAdvancedFilters()" [disabled]="activeAdvancedFilterCount === 0">
+        {{ 'WORKOUT_HISTORY.FILTERS_RESET' | translate }}
+      </button>
+      <button type="button" class="filters-done-btn" (click)="closeFilters()">
+        {{ 'WORKOUT_HISTORY.FILTERS_DONE' | translate }}
+      </button>
+    </div>
+  </app-modal-shell>
+}
