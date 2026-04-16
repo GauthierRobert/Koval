@@ -44,7 +44,7 @@ public class Notification {
         this.title = title;
         this.body = body;
         this.data = data;
-        this.read = false;
+        this.read = Boolean.FALSE;
         this.createdAt = Instant.now();
     }
 
@@ -66,7 +66,7 @@ public class Notification {
     public Map<String, String> getData() { return data; }
     public void setData(Map<String, String> data) { this.data = data; }
 
-    public boolean isRead() { return read; }
+    public Boolean isRead() { return read; }
     public void setRead(boolean read) { this.read = read; }
 
     public Instant getReadAt() { return readAt; }

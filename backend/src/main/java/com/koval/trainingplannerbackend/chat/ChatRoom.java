@@ -63,4 +63,12 @@ public class ChatRoom {
     private Instant createdAt;
     private String createdBy;
     private Boolean archived;
+
+    public boolean isJoinable() {
+        return Boolean.TRUE.equals(joinable);
+    }
+
+    public boolean isArchived() {
+        return Boolean.TRUE.equals(archived);
+    }
 }

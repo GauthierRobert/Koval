@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -246,8 +247,8 @@ public class NotificationService {
                 throw new IllegalStateException("Notification does not belong to user");
             }
             if (!n.isRead()) {
-                n.setRead(true);
-                n.setReadAt(java.time.Instant.now());
+                n.setRead(Boolean.TRUE);
+                n.setReadAt(Instant.now());
                 notificationRepository.save(n);
             }
         });
@@ -255,7 +256,7 @@ public class NotificationService {
 
     public int markAllRead(String userId) {
         List<Notification> unread = notificationRepository.findByUserIdAndReadFalse(userId);
-        java.time.Instant now = java.time.Instant.now();
+        Instant now = Instant.now();
         for (Notification n : unread) {
             n.setRead(true);
             n.setReadAt(now);
