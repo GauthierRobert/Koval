@@ -41,6 +41,8 @@ export class SessionCardComponent {
   @Output() downloadGpx = new EventEmitter<ClubTrainingSession>();
   @Output() shareGpx = new EventEmitter<ClubTrainingSession>();
 
+  showAllParticipants = false;
+
   constructor(private translate: TranslateService) {}
 
   // --- Status helpers ---
@@ -266,5 +268,18 @@ export class SessionCardComponent {
   onShareGpx(event: Event): void {
     event.stopPropagation();
     this.shareGpx.emit(this.session);
+  }
+
+  onToggleAllParticipants(event: Event): void {
+    event.stopPropagation();
+    this.showAllParticipants = !this.showAllParticipants;
+  }
+
+  hasMeetingPoint(): boolean {
+    return this.session.meetingPointLat != null && this.session.meetingPointLon != null;
+  }
+
+  meetingPointMapUrl(): string {
+    return `https://www.google.com/maps?q=${this.session.meetingPointLat},${this.session.meetingPointLon}`;
   }
 }

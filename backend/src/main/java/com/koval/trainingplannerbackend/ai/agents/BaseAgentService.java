@@ -6,8 +6,6 @@ import com.koval.trainingplannerbackend.ai.ConversationSummarizer;
 import com.koval.trainingplannerbackend.ai.UserContextResolver;
 import com.koval.trainingplannerbackend.ai.UserContextResolver.ClubContext;
 import com.koval.trainingplannerbackend.ai.UserContextResolver.UserContext;
-import com.koval.trainingplannerbackend.ai.anonymization.AnonymizationContext;
-import com.koval.trainingplannerbackend.ai.anonymization.AnonymizationService;
 import com.koval.trainingplannerbackend.ai.logger.UsageTracker;
 import com.koval.trainingplannerbackend.ai.logger.UsageTracker.UsageSnapshot;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
@@ -43,16 +41,13 @@ public abstract class BaseAgentService implements TrainingAgent {
     private final ZoneSystemService zoneSystemService;
     private final UsageTracker usageTracker;
     private final ConversationSummarizer conversationSummarizer;
-    private final AnonymizationService anonymizationService;
 
     protected BaseAgentService(ChatClient chatClient, ZoneSystemService zoneSystemService,
-                                UsageTracker usageTracker, ConversationSummarizer conversationSummarizer,
-                                AnonymizationService anonymizationService) {
+                                UsageTracker usageTracker, ConversationSummarizer conversationSummarizer) {
         this.chatClient = chatClient;
         this.zoneSystemService = zoneSystemService;
         this.usageTracker = usageTracker;
         this.conversationSummarizer = conversationSummarizer;
-        this.anonymizationService = anonymizationService;
     }
 
     @Override
@@ -122,24 +117,21 @@ public abstract class BaseAgentService implements TrainingAgent {
 
     private ChatClient.ChatClientRequestSpec buildPrompt(UserContext ctx, String conversationId,
                                                          Sinks.Many<ServerSentEvent<String>> toolSink) {
-        AnonymizationContext anonCtx = anonymizationService.getOrCreate(conversationId);
-        String context = systemContext(ctx, anonCtx);
+        String context = systemContext(ctx);
         String summary = conversationSummarizer.getSummaryIfNeeded(conversationId);
         if (summary != null) {
             context = context + "\n\nPrevious conversation summary: " + summary;
         }
         Map<String, Object> toolCtx = toolSink != null
-                ? Map.of(SecurityUtils.USER_ID_KEY, ctx.userId(), "toolSink", toolSink,
-                         AnonymizationService.ANONYMIZATION_CTX_KEY, anonCtx)
-                : Map.of(SecurityUtils.USER_ID_KEY, ctx.userId(),
-                         AnonymizationService.ANONYMIZATION_CTX_KEY, anonCtx);
+                ? Map.of(SecurityUtils.USER_ID_KEY, ctx.userId(), "toolSink", toolSink)
+                : Map.of(SecurityUtils.USER_ID_KEY, ctx.userId());
         return chatClient.prompt()
                 .messages(new SystemMessage(context))
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .toolContext(toolCtx);
     }
 
-    protected String systemContext(UserContext ctx, AnonymizationContext anonCtx) {
+    protected String systemContext(UserContext ctx) {
         LocalDate today = LocalDate.now();
         DayOfWeek dow = today.getDayOfWeek();
         LocalDate weekStart = today.with(DayOfWeek.MONDAY);
@@ -147,7 +139,6 @@ public abstract class BaseAgentService implements TrainingAgent {
 
         StringBuilder sb = new StringBuilder();
 
-        // Base profile line — no display name sent to AI
         sb.append("role=%s ftp=%sW".formatted(ctx.role(), ctx.ftp()));
         if (ctx.css() != null) sb.append(" css=%ss/100m".formatted(ctx.css()));
         if (ctx.ftPace() != null) sb.append(" ftPace=%ss/km".formatted(ctx.ftPace()));
@@ -155,45 +146,37 @@ public abstract class BaseAgentService implements TrainingAgent {
                 today, dow.getDisplayName(TextStyle.SHORT, Locale.ENGLISH),
                 weekStart, weekEnd));
 
-        // Fitness metrics — no name attached
         if (ctx.ctl() != null || ctx.atl() != null || ctx.tsb() != null) {
             sb.append("\nctl=%.0f atl=%.0f tsb=%.0f".formatted(
                     ctx.ctl() != null ? ctx.ctl() : 0.0,
                     ctx.atl() != null ? ctx.atl() : 0.0,
                     ctx.tsb() != null ? ctx.tsb() : 0.0));
         }
-        // displayName intentionally omitted — not sent to AI provider
 
-        // Athletes (coach-management and scheduling agents) — anonymized aliases
         AgentType agent = getAgentType();
         if (!ctx.athletes().isEmpty()
                 && (agent == AgentType.COACH_MANAGEMENT || agent == AgentType.SCHEDULING)) {
             sb.append("\n\nAthletes:");
             for (var a : ctx.athletes()) {
-                String alias = anonCtx.anonymizeAthlete(a.id());
-                sb.append("\n- ").append(alias);
+                sb.append("\n- ").append(a.id()).append(':').append(a.displayName());
             }
         }
 
-        // Groups (coach-management and scheduling agents) — anonymized
         if (!ctx.athleteGroups().isEmpty()
                 && (agent == AgentType.COACH_MANAGEMENT || agent == AgentType.SCHEDULING)) {
             sb.append("\n\nGroups:");
             for (var g : ctx.athleteGroups()) {
-                String alias = anonCtx.anonymizeGroup(g.id());
-                sb.append("\n- ").append(alias).append(':').append(g.name());
+                sb.append("\n- ").append(g.id()).append(':').append(g.name());
             }
         }
 
-        // Clubs with groups (club-management agent) — anonymized IDs
         if (!ctx.clubs().isEmpty() && agent == AgentType.CLUB_MANAGEMENT) {
             sb.append("\n\nClubs:");
             for (ClubContext c : ctx.clubs()) {
-                String clubAlias = anonCtx.anonymizeClub(c.id());
-                sb.append("\n- ").append(clubAlias).append(":\"").append(c.name()).append('"');
+                sb.append("\n- ").append(c.id()).append(":\"").append(c.name()).append('"');
                 if (!c.groups().isEmpty()) {
                     String groups = c.groups().stream()
-                            .map(g -> anonCtx.anonymizeGroup(g.id()) + ":" + g.name())
+                            .map(g -> g.id() + ":" + g.name())
                             .collect(Collectors.joining(","));
                     sb.append(" groups:[").append(groups).append(']');
                 }

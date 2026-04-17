@@ -275,7 +275,7 @@ public class ClubStatsService {
                             label, null, false, 0, 0, 0));
                 } else {
                     int participantCount = weekSession.getParticipantIds().size();
-                    int denominator = maxParticipants != null ? maxParticipants : eligibleCount;
+                    int denominator = (maxParticipants != null && maxParticipants > 0) ? maxParticipants : eligibleCount;
                     double fillPercent = denominator > 0
                             ? Math.round(participantCount * 1000.0 / denominator) / 10.0
                             : 0;

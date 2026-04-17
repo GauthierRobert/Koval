@@ -27,12 +27,14 @@
                 <div class="workout-card clickable"
                   [class.workout-card--completed]="$any(group.entry).scheduled.status === 'COMPLETED'"
                   [class.workout-card--skipped]="$any(group.entry).scheduled.status === 'SKIPPED'"
+                  [style.--sport-bg]="sportColor($any(group.entry).scheduled.sportType).bg"
+                  [style.--sport-text]="sportColor($any(group.entry).scheduled.sportType).text"
                   (click)="workoutSelected.emit($any(group.entry).scheduled)">
                 <div class="card-top">
                   <div class="card-top-left">
                     @if ($any(group.entry).scheduled.trainingType) {
-                      <span class="type-indicator">
-                        <span class="type-dot" [style.background]="getTypeColor($any(group.entry).scheduled.trainingType)"></span>
+                      <span class="type-indicator"
+                            [style.--type-color]="getTypeColor($any(group.entry).scheduled.trainingType)">
                         {{ getTypeLabel($any(group.entry).scheduled.trainingType) }}
                       </span>
                     }
@@ -86,12 +88,12 @@
                   </div>
                   <span class="metric-sep"></span>
                   <div class="metric">
-                    <span class="metric-val">{{ $any(group.entry).scheduled.tss || '-' }}</span>
+                    <span class="metric-val">{{ ($any(group.entry).scheduled.tss | number:'1.0-0') || '-' }}</span>
                     <span class="metric-unit">TSS</span>
                   </div>
                   <span class="metric-sep"></span>
                   <div class="metric">
-                    <span class="metric-val">{{ $any(group.entry).scheduled.intensityFactor || $any(group.entry).scheduled.if || '-' }}</span>
+                    <span class="metric-val">{{ (($any(group.entry).scheduled.intensityFactor || $any(group.entry).scheduled.if) | number:'1.2-2') || '-' }}</span>
                     <span class="metric-unit">{{ 'CALENDAR_WEEK.METRIC_IF' | translate }}</span>
                   </div>
                 </div>
@@ -101,9 +103,19 @@
 
             @case ('fused') {
               <div class="workout-card workout-card--fused clickable"
+              [style.--sport-bg]="sportColor($any(group.entry).scheduled.sportType).bg"
+              [style.--sport-text]="sportColor($any(group.entry).scheduled.sportType).text"
               (click)="workoutSelected.emit($any(group.entry).scheduled)">
               <div class="card-top">
-                <span class="fused-badge">✓ {{ 'CALENDAR_WEEK.FUSED_BADGE' | translate }}</span>
+                <div class="card-top-left">
+                  @if ($any(group.entry).scheduled.trainingType) {
+                    <span class="type-indicator"
+                          [style.--type-color]="getTypeColor($any(group.entry).scheduled.trainingType)">
+                      {{ getTypeLabel($any(group.entry).scheduled.trainingType) }}
+                    </span>
+                  }
+                  <span class="fused-badge">✓ {{ 'CALENDAR_WEEK.FUSED_BADGE' | translate }}</span>
+                </div>
                 <div class="card-top-right">
                   @if ($any(group.entry).session.fitFileId) {
                     <a class="analysis-link" [routerLink]="['/analysis', $any(group.entry).session.id]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
@@ -132,7 +144,7 @@
                       </div>
                       <span class="metric-sep"></span>
                       <div class="metric">
-                        <span class="metric-val">{{ $any(group.entry).scheduled.tss || '—' }}</span>
+                        <span class="metric-val">{{ ($any(group.entry).scheduled.tss | number:'1.0-0') || '—' }}</span>
                         <span class="metric-unit">TSS</span>
                       </div>
                     </div>
@@ -148,7 +160,7 @@
                         </div>
                         <span class="metric-sep"></span>
                         <div class="metric">
-                          <span class="metric-val">{{ $any(group.entry).session.tss || '—' }}</span>
+                          <span class="metric-val">{{ ($any(group.entry).session.tss | number:'1.0-0') || '—' }}</span>
                           <span class="metric-unit">TSS</span>
                         </div>
                       </div>
@@ -209,7 +221,7 @@
                   </div>
                   <span class="metric-sep"></span>
                   <div class="metric">
-                    <span class="metric-val">{{ $any(group.entry).session.tss || '—' }}</span>
+                    <span class="metric-val">{{ ($any(group.entry).session.tss | number:'1.0-0') || '—' }}</span>
                     <span class="metric-unit">TSS</span>
                   </div>
                   <span class="metric-sep"></span>

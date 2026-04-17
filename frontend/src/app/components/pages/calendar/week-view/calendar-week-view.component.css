@@ -110,10 +110,9 @@
   flex-direction: column;
   gap: 0.5rem;
   position: relative;
-  border: 1px solid var(--glass-border);
-  border-left: 3.5px solid var(--card-color);
+  border: none;
   overflow: visible;
-  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  transition: background 0.15s, box-shadow 0.15s;
 }
 
 .workout-card.clickable {
@@ -130,13 +129,13 @@
   --card-color: var(--accent-color);
 }
 
-/* ── Completed — green ───────────────────────────────────────────── */
+/* ── Completed — colored by sport (fallback to success) ─────────── */
 .workout-card--completed {
-  --card-color: var(--success-color);
-  background: var(--success-subtle);
+  --card-color: var(--sport-text, var(--success-color));
+  background: var(--sport-bg, var(--success-subtle));
 }
 .workout-card--completed.clickable:hover {
-  background: var(--success-hover);
+  background: color-mix(in srgb, var(--sport-text, var(--success-color)) 18%, transparent);
 }
 
 /* ── Skipped — muted red ─────────────────────────────────────────── */
@@ -146,13 +145,13 @@
   opacity: 0.6;
 }
 
-/* ── Fused (completed with plan) — green ─────────────────────────── */
+/* ── Fused (completed with plan) — colored by sport ──────────────── */
 .workout-card--fused {
-  --card-color: var(--success-color);
-  background: var(--success-subtle);
+  --card-color: var(--sport-text, var(--success-color));
+  background: var(--sport-bg, var(--success-subtle));
 }
 .workout-card--fused.clickable:hover {
-  background: var(--success-hover);
+  background: color-mix(in srgb, var(--sport-text, var(--success-color)) 18%, transparent);
 }
 
 /* ── Standalone session — cyan/info ──────────────────────────────── */
@@ -218,21 +217,21 @@
   flex-shrink: 0;
 }
 
-/* ── Type pill (tag) — uses card color ───────────────────────────── */
+/* ── Type pill (tag) — uses training-type color ──────────────────── */
 .type-indicator {
   display: inline-flex;
   align-items: center;
   gap: 0;
   font-size: 0.55rem;
   font-weight: 800;
-  color: var(--card-color);
+  color: var(--type-color, var(--accent-color));
   text-transform: uppercase;
   letter-spacing: 0.5px;
   white-space: nowrap;
   padding: 0.15rem 0.45rem;
   border-radius: 4px;
-  background: color-mix(in srgb, var(--card-color) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--card-color) 25%, transparent);
+  background: color-mix(in srgb, var(--type-color, var(--accent-color)) 12%, transparent);
+  border: none;
 }
 
 .type-dot {
@@ -249,19 +248,17 @@
   letter-spacing: 0.5px;
   background: color-mix(in srgb, var(--card-color) 12%, transparent);
   color: var(--card-color);
-  border: 1px solid color-mix(in srgb, var(--card-color) 25%, transparent);
+  border: none;
 }
 
 .workout-card--completed .status-badge {
-  background: color-mix(in srgb, var(--success-color) 12%, transparent);
-  color: var(--success-color);
-  border-color: color-mix(in srgb, var(--success-color) 25%, transparent);
+  background: color-mix(in srgb, var(--sport-text, var(--success-color)) 12%, transparent);
+  color: var(--sport-text, var(--success-color));
 }
 
 .workout-card--skipped .status-badge {
   background: color-mix(in srgb, var(--danger-color) 12%, transparent);
   color: var(--danger-color);
-  border-color: color-mix(in srgb, var(--danger-color) 25%, transparent);
 }
 
 /* ── Hover-to-reveal action buttons ──────────────────────────────── */
@@ -293,7 +290,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-  border: 1px solid color-mix(in srgb, var(--card-color) 40%, transparent);
+  border: none;
   cursor: pointer;
   transition: all 0.15s;
   background: transparent;
@@ -314,12 +311,10 @@
 
 .btn-skip {
   color: var(--text-muted);
-  border-color: var(--overlay-12);
 }
 
 .btn-skip:hover {
   color: var(--text-color);
-  border-color: var(--overlay-30);
 }
 
 .delete-btn {
@@ -378,7 +373,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 5px;
-  border: 1px solid color-mix(in srgb, var(--card-color) 40%, transparent);
+  border: none;
   background: transparent;
   color: var(--card-color);
   cursor: pointer;
@@ -517,9 +512,9 @@
   border-radius: 4px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: color-mix(in srgb, var(--success-color) 12%, transparent);
-  color: var(--success-color);
-  border: 1px solid color-mix(in srgb, var(--success-color) 25%, transparent);
+  background: color-mix(in srgb, var(--sport-text, var(--success-color)) 12%, transparent);
+  color: var(--sport-text, var(--success-color));
+  border: none;
 }
 
 .fused-metrics { display: flex; align-items: flex-start; gap: 0.4rem; }
@@ -531,7 +526,7 @@
   letter-spacing: 0.8px;
   color: var(--text-dim);
 }
-.fused-col--actual .fused-label { color: var(--success-color); }
+.fused-col--actual .fused-label { color: var(--sport-text, var(--success-color)); }
 .fused-divider { width: 1px; background: var(--glass-border); align-self: stretch; margin: 0.15rem 0; }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -546,7 +541,7 @@
   letter-spacing: 0.5px;
   background: color-mix(in srgb, var(--info-color) 12%, transparent);
   color: var(--info-color);
-  border: 1px solid color-mix(in srgb, var(--info-color) 25%, transparent);
+  border: none;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -561,7 +556,7 @@
   letter-spacing: 0.5px;
   background: color-mix(in srgb, var(--card-color) 12%, transparent);
   color: var(--card-color);
-  border: 1px solid color-mix(in srgb, var(--card-color) 25%, transparent);
+  border: none;
   white-space: nowrap;
 }
 
@@ -585,7 +580,6 @@
   justify-content: space-between;
   align-items: center;
   padding-top: 4px;
-  border-top: 1px solid var(--overlay-5);
   margin-top: 2px;
   font-size: 0.62rem;
   color: var(--text-muted);
@@ -657,7 +651,7 @@
   border-radius: 4px;
   background: color-mix(in srgb, var(--danger-color) 12%, transparent);
   color: var(--danger-color);
-  border: 1px solid color-mix(in srgb, var(--danger-color) 25%, transparent);
+  border: none;
   letter-spacing: 0.5px;
 }
 

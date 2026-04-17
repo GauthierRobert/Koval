@@ -12,6 +12,20 @@ import com.koval.trainingplannerbackend.ai.tools.scheduling.SchedulingToolServic
 import com.koval.trainingplannerbackend.ai.tools.training.TrainingToolService;
 import com.koval.trainingplannerbackend.ai.tools.zone.ZoneToolService;
 import com.koval.trainingplannerbackend.club.feed.ClubFeedBroadcastMessage;
+import com.koval.trainingplannerbackend.training.history.AnalyticsService;
+import com.koval.trainingplannerbackend.training.history.CompletedSession;
+import com.koval.trainingplannerbackend.training.metrics.PowerCurveService;
+import com.koval.trainingplannerbackend.mcp.McpAnalyticsTools;
+import com.koval.trainingplannerbackend.mcp.McpClubTools;
+import com.koval.trainingplannerbackend.mcp.McpCoachTools;
+import com.koval.trainingplannerbackend.mcp.McpGoalTools;
+import com.koval.trainingplannerbackend.mcp.McpHistoryTools;
+import com.koval.trainingplannerbackend.mcp.McpPlanTools;
+import com.koval.trainingplannerbackend.mcp.McpProfileTools;
+import com.koval.trainingplannerbackend.mcp.McpRaceTools;
+import com.koval.trainingplannerbackend.mcp.McpSchedulingTools;
+import com.koval.trainingplannerbackend.mcp.McpTrainingTools;
+import com.koval.trainingplannerbackend.mcp.McpZoneTools;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -32,11 +46,22 @@ public class NativeImageHints {
         }
 
         private void registerSerializationHints(RuntimeHints hints) {
-            // Records serialized via Jackson (e.g. Pub/Sub broker payloads) need reflection
-            hints.reflection().registerType(ClubFeedBroadcastMessage.class,
-                    MemberCategory.ACCESS_DECLARED_FIELDS,
-                    MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
-                    MemberCategory.INVOKE_DECLARED_METHODS);
+            // Records serialized via Jackson (e.g. Pub/Sub broker payloads, MCP tool results)
+            // need reflection. Inner records of @Tool classes are covered by the tool-service
+            // loop; these are external records returned from MCP tools.
+            Class<?>[] recordTypes = {
+                    ClubFeedBroadcastMessage.class,
+                    AnalyticsService.PmcDataPoint.class,
+                    CompletedSession.BlockSummary.class,
+                    PowerCurveService.VolumeEntry.class,
+                    PowerCurveService.FriResult.class
+            };
+            for (Class<?> type : recordTypes) {
+                hints.reflection().registerType(type,
+                        MemberCategory.ACCESS_DECLARED_FIELDS,
+                        MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+                        MemberCategory.INVOKE_DECLARED_METHODS);
+            }
         }
 
         private void registerToolServiceHints(RuntimeHints hints) {
@@ -52,7 +77,18 @@ public class NativeImageHints {
                     RaceToolService.class,
                     GoalToolService.class,
                     CoachToolService.class,
-                    PlanToolService.class
+                    PlanToolService.class,
+                    McpTrainingTools.class,
+                    McpSchedulingTools.class,
+                    McpHistoryTools.class,
+                    McpCoachTools.class,
+                    McpZoneTools.class,
+                    McpPlanTools.class,
+                    McpGoalTools.class,
+                    McpClubTools.class,
+                    McpRaceTools.class,
+                    McpProfileTools.class,
+                    McpAnalyticsTools.class
             };
 
             for (Class<?> toolService : toolServices) {

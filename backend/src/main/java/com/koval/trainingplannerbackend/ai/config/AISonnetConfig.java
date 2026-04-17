@@ -4,7 +4,6 @@ import com.koval.trainingplannerbackend.ai.ConversationSummarizer;
 import com.koval.trainingplannerbackend.ai.agents.AgentType;
 import com.koval.trainingplannerbackend.ai.agents.SpecialistAgentService;
 import com.koval.trainingplannerbackend.ai.agents.TrainingAgent;
-import com.koval.trainingplannerbackend.ai.anonymization.AnonymizationService;
 import com.koval.trainingplannerbackend.ai.logger.UsageTracker;
 import com.koval.trainingplannerbackend.ai.tools.action.CreationTrainingToolService;
 import com.koval.trainingplannerbackend.ai.tools.action.CreationTrainingWithClubSessionToolService;
@@ -88,8 +87,7 @@ public class AISonnetConfig extends AIConfig {
     public TrainingAgent trainingCreationAgent(@Qualifier("trainingCreationClient") ChatClient chatClient,
                                                ZoneSystemService zoneSystemService,
                                                UsageTracker usageTracker,
-                                               ConversationSummarizer conversationSummarizer,
-                                               AnonymizationService anonymizationService) {
-        return new SpecialistAgentService(AgentType.TRAINING_CREATION, chatClient, zoneSystemService, usageTracker, conversationSummarizer, anonymizationService);
+                                               ConversationSummarizer conversationSummarizer) {
+        return new SpecialistAgentService(AgentType.TRAINING_CREATION, chatClient, zoneSystemService, usageTracker, conversationSummarizer);
     }
 }

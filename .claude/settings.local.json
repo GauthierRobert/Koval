@@ -104,15 +104,18 @@
       "Bash(git checkout *)",
       "Bash(git commit *)",
       "Bash(git reset *)",
-      "Bash(node skills/package-skills.mjs)",
-      "Bash(unzip -l skills/dist/koval-analyze-last-ride.zip)",
+      "Bash(node *)",
+      "Bash(unzip *)",
       "Bash(unzip -l skills/dist/koval-athlete-onboarding.zip)",
       "Bash(export PATH=\"$JAVA_HOME/bin:$PATH\")",
       "Bash(mvn -q -o compile)",
       "Bash(echo \"Exit: $?\")",
-      "Bash(npx tsc *)",
+      "Bash(npx *)",
       "Read(//tmp/**)",
-      "Bash(mvn -q -pl . compile -DskipTests)"
+      "Bash(mvn -q -pl . compile -DskipTests)",
+      "Bash(mvn *)",
+      "Bash(powershell.exe *)",
+      "Bash(echo *)"
     ]
   }
 }

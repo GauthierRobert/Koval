@@ -4,286 +4,360 @@
   [class.sc-card--waiting]="isOnWaitingList()"
   [class.sc-card--cancelled]="isCancelled()"
   [class.sc-card--has-gpx]="session.routeCoordinates?.length"
+  [class.sc-card--has-linked]="hasAnyLinkedTraining()"
   (click)="onCardClick()">
 
-  <!-- Info side -->
-  <div class="sc-card__info">
-    <!-- ZONE 1: Lead -->
-    <div class="sc-lead">
-      <div class="sc-lead__left">
-        <app-sport-icon [sport]="$any(session.sport)" [size]="24"></app-sport-icon>
-        <div class="card-header-info">
-          <span class="card-title" [class.sc-title--cancelled]="isCancelled()">{{ session.title }}</span>
-          <span class="card-subtitle">
-            {{ formatTime() }}
-            @if (session.durationMinutes) {
-              <span class="sc-duration">{{ session.durationMinutes }}min</span>
-            }
+  <!-- ============================================================
+       COLUMN 1 — INFO
+       ============================================================ -->
+  <section class="sc-col sc-col--info">
+
+    <!-- Header: title + sport chip + recurring + status + coach controls -->
+    <header class="sc-header">
+      <div class="sc-header__identity">
+        <h3 class="sc-title" [class.sc-title--cancelled]="isCancelled()">{{ session.title }}</h3>
+        <div class="sc-chips">
+          <span class="sc-chip sc-chip--sport">
+            <app-sport-icon [sport]="$any(session.sport)" [size]="12"></app-sport-icon>
+            {{ session.sport }}
           </span>
+          @if (session.clubGroupId) {
+            <span class="sc-chip sc-chip--group">{{ getGroupName(session.clubGroupId) }}</span>
+          }
+          @if (session.openToAll && !isCancelled()) {
+            <span class="sc-chip sc-chip--open"
+                  [class.sc-chip--open-active]="getOpenToAllLabel() === ('CLUB_SESSIONS.OPEN_TO_ALL_OPENED' | translate)">
+              {{ getOpenToAllLabel() }}
+            </span>
+          }
+          @if (session.recurringTemplateId) {
+            <span class="sc-chip sc-chip--recurring" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" height="11" viewBox="0 -960 960 960" width="11" fill="currentColor">
+                <path d="M314-115q-104-48-169-145T80-479q0-26 2.5-51t8.5-49l-46 27-40-69 191-110 110 190-70 40-54-94q-11 27-16.5 56t-5.5 60q0 97 53 176.5T354-185l-40 70Zm306-485v-80h109q-46-57-111-88.5T480-800q-55 0-104 17t-90 48l-40-70q50-35 109-55t125-20q79 0 151 29.5T760-765v-55h80v220H620ZM594 0 403-110l110-190 69 40-57 98q118-17 196.5-107T800-480q0-11-.5-20.5T797-520h81q1 10 1.5 19.5t.5 20.5q0 135-80.5 241.5T590-95l44 26-40 69Z"/>
+              </svg>
+            </span>
+          }
         </div>
-        @if (session.recurringTemplateId) {
-        <span class="sc-recurring-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px"
-                 fill="currentColor"><path
-              d="M314-115q-104-48-169-145T80-479q0-26 2.5-51t8.5-49l-46 27-40-69 191-110 110 190-70 40-54-94q-11 27-16.5 56t-5.5 60q0 97 53 176.5T354-185l-40 70Zm306-485v-80h109q-46-57-111-88.5T480-800q-55 0-104 17t-90 48l-40-70q50-35 109-55t125-20q79 0 151 29.5T760-765v-55h80v220H620ZM594 0 403-110l110-190 69 40-57 98q118-17 196.5-107T800-480q0-11-.5-20.5T797-520h81q1 10 1.5 19.5t.5 20.5q0 135-80.5 241.5T590-95l44 26-40 69Z"/></svg>
-          </span>
-        }
       </div>
-      <div class="sc-lead__right">
-        @if (isParticipant() && !isCancelled()) {
-        <span class="sc-status-pill sc-status-pill--attending">{{ 'CLUB_SESSIONS.BADGE_ATTENDING' | translate }}</span>
-        }
-        @if (isOnWaitingList()) {
-        <span class="sc-status-pill sc-status-pill--waiting">{{ 'CLUB_SESSIONS.WAITING_LIST_POSITION' | translate: { position: getWaitingListPosition() } }}</span>
-        }
+
+      <div class="sc-header__controls">
         @if (isCancelled()) {
-        <span
-          class="sc-status-pill sc-status-pill--cancelled">{{ 'CLUB_SESSIONS.SESSION_BADGE_CANCELLED' | translate }}</span>
+          <span class="sc-status-pill sc-status-pill--cancelled">{{ 'CLUB_SESSIONS.SESSION_BADGE_CANCELLED' | translate }}</span>
         }
 
-        @if (isCoach && canLinkMoreTrainings()) {
-        <button class="sc-icon-btn" (click)="onLinkTraining($event)"
-                [title]="'CLUB_SESSIONS.BTN_AI_CREATE_TITLE' | translate">
-          <svg xmlns="http://www.w3.org/2000/svg" height="12" viewBox="0 -960 960 960" width="12" fill="currentColor">
-            <path
-              d="M440-280H280q-83 0-141.5-58.5T80-480q0-83 58.5-141.5T280-680h160v80H280q-50 0-85 35t-35 85q0 50 35 85t85 35h160v80ZM320-440v-80h320v80H320Zm200 160v-80h160q50 0 85-35t35-85q0-50-35-85t-85-35H520v-80h160q83 0 141.5 58.5T880-480q0 83-58.5 141.5T680-280H520Z"/>
-          </svg>
-          <span>{{ 'CLUB_SESSIONS.BTN_LINK_TRAINING' | translate }}</span>
-        </button>
+        @if (isCoach && canLinkMoreTrainings() && !hasAnyLinkedTraining()) {
+          <button class="sc-icon-btn" (click)="onLinkTraining($event)"
+                  [title]="'CLUB_SESSIONS.BTN_AI_CREATE_TITLE' | translate">
+            <svg xmlns="http://www.w3.org/2000/svg" height="12" viewBox="0 -960 960 960" width="12" fill="currentColor">
+              <path d="M440-280H280q-83 0-141.5-58.5T80-480q0-83 58.5-141.5T280-680h160v80H280q-50 0-85 35t-35 85q0 50 35 85t85 35h160v80ZM320-440v-80h320v80H320Zm200 160v-80h160q50 0 85-35t35-85q0-50-35-85t-85-35H520v-80h160q83 0 141.5 58.5T880-480q0 83-58.5 141.5T680-280H520Z"/>
+            </svg>
+            <span>{{ 'CLUB_SESSIONS.BTN_LINK_TRAINING' | translate }}</span>
+          </button>
         }
         @if (canCreate) {
-        <button class="sc-icon-btn" (click)="onEdit($event)"
-                [title]="'CLUB_SESSIONS.BTN_EDIT_SESSION_TITLE' | translate">
-          <svg xmlns="http://www.w3.org/2000/svg" height="12" viewBox="0 -960 960 960" width="12" fill="currentColor">
-            <path
-              d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/>
-          </svg>
-        </button>
-
-        <button class="sc-icon-btn" (click)="onDuplicateSession($event)"
-                [title]="'CLUB_SESSIONS.BTN_DUPLICATE_SESSION' | translate">
-          <svg xmlns="http://www.w3.org/2000/svg" height="12" viewBox="0 0 24 24" width="12" fill="none"
-               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-          </svg>
-        </button>
-
-        <button class="sc-icon-btn sc-icon-btn--danger" (click)="onCancelSession($event)"
-                [title]="'CLUB_SESSIONS.BTN_CANCEL_SESSION' | translate">
-          <svg xmlns="http://www.w3.org/2000/svg" height="12" viewBox="0 -960 960 960" width="12" fill="currentColor">
-            <path
-              d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/>
-          </svg>
-        </button>
-
+          <button class="sc-icon-btn" (click)="onEdit($event)"
+                  [title]="'CLUB_SESSIONS.BTN_EDIT_SESSION_TITLE' | translate"
+                  [attr.aria-label]="'CLUB_SESSIONS.BTN_EDIT_SESSION_TITLE' | translate">
+            <svg xmlns="http://www.w3.org/2000/svg" height="12" viewBox="0 -960 960 960" width="12" fill="currentColor">
+              <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/>
+            </svg>
+          </button>
+          <button class="sc-icon-btn" (click)="onDuplicateSession($event)"
+                  [title]="'CLUB_SESSIONS.BTN_DUPLICATE_SESSION' | translate"
+                  [attr.aria-label]="'CLUB_SESSIONS.BTN_DUPLICATE_SESSION' | translate">
+            <svg xmlns="http://www.w3.org/2000/svg" height="12" viewBox="0 0 24 24" width="12" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+          </button>
+          <button class="sc-icon-btn sc-icon-btn--danger" (click)="onCancelSession($event)"
+                  [title]="'CLUB_SESSIONS.BTN_CANCEL_SESSION' | translate"
+                  [attr.aria-label]="'CLUB_SESSIONS.BTN_CANCEL_SESSION' | translate">
+            <svg xmlns="http://www.w3.org/2000/svg" height="12" viewBox="0 -960 960 960" width="12" fill="currentColor">
+              <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/>
+            </svg>
+          </button>
         }
       </div>
-    </div>
+    </header>
 
-
-    <!-- ZONE 3: Tags -->
-    <div class="sc-tags">
-      @if (getCreatorName(); as name) {
-        <span class="sc-creator">{{ 'CLUB_SESSIONS.PROPOSED_BY' | translate: { name } }}</span>
-      }
-      @if (session.clubGroupId) {
-      <span class="sc-tag sc-tag--group">{{ getGroupName(session.clubGroupId) }}</span>
-      }
-      @if (session.openToAll && !isCancelled()) {
-      <span class="sc-tag sc-tag--open"
-            [class.sc-tag--open-active]="getOpenToAllLabel() === ('CLUB_SESSIONS.OPEN_TO_ALL_OPENED' | translate)">{{ getOpenToAllLabel() }}</span>
-      }
-      @if (session.location) {
-      <span class="sc-location">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-               stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle
-            cx="12" cy="10" r="3"/></svg>
-          {{ session.location }}
-        </span>
-      }
-      @if (session.meetingPointLat != null && session.meetingPointLon != null) {
-      <a class="sc-location sc-location--link"
-         [href]="'https://www.google.com/maps?q=' + session.meetingPointLat + ',' + session.meetingPointLon"
-         target="_blank" rel="noopener" (click)="$event.stopPropagation()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-          <circle cx="12" cy="10" r="3"/>
-        </svg>
-        {{ 'CLUB_SESSIONS.VIEW_ON_MAP' | translate }}
-      </a>
-      }
-    </div>
-
-    <!-- GPX metadata (only shown when no route/map — stats go on the map overlay when route exists) -->
-    @if (session.gpxFileName && !session.routeCoordinates?.length) {
-    <div class="gpx-row">
-      <div class="gpx-actions">
-        <span class="gpx-badge">{{ session.gpxFileName }}</span>
-        <button class="gpx-btn" (click)="onDownloadGpx($event)" [title]="'COMMON.DOWNLOAD' | translate">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-               stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-        </button>
-      </div>
-    </div>
+    <!-- Creator -->
+    @if (getCreatorName(); as name) {
+      <p class="sc-creator">{{ 'CLUB_SESSIONS.PROPOSED_BY' | translate: { name } }}</p>
     }
 
     <!-- Cancellation reason -->
     @if (isCancelled() && session.cancellationReason) {
-    <div class="sc-cancel-reason">{{ session.cancellationReason }}</div>
+      <p class="sc-cancel-reason">{{ session.cancellationReason }}</p>
     }
 
-    <!-- Linked trainings -->
-    @for (glt of getEffectiveLinkedTrainings(); track glt.trainingId) {
-    <div class="sc-linked">
-      <button class="sc-linked__btn"
-              [class.sc-linked__btn--dimmed]="!isInUserGroup(glt)"
-              (click)="onNavigateToTraining(glt.trainingId, $event)">
-        @if (glt.clubGroupName && !session.clubGroupId) {
-          <span class="sc-tag sc-tag--group small">{{ glt.clubGroupName }}</span>
+    <!-- Details grid -->
+    <div class="sc-section">
+      <h4 class="sc-section__label">{{ 'CLUB_SESSIONS.SECTION_DETAILS' | translate }}</h4>
+      <div class="sc-metrics">
+        <div class="sc-metric">
+          <svg class="sc-metric__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <polyline points="12 7 12 12 15 14"/>
+          </svg>
+          <div class="sc-metric__text">
+            <span class="sc-metric__label">{{ 'CLUB_SESSIONS.DETAIL_START_TIME' | translate }}</span>
+            <span class="sc-metric__value">{{ formatTime() || '—' }}</span>
+          </div>
+        </div>
+
+        @if (session.durationMinutes) {
+          <div class="sc-metric">
+            <svg class="sc-metric__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="12 6 12 12 16 14"/>
+              <circle cx="12" cy="12" r="9"/>
+            </svg>
+            <div class="sc-metric__text">
+              <span class="sc-metric__label">{{ 'CLUB_SESSIONS.DETAIL_DURATION' | translate }}</span>
+              <span class="sc-metric__value">{{ session.durationMinutes }}min</span>
+            </div>
+          </div>
         }
-        <span
-          class="sc-linked__title">{{ glt.trainingTitle || ('CLUB_SESSIONS.LINKED_TRAINING_FALLBACK' | translate) }}</span>
-        @if (glt.trainingDescription) {
-        <span class="sc-linked__desc">{{ truncate(glt.trainingDescription, 80) }}</span>
+
+        @if (session.routeCoordinates?.length) {
+          <div class="sc-metric">
+            <svg class="sc-metric__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21 1 6"/>
+              <line x1="8" y1="3" x2="8" y2="18"/>
+              <line x1="16" y1="6" x2="16" y2="21"/>
+            </svg>
+            <div class="sc-metric__text">
+              <span class="sc-metric__label">{{ 'CLUB_SESSIONS.DETAIL_DISTANCE' | translate }}</span>
+              <span class="sc-metric__value">{{ getTotalDistanceKm() }}km</span>
+            </div>
+          </div>
+
+          <div class="sc-metric">
+            <svg class="sc-metric__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="19" x2="12" y2="5"/>
+              <polyline points="5 12 12 5 19 12"/>
+            </svg>
+            <div class="sc-metric__text">
+              <span class="sc-metric__label">{{ 'CLUB_SESSIONS.DETAIL_ELEVATION' | translate }}</span>
+              <span class="sc-metric__value">{{ getElevationGain() }}m</span>
+            </div>
+          </div>
         }
-        <span class="sc-linked__arrow">{{ 'CLUB_SESSIONS.LINKED_VIEW_ARROW' | translate }}</span>
-      </button>
-      @if (isCoach && !isCancelled()) {
-      <button class="sc-icon-btn sc-icon-btn--danger" (click)="onUnlinkTraining(glt, $event)">&times;</button>
-      }
+      </div>
     </div>
+
+    <!-- Location -->
+    @if (session.location || hasMeetingPoint()) {
+      <div class="sc-location-row">
+        @if (session.location) {
+          <span class="sc-location">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            {{ session.location }}
+          </span>
+        }
+        @if (hasMeetingPoint()) {
+          <a class="sc-map-link"
+             [href]="meetingPointMapUrl()"
+             target="_blank" rel="noopener"
+             (click)="$event.stopPropagation()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21 1 6"/>
+              <line x1="8" y1="3" x2="8" y2="18"/>
+              <line x1="16" y1="6" x2="16" y2="21"/>
+            </svg>
+            {{ 'CLUB_SESSIONS.VIEW_ON_MAP' | translate }}
+          </a>
+        }
+      </div>
     }
 
-    <!-- Description (if no linked trainings and not recurring) -->
+    <!-- Description fallback -->
     @if (session.description && !hasAnyLinkedTraining() && !session.recurringTemplateId) {
-    <p class="sc-desc">{{ session.description }}</p>
+      <p class="sc-desc">{{ session.description }}</p>
     }
 
-    <div class="sc-detail">
-      <div class="sc-detail__section">
-        <div class="sc-detail__title sc-detail__title--accent">{{ 'CLUB_SESSIONS.DETAIL_ATTENDING' | translate: { count:
-          session.participantIds.length } }}
+    <!-- ============================================================
+         PARTICIPATION BLOCK — pinned to bottom of the info column
+         ============================================================ -->
+    <div class="sc-participation">
+      <div class="sc-section">
+        <div class="sc-participation__heading">
+          <h4 class="sc-section__label">
+            {{ 'CLUB_SESSIONS.DETAIL_ATTENDING' | translate: { count: session.participantIds.length } }}
+          </h4>
+          @if (isParticipant() && !isCancelled()) {
+            <span class="sc-status-pill sc-status-pill--attending">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="3"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              {{ 'CLUB_SESSIONS.BADGE_ATTENDING' | translate }}
+            </span>
+          }
+          @if (isOnWaitingList()) {
+            <span class="sc-status-pill sc-status-pill--waiting">{{ 'CLUB_SESSIONS.WAITING_LIST_POSITION' | translate: { position: getWaitingListPosition() } }}</span>
+          }
         </div>
+
         @if (session.participantIds.length > 0) {
-        <div class="sc-detail__list">
-          @for (p of getParticipantNames(); track p.initial) {
-          <div class="sc-detail__row">
-            <span class="sc-detail__name">&#x2022; {{ p.name }}</span>
+          <div class="sc-avatar-stack">
+            @for (p of getParticipantNames().slice(0, 4); track p.name + $index) {
+              <span class="sc-avatar sc-avatar--stacked" [title]="p.name" aria-hidden="true">{{ p.initial }}</span>
+            }
+            @if (session.participantIds.length > 4) {
+              <button class="sc-chip sc-chip--others"
+                      (click)="onToggleAllParticipants($event)"
+                      [attr.aria-expanded]="showAllParticipants">
+                {{ 'CLUB_SESSIONS.PARTICIPANTS_OTHERS' | translate: { count: session.participantIds.length - 4 } }}
+              </button>
+            }
           </div>
+
+          @if (showAllParticipants) {
+            <ul class="sc-people-list">
+              @for (p of getParticipantNames(); track p.name + $index) {
+                <li>{{ p.name }}</li>
+              }
+            </ul>
           }
-        </div>
         } @else {
-        <span class="sc-detail__empty">{{ 'CLUB_SESSIONS.DETAIL_NO_ATTENDEES' | translate }}</span>
+          <span class="sc-empty">{{ 'CLUB_SESSIONS.DETAIL_NO_ATTENDEES' | translate }}</span>
         }
-      </div>
-      @if ((session.waitingList?.length || 0) > 0) {
-      <div class="sc-detail__section">
-        <div class="sc-detail__title">{{ 'CLUB_SESSIONS.DETAIL_WAITING_LIST' | translate: { count:
-          session.waitingList!.length } }}
-        </div>
-        <div class="sc-detail__list">
-          @for (w of getWaitingListNames(); track w.position) {
-          <div class="sc-detail__row">
-            <span class="sc-detail__position">#{{ w.position }}</span>
-            <span class="sc-detail__name">&#x2022; {{ w.name }}</span>
+
+        @if ((session.waitingList?.length || 0) > 0) {
+          <div class="sc-waiting">
+            <span class="sc-section__label sc-section__label--sub">
+              {{ 'CLUB_SESSIONS.DETAIL_WAITING_LIST' | translate: { count: session.waitingList!.length } }}
+            </span>
+            <ul class="sc-people-list">
+              @for (w of getWaitingListNames(); track w.position) {
+                <li><span class="sc-waiting__pos">#{{ w.position }}</span> {{ w.name }}</li>
+              }
+            </ul>
           </div>
-          }
-        </div>
-      </div>
-      }
-    </div>
-    <!-- ZONE 4: Footer -->
-    <div class="sc-footer">
-      <div class="sc-capacity">
-        <svg class="sc-capacity__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-        <span [class.sc-capacity--full]="isFull()">{{ getCapacityText() }}</span>
-        @if (isFull() && !isCancelled()) {
-        <span class="sc-tag sc-tag--full">{{ 'CLUB_SESSIONS.BADGE_FULL' | translate }}</span>
         }
       </div>
-      @if (!isCancelled()) {
+
       <div class="sc-actions">
-        @if (!isParticipant() && !isOnWaitingList()) {
-        <button class="sc-join-btn"
-                [class.sc-join-btn--disabled]="!canJoin()"
-                [disabled]="!canJoin()"
-                [title]="canJoin() ? '' : getCannotJoinReason()"
-                (click)="onJoin($event)">
-          {{ isFull() ? ('CLUB_SESSIONS.BTN_JOIN_WAITING_LIST' | translate) : ('CLUB_SESSIONS.BTN_JOIN' | translate) }}
-        </button>
+        @if (session.maxParticipants != null) {
+          <div class="sc-capacity">
+            <span [class.sc-capacity--full]="isFull()">{{ getCapacityText() }}</span>
+            @if (isFull() && !isCancelled()) {
+              <span class="sc-chip sc-chip--full">{{ 'CLUB_SESSIONS.BADGE_FULL' | translate }}</span>
+            }
+          </div>
         }
-        @if (isParticipant()) {
-        <button class="sc-leave-btn" (click)="onLeave($event)">
-          {{ 'CLUB_SESSIONS.BTN_REMOVE_PARTICIPATION' | translate }}
-        </button>
-        }
-        @if (isOnWaitingList()) {
-        <button class="sc-leave-btn" (click)="onLeave($event)">
-          {{ 'CLUB_SESSIONS.BTN_LEAVE_WAITING_LIST' | translate }}
-        </button>
+
+        @if (!isCancelled()) {
+          <div class="sc-actions__buttons">
+            @if (!isParticipant() && !isOnWaitingList()) {
+              <button class="sc-btn sc-btn--primary"
+                      [disabled]="!canJoin()"
+                      [class.sc-btn--disabled]="!canJoin()"
+                      [title]="canJoin() ? '' : getCannotJoinReason()"
+                      (click)="onJoin($event)">
+                {{ isFull() ? ('CLUB_SESSIONS.BTN_JOIN_WAITING_LIST' | translate) : ('CLUB_SESSIONS.BTN_JOIN' | translate) }}
+              </button>
+            }
+            @if (isParticipant()) {
+              <button class="sc-btn sc-btn--ghost" (click)="onLeave($event)">
+                {{ 'CLUB_SESSIONS.BTN_REMOVE_PARTICIPATION' | translate }}
+              </button>
+            }
+            @if (isOnWaitingList()) {
+              <button class="sc-btn sc-btn--ghost" (click)="onLeave($event)">
+                {{ 'CLUB_SESSIONS.BTN_LEAVE_WAITING_LIST' | translate }}
+              </button>
+            }
+          </div>
         }
       </div>
-      }
     </div>
+  </section>
 
-  </div>
+  <!-- ============================================================
+       COLUMN 2 — LINKED TRAININGS
+       ============================================================ -->
+  @if (hasAnyLinkedTraining()) {
+    <section class="sc-col sc-col--linked">
+      <div class="sc-col__header">
+        <h4 class="sc-section__label">{{ 'CLUB_SESSIONS.SECTION_LINKED_TRAININGS' | translate }}</h4>
+        @if (isCoach && canLinkMoreTrainings() && !isCancelled()) {
+          <button class="sc-icon-btn" (click)="onLinkTraining($event)"
+                  [title]="'CLUB_SESSIONS.BTN_LINK_TRAINING' | translate">
+            <svg xmlns="http://www.w3.org/2000/svg" height="12" viewBox="0 -960 960 960" width="12" fill="currentColor">
+              <path d="M440-280H280q-83 0-141.5-58.5T80-480q0-83 58.5-141.5T280-680h160v80H280q-50 0-85 35t-35 85q0 50 35 85t85 35h160v80ZM320-440v-80h320v80H320Zm200 160v-80h160q50 0 85-35t35-85q0-50-35-85t-85-35H520v-80h160q83 0 141.5 58.5T880-480q0 83-58.5 141.5T680-280H520Z"/>
+            </svg>
+            <span>{{ 'CLUB_SESSIONS.BTN_LINK_TRAINING' | translate }}</span>
+          </button>
+        }
+      </div>
+      <div class="sc-linked-list">
+        @for (glt of getEffectiveLinkedTrainings(); track glt.trainingId) {
+          <div class="sc-linked">
+            <button class="sc-linked__btn"
+                    [class.sc-linked__btn--dimmed]="!isInUserGroup(glt)"
+                    (click)="onNavigateToTraining(glt.trainingId, $event)">
+              @if (glt.clubGroupName && !session.clubGroupId) {
+                <span class="sc-chip sc-chip--group small">{{ glt.clubGroupName }}</span>
+              }
+              <span class="sc-linked__title">
+                {{ glt.trainingTitle || ('CLUB_SESSIONS.LINKED_TRAINING_FALLBACK' | translate) }}
+              </span>
+              @if (glt.trainingDescription) {
+                <span class="sc-linked__desc">{{ truncate(glt.trainingDescription, 120) }}</span>
+              }
+            </button>
+            @if (isCoach && !isCancelled()) {
+              <button class="sc-icon-btn sc-icon-btn--danger"
+                      (click)="onUnlinkTraining(glt, $event)"
+                      aria-label="Unlink">&times;</button>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  }
 
-  <!-- Map side (only when GPX exists) -->
+  <!-- ============================================================
+       COLUMN 3 — GPX ROUTE
+       ============================================================ -->
   @if (session.routeCoordinates?.length) {
-  <div class="sc-card__map">
-    <app-route-map [routeCoordinates]="toRouteCoordinates()"></app-route-map>
+    <section class="sc-col sc-col--gpx">
+      <h4 class="sc-section__label">{{ 'CLUB_SESSIONS.SECTION_GPX_ROUTE' | translate }}</h4>
 
-    <!-- GPX overlay: filename + stats at top, actions at bottom -->
-    <div class="sc-map-overlay-top">
+      <div class="sc-map">
+        <app-route-map [routeCoordinates]="toRouteCoordinates()"></app-route-map>
+      </div>
+
       @if (session.gpxFileName) {
-        <span class="sc-map-badge">{{ session.gpxFileName }}</span>
+        <span class="sc-gpx-filename">{{ session.gpxFileName }}</span>
       }
-      <span class="gpx-stat">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round"><polyline
-          points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        {{ getElevationGain() }}m
-      </span>
-      <span class="gpx-stat">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline
-          points="12 5 19 12 12 19"/></svg>
-        {{ getTotalDistanceKm() }}km
-      </span>
-    </div>
 
-    <div class="sc-map-overlay-bottom">
-      <button class="sc-map-btn" (click)="onShareGpx($event)" [title]="'COMMON.SHARE' | translate">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="18" cy="5" r="3"/>
-          <circle cx="6" cy="12" r="3"/>
-          <circle cx="18" cy="19" r="3"/>
-          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-        </svg>
-      </button>
-      <button class="sc-map-btn" (click)="onDownloadGpx($event)" [title]="'COMMON.DOWNLOAD' | translate">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-      </button>
-    </div>
-  </div>
+      <div class="sc-gpx-actions">
+        <button class="sc-btn sc-btn--primary" (click)="onDownloadGpx($event)">
+          {{ 'CLUB_SESSIONS.BTN_DOWNLOAD_GPX' | translate }}
+        </button>
+        @if (hasMeetingPoint()) {
+          <a class="sc-link"
+             [href]="meetingPointMapUrl()"
+             target="_blank" rel="noopener"
+             (click)="$event.stopPropagation()">
+            {{ 'CLUB_SESSIONS.BTN_OPEN_IN_MAP' | translate }}
+          </a>
+        } @else {
+          <button class="sc-link sc-link--button"
+                  (click)="onShareGpx($event)"
+                  [title]="'COMMON.SHARE' | translate">
+            {{ 'CLUB_SESSIONS.BTN_OPEN_IN_MAP' | translate }}
+          </button>
+        }
+      </div>
+    </section>
   }
 </div>

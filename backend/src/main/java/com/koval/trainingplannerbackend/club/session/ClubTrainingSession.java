@@ -70,7 +70,7 @@ public class ClubTrainingSession {
     }
 
     public boolean isFull() {
-        return maxParticipants != null && participantIds.size() >= maxParticipants;
+        return maxParticipants != null && maxParticipants > 0 && participantIds.size() >= maxParticipants;
     }
 
     public boolean isOnWaitingList(String userId) {

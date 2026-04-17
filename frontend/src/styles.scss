@@ -8,7 +8,7 @@
   --secondary-color: oklch(0.65 0.15 230);
   --success-color: oklch(0.75 0.17 160);
   --danger-color: oklch(0.65 0.2 25);
-  --info-text: oklch(0.72 0.12 230);
+  --info-text: oklch(0.72 0.18 295);
 
   /* ── Surfaces (dark-first) ── */
   --bg-color: #0a0a0f;
@@ -38,7 +38,7 @@
   --danger-border: color-mix(in oklch, var(--danger-color) 25%, transparent);
   --danger-hover: color-mix(in oklch, var(--danger-color) 15%, transparent);
 
-  --info-color: var(--secondary-color);
+  --info-color: oklch(0.65 0.22 295);
   --info-subtle: color-mix(in oklch, var(--info-color) 8%, transparent);
   --info-border: color-mix(in oklch, var(--info-color) 25%, transparent);
   --info-hover: color-mix(in oklch, var(--info-color) 15%, transparent);

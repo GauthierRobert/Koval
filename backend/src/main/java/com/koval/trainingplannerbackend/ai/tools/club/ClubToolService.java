@@ -1,8 +1,6 @@
 package com.koval.trainingplannerbackend.ai.tools.club;
 
 import com.koval.trainingplannerbackend.ai.ToolEventEmitter;
-import com.koval.trainingplannerbackend.ai.anonymization.AnonymizationContext;
-import com.koval.trainingplannerbackend.ai.anonymization.AnonymizationService;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.club.dto.ClubMemberResponse;
 import com.koval.trainingplannerbackend.club.dto.CreateRecurringSessionRequest;
@@ -58,11 +56,10 @@ public class ClubToolService {
         if (err != null) return err;
         if (from == null || to == null) return "Error: from and to dates are required.";
 
-        String realClubId = deAnonymizeClub(clubId, context);
         String userId = SecurityUtils.getUserId(context);
         LocalDateTime fromDt = from.atStartOfDay();
         LocalDateTime toDt = to.plusDays(1).atStartOfDay();
-        List<ClubTrainingSession> sessions = sessionService.listSessions(userId, realClubId, fromDt, toDt);
+        List<ClubTrainingSession> sessions = sessionService.listSessions(userId, clubId, fromDt, toDt);
         return sessions.stream().map(ClubSessionSummary::from).toList();
     }
 
@@ -86,12 +83,11 @@ public class ClubToolService {
         if (scheduledAt == null) return "Error: scheduledAt is required.";
 
         ToolEventEmitter.emitToolCall(context, "createClubSession", "Creating: " + title);
-        String realClubId = deAnonymizeClub(clubId, context);
         String userId = SecurityUtils.getUserId(context);
         var req = new CreateSessionRequest(null, title, sport, scheduledAt, location, null, null, description,
                 null, maxParticipants, durationMinutes, clubGroupId, userId,
                 null, null, null);
-        ClubTrainingSession session = sessionService.createSession(userId, realClubId, req);
+        ClubTrainingSession session = sessionService.createSession(userId, clubId, req);
         ToolEventEmitter.emitToolResult(context, "createClubSession", title, true);
         return ClubSessionSummary.from(session);
     }
@@ -119,12 +115,11 @@ public class ClubToolService {
         if (timeOfDay == null) return "Error: timeOfDay is required.";
 
         ToolEventEmitter.emitToolCall(context, "createRecurringSession", "Creating recurring: " + title);
-        String realClubId = deAnonymizeClub(clubId, context);
         String userId = SecurityUtils.getUserId(context);
         var req = new CreateRecurringSessionRequest(null, title, sport, dayOfWeek, timeOfDay, location, null, null, description,
                 null, maxParticipants, durationMinutes, clubGroupId, userId,
                 null, null, null, endDate);
-        RecurringSessionTemplate template = recurringService.createTemplate(userId, realClubId, req);
+        RecurringSessionTemplate template = recurringService.createTemplate(userId, clubId, req);
         ToolEventEmitter.emitToolResult(context, "createRecurringSession", title, true);
         return RecurringTemplateSummary.from(template);
     }
@@ -142,9 +137,8 @@ public class ClubToolService {
         if (err != null) return err;
 
         ToolEventEmitter.emitToolCall(context, "cancelSession", "Cancelling session...");
-        String realClubId = deAnonymizeClub(clubId, context);
         String userId = SecurityUtils.getUserId(context);
-        sessionService.cancelEntireSession(userId, realClubId, sessionId, reason);
+        sessionService.cancelEntireSession(userId, clubId, sessionId, reason);
         ToolEventEmitter.emitToolResult(context, "cancelSession", "Session cancelled", true);
         return "Session " + sessionId + " cancelled.";
     }
@@ -162,9 +156,8 @@ public class ClubToolService {
         if (err != null) return err;
 
         ToolEventEmitter.emitToolCall(context, "cancelRecurringSeries", "Cancelling recurring series...");
-        String realClubId = deAnonymizeClub(clubId, context);
         String userId = SecurityUtils.getUserId(context);
-        recurringService.cancelFutureInstances(userId, realClubId, templateId, reason);
+        recurringService.cancelFutureInstances(userId, clubId, templateId, reason);
         ToolEventEmitter.emitToolResult(context, "cancelRecurringSeries", "Series cancelled", true);
         return "Recurring series " + templateId + " cancelled. All future instances removed.";
     }
@@ -184,9 +177,8 @@ public class ClubToolService {
         if (err != null) return err;
 
         ToolEventEmitter.emitToolCall(context, "linkTrainingToSession", "Linking training...");
-        String realClubId = deAnonymizeClub(clubId, context);
         String userId = SecurityUtils.getUserId(context);
-        trainingLinkService.linkTrainingToSession(userId, realClubId, sessionId, trainingId, clubGroupId);
+        trainingLinkService.linkTrainingToSession(userId, clubId, sessionId, trainingId, clubGroupId);
         ToolEventEmitter.emitToolResult(context, "linkTrainingToSession", "Training linked", true);
         return "Training " + trainingId + " linked to session " + sessionId + ".";
     }
@@ -204,9 +196,8 @@ public class ClubToolService {
         if (err != null) return err;
 
         ToolEventEmitter.emitToolCall(context, "unlinkTrainingFromSession", "Unlinking training...");
-        String realClubId = deAnonymizeClub(clubId, context);
         String userId = SecurityUtils.getUserId(context);
-        trainingLinkService.unlinkTrainingFromSession(userId, realClubId, sessionId, clubGroupId);
+        trainingLinkService.unlinkTrainingFromSession(userId, clubId, sessionId, clubGroupId);
         ToolEventEmitter.emitToolResult(context, "unlinkTrainingFromSession", "Training unlinked", true);
         return "Training unlinked from session " + sessionId + ".";
     }
@@ -220,17 +211,9 @@ public class ClubToolService {
         String err = requireNonBlank(clubId, "clubId");
         if (err != null) return err;
 
-        AnonymizationContext anonCtx = AnonymizationService.fromToolContext(context.getContext());
-        String realClubId = anonCtx != null ? anonCtx.deAnonymize(clubId) : clubId;
         String userId = SecurityUtils.getUserId(context);
-        List<ClubMemberResponse> members = membershipService.getMembers(userId, realClubId);
-        return members.stream().map(m -> {
-            if (anonCtx != null) {
-                String alias = anonCtx.anonymizeAthlete(m.userId());
-                return new ClubMemberSummary(alias, alias, m.role().name(), m.tags());
-            }
-            return ClubMemberSummary.from(m);
-        }).toList();
+        List<ClubMemberResponse> members = membershipService.getMembers(userId, clubId);
+        return members.stream().map(ClubMemberSummary::from).toList();
     }
 
     // ── List recurring templates ──────────────────────────────────────
@@ -242,9 +225,8 @@ public class ClubToolService {
         String err = requireNonBlank(clubId, "clubId");
         if (err != null) return err;
 
-        String realClubId = deAnonymizeClub(clubId, context);
         String userId = SecurityUtils.getUserId(context);
-        List<RecurringSessionTemplate> templates = recurringService.listTemplates(userId, realClubId);
+        List<RecurringSessionTemplate> templates = recurringService.listTemplates(userId, clubId);
         return templates.stream().map(RecurringTemplateSummary::from).toList();
     }
 
@@ -252,12 +234,6 @@ public class ClubToolService {
 
     private static String requireNonBlank(String value, String fieldName) {
         return (value == null || value.isBlank()) ? "Error: " + fieldName + " is required." : null;
-    }
-
-    /** De-anonymize a club alias back to its real ID. */
-    private static String deAnonymizeClub(String clubId, ToolContext context) {
-        AnonymizationContext anonCtx = AnonymizationService.fromToolContext(context.getContext());
-        return anonCtx != null ? anonCtx.deAnonymize(clubId) : clubId;
     }
 
 }
