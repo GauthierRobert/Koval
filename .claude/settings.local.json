@@ -108,7 +108,11 @@
       "Bash(unzip -l skills/dist/koval-analyze-last-ride.zip)",
       "Bash(unzip -l skills/dist/koval-athlete-onboarding.zip)",
       "Bash(export PATH=\"$JAVA_HOME/bin:$PATH\")",
-      "Bash(mvn -q -o compile)"
+      "Bash(mvn -q -o compile)",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(npx tsc *)",
+      "Read(//tmp/**)",
+      "Bash(mvn -q -pl . compile -DskipTests)"
     ]
   }
 }

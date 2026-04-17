@@ -44,13 +44,16 @@ public class StravaActivityMapper {
         String type = (String) activity.get("type");
         session.setSportType(mapSportType(type));
 
-        // Fallback single block summary (overridden if laps are fetched)
+        // Fallback single block summary (overridden if laps are fetched).
+        // Use moving time so the block duration matches the Strava time-series,
+        // which skips paused seconds.
         Double distance = doubleValueOrNull(activity.get("distance"));
         if (distance != null) {
+            int blockDuration = movingTime > 0 ? movingTime : session.getTotalDurationSeconds();
             CompletedSession.BlockSummary summary = new CompletedSession.BlockSummary(
                     session.getTitle(),
                     session.getSportType(),
-                    session.getTotalDurationSeconds(),
+                    blockDuration,
                     0, session.getAvgPower(),
                     session.getAvgCadence(), session.getAvgHR(),
                     distance);
@@ -69,7 +72,10 @@ public class StravaActivityMapper {
 
         return laps.stream().map(lap -> {
             String name = (String) lap.get("name");
-            int elapsed = intValue(lap.get("elapsed_time"));
+            // Prefer moving_time: Strava's `time` stream skips paused seconds, so summing
+            // lap elapsed_time (which includes watch pauses) diverges from the time series.
+            int moving = intValue(lap.get("moving_time"));
+            int duration = moving > 0 ? moving : intValue(lap.get("elapsed_time"));
             double power = deviceWatts ? doubleValue(lap.get("average_watts")) : 0;
             double hr = doubleValue(lap.get("average_heartrate"));
             double cadence = doubleValue(lap.get("average_cadence"));
@@ -78,7 +84,7 @@ public class StravaActivityMapper {
             return new CompletedSession.BlockSummary(
                     name != null ? name : "Lap",
                     sportType,
-                    elapsed,
+                    duration,
                     0, power, cadence, hr, distance);
         }).toList();
     }

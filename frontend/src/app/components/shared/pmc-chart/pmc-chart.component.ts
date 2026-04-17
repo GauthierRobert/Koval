@@ -14,15 +14,15 @@ import {PmcDataPoint} from '../../../services/metrics.service';
 import {PRIORITY_COLORS, RaceGoal} from '../../../services/race-goal.service';
 
 const SPORT_COLORS: Record<string, string> = {
-    CYCLING: '#FF9D00',
-    RUNNING: '#34D399',
-    SWIMMING: '#60A5FA',
+    SWIMMING: '#00a0e9',
+    CYCLING: '#34d399',
+    RUNNING: '#f87171',
     BRICK: '#A78BFA',
     GYM: '#F472B6',
 };
 
 function getSportColor(sport?: string): string {
-    return SPORT_COLORS[sport || ''] || '#FF9D00';
+    return SPORT_COLORS[sport || ''] || '#34d399';
 }
 
 @Component({
