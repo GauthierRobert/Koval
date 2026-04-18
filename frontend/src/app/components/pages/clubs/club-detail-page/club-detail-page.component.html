@@ -1,4 +1,4 @@
-<div class="page-layout">
+<div class="page-layout" [class.is-chat-fullscreen]="activeTab === 'chat' && chatView === 'chat'">
   @if (selectedClub$ | async; as club) {
 
     <!-- Ambient depth -->
@@ -121,7 +121,7 @@
         <app-club-race-goals-tab></app-club-race-goals-tab>
       }
       @if (activeTab === 'chat') {
-        <app-club-chat-tab [clubId]="clubId"></app-club-chat-tab>
+        <app-club-chat-tab [clubId]="clubId" (viewChange)="onChatViewChange($event)"></app-club-chat-tab>
       }
     </div>
 

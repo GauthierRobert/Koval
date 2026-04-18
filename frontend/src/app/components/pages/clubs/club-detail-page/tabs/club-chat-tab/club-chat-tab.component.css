@@ -87,6 +87,10 @@
     min-height: 0;
   }
 
+  .chat-tab.is-chat-view {
+    height: calc(100vh - 56px);
+  }
+
   .chat-tab__rooms {
     flex-direction: column;
     flex-wrap: nowrap;

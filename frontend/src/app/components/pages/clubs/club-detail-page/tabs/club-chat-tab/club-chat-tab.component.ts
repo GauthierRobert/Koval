@@ -2,11 +2,13 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  EventEmitter,
   inject,
   Input,
   OnChanges,
   OnDestroy,
   OnInit,
+  Output,
   SimpleChanges,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -44,6 +46,7 @@ interface ChatTarget {
 })
 export class ClubChatTabComponent implements OnInit, OnChanges, OnDestroy {
   @Input({ required: true }) clubId!: string;
+  @Output() viewChange = new EventEmitter<'list' | 'chat'>();
 
   private readonly authService = inject(AuthService);
   private readonly clubService = inject(ClubService);
@@ -83,7 +86,7 @@ export class ClubChatTabComponent implements OnInit, OnChanges, OnDestroy {
       this.clubService.loadGroups(this.clubId);
       this.clubFeedService.loadRaceGoals(this.clubId);
       this.selected = this.defaultTarget();
-      this.view = 'list';
+      this.setView('list');
     }
   }
 
@@ -93,11 +96,17 @@ export class ClubChatTabComponent implements OnInit, OnChanges, OnDestroy {
 
   selectTarget(target: ChatTarget): void {
     this.selected = target;
-    this.view = 'chat';
+    this.setView('chat');
   }
 
   backToList(): void {
-    this.view = 'list';
+    this.setView('list');
+  }
+
+  private setView(view: 'list' | 'chat'): void {
+    if (this.view === view) return;
+    this.view = view;
+    this.viewChange.emit(view);
   }
 
   trackByKey(_index: number, target: ChatTarget): string {
