@@ -2,11 +2,13 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  EventEmitter,
   inject,
   Input,
   OnChanges,
   OnDestroy,
   OnInit,
+  Output,
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
@@ -41,12 +43,17 @@ import { ChatMessageListComponent } from '../chat-message-list/chat-message-list
         [loadingOlder]="loadingOlder"
         [sending]="sending"
         [currentUserId]="authService.currentUser?.id ?? null"
+        [clubName]="clubName"
+        [clubLogoUrl]="clubLogoUrl"
+        [scope]="scope"
+        [showBackButton]="showBackButton"
         (sendMessage)="onSend($event)"
         (deleteMsg)="onDelete($event)"
         (scrolledNearTop)="onLoadOlder()"
         (joinRoom)="api.joinRoom(roomDetail!.id).subscribe()"
         (leaveRoom)="api.leaveRoom(roomDetail!.id).subscribe()"
-        (toggleMute)="api.setMuted(roomDetail!.id, !roomDetail!.currentUserMuted).subscribe()">
+        (toggleMute)="api.setMuted(roomDetail!.id, !roomDetail!.currentUserMuted).subscribe()"
+        (backClick)="backClick.emit()">
       </app-chat-message-list>
     }
   `,
@@ -62,6 +69,11 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
   @Input() refId?: string;
   @Input() title?: string;
   @Input() showHeader = false;
+  @Input() clubName?: string | null;
+  @Input() clubLogoUrl?: string | null;
+  @Input() showBackButton = false;
+
+  @Output() backClick = new EventEmitter<void>();
 
   @ViewChild('messageList') private messageList?: ChatMessageListComponent;
 

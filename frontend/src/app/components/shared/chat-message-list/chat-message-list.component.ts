@@ -1,15 +1,18 @@
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   ElementRef,
   EventEmitter,
+  HostListener,
   Input,
   Output,
   ViewChild,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ChatMessage, ChatRoomDetail } from '../../../models/chat.models';
+import { ChatMessage, ChatRoomDetail, ChatRoomScope } from '../../../models/chat.models';
 import { isGroupStart, isNewDay, formatChatDate } from '../../../utils/chat-message.utils';
 
 /**
@@ -33,6 +36,10 @@ export class ChatMessageListComponent {
   @Input() loadingOlder = false;
   @Input() sending = false;
   @Input() currentUserId: string | null = null;
+  @Input() clubName?: string | null;
+  @Input() clubLogoUrl?: string | null;
+  @Input() scope?: ChatRoomScope;
+  @Input() showBackButton = false;
 
   @Output() sendMessage = new EventEmitter<string>();
   @Output() deleteMsg = new EventEmitter<string>();
@@ -40,10 +47,14 @@ export class ChatMessageListComponent {
   @Output() joinRoom = new EventEmitter<void>();
   @Output() leaveRoom = new EventEmitter<void>();
   @Output() toggleMute = new EventEmitter<void>();
+  @Output() backClick = new EventEmitter<void>();
 
   @ViewChild('scrollContainer') private scrollContainer?: ElementRef<HTMLElement>;
 
+  private readonly cdr = inject(ChangeDetectorRef);
+
   draft = '';
+  menuOpen = false;
   private nearBottom = true;
 
   private static readonly SCROLL_BOTTOM_THRESHOLD = 80;
@@ -107,5 +118,42 @@ export class ChatMessageListComponent {
   private scrollToBottom(): void {
     const el = this.scrollContainer?.nativeElement;
     if (el) el.scrollTop = el.scrollHeight;
+  }
+
+  // --- Mobile header: scope icon + overflow menu ---
+
+  get scopeIconName(): 'club' | 'group' | 'objective' {
+    if (this.scope === 'GROUP') return 'group';
+    if (this.scope === 'OBJECTIVE') return 'objective';
+    return 'club';
+  }
+
+  get clubInitial(): string {
+    return (this.clubName ?? '').trim().charAt(0).toUpperCase();
+  }
+
+  toggleMenu(event: Event): void {
+    event.stopPropagation();
+    this.menuOpen = !this.menuOpen;
+    this.cdr.markForCheck();
+  }
+
+  closeMenu(): void {
+    if (!this.menuOpen) return;
+    this.menuOpen = false;
+    this.cdr.markForCheck();
+  }
+
+  runMenuAction(action: 'join' | 'mute' | 'leave'): void {
+    this.menuOpen = false;
+    if (action === 'join') this.joinRoom.emit();
+    else if (action === 'mute') this.toggleMute.emit();
+    else this.leaveRoom.emit();
+    this.cdr.markForCheck();
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.closeMenu();
   }
 }

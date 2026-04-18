@@ -52,6 +52,8 @@ export class ClubChatTabComponent implements OnInit, OnChanges, OnDestroy {
 
   readonly currentUserId$ = this.authService.user$.pipe(map((u) => u?.id ?? null));
 
+  readonly club$ = this.clubService.selectedClub$;
+
   readonly targets$ = combineLatest([
     this.authService.user$,
     this.clubService.groups$,

@@ -81,10 +81,6 @@
   text-overflow: ellipsis;
 }
 
-.chat-tab__back {
-  display: none;
-}
-
 @media (max-width: 768px) {
   .chat-tab {
     height: calc(100vh - 220px);
@@ -117,26 +113,6 @@
 
   .chat-tab:not(.is-chat-view) .chat-tab__panel {
     display: none;
-  }
-
-  .chat-tab__back {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    align-self: flex-start;
-    margin-bottom: 8px;
-    padding: 6px 10px;
-    border-radius: 999px;
-    border: 1px solid var(--glass-border);
-    background: var(--glass-bg);
-    color: var(--text-color);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .chat-tab__back:hover {
-    border-color: var(--accent-color);
   }
 
   .chat-tab__panel {

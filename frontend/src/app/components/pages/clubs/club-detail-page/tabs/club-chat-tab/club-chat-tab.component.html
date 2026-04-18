@@ -21,16 +21,16 @@
 
     @if (selected) {
       <div class="chat-tab__panel">
-        <button type="button" class="chat-tab__back" (click)="backToList()">
-          <span aria-hidden="true">←</span>
-          <span>{{ 'CLUB_DETAIL.CHAT_BACK_TO_ROOMS' | translate }}</span>
-        </button>
         <app-embedded-chat
           [scope]="selected.scope"
           [clubId]="clubId"
           [refId]="selected.refId"
           [title]="selected.title"
-          [showHeader]="true">
+          [showHeader]="true"
+          [clubName]="(club$ | async)?.name"
+          [clubLogoUrl]="(club$ | async)?.logoUrl"
+          [showBackButton]="true"
+          (backClick)="backToList()">
         </app-embedded-chat>
       </div>
     }
