@@ -94,7 +94,9 @@
 
     <!-- Details grid -->
     <div class="sc-section">
-      <h4 class="sc-section__label">{{ 'CLUB_SESSIONS.SECTION_DETAILS' | translate }}</h4>
+      @if (!(session.routeCoordinates?.length && hasAnyLinkedTraining())) {
+        <h4 class="sc-section__label">{{ 'CLUB_SESSIONS.SECTION_DETAILS' | translate }}</h4>
+      }
       <div class="sc-metrics">
         <div class="sc-metric">
           <svg class="sc-metric__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -329,35 +331,46 @@
        ============================================================ -->
   @if (session.routeCoordinates?.length) {
     <section class="sc-col sc-col--gpx">
-      <h4 class="sc-section__label">{{ 'CLUB_SESSIONS.SECTION_GPX_ROUTE' | translate }}</h4>
+      @if (!hasAnyLinkedTraining()) {
+        <h4 class="sc-section__label">{{ 'CLUB_SESSIONS.SECTION_GPX_ROUTE' | translate }}</h4>
+      }
 
       <div class="sc-map">
         <app-route-map [routeCoordinates]="toRouteCoordinates()"></app-route-map>
+        @if (hasAnyLinkedTraining()) {
+          <button class="sc-btn sc-btn--primary sc-map__download-btn"
+                  (click)="onDownloadGpx($event)"
+                  [title]="'CLUB_SESSIONS.BTN_DOWNLOAD_GPX' | translate">
+            {{ 'CLUB_SESSIONS.BTN_DOWNLOAD_GPX' | translate }}
+          </button>
+        }
       </div>
 
       @if (session.gpxFileName) {
         <span class="sc-gpx-filename">{{ session.gpxFileName }}</span>
       }
 
-      <div class="sc-gpx-actions">
-        <button class="sc-btn sc-btn--primary" (click)="onDownloadGpx($event)">
-          {{ 'CLUB_SESSIONS.BTN_DOWNLOAD_GPX' | translate }}
-        </button>
-        @if (hasMeetingPoint()) {
-          <a class="sc-link"
-             [href]="meetingPointMapUrl()"
-             target="_blank" rel="noopener"
-             (click)="$event.stopPropagation()">
-            {{ 'CLUB_SESSIONS.BTN_OPEN_IN_MAP' | translate }}
-          </a>
-        } @else {
-          <button class="sc-link sc-link--button"
-                  (click)="onShareGpx($event)"
-                  [title]="'COMMON.SHARE' | translate">
-            {{ 'CLUB_SESSIONS.BTN_OPEN_IN_MAP' | translate }}
+      @if (!hasAnyLinkedTraining()) {
+        <div class="sc-gpx-actions">
+          <button class="sc-btn sc-btn--primary" (click)="onDownloadGpx($event)">
+            {{ 'CLUB_SESSIONS.BTN_DOWNLOAD_GPX' | translate }}
           </button>
-        }
-      </div>
+          @if (hasMeetingPoint()) {
+            <a class="sc-link"
+               [href]="meetingPointMapUrl()"
+               target="_blank" rel="noopener"
+               (click)="$event.stopPropagation()">
+              {{ 'CLUB_SESSIONS.BTN_OPEN_IN_MAP' | translate }}
+            </a>
+          } @else {
+            <button class="sc-link sc-link--button"
+                    (click)="onShareGpx($event)"
+                    [title]="'COMMON.SHARE' | translate">
+              {{ 'CLUB_SESSIONS.BTN_OPEN_IN_MAP' | translate }}
+            </button>
+          }
+        </div>
+      }
     </section>
   }
 </div>
