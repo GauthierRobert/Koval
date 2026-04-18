@@ -408,6 +408,15 @@
     padding: var(--space-md);
     max-width: 100%;
   }
+
+  .page-layout.is-chat-fullscreen .club-hero,
+  .page-layout.is-chat-fullscreen .tab-strip {
+    display: none;
+  }
+
+  .page-layout.is-chat-fullscreen .tab-body {
+    padding: 0;
+  }
 }
 
 @media (max-width: 480px) {

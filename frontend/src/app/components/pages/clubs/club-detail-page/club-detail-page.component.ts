@@ -63,6 +63,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   currentUserId: string | null = null;
 
   activeTab: TabId = 'feed';
+  chatView: 'list' | 'chat' = 'list';
   loadedTabs = new Set<TabId>();
 
   clubId = '';
@@ -106,6 +107,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
         this.clubId = params['id'];
         this.loadedTabs.clear();
         this.activeTab = 'feed';
+        this.chatView = 'list';
         this.clubService.resetDetail();
         this.clubSessionService.resetDetail();
         this.clubFeedService.resetDetail();
@@ -139,6 +141,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
 
   activateTab(tab: TabId): void {
     this.activeTab = tab;
+    if (tab !== 'chat') this.chatView = 'list';
     if (this.loadedTabs.has(tab)) return;
     this.loadedTabs.add(tab);
 
@@ -197,6 +200,11 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
 
   hasPendingBadge(tab: TabId): boolean {
     return tab === 'members';
+  }
+
+  onChatViewChange(view: 'list' | 'chat'): void {
+    this.chatView = view;
+    this.cdr.markForCheck();
   }
 
   openAiModalForSession(session: ClubTrainingSession): void {
