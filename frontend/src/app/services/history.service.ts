@@ -21,6 +21,7 @@ export interface SavedSession extends SessionSummary {
     scheduledWorkoutId?: string;
     clubSessionId?: string;
     stravaActivityId?: string;
+    nolioActivityId?: string;
 }
 
 @Injectable({
@@ -79,6 +80,7 @@ export class HistoryService {
                     scheduledWorkoutId: s.scheduledWorkoutId ?? undefined,
                     clubSessionId: s.clubSessionId ?? undefined,
                     stravaActivityId: s.stravaActivityId ?? undefined,
+                    nolioActivityId: s.nolioActivityId ?? undefined,
                 }));
                 parsed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
                 this.sessionsSubject.next(parsed);

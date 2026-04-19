@@ -11,6 +11,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import com.koval.trainingplannerbackend.integration.nolio.write.NolioSyncStatus;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +54,12 @@ public abstract class Training {
     @Indexed
     private List<String> clubIds = new ArrayList<>();
     private List<String> clubGroupIds = new ArrayList<>(); // Optional: club groups within clubs
+
+    // Nolio sync state (write path - push to user's Nolio account)
+    private String nolioWorkoutId;
+    private NolioSyncStatus nolioSyncStatus = NolioSyncStatus.NONE;
+    private LocalDateTime nolioLastSyncedAt;
+    private String nolioSyncError;
 
     /** Adds the given club ID to this training's club list (idempotent, null-safe). */
     public void addClubId(String clubId) {

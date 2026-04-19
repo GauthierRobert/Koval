@@ -70,6 +70,20 @@ public class User {
     private LocalDateTime zwiftLastSyncAt;
     private Boolean zwiftAutoSyncWorkouts = false;
 
+    // Terra linkage for Nolio activity ingest (read path)
+    @Indexed(unique = true, sparse = true)
+    private String terraUserId;
+    private Boolean terraProviderNolioConnected = false;
+
+    // Nolio direct OAuth tokens (write path - push trainings)
+    @Indexed(unique = true, sparse = true)
+    private String nolioUserId;
+    private String nolioAccessToken;
+    private String nolioRefreshToken;
+    private Long nolioTokenExpiresAt;
+    private LocalDateTime nolioLastSyncAt;
+    private Boolean nolioAutoSyncWorkouts = false;
+
     public User() {
         this.createdAt = LocalDateTime.now();
     }

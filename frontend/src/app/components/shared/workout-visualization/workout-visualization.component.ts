@@ -11,6 +11,7 @@ import {TrainingActionModalComponent} from '../training-action-modal/training-ac
 import {BlockStepsListComponent} from './block-steps-list/block-steps-list.component';
 import {WorkoutChartBarComponent} from './workout-chart-bar/workout-chart-bar.component';
 import {AuthService} from '../../../services/auth.service';
+import {NolioSyncService} from '../../../services/nolio-sync.service';
 import {DurationEstimationService} from '../../../services/duration-estimation.service';
 import {ZoneService} from '../../../services/zone.service';
 import {ZoneSystem} from '../../../services/zone';
@@ -30,6 +31,7 @@ export class WorkoutVisualizationComponent {
   private trainingService = inject(TrainingService);
   private executionService = inject(WorkoutExecutionService);
   private authService = inject(AuthService);
+  nolioSync = inject(NolioSyncService);
   private durationService = inject(DurationEstimationService);
   private zoneService = inject(ZoneService);
 
@@ -357,6 +359,27 @@ export class WorkoutVisualizationComponent {
     this.http.post(`${environment.apiUrl}/api/integration/zwift/push-workout/${this.training.id}`, {}).subscribe({
       error: () => {},
     });
+  }
+
+  pushToNolio(): void {
+    if (!this.training) return;
+    this.closeDropdownListener();
+    this.nolioSync.pushTraining(this.training.id).subscribe({
+      next: (updated) => {
+        if (this.training) {
+          this.training.nolioWorkoutId = updated.nolioWorkoutId;
+          this.training.nolioSyncStatus = updated.nolioSyncStatus;
+          this.training.nolioLastSyncedAt = updated.nolioLastSyncedAt;
+          this.training.nolioSyncError = updated.nolioSyncError;
+        }
+      },
+      error: () => {},
+    });
+  }
+
+  canPushToNolio(): boolean {
+    const user = this.authService.currentUser;
+    return !!user?.linkedAccounts?.nolioWrite && this.isOwner();
   }
 
   private exportService = inject(ExportService);

@@ -19,6 +19,8 @@ export type TrainingType =
 
 export type TrainingVisibility = 'PUBLIC' | 'PRIVATE' | 'COACH_ONLY';
 
+export type NolioSyncStatus = 'NONE' | 'PENDING' | 'SYNCED' | 'FAILED';
+
 export const TRAINING_TYPES: TrainingType[] = [
     'VO2MAX',
     'THRESHOLD',
@@ -160,6 +162,10 @@ export interface Training {
     createdAt?: string;
     clubIds?: string[];
     clubGroupIds?: string[];
+    nolioWorkoutId?: string;
+    nolioSyncStatus?: NolioSyncStatus;
+    nolioLastSyncedAt?: string;
+    nolioSyncError?: string;
     _receivedMeta?: {
         assignedByName?: string;
         origin: 'COACH_GROUP' | 'CLUB' | 'CLUB_SESSION';

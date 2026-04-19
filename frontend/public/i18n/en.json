@@ -365,7 +365,9 @@
     "LINK_PICKER_BTN_CANCEL": "Cancel",
     "SESSION_FALLBACK_TITLE": "Session #",
     "WORKOUT_FALLBACK_TITLE": "Workout",
-    "PLAN_WEEK": "Week"
+    "PLAN_WEEK": "Week",
+    "MORE": "more",
+    "SHOW_LESS": "Show less"
   },
   "CALENDAR_MONTH": {
     "DAY_MON": "MON",

@@ -365,7 +365,9 @@
     "LINK_PICKER_BTN_CANCEL": "Annuler",
     "SESSION_FALLBACK_TITLE": "Session n°",
     "WORKOUT_FALLBACK_TITLE": "Séance",
-    "PLAN_WEEK": "Semaine"
+    "PLAN_WEEK": "Semaine",
+    "MORE": "autres",
+    "SHOW_LESS": "Réduire"
   },
   "CALENDAR_MONTH": {
     "DAY_MON": "LUN",

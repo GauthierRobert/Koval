@@ -18,7 +18,8 @@
 
       <div class="workout-slot">
 
-        @for (group of groupEntries(entriesByDay.get(day.key) || []); track $index) {
+        @let dayGroups = groupEntries(entriesByDay.get(day.key) || []);
+        @for (group of visibleGroups(day.key, dayGroups); track $index) {
 
           @if (group.type === 'single') {
             @switch (group.entry.kind) {
@@ -353,6 +354,17 @@
             </div>
           }
 
+        }
+
+        @if (hiddenCount(day.key, dayGroups) > 0) {
+          <button class="more-chip" data-testid="calendar-more-chip" (click)="toggleExpand(day.key)">
+            +{{ hiddenCount(day.key, dayGroups) }} {{ 'CALENDAR_WEEK.MORE' | translate }}
+          </button>
+        }
+        @if (isExpanded(day.key) && dayGroups.length > 2) {
+          <button class="more-chip more-chip--collapse" (click)="toggleExpand(day.key)">
+            {{ 'CALENDAR_WEEK.SHOW_LESS' | translate }}
+          </button>
         }
 
         @for (goal of goalsByDay.get(day.key) || []; track goal.id) {

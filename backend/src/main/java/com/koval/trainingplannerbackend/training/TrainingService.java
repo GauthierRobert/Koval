@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
+import com.koval.trainingplannerbackend.auth.UserService;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
+import com.koval.trainingplannerbackend.integration.nolio.write.NolioPushService;
 import com.koval.trainingplannerbackend.integration.zwift.ZwiftWorkoutService;
 import com.koval.trainingplannerbackend.training.metrics.TrainingMetricsService;
 import com.koval.trainingplannerbackend.training.model.BlockType;
@@ -30,17 +32,23 @@ public class TrainingService {
     private final TrainingMetricsService metricsService;
     private final ClubMembershipRepository membershipRepository;
     private final ZwiftWorkoutService zwiftWorkoutService;
+    private final NolioPushService nolioPushService;
+    private final UserService userService;
     private final ObjectMapper objectMapper;
 
     public TrainingService(TrainingRepository trainingRepository,
                            TrainingMetricsService metricsService,
                            ClubMembershipRepository membershipRepository,
                            ZwiftWorkoutService zwiftWorkoutService,
+                           NolioPushService nolioPushService,
+                           UserService userService,
                            ObjectMapper objectMapper) {
         this.trainingRepository = trainingRepository;
         this.metricsService = metricsService;
         this.membershipRepository = membershipRepository;
         this.zwiftWorkoutService = zwiftWorkoutService;
+        this.nolioPushService = nolioPushService;
+        this.userService = userService;
         this.objectMapper = objectMapper;
     }
 
@@ -78,6 +86,7 @@ public class TrainingService {
         training.setBlocks(training.getBlocks().stream().map(this::standardizeBlockType).toList());
         Training saved = trainingRepository.save(training);
         zwiftWorkoutService.autoSyncIfEnabled(userId, saved);
+        nolioPushService.autoSyncIfEnabled(userId, saved);
         return saved;
     }
 
@@ -127,7 +136,9 @@ public class TrainingService {
         applyPartialUpdates(training, updates);
 
         metricsService.calculateTrainingMetrics(training, training.getCreatedBy());
-        return trainingRepository.save(training);
+        Training saved = trainingRepository.save(training);
+        nolioPushService.autoSyncIfEnabled(saved.getCreatedBy(), saved);
+        return saved;
     }
 
     private void applyPartialUpdates(Training training, Training updates) {
@@ -147,10 +158,18 @@ public class TrainingService {
      * Delete a training.
      */
     public void deleteTraining(String trainingId) {
-        if (!trainingRepository.existsById(trainingId)) {
-            throw new ResourceNotFoundException("Training", trainingId);
-        }
+        Training training = trainingRepository.findById(trainingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Training", trainingId));
+
+        String nolioWorkoutId = training.getNolioWorkoutId();
+        String ownerId = training.getCreatedBy();
+
         trainingRepository.deleteById(trainingId);
+
+        if (nolioWorkoutId != null && ownerId != null) {
+            userService.findById(ownerId).ifPresent(owner ->
+                    nolioPushService.deleteRemote(owner, nolioWorkoutId));
+        }
     }
 
     /**

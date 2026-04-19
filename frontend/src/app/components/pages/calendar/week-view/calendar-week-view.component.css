@@ -736,6 +736,30 @@
   background: var(--accent-subtle);
 }
 
+.more-chip {
+  background: var(--surface-elevated);
+  border: 1px solid var(--overlay-12);
+  border-radius: 999px;
+  color: var(--text-muted);
+  padding: 3px 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.15s;
+  align-self: center;
+}
+
+.more-chip:hover {
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+  background: var(--accent-subtle);
+}
+
+.more-chip--collapse {
+  opacity: 0.75;
+}
+
 .rest-day {
   flex: 1;
   display: flex;

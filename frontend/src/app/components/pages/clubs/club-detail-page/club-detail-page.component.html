@@ -83,10 +83,15 @@
 
     <!-- ═══ TAB STRIP ═══ -->
     <div class="tab-strip">
-      <div class="tab-strip-inner">
+      <div class="tab-strip-inner" role="tablist" aria-label="Club sections">
         @for (tab of tabs; track tab.id) {
           <button
             class="tab-pill"
+            role="tab"
+            [id]="'tab-btn-' + tab.id"
+            [attr.aria-selected]="activeTab === tab.id"
+            [attr.aria-controls]="'tabpanel-' + tab.id"
+            [attr.tabindex]="activeTab === tab.id ? 0 : -1"
             [attr.data-testid]="'tab-' + tab.id"
             [class.active]="activeTab === tab.id"
             (click)="activateTab(tab.id)">
@@ -100,28 +105,44 @@
     <!-- ═══ TAB BODY ═══ -->
     <div class="tab-body">
       @if (activeTab === 'feed') {
-        <app-club-feed-tab [club]="club"></app-club-feed-tab>
+        <div role="tabpanel" id="tabpanel-feed" aria-labelledby="tab-btn-feed">
+          <app-club-feed-tab [club]="club"></app-club-feed-tab>
+        </div>
       }
       @if (activeTab === 'sessions') {
-        <app-club-sessions-tab [club]="club" (createAiForSession)="openAiModalForSession($event)"></app-club-sessions-tab>
+        <div role="tabpanel" id="tabpanel-sessions" aria-labelledby="tab-btn-sessions">
+          <app-club-sessions-tab [club]="club" (createAiForSession)="openAiModalForSession($event)"></app-club-sessions-tab>
+        </div>
       }
       @if (activeTab === 'open-sessions') {
-        <app-club-open-sessions-tab [club]="club" (createAiForSession)="openAiModalForSession($event)"></app-club-open-sessions-tab>
+        <div role="tabpanel" id="tabpanel-open-sessions" aria-labelledby="tab-btn-open-sessions">
+          <app-club-open-sessions-tab [club]="club" (createAiForSession)="openAiModalForSession($event)"></app-club-open-sessions-tab>
+        </div>
       }
       @if (activeTab === 'members') {
-        <app-club-members-tab [club]="club"></app-club-members-tab>
+        <div role="tabpanel" id="tabpanel-members" aria-labelledby="tab-btn-members">
+          <app-club-members-tab [club]="club"></app-club-members-tab>
+        </div>
       }
       @if (activeTab === 'stats') {
-        <app-club-stats-tab></app-club-stats-tab>
+        <div role="tabpanel" id="tabpanel-stats" aria-labelledby="tab-btn-stats">
+          <app-club-stats-tab></app-club-stats-tab>
+        </div>
       }
       @if (activeTab === 'leaderboard') {
-        <app-club-leaderboard-tab></app-club-leaderboard-tab>
+        <div role="tabpanel" id="tabpanel-leaderboard" aria-labelledby="tab-btn-leaderboard">
+          <app-club-leaderboard-tab></app-club-leaderboard-tab>
+        </div>
       }
       @if (activeTab === 'race-goals') {
-        <app-club-race-goals-tab></app-club-race-goals-tab>
+        <div role="tabpanel" id="tabpanel-race-goals" aria-labelledby="tab-btn-race-goals">
+          <app-club-race-goals-tab></app-club-race-goals-tab>
+        </div>
       }
       @if (activeTab === 'chat') {
-        <app-club-chat-tab [clubId]="clubId" (viewChange)="onChatViewChange($event)"></app-club-chat-tab>
+        <div role="tabpanel" id="tabpanel-chat" aria-labelledby="tab-btn-chat">
+          <app-club-chat-tab [clubId]="clubId" (viewChange)="onChatViewChange($event)"></app-club-chat-tab>
+        </div>
       }
     </div>
 

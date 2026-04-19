@@ -45,9 +45,9 @@
           </app-dashboard-focus-card>
         </div>
 
-        <!-- ▌ Active Plan — spans 8 cols -->
+        <!-- ▌ Active Plan — spans 6 cols (pairs with Next Workout) -->
         @if (vm.activePlan; as plan) {
-          <div class="bento-card bento-8 glow-card" (click)="navigateToPlan(plan.planId)" style="cursor:pointer;">
+          <div class="bento-card bento-6 glow-card" (click)="navigateToPlan(plan.planId)" style="cursor:pointer;">
             <span class="tile-label accent">{{ 'DASHBOARD.CARD_ACTIVE_PLAN' | translate }}</span>
             <div class="plan-title-row">
               <span class="plan-title">{{ plan.title }}</span>
@@ -83,27 +83,29 @@
           </div>
         }
 
-        <!-- ▌ Latest Activity — spans 8 cols -->
+        <!-- ▌ Latest Activity — full width, horizontal layout -->
         @if (vm.latestFit; as fit) {
           <div class="bento-card bento-full glow-card latest-tile">
-            <div class="latest-header">
-              <span class="tile-label">{{ 'DASHBOARD.CARD_LATEST_ACTIVITY' | translate }}</span>
+            <div class="latest-main">
+              <div class="latest-info">
+                <span class="tile-label">{{ 'DASHBOARD.CARD_LATEST_ACTIVITY' | translate }}</span>
+                <div class="latest-body">
+                  <app-sport-icon [sport]="fit.sportType" [size]="20"></app-sport-icon>
+                  <span class="latest-title">{{ fit.title }}</span>
+                </div>
+              </div>
+              <div class="latest-stats">
+                <span class="latest-stat">{{ formatDate(fit.date) }}</span>
+                <span class="latest-stat">{{ formatDuration(fit.totalDuration) }}</span>
+                @if (fit.avgPower) {
+                  <span class="latest-stat accent">{{ fit.avgPower | number:'1.0-0' }}w</span>
+                }
+                @if (fit.tss) {
+                  <span class="latest-stat">TSS {{ fit.tss | number:'1.0-0' }}</span>
+                }
+              </div>
+              <button class="view-btn" (click)="openAnalysis(fit)">{{ 'DASHBOARD.BTN_VIEW_ANALYSIS' | translate }} →</button>
             </div>
-            <div class="latest-body">
-              <app-sport-icon [sport]="fit.sportType" [size]="20"></app-sport-icon>
-              <span class="latest-title">{{ fit.title }}</span>
-            </div>
-            <div class="latest-stats">
-              <span class="latest-stat">{{ formatDate(fit.date) }}</span>
-              <span class="latest-stat">{{ formatDuration(fit.totalDuration) }}</span>
-              @if (fit.avgPower) {
-                <span class="latest-stat accent">{{ fit.avgPower | number:'1.0-0' }}w</span>
-              }
-              @if (fit.tss) {
-                <span class="latest-stat">TSS {{ fit.tss | number:'1.0-0' }}</span>
-              }
-            </div>
-            <button class="view-btn" (click)="openAnalysis(fit)">{{ 'DASHBOARD.BTN_VIEW_ANALYSIS' | translate }} →</button>
           </div>
         }
 

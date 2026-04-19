@@ -3,6 +3,7 @@ import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {HttpClient} from '@angular/common/http';
 import {AuthService, User} from '../../../services/auth.service';
+import {NolioSyncService} from '../../../services/nolio-sync.service';
 import {TranslateModule} from '@ngx-translate/core';
 import {environment} from '../../../../environments/environment';
 
@@ -17,11 +18,13 @@ import {environment} from '../../../../environments/environment';
 export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+  private nolioSync = inject(NolioSyncService);
 
   @Output() closed = new EventEmitter<void>();
 
   user$ = this.authService.user$;
   unlinking = false;
+  readonly isProd = environment.production;
 
   private onLinkMessage = (event: MessageEvent) => {
     if (event.origin !== window.location.origin) return;
@@ -41,8 +44,14 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
 
   getConnectedCount(user: User): number {
     if (!user.linkedAccounts) return 0;
-    return [user.linkedAccounts.strava, user.linkedAccounts.google, user.linkedAccounts.garmin, user.linkedAccounts.zwift]
-      .filter(Boolean).length;
+    return [
+      user.linkedAccounts.strava,
+      user.linkedAccounts.google,
+      user.linkedAccounts.garmin,
+      user.linkedAccounts.zwift,
+      user.linkedAccounts.nolioRead,
+      user.linkedAccounts.nolioWrite,
+    ].filter(Boolean).length;
   }
 
   canUnlink(user: User, provider: 'strava' | 'google'): boolean {
@@ -51,14 +60,16 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
     return user.linkedAccounts[other] === true;
   }
 
-  unlinkApp(provider: 'strava' | 'google' | 'garmin' | 'zwift') {
+  unlinkApp(provider: 'strava' | 'google' | 'garmin' | 'zwift' | 'nolioRead' | 'nolioWrite') {
     this.unlinking = true;
-    let obs;
+    let obs: any;
     switch (provider) {
       case 'strava': obs = this.authService.unlinkStrava(); break;
       case 'google': obs = this.authService.unlinkGoogle(); break;
       case 'garmin': obs = this.authService.unlinkGarmin(); break;
       case 'zwift': obs = this.authService.unlinkZwift(); break;
+      case 'nolioRead': obs = this.nolioSync.disconnectRead(); break;
+      case 'nolioWrite': obs = this.nolioSync.disconnectWrite(); break;
     }
     obs.subscribe({
       next: () => this.unlinking = false,
@@ -93,6 +104,18 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
     this.http.put<any>(`${environment.apiUrl}/api/integration/zwift/auto-sync`, {enabled}).subscribe({
       next: () => this.authService.refreshUser(),
     });
+  }
+
+  connectNolioRead(): void {
+    this.nolioSync.connectRead().subscribe();
+  }
+
+  connectNolioWrite(): void {
+    this.nolioSync.connectWrite().subscribe();
+  }
+
+  toggleNolioAutoSync(enabled: boolean): void {
+    this.nolioSync.setAutoSync(enabled).subscribe();
   }
 
   @HostListener('document:keydown.escape')

@@ -263,6 +263,20 @@ public class AuthController {
         return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 
+    @DeleteMapping("/link/nolio-read")
+    public ResponseEntity<Map<String, Object>> unlinkNolioRead() {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = accountLinkingService.unlinkNolioRead(userId);
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
+    }
+
+    @DeleteMapping("/link/nolio-write")
+    public ResponseEntity<Map<String, Object>> unlinkNolioWrite() {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = accountLinkingService.unlinkNolioWrite(userId);
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
+    }
+
     // --- Unlinking ---
 
     @DeleteMapping("/link/strava")

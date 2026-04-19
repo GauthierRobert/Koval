@@ -2,7 +2,21 @@
   <div class="viz-container" [class.compact]="compact">
     @if (!compact) {
       <div class="header">
-        <h1>{{ training.title }}</h1>
+        <h1>
+          {{ training.title }}
+          @if (training.nolioSyncStatus && training.nolioSyncStatus !== 'NONE') {
+            <span class="nolio-sync-pill" [class.synced]="training.nolioSyncStatus === 'SYNCED'"
+              [class.pending]="training.nolioSyncStatus === 'PENDING'"
+              [class.failed]="training.nolioSyncStatus === 'FAILED'"
+              [title]="training.nolioSyncError || ''">
+              @switch (training.nolioSyncStatus) {
+                @case ('SYNCED') { Nolio &#x2713; }
+                @case ('PENDING') { Nolio &hellip; }
+                @case ('FAILED') { Nolio &#x26A0; }
+              }
+            </span>
+          }
+        </h1>
         <div class="action-buttons">
           <div class="export-dropdown desktop-only">
             @if (isExportDropdownOpen) {
@@ -10,6 +24,12 @@
                 @if (training.sportType === 'CYCLING') {
                   <button class="dropdown-item" (click)="exportToZwift()">{{ 'WORKOUT_VIZ.EXPORT_ZWIFT' | translate }}</button>
                   <button class="dropdown-item" (click)="sendToZwift()">{{ 'WORKOUT_VIZ.SEND_TO_ZWIFT' | translate }}</button>
+                }
+                @if (canPushToNolio()) {
+                  <button class="dropdown-item" (click)="pushToNolio()"
+                    [disabled]="(nolioSync.pushing$ | async) === training.id">
+                    {{ 'WORKOUT_VIZ.PUSH_TO_NOLIO' | translate }}
+                  </button>
                 }
                 <button class="dropdown-item" (click)="exportToJSON()">{{ 'WORKOUT_VIZ.EXPORT_JSON' | translate }}</button>
               </div>
@@ -46,7 +66,7 @@
       <app-block-steps-list
         [blocks]="displayBlocks"
         [displayUnit]="displayUnit"
-        [ftp]="0"
+        [ftp]="(user$ | async)?.ftp ?? 0"
         [sportType]="training.sportType"
         [training]="training"
         [currentZoneSystem]="currentZoneSystem">
@@ -59,7 +79,7 @@
       <app-workout-chart-bar
         [blocks]="displayBlocks"
         [displayUnit]="displayUnit"
-        [ftp]="0"
+        [ftp]="(user$ | async)?.ftp ?? 0"
         [sportType]="training.sportType"
         [compact]="compact"
         [training]="training"

@@ -153,21 +153,88 @@ public class TrainingPlanService {
                 weekActualTss);
     }
 
+    @Transactional
     public TrainingPlan updatePlan(String planId, TrainingPlan updates, String userId) {
         TrainingPlan existing = getPlan(planId);
         verifyOwnership(existing, userId);
+
+        boolean weeksChanged = updates.getWeeks() != null && !updates.getWeeks().isEmpty();
 
         if (updates.getTitle() != null) existing.setTitle(updates.getTitle());
         if (updates.getDescription() != null) existing.setDescription(updates.getDescription());
         if (updates.getSportType() != null) existing.setSportType(updates.getSportType());
         if (updates.getStartDate() != null) existing.setStartDate(updates.getStartDate());
         if (updates.getDurationWeeks() > 0) existing.setDurationWeeks(updates.getDurationWeeks());
-        if (updates.getWeeks() != null && !updates.getWeeks().isEmpty()) existing.setWeeks(updates.getWeeks());
+        if (weeksChanged) existing.setWeeks(updates.getWeeks());
         if (updates.getGoalRaceId() != null) existing.setGoalRaceId(updates.getGoalRaceId());
         if (updates.getTargetFtp() != null) existing.setTargetFtp(updates.getTargetFtp());
         if (updates.getAthleteIds() != null) existing.setAthleteIds(updates.getAthleteIds());
 
+        // For active plans, propagate day-level edits to the calendar by
+        // rebuilding future PENDING scheduled workouts from the new structure.
+        if (weeksChanged && existing.getStatus() == PlanStatus.ACTIVE && existing.getStartDate() != null) {
+            syncFutureScheduledWorkouts(existing, userId);
+        }
+
         return planRepository.save(existing);
+    }
+
+    private void syncFutureScheduledWorkouts(TrainingPlan plan, String userId) {
+        LocalDate today = LocalDate.now();
+        List<ScheduledWorkout> planWorkouts = scheduledWorkoutRepository.findByPlanId(plan.getId());
+
+        // Delete future PENDING scheduled workouts; preserve past, completed, skipped.
+        for (ScheduledWorkout sw : planWorkouts) {
+            if (sw.getStatus() == ScheduleStatus.PENDING
+                    && !sw.getScheduledDate().isBefore(today)) {
+                scheduledWorkoutRepository.deleteById(sw.getId());
+            }
+        }
+
+        // Clear stale scheduledWorkoutId references on future days so we re-link below.
+        for (PlanWeek week : plan.getWeeks()) {
+            for (PlanDay day : week.getDays()) {
+                LocalDate date = computeDate(plan.getStartDate(), week.getWeekNumber(), day.getDayOfWeek());
+                if (!date.isBefore(today)) {
+                    day.setScheduledWorkoutId(null);
+                }
+            }
+        }
+
+        List<String> targetAthleteIds = plan.getAthleteIds().isEmpty()
+                ? List.of(userId)
+                : plan.getAthleteIds();
+
+        // Recreate future scheduled workouts from the updated plan structure.
+        for (PlanWeek week : plan.getWeeks()) {
+            for (PlanDay day : week.getDays()) {
+                if (day.getTrainingId() == null) continue;
+                LocalDate date = computeDate(plan.getStartDate(), week.getWeekNumber(), day.getDayOfWeek());
+                if (date.isBefore(today)) continue;
+
+                for (String athleteId : targetAthleteIds) {
+                    ScheduledWorkout sw = new ScheduledWorkout();
+                    sw.setTrainingId(day.getTrainingId());
+                    sw.setAthleteId(athleteId);
+                    sw.setAssignedBy(userId);
+                    sw.setScheduledDate(date);
+                    sw.setNotes(day.getNotes());
+                    sw.setPlanId(plan.getId());
+                    sw.setStatus(ScheduleStatus.PENDING);
+
+                    try {
+                        Training training = trainingService.getTrainingById(day.getTrainingId());
+                        if (training != null && training.getEstimatedTss() != null) {
+                            sw.setTss(training.getEstimatedTss());
+                            sw.setIntensityFactor(training.getEstimatedIf());
+                        }
+                    } catch (Exception ignored) {}
+
+                    ScheduledWorkout saved = scheduledWorkoutRepository.save(sw);
+                    day.setScheduledWorkoutId(saved.getId());
+                }
+            }
+        }
     }
 
     public TrainingPlan activatePlan(String planId, String userId, LocalDate startDate) {

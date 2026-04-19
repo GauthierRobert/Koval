@@ -166,6 +166,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     showCadence = false;
     showEfficiency = false;
     showBlocks = false;
+    private blocksDefaultApplied = false;
 
     hoverIdx: number | null = null;
     ttX = 0;
@@ -312,6 +313,10 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     ngOnChanges(): void {
         this.updateHasElevation();
         this._ds = this.downsample(this.records, 30);
+        if (!this.blocksDefaultApplied && (this.zoneBlocks.length > 0 || this.blockSummaries.length > 0)) {
+            this.showBlocks = true;
+            this.blocksDefaultApplied = true;
+        }
         if (this.ready) setTimeout(() => this.drawAll(), 0);
     }
 

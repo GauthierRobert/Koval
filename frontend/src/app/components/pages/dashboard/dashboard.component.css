@@ -360,16 +360,24 @@
 .latest-tile {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
 }
 
-.latest-header {
+.latest-main {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
 }
 
-.latest-header .tile-label {
+.latest-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.latest-info .tile-label {
   margin-bottom: 0;
 }
 
@@ -415,17 +423,28 @@
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: var(--text-color);
-  background: none;
-  border: none;
+  color: var(--accent-color);
+  background: var(--accent-subtle);
+  border: 1px solid transparent;
   cursor: pointer;
-  padding: 0;
-  transition: opacity 0.2s;
-  align-self: flex-start;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .view-btn:hover {
-  opacity: 0.75;
+  background: var(--accent-hover);
+  border-color: var(--accent-color);
+  opacity: 1;
+}
+
+@media (max-width: 600px) {
+  .latest-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-sm);
+  }
 }
 
 /* ─── Quick Actions ───────────────────────────────────────── */

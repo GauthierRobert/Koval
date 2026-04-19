@@ -46,15 +46,31 @@
             </app-fit-timeseries-chart>
           }
           @if (!fit.loading && !fit.error && fit.records.length === 0) {
-            <div class="no-fit-msg">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                opacity="0.4">
-                <path d="M3 3l18 18M10.5 10.677A2 2 0 0 0 10 12a2 2 0 0 0 4 0 2 2 0 0 0-.5-1.323" />
-                <path d="M3 10l3 2 2-4 2 7 2-5 2 2h5" />
-              </svg>
-              <p>{{ 'SESSION_ANALYSIS.NO_FIT_DATA' | translate }}</p>
-              <p class="hint">{{ 'SESSION_ANALYSIS.NO_FIT_HINT' | translate }}</p>
-            </div>
+            @if (session.blockSummaries.length > 0) {
+              @let sTotal = syntheticTotalDuration(session.blockSummaries);
+              @let sMax = syntheticMaxPower(session.blockSummaries, ftp);
+              <div class="synthetic-chart" data-testid="synthetic-block-chart">
+                @for (block of session.blockSummaries; track $index) {
+                  <div class="synthetic-bar"
+                    [style.width.%]="syntheticBarWidthPct(block, sTotal)"
+                    [style.height.%]="syntheticBarHeightPct(block, sMax)"
+                    [style.background]="syntheticBarColor(block, ftp)"
+                    [attr.title]="block.label + ' · ' + (block.actualPower || block.targetPower) + 'W'">
+                  </div>
+                }
+              </div>
+              <p class="synthetic-hint">{{ 'SESSION_ANALYSIS.NO_FIT_HINT' | translate }}</p>
+            } @else {
+              <div class="no-fit-msg">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                  opacity="0.4">
+                  <path d="M3 3l18 18M10.5 10.677A2 2 0 0 0 10 12a2 2 0 0 0 4 0 2 2 0 0 0-.5-1.323" />
+                  <path d="M3 10l3 2 2-4 2 7 2-5 2 2h5" />
+                </svg>
+                <p>{{ 'SESSION_ANALYSIS.NO_FIT_DATA' | translate }}</p>
+                <p class="hint">{{ 'SESSION_ANALYSIS.NO_FIT_HINT' | translate }}</p>
+              </div>
+            }
           }
           @if (fit.loading) {
             <div class="no-fit-msg">

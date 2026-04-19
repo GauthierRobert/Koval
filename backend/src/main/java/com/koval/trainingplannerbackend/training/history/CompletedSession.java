@@ -55,6 +55,9 @@ public class CompletedSession {
     @Indexed(unique = true, sparse = true)
     private String zwiftActivityId;
 
+    @Indexed(unique = true, sparse = true)
+    private String nolioActivityId;
+
     public record BlockSummary(
             String label,
             String type,

@@ -1,6 +1,7 @@
 import {AfterViewInit, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, OnDestroy, ViewChild} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
+import {ActivatedRoute} from '@angular/router';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {WorkoutExecutionService} from '../../../services/workout-execution.service';
 import {BluetoothService} from '../../../services/bluetooth.service';
@@ -11,6 +12,7 @@ import {PipService} from '../../../services/pip.service';
 import {HistoryService} from '../../../services/history.service';
 import {AuthService} from '../../../services/auth.service';
 import {formatPace, formatTimeMS} from '../../shared/format/format.utils';
+import {filter, take} from 'rxjs/operators';
 
 @Component({
   selector: 'app-live-dashboard',
@@ -26,6 +28,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
   private bluetoothService = inject(BluetoothService);
   private trainingService = inject(TrainingService);
   private authService = inject(AuthService);
+  private route = inject(ActivatedRoute);
 
   state$ = this.executionService.state$;
   metrics$ = this.bluetoothService.metrics$;
@@ -70,6 +73,13 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     this.ctx = this.canvas.nativeElement.getContext('2d')!;
     this.resizeCanvas();
     this.drawGraph();
+
+    // Demo mode: ?demo=1 auto-loads a workout and toggles bluetooth simulation.
+    // Used by the promo capture spec; also exposes an entry point for first-time users
+    // who don't own a physical trainer.
+    if (this.route.snapshot.queryParamMap.get('demo') === '1') {
+      this.activateDemoMode();
+    }
 
     // Wire PiP controls
     this.pipService.onPlay.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
@@ -185,6 +195,17 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
+  }
+
+  private activateDemoMode(): void {
+    this.bluetoothService.toggleSimulation(true);
+    if (this.executionService.currentState.training) return;
+    this.trainingService.trainings$
+      .pipe(filter((list) => list.length > 0), take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe((list) => {
+        const cycling = list.find((t) => t.sportType === 'CYCLING') ?? list[0];
+        this.executionService.startWorkout(cycling);
+      });
   }
 
   formatTime(seconds: number | undefined): string {

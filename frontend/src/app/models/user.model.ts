@@ -26,7 +26,15 @@ export interface User {
     needsCguAcceptance?: boolean;
     aiPrePrompt?: string;
     aiPrePromptEnabled?: boolean;
-    linkedAccounts?: { strava: boolean; google: boolean; garmin: boolean; zwift: boolean };
+    linkedAccounts?: {
+        strava: boolean;
+        google: boolean;
+        garmin: boolean;
+        zwift: boolean;
+        nolioRead: boolean;
+        nolioWrite: boolean;
+    };
     authProvider?: string;
     zwiftAutoSyncWorkouts?: boolean;
+    nolioAutoSyncWorkouts?: boolean;
 }

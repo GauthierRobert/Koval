@@ -62,7 +62,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   selectedClub$ = this.clubService.selectedClub$;
   currentUserId: string | null = null;
 
-  activeTab: TabId = 'feed';
+  activeTab: TabId = 'open-sessions';
   chatView: 'list' | 'chat' = 'list';
   loadedTabs = new Set<TabId>();
 
@@ -106,13 +106,13 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
       this.route.params.subscribe((params) => {
         this.clubId = params['id'];
         this.loadedTabs.clear();
-        this.activeTab = 'feed';
+        this.activeTab = 'open-sessions';
         this.chatView = 'list';
         this.clubService.resetDetail();
         this.clubSessionService.resetDetail();
         this.clubFeedService.resetDetail();
         this.clubService.loadClubDetail(this.clubId);
-        this.activateTab('feed');
+        this.activateTab('open-sessions');
       })
     );
 

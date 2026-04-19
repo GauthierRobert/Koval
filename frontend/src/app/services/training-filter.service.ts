@@ -19,7 +19,7 @@ export class TrainingFilterService {
     activeContext$ = this.activeContextSubject.asObservable();
 
     // ── Filter state ──────────────────────────────────────────────────────
-    private tagFilterSubject = new BehaviorSubject<string | null>(null);
+    private tagFilterSubject = new BehaviorSubject<string | null>('__mine__');
     private sportFilterSubject = new BehaviorSubject<SportFilter>(null);
     private typeFilterSubject = new BehaviorSubject<TrainingType | null>(null);
 
@@ -110,7 +110,9 @@ export class TrainingFilterService {
 
     setContext(context: string): void {
         this.activeContextSubject.next(context);
-        if (context !== 'mine') {
+        if (context === 'mine') {
+            this.tagFilterSubject.next('__mine__');
+        } else {
             this.trainingService.loadReceivedTrainings();
             this.tagFilterSubject.next(null);
         }

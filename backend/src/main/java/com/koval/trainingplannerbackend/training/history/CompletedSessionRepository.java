@@ -21,6 +21,11 @@ public interface CompletedSessionRepository extends MongoRepository<CompletedSes
     @Query(value = "{ 'userId': ?0, 'zwiftActivityId': { $ne: null } }", fields = "{ 'zwiftActivityId': 1 }")
     List<CompletedSession> findZwiftActivityIdsByUserId(String userId);
 
+    @Query(value = "{ 'userId': ?0, 'nolioActivityId': { $ne: null } }", fields = "{ 'nolioActivityId': 1 }")
+    List<CompletedSession> findNolioActivityIdsByUserId(String userId);
+
+    Optional<CompletedSession> findByUserIdAndNolioActivityId(String userId, String nolioActivityId);
+
     List<CompletedSession> findByUserIdOrderByCompletedAtDesc(String userId);
     Page<CompletedSession> findByUserIdOrderByCompletedAtDesc(String userId, Pageable pageable);
     List<CompletedSession> findByUserIdOrderByCompletedAtAsc(String userId);

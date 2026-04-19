@@ -172,6 +172,31 @@ export class CalendarWeekViewComponent {
   }
 
   /** Group consecutive club-session entries that share the same hour into rows */
+  private readonly MAX_VISIBLE_PER_DAY = 2;
+  expandedDays = new Set<string>();
+
+  toggleExpand(dayKey: string): void {
+    if (this.expandedDays.has(dayKey)) {
+      this.expandedDays.delete(dayKey);
+    } else {
+      this.expandedDays.add(dayKey);
+    }
+  }
+
+  isExpanded(dayKey: string): boolean {
+    return this.expandedDays.has(dayKey);
+  }
+
+  visibleGroups<T>(dayKey: string, groups: T[]): T[] {
+    if (this.expandedDays.has(dayKey) || groups.length <= this.MAX_VISIBLE_PER_DAY) return groups;
+    return groups.slice(0, this.MAX_VISIBLE_PER_DAY);
+  }
+
+  hiddenCount<T>(dayKey: string, groups: T[]): number {
+    if (this.expandedDays.has(dayKey)) return 0;
+    return Math.max(0, groups.length - this.MAX_VISIBLE_PER_DAY);
+  }
+
   groupEntries(entries: CalendarEntry[]): Array<{ type: 'single'; entry: CalendarEntry } | { type: 'club-row'; entries: CalendarEntry[] }> {
     const result: Array<{ type: 'single'; entry: CalendarEntry } | { type: 'club-row'; entries: CalendarEntry[] }> = [];
     let i = 0;

@@ -11,7 +11,7 @@ import { User } from '../../../../models/user.model';
 import { SportIconComponent } from '../../../shared/sport-icon/sport-icon.component';
 import { WorkoutPickerModalComponent } from '../workout-picker-modal/workout-picker-modal.component';
 import { DAY_LABELS, DayOfWeek, PlanAnalytics, PlanDay, PlanWeek, PlanWeekAnalytics, TrainingPlan } from '../../../../models/plan.model';
-import { Training } from '../../../../models/training.model';
+import { Training, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS, TrainingType } from '../../../../models/training.model';
 import { map } from 'rxjs';
 
 @Component({
@@ -89,7 +89,7 @@ export class PlanDetailPageComponent implements OnInit {
   }
 
   isEditable(plan: TrainingPlan): boolean {
-    return plan.status === 'DRAFT' || plan.status === 'PAUSED';
+    return plan.status === 'DRAFT' || plan.status === 'PAUSED' || plan.status === 'ACTIVE';
   }
 
   // ── Workout Picker ──────────────────────────────────────
@@ -245,6 +245,18 @@ export class PlanDetailPageComponent implements OnInit {
   getTrainingTitle(trainingId: string | undefined, trainingMap: Map<string, Training>): string {
     if (!trainingId) return '';
     return trainingMap.get(trainingId)?.title ?? 'Unknown';
+  }
+
+  getTraining(trainingId: string | undefined, trainingMap: Map<string, Training>): Training | undefined {
+    return trainingId ? trainingMap.get(trainingId) : undefined;
+  }
+
+  getTypeColor(type: TrainingType | undefined): string {
+    return type ? TRAINING_TYPE_COLORS[type] : '#888';
+  }
+
+  getTypeLabel(type: TrainingType | undefined): string {
+    return type ? TRAINING_TYPE_LABELS[type] : '';
   }
 
   computeDate(startDate: string, weekNumber: number, day: DayOfWeek): string {

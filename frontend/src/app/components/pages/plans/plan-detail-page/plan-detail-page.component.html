@@ -113,31 +113,33 @@
             </div>
           </div>
 
-          <!-- Weekly Breakdown -->
+          <!-- Weekly Breakdown (past + current weeks only) -->
           <div class="analytics-weekly">
             <h3 class="analytics-subtitle">{{ 'PLANS.ANALYTICS_WEEKLY_BREAKDOWN' | translate }}</h3>
             @for (week of analytics.weeklyBreakdown; track week.weekNumber) {
-              <div class="analytics-week-row" [class.analytics-current-week]="week.weekNumber === analytics.currentWeek">
-                <div class="analytics-week-info">
-                  <span class="analytics-week-number">{{ 'PLANS.WEEK' | translate }} {{ week.weekNumber }}</span>
-                  @if (week.label) {
-                    <span class="analytics-week-label">{{ week.label }}</span>
-                  }
-                  @if (week.weekNumber === analytics.currentWeek) {
-                    <span class="current-badge">{{ 'PLANS.CURRENT' | translate }}</span>
-                  }
-                  <span class="analytics-week-workouts">{{ week.workoutsCompleted }}/{{ week.workoutsTotal }} {{ 'PLANS.ANALYTICS_WORKOUTS' | translate }}</span>
-                </div>
-                <div class="analytics-bar-container">
-                  <div class="analytics-bar-track" [style.width.%]="tssBarWidth(week, maxTss(analytics))">
-                    <div class="analytics-bar-fill"
-                      [style.width.%]="tssFilledWidth(week)"
-                      [style.background]="adherenceColor(week.adherencePercent)">
-                    </div>
+              @if (week.weekNumber <= analytics.currentWeek) {
+                <div class="analytics-week-row" [class.analytics-current-week]="week.weekNumber === analytics.currentWeek">
+                  <div class="analytics-week-info">
+                    <span class="analytics-week-number">{{ 'PLANS.WEEK' | translate }} {{ week.weekNumber }}</span>
+                    @if (week.label) {
+                      <span class="analytics-week-label">{{ week.label }}</span>
+                    }
+                    @if (week.weekNumber === analytics.currentWeek) {
+                      <span class="current-badge">{{ 'PLANS.CURRENT' | translate }}</span>
+                    }
+                    <span class="analytics-week-workouts">{{ week.workoutsCompleted }}/{{ week.workoutsTotal }} {{ 'PLANS.ANALYTICS_WORKOUTS' | translate }}</span>
                   </div>
-                  <span class="analytics-bar-value">{{ week.actualTss }}@if (week.targetTss) { / {{ week.targetTss }} } TSS</span>
+                  <div class="analytics-bar-container">
+                    <div class="analytics-bar-track" [style.width.%]="tssBarWidth(week, maxTss(analytics))">
+                      <div class="analytics-bar-fill"
+                        [style.width.%]="tssFilledWidth(week)"
+                        [style.background]="adherenceColor(week.adherencePercent)">
+                      </div>
+                    </div>
+                    <span class="analytics-bar-value">{{ week.actualTss }}@if (week.targetTss) { / {{ week.targetTss }} } TSS</span>
+                  </div>
                 </div>
-              </div>
+              }
             }
           </div>
         </div>
@@ -198,7 +200,19 @@
                     <span class="day-label">{{ DAY_LABELS[day] }}</span>
                     <span class="day-date">{{ computeDate(plan.startDate, week.weekNumber, day) }}</span>
                     @if (getTrainingForDay(week, day); as planDay) {
+                      @let dayTraining = getTraining(planDay.trainingId, trainingMap);
+                      @if (dayTraining?.trainingType) {
+                        <span class="day-type-badge"
+                          [style.background]="getTypeColor(dayTraining!.trainingType) + '22'"
+                          [style.color]="getTypeColor(dayTraining!.trainingType)"
+                          [style.border-color]="getTypeColor(dayTraining!.trainingType)">
+                          {{ getTypeLabel(dayTraining!.trainingType) }}
+                        </span>
+                      }
                       <div class="day-workout">
+                        @if (dayTraining) {
+                          <app-sport-icon [sport]="dayTraining.sportType" [size]="12" class="day-sport-icon"></app-sport-icon>
+                        }
                         {{ getTrainingTitle(planDay.trainingId, trainingMap) }}
                       </div>
                       @if (planDay.notes) {

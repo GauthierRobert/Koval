@@ -81,7 +81,7 @@
               {{ 'SETTINGS.BTN_UNLINK' | translate }}
             </button>
           } @else {
-            <button class="connect-btn" (click)="connectGarmin()">
+            <button class="connect-btn" [disabled]="isProd" [title]="isProd ? 'Coming soon' : ''" (click)="connectGarmin()">
               {{ 'SETTINGS.BTN_CONNECT' | translate }}
             </button>
           }
@@ -120,6 +120,69 @@
                 (change)="toggleZwiftAutoSync($any($event.target).checked)"/>
               <span class="toggle-switch"></span>
               <span>{{ 'SETTINGS.ZWIFT_AUTO_SYNC_WORKOUTS' | translate }}</span>
+            </label>
+          </div>
+        }
+
+        <!-- Nolio activities (read via Terra) -->
+        <div class="linked-app-row">
+          <div class="app-info">
+            <svg class="app-icon nolio" viewBox="0 0 24 24" width="20" height="20">
+              <circle cx="12" cy="12" r="10" fill="#0EA5A4"/>
+              <path d="M8 7v10M8 7l8 10M16 17V7" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="app-details">
+              <span class="app-name">Nolio activities</span>
+              <span class="app-status" [class.connected]="user.linkedAccounts?.nolioRead">
+                {{ (user.linkedAccounts?.nolioRead ? 'SETTINGS.APP_CONNECTED' : 'SETTINGS.APP_NOT_CONNECTED') | translate }}
+              </span>
+            </div>
+          </div>
+          @if (user.linkedAccounts?.nolioRead) {
+            <button class="unlink-btn" [disabled]="unlinking" (click)="unlinkApp('nolioRead')">
+              {{ 'SETTINGS.BTN_UNLINK' | translate }}
+            </button>
+          } @else {
+            <button class="connect-btn" [disabled]="isProd" [title]="isProd ? 'Coming soon' : ''" (click)="connectNolioRead()">
+              {{ 'SETTINGS.BTN_CONNECT' | translate }}
+            </button>
+          }
+        </div>
+
+        <!-- Nolio workout push (direct OAuth) -->
+        <div class="linked-app-row">
+          <div class="app-info">
+            <svg class="app-icon nolio" viewBox="0 0 24 24" width="20" height="20">
+              <circle cx="12" cy="12" r="10" fill="#0EA5A4"/>
+              <path d="M12 7v10M8 11l4-4 4 4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="app-details">
+              <span class="app-name">Nolio workout push</span>
+              <span class="app-status" [class.connected]="user.linkedAccounts?.nolioWrite">
+                {{ (user.linkedAccounts?.nolioWrite ? 'SETTINGS.APP_CONNECTED' : 'SETTINGS.APP_NOT_CONNECTED') | translate }}
+              </span>
+            </div>
+          </div>
+          @if (user.linkedAccounts?.nolioWrite) {
+            <button class="unlink-btn" [disabled]="unlinking" (click)="unlinkApp('nolioWrite')">
+              {{ 'SETTINGS.BTN_UNLINK' | translate }}
+            </button>
+          } @else {
+            <button class="connect-btn" [disabled]="isProd" [title]="isProd ? 'Coming soon' : ''" (click)="connectNolioWrite()">
+              {{ 'SETTINGS.BTN_CONNECT' | translate }}
+            </button>
+          }
+        </div>
+
+        <!-- Nolio auto-sync toggle -->
+        @if (user.linkedAccounts?.nolioWrite) {
+          <div class="auto-sync-row">
+            <label class="toggle-label">
+              <input type="checkbox" class="toggle-input"
+                [checked]="user.nolioAutoSyncWorkouts"
+                (change)="toggleNolioAutoSync($any($event.target).checked)"/>
+              <span class="toggle-switch"></span>
+              <span>{{ 'SETTINGS.NOLIO_AUTO_SYNC_WORKOUTS' | translate }}</span>
             </label>
           </div>
         }

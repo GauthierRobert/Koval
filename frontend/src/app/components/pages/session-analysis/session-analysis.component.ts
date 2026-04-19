@@ -420,4 +420,36 @@ export class SessionAnalysisComponent implements OnDestroy {
             year: 'numeric',
         });
     }
+
+    // Synthetic block-bar chart helpers (used when no FIT file is attached).
+    syntheticMaxPower(blocks: BlockSummary[], ftp: number | null): number {
+        const observed = blocks.reduce((m, b) => Math.max(m, b.actualPower || 0, b.targetPower || 0), 0);
+        const floor = ftp ? ftp * 1.2 : 200;
+        return Math.max(observed, floor, 1);
+    }
+
+    syntheticTotalDuration(blocks: BlockSummary[]): number {
+        return blocks.reduce((s, b) => s + (b.durationSeconds || 0), 0) || 1;
+    }
+
+    syntheticBarWidthPct(block: BlockSummary, total: number): number {
+        return ((block.durationSeconds || 0) / total) * 100;
+    }
+
+    syntheticBarHeightPct(block: BlockSummary, maxPower: number): number {
+        const v = block.actualPower || block.targetPower || 0;
+        return Math.max(4, (v / maxPower) * 100);
+    }
+
+    syntheticBarColor(block: BlockSummary, ftp: number | null): string {
+        const v = block.actualPower || block.targetPower || 0;
+        if (!ftp || ftp <= 0) return 'var(--accent-color, #ff9d00)';
+        const pct = (v / ftp) * 100;
+        if (pct < 55) return '#b2bec3';
+        if (pct < 75) return '#3498db';
+        if (pct < 90) return '#2ecc71';
+        if (pct < 105) return '#f1c40f';
+        if (pct < 120) return '#e67e22';
+        return '#e74c3c';
+    }
 }

@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.auth;
 
+import com.koval.trainingplannerbackend.integration.terra.TerraApiClient;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -10,10 +11,14 @@ public class AccountLinkingService {
 
     private final UserRepository userRepository;
     private final UserService userService;
+    private final TerraApiClient terraApiClient;
 
-    public AccountLinkingService(UserRepository userRepository, UserService userService) {
+    public AccountLinkingService(UserRepository userRepository,
+                                 UserService userService,
+                                 TerraApiClient terraApiClient) {
         this.userRepository = userRepository;
         this.userService = userService;
+        this.terraApiClient = terraApiClient;
     }
 
     public User findOrCreateFromStrava(String stravaId, String displayName, String profilePicture,
@@ -186,6 +191,35 @@ public class AccountLinkingService {
         if (user.getAuthProvider() == AuthProvider.STRAVA) {
             user.setAuthProvider(AuthProvider.GOOGLE);
         }
+        return userRepository.save(user);
+    }
+
+    /**
+     * Disconnects the Nolio activity feed (Terra read side).
+     * Also attempts Terra-side deauth; local state is cleared regardless.
+     */
+    public User unlinkNolioRead(String userId) {
+        User user = userService.getUserById(userId);
+        if (user.getTerraUserId() != null) {
+            terraApiClient.deauthenticateUser(user.getTerraUserId());
+        }
+        user.setTerraUserId(null);
+        user.setTerraProviderNolioConnected(false);
+        return userRepository.save(user);
+    }
+
+    /**
+     * Disconnects the direct Nolio write access and clears the auto-sync flag.
+     * Leaves the Terra read side untouched — the two connections are independent.
+     */
+    public User unlinkNolioWrite(String userId) {
+        User user = userService.getUserById(userId);
+        user.setNolioUserId(null);
+        user.setNolioAccessToken(null);
+        user.setNolioRefreshToken(null);
+        user.setNolioTokenExpiresAt(null);
+        user.setNolioLastSyncAt(null);
+        user.setNolioAutoSyncWorkouts(false);
         return userRepository.save(user);
     }
 

@@ -23,6 +23,10 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     Optional<User> findByZwiftUserId(String zwiftUserId);
 
+    Optional<User> findByTerraUserId(String terraUserId);
+
+    Optional<User> findByNolioUserId(String nolioUserId);
+
     Optional<User> findByEmail(String email);
 
     List<User> findByRole(UserRole role);

@@ -115,7 +115,12 @@
       "Bash(mvn -q -pl . compile -DskipTests)",
       "Bash(mvn *)",
       "Bash(powershell.exe *)",
-      "Bash(echo *)"
+      "Bash(echo *)",
+      "WebFetch(domain:tryterra.co)",
+      "WebFetch(domain:docs.tryterra.co)",
+      "Bash(where mvn *)",
+      "Read(//c/Program Files/**)",
+      "Read(//c/Users/gauth/**)"
     ]
   }
 }

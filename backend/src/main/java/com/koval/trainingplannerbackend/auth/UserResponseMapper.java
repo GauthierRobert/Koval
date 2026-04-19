@@ -61,9 +61,12 @@ public class UserResponseMapper {
         linkedAccounts.put("google", user.getGoogleId() != null);
         linkedAccounts.put("garmin", user.getGarminUserId() != null);
         linkedAccounts.put("zwift", user.getZwiftUserId() != null);
+        linkedAccounts.put("nolioRead", Boolean.TRUE.equals(user.getTerraProviderNolioConnected()));
+        linkedAccounts.put("nolioWrite", user.getNolioAccessToken() != null);
         map.put("linkedAccounts", linkedAccounts);
         map.put("authProvider", user.getAuthProvider() != null ? user.getAuthProvider().name() : null);
         map.put("zwiftAutoSyncWorkouts", user.getZwiftAutoSyncWorkouts());
+        map.put("nolioAutoSyncWorkouts", Boolean.TRUE.equals(user.getNolioAutoSyncWorkouts()));
 
         if (user.isCoach()) {
             List<String> athleteIds = groupService.getAthleteIdsForCoach(user.getId());
