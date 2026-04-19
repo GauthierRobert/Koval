@@ -3,6 +3,7 @@ import {CommonModule} from '@angular/common';
 import {FitRecord} from '../../../../services/metrics.service';
 import {BlockSummary} from '../../../../services/workout-execution.service';
 import {ZoneBlock} from '../../../../services/zone';
+import {formatPaceWithUnit} from '../../../shared/format/format.utils';
 
 @Component({
     selector: 'app-fit-timeseries-chart',
@@ -175,8 +176,10 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     ttRows: Array<{ label: string; value: string; color: string }> = [];
 
     _hasElevation = false;
-    /** Max value (W or km/h) used by drawPrimary's yOf — cached so the tooltip can follow the curve. */
+    /** Max value (W, km/h, or sec/100m for swimming) used by drawPrimary's yOf — cached so the tooltip can follow the curve. */
     private _primaryMax = 0;
+    /** Min value used by drawPrimary's yOf when the axis is inverted (swimming pace). */
+    private _primaryMin = 0;
     /** Downsampled records (30s buckets) used for raw-mode line drawing to avoid canvas perf issues. */
     private _ds: FitRecord[] = [];
     private ready = false;
@@ -201,8 +204,25 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     private _dotStroke = 'rgba(255,255,255,0.8)';
 
     get isCycling(): boolean { return this.sportType === 'CYCLING'; }
-    get primaryLabel(): string { return this.isCycling ? 'Power' : 'Speed'; }
+    get isSwimming(): boolean { return this.sportType === 'SWIMMING'; }
+    get primaryLabel(): string {
+        if (this.isCycling) return 'Power';
+        if (this.isSwimming) return 'Pace';
+        return 'Speed';
+    }
     private get cadUnit(): string { return this.sportType === 'RUNNING' ? 'spm' : 'rpm'; }
+
+    /** Convert speed in km/h to pace in seconds per 100m for swimming. Returns NaN for stops. */
+    private kmhToPace(speedKmh: number): number {
+        return speedKmh > 0.5 ? 360 / speedKmh : NaN;
+    }
+
+    /** Map a km/h speed to the value used by yOf (km/h normally, sec/100m for swimming). */
+    private speedToPlotValue(speedKmh: number): number {
+        if (!this.isSwimming) return speedKmh;
+        const p = this.kmhToPace(speedKmh);
+        return isNaN(p) ? this._primaryMax : p;
+    }
 
     /** Convert any CSS color (including oklch) to [r, g, b]. */
     private cssToRgb(css: string): [number, number, number] {
@@ -463,7 +483,9 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
             const mT = 6, mB = 6;
             const chartH = pRect.height - mT - mB;
             const val = this.hoverPrimaryValue(idx, t0);
-            const yLocal = mT + chartH * (1 - val / this._primaryMax);
+            const yLocal = this.isSwimming
+                ? mT + chartH * ((val - this._primaryMin) / (this._primaryMax - this._primaryMin || 1))
+                : mT + chartH * (1 - val / this._primaryMax);
             this.ttY = (pRect.top - stackRect.top) + yLocal - 50;
         } else {
             const anchorRect = (this.showPrimary && this.pRef?.nativeElement)
@@ -589,15 +611,37 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         const top = mT, bottom = mT + chartH;
 
         let maxP = 1, maxS = 1;
+        let minPace = 0, maxPace = 1;
         let yOf: (v: number) => number;
         if (this.isCycling) {
             maxP = Math.max(this.ftp ? this.ftp * 1.5 : 0, ...this.records.map(r => r.power)) || 1;
             yOf = (v) => top + chartH * (1 - v / maxP);
+            this._primaryMin = 0;
             this._primaryMax = maxP;
+        } else if (this.isSwimming) {
+            // Pace = seconds per 100m. Lower = faster. Y axis inverted (fastest at top).
+            const paces = this.records
+                .map(r => (r.speed || 0) * 3.6)
+                .filter(v => v > 0.5)
+                .map(v => 360 / v);
+            if (paces.length === 0) {
+                minPace = 60; maxPace = 180;
+            } else {
+                const lo = Math.min(...paces);
+                const hi = Math.max(...paces);
+                const pad = Math.max((hi - lo) * 0.05, 2);
+                minPace = Math.max(0, lo - pad);
+                maxPace = hi + pad;
+            }
+            this._primaryMin = minPace;
+            this._primaryMax = maxPace;
+            const range = maxPace - minPace || 1;
+            yOf = (paceVal) => top + chartH * ((paceVal - minPace) / range);
         } else {
             const sp = this.records.map(r => (r.speed || 0) * 3.6);
             maxS = Math.max(...sp.filter(v => v > 0), 1);
             yOf = (v) => top + chartH * (1 - v / maxS);
+            this._primaryMin = 0;
             this._primaryMax = maxS;
         }
 
@@ -605,7 +649,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         if (this.useZB) {
             for (const b of this.zoneBlocks) {
                 const x1 = xOf(b.startIndex), x2 = xOf(b.endIndex);
-                const val = this.isCycling ? b.avgPower : b.avgSpeed;
+                const val = this.isCycling ? b.avgPower : this.speedToPlotValue(b.avgSpeed);
                 const y = yOf(val);
                 const [br, bg, bb] = this.cssToRgb(b.color);
                 const hb = `rgb(${br},${bg},${bb})`;
@@ -622,8 +666,8 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
             for (let bi = 0; bi < this.blockSummaries.length; bi++) {
                 const b = this.blockSummaries[bi];
                 const x1 = xOfT(acc), x2 = xOfT(acc + b.durationSeconds);
-                const val = this.isCycling ? b.actualPower
-                    : (b.distanceMeters && b.durationSeconds > 0 ? (b.distanceMeters / b.durationSeconds) * 3.6 : 0);
+                const speedKmh = b.distanceMeters && b.durationSeconds > 0 ? (b.distanceMeters / b.durationSeconds) * 3.6 : 0;
+                const val = this.isCycling ? b.actualPower : this.speedToPlotValue(speedKmh);
                 const y = yOf(val);
                 if (b.targetPower > 0) {
                     const yt = yOf(b.targetPower);
@@ -670,7 +714,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
                     ctx.strokeStyle = accent; ctx.lineWidth = 2; ctx.stroke();
                 }
             } else {
-                const vals = ds.map(r => (r.speed || 0) * 3.6);
+                const vals = ds.map(r => this.speedToPlotValue((r.speed || 0) * 3.6));
                 if (vals.length > 1) {
                     ctx.beginPath();
                     ctx.moveTo(dsX(0), bottom);
@@ -696,6 +740,18 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
             [0, 0.5, 1].forEach(f => {
                 const p = Math.round(maxP * f);
                 ctx.fillText(String(p), mL - 4, yOf(p) + 4);
+            });
+        } else if (this.isSwimming) {
+            // f=0 → fastest pace at top, f=1 → slowest at bottom (axis inverted).
+            // Render value and "/100" on two lines so the unit doesn't crowd the plot area.
+            [0, 0.5, 1].forEach(f => {
+                const pace = minPace + (maxPace - minPace) * f;
+                const m = Math.floor(pace / 60);
+                const sec = Math.round(pace % 60);
+                const valStr = `${m}:${String(sec).padStart(2, '0')}`;
+                const y = yOf(pace);
+                ctx.fillText(valStr, mL - 4, y);
+                ctx.fillText('/100', mL - 4, y + 10);
             });
         } else {
             [0, 0.5, 1].forEach(f => {
@@ -1150,13 +1206,27 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
                 if (this.isCycling) {
                     rows.push({ label: 'Avg Power', value: `${Math.round(bp!)}W`, color: accent });
                     if (bpMax) rows.push({ label: 'Max Power', value: `${Math.round(bpMax)}W`, color: accent });
+                } else if (this.isSwimming) {
+                    // bp/bpMax are in km/h here; convert to pace.
+                    const avgPace = this.kmhToPace(bp!);
+                    rows.push({ label: 'Avg Pace', value: isNaN(avgPace) ? '\u2014' : formatPaceWithUnit(avgPace, 'SWIMMING'), color: accent });
+                    if (bpMax) {
+                        const bestPace = this.kmhToPace(bpMax); // max speed → fastest pace
+                        if (!isNaN(bestPace)) rows.push({ label: 'Best Pace', value: formatPaceWithUnit(bestPace, 'SWIMMING'), color: accent });
+                    }
                 } else {
                     rows.push({ label: 'Avg Speed', value: `${bp!.toFixed(1)} km/h`, color: accent });
                     if (bpMax) rows.push({ label: 'Max Speed', value: `${bpMax.toFixed(1)} km/h`, color: accent });
                 }
             } else {
-                if (this.isCycling) rows.push({ label: 'Power', value: `${Math.round(rec.power)}W`, color: accent });
-                else rows.push({ label: 'Speed', value: `${((rec.speed || 0) * 3.6).toFixed(1)} km/h`, color: accent });
+                if (this.isCycling) {
+                    rows.push({ label: 'Power', value: `${Math.round(rec.power)}W`, color: accent });
+                } else if (this.isSwimming) {
+                    const pace = this.kmhToPace((rec.speed || 0) * 3.6);
+                    rows.push({ label: 'Pace', value: isNaN(pace) ? '\u2014' : formatPaceWithUnit(pace, 'SWIMMING'), color: accent });
+                } else {
+                    rows.push({ label: 'Speed', value: `${((rec.speed || 0) * 3.6).toFixed(1)} km/h`, color: accent });
+                }
             }
         }
         if (this.showHR) {
@@ -1194,14 +1264,18 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     private hoverPrimaryValue(idx: number, t0: number): number {
         if (this.useZB) {
             const zb = this.zoneBlocks.find(b => idx >= b.startIndex && idx <= b.endIndex);
-            if (zb) return this.isCycling ? zb.avgPower : zb.avgSpeed;
+            if (zb) return this.isCycling ? zb.avgPower : this.speedToPlotValue(zb.avgSpeed);
         } else if (this.usePB) {
             const pb = this.findPlannedBlock(idx, t0);
-            if (pb) return this.isCycling ? pb.actualPower
-                : (pb.distanceMeters && pb.durationSeconds > 0 ? (pb.distanceMeters / pb.durationSeconds) * 3.6 : 0);
+            if (pb) {
+                if (this.isCycling) return pb.actualPower;
+                const speedKmh = pb.distanceMeters && pb.durationSeconds > 0 ? (pb.distanceMeters / pb.durationSeconds) * 3.6 : 0;
+                return this.speedToPlotValue(speedKmh);
+            }
         }
         const rec = this.records[idx];
-        return this.isCycling ? rec.power : (rec.speed || 0) * 3.6;
+        if (this.isCycling) return rec.power;
+        return this.speedToPlotValue((rec.speed || 0) * 3.6);
     }
 
     private hoverHR(idx: number, t0: number): number {

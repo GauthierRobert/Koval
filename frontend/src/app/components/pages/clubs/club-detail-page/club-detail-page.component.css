@@ -371,6 +371,11 @@
     justify-content: flex-start;
   }
 
+  .hero-badges .badge--visibility,
+  .hero-actions .invite-chip {
+    display: none;
+  }
+
   .club-name {
     font-size: var(--text-xl);
   }

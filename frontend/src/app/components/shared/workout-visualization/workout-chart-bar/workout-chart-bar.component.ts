@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, Input } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, NgZone, OnDestroy, ViewChild, inject, Input, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { WorkoutBlock, flattenElements, Training } from '../../../../models/training.model';
 import { AuthService } from '../../../../services/auth.service';
 import { DurationEstimationService } from '../../../../services/duration-estimation.service';
+import { ResponsiveService } from '../../../../services/responsive.service';
 import { ZoneSystem } from '../../../../services/zone';
 import { formatPace as sharedFormatPace } from '../../format/format.utils';
 
@@ -15,7 +17,7 @@ import { formatPace as sharedFormatPace } from '../../format/format.utils';
   styleUrl: './workout-chart-bar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class WorkoutChartBarComponent {
+export class WorkoutChartBarComponent implements AfterViewInit, OnDestroy {
   @Input() blocks: WorkoutBlock[] = [];
   @Input() displayUnit: 'PERCENT' | 'ABSOLUTE' = 'PERCENT';
   @Input() ftp: number = 0;
@@ -24,9 +26,91 @@ export class WorkoutChartBarComponent {
   @Input() training: Training | null = null;
   @Input() currentZoneSystem: ZoneSystem | null = null;
 
+  @ViewChild('chartArea') chartAreaRef?: ElementRef<HTMLDivElement>;
+
   private authService = inject(AuthService);
   private durationService = inject(DurationEstimationService);
   private translate = inject(TranslateService);
+  private responsive = inject(ResponsiveService);
+  private zone = inject(NgZone);
+
+  /** Block index currently under a touch-scrub finger (null when not scrubbing). Drives .active class → tooltip. */
+  readonly activeIndex = signal<number | null>(null);
+  readonly isMobile = toSignal(this.responsive.isMobile$, { initialValue: false });
+
+  private touchStartX = 0;
+  private touchStartY = 0;
+  private touchGesture: 'undecided' | 'scrub' | 'scroll' = 'undecided';
+  private readonly touchMoveListener = (e: TouchEvent) => this.handleTouchMove(e);
+
+  ngAfterViewInit(): void {
+    const el = this.chartAreaRef?.nativeElement;
+    if (!el) return;
+    // Native listener (passive: false) so scrubbing can preventDefault to block page scroll.
+    this.zone.runOutsideAngular(() => {
+      el.addEventListener('touchmove', this.touchMoveListener, { passive: false });
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.chartAreaRef?.nativeElement.removeEventListener('touchmove', this.touchMoveListener);
+  }
+
+  onTouchStart(event: TouchEvent): void {
+    const touch = event.touches[0];
+    if (!touch) return;
+    this.touchStartX = touch.clientX;
+    this.touchStartY = touch.clientY;
+    this.touchGesture = 'undecided';
+    this.updateActiveAt(touch.clientX);
+  }
+
+  onTouchEnd(): void {
+    this.touchGesture = 'undecided';
+    this.activeIndex.set(null);
+  }
+
+  private handleTouchMove(event: TouchEvent): void {
+    const touch = event.touches[0];
+    if (!touch) return;
+
+    if (this.touchGesture === 'undecided') {
+      const dx = Math.abs(touch.clientX - this.touchStartX);
+      const dy = Math.abs(touch.clientY - this.touchStartY);
+      if (dx >= 4 || dy >= 4) {
+        if (dx >= dy) {
+          this.touchGesture = 'scrub';
+        } else {
+          this.touchGesture = 'scroll';
+          this.activeIndex.set(null);
+          return;
+        }
+      }
+    }
+
+    this.updateActiveAt(touch.clientX);
+
+    if (this.touchGesture === 'scrub' && event.cancelable) {
+      event.preventDefault();
+    }
+  }
+
+  private updateActiveAt(clientX: number): void {
+    const el = this.chartAreaRef?.nativeElement;
+    if (!el) return;
+    // Walk real DOM wrappers so the hit-test accounts for the 2px gap between bars.
+    const wrappers = el.querySelectorAll<HTMLElement>('.block-bar-wrapper');
+    if (wrappers.length === 0) return;
+    for (let i = 0; i < wrappers.length; i++) {
+      const r = wrappers[i].getBoundingClientRect();
+      if (clientX >= r.left - 1 && clientX <= r.right + 1) {
+        this.activeIndex.set(i);
+        return;
+      }
+    }
+    const firstLeft = wrappers[0].getBoundingClientRect().left;
+    this.activeIndex.set(clientX < firstLeft ? 0 : wrappers.length - 1);
+  }
 
   get displayFlatBlocks(): WorkoutBlock[] {
     return flattenElements(this.blocks);
@@ -170,7 +254,10 @@ export class WorkoutChartBarComponent {
   }
 
   isNarrowBlock(block: WorkoutBlock): boolean {
-    return block.type === 'PAUSE' || this.getBlockWidth(block) < 5;
+    // Mobile viewports get a stricter threshold: narrower blocks are unreadable in
+    // absolute pixels, so a 5–9% bar on a 400px chart can't fit a horizontal label.
+    const threshold = this.isMobile() ? 9 : 5;
+    return block.type === 'PAUSE' || this.getBlockWidth(block) < threshold;
   }
 
   blockColor(block: WorkoutBlock): string {

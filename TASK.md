@@ -134,7 +134,7 @@ _ Training assign should be more clear, on training dashboard do not change, jus
 
 ## TO FIX
 - Language change can be put in the settings modal
-- 
+- Mobile mode : Pace must be displayed also in mobile mode in running zones And Zones can be higher with more space in mobbile zone and phisiolgic detials more compact
 
 # TO IMPLEMENT
 - Colour of Zone need to be changed, (in Zone distribution, Zone display in analysis, zone creation,...) must use colour that goes from purple (lowest) to dark red (highest). Default Zone Color must use the same system. You can assuse that the mean of the lowest zone is 0% then purple and the mean of the highest zone is 100% then dark red.

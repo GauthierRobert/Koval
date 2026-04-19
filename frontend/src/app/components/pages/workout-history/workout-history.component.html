@@ -5,6 +5,20 @@
     <div class="sidebar-header">
       <h3 class="sidebar-title">{{ 'WORKOUT_HISTORY.SIDEBAR_TITLE' | translate }}</h3>
       <div class="sidebar-actions">
+        <button
+          type="button"
+          class="icon-btn filters-icon-btn"
+          [class.has-active]="activeAdvancedFilterCount > 0"
+          (click)="openFilters()"
+          [title]="'WORKOUT_HISTORY.BTN_FILTERS' | translate">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+          </svg>
+          @if (activeAdvancedFilterCount > 0) {
+            <span class="filters-badge">{{ activeAdvancedFilterCount }}</span>
+          }
+        </button>
         <button data-testid="strava-sync-btn" class="icon-btn strava-btn" (click)="importStravaHistory()" [disabled]="(syncing$ | async) === true"
           [title]="(syncing$ | async) ? ('WORKOUT_HISTORY.BTN_SYNCING' | translate) : ('WORKOUT_HISTORY.BTN_STRAVA_SYNC' | translate)">
           @if ((syncing$ | async) === true) {
@@ -54,27 +68,13 @@
       </div>
     }
 
-    <!-- Sport filter pills + advanced filter toggle -->
+    <!-- Sport filter pills -->
     <div class="filter-bar">
       <app-filter-pills
         [options]="sportOptions"
         [selected]="activeSportFilter"
         (selectionChange)="setSportFilter($event)">
       </app-filter-pills>
-      <button
-        type="button"
-        class="filters-btn"
-        [class.has-active]="activeAdvancedFilterCount > 0"
-        (click)="openFilters()"
-        [title]="'WORKOUT_HISTORY.BTN_FILTERS' | translate">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-          stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-        </svg>
-        @if (activeAdvancedFilterCount > 0) {
-          <span class="filters-badge">{{ activeAdvancedFilterCount }}</span>
-        }
-      </button>
     </div>
 
     @if (historyService.loading$ | async) {

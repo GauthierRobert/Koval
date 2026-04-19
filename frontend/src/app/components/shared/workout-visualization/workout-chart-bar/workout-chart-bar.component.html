@@ -4,11 +4,14 @@
       <span>{{ label }}%</span>
     }
   </div>
-  <div class="chart-area">
+  <div #chartArea class="chart-area"
+    (touchstart)="onTouchStart($event)"
+    (touchend)="onTouchEnd()"
+    (touchcancel)="onTouchEnd()">
     @for (block of displayFlatBlocks; let i = $index; track i) {
       <div class="block-bar-wrapper"
         [style.width.%]="getBlockWidth(block)">
-        <div class="bar-container" [style.height.%]="getBlockHeight(block)">
+        <div class="bar-container" [class.active]="activeIndex() === i" [style.height.%]="getBlockHeight(block)">
           <div class="block-bar" [style.background]="getBlockColor(block)"
             [style.clip-path]="getBlockClipPath(block)" [attr.data-type]="block.type"></div>
 

@@ -41,7 +41,7 @@
                 {{ club.location }}
               </span>
             }
-            <span class="badge" [class.badge--private]="club.visibility === 'PRIVATE'">{{ club.visibility }}</span>
+            <span class="badge badge--visibility" [class.badge--private]="club.visibility === 'PRIVATE'">{{ club.visibility }}</span>
             @if (club.currentMembershipStatus) {
               <span class="badge badge--role">
                 {{ getMembershipLabel(club.currentMembershipStatus) }}

@@ -218,21 +218,10 @@
       </div>
     }
 
-    <!-- Mobile-only controls -->
+    <!-- Mobile-only controls (remaining items not shown in topbar) -->
     <div class="mobile-controls mobile-only">
       <div class="nav-sep"></div>
       <div class="mobile-controls-row">
-        <button class="control-btn" (click)="themeService.toggle()" [attr.aria-label]="'TOP_BAR.BTN_THEME_TOGGLE' | translate">
-          @if ((themeService.theme$ | async) === 'dark') {
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-            </svg>
-          } @else {
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-            </svg>
-          }
-        </button>
         <button class="control-btn" (click)="toggleMemberships(); closeMobileMenu()" [attr.aria-label]="'TOP_BAR.BTN_MY_MEMBERSHIPS_TITLE' | translate">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
@@ -242,22 +231,6 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
           </svg>
-        </button>
-        <button class="control-btn" (click)="goToAiAssistants()" [attr.aria-label]="'TOP_BAR.BTN_AI_ASSISTANTS_TITLE' | translate">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8L12 3z"/>
-            <path d="M19 14l.9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14z"/>
-          </svg>
-        </button>
-        <button class="control-btn notif-bell" (click)="toggleNotifCenter(); closeMobileMenu()" [attr.aria-label]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          </svg>
-          @if ((unreadNotifications$ | async) ?? 0; as unread) {
-            @if (unread > 0) {
-              <span class="notif-badge">{{ unread > 99 ? '99+' : unread }}</span>
-            }
-          }
         </button>
         <button class="control-btn" (click)="toggleSettings(); closeMobileMenu()" [attr.aria-label]="'TOP_BAR.BTN_REFERENCE_VALUES_TITLE' | translate">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -270,7 +243,7 @@
 
   <div class="right-section">
     <div class="topbar-controls">
-      <button class="control-btn" (click)="themeService.toggle()" [attr.aria-label]="'TOP_BAR.BTN_THEME_TOGGLE' | translate">
+      <button class="control-btn mobile-visible" (click)="themeService.toggle()" [attr.aria-label]="'TOP_BAR.BTN_THEME_TOGGLE' | translate">
         @if ((themeService.theme$ | async) === 'dark') {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <circle cx="12" cy="12" r="5"/>
@@ -305,14 +278,14 @@
         </svg>
       </button>
 
-      <button class="control-btn" (click)="goToAiAssistants()" [title]="'TOP_BAR.BTN_AI_ASSISTANTS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_AI_ASSISTANTS_TITLE' | translate">
+      <button class="control-btn mobile-visible" (click)="goToAiAssistants()" [title]="'TOP_BAR.BTN_AI_ASSISTANTS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_AI_ASSISTANTS_TITLE' | translate">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8L12 3z"/>
           <path d="M19 14l.9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14z"/>
         </svg>
       </button>
 
-      <button class="control-btn notif-bell" (click)="toggleNotifCenter()" [title]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate">
+      <button class="control-btn notif-bell mobile-visible" (click)="toggleNotifCenter()" [title]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.73 21a2 2 0 0 1-3.46 0" />

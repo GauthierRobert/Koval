@@ -21,6 +21,11 @@
   align-items: flex-end;
   gap: 2px;
   padding-left: 8px;
+  /* Allow vertical page scroll; horizontal scrub is claimed via preventDefault in JS. */
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .block-bar-wrapper {
@@ -46,12 +51,14 @@
   transition: all 0.25s var(--ease-spring-gentle);
 }
 
-.bar-container:hover .block-bar {
+.bar-container:hover .block-bar,
+.bar-container.active .block-bar {
   transform: scaleY(1.01);
   filter: brightness(1.1);
 }
 
-.bar-container:hover .block-tooltip {
+.bar-container:hover .block-tooltip,
+.bar-container.active .block-tooltip {
   opacity: 1;
   visibility: visible;
   transform: translateX(-50%) translateY(-10px);
@@ -80,7 +87,8 @@
   top: 20%;
 }
 
-.bar-container:hover .block-tooltip.tooltip-below {
+.bar-container:hover .block-tooltip.tooltip-below,
+.bar-container.active .block-tooltip.tooltip-below {
   transform: translateX(-50%) translateY(10px);
 }
 

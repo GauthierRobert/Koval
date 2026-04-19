@@ -515,7 +515,16 @@
       }
 
       .topbar-controls {
+        gap: 2px;
+      }
+
+      .topbar-controls .control-btn:not(.mobile-visible) {
         display: none;
+      }
+
+      .topbar-controls .control-btn {
+        width: 36px;
+        height: 36px;
       }
 
       .mobile-backdrop {

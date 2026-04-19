@@ -82,11 +82,11 @@ public class RaceService {
             @CacheEvict(value = "raceSportFacets", allEntries = true),
             @CacheEvict(value = "raceCountryFacets", allEntries = true)
     })
-    public Race updateRace(String id, Race updates) {
+    public Race updateRace(String raceId, Race updates) {
         validateLoops(updates.getSwimGpxLoops());
         validateLoops(updates.getBikeGpxLoops());
         validateLoops(updates.getRunGpxLoops());
-        Race existing = getRaceById(id);
+        Race existing = getRaceById(raceId);
         mergeIfPresent(updates.getTitle(), existing::setTitle);
         mergeIfPresent(updates.getSport(), existing::setSport);
         mergeIfPresent(updates.getLocation(), existing::setLocation);
