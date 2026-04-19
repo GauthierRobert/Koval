@@ -517,10 +517,19 @@ export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
                         ctx.fillRect(x, currentY - bH, barW, bH);
                         currentY -= bH;
                     });
-                } else {
+                } else if (p.dailyTss > 0) {
                     const bH = (p.dailyTss / maxTss) * cH;
-                    ctx.fillStyle = 'rgba(255,255,255,0.08)';
-                    ctx.fillRect(x, currentY - bH, barW, bH);
+                    if (p.predicted) {
+                        ctx.fillStyle = 'rgba(255,255,255,0.28)';
+                        ctx.fillRect(x, currentY - bH, barW, bH);
+                        ctx.fillStyle = accent;
+                        ctx.globalAlpha = 0.9;
+                        ctx.fillRect(x, currentY - bH, barW, Math.min(2, bH));
+                        ctx.globalAlpha = 1;
+                    } else {
+                        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+                        ctx.fillRect(x, currentY - bH, barW, bH);
+                    }
                 }
             }
             ctx.globalAlpha = 1;
@@ -863,21 +872,29 @@ export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
         ctx.fillText('FORM', W - mR + 6, mT - 6);
 
         // ── Legend ────────────────────────────────────────────────────────────
-        const legendItems = [
-            { label: 'CTL \u2014 Fitness', color: accent, bar: false, fill: false },
-            { label: 'ATL \u2014 Fatigue', color: '#e74c3c', bar: false, fill: false },
-            { label: 'TSB \u2014 Form', color: '#3b82f6', bar: false, fill: false },
-            { label: 'Daily TSS', color: 'rgba(255,255,255,0.3)', bar: true, fill: false },
-            { label: 'Fatigue zone', color: 'rgba(239,68,68,0.2)', bar: false, fill: true },
+        const legendItems: Array<{ label: string; color: string; kind: 'line' | 'bar' | 'planned' | 'fill' }> = [
+            { label: 'CTL \u2014 Fitness', color: accent, kind: 'line' },
+            { label: 'ATL \u2014 Fatigue', color: '#e74c3c', kind: 'line' },
+            { label: 'TSB \u2014 Form', color: '#3b82f6', kind: 'line' },
+            { label: 'Daily TSS', color: 'rgba(255,255,255,0.3)', kind: 'bar' },
+            { label: 'Planned TSS', color: accent, kind: 'planned' },
+            { label: 'Fatigue zone', color: 'rgba(239,68,68,0.2)', kind: 'fill' },
         ];
         const itemW = cW / legendItems.length;
         const ly0 = 22;
         legendItems.forEach((item, idx) => {
             const lx = mL + idx * itemW + 4;
-            if (item.bar) {
+            if (item.kind === 'bar') {
                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
                 ctx.fillRect(lx, ly0 - 7, 10, 12);
-            } else if (item.fill) {
+            } else if (item.kind === 'planned') {
+                ctx.fillStyle = 'rgba(255,255,255,0.28)';
+                ctx.fillRect(lx, ly0 - 7, 10, 12);
+                ctx.fillStyle = item.color;
+                ctx.globalAlpha = 0.9;
+                ctx.fillRect(lx, ly0 - 7, 10, 2);
+                ctx.globalAlpha = 1;
+            } else if (item.kind === 'fill') {
                 ctx.fillStyle = 'rgba(239,68,68,0.15)';
                 ctx.fillRect(lx, ly0 - 7, 14, 12);
                 ctx.strokeStyle = 'rgba(239,68,68,0.4)';

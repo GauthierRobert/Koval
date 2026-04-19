@@ -172,8 +172,11 @@
     "META_RECEIVED_FROM": "de",
     "META_RECEIVED_VIA": "via",
     "BTN_EDIT_TITLE": "Modifier dans le constructeur",
+    "BTN_DUPLICATE_TITLE": "Dupliquer",
     "BTN_DELETE_TITLE": "Supprimer l'entraînement",
-    "DELETE_CONFIRM": "Supprimer \"{{title}}\" ?"
+    "DELETE_CONFIRM": "Supprimer \"{{title}}\" ?",
+    "EMPTY_NO_TRAININGS": "Aucun entraînement",
+    "EMPTY_HINT": "Créez votre premier pour commencer"
   },
   "LOGIN": {
     "SUBTITLE": "Plateforme de gestion d'entrainements et clubs pour sports d'endurance",
@@ -245,6 +248,9 @@
     "WEEK_TSS_SUMMARY": "{{tss}} TSS cette semaine",
     "WEEK_TSS_VS_LAST_WEEK": "vs semaine dernière",
     "CARD_NEXT_WORKOUT": "PROCHAINE SÉANCE",
+    "NEXT_WORKOUT_EMPTY_TITLE": "Aucune séance prévue",
+    "NEXT_WORKOUT_EMPTY_SUB": "Planifie ta prochaine séance pour garder l'élan.",
+    "NEXT_WORKOUT_EMPTY_CTA": "OUVRIR LE CALENDRIER",
     "LINK_VIEW_IN_CALENDAR": "VOIR DANS LE CALENDRIER →",
     "CARD_LATEST_ACTIVITY": "DERNIÈRE ACTIVITÉ",
     "LATEST_ACTIVITY_BADGE": "FIT",

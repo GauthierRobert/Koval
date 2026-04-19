@@ -39,9 +39,21 @@ export interface FitTimerEvent {
     type: 'stop' | 'start';
 }
 
+export interface FitLap {
+    startTimeSeconds: number;
+    totalTimerSeconds: number;
+    totalDistanceMeters: number;
+    avgHeartRate: number;
+    avgCadence: number;
+    avgPower: number;
+    numLengths: number;
+    swimStroke?: string;
+}
+
 export interface FitParseResult {
     records: FitRecord[];
     timerEvents: FitTimerEvent[];
+    laps: FitLap[];
     totalTimerTime: number;
     totalElapsedTime: number;
 }
@@ -155,11 +167,22 @@ export class MetricsService {
                     console.warn('FIT file has events but no timer events were parsed. Event sample:', rawEvents[0]);
                 }
 
+                const laps: FitLap[] = (data.laps || []).map((l: any) => ({
+                    startTimeSeconds: l.start_time ? Math.round(new Date(l.start_time).getTime() / 1000) : 0,
+                    totalTimerSeconds: Math.round(l.total_timer_time || l.total_elapsed_time || 0),
+                    totalDistanceMeters: Math.round(l.total_distance || 0),
+                    avgHeartRate: Math.round(l.avg_heart_rate || 0),
+                    avgCadence: Math.round(l.avg_cadence || 0),
+                    avgPower: Math.round(l.avg_power || 0),
+                    numLengths: Math.round(l.num_lengths || 0),
+                    swimStroke: l.swim_stroke || undefined,
+                }));
+
                 const session = data.sessions?.[0];
                 const totalTimerTime = Math.round(session?.total_timer_time || 0);
                 const totalElapsedTime = Math.round(session?.total_elapsed_time || 0);
 
-                resolve({records, timerEvents, totalTimerTime, totalElapsedTime});
+                resolve({records, timerEvents, laps, totalTimerTime, totalElapsedTime});
             });
         });
     }

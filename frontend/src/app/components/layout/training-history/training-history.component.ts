@@ -1,7 +1,7 @@
 import {Component, inject} from '@angular/core';
 
 import {CommonModule} from '@angular/common';
-import {Router} from '@angular/router';
+import {Router, RouterLink} from '@angular/router';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {TrainingService} from '../../../services/training.service';
 import {TrainingFilterService} from '../../../services/training-filter.service';
@@ -19,7 +19,7 @@ import {TranslateModule, TranslateService} from '@ngx-translate/core';
 @Component({
     selector: 'app-training-history',
     standalone: true,
-    imports: [CommonModule, SportIconComponent, TranslateModule],
+    imports: [CommonModule, RouterLink, SportIconComponent, TranslateModule],
     templateUrl: './training-history.component.html',
     styleUrl: './training-history.component.css',
 })

@@ -356,6 +356,38 @@
   opacity: 0.75;
 }
 
+.next-tile--empty .next-empty-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.next-empty-icon {
+  color: var(--accent-color);
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.next-empty-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.next-empty-title {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.next-empty-sub {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
 /* ─── Latest activity tile ────────────────────────────────── */
 .latest-tile {
   display: flex;

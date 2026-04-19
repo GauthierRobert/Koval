@@ -5,7 +5,7 @@ import {BehaviorSubject, combineLatest, from, Observable, of, Subject} from 'rxj
 import {catchError, debounceTime, distinctUntilChanged, map, shareReplay, startWith, switchMap} from 'rxjs/operators';
 import {HistoryService, SavedSession} from '../../../services/history.service';
 import {AuthService} from '../../../services/auth.service';
-import {FitRecord, FitTimerEvent, MetricsService} from '../../../services/metrics.service';
+import {FitLap, FitRecord, FitTimerEvent, MetricsService} from '../../../services/metrics.service';
 import {ZoneService} from '../../../services/zone.service';
 import {ZoneBlock, ZoneSystem, SportType} from '../../../services/zone';
 import {ZoneClassificationService} from '../../../services/zone-classification.service';
@@ -23,6 +23,7 @@ interface FitState {
     loading: boolean;
     error: boolean;
     records: FitRecord[];
+    laps: FitLap[];
     movingTime: number;
 }
 
@@ -59,6 +60,9 @@ export class SessionAnalysisComponent implements OnDestroy {
     @Input() set session(s: SavedSession | null) {
         this.sessionSubject.next(s ?? null);
         this.selectedZoneSystemId$.next(null);
+        if (s?.sportType === 'SWIMMING') {
+            this.blockView = 'planned';
+        }
     }
 
     session$ = this.sessionSubject.asObservable();
@@ -68,7 +72,7 @@ export class SessionAnalysisComponent implements OnDestroy {
         distinctUntilChanged((a, b) => a?.fitFileId === b?.fitFileId),
         switchMap((session) => {
             if (!session?.fitFileId) {
-                return of({loading: false, error: false, records: [] as FitRecord[], movingTime: 0});
+                return of({loading: false, error: false, records: [] as FitRecord[], laps: [] as FitLap[], movingTime: 0});
             }
             return this.metricsService.downloadStoredFit(session.id).pipe(
                 switchMap((buffer) => from(this.metricsService.parseFitFile(buffer))),
@@ -76,10 +80,10 @@ export class SessionAnalysisComponent implements OnDestroy {
                     const stripped = this.stripPauses(result.records, result.timerEvents);
                     // Prefer session total_timer_time from FIT; fallback to stripped calculation
                     const movingTime = result.totalTimerTime > 0 ? result.totalTimerTime : stripped.movingTime;
-                    return {loading: false, error: false, records: stripped.records, movingTime};
+                    return {loading: false, error: false, records: stripped.records, laps: result.laps, movingTime};
                 }),
-                catchError(() => of({loading: false, error: true, records: [] as FitRecord[], movingTime: 0})),
-                startWith({loading: true, error: false, records: [] as FitRecord[], movingTime: 0}),
+                catchError(() => of({loading: false, error: true, records: [] as FitRecord[], laps: [] as FitLap[], movingTime: 0})),
+                startWith({loading: true, error: false, records: [] as FitRecord[], laps: [] as FitLap[], movingTime: 0}),
             );
         }),
         shareReplay(1),
@@ -188,6 +192,8 @@ export class SessionAnalysisComponent implements OnDestroy {
     ]).pipe(
         map(([fit, user, session, selectedId, userSystems, smoothFactor]) => {
             if (!fit || fit.loading || fit.error || !fit.records.length || !session?.sportType) return [];
+            // Pool swim FIT records have no meaningful speed — interpolated blocks are noise.
+            if (session.sportType === 'SWIMMING') return [];
             const sport = session.sportType as SportType;
             const resolved = this.zoneCls.resolveZonesAndReference(sport, user, selectedId, userSystems);
             if (!resolved) return [];
@@ -195,19 +201,37 @@ export class SessionAnalysisComponent implements OnDestroy {
         }),
     );
 
+    // ── Display blocks ───────────────────────────────────────────────────
+    // For pool swim, derive blocks from FIT laps (0m lap = REST, >0m = INTERVAL).
+    // For other sports, use the stored blockSummaries.
+    displayBlocks$: Observable<BlockSummary[]> = combineLatest([
+        this.sessionSubject,
+        this.fitState$,
+    ]).pipe(
+        map(([session, fit]) => {
+            if (!session) return [];
+            if (session.sportType === 'SWIMMING' && fit.laps.length > 0) {
+                return this.lapsToBlockSummaries(fit.laps);
+            }
+            return session.blockSummaries ?? [];
+        }),
+        shareReplay(1),
+    );
+
     // ── Planned blocks with zone overlay ─────────────────────────────────
 
     plannedBlocksWithZones$: Observable<(BlockSummary & {zoneLabel?: string; zoneColor?: string; actualSpeedKmh?: number})[]> = combineLatest([
+        this.displayBlocks$,
         this.sessionSubject,
         this.authService.user$,
         this.selectedZoneSystemId$,
         this.userZoneSystems$,
     ]).pipe(
-        map(([session, user, selectedId, userSystems]) => {
-            if (!session?.blockSummaries?.length) return [];
+        map(([blocks, session, user, selectedId, userSystems]) => {
+            if (!blocks.length || !session) return [];
             const sport = session.sportType as SportType;
             const resolved = this.zoneCls.resolveZonesAndReference(sport, user, selectedId, userSystems);
-            return session.blockSummaries.map(block => {
+            return blocks.map(block => {
                 const isCycling = sport === 'CYCLING';
                 const speedMs = (!isCycling && block.distanceMeters && block.durationSeconds > 0)
                     ? block.distanceMeters / block.durationSeconds : 0;
@@ -265,6 +289,40 @@ export class SessionAnalysisComponent implements OnDestroy {
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────
+
+    // 0m laps = passive rest; active laps carry distance and a swim_stroke.
+    private lapsToBlockSummaries(laps: FitLap[]): BlockSummary[] {
+        let swimIndex = 0;
+        return laps.map(lap => {
+            const isRest = lap.totalDistanceMeters === 0;
+            if (isRest) {
+                return {
+                    label: 'Rest',
+                    durationSeconds: lap.totalTimerSeconds,
+                    distanceMeters: 0,
+                    targetPower: 0,
+                    actualPower: 0,
+                    actualCadence: 0,
+                    actualHR: lap.avgHeartRate,
+                    type: 'REST',
+                };
+            }
+            swimIndex++;
+            const stroke = lap.swimStroke
+                ? lap.swimStroke.charAt(0).toUpperCase() + lap.swimStroke.slice(1)
+                : '';
+            return {
+                label: `Lap ${swimIndex}${stroke ? ' · ' + stroke : ''}`,
+                durationSeconds: lap.totalTimerSeconds,
+                distanceMeters: lap.totalDistanceMeters,
+                targetPower: 0,
+                actualPower: lap.avgPower,
+                actualCadence: lap.avgCadence,
+                actualHR: lap.avgHeartRate,
+                type: 'INTERVAL',
+            };
+        });
+    }
 
     /**
      * Strip paused periods from records using FIT timer events (stop/start pairs).

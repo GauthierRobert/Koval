@@ -271,6 +271,10 @@
   line-height: 1.5;
 }
 
+.rc-desc p {
+  white-space: pre-wrap;
+}
+
 .rc-website {
   display: block;
   font-size: 0.72rem;

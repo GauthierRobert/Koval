@@ -120,7 +120,9 @@
       "WebFetch(domain:docs.tryterra.co)",
       "Bash(where mvn *)",
       "Read(//c/Program Files/**)",
-      "Read(//c/Users/gauth/**)"
+      "Read(//c/Users/gauth/**)",
+      "Bash(awk NR>=1320 && NR<=1345 {printf \"%d: %s\\\\n\", NR, $0} *)",
+      "Bash(awk NR>=88 && NR<=100 {printf \"%d: %s\\\\n\", NR, $0} *)"
     ]
   }
 }

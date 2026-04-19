@@ -89,8 +89,9 @@ public class StravaActivitySyncService {
 
                 // Fetch laps for per-lap block breakdown (non-fatal)
                 boolean deviceWatts = Boolean.TRUE.equals(activity.get("device_watts"));
+                List<Map<String, Object>> laps = List.of();
                 try {
-                    List<Map<String, Object>> laps = stravaApiClient.fetchLaps(user, stravaId);
+                    laps = stravaApiClient.fetchLaps(user, stravaId);
                     List<CompletedSession.BlockSummary> lapBlocks = mapper.mapLaps(laps, session.getSportType(), deviceWatts);
                     if (lapBlocks != null) {
                         session.setBlockSummaries(lapBlocks);
@@ -103,7 +104,7 @@ public class StravaActivitySyncService {
 
                 // Fetch streams and build FIT file (non-fatal if it fails)
                 try {
-                    saved = buildAndStoreFit(saved, user);
+                    saved = buildAndStoreFit(saved, user, laps);
                 } catch (RuntimeException fitEx) {
                     log.warn("Failed to build FIT for Strava activity {}: {}", stravaId, fitEx.getMessage());
                 }
@@ -152,8 +153,9 @@ public class StravaActivitySyncService {
         CompletedSession session = mapper.map(activity);
 
         boolean deviceWatts = Boolean.TRUE.equals(activity.get("device_watts"));
+        List<Map<String, Object>> laps = List.of();
         try {
-            List<Map<String, Object>> laps = stravaApiClient.fetchLaps(user, stravaActivityId);
+            laps = stravaApiClient.fetchLaps(user, stravaActivityId);
             List<CompletedSession.BlockSummary> lapBlocks = mapper.mapLaps(laps, session.getSportType(), deviceWatts);
             if (lapBlocks != null) {
                 session.setBlockSummaries(lapBlocks);
@@ -165,7 +167,7 @@ public class StravaActivitySyncService {
         CompletedSession saved = sessionService.saveSession(session, user.getId());
 
         try {
-            buildAndStoreFit(saved, user);
+            buildAndStoreFit(saved, user, laps);
         } catch (RuntimeException fitEx) {
             log.warn("Failed to build FIT for Strava activity {}: {}", stravaActivityId, fitEx.getMessage());
         }
@@ -198,13 +200,20 @@ public class StravaActivitySyncService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        return buildAndStoreFit(session, user);
+        List<Map<String, Object>> laps = List.of();
+        try {
+            laps = stravaApiClient.fetchLaps(user, session.getStravaActivityId());
+        } catch (RuntimeException lapEx) {
+            log.warn("Failed to fetch laps for Strava activity {}: {}", session.getStravaActivityId(), lapEx.getMessage());
+        }
+
+        return buildAndStoreFit(session, user, laps);
     }
 
     /**
      * Fetch Strava streams, build a FIT binary, store in GridFS, and update the session.
      */
-    private CompletedSession buildAndStoreFit(CompletedSession session, User user) {
+    private CompletedSession buildAndStoreFit(CompletedSession session, User user, List<Map<String, Object>> laps) {
         Map<String, List<? extends Number>> streams =
                 stravaApiClient.fetchStreams(user, session.getStravaActivityId());
 
@@ -217,7 +226,8 @@ public class StravaActivitySyncService {
                 streams, session.getSportType(), session.getCompletedAt(),
                 session.getTotalDurationSeconds(), session.getMovingTimeSeconds(),
                 session.getAvgPower(), session.getAvgHR(),
-                session.getAvgCadence(), session.getAvgSpeed());
+                session.getAvgCadence(), session.getAvgSpeed(),
+                laps);
 
         ObjectId fileId = gridFsOperations.store(
                 new ByteArrayInputStream(fitBytes),

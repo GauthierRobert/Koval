@@ -1,5 +1,6 @@
 @if (session$ | async; as session) {
   @let ftp = (ftp$ | async);
+  @let displayBlocks = (displayBlocks$ | async) ?? [];
   <div class="analysis-page">
 
       <!-- Header + Key metrics -->
@@ -18,7 +19,7 @@
           <div class="chart-header-row">
             <div class="section-label">{{ 'SESSION_ANALYSIS.CHART_FIT_TIME_SERIES' | translate }}</div>
             <div class="chart-controls">
-              @if (blockView === 'interpolated' || !session.blockSummaries.length) {
+              @if (blockView === 'interpolated' || !displayBlocks.length) {
                 @if (!fit.loading && !fit.error && fit.records.length > 0 && (zoneBlocks$ | async)?.length) {
                   <div class="smooth-control">
                     <span class="smooth-label">{{ 'SESSION_ANALYSIS.SMOOTH_LABEL' | translate }}</span>
@@ -30,7 +31,7 @@
                   </div>
                 }
               }
-              @if (session.blockSummaries.length && (zoneBlocks$ | async)?.length) {
+              @if (displayBlocks.length && (zoneBlocks$ | async)?.length) {
                 <div class="view-toggle">
                   <button data-testid="block-view-toggle" class="toggle-pill" [class.active]="blockView === 'planned'" (click)="blockView = 'planned'">{{ 'SESSION_ANALYSIS.TOGGLE_PLANNED' | translate }}</button>
                   <button data-testid="block-view-toggle" class="toggle-pill" [class.active]="blockView === 'interpolated'" (click)="blockView = 'interpolated'">{{ 'SESSION_ANALYSIS.TOGGLE_INTERPOLATED' | translate }}</button>
@@ -40,17 +41,17 @@
           </div>
           @if (!fit.loading && !fit.error && fit.records.length > 0) {
             <app-fit-timeseries-chart [records]="fit.records"
-              [ftp]="ftp" [sportType]="session.sportType" [blockSummaries]="session.blockSummaries"
+              [ftp]="ftp" [sportType]="session.sportType" [blockSummaries]="displayBlocks"
               [blockColors]="(blockColors$ | async) ?? []"
               [zoneBlocks]="(blockView === 'interpolated' ? (zoneBlocks$ | async) : null) ?? []">
             </app-fit-timeseries-chart>
           }
           @if (!fit.loading && !fit.error && fit.records.length === 0) {
-            @if (session.blockSummaries.length > 0) {
-              @let sTotal = syntheticTotalDuration(session.blockSummaries);
-              @let sMax = syntheticMaxPower(session.blockSummaries, ftp);
+            @if (displayBlocks.length > 0) {
+              @let sTotal = syntheticTotalDuration(displayBlocks);
+              @let sMax = syntheticMaxPower(displayBlocks, ftp);
               <div class="synthetic-chart" data-testid="synthetic-block-chart">
-                @for (block of session.blockSummaries; track $index) {
+                @for (block of displayBlocks; track $index) {
                   <div class="synthetic-bar"
                     [style.width.%]="syntheticBarWidthPct(block, sTotal)"
                     [style.height.%]="syntheticBarHeightPct(block, sMax)"
@@ -113,7 +114,7 @@
       }
 
       <!-- Block breakdown -->
-      @if (session.blockSummaries.length || (zoneBlocks$ | async)?.length) {
+      @if (displayBlocks.length || (zoneBlocks$ | async)?.length) {
         <app-block-breakdown-table
           [blockView]="blockView"
           [plannedBlocks]="(filteredPlannedBlocks$ | async) ?? []"

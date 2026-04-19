@@ -97,6 +97,7 @@
   color: var(--text-muted);
   font-size: var(--text-base);
   margin: var(--space-sm) 0 0;
+  white-space: pre-wrap;
 }
 
 .meta-row {

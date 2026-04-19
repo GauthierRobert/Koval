@@ -172,8 +172,11 @@
     "META_RECEIVED_FROM": "from",
     "META_RECEIVED_VIA": "via",
     "BTN_EDIT_TITLE": "Edit in builder",
+    "BTN_DUPLICATE_TITLE": "Duplicate",
     "BTN_DELETE_TITLE": "Delete training",
-    "DELETE_CONFIRM": "Delete \"{{title}}\"?"
+    "DELETE_CONFIRM": "Delete \"{{title}}\"?",
+    "EMPTY_NO_TRAININGS": "No trainings yet",
+    "EMPTY_HINT": "Create your first one to get started"
   },
   "LOGIN": {
     "SUBTITLE": "Management platform for clubs and endurance athlete",
@@ -245,6 +248,9 @@
     "WEEK_TSS_SUMMARY": "{{tss}} TSS this week",
     "WEEK_TSS_VS_LAST_WEEK": "vs last week",
     "CARD_NEXT_WORKOUT": "NEXT WORKOUT",
+    "NEXT_WORKOUT_EMPTY_TITLE": "No workout scheduled",
+    "NEXT_WORKOUT_EMPTY_SUB": "Plan your next session to keep the momentum.",
+    "NEXT_WORKOUT_EMPTY_CTA": "OPEN CALENDAR",
     "LINK_VIEW_IN_CALENDAR": "VIEW IN CALENDAR →",
     "CARD_LATEST_ACTIVITY": "LATEST ACTIVITY",
     "LATEST_ACTIVITY_BADGE": "FIT",

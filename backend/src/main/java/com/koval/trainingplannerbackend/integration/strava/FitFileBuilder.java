@@ -2,7 +2,9 @@ package com.koval.trainingplannerbackend.integration.strava;
 
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +38,7 @@ import java.util.Map;
  *   <li>Local 2 → session</li>
  *   <li>Local 3 → activity</li>
  *   <li>Local 4 → event</li>
+ *   <li>Local 5 → lap</li>
  * </ul>
  *
  * <h3>Timestamps</h3>
@@ -97,6 +100,22 @@ public class FitFileBuilder {
                                   int totalDurationSeconds,
                                   Integer movingTimeSeconds,
                                   double avgPower, double avgHR, double avgCadence, double avgSpeed) {
+        return buildFromStreams(streams, sportType, startTime, totalDurationSeconds, movingTimeSeconds,
+                avgPower, avgHR, avgCadence, avgSpeed, List.of());
+    }
+
+    /**
+     * Same as {@link #buildFromStreams(Map, String, LocalDateTime, int, Integer, double, double, double, double)}
+     * but also emits per-lap data. For swim activities, Strava returns rest intervals as laps
+     * with {@code distance = 0} — preserving them lets the frontend render rest blocks.
+     */
+    public byte[] buildFromStreams(Map<String, List<? extends Number>> streams,
+                                  String sportType,
+                                  LocalDateTime startTime,
+                                  int totalDurationSeconds,
+                                  Integer movingTimeSeconds,
+                                  double avgPower, double avgHR, double avgCadence, double avgSpeed,
+                                  List<Map<String, Object>> laps) {
 
         long startUnix = startTime.toEpochSecond(ZoneOffset.UTC);
         int startTs = toFitTs(startUnix);
@@ -104,11 +123,13 @@ public class FitFileBuilder {
         int elapsedMs = totalDurationSeconds * 1000;
         int timerMs = (movingTimeSeconds != null ? movingTimeSeconds : totalDurationSeconds) * 1000;
         boolean cycling = "CYCLING".equals(sportType);
+        int sport = fitSport(sportType);
 
         writeFileId(endTs);
         writeTimerEvent(startTs, true);
         writeRecords(streams, startTs, cycling);
         writeTimerEvent(endTs, false);
+        writeLaps(laps, startTs, endTs, sport);
         writeSession(endTs, startTs, elapsedMs, timerMs, sportType, cycling, avgPower, avgHR, avgCadence, avgSpeed, totalDurationSeconds);
         writeActivity(endTs, elapsedMs);
 
@@ -299,6 +320,71 @@ public class FitFileBuilder {
                 totalDistCm, (int) avgHR, (int) avgCadence,
                 0, 1
         });
+    }
+
+    /**
+     * Write lap messages (global msg 19) from Strava laps.
+     * Strava returns swim rests as laps with {@code distance = 0}; we preserve these so the
+     * frontend can render them as REST blocks. Falls back to cumulative durations when
+     * {@code start_date} is missing or unparseable on a lap.
+     */
+    private void writeLaps(List<Map<String, Object>> laps, int startTs, int endTs, int sport) {
+        if (laps == null || laps.isEmpty()) return;
+
+        defineMsg(5, 19, new int[][]{
+                {253, 4, UINT32}, // timestamp (end of lap)
+                {2, 4, UINT32},   // start_time
+                {7, 4, UINT32},   // total_elapsed_time (ms)
+                {8, 4, UINT32},   // total_timer_time (ms)
+                {9, 4, UINT32},   // total_distance (cm)
+                {15, 1, UINT8},   // avg_heart_rate (bpm)
+                {17, 1, UINT8},   // avg_cadence (rpm/spm)
+                {25, 1, ENUM}     // sport
+        });
+
+        int cursorTs = startTs;
+        for (Map<String, Object> lap : laps) {
+            int lapStartTs = lapStartTs(lap, cursorTs);
+            int elapsedS = intValue(lap.get("elapsed_time"));
+            int movingS = intValue(lap.get("moving_time"));
+            int timerS = movingS > 0 ? movingS : elapsedS;
+            int lapEndTs = Math.min(lapStartTs + Math.max(elapsedS, timerS), endTs);
+            int distCm = (int) Math.round(doubleValue(lap.get("distance")) * 100);
+
+            writeMsg(5, new int[]{
+                    lapEndTs,
+                    lapStartTs,
+                    elapsedS * 1000,
+                    timerS * 1000,
+                    distCm,
+                    (int) Math.round(doubleValue(lap.get("average_heartrate"))),
+                    (int) Math.round(doubleValue(lap.get("average_cadence"))),
+                    sport
+            });
+
+            cursorTs = lapEndTs;
+        }
+    }
+
+    /** Parse a Strava lap's start_date (ISO-8601) or fall back to a running cursor. */
+    private static int lapStartTs(Map<String, Object> lap, int fallbackTs) {
+        Object startDate = lap.get("start_date");
+        if (startDate instanceof String s) {
+            try {
+                return toFitTs(OffsetDateTime.parse(s).toEpochSecond());
+            } catch (DateTimeParseException ignored) {
+                // fall through to fallback
+            }
+        }
+        return fallbackTs;
+    }
+
+    private static int intValue(Object o) {
+        return o instanceof Number n ? n.intValue() : 0;
+    }
+
+    private static double doubleValue(Object o) {
+        return o instanceof Number n ? n.doubleValue() : 0.0;
     }
 
     /**

@@ -1,3 +1,6 @@
+/* ── Buttons (extracted to _buttons.scss) ── */
+@use 'styles/buttons';
+
 :root {
   /* ── Typography ── */
   --font-display: 'Space Grotesk', sans-serif;
@@ -726,28 +729,27 @@ textarea:focus-visible {
 
 /* Premium button hover guards are in _buttons.scss */
 
-.tab-btn--ai-background{
-  background: var(--secondary-color);
-  color: #fff;
-}
-
-.tab-btn--ai:hover {
-  filter: brightness(1.15);
-}
-
 .tab-btn--ai {
-  border: none;
   padding: 6px 14px;
   border-radius: var(--radius-pill);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.5px;
   cursor: pointer;
-  transition: filter var(--transition-fast);
+  transition: all 0.25s var(--ease-spring-gentle);
 }
 
-/* ── Buttons (extracted to _buttons.scss) ── */
-@import 'styles/buttons';
+.tab-btn--ai-background {
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+}
+
+.tab-btn--ai:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.45);
+  color: #c7d2fe;
+}
 
 /* ── Skeleton loading (alive feel) ── */
 .skeleton {
