@@ -490,7 +490,7 @@
     height: 220px;
   }
 
-  .hub-greeting { flex-direction: column; gap: 4px; }
+  .hub-greeting { flex-direction: column; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid #2e2d2a;}
   .greeting-text, .greeting-name { font-size: var(--text-2xl); }
   .greeting-date { margin-left: 0; }
 
