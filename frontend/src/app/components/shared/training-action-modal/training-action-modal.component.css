@@ -329,25 +329,6 @@
   flex-shrink: 0;
 }
 
-.badge {
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.sport-badge {
-  background: rgba(99, 102, 241, 0.15);
-  color: #818cf8;
-}
-
-.type-badge {
-  background: rgba(234, 179, 8, 0.15);
-  color: #facc15;
-}
-
 .training-description {
   font-size: 0.78rem;
   color: #64748b;

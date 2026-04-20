@@ -58,7 +58,6 @@
 
 .plan-banner-segment {
   background: var(--sport-bg, rgba(255, 157, 0, 0.15));
-  border-top: 2px solid var(--sport-border, #ff9d00);
   color: var(--sport-text, #ff9d00);
   height: 18px;
   display: flex;
@@ -80,13 +79,11 @@
 }
 
 .plan-banner-segment.is-start {
-  border-left: 2px solid var(--sport-border, #ff9d00);
   border-radius: 4px 0 0 4px;
   padding-left: 6px;
 }
 
 .plan-banner-segment.is-end {
-  border-right: 2px solid var(--sport-border, #ff9d00);
   border-radius: 0 4px 4px 0;
 }
 
@@ -193,7 +190,12 @@
   overflow-x: hidden;
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   MINI CARD — compact variant of week view .workout-card
+   Uses same --card-color theming + sport-bg tints for consistency
+   ══════════════════════════════════════════════════════════════════════ */
 .mini-card {
+  --card-color: var(--accent-color);
   padding: 4px 6px;
   border-radius: 4px;
   background: var(--surface-elevated);
@@ -202,18 +204,34 @@
   gap: 6px;
   font-size: 10px;
   cursor: pointer;
-  border: 1px solid var(--glass-border);
-  transition: transform 0.15s, border-color 0.15s;
+  border: none;
+  position: relative;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.mini-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--type-color, var(--card-color));
+  border-radius: 4px 0 0 4px;
 }
 
 .mini-card:hover {
-  transform: translateX(2px);
-  border-color: var(--accent-border);
+  background: var(--surface-hover);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  transform: translateX(1px);
 }
 
 .mini-title {
   flex: 1;
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -221,21 +239,67 @@
 }
 
 .mini-tss {
-  font-weight: 900;
-  color: var(--accent-color);
+  font-weight: 700;
+  color: var(--card-color);
   font-size: 9px;
-  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
 }
 
-.mini-card--fused { background: var(--success-subtle); border-color: var(--success-border); }
-.mini-card--session { background: var(--accent-subtle); border-color: var(--accent-border); }
-.mini-card--club-session { background: var(--info-subtle); border-color: var(--info-border); }
-.mini-card--club-session.not-joined { opacity: 0.8; }
-.mini-card--cs-attending { background: rgba(255, 157, 0, 0.06); border-color: rgba(255, 157, 0, 0.2); }
-.mini-card--cs-waiting { background: var(--overlay-5); border-color: var(--overlay-15); }
-.mini-card--cancelled { opacity: 0.5; background: rgba(239, 68, 68, 0.06); border-color: rgba(239, 68, 68, 0.2); }
-.mini-card--completed { background: var(--success-subtle); border-color: var(--success-border); }
-.mini-card--skipped { opacity: 0.5; filter: grayscale(0.5); }
+/* ── Completed & fused — sport-tinted background ─────────────────── */
+.mini-card--completed,
+.mini-card--fused {
+  --card-color: var(--sport-text, var(--success-color));
+  background: var(--sport-bg, var(--success-subtle));
+}
+
+.mini-card--completed:hover,
+.mini-card--fused:hover {
+  background: color-mix(in srgb, var(--sport-text, var(--success-color)) 18%, transparent);
+}
+
+/* ── Skipped — muted red ─────────────────────────────────────────── */
+.mini-card--skipped {
+  --card-color: var(--danger-color);
+  background: var(--danger-subtle);
+  opacity: 0.6;
+}
+
+/* ── Standalone session — info/cyan ──────────────────────────────── */
+.mini-card--session {
+  --card-color: var(--info-color);
+  background: var(--info-subtle);
+}
+
+.mini-card--session:hover {
+  background: var(--info-hover);
+}
+
+/* ── Club session — primary/accent ───────────────────────────────── */
+.mini-card--club-session,
+.mini-card--cs-attending {
+  --card-color: var(--accent-color);
+  background: var(--accent-subtle);
+}
+
+.mini-card--cs-waiting {
+  --card-color: var(--accent-color);
+  background: var(--accent-subtle);
+  opacity: 0.85;
+}
+
+.mini-card--club-session.not-joined {
+  --card-color: var(--text-dim);
+  background: var(--surface-elevated);
+  opacity: 0.75;
+}
+
+.mini-card--cancelled {
+  --card-color: var(--danger-color);
+  background: var(--danger-subtle);
+  opacity: 0.55;
+}
+
 .title-cancelled { text-decoration: line-through; opacity: 0.7; }
 
 .mini-cs-time {
@@ -248,7 +312,7 @@
 
 .mini-club-name {
   font-weight: 800;
-  color: var(--info-color);
+  color: var(--card-color);
   font-size: 8px;
   flex-shrink: 0;
   text-transform: uppercase;

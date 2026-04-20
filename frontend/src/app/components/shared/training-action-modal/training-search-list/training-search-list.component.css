@@ -133,16 +133,7 @@
   border-radius: 4px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-}
-
-.sport-badge {
-  background: rgba(99, 102, 241, 0.15);
-  color: #818cf8;
-}
-
-.type-badge {
-  background: rgba(234, 179, 8, 0.15);
-  color: #facc15;
+  border: 1px solid transparent;
 }
 
 .training-description {

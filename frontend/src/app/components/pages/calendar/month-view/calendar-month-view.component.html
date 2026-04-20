@@ -50,11 +50,13 @@
                     <div class="mini-card"
                   [class.mini-card--completed]="entry.scheduled.status === 'COMPLETED'"
                   [class.mini-card--skipped]="entry.scheduled.status === 'SKIPPED'"
-                  (click)="workoutSelected.emit(entry.scheduled)"
-                  [style.border-left]="'2px solid ' + (entry.scheduled.trainingType ? getTypeColor(entry.scheduled.trainingType) : 'var(--accent-color)')">
+                  [style.--sport-bg]="sportColor(entry.scheduled.sportType).bg"
+                  [style.--sport-text]="sportColor(entry.scheduled.sportType).text"
+                  [style.--type-color]="entry.scheduled.trainingType ? getTypeColor(entry.scheduled.trainingType) : null"
+                  (click)="workoutSelected.emit(entry.scheduled)">
                   <app-sport-icon [sport]="entry.scheduled.sportType" [size]="10"></app-sport-icon>
                   <span class="mini-title">{{ entry.scheduled.trainingTitle || entry.scheduled.title || ('CALENDAR_MONTH.WORKOUT_FALLBACK_TITLE' | translate) }}</span>
-                    <span class="mini-tss">{{ entry.scheduled.tss || 0 }}</span>
+                    <span class="mini-tss">{{ (entry.scheduled.tss || 0) | number:'1.0-0' }}</span>
                     @if (entry.scheduled.status === 'PENDING') {
                       <button class="btn-reschedule-mini" (click)="openReschedule(entry.scheduled, $event)" [title]="'CALENDAR_MONTH.BTN_ADD_TRAINING_TITLE' | translate">
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -67,21 +69,21 @@
 
                   @if (entry.kind === 'fused') {
                     <div class="mini-card mini-card--fused"
-                  (click)="workoutSelected.emit(entry.scheduled)"
-                  [style.border-left]="'2px solid #34d399'">
+                  [style.--sport-bg]="sportColor(entry.scheduled.sportType).bg"
+                  [style.--sport-text]="sportColor(entry.scheduled.sportType).text"
+                  (click)="workoutSelected.emit(entry.scheduled)">
                   <app-sport-icon [sport]="entry.scheduled.sportType" [size]="10"></app-sport-icon>
                   <span class="mini-title">{{ entry.scheduled.trainingTitle || ('CALENDAR_MONTH.WORKOUT_FALLBACK_TITLE' | translate) }}</span>
-                    <span class="mini-tss">{{ entry.session.tss || 0 }}</span>
+                    <span class="mini-tss">{{ (entry.session.tss || 0) | number:'1.0-0' }}</span>
                   </div>
                   }
 
                   @if (entry.kind === 'standalone') {
                     <div class="mini-card mini-card--session"
-                  (click)="sessionSelected.emit(entry.session)"
-                  style="border-left: 2px solid #0891b2">
+                  (click)="sessionSelected.emit(entry.session)">
                   <app-sport-icon [sport]="entry.session.sportType" [size]="10"></app-sport-icon>
                   <span class="mini-title">{{ entry.session.title }}</span>
-                    <span class="mini-tss">{{ entry.session.tss || 0 }}</span>
+                    <span class="mini-tss">{{ (entry.session.tss || 0) | number:'1.0-0' }}</span>
                   </div>
                   }
 
@@ -90,8 +92,7 @@
                   [class.mini-card--cs-attending]="entry.clubSession.joined"
                   [class.mini-card--cs-waiting]="entry.clubSession.onWaitingList"
                   [class.not-joined]="!entry.clubSession.joined && !entry.clubSession.onWaitingList"
-                  [class.mini-card--cancelled]="entry.clubSession.cancelled"
-                  [style.border-left]="entry.clubSession.cancelled ? '2px solid #ef4444' : (entry.clubSession.joined ? '2px solid var(--accent-color)' : (entry.clubSession.onWaitingList ? '2px solid rgba(255,255,255,0.2)' : '2px solid var(--club-session-color)'))">
+                  [class.mini-card--cancelled]="entry.clubSession.cancelled">
                   <app-sport-icon [sport]="$any(entry.clubSession.sport)" [size]="10"></app-sport-icon>
                   <span class="mini-title" [class.title-cancelled]="entry.clubSession.cancelled">{{ entry.clubSession.title }}</span>
                     <span class="mini-cs-time">{{ entry.clubSession.scheduledAt | date:'HH:mm' }}</span>

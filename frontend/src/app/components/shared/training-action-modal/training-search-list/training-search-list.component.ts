@@ -2,7 +2,8 @@ import {Component, ChangeDetectionStrategy, Input, Output, EventEmitter} from '@
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule} from '@ngx-translate/core';
-import {Training} from '../../../../models/training.model';
+import {Training, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS, TrainingType} from '../../../../models/training.model';
+import {SPORT_BANNER_COLORS} from '../../../../models/plan.model';
 import {ClubGroup} from '../../../../services/club.service';
 
 @Component({
@@ -48,5 +49,17 @@ export class TrainingSearchListComponent {
 
   onGroupChange(value: string): void {
     this.groupChange.emit(value);
+  }
+
+  sportColor(sport: string): { bg: string; border: string; text: string } {
+    return SPORT_BANNER_COLORS[sport] ?? { bg: 'rgba(255,157,0,0.15)', border: '#ff9d00', text: '#ff9d00' };
+  }
+
+  getTypeColor(type: string): string {
+    return TRAINING_TYPE_COLORS[type as TrainingType] || '#888';
+  }
+
+  getTypeLabel(type: string): string {
+    return TRAINING_TYPE_LABELS[type as TrainingType] || type;
   }
 }

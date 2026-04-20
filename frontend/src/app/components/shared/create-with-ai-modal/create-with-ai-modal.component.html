@@ -121,10 +121,16 @@
                       <span class="training-title">{{ t.title }}</span>
                       <div class="training-badges">
                         @if (t.sportType) {
-                          <span class="badge sport-badge">{{ t.sportType }}</span>
+                          <span class="badge sport-badge"
+                            [style.background]="sportColor(t.sportType).bg"
+                            [style.color]="sportColor(t.sportType).text"
+                            [style.border-color]="sportColor(t.sportType).border + '55'">{{ t.sportType }}</span>
                         }
                         @if (t.trainingType) {
-                          <span class="badge type-badge">{{ t.trainingType }}</span>
+                          <span class="badge type-badge"
+                            [style.background]="getTypeColor(t.trainingType) + '22'"
+                            [style.color]="getTypeColor(t.trainingType)"
+                            [style.border-color]="getTypeColor(t.trainingType) + '55'">{{ getTypeLabel(t.trainingType) }}</span>
                         }
                       </div>
                     </div>
