@@ -154,8 +154,8 @@ export class WorkoutDetailModalComponent {
     return sharedGetBlockClipPath(block, getMaxIntensity(training));
   }
 
-  getBlockColor(block: WorkoutBlock): string {
-    return sharedGetBlockColor(block);
+  getBlockColor(block: WorkoutBlock, training?: Training): string {
+    return sharedGetBlockColor(block, training?.sportType);
   }
 
   getFlatBlocks(training: Training): WorkoutBlock[] {

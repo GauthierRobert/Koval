@@ -1,23 +1,119 @@
-<div class="focus-card glass">
-  @if (upcomingWorkouts[0]?.scheduledDate === todayKey) {
-    <div class="focus-info">
-      <span class="card-label">{{ 'DASHBOARD.CARD_TODAYS_FOCUS' | translate }}</span>
-      <div class="focus-header-row">
-        <div class="focus-sport-badge" [ngClass]="'focus-sport-badge--' + upcomingWorkouts[0].sportType.toLowerCase()">
-          {{ upcomingWorkouts[0].sportType }}
-        </div>
-        @if (formatScheduleDuration(upcomingWorkouts[0])) {
-          <span class="focus-meta-chip">{{ formatScheduleDuration(upcomingWorkouts[0]) }}</span>
+@let w = todaysWorkout();
+<div class="rail-hero glass" [class.rail-hero--rest]="!w">
+  <div class="rail-speed-accent" aria-hidden="true"></div>
+
+  <div class="rail-body">
+    <div class="rail-date mono">
+      {{ todayDate | date:'EEEE d MMMM' }} <span class="rail-date-dot">·</span>
+      <span>WK {{ weekMeta() }}</span>
+    </div>
+    <div class="rail-greet">
+      Hello, <b>{{ userName }}</b>
+    </div>
+
+    <div class="rail-focus-marker">
+      <span class="rail-focus-dash"></span>
+      {{ 'DASHBOARD.CARD_TODAYS_FOCUS' | translate }}
+    </div>
+
+    @if (w) {
+      <div class="rail-sport-tag mono" [style.color]="sportAccent()">
+        <app-sport-icon [sport]="w.sportType" [size]="14" [color]="sportAccent()"></app-sport-icon>
+        <span>{{ sportLabel(w.sportType) }}</span>
+      </div>
+
+      <h1 class="rail-session-title">
+        {{ w.trainingTitle || w.title || ('DASHBOARD.DEFAULT_WORKOUT_TITLE' | translate) }}
+      </h1>
+
+      <div class="rail-pills">
+        @if (formatScheduleDuration(w)) {
+          <span class="rail-pill rail-pill--accent mono">{{ formatScheduleDuration(w) }}</span>
+        }
+        @if (formatDistance(w); as dist) {
+          <span class="rail-pill rail-pill--ghost mono">{{ dist }}</span>
         }
       </div>
-      <div class="focus-title">{{ upcomingWorkouts[0].trainingTitle || upcomingWorkouts[0].title || ('DASHBOARD.DEFAULT_WORKOUT_TITLE' | translate) }}</div>
-    </div>
-    <button class="view-workout-btn" (click)="openDetail.emit(upcomingWorkouts[0])">{{ 'DASHBOARD.BTN_VIEW_WORKOUT' | translate }}</button>
-  } @else {
-    <div class="focus-info">
-      <span class="card-label">{{ 'DASHBOARD.CARD_TODAYS_FOCUS' | translate }}</span>
-      <div class="focus-rest-label">{{ 'DASHBOARD.FOCUS_REST_DAY' | translate }}</div>
-      <div class="focus-rest-sub">{{ 'DASHBOARD.FOCUS_REST_SUB' | translate }}</div>
-    </div>
-  }
+
+      <div class="rail-meta-grid">
+        <div class="rail-meta-cell">
+          <span class="rail-meta-label">{{ 'DASHBOARD.RAIL_DURATION' | translate }}</span>
+          <span class="rail-meta-value mono">{{ formatScheduleDuration(w) || '—' }}</span>
+        </div>
+        <div class="rail-meta-cell">
+          <span class="rail-meta-label">{{ 'DASHBOARD.RAIL_TSS' | translate }}</span>
+          <span class="rail-meta-value mono">{{ workoutTss() != null ? (workoutTss() | number:'1.0-0') : '—' }}</span>
+        </div>
+        <div class="rail-meta-cell">
+          <span class="rail-meta-label">{{ 'DASHBOARD.RAIL_IF' | translate }}</span>
+          <span class="rail-meta-value mono">{{ intensityFactor() != null ? (intensityFactor() | number:'1.2-2') : '—' }}</span>
+        </div>
+      </div>
+
+      @if (zoneDistribution().length > 0) {
+        <div class="rail-zones">
+          <div class="rail-section-label">{{ 'DASHBOARD.RAIL_ZONES' | translate }}</div>
+          <div class="rail-zone-bar">
+            @for (z of zoneDistribution(); track z.label) {
+              @if (z.pct > 0) {
+                <div class="rail-zone-chunk"
+                     [style.background]="z.color"
+                     [style.flexBasis.%]="z.pct"
+                     [attr.title]="z.label + ' ' + z.pct + '%'">
+                </div>
+              }
+            }
+          </div>
+          <div class="rail-zone-legend mono">
+            @for (z of zoneDistribution(); track z.label) {
+              <span class="rail-zone-legend-item" [class.is-muted]="z.pct === 0">
+                <span class="rail-zone-dot" [style.background]="z.color"></span>
+                <span>{{ z.label }}</span>
+              </span>
+            }
+          </div>
+        </div>
+      }
+
+      @if (hrTarget() || powerTarget()) {
+        <div class="rail-targets">
+          <div class="rail-section-label">{{ 'DASHBOARD.RAIL_TARGETS' | translate }}</div>
+          @if (hrTarget(); as hr) {
+            <div class="rail-target-row">
+              <span class="rail-target-key">{{ 'DASHBOARD.RAIL_TARGET_HR' | translate }}</span>
+              <span class="rail-target-val mono">
+                {{ hr.min }}–{{ hr.max }}<span class="rail-target-unit"> bpm</span>
+              </span>
+            </div>
+          }
+          @if (powerTarget(); as p) {
+            <div class="rail-target-row">
+              <span class="rail-target-key">{{ 'DASHBOARD.RAIL_TARGET_POWER' | translate }}</span>
+              <span class="rail-target-val mono">
+                {{ p.min }}–{{ p.max }}<span class="rail-target-unit"> W</span>
+              </span>
+            </div>
+          }
+        </div>
+      }
+
+      <div class="rail-actions">
+        <button class="rail-btn rail-btn--primary" (click)="openDetail.emit(w)">
+          {{ 'DASHBOARD.BTN_VIEW_WORKOUT' | translate }}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M13 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+    } @else {
+      <h1 class="rail-session-title">{{ 'DASHBOARD.FOCUS_REST_DAY' | translate }}</h1>
+      <p class="rail-rest-copy">{{ 'DASHBOARD.RAIL_REST_TIP' | translate }}</p>
+
+      <div class="rail-meta-grid rail-meta-grid--rest">
+        <div class="rail-meta-cell"><span class="rail-meta-label">{{ 'DASHBOARD.RAIL_DURATION' | translate }}</span><span class="rail-meta-value mono">—</span></div>
+        <div class="rail-meta-cell"><span class="rail-meta-label">{{ 'DASHBOARD.RAIL_TSS' | translate }}</span><span class="rail-meta-value mono">0</span></div>
+        <div class="rail-meta-cell"><span class="rail-meta-label">{{ 'DASHBOARD.RAIL_IF' | translate }}</span><span class="rail-meta-value mono">—</span></div>
+      </div>
+    }
+  </div>
 </div>

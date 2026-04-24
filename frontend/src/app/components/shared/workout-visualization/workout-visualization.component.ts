@@ -17,6 +17,8 @@ import {ZoneService} from '../../../services/zone.service';
 import {ZoneSystem} from '../../../services/zone';
 import {formatPace as sharedFormatPace} from '../format/format.utils';
 import {environment} from '../../../../environments/environment';
+import {getBlockColor as sharedGetBlockColor, normalizeSport} from '../block-helpers/block-helpers';
+import {ZoneClassificationService} from '../../../services/zone-classification.service';
 
 @Component({
   selector: 'app-workout-visualization',
@@ -34,6 +36,7 @@ export class WorkoutVisualizationComponent {
   nolioSync = inject(NolioSyncService);
   private durationService = inject(DurationEstimationService);
   private zoneService = inject(ZoneService);
+  private zoneCls = inject(ZoneClassificationService);
 
   private router = inject(Router);
   currentZoneSystem: ZoneSystem | null = null;
@@ -159,26 +162,7 @@ export class WorkoutVisualizationComponent {
   }
 
   getBlockColor(block: WorkoutBlock): string {
-    if (block.type === 'PAUSE') return '#636e72';
-    if (block.type === 'FREE') return '#636e72';
-    if (block.type === 'TRANSITION') return '#fd79a8';
-    if (block.type === 'WARMUP') return 'rgba(9, 132, 227, 0.6)';
-    if (block.type === 'COOLDOWN') return 'rgba(108, 92, 231, 0.6)';
-
-    const start = this.getEffectiveIntensity(block, 'START');
-    const end = this.getEffectiveIntensity(block, 'END');
-    const target = this.getEffectiveIntensity(block, 'TARGET');
-
-    const power = block.type === 'RAMP'
-      ? (start + end) / 2
-      : target;
-
-    if (power < 55) return '#b2bec3'; // Z1
-    if (power < 75) return '#3498db'; // Z2
-    if (power < 90) return '#2ecc71'; // Z3
-    if (power < 105) return '#f1c40f'; // Z4
-    if (power < 120) return '#e67e22'; // Z5
-    return '#e74c3c'; // Z6
+    return sharedGetBlockColor(block, this.training?.sportType);
   }
 
   getDisplayIntensity(block: WorkoutBlock): string {
@@ -394,33 +378,22 @@ export class WorkoutVisualizationComponent {
         : block.intensityTarget || 0;
 
     if (this.currentZoneSystem) {
-      const zone = this.currentZoneSystem.zones.find(
-        (z) => intensity >= z.low && intensity <= z.high,
-      );
+      const zi = this.zoneCls.classifyZone(intensity, this.currentZoneSystem.zones);
+      const zone = this.currentZoneSystem.zones[zi];
       if (zone) return zone.label.toUpperCase();
     }
 
-    // Hardcoded fallback
-    if (intensity < 55) return 'Z1';
-    if (intensity < 75) return 'Z2';
-    if (intensity < 90) return 'Z3';
-    if (intensity < 105) return 'Z4';
-    if (intensity < 120) return 'Z5';
-    return 'Z6';
+    const sport = normalizeSport(this.training?.sportType);
+    const defaultZones = this.zoneCls.defaultZonesBySport[sport];
+    const zi = this.zoneCls.classifyZone(intensity, defaultZones);
+    return defaultZones[zi]?.label.toUpperCase() ?? 'Z1';
   }
-
-  private readonly ZONE_COLORS: Record<string, string> = {
-    Z1: '#b2bec3',
-    Z2: '#3498db',
-    Z3: '#2ecc71',
-    Z4: '#f1c40f',
-    Z5: '#e67e22',
-    Z6: '#e74c3c',
-  };
 
   getZoneRepartition(): { label: string; color: string; seconds: number; percentage: number }[] {
     if (!this.training) return [];
 
+    const sport = normalizeSport(this.training.sportType);
+    const zones = this.currentZoneSystem?.zones ?? this.zoneCls.defaultZonesBySport[sport];
     const zoneMap = new Map<string, number>();
     let totalSeconds = 0;
 
@@ -438,12 +411,15 @@ export class WorkoutVisualizationComponent {
     // Sort by zone label
     const sorted = [...zoneMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 
-    return sorted.map(([label, seconds]) => ({
-      label,
-      color: this.ZONE_COLORS[label] || '#636e72',
-      seconds,
-      percentage: Math.round((seconds / totalSeconds) * 100),
-    }));
+    return sorted.map(([label, seconds]) => {
+      const zi = zones.findIndex(z => z.label.toUpperCase() === label);
+      return {
+        label,
+        color: zi >= 0 ? this.zoneCls.getZoneColor(zi, zones, sport) : '#636e72',
+        seconds,
+        percentage: Math.round((seconds / totalSeconds) * 100),
+      };
+    });
   }
 
   getEstimatedBlockDistance(block: WorkoutBlock): number {

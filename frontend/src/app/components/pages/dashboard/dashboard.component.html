@@ -8,234 +8,293 @@
       <div class="orb orb--muted"></div>
     </div>
 
-    <!-- Greeting -->
-    <div class="hub-greeting animate-in">
-      <span class="greeting-text">Hello,</span>
-      <span class="greeting-name">{{ vm.user?.displayName ?? 'Athlete' }}</span>
-      <span class="greeting-date">{{ todayDate | date:'EEEE, MMMM d' }}</span>
-    </div>
-
     <!-- Session reminders (coach only) -->
     @if (vm.user?.role === 'COACH' && vm.reminders.length > 0) {
       <div class="session-reminders">
         @for (r of vm.reminders; track $index) {
           <div class="reminder-card glass">
-        <span class="reminder-icon">&#9888;</span>
-        <div class="reminder-info">
-          <span class="reminder-title">{{ r.title }}</span>
-          <span class="reminder-meta">{{ r.scheduledAt | date:'EEE, MMM d · HH:mm' }} — {{ 'DASHBOARD.REMINDER_NO_TRAINING_LINKED' | translate }}</span>
-        </div>
-        <button class="reminder-action" (click)="navigateToLinkTraining(r)">{{ 'DASHBOARD.BTN_LINK_TRAINING' | translate }}</button>
-        </div>
+            <span class="reminder-icon">&#9888;</span>
+            <div class="reminder-info">
+              <span class="reminder-title">{{ r.title }}</span>
+              <span class="reminder-meta">{{ r.scheduledAt | date:'EEE, MMM d · HH:mm' }} — {{ 'DASHBOARD.REMINDER_NO_TRAINING_LINKED' | translate }}</span>
+            </div>
+            <button class="reminder-action" (click)="navigateToLinkTraining(r)">{{ 'DASHBOARD.BTN_LINK_TRAINING' | translate }}</button>
+          </div>
         }
       </div>
     }
 
     <div class="dashboard-body">
 
-      <!-- ═══ BENTO GRID ═══ -->
-      <div class="bento-grid stagger-children">
+      <!-- ═══ SPLIT RAIL ═══ -->
+      <div class="dash-split">
 
-        <!-- ▌ Hero: Today's Focus — full width -->
-        <div class="bento-card bento-full inner-glow glow-card focus-hero">
+        <!-- Left rail: today's focus -->
+        <aside class="dash-rail">
           <app-dashboard-focus-card
             [upcomingWorkouts]="vm.upcoming"
             [todayKey]="todayKey"
-            (openDetail)="openDetail($event)">
+            [userName]="vm.user?.displayName ?? 'Athlete'"
+            [todayDate]="todayDate"
+            [ftp]="vm.form.ftp ?? null"
+            (openDetail)="openDetail($event)"
+            (startNow)="onStartNow($event)">
           </app-dashboard-focus-card>
-        </div>
+        </aside>
 
-        <!-- ▌ Active Plan — spans 6 cols (pairs with Next Workout) -->
-        @if (vm.activePlan; as plan) {
-          <div class="bento-card bento-6 glow-card" (click)="navigateToPlan(plan.planId)" style="cursor:pointer;">
-            <span class="tile-label accent">{{ 'DASHBOARD.CARD_ACTIVE_PLAN' | translate }}</span>
-            <div class="plan-title-row">
-              <span class="plan-title">{{ plan.title }}</span>
-              <span class="plan-percent counter-value">{{ plan.completionPercent | number:'1.0-0' }}%</span>
-            </div>
-            <div class="plan-meta">
-              {{ 'DASHBOARD.ACTIVE_PLAN_WEEK' | translate: { current: plan.currentWeek, total: plan.totalWeeks } }}
-              @if (plan.weekLabel) {
-                <span class="plan-phase"> — {{ plan.weekLabel }}</span>
+        <!-- Right main column -->
+        <section class="dash-main">
+
+          <!-- KPI strip -->
+          <div class="kpi-strip">
+            <div class="kpi-tile">
+              <span class="kpi-label mono">{{ 'DASHBOARD.KPI_FITNESS' | translate }}</span>
+              <span class="kpi-value mono">{{ vm.form.ctl != null ? (vm.form.ctl | number:'1.0-0') : '—' }}</span>
+              @if (hasDelta(ctlDelta(vm.pmc))) {
+                <span class="kpi-delta mono" [class.kpi-delta--up]="(ctlDelta(vm.pmc) ?? 0) > 0" [class.kpi-delta--down]="(ctlDelta(vm.pmc) ?? 0) < 0">
+                  {{ (ctlDelta(vm.pmc) ?? 0) >= 0 ? '▲' : '▼' }} {{ deltaAbs(ctlDelta(vm.pmc)) | number:'1.0-1' }} · 7d
+                </span>
+              } @else {
+                <span class="kpi-delta mono">— · 7d</span>
               }
             </div>
-            <div class="plan-progress">
-              <div class="plan-progress-fill" [style.width.%]="plan.completionPercent"></div>
-            </div>
-          </div>
-        }
-
-        <!-- ▌ Next Workout — spans 6 cols, or full width when no active plan -->
-        @if (vm.upcoming.length > 0) {
-          <div class="bento-card glow-card next-tile" [class.bento-6]="vm.activePlan" [class.bento-full]="!vm.activePlan">
-            <span class="tile-label accent">{{ 'DASHBOARD.CARD_NEXT_WORKOUT' | translate }}</span>
-            <div class="next-body">
-              <app-sport-icon [sport]="vm.upcoming[0].sportType" [size]="20"></app-sport-icon>
-              <span class="next-title">{{ vm.upcoming[0].trainingTitle || vm.upcoming[0].title || ('DASHBOARD.DEFAULT_WORKOUT_TITLE' | translate) }}</span>
-              @if (formatScheduleDuration(vm.upcoming[0])) {
-                <span class="next-dur">{{ formatScheduleDuration(vm.upcoming[0]) }}</span>
+            <div class="kpi-tile">
+              <span class="kpi-label mono">{{ 'DASHBOARD.KPI_FATIGUE' | translate }}</span>
+              <span class="kpi-value mono">{{ vm.form.atl != null ? (vm.form.atl | number:'1.0-0') : '—' }}</span>
+              @if (hasDelta(atlDelta(vm.pmc))) {
+                <span class="kpi-delta mono" [class.kpi-delta--up]="(atlDelta(vm.pmc) ?? 0) < 0" [class.kpi-delta--down]="(atlDelta(vm.pmc) ?? 0) > 0">
+                  {{ (atlDelta(vm.pmc) ?? 0) >= 0 ? '▲' : '▼' }} {{ deltaAbs(atlDelta(vm.pmc)) | number:'1.0-1' }} · 7d
+                </span>
+              } @else {
+                <span class="kpi-delta mono">— · 7d</span>
               }
             </div>
-            <div class="next-footer">
-              <span class="next-date">{{ formatScheduleDate(vm.upcoming[0].scheduledDate) }}</span>
-              <a routerLink="/calendar" class="view-link">{{ 'DASHBOARD.LINK_VIEW_IN_CALENDAR' | translate }} →</a>
+            <div class="kpi-tile">
+              <span class="kpi-label mono">{{ 'DASHBOARD.KPI_FORM' | translate }}</span>
+              <span class="kpi-value kpi-value--tsb mono" [ngClass]="tsbClass(vm.form.tsb)">
+                @if (vm.form.tsb != null) {
+                  {{ (vm.form.tsb > 0 ? '+' : '') }}{{ vm.form.tsb | number:'1.0-0' }}
+                } @else { — }
+              </span>
+              <span class="kpi-delta kpi-delta--form mono">{{ tsbLabel(vm.form.tsb) | translate }}</span>
+            </div>
+            <div class="kpi-tile">
+              <span class="kpi-label mono">{{ 'DASHBOARD.KPI_RAMP' | translate }}</span>
+              <span class="kpi-value mono">
+                @if (rampRate(vm.pmc) != null) {
+                  {{ (rampRate(vm.pmc) ?? 0) >= 0 ? '+' : '' }}{{ rampRate(vm.pmc) | number:'1.0-0' }}<small>%</small>
+                } @else { — }
+              </span>
+              <span class="kpi-delta mono">vs 28d avg</span>
+            </div>
+            <div class="kpi-tile">
+              <span class="kpi-label mono">{{ 'DASHBOARD.KPI_COMPLIANCE' | translate }}</span>
+              <span class="kpi-value mono">{{ compliancePct(vm) | number:'1.0-0' }}<small>%</small></span>
+              <span class="kpi-delta kpi-delta--up mono">{{ 'DASHBOARD.KPI_COMPLIANCE_META' | translate: { done: complianceStats(vm).done, total: complianceStats(vm).total } }}</span>
             </div>
           </div>
-        } @else {
-          <div class="bento-card glow-card next-tile next-tile--empty" [class.bento-6]="vm.activePlan" [class.bento-full]="!vm.activePlan">
-            <span class="tile-label accent">{{ 'DASHBOARD.CARD_NEXT_WORKOUT' | translate }}</span>
-            <div class="next-empty-body">
-              <svg class="next-empty-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                <line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/>
-                <line x1="3" y1="10" x2="21" y2="10"/>
-                <line x1="12" y1="14" x2="12" y2="18"/>
-                <line x1="10" y1="16" x2="14" y2="16"/>
-              </svg>
-              <div class="next-empty-text">
-                <span class="next-empty-title">{{ 'DASHBOARD.NEXT_WORKOUT_EMPTY_TITLE' | translate }}</span>
-                <span class="next-empty-sub">{{ 'DASHBOARD.NEXT_WORKOUT_EMPTY_SUB' | translate }}</span>
+
+          <!-- Volume chart -->
+          <div class="chart-card glass">
+            <div class="chart-hd">
+              <div class="chart-hd-left">
+                <span class="chart-title">{{ 'DASHBOARD.CARD_VOLUME' | translate }}</span>
+                <span class="chart-subtitle mono">· stacked by sport · 10 wks</span>
               </div>
-            </div>
-            <div class="next-footer">
-              <span class="next-date"></span>
-              <a routerLink="/calendar" class="view-link">{{ 'DASHBOARD.NEXT_WORKOUT_EMPTY_CTA' | translate }} →</a>
-            </div>
-          </div>
-        }
-
-        <!-- ▌ Latest Activity — full width, horizontal layout -->
-        @if (vm.latestFit; as fit) {
-          <div class="bento-card bento-full glow-card latest-tile">
-            <div class="latest-main">
-              <div class="latest-info">
-                <span class="tile-label">{{ 'DASHBOARD.CARD_LATEST_ACTIVITY' | translate }}</span>
-                <div class="latest-body">
-                  <app-sport-icon [sport]="fit.sportType" [size]="20"></app-sport-icon>
-                  <span class="latest-title">{{ fit.title }}</span>
+              <div class="chart-hd-right">
+                <div class="chart-legend mono">
+                  <span><span class="legend-dot legend-dot--bike"></span>Bike</span>
+                  <span><span class="legend-dot legend-dot--run"></span>Run</span>
+                  <span><span class="legend-dot legend-dot--swim"></span>Swim</span>
+                </div>
+                <div class="chart-tabs mono">
+                  <button class="chart-tab" [class.active]="volumeMetric === 'time'" (click)="volumeMetric = 'time'">Time</button>
+                  <button class="chart-tab" [class.active]="volumeMetric === 'tss'" (click)="volumeMetric = 'tss'">TSS</button>
+                  <button class="chart-tab" [class.active]="volumeMetric === 'distance'" (click)="volumeMetric = 'distance'">Dist</button>
                 </div>
               </div>
-              <div class="latest-stats">
-                <span class="latest-stat">{{ formatDate(fit.date) }}</span>
-                <span class="latest-stat">{{ formatDuration(fit.totalDuration) }}</span>
-                @if (fit.avgPower) {
-                  <span class="latest-stat accent">{{ fit.avgPower | number:'1.0-0' }}w</span>
-                }
-                @if (fit.tss) {
-                  <span class="latest-stat">TSS {{ fit.tss | number:'1.0-0' }}</span>
+            </div>
+            <div class="chart-body">
+              <app-dashboard-volume-chart [data]="vm.volume" [metric]="volumeMetric"></app-dashboard-volume-chart>
+            </div>
+          </div>
+
+          <!-- Latest activity + 7-day mix -->
+          <div class="activity-mix-row">
+
+            <!-- Latest Activity -->
+            @if (vm.latestFit; as fit) {
+              <div class="activity-tile glass">
+                <div class="activity-head">
+                  <div>
+                    <span class="eyebrow eyebrow--accent mono">{{ 'DASHBOARD.CARD_LATEST_ACTIVITY' | translate }} · {{ formatDate(fit.date) }}</span>
+                    <h3 class="activity-title">
+                      <app-sport-icon [sport]="fit.sportType" [size]="16"></app-sport-icon>
+                      <span>{{ fit.title }}</span>
+                    </h3>
+                  </div>
+                  <button class="ghost-btn mono" (click)="openAnalysis(fit)">
+                    {{ 'DASHBOARD.BTN_VIEW_ANALYSIS' | translate }}
+                  </button>
+                </div>
+
+                <div class="activity-stats mono">
+                  <div class="stat-cell">
+                    <span class="stat-label">{{ 'DASHBOARD.STATS_DURATION' | translate }}</span>
+                    <span class="stat-value">{{ formatDuration(fit.totalDuration) }}</span>
+                  </div>
+                  <div class="stat-cell">
+                    <span class="stat-label">{{ 'DASHBOARD.STATS_DISTANCE' | translate }}</span>
+                    <span class="stat-value">{{ formatFitDistance(fit) }}</span>
+                  </div>
+                  @if (fit.avgPower) {
+                    <div class="stat-cell">
+                      <span class="stat-label">{{ 'DASHBOARD.STATS_AVG_POWER' | translate }}</span>
+                      <span class="stat-value accent">{{ fit.avgPower | number:'1.0-0' }}<small>W</small></span>
+                    </div>
+                  }
+                  @if (fit.tss) {
+                    <div class="stat-cell">
+                      <span class="stat-label">{{ 'DASHBOARD.STATS_TSS' | translate }}</span>
+                      <span class="stat-value">{{ fit.tss | number:'1.0-0' }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Sport mix + active plan -->
+            <div class="mix-tile glass">
+              <div class="mix-head">
+                <div>
+                  <span class="eyebrow eyebrow--accent mono">{{ 'DASHBOARD.MIX_LABEL' | translate }}</span>
+                  <div class="mix-total">
+                    <span class="mix-total-val mono">{{ formatDuration(totalWeekSeconds(vm.weekMetrics)) }}</span>
+                    <small class="mix-total-sub">{{ 'DASHBOARD.MIX_TOTAL' | translate }}</small>
+                  </div>
+                </div>
+                @if (weekTrendDelta(vm.weekMetrics) != null) {
+                  <span class="mix-delta mono"
+                        [class.mix-delta--up]="(weekTrendDelta(vm.weekMetrics) ?? 0) >= 0"
+                        [class.mix-delta--down]="(weekTrendDelta(vm.weekMetrics) ?? 0) < 0">
+                    {{ (weekTrendDelta(vm.weekMetrics) ?? 0) >= 0 ? '▲' : '▼' }} {{ weekTrendDelta(vm.weekMetrics) | number:'1.0-0' }}%
+                  </span>
                 }
               </div>
-              <button class="view-btn" (click)="openAnalysis(fit)">{{ 'DASHBOARD.BTN_VIEW_ANALYSIS' | translate }} →</button>
+
+              @if (hasAnyActivity(vm.weekMetrics)) {
+                <div class="mix-bar">
+                  @for (s of vm.weekMetrics.current; track s.sport) {
+                    @if (mixPercent(s, vm.weekMetrics) > 0) {
+                      <div class="mix-chunk"
+                           [class]="'mix-chunk--' + s.sport.toLowerCase()"
+                           [style.flexBasis.%]="mixPercent(s, vm.weekMetrics)"
+                           [attr.title]="s.sport"></div>
+                    }
+                  }
+                </div>
+
+                <div class="mix-rows">
+                  @for (s of vm.weekMetrics.current; track s.sport) {
+                    <div class="mix-row" [class.dim-row]="s.sessionCount === 0">
+                      <span class="mix-dot" [class]="'mix-dot--' + s.sport.toLowerCase()"></span>
+                      <span class="mix-name">{{ sportPretty(s.sport) }}</span>
+                      <span class="mix-val mono">{{ s.sessionCount > 0 ? formatDuration(s.durationSeconds) : '—' }}</span>
+                      <span class="mix-pct mono">{{ mixPercent(s, vm.weekMetrics) | number:'1.0-0' }}%</span>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="mix-empty">{{ 'DASHBOARD.SPORT_CARD_NO_ACTIVITY' | translate }}</p>
+              }
+
+              @if (vm.activePlan; as plan) {
+                <div class="mix-plan" (click)="navigateToPlan(plan.planId)" role="button" tabindex="0">
+                  <span class="eyebrow eyebrow--accent mono">{{ 'DASHBOARD.CARD_ACTIVE_PLAN' | translate }} · {{ plan.title }}</span>
+                  <div class="mix-plan-row">
+                    <span class="mono mix-plan-week">{{ 'DASHBOARD.ACTIVE_PLAN_WEEK' | translate: { current: plan.currentWeek, total: plan.totalWeeks } }}</span>
+                    <span class="mono mix-plan-pct">{{ plan.completionPercent | number:'1.0-0' }}%</span>
+                  </div>
+                  <div class="mix-plan-bar">
+                    <div class="mix-plan-fill" [style.width.%]="plan.completionPercent"></div>
+                  </div>
+                </div>
+              }
             </div>
           </div>
-        }
 
-        <!-- ▌ Volume Chart — full width -->
-        <div class="bento-card bento-full volume-chart-tile">
-          <div class="volume-header">
-            <span class="tile-label">{{ 'DASHBOARD.CARD_VOLUME' | translate }}</span>
-            <div class="metric-toggle">
-              <button class="toggle-btn" [class.active]="volumeMetric === 'time'" (click)="volumeMetric = 'time'">Time</button>
-              <button class="toggle-btn" [class.active]="volumeMetric === 'tss'" (click)="volumeMetric = 'tss'">TSS</button>
-              <button class="toggle-btn" [class.active]="volumeMetric === 'distance'" (click)="volumeMetric = 'distance'">Distance</button>
+          <!-- Clubs -->
+          <app-dashboard-club-cards></app-dashboard-club-cards>
+
+          <!-- Quick Actions -->
+          <div class="quick-actions-section">
+            <div class="quick-actions-label mono">{{ 'DASHBOARD.QUICK_ACTIONS_LABEL' | translate }}</div>
+            <div class="quick-actions-grid">
+              <a class="quick-tile glass glow-card" routerLink="/analytics/power-curve">
+                <span class="quick-tile-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                  </svg>
+                </span>
+                <span class="quick-tile-title">{{ 'DASHBOARD.QUICK_TILE_ANALYTICS_TITLE' | translate }}</span>
+                <span class="quick-tile-sub">{{ 'DASHBOARD.QUICK_TILE_ANALYTICS_SUB' | translate }}</span>
+              </a>
+              <a class="quick-tile glass glow-card" routerLink="/calendar">
+                <span class="quick-tile-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                </span>
+                <span class="quick-tile-title">{{ 'DASHBOARD.QUICK_TILE_CALENDAR_TITLE' | translate }}</span>
+                <span class="quick-tile-sub">{{ 'DASHBOARD.QUICK_TILE_CALENDAR_SUB' | translate }}</span>
+              </a>
+              <a class="quick-tile glass glow-card" routerLink="/trainings">
+                <span class="quick-tile-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                  </svg>
+                </span>
+                <span class="quick-tile-title">{{ 'DASHBOARD.QUICK_TILE_LIBRARY_TITLE' | translate }}</span>
+                <span class="quick-tile-sub">{{ 'DASHBOARD.QUICK_TILE_LIBRARY_SUB' | translate }}</span>
+              </a>
             </div>
           </div>
-          <app-dashboard-volume-chart [data]="vm.volume" [metric]="volumeMetric"></app-dashboard-volume-chart>
-        </div>
 
-        <!-- ▌ Performance Metrics — spans 3 cols (sits on the same row as the 3 sport cards) -->
-        <div class="bento-card bento-3 perf-tile">
-          <app-dashboard-performance-panel
-            [formStats]="vm.form">
-          </app-dashboard-performance-panel>
-        </div>
-
-        <!-- ▌ Sport Cards — each spans 3 cols so perf + 3 sports fill one 12-col row -->
-        <app-dashboard-sport-cards
-          [weekMetrics]="vm.weekMetrics">
-        </app-dashboard-sport-cards>
-
-        <!-- ▌ Clubs -->
-        <app-dashboard-club-cards></app-dashboard-club-cards>
-
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="quick-actions-section stagger-children">
-        <div class="quick-actions-label">{{ 'DASHBOARD.QUICK_ACTIONS_LABEL' | translate }}</div>
-        <div class="quick-actions-grid">
-          <a class="quick-tile bento-card glow-card" routerLink="/analytics/power-curve">
-            <span class="quick-tile-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-              </svg>
-            </span>
-            <span class="quick-tile-title">{{ 'DASHBOARD.QUICK_TILE_ANALYTICS_TITLE' | translate }}</span>
-            <span class="quick-tile-sub">{{ 'DASHBOARD.QUICK_TILE_ANALYTICS_SUB' | translate }}</span>
-          </a>
-          <a class="quick-tile bento-card glow-card" routerLink="/calendar">
-            <span class="quick-tile-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                <line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/>
-                <line x1="3" y1="10" x2="21" y2="10"/>
-              </svg>
-            </span>
-            <span class="quick-tile-title">{{ 'DASHBOARD.QUICK_TILE_CALENDAR_TITLE' | translate }}</span>
-            <span class="quick-tile-sub">{{ 'DASHBOARD.QUICK_TILE_CALENDAR_SUB' | translate }}</span>
-          </a>
-          <a class="quick-tile bento-card glow-card" routerLink="/trainings">
-            <span class="quick-tile-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-              </svg>
-            </span>
-            <span class="quick-tile-title">{{ 'DASHBOARD.QUICK_TILE_LIBRARY_TITLE' | translate }}</span>
-            <span class="quick-tile-sub">{{ 'DASHBOARD.QUICK_TILE_LIBRARY_SUB' | translate }}</span>
-          </a>
-        </div>
+        </section>
       </div>
 
     </div>
   </div>
 } @else {
-  <!-- Skeleton loading state (alive feel) -->
+  <!-- Skeleton loading state -->
   <div class="dashboard-layout">
     <div class="ambient-orbs">
       <div class="orb orb--accent"></div>
       <div class="orb orb--secondary"></div>
     </div>
-    <div class="hub-greeting" style="padding: 16px var(--page-padding) 0;">
-      <div class="skeleton" style="width: 240px; height: 28px; border-radius: 8px;"></div>
-    </div>
     <div class="dashboard-body">
-      <div class="bento-grid">
-        <div class="bento-card bento-8 bento-tall">
-          <div class="skeleton" style="width: 100px; height: 12px; margin-bottom: 20px;"></div>
-          <div class="skeleton" style="width: 70%; height: 24px; margin-bottom: 16px;"></div>
-          <div class="skeleton" style="width: 45%; height: 16px; margin-bottom: 24px;"></div>
-          <div class="skeleton" style="width: 140px; height: 40px; border-radius: 100px;"></div>
-        </div>
-        <div class="bento-card bento-4 bento-tall">
-          <div class="skeleton" style="width: 100px; height: 12px; margin-bottom: 20px;"></div>
-          <div style="display: flex; gap: 16px; flex-direction: column; flex: 1; justify-content: center;">
-            <div class="skeleton" style="width: 100%; height: 40px;"></div>
-            <div class="skeleton" style="width: 100%; height: 40px;"></div>
-            <div class="skeleton" style="width: 100%; height: 40px;"></div>
+      <div class="dash-split">
+        <aside class="dash-rail">
+          <div class="skeleton" style="width:100%; height: 100%; min-height: 520px; border-radius: var(--radius-xl);"></div>
+        </aside>
+        <section class="dash-main">
+          <div class="kpi-strip">
+            <div class="skeleton" style="height: 88px;"></div>
+            <div class="skeleton" style="height: 88px;"></div>
+            <div class="skeleton" style="height: 88px;"></div>
+            <div class="skeleton" style="height: 88px;"></div>
+            <div class="skeleton" style="height: 88px;"></div>
           </div>
-        </div>
-        <div class="bento-card bento-4">
-          <div class="skeleton" style="width: 120px; height: 12px; margin-bottom: 16px;"></div>
-          <div class="skeleton" style="width: 80%; height: 20px; margin-bottom: 8px;"></div>
-          <div class="skeleton" style="width: 100%; height: 4px; border-radius: 2px;"></div>
-        </div>
-        <div class="bento-card bento-4">
-          <div class="skeleton" style="width: 100px; height: 12px; margin-bottom: 16px;"></div>
-          <div class="skeleton" style="width: 60%; height: 20px;"></div>
-        </div>
+          <div class="skeleton" style="height: 280px; border-radius: var(--radius-xl);"></div>
+          <div class="activity-mix-row">
+            <div class="skeleton" style="height: 200px; border-radius: var(--radius-xl);"></div>
+            <div class="skeleton" style="height: 200px; border-radius: var(--radius-xl);"></div>
+          </div>
+        </section>
       </div>
     </div>
   </div>

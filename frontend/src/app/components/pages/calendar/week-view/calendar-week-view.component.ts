@@ -172,7 +172,7 @@ export class CalendarWeekViewComponent {
   }
 
   /** Group consecutive club-session entries that share the same hour into rows */
-  private readonly MAX_VISIBLE_PER_DAY = 2;
+  private readonly MAX_VISIBLE_PER_DAY = 4;
   expandedDays = new Set<string>();
 
   toggleExpand(dayKey: string): void {

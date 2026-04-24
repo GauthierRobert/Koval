@@ -30,13 +30,13 @@ export class ZoneInterpolationService {
 
         // Pass 3 — group consecutive same-zone runs
         const minBlockSec = Math.max(5, smoothFactor * 2);
-        let blocks = this.groupZoneRuns(smoothed, records, percents, zones);
+        let blocks = this.groupZoneRuns(smoothed, records, percents, zones, sport);
 
         // Pass 4 — merge short blocks (bidirectional)
-        blocks = this.mergeShortBlocks(blocks, minBlockSec, records, percents, zones);
+        blocks = this.mergeShortBlocks(blocks, minBlockSec, records, percents, zones, sport);
 
         // Pass 5 — reclassify by average percent (skip walking blocks)
-        this.reclassifyByAvgPercent(blocks, zones);
+        this.reclassifyByAvgPercent(blocks, zones, sport);
 
         // Pass 6 — collapse adjacent same-zone blocks
         blocks = this.collapseAdjacentSameZone(blocks, records, percents);
@@ -86,13 +86,13 @@ export class ZoneInterpolationService {
 
     // ── Pass 3: Group consecutive same-zone runs ─────────────────────────
 
-    private groupZoneRuns(smoothed: number[], records: FitRecord[], percents: number[], zones: Zone[]): ZoneBlock[] {
+    private groupZoneRuns(smoothed: number[], records: FitRecord[], percents: number[], zones: Zone[], sport: SportType): ZoneBlock[] {
         const blocks: ZoneBlock[] = [];
         const n = smoothed.length;
         let start = 0;
         for (let i = 1; i <= n; i++) {
             if (i < n && smoothed[i] === smoothed[start]) continue;
-            blocks.push(this.buildBlock(smoothed[start], start, i - 1, records, percents, zones));
+            blocks.push(this.buildBlock(smoothed[start], start, i - 1, records, percents, zones, sport));
             start = i;
         }
         return blocks;
@@ -102,20 +102,20 @@ export class ZoneInterpolationService {
 
     private mergeShortBlocks(
         blocks: ZoneBlock[], minBlockSec: number,
-        records: FitRecord[], percents: number[], zones: Zone[],
+        records: FitRecord[], percents: number[], zones: Zone[], sport: SportType,
     ): ZoneBlock[] {
         // Forward pass
-        blocks = this.mergeShortBlocksSinglePass(blocks, minBlockSec, records, percents, zones);
+        blocks = this.mergeShortBlocksSinglePass(blocks, minBlockSec, records, percents, zones, sport);
         // Reverse pass — eliminates forward-only directional bias
         blocks.reverse();
-        blocks = this.mergeShortBlocksSinglePass(blocks, minBlockSec, records, percents, zones);
+        blocks = this.mergeShortBlocksSinglePass(blocks, minBlockSec, records, percents, zones, sport);
         blocks.reverse();
         return blocks;
     }
 
     private mergeShortBlocksSinglePass(
         blocks: ZoneBlock[], minBlockSec: number,
-        records: FitRecord[], percents: number[], zones: Zone[],
+        records: FitRecord[], percents: number[], zones: Zone[], sport: SportType,
     ): ZoneBlock[] {
         let changed = true;
         while (changed) {
@@ -168,7 +168,7 @@ export class ZoneInterpolationService {
 
     // ── Pass 5: Reclassify by average percent ────────────────────────────
 
-    private reclassifyByAvgPercent(blocks: ZoneBlock[], zones: Zone[]): void {
+    private reclassifyByAvgPercent(blocks: ZoneBlock[], zones: Zone[], sport: SportType): void {
         for (const b of blocks) {
             if (b.zoneIndex === this.cls.WALKING_ZONE_INDEX) continue;
             const newZi = this.cls.classifyZone(b.avgPercent, zones);
@@ -176,7 +176,7 @@ export class ZoneInterpolationService {
                 b.zoneIndex = newZi;
                 b.zoneLabel = this.cls.getZoneLabel(newZi, zones);
                 b.zoneDescription = this.cls.getZoneDescription(newZi, zones);
-                b.color = this.cls.getZoneColor(newZi);
+                b.color = this.cls.getZoneColor(newZi, zones, sport);
             }
         }
     }
@@ -199,7 +199,7 @@ export class ZoneInterpolationService {
 
     // ── Block building & merging ─────────────────────────────────────────
 
-    private buildBlock(zi: number, start: number, end: number, records: FitRecord[], percents: number[], zones: Zone[]): ZoneBlock {
+    private buildBlock(zi: number, start: number, end: number, records: FitRecord[], percents: number[], zones: Zone[], sport: SportType): ZoneBlock {
         let sumPower = 0, sumSpeed = 0, sumHR = 0, sumCad = 0, sumPct = 0;
         let maxPower = 0, maxSpeed = 0;
         for (let j = start; j <= end; j++) {
@@ -216,7 +216,7 @@ export class ZoneInterpolationService {
             zoneIndex: zi,
             zoneLabel: this.cls.getZoneLabel(zi, zones),
             zoneDescription: this.cls.getZoneDescription(zi, zones),
-            color: this.cls.getZoneColor(zi),
+            color: this.cls.getZoneColor(zi, zones, sport),
             startIndex: start,
             endIndex: end,
             durationSeconds: records[end].timestamp - records[start].timestamp,

@@ -1,4 +1,6 @@
 import {flattenElements, Training, WorkoutBlock} from '../../../models/training.model';
+import {blockColor as sharedBlockColor} from '../../../services/zone-classification.service';
+import {SportType} from '../../../services/zone';
 
 /**
  * Pure utility functions for computing workout block visual properties.
@@ -38,22 +40,38 @@ export function getBlockClipPath(block: WorkoutBlock, maxI: number): string {
   return `polygon(0% ${startRel}%, 100% ${endRel}%, 100% 100%, 0% 100%)`;
 }
 
-export function getBlockColor(block: WorkoutBlock): string {
-  if (block.type === 'PAUSE') return '#636e72';
-  if (block.type === 'FREE') return '#636e72';
-  if (block.type === 'TRANSITION') return '#fd79a8';
-  if (block.type === 'WARMUP') return 'rgba(9, 132, 227, 0.6)';
-  if (block.type === 'COOLDOWN') return 'rgba(108, 92, 231, 0.6)';
-  const intensity =
-    block.type === 'RAMP'
-      ? ((block.intensityStart || 0) + (block.intensityEnd || 0)) / 2
-      : block.intensityTarget || 0;
-  if (intensity < 55) return '#b2bec3';
-  if (intensity < 75) return '#3498db';
-  if (intensity < 90) return '#2ecc71';
-  if (intensity < 105) return '#f1c40f';
-  if (intensity < 120) return '#e67e22';
-  return '#e74c3c';
+/** Normalize Training.sportType (which may be 'BRICK') to a spectrum SportType. */
+export function normalizeSport(sport: string | null | undefined): SportType {
+  if (sport === 'RUNNING' || sport === 'SWIMMING') return sport;
+  return 'CYCLING';
+}
+
+export function getBlockColor(block: WorkoutBlock, sport: string | null | undefined = 'CYCLING'): string {
+  return sharedBlockColor(block, normalizeSport(sport));
+}
+
+/** Representative intensity % per block type, used for type selector chips / swatches. */
+const BLOCK_TYPE_REPRESENTATIVE_INTENSITY: Record<string, number | null> = {
+  WARMUP: 55,
+  STEADY: 75,
+  INTERVAL: 110,
+  RAMP: 85,
+  COOLDOWN: 40,
+  FREE: null,
+  PAUSE: null,
+  TRANSITION: null,
+};
+
+/**
+ * Color for a block TYPE alone (e.g., chips in the type selector where no intensity is known).
+ * Maps each type to a representative position on the spectrum so the chips still follow the
+ * same purple → red gradient used everywhere else.
+ */
+export function getBlockTypeColor(type: string, sport: string | null | undefined = 'CYCLING'): string {
+  return sharedBlockColor(
+    {type: type as WorkoutBlock['type'], label: '', intensityTarget: BLOCK_TYPE_REPRESENTATIVE_INTENSITY[type] ?? undefined},
+    normalizeSport(sport),
+  );
 }
 
 export function getDisplayIntensity(block: WorkoutBlock): string {

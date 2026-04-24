@@ -8,6 +8,7 @@ import { DurationEstimationService } from '../../../../services/duration-estimat
 import { Training } from '../../../../models/training.model';
 import { ZoneSystem } from '../../../../services/zone';
 import { formatPace as sharedFormatPace } from '../../format/format.utils';
+import { getBlockColor as sharedGetBlockColor } from '../../block-helpers/block-helpers';
 
 @Component({
   selector: 'app-block-steps-list',
@@ -38,24 +39,7 @@ export class BlockStepsListComponent {
   }
 
   getBlockColor(block: WorkoutBlock): string {
-    if (block.type === 'PAUSE') return '#636e72';
-    if (block.type === 'FREE') return '#636e72';
-    if (block.type === 'TRANSITION') return '#fd79a8';
-    if (block.type === 'WARMUP') return 'rgba(9, 132, 227, 0.6)';
-    if (block.type === 'COOLDOWN') return 'rgba(108, 92, 231, 0.6)';
-
-    const start = this.getEffectiveIntensity(block, 'START');
-    const end = this.getEffectiveIntensity(block, 'END');
-    const target = this.getEffectiveIntensity(block, 'TARGET');
-
-    const power = block.type === 'RAMP' ? (start + end) / 2 : target;
-
-    if (power < 55) return '#b2bec3';
-    if (power < 75) return '#3498db';
-    if (power < 90) return '#2ecc71';
-    if (power < 105) return '#f1c40f';
-    if (power < 120) return '#e67e22';
-    return '#e74c3c';
+    return sharedGetBlockColor(block, this.sportType);
   }
 
   getDisplayIntensity(block: WorkoutBlock): string {

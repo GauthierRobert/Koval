@@ -1,11 +1,99 @@
 import {Injectable} from '@angular/core';
 import {Zone, ZoneSystem, SportType} from './zone';
 import {User} from './auth.service';
+import {WorkoutBlock} from '../models/training.model';
+
+/**
+ * Color stops along the intensity-percent axis, per sport. Stops are positioned so that each sport's
+ * default zone means land on a distinct palette color: Z2→blue, Z3→green, Z4→yellow, Z5→orange, and
+ * for cycling Z6→red, Z7→dark red. Run/swim (5 zones) reserve red / dark red for efforts above Z5.
+ */
+export const INTENSITY_COLOR_STOPS_BY_SPORT: Record<SportType, ReadonlyArray<{percent: number; hex: string}>> = {
+    CYCLING: [
+        {percent: 0,   hex: '#b2bec3'}, // gray      — recovery
+        {percent: 67,  hex: '#3498db'}, // blue      — endurance (Z2 mean ~65)
+        {percent: 80,  hex: '#2ecc71'}, // green     — tempo     (Z3 mean ~82)
+        {percent: 90,  hex: '#f1c40f'}, // yellow    — threshold (Z4 mean ~97)
+        {percent: 102, hex: '#e67e22'}, // orange    — VO2max    (Z5 mean ~112)
+        {percent: 120, hex: '#e74c3c'}, // red       — anaerobic (Z6 mean ~135)
+        {percent: 150, hex: '#c0392b'}, // dark red  — neuromuscular (Z7)
+    ],
+    RUNNING: [
+        {percent: 0,   hex: '#b2bec3'}, // gray      — Z1 easy    (mean ~37)
+        {percent: 78,  hex: '#3498db'}, // blue      — Z2 aerobic (mean 80)
+        {percent: 86,  hex: '#2ecc71'}, // green     — Z3 tempo   (mean 90)
+        {percent: 96, hex: '#f1c40f'}, // yellow    — Z4 threshold (mean 100)
+        {percent: 105, hex: '#e67e22'}, // orange    — Z5 VO2max  (mean ~112)
+        {percent: 120, hex: '#e74c3c'}, // red       — above Z5
+        {percent: 150, hex: '#c0392b'}, // dark red  — extreme
+    ],
+    SWIMMING: [
+        {percent: 0,   hex: '#b2bec3'}, // gray      — Z1 recovery  (mean ~40)
+        {percent: 85,  hex: '#3498db'}, // blue      — Z2 endurance (mean 85)
+        {percent: 95,  hex: '#2ecc71'}, // green     — Z3 threshold (mean 95)
+        {percent: 105, hex: '#f1c40f'}, // yellow    — Z4 VO2max    (mean 105)
+        {percent: 120, hex: '#e67e22'}, // orange    — Z5 sprint    (mean 120)
+        {percent: 135, hex: '#e74c3c'}, // red       — above Z5
+        {percent: 160, hex: '#c0392b'}, // dark red  — extreme
+    ],
+};
+
+const NEUTRAL_COLOR = '#636e72';
+const TRANSITION_COLOR = '#fd79a8';
+
+function hexToRgb(hex: string): [number, number, number] {
+    const h = hex.replace('#', '');
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+    const c = (n: number) => Math.round(Math.max(0, Math.min(255, n))).toString(16).padStart(2, '0');
+    return `#${c(r)}${c(g)}${c(b)}`;
+}
+
+/**
+ * Percent → color along the zone palette (gray → blue → green → yellow → orange → red → dark red).
+ * Stops are tuned per sport so zones land on the expected palette color.
+ */
+export function intensityToColor(percent: number, sport: SportType = 'CYCLING'): string {
+    const stops = INTENSITY_COLOR_STOPS_BY_SPORT[sport];
+    if (percent <= stops[0].percent) return stops[0].hex;
+    if (percent >= stops[stops.length - 1].percent) return stops[stops.length - 1].hex;
+    for (let i = 1; i < stops.length; i++) {
+        const hi = stops[i];
+        if (percent <= hi.percent) {
+            const lo = stops[i - 1];
+            const t = (percent - lo.percent) / (hi.percent - lo.percent);
+            const [lr, lg, lb] = hexToRgb(lo.hex);
+            const [hr, hg, hb] = hexToRgb(hi.hex);
+            return rgbToHex(lr + (hr - lr) * t, lg + (hg - lg) * t, lb + (hb - lb) * t);
+        }
+    }
+    return stops[stops.length - 1].hex;
+}
+
+/** The percent used for coloring a block. RAMP uses mean(start,end). Null when the block has no intensity. */
+export function blockColorIntensity(block: WorkoutBlock): number | null {
+    if (block.type === 'PAUSE' || block.type === 'FREE' || block.type === 'TRANSITION') return null;
+    if (block.type === 'RAMP') {
+        const s = block.intensityStart;
+        const e = block.intensityEnd;
+        if (s == null && e == null) return null;
+        return ((s ?? 0) + (e ?? 0)) / 2;
+    }
+    return block.intensityTarget ?? null;
+}
+
+/** Color for a WorkoutBlock — intensity spectrum when available, neutral otherwise. Pure. */
+export function blockColor(block: WorkoutBlock, sport: SportType = 'CYCLING'): string {
+    if (block.type === 'TRANSITION') return TRANSITION_COLOR;
+    const intensity = blockColorIntensity(block);
+    if (intensity == null) return NEUTRAL_COLOR;
+    return intensityToColor(intensity, sport);
+}
 
 @Injectable({providedIn: 'root'})
 export class ZoneClassificationService {
-
-    readonly ZONE_COLORS = ['#b2bec3', '#3498db', '#2ecc71', '#f1c40f', '#e67e22', '#e74c3c', '#c0392b'];
 
     readonly WALKING_ZONE_INDEX = -1;
     readonly WALKING_COLOR = '#78909c';
@@ -47,12 +135,20 @@ export class ZoneClassificationService {
         return (speed / referenceValue) * 100;
     }
 
-    /** Find which zone index a given percentage falls into. */
+    /**
+     * Find which zone index a given percentage falls into.
+     *
+     * Boundaries are treated as [low, high): a value equal to the boundary belongs to the
+     * upper zone, so 90% on CYCLING defaults lands in Z4 (Threshold) not Z3 (Tempo).
+     * The top zone is inclusive on both ends so its ceiling is reachable.
+     */
     classifyZone(percent: number, zones: Zone[]): number {
+        const last = zones.length - 1;
         for (let i = 0; i < zones.length; i++) {
-            if (percent >= zones[i].low && percent <= zones[i].high) return i;
+            const inUpper = i === last ? percent <= zones[i].high : percent < zones[i].high;
+            if (percent >= zones[i].low && inUpper) return i;
         }
-        if (percent > zones[zones.length - 1].high) return zones.length - 1;
+        if (percent > zones[last].high) return last;
         // Value in a gap — nearest boundary
         let bestIdx = 0;
         let bestDist = Infinity;
@@ -77,9 +173,23 @@ export class ZoneClassificationService {
         return this.classifyZone(this.recordPercent(power, speed, sport, referenceValue), zones);
     }
 
-    getZoneColor(zoneIndex: number): string {
+    /** Spectrum color from a raw intensity percent. */
+    intensityToColor(percent: number, sport: SportType = 'CYCLING'): string {
+        return intensityToColor(percent, sport);
+    }
+
+    /** Spectrum color for a WorkoutBlock. Uses intensityTarget (mean of start/end for RAMP). */
+    blockColor(block: WorkoutBlock, sport: SportType = 'CYCLING'): string {
+        return blockColor(block, sport);
+    }
+
+    /** Color for a zone — derived from the zone's mean intensity. */
+    getZoneColor(zoneIndex: number, zones?: Zone[], sport: SportType = 'CYCLING'): string {
         if (zoneIndex === this.WALKING_ZONE_INDEX) return this.WALKING_COLOR;
-        return this.ZONE_COLORS[zoneIndex] ?? this.ZONE_COLORS[this.ZONE_COLORS.length - 1];
+        const zs = zones ?? this.defaultZonesBySport[sport];
+        const z = zs[zoneIndex];
+        if (!z) return intensityToColor(999, sport);
+        return intensityToColor((z.low + z.high) / 2, sport);
     }
 
     getZoneLabel(zoneIndex: number, zones: Zone[]): string {

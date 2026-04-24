@@ -176,7 +176,7 @@
               <div
                 class="zone-segment"
                 [style.flex]="getZoneBarFlex(z)"
-                [style.background]="getZoneColor(i)"
+                [style.background]="getZoneColorForSystem(i, sys)"
               >
                 <span class="seg-label">{{ z.label }}</span>
               </div>
@@ -187,7 +187,7 @@
           <div class="zones-table">
             @for (z of sys.zones; let i = $index; track i) {
               <div class="zone-row">
-                <span class="zone-dot" [style.background]="getZoneColor(i)"></span>
+                <span class="zone-dot" [style.background]="getZoneColorForSystem(i, sys)"></span>
                 <span class="zone-label">{{ z.label }}</span>
                 <span class="zone-name">{{ z.description }}</span>
                 <span class="zone-pct">{{ z.low }}–{{ z.high }}%</span>

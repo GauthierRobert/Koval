@@ -49,7 +49,7 @@
                 <div class="block-bar-wrapper"
                   [style.width.%]="getBlockWidth(block, training)">
                   <div class="bar-container" [style.height.%]="getBlockHeight(block, training)">
-                    <div class="block-bar" [style.background]="getBlockColor(block)"
+                    <div class="block-bar" [style.background]="getBlockColor(block, training)"
                       [style.clip-path]="getBlockClipPath(block, training)" [attr.data-type]="block.type"></div>
                   </div>
                 </div>

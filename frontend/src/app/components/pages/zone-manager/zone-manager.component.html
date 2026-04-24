@@ -53,7 +53,7 @@
             <div class="zone-bar-preview">
               @for (zone of system.zones; let i = $index; track i) {
                 <div class="bar-segment"
-                  [style.flex]="zone.high - zone.low" [style.background]="getZoneColor(i)">
+                  [style.flex]="zone.high - zone.low" [style.background]="getZoneColorForSystem(i, system)">
                 </div>
               }
             </div>

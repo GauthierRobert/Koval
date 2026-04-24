@@ -16,8 +16,6 @@ import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {WorkoutDetailModalComponent} from '../../shared/workout-detail-modal/workout-detail-modal.component';
 import {daysUntil, formatTrainingDuration} from '../../shared/format/format.utils';
 import {DashboardFocusCardComponent} from './dashboard-focus-card/dashboard-focus-card.component';
-import {DashboardPerformancePanelComponent} from './dashboard-performance-panel/dashboard-performance-panel.component';
-import {DashboardSportCardsComponent} from './dashboard-sport-cards/dashboard-sport-cards.component';
 import {DashboardClubCardsComponent} from './dashboard-club-cards/dashboard-club-cards.component';
 import {DashboardVolumeChartComponent} from './dashboard-volume-chart/dashboard-volume-chart.component';
 
@@ -31,7 +29,7 @@ function toDateKey(d: Date): string {
 function getStartOfWeek(d: Date): Date {
   const date = new Date(d);
   const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day; // Monday
+  const diff = day === 0 ? -6 : 1 - day;
   date.setDate(date.getDate() + diff);
   date.setHours(0, 0, 0, 0);
   return date;
@@ -85,7 +83,7 @@ function computeWeekMetrics(sessions: SavedSession[]): WeekMetrics {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, SportIconComponent, WorkoutDetailModalComponent, TranslateModule, DashboardFocusCardComponent, DashboardPerformancePanelComponent, DashboardSportCardsComponent, DashboardClubCardsComponent, DashboardVolumeChartComponent],
+  imports: [CommonModule, RouterModule, SportIconComponent, WorkoutDetailModalComponent, TranslateModule, DashboardFocusCardComponent, DashboardClubCardsComponent, DashboardVolumeChartComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -130,11 +128,20 @@ export class DashboardComponent {
     startWith([] as ScheduledWorkout[]),
   );
 
+  completedLastWeek$ = this.schedule$.pipe(
+    map((ws) => ws.filter((w) => w.status === 'COMPLETED' && w.scheduledDate >= this.sevenDaysAgoKey)),
+    startWith([] as ScheduledWorkout[]),
+  );
+
+  plannedLastWeek$ = this.schedule$.pipe(
+    map((ws) => ws.filter((w) => w.scheduledDate >= this.sevenDaysAgoKey && w.scheduledDate <= this.todayKey)),
+    startWith([] as ScheduledWorkout[]),
+  );
+
   weekMetrics$ = this.historyService.sessions$.pipe(map((sessions) => computeWeekMetrics(sessions)));
 
   latestFit$ = this.historyService.sessions$.pipe(map((ss) => ss.find((s) => !!s.fitFileId) ?? null));
 
-  // Fetch the same PMC data the PMC page uses (last 90 days + 30 days ahead for projection)
   pmcData$ = this.authService.user$.pipe(
     filter((u) => !!u),
     switchMap(() => {
@@ -155,7 +162,6 @@ export class DashboardComponent {
     startWith([] as any[]),
   );
 
-  // Derive CTL/ATL/TSB from the live PMC data — same source as the PMC page
   formStats$ = combineLatest([this.pmcData$, this.authService.user$]).pipe(
     map(([pmcData, user]) => {
       const today = new Date().toISOString().split('T')[0];
@@ -174,7 +180,7 @@ export class DashboardComponent {
     filter((u) => !!u),
     switchMap(() => {
       const to = new Date();
-      const from = subDays(to, 70); // ~10 weeks
+      const from = subDays(to, 70);
       this.analyticsService.loadVolume(toDateKey(from), toDateKey(to), 'week');
       return this.analyticsService.volume$;
     }),
@@ -186,6 +192,8 @@ export class DashboardComponent {
   vm$ = combineLatest({
     overdue: this.overdueWorkouts$,
     upcoming: this.upcomingWorkouts$,
+    completedLastWeek: this.completedLastWeek$,
+    plannedLastWeek: this.plannedLastWeek$,
     weekMetrics: this.weekMetrics$,
     latestFit: this.latestFit$,
     form: this.formStats$,
@@ -194,6 +202,7 @@ export class DashboardComponent {
     user: this.authService.user$,
     activePlan: this.activePlan$,
     volume: this.volume$,
+    pmc: this.pmcData$,
   });
 
   volumeMetric: 'time' | 'tss' | 'distance' = 'time';
@@ -209,19 +218,10 @@ export class DashboardComponent {
     return `${(meters / 1000).toFixed(1)} km`;
   }
 
-  getTrend(curr: SportStats, prev: SportStats[]): '▲' | '▼' | '–' {
-    const prevStats = prev.find((p) => p.sport === curr.sport);
-    if (!prevStats || prevStats.tss === 0) return '–';
-    if (curr.tss > prevStats.tss) return '▲';
-    if (curr.tss < prevStats.tss) return '▼';
-    return '–';
-  }
-
-  getTrendClass(curr: SportStats, prev: SportStats[]): string {
-    const trend = this.getTrend(curr, prev);
-    if (trend === '▲') return 'trend-up';
-    if (trend === '▼') return 'trend-down';
-    return '';
+  formatFitDistance(session: SavedSession): string {
+    if (!session.avgSpeed || session.avgSpeed <= 0) return '—';
+    const meters = session.avgSpeed * session.totalDuration;
+    return this.formatDistance(meters, session.sportType);
   }
 
   navigateToLinkTraining(session: any): void {
@@ -240,14 +240,12 @@ export class DashboardComponent {
     this.selectedScheduledWorkout = w;
   }
 
-  onDetailClosed(): void {
-    this.selectedScheduledWorkout = null;
+  onStartNow(_w: ScheduledWorkout): void {
+    this.router.navigate(['/active-session']);
   }
 
-  onDetailStarted(): void {
-    this.selectedScheduledWorkout = null;
-  }
-
+  onDetailClosed(): void { this.selectedScheduledWorkout = null; }
+  onDetailStarted(): void { this.selectedScheduledWorkout = null; }
   onDetailStatusChanged(): void {
     this.selectedScheduledWorkout = null;
     this.reload$.next();
@@ -258,45 +256,108 @@ export class DashboardComponent {
     return d.toLocaleDateString('en-US', {weekday: 'short', month: 'short', day: 'numeric'});
   }
 
-  formatScheduleDuration(workout: ScheduledWorkout): string {
-    if (!workout.totalDurationSeconds) return workout.duration || '';
-    const totalSec = workout.totalDurationSeconds;
-    const h = Math.floor(totalSec / 3600);
-    const m = Math.floor((totalSec % 3600) / 60);
-    if (h > 0) return `${h}h ${m}m`;
-    return `${m}m`;
-  }
-
   formatDate(date: Date): string {
     return new Date(date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
-  }
-
-  totalWeekTss(metrics: WeekMetrics): number {
-    return Math.round(metrics.current.reduce((a, s) => a + s.tss, 0));
-  }
-
-  totalPrevTss(metrics: WeekMetrics): number {
-    return Math.round(metrics.previous.reduce((a, s) => a + s.tss, 0));
   }
 
   hasAnyActivity(metrics: WeekMetrics): boolean {
     return metrics.current.some((s) => s.sessionCount > 0);
   }
 
+  totalWeekSeconds(metrics: WeekMetrics): number {
+    return metrics.current.reduce((a, s) => a + s.durationSeconds, 0);
+  }
+
+  totalPrevSeconds(metrics: WeekMetrics): number {
+    return metrics.previous.reduce((a, s) => a + s.durationSeconds, 0);
+  }
+
+  weekTrendDelta(metrics: WeekMetrics): number | null {
+    const prev = this.totalPrevSeconds(metrics);
+    const curr = this.totalWeekSeconds(metrics);
+    if (prev <= 0) return curr > 0 ? 100 : null;
+    return ((curr - prev) / prev) * 100;
+  }
+
+  mixPercent(s: SportStats, metrics: WeekMetrics): number {
+    const total = this.totalWeekSeconds(metrics);
+    if (total <= 0) return 0;
+    return (s.durationSeconds / total) * 100;
+  }
+
+  sportPretty(sport: string): string {
+    return sport.charAt(0) + sport.slice(1).toLowerCase();
+  }
+
+  /* ── KPI deltas (7-day) ── */
+  ctlDelta(pmc: PmcDataPoint[]): number | null {
+    return this.metricDelta(pmc, 'ctl');
+  }
+  atlDelta(pmc: PmcDataPoint[]): number | null {
+    return this.metricDelta(pmc, 'atl');
+  }
+
+  hasDelta(delta: number | null): boolean {
+    return delta != null && Math.abs(delta) >= 0.05;
+  }
+
+  deltaAbs(delta: number | null): number {
+    return delta == null ? 0 : Math.abs(delta);
+  }
+
+  private metricDelta(pmc: PmcDataPoint[], key: 'ctl' | 'atl'): number | null {
+    if (!pmc || pmc.length === 0) return null;
+    const real = pmc.filter((p) => !p.predicted);
+    if (real.length < 2) return null;
+    const latest = real[real.length - 1];
+    const sevenAgoDate = subDays(new Date(latest.date), 7).toISOString().split('T')[0];
+    const past = real.find((p) => p.date >= sevenAgoDate);
+    if (!past) return null;
+    return (latest[key] ?? 0) - (past[key] ?? 0);
+  }
+
+  /* CTL ramp rate (% week-over-week change of CTL) */
+  rampRate(pmc: PmcDataPoint[]): number | null {
+    const delta = this.ctlDelta(pmc);
+    if (delta == null) return null;
+    const real = pmc.filter((p) => !p.predicted);
+    if (real.length === 0) return null;
+    const base = real[real.length - 1].ctl;
+    if (!base || base <= 0) return null;
+    return (delta / base) * 100;
+  }
+
+  tsbClass(tsb: number | null | undefined): string {
+    if (tsb == null) return '';
+    if (tsb > 5) return 'tsb-fresh';
+    if (tsb < -10) return 'tsb-stressed';
+    if (tsb < 0) return 'tsb-productive';
+    return 'tsb-neutral';
+  }
+
+  tsbLabel(tsb: number | null | undefined): string {
+    if (tsb == null) return 'DASHBOARD.KPI_NO_DATA';
+    if (tsb > 5) return 'DASHBOARD.KPI_FORM_FRESH';
+    if (tsb < -10) return 'DASHBOARD.KPI_FORM_STRESSED';
+    if (tsb < 0) return 'DASHBOARD.KPI_FORM_PRODUCTIVE';
+    return 'DASHBOARD.KPI_FORM_NEUTRAL';
+  }
+
+  /* Compliance = completed / (completed + overdue) */
+  complianceStats(vm: { completedLastWeek: ScheduledWorkout[]; overdue: ScheduledWorkout[] }): { done: number; total: number } {
+    const done = vm.completedLastWeek.length;
+    const total = done + vm.overdue.length;
+    return { done, total: total || done };
+  }
+
+  compliancePct(vm: { completedLastWeek: ScheduledWorkout[]; overdue: ScheduledWorkout[] }): number {
+    const { done, total } = this.complianceStats(vm);
+    if (total <= 0) return 100;
+    return (done / total) * 100;
+  }
+
   daysUntilGoal(goal: RaceGoal): number {
     return daysUntil(goal.raceDate);
-  }
-
-  getGoalPriorityColor(priority: string): string {
-    return this.raceGoalService.getPriorityColor(priority);
-  }
-
-  trackWorkoutById(workout: ScheduledWorkout): string {
-    return workout.id;
-  }
-
-  trackBySport(stat: SportStats): string {
-    return stat.sport;
   }
 
   get greeting(): string {
@@ -304,9 +365,5 @@ export class DashboardComponent {
     if (h < 12) return this.translate.instant('DASHBOARD.GREETING_MORNING');
     if (h < 18) return this.translate.instant('DASHBOARD.GREETING_AFTERNOON');
     return this.translate.instant('DASHBOARD.GREETING_EVENING');
-  }
-
-  get todayFormatted(): string {
-    return new Date().toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'});
   }
 }

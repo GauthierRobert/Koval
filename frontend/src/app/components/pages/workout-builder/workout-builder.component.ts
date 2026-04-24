@@ -18,6 +18,7 @@ import { BlockEditorFormComponent } from './block-editor-form/block-editor-form.
 import { SetEditorFormComponent } from './set-editor-form/set-editor-form.component';
 import { BlockListItemComponent } from './block-list-item/block-list-item.component';
 import { SetBlockItemComponent } from './set-block-item/set-block-item.component';
+import { getBlockColor as sharedGetBlockColor } from '../../shared/block-helpers/block-helpers';
 type SportType = 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK';
 type BlockType = WorkoutBlock['type'];
 
@@ -440,17 +441,8 @@ export class WorkoutBuilderComponent implements OnInit {
     return this.editType === 'FREE' || this.editType === 'PAUSE';
   }
 
-  blockColor(block: { type: string }): string {
-    const colors: Record<string, string> = {
-      WARMUP: '#f59e0b',
-      STEADY: '#22c55e',
-      INTERVAL: '#ef4444',
-      RAMP: '#8b5cf6',
-      COOLDOWN: '#3b82f6',
-      FREE: '#6b7280',
-      PAUSE: '#374151',
-    };
-    return colors[block.type] || '#6b7280';
+  blockColor(block: WorkoutBlock): string {
+    return sharedGetBlockColor(block, this.sportType);
   }
 
   formatSeconds(sec: number): string {

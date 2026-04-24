@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { WorkoutBlock } from '../../../../models/training.model';
+import { getBlockColor as sharedGetBlockColor } from '../../../shared/block-helpers/block-helpers';
 
 @Component({
   selector: 'app-set-editor-form',
@@ -20,6 +21,7 @@ export class SetEditorFormComponent {
   @Input() editSetPassiveRest = false;
   @Input() editLabel = '';
   @Input() setElements: WorkoutBlock[] = [];
+  @Input() sportType: string = 'CYCLING';
 
   @Output() editSetRepsChange = new EventEmitter<number>();
   @Output() editSetNoRestChange = new EventEmitter<boolean>();
@@ -32,17 +34,8 @@ export class SetEditorFormComponent {
   @Output() dissociate = new EventEmitter<void>();
   @Output() deselect = new EventEmitter<void>();
 
-  blockColor(block: { type: string }): string {
-    const colors: Record<string, string> = {
-      WARMUP: '#f59e0b',
-      STEADY: '#22c55e',
-      INTERVAL: '#ef4444',
-      RAMP: '#8b5cf6',
-      COOLDOWN: '#3b82f6',
-      FREE: '#6b7280',
-      PAUSE: '#374151',
-    };
-    return colors[block.type] || '#6b7280';
+  blockColor(block: WorkoutBlock): string {
+    return sharedGetBlockColor(block, this.sportType);
   }
 
   formatBlockDuration(block: WorkoutBlock): string {

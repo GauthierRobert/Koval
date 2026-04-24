@@ -6,6 +6,7 @@ import {BehaviorSubject, combineLatest, map, Observable, of, switchMap} from 'rx
 import {AuthService, User} from '../../../services/auth.service';
 import {Zone, ZoneSystem} from '../../../services/zone';
 import {ZoneService} from '../../../services/zone.service';
+import {ZoneClassificationService} from '../../../services/zone-classification.service';
 import {formatPace as sharedFormatPace, formatPaceCompact} from '../../shared/format/format.utils';
 
 type Sport = 'CYCLING' | 'RUNNING' | 'SWIMMING';
@@ -74,11 +75,8 @@ export class PhysiologyPageComponent implements OnInit {
     ],
   };
 
-  readonly zoneColors = [
-    '#6366f1', '#3b82f6', '#22c55e', '#eab308', '#f97316', '#ef4444', '#dc2626',
-  ];
-
   private translate = inject(TranslateService);
+  private zoneCls = inject(ZoneClassificationService);
 
   constructor(
     private authService: AuthService,
@@ -97,7 +95,12 @@ export class PhysiologyPageComponent implements OnInit {
   }
 
   getZoneColor(i: number): string {
-    return this.zoneColors[i % this.zoneColors.length];
+    return this.zoneCls.getZoneColor(i, this.zones[this.activeSport], this.activeSport);
+  }
+
+  /** Color for a zone that belongs to a specific ZoneSystem (used in the coach-system list). */
+  getZoneColorForSystem(i: number, sys: ZoneSystem): string {
+    return this.zoneCls.getZoneColor(i, sys.zones, sys.sportType);
   }
 
   getZoneBarFlex(zone: Zone): number {
@@ -273,19 +276,6 @@ export class PhysiologyPageComponent implements OnInit {
       case 'RUNNING': return this.translate.instant('PHYSIOLOGY.EMPTY_THRESHOLD_PACE');
       case 'SWIMMING': return this.translate.instant('PHYSIOLOGY.EMPTY_CSS');
     }
-  }
-
-  // Legacy methods kept for compatibility
-  getPowerZones(ftp: number | undefined): { name: string; low: number; high: number | null; color: string }[] {
-    if (!ftp) return [];
-    return [
-      { name: 'Z1 — Active Recovery', low: 0,                          high: Math.round(ftp * 0.55),       color: '#60a5fa' },
-      { name: 'Z2 — Endurance',       low: Math.round(ftp * 0.55) + 1, high: Math.round(ftp * 0.75),       color: '#34d399' },
-      { name: 'Z3 — Tempo',           low: Math.round(ftp * 0.75) + 1, high: Math.round(ftp * 0.90),       color: '#fbbf24' },
-      { name: 'Z4 — Threshold',       low: Math.round(ftp * 0.90) + 1, high: Math.round(ftp * 1.05),       color: '#f97316' },
-      { name: 'Z5 — VO2Max',          low: Math.round(ftp * 1.05) + 1, high: Math.round(ftp * 1.20),       color: '#f43f5e' },
-      { name: 'Z6 — Anaerobic',       low: Math.round(ftp * 1.20) + 1, high: null,                         color: '#a855f7' },
-    ];
   }
 
   getWkg(user: User): string {

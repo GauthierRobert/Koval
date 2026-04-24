@@ -161,7 +161,7 @@ export class SessionAnalysisComponent implements OnDestroy {
             const result: ZoneDistEntry[] = zones.map((z, i) => ({
                 label: z.label,
                 description: z.description ?? '',
-                color: this.zoneCls.getZoneColor(i),
+                color: this.zoneCls.getZoneColor(i, zones, sport),
                 seconds: Math.round(zoneSeconds[i]),
                 percentage: Math.round((zoneSeconds[i] / totalSeconds) * 100),
             }));
@@ -243,7 +243,7 @@ export class SessionAnalysisComponent implements OnDestroy {
                 return {
                     ...block,
                     zoneLabel: this.zoneCls.getZoneLabel(zi, resolved.zones),
-                    zoneColor: this.zoneCls.getZoneColor(zi),
+                    zoneColor: this.zoneCls.getZoneColor(zi, resolved.zones, sport),
                     actualSpeedKmh: isCycling ? undefined : actualSpeedKmh,
                 };
             });
@@ -502,12 +502,7 @@ export class SessionAnalysisComponent implements OnDestroy {
     syntheticBarColor(block: BlockSummary, ftp: number | null): string {
         const v = block.actualPower || block.targetPower || 0;
         if (!ftp || ftp <= 0) return 'var(--accent-color, #ff9d00)';
-        const pct = (v / ftp) * 100;
-        if (pct < 55) return '#b2bec3';
-        if (pct < 75) return '#3498db';
-        if (pct < 90) return '#2ecc71';
-        if (pct < 105) return '#f1c40f';
-        if (pct < 120) return '#e67e22';
-        return '#e74c3c';
+        const sport = (this.sessionSubject.value?.sportType as SportType | undefined) ?? 'CYCLING';
+        return this.zoneCls.intensityToColor((v / ftp) * 100, sport);
     }
 }

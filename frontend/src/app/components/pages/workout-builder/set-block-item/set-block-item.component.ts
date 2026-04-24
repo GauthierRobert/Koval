@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { WorkoutBlock } from '../../../../models/training.model';
+import { getBlockColor as sharedGetBlockColor } from '../../../shared/block-helpers/block-helpers';
 
 @Component({
   selector: 'app-set-block-item',
@@ -18,6 +19,7 @@ export class SetBlockItemComponent {
   @Input() isSelected = false;
   @Input() selectedChildIndex = -1;
   @Input() isSelectedForSet = false;
+  @Input() sportType: string = 'CYCLING';
 
   @Output() select = new EventEmitter<number>();
   @Output() selectChild = new EventEmitter<{ parentIndex: number; childIndex: number }>();
@@ -26,17 +28,8 @@ export class SetBlockItemComponent {
   @Output() remove = new EventEmitter<number>();
   @Output() removeChild = new EventEmitter<{ parentIndex: number; childIndex: number }>();
 
-  blockColor(block: { type: string }): string {
-    const colors: Record<string, string> = {
-      WARMUP: '#f59e0b',
-      STEADY: '#22c55e',
-      INTERVAL: '#ef4444',
-      RAMP: '#8b5cf6',
-      COOLDOWN: '#3b82f6',
-      FREE: '#6b7280',
-      PAUSE: '#374151',
-    };
-    return colors[block.type] || '#6b7280';
+  blockColor(block: WorkoutBlock): string {
+    return sharedGetBlockColor(block, this.sportType);
   }
 
   formatBlockDuration(block: WorkoutBlock): string {

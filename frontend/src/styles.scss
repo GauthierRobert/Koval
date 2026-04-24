@@ -542,6 +542,10 @@ select option {
 
 /* ── Global Utility Classes ── */
 
+/* Tabular numerals for data-heavy displays (keeps app body font) */
+.mono { font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+.tnum { font-variant-numeric: tabular-nums; }
+
 /* Display heading */
 .display-heading {
   font-family: var(--font-display);

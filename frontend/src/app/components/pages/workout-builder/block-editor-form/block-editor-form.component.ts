@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { WorkoutBlock } from '../../../../models/training.model';
+import { getBlockTypeColor } from '../../../shared/block-helpers/block-helpers';
 
 type BlockType = WorkoutBlock['type'];
 
@@ -27,6 +28,7 @@ export class BlockEditorFormComponent {
   @Input() editZone = '';
   @Input() selectedBlockIndex = -1;
   @Input() BLOCK_TYPES: BlockType[] = [];
+  @Input() sportType: string = 'CYCLING';
 
   @Output() editTypeChange = new EventEmitter<BlockType>();
   @Output() editLabelChange = new EventEmitter<string>();
@@ -52,16 +54,7 @@ export class BlockEditorFormComponent {
   }
 
   blockColor(block: { type: string }): string {
-    const colors: Record<string, string> = {
-      WARMUP: '#f59e0b',
-      STEADY: '#22c55e',
-      INTERVAL: '#ef4444',
-      RAMP: '#8b5cf6',
-      COOLDOWN: '#3b82f6',
-      FREE: '#6b7280',
-      PAUSE: '#374151',
-    };
-    return colors[block.type] || '#6b7280';
+    return getBlockTypeColor(block.type, this.sportType);
   }
 
   onTypeSelect(t: BlockType): void {

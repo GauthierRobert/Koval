@@ -6,6 +6,7 @@ import {BehaviorSubject, combineLatest} from 'rxjs';
 import {map} from 'rxjs/operators';
 import {Router} from '@angular/router';
 import {ZoneService} from '../../../services/zone.service';
+import {ZoneClassificationService} from '../../../services/zone-classification.service';
 import {AuthService} from '../../../services/auth.service';
 import {SportType, Zone, ZoneReferenceType, ZoneSystem} from '../../../services/zone';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
@@ -25,6 +26,7 @@ export class ZoneManagerComponent implements OnInit {
   @Output() closed = new EventEmitter<void>();
 
   private zoneService = inject(ZoneService);
+  private zoneCls = inject(ZoneClassificationService);
   private authService = inject(AuthService);
   private router = inject(Router);
   private translate = inject(TranslateService);
@@ -97,10 +99,6 @@ export class ZoneManagerComponent implements OnInit {
       { label: 'Z5', low: 111, high: 130, description: 'Sprint' },
     ],
   };
-
-  readonly zoneColors = [
-    '#6366f1', '#3b82f6', '#22c55e', '#eab308', '#f97316', '#ef4444', '#dc2626',
-  ];
 
   ngOnInit() {
     this.loadZoneSystems();
@@ -237,7 +235,16 @@ export class ZoneManagerComponent implements OnInit {
   }
 
   getZoneColor(index: number): string {
-    return this.zoneColors[index % this.zoneColors.length];
+    return this.zoneCls.getZoneColor(
+      index,
+      this.editingSystem?.zones,
+      this.editingSystem?.sportType ?? 'CYCLING',
+    );
+  }
+
+  /** Color for a zone inside a system card in the list (not the currently-edited one). */
+  getZoneColorForSystem(index: number, sys: ZoneSystem): string {
+    return this.zoneCls.getZoneColor(index, sys.zones, sys.sportType);
   }
 
   getZoneWidth(zone: Zone): number {
