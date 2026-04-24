@@ -1,15 +1,15 @@
 .analytics-page { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-.page-header h1 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: var(--text-primary, #f0f0f0); margin: 0; }
+.page-header h1 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: var(--text-color); margin: 0; }
 .date-filters { display: flex; align-items: center; gap: 0.5rem; }
-.date-filters input { padding: 0.4rem 0.6rem; border: 1px solid var(--border, var(--overlay-10)); border-radius: 6px; background: var(--input-bg, rgba(0, 0, 0, 0.2)); color: var(--text-primary, #f0f0f0); font-size: 0.8rem; }
-.date-sep { color: var(--text-tertiary, #707070); }
+.date-filters input { padding: 0.4rem 0.6rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--overlay-5); color: var(--text-color); font-size: 0.8rem; }
+.date-sep { color: var(--text-dim); }
 .empty-state { text-align: center; padding: 4rem 2rem; }
-.empty-state h3 { color: var(--text-primary, #f0f0f0); margin: 0 0 0.5rem; }
+.empty-state h3 { color: var(--text-color); margin: 0 0 0.5rem; }
 
 /* Volume controls */
 .volume-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 1rem; }
-.volume-controls select { padding: 0.4rem 0.6rem; border: 1px solid var(--border, var(--overlay-10)); border-radius: 6px; background: var(--input-bg, rgba(0, 0, 0, 0.2)); color: var(--text-primary, #f0f0f0); font-size: 0.8rem; }
+.volume-controls select { padding: 0.4rem 0.6rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--overlay-5); color: var(--text-color); font-size: 0.8rem; }
 
 .metric-toggle { display: inline-flex; gap: 2px; padding: 2px; background: var(--overlay-5); border: 1px solid var(--overlay-8); border-radius: var(--radius-pill); }
 .toggle-btn { background: transparent; border: none; color: var(--text-dim); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 12px; border-radius: var(--radius-pill); cursor: pointer; transition: all 0.2s; }
@@ -23,8 +23,8 @@
 /* Volume table */
 .volume-table { padding: 1rem; border-radius: 12px; overflow-x: auto; }
 .volume-table table { width: 100%; border-collapse: collapse; }
-.volume-table th { text-align: left; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary, #707070); padding: 0.5rem; border-bottom: 1px solid var(--border, var(--overlay-8)); }
-.volume-table td { font-size: 0.8rem; color: var(--text-primary, #f0f0f0); padding: 0.5rem; border-bottom: 1px solid var(--border, var(--overlay-5)); }
+.volume-table th { text-align: left; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); padding: 0.5rem; border-bottom: 1px solid var(--overlay-8); }
+.volume-table td { font-size: 0.8rem; color: var(--text-color); padding: 0.5rem; border-bottom: 1px solid var(--overlay-5); }
 
 @media (max-width: 768px) {
   .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
