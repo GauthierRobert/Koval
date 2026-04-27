@@ -54,6 +54,10 @@ public class TerraApiClient {
                                                List<String> providers,
                                                String successUrl,
                                                String failureUrl) {
+        if (devId == null || devId.isBlank() || apiKey == null || apiKey.isBlank()) {
+            throw new IllegalStateException(
+                    "Terra integration not configured. Set TERRA_DEV_ID and TERRA_API_KEY on the backend.");
+        }
         String url = apiBaseUrl + "/auth/generateWidgetSession";
 
         Map<String, Object> body = Map.of(

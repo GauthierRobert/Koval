@@ -29,7 +29,7 @@
       <!-- ═══ SPLIT RAIL ═══ -->
       <div class="dash-split">
 
-        <!-- Left rail: today's focus -->
+        <!-- Left rail: today's focus + last activity -->
         <aside class="dash-rail">
           <app-dashboard-focus-card
             [upcomingWorkouts]="vm.upcoming"
@@ -40,6 +40,9 @@
             (openDetail)="openDetail($event)"
             (startNow)="onStartNow($event)">
           </app-dashboard-focus-card>
+          @if (vm.latestFit; as latest) {
+            <app-last-activity-card [session]="latest"></app-last-activity-card>
+          }
         </aside>
 
         <!-- Right main column -->
@@ -119,49 +122,8 @@
             </div>
           </div>
 
-          <!-- Latest activity + 7-day mix -->
+          <!-- 7-day sport mix + active plan -->
           <div class="activity-mix-row">
-
-            <!-- Latest Activity -->
-            @if (vm.latestFit; as fit) {
-              <div class="activity-tile glass">
-                <div class="activity-head">
-                  <div>
-                    <span class="eyebrow eyebrow--accent mono">{{ 'DASHBOARD.CARD_LATEST_ACTIVITY' | translate }} · {{ formatDate(fit.date) }}</span>
-                    <h3 class="activity-title">
-                      <app-sport-icon [sport]="fit.sportType" [size]="16"></app-sport-icon>
-                      <span>{{ fit.title }}</span>
-                    </h3>
-                  </div>
-                  <button class="ghost-btn mono" (click)="openAnalysis(fit)">
-                    {{ 'DASHBOARD.BTN_VIEW_ANALYSIS' | translate }}
-                  </button>
-                </div>
-
-                <div class="activity-stats mono">
-                  <div class="stat-cell">
-                    <span class="stat-label">{{ 'DASHBOARD.STATS_DURATION' | translate }}</span>
-                    <span class="stat-value">{{ formatDuration(fit.totalDuration) }}</span>
-                  </div>
-                  <div class="stat-cell">
-                    <span class="stat-label">{{ 'DASHBOARD.STATS_DISTANCE' | translate }}</span>
-                    <span class="stat-value">{{ formatFitDistance(fit) }}</span>
-                  </div>
-                  @if (fit.avgPower) {
-                    <div class="stat-cell">
-                      <span class="stat-label">{{ 'DASHBOARD.STATS_AVG_POWER' | translate }}</span>
-                      <span class="stat-value accent">{{ fit.avgPower | number:'1.0-0' }}<small>W</small></span>
-                    </div>
-                  }
-                  @if (fit.tss) {
-                    <div class="stat-cell">
-                      <span class="stat-label">{{ 'DASHBOARD.STATS_TSS' | translate }}</span>
-                      <span class="stat-value">{{ fit.tss | number:'1.0-0' }}</span>
-                    </div>
-                  }
-                </div>
-              </div>
-            }
 
             <!-- Sport mix + active plan -->
             <div class="mix-tile glass">
@@ -279,7 +241,8 @@
     <div class="dashboard-body">
       <div class="dash-split">
         <aside class="dash-rail">
-          <div class="skeleton" style="width:100%; height: 100%; min-height: 520px; border-radius: var(--radius-xl);"></div>
+          <div class="skeleton" style="width:100%; height: 520px; border-radius: var(--radius-xl);"></div>
+          <div class="skeleton" style="width:100%; height: 220px; border-radius: var(--radius-xl);"></div>
         </aside>
         <section class="dash-main">
           <div class="kpi-strip">
@@ -290,10 +253,7 @@
             <div class="skeleton" style="height: 88px;"></div>
           </div>
           <div class="skeleton" style="height: 280px; border-radius: var(--radius-xl);"></div>
-          <div class="activity-mix-row">
-            <div class="skeleton" style="height: 200px; border-radius: var(--radius-xl);"></div>
-            <div class="skeleton" style="height: 200px; border-radius: var(--radius-xl);"></div>
-          </div>
+          <div class="skeleton" style="height: 200px; border-radius: var(--radius-xl);"></div>
         </section>
       </div>
     </div>

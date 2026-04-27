@@ -103,33 +103,71 @@
   cursor: pointer;
 }
 
-/* --- Day groups (list view) --- */
-.sessions-list {
+/* --- Day strip --- */
+.day-strip {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.day-cell {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 4px;
-}
-
-.day-group {
-  margin-bottom: 4px;
-}
-
-.day-group-header {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  padding: 10px 4px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: transparent;
   color: var(--text-muted);
-  opacity: 0.7;
-  padding: 10px 0 6px;
-  border-bottom: 1px solid var(--glass-border);
-  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all 0.25s var(--ease-spring-gentle);
+  font-family: inherit;
+  position: relative;
 }
 
-.day-group-header.today {
+.day-cell:hover {
+  border-color: var(--accent-color);
   color: var(--accent-color);
-  opacity: 1;
-  border-bottom-color: var(--accent-color);
+}
+
+.day-cell--selected {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.day-cell__weekday {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  opacity: 0.7;
+}
+
+.day-cell--selected .day-cell__weekday { opacity: 1; }
+
+.day-cell__num {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: inherit;
+  line-height: 1;
+}
+
+.day-cell__dots {
+  display: flex;
+  gap: 3px;
+  height: 6px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .day-sessions {

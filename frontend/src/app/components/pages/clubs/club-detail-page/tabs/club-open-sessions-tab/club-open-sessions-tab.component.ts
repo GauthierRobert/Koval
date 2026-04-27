@@ -17,6 +17,7 @@ import {
 import {ClubSessionService} from '../../../../../../services/club-session.service';
 import {AuthService} from '../../../../../../services/auth.service';
 import {TrainingService} from '../../../../../../services/training.service';
+import {SPORT_BANNER_COLORS} from '../../../../../../models/plan.model';
 import {MeetingPointPickerComponent} from '../../../../../shared/meeting-point-picker/meeting-point-picker.component';
 import {SessionCardComponent} from '../../../../../shared/session-card/session-card.component';
 
@@ -48,6 +49,7 @@ export class ClubOpenSessionsTabComponent implements OnInit {
 
   calendarWeekStart: Date = ClubOpenSessionsTabComponent.getMonday(new Date());
   calendarDays: Date[] = [];
+  selectedDay: Date = new Date();
 
   readonly isSavingSession$ = new BehaviorSubject(false);
 
@@ -57,7 +59,6 @@ export class ClubOpenSessionsTabComponent implements OnInit {
   gpxFile: File | null = null;
 
   expandedSessionId: string | null = null;
-  showPastSessions = false;
 
   // Cancel session state
   showCancelConfirm = false;
@@ -120,6 +121,8 @@ export class ClubOpenSessionsTabComponent implements OnInit {
     for (let i = 0; i < 7; i++) {
       this.calendarDays.push(new Date(this.calendarWeekStart.getTime() + i * 86400000));
     }
+    const today = this.calendarDays.find((d) => this.isToday(d));
+    this.selectedDay = today ?? this.calendarDays[0];
   }
 
   loadActivities(): void {
@@ -130,51 +133,43 @@ export class ClubOpenSessionsTabComponent implements OnInit {
 
   // --- Filters ---
 
-  toggleShowPastSessions(): void {
-    this.showPastSessions = !this.showPastSessions;
+  filterActivities(sessions: ClubTrainingSession[]): ClubTrainingSession[] {
+    // Show OPEN sessions + non-recurring SCHEDULED sessions (coach single sessions)
+    return sessions.filter(
+      (s) => s.category === 'OPEN' || (s.category === 'SCHEDULED' && !s.recurringTemplateId),
+    );
+  }
+
+  // --- Day strip helpers ---
+
+  getSessionsForDay(sessions: ClubTrainingSession[], day: Date): ClubTrainingSession[] {
+    return sessions
+      .filter((s) => {
+        if (!s.scheduledAt) return false;
+        const d = new Date(s.scheduledAt);
+        return d.getFullYear() === day.getFullYear() && d.getMonth() === day.getMonth() && d.getDate() === day.getDate();
+      })
+      .sort((a, b) => (a.scheduledAt ?? '').localeCompare(b.scheduledAt ?? ''));
+  }
+
+  selectDay(day: Date): void {
+    this.selectedDay = day;
     this.cdr.markForCheck();
   }
 
-  filterActivities(sessions: ClubTrainingSession[]): ClubTrainingSession[] {
-    // Show OPEN sessions + non-recurring SCHEDULED sessions (coach single sessions)
-    let filtered = sessions.filter(
-      (s) => s.category === 'OPEN' || (s.category === 'SCHEDULED' && !s.recurringTemplateId),
-    );
-
-    // Past sessions filter
-    if (!this.showPastSessions) {
-      const todayMidnight = new Date();
-      todayMidnight.setHours(0, 0, 0, 0);
-      filtered = filtered.filter((s) => {
-        if (!s.scheduledAt) return true;
-        return new Date(s.scheduledAt) >= todayMidnight;
-      });
-    }
-
-    return filtered;
+  isSelectedDay(day: Date): boolean {
+    return this.selectedDay.getFullYear() === day.getFullYear()
+      && this.selectedDay.getMonth() === day.getMonth()
+      && this.selectedDay.getDate() === day.getDate();
   }
 
-  // --- Group sessions by date ---
-
-  groupByDay(sessions: ClubTrainingSession[]): { date: Date; sessions: ClubTrainingSession[] }[] {
-    const map = new Map<string, ClubTrainingSession[]>();
-    for (const s of sessions) {
-      const key = s.scheduledAt ? s.scheduledAt.substring(0, 10) : 'unknown';
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(s);
-    }
-    return Array.from(map.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, sessions]) => ({ date: new Date(key), sessions }));
+  dotColor(session: ClubTrainingSession): string {
+    return SPORT_BANNER_COLORS[session.sport ?? '']?.border ?? '#ff9d00';
   }
 
   isToday(date: Date): boolean {
     const now = new Date();
     return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
-  }
-
-  formatDayHeader(date: Date): string {
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   }
 
   // --- Form ---

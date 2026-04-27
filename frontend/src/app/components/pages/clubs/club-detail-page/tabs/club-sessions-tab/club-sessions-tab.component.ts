@@ -26,6 +26,7 @@ import {
 import {ClubSessionService} from '../../../../../../services/club-session.service';
 import {AuthService} from '../../../../../../services/auth.service';
 import {TrainingService} from '../../../../../../services/training.service';
+import {SPORT_BANNER_COLORS} from '../../../../../../models/plan.model';
 import {SessionCardComponent} from '../../../../../shared/session-card/session-card.component';
 import {SessionFormModalComponent, SessionFormSaveEvent} from './session-form-modal/session-form-modal.component';
 import {CancelSessionDialogsComponent} from './cancel-session-dialogs/cancel-session-dialogs.component';
@@ -55,6 +56,7 @@ export class ClubSessionsTabComponent implements OnInit {
 
   calendarWeekStart: Date = ClubSessionsTabComponent.getMonday(new Date());
   calendarDays: Date[] = [];
+  selectedDay: Date = new Date();
 
   // Form state
   isFormOpen = false;
@@ -84,7 +86,6 @@ export class ClubSessionsTabComponent implements OnInit {
 
   private static readonly SHOW_OTHER_GROUPS_KEY = 'club-sessions-show-other-groups';
   showOtherGroupSessions = localStorage.getItem(ClubSessionsTabComponent.SHOW_OTHER_GROUPS_KEY) !== 'false';
-  showPastSessions = false;
 
   ngOnInit(): void {
     this.authService.user$.subscribe((u) => {
@@ -128,11 +129,6 @@ export class ClubSessionsTabComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  toggleShowPastSessions(): void {
-    this.showPastSessions = !this.showPastSessions;
-    this.cdr.markForCheck();
-  }
-
   applyFilters(sessions: ClubTrainingSession[]): ClubTrainingSession[] {
     let filtered = sessions;
 
@@ -145,23 +141,24 @@ export class ClubSessionsTabComponent implements OnInit {
       filtered = filtered.filter((s) => !s.clubGroupId || userGroupIds.has(s.clubGroupId));
     }
 
-    // Past sessions filter (hide sessions before midnight today)
-    if (!this.showPastSessions) {
-      const todayMidnight = new Date();
-      todayMidnight.setHours(0, 0, 0, 0);
-      filtered = filtered.filter((s) => {
-        if (!s.scheduledAt) return true;
-        return new Date(s.scheduledAt) >= todayMidnight;
-      });
-    }
-
     return filtered;
   }
 
-  // --- List view helpers ---
+  // --- Day strip helpers ---
 
-  getListDaysWithSessions(sessions: ClubTrainingSession[]): Date[] {
-    return this.calendarDays.filter((day) => this.getSessionsForDay(sessions, day).length > 0);
+  selectDay(day: Date): void {
+    this.selectedDay = day;
+    this.cdr.markForCheck();
+  }
+
+  isSelectedDay(day: Date): boolean {
+    return this.selectedDay.getFullYear() === day.getFullYear()
+      && this.selectedDay.getMonth() === day.getMonth()
+      && this.selectedDay.getDate() === day.getDate();
+  }
+
+  dotColor(session: ClubTrainingSession): string {
+    return SPORT_BANNER_COLORS[session.sport ?? '']?.border ?? '#ff9d00';
   }
 
   // --- Calendar navigation ---
@@ -189,6 +186,8 @@ export class ClubSessionsTabComponent implements OnInit {
     for (let i = 0; i < 7; i++) {
       this.calendarDays.push(new Date(this.calendarWeekStart.getTime() + i * 86400000));
     }
+    const today = this.calendarDays.find((d) => this.isToday(d));
+    this.selectedDay = today ?? this.calendarDays[0];
   }
 
   private loadCalendarSessions(): void {

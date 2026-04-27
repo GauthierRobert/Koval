@@ -107,11 +107,23 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
   }
 
   connectNolioRead(): void {
-    this.nolioSync.connectRead().subscribe();
+    this.nolioSync.connectRead().subscribe({
+      error: (err) => this.reportConnectError(err, 'Nolio activities'),
+    });
   }
 
   connectNolioWrite(): void {
-    this.nolioSync.connectWrite().subscribe();
+    this.nolioSync.connectWrite().subscribe({
+      error: (err) => this.reportConnectError(err, 'Nolio workout push'),
+    });
+  }
+
+  private reportConnectError(err: any, label: string): void {
+    const backendMessage = err?.error?.message || err?.error?.detail;
+    const message = backendMessage
+      ? `${label}: ${backendMessage}`
+      : `${label}: connection failed (status ${err?.status ?? 'unknown'}).`;
+    alert(message);
   }
 
   toggleNolioAutoSync(enabled: boolean): void {

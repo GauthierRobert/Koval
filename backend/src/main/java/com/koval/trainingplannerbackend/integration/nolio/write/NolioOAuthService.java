@@ -58,6 +58,11 @@ public class NolioOAuthService {
     }
 
     public String getAuthorizationUrl(String state) {
+        if (authUrl == null || authUrl.isBlank() || clientId == null || clientId.isBlank()) {
+            throw new IllegalStateException(
+                    "Nolio integration not configured. Set NOLIO_AUTH_URL, NOLIO_TOKEN_URL, "
+                            + "NOLIO_CLIENT_ID and NOLIO_CLIENT_SECRET on the backend.");
+        }
         return UriComponentsBuilder.fromUriString(authUrl)
                 .queryParam("client_id", clientId)
                 .queryParam("response_type", "code")

@@ -12,12 +12,12 @@ import {CoachService, ScheduledWorkout} from '../../../services/coach.service';
 import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
 import {PlanService} from '../../../services/plan.service';
 import {AnalyticsService, VolumeEntry} from '../../../services/analytics.service';
-import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {WorkoutDetailModalComponent} from '../../shared/workout-detail-modal/workout-detail-modal.component';
 import {daysUntil, formatTrainingDuration} from '../../shared/format/format.utils';
 import {DashboardFocusCardComponent} from './dashboard-focus-card/dashboard-focus-card.component';
 import {DashboardClubCardsComponent} from './dashboard-club-cards/dashboard-club-cards.component';
 import {DashboardVolumeChartComponent} from './dashboard-volume-chart/dashboard-volume-chart.component';
+import {LastActivityCardComponent} from './last-activity-card/last-activity-card.component';
 
 function toDateKey(d: Date): string {
   const y = d.getFullYear();
@@ -83,7 +83,7 @@ function computeWeekMetrics(sessions: SavedSession[]): WeekMetrics {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, SportIconComponent, WorkoutDetailModalComponent, TranslateModule, DashboardFocusCardComponent, DashboardClubCardsComponent, DashboardVolumeChartComponent],
+  imports: [CommonModule, RouterModule, WorkoutDetailModalComponent, TranslateModule, DashboardFocusCardComponent, DashboardClubCardsComponent, DashboardVolumeChartComponent, LastActivityCardComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -212,28 +212,12 @@ export class DashboardComponent {
     return formatTrainingDuration(s);
   }
 
-  formatDistance(meters: number, sport: string): string {
-    if (meters <= 0) return '';
-    if (sport === 'SWIMMING') return `${Math.round(meters)}m`;
-    return `${(meters / 1000).toFixed(1)} km`;
-  }
-
-  formatFitDistance(session: SavedSession): string {
-    if (!session.avgSpeed || session.avgSpeed <= 0) return '—';
-    const meters = session.avgSpeed * session.totalDuration;
-    return this.formatDistance(meters, session.sportType);
-  }
-
   navigateToLinkTraining(session: any): void {
     this.router.navigate(['/clubs', session.clubId]);
   }
 
   navigateToPlan(planId: string): void {
     this.router.navigate(['/plans', planId]);
-  }
-
-  openAnalysis(session: SavedSession): void {
-    this.router.navigate(['/history', session.id]);
   }
 
   openDetail(w: ScheduledWorkout): void {
@@ -249,15 +233,6 @@ export class DashboardComponent {
   onDetailStatusChanged(): void {
     this.selectedScheduledWorkout = null;
     this.reload$.next();
-  }
-
-  formatScheduleDate(dateStr: string): string {
-    const d = new Date(dateStr + 'T00:00:00');
-    return d.toLocaleDateString('en-US', {weekday: 'short', month: 'short', day: 'numeric'});
-  }
-
-  formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
   }
 
   hasAnyActivity(metrics: WeekMetrics): boolean {

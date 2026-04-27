@@ -19,13 +19,6 @@
     </div>
   </header>
 
-  <div class="filter-row">
-    <label class="filter-checkbox">
-      <input type="checkbox" [checked]="showPastSessions" (change)="toggleShowPastSessions()"/>
-      <span>{{ 'CLUB_SESSIONS.SHOW_PAST' | translate }}</span>
-    </label>
-  </div>
-
   <!-- Create/Edit Form Modal -->
   @if (isFormOpen) {
     <div class="form-overlay" (click)="closeForm()">
@@ -106,40 +99,57 @@
 
   <!-- Sessions List -->
   @if (openSessions$ | async; as sessions) {
-    @if (filterActivities(sessions); as filtered) {
-      @if (filtered.length === 0) {
-        <div class="empty-state">
-          <p>{{ 'CLUB_OPEN_SESSIONS.EMPTY' | translate }}</p>
-          <p class="hint">{{ 'CLUB_OPEN_SESSIONS.EMPTY_HINT' | translate }}</p>
-        </div>
-      } @else {
-        @for (group of groupByDay(filtered); track group.date.toISOString()) {
-          <div class="day-group">
-            <div class="day-header" [class.today]="isToday(group.date)">{{ formatDayHeader(group.date) }}</div>
-            @for (session of group.sessions; track session.id) {
-              <app-session-card
-                [session]="session"
-                [members]="allMembers"
-                [currentUserId]="currentUserId"
-                [clubGroups]="clubGroups"
-                [clubId]="club.id"
-                [isCoach]="isCoach"
-                [canCreate]="canEditSession(session)"
-                (join)="joinSession($event)"
-                (leave)="leaveSession($event)"
-                (edit)="editSession($event)"
-                (cancelSession)="openCancelSessionModal($event)"
-                (linkTraining)="onLinkTraining($event)"
-                (unlinkTraining)="unlinkTraining($event)"
-                (toggleDetail)="toggleDetail($event)"
-                (navigateToTraining)="navigateToTraining($event)"
-                (downloadGpx)="downloadGpx($event)"
-                (shareGpx)="shareGpx($event)">
-              </app-session-card>
+    @let filtered = filterActivities(sessions);
+
+    <div class="day-strip">
+      @for (day of calendarDays; track day.toISOString()) {
+        <button
+          type="button"
+          class="day-cell"
+          [class.day-cell--selected]="isSelectedDay(day)"
+          [class.day-cell--today]="isToday(day)"
+          (click)="selectDay(day)">
+          <span class="day-cell__weekday">{{ day | date:'EEE' | uppercase }}</span>
+          <span class="day-cell__num">{{ day.getDate() }}</span>
+          <div class="day-cell__dots">
+            @for (s of getSessionsForDay(filtered, day); track s.id) {
+              <span class="dot" [style.background]="dotColor(s)"></span>
             }
           </div>
-        }
+        </button>
       }
+    </div>
+
+    @let daySessions = getSessionsForDay(filtered, selectedDay);
+    @if (daySessions.length > 0) {
+      <div class="day-sessions">
+        @for (session of daySessions; track session.id) {
+          <app-session-card
+            [session]="session"
+            [members]="allMembers"
+            [currentUserId]="currentUserId"
+            [clubGroups]="clubGroups"
+            [clubId]="club.id"
+            [isCoach]="isCoach"
+            [canCreate]="canEditSession(session)"
+            (join)="joinSession($event)"
+            (leave)="leaveSession($event)"
+            (edit)="editSession($event)"
+            (cancelSession)="openCancelSessionModal($event)"
+            (linkTraining)="onLinkTraining($event)"
+            (unlinkTraining)="unlinkTraining($event)"
+            (toggleDetail)="toggleDetail($event)"
+            (navigateToTraining)="navigateToTraining($event)"
+            (downloadGpx)="downloadGpx($event)"
+            (shareGpx)="shareGpx($event)">
+          </app-session-card>
+        }
+      </div>
+    } @else {
+      <div class="empty-state">
+        <p>{{ 'CLUB_SESSIONS.EMPTY_NO_SESSIONS_DAY' | translate }}</p>
+        <p class="hint">{{ 'CLUB_OPEN_SESSIONS.EMPTY_HINT' | translate }}</p>
+      </div>
     }
   }
 </div>

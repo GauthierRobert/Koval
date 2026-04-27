@@ -45,9 +45,14 @@ export class AuthService {
                     this.userSubject.next(user);
                     this.notificationService.requestPermissionAndRegisterToken();
                 },
-                error: () => {
-                    localStorage.removeItem('token');
-                    this.router.navigate(['/login']);
+                error: (err) => {
+                    // Only clear the session for genuine auth failures.
+                    // Transient errors (backend redeploy, 502/503, network blip) must
+                    // not log the user out — the auth interceptor already handles 401.
+                    if (err?.status === 401 || err?.status === 403) {
+                        localStorage.removeItem('token');
+                        this.router.navigate(['/login']);
+                    }
                 }
             });
         }

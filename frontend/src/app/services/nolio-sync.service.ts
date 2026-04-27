@@ -14,6 +14,10 @@ export interface NolioAuthUrlResponse {
     authUrl: string;
 }
 
+function isAbsoluteUrl(value: string | null | undefined): value is string {
+    return !!value && /^https?:\/\//i.test(value);
+}
+
 @Injectable({ providedIn: 'root' })
 export class NolioSyncService {
     private readonly terraUrl = `${environment.apiUrl}/api/integration/terra`;
@@ -30,7 +34,7 @@ export class NolioSyncService {
     connectRead(): Observable<TerraWidgetResponse> {
         return this.http.post<TerraWidgetResponse>(`${this.terraUrl}/nolio/connect`, {}).pipe(
             tap(({ widgetUrl }) => {
-                if (widgetUrl) {
+                if (isAbsoluteUrl(widgetUrl)) {
                     window.open(widgetUrl, '_blank', 'width=600,height=700');
                 }
             }),
@@ -46,7 +50,7 @@ export class NolioSyncService {
     connectWrite(): Observable<NolioAuthUrlResponse> {
         return this.http.get<NolioAuthUrlResponse>(`${this.nolioUrl}/authorize`).pipe(
             tap(({ authUrl }) => {
-                if (authUrl) {
+                if (isAbsoluteUrl(authUrl)) {
                     window.open(authUrl, '_blank', 'width=600,height=700');
                 }
             }),

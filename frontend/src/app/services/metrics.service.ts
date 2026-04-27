@@ -1,6 +1,7 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {Observable} from 'rxjs';
+import {from, Observable} from 'rxjs';
+import {map, shareReplay, switchMap} from 'rxjs/operators';
 import {environment} from '../../environments/environment';
 import {
     computeIF as _computeIF,
@@ -62,6 +63,7 @@ export interface FitParseResult {
 export class MetricsService {
     private readonly apiUrl = `${environment.apiUrl}/api`;
     private http = inject(HttpClient);
+    private fitRecordsCache = new Map<string, Observable<FitRecord[]>>();
 
     // ── TSS / IF computation (delegated to training-math.util) ───────────────
 
@@ -122,6 +124,19 @@ export class MetricsService {
         return this.http.get(`${this.apiUrl}/sessions/${sessionId}/fit`, {
             responseType: 'arraybuffer',
         });
+    }
+
+    getCachedFitRecords(sessionId: string): Observable<FitRecord[]> {
+        let entry = this.fitRecordsCache.get(sessionId);
+        if (!entry) {
+            entry = this.downloadStoredFit(sessionId).pipe(
+                switchMap((buffer) => from(this.parseFitFile(buffer))),
+                map((result) => result.records),
+                shareReplay({ bufferSize: 1, refCount: false }),
+            );
+            this.fitRecordsCache.set(sessionId, entry);
+        }
+        return entry;
     }
 
     // ── FIT time-series parse ─────────────────────────────────────────────────

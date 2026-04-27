@@ -22,29 +22,31 @@ import {formatPaceWithUnit} from '../../../shared/format/format.utils';
     standalone: true,
     imports: [CommonModule],
     template: `
-        <div class="chart-wrap">
-            <div class="chart-toggles">
-                <button class="toggle-btn" [class.active]="showPrimary" (click)="toggle('showPrimary')">
-                    <span class="dot power"></span> {{ primaryLabel }}
-                </button>
-                <button class="toggle-btn" [class.active]="showHR" (click)="toggle('showHR')">
-                    <span class="dot hr"></span> Heart Rate
-                </button>
-                <button class="toggle-btn" [class.active]="showCadence" (click)="toggle('showCadence')">
-                    <span class="dot cad"></span> Cadence
-                </button>
-                @if (sportType !== 'SWIMMING') {
-                    <button class="toggle-btn" [class.active]="showEfficiency" (click)="toggle('showEfficiency')">
-                        <span class="dot eff"></span> Efficiency
+        <div class="chart-wrap" [class.compact]="compact">
+            @if (showToggles) {
+                <div class="chart-toggles">
+                    <button class="toggle-btn" [class.active]="showPrimary" (click)="toggle('showPrimary')">
+                        <span class="dot power"></span> {{ primaryLabel }}
                     </button>
-                }
-                @if (zoneBlocks.length > 0 || blockSummaries.length > 0) {
-                    <span class="toggle-sep"></span>
-                    <button class="toggle-btn" [class.active]="showBlocks" (click)="toggle('showBlocks')">
-                        <span class="dot blocks"></span> Blocks
+                    <button class="toggle-btn" [class.active]="showHR" (click)="toggle('showHR')">
+                        <span class="dot hr"></span> Heart Rate
                     </button>
-                }
-            </div>
+                    <button class="toggle-btn" [class.active]="showCadence" (click)="toggle('showCadence')">
+                        <span class="dot cad"></span> Cadence
+                    </button>
+                    @if (sportType !== 'SWIMMING') {
+                        <button class="toggle-btn" [class.active]="showEfficiency" (click)="toggle('showEfficiency')">
+                            <span class="dot eff"></span> Efficiency
+                        </button>
+                    }
+                    @if (zoneBlocks.length > 0 || blockSummaries.length > 0) {
+                        <span class="toggle-sep"></span>
+                        <button class="toggle-btn" [class.active]="showBlocks" (click)="toggle('showBlocks')">
+                            <span class="dot blocks"></span> Blocks
+                        </button>
+                    }
+                </div>
+            }
             <div class="charts-stack" #stack (mouseleave)="onMouseLeave()">
                 @if (showPrimary) {
                     <canvas #primaryCanvas class="mc primary-h"
@@ -81,8 +83,10 @@ import {formatPaceWithUnit} from '../../../shared/format/format.utils';
                         (touchend)="onTouchEnd()"
                         (touchcancel)="onTouchEnd()"></canvas>
                 }
-                <canvas #xCanvas class="mc xaxis-h"></canvas>
-                @if (hoverIdx !== null) {
+                @if (showXAxis) {
+                    <canvas #xCanvas class="mc xaxis-h"></canvas>
+                }
+                @if (hoverIdx !== null && showTooltip) {
                     <div #ttEl class="tt"
                         [style.left.px]="ttX"
                         [style.top.px]="ttY"
@@ -158,6 +162,21 @@ import {formatPaceWithUnit} from '../../../shared/format/format.utils';
             .eff-h { min-height: 80px; }
             .elev-h { min-height: 70px; }
         }
+
+        :host { display: block; }
+        .chart-wrap.compact {
+            gap: 0;
+            height: 100%;
+        }
+        .chart-wrap.compact .charts-stack { flex: 1 1 0; min-height: 0; }
+        .chart-wrap.compact .chart-toggles { padding: 0; }
+        .chart-wrap.compact .primary-h { min-height: 0; flex: 1 1 0; }
+        .chart-wrap.compact .hr-h { min-height: 0; flex: 1 1 0; }
+        .chart-wrap.compact .cad-h { min-height: 0; flex: 1 1 0; }
+        .chart-wrap.compact .eff-h { min-height: 0; flex: 1 1 0; }
+        .chart-wrap.compact .elev-h { min-height: 0; flex: 1 1 0; }
+        .chart-wrap.compact .xaxis-h { flex: 0 0 16px; height: 16px; }
+        .chart-wrap.compact .mc { cursor: default; }
     `],
 })
 export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, AfterViewChecked, OnDestroy {
@@ -167,6 +186,15 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     @Input() blockSummaries: BlockSummary[] = [];
     @Input() blockColors: string[] = [];
     @Input() zoneBlocks: ZoneBlock[] = [];
+    @Input() showToggles = true;
+    @Input() showXAxis = true;
+    @Input() compact = false;
+    @Input() showTooltip = true;
+    @Input() showPrimary = true;
+    @Input() showHR = true;
+    @Input() showCadence = false;
+    @Input() showEfficiency = false;
+    @Input() showBlocks = false;
 
     @ViewChild('stack') stackRef!: ElementRef<HTMLDivElement>;
     @ViewChild('primaryCanvas') pRef?: ElementRef<HTMLCanvasElement>;
@@ -177,11 +205,6 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     @ViewChild('xCanvas') xRef?: ElementRef<HTMLCanvasElement>;
     @ViewChild('ttEl') ttElRef?: ElementRef<HTMLDivElement>;
 
-    showPrimary = true;
-    showHR = true;
-    showCadence = false;
-    showEfficiency = false;
-    showBlocks = false;
     private blocksDefaultApplied = false;
 
     hoverIdx: number | null = null;
@@ -364,6 +387,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     }
 
     onHover(event: MouseEvent): void {
+        if (!this.showTooltip) return;
         const canvas = event.target as HTMLCanvasElement;
         this.isTouchHover = false;
         this.computeHoverAt(canvas, event.clientX, event.clientY);
@@ -377,6 +401,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     private readonly touchMoveListener = (e: TouchEvent) => this.handleTouchMove(e);
 
     onTouchStart(event: TouchEvent): void {
+        if (!this.showTooltip) return;
         const touch = event.touches[0];
         if (!touch) return;
         const canvas = event.currentTarget as HTMLCanvasElement;

@@ -105,7 +105,8 @@ google:
 # JWT Configuration
 jwt:
   secret: ${JWT_SECRET}
-  expiration: 86400000
+  # 30 days — long-lived session. Override with JWT_EXPIRATION (ms) per-env.
+  expiration: ${JWT_EXPIRATION:2592000000}
 
 cors:
   allowed-origins: ${ALLOWED_ORIGINS:http://localhost:4200,http://localhost:3000}

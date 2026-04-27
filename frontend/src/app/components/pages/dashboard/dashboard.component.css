@@ -79,9 +79,14 @@
 }
 
 .dash-rail {
-  position: sticky;
-  top: 0;
   align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-width: 0;
+}
+
+.dash-rail > app-dashboard-focus-card {
   display: flex;
   min-height: 620px;
 }
@@ -284,93 +289,10 @@
    ═══════════════════════════════════════════════════════════════ */
 .activity-mix-row {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: 1fr;
   gap: var(--space-md);
   align-items: stretch;
 }
-
-/* ─── Activity tile ─── */
-.activity-tile {
-  padding: 18px 20px 20px;
-  border-radius: var(--radius-xl);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.activity-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.activity-title {
-  margin: 6px 0 0;
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-color);
-}
-
-.ghost-btn {
-  background: transparent;
-  color: var(--text-color);
-  border: 1px solid var(--glass-border);
-  padding: 8px 14px;
-  border-radius: var(--radius-md);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.2s var(--ease-spring-gentle);
-}
-
-.ghost-btn:hover {
-  border-color: color-mix(in oklch, var(--accent-color) 35%, transparent);
-  color: var(--accent-color);
-  background: var(--accent-subtle);
-}
-
-.activity-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-
-.stat-cell {
-  background: var(--overlay-3);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  padding: 9px 11px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.stat-label {
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  font-weight: 500;
-}
-
-.stat-value {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--text-color);
-}
-
-.stat-value.accent { color: var(--accent-color); }
-.stat-value small { font-size: 10px; color: var(--text-dim); font-weight: 400; margin-left: 2px; }
 
 /* ─── Mix tile ─── */
 .mix-tile {
@@ -588,20 +510,13 @@
   .dash-split {
     grid-template-columns: 1fr;
   }
-  .dash-rail {
-    position: static;
+  .dash-rail > app-dashboard-focus-card {
     min-height: auto;
-  }
-  .activity-mix-row {
-    grid-template-columns: 1fr;
   }
   .quick-actions-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
-  .activity-stats {
-    grid-template-columns: repeat(2, 1fr);
-  }
   .chart-body { height: 220px; padding: 12px; }
   .dashboard-body { padding: var(--space-md); }
 }
