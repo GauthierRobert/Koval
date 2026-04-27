@@ -27,6 +27,11 @@ import FitParser from 'fit-file-parser';
 
 type SportFilter = string | null;
 
+type WeekHeaderRow = { kind: 'week'; weekKey: string; start: Date; end: Date; count: number };
+type SessionRow = { kind: 'session'; weekKey: string; session: SavedSession };
+type InactivityRow = { kind: 'inactivity'; rowKey: string; start: Date; end: Date; weeks: number };
+export type HistoryRow = WeekHeaderRow | SessionRow | InactivityRow;
+
 @Component({
     selector: 'app-workout-history',
     standalone: true,
@@ -200,6 +205,145 @@ export class WorkoutHistoryComponent implements OnInit {
             return filtered;
         })
     );
+
+    // Week grouping state — tracks which week keys the user has expanded.
+    // Seeded once on the first non-empty emission so the most recent active
+    // week starts open; subsequent toggles are fully manual.
+    expandedWeeks = new Set<string>();
+    private expandedSeeded = false;
+    private toggleSubject = new BehaviorSubject<void>(undefined);
+
+    groupedRows$ = combineLatest([this.filteredSessions$, this.toggleSubject]).pipe(
+        map(([sessions]) => {
+            if (!this.expandedSeeded && sessions.length > 0) {
+                const firstKey = this.weekKeyOf(new Date(sessions[0].date));
+                this.expandedWeeks.add(firstKey);
+                this.expandedSeeded = true;
+            }
+            return this.buildRows(sessions);
+        }),
+    );
+
+    toggleWeek(weekKey: string): void {
+        if (this.expandedWeeks.has(weekKey)) {
+            this.expandedWeeks.delete(weekKey);
+        } else {
+            this.expandedWeeks.add(weekKey);
+        }
+        this.toggleSubject.next();
+    }
+
+    isExpanded(weekKey: string): boolean {
+        return this.expandedWeeks.has(weekKey);
+    }
+
+    /** Monday 00:00 of the week containing `d` (local time). */
+    private weekStartOf(d: Date): Date {
+        const out = new Date(d);
+        out.setHours(0, 0, 0, 0);
+        const day = out.getDay(); // 0=Sun..6=Sat
+        const offsetToMonday = day === 0 ? -6 : 1 - day;
+        out.setDate(out.getDate() + offsetToMonday);
+        return out;
+    }
+
+    /** Stable per-week key (Monday's local YYYY-MM-DD). */
+    private weekKeyOf(d: Date): string {
+        const monday = this.weekStartOf(d);
+        const y = monday.getFullYear();
+        const m = String(monday.getMonth() + 1).padStart(2, '0');
+        const day = String(monday.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    /**
+     * Build the flat row sequence the template iterates: alternating week
+     * headers and (when expanded) their sessions, with a single inactivity
+     * row between two active weeks separated by ≥ 1 fully-skipped week.
+     * Sessions arrive sorted newest→oldest from `historyService.loadSessions()`.
+     */
+    private buildRows(sessions: SavedSession[]): HistoryRow[] {
+        if (sessions.length === 0) return [];
+
+        // Group preserving the input order so each week's session list stays
+        // newest-first within the week.
+        const order: string[] = [];
+        const buckets = new Map<string, { start: Date; end: Date; sessions: SavedSession[] }>();
+        for (const s of sessions) {
+            const start = this.weekStartOf(new Date(s.date));
+            const key = this.weekKeyOf(new Date(s.date));
+            let bucket = buckets.get(key);
+            if (!bucket) {
+                const end = new Date(start);
+                end.setDate(end.getDate() + 6);
+                end.setHours(23, 59, 59, 999);
+                bucket = { start, end, sessions: [] };
+                buckets.set(key, bucket);
+                order.push(key);
+            }
+            bucket.sessions.push(s);
+        }
+
+        const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+        const rows: HistoryRow[] = [];
+        let prev: { start: Date; end: Date } | null = null;
+
+        for (const key of order) {
+            const bucket = buckets.get(key)!;
+
+            if (prev) {
+                // Gap between newer (prev) and older (bucket) — measured in
+                // skipped Mondays.
+                const gapWeeks = Math.round(
+                    (prev.start.getTime() - bucket.end.getTime()) / ONE_WEEK_MS,
+                );
+                if (gapWeeks >= 1) {
+                    const gapStart = new Date(bucket.end);
+                    gapStart.setDate(gapStart.getDate() + 1);
+                    gapStart.setHours(0, 0, 0, 0);
+                    const gapEnd = new Date(prev.start);
+                    gapEnd.setDate(gapEnd.getDate() - 1);
+                    gapEnd.setHours(23, 59, 59, 999);
+                    rows.push({
+                        kind: 'inactivity',
+                        rowKey: `gap-${this.weekKeyOf(gapStart)}-${this.weekKeyOf(gapEnd)}`,
+                        start: gapStart,
+                        end: gapEnd,
+                        weeks: gapWeeks,
+                    });
+                }
+            }
+
+            rows.push({
+                kind: 'week',
+                weekKey: key,
+                start: bucket.start,
+                end: bucket.end,
+                count: bucket.sessions.length,
+            });
+
+            if (this.expandedWeeks.has(key)) {
+                for (const s of bucket.sessions) {
+                    rows.push({ kind: 'session', weekKey: key, session: s });
+                }
+            }
+
+            prev = { start: bucket.start, end: bucket.end };
+        }
+
+        return rows;
+    }
+
+    formatWeekRange(start: Date, end: Date): string {
+        const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+        return `${start.toLocaleDateString('en-US', opts)} – ${end.toLocaleDateString('en-US', opts)}`;
+    }
+
+    trackRow(_index: number, row: HistoryRow): string {
+        if (row.kind === 'session') return `s-${row.session.id}`;
+        if (row.kind === 'week') return `w-${row.weekKey}`;
+        return row.rowKey;
+    }
 
     setSportFilter(value: SportFilter): void {
         this.activeSportFilter = value;
@@ -380,9 +524,5 @@ export class WorkoutHistoryComponent implements OnInit {
         if (session.sportType === 'RUNNING') return '/km';
         if (session.sportType === 'SWIMMING') return '/100m';
         return 'W';
-    }
-
-    trackSessionById(session: SavedSession): string {
-        return session.id;
     }
 }

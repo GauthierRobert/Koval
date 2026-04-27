@@ -1,4 +1,16 @@
-import {AfterViewChecked, AfterViewInit, ChangeDetectorRef, Component, ElementRef, inject, Input, NgZone, OnChanges, OnDestroy, ViewChild} from '@angular/core';
+import {
+  AfterViewChecked,
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  inject,
+  Input,
+  NgZone,
+  OnChanges,
+  OnDestroy,
+  ViewChild
+} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FitRecord} from '../../../../services/metrics.service';
 import {BlockSummary} from '../../../../services/workout-execution.service';
@@ -71,7 +83,10 @@ import {formatPaceWithUnit} from '../../../shared/format/format.utils';
                 }
                 <canvas #xCanvas class="mc xaxis-h"></canvas>
                 @if (hoverIdx !== null) {
-                    <div class="tt" [style.left.px]="ttX" [style.top.px]="ttY">
+                    <div #ttEl class="tt"
+                        [style.left.px]="ttX"
+                        [style.top.px]="ttY"
+                        [style.transform]="'translate(calc(-50% + ' + ttShift + 'px), -100%)'">
                         <div class="tt-hdr">{{ ttHeader }}</div>
                         <div class="tt-sep"></div>
                         @for (r of ttRows; track r.label) {
@@ -127,7 +142,6 @@ import {formatPaceWithUnit} from '../../../shared/format/format.utils';
             border: 1px solid var(--glass-border, rgba(255,255,255,0.22));
             border-radius: 8px; padding: 8px 10px;
             min-width: 120px; white-space: nowrap;
-            transform: translate(-50%, -100%);
         }
         .tt-hdr { color: var(--text-80); font: 9px monospace; }
         .tt-sep { height: 1px; background: var(--overlay-15); margin: 5px 0; }
@@ -161,6 +175,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     @ViewChild('effCanvas') effRef?: ElementRef<HTMLCanvasElement>;
     @ViewChild('elevCanvas') elRef?: ElementRef<HTMLCanvasElement>;
     @ViewChild('xCanvas') xRef?: ElementRef<HTMLCanvasElement>;
+    @ViewChild('ttEl') ttElRef?: ElementRef<HTMLDivElement>;
 
     showPrimary = true;
     showHR = true;
@@ -172,8 +187,10 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     hoverIdx: number | null = null;
     ttX = 0;
     ttY = 0;
+    ttShift = 0;
     ttHeader = '';
     ttRows: Array<{ label: string; value: string; color: string }> = [];
+    private ttShiftRaf: number | null = null;
 
     _hasElevation = false;
     /** Max value (W, km/h, or sec/100m for swimming) used by drawPrimary's yOf — cached so the tooltip can follow the curve. */
@@ -328,6 +345,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     ngOnDestroy(): void {
         this.resizeObserver?.disconnect();
         this.unregisterTouchMoveListeners();
+        if (this.ttShiftRaf !== null) cancelAnimationFrame(this.ttShiftRaf);
     }
 
     ngOnChanges(): void {
@@ -497,12 +515,44 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         this.hoverIdx = idx;
         this.buildTooltip();
         this.drawAll();
+        this.scheduleTooltipShiftUpdate();
     }
 
     onMouseLeave(): void {
         this.hoverIdx = null;
         this.ttRows = [];
+        this.ttShift = 0;
+        if (this.ttShiftRaf !== null) {
+            cancelAnimationFrame(this.ttShiftRaf);
+            this.ttShiftRaf = null;
+        }
         this.drawAll();
+    }
+
+    /**
+     * Anchor sits at the scrub line, but on mobile the tooltip body can extend past
+     * the chart edges. Measure the rendered tooltip and shift it horizontally so
+     * both edges stay inside the stack while the anchor visually stays put.
+     */
+    private scheduleTooltipShiftUpdate(): void {
+        if (this.ttShiftRaf !== null) cancelAnimationFrame(this.ttShiftRaf);
+        this.ttShiftRaf = requestAnimationFrame(() => {
+            this.ttShiftRaf = null;
+            const tt = this.ttElRef?.nativeElement;
+            if (!tt || this.hoverIdx === null) return;
+            const stackW = this.stackRef.nativeElement.getBoundingClientRect().width;
+            const halfW = tt.offsetWidth / 2;
+            const margin = 8;
+            const leftEdge = this.ttX - halfW;
+            const rightEdge = this.ttX + halfW;
+            let shift = 0;
+            if (leftEdge < margin) shift = margin - leftEdge;
+            else if (rightEdge > stackW - margin) shift = (stackW - margin) - rightEdge;
+            if (this.ttShift !== shift) {
+                this.ttShift = shift;
+                this.cdr.detectChanges();
+            }
+        });
     }
 
     // ── Shared helpers ───────────────────────────────────────────────────
@@ -856,7 +906,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
 
         const s = this.initCanvas(this.effRef);
         if (!s) return;
-        const { ctx, W, H, xOf, xOfT, mT, mB, mL, mR } = s;
+        const { ctx, H, xOf, xOfT, mT, mB, mL } = s;
         const chartH = H - mT - mB;
         const top = mT, bottom = mT + chartH;
         const range = this._effMax - this._effMin || 1;
@@ -914,13 +964,12 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
             ctx.stroke();
         }
 
-        // Y-axis labels (right side)
         ctx.fillStyle = color;
         ctx.font = '9px monospace';
-        ctx.textAlign = 'left';
+        ctx.textAlign = 'right';
         const mid = (this._effMin + this._effMax) / 2;
         [this._effMax, mid, this._effMin].forEach(v =>
-            ctx.fillText(v.toFixed(2), W - mR + 4, yOf(v) + 4));
+            ctx.fillText(v.toFixed(2), mL - 4, yOf(v) + 4));
 
         this.drawBlockBounds(ctx, xOfT, top, bottom, totalSec);
 
@@ -938,7 +987,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     private drawCadence(): void {
         const s = this.initCanvas(this.cadRef);
         if (!s) return;
-        const { ctx, W, H, cW, xOf, xOfT, mT, mB, mL, mR } = s;
+        const { ctx, H, xOf, xOfT, mT, mB, mL } = s;
         const n = this.records.length;
         const t0 = this.records[0].timestamp;
         const totalSec = this.records[n - 1].timestamp - t0 || n;
@@ -973,13 +1022,12 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
             ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
         }
 
-        // Y-axis labels (right side to avoid overlap with HR)
         ctx.fillStyle = color;
         ctx.font = '9px monospace';
-        ctx.textAlign = 'left';
+        ctx.textAlign = 'right';
         const mid = Math.round((minCad + maxCad) / 2);
         [Math.round(maxCad), mid, minCad].forEach(v =>
-            ctx.fillText(String(v), W - mR + 4, yOf(v) + 4));
+            ctx.fillText(String(v), mL - 4, yOf(v) + 4));
 
         this.drawBlockBounds(ctx, xOfT, top, bottom, totalSec);
 

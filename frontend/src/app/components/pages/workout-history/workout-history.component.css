@@ -310,6 +310,84 @@
   margin-top: 4px;
 }
 
+/* ─── Week headers (collapsible group banners) ───────────────── */
+.week-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s var(--ease-spring-gentle), color 0.2s;
+}
+
+.week-header:first-child {
+  margin-top: 0;
+}
+
+.week-header:hover {
+  background: var(--overlay-5);
+  color: var(--text-color);
+}
+
+.week-chevron {
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: transform 0.2s var(--ease-spring-gentle);
+}
+
+.week-header.expanded .week-chevron {
+  transform: rotate(90deg);
+}
+
+.week-range {
+  flex-shrink: 0;
+}
+
+.week-count {
+  opacity: 0.7;
+  font-weight: 700;
+}
+
+/* ─── Inactivity row (collapsed empty-week gap) ──────────────── */
+.inactivity-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  margin: 4px 0;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.55;
+  border-top: 1px dashed var(--glass-border);
+  border-bottom: 1px dashed var(--glass-border);
+  user-select: none;
+}
+
+.inactivity-label {
+  color: var(--text-muted);
+}
+
+.inactivity-range,
+.inactivity-weeks {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
 .session-item {
   display: flex;
   align-items: flex-start;

@@ -959,7 +959,12 @@
     "HEADER_SUBTITLE": "Sessions passées & analytique",
     "EMPTY_MAIN_HEADING": "Analyse d'activité",
     "EMPTY_MAIN_DESC": "Sélectionne une activité dans la liste pour voir les métriques de performance détaillées et les données de puissance.",
-    "BTN_IMPORT_FIT_FILE": "Importer un fichier .FIT"
+    "BTN_IMPORT_FIT_FILE": "Importer un fichier .FIT",
+    "WEEK_SESSION_COUNT_SINGULAR": "{{count}} séance",
+    "WEEK_SESSION_COUNT_PLURAL": "{{count}} séances",
+    "INACTIVITY_LABEL": "Inactif",
+    "INACTIVITY_WEEKS_SINGULAR": "{{count}} semaine",
+    "INACTIVITY_WEEKS_PLURAL": "{{count}} semaines"
   },
   "SESSION_ANALYSIS": {
     "STAT_DURATION": "Durée",

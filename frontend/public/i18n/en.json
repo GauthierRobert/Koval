@@ -959,7 +959,12 @@
     "HEADER_SUBTITLE": "Past sessions & analytics",
     "EMPTY_MAIN_HEADING": "Activity Analysis",
     "EMPTY_MAIN_DESC": "Select an activity from the list to view detailed performance metrics and power data.",
-    "BTN_IMPORT_FIT_FILE": "Import .FIT File"
+    "BTN_IMPORT_FIT_FILE": "Import .FIT File",
+    "WEEK_SESSION_COUNT_SINGULAR": "{{count}} session",
+    "WEEK_SESSION_COUNT_PLURAL": "{{count}} sessions",
+    "INACTIVITY_LABEL": "Inactive",
+    "INACTIVITY_WEEKS_SINGULAR": "{{count}} week",
+    "INACTIVITY_WEEKS_PLURAL": "{{count}} weeks"
   },
   "SESSION_ANALYSIS": {
     "STAT_DURATION": "Duration",
