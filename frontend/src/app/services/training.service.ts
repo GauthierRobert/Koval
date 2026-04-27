@@ -59,15 +59,8 @@ export class TrainingService {
 
     loadTrainings(): void {
         this.http.get<Training[]>(this.apiUrl).subscribe({
-            next: (trainings) => {
-                this.trainingsSubject.next(trainings);
-                if (!this.selectedTrainingSubject.value && trainings?.length > 0) {
-                    this.selectedTrainingSubject.next(trainings[0]);
-                }
-            },
-            error: () => {
-                this.trainingsSubject.next([]);
-            },
+            next: (trainings) => this.trainingsSubject.next(trainings),
+            error: () => this.trainingsSubject.next([]),
         });
     }
 

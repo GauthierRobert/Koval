@@ -13,10 +13,9 @@ import {
   TRAINING_TYPES,
   TrainingType,
 } from '../../../models/training.model';
-import {combineLatest, Observable} from 'rxjs';
-import {distinctUntilChanged, filter, map, pairwise, take} from 'rxjs/operators';
-import {RouterModule} from '@angular/router';
-import {ResponsiveService} from '../../../services/responsive.service';
+import {Observable, of} from 'rxjs';
+import {catchError, map, shareReplay, switchMap} from 'rxjs/operators';
+import {ActivatedRoute, RouterModule} from '@angular/router';
 import {WorkoutVisualizationComponent} from '../../shared/workout-visualization/workout-visualization.component';
 import {SidebarComponent} from '../../layout/sidebar/sidebar.component';
 import {FilterPillOption, FilterPillsComponent} from '../../shared/filter-pills/filter-pills.component';
@@ -41,16 +40,33 @@ export class WorkoutSelectionComponent implements OnInit {
   private trainingService = inject(TrainingService);
   filterService = inject(TrainingFilterService);
   private translate = inject(TranslateService);
-  private responsive = inject(ResponsiveService);
+  private route = inject(ActivatedRoute);
   private destroyRef = inject(DestroyRef);
 
   showAiModal = false;
-  mobileListOpen = true;
-  private isMobile = false;
 
-  showMobileList(): void {
-    this.mobileListOpen = true;
-  }
+  /**
+   * The detail view is driven by the `:id` URL segment:
+   *   /trainings        → list (no detail)
+   *   /trainings/:id    → detail of that training
+   *
+   * Mobile flow falls out for free: when the URL has an id, CSS hides the
+   * list; the device back button navigates back to /trainings naturally.
+   */
+  selectedTraining$: Observable<Training | null> = this.route.paramMap.pipe(
+    map((p) => p.get('id')),
+    switchMap((id) =>
+      id
+        ? this.trainingService.getTrainingById(id).pipe(catchError(() => of(null)))
+        : of(null),
+    ),
+    shareReplay({ bufferSize: 1, refCount: true }),
+  );
+
+  /** True when the URL is bare `/trainings` (no id). Used by CSS to flip mobile layout. */
+  isListView$: Observable<boolean> = this.route.paramMap.pipe(
+    map((p) => !p.has('id')),
+  );
 
   sourceOptions$: Observable<FilterPillOption[]> = this.trainingService.receivedTrainings$.pipe(
     map((received) => {
@@ -82,36 +98,15 @@ export class WorkoutSelectionComponent implements OnInit {
     ]),
   );
 
-  selectedTraining$: Observable<Training | null> = this.trainingService.selectedTraining$;
-
   ngOnInit(): void {
     this.trainingService.loadReceivedTrainings();
 
-    this.responsive.isMobile$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((mobile) => {
-      this.isMobile = mobile;
-      if (!mobile) this.mobileListOpen = true;
-    });
-
-    // Switch to detail view when a training is selected on mobile
-    this.selectedTraining$.pipe(
-      distinctUntilChanged((a, b) => a?.id === b?.id),
-      pairwise(),
-      takeUntilDestroyed(this.destroyRef),
-    ).subscribe(([prev, curr]) => {
-      if (this.isMobile && curr && prev?.id !== curr.id) {
-        this.mobileListOpen = false;
-      }
-    });
-
-    // Auto-select first training if none is selected
-    combineLatest([this.filterService.filteredTrainings$, this.selectedTraining$]).pipe(
-      filter(([trainings]) => trainings.length > 0),
-      take(1),
-    ).subscribe(([trainings, selected]) => {
-      if (!selected) {
-        this.trainingService.selectTraining(trainings[0]);
-      }
-    });
+    // Keep the service-level selectedTraining in sync with the route param.
+    // Components downstream (chart toolbar, edit-mode, etc.) still read it
+    // via TrainingService while we phase out the BehaviorSubject pattern.
+    this.selectedTraining$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((t) => this.trainingService.selectTraining(t));
   }
 
   onContextChange(value: string | null): void {

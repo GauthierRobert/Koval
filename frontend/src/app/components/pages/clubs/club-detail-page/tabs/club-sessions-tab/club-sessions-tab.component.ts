@@ -441,10 +441,7 @@ export class ClubSessionsTabComponent implements OnInit {
   }
 
   navigateToTraining(trainingId: string): void {
-    this.trainingService.getTrainingById(trainingId).subscribe((training) => {
-      this.trainingService.selectTraining(training);
-      this.router.navigate(['/trainings']);
-    });
+    this.router.navigate(['/trainings', trainingId]);
   }
 
   unlinkTraining(session: ClubTrainingSession, glt: GroupLinkedTraining): void {

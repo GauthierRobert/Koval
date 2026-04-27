@@ -3,9 +3,9 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {ActivatedRoute} from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
 import {BehaviorSubject, combineLatest} from 'rxjs';
-import {filter, map, take} from 'rxjs/operators';
+import {map, take} from 'rxjs/operators';
 import {ResponsiveService} from '../../../services/responsive.service';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {SessionAnalysisComponent} from '../session-analysis/session-analysis.component';
@@ -45,43 +45,57 @@ export class WorkoutHistoryComponent implements OnInit {
     private authService = inject(AuthService);
     private metricsService = inject(MetricsService);
     private route = inject(ActivatedRoute);
+    private router = inject(Router);
     private destroyRef = inject(DestroyRef);
     private responsive = inject(ResponsiveService);
     stravaSyncService = inject(StravaSyncService);
 
     sessions$ = this.historyService.sessions$;
-    mobileListOpen = true;
     sidebarCollapsed = false;
-    private isMobile = false;
+
+    /**
+     * Detail mode is driven entirely by the URL:
+     *   /history             → list, no detail
+     *   /history/:sessionId  → detail of that session
+     *
+     * The native back button works for free; mobile flow is pure CSS.
+     */
+    sessionIdParam$ = this.route.paramMap.pipe(map((p) => p.get('sessionId')));
+    isListView$ = this.sessionIdParam$.pipe(map((id) => !id));
 
     toggleSidebar(): void {
       this.sidebarCollapsed = !this.sidebarCollapsed;
     }
 
-    showMobileList(): void {
-      this.mobileListOpen = true;
-    }
-
     ngOnInit(): void {
-        this.responsive.isMobile$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((mobile) => {
-            this.isMobile = mobile;
-            if (!mobile) this.mobileListOpen = true;
-        });
-        const sessionId = this.route.snapshot.paramMap.get('sessionId');
-        this.historyService.sessions$.pipe(
-            filter(sessions => sessions.length > 0),
-            take(1),
-            takeUntilDestroyed(this.destroyRef),
-        ).subscribe(sessions => {
-            if (sessionId) {
-                const match = sessions.find(s => s.id === sessionId);
-                if (match) this.historyService.selectSession(match);
-            } else {
-                this.historyService.selectedSession$.pipe(take(1)).subscribe(current => {
-                    if (!current) this.historyService.selectSession(sessions[0]);
-                });
-            }
-        });
+        // Sync the service-level selectedSession with the route param so any
+        // downstream consumer that reads `historyService.selectedSession$`
+        // sees the current focus.
+        combineLatest([this.sessionIdParam$, this.historyService.sessions$])
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(([id, sessions]) => {
+                if (!id) {
+                    this.historyService.selectSession(null);
+                    return;
+                }
+                if (sessions.length === 0) return;
+                const match = sessions.find((s) => s.id === id);
+                this.historyService.selectSession(match ?? null);
+            });
+
+        // On desktop, when the user lands on bare /history, jump them to the
+        // first session so the detail panel isn't empty.
+        combineLatest([
+            this.historyService.sessions$,
+            this.responsive.isMobile$,
+            this.sessionIdParam$,
+        ])
+            .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+            .subscribe(([sessions, mobile, id]) => {
+                if (!mobile && !id && sessions.length > 0) {
+                    this.router.navigate(['/history', sessions[0].id], { replaceUrl: true });
+                }
+            });
     }
 
     // Filters — labels translated via instant (language known at component init)
@@ -251,8 +265,7 @@ export class WorkoutHistoryComponent implements OnInit {
     }
 
     onSelect(session: SavedSession): void {
-        this.historyService.selectSession(session);
-        if (this.isMobile) this.mobileListOpen = false;
+        this.router.navigate(['/history', session.id]);
     }
 
     downloadFit(event: Event, session: SavedSession) {

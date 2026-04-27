@@ -1,7 +1,7 @@
 import {Component, inject} from '@angular/core';
 
 import {CommonModule} from '@angular/common';
-import {Router, RouterLink} from '@angular/router';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {TrainingService} from '../../../services/training.service';
 import {TrainingFilterService} from '../../../services/training-filter.service';
@@ -12,6 +12,7 @@ import {
   TRAINING_TYPE_LABELS,
   TrainingType,
 } from '../../../models/training.model';
+import {map} from 'rxjs/operators';
 import {DurationEstimationService} from '../../../services/duration-estimation.service';
 import {HistoryService} from '../../../services/history.service';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
@@ -30,34 +31,43 @@ export class TrainingHistoryComponent {
     private durationService = inject(DurationEstimationService);
     private translate = inject(TranslateService);
     private router = inject(Router);
+    private route = inject(ActivatedRoute);
 
-    selectedTraining$ = this.trainingService.selectedTraining$;
+    /** Highlight the row whose id is in the URL — the route is the source of truth. */
+    activeTrainingId$ = this.route.paramMap.pipe(map((p) => p.get('id')));
     filteredTrainings$ = this.filterService.filteredTrainings$;
     activeContext$ = this.filterService.activeContext$;
 
     onSelect(training: Training): void {
         this.historyService.selectSession(null);
-        this.trainingService.selectTraining(training);
+        this.router.navigate(['/trainings', training.id]);
     }
 
     onEdit(event: Event, training: Training): void {
         event.stopPropagation();
-        this.router.navigate(['/builder', training.id]);
+        this.router.navigate(['/trainings', training.id, 'edit']);
     }
 
     onDelete(event: Event, training: Training): void {
         event.stopPropagation();
         if (!confirm(this.translate.instant('TRAINING_HISTORY.DELETE_CONFIRM', { title: training.title }))) return;
+        const wasActive = this.route.snapshot.paramMap.get('id') === training.id;
         this.trainingService.deleteTraining(training.id).subscribe({
-            next: () => this.trainingService.removeTrainingLocally(training.id),
-            error: () => this.trainingService.removeTrainingLocally(training.id),
+            next: () => {
+                this.trainingService.removeTrainingLocally(training.id);
+                if (wasActive) this.router.navigate(['/trainings']);
+            },
+            error: () => {
+                this.trainingService.removeTrainingLocally(training.id);
+                if (wasActive) this.router.navigate(['/trainings']);
+            },
         });
     }
 
     onDuplicate(event: Event, training: Training): void {
         event.stopPropagation();
         this.trainingService.duplicateTraining(training.id).subscribe({
-            next: (copy) => this.trainingService.selectTraining(copy),
+            next: (copy) => this.router.navigate(['/trainings', copy.id]),
             error: (err) => console.error('Failed to duplicate training', err),
         });
     }

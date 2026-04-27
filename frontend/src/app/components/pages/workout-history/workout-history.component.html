@@ -1,7 +1,7 @@
 <div class="history-layout">
 
   <!-- Left panel: session list -->
-  <aside class="history-sidebar glass" [class.mobile-detail-active]="!mobileListOpen" [class.desktop-collapsed]="sidebarCollapsed">
+  <aside class="history-sidebar glass" [class.mobile-detail-active]="!(isListView$ | async)" [class.desktop-collapsed]="sidebarCollapsed">
     <div class="sidebar-header">
       <h3 class="sidebar-title">{{ 'WORKOUT_HISTORY.SIDEBAR_TITLE' | translate }}</h3>
       <div class="sidebar-actions">
@@ -128,21 +128,14 @@
   </button>
 
   <!-- Right panel: analysis or empty state -->
-  <main class="history-main" [class.mobile-list-active]="mobileListOpen">
-    <div class="header glass">
+  <main class="history-main" [class.mobile-list-active]="(isListView$ | async)">
+    <div class="header glass desktop-only">
       <div class="header-left">
         <div class="header-avatar">A</div>
         <div class="header-info">
           <span class="header-title">{{ 'WORKOUT_HISTORY.HEADER_TITLE' | translate }} <span class="dim">{{ 'WORKOUT_HISTORY.HEADER_TITLE_DIM' | translate }}</span></span>
           <span class="header-subtitle">{{ 'WORKOUT_HISTORY.HEADER_SUBTITLE' | translate }}</span>
         </div>
-      </div>
-      <div class="header-right">
-        <button class="list-toggle-btn mobile-only" (click)="showMobileList()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-        </button>
       </div>
     </div>
     @if (historyService.selectedSession$ | async; as session) {

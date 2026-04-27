@@ -129,9 +129,8 @@ export class WorkoutDetailModalComponent {
   }
 
   viewInLibrary(training: Training): void {
-    this.trainingService.selectTraining(training);
     this.close();
-    this.router.navigate(['/trainings']);
+    this.router.navigate(['/trainings', training.id]);
   }
 
   private flattenElements(blocks: WorkoutBlock[]): WorkoutBlock[] {

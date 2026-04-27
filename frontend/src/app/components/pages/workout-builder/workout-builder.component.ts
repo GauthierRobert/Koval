@@ -414,11 +414,11 @@ export class WorkoutBuilderComponent implements OnInit {
 
     if (this.isEditing && this.trainingId) {
       this.trainingService.updateTraining(this.trainingId, training).subscribe({
-        next: () => this.router.navigate(['/trainings']),
+        next: (updated) => this.router.navigate(['/trainings', updated.id]),
       });
     } else {
       this.trainingService.createTraining(training).subscribe({
-        next: () => this.router.navigate(['/trainings']),
+        next: (created) => this.router.navigate(['/trainings', created.id]),
       });
     }
   }

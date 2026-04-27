@@ -578,26 +578,6 @@
 .desktop-only { display: flex; }
 .mobile-only { display: none; }
 
-/* ── List toggle button (mobile) ───────────────────────────────────── */
-.list-toggle-btn {
-  background: var(--overlay-8);
-  border: 1px solid var(--glass-border);
-  border-radius: 10px;
-  color: var(--text-muted);
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.25s var(--ease-spring-gentle);
-}
-
-.list-toggle-btn:hover {
-  background: var(--overlay-10);
-  color: var(--text-color);
-}
-
 /* ── Responsive ────────────────────────────────────────── */
 @media (max-width: 768px) {
   :host {
@@ -639,6 +619,12 @@
   }
 
   .history-main.mobile-list-active {
+    display: none;
+  }
+
+  /* Header (avatar + page title) is desktop-only; hidden on mobile so
+     the detail view is content-first like the library page. */
+  .history-main .header {
     display: none;
   }
 

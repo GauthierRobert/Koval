@@ -45,7 +45,7 @@
                   </div>
                   <div class="card-top-right">
                     @if ($any(group.entry).scheduled.status === 'COMPLETED' && $any(group.entry).scheduled.sessionId) {
-                      <a class="analysis-link" [routerLink]="['/analysis', $any(group.entry).scheduled.sessionId]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
+                      <a class="analysis-link" [routerLink]="['/history', $any(group.entry).scheduled.sessionId]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                         </svg>
@@ -119,7 +119,7 @@
                 </div>
                 <div class="card-top-right">
                   @if ($any(group.entry).session.fitFileId) {
-                    <a class="analysis-link" [routerLink]="['/analysis', $any(group.entry).session.id]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
+                    <a class="analysis-link" [routerLink]="['/history', $any(group.entry).session.id]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                       </svg>
@@ -178,7 +178,7 @@
                 <span class="session-badge">{{ 'CALENDAR_WEEK.SESSION_BADGE' | translate }}</span>
                 <div class="card-top-right">
                   @if ($any(group.entry).session.fitFileId) {
-                    <a class="analysis-link" [routerLink]="['/analysis', $any(group.entry).session.id]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
+                    <a class="analysis-link" [routerLink]="['/history', $any(group.entry).session.id]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                       </svg>
@@ -251,7 +251,7 @@
                     <span class="cancelled-badge">{{ 'CALENDAR_WEEK.CLUB_SESSION_BADGE_CANCELLED' | translate }}</span>
                   }
                   @if ($any(group.entry).linkedSession) {
-                    <a class="analysis-link" [routerLink]="['/analysis', $any(group.entry).linkedSession.id]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
+                    <a class="analysis-link" [routerLink]="['/history', $any(group.entry).linkedSession.id]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                       </svg>

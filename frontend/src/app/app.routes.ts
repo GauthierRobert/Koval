@@ -19,7 +19,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'builder',
+    path: 'trainings/new',
     loadComponent: () =>
       import('./components/pages/workout-builder/workout-builder.component').then(
         (m) => m.WorkoutBuilderComponent,
@@ -27,12 +27,26 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'builder/:id',
+    path: 'trainings/:id/edit',
     loadComponent: () =>
       import('./components/pages/workout-builder/workout-builder.component').then(
         (m) => m.WorkoutBuilderComponent,
       ),
     canActivate: [authGuard],
+  },
+  {
+    path: 'trainings/:id',
+    loadComponent: () =>
+      import('./components/pages/workout-selection/workout-selection.component').then(
+        (m) => m.WorkoutSelectionComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  // Legacy redirects — keep for one release so old bookmarks still resolve.
+  { path: 'builder', redirectTo: '/trainings/new', pathMatch: 'full' },
+  {
+    path: 'builder/:id',
+    redirectTo: ({ params }) => `/trainings/${params['id']}/edit`,
   },
   {
     path: 'active-session',
@@ -44,6 +58,14 @@ export const routes: Routes = [
   },
   {
     path: 'history',
+    loadComponent: () =>
+      import('./components/pages/workout-history/workout-history.component').then(
+        (m) => m.WorkoutHistoryComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'history/:sessionId',
     loadComponent: () =>
       import('./components/pages/workout-history/workout-history.component').then(
         (m) => m.WorkoutHistoryComponent,
@@ -88,13 +110,10 @@ export const routes: Routes = [
       import('./components/pages/chat-page/chat-page.component').then((m) => m.ChatPageComponent),
     canActivate: [authGuard],
   },
+  // Legacy redirect — old `/analysis/:sessionId` URLs go to `/history/:sessionId`.
   {
     path: 'analysis/:sessionId',
-    loadComponent: () =>
-      import('./components/pages/workout-history/workout-history.component').then(
-        (m) => m.WorkoutHistoryComponent,
-      ),
-    canActivate: [authGuard],
+    redirectTo: ({ params }) => `/history/${params['sessionId']}`,
   },
   {
     path: 'pmc',

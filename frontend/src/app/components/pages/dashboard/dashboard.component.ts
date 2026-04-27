@@ -233,7 +233,7 @@ export class DashboardComponent {
   }
 
   openAnalysis(session: SavedSession): void {
-    this.router.navigate(['/analysis', session.id]);
+    this.router.navigate(['/history', session.id]);
   }
 
   openDetail(w: ScheduledWorkout): void {

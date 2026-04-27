@@ -2,7 +2,7 @@
   <div class="history-list stagger-children">
     @for (training of filteredTrainings$ | async; track training.id) {
       <div class="history-item"
-        [class.selected]="(selectedTraining$ | async)?.id === training.id" (click)="onSelect(training)">
+        [class.selected]="(activeTrainingId$ | async) === training.id" (click)="onSelect(training)">
         <div class="item-icon">
           <app-sport-icon [sport]="training.sportType" [size]="20"></app-sport-icon>
         </div>
@@ -69,7 +69,7 @@
         </svg>
         <p class="empty-title">{{ 'TRAINING_HISTORY.EMPTY_NO_TRAININGS' | translate }}</p>
         <p class="empty-hint">{{ 'TRAINING_HISTORY.EMPTY_HINT' | translate }}</p>
-        <button class="empty-cta" routerLink="/builder">
+        <button class="empty-cta" routerLink="/trainings/new">
           + {{ 'WORKOUT_SELECTION.BTN_CREATE_MANUALLY' | translate }}
         </button>
       </div>

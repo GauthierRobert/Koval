@@ -3,7 +3,17 @@ import {CommonModule} from '@angular/common';
 import {Router} from '@angular/router';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {TrainingService} from '../../../services/training.service';
-import {flattenElements, hasDurationEstimate, isSet, Training, WorkoutBlock} from '../../../models/training.model';
+import {
+  flattenElements,
+  hasDurationEstimate,
+  isSet,
+  SPORT_OPTIONS,
+  Training,
+  TRAINING_TYPE_COLORS,
+  TRAINING_TYPE_LABELS,
+  TrainingType,
+  WorkoutBlock,
+} from '../../../models/training.model';
 import {WorkoutExecutionService} from '../../../services/workout-execution.service';
 import {HttpClient} from '@angular/common/http';
 import {ExportService} from '../../../services/export.service';
@@ -77,7 +87,7 @@ export class WorkoutVisualizationComponent {
 
   enterEditMode(): void {
     if (this.training?.id) {
-      this.router.navigate(['/builder', this.training.id]);
+      this.router.navigate(['/trainings', this.training.id, 'edit']);
     }
   }
 
@@ -296,6 +306,33 @@ export class WorkoutVisualizationComponent {
 
   formatPace(totalSeconds: number): string {
     return sharedFormatPace(totalSeconds);
+  }
+
+  getSportLabel(): string {
+    if (!this.training) return '';
+    const opt = SPORT_OPTIONS.find((o) => o.value === this.training!.sportType);
+    return opt?.label ?? this.training.sportType;
+  }
+
+  getSportColor(): string {
+    if (!this.training) return 'var(--text-muted)';
+    switch (this.training.sportType) {
+      case 'SWIMMING': return '#06b6d4';
+      case 'CYCLING': return '#22c55e';
+      case 'RUNNING': return '#f97316';
+      case 'BRICK': return '#a855f7';
+      default: return 'var(--text-muted)';
+    }
+  }
+
+  getTrainingTypeLabel(): string {
+    if (!this.training?.trainingType) return '';
+    return TRAINING_TYPE_LABELS[this.training.trainingType as TrainingType] ?? this.training.trainingType;
+  }
+
+  getTrainingTypeColor(): string {
+    if (!this.training?.trainingType) return 'var(--accent-color)';
+    return TRAINING_TYPE_COLORS[this.training.trainingType as TrainingType] ?? 'var(--accent-color)';
   }
 
   getSportUnit(): string {

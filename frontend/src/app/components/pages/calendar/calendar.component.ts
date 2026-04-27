@@ -334,8 +334,7 @@ export class CalendarComponent implements OnInit {
   selectWorkout(workout: ScheduledWorkout): void { this.selectedWorkout = workout; }
 
   selectSession(session: SavedSession): void {
-    this.historyService.setSelectedSession(session);
-    this.router.navigate(['/history']);
+    this.router.navigate(['/history', session.id]);
   }
 
   onDetailClosed(): void { this.selectedWorkout = null; }

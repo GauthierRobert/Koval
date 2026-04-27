@@ -22,7 +22,20 @@
             <img class="club-avatar-img" [src]="club.logoUrl" [alt]="'CLUB_DETAIL.LOGO_ALT' | translate" />
           }
           <div class="hero-info">
-            <h1 class="club-name">{{ club.name }}</h1>
+            <div class="club-name-row">
+              <h1 class="club-name">{{ club.name }}</h1>
+              @if (club.currentMembershipStatus) {
+                <span class="club-name-status">
+                  {{ getMembershipLabel(club.currentMembershipStatus) }}
+                  @if (club.currentMemberRole) {
+                    <span> · {{ club.currentMemberRole }}</span>
+                  }
+                </span>
+              }
+            </div>
+            <p class="club-members-subtitle">
+              {{ 'CLUB_DETAIL.HEADER_MEMBER_COUNT' | translate: { count: club.memberCount } }}
+            </p>
             @if (club.description) {
               <p class="club-desc">{{ club.description }}</p>
             }

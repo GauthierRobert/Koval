@@ -215,11 +215,31 @@
   display: none;
 }
 
+/* Profile chart card (library detail) overrides */
+:host-context(.profile-chart-card) .chart-wrapper {
+  height: 260px;
+  padding: 14px 8px;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 8px;
+}
+
+:host-context(.profile-chart-card) .y-axis {
+  font-size: 10px;
+  color: var(--text-dim);
+  border-right-color: rgba(255, 255, 255, 0.04);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .chart-wrapper {
     height: 250px;
     padding: 12px;
+  }
+
+  :host-context(.profile-chart-card) .chart-wrapper {
+    height: 200px;
+    padding: 10px 6px;
   }
 }
 
@@ -227,5 +247,10 @@
   .chart-wrapper {
     height: 280px;
     padding: 12px;
+  }
+
+  :host-context(.profile-chart-card) .chart-wrapper {
+    height: 200px;
+    padding: 10px 6px;
   }
 }

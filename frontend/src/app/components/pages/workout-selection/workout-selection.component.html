@@ -3,30 +3,24 @@
     <div class="orb orb--accent"></div>
     <div class="orb orb--secondary"></div>
   </div>
-  <app-sidebar [class.mobile-detail-active]="!mobileListOpen"></app-sidebar>
+  <app-sidebar [class.mobile-detail-active]="!(isListView$ | async)"></app-sidebar>
 
-  <main class="selection-main" [class.mobile-list-active]="mobileListOpen">
+  <main class="selection-main" [class.mobile-list-active]="(isListView$ | async)">
 
-    <div class="header glass">
-      <div class="header-left">
-        <div class="header-avatar">T</div>
-        <div class="header-info">
-          <span class="header-title">{{ 'WORKOUT_SELECTION.HEADER_TITLE' | translate }} <span class="dim">{{ 'WORKOUT_SELECTION.HEADER_TITLE_DIM' | translate }}</span></span>
-          <span class="header-subtitle">{{ 'WORKOUT_SELECTION.HEADER_SUBTITLE' | translate }}</span>
+    <div class="lib-tophd">
+      <div class="lib-tophd-left">
+        <div class="lib-tophd-title">
+          <span class="crumb">{{ 'WORKOUT_SELECTION.HEADER_TITLE' | translate }} · {{ 'WORKOUT_SELECTION.HEADER_TITLE_DIM' | translate }}</span>
+          <h2 class="page-h2">Parcourir &amp; gérer <b>vos séances</b></h2>
         </div>
       </div>
-      <div class="header-right">
-        <button class="list-toggle-btn mobile-only" (click)="showMobileList()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-        </button>
-        <button class="tab-btn tab-btn--manual desktop-only" routerLink="/builder">+ {{ 'WORKOUT_SELECTION.BTN_CREATE_MANUALLY' | translate }}</button>
-        <button class="tab-btn tab-btn--ai tab-btn--ai-background" (click)="showAiModal = true">✨ {{ 'WORKOUT_SELECTION.BTN_CREATE_WITH_AI' | translate }}</button>
+      <div class="lib-tophd-actions">
+        <button class="tab-btn tab-btn--manual desktop-only" routerLink="/trainings/new">+ {{ 'WORKOUT_SELECTION.BTN_CREATE_MANUALLY' | translate }}</button>
+        <button class="tab-btn tab-btn--ai tab-btn--ai-background" (click)="showAiModal = true">✦ {{ 'WORKOUT_SELECTION.BTN_CREATE_WITH_AI' | translate }}</button>
       </div>
     </div>
 
-    <!-- Sticky filter bar -->
+    <!-- Sticky filter bar (acts as tabs row) -->
     <div class="filter-bar">
       <!-- Source selector: My Trainings | Clubs | Groups -->
       <div class="filter-group">
