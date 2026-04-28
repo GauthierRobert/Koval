@@ -1,60 +1,106 @@
 <div class="race-goals-tab">
   @if (raceGoals$ | async; as raceGoals) {
     @if (raceGoals.length > 0) {
-      <h4 class="section-title">{{ 'CLUB_RACE_GOALS.SECTION_UPCOMING_RACES' | translate }}</h4>
-      <div class="goals-list">
-        @for (item of raceGoals; track item) {
-          <div class="goal-row glass">
-            <div class="goal-info">
-              <div class="goal-header">
-                <span class="goal-title">{{ item.title }}</span>
-                <span class="participant-count">{{ item.participants.length }}</span>
-              </div>
-              <div class="goal-meta">
-                <span>{{ item.sport }}</span>
-                <span>{{ formatDate(item.raceDate) }}</span>
-                @if (item.distance) {
-                  <span>{{ item.distance }}</span>
-                }
-                @if (item.location) {
-                  <span>{{ item.location }}</span>
-                }
-                @if (daysUntil(item.raceDate); as days) {
-                  <span class="days-badge" [class.soon]="days <= 30">
-                    {{ 'CLUB_RACE_GOALS.DAYS_TO_GO' | translate: { days: days } }}
-                  </span>
-                }
-              </div>
-              <div class="participants-row">
-                <div class="participant-avatars">
-                  @for (p of item.participants.slice(0, 5); track p.userId) {
-                    @if (p.profilePicture) {
-                      <img [src]="p.profilePicture" class="participant-avatar" />
-                    } @else {
-                      <span class="participant-avatar-placeholder">
-                        {{ p.displayName.charAt(0) }}
-                      </span>
+      <div class="tab-header">
+        <h4 class="section-title">{{ 'CLUB_RACE_GOALS.SECTION_UPCOMING_RACES' | translate }}</h4>
+        <div class="view-toggle">
+          <button
+            type="button"
+            [class.active]="view === 'timeline'"
+            (click)="setView('timeline')">
+            {{ 'CLUB_RACE_GOALS.VIEW_TIMELINE' | translate }}
+          </button>
+          <button
+            type="button"
+            [class.active]="view === 'list'"
+            (click)="setView('list')">
+            {{ 'CLUB_RACE_GOALS.VIEW_LIST' | translate }}
+          </button>
+        </div>
+      </div>
+
+      @if (view === 'timeline') {
+        @if (timelineItems$ | async; as items) {
+          <app-goal-timeline
+            [items]="items"
+            (itemClick)="onTimelineItemClick($event)">
+            <ng-template #cardFooter let-item>
+              @if (item.data?.participants?.length) {
+                <div class="club-card-participants">
+                  <div class="club-card-avatars">
+                    @for (p of item.data.participants.slice(0, 4); track p.userId) {
+                      @if (p.profilePicture) {
+                        <img [src]="p.profilePicture" class="club-card-avatar" [title]="p.displayName" />
+                      } @else {
+                        <span class="club-card-avatar club-card-avatar-placeholder" [title]="p.displayName">
+                          {{ p.displayName.charAt(0) }}
+                        </span>
+                      }
                     }
+                  </div>
+                  @if (item.data.participants.length > 4) {
+                    <span class="club-card-more">+{{ item.data.participants.length - 4 }}</span>
                   }
                 </div>
-                <button class="view-members-btn" (click)="openMembersModal(item, $event)">
-                  {{ item.participants.length === 1
-                    ? ('CLUB_RACE_GOALS.BTN_VIEW_MEMBERS_SINGULAR' | translate: { count: item.participants.length })
-                    : ('CLUB_RACE_GOALS.BTN_VIEW_MEMBERS_PLURAL' | translate: { count: item.participants.length }) }}
-                </button>
-                @if (!isParticipant(item, currentUserId$ | async)) {
-                  <button
-                    class="add-to-goals-btn"
-                    [disabled]="isAdding(item)"
-                    (click)="addToMyGoals(item)">
-                    {{ 'CLUB_RACE_GOALS.BTN_ADD_RACE' | translate }}
+              }
+            </ng-template>
+          </app-goal-timeline>
+        }
+      } @else {
+        <div class="goals-list">
+          @for (item of raceGoals; track item) {
+            <div class="goal-row glass">
+              <div class="goal-info">
+                <div class="goal-header">
+                  <span class="goal-title">{{ item.title }}</span>
+                  <span class="participant-count">{{ item.participants.length }}</span>
+                </div>
+                <div class="goal-meta">
+                  <span>{{ item.sport }}</span>
+                  <span>{{ formatDate(item.raceDate) }}</span>
+                  @if (item.distance) {
+                    <span>{{ item.distance }}</span>
+                  }
+                  @if (item.location) {
+                    <span>{{ item.location }}</span>
+                  }
+                  @if (daysUntil(item.raceDate); as days) {
+                    <span class="days-badge" [class.soon]="days <= 30">
+                      {{ 'CLUB_RACE_GOALS.DAYS_TO_GO' | translate: { days: days } }}
+                    </span>
+                  }
+                </div>
+                <div class="participants-row">
+                  <div class="participant-avatars">
+                    @for (p of item.participants.slice(0, 5); track p.userId) {
+                      @if (p.profilePicture) {
+                        <img [src]="p.profilePicture" class="participant-avatar" />
+                      } @else {
+                        <span class="participant-avatar-placeholder">
+                          {{ p.displayName.charAt(0) }}
+                        </span>
+                      }
+                    }
+                  </div>
+                  <button class="view-members-btn" (click)="openMembersModal(item, $event)">
+                    {{ item.participants.length === 1
+                      ? ('CLUB_RACE_GOALS.BTN_VIEW_MEMBERS_SINGULAR' | translate: { count: item.participants.length })
+                      : ('CLUB_RACE_GOALS.BTN_VIEW_MEMBERS_PLURAL' | translate: { count: item.participants.length }) }}
                   </button>
-                }
+                  @if (!isParticipant(item, currentUserId$ | async)) {
+                    <button
+                      class="add-to-goals-btn"
+                      [disabled]="isAdding(item)"
+                      (click)="addToMyGoals(item)">
+                      {{ 'CLUB_RACE_GOALS.BTN_ADD_RACE' | translate }}
+                    </button>
+                  }
+                </div>
               </div>
             </div>
-          </div>
-        }
-      </div>
+          }
+        </div>
+      }
     } @else {
       <div class="empty-tab">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>

@@ -3,49 +3,28 @@ import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
-import {BehaviorSubject, combineLatest, debounceTime, distinctUntilChanged, of, switchMap} from 'rxjs';
+import {BehaviorSubject, debounceTime, distinctUntilChanged, of, switchMap} from 'rxjs';
 import {map} from 'rxjs/operators';
 import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
 import {Race, RaceService} from '../../../services/race.service';
-import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {SkeletonComponent} from '../../shared/skeleton/skeleton.component';
-
-type LaneKey = 'run' | 'tri' | 'bike';
-
-interface RoadmapMarker extends RaceGoal {
-  _x: number;
-  _lane: LaneKey;
-  _statusKey: 'A' | 'B' | 'C' | 'PASSED';
-  _statusLabel: string;
-  _short: string;
-  _dateShort: string;
-  _passed: boolean;
-  _isPrimary: boolean;
-}
-
-interface RoadmapMonth {
-  label: string;
-}
-
-interface RoadmapData {
-  months: RoadmapMonth[];
-  todayX: number;
-  todayShort: string;
-  windowStartLabel: string;
-  windowEndLabel: string;
-  markersByLane: Record<LaneKey, RoadmapMarker[]>;
-}
-
-interface LaneDef {
-  key: LaneKey;
-  label: string;
-  icon: 'RUNNING' | 'CYCLING' | 'SWIMMING' | 'BRICK';
-}
+import {
+  GoalTimelineComponent,
+  TimelineItem,
+  TimelinePriority,
+} from '../../shared/goal-timeline/goal-timeline.component';
 
 @Component({
   selector: 'app-goals-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, SportIconComponent, SkeletonComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TranslateModule,
+    RouterLink,
+    SkeletonComponent,
+    GoalTimelineComponent,
+  ],
   templateUrl: './goals-page.component.html',
   styleUrl: './goals-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -61,21 +40,24 @@ export class GoalsPageComponent implements OnInit {
   allGoals$ = this.raceGoalService.goals$.pipe(map((goals) => this.sortGoals(goals)));
   loading$ = this.raceGoalService.loading$;
 
-  readonly lanes: LaneDef[] = [
-    { key: 'run', label: 'RUN', icon: 'RUNNING' },
-    { key: 'tri', label: 'TRI', icon: 'BRICK' },
-    { key: 'bike', label: 'BIKE', icon: 'CYCLING' },
-  ];
-
-  private windowMonthsSubject = new BehaviorSubject<{ start: Date; end: Date }>(this.computeWindow());
-
-  roadmap$ = combineLatest([this.allGoals$, this.windowMonthsSubject]).pipe(
-    map(([goals, window]) => this.buildRoadmap(goals, window.start, window.end)),
-  );
-
   primaryGoal$ = this.allGoals$.pipe(map((goals) => this.findPrimaryGoal(goals)));
   pastGoals$ = this.allGoals$.pipe(
     map((goals) => goals.filter((g) => !this.isUpcoming(g)).slice(0, 5)),
+  );
+
+  timelineItems$ = this.allGoals$.pipe(
+    map((goals) => {
+      const primary = this.findPrimaryGoal(goals);
+      return goals.map<TimelineItem<RaceGoal>>((g) => ({
+        id: g.id,
+        title: g.title,
+        sport: g.sport,
+        raceDate: g.race?.scheduledDate,
+        priority: g.priority as TimelinePriority,
+        isPrimary: !!primary && primary.id === g.id,
+        data: g,
+      }));
+    }),
   );
 
   // Modal state
@@ -121,60 +103,7 @@ export class GoalsPageComponent implements OnInit {
     });
   }
 
-  // ── Roadmap window ────────────────────────────────────────────────
-
-  private computeWindow(): { start: Date; end: Date } {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), 1);
-    const end = new Date(start.getFullYear() + 1, start.getMonth(), 1);
-    return { start, end };
-  }
-
-  private buildRoadmap(goals: RaceGoal[], start: Date, end: Date): RoadmapData {
-    const span = end.getTime() - start.getTime();
-    const now = new Date();
-    const todayX = Math.max(0, Math.min(100, ((now.getTime() - start.getTime()) / span) * 100));
-
-    const months: RoadmapMonth[] = [];
-    for (let i = 0; i <= 12; i++) {
-      const d = new Date(start.getFullYear(), start.getMonth() + i, 1);
-      months.push({ label: this.monthShort(d) });
-    }
-
-    const primary = this.findPrimaryGoal(goals);
-    const markersByLane: Record<LaneKey, RoadmapMarker[]> = { run: [], tri: [], bike: [] };
-
-    for (const g of goals) {
-      const effectiveDateStr = g.race?.scheduledDate;
-      const d = this.parseGoalDate(effectiveDateStr);
-      if (!d) continue;
-      if (d < start || d > end) continue;
-      const x = ((d.getTime() - start.getTime()) / span) * 100;
-      const lane = this.laneOfSport(g.sport);
-      const passed = !this.isUpcoming(g);
-      const marker: RoadmapMarker = {
-        ...g,
-        _x: x,
-        _lane: lane,
-        _passed: passed,
-        _statusKey: passed ? 'PASSED' : (g.priority ?? 'C'),
-        _statusLabel: passed ? '✓' : (g.priority ?? 'C'),
-        _short: this.shortLabelFor(g),
-        _dateShort: this.formatDateShort(effectiveDateStr),
-        _isPrimary: !!primary && primary.id === g.id,
-      };
-      markersByLane[lane].push(marker);
-    }
-
-    return {
-      months,
-      todayX,
-      todayShort: this.formatToday(now),
-      windowStartLabel: this.monthLong(start),
-      windowEndLabel: this.monthLong(new Date(end.getFullYear(), end.getMonth(), 1)),
-      markersByLane,
-    };
-  }
+  // ── Date helpers ──────────────────────────────────────────────────
 
   private parseGoalDate(dateStr: string | undefined | null): Date | null {
     if (!dateStr) return null;
@@ -227,8 +156,8 @@ export class GoalsPageComponent implements OnInit {
 
   // ── Click handlers ────────────────────────────────────────────────
 
-  onMarkerClick(goal: RaceGoal): void {
-    this.openEdit(goal);
+  onMarkerClick(item: TimelineItem<RaceGoal>): void {
+    if (item.data) this.openEdit(item.data);
   }
 
   // ── Modal: Create / Edit ──────────────────────────────────────────
@@ -306,61 +235,13 @@ export class GoalsPageComponent implements OnInit {
 
   // ── Formatting helpers ────────────────────────────────────────────
 
-  private laneOfSport(sport: RaceGoal['sport']): LaneKey {
-    switch (sport) {
-      case 'RUNNING': return 'run';
-      case 'CYCLING': return 'bike';
-      case 'TRIATHLON': return 'tri';
-      case 'SWIMMING': return 'tri';
-      default: return 'bike';
-    }
-  }
-
-  private shortLabelFor(g: RaceGoal): string {
-    const text = `${g.title ?? ''} ${g.distance ?? ''}`.toLowerCase();
-    if (g.sport === 'RUNNING') {
-      if (/marathon|42/.test(text)) return 'MAR';
-      if (/semi|21|half/.test(text)) return '21K';
-      if (/10\s?k|10km/.test(text)) return '10K';
-      if (/5\s?k|5km/.test(text)) return '5K';
-      return 'RUN';
-    }
-    if (g.sport === 'CYCLING') {
-      if (/etape|granfondo|gravel|cyclo/.test(text)) return 'GRF';
-      return 'BIKE';
-    }
-    if (g.sport === 'SWIMMING') return 'SWIM';
-    if (g.sport === 'TRIATHLON') {
-      if (/ironman|140\.6/.test(text)) return 'IM';
-      if (/70\.3|half/.test(text)) return '70.3';
-      if (/olympic|olympique/.test(text)) return 'OLY';
-      if (/sprint/.test(text)) return 'SPR';
-      return 'TRI';
-    }
-    return '—';
-  }
-
-  private monthShort(d: Date): string {
-    return d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '').toUpperCase().slice(0, 3);
-  }
-
-  private monthLong(d: Date): string {
-    return d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-  }
-
   formatDateShort(dateStr: string | undefined | null): string {
     const d = this.parseGoalDate(dateStr);
     if (!d) return 'Date à définir';
     const day = String(d.getDate()).padStart(2, '0');
-    const month = this.monthShort(d);
+    const month = d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '').toUpperCase().slice(0, 3);
     const year = d.getFullYear();
     return `${day} ${month} ${year}`;
-  }
-
-  private formatToday(d: Date): string {
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = this.monthShort(d);
-    return `${day} ${month}`;
   }
 
   // ── Sorting ───────────────────────────────────────────────────────

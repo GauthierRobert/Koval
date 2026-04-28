@@ -714,7 +714,9 @@
     "BTN_ADD_RACE": "+ Add to my goals",
     "EMPTY_NO_GOALS": "No race goals from club members yet.",
     "MODAL_RACING_SINGULAR": "{{count}} member racing",
-    "MODAL_RACING_PLURAL": "{{count}} members racing"
+    "MODAL_RACING_PLURAL": "{{count}} members racing",
+    "VIEW_TIMELINE": "Timeline",
+    "VIEW_LIST": "List"
   },
   "COACH_DASHBOARD": {
     "ATHLETES_HEADING": "ATHLETES",

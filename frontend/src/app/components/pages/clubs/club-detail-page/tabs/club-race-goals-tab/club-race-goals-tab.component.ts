@@ -7,11 +7,18 @@ import {AuthService} from '../../../../../../services/auth.service';
 import {ClubFeedService} from '../../../../../../services/club-feed.service';
 import {RaceGoalService} from '../../../../../../services/race-goal.service';
 import {ClubRaceGoalResponse} from '../../../../../../models/club.model';
+import {
+  GoalTimelineComponent,
+  TimelineItem,
+  TimelinePriority,
+} from '../../../../../shared/goal-timeline/goal-timeline.component';
+
+type ViewMode = 'timeline' | 'list';
 
 @Component({
   selector: 'app-club-race-goals-tab',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslateModule, GoalTimelineComponent],
   templateUrl: './club-race-goals-tab.component.html',
   styleUrl: './club-race-goals-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,8 +33,39 @@ export class ClubRaceGoalsTabComponent {
   raceGoals$ = this.clubFeedService.raceGoals$;
   currentUserId$ = this.authService.user$.pipe(map((u) => u?.id ?? null));
 
+  /** Timeline as default per design. */
+  view: ViewMode = 'timeline';
+
+  timelineItems$ = this.raceGoals$.pipe(
+    map((goals) =>
+      goals.map<TimelineItem<ClubRaceGoalResponse>>((g) => ({
+        id: this.rowKey(g),
+        title: g.title,
+        sport: g.sport,
+        raceDate: g.raceDate,
+        priority: this.derivePriority(g),
+        data: g,
+      })),
+    ),
+  );
+
   membersModalGoal: ClubRaceGoalResponse | null = null;
   addingKey: string | null = null;
+
+  setView(mode: ViewMode): void {
+    this.view = mode;
+  }
+
+  onTimelineItemClick(item: TimelineItem<ClubRaceGoalResponse>): void {
+    if (item.data) this.membersModalGoal = item.data;
+  }
+
+  /** Highest priority among participants drives the marker color. */
+  private derivePriority(goal: ClubRaceGoalResponse): TimelinePriority {
+    if (goal.participants.some((p) => p.priority === 'A')) return 'A';
+    if (goal.participants.some((p) => p.priority === 'B')) return 'B';
+    return 'C';
+  }
 
   openMembersModal(goal: ClubRaceGoalResponse, event: Event): void {
     event.stopPropagation();

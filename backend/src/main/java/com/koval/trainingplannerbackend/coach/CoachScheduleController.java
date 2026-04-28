@@ -81,7 +81,11 @@ public class CoachScheduleController {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime threeDaysLater = now.plusDays(3);
         List<ClubTrainingSession> sessions = clubSessionRepository
-                .findByResponsibleCoachIdAndLinkedTrainingIdIsNullAndScheduledAtBetween(userId, now, threeDaysLater);
+                .findByResponsibleCoachIdAndLinkedTrainingIdIsNullAndScheduledAtBetween(userId, now, threeDaysLater)
+                .stream()
+                .filter(s -> s.getRecurringTemplateId() != null)
+                .filter(s -> s.getLinkedTrainings() == null || s.getLinkedTrainings().isEmpty())
+                .toList();
         return ResponseEntity.ok(sessions);
     }
 }

@@ -194,6 +194,12 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
     }
   `,
   styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
     /* --- Sidebar panels --- */
     .sidebar-panel {
       display: flex;

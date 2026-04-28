@@ -1,0 +1,76 @@
+<div class="rm-panel glass">
+  @if (showHeader) {
+    <div class="rm-panel-hd">
+      <div class="rm-panel-title">
+        {{ panelTitle }} <small>· {{ windowStartLabel }} → {{ windowEndLabel }}</small>
+      </div>
+      @if (showLegend) {
+        <div class="rm-legend">
+          <span><i class="leg-dot a"></i>A-Race</span>
+          <span><i class="leg-dot b"></i>B-Race</span>
+          <span><i class="leg-dot c"></i>C-Race</span>
+          <span><i class="leg-dot done"></i>Passé</span>
+        </div>
+      }
+    </div>
+  }
+
+  <div class="rm-canvas" [style.--today-x]="todayX">
+    <div class="rm-axis">
+      <div class="rm-axis-spacer"></div>
+      <div class="rm-axis-track" #trackRef>
+        @for (m of months; let i = $index; track i) {
+          <div class="rm-axis-tick" [style.left.%]="(i / 12) * 100">
+            <span>{{ m.label }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="rm-lanes">
+      @for (lane of lanes; track lane.key) {
+        <div class="rm-row">
+          <div class="rm-lane-lbl">
+            <app-sport-icon [sport]="lane.icon" [size]="14"></app-sport-icon>
+            <span>{{ lane.label }}</span>
+          </div>
+          <div class="rm-lane">
+            <div class="rm-track"></div>
+            @for (m of markersByLane[lane.key]; track m.id) {
+              <button
+                type="button"
+                class="rm-marker"
+                [class.passed]="m._passed"
+                [class.primary]="m.isPrimary"
+                [class.above]="m._above"
+                [attr.data-status]="m._statusKey"
+                [style.left.%]="m._x"
+                (click)="onMarkerClick(m)"
+                [title]="m.title">
+                <div class="rm-dot">
+                  <span>{{ m._statusLabel }}</span>
+                </div>
+                <div class="rm-card">
+                  <div class="rm-card-tag">{{ m._short }}</div>
+                  <div class="rm-card-name">{{ m.title }}</div>
+                  <div class="rm-card-date">{{ m._dateShort }}</div>
+                  @if (cardFooterTpl(); as tpl) {
+                    <ng-container *ngTemplateOutlet="tpl; context: {$implicit: m}"></ng-container>
+                  }
+                </div>
+              </button>
+            }
+            @if (markersByLane[lane.key].length === 0) {
+              <span class="rm-lane-empty">{{ emptyLaneLabel }}</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="rm-today">
+      <div class="rm-today-pill">AUJ' · {{ todayShort }}</div>
+      <div class="rm-today-line"></div>
+    </div>
+  </div>
+</div>

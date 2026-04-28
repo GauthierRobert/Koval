@@ -45,6 +45,7 @@ Thumbs.db
 
 /mongo-data/
 setup-gcp.sh
+.playwright-mcp
 .claude/worktrees
 .claude/settings.local.json
 .superpowers

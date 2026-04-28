@@ -225,9 +225,9 @@ input:checked + .slider:before {
     overflow-y: auto;
     min-height: 0;
   }
-}
 
-:host.mobile-detail-active {
-  display: none;
+  :host.mobile-detail-active {
+    display: none;
+  }
 }
 

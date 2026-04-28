@@ -2,7 +2,6 @@
   @if (loading$ | async) {
     <app-skeleton [rows]="5"></app-skeleton>
   } @else if (allGoals$ | async; as allGoals) {
-    @if (roadmap$ | async; as rm) {
 
       <div class="rm-header">
         <div>
@@ -46,7 +45,7 @@
         <div class="rm-stat glass">
           <small>FENÊTRE</small>
           <b class="info">12 MOIS</b>
-          <span class="mono dim">{{ rm.windowStartLabel }} → {{ rm.windowEndLabel }}</span>
+          <span class="mono dim">12 prochains mois</span>
         </div>
 
         <div class="rm-stat glass">
@@ -68,81 +67,18 @@
         </div>
       </div>
 
-      <!-- Roadmap panel -->
-      <div class="rm-panel glass">
-        <div class="rm-panel-hd">
-          <div class="rm-panel-title">
-            Roadmap 12 mois <small>· {{ rm.windowStartLabel }} → {{ rm.windowEndLabel }}</small>
-          </div>
-          <div class="rm-legend">
-            <span><i class="leg-dot a"></i>A-Race</span>
-            <span><i class="leg-dot b"></i>B-Race</span>
-            <span><i class="leg-dot c"></i>C-Race</span>
-            <span><i class="leg-dot done"></i>Passé</span>
-          </div>
-        </div>
-
-        <div class="rm-canvas" [style.--today-x]="rm.todayX">
-          <!-- Months axis -->
-          <div class="rm-axis">
-            <div class="rm-axis-spacer"></div>
-            <div class="rm-axis-track">
-              @for (m of rm.months; let i = $index; track i) {
-                <div class="rm-axis-tick" [style.left.%]="(i / 12) * 100">
-                  <span>{{ m.label }}</span>
-                </div>
-              }
-            </div>
-          </div>
-
-          <!-- Lanes -->
-          <div class="rm-lanes">
-            @for (lane of lanes; track lane.key) {
-              <div class="rm-row">
-                <div class="rm-lane-lbl">
-                  <app-sport-icon [sport]="lane.icon" [size]="14"></app-sport-icon>
-                  <span>{{ lane.label }}</span>
-                </div>
-                <div class="rm-lane">
-                  <div class="rm-track"></div>
-                  @for (g of rm.markersByLane[lane.key]; track g.id) {
-                    <button
-                      type="button"
-                      class="rm-marker"
-                      [class.passed]="g._passed"
-                      [class.primary]="g._isPrimary"
-                      [attr.data-status]="g._statusKey"
-                      [style.left.%]="g._x"
-                      (click)="onMarkerClick(g)"
-                      [title]="g.title">
-                      <div class="rm-dot">
-                        <span>{{ g._statusLabel }}</span>
-                      </div>
-                      <div class="rm-card">
-                        <div class="rm-card-tag">{{ g._short }}</div>
-                        <div class="rm-card-name">{{ g.title }}</div>
-                        <div class="rm-card-date">
-                          {{ g._dateShort }}
-                          @if (g.targetTime) { <span class="rm-card-time"> · {{ g.targetTime }}</span> }
-                        </div>
-                      </div>
-                    </button>
-                  }
-                  @if (rm.markersByLane[lane.key].length === 0) {
-                    <span class="rm-lane-empty">Aucun objectif sur cette voie</span>
-                  }
-                </div>
-              </div>
+      <!-- Roadmap panel (shared timeline) -->
+      @if (timelineItems$ | async; as items) {
+        <app-goal-timeline
+          [items]="items"
+          (itemClick)="onMarkerClick($event)">
+          <ng-template #cardFooter let-item>
+            @if (item.data?.targetTime) {
+              <div class="rm-card-time-row mono">{{ item.data.targetTime }}</div>
             }
-          </div>
-
-          <!-- Today line -->
-          <div class="rm-today">
-            <div class="rm-today-pill">AUJ' · {{ rm.todayShort }}</div>
-            <div class="rm-today-line"></div>
-          </div>
-        </div>
-      </div>
+          </ng-template>
+        </app-goal-timeline>
+      }
 
       <!-- Bottom: focus + history -->
       <div class="rm-bottom">
@@ -227,7 +163,6 @@
         </div>
       </div>
 
-    }
   }
 </div>
 

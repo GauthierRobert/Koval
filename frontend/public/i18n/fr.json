@@ -714,7 +714,9 @@
     "BTN_ADD_RACE": "+ Ajouter à mes objectifs",
     "EMPTY_NO_GOALS": "Aucun objectif de course des membres du club pour l'instant.",
     "MODAL_RACING_SINGULAR": "{{count}} membre en course",
-    "MODAL_RACING_PLURAL": "{{count}} membres en course"
+    "MODAL_RACING_PLURAL": "{{count}} membres en course",
+    "VIEW_TIMELINE": "Timeline",
+    "VIEW_LIST": "Liste"
   },
   "COACH_DASHBOARD": {
     "BULK_SELECT": "Sélectionner",

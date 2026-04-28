@@ -97,7 +97,12 @@ export class RacesPageComponent implements OnInit {
     const q = this.searchQuery().trim().toLowerCase();
     const dists = this.distanceFilters();
     const verified = this.verifiedFilter();
+    const preset = this.datePreset();
     const cache = this.raceCache();
+
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const in12Months = new Date(today); in12Months.setMonth(in12Months.getMonth() + 12);
+
     return results.content.filter(r => {
       if (dists.size > 0) {
         const dist = (r.distance ?? '').toUpperCase();
@@ -112,6 +117,15 @@ export class RacesPageComponent implements OnInit {
       if (q) {
         const haystack = [r.title, r.location, r.country, r.distance].join(' ').toLowerCase();
         if (!haystack.includes(q)) return false;
+      }
+      if (!r.scheduledDate) return false;
+      if (preset === '12m') {
+        const t = new Date(r.scheduledDate + 'T00:00:00').getTime();
+        if (t < today.getTime() || t > in12Months.getTime()) return false;
+      } else if (preset === 'y2026') {
+        if (r.scheduledDate.slice(0, 4) !== '2026') return false;
+      } else if (preset === 'y2027') {
+        if (r.scheduledDate.slice(0, 4) !== '2027') return false;
       }
       return true;
     }).map(r => cache[r.id] ?? r);
