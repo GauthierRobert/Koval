@@ -16,6 +16,7 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
 import { ChatApiService } from '../../../services/chat-api.service';
+import { ChatRoomCacheService } from '../../../services/chat-room-cache.service';
 import { ChatSseService } from '../../../services/chat-sse.service';
 import { ChatMessage, ChatRoomDetail, ChatRoomScope } from '../../../models/chat.models';
 import { ChatMessageListComponent } from '../chat-message-list/chat-message-list.component';
@@ -81,6 +82,7 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
   readonly authService = inject(AuthService);
   private readonly sse = inject(ChatSseService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly cache = inject(ChatRoomCacheService);
 
   roomDetail: ChatRoomDetail | null = null;
   messages: ChatMessage[] = [];
@@ -88,17 +90,14 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
   sending = false;
   loadingOlder = false;
   private roomId: string | null = null;
+  private cacheKey: string | null = null;
   private subs = new Subscription();
 
   ngOnInit(): void {
     this.resolveRoom();
     this.subs.add(
       this.sse.onChatMessage$.subscribe((msg) => {
-        if (msg.roomId !== this.roomId) return;
-        if (this.messages.some((m) => m.id === msg.id)) return;
-        this.messages = [...this.messages, msg];
-        this.messageList?.scrollToBottomIfNeeded();
-        this.cdr.markForCheck();
+        this.handleIncomingMessage(msg);
       }),
     );
   }
@@ -114,10 +113,12 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
   onSend(text: string): void {
     if (!this.roomId) return;
     this.sending = true;
+    const key = this.cacheKey;
     this.api.postMessage(this.roomId, text).subscribe({
       next: (msg) => {
         if (!this.messages.some((m) => m.id === msg.id)) {
           this.messages = [...this.messages, msg];
+          if (key) this.cache.appendMessage(key, msg);
           this.messageList?.scrollToBottomIfNeeded();
         }
         this.sending = false;
@@ -128,9 +129,11 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onDelete(messageId: string): void {
+    const key = this.cacheKey;
     this.api.deleteMessage(messageId).subscribe({
       next: () => {
         this.messages = this.messages.map((m) => m.id === messageId ? { ...m, deleted: true, content: '' } : m);
+        if (key) this.cache.updateMessage(key, messageId, { deleted: true, content: '' });
         this.cdr.markForCheck();
       },
     });
@@ -140,9 +143,11 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
     if (this.loadingOlder || !this.roomId || this.messages.length === 0) return;
     this.loadingOlder = true;
     const prevHeight = this.messageList?.scrollHeight ?? 0;
+    const key = this.cacheKey;
     this.api.getMessages(this.roomId, this.messages[0].createdAt).subscribe({
       next: (older) => {
         this.messages = [...older, ...this.messages];
+        if (key) this.cache.prependMessages(key, older);
         this.messageList?.preserveScrollAfterPrepend(prevHeight);
         this.loadingOlder = false;
         this.cdr.markForCheck();
@@ -151,26 +156,57 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
+  private handleIncomingMessage(msg: ChatMessage): void {
+    if (msg.roomId !== this.roomId) return;
+    if (this.messages.some((m) => m.id === msg.id)) return;
+    this.messages = [...this.messages, msg];
+    if (this.cacheKey) this.cache.appendMessage(this.cacheKey, msg);
+    this.messageList?.scrollToBottomIfNeeded();
+    this.cdr.markForCheck();
+  }
+
   private resolveRoom(): void {
+    const key = ChatRoomCacheService.keyFor(this.scope, this.clubId, this.refId, this.title);
+    this.cacheKey = key;
+
+    const cached = this.cache.get(key);
+    if (cached) {
+      this.roomId = cached.detail.id;
+      this.roomDetail = cached.detail;
+      this.messages = cached.messages;
+      this.loading = false;
+      this.cdr.markForCheck();
+      requestAnimationFrame(() => this.messageList?.scrollToBottomIfNeeded());
+      return;
+    }
+
     this.loading = true;
     this.roomId = null;
     this.messages = [];
     this.roomDetail = null;
     this.api.findByParent(this.scope, this.clubId, this.refId, this.title).subscribe({
       next: (detail) => {
+        if (this.cacheKey !== key) return;
         this.roomId = detail.id;
         this.roomDetail = detail;
         this.loading = false;
+        this.cache.setDetail(key, detail);
         this.cdr.markForCheck();
         this.api.getMessages(detail.id).subscribe({
           next: (msgs) => {
+            if (this.cacheKey !== key) return;
             this.messages = msgs;
+            this.cache.set(key, { detail, messages: msgs });
             this.cdr.markForCheck();
             requestAnimationFrame(() => this.messageList?.scrollToBottomIfNeeded());
           },
         });
       },
-      error: () => { this.loading = false; this.cdr.markForCheck(); },
+      error: () => {
+        if (this.cacheKey !== key) return;
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
     });
   }
 }

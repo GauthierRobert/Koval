@@ -168,9 +168,19 @@
 /* ── Message body ── */
 
 .chat-panel-body {
-  flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 16px;
-  display: flex; flex-direction: column; gap: 4px;
+  flex: 1 1 auto; min-height: 0; padding: 16px;
+  display: flex; flex-direction: column;
 }
+
+.chat-message-viewport {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.chat-message-row { display: flex; flex-direction: column; width: 100%; }
+.chat-message-row.own-row > .chat-message { align-self: flex-end; }
 
 .chat-empty-state { color: var(--text-muted, rgba(255, 255, 255, 0.5)); text-align: center; margin: auto; font-size: 0.9rem; }
 .chat-loading-older { text-align: center; padding: 8px; color: var(--text-muted, rgba(255, 255, 255, 0.4)); font-size: 0.8rem; }

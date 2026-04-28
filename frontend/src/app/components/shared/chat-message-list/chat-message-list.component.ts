@@ -2,7 +2,6 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  ElementRef,
   EventEmitter,
   HostListener,
   Input,
@@ -12,6 +11,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
+import { ScrollingModule as ExperimentalScrollingModule } from '@angular/cdk-experimental/scrolling';
 import { ChatMessage, ChatRoomDetail, ChatRoomScope } from '../../../models/chat.models';
 import { isGroupStart, isNewDay, formatChatDate } from '../../../utils/chat-message.utils';
 
@@ -19,12 +20,14 @@ import { isGroupStart, isNewDay, formatChatDate } from '../../../utils/chat-mess
  * Pure presentational component that renders a chat message list with composer.
  *
  * All data flows in via @Input; all user actions flow out via @Output.
- * Smart auto-scroll and infinite-scroll detection are handled internally.
+ * The message list is virtualized via the CDK autosize strategy so the DOM
+ * cost stays bounded for long histories. Smart auto-scroll and infinite-scroll
+ * detection are handled internally against the virtual viewport.
  */
 @Component({
   selector: 'app-chat-message-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ScrollingModule, ExperimentalScrollingModule],
   templateUrl: './chat-message-list.component.html',
   styleUrl: './chat-message-list.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -49,7 +52,7 @@ export class ChatMessageListComponent {
   @Output() toggleMute = new EventEmitter<void>();
   @Output() backClick = new EventEmitter<void>();
 
-  @ViewChild('scrollContainer') private scrollContainer?: ElementRef<HTMLElement>;
+  @ViewChild('viewport') private viewport?: CdkVirtualScrollViewport;
 
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -66,9 +69,7 @@ export class ChatMessageListComponent {
   readonly isNewDay = isNewDay;
   readonly formatChatDate = formatChatDate;
 
-  trackById(_index: number, msg: ChatMessage): string {
-    return msg.id;
-  }
+  trackById = (_index: number, msg: ChatMessage): string => msg.id;
 
   isOwn(msg: ChatMessage): boolean {
     return msg.senderId === this.currentUserId;
@@ -91,11 +92,16 @@ export class ChatMessageListComponent {
   }
 
   onScroll(): void {
-    const el = this.scrollContainer?.nativeElement;
-    if (!el) return;
-    this.nearBottom =
-      el.scrollHeight - el.scrollTop - el.clientHeight < ChatMessageListComponent.SCROLL_BOTTOM_THRESHOLD;
-    if (el.scrollTop < ChatMessageListComponent.SCROLL_TOP_THRESHOLD && !this.loadingOlder && this.messages.length > 0) {
+    const viewport = this.viewport;
+    if (!viewport) return;
+    const distanceFromBottom = viewport.measureScrollOffset('bottom');
+    const distanceFromTop = viewport.measureScrollOffset('top');
+    this.nearBottom = distanceFromBottom < ChatMessageListComponent.SCROLL_BOTTOM_THRESHOLD;
+    if (
+      distanceFromTop < ChatMessageListComponent.SCROLL_TOP_THRESHOLD &&
+      !this.loadingOlder &&
+      this.messages.length > 0
+    ) {
       this.scrolledNearTop.emit();
     }
   }
@@ -107,17 +113,23 @@ export class ChatMessageListComponent {
 
   /** Preserve scroll position after older messages are prepended. */
   preserveScrollAfterPrepend(prevHeight: number): void {
-    const el = this.scrollContainer?.nativeElement;
-    if (el) requestAnimationFrame(() => { el.scrollTop = el.scrollHeight - prevHeight; });
+    const viewport = this.viewport;
+    if (!viewport) return;
+    requestAnimationFrame(() => {
+      viewport.checkViewportSize();
+      const el = viewport.elementRef.nativeElement;
+      viewport.scrollToOffset(Math.max(0, el.scrollHeight - prevHeight));
+    });
   }
 
   get scrollHeight(): number {
-    return this.scrollContainer?.nativeElement?.scrollHeight ?? 0;
+    return this.viewport?.elementRef.nativeElement.scrollHeight ?? 0;
   }
 
   private scrollToBottom(): void {
-    const el = this.scrollContainer?.nativeElement;
-    if (el) el.scrollTop = el.scrollHeight;
+    const viewport = this.viewport;
+    if (!viewport) return;
+    viewport.scrollTo({ bottom: 0 });
   }
 
   // --- Mobile header: scope icon + overflow menu ---

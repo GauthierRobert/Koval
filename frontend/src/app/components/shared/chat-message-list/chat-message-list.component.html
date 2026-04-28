@@ -82,53 +82,65 @@
     </header>
   }
 
-  <div class="chat-panel-body" #scrollContainer (scroll)="onScroll()">
+  <div class="chat-panel-body">
     @if (loadingOlder) {
       <div class="chat-loading-older">Loading older messages…</div>
     }
-    @for (msg of messages; track trackById($index, msg)) {
-      @if (isNewDay(msg, $index, messages)) {
-        <div class="chat-date-separator"><span>{{ formatChatDate(msg.createdAt) }}</span></div>
-      }
-      @if (msg.type === 'SYSTEM') {
-        <div class="chat-system-message">{{ msg.content }}</div>
-      } @else {
-        <div class="chat-message" [class.own]="isOwn(msg)" [class.group-continuation]="!isGroupStart(msg, $index, messages)">
-          @if (!isOwn(msg) && isGroupStart(msg, $index, messages)) {
-            <div class="chat-message-avatar">
-              @if (msg.senderProfilePicture) {
-                <img [src]="msg.senderProfilePicture" [alt]="msg.senderDisplayName" />
-              } @else {
-                <span>{{ msg.senderDisplayName.charAt(0).toUpperCase() }}</span>
-              }
-            </div>
-          }
-          @if (!isOwn(msg) && !isGroupStart(msg, $index, messages)) {
-            <div class="chat-message-avatar-spacer"></div>
-          }
-          <div class="chat-message-bubble">
-            @if (!isOwn(msg) && isGroupStart(msg, $index, messages)) {
-              <div class="chat-message-author">{{ msg.senderDisplayName }}</div>
-            }
-            @if (msg.deleted) {
-              <div class="chat-message-deleted"><em>message deleted</em></div>
-            } @else {
-              <div class="chat-message-text">{{ msg.content }}</div>
-            }
-            <div class="chat-message-meta">
-              <span class="chat-message-time">{{ msg.createdAt | date: 'shortTime' }}</span>
-              @if (isOwn(msg) && !msg.deleted) {
-                <button class="chat-message-delete" (click)="deleteMsg.emit(msg.id)" title="Delete">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                </button>
-              }
-            </div>
-          </div>
-        </div>
-      }
-    }
     @if (messages.length === 0) {
       <div class="chat-empty-state">No messages yet. Say hi!</div>
+    } @else {
+      <cdk-virtual-scroll-viewport
+        autosize
+        minBufferPx="600"
+        maxBufferPx="1200"
+        class="chat-message-viewport"
+        #viewport
+        (scroll)="onScroll()">
+        <div
+          *cdkVirtualFor="let msg of messages; let i = index; trackBy: trackById"
+          class="chat-message-row"
+          [class.own-row]="msg.type !== 'SYSTEM' && isOwn(msg)">
+          @if (isNewDay(msg, i, messages)) {
+            <div class="chat-date-separator"><span>{{ formatChatDate(msg.createdAt) }}</span></div>
+          }
+          @if (msg.type === 'SYSTEM') {
+            <div class="chat-system-message">{{ msg.content }}</div>
+          } @else {
+            <div class="chat-message" [class.own]="isOwn(msg)" [class.group-continuation]="!isGroupStart(msg, i, messages)">
+              @if (!isOwn(msg) && isGroupStart(msg, i, messages)) {
+                <div class="chat-message-avatar">
+                  @if (msg.senderProfilePicture) {
+                    <img [src]="msg.senderProfilePicture" [alt]="msg.senderDisplayName" loading="lazy" decoding="async" />
+                  } @else {
+                    <span>{{ msg.senderDisplayName.charAt(0).toUpperCase() }}</span>
+                  }
+                </div>
+              }
+              @if (!isOwn(msg) && !isGroupStart(msg, i, messages)) {
+                <div class="chat-message-avatar-spacer"></div>
+              }
+              <div class="chat-message-bubble">
+                @if (!isOwn(msg) && isGroupStart(msg, i, messages)) {
+                  <div class="chat-message-author">{{ msg.senderDisplayName }}</div>
+                }
+                @if (msg.deleted) {
+                  <div class="chat-message-deleted"><em>message deleted</em></div>
+                } @else {
+                  <div class="chat-message-text">{{ msg.content }}</div>
+                }
+                <div class="chat-message-meta">
+                  <span class="chat-message-time">{{ msg.createdAt | date: 'shortTime' }}</span>
+                  @if (isOwn(msg) && !msg.deleted) {
+                    <button class="chat-message-delete" (click)="deleteMsg.emit(msg.id)" title="Delete">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </cdk-virtual-scroll-viewport>
     }
   </div>
 
