@@ -19,9 +19,11 @@
                 @if (item.location) {
                   <span>{{ item.location }}</span>
                 }
-                <span class="days-badge" [class.soon]="daysUntil(item.raceDate) <= 30">
-                  {{ 'CLUB_RACE_GOALS.DAYS_TO_GO' | translate: { days: daysUntil(item.raceDate) } }}
-                </span>
+                @if (daysUntil(item.raceDate); as days) {
+                  <span class="days-badge" [class.soon]="days <= 30">
+                    {{ 'CLUB_RACE_GOALS.DAYS_TO_GO' | translate: { days: days } }}
+                  </span>
+                }
               </div>
               <div class="participants-row">
                 <div class="participant-avatars">

@@ -28,11 +28,15 @@
               </td>
               <td class="goal-title-cell">{{ goal.title }}</td>
               <td>{{ goal.sport }}</td>
-              <td>{{ goal.raceDate | date:'MMM d, y' }}</td>
+              <td>{{ goalDate(goal) ? (goalDate(goal) | date:'MMM d, y') : '—' }}</td>
               <td>
-                <span class="days-badge-coach" [class.past]="daysUntil(goal.raceDate) < 0">
-                  {{ daysUntil(goal.raceDate) < 0 ? ('COACH_DASHBOARD.DAYS_AGO' | translate: { n: daysUntil(goal.raceDate) * -1 }) : ('COACH_DASHBOARD.DAYS_AHEAD' | translate: { n: daysUntil(goal.raceDate) }) }}
-                </span>
+                @if (daysUntil(goalDate(goal)); as d) {
+                  <span class="days-badge-coach" [class.past]="d < 0">
+                    {{ d < 0 ? ('COACH_DASHBOARD.DAYS_AGO' | translate: { n: d * -1 }) : ('COACH_DASHBOARD.DAYS_AHEAD' | translate: { n: d }) }}
+                  </span>
+                } @else {
+                  <span class="days-badge-coach">—</span>
+                }
               </td>
               <td>{{ goal.distance || '—' }}</td>
               <td>{{ goal.targetTime || '—' }}</td>

@@ -11,7 +11,6 @@ export interface RaceGoal {
   athleteId: string;
   title: string;
   sport: 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'TRIATHLON' | 'OTHER';
-  raceDate: string; // YYYY-MM-DD
   priority: 'A' | 'B' | 'C';
   distance?: string;
   location?: string;
@@ -19,7 +18,12 @@ export interface RaceGoal {
   targetTime?: string;
   createdAt?: string;
   raceId?: string;
-  race?: Race; // full race data embedded by backend (cached)
+  race?: Race; // full race data embedded by backend; race.scheduledDate is the goal's date
+}
+
+/** A goal's date is sourced from its linked race's scheduledDate. */
+export function goalDate(goal: RaceGoal | null | undefined): string | undefined {
+  return goal?.race?.scheduledDate;
 }
 
 export const PRIORITY_COLORS: Record<string, string> = {
@@ -44,7 +48,9 @@ export class RaceGoalService {
   nextGoal$: Observable<RaceGoal | null> = this.goals$.pipe(
     map((goals) => {
       const today = new Date().toISOString().split('T')[0];
-      const future = goals.filter((g) => g.raceDate >= today).sort((a, b) => a.raceDate.localeCompare(b.raceDate));
+      const future = goals
+        .filter((g) => !!goalDate(g) && goalDate(g)! >= today)
+        .sort((a, b) => (goalDate(a) ?? '').localeCompare(goalDate(b) ?? ''));
       return future[0] ?? null;
     }),
   );
@@ -69,7 +75,7 @@ export class RaceGoalService {
       this.http.post<RaceGoal>(this.apiUrl, goal).subscribe({
         next: (created) => {
           this.ngZone.run(() => {
-            this.goalsSubject.next([...this.goalsSubject.value, created].sort((a, b) => a.raceDate.localeCompare(b.raceDate)));
+            this.goalsSubject.next([...this.goalsSubject.value, created].sort((a, b) => (goalDate(a) ?? '').localeCompare(goalDate(b) ?? '')));
             observer.next(created);
             observer.complete();
           });
@@ -84,7 +90,7 @@ export class RaceGoalService {
       this.http.put<RaceGoal>(`${this.apiUrl}/${id}`, goal).subscribe({
         next: (updated) => {
           this.ngZone.run(() => {
-            const list = this.goalsSubject.value.map((g) => (g.id === id ? updated : g)).sort((a, b) => a.raceDate.localeCompare(b.raceDate));
+            const list = this.goalsSubject.value.map((g) => (g.id === id ? updated : g)).sort((a, b) => (goalDate(a) ?? '').localeCompare(goalDate(b) ?? ''));
             this.goalsSubject.next(list);
             observer.next(updated);
             observer.complete();

@@ -712,9 +712,10 @@ export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
         }
 
         // ── Race Goal markers ─────────────────────────────────────────────────
-        const goalsToShow = (this.goals ?? []).filter(g =>
-            g.raceDate >= this.viewStartDate && g.raceDate <= this.viewEndDate
-        );
+        const goalsToShow = (this.goals ?? []).filter(g => {
+            const date = g.race?.scheduledDate;
+            return !!date && date >= this.viewStartDate && date <= this.viewEndDate;
+        });
         const sortedGoals = [...goalsToShow].sort((a, b) => {
             const order: Record<string, number> = { C: 0, B: 1, A: 2 };
             return (order[a.priority] ?? 0) - (order[b.priority] ?? 0);
@@ -736,7 +737,9 @@ export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
         };
 
         for (const goal of sortedGoals) {
-            const gx = xOf(goal.raceDate);
+            const goalDate = goal.race?.scheduledDate;
+            if (!goalDate) continue;
+            const gx = xOf(goalDate);
             const color = PRIORITY_COLORS[goal.priority] ?? '#9CA3AF';
             const isA = goal.priority === 'A';
 
@@ -788,7 +791,7 @@ export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
             const title = goal.title.length > 21 ? goal.title.substring(0, 20) + '\u2026' : goal.title;
             ctx.font = isA ? `bold ${FONT_SM}` : FONT_XS;
             const titleWidth = ctx.measureText(title).width;
-            const dateLabel = new Date(goal.raceDate + 'T12:00:00')
+            const dateLabel = new Date(goalDate + 'T12:00:00')
                 .toLocaleDateString('en', { month: 'short', day: 'numeric' });
             ctx.font = FONT_XS;
             const dateWidth = ctx.measureText(dateLabel).width;

@@ -251,7 +251,8 @@ export interface ClubRaceGoalResponse {
   raceId?: string;
   title: string;
   sport: string;
-  raceDate: string;
+  /** YYYY-MM-DD; sourced from the linked race's scheduledDate (may be missing if unlinked). */
+  raceDate?: string;
   distance?: string;
   location?: string;
   participants: {

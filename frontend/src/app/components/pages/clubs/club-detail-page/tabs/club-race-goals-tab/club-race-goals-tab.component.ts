@@ -53,7 +53,6 @@ export class ClubRaceGoalsTabComponent {
         raceId: goal.raceId,
         title: goal.title,
         sport: goal.sport as never,
-        raceDate: goal.raceDate,
         distance: goal.distance,
         location: goal.location,
         priority: 'A',
@@ -77,17 +76,22 @@ export class ClubRaceGoalsTabComponent {
   }
 
   private rowKey(goal: ClubRaceGoalResponse): string {
-    return goal.raceId ?? `${goal.title}|${goal.raceDate}`;
+    return goal.raceId ?? `${goal.title}|${goal.raceDate ?? ''}`;
   }
 
-  formatDate(dateStr: string): string {
-    return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
+  formatDate(dateStr: string | undefined | null): string {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr + 'T00:00:00');
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('en-US', {
       weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
     });
   }
 
-  daysUntil(dateStr: string): number {
+  daysUntil(dateStr: string | undefined | null): number | null {
+    if (!dateStr) return null;
     const race = new Date(dateStr + 'T00:00:00').getTime();
+    if (isNaN(race)) return null;
     return Math.round((race - Date.now()) / 86400000);
   }
 

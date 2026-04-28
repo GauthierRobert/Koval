@@ -1,14 +1,18 @@
 package com.koval.trainingplannerbackend;
 
+import com.koval.trainingplannerbackend.race.Race;
+import com.koval.trainingplannerbackend.race.RaceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.LocalDate;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -20,6 +24,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Integration tests for race goals and zone system CRUD.
  */
 class RaceGoalAndZoneIntegrationTest extends BaseIntegrationTest {
+
+    @Autowired
+    private RaceRepository raceRepository;
 
     private String athleteToken;
     private String coachToken;
@@ -44,14 +51,13 @@ class RaceGoalAndZoneIntegrationTest extends BaseIntegrationTest {
                                 {
                                     "title": "Ironman Nice",
                                     "sport": "TRIATHLON",
-                                    "raceDate": "%s",
                                     "priority": "A",
                                     "distance": "140.6 miles",
                                     "location": "Nice, France",
                                     "targetTime": "10:30:00",
                                     "notes": "Main goal race"
                                 }
-                                """.formatted(LocalDate.now().plusMonths(6))))
+                                """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Ironman Nice"))
                 .andExpect(jsonPath("$.priority").value("A"))
@@ -75,11 +81,10 @@ class RaceGoalAndZoneIntegrationTest extends BaseIntegrationTest {
                                 {
                                     "title": "Ironman Nice 2026",
                                     "sport": "TRIATHLON",
-                                    "raceDate": "%s",
                                     "priority": "A",
                                     "targetTime": "10:00:00"
                                 }
-                                """.formatted(LocalDate.now().plusMonths(6))))
+                                """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Ironman Nice 2026"))
                 .andExpect(jsonPath("$.targetTime").value("10:00:00"));
@@ -102,14 +107,68 @@ class RaceGoalAndZoneIntegrationTest extends BaseIntegrationTest {
                         .header("Authorization", bearer(athleteToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"title": "My Race", "sport": "CYCLING", "raceDate": "%s", "priority": "B"}
-                                """.formatted(LocalDate.now().plusMonths(3))))
+                                {"title": "My Race", "sport": "CYCLING", "priority": "B"}
+                                """))
                 .andExpect(status().isCreated());
 
         String athlete2Token = loginAthlete("athlete2");
         mockMvc.perform(get("/api/goals")
                         .header("Authorization", bearer(athlete2Token)))
                 .andExpect(jsonPath("$", hasSize(0)));
+    }
+
+    @Test
+    @DisplayName("Listed goal exposes the linked race's scheduledDate as its date")
+    void goalListIncludesLinkedRaceDate() throws Exception {
+        // Seed a race in the catalog with a known scheduledDate
+        String scheduledDate = LocalDate.now().plusMonths(6).toString();
+        Race race = new Race();
+        race.setTitle("Ironman Nice 2026");
+        race.setSport("TRIATHLON");
+        race.setLocation("Nice, France");
+        race.setDistance("140.6 miles");
+        race.setScheduledDate(scheduledDate);
+        Race savedRace = raceRepository.save(race);
+
+        // Create a goal linked to that race (no raceDate in payload)
+        mockMvc.perform(post("/api/goals")
+                        .header("Authorization", bearer(athleteToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "title": "Sub-10 Ironman",
+                                    "sport": "TRIATHLON",
+                                    "priority": "A",
+                                    "raceId": "%s"
+                                }
+                                """.formatted(savedRace.getId())))
+                .andExpect(status().isCreated());
+
+        // Listing the goal should embed the race and expose its scheduledDate
+        mockMvc.perform(get("/api/goals")
+                        .header("Authorization", bearer(athleteToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].raceId").value(savedRace.getId()))
+                .andExpect(jsonPath("$[0].race.scheduledDate").value(scheduledDate));
+    }
+
+    @Test
+    @DisplayName("Goal without a linked race has no date in the response")
+    void goalWithoutRaceHasNoDate() throws Exception {
+        mockMvc.perform(post("/api/goals")
+                        .header("Authorization", bearer(athleteToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title": "Unscheduled goal", "sport": "RUNNING", "priority": "C"}
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/goals")
+                        .header("Authorization", bearer(athleteToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].race", is(org.hamcrest.Matchers.nullValue())));
     }
 
     // --- Zone System ---

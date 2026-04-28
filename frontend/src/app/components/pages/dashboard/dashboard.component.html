@@ -97,33 +97,36 @@
             </div>
           </div>
 
-          <!-- Volume chart -->
-          <div class="chart-card glass">
-            <div class="chart-hd">
-              <div class="chart-hd-left">
-                <span class="chart-title">{{ 'DASHBOARD.CARD_VOLUME' | translate }}</span>
-                <span class="chart-subtitle mono">· stacked by sport · 10 wks</span>
-              </div>
-              <div class="chart-hd-right">
-                <div class="chart-legend mono">
-                  <span><span class="legend-dot legend-dot--bike"></span>Bike</span>
-                  <span><span class="legend-dot legend-dot--run"></span>Run</span>
-                  <span><span class="legend-dot legend-dot--swim"></span>Swim</span>
-                </div>
-                <div class="chart-tabs mono">
-                  <button class="chart-tab" [class.active]="volumeMetric === 'time'" (click)="volumeMetric = 'time'">Time</button>
-                  <button class="chart-tab" [class.active]="volumeMetric === 'tss'" (click)="volumeMetric = 'tss'">TSS</button>
-                  <button class="chart-tab" [class.active]="volumeMetric === 'distance'" (click)="volumeMetric = 'distance'">Dist</button>
-                </div>
-              </div>
-            </div>
-            <div class="chart-body">
-              <app-dashboard-volume-chart [data]="vm.volume" [metric]="volumeMetric"></app-dashboard-volume-chart>
-            </div>
-          </div>
+          <!-- Volume chart + 7-day sport mix (side-by-side on desktop, 3/5 · 2/5) -->
+          <div class="volume-mix-row">
 
-          <!-- 7-day sport mix + active plan -->
-          <div class="activity-mix-row">
+            <!-- Volume chart -->
+            <div class="chart-card glass">
+              <div class="chart-hd">
+                <div class="chart-hd-left">
+                  <span class="chart-title">{{ 'DASHBOARD.CARD_VOLUME' | translate }}</span>
+                  <span class="chart-subtitle mono">· stacked by sport · 10 wks</span>
+                </div>
+                <div class="chart-hd-right">
+                  <div class="chart-legend mono">
+                    <span><span class="legend-dot legend-dot--bike"></span>Bike</span>
+                    <span><span class="legend-dot legend-dot--run"></span>Run</span>
+                    <span><span class="legend-dot legend-dot--swim"></span>Swim</span>
+                  </div>
+                  <div class="chart-tabs mono">
+                    <button class="chart-tab" [class.active]="volumeMetric === 'time'" (click)="volumeMetric = 'time'">Time</button>
+                    <button class="chart-tab" [class.active]="volumeMetric === 'tss'" (click)="volumeMetric = 'tss'">TSS</button>
+                    <button class="chart-tab" [class.active]="volumeMetric === 'distance'" (click)="volumeMetric = 'distance'">Dist</button>
+                  </div>
+                </div>
+              </div>
+              <div class="chart-body">
+                <app-dashboard-volume-chart [data]="vm.volume" [metric]="volumeMetric"></app-dashboard-volume-chart>
+              </div>
+            </div>
+
+            <!-- 7-day sport mix + active plan -->
+            <div class="activity-mix-row">
 
             <!-- Sport mix + active plan -->
             <div class="mix-tile glass">
@@ -182,6 +185,7 @@
                   </div>
                 </div>
               }
+            </div>
             </div>
           </div>
 

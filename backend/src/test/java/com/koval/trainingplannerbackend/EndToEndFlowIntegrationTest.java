@@ -336,14 +336,13 @@ class EndToEndFlowIntegrationTest extends BaseIntegrationTest {
                                 {
                                     "title": "La Marmotte",
                                     "sport": "CYCLING",
-                                    "raceDate": "%s",
                                     "priority": "A",
                                     "distance": "174km",
                                     "location": "Alpe d'Huez",
                                     "targetTime": "7:30:00",
                                     "notes": "Key goal for the season"
                                 }
-                                """.formatted(LocalDate.now().plusMonths(4))))
+                                """))
                 .andExpect(status().isCreated());
 
         // ======= STEP 18: Coach views athlete's race goals =======

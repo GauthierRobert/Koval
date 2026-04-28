@@ -331,8 +331,8 @@ export class DashboardComponent {
     return (done / total) * 100;
   }
 
-  daysUntilGoal(goal: RaceGoal): number {
-    return daysUntil(goal.raceDate);
+  daysUntilGoal(goal: RaceGoal): number | null {
+    return goal.race?.scheduledDate ? daysUntil(goal.race.scheduledDate) : null;
   }
 
   get greeting(): string {

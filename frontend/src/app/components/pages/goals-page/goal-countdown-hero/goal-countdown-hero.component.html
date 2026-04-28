@@ -1,8 +1,0 @@
-@if (isUpcoming() && goal.createdAt && goal.raceDate) {
-  <div class="detail-progress">
-    <div class="progress-bar-track">
-      <div class="progress-bar-fill" [style.width.%]="getProgressPercent(goal)"></div>
-    </div>
-    <span class="progress-label">{{ 'GOALS.PROGRESS_LABEL' | translate: { percent: getProgressPercent(goal) } }}</span>
-  </div>
-}

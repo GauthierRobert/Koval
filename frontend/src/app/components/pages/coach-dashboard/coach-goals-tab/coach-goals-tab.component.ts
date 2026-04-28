@@ -2,7 +2,7 @@ import {ChangeDetectionStrategy, Component, inject, Input} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
 import {Observable} from 'rxjs';
-import {RaceGoal, RaceGoalService} from '../../../../services/race-goal.service';
+import {goalDate, RaceGoal, RaceGoalService} from '../../../../services/race-goal.service';
 import {daysUntil as sharedDaysUntil} from '../../../shared/format/format.utils';
 
 @Component({
@@ -22,8 +22,12 @@ export class CoachGoalsTabComponent {
     return this.raceGoalService.getPriorityColor(priority);
   }
 
-  daysUntil(dateStr: string): number {
-    return sharedDaysUntil(dateStr);
+  daysUntil(dateStr: string | undefined | null): number | null {
+    return dateStr ? sharedDaysUntil(dateStr) : null;
+  }
+
+  goalDate(goal: RaceGoal): string | undefined {
+    return goalDate(goal);
   }
 
   trackGoalById(goal: RaceGoal): string {

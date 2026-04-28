@@ -9,6 +9,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -24,16 +25,10 @@ public class RaceGoalService {
     }
 
     public List<RaceGoalResponse> getGoalsForAthlete(String athleteId) {
-        return repository.findByAthleteIdOrderByRaceDateAsc(athleteId).stream()
-                .map(goal -> {
-                    Race race = null;
-                    if (goal.getRaceId() != null) {
-                        try {
-                            race = raceService.getRaceById(goal.getRaceId());
-                        } catch (NoSuchElementException ignored) {}
-                    }
-                    return RaceGoalResponse.from(goal, race);
-                })
+        return repository.findByAthleteId(athleteId).stream()
+                .map(this::toResponse)
+                .sorted(Comparator.comparing(
+                        (RaceGoalResponse r) -> r.raceDate() == null ? "9999-99-99" : r.raceDate()))
                 .toList();
     }
 
@@ -77,13 +72,7 @@ public class RaceGoalService {
         if (!goal.getAthleteId().equals(athleteId)) {
             throw new ForbiddenOperationException("Not authorized");
         }
-        Race race = null;
-        if (goal.getRaceId() != null) {
-            try {
-                race = raceService.getRaceById(goal.getRaceId());
-            } catch (NoSuchElementException ignored) {}
-        }
-        return RaceGoalResponse.from(goal, race);
+        return toResponse(goal);
     }
 
     @CacheEvict(value = "athleteGoals", key = "#athleteId")
@@ -95,5 +84,15 @@ public class RaceGoalService {
         }
         goal.setRaceId(raceId);
         return repository.save(goal);
+    }
+
+    private RaceGoalResponse toResponse(RaceGoal goal) {
+        Race race = null;
+        if (goal.getRaceId() != null) {
+            try {
+                race = raceService.getRaceById(goal.getRaceId());
+            } catch (NoSuchElementException ignored) {}
+        }
+        return RaceGoalResponse.from(goal, race);
     }
 }

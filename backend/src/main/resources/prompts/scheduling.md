@@ -13,9 +13,9 @@ User profile (FTP, CTL, ATL, TSB, role, name), date, athletes, and groups — no
 - `getAthletesByGroup(groupId)` — filter athletes by group.
 
 ### Goal Tools
-- `listGoals()` — list race goals with days-until countdown.
-- `createGoal(title, sport, raceDate, priority, distance, location, targetTime, notes, raceId)` — add a new race goal. Optionally link to a race catalog entry via raceId.
-- `updateGoal(goalId, ...)` — update fields of an existing goal.
+- `listGoals()` — list race goals with days-until countdown. The race date is sourced from the linked race catalog entry.
+- `createGoal(title, sport, priority, raceId, notes)` — add a new race goal. Link a raceId so the goal inherits the race's scheduled date.
+- `updateGoal(goalId, ...)` — update fields of an existing goal. To change the date, link a different race via the catalog.
 - `deleteGoal(goalId)` — remove a goal.
 - Priority: A = goal race, B = target race, C = training race.
 

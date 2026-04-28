@@ -177,6 +177,27 @@
 .kpi-delta--form { color: var(--accent-color); font-weight: 600; }
 
 /* ═══════════════════════════════════════════════════════════════
+   VOLUME + SPORT MIX ROW (3/5 · 2/5 on desktop)
+   ═══════════════════════════════════════════════════════════════ */
+.volume-mix-row {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: var(--space-md);
+  align-items: stretch;
+}
+
+.volume-mix-row > .chart-card,
+.volume-mix-row > .activity-mix-row {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.volume-mix-row > .activity-mix-row > .mix-tile {
+  flex: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════
    VOLUME CHART CARD
    ═══════════════════════════════════════════════════════════════ */
 .chart-card {
@@ -503,6 +524,9 @@
   }
   .kpi-strip {
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+  .volume-mix-row {
+    grid-template-columns: 1fr;
   }
 }
 

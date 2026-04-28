@@ -7,7 +7,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -24,7 +23,6 @@ public class RaceGoal {
     @NotBlank
     private String title;
     private String sport;        // CYCLING | RUNNING | SWIMMING | TRIATHLON | OTHER
-    private LocalDate raceDate;
     private String priority;     // A | B | C
     private String distance;
     private String location;

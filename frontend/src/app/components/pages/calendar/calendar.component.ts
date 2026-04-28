@@ -256,8 +256,10 @@ export class CalendarComponent implements OnInit {
       map((goals) => {
         const byDay: GoalsByDay = new Map();
         for (const g of goals) {
-          const list = byDay.get(g.raceDate);
-          if (list) { list.push(g); } else { byDay.set(g.raceDate, [g]); }
+          const date = g.race?.scheduledDate;
+          if (!date) continue;
+          const list = byDay.get(date);
+          if (list) { list.push(g); } else { byDay.set(date, [g]); }
         }
         return byDay;
       })

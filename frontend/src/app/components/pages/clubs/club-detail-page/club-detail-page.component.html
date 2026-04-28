@@ -116,7 +116,7 @@
     </div>
 
     <!-- ═══ TAB BODY ═══ -->
-    <div class="tab-body">
+    <div class="tab-body" [class.tab-body--wide]="activeTab === 'chat'">
       @if (activeTab === 'feed') {
         <div role="tabpanel" id="tabpanel-feed" aria-labelledby="tab-btn-feed">
           <app-club-feed-tab [club]="club"></app-club-feed-tab>

@@ -9,6 +9,7 @@ import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 /**
@@ -24,7 +25,7 @@ public class GoalToolService {
         this.raceGoalService = raceGoalService;
     }
 
-    @Tool(description = "List race goals for a user (by date ascending).")
+    @Tool(description = "List race goals for a user (by date ascending). The race date is sourced from the linked race entry.")
     public List<GoalSummary> listGoals(ToolContext context) {
         String userId = SecurityUtils.getUserId(context);
         return raceGoalService.getGoalsForAthlete(userId)
@@ -57,10 +58,16 @@ public class GoalToolService {
             String raceId
     ) {
         static GoalSummary from(RaceGoalResponse g) {
-            long days = g.raceDate() != null ? LocalDate.now().until(g.raceDate()).getDays() : -1;
+            String raceDate = g.raceDate();
+            long days = -1;
+            if (raceDate != null) {
+                try {
+                    days = LocalDate.now().until(LocalDate.parse(raceDate)).getDays();
+                } catch (DateTimeParseException ignored) {}
+            }
             return new GoalSummary(
                     g.id(), g.title(), g.sport(),
-                    g.raceDate() != null ? g.raceDate().toString() : null, g.priority(),
+                    raceDate, g.priority(),
                     g.distance(), g.location(), g.targetTime(), g.notes(),
                     days, g.raceId());
         }

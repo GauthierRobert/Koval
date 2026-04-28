@@ -9,6 +9,7 @@ import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 /**
@@ -23,7 +24,7 @@ public class McpGoalTools {
         this.raceGoalService = raceGoalService;
     }
 
-    @Tool(description = "List the user's race goals sorted by date. Goals have priority A (main target), B (important), or C (training race). Shows days until each race.")
+    @Tool(description = "List the user's race goals sorted by date. Goals have priority A (main target), B (important), or C (training race). The race date is sourced from the linked race entry.")
     public List<GoalSummary> listGoals() {
         String userId = SecurityUtils.getCurrentUserId();
         return raceGoalService.getGoalsForAthlete(userId).stream()
@@ -38,33 +39,30 @@ public class McpGoalTools {
         return GoalSummary.from(raceGoalService.getGoal(goalId, userId));
     }
 
-    @Tool(description = "Create a new race goal. Priority is A (main target), B (important), or C (training race). Optional raceId links to an existing entry in the race catalog.")
+    @Tool(description = "Create a new race goal. Priority is A (main target), B (important), or C (training race). The race date comes from the linked race catalog entry — link a raceId for the goal to have a date.")
     public GoalSummary createGoal(
             @ToolParam(description = "Goal title (e.g. 'Sub-3 hour marathon')") String title,
             @ToolParam(description = "Sport: CYCLING, RUNNING, SWIMMING, TRIATHLON, or OTHER") String sport,
             @ToolParam(description = "Priority: A, B, or C") String priority,
-            @ToolParam(description = "Race date (YYYY-MM-DD)") LocalDate raceDate,
-            @ToolParam(description = "Optional race catalog ID to link") String raceId,
+            @ToolParam(description = "Optional race catalog ID to link (provides the date)") String raceId,
             @ToolParam(description = "Optional notes") String notes) {
         String userId = SecurityUtils.getCurrentUserId();
         RaceGoal goal = new RaceGoal();
         goal.setTitle(title);
         goal.setSport(sport);
         goal.setPriority(priority);
-        goal.setRaceDate(raceDate);
         goal.setRaceId(raceId);
         goal.setNotes(notes);
         RaceGoal saved = raceGoalService.createGoal(userId, goal);
         return GoalSummary.from(RaceGoalResponse.from(saved, null));
     }
 
-    @Tool(description = "Update an existing race goal. Pass null for any field you don't want to change. Cannot reassign athleteId.")
+    @Tool(description = "Update an existing race goal. Pass null for any field you don't want to change. Cannot reassign athleteId. To change the date, link a different race via the race catalog.")
     public GoalSummary updateGoal(
             @ToolParam(description = "Goal ID to update") String goalId,
             @ToolParam(description = "New title (null = unchanged)") String title,
             @ToolParam(description = "New sport (null = unchanged)") String sport,
             @ToolParam(description = "New priority A/B/C (null = unchanged)") String priority,
-            @ToolParam(description = "New race date (null = unchanged)") LocalDate raceDate,
             @ToolParam(description = "New target time (null = unchanged)") String targetTime,
             @ToolParam(description = "New notes (null = unchanged)") String notes) {
         String userId = SecurityUtils.getCurrentUserId();
@@ -73,7 +71,6 @@ public class McpGoalTools {
         update.setTitle(title != null ? title : current.title());
         update.setSport(sport != null ? sport : current.sport());
         update.setPriority(priority != null ? priority : current.priority());
-        update.setRaceDate(raceDate != null ? raceDate : current.raceDate());
         update.setTargetTime(targetTime != null ? targetTime : current.targetTime());
         update.setNotes(notes != null ? notes : current.notes());
         update.setDistance(current.distance());
@@ -95,10 +92,16 @@ public class McpGoalTools {
                                String priority, String distance, String location,
                                String targetTime, long daysUntil) {
         static GoalSummary from(RaceGoalResponse g) {
-            long days = g.raceDate() != null ? LocalDate.now().until(g.raceDate()).getDays() : -1;
+            String raceDate = g.raceDate();
+            long days = -1;
+            if (raceDate != null) {
+                try {
+                    days = LocalDate.now().until(LocalDate.parse(raceDate)).getDays();
+                } catch (DateTimeParseException ignored) {}
+            }
             return new GoalSummary(
                     g.id(), g.title(), g.sport(),
-                    g.raceDate() != null ? g.raceDate().toString() : null,
+                    raceDate,
                     g.priority(), g.distance(), g.location(), g.targetTime(), days);
         }
     }

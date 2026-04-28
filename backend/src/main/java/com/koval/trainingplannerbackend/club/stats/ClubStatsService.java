@@ -16,6 +16,8 @@ import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
 import com.koval.trainingplannerbackend.goal.RaceGoal;
 import com.koval.trainingplannerbackend.goal.RaceGoalRepository;
+import com.koval.trainingplannerbackend.race.Race;
+import com.koval.trainingplannerbackend.race.RaceService;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -38,6 +41,7 @@ public class ClubStatsService {
     private final ClubTrainingSessionRepository sessionRepository;
     private final CompletedSessionRepository completedSessionRepository;
     private final RaceGoalRepository raceGoalRepository;
+    private final RaceService raceService;
     private final UserService userService;
     private final ClubMembershipService clubMembershipService;
     private final ClubAuthorizationService authorizationService;
@@ -47,6 +51,7 @@ public class ClubStatsService {
     public ClubStatsService(ClubTrainingSessionRepository sessionRepository,
                             CompletedSessionRepository completedSessionRepository,
                             RaceGoalRepository raceGoalRepository,
+                            RaceService raceService,
                             UserService userService,
                             ClubMembershipService clubMembershipService,
                             ClubAuthorizationService authorizationService,
@@ -55,6 +60,7 @@ public class ClubStatsService {
         this.sessionRepository = sessionRepository;
         this.completedSessionRepository = completedSessionRepository;
         this.raceGoalRepository = raceGoalRepository;
+        this.raceService = raceService;
         this.userService = userService;
         this.clubMembershipService = clubMembershipService;
         this.authorizationService = authorizationService;
@@ -418,16 +424,33 @@ public class ClubStatsService {
         List<String> memberIds = clubMembershipService.getActiveMemberIds(clubId);
         if (memberIds.isEmpty()) return List.of();
 
-        LocalDate today = LocalDate.now();
-        List<RaceGoal> goals = raceGoalRepository.findByAthleteIdInOrderByRaceDateAsc(memberIds)
-                .stream()
-                .filter(g -> g.getRaceDate() == null || !g.getRaceDate().isBefore(today))
+        String todayIso = LocalDate.now().toString();
+        Map<String, Race> raceCache = new java.util.HashMap<>();
+        java.util.function.Function<String, Race> resolveRace = (raceId) -> {
+            if (raceId == null) return null;
+            return raceCache.computeIfAbsent(raceId, id -> {
+                try { return raceService.getRaceById(id); }
+                catch (java.util.NoSuchElementException ignored) { return null; }
+            });
+        };
+
+        List<RaceGoal> goals = raceGoalRepository.findByAthleteIdIn(memberIds).stream()
+                .filter(g -> {
+                    Race race = resolveRace.apply(g.getRaceId());
+                    String date = race != null ? race.getScheduledDate() : null;
+                    return date == null || date.compareTo(todayIso) >= 0;
+                })
+                .sorted(Comparator.comparing(g -> {
+                    Race race = resolveRace.apply(g.getRaceId());
+                    String date = race != null ? race.getScheduledDate() : null;
+                    return date == null ? "9999-99-99" : date;
+                }))
                 .toList();
 
         Map<String, List<RaceGoal>> goalsByRace = goals.stream()
                 .collect(Collectors.groupingBy(g ->
                         g.getRaceId() != null ? g.getRaceId()
-                                : g.getTitle().toLowerCase().trim() + "|" + g.getRaceDate(),
+                                : g.getTitle().toLowerCase().trim(),
                         LinkedHashMap::new, Collectors.toList()));
 
         List<String> athleteIds = goals.stream().map(RaceGoal::getAthleteId).distinct().toList();
@@ -436,6 +459,7 @@ public class ClubStatsService {
 
         return goalsByRace.values().stream().map(raceGoals -> {
             RaceGoal representative = raceGoals.getFirst();
+            Race race = resolveRace.apply(representative.getRaceId());
             List<ClubRaceGoalResponse.RaceParticipant> participants = raceGoals.stream()
                     .map(g -> {
                         User u = userMap.get(g.getAthleteId());
@@ -452,7 +476,7 @@ public class ClubStatsService {
                     representative.getRaceId(),
                     representative.getTitle(),
                     representative.getSport(),
-                    representative.getRaceDate(),
+                    race != null ? race.getScheduledDate() : null,
                     representative.getDistance(),
                     representative.getLocation(),
                     participants);

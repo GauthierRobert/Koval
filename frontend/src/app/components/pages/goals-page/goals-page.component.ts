@@ -3,22 +3,49 @@ import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
-import {BehaviorSubject, debounceTime, distinctUntilChanged, of, switchMap} from 'rxjs';
-import {map, take} from 'rxjs/operators';
+import {BehaviorSubject, combineLatest, debounceTime, distinctUntilChanged, of, switchMap} from 'rxjs';
+import {map} from 'rxjs/operators';
 import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
-import {Race, RaceService, RouteCoordinate, SimulationRequest} from '../../../services/race.service';
+import {Race, RaceService} from '../../../services/race.service';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
-import {RouteMapComponent} from '../pacing/route-map/route-map.component';
-import {daysUntil as sharedDaysUntil, weeksUntil as sharedWeeksUntil} from '../../shared/format/format.utils';
-import {GoalSidebarItemComponent} from './goal-sidebar-item/goal-sidebar-item.component';
-import {GoalCountdownHeroComponent} from './goal-countdown-hero/goal-countdown-hero.component';
-import {GpxDisciplineUploaderComponent} from './gpx-discipline-uploader/gpx-discipline-uploader.component';
 import {SkeletonComponent} from '../../shared/skeleton/skeleton.component';
+
+type LaneKey = 'run' | 'tri' | 'bike';
+
+interface RoadmapMarker extends RaceGoal {
+  _x: number;
+  _lane: LaneKey;
+  _statusKey: 'A' | 'B' | 'C' | 'PASSED';
+  _statusLabel: string;
+  _short: string;
+  _dateShort: string;
+  _passed: boolean;
+  _isPrimary: boolean;
+}
+
+interface RoadmapMonth {
+  label: string;
+}
+
+interface RoadmapData {
+  months: RoadmapMonth[];
+  todayX: number;
+  todayShort: string;
+  windowStartLabel: string;
+  windowEndLabel: string;
+  markersByLane: Record<LaneKey, RoadmapMarker[]>;
+}
+
+interface LaneDef {
+  key: LaneKey;
+  label: string;
+  icon: 'RUNNING' | 'CYCLING' | 'SWIMMING' | 'BRICK';
+}
 
 @Component({
   selector: 'app-goals-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, SportIconComponent, GoalSidebarItemComponent, GoalCountdownHeroComponent, GpxDisciplineUploaderComponent, SkeletonComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, SportIconComponent, SkeletonComponent],
   templateUrl: './goals-page.component.html',
   styleUrl: './goals-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,8 +61,22 @@ export class GoalsPageComponent implements OnInit {
   allGoals$ = this.raceGoalService.goals$.pipe(map((goals) => this.sortGoals(goals)));
   loading$ = this.raceGoalService.loading$;
 
-  // Selected goal (sidebar selection)
-  selectedGoalId: string | null = null;
+  readonly lanes: LaneDef[] = [
+    { key: 'run', label: 'RUN', icon: 'RUNNING' },
+    { key: 'tri', label: 'TRI', icon: 'BRICK' },
+    { key: 'bike', label: 'BIKE', icon: 'CYCLING' },
+  ];
+
+  private windowMonthsSubject = new BehaviorSubject<{ start: Date; end: Date }>(this.computeWindow());
+
+  roadmap$ = combineLatest([this.allGoals$, this.windowMonthsSubject]).pipe(
+    map(([goals, window]) => this.buildRoadmap(goals, window.start, window.end)),
+  );
+
+  primaryGoal$ = this.allGoals$.pipe(map((goals) => this.findPrimaryGoal(goals)));
+  pastGoals$ = this.allGoals$.pipe(
+    map((goals) => goals.filter((g) => !this.isUpcoming(g)).slice(0, 5)),
+  );
 
   // Modal state
   isFormOpen = false;
@@ -43,7 +84,6 @@ export class GoalsPageComponent implements OnInit {
   formStep: 'search' | 'details' = 'search';
   form: Partial<RaceGoal> = this.emptyForm();
 
-  // Race search
   raceSearchQuery = '';
   private searchSubject = new BehaviorSubject<string>('');
   searchResults$ = this.searchSubject.pipe(
@@ -54,14 +94,6 @@ export class GoalsPageComponent implements OnInit {
   selectedRace: Race | null = null;
 
   readonly isSavingGoal$ = new BehaviorSubject(false);
-
-  // GPX upload
-  gpxUploading: Record<string, boolean> = {};
-
-  routeCache: Record<string, RouteCoordinate[]> = {};
-
-  // Simulation requests per goal
-  simRequestsCache: Record<string, SimulationRequest[]> = {};
 
   readonly sports = ['CYCLING', 'RUNNING', 'SWIMMING', 'TRIATHLON', 'OTHER'];
   get priorities(): Array<{ value: 'A' | 'B' | 'C'; label: string }> {
@@ -75,14 +107,6 @@ export class GoalsPageComponent implements OnInit {
   ngOnInit(): void {
     this.raceGoalService.loadGoals();
 
-    // Auto-select nearest upcoming goal on first load
-    this.allGoals$.pipe(take(1)).subscribe((goals) => {
-      const upcoming = goals.filter((g) => this.isUpcoming(g));
-      const toSelect = upcoming.length > 0 ? upcoming[0] : goals[0] ?? null;
-      if (toSelect) this.selectGoal(toSelect);
-    });
-
-    // Handle raceId query param from /races page "ADD TO MY GOALS"
     this.route.queryParams.subscribe((params) => {
       const raceId = params['raceId'];
       if (raceId) {
@@ -97,56 +121,114 @@ export class GoalsPageComponent implements OnInit {
     });
   }
 
-  getPriorityColor(priority: string): string {
-    return this.raceGoalService.getPriorityColor(priority);
+  // ── Roadmap window ────────────────────────────────────────────────
+
+  private computeWindow(): { start: Date; end: Date } {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(start.getFullYear() + 1, start.getMonth(), 1);
+    return { start, end };
   }
 
-  daysUntil(dateStr: string): number {
-    return sharedDaysUntil(dateStr);
+  private buildRoadmap(goals: RaceGoal[], start: Date, end: Date): RoadmapData {
+    const span = end.getTime() - start.getTime();
+    const now = new Date();
+    const todayX = Math.max(0, Math.min(100, ((now.getTime() - start.getTime()) / span) * 100));
+
+    const months: RoadmapMonth[] = [];
+    for (let i = 0; i <= 12; i++) {
+      const d = new Date(start.getFullYear(), start.getMonth() + i, 1);
+      months.push({ label: this.monthShort(d) });
+    }
+
+    const primary = this.findPrimaryGoal(goals);
+    const markersByLane: Record<LaneKey, RoadmapMarker[]> = { run: [], tri: [], bike: [] };
+
+    for (const g of goals) {
+      const effectiveDateStr = g.race?.scheduledDate;
+      const d = this.parseGoalDate(effectiveDateStr);
+      if (!d) continue;
+      if (d < start || d > end) continue;
+      const x = ((d.getTime() - start.getTime()) / span) * 100;
+      const lane = this.laneOfSport(g.sport);
+      const passed = !this.isUpcoming(g);
+      const marker: RoadmapMarker = {
+        ...g,
+        _x: x,
+        _lane: lane,
+        _passed: passed,
+        _statusKey: passed ? 'PASSED' : (g.priority ?? 'C'),
+        _statusLabel: passed ? '✓' : (g.priority ?? 'C'),
+        _short: this.shortLabelFor(g),
+        _dateShort: this.formatDateShort(effectiveDateStr),
+        _isPrimary: !!primary && primary.id === g.id,
+      };
+      markersByLane[lane].push(marker);
+    }
+
+    return {
+      months,
+      todayX,
+      todayShort: this.formatToday(now),
+      windowStartLabel: this.monthLong(start),
+      windowEndLabel: this.monthLong(new Date(end.getFullYear(), end.getMonth(), 1)),
+      markersByLane,
+    };
   }
 
-  weeksUntil(dateStr: string): number {
-    return sharedWeeksUntil(dateStr);
+  private parseGoalDate(dateStr: string | undefined | null): Date | null {
+    if (!dateStr) return null;
+    const direct = new Date(dateStr);
+    if (!isNaN(direct.getTime())) return direct;
+    const padded = new Date(dateStr + 'T00:00:00');
+    if (!isNaN(padded.getTime())) return padded;
+    return null;
   }
 
-  formatDate(dateStr: string): string {
-    return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+  // ── Stats helpers (used in template via primaryGoal$ + allGoals$) ──
+
+  countActive(goals: RaceGoal[]): number {
+    return goals.filter((g) => this.isUpcoming(g)).length;
+  }
+
+  findPrimaryGoal(goals: RaceGoal[]): RaceGoal | null {
+    const sortByDate = (a: RaceGoal, b: RaceGoal) =>
+      (this.effectiveDate(a) ?? '9999').localeCompare(this.effectiveDate(b) ?? '9999');
+    const upcomingA = goals.filter((g) => this.isUpcoming(g) && g.priority === 'A').sort(sortByDate);
+    if (upcomingA.length > 0) return upcomingA[0];
+    const upcoming = goals.filter((g) => this.isUpcoming(g)).sort(sortByDate);
+    return upcoming[0] ?? null;
+  }
+
+  findNextB(goals: RaceGoal[]): RaceGoal | null {
+    return goals
+      .filter((g) => this.isUpcoming(g) && g.priority === 'B')
+      .sort((a, b) => (this.effectiveDate(a) ?? '9999').localeCompare(this.effectiveDate(b) ?? '9999'))[0] ?? null;
+  }
+
+  daysUntil(dateStr: string | undefined | null): number | null {
+    const d = this.parseGoalDate(dateStr);
+    if (!d) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(d);
+    target.setHours(0, 0, 0, 0);
+    return Math.round((target.getTime() - today.getTime()) / 86400000);
+  }
+
+  effectiveDate(goal: RaceGoal): string | undefined {
+    return goal.race?.scheduledDate;
   }
 
   isUpcoming(goal: RaceGoal): boolean {
-    return !goal.raceDate || this.daysUntil(goal.raceDate) >= 0;
+    const days = this.daysUntil(this.effectiveDate(goal));
+    return days === null || days >= 0;
   }
 
-  getProgressPercent(goal: RaceGoal): number {
-    if (!goal.createdAt || !goal.raceDate) return 0;
-    const created = new Date(goal.createdAt).getTime();
-    const race = new Date(goal.raceDate + 'T00:00:00').getTime();
-    const now = Date.now();
-    if (now >= race) return 100;
-    if (now <= created) return 0;
-    return Math.round(((now - created) / (race - created)) * 100);
-  }
+  // ── Click handlers ────────────────────────────────────────────────
 
-  // ── Sidebar selection ─────────────────────────────────────────────
-
-  selectGoal(goal: RaceGoal): void {
-    this.selectedGoalId = goal.id;
-    if (goal.race) {
-      this.loadRoutesForGoal(goal.race);
-    }
-    if (goal.id && !this.simRequestsCache[goal.id]) {
-      this.loadSimulationRequests(goal);
-    }
-    this.cdr.markForCheck();
-  }
-
-  getSelectedGoal(goals: RaceGoal[]): RaceGoal | null {
-    return goals.find((g) => g.id === this.selectedGoalId) ?? null;
+  onMarkerClick(goal: RaceGoal): void {
+    this.openEdit(goal);
   }
 
   // ── Modal: Create / Edit ──────────────────────────────────────────
@@ -206,10 +288,9 @@ export class GoalsPageComponent implements OnInit {
       });
     } else {
       this.raceGoalService.createGoal(this.form).subscribe({
-        next: (created) => {
+        next: () => {
           this.isSavingGoal$.next(false);
           this.isFormOpen = false;
-          if (created.race) this.loadRoutesForGoal(created.race);
           this.cdr.markForCheck();
         },
         error: () => this.isSavingGoal$.next(false),
@@ -223,146 +304,63 @@ export class GoalsPageComponent implements OnInit {
     }
   }
 
-  // ── Race / Route Loading ──────────────────────────────────────────
+  // ── Formatting helpers ────────────────────────────────────────────
 
-  loadRoutesForGoal(race: Race): void {
-    for (const disc of ['swim', 'bike', 'run']) {
-      const key = race.id + '_' + disc;
-      if (this.hasGpxForDiscipline(race, disc) && !this.routeCache[key]) {
-        this.raceService.getRouteCoordinates(race.id, disc).subscribe({
-          next: (coords) => {
-            this.routeCache[key] = coords;
-            this.cdr.markForCheck();
-          },
-        });
-      }
+  private laneOfSport(sport: RaceGoal['sport']): LaneKey {
+    switch (sport) {
+      case 'RUNNING': return 'run';
+      case 'CYCLING': return 'bike';
+      case 'TRIATHLON': return 'tri';
+      case 'SWIMMING': return 'tri';
+      default: return 'bike';
     }
   }
 
-  loadSimulationRequests(goal: RaceGoal): void {
-    this.raceService.loadSimulationRequests(goal.id);
-    this.raceService.simulationRequests$.subscribe({
-      next: (reqs) => {
-        this.simRequestsCache[goal.id] = reqs.filter((r) => r.goalId === goal.id);
-        this.cdr.markForCheck();
-      },
-    });
-  }
-
-  getRace(goals: RaceGoal[], raceId: string): Race | null {
-    return goals.find((g) => g.raceId === raceId)?.race ?? null;
-  }
-
-  getRouteCoordsForDiscipline(race: Race, disc: string): RouteCoordinate[] {
-    return this.routeCache[race.id + '_' + disc] ?? [];
-  }
-
-  getSimRequests(goalId: string): SimulationRequest[] {
-    return this.simRequestsCache[goalId] ?? [];
-  }
-
-  // ── GPX Upload ────────────────────────────────────────────────────
-
-  onGpxFileSelected(event: Event, raceId: string, discipline: string): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.uploadGpx(raceId, discipline, input.files[0]);
+  private shortLabelFor(g: RaceGoal): string {
+    const text = `${g.title ?? ''} ${g.distance ?? ''}`.toLowerCase();
+    if (g.sport === 'RUNNING') {
+      if (/marathon|42/.test(text)) return 'MAR';
+      if (/semi|21|half/.test(text)) return '21K';
+      if (/10\s?k|10km/.test(text)) return '10K';
+      if (/5\s?k|5km/.test(text)) return '5K';
+      return 'RUN';
     }
-  }
-
-  uploadGpx(raceId: string, discipline: string, file: File): void {
-    if (!file.name.toLowerCase().endsWith('.gpx')) return;
-    const key = raceId + '_' + discipline;
-    this.gpxUploading[key] = true;
-    this.cdr.markForCheck();
-
-    this.raceService.uploadGpx(raceId, discipline, file).subscribe({
-      next: () => {
-        this.gpxUploading[key] = false;
-        // Reload goals so the embedded race reflects the new GPX flags
-        this.raceGoalService.loadGoals();
-        // Reload route coords for the newly uploaded discipline
-        this.raceService.getRouteCoordinates(raceId, discipline).subscribe({
-          next: (coords) => {
-            this.routeCache[key] = coords;
-            this.cdr.markForCheck();
-          },
-        });
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.gpxUploading[key] = false;
-        this.cdr.markForCheck();
-      },
-    });
-  }
-
-  isGpxUploading(raceId: string, discipline: string): boolean {
-    return this.gpxUploading[raceId + '_' + discipline] ?? false;
-  }
-
-  // ── Simulation ────────────────────────────────────────────────────
-
-  simulateRace(goal: RaceGoal): void {
-    const params: Record<string, string> = {};
-    if (goal.raceId) params['raceId'] = goal.raceId;
-    if (goal.id) params['goalId'] = goal.id;
-    this.router.navigate(['/pacing'], { queryParams: params });
-  }
-
-  rerunSimulation(req: SimulationRequest): void {
-    const params: Record<string, string> = {};
-    if (req.raceId) params['raceId'] = req.raceId;
-    if (req.goalId) params['goalId'] = req.goalId;
-    this.router.navigate(['/pacing'], { queryParams: params });
-  }
-
-  deleteSimRequest(req: SimulationRequest): void {
-    if (!req.id) return;
-    this.raceService.deleteSimulationRequest(req.id).subscribe({
-      next: () => {
-        if (req.goalId) {
-          this.simRequestsCache[req.goalId] = (this.simRequestsCache[req.goalId] ?? []).filter(
-            (r) => r.id !== req.id,
-          );
-          this.cdr.markForCheck();
-        }
-      },
-    });
-  }
-
-  formatSimLabel(req: SimulationRequest): string {
-    return req.label ?? `${req.discipline} simulation`;
-  }
-
-  formatSimDate(dateStr?: string): string {
-    if (!dateStr) return '';
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
-
-  // ── Discipline helpers ────────────────────────────────────────────
-
-  formatDistance(meters?: number): string {
-    if (!meters) return '';
-    if (meters >= 1000) return (meters / 1000).toFixed(1) + ' km';
-    return Math.round(meters) + ' m';
-  }
-
-  getGpxDisciplines(race: Race): string[] {
-    if (race.sport === 'TRIATHLON') return ['swim', 'bike', 'run'];
-    if (race.sport === 'CYCLING') return ['bike'];
-    if (race.sport === 'RUNNING') return ['run'];
-    if (race.sport === 'SWIMMING') return ['swim'];
-    return ['bike'];
-  }
-
-  hasGpxForDiscipline(race: Race, discipline: string): boolean {
-    switch (discipline) {
-      case 'swim': return !!race.hasSwimGpx;
-      case 'bike': return !!race.hasBikeGpx;
-      case 'run': return !!race.hasRunGpx;
-      default: return false;
+    if (g.sport === 'CYCLING') {
+      if (/etape|granfondo|gravel|cyclo/.test(text)) return 'GRF';
+      return 'BIKE';
     }
+    if (g.sport === 'SWIMMING') return 'SWIM';
+    if (g.sport === 'TRIATHLON') {
+      if (/ironman|140\.6/.test(text)) return 'IM';
+      if (/70\.3|half/.test(text)) return '70.3';
+      if (/olympic|olympique/.test(text)) return 'OLY';
+      if (/sprint/.test(text)) return 'SPR';
+      return 'TRI';
+    }
+    return '—';
+  }
+
+  private monthShort(d: Date): string {
+    return d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '').toUpperCase().slice(0, 3);
+  }
+
+  private monthLong(d: Date): string {
+    return d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  }
+
+  formatDateShort(dateStr: string | undefined | null): string {
+    const d = this.parseGoalDate(dateStr);
+    if (!d) return 'Date à définir';
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = this.monthShort(d);
+    const year = d.getFullYear();
+    return `${day} ${month} ${year}`;
+  }
+
+  private formatToday(d: Date): string {
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = this.monthShort(d);
+    return `${day} ${month}`;
   }
 
   // ── Sorting ───────────────────────────────────────────────────────
@@ -371,17 +369,21 @@ export class GoalsPageComponent implements OnInit {
     const priorityOrder: Record<string, number> = { A: 0, B: 1, C: 2 };
     const upcoming = goals.filter((g) => this.isUpcoming(g));
     const past = goals.filter((g) => !this.isUpcoming(g));
+    const dateMs = (g: RaceGoal): number => {
+      const d = this.parseGoalDate(this.effectiveDate(g));
+      return d ? d.getTime() : Number.POSITIVE_INFINITY;
+    };
 
     const sortFn = (a: RaceGoal, b: RaceGoal) => {
       const pa = priorityOrder[a.priority] ?? 3;
       const pb = priorityOrder[b.priority] ?? 3;
       if (pa !== pb) return pa - pb;
-      return new Date(a.raceDate).getTime() - new Date(b.raceDate).getTime();
+      return dateMs(a) - dateMs(b);
     };
 
     return [
       ...upcoming.sort(sortFn),
-      ...past.sort((a, b) => new Date(b.raceDate).getTime() - new Date(a.raceDate).getTime()),
+      ...past.sort((a, b) => dateMs(b) - dateMs(a)),
     ];
   }
 

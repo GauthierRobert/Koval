@@ -267,8 +267,8 @@ export class FeedSessionsUpcomingComponent {
   get nextGoal(): ClubRaceGoalResponse | null {
     const now = Date.now();
     const future = this.raceGoals
-      .filter((g) => new Date(g.raceDate).getTime() > now)
-      .sort((a, b) => new Date(a.raceDate).getTime() - new Date(b.raceDate).getTime());
+      .filter((g) => !!g.raceDate && new Date(g.raceDate).getTime() > now)
+      .sort((a, b) => new Date(a.raceDate!).getTime() - new Date(b.raceDate!).getTime());
     return future.length > 0 ? future[0] : null;
   }
 
@@ -315,12 +315,16 @@ export class FeedSessionsUpcomingComponent {
   }
 
   getDaysUntil(goal: ClubRaceGoalResponse): number {
+    if (!goal.raceDate) return 0;
     const diff = new Date(goal.raceDate).getTime() - Date.now();
     return Math.max(0, Math.ceil(diff / 86400000));
   }
 
-  formatGoalDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('en-US', {
+  formatGoalDate(dateStr: string | undefined | null): string {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('en-US', {
       weekday: 'short', month: 'short', day: 'numeric',
     });
   }

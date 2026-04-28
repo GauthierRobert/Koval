@@ -154,6 +154,6 @@ export class ClubChatTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private objectiveKey(goal: ClubRaceGoalResponse): string {
-    return goal.raceId ?? `${goal.title}|${goal.raceDate}`;
+    return goal.raceId ?? `${goal.title}|${goal.raceDate ?? ''}`;
   }
 }
