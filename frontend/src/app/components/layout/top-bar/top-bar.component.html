@@ -148,6 +148,11 @@
       </button>
       @if (isAnalyticsOpen) {
         <div class="nav-dropdown" role="menu" (click)="$event.stopPropagation()">
+        <a routerLink="/analytics/reference-values" routerLinkActive="active" class="dropdown-item" role="menuitem"
+          (click)="closeAnalytics(); closeMobileMenu()">
+          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_REFERENCE_VALUES_LABEL' | translate }}</span>
+          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_REFERENCE_VALUES_DESC' | translate }}</span>
+        </a>
         <a routerLink="/pmc"        routerLinkActive="active" class="dropdown-item" role="menuitem"
           (click)="closeAnalytics(); closeMobileMenu()">
           <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PMC_LABEL' | translate }}</span>

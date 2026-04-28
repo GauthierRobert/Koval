@@ -77,11 +77,13 @@
     "DROPDOWN_RECORDS_DESC": "Personal records",
     "DROPDOWN_PHYSIOLOGY_LABEL": "PHYSIOLOGY",
     "DROPDOWN_PHYSIOLOGY_DESC": "Zones & physiological data",
+    "DROPDOWN_REFERENCE_VALUES_LABEL": "REFERENCE VALUES",
+    "DROPDOWN_REFERENCE_VALUES_DESC": "FTP, paces, weight & custom zones",
     "BTN_MY_MEMBERSHIPS_TITLE": "My Memberships",
     "BTN_CONNECTED_APPS_TITLE": "Connected Apps",
     "BTN_AI_ASSISTANTS_TITLE": "AI Assistants",
     "BTN_NOTIFICATIONS_TITLE": "Notification Preferences",
-    "BTN_REFERENCE_VALUES_TITLE": "Reference Values",
+    "BTN_REFERENCE_VALUES_TITLE": "Settings",
     "BTN_MANAGE_DEVICES_TITLE": "Manage Devices",
     "PROFILE_PICTURE_ALT": "Profile",
     "BTN_LOGOUT_TITLE": "Logout",
@@ -97,8 +99,12 @@
     "JOIN_BTN_LABEL": "JOIN",
     "INVALID_CODE": "Invalid or expired code"
   },
+  "REFERENCE_VALUES": {
+    "PAGE_TITLE": "REFERENCE VALUES",
+    "PAGE_SUBTITLE": "Set the physiological reference values used to compute your zones and training targets."
+  },
   "SETTINGS": {
-    "TITLE": "REFERENCE VALUES",
+    "TITLE": "SETTINGS",
     "SECTION_PHYSICAL_PROFILE": "Physical Profile",
     "FIELD_BODY_WEIGHT_LABEL": "Body Weight",
     "FIELD_BODY_WEIGHT_HINT": "Used for W/kg calculations",

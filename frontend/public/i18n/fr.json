@@ -77,11 +77,13 @@
     "DROPDOWN_RECORDS_DESC": "Records personnels",
     "DROPDOWN_PHYSIOLOGY_LABEL": "PHYSIOLOGIE",
     "DROPDOWN_PHYSIOLOGY_DESC": "Zones & données physiologiques",
+    "DROPDOWN_REFERENCE_VALUES_LABEL": "VALEURS DE RÉFÉRENCE",
+    "DROPDOWN_REFERENCE_VALUES_DESC": "FTP, allures, poids & zones personnalisées",
     "BTN_MY_MEMBERSHIPS_TITLE": "Mes abonnements",
     "BTN_CONNECTED_APPS_TITLE": "Applications connectées",
     "BTN_AI_ASSISTANTS_TITLE": "Assistants IA",
     "BTN_NOTIFICATIONS_TITLE": "Préférences de notification",
-    "BTN_REFERENCE_VALUES_TITLE": "Valeurs de référence",
+    "BTN_REFERENCE_VALUES_TITLE": "Paramètres",
     "BTN_MANAGE_DEVICES_TITLE": "Gérer les appareils",
     "PROFILE_PICTURE_ALT": "Profil",
     "BTN_LOGOUT_TITLE": "Déconnexion",
@@ -97,8 +99,12 @@
     "JOIN_BTN_LABEL": "Rejoindre",
     "INVALID_CODE": "Code invalide ou expiré"
   },
+  "REFERENCE_VALUES": {
+    "PAGE_TITLE": "VALEURS DE RÉFÉRENCE",
+    "PAGE_SUBTITLE": "Définissez les valeurs physiologiques utilisées pour calculer vos zones et cibles d'entraînement."
+  },
   "SETTINGS": {
-    "TITLE": "VALEURS DE RÉFÉRENCE",
+    "TITLE": "PARAMÈTRES",
     "SECTION_PHYSICAL_PROFILE": "Profil physique",
     "FIELD_BODY_WEIGHT_LABEL": "Poids corporel",
     "FIELD_BODY_WEIGHT_HINT": "Utilisé pour les calculs W/kg",

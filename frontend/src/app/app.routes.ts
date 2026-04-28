@@ -151,6 +151,14 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'analytics/reference-values',
+    loadComponent: () =>
+      import(
+        './components/pages/analytics/reference-values-page/reference-values-page.component'
+      ).then((m) => m.ReferenceValuesPageComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'groups',
     loadComponent: () =>
       import('./components/pages/group-management/group-management.component').then(
