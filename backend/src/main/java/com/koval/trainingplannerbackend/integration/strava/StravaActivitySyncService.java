@@ -235,7 +235,7 @@ public class StravaActivitySyncService {
                 "application/octet-stream");
 
         session.setFitFileId(fileId.toHexString());
-        return sessionRepository.save(session);
+        return sessionService.recomputeMetricsAfterFitChange(session);
     }
 
     public record SyncResult(

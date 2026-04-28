@@ -87,14 +87,16 @@ public class AnalyticsService {
             }
             case RUNNING -> {
                 int ftPaceSec = orZero(user.getFunctionalThresholdPace());
-                yield (ftPaceSec > 0 && session.getAvgSpeed() > 0)
-                        ? OptionalDouble.of(session.getAvgSpeed() / (1000.0 / ftPaceSec))
+                double speed = effectivePaceSpeed(session);
+                yield (ftPaceSec > 0 && speed > 0)
+                        ? OptionalDouble.of(speed / (1000.0 / ftPaceSec))
                         : OptionalDouble.empty();
             }
             case SWIMMING -> {
                 int cssSec = orZero(user.getCriticalSwimSpeed());
-                yield (cssSec > 0 && session.getAvgSpeed() > 0)
-                        ? OptionalDouble.of(session.getAvgSpeed() / (100.0 / cssSec))
+                double speed = effectivePaceSpeed(session);
+                yield (cssSec > 0 && speed > 0)
+                        ? OptionalDouble.of(speed / (100.0 / cssSec))
                         : OptionalDouble.empty();
             }
             case BRICK -> {
@@ -103,11 +105,23 @@ public class AnalyticsService {
                     yield OptionalDouble.of(session.getAvgPower() / (double) ftp);
                 }
                 int ftPaceSec = orZero(user.getFunctionalThresholdPace());
-                yield (ftPaceSec > 0 && session.getAvgSpeed() > 0)
-                        ? OptionalDouble.of(session.getAvgSpeed() / (1000.0 / ftPaceSec))
+                double speed = effectivePaceSpeed(session);
+                yield (ftPaceSec > 0 && speed > 0)
+                        ? OptionalDouble.of(speed / (1000.0 / ftPaceSec))
                         : OptionalDouble.empty();
             }
         };
+    }
+
+    /**
+     * Use the session's normalized speed (NGP/NSS computed from FIT samples) when available;
+     * fall back to raw average speed. Normalized values weight harder intervals and account
+     * for grade, so they better reflect physiological cost than the elapsed-time average.
+     */
+    private static double effectivePaceSpeed(CompletedSession session) {
+        Double ns = session.getNormalizedSpeed();
+        if (ns != null && ns > 0) return ns;
+        return session.getAvgSpeed();
     }
 
     private static int orZero(Integer val) {

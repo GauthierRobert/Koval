@@ -6,7 +6,9 @@ import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
 import com.koval.trainingplannerbackend.coach.CoachService;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkoutService;
+import com.koval.trainingplannerbackend.training.metrics.NormalizedSpeedService;
 import com.koval.trainingplannerbackend.training.metrics.TssCalculator;
+import com.koval.trainingplannerbackend.training.model.SportType;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -46,6 +48,7 @@ public class SessionService {
     private final SessionAssociationService associationService;
     private final ClubTrainingSessionRepository clubTrainingSessionRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final NormalizedSpeedService normalizedSpeedService;
 
     public SessionService(CompletedSessionRepository repository,
                           AnalyticsService analyticsService,
@@ -55,7 +58,8 @@ public class SessionService {
                           GridFsOperations gridFsOperations,
                           SessionAssociationService associationService,
                           ClubTrainingSessionRepository clubTrainingSessionRepository,
-                          ApplicationEventPublisher eventPublisher) {
+                          ApplicationEventPublisher eventPublisher,
+                          NormalizedSpeedService normalizedSpeedService) {
         this.repository = repository;
         this.analyticsService = analyticsService;
         this.userRepository = userRepository;
@@ -65,6 +69,7 @@ public class SessionService {
         this.associationService = associationService;
         this.clubTrainingSessionRepository = clubTrainingSessionRepository;
         this.eventPublisher = eventPublisher;
+        this.normalizedSpeedService = normalizedSpeedService;
     }
 
     /**
@@ -217,7 +222,31 @@ public class SessionService {
         deleteFitFileQuietly(session.getFitFileId());
         ObjectId fileId = gridFsOperations.store(data, session.getId() + ".fit", "application/octet-stream");
         session.setFitFileId(fileId.toHexString());
-        return repository.save(session);
+        return recomputeMetricsAfterFitChange(session);
+    }
+
+    /**
+     * After a FIT file has been attached to a session, recompute its normalized speed
+     * (NGP for running, NSS for swimming) and resulting TSS/IF, then refresh user load.
+     * Caller is responsible for setting {@code session.fitFileId} before invoking.
+     */
+    public CompletedSession recomputeMetricsAfterFitChange(CompletedSession session) {
+        refreshNormalizedSpeedAndMetrics(session);
+        CompletedSession saved = repository.save(session);
+        if (saved.getUserId() != null) {
+            analyticsService.recomputeAndSaveUserLoad(saved.getUserId());
+        }
+        return saved;
+    }
+
+    private void refreshNormalizedSpeedAndMetrics(CompletedSession session) {
+        SportType sport = SportType.fromString(session.getSportType());
+        if (sport != SportType.CYCLING) {
+            normalizedSpeedService.computeFromFit(session.getFitFileId(), sport)
+                    .ifPresent(session::setNormalizedSpeed);
+        }
+        userRepository.findById(session.getUserId())
+                .ifPresent(user -> analyticsService.computeAndAttachMetrics(session, user));
     }
 
     /**

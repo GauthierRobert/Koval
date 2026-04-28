@@ -10,9 +10,15 @@
 
   @if (multiSelectMode && multiSelectedIds.size > 0) {
     <div class="bulk-action-bar">
-      <span class="bulk-count">{{ 'COACH_DASHBOARD.BULK_SELECTED_COUNT' | translate: { count: multiSelectedIds.size } }}</span>
-      <button class="bulk-assign-btn" type="button" (click)="bulkAssign.emit()">
-        {{ 'COACH_DASHBOARD.BULK_ASSIGN_ACTION' | translate }}
+      <div class="bulk-count">
+        <span class="bulk-count-number">{{ multiSelectedIds.size }}</span>
+        <span class="bulk-count-label">{{ 'COACH_DASHBOARD.BULK_SELECTED_LABEL' | translate }}</span>
+      </div>
+      <button class="bulk-assign-btn btn-primary-gradient" type="button" (click)="bulkAssign.emit()">
+        <svg class="bulk-assign-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        <span>{{ 'COACH_DASHBOARD.BULK_ASSIGN_ACTION' | translate }}</span>
       </button>
     </div>
   }

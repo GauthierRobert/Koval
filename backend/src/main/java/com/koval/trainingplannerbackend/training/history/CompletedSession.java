@@ -38,6 +38,7 @@ public class CompletedSession {
     private String clubSessionId; // Reference to ClubTrainingSession
     private Double tss;
     private Double intensityFactor;
+    private Double normalizedSpeed; // m/s — NGP for running, NSS for swimming, when computed from FIT
     private String fitFileId; // GridFS ObjectId; null when no FIT stored
     private Integer rpe;
     private Boolean syntheticCompletion; // true when created from planned data via COMPLETE button

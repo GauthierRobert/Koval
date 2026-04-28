@@ -725,6 +725,7 @@
     "BULK_SELECT": "Select",
     "BULK_CANCEL": "Cancel",
     "BULK_SELECTED_COUNT": "{{count}} selected",
+    "BULK_SELECTED_LABEL": "selected",
     "BULK_ASSIGN_ACTION": "Assign workout",
     "IMPORT_CSV": "Import CSV",
     "IMPORT_CSV_BTN": "Import CSV",
