@@ -14,6 +14,12 @@ export interface User {
     paceMarathon?: number;
     vo2maxPower?: number;
     vo2maxPace?: number;
+    power3MinW?: number;
+    power12MinW?: number;
+    /** Derived from power3MinW + power12MinW on the backend; read-only from the client. */
+    criticalPower?: number;
+    /** Derived from power3MinW + power12MinW on the backend; read-only from the client. */
+    wPrimeJ?: number;
     groups?: string[];
     clubs?: string[];
     customZoneReferenceValues?: Record<string, number>;

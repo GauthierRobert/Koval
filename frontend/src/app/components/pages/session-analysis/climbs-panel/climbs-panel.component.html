@@ -1,0 +1,38 @@
+@if (climbs; as list) {
+  @if (list.length > 0) {
+    <div class="climbs-panel glass">
+      <div class="climbs-header">
+        <div class="section-label">{{ 'SESSION_ANALYSIS.CLIMBS_TITLE' | translate }}</div>
+        <span class="climb-count">{{ list.length }} {{ list.length === 1 ? ('SESSION_ANALYSIS.CLIMB_SINGULAR' | translate) : ('SESSION_ANALYSIS.CLIMB_PLURAL' | translate) }}</span>
+      </div>
+      <div class="climbs-table">
+        <div class="cb-header">
+          <span class="cb-col cb-num">#</span>
+          <span class="cb-col cb-cat">{{ 'SESSION_ANALYSIS.CLIMBS_COL_CAT' | translate }}</span>
+          <span class="cb-col cb-start">{{ 'SESSION_ANALYSIS.CLIMBS_COL_START' | translate }}</span>
+          <span class="cb-col cb-dist">{{ 'SESSION_ANALYSIS.CLIMBS_COL_DISTANCE' | translate }}</span>
+          <span class="cb-col cb-gain">{{ 'SESSION_ANALYSIS.CLIMBS_COL_GAIN' | translate }}</span>
+          <span class="cb-col cb-grade">{{ 'SESSION_ANALYSIS.CLIMBS_COL_GRADE' | translate }}</span>
+          <span class="cb-col cb-vam">{{ 'SESSION_ANALYSIS.CLIMBS_COL_VAM' | translate }}</span>
+          <span class="cb-col cb-pwr">{{ 'SESSION_ANALYSIS.CLIMBS_COL_AVG_PWR' | translate }}</span>
+          <span class="cb-col cb-hr">{{ 'SESSION_ANALYSIS.CLIMBS_COL_HR' | translate }}</span>
+        </div>
+        @for (c of list; track c.index) {
+          <div class="cb-row" data-testid="climb-row">
+            <span class="cb-col cb-num">{{ c.index }}</span>
+            <span class="cb-col cb-cat">
+              <span class="cat-pill" [attr.data-cat]="c.category">{{ c.category }}</span>
+            </span>
+            <span class="cb-col cb-start mono">{{ formatDuration(c.startSecond) }}</span>
+            <span class="cb-col cb-dist mono">{{ formatDistance(c.distanceMeters) }}</span>
+            <span class="cb-col cb-gain mono">{{ c.elevationGain }} m</span>
+            <span class="cb-col cb-grade mono">{{ c.avgGrade.toFixed(1) }}%</span>
+            <span class="cb-col cb-vam mono">{{ c.vam }} m/h</span>
+            <span class="cb-col cb-pwr mono">{{ c.avgPower != null ? c.avgPower + ' W' : '—' }}</span>
+            <span class="cb-col cb-hr mono">{{ c.avgHr != null ? c.avgHr + ' bpm' : '—' }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+}

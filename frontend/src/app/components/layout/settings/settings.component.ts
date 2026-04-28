@@ -41,11 +41,50 @@ export class SettingsComponent implements OnInit {
     ftp: number | null = null;
     weightKg: number | null = null;
     vo2maxPower: number | null = null;
+    power3MinW: number | null = null;
+    power12MinW: number | null = null;
+    showCpHelp = false;
     aiPrePrompt = '';
     aiPrePromptEnabled = false;
     isCoach = false;
     saving = false;
     saved = false;
+
+    /**
+     * Two-parameter critical-power model:
+     *   P = CP + W'/t  →  CP = (T1·P1 − T2·P2) / (T1 − T2)
+     * For T1 = 3 min, T2 = 12 min, this simplifies to (4·P12 − P3) / 3.
+     * Returns null until both inputs are valid (P3 > P12 > 0).
+     */
+    get derivedCp(): number | null {
+        const p3 = this.power3MinW;
+        const p12 = this.power12MinW;
+        if (p3 == null || p12 == null || p3 <= 0 || p12 <= 0 || p3 <= p12) return null;
+        return Math.round((4 * p12 - p3) / 3);
+    }
+
+    /** Derived W' in kJ (for display). Backend stores joules; we convert here. */
+    get derivedWPrimeKj(): number | null {
+        const cp = this.derivedCp;
+        const p3 = this.power3MinW;
+        if (cp == null || p3 == null) return null;
+        const j = (p3 - cp) * 180;
+        return Math.round(j / 100) / 10;
+    }
+
+    /** True when the user filled valid test values. */
+    get cpTestValid(): boolean {
+        return this.derivedCp != null;
+    }
+
+    /** True when test inputs exist but the relationship P3 > P12 is violated. */
+    get cpTestInvalidOrder(): boolean {
+        return this.power3MinW != null
+            && this.power12MinW != null
+            && this.power3MinW > 0
+            && this.power12MinW > 0
+            && this.power3MinW <= this.power12MinW;
+    }
     currentLang = this.translateService.currentLang || 'en';
 
     setLang(lang: string): void {
@@ -96,6 +135,8 @@ export class SettingsComponent implements OnInit {
         this.ftp = user.ftp ?? null;
         this.weightKg = user.weightKg ?? null;
         this.vo2maxPower = user.vo2maxPower ?? null;
+        this.power3MinW = user.power3MinW ?? null;
+        this.power12MinW = user.power12MinW ?? null;
         this.isCoach = user.role === 'COACH';
         this.aiPrePrompt = user.aiPrePrompt ?? '';
         this.aiPrePromptEnabled = user.aiPrePromptEnabled ?? false;
@@ -138,6 +179,10 @@ export class SettingsComponent implements OnInit {
         this.authService.toggleSettings(false);
     }
 
+    toggleCpHelp(): void {
+        this.showCpHelp = !this.showCpHelp;
+    }
+
     @HostListener('document:keydown.escape')
     onEscapeKey(): void {
         this.close();
@@ -151,6 +196,8 @@ export class SettingsComponent implements OnInit {
             ftp: this.ftp ?? null,
             weightKg: this.weightKg ?? null,
             vo2maxPower: this.vo2maxPower ?? null,
+            power3MinW: this.power3MinW ?? null,
+            power12MinW: this.power12MinW ?? null,
             ...(this.isCoach ? { aiPrePrompt: this.aiPrePrompt.trim() || null, aiPrePromptEnabled: this.aiPrePromptEnabled } : {}),
         };
         for (const field of [...this.allRunFields, ...this.swimFields]) {

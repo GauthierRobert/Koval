@@ -1,3 +1,7 @@
+:host:empty {
+  display: none;
+}
+
 .decoupling-panel {
   padding: var(--space-md) var(--page-padding);
 }

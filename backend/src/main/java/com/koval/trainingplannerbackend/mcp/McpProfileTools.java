@@ -44,6 +44,7 @@ public class McpProfileTools {
                 u.getFtp(), u.getWeightKg(), secondsPerKm, u.getCriticalSwimSpeed(),
                 u.getPace5k(), u.getPace10k(), u.getPaceHalfMarathon(), u.getPaceMarathon(),
                 u.getVo2maxPower(), u.getVo2maxPace(),
+                u.getPower3MinW(), u.getPower12MinW(),
                 u.getCustomZoneReferenceValues(), u.getAiPrePrompt(), u.getAiPrePromptEnabled()));
     }
 
@@ -57,6 +58,7 @@ public class McpProfileTools {
                 u.getFtp(), u.getWeightKg(), u.getFunctionalThresholdPace(), secondsPer100m,
                 u.getPace5k(), u.getPace10k(), u.getPaceHalfMarathon(), u.getPaceMarathon(),
                 u.getVo2maxPower(), u.getVo2maxPace(),
+                u.getPower3MinW(), u.getPower12MinW(),
                 u.getCustomZoneReferenceValues(), u.getAiPrePrompt(), u.getAiPrePromptEnabled()));
     }
 
@@ -70,6 +72,7 @@ public class McpProfileTools {
                 u.getFtp(), weightKg, u.getFunctionalThresholdPace(), u.getCriticalSwimSpeed(),
                 u.getPace5k(), u.getPace10k(), u.getPaceHalfMarathon(), u.getPaceMarathon(),
                 u.getVo2maxPower(), u.getVo2maxPace(),
+                u.getPower3MinW(), u.getPower12MinW(),
                 u.getCustomZoneReferenceValues(), u.getAiPrePrompt(), u.getAiPrePromptEnabled()));
     }
 

@@ -37,6 +37,10 @@ public class UserResponseMapper {
         map.put("paceMarathon", user.getPaceMarathon());
         map.put("vo2maxPower", user.getVo2maxPower());
         map.put("vo2maxPace", user.getVo2maxPace());
+        map.put("power3MinW", user.getPower3MinW());
+        map.put("power12MinW", user.getPower12MinW());
+        map.put("criticalPower", user.getCriticalPower());
+        map.put("wPrimeJ", user.getWPrimeJ());
 
         map.put("hasCoach", groupService.athleteHasCoach(user.getId()));
         List<Group> userGroups = groupService.getGroupsForAthlete(user.getId());

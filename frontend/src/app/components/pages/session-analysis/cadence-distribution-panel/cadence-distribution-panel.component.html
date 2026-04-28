@@ -1,0 +1,32 @@
+@if (result; as r) {
+  <div class="cadence-panel glass">
+    <div class="cad-header">
+      <div class="section-label">{{ 'SESSION_ANALYSIS.CADENCE_TITLE' | translate }}</div>
+      <div class="cad-summary">
+        <span class="cad-median mono">{{ r.medianRpm }} <span class="rpm-unit">{{ r.unit }}</span></span>
+        <span class="cad-profile" [attr.data-profile]="r.profile">
+          @switch (r.profile) {
+            @case ('grinder') { {{ 'SESSION_ANALYSIS.CADENCE_PROFILE_GRINDER' | translate }} }
+            @case ('balanced') { {{ 'SESSION_ANALYSIS.CADENCE_PROFILE_BALANCED' | translate }} }
+            @case ('spinner') { {{ 'SESSION_ANALYSIS.CADENCE_PROFILE_SPINNER' | translate }} }
+            @case ('mixed') { {{ 'SESSION_ANALYSIS.CADENCE_PROFILE_MIXED' | translate }} }
+          }
+        </span>
+      </div>
+    </div>
+    <div class="cad-bars">
+      @for (b of r.buckets; track b.label) {
+        @if (b.seconds > 0) {
+          <div class="cad-row" data-testid="cadence-row">
+            <span class="cad-label">{{ b.label }}</span>
+            <div class="bar-track">
+              <div class="bar-fill" [style.width.%]="b.percentage" [style.background]="b.color"></div>
+            </div>
+            <span class="cad-time mono">{{ formatDuration(b.seconds) }}</span>
+            <span class="cad-pct">{{ b.percentage }}%</span>
+          </div>
+        }
+      }
+    </div>
+  </div>
+}
