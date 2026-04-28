@@ -1,133 +1,531 @@
-<div class="races-page">
-  <div class="page-header">
-    <h1><span class="accent">{{ 'RACES.PAGE_TITLE' | translate }}</span></h1>
-    <button class="btn-primary" (click)="toggleCreateRace()">
-      {{ isCreatingRace ? ('RACES.BTN_CANCEL_CREATE' | translate) : ('RACES.BTN_CREATE_RACE' | translate) }}
-    </button>
-  </div>
+<div class="rp-wrap">
 
-  <!-- Create Race inline form -->
-  @if (isCreatingRace) {
-  <div class="create-race-panel glass">
-    <div class="form-row">
-      <label>{{ 'RACES.FIELD_RACE_TITLE_LABEL' | translate }}</label>
-      <input [(ngModel)]="newRaceTitle" [placeholder]="'RACES.FIELD_RACE_TITLE_PLACEHOLDER' | translate" class="form-input"/>
+  <!-- ─────── Header ─────── -->
+  <header class="rp-hd">
+    <div class="rp-hd-left">
+      <span class="rp-eyebrow">CATALOGUE · COMPÉTITIONS PUBLIQUES</span>
+      <h1 class="rp-title">
+        Toutes les <span class="rp-title-accent">courses</span>
+      </h1>
     </div>
-    <button class="btn-primary" (click)="createAndCompleteRace()"
-            [disabled]="!newRaceTitle.trim() || isAiCompleting">
-      @if (!isAiCompleting) {
-      <span>{{ 'RACES.BTN_CREATE_AI_COMPLETE' | translate }}</span>
-      }
-      @if (isAiCompleting) {
-      <span class="ai-loading">{{ 'RACES.BTN_AI_COMPLETING' | translate }}</span>
-      }
-    </button>
-  </div>
-  }
-
-  <!-- Breadcrumb navigation -->
-  @if (selectedBrowseSport) {
-  <div class="browse-breadcrumb">
-    <button class="breadcrumb-link" (click)="backToSports()">{{ 'RACES.BREADCRUMB_ALL_SPORTS' | translate }}</button>
-    <span class="breadcrumb-sep">/</span>
-    @if (!selectedBrowseCountry) {
-    <span class="breadcrumb-current">{{ selectedBrowseSport }}</span>
-    }
-    @if (selectedBrowseCountry) {
-    <button class="breadcrumb-link" (click)="backToCountries()">{{ selectedBrowseSport }}</button>
-    <span class="breadcrumb-sep">/</span>
-    <span class="breadcrumb-current">{{ selectedBrowseCountry }}</span>
-    }
-  </div>
-  }
-
-  <!-- Level 0: Sport Cards -->
-  @if (!selectedBrowseSport) {
-  <div class="facet-grid">
-    @for (facet of sportFacets; track facet) {
-    <div class="facet-card glass" (click)="selectBrowseSport(facet.sport)">
-      <div class="facet-name">{{ facet.sport }}</div>
-      <div class="facet-counts">
-        <span>{{ 'RACES.FACET_RACES_COUNT' | translate: { count: facet.raceCount } }}</span>
-        <span>{{ 'RACES.FACET_COUNTRIES_COUNT' | translate: { count: facet.countryCount } }}</span>
-      </div>
-    </div>
-    }
-    @if (sportFacets.length === 0 && !browseLoading) {
-    <div class="browse-empty">
-      {{ 'RACES.BROWSE_EMPTY_CATALOG' | translate }}
-    </div>
-    }
-  </div>
-  }
-
-  <!-- Level 1: Country Cards -->
-  @if (selectedBrowseSport && !selectedBrowseCountry && !browseLoading) {
-  <div class="facet-grid facet-grid--countries">
-    @for (facet of countryFacets; track facet) {
-    <div class="facet-card facet-card--country glass"
-         (click)="selectBrowseCountry(facet.country)">
-      <div class="facet-name">{{ facet.country || ('RACES.COUNTRY_UNKNOWN' | translate) }}</div>
-      <div class="facet-counts"><span>{{ 'RACES.FACET_RACES_COUNT' | translate: { count: facet.raceCount } }}</span></div>
-    </div>
-    }
-    @if (countryFacets.length === 0) {
-    <div class="browse-empty">
-      {{ 'RACES.BROWSE_EMPTY_SPORT' | translate: { sport: selectedBrowseSport } }}
-    </div>
-    }
-  </div>
-  }
-
-  <!-- Level 2: Race List -->
-  @if (selectedBrowseCountry && browseResults && !browseLoading) {
-  <div class="browse-race-list">
-    @for (race of browseResults.content; track race.id) {
-      @if (addedRaceIds$ | async; as addedRaceIds) {
-        <app-race-summary-card
-          [race]="getCachedRace(race)"
-          [isExpanded]="expandedRaceId === race.id"
-          [isAdded]="addedRaceIds.has(race.id)"
-          [isOwnRace]="isOwnRace(race)"
-          [isEditing]="editingRaceId === race.id"
-          [editForm]="editForm"
-          [isSavingEdit]="isSavingEdit"
-          [gpxUploading]="gpxUploading"
-          [canSimulate]="canSimulate(getCachedRace(race))"
-          [simulateDisabledReason]="getSimulateDisabledReason(getCachedRace(race))"
-          (toggleExpand)="toggleExpand($event)"
-          (simulate)="simulateRace($event)"
-          (addToGoals)="addToMyGoals($event)"
-          (startEdit)="startEdit($event)"
-          (saveEdit)="saveEdit($event)"
-          (cancelEdit)="cancelEdit()"
-          (editFormChange)="onEditFormChange($event)"
-          (gpxFileSelected)="onGpxFileFromCard($event)"
-          (loopsChanged)="onLoopsFromCard($event)">
-        </app-race-summary-card>
-      }
-    }
-    @if (browseResults.content.length === 0) {
-    <div class="browse-empty">
-      {{ 'RACES.BROWSE_EMPTY_RESULTS' | translate }}
-    </div>
-    }
-
-    <!-- Pagination -->
-    @if (browseResults.totalPages > 1) {
-    <div class="browse-pagination">
-      <button class="btn-secondary" (click)="browsePrevPage()" [disabled]="browsePage === 0">{{ 'RACES.PAGINATION_PREV' | translate }}</button>
-      <span class="page-info">{{ 'RACES.PAGINATION_INFO' | translate: { current: browsePage + 1, total: browseResults.totalPages } }}</span>
-      <button class="btn-secondary" (click)="browseNextPage()"
-              [disabled]="browsePage >= browseResults.totalPages - 1">{{ 'RACES.PAGINATION_NEXT' | translate }}
+    <div class="rp-hd-right">
+      <label class="rp-search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="m20 20-3.5-3.5"/>
+        </svg>
+        <input type="text"
+               [ngModel]="searchQuery()"
+               (ngModelChange)="onSearchChange($event)"
+               placeholder="Rechercher : Nice, IRONMAN, Roth…"/>
+        <kbd class="rp-kbd">⌘K</kbd>
+      </label>
+      <button class="rp-btn-create" (click)="toggleCreateRace()">
+        <span class="rp-btn-plus">+</span>
+        {{ isCreatingRace() ? ('RACES.BTN_CANCEL_CREATE' | translate) : 'CRÉER' }}
       </button>
     </div>
-    }
-  </div>
+  </header>
+
+  <!-- ─────── Inline Create panel ─────── -->
+  @if (isCreatingRace()) {
+    <div class="rp-create-panel">
+      <div class="rp-create-row">
+        <label>{{ 'RACES.FIELD_RACE_TITLE_LABEL' | translate }}</label>
+        <input class="rp-create-input"
+               [ngModel]="newRaceTitle()"
+               (ngModelChange)="setNewRaceTitle($event)"
+               [placeholder]="'RACES.FIELD_RACE_TITLE_PLACEHOLDER' | translate"/>
+      </div>
+      <button class="rp-create-cta"
+              [disabled]="!newRaceTitle().trim() || isAiCompleting()"
+              (click)="createAndCompleteRace()">
+        @if (!isAiCompleting()) {
+          {{ 'RACES.BTN_CREATE_AI_COMPLETE' | translate }}
+        } @else {
+          <span class="rp-loader"></span>
+          {{ 'RACES.BTN_AI_COMPLETING' | translate }}
+        }
+      </button>
+    </div>
   }
 
-  <!-- Loading -->
-  @if (browseLoading) {
-  <div class="browse-loading">{{ 'RACES.LOADING' | translate }}</div>
-  }
+  <!-- ─────── Main grid ─────── -->
+  <div class="rp-grid">
+
+    <!-- ━━━ LEFT — Filter rail ━━━ -->
+    <aside class="rp-filters">
+      <!-- Sport -->
+      <section class="rp-fg">
+        <header class="rp-fg-hd">
+          <span class="rp-fg-lbl">SPORT</span>
+          <span class="rp-fg-note">exclusif</span>
+        </header>
+        <div class="rp-sport-list">
+          @for (s of sportFacetsView(); track s.id) {
+            <button class="rp-sport-row"
+                    [class.active]="selectedSport() === s.id"
+                    (click)="selectSport(s.id)">
+              <span class="rp-sport-dot rp-sport-dot--{{ s.id.toLowerCase() }}"></span>
+              <span class="rp-sport-lbl">{{ s.label }}</span>
+              <span class="mono tnum rp-sport-ct">{{ s.count }}</span>
+            </button>
+          }
+          @if (sportFacets().length === 0 && !browseLoading()) {
+            <div class="rp-empty-mini">{{ 'RACES.BROWSE_EMPTY_CATALOG' | translate }}</div>
+          }
+        </div>
+      </section>
+
+      <!-- Distance (client filter) -->
+      @if (distancePresets().length > 0) {
+        <section class="rp-fg">
+          <header class="rp-fg-hd">
+            <span class="rp-fg-lbl">DISTANCE</span>
+            @if (distanceFilters().size > 0) {
+              <span class="rp-fg-ct">{{ distanceFilters().size }}</span>
+            }
+          </header>
+          <div class="rp-chip-list">
+            @for (d of distancePresets(); track d) {
+              <button class="rp-chip"
+                      [class.active]="distanceFilters().has(d)"
+                      (click)="toggleDistance(d)">{{ d }}</button>
+            }
+          </div>
+        </section>
+      }
+
+      <!-- Country -->
+      @if (countryFacets().length > 0) {
+        <section class="rp-fg">
+          <header class="rp-fg-hd">
+            <span class="rp-fg-lbl">PAYS</span>
+            @if (selectedCountry()) {
+              <span class="rp-fg-ct">1</span>
+            }
+          </header>
+          <div class="rp-country-list">
+            @for (c of countryFacets(); track c.country) {
+              <button class="rp-country-row"
+                      [class.active]="selectedCountry() === c.country"
+                      (click)="selectCountry(c.country)">
+                <span class="rp-flag">{{ countryFlag(c.country) }}</span>
+                <span class="rp-cname">{{ c.country || 'XX' }}</span>
+                <span class="mono tnum rp-cn">{{ c.raceCount }}</span>
+              </button>
+            }
+          </div>
+        </section>
+      }
+
+      <!-- Date -->
+      <section class="rp-fg">
+        <header class="rp-fg-hd">
+          <span class="rp-fg-lbl">DATE</span>
+        </header>
+        <div class="rp-chip-list">
+          <button class="rp-chip" [class.active]="datePreset() === '12m'"
+                  (click)="setDatePreset('12m')">12 prochains mois
+          </button>
+          <button class="rp-chip" [class.active]="datePreset() === 'y2026'"
+                  (click)="setDatePreset('y2026')">2026
+          </button>
+          <button class="rp-chip" [class.active]="datePreset() === 'y2027'"
+                  (click)="setDatePreset('y2027')">2027
+          </button>
+        </div>
+      </section>
+
+      <!-- Verification -->
+      <section class="rp-fg">
+        <header class="rp-fg-hd">
+          <span class="rp-fg-lbl">VÉRIFICATION</span>
+        </header>
+        <div class="rp-chip-list">
+          <button class="rp-chip" [class.active]="verifiedFilter() === 'all'"
+                  (click)="setVerifiedFilter('all')">Toutes
+          </button>
+          <button class="rp-chip" [class.active]="verifiedFilter() === 'verified'"
+                  (click)="setVerifiedFilter('verified')">Vérifiées
+          </button>
+          <button class="rp-chip" [class.active]="verifiedFilter() === 'community'"
+                  (click)="setVerifiedFilter('community')">Communautaires
+          </button>
+        </div>
+      </section>
+
+      <button class="rp-reset" (click)="resetFilters()">↺ Réinitialiser les filtres</button>
+    </aside>
+
+    <!-- ━━━ MIDDLE — List ━━━ -->
+    <section class="rp-list-col">
+      <header class="rp-list-hd">
+        <div class="rp-count">
+          <b class="mono tnum">{{ filteredRaces().length }}</b>
+          <span> sur </span>
+          <b class="mono tnum">{{ browseResults()?.totalElements ?? 0 }}</b>
+          <span> courses</span>
+        </div>
+        <div class="rp-active-filters">
+          @if (selectedSport(); as sport) {
+            <span class="rp-af">{{ sport }}</span>
+          }
+          @for (d of distanceFilters(); track d) {
+            <span class="rp-af">+ {{ d }}</span>
+          }
+          @if (selectedCountry(); as country) {
+            <span class="rp-af">{{ countryFlag(country) }} {{ country }}</span>
+          }
+        </div>
+      </header>
+
+      <div class="rp-list">
+        @if (browseLoading()) {
+          <div class="rp-loading">{{ 'RACES.LOADING' | translate }}</div>
+        }
+
+        @for (r of filteredRaces(); track r.id) {
+          <article class="rp-card"
+                   [class.selected]="selectedRaceId() === r.id"
+                   [class.past]="isPast(r)"
+                   (click)="selectRace(r)">
+            <!-- Date block -->
+            <div class="rp-date-block">
+              <div class="rp-mo">{{ monthAbbr(r.scheduledDate) }}</div>
+              <div class="rp-dom">{{ domDay(r.scheduledDate) }}</div>
+              <div class="rp-yr">'{{ shortYear(r.scheduledDate) }}</div>
+            </div>
+
+            <!-- Body -->
+            <div class="rp-card-body">
+              <div class="rp-card-top">
+                <h3 class="rp-card-title">
+                  <span class="rp-flag-inline">{{ countryFlag(r.country) }}</span>
+                  <span class="rp-card-name">{{ r.title }}</span>
+                  @if (r.verified) {
+                    <span class="rp-verif" title="Vérifiée">✓</span>
+                  }
+                </h3>
+                @if (r.distance) {
+                  <span class="rp-dist-tag">{{ r.distance }}</span>
+                }
+              </div>
+
+              <div class="rp-card-meta mono">
+                @if (r.location) {
+                  <span class="rp-loc">📍 {{ r.location }}, {{ r.country }}</span>
+                }
+                @if (daysUntil(r.scheduledDate) !== null && daysUntil(r.scheduledDate)! >= 0) {
+                  <span class="rp-sep">·</span>
+                  <span>D−{{ daysUntil(r.scheduledDate) }}j</span>
+                }
+              </div>
+
+              <div class="rp-segs-row">
+                @if (r.swimDistanceM) {
+                  <span class="rp-seg rp-seg--s">S {{ formatKm(r.swimDistanceM) }} km</span>
+                }
+                @if (r.bikeDistanceM) {
+                  <span class="rp-seg rp-seg--b">B {{ formatKm(r.bikeDistanceM) }} km</span>
+                }
+                @if (r.runDistanceM) {
+                  <span class="rp-seg rp-seg--r">R {{ formatKm(r.runDistanceM) }} km</span>
+                }
+                @if (r.elevationGainM) {
+                  <span class="rp-seg rp-seg--elev">▲ {{ r.elevationGainM }} m</span>
+                }
+              </div>
+            </div>
+
+            <!-- GPX ring + arrow -->
+            <div class="rp-card-aside">
+              <svg class="rp-gpx-ring" width="34" height="34" viewBox="0 0 34 34"
+                   [attr.title]="gpxCount(r) + '/' + gpxTotal(r) + ' traces GPX'">
+                <circle cx="17" cy="17" r="12" fill="none"
+                        stroke="rgba(255,255,255,0.06)" stroke-width="2.5"/>
+                <circle cx="17" cy="17" r="12" fill="none"
+                        [attr.stroke]="gpxCount(r) === gpxTotal(r) ? 'var(--success-color)' : (gpxCount(r) > 0 ? 'var(--accent-color)' : 'rgba(255,255,255,0.18)')"
+                        stroke-width="2.5"
+                        [attr.stroke-dasharray]="gpxRingDashArray(r, 75.4)"
+                        stroke-dashoffset="0"
+                        transform="rotate(-90 17 17)"
+                        stroke-linecap="round"/>
+                <text x="17" y="20" text-anchor="middle"
+                      font-family="var(--font-display), sans-serif"
+                      font-size="9" font-weight="700"
+                      [attr.fill]="gpxCount(r) === gpxTotal(r) ? 'var(--success-color)' : (gpxCount(r) > 0 ? 'var(--accent-color)' : 'rgba(255,255,255,0.35)')">
+                  {{ gpxCount(r) }}/{{ gpxTotal(r) }}
+                </text>
+              </svg>
+              <span class="rp-arrow">→</span>
+            </div>
+          </article>
+        }
+
+        @if (!browseLoading() && filteredRaces().length === 0 && browseResults()) {
+          <div class="rp-empty">{{ 'RACES.BROWSE_EMPTY_RESULTS' | translate }}</div>
+        }
+
+        @if (browseResults(); as results) {
+          @if (results.totalPages > 1 && browsePage() < results.totalPages - 1) {
+            <button class="rp-load-more" (click)="loadMore()">
+              Charger plus
+              <span class="mono"> · page {{ browsePage() + 2 }} / {{ results.totalPages }}</span>
+            </button>
+          }
+        }
+      </div>
+    </section>
+
+    <!-- ━━━ RIGHT — Detail panel ━━━ -->
+    <aside class="rp-detail">
+      @if (selectedRace(); as race) {
+        @if (editingRaceId() !== race.id) {
+          <!-- Hero -->
+          <div class="rp-hero">
+            <svg class="rp-hero-bg" viewBox="0 0 600 220" preserveAspectRatio="xMidYMid slice">
+              @for (line of [0,1,2,3,4,5,6,7]; track line) {
+                <path [attr.d]="'M0,' + (30 + line * 22) + ' Q150,' + (10 + line * 22) + ' 300,' + (40 + line * 22) + ' T600,' + (20 + line * 22)"
+                      fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="0.8"/>
+              }
+              <path d="M0,180 Q120,160 200,170 T380,150 T600,180 L600,220 L0,220 Z"
+                    fill="rgba(255,255,255,0.025)"/>
+              <path d="M40,170 Q90,140 160,150 T280,90 Q350,60 420,80 T570,50"
+                    fill="none" stroke="var(--accent-color)" stroke-width="2.2"
+                    stroke-dasharray="5 4" stroke-linecap="round" opacity="0.7"/>
+            </svg>
+            <div class="rp-hero-grad"></div>
+            <div class="rp-hero-tag">
+              <span class="rp-hero-flag">{{ countryFlag(race.country) }}</span>
+              <span class="mono">{{ race.country }} · {{ race.region?.toUpperCase() || race.location?.toUpperCase() }}</span>
+            </div>
+            <div class="rp-hero-title-row">
+              <h2>{{ race.title }}</h2>
+              @if (race.verified) {
+                <span class="rp-verif-big" title="Vérifiée">✓ VÉRIFIÉE</span>
+              }
+            </div>
+            <div class="rp-hero-date mono">
+              <span>{{ monthAbbr(race.scheduledDate) }} {{ domDay(race.scheduledDate) }},
+                {{ race.scheduledDate?.slice(0, 4) }}</span>
+              @if (daysUntil(race.scheduledDate) !== null && daysUntil(race.scheduledDate)! >= 0) {
+                <span class="rp-hero-cd">D−{{ daysUntil(race.scheduledDate) }} jours</span>
+              } @else if (isPast(race)) {
+                <span class="rp-hero-cd rp-hero-cd--past">terminée</span>
+              }
+            </div>
+          </div>
+
+          <!-- Stats strip -->
+          <div class="rp-stats-strip">
+            <div class="rp-stat">
+              <small>DIST. TOTALE</small>
+              <b class="mono tnum">{{ totalDistanceKm(race) }} <small>km</small></b>
+            </div>
+            <div class="rp-stat">
+              <small>DÉNIVELÉ +</small>
+              <b class="mono tnum">{{ race.elevationGainM ? (race.elevationGainM | number:'1.0-0') : '—' }}
+                <small>m</small></b>
+            </div>
+            <div class="rp-stat">
+              <small>STATUT GPX</small>
+              <b class="mono tnum rp-stat-gpx">{{ gpxCount(race) }}/{{ gpxTotal(race) }}</b>
+            </div>
+          </div>
+
+          <!-- GPX legs -->
+          <div class="rp-section">
+            <header class="rp-section-hd">
+              <span class="rp-eyebrow rp-eyebrow--accent">PARCOURS · TRACES GPX</span>
+            </header>
+            @for (disc of getGpxDisciplines(race); track disc) {
+              <div class="rp-leg rp-leg--{{ disc }}"
+                   [class.has-gpx]="hasGpx(race, disc)">
+                <span class="rp-leg-tag">{{ disc | uppercase }}</span>
+                <div class="rp-leg-info">
+                  <span class="rp-leg-dist mono">
+                    @if (getDisciplineDistanceKm(race, disc); as km) {
+                      {{ km | number:'1.1-1' }} km
+                    } @else {
+                      —
+                    }
+                  </span>
+                  @if (hasGpx(race, disc) && getLoopCount(race, disc) > 1) {
+                    <span class="rp-leg-meta mono">×{{ getLoopCount(race, disc) }} boucles</span>
+                  }
+                </div>
+                <div class="rp-leg-right">
+                  @if (hasGpx(race, disc)) {
+                    <svg class="rp-leg-thumb" width="40" height="18" viewBox="0 0 40 20">
+                      <path d="M2,14 L7,8 L11,12 L16,4 L22,10 L28,6 L34,14 L38,8"
+                            fill="none" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <label class="rp-leg-action">
+                      ↻ Remplacer
+                      <input type="file" accept=".gpx" hidden
+                             (change)="onGpxFileSelected($event, race, disc)">
+                    </label>
+                  } @else {
+                    <label class="rp-leg-upload">
+                      @if (isUploading(race.id, disc)) {
+                        <span class="rp-loader rp-loader--sm"></span>
+                        {{ 'RACES.GPX_UPLOADING' | translate }}
+                      } @else {
+                        + IMPORTER GPX
+                      }
+                      <input type="file" accept=".gpx" hidden
+                             (change)="onGpxFileSelected($event, race, disc)">
+                    </label>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Description -->
+          @if (race.description) {
+            <div class="rp-section">
+              <header class="rp-section-hd">
+                <span class="rp-eyebrow">DESCRIPTION</span>
+              </header>
+              <p class="rp-desc">{{ race.description }}</p>
+              @if (race.website) {
+                <a class="rp-link" [href]="race.website" target="_blank" rel="noopener">→ {{ race.website }}</a>
+              }
+            </div>
+          } @else if (race.website) {
+            <div class="rp-section">
+              <a class="rp-link" [href]="race.website" target="_blank" rel="noopener">→ {{ race.website }}</a>
+            </div>
+          }
+
+          <!-- Actions -->
+          <div class="rp-actions">
+            <button class="rp-action-primary"
+                    [class.added]="addedRaceIds().has(race.id)"
+                    [disabled]="addedRaceIds().has(race.id)"
+                    (click)="addToMyGoals(race)">
+              @if (addedRaceIds().has(race.id)) {
+                ✓ {{ 'RACES.BTN_ADDED' | translate }}
+              } @else {
+                ★ {{ 'RACES.BTN_ADD_TO_GOALS' | translate }}
+              }
+            </button>
+            <button class="rp-action-ghost"
+                    [disabled]="!canSimulate(race)"
+                    [title]="canSimulate(race) ? '' : getSimulateDisabledReason(race)"
+                    (click)="simulateRace(race)">
+              ▶ {{ 'RACES.BTN_SIMULATE' | translate }}
+            </button>
+            @if (isOwnRace(race)) {
+              <button class="rp-action-icon" (click)="startEdit(race)" [title]="'RACES.BTN_EDIT_RACE_TITLE' | translate">
+                ✎
+              </button>
+            }
+          </div>
+
+          <!-- Meta footer -->
+          <div class="rp-meta-foot mono">
+            <span>id: {{ race.id }}</span>
+            @if (race.createdBy) {
+              <span>·</span>
+              <span>créée par {{ isOwnRace(race) ? 'vous' : '@' + race.createdBy.slice(0, 8) }}</span>
+            }
+          </div>
+        } @else {
+          <!-- Edit form -->
+          <div class="rp-edit">
+            <header class="rp-section-hd">
+              <span class="rp-eyebrow rp-eyebrow--accent">ÉDITION DE LA COURSE</span>
+            </header>
+            <div class="rp-edit-grid">
+              <div class="rp-edit-field rp-edit-field--full">
+                <label>{{ 'RACES.EDIT_FIELD_TITLE' | translate }}</label>
+                <input class="rp-edit-input" [ngModel]="editForm().title"
+                       (ngModelChange)="onEditFieldChange('title', $event)"/>
+              </div>
+              <div class="rp-edit-field">
+                <label>{{ 'RACES.EDIT_FIELD_SPORT' | translate }}</label>
+                <select class="rp-edit-input" [ngModel]="editForm().sport"
+                        (ngModelChange)="onEditFieldChange('sport', $event)">
+                  <option value="CYCLING">{{ 'RACES.SPORT_CYCLING' | translate }}</option>
+                  <option value="RUNNING">{{ 'RACES.SPORT_RUNNING' | translate }}</option>
+                  <option value="SWIMMING">{{ 'RACES.SPORT_SWIMMING' | translate }}</option>
+                  <option value="TRIATHLON">{{ 'RACES.SPORT_TRIATHLON' | translate }}</option>
+                  <option value="OTHER">{{ 'RACES.SPORT_OTHER' | translate }}</option>
+                </select>
+              </div>
+              <div class="rp-edit-field">
+                <label>{{ 'RACES.EDIT_FIELD_DISTANCE' | translate }}</label>
+                <input class="rp-edit-input" [ngModel]="editForm().distance"
+                       (ngModelChange)="onEditFieldChange('distance', $event)"
+                       [placeholder]="'RACES.EDIT_FIELD_DISTANCE_PLACEHOLDER' | translate"/>
+              </div>
+              <div class="rp-edit-field">
+                <label>{{ 'RACES.EDIT_FIELD_LOCATION' | translate }}</label>
+                <input class="rp-edit-input" [ngModel]="editForm().location"
+                       (ngModelChange)="onEditFieldChange('location', $event)"/>
+              </div>
+              <div class="rp-edit-field">
+                <label>{{ 'RACES.EDIT_FIELD_COUNTRY' | translate }}</label>
+                <input class="rp-edit-input" [ngModel]="editForm().country"
+                       (ngModelChange)="onEditFieldChange('country', $event)"/>
+              </div>
+              <div class="rp-edit-field">
+                <label>{{ 'RACES.EDIT_FIELD_SCHEDULED_DATE' | translate }}</label>
+                <input class="rp-edit-input" type="date" [ngModel]="editForm().scheduledDate"
+                       (ngModelChange)="onEditFieldChange('scheduledDate', $event)"/>
+              </div>
+              <div class="rp-edit-field">
+                <label>{{ 'RACES.EDIT_FIELD_ELEVATION' | translate }}</label>
+                <input class="rp-edit-input" type="number" [ngModel]="editForm().elevationGainM"
+                       (ngModelChange)="onEditFieldChange('elevationGainM', $event)"/>
+              </div>
+              <div class="rp-edit-field">
+                <label>{{ 'RACES.EDIT_FIELD_SWIM' | translate }}</label>
+                <input class="rp-edit-input" type="number" [ngModel]="editForm().swimDistanceM"
+                       (ngModelChange)="onEditFieldChange('swimDistanceM', $event)"/>
+              </div>
+              <div class="rp-edit-field">
+                <label>{{ 'RACES.EDIT_FIELD_BIKE' | translate }}</label>
+                <input class="rp-edit-input" type="number" [ngModel]="editForm().bikeDistanceM"
+                       (ngModelChange)="onEditFieldChange('bikeDistanceM', $event)"/>
+              </div>
+              <div class="rp-edit-field">
+                <label>{{ 'RACES.EDIT_FIELD_RUN' | translate }}</label>
+                <input class="rp-edit-input" type="number" [ngModel]="editForm().runDistanceM"
+                       (ngModelChange)="onEditFieldChange('runDistanceM', $event)"/>
+              </div>
+              <div class="rp-edit-field rp-edit-field--full">
+                <label>{{ 'RACES.EDIT_FIELD_WEBSITE' | translate }}</label>
+                <input class="rp-edit-input" [ngModel]="editForm().website"
+                       (ngModelChange)="onEditFieldChange('website', $event)" placeholder="https://..."/>
+              </div>
+              <div class="rp-edit-field rp-edit-field--full">
+                <label>{{ 'RACES.EDIT_FIELD_DESCRIPTION' | translate }}</label>
+                <textarea class="rp-edit-input rp-edit-textarea" rows="4"
+                          [ngModel]="editForm().description"
+                          (ngModelChange)="onEditFieldChange('description', $event)"></textarea>
+              </div>
+            </div>
+            <div class="rp-edit-actions">
+              <button class="rp-action-primary" [disabled]="isSavingEdit()" (click)="saveEdit(race)">
+                {{ isSavingEdit() ? ('RACES.BTN_SAVING' | translate) : ('RACES.BTN_SAVE' | translate) }}
+              </button>
+              <button class="rp-action-ghost" [disabled]="isSavingEdit()" (click)="cancelEdit()">
+                {{ 'RACES.BTN_CANCEL' | translate }}
+              </button>
+            </div>
+          </div>
+        }
+      } @else {
+        <div class="rp-detail-empty">
+          <span>Sélectionne une course pour voir les détails</span>
+        </div>
+      }
+    </aside>
+  </div>
 </div>
