@@ -97,6 +97,13 @@ public class User {
     private Integer vo2maxPower;   // Watts (VO2MAX_POWER reference)
     private Integer vo2maxPace;    // Seconds per km (VO2MAX_PACE reference)
 
+    // Two-parameter CP test results (max avg power over 3 min and 12 min, in watts).
+    // Stored as inputs; criticalPower and wPrimeJ are derived from them.
+    private Integer power3MinW;
+    private Integer power12MinW;
+    private Integer criticalPower; // Watts — derived from the two-test linear model
+    private Integer wPrimeJ;       // Joules — derived from the two-test linear model
+
     private Boolean needsOnboarding = false;
 
     private LocalDateTime cguAcceptedAt;

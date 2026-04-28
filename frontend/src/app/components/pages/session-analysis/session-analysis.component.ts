@@ -19,7 +19,6 @@ import {BlockBreakdownTableComponent} from './block-breakdown-table/block-breakd
 import {PowerCurveChartComponent} from './power-curve-chart/power-curve-chart.component';
 import {DecouplingGaugeComponent} from './decoupling-gauge/decoupling-gauge.component';
 import {CadenceDistributionPanelComponent} from './cadence-distribution-panel/cadence-distribution-panel.component';
-import {DetectedEffortsPanelComponent} from './detected-efforts-panel/detected-efforts-panel.component';
 import {ClimbsPanelComponent} from './climbs-panel/climbs-panel.component';
 import {WPrimeBalanceChartComponent} from './wprime-balance-chart/wprime-balance-chart.component';
 
@@ -34,7 +33,7 @@ interface FitState {
 @Component({
     selector: 'app-session-analysis',
     standalone: true,
-    imports: [CommonModule, TranslateModule, FitTimeseriesChartComponent, SessionStatsHeaderComponent, ZoneDistributionPanelComponent, BlockBreakdownTableComponent, PowerCurveChartComponent, DecouplingGaugeComponent, CadenceDistributionPanelComponent, DetectedEffortsPanelComponent, ClimbsPanelComponent, WPrimeBalanceChartComponent],
+    imports: [CommonModule, TranslateModule, FitTimeseriesChartComponent, SessionStatsHeaderComponent, ZoneDistributionPanelComponent, BlockBreakdownTableComponent, PowerCurveChartComponent, DecouplingGaugeComponent, CadenceDistributionPanelComponent, ClimbsPanelComponent, WPrimeBalanceChartComponent],
     templateUrl: './session-analysis.component.html',
     styleUrl: './session-analysis.component.css',
 })
@@ -71,6 +70,8 @@ export class SessionAnalysisComponent implements OnDestroy {
 
     session$ = this.sessionSubject.asObservable();
     ftp$ = this.authService.user$.pipe(map((u) => u?.ftp ?? null));
+    criticalPower$ = this.authService.user$.pipe(map((u) => u?.criticalPower ?? null));
+    wPrimeJ$ = this.authService.user$.pipe(map((u) => u?.wPrimeJ ?? null));
 
     fitState$: Observable<FitState> = this.sessionSubject.pipe(
         distinctUntilChanged((a, b) => a?.fitFileId === b?.fitFileId),

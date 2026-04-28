@@ -177,6 +177,11 @@ public class AuthController {
             newUser.setDisplayName(request.displayName() != null ? request.displayName() : userId);
             newUser.setRole(request.role() != null ? request.role() : UserRole.ATHLETE);
             newUser.setFtp(250);
+            newUser.setPower3MinW(350);
+            newUser.setPower12MinW(280);
+            // CP and W' will be derived on first settings save; seed them so the chart works in dev:
+            newUser.setCriticalPower(257);
+            newUser.setWPrimeJ(16800);
             return userRepository.save(newUser);
         });
 
@@ -211,6 +216,7 @@ public class AuthController {
             Integer criticalSwimSpeed, Integer pace5k, Integer pace10k,
             Integer paceHalfMarathon, Integer paceMarathon,
             Integer vo2maxPower, Integer vo2maxPace,
+            @Positive Integer power3MinW, @Positive Integer power12MinW,
             Map<String, Integer> customZoneReferenceValues,
             String aiPrePrompt, Boolean aiPrePromptEnabled) {
     }
@@ -223,6 +229,7 @@ public class AuthController {
                 request.criticalSwimSpeed(), request.pace5k(), request.pace10k(),
                 request.paceHalfMarathon(), request.paceMarathon(),
                 request.vo2maxPower(), request.vo2maxPace(),
+                request.power3MinW(), request.power12MinW(),
                 request.customZoneReferenceValues(),
                 request.aiPrePrompt(), request.aiPrePromptEnabled());
         return ResponseEntity.ok(userResponseMapper.userToMap(user));

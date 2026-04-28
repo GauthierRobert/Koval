@@ -3,7 +3,7 @@
     <div class="cad-header">
       <div class="section-label">{{ 'SESSION_ANALYSIS.CADENCE_TITLE' | translate }}</div>
       <div class="cad-summary">
-        <span class="cad-median mono">{{ r.medianRpm }} <span class="rpm-unit">rpm</span></span>
+        <span class="cad-median mono">{{ r.medianRpm }} <span class="rpm-unit">{{ r.unit }}</span></span>
         <span class="cad-profile" [attr.data-profile]="r.profile">
           @switch (r.profile) {
             @case ('grinder') { {{ 'SESSION_ANALYSIS.CADENCE_PROFILE_GRINDER' | translate }} }

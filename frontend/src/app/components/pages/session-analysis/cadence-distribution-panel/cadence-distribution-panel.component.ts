@@ -23,9 +23,17 @@ export interface CadenceProfileResult {
     spinningPct: number;
     profile: CadenceProfile;
     totalSeconds: number;
+    unit: 'rpm' | 'spm';
 }
 
-const BUCKETS: {label: string; min: number; max: number; color: string}[] = [
+interface BucketDef {
+    label: string;
+    min: number;
+    max: number;
+    color: string;
+}
+
+const CYCLING_BUCKETS: BucketDef[] = [
     {label: '<60', min: 0, max: 60, color: 'oklch(0.55 0.16 25)'},
     {label: '60–70', min: 60, max: 70, color: 'oklch(0.65 0.14 45)'},
     {label: '70–80', min: 70, max: 80, color: 'oklch(0.72 0.12 75)'},
@@ -33,6 +41,15 @@ const BUCKETS: {label: string; min: number; max: number; color: string}[] = [
     {label: '90–100', min: 90, max: 100, color: 'oklch(0.78 0.16 155)'},
     {label: '100–110', min: 100, max: 110, color: 'oklch(0.72 0.16 200)'},
     {label: '110+', min: 110, max: Infinity, color: 'oklch(0.65 0.18 240)'},
+];
+
+const RUNNING_BUCKETS: BucketDef[] = [
+    {label: '<155', min: 0, max: 155, color: 'oklch(0.55 0.16 25)'},
+    {label: '155–165', min: 155, max: 165, color: 'oklch(0.65 0.14 45)'},
+    {label: '165–175', min: 165, max: 175, color: 'oklch(0.72 0.12 75)'},
+    {label: '175–185', min: 175, max: 185, color: 'oklch(0.78 0.14 130)'},
+    {label: '185–195', min: 185, max: 195, color: 'oklch(0.78 0.16 155)'},
+    {label: '195+', min: 195, max: Infinity, color: 'oklch(0.72 0.16 200)'},
 ];
 
 @Component({
@@ -66,29 +83,35 @@ export class CadenceDistributionPanelComponent {
     }
 
     private computeProfile(): CadenceProfileResult | null {
-        if (this.sportType !== 'CYCLING') return null;
+        if (this.sportType !== 'CYCLING' && this.sportType !== 'RUNNING') return null;
         if (!this.records || this.records.length < 30) return null;
 
-        const seconds = BUCKETS.map(() => 0);
+        const isRunning = this.sportType === 'RUNNING';
+        const buckets = isRunning ? RUNNING_BUCKETS : CYCLING_BUCKETS;
+        const unit: 'rpm' | 'spm' = isRunning ? 'spm' : 'rpm';
+
+        const seconds = buckets.map(() => 0);
         const cadences: number[] = [];
         let total = 0;
 
         for (let i = 0; i < this.records.length; i++) {
             const r = this.records[i];
-            if (r.cadence <= 0) continue;
+            // FIT stores running cadence as per-leg rpm — double it to spm.
+            const cadence = isRunning ? r.cadence * 2 : r.cadence;
+            if (cadence <= 0) continue;
             const dt = i + 1 < this.records.length
                 ? Math.min(this.records[i + 1].timestamp - r.timestamp, 30)
                 : 1;
             if (dt <= 0) continue;
-            const idx = this.bucketIndex(r.cadence);
+            const idx = this.bucketIndex(cadence, buckets);
             seconds[idx] += dt;
-            cadences.push(r.cadence);
+            cadences.push(cadence);
             total += dt;
         }
 
         if (total < 30 || cadences.length === 0) return null;
 
-        const buckets: CadenceBucket[] = BUCKETS.map((b, i) => ({
+        const bucketResult: CadenceBucket[] = buckets.map((b, i) => ({
             label: b.label,
             minRpm: b.min,
             maxRpm: b.max === Infinity ? 999 : b.max,
@@ -100,10 +123,22 @@ export class CadenceDistributionPanelComponent {
         cadences.sort((a, b) => a - b);
         const median = cadences[Math.floor(cadences.length / 2)];
 
-        const grinderSec = seconds[0] + seconds[1]; // <70
-        const optimalSec = seconds[2] + seconds[3] + seconds[4]; // 70-100
-        const highSec = seconds[5]; // 100-110
-        const spinningSec = seconds[6]; // 110+
+        let grinderSec: number;
+        let optimalSec: number;
+        let highSec: number;
+        let spinningSec: number;
+
+        if (isRunning) {
+            grinderSec = seconds[0] + seconds[1]; // <165 spm
+            optimalSec = seconds[2] + seconds[3]; // 165-185 (centered on 180)
+            highSec = seconds[4]; // 185-195
+            spinningSec = seconds[5]; // 195+
+        } else {
+            grinderSec = seconds[0] + seconds[1]; // <70 rpm
+            optimalSec = seconds[2] + seconds[3] + seconds[4]; // 70-100
+            highSec = seconds[5]; // 100-110
+            spinningSec = seconds[6]; // 110+
+        }
 
         const grinderPct = Math.round((grinderSec / total) * 100);
         const optimalPct = Math.round((optimalSec / total) * 100);
@@ -113,7 +148,7 @@ export class CadenceDistributionPanelComponent {
         const profile = this.classifyProfile(grinderPct, optimalPct, highPct, spinningPct);
 
         return {
-            buckets,
+            buckets: bucketResult,
             medianRpm: median,
             grinderPct,
             optimalPct,
@@ -121,14 +156,15 @@ export class CadenceDistributionPanelComponent {
             spinningPct,
             profile,
             totalSeconds: total,
+            unit,
         };
     }
 
-    private bucketIndex(rpm: number): number {
-        for (let i = 0; i < BUCKETS.length; i++) {
-            if (rpm >= BUCKETS[i].min && rpm < BUCKETS[i].max) return i;
+    private bucketIndex(value: number, buckets: BucketDef[]): number {
+        for (let i = 0; i < buckets.length; i++) {
+            if (value >= buckets[i].min && value < buckets[i].max) return i;
         }
-        return BUCKETS.length - 1;
+        return buckets.length - 1;
     }
 
     private classifyProfile(grinder: number, optimal: number, high: number, spinning: number): CadenceProfile {

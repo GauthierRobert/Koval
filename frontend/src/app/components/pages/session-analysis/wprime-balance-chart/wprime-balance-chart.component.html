@@ -1,9 +1,52 @@
 @if (visible && stats) {
   <div class="wprime-panel glass">
     <div class="wprime-header">
-      <div class="section-label">{{ 'SESSION_ANALYSIS.WPRIME_TITLE' | translate }}</div>
-      <span class="capacity-pill mono">{{ stats.capacityKj.toFixed(1) }} kJ</span>
+      <div class="wprime-title-block">
+        <div class="section-label-row">
+          <div class="section-label">{{ 'SESSION_ANALYSIS.WPRIME_TITLE' | translate }}</div>
+          <button type="button" class="info-btn"
+            [class.active]="helpOpen"
+            [attr.aria-label]="'SESSION_ANALYSIS.WPRIME_HELP_TITLE' | translate"
+            [attr.aria-expanded]="helpOpen"
+            (click)="toggleHelp()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="wprime-subtitle">{{ 'SESSION_ANALYSIS.WPRIME_SUBTITLE' | translate }}</div>
+      </div>
+      <div class="capacity-stack">
+        <span class="capacity-pill mono">{{ stats.capacityKj.toFixed(1) }} kJ {{ 'SESSION_ANALYSIS.WPRIME_CAPACITY_LABEL' | translate }}</span>
+        <span class="source-pill" [class.personal]="usingUserCp && usingUserWPrime">
+          @if (usingUserCp && usingUserWPrime) {
+            {{ 'SESSION_ANALYSIS.WPRIME_PERSONAL' | translate }}
+          } @else {
+            {{ 'SESSION_ANALYSIS.WPRIME_GENERIC' | translate }}
+          }
+        </span>
+      </div>
     </div>
+
+    @if (helpOpen) {
+      <div class="wprime-help" role="region" [attr.aria-label]="'SESSION_ANALYSIS.WPRIME_HELP_TITLE' | translate">
+        <button type="button" class="help-close" (click)="closeHelp()" aria-label="Close">×</button>
+        <div class="help-section">
+          <h4>{{ 'SESSION_ANALYSIS.WPRIME_HELP_HOW_TITLE' | translate }}</h4>
+          <p>{{ 'SESSION_ANALYSIS.WPRIME_HELP_HOW_BODY' | translate }}</p>
+        </div>
+        <div class="help-section">
+          <h4>{{ 'SESSION_ANALYSIS.WPRIME_HELP_READ_TITLE' | translate }}</h4>
+          <p>{{ 'SESSION_ANALYSIS.WPRIME_HELP_READ_BODY' | translate }}</p>
+        </div>
+        <div class="help-section">
+          <h4>{{ 'SESSION_ANALYSIS.WPRIME_HELP_PRECISION_TITLE' | translate }}</h4>
+          <p>{{ 'SESSION_ANALYSIS.WPRIME_HELP_PRECISION_BODY' | translate }}</p>
+        </div>
+      </div>
+    }
 
     <div class="wprime-stats">
       <div class="stat-cell">

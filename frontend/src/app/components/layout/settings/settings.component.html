@@ -54,6 +54,80 @@
                         <span class="unit">{{ 'SETTINGS.FIELD_FTP_UNIT' | translate }}</span>
                     </div>
                 </div>
+
+                <div class="cp-test-block">
+                    <div class="cp-test-header">
+                        <div class="label-with-info">
+                            <span class="cp-test-title">{{ 'SETTINGS.FIELD_CP_TEST_SECTION_LABEL' | translate }}</span>
+                            <button type="button" class="info-btn" [class.active]="showCpHelp"
+                                [attr.aria-label]="'SETTINGS.FIELD_CP_TEST_TITLE' | translate"
+                                [attr.aria-expanded]="showCpHelp" (click)="toggleCpHelp()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field-info">
+                            <label for="settings-p3min">{{ 'SETTINGS.FIELD_P3MIN_LABEL' | translate }}</label>
+                            <span class="hint">{{ 'SETTINGS.FIELD_P3MIN_HINT' | translate }}</span>
+                        </div>
+                        <div class="field-input ftp-input-group">
+                            <input id="settings-p3min" type="number" [(ngModel)]="power3MinW" min="50" max="800" class="value-input numeric" placeholder="—" />
+                            <span class="unit">{{ 'SETTINGS.FIELD_FTP_UNIT' | translate }}</span>
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field-info">
+                            <label for="settings-p12min">{{ 'SETTINGS.FIELD_P12MIN_LABEL' | translate }}</label>
+                            <span class="hint">{{ 'SETTINGS.FIELD_P12MIN_HINT' | translate }}</span>
+                        </div>
+                        <div class="field-input ftp-input-group">
+                            <input id="settings-p12min" type="number" [(ngModel)]="power12MinW" min="50" max="600" class="value-input numeric" placeholder="—" />
+                            <span class="unit">{{ 'SETTINGS.FIELD_FTP_UNIT' | translate }}</span>
+                        </div>
+                    </div>
+
+                    @if (cpTestValid) {
+                        <div class="cp-derived" data-testid="cp-derived">
+                            <span class="cp-derived-label">{{ 'SETTINGS.CP_DERIVED_LABEL' | translate }}</span>
+                            <div class="cp-derived-values">
+                                <span class="cp-derived-pair">
+                                    <span class="cp-derived-name">{{ 'SETTINGS.FIELD_CRITICAL_POWER_LABEL' | translate }}</span>
+                                    <span class="cp-derived-num mono">{{ derivedCp }} W</span>
+                                </span>
+                                <span class="cp-derived-sep">·</span>
+                                <span class="cp-derived-pair">
+                                    <span class="cp-derived-name">{{ 'SETTINGS.FIELD_WPRIME_LABEL' | translate }}</span>
+                                    <span class="cp-derived-num mono">{{ derivedWPrimeKj }} kJ</span>
+                                </span>
+                            </div>
+                        </div>
+                    } @else if (cpTestInvalidOrder) {
+                        <div class="cp-warning" role="alert">
+                            {{ 'SETTINGS.CP_TEST_INVALID_ORDER' | translate }}
+                        </div>
+                    }
+                </div>
+
+                @if (showCpHelp) {
+                    <div class="cp-help" role="region" [attr.aria-label]="'SETTINGS.FIELD_CP_TEST_TITLE' | translate">
+                        <h4>{{ 'SETTINGS.FIELD_CP_TEST_TITLE' | translate }}</h4>
+                        <p>{{ 'SETTINGS.FIELD_CP_TEST_BODY' | translate }}</p>
+                        <ol>
+                            <li>{{ 'SETTINGS.FIELD_CP_TEST_STEP_1' | translate }}</li>
+                            <li>{{ 'SETTINGS.FIELD_CP_TEST_STEP_2' | translate }}</li>
+                            <li>{{ 'SETTINGS.FIELD_CP_TEST_STEP_3' | translate }}</li>
+                            <li>{{ 'SETTINGS.FIELD_CP_TEST_STEP_4' | translate }}</li>
+                        </ol>
+                        <p class="cp-help-formula">{{ 'SETTINGS.FIELD_CP_TEST_FORMULA' | translate }}</p>
+                    </div>
+                }
             </div>
         </section>
 

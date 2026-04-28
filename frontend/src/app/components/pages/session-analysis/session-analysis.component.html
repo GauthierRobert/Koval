@@ -115,15 +115,10 @@
           <app-wprime-balance-chart
             [records]="fit.records"
             [sportType]="session.sportType"
-            [ftp]="ftp">
+            [ftp]="ftp"
+            [criticalPower]="(criticalPower$ | async) ?? null"
+            [userWPrimeJ]="(wPrimeJ$ | async) ?? null">
           </app-wprime-balance-chart>
-
-          <!-- Auto-detected effort segments (cycling w/ FTP and power data) -->
-          <app-detected-efforts-panel
-            [records]="fit.records"
-            [sportType]="session.sportType"
-            [ftp]="ftp">
-          </app-detected-efforts-panel>
 
           <!-- Climbs (any sport with elevation data) -->
           <app-climbs-panel

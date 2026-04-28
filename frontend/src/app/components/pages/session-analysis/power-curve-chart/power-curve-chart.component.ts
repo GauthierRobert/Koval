@@ -74,6 +74,7 @@ interface CurveState {
         }
     `,
     styles: [`
+        :host:empty { display: none; }
         .power-curve { padding: var(--space-md) var(--page-padding); }
         .pc-header {
             display: flex; align-items: center; justify-content: space-between;
