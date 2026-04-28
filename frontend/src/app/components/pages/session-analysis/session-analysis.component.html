@@ -105,6 +105,32 @@
             [sportType]="session.sportType">
           </app-decoupling-gauge>
 
+          <!-- Cadence distribution (cycling only, hidden when no cadence data) -->
+          <app-cadence-distribution-panel
+            [records]="fit.records"
+            [sportType]="session.sportType">
+          </app-cadence-distribution-panel>
+
+          <!-- W' balance trace (cycling w/ FTP and power data) -->
+          <app-wprime-balance-chart
+            [records]="fit.records"
+            [sportType]="session.sportType"
+            [ftp]="ftp">
+          </app-wprime-balance-chart>
+
+          <!-- Auto-detected effort segments (cycling w/ FTP and power data) -->
+          <app-detected-efforts-panel
+            [records]="fit.records"
+            [sportType]="session.sportType"
+            [ftp]="ftp">
+          </app-detected-efforts-panel>
+
+          <!-- Climbs (any sport with elevation data) -->
+          <app-climbs-panel
+            [records]="fit.records"
+            [sportType]="session.sportType">
+          </app-climbs-panel>
+
           <!-- Power curve (cycling only, hidden when no power data) -->
           <app-power-curve-chart
             [sessionId]="session.id"

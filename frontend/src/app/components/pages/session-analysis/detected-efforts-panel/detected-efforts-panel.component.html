@@ -1,0 +1,34 @@
+@if (efforts; as list) {
+  @if (list.length > 0) {
+    <div class="efforts-panel glass">
+      <div class="efforts-header">
+        <div class="section-label">{{ 'SESSION_ANALYSIS.EFFORTS_TITLE' | translate }}</div>
+        <span class="effort-count">{{ list.length }} {{ list.length === 1 ? ('SESSION_ANALYSIS.EFFORT_SINGULAR' | translate) : ('SESSION_ANALYSIS.EFFORT_PLURAL' | translate) }}</span>
+      </div>
+      <div class="efforts-table">
+        <div class="eff-header">
+          <span class="eff-col eff-num">#</span>
+          <span class="eff-col eff-start">{{ 'SESSION_ANALYSIS.EFFORTS_COL_START' | translate }}</span>
+          <span class="eff-col eff-dur">{{ 'SESSION_ANALYSIS.EFFORTS_COL_DURATION' | translate }}</span>
+          <span class="eff-col eff-pwr">{{ 'SESSION_ANALYSIS.EFFORTS_COL_AVG' | translate }}</span>
+          <span class="eff-col eff-np">{{ 'SESSION_ANALYSIS.EFFORTS_COL_NP' | translate }}</span>
+          <span class="eff-col eff-peak">{{ 'SESSION_ANALYSIS.EFFORTS_COL_PEAK' | translate }}</span>
+          <span class="eff-col eff-if">{{ 'SESSION_ANALYSIS.EFFORTS_COL_IF' | translate }}</span>
+          <span class="eff-col eff-hr">{{ 'SESSION_ANALYSIS.EFFORTS_COL_HR' | translate }}</span>
+        </div>
+        @for (e of list; track e.index) {
+          <div class="eff-row" data-testid="effort-row">
+            <span class="eff-col eff-num">{{ e.index }}</span>
+            <span class="eff-col eff-start mono">{{ formatDuration(e.startSecond) }}</span>
+            <span class="eff-col eff-dur mono">{{ formatDuration(e.durationSeconds) }}</span>
+            <span class="eff-col eff-pwr mono">{{ e.avgPower }} W</span>
+            <span class="eff-col eff-np mono">{{ e.normalizedPower }} W</span>
+            <span class="eff-col eff-peak mono">{{ e.peakPower }} W</span>
+            <span class="eff-col eff-if mono">{{ e.intensityFactor != null ? e.intensityFactor.toFixed(2) : '—' }}</span>
+            <span class="eff-col eff-hr mono">{{ e.avgHr != null ? e.avgHr + ' bpm' : '—' }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+}
