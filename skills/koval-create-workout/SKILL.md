@@ -96,6 +96,7 @@ If none exists, fall back to standard Coggan / pace / CSS conventions.
 4. **UserId** — resolved from auth, never pass it.
 
 ## OUTPUT
+- Never reference the athlete reference value in the training. The training should be adaptable for every athlete.
 - No preamble. No restating the request. No describing the block-by-block content (it's in the training object).
 - After the tool call, **max 3 lines**:
 
@@ -108,7 +109,6 @@ If you also scheduled it: append `· scheduled <YYYY-MM-DD>`.
 On error: one sentence.
 
 ## Edge cases
-- **No FTP / CSS / threshold pace** → use generic %FTP defaults, mention once that estimates will sharpen after `koval-zone-setup`.
 - **`forbiddenEfforts` from profile** (e.g. no all-out sprints, no max HR) → honour silently, redesign without them.
 - **Request exceeds `maxSessionMinutes`** → trim to the cap and note it in the Done line.
 - **Ambiguous sport** → ask one short question; do not guess between RUN and BIKE.

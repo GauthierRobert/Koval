@@ -1,83 +1,37 @@
-@if (clubs.length > 0) {
+@if (rows.length > 0) {
   <div class="clubs-section">
     <div class="clubs-header">
-      <span class="clubs-title">{{ 'DASHBOARD.MY_CLUBS_TITLE' | translate }}</span>
-      <span class="clubs-count">{{ clubs.length }}</span>
+      <span class="clubs-title mono">{{ 'DASHBOARD.MY_CLUBS_TITLE' | translate }} · {{ rows.length }}</span>
+      <button type="button" class="clubs-view-all mono" (click)="navigateToClubsList()">
+        {{ 'DASHBOARD.CLUBS_VIEW_ALL' | translate }} →
+      </button>
     </div>
-    <div class="clubs-grid">
-      @for (item of clubs; track trackByClubId($index, item)) {
-        <div class="club-card glass glow-card" (click)="navigateToClub(item.club.id)">
-
-          <div class="card-body">
-            <div class="club-identity">
-              <div class="club-avatar">
-                {{ getClubInitials(item.club.name) }}
-              </div>
-              <span class="club-name">{{ item.club.name }}</span>
-              @if (item.status === 'attending') {
-                <span class="status-check">&#x2713;</span>
+    <div class="clubs-list glass">
+      @for (item of rows; track trackByClubId($index, item); let last = $last) {
+        <button
+          type="button"
+          class="club-row"
+          [class.club-row--last]="last"
+          (click)="navigateToClub(item.club.id)">
+          <span class="club-avatar">{{ getClubInitials(item.club.name) }}</span>
+          <span class="club-info">
+            <span class="club-name">{{ item.club.name }}</span>
+            <span class="club-meta mono">
+              @if (item.memberCount != null) {
+                {{ 'DASHBOARD.CLUBS_MEMBERS' | translate: { count: item.memberCount } }}
               }
-              @if (item.status === 'waitlist') {
-                <span class="status-position">#{{ item.waitlistPosition }}</span>
+              @if (item.memberCount != null && item.nextSession?.scheduledAt) {
+                <span class="meta-sep">·</span>
               }
-            </div>
-
-            @if (item.nextSession) {
-              <div class="session-info">
-                <div class="session-title-row">
-                  <app-sport-icon [sport]="$any(item.nextSession.sport ?? 'CYCLING')" [size]="14"></app-sport-icon>
-                  <span class="session-title">{{ item.nextSession.title }}</span>
-                </div>
-                <div class="session-meta">
-                  {{ formatSessionDate(item.nextSession.scheduledAt!) }}
-                  @if (item.nextSession.location) {
-                    <span class="meta-sep">&middot;</span> {{ item.nextSession.location }}
-                  }
-                  @if (item.nextSession.maxParticipants) {
-                    <span class="meta-sep">&middot;</span>
-                    <span [class.capacity-full]="item.status === 'full' || item.status === 'waitlist'">
-                      {{ getCapacityText(item.nextSession) }}
-                    </span>
-                  }
-                </div>
-              </div>
-            } @else {
-              <div class="session-info">
-                <span class="no-session">{{ 'DASHBOARD.CLUBS_NO_UPCOMING' | translate }}</span>
-              </div>
-            }
-          </div>
-
-          <div class="card-footer"
-            [class.footer-join]="item.status === 'not-joined'"
-            [class.footer-attending]="item.status === 'attending'"
-            [class.footer-waitlist]="item.status === 'waitlist'"
-            [class.footer-full]="item.status === 'full'"
-            [class.footer-view]="item.status === 'no-session'">
-
-            @switch (item.status) {
-              @case ('not-joined') {
-                <span class="footer-action" (click)="onJoin(item, $event)">{{ 'DASHBOARD.CLUBS_JOIN_SESSION' | translate }}</span>
+              @if (item.nextSession?.scheduledAt; as next) {
+                <span>{{ 'DASHBOARD.CLUBS_NEXT' | translate }} {{ formatNextSession(next) }}</span>
+              } @else if (item.memberCount != null) {
+                <span class="meta-quiet">{{ 'DASHBOARD.CLUBS_NO_UPCOMING' | translate }}</span>
               }
-              @case ('attending') {
-                <span class="footer-text">{{ 'DASHBOARD.CLUBS_ATTENDING' | translate }}</span>
-                <span class="footer-sep">&middot;</span>
-                <span class="footer-leave" (click)="onLeave(item, $event)">{{ 'DASHBOARD.CLUBS_LEAVE' | translate }}</span>
-              }
-              @case ('waitlist') {
-                <span class="footer-text">{{ 'DASHBOARD.CLUBS_WAITLIST' | translate: { position: item.waitlistPosition } }}</span>
-                <span class="footer-sep">&middot;</span>
-                <span class="footer-leave" (click)="onLeave(item, $event)">{{ 'DASHBOARD.CLUBS_LEAVE' | translate }}</span>
-              }
-              @case ('full') {
-                <span class="footer-action" (click)="onJoin(item, $event)">{{ 'DASHBOARD.CLUBS_JOIN_WAITLIST' | translate }}</span>
-              }
-              @case ('no-session') {
-                <span class="footer-action" (click)="navigateToClub(item.club.id)">{{ 'DASHBOARD.CLUBS_VIEW_CLUB' | translate }}</span>
-              }
-            }
-          </div>
-        </div>
+            </span>
+          </span>
+          <span class="club-chevron" aria-hidden="true">›</span>
+        </button>
       }
     </div>
   </div>

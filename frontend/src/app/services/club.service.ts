@@ -90,6 +90,12 @@ export class ClubService {
       .subscribe((club) => this.ngZone.run(() => this.selectedClubSubject.next(club)));
   }
 
+  getClubDetail(id: string): Observable<ClubDetail | null> {
+    return this.http
+      .get<ClubDetail>(`${this.apiUrl}/${id}`)
+      .pipe(catchError(() => of(null as ClubDetail | null)));
+  }
+
   // --- Membership ---
 
   joinClub(id: string): Observable<void> {

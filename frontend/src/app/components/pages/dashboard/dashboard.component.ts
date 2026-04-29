@@ -10,7 +10,6 @@ import {HistoryService, SavedSession} from '../../../services/history.service';
 import {MetricsService, PmcDataPoint} from '../../../services/metrics.service';
 import {CoachService, ScheduledWorkout} from '../../../services/coach.service';
 import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
-import {PlanService} from '../../../services/plan.service';
 import {AnalyticsService, VolumeEntry} from '../../../services/analytics.service';
 import {WorkoutDetailModalComponent} from '../../shared/workout-detail-modal/workout-detail-modal.component';
 import {daysUntil, formatTrainingDuration} from '../../shared/format/format.utils';
@@ -95,7 +94,6 @@ export class DashboardComponent {
   private metricsService = inject(MetricsService);
   private raceGoalService = inject(RaceGoalService);
   private coachService = inject(CoachService);
-  private planService = inject(PlanService);
   private analyticsService = inject(AnalyticsService);
   private router = inject(Router);
   private translate = inject(TranslateService);
@@ -187,8 +185,6 @@ export class DashboardComponent {
     startWith([] as VolumeEntry[]),
   );
 
-  activePlan$ = this.planService.activePlan$;
-
   vm$ = combineLatest({
     overdue: this.overdueWorkouts$,
     upcoming: this.upcomingWorkouts$,
@@ -200,7 +196,6 @@ export class DashboardComponent {
     nextGoal: this.raceGoalService.nextGoal$,
     reminders: this.sessionReminders$,
     user: this.authService.user$,
-    activePlan: this.activePlan$,
     volume: this.volume$,
     pmc: this.pmcData$,
   });
@@ -214,10 +209,6 @@ export class DashboardComponent {
 
   navigateToLinkTraining(session: any): void {
     this.router.navigate(['/clubs', session.clubId]);
-  }
-
-  navigateToPlan(planId: string): void {
-    this.router.navigate(['/plans', planId]);
   }
 
   openDetail(w: ScheduledWorkout): void {
@@ -260,8 +251,29 @@ export class DashboardComponent {
     return (s.durationSeconds / total) * 100;
   }
 
-  sportPretty(sport: string): string {
-    return sport.charAt(0) + sport.slice(1).toLowerCase();
+  sportLabel(sport: string): string {
+    switch (sport) {
+      case 'CYCLING': return 'DASHBOARD.MIX_BIKE';
+      case 'RUNNING': return 'DASHBOARD.MIX_RUN';
+      case 'SWIMMING': return 'DASHBOARD.MIX_SWIM';
+      default: return sport;
+    }
+  }
+
+  donutSegments(metrics: WeekMetrics): { sport: string; dashArray: string; dashOffset: number }[] {
+    const total = this.totalWeekSeconds(metrics);
+    if (total <= 0) return [];
+    const GAP = 1.5;
+    let cursor = 0;
+    return metrics.current
+      .filter((s) => s.durationSeconds > 0)
+      .map((s) => {
+        const pct = (s.durationSeconds / total) * 100;
+        const len = Math.max(0, pct - GAP);
+        const seg = { sport: s.sport, dashArray: `${len} ${100 - len}`, dashOffset: -cursor };
+        cursor += pct;
+        return seg;
+      });
   }
 
   /* ── KPI deltas (7-day) ── */

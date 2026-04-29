@@ -10,8 +10,12 @@ import com.koval.trainingplannerbackend.integration.nolio.write.NolioPushService
 import com.koval.trainingplannerbackend.integration.zwift.ZwiftWorkoutService;
 import com.koval.trainingplannerbackend.training.metrics.TrainingMetricsService;
 import com.koval.trainingplannerbackend.training.model.BlockType;
+import com.koval.trainingplannerbackend.training.model.SportType;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.model.WorkoutElement;
+import com.koval.trainingplannerbackend.training.zone.Zone;
+import com.koval.trainingplannerbackend.training.zone.ZoneSystem;
+import com.koval.trainingplannerbackend.training.zone.ZoneSystemService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static java.util.Optional.ofNullable;
 
@@ -35,6 +40,7 @@ public class TrainingService {
     private final NolioPushService nolioPushService;
     private final UserService userService;
     private final ObjectMapper objectMapper;
+    private final ZoneSystemService zoneSystemService;
 
     public TrainingService(TrainingRepository trainingRepository,
                            TrainingMetricsService metricsService,
@@ -42,7 +48,8 @@ public class TrainingService {
                            ZwiftWorkoutService zwiftWorkoutService,
                            NolioPushService nolioPushService,
                            UserService userService,
-                           ObjectMapper objectMapper) {
+                           ObjectMapper objectMapper,
+                           ZoneSystemService zoneSystemService) {
         this.trainingRepository = trainingRepository;
         this.metricsService = metricsService;
         this.membershipRepository = membershipRepository;
@@ -50,6 +57,7 @@ public class TrainingService {
         this.nolioPushService = nolioPushService;
         this.userService = userService;
         this.objectMapper = objectMapper;
+        this.zoneSystemService = zoneSystemService;
     }
 
     /**
@@ -83,7 +91,10 @@ public class TrainingService {
         training.setCreatedBy(userId);
         training.setCreatedAt(LocalDateTime.now());
         metricsService.calculateTrainingMetrics(training, userId);
-        training.setBlocks(training.getBlocks().stream().map(this::standardizeBlockType).toList());
+        ZoneSystem zoneSystem = resolveZoneSystem(training, userId);
+        training.setBlocks(training.getBlocks().stream()
+                .map(b -> standardizeBlockType(b, zoneSystem))
+                .toList());
         Training saved = trainingRepository.save(training);
         zwiftWorkoutService.autoSyncIfEnabled(userId, saved);
         nolioPushService.autoSyncIfEnabled(userId, saved);
@@ -91,23 +102,22 @@ public class TrainingService {
     }
 
     /**
-     * Because AI can be Wrong — recurses into sets.
+     * Because AI can be Wrong — recurses into sets. When a leaf block has no
+     * intensity, attempts to resolve it from a known zone (matched against the
+     * training's custom zone system or the creator's default for the sport)
+     * via {@code zoneTarget} or {@code label}; falls back to PAUSE if no zone
+     * matches.
      */
-    private WorkoutElement standardizeBlockType(WorkoutElement element) {
+    private WorkoutElement standardizeBlockType(WorkoutElement element, ZoneSystem zoneSystem) {
         if (element.isSet()) {
             var standardizedChildren = element.elements().stream()
-                    .map(this::standardizeBlockType)
+                    .map(child -> standardizeBlockType(child, zoneSystem))
                     .toList();
             return element.withElements(standardizedChildren);
         }
 
         if (isPositive(element.intensityEnd()) && isPositive(element.intensityStart())) {
             return element.updateType(BlockType.RAMP);
-        }
-
-        // Don't reclassify zone-targeted blocks as PAUSE — they may have no intensity before enrichment
-        if (element.zoneTarget() != null && !element.zoneTarget().isBlank()) {
-            return element;
         }
 
         // Preserve TRANSITION blocks — they intentionally have no intensity
@@ -117,6 +127,16 @@ public class TrainingService {
 
         if (!isPositive(element.intensityEnd()) && !isPositive(element.intensityStart())
                 && !isPositive(element.intensityTarget())) {
+            Zone matched = matchZone(element, zoneSystem);
+            if (matched != null) {
+                int midpoint = (matched.low() + matched.high()) / 2;
+                return element.withResolvedIntensity(midpoint, formatZoneDisplayLabel(matched));
+            }
+            // Unmatched zoneTarget is preserved for later enrichment (zone system may
+            // change, or be absent at create time).
+            if (element.zoneTarget() != null && !element.zoneTarget().isBlank()) {
+                return element;
+            }
             return element.updateType(BlockType.PAUSE);
         }
         return element;
@@ -124,6 +144,64 @@ public class TrainingService {
 
     private static boolean isPositive(Integer val) {
         return val != null && val > 0;
+    }
+
+    /**
+     * Resolves the zone system attached to a training: the custom one referenced
+     * by {@code zoneSystemId}, otherwise the creator's default for the sport.
+     * Returns {@code null} if neither is available.
+     */
+    private ZoneSystem resolveZoneSystem(Training training, String userId) {
+        if (training.getZoneSystemId() != null && !training.getZoneSystemId().isBlank()) {
+            try {
+                return zoneSystemService.getZoneSystem(training.getZoneSystemId());
+            } catch (Exception ignored) {
+                // fall through to default
+            }
+        }
+        SportType sport = training.getSportType() != null ? training.getSportType() : SportType.CYCLING;
+        String createdBy = training.getCreatedBy() != null ? training.getCreatedBy() : userId;
+        return zoneSystemService.getDefaultZoneSystem(createdBy, sport).orElse(null);
+    }
+
+    /**
+     * Tries to find a zone in {@code zoneSystem} matching the element's
+     * {@code zoneTarget} (first) or {@code label} (fallback). Exact matches win
+     * over token-contains matches (e.g. "Z4" inside "Z4 Threshold").
+     */
+    private static Zone matchZone(WorkoutElement element, ZoneSystem zoneSystem) {
+        if (zoneSystem == null || zoneSystem.getZones() == null || zoneSystem.getZones().isEmpty()) {
+            return null;
+        }
+        Zone matched = matchZoneInText(element.zoneTarget(), zoneSystem);
+        if (matched != null) return matched;
+        return matchZoneInText(element.label(), zoneSystem);
+    }
+
+    private static Zone matchZoneInText(String text, ZoneSystem zoneSystem) {
+        if (text == null || text.isBlank()) return null;
+        String upper = text.trim().toUpperCase();
+        Zone tokenMatch = null;
+        for (Zone z : zoneSystem.getZones()) {
+            if (z.label() == null || z.label().isBlank()) continue;
+            String zoneLabel = z.label().trim().toUpperCase();
+            if (upper.equals(zoneLabel)) return z;
+            if (tokenMatch == null && containsAsToken(upper, zoneLabel)) {
+                tokenMatch = z;
+            }
+        }
+        return tokenMatch;
+    }
+
+    /** Word-boundary contains: "Z4" matches "Z4 Threshold" but not "Z40". */
+    private static boolean containsAsToken(String text, String token) {
+        String regex = "(?:^|[^A-Z0-9])" + Pattern.quote(token) + "(?:[^A-Z0-9]|$)";
+        return Pattern.compile(regex).matcher(text).find();
+    }
+
+    private static String formatZoneDisplayLabel(Zone z) {
+        String desc = (z.description() != null && !z.description().isBlank()) ? " - " + z.description() : "";
+        return z.label() + desc + " (" + z.low() + "-" + z.high() + "%)";
     }
 
     /**
@@ -145,13 +223,18 @@ public class TrainingService {
         ofNullable(updates.getTitle()).ifPresent(training::setTitle);
         ofNullable(updates.getDescription()).ifPresent(training::setDescription);
         ofNullable(updates.getSportType()).ifPresent(training::setSportType);
-        ofNullable(updates.getBlocks()).ifPresent(blocks ->
-                training.setBlocks(blocks.stream().map(this::standardizeBlockType).toList()));
+        // Apply zoneSystemId before block standardization so the latter can resolve zones.
+        ofNullable(updates.getZoneSystemId()).ifPresent(training::setZoneSystemId);
+        ofNullable(updates.getBlocks()).ifPresent(blocks -> {
+            ZoneSystem zoneSystem = resolveZoneSystem(training, training.getCreatedBy());
+            training.setBlocks(blocks.stream()
+                    .map(b -> standardizeBlockType(b, zoneSystem))
+                    .toList());
+        });
         ofNullable(updates.getGroupIds()).ifPresent(training::setGroupIds);
         ofNullable(updates.getTrainingType()).ifPresent(training::setTrainingType);
         ofNullable(updates.getClubIds()).ifPresent(training::setClubIds);
         ofNullable(updates.getClubGroupIds()).ifPresent(training::setClubGroupIds);
-        ofNullable(updates.getZoneSystemId()).ifPresent(training::setZoneSystemId);
     }
 
     /**

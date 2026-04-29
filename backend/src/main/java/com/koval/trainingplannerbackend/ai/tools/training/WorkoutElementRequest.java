@@ -17,7 +17,7 @@ public record WorkoutElementRequest(
         Integer reps,
         @JsonPropertyDescription("Children elements (leaf blocks or nested sets)")
         List<WorkoutElementRequest> elements,
-        @JsonPropertyDescription("Rest duration (seconds) between reps")
+        @JsonPropertyDescription("Rest duration (seconds) between reps (restDur or restPct, Never Both)")
         Integer restDur,
         @JsonPropertyDescription("Rest intensity % between reps (default ~60)")
         Integer restPct,
