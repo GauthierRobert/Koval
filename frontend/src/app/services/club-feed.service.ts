@@ -93,8 +93,15 @@ export class ClubFeedService {
       });
   }
 
-  createAnnouncement(clubId: string, content: string): Observable<ClubFeedEventResponse> {
-    return this.http.post<ClubFeedEventResponse>(`${this.apiUrl}/${clubId}/feed/announcements`, { content });
+  createAnnouncement(
+    clubId: string,
+    content: string,
+    mediaIds: string[] = [],
+  ): Observable<ClubFeedEventResponse> {
+    return this.http.post<ClubFeedEventResponse>(`${this.apiUrl}/${clubId}/feed/announcements`, {
+      content,
+      mediaIds,
+    });
   }
 
   giveKudos(clubId: string, eventId: string): Observable<KudosResponse> {

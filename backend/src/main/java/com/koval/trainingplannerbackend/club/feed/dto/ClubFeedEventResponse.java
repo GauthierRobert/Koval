@@ -33,6 +33,7 @@ public record ClubFeedEventResponse(
         String authorName,
         String authorProfilePicture,
         String announcementContent,
+        List<AnnouncementAttachmentResponse> announcementAttachments,
         // NEXT_GOAL
         String goalTitle,
         String goalSport,
@@ -63,12 +64,18 @@ public record ClubFeedEventResponse(
                 : e.getPhotoEnrichments().stream()
                         .map(en -> PhotoEnrichmentResponse.from(en, mediaResolver))
                         .toList();
+        List<AnnouncementAttachmentResponse> attachments = e.getAnnouncementAttachments() == null
+                ? List.of()
+                : e.getAnnouncementAttachments().stream()
+                        .map(a -> AnnouncementAttachmentResponse.from(a, mediaResolver))
+                        .toList();
         return new ClubFeedEventResponse(
                 e.getId(), e.getType(), Boolean.TRUE.equals(e.getPinned()), e.getCreatedAt(), e.getUpdatedAt(),
                 e.getClubSessionId(), e.getSessionTitle(), e.getSessionSport(), e.getSessionScheduledAt(),
                 e.getCompletions(), e.getKudosGivenBy(),
                 e.getRaceGoalId(), e.getRaceTitle(), e.getRaceDate(), e.getRaceCompletions(),
                 e.getAuthorId(), e.getAuthorName(), e.getAuthorProfilePicture(), e.getAnnouncementContent(),
+                attachments,
                 e.getGoalTitle(), e.getGoalSport(), e.getGoalDate(), e.getGoalLocation(), e.getEngagedAthletes(),
                 e.getGazetteEditionId(), e.getGazetteEditionNumber(),
                 e.getGazettePeriodStart(), e.getGazettePeriodEnd(), e.getGazettePostCount(),

@@ -1,8 +1,8 @@
 spring:
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 15MB
+      max-file-size: 25MB
+      max-request-size: 30MB
   application:
     name: training-planner-backend
   ai:
@@ -71,8 +71,17 @@ storage:
     signer-service-account: ${GCS_MEDIA_SIGNER_SA:}
     signed-url-upload-ttl: PT15M
     signed-url-read-ttl: PT24H
-    max-upload-size-bytes: 8388608      # 8 MB
-    allowed-content-types: image/jpeg,image/png,image/webp,image/heic
+    max-upload-size-bytes: 26214400     # 25 MB (covers PDF training plans)
+    allowed-content-types: >-
+      image/jpeg,image/png,image/webp,image/heic,image/gif,
+      application/pdf,
+      application/msword,
+      application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+      application/vnd.ms-excel,
+      application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,
+      application/vnd.ms-powerpoint,
+      application/vnd.openxmlformats-officedocument.presentationml.presentation,
+      text/plain,text/csv
     unconfirmed-retention: PT24H        # purge unconfirmed Media after 24h
 
 server:

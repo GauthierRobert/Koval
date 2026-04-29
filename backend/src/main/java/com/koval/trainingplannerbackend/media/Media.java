@@ -35,6 +35,9 @@ public class Media {
 
     private String contentType;
 
+    /** Original filename supplied by the uploader, preserved for download UX (e.g. "Q1-plan.pdf"). */
+    private String originalFileName;
+
     private long sizeBytes;
 
     private Integer width;

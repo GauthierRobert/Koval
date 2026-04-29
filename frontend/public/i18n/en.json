@@ -552,7 +552,10 @@
     "COMMENT_PLACEHOLDER": "Write a comment...",
     "COMMENT_POST": "Post",
     "COMMENT_COUNT": "{{count}} comments",
-    "COMMENT_COUNT_ONE": "1 comment"
+    "COMMENT_COUNT_ONE": "1 comment",
+    "ATTACH": "Attach files",
+    "ATTACHMENTS": "Attachments",
+    "DOWNLOAD": "Download"
   },
   "CLUB_SESSIONS": {
     "HEADING": "Weekly Sessions",

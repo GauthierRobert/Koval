@@ -23,11 +23,21 @@ import java.util.UUID;
 @Service
 public class MediaService {
 
-    private static final Map<String, String> MIME_TO_EXTENSION = Map.of(
-            "image/jpeg", "jpg",
-            "image/png", "png",
-            "image/webp", "webp",
-            "image/heic", "heic"
+    private static final Map<String, String> MIME_TO_EXTENSION = Map.ofEntries(
+            Map.entry("image/jpeg", "jpg"),
+            Map.entry("image/png", "png"),
+            Map.entry("image/webp", "webp"),
+            Map.entry("image/heic", "heic"),
+            Map.entry("image/gif", "gif"),
+            Map.entry("application/pdf", "pdf"),
+            Map.entry("application/msword", "doc"),
+            Map.entry("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx"),
+            Map.entry("application/vnd.ms-excel", "xls"),
+            Map.entry("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"),
+            Map.entry("application/vnd.ms-powerpoint", "ppt"),
+            Map.entry("application/vnd.openxmlformats-officedocument.presentationml.presentation", "pptx"),
+            Map.entry("text/plain", "txt"),
+            Map.entry("text/csv", "csv")
     );
 
     private final MediaRepository mediaRepository;
@@ -62,6 +72,7 @@ public class MediaService {
         media.setPurpose(req.purpose());
         media.setObjectName(objectName);
         media.setContentType(req.contentType());
+        media.setOriginalFileName(sanitizeFileName(req.originalFileName()));
         media.setSizeBytes(req.sizeBytes());
         media.setConfirmed(false);
         media.setCreatedAt(LocalDateTime.now());
@@ -134,6 +145,7 @@ public class MediaService {
                 media.getId(),
                 media.getPurpose(),
                 media.getContentType(),
+                media.getOriginalFileName(),
                 media.getSizeBytes(),
                 media.getWidth(),
                 media.getHeight(),
@@ -211,8 +223,31 @@ public class MediaService {
         return switch (purpose) {
             case GAZETTE_POST -> "gazette-post";
             case FEED_POST_ENRICHMENT -> "feed-post";
+            case ANNOUNCEMENT_ATTACHMENT -> "announcement-attachment";
             case AVATAR -> "avatar";
         };
     }
 
+    /**
+     * Strip path separators, control chars, and trim length so we never persist
+     * an attacker-controlled file name that could mislead the UI when shown in
+     * a download link or rendered as plain text.
+     */
+    private static String sanitizeFileName(String raw) {
+        if (raw == null) return null;
+        String trimmed = raw.trim();
+        if (trimmed.isEmpty()) return null;
+        // Drop any directory components.
+        int lastSep = Math.max(trimmed.lastIndexOf('/'), trimmed.lastIndexOf('\\'));
+        if (lastSep >= 0) trimmed = trimmed.substring(lastSep + 1);
+        // Strip control chars.
+        StringBuilder sb = new StringBuilder(trimmed.length());
+        for (int i = 0; i < trimmed.length(); i++) {
+            char c = trimmed.charAt(i);
+            if (c >= 0x20 && c != 0x7F) sb.append(c);
+        }
+        String cleaned = sb.toString();
+        if (cleaned.length() > 200) cleaned = cleaned.substring(0, 200);
+        return cleaned.isEmpty() ? null : cleaned;
+    }
 }

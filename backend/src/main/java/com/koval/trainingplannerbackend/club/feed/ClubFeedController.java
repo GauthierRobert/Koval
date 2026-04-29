@@ -58,7 +58,8 @@ public class ClubFeedController {
             @PathVariable String clubId,
             @RequestBody CreateAnnouncementRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(feedService.createCoachAnnouncement(userId, clubId, req.content()));
+        return ResponseEntity.ok(
+                feedService.createCoachAnnouncement(userId, clubId, req.content(), req.mediaIds()));
     }
 
     @PostMapping("/{eventId}/kudos")

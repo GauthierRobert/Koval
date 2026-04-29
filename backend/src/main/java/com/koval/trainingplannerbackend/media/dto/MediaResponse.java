@@ -18,6 +18,7 @@ public record MediaResponse(
         String mediaId,
         MediaPurpose purpose,
         String contentType,
+        String originalFileName,
         long sizeBytes,
         Integer width,
         Integer height,

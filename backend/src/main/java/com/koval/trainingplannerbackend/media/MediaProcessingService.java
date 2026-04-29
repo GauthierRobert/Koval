@@ -60,6 +60,17 @@ public class MediaProcessingService {
      * doesn't have to download from GCS twice). Mutates and saves the Media doc.
      */
     public void process(Media media, byte[] originalBytes) {
+        // Skip image variant generation for non-image attachments (PDF, docs, etc.).
+        // The original is still served verbatim through its signed URL.
+        String contentType = media.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            media.setProcessingStatus(MediaProcessingStatus.READY);
+            media.setProcessingError(null);
+            media.setProcessedAt(LocalDateTime.now());
+            mediaRepository.save(media);
+            return;
+        }
+
         media.setProcessingStatus(MediaProcessingStatus.PENDING);
         try {
             BufferedImage source;

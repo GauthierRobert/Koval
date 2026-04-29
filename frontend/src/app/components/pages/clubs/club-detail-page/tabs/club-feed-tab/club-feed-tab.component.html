@@ -15,8 +15,17 @@
           [style.height]="composerExpanded ? '80px' : '36px'"
         ></textarea>
         @if (composerExpanded) {
+          <div class="composer-attachments">
+            <koval-attachment-uploader
+              [purpose]="'ANNOUNCEMENT_ATTACHMENT'"
+              [clubId]="club.id"
+              [maxFiles]="5"
+              [label]="'CLUB_FEED.ATTACH' | translate"
+              (attached)="onAnnouncementAttached($event)">
+            </koval-attachment-uploader>
+          </div>
           <div class="composer-actions">
-            <button class="composer-cancel" (click)="composerExpanded = false; announcementText = ''">
+            <button class="composer-cancel" (click)="cancelAnnouncement()">
               {{ 'CLUB_FEED.CANCEL' | translate }}
             </button>
             <button data-testid="feed-post-btn" class="btn-primary" [disabled]="!announcementText.trim()" (click)="submitAnnouncement()">

@@ -28,6 +28,7 @@ import {FeedAnnouncementCardComponent} from './cards/feed-announcement-card.comp
 import {FeedNextGoalCardComponent} from './cards/feed-next-goal-card.component';
 import {FeedRaceCompletionCardComponent} from './cards/feed-race-completion-card.component';
 import {FeedSessionsUpcomingComponent} from './cards/feed-sessions-upcoming.component';
+import {KovalAttachmentUploaderComponent} from '../../../../../shared/koval-attachment-uploader/koval-attachment-uploader.component';
 
 @Component({
   selector: 'app-club-feed-tab',
@@ -41,6 +42,7 @@ import {FeedSessionsUpcomingComponent} from './cards/feed-sessions-upcoming.comp
     FeedNextGoalCardComponent,
     FeedRaceCompletionCardComponent,
     FeedSessionsUpcomingComponent,
+    KovalAttachmentUploaderComponent,
   ],
   templateUrl: './club-feed-tab.component.html',
   styleUrl: './club-feed-tab.component.css',
@@ -66,6 +68,7 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
   // Announcement composer
   announcementText = '';
   composerExpanded = false;
+  announcementMediaIds: string[] = [];
   isCoachOrAdmin = false;
 
   private subs = new Subscription();
@@ -175,13 +178,26 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
 
   submitAnnouncement(): void {
     if (!this.announcementText.trim()) return;
-    this.clubFeedService.createAnnouncement(this.club.id, this.announcementText.trim()).subscribe({
-      next: () => {
-        this.announcementText = '';
-        this.composerExpanded = false;
-        this.cdr.markForCheck();
-      },
-    });
+    this.clubFeedService
+      .createAnnouncement(this.club.id, this.announcementText.trim(), this.announcementMediaIds)
+      .subscribe({
+        next: () => {
+          this.announcementText = '';
+          this.announcementMediaIds = [];
+          this.composerExpanded = false;
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  onAnnouncementAttached(mediaIds: string[]): void {
+    this.announcementMediaIds = mediaIds;
+  }
+
+  cancelAnnouncement(): void {
+    this.composerExpanded = false;
+    this.announcementText = '';
+    this.announcementMediaIds = [];
   }
 
   onCommentSubmitted(ev: {eventId: string; content: string}): void {

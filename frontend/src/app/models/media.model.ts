@@ -1,4 +1,4 @@
-export type MediaPurpose = 'GAZETTE_POST' | 'FEED_POST_ENRICHMENT' | 'AVATAR';
+export type MediaPurpose = 'GAZETTE_POST' | 'FEED_POST_ENRICHMENT' | 'ANNOUNCEMENT_ATTACHMENT' | 'AVATAR';
 
 export type MediaProcessingStatus = 'PENDING' | 'READY' | 'FAILED';
 
@@ -14,6 +14,8 @@ export interface MediaResponse {
   mediaId: string;
   purpose: MediaPurpose;
   contentType: string;
+  /** Original filename if the media was uploaded with one (e.g. "Q1-plan.pdf"). */
+  originalFileName: string | null;
   sizeBytes: number;
   width: number | null;
   height: number | null;
@@ -29,6 +31,7 @@ export interface RequestUploadUrlRequest {
   contentType: string;
   sizeBytes: number;
   clubId?: string | null;
+  originalFileName?: string | null;
 }
 
 export interface RequestUploadUrlResponse {

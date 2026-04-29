@@ -51,6 +51,7 @@ public class ClubFeedEvent {
     private String authorName;
     private String authorProfilePicture;
     private String announcementContent;
+    private List<AnnouncementAttachment> announcementAttachments = new ArrayList<>();
 
     // --- Comments ---
     private List<CommentEntry> comments = new ArrayList<>();
@@ -118,5 +119,10 @@ public class ClubFeedEvent {
             String contributedByUserId,
             String contributedByDisplayName,
             String contributedByProfilePicture,
+            LocalDateTime addedAt) {}
+
+    public record AnnouncementAttachment(
+            String id,
+            String mediaId,
             LocalDateTime addedAt) {}
 }

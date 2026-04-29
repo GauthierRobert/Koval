@@ -315,6 +315,12 @@ export interface FeedCommentEntry {
   createdAt: string;
 }
 
+export interface AnnouncementAttachmentResponse {
+  id: string;
+  addedAt: string;
+  file: import('./media.model').MediaResponse | null;
+}
+
 export interface ClubFeedEventResponse {
   id: string;
   type: ClubFeedEventType;
@@ -338,6 +344,7 @@ export interface ClubFeedEventResponse {
   authorName?: string;
   authorProfilePicture?: string;
   announcementContent?: string;
+  announcementAttachments?: AnnouncementAttachmentResponse[];
   // NEXT_GOAL
   goalTitle?: string;
   goalSport?: string;

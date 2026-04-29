@@ -43,11 +43,12 @@ export class MediaService {
    * One-shot helper: requests a signed URL, PUTs the file directly to GCS,
    * confirms with the backend. Returns the confirmed mediaId.
    */
-  async upload(file: File, req: Omit<RequestUploadUrlRequest, 'contentType' | 'sizeBytes'>): Promise<ConfirmUploadResponse> {
+  async upload(file: File, req: Omit<RequestUploadUrlRequest, 'contentType' | 'sizeBytes' | 'originalFileName'>): Promise<ConfirmUploadResponse> {
     const fullReq: RequestUploadUrlRequest = {
       ...req,
       contentType: file.type,
       sizeBytes: file.size,
+      originalFileName: file.name,
     };
     const upload = await firstValueFrom(this.requestUploadUrl(fullReq));
     await this.putToSignedUrl(upload.signedUrl, file);

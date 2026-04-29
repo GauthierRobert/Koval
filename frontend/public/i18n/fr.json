@@ -552,7 +552,10 @@
     "COMMENT_PLACEHOLDER": "Écrire un commentaire...",
     "COMMENT_POST": "Publier",
     "COMMENT_COUNT": "{{count}} commentaires",
-    "COMMENT_COUNT_ONE": "1 commentaire"
+    "COMMENT_COUNT_ONE": "1 commentaire",
+    "ATTACH": "Joindre des fichiers",
+    "ATTACHMENTS": "Pièces jointes",
+    "DOWNLOAD": "Télécharger"
   },
   "CLUB_SESSIONS": {
     "HEADING": "Sessions Hebdo",

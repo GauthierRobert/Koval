@@ -170,11 +170,20 @@ public class ClubFeedService {
 
     /**
      * Create a coach announcement in the feed.
+     *
+     * Optional {@code mediaIds} are attachments (images, PDFs, docs) the coach
+     * uploaded with purpose {@code ANNOUNCEMENT_ATTACHMENT} prior to posting.
      */
-    public ClubFeedEventResponse createCoachAnnouncement(String userId, String clubId, String content) {
+    public ClubFeedEventResponse createCoachAnnouncement(String userId, String clubId, String content,
+                                                         List<String> mediaIds) {
         authorizationService.requireAdminOrCoach(userId, clubId);
 
+        if (mediaIds != null && !mediaIds.isEmpty()) {
+            mediaService.requireOwnedAndConfirmed(userId, mediaIds, MediaPurpose.ANNOUNCEMENT_ATTACHMENT);
+        }
+
         User author = userService.findById(userId).orElseThrow();
+        LocalDateTime now = LocalDateTime.now();
 
         ClubFeedEvent event = new ClubFeedEvent();
         event.setClubId(clubId);
@@ -183,8 +192,14 @@ public class ClubFeedService {
         event.setAuthorName(author.getDisplayName());
         event.setAuthorProfilePicture(author.getProfilePicture());
         event.setAnnouncementContent(content);
-        event.setCreatedAt(LocalDateTime.now());
-        event.setUpdatedAt(LocalDateTime.now());
+        event.setCreatedAt(now);
+        event.setUpdatedAt(now);
+        if (mediaIds != null) {
+            for (String mediaId : mediaIds) {
+                event.getAnnouncementAttachments().add(new ClubFeedEvent.AnnouncementAttachment(
+                        UUID.randomUUID().toString(), mediaId, now));
+            }
+        }
         feedEventRepository.save(event);
 
         // Broadcast via SSE

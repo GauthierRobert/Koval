@@ -6,5 +6,6 @@ public record RequestUploadUrlRequest(
         MediaPurpose purpose,
         String contentType,
         long sizeBytes,
-        String clubId
+        String clubId,
+        String originalFileName
 ) {}
