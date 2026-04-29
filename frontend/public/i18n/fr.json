@@ -1683,7 +1683,28 @@
     "BTN_MARK_COMPLETE": "Marquer comme terminé",
     "BTN_SKIP": "Passer",
     "BTN_VIEW_IN_LIBRARY": "Voir dans la bibliothèque",
-    "BTN_VIEW_ANALYSIS": "Voir l'analyse"
+    "BTN_VIEW_ANALYSIS": "Voir l'analyse",
+    "LABEL_SENDOFF": "Départ",
+    "LABEL_SPM": "cps/min"
+  },
+  "STROKE": {
+    "FREESTYLE": "Crawl",
+    "BACKSTROKE": "Dos",
+    "BREASTSTROKE": "Brasse",
+    "BUTTERFLY": "Papillon",
+    "IM": "4 nages",
+    "KICK": "Battements",
+    "PULL": "Bras seuls",
+    "DRILL": "Éducatif",
+    "CHOICE": "Au choix"
+  },
+  "SWIM_EQUIPMENT": {
+    "PADDLES": "Plaquettes",
+    "PULL_BUOY": "Pull buoy",
+    "FINS": "Palmes",
+    "SNORKEL": "Tuba",
+    "BAND": "Élastique",
+    "KICKBOARD": "Planche"
   },
   "WORKOUT_VIZ": {
     "BTN_EXPORT": "EXPORTER",

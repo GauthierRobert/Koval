@@ -91,7 +91,6 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
     { id: 'sessions', label: 'CLUB_DETAIL.TAB_RECURRING_SESSIONS', shortLabel: 'CLUB_DETAIL.TAB_RECURRING_SESSIONS_SHORT' },
     { id: 'members', label: 'CLUB_DETAIL.TAB_MEMBERS', shortLabel: 'CLUB_DETAIL.TAB_MEMBERS_SHORT' },
     { id: 'stats', label: 'CLUB_DETAIL.TAB_STATS', shortLabel: 'CLUB_DETAIL.TAB_STATS_SHORT' },
-    { id: 'leaderboard', label: 'CLUB_DETAIL.TAB_LEADERBOARD', shortLabel: 'CLUB_DETAIL.TAB_LEADERBOARD_SHORT' },
     { id: 'race-goals', label: 'CLUB_DETAIL.TAB_RACE_GOALS', shortLabel: 'CLUB_DETAIL.TAB_RACE_GOALS_SHORT' },
     { id: 'gazette', label: 'CLUB_DETAIL.TAB_GAZETTE', shortLabel: 'CLUB_DETAIL.TAB_GAZETTE_SHORT' },
     { id: 'chat', label: 'CLUB_DETAIL.TAB_CHAT', shortLabel: 'CLUB_DETAIL.TAB_CHAT_SHORT' },

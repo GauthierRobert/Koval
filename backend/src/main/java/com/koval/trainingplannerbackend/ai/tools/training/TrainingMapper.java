@@ -71,7 +71,7 @@ public class TrainingMapper {
      */
     private WorkoutElement block(WorkoutElementRequest b) {
         return new WorkoutElement(null, null, null, null,
-                b.type(), b.dur(), b.dist(), b.label(), b.desc(), b.pct(), b.pctFrom(), b.pctTo(), b.cad(), b.zone(), null,
+                b.type(), b.dur(), b.dist(), b.label(), b.desc(), b.pct(), b.pctFrom(), b.pctTo(), b.cad(), b.zone(), b.zone(),
                 b.stroke(), b.equip(), b.sendOff(), b.transition());
     }
 

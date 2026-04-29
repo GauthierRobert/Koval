@@ -1,10 +1,12 @@
+:host {
+  display: block;
+}
+
 .reference-values-page {
   padding: var(--page-padding);
   max-width: var(--page-max-width);
   margin: 0 auto;
   color: var(--text-color);
-  height: 100%;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
@@ -31,6 +33,7 @@
   border: none;
   border-radius: var(--radius-md);
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .card-header {

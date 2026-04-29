@@ -237,6 +237,26 @@ export class WorkoutDetailModalComponent {
     return training.sportType === 'CYCLING';
   }
 
+  isSwim(training: Training): boolean {
+    return training.sportType === 'SWIMMING';
+  }
+
+  hasSwimMeta(block: WorkoutBlock): boolean {
+    return !!(
+      block.strokeType ||
+      (block.equipment && block.equipment.length) ||
+      block.sendOffSeconds ||
+      block.cadenceTarget
+    );
+  }
+
+  formatSendOff(seconds?: number): string {
+    if (!seconds || seconds <= 0) return '';
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
   calculateIntensityValue(percent: number | undefined, training: Training): string {
     if (percent === undefined) return '0';
     const user = this.authService.currentUser;

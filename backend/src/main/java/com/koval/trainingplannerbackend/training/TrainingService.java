@@ -16,6 +16,7 @@ import com.koval.trainingplannerbackend.training.model.WorkoutElement;
 import com.koval.trainingplannerbackend.training.zone.Zone;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystem;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystemService;
+import com.koval.trainingplannerbackend.training.zone.ZoneUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -148,8 +149,8 @@ public class TrainingService {
 
     /**
      * Resolves the zone system attached to a training: the custom one referenced
-     * by {@code zoneSystemId}, otherwise the creator's default for the sport.
-     * Returns {@code null} if neither is available.
+     * by {@code zoneSystemId}, otherwise the creator's default for the sport, otherwise
+     * the built-in fallback from {@link ZoneUtils}. Always non-null.
      */
     private ZoneSystem resolveZoneSystem(Training training, String userId) {
         if (training.getZoneSystemId() != null && !training.getZoneSystemId().isBlank()) {
@@ -161,7 +162,8 @@ public class TrainingService {
         }
         SportType sport = training.getSportType() != null ? training.getSportType() : SportType.CYCLING;
         String createdBy = training.getCreatedBy() != null ? training.getCreatedBy() : userId;
-        return zoneSystemService.getDefaultZoneSystem(createdBy, sport).orElse(null);
+        return zoneSystemService.getDefaultZoneSystem(createdBy, sport)
+                .orElseGet(() -> ZoneUtils.getDefaultZoneSystem(sport));
     }
 
     /**

@@ -1683,7 +1683,28 @@
     "BTN_MARK_COMPLETE": "Mark Complete",
     "BTN_SKIP": "Skip",
     "BTN_VIEW_IN_LIBRARY": "View in Training Library",
-    "BTN_VIEW_ANALYSIS": "See Analysis"
+    "BTN_VIEW_ANALYSIS": "See Analysis",
+    "LABEL_SENDOFF": "Send-off",
+    "LABEL_SPM": "SPM"
+  },
+  "STROKE": {
+    "FREESTYLE": "Freestyle",
+    "BACKSTROKE": "Backstroke",
+    "BREASTSTROKE": "Breaststroke",
+    "BUTTERFLY": "Butterfly",
+    "IM": "Medley",
+    "KICK": "Kick",
+    "PULL": "Pull",
+    "DRILL": "Drill",
+    "CHOICE": "Choice"
+  },
+  "SWIM_EQUIPMENT": {
+    "PADDLES": "Paddles",
+    "PULL_BUOY": "Pull buoy",
+    "FINS": "Fins",
+    "SNORKEL": "Snorkel",
+    "BAND": "Band",
+    "KICKBOARD": "Kickboard"
   },
   "WORKOUT_VIZ": {
     "BTN_EXPORT": "EXPORT",
