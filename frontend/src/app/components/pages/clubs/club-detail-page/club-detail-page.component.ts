@@ -22,11 +22,12 @@ import {ClubLeaderboardTabComponent} from './tabs/club-leaderboard-tab/club-lead
 import {ClubRaceGoalsTabComponent} from './tabs/club-race-goals-tab/club-race-goals-tab.component';
 import {ClubOpenSessionsTabComponent} from './tabs/club-open-sessions-tab/club-open-sessions-tab.component';
 import {ClubChatTabComponent} from './tabs/club-chat-tab/club-chat-tab.component';
+import {ClubGazetteTabComponent} from './tabs/club-gazette-tab/club-gazette-tab.component';
 import {TrainingActionModalComponent} from '../../../shared/training-action-modal/training-action-modal.component';
 import {ActionContext} from '../../../../services/ai-action.service';
 import {BehaviorSubject, map, Observable, Subscription} from 'rxjs';
 
-type TabId = 'feed' | 'sessions' | 'open-sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals' | 'chat';
+type TabId = 'feed' | 'sessions' | 'open-sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals' | 'chat' | 'gazette';
 
 @Component({
   selector: 'app-club-detail-page',
@@ -43,6 +44,7 @@ type TabId = 'feed' | 'sessions' | 'open-sessions' | 'members' | 'stats' | 'lead
     ClubRaceGoalsTabComponent,
     ClubOpenSessionsTabComponent,
     ClubChatTabComponent,
+    ClubGazetteTabComponent,
     TrainingActionModalComponent,
   ],
   templateUrl: './club-detail-page.component.html',
@@ -91,6 +93,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
     { id: 'stats', label: 'CLUB_DETAIL.TAB_STATS', shortLabel: 'CLUB_DETAIL.TAB_STATS_SHORT' },
     { id: 'leaderboard', label: 'CLUB_DETAIL.TAB_LEADERBOARD', shortLabel: 'CLUB_DETAIL.TAB_LEADERBOARD_SHORT' },
     { id: 'race-goals', label: 'CLUB_DETAIL.TAB_RACE_GOALS', shortLabel: 'CLUB_DETAIL.TAB_RACE_GOALS_SHORT' },
+    { id: 'gazette', label: 'CLUB_DETAIL.TAB_GAZETTE', shortLabel: 'CLUB_DETAIL.TAB_GAZETTE_SHORT' },
     { id: 'chat', label: 'CLUB_DETAIL.TAB_CHAT', shortLabel: 'CLUB_DETAIL.TAB_CHAT_SHORT' },
   ];
 
@@ -172,6 +175,9 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
         break;
       case 'chat':
         // The embedded chat component resolves the room itself on first render.
+        break;
+      case 'gazette':
+        // The gazette tab loads its own data via ClubGazetteService when [clubId] is set.
         break;
     }
     this.cdr.markForCheck();

@@ -51,6 +51,30 @@ club-feed:
       project-id: ${GCP_PROJECT_ID:}
       topic: club-feed-events
 
+# Google Cloud Storage for user-uploaded media (photos)
+# Authentication uses GOOGLE_APPLICATION_CREDENTIALS env var
+# (Workload Identity in GKE/Cloud Run, JSON key file in dev).
+storage:
+  gcs:
+    enabled: ${GCS_MEDIA_ENABLED:false}
+    bucket: ${GCS_MEDIA_BUCKET:koval-media-dev}
+    project-id: ${GCP_PROJECT_ID:local-dev}
+    # When set, uses the local emulator (fake-gcs-server) with anonymous creds.
+    # Set to http://localhost:4443 to talk to the docker-compose `fake-gcs` service.
+    endpoint-url: ${GCS_MEDIA_ENDPOINT:}
+    # Path to a service-account JSON key file. Required for V4 URL signing
+    # when ADC returns user creds (e.g. `gcloud auth application-default login`).
+    credentials-path: ${GCS_MEDIA_CREDENTIALS_PATH:}
+    # Service-account email to impersonate via IAM signBlob for V4 URL signing.
+    # Use in Cloud Run / GKE where the runtime credentials lack a private key.
+    # Runtime SA needs roles/iam.serviceAccountTokenCreator on this target SA.
+    signer-service-account: ${GCS_MEDIA_SIGNER_SA:}
+    signed-url-upload-ttl: PT15M
+    signed-url-read-ttl: PT24H
+    max-upload-size-bytes: 8388608      # 8 MB
+    allowed-content-types: image/jpeg,image/png,image/webp,image/heic
+    unconfirmed-retention: PT24H        # purge unconfirmed Media after 24h
+
 server:
   port: 8080
 

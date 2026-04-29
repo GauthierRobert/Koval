@@ -1,0 +1,129 @@
+@switch (view()) {
+  @case ('list') {
+    <div class="gz-list">
+      <header class="gz-list-hd">
+        <div class="gz-list-hd-text">
+          <span class="section-label">Club gazette</span>
+          <h2 class="gz-list-title">Weekly editions</h2>
+          <p class="gz-list-sub">A snapshot of the week — sessions, milestones, member voices.</p>
+        </div>
+        @if (currentDraft(); as d) {
+          <button class="btn-primary" (click)="openComposer()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            Contribute to draft #{{d.editionNumber}}
+          </button>
+        }
+      </header>
+
+      @if (currentDraft(); as d) {
+        <article class="gz-draft-hero" (click)="openDraftPreview()">
+          <div class="gz-draft-hero-bg"></div>
+          <div class="gz-draft-hero-content">
+            <div class="gz-draft-left">
+              <div class="gz-draft-tag">
+                <span class="dot"></span>
+                Open draft · auto-saving
+              </div>
+              <h3 class="gz-draft-title">Edition #{{d.editionNumber}}</h3>
+              <p class="gz-draft-period">
+                {{d.periodStart | date:'mediumDate'}} → {{d.periodEnd | date:'mediumDate'}}
+              </p>
+              <div class="gz-draft-actions">
+                <button class="gz-link-btn" (click)="$event.stopPropagation(); openComposer()">
+                  Add a post →
+                </button>
+                <button class="gz-link-btn ghost" (click)="$event.stopPropagation(); openDraftPreview()">
+                  Preview draft
+                </button>
+              </div>
+            </div>
+            <div class="gz-draft-stats">
+              <div class="gz-stat">
+                <span class="gz-stat-value">{{d.statsSnapshot?.sessionCount ?? '—'}}</span>
+                <span class="gz-stat-label">Sessions</span>
+              </div>
+              <div class="gz-stat">
+                <span class="gz-stat-value">{{d.statsSnapshot?.totalHours ?? '—'}}</span>
+                <span class="gz-stat-label">Hours</span>
+              </div>
+              <div class="gz-stat">
+                <span class="gz-stat-value">{{d.viewCount}}</span>
+                <span class="gz-stat-label">Views</span>
+              </div>
+            </div>
+          </div>
+        </article>
+      }
+
+      <div class="gz-section-hd">
+        <span class="section-label">Published editions</span>
+        @if (editions$ | async; as editions) {
+          <span class="gz-count">{{editions.length}}</span>
+        }
+      </div>
+
+      @if (editions$ | async; as editions) {
+        @if (editions.length === 0) {
+          <div class="empty-state">
+            No editions yet. The first one will be published at the end of the week.
+          </div>
+        } @else {
+          <div class="gz-grid">
+            @for (e of editions; track e.id) {
+              <article
+                class="gz-card"
+                [class.draft]="e.status === 'DRAFT'"
+                [class.published]="e.status === 'PUBLISHED'"
+                (click)="openEdition(e)"
+              >
+                <header class="gz-card-hd">
+                  <span class="gz-edition-num">#{{e.editionNumber}}</span>
+                  <span class="gz-status" [class.draft]="e.status === 'DRAFT'">
+                    @if (e.status === 'DRAFT') {
+                      <span class="dot"></span> Draft
+                    } @else if (e.status === 'PUBLISHED') {
+                      Published
+                    } @else {
+                      {{e.status}}
+                    }
+                  </span>
+                </header>
+                <p class="gz-card-period">
+                  {{e.periodStart | date:'MMM d'}} – {{e.periodEnd | date:'MMM d, y'}}
+                </p>
+                <footer class="gz-card-foot">
+                  @if (e.publishedAt) {
+                    <span class="gz-card-meta">{{e.publishedAt | date:'mediumDate'}}</span>
+                  }
+                  @if (e.hasPdf) {
+                    <span class="gz-pdf-badge">PDF</span>
+                  }
+                </footer>
+              </article>
+            }
+          </div>
+        }
+      } @else {
+        <div class="gz-grid">
+          <div class="skeleton" style="height: 110px"></div>
+          <div class="skeleton" style="height: 110px"></div>
+          <div class="skeleton" style="height: 110px"></div>
+        </div>
+      }
+    </div>
+  }
+  @case ('reader') {
+    <button class="gz-back-btn" (click)="back()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to editions
+    </button>
+    <club-gazette-reader [clubId]="clubId" [editionId]="selectedEditionId()!"></club-gazette-reader>
+  }
+  @case ('composer') {
+    <club-gazette-composer
+      [clubId]="clubId"
+      (cancelled)="back()"
+      (saved)="onPostSaved()"
+    ></club-gazette-composer>
+  }
+}

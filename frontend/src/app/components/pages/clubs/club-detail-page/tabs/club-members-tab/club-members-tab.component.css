@@ -240,8 +240,8 @@
 
 /* ─── Group cards ─────────────────────────────────────────── */
 .group-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 10px;
 }
@@ -255,6 +255,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: fit-content;
   transition: all 0.25s var(--ease-spring-gentle);
 }
 
@@ -515,35 +516,6 @@
 .btn-copied {
   color: #34d399 !important;
   border-color: rgba(52, 211, 153, 0.25) !important;
-}
-
-/* ─── Assignment buttons ────────────────────────────────────── */
-.members-header-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.ai-btn-corner {
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border);
-  background: var(--overlay-5);
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 3px 10px;
-  font-size: 9px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  letter-spacing: 0.04em;
-  transition: all 0.25s var(--ease-spring-gentle);
-}
-
-.ai-btn-corner:hover {
-  background: rgba(0, 160, 233, 0.12);
-  border-color: rgba(0, 160, 233, 0.3);
-  color: var(--secondary-color);
 }
 
 /* ─── Empty state ─────────────────────────────────────────── */

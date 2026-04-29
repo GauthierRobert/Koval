@@ -1,0 +1,187 @@
+<div class="gz-composer-shell">
+
+  <!-- LEFT RAIL -->
+  <gazette-composer-aside-left
+    class="rail rail-left"
+    [draft]="draft()"
+    [postsCount]="draftPostsCount()"
+    [photosCount]="draftPhotosCount()"
+    [myPostsCount]="myDraftPosts().length"
+    (back)="cancel()"
+  ></gazette-composer-aside-left>
+
+  <!-- COMPOSER -->
+  <main class="composer-main">
+    <header class="composer-hd">
+      <div>
+        <span class="crumb">Gazette · New post</span>
+        <h2 class="composer-title">Compose a <b>post</b></h2>
+      </div>
+      <div class="composer-status">
+        <span class="dot"></span>
+        <span>Draft · saves on publish</span>
+      </div>
+    </header>
+
+    <!-- TYPE TILES -->
+    <div class="type-row">
+      @for (t of types; track t.value) {
+        <button
+          class="type-tile"
+          [class.active]="type() === t.value"
+          (click)="selectType(t.value)"
+          type="button"
+        >
+          <div class="top">
+            <div class="ico">
+              @switch (t.icon) {
+                @case ('spark') { <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> }
+                @case ('run') { <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M4 22l4-9 4 4 6-3"/><path d="M14 15l3 7"/></svg> }
+                @case ('flag') { <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4"/><path d="M4 4h12l-2 4 2 4H4"/></svg> }
+                @case ('trophy') { <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v6a6 6 0 1 1-12 0V3z"/><path d="M9 21h6"/><path d="M12 15v6"/><path d="M6 6H3a3 3 0 0 0 3 3"/><path d="M18 6h3a3 3 0 0 1-3 3"/></svg> }
+                @case ('heart') { <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> }
+              }
+            </div>
+            <div class="ttl">{{t.label}}</div>
+          </div>
+          <div class="desc">{{t.hint}}</div>
+        </button>
+      }
+    </div>
+
+    <!-- FIELDS -->
+    <div class="fields">
+      <!-- TITLE -->
+      <div class="field">
+        <div class="field-lbl">
+          <span>Title <span class="opt">· optional</span></span>
+          <span class="ct">{{titleCount()}} / {{titleMax}}</span>
+        </div>
+        <input
+          class="gz-input title"
+          type="text"
+          [maxlength]="titleMax"
+          [ngModel]="title()"
+          (ngModelChange)="title.set($event)"
+          placeholder="Give your post a catchy title…"
+        />
+      </div>
+
+      <!-- CONTENT -->
+      <div class="field">
+        <div class="field-lbl">
+          <span>Content</span>
+          <span class="ct" [class.warn]="contentCount() > contentMax * 0.9">{{contentCount()}} / {{contentMax}}</span>
+        </div>
+        <textarea
+          class="gz-input gz-textarea"
+          [maxlength]="contentMax"
+          [ngModel]="content()"
+          (ngModelChange)="content.set($event)"
+          placeholder="Share your feeling, your week summary, your sensations from the sessions…"
+          rows="9"
+        ></textarea>
+      </div>
+
+      <!-- PHOTOS -->
+      <div class="field">
+        <div class="field-lbl">
+          <span>Photos <span class="opt">· up to {{maxPhotos}}</span></span>
+          <span class="ct">{{photoCount()}} / {{maxPhotos}}</span>
+        </div>
+        @if (photoCount() < maxPhotos) {
+          <koval-photo-uploader
+            purpose="GAZETTE_POST"
+            [clubId]="clubId"
+            [maxPhotos]="maxPhotos"
+            (mediaUploaded)="onMediaUploaded($event.mediaId)"
+          ></koval-photo-uploader>
+        } @else {
+          <div class="photo-cap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Maximum number of photos reached
+          </div>
+        }
+      </div>
+
+      <!-- ATTACH -->
+      @if (type() === 'SESSION_RECAP' || type() === 'RACE_RESULT') {
+        <div class="field">
+          <div class="field-lbl">
+            <span>
+              @if (type() === 'SESSION_RECAP') { Linked session ID }
+              @if (type() === 'RACE_RESULT') { Linked race goal ID }
+              <span class="opt">· optional</span>
+            </span>
+          </div>
+          @if (type() === 'SESSION_RECAP') {
+            <input
+              class="gz-input"
+              type="text"
+              [ngModel]="linkedSessionId()"
+              (ngModelChange)="linkedSessionId.set($event)"
+              placeholder="ClubTrainingSession id"
+            />
+          }
+          @if (type() === 'RACE_RESULT') {
+            <input
+              class="gz-input"
+              type="text"
+              [ngModel]="linkedRaceGoalId()"
+              (ngModelChange)="linkedRaceGoalId.set($event)"
+              placeholder="RaceGoal id"
+            />
+          }
+        </div>
+      }
+
+      @if (error()) {
+        <div class="error-banner">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {{error()}}
+        </div>
+      }
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="composer-foot">
+      <div class="left">
+        <span class="meta-item">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          @if (draft(); as d) { Target edition · <b>#{{d.editionNumber}}</b> }
+        </span>
+        <span class="meta-item">Visibility · <b>Club</b></span>
+      </div>
+      <div class="right">
+        <button class="btn-ghost" type="button" (click)="cancel()" [disabled]="submitting()">
+          Cancel
+        </button>
+        <button
+          class="btn-primary"
+          type="button"
+          (click)="submit()"
+          [disabled]="!canSubmit()"
+        >
+          @if (submitting()) {
+            <span class="btn-spinner"></span>
+            Publishing…
+          } @else {
+            Publish
+          }
+        </button>
+      </div>
+    </footer>
+  </main>
+
+  <!-- RIGHT RAIL -->
+  <gazette-composer-aside-right
+    class="rail rail-right"
+    [title]="title()"
+    [content]="content()"
+    [type]="type()"
+    [photoCount]="photoCount()"
+    [maxPhotos]="maxPhotos"
+    [authorName]="authorName()"
+    [recentPosts]="recentPosts()"
+  ></gazette-composer-aside-right>
+</div>

@@ -82,7 +82,7 @@ import {ClubFeedEventResponse} from '../../../../../../../services/club.service'
     </div>
   `,
   styles: `
-    .feed-card--announcement { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: var(--space-md); }
+    .feed-card--announcement { background: var(--glass-bg); border-radius: var(--radius-md); padding: var(--space-md); }
     .announcement-header { display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm); }
     .author-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--surface-elevated); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--text-muted); overflow: hidden; flex-shrink: 0; }
     .author-avatar img { width: 100%; height: 100%; object-fit: cover; }

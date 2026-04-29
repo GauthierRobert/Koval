@@ -504,6 +504,8 @@
     "TAB_OPEN_SESSIONS_SHORT": "SESS.",
     "TAB_RACE_GOALS": "OBJECTIFS COURSE",
     "TAB_RACE_GOALS_SHORT": "OBJS.",
+    "TAB_GAZETTE": "GAZETTE",
+    "TAB_GAZETTE_SHORT": "GAZ.",
     "TAB_CHAT": "CHAT",
     "TAB_CHAT_SHORT": "CHAT",
     "CHAT_BADGE_CLUB": "Club",
@@ -683,7 +685,6 @@
   "CLUB_MEMBERS": {
     "SECTION_GROUPS": "Groupes",
     "GROUP_MEMBER_COUNT": "{{count}} membres",
-    "BTN_ASSIGN": "+ Assigner",
     "BTN_DELETE_GROUP": "×",
     "NO_GROUPS": "Aucun groupe pour l'instant.",
     "PLACEHOLDER_GROUP_NAME": "Nom du groupe…",

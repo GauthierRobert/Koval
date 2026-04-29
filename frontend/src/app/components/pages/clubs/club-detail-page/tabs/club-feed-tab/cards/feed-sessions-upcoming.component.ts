@@ -206,13 +206,11 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
       flex-direction: column;
       gap: var(--space-sm);
       background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
       border-radius: var(--radius-md);
       padding: var(--space-md);
     }
 
     /* --- Goal panel --- */
-    .goal-panel { border-left: 3px solid var(--warning, #f59e0b); }
     .goal-header { display: flex; align-items: center; gap: var(--space-sm); }
     .goal-flag { color: var(--warning, #f59e0b); flex-shrink: 0; }
     .goal-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--warning, #f59e0b); flex: 1; }

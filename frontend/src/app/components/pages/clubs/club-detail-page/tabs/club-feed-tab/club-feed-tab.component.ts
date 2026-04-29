@@ -120,6 +120,7 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
         this.club.currentMemberRole === 'COACH';
 
       this.clubFeedService.loadFeedEvents(this.club.id);
+      this.clubFeedService.loadRaceGoals(this.club.id);
       this.loadSessionsForWeek();
       this.sseService.connect(this.club.id);
     }

@@ -145,7 +145,7 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
     </div>
   `,
   styles: `
-    .feed-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: var(--space-md); }
+    .feed-card { background: var(--glass-bg); border-radius: var(--radius-md); padding: var(--space-md); }
     .feed-card--pinned { border-left: 3px solid var(--primary); }
     .card-pin-badge { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary); margin-bottom: var(--space-xs); }
     .card-header { display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm); }

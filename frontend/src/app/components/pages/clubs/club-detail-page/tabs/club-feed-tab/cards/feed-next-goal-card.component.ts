@@ -50,7 +50,7 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
     </div>
   `,
   styles: `
-    .feed-card--goal { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: var(--space-md); border-left: 3px solid var(--warning, #f59e0b); }
+    .feed-card--goal { background: var(--glass-bg); border-radius: var(--radius-md); padding: var(--space-md); }
     .goal-header { display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm); }
     .goal-flag { color: var(--warning, #f59e0b); display: flex; }
     .goal-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--warning, #f59e0b); flex: 1; }

@@ -2,14 +2,12 @@ import {ChangeDetectionStrategy, Component, inject, Input, OnInit} from '@angula
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule} from '@ngx-translate/core';
-import {ClubDetail, ClubGroup, ClubMember, ClubMemberRole, ClubService,} from '../../../../../../services/club.service';
-import {User} from '../../../../../../services/auth.service';
-import {TrainingActionModalComponent} from '../../../../../shared/training-action-modal/training-action-modal.component';
+import {ClubDetail, ClubGroup, ClubMemberRole, ClubService,} from '../../../../../../services/club.service';
 
 @Component({
   selector: 'app-club-members-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, TrainingActionModalComponent],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './club-members-tab.component.html',
   styleUrl: './club-members-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,14 +22,6 @@ export class ClubMembersTabComponent implements OnInit {
 
   newTagName = '';
   roleChangeInProgress = new Set<string>();
-
-  isScheduleModalOpen = false;
-  assigningAthletes: User[] = [];
-
-  get canAssign(): boolean {
-    const role = this.club?.currentMemberRole;
-    return role === 'OWNER' || role === 'ADMIN' || role === 'COACH';
-  }
 
   get isAdmin(): boolean {
     const role = this.club?.currentMemberRole;
@@ -107,25 +97,6 @@ export class ClubMembersTabComponent implements OnInit {
   getAvailableRoles(): string[] {
     if (this.isOwner) return ['ADMIN', 'COACH', 'MEMBER'];
     return ['COACH', 'MEMBER'];
-  }
-
-
-  assignToClubGroup(tag: ClubGroup): void {
-    this.assigningAthletes = tag.memberIds.map(id => ({ id, displayName: id } as User));
-    this.isScheduleModalOpen = true;
-  }
-
-  assignToAllMembers(members: ClubMember[]): void {
-    this.assigningAthletes = members.map(m => ({
-      id: m.userId,
-      displayName: m.displayName || m.userId,
-    } as User));
-    this.isScheduleModalOpen = true;
-  }
-
-  onScheduled(): void {
-    this.isScheduleModalOpen = false;
-    this.assigningAthletes = [];
   }
 
   getAvailableTags(member: { userId: string }, allGroups: ClubGroup[]): ClubGroup[] {

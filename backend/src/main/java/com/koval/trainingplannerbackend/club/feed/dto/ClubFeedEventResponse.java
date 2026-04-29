@@ -2,11 +2,13 @@ package com.koval.trainingplannerbackend.club.feed.dto;
 
 import com.koval.trainingplannerbackend.club.feed.ClubFeedEvent;
 import com.koval.trainingplannerbackend.club.feed.ClubFeedEventType;
+import com.koval.trainingplannerbackend.media.dto.MediaResponse;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 public record ClubFeedEventResponse(
         String id,
@@ -37,10 +39,30 @@ public record ClubFeedEventResponse(
         LocalDate goalDate,
         String goalLocation,
         List<ClubFeedEvent.EngagedAthlete> engagedAthletes,
+        // GAZETTE_PUBLISHED
+        String gazetteEditionId,
+        Integer gazetteEditionNumber,
+        LocalDate gazettePeriodStart,
+        LocalDate gazettePeriodEnd,
+        int gazettePostCount,
         // COMMENTS
-        List<ClubFeedEvent.CommentEntry> comments) {
+        List<ClubFeedEvent.CommentEntry> comments,
+        // PHOTO ENRICHMENTS
+        List<PhotoEnrichmentResponse> photoEnrichments) {
 
+    /** Plain mapping with no media resolution — photoEnrichments will be empty. */
     public static ClubFeedEventResponse from(ClubFeedEvent e) {
+        return from(e, null);
+    }
+
+    /** Mapping with optional media resolver to populate photo enrichments. */
+    public static ClubFeedEventResponse from(ClubFeedEvent e,
+                                             Function<String, MediaResponse> mediaResolver) {
+        List<PhotoEnrichmentResponse> photos = e.getPhotoEnrichments() == null
+                ? List.of()
+                : e.getPhotoEnrichments().stream()
+                        .map(en -> PhotoEnrichmentResponse.from(en, mediaResolver))
+                        .toList();
         return new ClubFeedEventResponse(
                 e.getId(), e.getType(), Boolean.TRUE.equals(e.getPinned()), e.getCreatedAt(), e.getUpdatedAt(),
                 e.getClubSessionId(), e.getSessionTitle(), e.getSessionSport(), e.getSessionScheduledAt(),
@@ -48,6 +70,9 @@ public record ClubFeedEventResponse(
                 e.getRaceGoalId(), e.getRaceTitle(), e.getRaceDate(), e.getRaceCompletions(),
                 e.getAuthorId(), e.getAuthorName(), e.getAuthorProfilePicture(), e.getAnnouncementContent(),
                 e.getGoalTitle(), e.getGoalSport(), e.getGoalDate(), e.getGoalLocation(), e.getEngagedAthletes(),
-                e.getComments());
+                e.getGazetteEditionId(), e.getGazetteEditionNumber(),
+                e.getGazettePeriodStart(), e.getGazettePeriodEnd(), e.getGazettePostCount(),
+                e.getComments(),
+                photos);
     }
 }

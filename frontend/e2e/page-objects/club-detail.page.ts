@@ -279,12 +279,4 @@ export class ClubDetailPage {
     return this.page.locator('[data-testid="btn-propose-session"]');
   }
 
-  // Assign to group
-  getAssignGroupBtn(groupName: string) {
-    return this.getGroupCard(groupName).locator('.ai-btn-corner');
-  }
-
-  getAssignAllMembersBtn() {
-    return this.page.locator('[data-testid="btn-assign-all-members"]');
-  }
 }

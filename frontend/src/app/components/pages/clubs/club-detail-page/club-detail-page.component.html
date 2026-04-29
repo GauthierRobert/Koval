@@ -152,6 +152,11 @@
           <app-club-race-goals-tab></app-club-race-goals-tab>
         </div>
       }
+      @if (activeTab === 'gazette') {
+        <div role="tabpanel" id="tabpanel-gazette" aria-labelledby="tab-btn-gazette">
+          <app-club-gazette-tab [clubId]="clubId"></app-club-gazette-tab>
+        </div>
+      }
       @if (activeTab === 'chat') {
         <div role="tabpanel" id="tabpanel-chat" aria-labelledby="tab-btn-chat">
           <app-club-chat-tab [clubId]="clubId" (viewChange)="onChatViewChange($event)"></app-club-chat-tab>

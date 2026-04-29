@@ -26,3 +26,20 @@ services:
     ports:
       - "8085:8085"
 
+  # Local Google Cloud Storage emulator. Implements the JSON API + V4 signed URLs
+  # so the backend's MediaStorageService works the same as in production.
+  # See https://github.com/fsouza/fake-gcs-server.
+  fake-gcs:
+    image: fsouza/fake-gcs-server:latest
+    container_name: training-planner-fake-gcs
+    command: >-
+      -scheme http
+      -public-host localhost:4443
+      -port 4443
+      -data /data
+    ports:
+      - "4443:4443"
+    volumes:
+      - ./fake-gcs-data:/data
+    restart: unless-stopped
+

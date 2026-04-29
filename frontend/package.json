@@ -38,6 +38,7 @@
     "@angular/service-worker": "^21.1.2",
     "@ngx-translate/core": "^17.0.0",
     "@ngx-translate/http-loader": "^17.0.0",
+    "blurhash": "^2.0.5",
     "firebase": "^12.10.0",
     "fit-file-parser": "^2.3.3",
     "leaflet": "^1.9.4",

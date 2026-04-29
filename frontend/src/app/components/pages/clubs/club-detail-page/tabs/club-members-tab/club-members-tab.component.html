@@ -12,9 +12,6 @@
                 <div class="group-card-header">
                   <span class="group-card-name">{{ tag.name }}</span>
                   <span class="group-card-count">{{ 'CLUB_MEMBERS.GROUP_MEMBER_COUNT' | translate: { count: tag.memberIds.length } }}</span>
-                  @if (canAssign) {
-                    <button class="ai-btn-corner" (click)="assignToClubGroup(tag)">{{ 'CLUB_MEMBERS.BTN_ASSIGN' | translate }}</button>
-                  }
                   @if (isAdmin) {
                     <button class="tag-delete" (click)="deleteTag(tag.id)">{{ 'CLUB_MEMBERS.BTN_DELETE_GROUP' | translate }}</button>
                   }
@@ -68,12 +65,7 @@
 
     <!-- Active Members -->
     @if (members$ | async; as members) {
-      <div class="members-header-row">
-        <h4 class="section-title">{{ 'CLUB_MEMBERS.SECTION_MEMBERS' | translate }}</h4>
-        @if (canAssign && members.length > 0) {
-          <button class="ai-btn-corner" data-testid="btn-assign-all-members" (click)="assignToAllMembers(members)">{{ 'CLUB_MEMBERS.BTN_ASSIGN' | translate }}</button>
-        }
-      </div>
+      <h4 class="section-title">{{ 'CLUB_MEMBERS.SECTION_MEMBERS' | translate }}</h4>
       @if (members.length > 0) {
         <div class="member-list">
           @for (m of members; track m.userId) {
@@ -147,13 +139,4 @@
     }
 
   }
-
-  <app-training-action-modal
-    [isOpen]="isScheduleModalOpen"
-    mode="group-assign"
-    [preselectedAthletes]="assigningAthletes"
-    [clubId]="club.id"
-    (closed)="isScheduleModalOpen = false"
-    (completed)="onScheduled()">
-  </app-training-action-modal>
 </div>

@@ -23,9 +23,10 @@ public class McpServerConfig {
                                          McpClubTools club,
                                          McpRaceTools race,
                                          McpProfileTools profile,
-                                         McpAnalyticsTools analytics) {
+                                         McpAnalyticsTools analytics,
+                                         McpGazetteTools gazette) {
         return MethodToolCallbackProvider.builder()
-                .toolObjects(training, scheduling, history, coach, zone, plan, goal, club, race, profile, analytics)
+                .toolObjects(training, scheduling, history, coach, zone, plan, goal, club, race, profile, analytics, gazette)
                 .build();
     }
 }

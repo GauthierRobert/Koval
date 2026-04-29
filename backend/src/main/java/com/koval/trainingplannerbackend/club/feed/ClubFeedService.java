@@ -5,6 +5,7 @@ import com.koval.trainingplannerbackend.auth.UserService;
 import com.koval.trainingplannerbackend.club.feed.dto.ClubFeedEventResponse;
 import com.koval.trainingplannerbackend.club.feed.dto.ClubFeedResponse;
 import com.koval.trainingplannerbackend.club.feed.dto.CompletionUpdatePayload;
+import com.koval.trainingplannerbackend.club.feed.dto.PhotoEnrichmentResponse;
 import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService;
 import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
@@ -12,6 +13,10 @@ import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
 import com.koval.trainingplannerbackend.integration.strava.StravaApiClient;
+import com.koval.trainingplannerbackend.media.Media;
+import com.koval.trainingplannerbackend.media.MediaPurpose;
+import com.koval.trainingplannerbackend.media.MediaService;
+import com.koval.trainingplannerbackend.media.dto.MediaResponse;
 import com.koval.trainingplannerbackend.notification.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +44,7 @@ public class ClubFeedService {
     private final NotificationService notificationService;
     private final ClubFeedSseBroadcaster broadcaster;
     private final StravaApiClient stravaApiClient;
+    private final MediaService mediaService;
 
     public ClubFeedService(ClubFeedEventRepository feedEventRepository,
                            ClubTrainingSessionRepository clubSessionRepository,
@@ -47,7 +53,8 @@ public class ClubFeedService {
                            UserService userService,
                            NotificationService notificationService,
                            ClubFeedSseBroadcaster broadcaster,
-                           StravaApiClient stravaApiClient) {
+                           StravaApiClient stravaApiClient,
+                           MediaService mediaService) {
         this.feedEventRepository = feedEventRepository;
         this.clubSessionRepository = clubSessionRepository;
         this.authorizationService = authorizationService;
@@ -56,6 +63,15 @@ public class ClubFeedService {
         this.notificationService = notificationService;
         this.broadcaster = broadcaster;
         this.stravaApiClient = stravaApiClient;
+        this.mediaService = mediaService;
+    }
+
+    /** Resolve a mediaId to its full read DTO, or null if not found / not confirmed. */
+    private MediaResponse resolveMedia(String mediaId) {
+        return mediaService.findById(mediaId)
+                .filter(Media::isConfirmed)
+                .map(mediaService::buildMediaResponse)
+                .orElse(null);
     }
 
     /**
@@ -67,14 +83,14 @@ public class ClubFeedService {
         List<ClubFeedEventResponse> pinned = feedEventRepository
                 .findByClubIdAndPinnedTrueOrderByCreatedAtDesc(clubId)
                 .stream()
-                .map(ClubFeedEventResponse::from)
+                .map(e -> ClubFeedEventResponse.from(e, this::resolveMedia))
                 .toList();
 
         List<ClubFeedEventResponse> items = feedEventRepository
                 .findByClubIdOrderByCreatedAtDesc(clubId, PageRequest.of(page, size))
                 .stream()
                 .filter(e -> !Boolean.TRUE.equals(e.getPinned())) // exclude pinned from timeline
-                .map(ClubFeedEventResponse::from)
+                .map(e -> ClubFeedEventResponse.from(e, this::resolveMedia))
                 .toList();
 
         boolean hasMore = items.size() == size;
@@ -172,7 +188,7 @@ public class ClubFeedService {
         feedEventRepository.save(event);
 
         // Broadcast via SSE
-        ClubFeedEventResponse response = ClubFeedEventResponse.from(event);
+        ClubFeedEventResponse response = ClubFeedEventResponse.from(event, this::resolveMedia);
         broadcaster.broadcast(clubId, "new_feed_event", response);
 
         // Send push notification to all club members
@@ -217,6 +233,78 @@ public class ClubFeedService {
                 new CommentUpdatePayload(feedEventId, comment));
 
         return comment;
+    }
+
+    /**
+     * Attach one or more user-uploaded photos to a feed event. The mediaIds must
+     * already be confirmed and have purpose FEED_POST_ENRICHMENT.
+     */
+    public List<PhotoEnrichmentResponse> attachPhotos(String userId, String clubId,
+                                                      String feedEventId, List<String> mediaIds) {
+        authorizationService.requireActiveMember(userId, clubId);
+        if (mediaIds == null || mediaIds.isEmpty()) {
+            throw new IllegalArgumentException("mediaIds is required");
+        }
+        ClubFeedEvent event = feedEventRepository.findById(feedEventId)
+                .filter(e -> clubId.equals(e.getClubId()))
+                .orElseThrow(() -> new IllegalArgumentException("Feed event not found"));
+
+        mediaService.requireOwnedAndConfirmed(userId, mediaIds, MediaPurpose.FEED_POST_ENRICHMENT);
+
+        User author = userService.findById(userId).orElseThrow();
+        List<PhotoEnrichmentResponse> added = new java.util.ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+        for (String mediaId : mediaIds) {
+            ClubFeedEvent.MediaEnrichment enrichment = new ClubFeedEvent.MediaEnrichment(
+                    UUID.randomUUID().toString(),
+                    mediaId,
+                    userId,
+                    author.getDisplayName(),
+                    author.getProfilePicture(),
+                    now);
+            event.getPhotoEnrichments().add(enrichment);
+            added.add(PhotoEnrichmentResponse.from(enrichment, this::resolveMedia));
+        }
+        event.setUpdatedAt(now);
+        feedEventRepository.save(event);
+
+        java.util.Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("feedEventId", feedEventId);
+        payload.put("enrichments", added);
+        broadcaster.broadcast(clubId, "feed_photo_added", payload);
+
+        return added;
+    }
+
+    /**
+     * Detach a single enrichment. The author of the enrichment, or any
+     * admin/coach of the club, can detach.
+     */
+    public void detachPhoto(String userId, String clubId, String feedEventId, String enrichmentId) {
+        authorizationService.requireActiveMember(userId, clubId);
+        ClubFeedEvent event = feedEventRepository.findById(feedEventId)
+                .filter(e -> clubId.equals(e.getClubId()))
+                .orElseThrow(() -> new IllegalArgumentException("Feed event not found"));
+
+        ClubFeedEvent.MediaEnrichment target = event.getPhotoEnrichments().stream()
+                .filter(en -> en.id().equals(enrichmentId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Photo enrichment not found"));
+
+        boolean isAuthor = target.contributedByUserId().equals(userId);
+        boolean isAdmin = authorizationService.isAdminOrCoach(userId, clubId);
+        if (!isAuthor && !isAdmin) {
+            throw new IllegalStateException("Only the contributor or an admin can remove this photo");
+        }
+
+        event.getPhotoEnrichments().removeIf(en -> en.id().equals(enrichmentId));
+        event.setUpdatedAt(LocalDateTime.now());
+        feedEventRepository.save(event);
+
+        java.util.Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("feedEventId", feedEventId);
+        payload.put("enrichmentId", enrichmentId);
+        broadcaster.broadcast(clubId, "feed_photo_removed", payload);
     }
 
     // --- Private helpers ---

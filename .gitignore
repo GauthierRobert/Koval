@@ -44,6 +44,10 @@ __screenshots__/
 Thumbs.db
 
 /mongo-data/
+/fake-gcs-data/*
+!/fake-gcs-data/.gitkeep
+!/fake-gcs-data/koval-media-dev/
+!/fake-gcs-data/koval-media-dev/.gitkeep
 setup-gcp.sh
 .playwright-mcp
 .claude/worktrees

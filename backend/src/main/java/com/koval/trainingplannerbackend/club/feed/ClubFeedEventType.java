@@ -4,5 +4,6 @@ public enum ClubFeedEventType {
     SESSION_COMPLETION,
     RACE_COMPLETION,
     COACH_ANNOUNCEMENT,
-    NEXT_GOAL
+    NEXT_GOAL,
+    GAZETTE_PUBLISHED
 }

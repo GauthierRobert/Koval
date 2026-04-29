@@ -62,6 +62,16 @@ public class ClubFeedEvent {
     private String goalLocation;
     private List<EngagedAthlete> engagedAthletes = new ArrayList<>();
 
+    // --- GAZETTE_PUBLISHED fields ---
+    private String gazetteEditionId;
+    private Integer gazetteEditionNumber;
+    private LocalDate gazettePeriodStart;
+    private LocalDate gazettePeriodEnd;
+    private int gazettePostCount;
+
+    // --- Photo enrichments (any event type) ---
+    private List<MediaEnrichment> photoEnrichments = new ArrayList<>();
+
     // --- Embedded records ---
 
     public record CompletionEntry(
@@ -101,4 +111,12 @@ public class ClubFeedEvent {
             String profilePicture,
             String content,
             LocalDateTime createdAt) {}
+
+    public record MediaEnrichment(
+            String id,
+            String mediaId,
+            String contributedByUserId,
+            String contributedByDisplayName,
+            String contributedByProfilePicture,
+            LocalDateTime addedAt) {}
 }
