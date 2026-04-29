@@ -1,0 +1,146 @@
+@if (edition$ | async; as edition) {
+  <header class="reader-hdr">
+    <div class="reader-hdr-top">
+      <h2>Edition #{{edition.editionNumber}}</h2>
+      <div class="reader-hdr-meta">
+        @if (edition.status === 'DRAFT') {
+          <span class="reader-status draft">
+            <span class="dot"></span>
+            Draft preview
+          </span>
+        } @else if (edition.status === 'PUBLISHED') {
+          <span class="reader-status">Published</span>
+          @if (edition.hasPdf) {
+            <a class="pdf-link" [href]="pdfUrl" target="_blank" rel="noopener">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download PDF
+            </a>
+          }
+        }
+      </div>
+    </div>
+    <p class="reader-period">{{edition.periodStart | date:'mediumDate'}} → {{edition.periodEnd | date:'mediumDate'}}</p>
+    @if (edition.publishedAt) {
+      <p class="reader-pub">Published {{edition.publishedAt | date:'mediumDate'}}</p>
+    }
+  </header>
+
+  @if (edition.statsSnapshot; as s) {
+    <section class="reader-section">
+      <h3>Stats</h3>
+      <div class="stats-row">
+        <p>{{s.sessionCount}} sessions · {{s.totalHours}} h · {{s.totalTss}} TSS</p>
+        <p>{{s.swimKm}} km swim · {{s.bikeKm}} km bike · {{s.runKm}} km run</p>
+      </div>
+    </section>
+  }
+
+  @if (edition.leaderboardSnapshot.length) {
+    <section class="reader-section">
+      <h3>Leaderboard</h3>
+      <ol class="entry-list">
+        @for (entry of edition.leaderboardSnapshot; track entry.userId) {
+          <li>
+            <span class="rank">#{{entry.rank}}</span>
+            <span class="em">{{entry.displayName}}</span>
+            <span class="meta">· {{entry.tss}} TSS · {{entry.sessionCount}} sessions</span>
+          </li>
+        }
+      </ol>
+    </section>
+  }
+
+  @if (edition.topSessions.length) {
+    <section class="reader-section">
+      <h3>Top sessions</h3>
+      <ul class="entry-list">
+        @for (s of edition.topSessions; track s.clubSessionId) {
+          <li>
+            <span class="em">{{s.title}}</span>
+            <span class="meta">· {{s.participantCount}} participants @if (s.date) {· {{s.date | date:'mediumDate'}}}</span>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (edition.mostActiveMembers.length) {
+    <section class="reader-section">
+      <h3>Most active</h3>
+      <ul class="entry-list">
+        @for (m of edition.mostActiveMembers; track m.userId) {
+          <li>
+            <span class="em">{{m.displayName}}</span>
+            <span class="meta">· {{m.hours}} h · {{m.sessions}} sessions</span>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (edition.milestones.length) {
+    <section class="reader-section">
+      <h3>Milestones</h3>
+      <ul class="entry-list">
+        @for (m of edition.milestones; track m.userId + m.type) {
+          <li>
+            <span class="em">{{m.displayName}}</span>
+            <span class="meta">— {{m.description}}</span>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  <section class="reader-section">
+    <h3>Member posts</h3>
+    @if (postsState$ | async; as posts) {
+      @if (posts.posts.length === 0) {
+        <div class="posts-empty">
+          @if (edition.status === 'DRAFT') {
+            @if (posts.othersDraftCount > 0) {
+              {{posts.othersDraftCount}} teammate(s) are contributing to this draft. Their posts will appear once the edition is published.
+            } @else {
+              No posts yet — be the first to contribute.
+            }
+          } @else {
+            No member posts in this edition.
+          }
+        </div>
+      } @else {
+        @for (p of posts.posts; track p.id) {
+          <article class="post">
+            <header class="post-hdr">
+              <span class="post-author">{{p.authorDisplayName}}</span>
+              <span class="post-type">{{p.type}}</span>
+            </header>
+            @if (p.title) { <h4 class="post-title">{{p.title}}</h4> }
+            <p class="post-content">{{p.content}}</p>
+            @if (p.photos.length) {
+              <div class="photos">
+                @for (photo of p.photos; track photo.mediaId) {
+                  <koval-image [media]="photo" size="medium" alt=""></koval-image>
+                }
+              </div>
+            }
+            @if (p.linkedSessionSnapshot; as s) {
+              <div class="link-card">
+                Session: <span class="em">{{s.title}}</span> ({{s.scheduledAt | date:'mediumDate'}})
+              </div>
+            }
+            @if (p.linkedRaceGoalSnapshot; as r) {
+              <div class="link-card">
+                Race: <span class="em">{{r.title}}</span> ({{r.raceDate | date:'mediumDate'}})
+              </div>
+            }
+          </article>
+        }
+        @if (posts.othersDraftCount > 0 && edition.status === 'DRAFT') {
+          <p class="hint">
+            {{posts.othersDraftCount}} other teammate(s) are also contributing to this draft.
+          </p>
+        }
+      }
+    }
+  </section>
+}
