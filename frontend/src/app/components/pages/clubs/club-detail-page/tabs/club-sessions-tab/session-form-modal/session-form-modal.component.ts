@@ -39,7 +39,6 @@ export class SessionFormModalComponent implements OnChanges {
   @Input() clubGroups: ClubGroup[] = [];
   @Input() coachMembers: ClubMember[] = [];
   @Input() sports: readonly string[] = [];
-  @Input() daysOfWeek: readonly string[] = [];
 
   @Output() closed = new EventEmitter<void>();
   @Output() saved = new EventEmitter<SessionFormSaveEvent>();
@@ -55,35 +54,28 @@ export class SessionFormModalComponent implements OnChanges {
 
   private initForm(): void {
     this.gpxFile = null;
-    if (this.editingSession) {
-      this.form = {
-        title: this.editingSession.title,
-        sport: this.editingSession.sport || 'CYCLING',
-        scheduledAt: this.editingSession.scheduledAt
-          ? this.toDatetimeLocal(this.editingSession.scheduledAt)
-          : '',
-        location: this.editingSession.location || '',
-        meetingPointLat: this.editingSession.meetingPointLat ?? null,
-        meetingPointLon: this.editingSession.meetingPointLon ?? null,
-        description: this.editingSession.description || '',
-        maxParticipants: this.editingSession.maxParticipants || '',
-        durationMinutes: this.editingSession.durationMinutes || '',
-        clubGroupId: this.editingSession.clubGroupId || '',
-        responsibleCoachId: this.editingSession.responsibleCoachId || '',
-        openToAll: this.editingSession.openToAll || false,
-        openToAllDelayValue: this.editingSession.openToAllDelayValue || 2,
-        openToAllDelayUnit: this.editingSession.openToAllDelayUnit || 'DAYS',
-      };
-    } else {
-      this.form = {
-        sport: 'CYCLING',
-        title: '',
-        clubGroupId: '',
-        openToAll: false,
-        openToAllDelayValue: 2,
-        openToAllDelayUnit: 'DAYS',
-      };
+    if (!this.editingSession) {
+      this.form = {};
+      return;
     }
+    this.form = {
+      title: this.editingSession.title,
+      sport: this.editingSession.sport || 'CYCLING',
+      scheduledAt: this.editingSession.scheduledAt
+        ? this.toDatetimeLocal(this.editingSession.scheduledAt)
+        : '',
+      location: this.editingSession.location || '',
+      meetingPointLat: this.editingSession.meetingPointLat ?? null,
+      meetingPointLon: this.editingSession.meetingPointLon ?? null,
+      description: this.editingSession.description || '',
+      maxParticipants: this.editingSession.maxParticipants || '',
+      durationMinutes: this.editingSession.durationMinutes || '',
+      clubGroupId: this.editingSession.clubGroupId || '',
+      responsibleCoachId: this.editingSession.responsibleCoachId || '',
+      openToAll: this.editingSession.openToAll || false,
+      openToAllDelayValue: this.editingSession.openToAllDelayValue || 2,
+      openToAllDelayUnit: this.editingSession.openToAllDelayUnit || 'DAYS',
+    };
   }
 
   toDatetimeLocal(isoStr: string): string {
@@ -112,9 +104,7 @@ export class SessionFormModalComponent implements OnChanges {
   }
 
   get isFormValid(): boolean {
-    if (!this.form['title'] || !this.form['sport']) return false;
-    if (!this.editingSession && (!this.form['dayOfWeek'] || !this.form['timeOfDay'])) return false;
-    return true;
+    return !!this.form['title'] && !!this.form['sport'];
   }
 
   close(): void {

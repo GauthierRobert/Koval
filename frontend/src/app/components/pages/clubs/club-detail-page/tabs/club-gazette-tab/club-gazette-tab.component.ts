@@ -1,6 +1,7 @@
-import {ChangeDetectionStrategy, Component, DestroyRef, inject, Input, OnChanges, signal} from '@angular/core';
+import {ChangeDetectionStrategy, Component, DestroyRef, inject, Input, OnChanges, OnInit, signal} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {AsyncPipe, DatePipe} from '@angular/common';
+import {ActivatedRoute, Router} from '@angular/router';
 import {ClubGazetteService} from '../../../../../../services/club-gazette.service';
 import {
   ClubGazetteEditionResponse,
@@ -16,6 +17,9 @@ type View = 'list' | 'reader' | 'composer';
  *   list     — published editions grid + a hero CTA for the current draft
  *   reader   — a single edition (published or draft preview)
  *   composer — create or edit a member post in the current draft
+ *
+ * View state is encoded in the URL via query params (`?view=reader&editionId=…`,
+ * `?view=composer`) so the browser back button moves between gazette views.
  */
 @Component({
   selector: 'app-club-gazette-tab',
@@ -25,7 +29,7 @@ type View = 'list' | 'reader' | 'composer';
   templateUrl: './club-gazette-tab.component.html',
   styleUrls: ['./club-gazette-tab.component.css'],
 })
-export class ClubGazetteTabComponent implements OnChanges {
+export class ClubGazetteTabComponent implements OnInit, OnChanges {
   @Input() clubId!: string;
 
   readonly view = signal<View>('list');
@@ -33,8 +37,29 @@ export class ClubGazetteTabComponent implements OnChanges {
   readonly currentDraft = signal<ClubGazetteEditionResponse | null>(null);
 
   private gazetteService = inject(ClubGazetteService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   readonly editions$ = this.gazetteService.editions$;
+
+  ngOnInit(): void {
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => {
+        const v = params.get('view');
+        const editionId = params.get('editionId');
+        if (v === 'reader' && editionId) {
+          this.selectedEditionId.set(editionId);
+          this.view.set('reader');
+        } else if (v === 'composer') {
+          this.selectedEditionId.set(null);
+          this.view.set('composer');
+        } else {
+          this.selectedEditionId.set(null);
+          this.view.set('list');
+        }
+      });
+  }
 
   ngOnChanges(): void {
     if (this.clubId) this.refresh();
@@ -51,8 +76,11 @@ export class ClubGazetteTabComponent implements OnChanges {
   }
 
   openEdition(e: ClubGazetteEditionSummary | ClubGazetteEditionResponse): void {
-    this.selectedEditionId.set(e.id);
-    this.view.set('reader');
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { view: 'reader', editionId: e.id },
+      queryParamsHandling: 'merge',
+    });
   }
 
   openDraftPreview(): void {
@@ -62,11 +90,19 @@ export class ClubGazetteTabComponent implements OnChanges {
   }
 
   openComposer(): void {
-    this.view.set('composer');
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { view: 'composer', editionId: null },
+      queryParamsHandling: 'merge',
+    });
   }
 
   back(): void {
-    this.view.set('list');
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { view: null, editionId: null },
+      queryParamsHandling: 'merge',
+    });
     this.refresh();
   }
 

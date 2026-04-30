@@ -313,6 +313,7 @@ export interface FeedCommentEntry {
   profilePicture?: string;
   content: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface AnnouncementAttachmentResponse {
@@ -378,6 +379,15 @@ export interface CompletionUpdatePayload {
 export interface CommentUpdatePayload {
   feedEventId: string;
   comment: FeedCommentEntry;
+}
+
+export interface CommentDeletedPayload {
+  feedEventId: string;
+  commentId: string;
+}
+
+export interface FeedEventDeletedPayload {
+  feedEventId: string;
 }
 
 export interface CreateClubData {

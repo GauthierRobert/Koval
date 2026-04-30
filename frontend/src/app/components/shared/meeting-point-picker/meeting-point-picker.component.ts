@@ -2,8 +2,10 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   EventEmitter,
+  inject,
   Input,
   OnChanges,
   OnDestroy,
@@ -11,8 +13,11 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import * as L from 'leaflet';
+import {ThemeService} from '../../../services/theme.service';
+import {CARTO_TILE_OPTIONS, tileUrlForTheme} from '../leaflet/tile-themes';
 
 // Reset imagePath to prevent Angular's esbuild builder from prepending /media/
 (L.Icon.Default as any).imagePath = '';
@@ -87,7 +92,11 @@ export class MeetingPointPickerComponent implements AfterViewInit, OnChanges, On
 
   @ViewChild('mapContainer', {static: true}) mapContainer!: ElementRef<HTMLDivElement>;
 
+  private themeService = inject(ThemeService);
+  private destroyRef = inject(DestroyRef);
+
   private map: L.Map | null = null;
+  private tileLayer: L.TileLayer | null = null;
   private marker: L.Marker | null = null;
 
   ngAfterViewInit(): void {
@@ -103,9 +112,13 @@ export class MeetingPointPickerComponent implements AfterViewInit, OnChanges, On
       attributionControl: false,
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-    }).addTo(this.map);
+    this.themeService.theme$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((theme) => {
+        if (!this.map) return;
+        if (this.tileLayer) this.map.removeLayer(this.tileLayer);
+        this.tileLayer = L.tileLayer(tileUrlForTheme(theme), CARTO_TILE_OPTIONS).addTo(this.map);
+      });
 
     L.control.zoom({position: 'bottomright'}).addTo(this.map);
 

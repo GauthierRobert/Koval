@@ -4,11 +4,12 @@ import {FormsModule} from '@angular/forms';
 import {TranslateModule} from '@ngx-translate/core';
 import {ClubFeedEventResponse} from '../../../../../../../services/club.service';
 import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon.component';
+import {FeedCommentsSectionComponent} from './feed-comments-section.component';
 
 @Component({
   selector: 'app-feed-session-completion-card',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, SportIconComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, SportIconComponent, FeedCommentsSectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div data-testid="feed-event" class="feed-card feed-card--pinned" [class.feed-card--expanded]="expanded">
@@ -89,59 +90,14 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
         </div>
       }
 
-      <!-- Comments section -->
-      <div class="comments-section">
-        <button class="comments-toggle" (click)="commentsExpanded = !commentsExpanded; $event.stopPropagation()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
-          @if (commentCount === 1) {
-            {{ 'CLUB_FEED.COMMENT_COUNT_ONE' | translate }}
-          } @else {
-            {{ 'CLUB_FEED.COMMENT_COUNT' | translate: {count: commentCount} }}
-          }
-          <svg class="comments-chevron" [class.rotated]="commentsExpanded" width="12" height="12" viewBox="0 0 24 24"
-               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-        </button>
-
-        @if (commentsExpanded) {
-          <div class="comments-list">
-            @for (c of event.comments; track c.id) {
-              <div class="comment-item">
-                <div class="comment-avatar">
-                  @if (c.profilePicture) {
-                    <img [src]="c.profilePicture" [alt]="c.displayName" />
-                  } @else {
-                    {{ c.displayName.charAt(0).toUpperCase() }}
-                  }
-                </div>
-                <div class="comment-body">
-                  <div class="comment-meta">
-                    <span class="comment-author">{{ c.displayName }}</span>
-                    <span class="comment-time">{{ relativeTime(c.createdAt) }}</span>
-                  </div>
-                  <div class="comment-text">{{ c.content }}</div>
-                </div>
-              </div>
-            }
-          </div>
-
-          <div class="comment-input-row">
-            <input
-              class="comment-input"
-              [placeholder]="'CLUB_FEED.COMMENT_PLACEHOLDER' | translate"
-              [(ngModel)]="commentText"
-              (keydown.enter)="submitComment()"
-              (click)="$event.stopPropagation()"
-            />
-            <button class="comment-post-btn" [disabled]="!commentText.trim()" (click)="submitComment(); $event.stopPropagation()">
-              {{ 'CLUB_FEED.COMMENT_POST' | translate }}
-            </button>
-          </div>
-        }
-      </div>
+      <app-feed-comments-section
+        [eventId]="event.id"
+        [comments]="event.comments ?? []"
+        [currentUserId]="currentUserId"
+        (commentSubmitted)="commentSubmitted.emit($event)"
+        (commentEdited)="commentEdited.emit($event)"
+        (commentDeleted)="commentDeleted.emit($event)">
+      </app-feed-comments-section>
     </div>
   `,
   styles: `
@@ -176,28 +132,6 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
     .kudos-given { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; font-size: var(--text-xs); font-weight: 600; color: var(--success); white-space: nowrap; }
     .spinner-sm { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    .comments-section { margin-top: var(--space-sm); padding-top: var(--space-sm); border-top: 1px solid var(--glass-border); }
-    .comments-toggle { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--text-muted); font-size: var(--text-xs); cursor: pointer; padding: 0; }
-    .comments-toggle:hover { color: var(--text-color); }
-    .comments-chevron { transition: transform 0.2s; }
-    .comments-chevron.rotated { transform: rotate(180deg); }
-    .comments-list { display: flex; flex-direction: column; gap: 8px; margin-top: var(--space-sm); }
-    .comment-item { display: flex; gap: var(--space-sm); }
-    .comment-avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--surface-elevated); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; color: var(--text-muted); overflow: hidden; flex-shrink: 0; }
-    .comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .comment-body { flex: 1; min-width: 0; }
-    .comment-meta { display: flex; align-items: center; gap: var(--space-xs); }
-    .comment-author { font-size: var(--text-xs); font-weight: 600; color: var(--text-color); }
-    .comment-time { font-size: 9px; color: var(--text-muted); font-family: monospace; }
-    .comment-text { font-size: var(--text-xs); color: var(--text-color); line-height: 1.4; word-break: break-word; }
-    .comment-input-row { display: flex; gap: 6px; margin-top: var(--space-sm); }
-    .comment-input { flex: 1; background: var(--surface-elevated); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 6px 10px; font-size: var(--text-xs); color: var(--text-color); outline: none; }
-    .comment-input::placeholder { color: var(--text-muted); }
-    .comment-input:focus { border-color: var(--primary); }
-    .comment-post-btn { background: var(--primary); color: #000; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: var(--text-xs); font-weight: 600; cursor: pointer; white-space: nowrap; }
-    .comment-post-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .comment-post-btn:hover:not(:disabled) { opacity: 0.9; }
   `,
 })
 export class FeedSessionCompletionCardComponent {
@@ -205,11 +139,11 @@ export class FeedSessionCompletionCardComponent {
   @Input() currentUserId: string | null = null;
   @Output() kudosRequested = new EventEmitter<string>();
   @Output() commentSubmitted = new EventEmitter<{eventId: string; content: string}>();
+  @Output() commentEdited = new EventEmitter<{eventId: string; commentId: string; content: string}>();
+  @Output() commentDeleted = new EventEmitter<{eventId: string; commentId: string}>();
 
   expanded = false;
   kudosLoading = false;
-  commentText = '';
-  commentsExpanded = false;
 
   get displayedCompletions() {
     return (this.event.completions ?? []).slice(0, 5);
@@ -223,32 +157,9 @@ export class FeedSessionCompletionCardComponent {
     return !!this.currentUserId && (this.event.kudosGivenBy ?? []).includes(this.currentUserId);
   }
 
-  get commentCount(): number {
-    return this.event.comments?.length ?? 0;
-  }
-
   onGiveKudos(): void {
     this.kudosLoading = true;
     this.kudosRequested.emit(this.event.id);
-  }
-
-  submitComment(): void {
-    const text = this.commentText.trim();
-    if (!text) return;
-    this.commentSubmitted.emit({eventId: this.event.id, content: text});
-    this.commentText = '';
-  }
-
-  relativeTime(dateStr?: string): string {
-    if (!dateStr) return '';
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'now';
-    if (mins < 60) return `${mins}m`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h`;
-    const days = Math.floor(hours / 24);
-    return `${days}d`;
   }
 
   formatDate(dateStr?: string): string {

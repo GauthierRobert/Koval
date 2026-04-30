@@ -5,6 +5,7 @@ import com.koval.trainingplannerbackend.club.ClubRepository;
 import com.koval.trainingplannerbackend.club.activity.ClubActivityService;
 import com.koval.trainingplannerbackend.club.activity.ClubActivityType;
 import com.koval.trainingplannerbackend.club.group.ClubGroupRepository;
+import com.koval.trainingplannerbackend.club.recurring.RecurringSessionMaterializer;
 import com.koval.trainingplannerbackend.notification.NotificationService;
 import org.springframework.stereotype.Service;
 
@@ -21,22 +22,25 @@ public class SessionParticipationService {
     private final ClubRepository clubRepository;
     private final NotificationService notificationService;
     private final ClubActivityService activityService;
+    private final RecurringSessionMaterializer materializer;
 
     public SessionParticipationService(ClubTrainingSessionRepository sessionRepository,
                                        ClubGroupRepository clubGroupRepository,
                                        ClubRepository clubRepository,
                                        NotificationService notificationService,
-                                       ClubActivityService activityService) {
+                                       ClubActivityService activityService,
+                                       RecurringSessionMaterializer materializer) {
         this.sessionRepository = sessionRepository;
         this.clubGroupRepository = clubGroupRepository;
         this.clubRepository = clubRepository;
         this.notificationService = notificationService;
         this.activityService = activityService;
+        this.materializer = materializer;
     }
 
     public ClubTrainingSession joinSession(String userId, String sessionId) {
-        ClubTrainingSession session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        ClubTrainingSession session = materializer.resolveOrMaterialize(sessionId);
+        sessionId = session.getId();
         if (Boolean.TRUE.equals(session.getCancelled())) {
             throw new IllegalStateException("Cannot join a cancelled session");
         }
@@ -69,8 +73,7 @@ public class SessionParticipationService {
     }
 
     public ClubTrainingSession cancelSessionParticipation(String userId, String sessionId) {
-        ClubTrainingSession session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        ClubTrainingSession session = materializer.resolveOrMaterialize(sessionId);
         if (session.getParticipantIds().remove(userId)) {
             if (session.getMaxParticipants() != null && !session.getWaitingList().isEmpty()) {
                 promoteNextFromWaitingList(session);

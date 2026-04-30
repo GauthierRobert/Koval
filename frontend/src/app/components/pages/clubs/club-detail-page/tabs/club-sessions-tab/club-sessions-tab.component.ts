@@ -3,6 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   EventEmitter,
+  HostListener,
   inject,
   Input,
   OnInit,
@@ -29,12 +30,29 @@ import {TrainingService} from '../../../../../../services/training.service';
 import {SPORT_BANNER_COLORS} from '../../../../../../models/plan.model';
 import {SessionCardComponent} from '../../../../../shared/session-card/session-card.component';
 import {SessionFormModalComponent, SessionFormSaveEvent} from './session-form-modal/session-form-modal.component';
+import {
+  CreateSingleSessionModalComponent,
+  SingleSessionCreateEvent,
+} from './create-single-session-modal/create-single-session-modal.component';
+import {
+  CreateRecurringTemplateModalComponent,
+  RecurringTemplateCreateEvent,
+} from './create-recurring-template-modal/create-recurring-template-modal.component';
 import {CancelSessionDialogsComponent} from './cancel-session-dialogs/cancel-session-dialogs.component';
 
 @Component({
   selector: 'app-club-sessions-tab',
   standalone: true,
-  imports: [CommonModule, RouterModule, TranslateModule, SessionCardComponent, SessionFormModalComponent, CancelSessionDialogsComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    TranslateModule,
+    SessionCardComponent,
+    SessionFormModalComponent,
+    CreateSingleSessionModalComponent,
+    CreateRecurringTemplateModalComponent,
+    CancelSessionDialogsComponent,
+  ],
   templateUrl: './club-sessions-tab.component.html',
   styleUrl: './club-sessions-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -58,14 +76,19 @@ export class ClubSessionsTabComponent implements OnInit {
   calendarDays: Date[] = [];
   selectedDay: Date = new Date();
 
-  // Form state
-  isFormOpen = false;
+  // Modal state — three independent modals
+  isEditModalOpen = false;
+  isCreateSingleModalOpen = false;
+  isCreateRecurringModalOpen = false;
+  isCreateMenuOpen = false;
   clubGroups: ClubGroup[] = [];
 
   // Edit state
   editingSession: ClubTrainingSession | null = null;
   editAllFutureMode = false;
-  showRecurringEditChoice = false;
+
+  // Edit recurring choice (this session only vs entire template)
+  showEditRecurringChoice = false;
   pendingEditSession: ClubTrainingSession | null = null;
 
   readonly isSavingSession$ = new BehaviorSubject(false);
@@ -111,14 +134,29 @@ export class ClubSessionsTabComponent implements OnInit {
     }
   }
 
-  get canCreate(): boolean {
+  /** Members can propose single sessions */
+  get canCreateSingle(): boolean {
+    return this.club?.currentMembershipStatus === 'ACTIVE';
+  }
+
+  /** Only coaches/admins/owners can create recurring weekly templates */
+  get canCreateRecurring(): boolean {
     const role = this.club?.currentMemberRole;
     return role === 'OWNER' || role === 'ADMIN' || role === 'COACH';
+  }
+
+  /** Used by session-card actions (kept for backwards compat) */
+  get canCreate(): boolean {
+    return this.canCreateRecurring;
   }
 
   get isCoach(): boolean {
     const role = this.club?.currentMemberRole;
     return role === 'OWNER' || role === 'COACH';
+  }
+
+  canEditSession(session: ClubTrainingSession): boolean {
+    return (!!this.currentUserId && session.createdBy === this.currentUserId) || this.canCreateRecurring;
   }
 
   // --- Filters ---
@@ -132,13 +170,12 @@ export class ClubSessionsTabComponent implements OnInit {
   applyFilters(sessions: ClubTrainingSession[]): ClubTrainingSession[] {
     let filtered = sessions;
 
-    // Only recurring sessions
-    filtered = filtered.filter((s) => !!s.recurringTemplateId);
-
-    // Group filter
+    // Group filter (only narrows recurring/scheduled with a group; OPEN sessions are always visible)
     if (!this.showOtherGroupSessions) {
       const userGroupIds = this.getUserGroupIds();
-      filtered = filtered.filter((s) => !s.clubGroupId || userGroupIds.has(s.clubGroupId));
+      filtered = filtered.filter(
+        (s) => s.category === 'OPEN' || !s.clubGroupId || userGroupIds.has(s.clubGroupId),
+      );
     }
 
     return filtered;
@@ -193,7 +230,8 @@ export class ClubSessionsTabComponent implements OnInit {
   private loadCalendarSessions(): void {
     const from = this.calendarWeekStart.toISOString();
     const to = new Date(this.calendarWeekStart.getTime() + 7 * 86400000).toISOString();
-    this.clubSessionService.loadSessionsForRange(this.club.id, from, to, 'SCHEDULED');
+    // Load ALL sessions (recurring + single SCHEDULED + OPEN) for the visible week.
+    this.clubSessionService.loadSessionsForRange(this.club.id, from, to);
   }
 
   getSessionsForDay(sessions: ClubTrainingSession[], day: Date): ClubTrainingSession[] {
@@ -203,7 +241,13 @@ export class ClubSessionsTabComponent implements OnInit {
         const d = new Date(s.scheduledAt);
         return d.getFullYear() === day.getFullYear() && d.getMonth() === day.getMonth() && d.getDate() === day.getDate();
       })
-      .sort((a, b) => (a.scheduledAt ?? '').localeCompare(b.scheduledAt ?? ''));
+      .sort((a, b) => {
+        // Recurring sessions always on top
+        const aRecurring = !!a.recurringTemplateId;
+        const bRecurring = !!b.recurringTemplateId;
+        if (aRecurring !== bRecurring) return aRecurring ? -1 : 1;
+        return (a.scheduledAt ?? '').localeCompare(b.scheduledAt ?? '');
+      });
   }
 
   formatDayHeader(day: Date): string {
@@ -221,16 +265,55 @@ export class ClubSessionsTabComponent implements OnInit {
     return `${this.calendarWeekStart.toLocaleDateString('en-US', opts)} - ${end.toLocaleDateString('en-US', opts)}`;
   }
 
-  // --- Form ---
+  // --- Create dropdown ---
 
-  openForm(): void {
-    this.editingSession = null;
-    this.editAllFutureMode = false;
-    this.isFormOpen = true;
+  toggleCreateMenu(): void {
+    this.isCreateMenuOpen = !this.isCreateMenuOpen;
   }
 
-  closeForm(): void {
-    this.isFormOpen = false;
+  closeCreateMenu(): void {
+    this.isCreateMenuOpen = false;
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    if (this.isCreateMenuOpen) {
+      this.isCreateMenuOpen = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.isCreateMenuOpen) {
+      this.isCreateMenuOpen = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  startCreate(mode: 'single' | 'recurring'): void {
+    if (mode === 'recurring' && !this.canCreateRecurring) return;
+    if (mode === 'single' && !this.canCreateSingle) return;
+    this.isCreateMenuOpen = false;
+    this.editingSession = null;
+    this.editAllFutureMode = false;
+    if (mode === 'single') {
+      this.isCreateSingleModalOpen = true;
+    } else {
+      this.isCreateRecurringModalOpen = true;
+    }
+  }
+
+  closeCreateSingle(): void {
+    this.isCreateSingleModalOpen = false;
+  }
+
+  closeCreateRecurring(): void {
+    this.isCreateRecurringModalOpen = false;
+  }
+
+  closeEditForm(): void {
+    this.isEditModalOpen = false;
     this.editingSession = null;
     this.editAllFutureMode = false;
   }
@@ -238,101 +321,145 @@ export class ClubSessionsTabComponent implements OnInit {
   openEditForm(session: ClubTrainingSession): void {
     if (session.recurringTemplateId) {
       this.pendingEditSession = session;
-      this.showRecurringEditChoice = true;
+      this.showEditRecurringChoice = true;
       this.cdr.markForCheck();
-    } else {
-      this.startEditing(session, false);
+      return;
     }
+    this.startEditing(session, false);
   }
 
-  editThisOnly(): void {
+  editThisSessionOnly(): void {
     if (!this.pendingEditSession) return;
-    this.showRecurringEditChoice = false;
-    this.startEditing(this.pendingEditSession, false);
+    const session = this.pendingEditSession;
     this.pendingEditSession = null;
+    this.showEditRecurringChoice = false;
+    this.startEditing(session, false);
   }
 
-  editAllFuture(): void {
+  editEntireTemplate(): void {
     if (!this.pendingEditSession) return;
-    this.showRecurringEditChoice = false;
-    this.startEditing(this.pendingEditSession, true);
+    const session = this.pendingEditSession;
     this.pendingEditSession = null;
+    this.showEditRecurringChoice = false;
+    this.startEditing(session, true);
+  }
+
+  closeEditRecurringChoice(): void {
+    this.showEditRecurringChoice = false;
+    this.pendingEditSession = null;
+    this.cdr.markForCheck();
   }
 
   private startEditing(session: ClubTrainingSession, allFuture: boolean): void {
     this.expandedSessionId = null;
     this.editingSession = session;
     this.editAllFutureMode = allFuture;
-    this.isFormOpen = true;
+    this.isEditModalOpen = true;
     this.cdr.markForCheck();
   }
 
-  onFormSaved(event: SessionFormSaveEvent): void {
+  onEditFormSaved(event: SessionFormSaveEvent): void {
+    if (!event.editingSession) return;
     const form = event.form;
     this.isSavingSession$.next(true);
 
-    // Handle removeGpx action from sub-component
     if (form['__action'] === 'removeGpx') {
-      if (event.editingSession) {
-        this.clubSessionService.deleteSessionGpx(this.club.id, event.editingSession.id).subscribe({
-          next: () => this.loadCalendarSessions(),
-        });
-      }
+      this.clubSessionService.deleteSessionGpx(this.club.id, event.editingSession.id).subscribe({
+        next: () => {
+          this.isSavingSession$.next(false);
+          this.loadCalendarSessions();
+        },
+        error: () => this.isSavingSession$.next(false),
+      });
       return;
     }
 
-    if (event.editingSession) {
-      if (event.editAllFutureMode && event.editingSession.recurringTemplateId) {
-        const data: CreateRecurringSessionData = {
-          category: 'SCHEDULED',
-          title: form['title'],
-          sport: form['sport'],
-          dayOfWeek: undefined as any,
-          timeOfDay: form['scheduledAt'] ? new Date(form['scheduledAt']).toTimeString().slice(0, 5) : undefined as any,
-          location: form['location'] || undefined,
-          meetingPointLat: form['meetingPointLat'] ?? undefined,
-          meetingPointLon: form['meetingPointLon'] ?? undefined,
-          description: form['description'] || undefined,
-          maxParticipants: form['maxParticipants'] || undefined,
-          clubGroupId: form['clubGroupId'] || undefined,
-          responsibleCoachId: form['responsibleCoachId'] || undefined,
-          openToAll: form['openToAll'] ?? false,
-          openToAllDelayValue: form['openToAll'] ? form['openToAllDelayValue'] : undefined,
-          openToAllDelayUnit: form['openToAll'] ? form['openToAllDelayUnit'] : undefined,
-          endDate: form['endDate'] || undefined,
-        };
-        this.clubSessionService.updateRecurringTemplateWithInstances(this.club.id, event.editingSession.recurringTemplateId, data).subscribe({
-          next: () => this.finishSave(),
-          error: () => this.isSavingSession$.next(false),
-        });
-      } else {
-        const data: CreateSessionData = {
-          category: 'SCHEDULED',
-          title: form['title'],
-          sport: form['sport'],
-          scheduledAt: form['scheduledAt'] || undefined,
-          location: form['location'] || undefined,
-          meetingPointLat: form['meetingPointLat'] ?? undefined,
-          meetingPointLon: form['meetingPointLon'] ?? undefined,
-          description: form['description'] || undefined,
-          maxParticipants: form['maxParticipants'] || undefined,
-          durationMinutes: form['durationMinutes'] || undefined,
-          clubGroupId: form['clubGroupId'] || undefined,
-          responsibleCoachId: form['responsibleCoachId'] || undefined,
-          openToAll: form['openToAll'] ?? false,
-          openToAllDelayValue: form['openToAll'] ? form['openToAllDelayValue'] : undefined,
-          openToAllDelayUnit: form['openToAll'] ? form['openToAllDelayUnit'] : undefined,
-        };
-        const editId = event.editingSession.id;
-        this.clubSessionService.updateSession(this.club.id, editId, data).subscribe({
-          next: () => this.afterSaveSession(editId, event.gpxFile),
-          error: () => this.isSavingSession$.next(false),
-        });
-      }
+    if (event.editAllFutureMode && event.editingSession.recurringTemplateId) {
+      const scheduledAtDate = form['scheduledAt'] ? new Date(form['scheduledAt']) : null;
+      const data: CreateRecurringSessionData = {
+        category: 'SCHEDULED',
+        title: form['title'],
+        sport: form['sport'],
+        dayOfWeek: scheduledAtDate
+          ? this.daysOfWeek[(scheduledAtDate.getDay() + 6) % 7]
+          : (undefined as any),
+        timeOfDay: scheduledAtDate ? scheduledAtDate.toTimeString().slice(0, 5) : (undefined as any),
+        location: form['location'] || undefined,
+        meetingPointLat: form['meetingPointLat'] ?? undefined,
+        meetingPointLon: form['meetingPointLon'] ?? undefined,
+        description: form['description'] || undefined,
+        maxParticipants: form['maxParticipants'] || undefined,
+        clubGroupId: form['clubGroupId'] || undefined,
+        responsibleCoachId: form['responsibleCoachId'] || undefined,
+        openToAll: form['openToAll'] ?? false,
+        openToAllDelayValue: form['openToAll'] ? form['openToAllDelayValue'] : undefined,
+        openToAllDelayUnit: form['openToAll'] ? form['openToAllDelayUnit'] : undefined,
+        endDate: form['endDate'] || undefined,
+      };
+      this.clubSessionService.updateRecurringTemplateWithInstances(this.club.id, event.editingSession.recurringTemplateId, data).subscribe({
+        next: () => this.finishEdit(),
+        error: () => this.isSavingSession$.next(false),
+      });
       return;
     }
 
-    // Create new recurring session (always recurring)
+    const data: CreateSessionData = {
+      category: 'SCHEDULED',
+      title: form['title'],
+      sport: form['sport'],
+      scheduledAt: form['scheduledAt'] || undefined,
+      location: form['location'] || undefined,
+      meetingPointLat: form['meetingPointLat'] ?? undefined,
+      meetingPointLon: form['meetingPointLon'] ?? undefined,
+      description: form['description'] || undefined,
+      maxParticipants: form['maxParticipants'] || undefined,
+      durationMinutes: form['durationMinutes'] || undefined,
+      clubGroupId: form['clubGroupId'] || undefined,
+      responsibleCoachId: form['responsibleCoachId'] || undefined,
+      openToAll: form['openToAll'] ?? false,
+      openToAllDelayValue: form['openToAll'] ? form['openToAllDelayValue'] : undefined,
+      openToAllDelayUnit: form['openToAll'] ? form['openToAllDelayUnit'] : undefined,
+    };
+    const editId = event.editingSession.id;
+    this.clubSessionService.updateSession(this.club.id, editId, data).subscribe({
+      next: () => this.afterSaveSession(editId, event.gpxFile, () => this.finishEdit()),
+      error: () => this.isSavingSession$.next(false),
+    });
+  }
+
+  onCreateSingleSaved(event: SingleSessionCreateEvent): void {
+    const form = event.form;
+    this.isSavingSession$.next(true);
+
+    // ACTIVE non-coach members create OPEN sessions; coaches/admins/owners create SCHEDULED.
+    const category: 'OPEN' | 'SCHEDULED' = this.canCreateRecurring ? 'SCHEDULED' : 'OPEN';
+    const data: CreateSessionData = {
+      category,
+      title: form['title'],
+      sport: form['sport'],
+      scheduledAt: form['scheduledAt'] || undefined,
+      location: form['location'] || undefined,
+      meetingPointLat: form['meetingPointLat'] ?? undefined,
+      meetingPointLon: form['meetingPointLon'] ?? undefined,
+      description: form['description'] || undefined,
+      maxParticipants: form['maxParticipants'] || undefined,
+      durationMinutes: form['durationMinutes'] || undefined,
+      clubGroupId: form['clubGroupId'] || undefined,
+      responsibleCoachId: form['responsibleCoachId'] || undefined,
+      openToAll: form['openToAll'] ?? false,
+      openToAllDelayValue: form['openToAll'] ? form['openToAllDelayValue'] : undefined,
+      openToAllDelayUnit: form['openToAll'] ? form['openToAllDelayUnit'] : undefined,
+    };
+    this.clubSessionService.createSession(this.club.id, data).subscribe({
+      next: (session) => this.afterSaveSession(session.id, event.gpxFile, () => this.finishCreateSingle()),
+      error: () => this.isSavingSession$.next(false),
+    });
+  }
+
+  onCreateRecurringSaved(event: RecurringTemplateCreateEvent): void {
+    const form = event.form;
+    this.isSavingSession$.next(true);
+
     const data: CreateRecurringSessionData = {
       category: 'SCHEDULED',
       title: form['title'],
@@ -352,27 +479,41 @@ export class ClubSessionsTabComponent implements OnInit {
       endDate: form['endDate'] || undefined,
     };
     this.clubSessionService.createRecurringTemplate(this.club.id, data).subscribe({
-      next: () => this.finishSave(),
-      error: () => {},
+      next: () => this.finishCreateRecurring(),
+      error: () => this.isSavingSession$.next(false),
     });
   }
 
-  private afterSaveSession(sessionId: string, gpxFile: File | null): void {
+  private afterSaveSession(sessionId: string, gpxFile: File | null, done: () => void): void {
     if (gpxFile) {
       this.clubSessionService.uploadSessionGpx(this.club.id, sessionId, gpxFile).subscribe({
-        next: () => this.finishSave(),
-        error: () => this.finishSave(),
+        next: () => done(),
+        error: () => done(),
       });
     } else {
-      this.finishSave();
+      done();
     }
   }
 
-  private finishSave(): void {
+  private finishEdit(): void {
     this.isSavingSession$.next(false);
-    this.isFormOpen = false;
+    this.isEditModalOpen = false;
     this.editingSession = null;
     this.editAllFutureMode = false;
+    this.loadCalendarSessions();
+    this.cdr.markForCheck();
+  }
+
+  private finishCreateSingle(): void {
+    this.isSavingSession$.next(false);
+    this.isCreateSingleModalOpen = false;
+    this.loadCalendarSessions();
+    this.cdr.markForCheck();
+  }
+
+  private finishCreateRecurring(): void {
+    this.isSavingSession$.next(false);
+    this.isCreateRecurringModalOpen = false;
     this.loadCalendarSessions();
     this.cdr.markForCheck();
   }

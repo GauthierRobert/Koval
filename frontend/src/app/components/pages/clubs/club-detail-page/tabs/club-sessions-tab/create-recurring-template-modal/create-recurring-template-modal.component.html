@@ -1,11 +1,16 @@
-@if (isOpen && editingSession) {
+@if (isOpen) {
   <div class="modal-backdrop" (click)="close()">
-  <div class="modal glass" (click)="$event.stopPropagation()" data-testid="session-form-modal">
+  <div class="modal glass" (click)="$event.stopPropagation()" data-testid="create-recurring-template-modal">
     <div class="modal-header">
-      <h3>{{ 'CLUB_SESSIONS.FORM_EDIT_TITLE' | translate }}</h3>
+      <div class="modal-header__title">
+        <span class="modal-header__badge">{{ 'CLUB_SESSIONS.FORM_CREATE_RECURRING_BADGE' | translate }}</span>
+        <h3>{{ 'CLUB_SESSIONS.FORM_CREATE_RECURRING_TITLE' | translate }}</h3>
+      </div>
       <button class="close-btn" (click)="close()">&times;</button>
     </div>
     <div class="modal-body">
+      <p class="modal-subtitle">{{ 'CLUB_SESSIONS.FORM_CREATE_RECURRING_SUBTITLE' | translate }}</p>
+
       <div class="form-row two-col">
         <div class="form-row">
           <label>{{ 'CLUB_SESSIONS.FORM_LABEL_TITLE' | translate }}</label>
@@ -71,9 +76,25 @@
         </div>
       }
 
+      <div class="form-row two-col">
+        <div class="form-row">
+          <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DAY_OF_WEEK' | translate }}</label>
+          <select [(ngModel)]="form['dayOfWeek']" class="form-input" data-testid="form-day-of-week">
+            <option value="" disabled>{{ 'CLUB_SESSIONS.FORM_PLACEHOLDER_DAY_OF_WEEK' | translate }}</option>
+            @for (d of daysOfWeek; track d) {
+              <option [value]="d">{{ d }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-row">
+          <label>{{ 'CLUB_SESSIONS.FORM_LABEL_TIME' | translate }}</label>
+          <input type="time" [(ngModel)]="form['timeOfDay']" class="form-input" data-testid="form-time-of-day"/>
+        </div>
+      </div>
+
       <div class="form-row">
-        <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DATE_TIME' | translate }}</label>
-        <input type="datetime-local" [(ngModel)]="form['scheduledAt']" class="form-input"/>
+        <label>{{ 'CLUB_SESSIONS.FORM_LABEL_END_DATE' | translate }}</label>
+        <input type="date" [(ngModel)]="form['endDate']" class="form-input"/>
       </div>
 
       <div class="form-row two-col">
@@ -94,12 +115,6 @@
         </div>
         <div class="form-row">
           <label>{{ 'CLUB_SESSIONS.FORM_LABEL_GPX' | translate }}</label>
-          @if (editingSession.gpxFileName; as gpxName) {
-            <div class="gpx-existing">
-              <span class="gpx-badge">{{ gpxName }}</span>
-              <button class="btn-danger btn-sm" (click)="removeGpx()">{{ 'COMMON.DELETE' | translate }}</button>
-            </div>
-          }
           <input type="file" accept=".gpx" (change)="onGpxFileSelected($event)" class="form-input file-input" />
         </div>
       </div>
@@ -120,9 +135,9 @@
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" (click)="close()" data-testid="btn-cancel-form">{{ 'CLUB_SESSIONS.BTN_CANCEL' | translate }}</button>
-      <button class="btn-primary" (click)="save()" [disabled]="!isFormValid || isSaving" data-testid="btn-save-session">
+      <button class="btn-primary" (click)="save()" [disabled]="!isFormValid || isSaving" data-testid="btn-create-template">
         @if (isSaving) { <span class="btn-spinner"></span> }
-        {{ 'CLUB_SESSIONS.BTN_SAVE' | translate }}
+        {{ 'CLUB_SESSIONS.BTN_CREATE_TEMPLATE_SUBMIT' | translate }}
       </button>
     </div>
   </div>

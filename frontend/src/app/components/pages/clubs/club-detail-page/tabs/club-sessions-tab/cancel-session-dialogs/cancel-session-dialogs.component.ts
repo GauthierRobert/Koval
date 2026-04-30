@@ -13,18 +13,14 @@ import {ClubTrainingSession} from '../../../../../../../services/club.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CancelSessionDialogsComponent {
-  @Input() showRecurringEditChoice = false;
   @Input() showCancelRecurringChoice = false;
   @Input() showCancelConfirm = false;
   @Input() cancelMode: 'single' | 'all' = 'single';
   @Input() cancelTargetSession: ClubTrainingSession | null = null;
 
-  @Output() editThisOnly = new EventEmitter<void>();
-  @Output() editAllFuture = new EventEmitter<void>();
   @Output() cancelThisOnly = new EventEmitter<void>();
   @Output() cancelAllFuture = new EventEmitter<void>();
   @Output() closeCancelRecurringChoice = new EventEmitter<void>();
-  @Output() closeRecurringEditChoice = new EventEmitter<void>();
   @Output() closeCancelConfirm = new EventEmitter<void>();
   @Output() confirmCancel = new EventEmitter<string>();
 

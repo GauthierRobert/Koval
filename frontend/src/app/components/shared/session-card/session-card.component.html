@@ -337,39 +337,21 @@
 
       <div class="sc-map">
         <app-route-map [routeCoordinates]="toRouteCoordinates()"></app-route-map>
-        @if (hasAnyLinkedTraining()) {
-          <button class="sc-btn sc-btn--primary sc-map__download-btn"
-                  (click)="onDownloadGpx($event)"
-                  [title]="'CLUB_SESSIONS.BTN_DOWNLOAD_GPX' | translate">
-            {{ 'CLUB_SESSIONS.BTN_DOWNLOAD_GPX' | translate }}
-          </button>
-        }
+        <button class="sc-btn sc-btn--primary sc-map__download-btn"
+                (click)="onDownloadGpx($event)"
+                [title]="'CLUB_SESSIONS.BTN_DOWNLOAD_GPX' | translate"
+                [attr.aria-label]="'CLUB_SESSIONS.BTN_DOWNLOAD_GPX' | translate">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </button>
       </div>
 
       @if (session.gpxFileName) {
         <span class="sc-gpx-filename">{{ session.gpxFileName }}</span>
-      }
-
-      @if (!hasAnyLinkedTraining()) {
-        <div class="sc-gpx-actions">
-          <button class="sc-btn sc-btn--primary" (click)="onDownloadGpx($event)">
-            {{ 'CLUB_SESSIONS.BTN_DOWNLOAD_GPX' | translate }}
-          </button>
-          @if (hasMeetingPoint()) {
-            <a class="sc-link"
-               [href]="meetingPointMapUrl()"
-               target="_blank" rel="noopener"
-               (click)="$event.stopPropagation()">
-              {{ 'CLUB_SESSIONS.BTN_OPEN_IN_MAP' | translate }}
-            </a>
-          } @else {
-            <button class="sc-link sc-link--button"
-                    (click)="onShareGpx($event)"
-                    [title]="'COMMON.SHARE' | translate">
-              {{ 'CLUB_SESSIONS.BTN_OPEN_IN_MAP' | translate }}
-            </button>
-          }
-        </div>
       }
     </section>
   }

@@ -47,7 +47,9 @@
                   [event]="event"
                   [currentUserId]="currentUserId"
                   (kudosRequested)="onGiveKudos($event)"
-                  (commentSubmitted)="onCommentSubmitted($event)">
+                  (commentSubmitted)="onCommentSubmitted($event)"
+                  (commentEdited)="onCommentEdited($event)"
+                  (commentDeleted)="onCommentDeleted($event)">
                 </app-feed-session-completion-card>
               }
               @case ('RACE_COMPLETION') {
@@ -55,7 +57,9 @@
                   [event]="event"
                   [currentUserId]="currentUserId"
                   (kudosRequested)="onGiveKudos($event)"
-                  (commentSubmitted)="onCommentSubmitted($event)">
+                  (commentSubmitted)="onCommentSubmitted($event)"
+                  (commentEdited)="onCommentEdited($event)"
+                  (commentDeleted)="onCommentDeleted($event)">
                 </app-feed-race-completion-card>
               }
               @case ('NEXT_GOAL') {
@@ -75,7 +79,11 @@
                 <app-feed-announcement-card
                   [event]="event"
                   [currentUserId]="currentUserId"
-                  (commentSubmitted)="onCommentSubmitted($event)">
+                  (commentSubmitted)="onCommentSubmitted($event)"
+                  (commentEdited)="onCommentEdited($event)"
+                  (commentDeleted)="onCommentDeleted($event)"
+                  (announcementEdited)="onAnnouncementEdited($event)"
+                  (announcementDeleted)="onAnnouncementDeleted($event)">
                 </app-feed-announcement-card>
               }
               @case ('SESSION_COMPLETION') {
@@ -83,7 +91,9 @@
                   [event]="event"
                   [currentUserId]="currentUserId"
                   (kudosRequested)="onGiveKudos($event)"
-                  (commentSubmitted)="onCommentSubmitted($event)">
+                  (commentSubmitted)="onCommentSubmitted($event)"
+                  (commentEdited)="onCommentEdited($event)"
+                  (commentDeleted)="onCommentDeleted($event)">
                 </app-feed-session-completion-card>
               }
               @case ('RACE_COMPLETION') {
@@ -91,7 +101,9 @@
                   [event]="event"
                   [currentUserId]="currentUserId"
                   (kudosRequested)="onGiveKudos($event)"
-                  (commentSubmitted)="onCommentSubmitted($event)">
+                  (commentSubmitted)="onCommentSubmitted($event)"
+                  (commentEdited)="onCommentEdited($event)"
+                  (commentDeleted)="onCommentDeleted($event)">
                 </app-feed-race-completion-card>
               }
               @case ('NEXT_GOAL') {

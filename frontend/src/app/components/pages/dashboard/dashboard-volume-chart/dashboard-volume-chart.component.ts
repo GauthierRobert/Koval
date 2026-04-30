@@ -401,8 +401,8 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
   /** Round up to a clean grid-friendly number just above val. */
   private niceNum(val: number): number {
     if (val <= 0) return 1;
-    const gridCount = 5;
-    const raw = val*1.1; // 20% headroom
+    const gridCount = 4;
+    const raw = val * 1.2; // 20% headroom
     const step = raw / gridCount;
     const orderStep = Math.pow(10, Math.floor(Math.log10(step)));
     const fracStep = step / orderStep;
@@ -412,7 +412,7 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
     else if (fracStep <= 2) niceStep = 2;
     else if (fracStep <= 2.5) niceStep = 2.5;
     else if (fracStep <= 5) niceStep = 5;
-    else niceStep = 5;
+    else niceStep = 10;
     return niceStep * orderStep * gridCount;
   }
 

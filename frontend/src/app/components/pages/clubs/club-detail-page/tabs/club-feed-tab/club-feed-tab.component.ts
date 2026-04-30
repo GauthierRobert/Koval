@@ -113,6 +113,34 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
         this.cdr.markForCheck();
       }),
     );
+
+    this.subs.add(
+      this.sseService.onCommentEdited$.subscribe((payload) => {
+        this.clubFeedService.replaceFeedEventComment(payload.feedEventId, payload.comment);
+        this.cdr.markForCheck();
+      }),
+    );
+
+    this.subs.add(
+      this.sseService.onCommentDeleted$.subscribe((payload) => {
+        this.clubFeedService.removeFeedEventComment(payload.feedEventId, payload.commentId);
+        this.cdr.markForCheck();
+      }),
+    );
+
+    this.subs.add(
+      this.sseService.onFeedEventUpdated$.subscribe((event) => {
+        this.clubFeedService.replaceFeedEvent(event);
+        this.cdr.markForCheck();
+      }),
+    );
+
+    this.subs.add(
+      this.sseService.onFeedEventDeleted$.subscribe((payload) => {
+        this.clubFeedService.removeFeedEvent(payload.feedEventId);
+        this.cdr.markForCheck();
+      }),
+    );
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -204,6 +232,46 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
     this.clubFeedService.addComment(this.club.id, ev.eventId, ev.content).subscribe({
       next: (comment) => {
         this.clubFeedService.updateFeedEventComment(ev.eventId, comment);
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  onCommentEdited(ev: {eventId: string; commentId: string; content: string}): void {
+    this.clubFeedService
+      .updateComment(this.club.id, ev.eventId, ev.commentId, ev.content)
+      .subscribe({
+        next: (comment) => {
+          this.clubFeedService.replaceFeedEventComment(ev.eventId, comment);
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  onCommentDeleted(ev: {eventId: string; commentId: string}): void {
+    this.clubFeedService.deleteComment(this.club.id, ev.eventId, ev.commentId).subscribe({
+      next: () => {
+        this.clubFeedService.removeFeedEventComment(ev.eventId, ev.commentId);
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  onAnnouncementEdited(ev: {eventId: string; content: string; mediaIds: string[]}): void {
+    this.clubFeedService
+      .updateAnnouncement(this.club.id, ev.eventId, ev.content, ev.mediaIds)
+      .subscribe({
+        next: (event) => {
+          this.clubFeedService.replaceFeedEvent(event);
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  onAnnouncementDeleted(eventId: string): void {
+    this.clubFeedService.deleteAnnouncement(this.club.id, eventId).subscribe({
+      next: () => {
+        this.clubFeedService.removeFeedEvent(eventId);
         this.cdr.markForCheck();
       },
     });

@@ -238,7 +238,8 @@ public class ClubFeedService {
                 author.getDisplayName(),
                 author.getProfilePicture(),
                 content,
-                LocalDateTime.now());
+                LocalDateTime.now(),
+                null);
 
         event.getComments().add(comment);
         event.setUpdatedAt(LocalDateTime.now());
@@ -248,6 +249,155 @@ public class ClubFeedService {
                 new CommentUpdatePayload(feedEventId, comment));
 
         return comment;
+    }
+
+    /**
+     * Edit an existing coach announcement. Only the original author may edit.
+     * Replaces content and (if provided) the full attachment list.
+     */
+    public ClubFeedEventResponse updateCoachAnnouncement(String userId, String clubId, String feedEventId,
+                                                         String content, List<String> mediaIds) {
+        authorizationService.requireActiveMember(userId, clubId);
+
+        ClubFeedEvent event = feedEventRepository.findById(feedEventId)
+                .filter(e -> clubId.equals(e.getClubId()))
+                .orElseThrow(() -> new IllegalArgumentException("Feed event not found"));
+
+        if (event.getType() != ClubFeedEventType.COACH_ANNOUNCEMENT) {
+            throw new IllegalStateException("Event is not an announcement");
+        }
+        if (!userId.equals(event.getAuthorId())) {
+            throw new IllegalStateException("Only the author can edit this announcement");
+        }
+
+        if (mediaIds != null && !mediaIds.isEmpty()) {
+            // Only validate ownership for newly added media; existing attachments stay as-is.
+            List<String> existing = event.getAnnouncementAttachments().stream()
+                    .map(ClubFeedEvent.AnnouncementAttachment::mediaId).toList();
+            List<String> newMedia = mediaIds.stream().filter(id -> !existing.contains(id)).toList();
+            if (!newMedia.isEmpty()) {
+                mediaService.requireOwnedAndConfirmed(userId, newMedia, MediaPurpose.ANNOUNCEMENT_ATTACHMENT);
+            }
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        event.setAnnouncementContent(content);
+        event.setUpdatedAt(now);
+
+        if (mediaIds != null) {
+            // Rebuild attachments list — preserve enrichment ids for media kept; create new ones for added.
+            List<ClubFeedEvent.AnnouncementAttachment> rebuilt = new java.util.ArrayList<>();
+            for (String mediaId : mediaIds) {
+                ClubFeedEvent.AnnouncementAttachment existing = event.getAnnouncementAttachments().stream()
+                        .filter(a -> a.mediaId().equals(mediaId)).findFirst().orElse(null);
+                rebuilt.add(existing != null
+                        ? existing
+                        : new ClubFeedEvent.AnnouncementAttachment(UUID.randomUUID().toString(), mediaId, now));
+            }
+            event.setAnnouncementAttachments(rebuilt);
+        }
+
+        feedEventRepository.save(event);
+
+        ClubFeedEventResponse response = ClubFeedEventResponse.from(event, this::resolveMedia);
+        broadcaster.broadcast(clubId, "feed_event_updated", response);
+        return response;
+    }
+
+    /**
+     * Delete a coach announcement. Author may delete; admins/owners/coaches may
+     * also delete for moderation.
+     */
+    public void deleteCoachAnnouncement(String userId, String clubId, String feedEventId) {
+        authorizationService.requireActiveMember(userId, clubId);
+
+        ClubFeedEvent event = feedEventRepository.findById(feedEventId)
+                .filter(e -> clubId.equals(e.getClubId()))
+                .orElseThrow(() -> new IllegalArgumentException("Feed event not found"));
+
+        if (event.getType() != ClubFeedEventType.COACH_ANNOUNCEMENT) {
+            throw new IllegalStateException("Event is not an announcement");
+        }
+
+        boolean isAuthor = userId.equals(event.getAuthorId());
+        boolean isAdmin = authorizationService.isAdminOrCoach(userId, clubId);
+        if (!isAuthor && !isAdmin) {
+            throw new IllegalStateException("Only the author or an admin can delete this announcement");
+        }
+
+        feedEventRepository.deleteById(feedEventId);
+
+        java.util.Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("feedEventId", feedEventId);
+        broadcaster.broadcast(clubId, "feed_event_deleted", payload);
+    }
+
+    /**
+     * Edit a comment. Only the original author may edit.
+     */
+    public ClubFeedEvent.CommentEntry updateComment(String userId, String clubId, String feedEventId,
+                                                    String commentId, String content) {
+        authorizationService.requireActiveMember(userId, clubId);
+
+        ClubFeedEvent event = feedEventRepository.findById(feedEventId)
+                .filter(e -> clubId.equals(e.getClubId()))
+                .orElseThrow(() -> new IllegalArgumentException("Feed event not found"));
+
+        ClubFeedEvent.CommentEntry existing = event.getComments().stream()
+                .filter(c -> c.id().equals(commentId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Comment not found"));
+
+        if (!userId.equals(existing.userId())) {
+            throw new IllegalStateException("Only the author can edit this comment");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        ClubFeedEvent.CommentEntry updated = new ClubFeedEvent.CommentEntry(
+                existing.id(), existing.userId(), existing.displayName(), existing.profilePicture(),
+                content, existing.createdAt(), now);
+
+        int idx = event.getComments().indexOf(existing);
+        event.getComments().set(idx, updated);
+        event.setUpdatedAt(now);
+        feedEventRepository.save(event);
+
+        broadcaster.broadcast(clubId, "comment_edited",
+                new CommentUpdatePayload(feedEventId, updated));
+
+        return updated;
+    }
+
+    /**
+     * Delete a comment. Author may delete; admins/coaches/owners may also delete
+     * for moderation.
+     */
+    public void deleteComment(String userId, String clubId, String feedEventId, String commentId) {
+        authorizationService.requireActiveMember(userId, clubId);
+
+        ClubFeedEvent event = feedEventRepository.findById(feedEventId)
+                .filter(e -> clubId.equals(e.getClubId()))
+                .orElseThrow(() -> new IllegalArgumentException("Feed event not found"));
+
+        ClubFeedEvent.CommentEntry existing = event.getComments().stream()
+                .filter(c -> c.id().equals(commentId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Comment not found"));
+
+        boolean isAuthor = userId.equals(existing.userId());
+        boolean isAdmin = authorizationService.isAdminOrCoach(userId, clubId);
+        if (!isAuthor && !isAdmin) {
+            throw new IllegalStateException("Only the author or an admin can delete this comment");
+        }
+
+        event.getComments().removeIf(c -> c.id().equals(commentId));
+        event.setUpdatedAt(LocalDateTime.now());
+        feedEventRepository.save(event);
+
+        java.util.Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("feedEventId", feedEventId);
+        payload.put("commentId", commentId);
+        broadcaster.broadcast(clubId, "comment_deleted", payload);
     }
 
     /**

@@ -1,11 +1,13 @@
-@if (isOpen && editingSession) {
+@if (isOpen) {
   <div class="modal-backdrop" (click)="close()">
-  <div class="modal glass" (click)="$event.stopPropagation()" data-testid="session-form-modal">
+  <div class="modal glass" (click)="$event.stopPropagation()" data-testid="create-single-session-modal">
     <div class="modal-header">
-      <h3>{{ 'CLUB_SESSIONS.FORM_EDIT_TITLE' | translate }}</h3>
+      <h3>{{ 'CLUB_SESSIONS.FORM_CREATE_SINGLE_TITLE' | translate }}</h3>
       <button class="close-btn" (click)="close()">&times;</button>
     </div>
     <div class="modal-body">
+      <p class="modal-subtitle">{{ 'CLUB_SESSIONS.FORM_CREATE_SINGLE_SUBTITLE' | translate }}</p>
+
       <div class="form-row two-col">
         <div class="form-row">
           <label>{{ 'CLUB_SESSIONS.FORM_LABEL_TITLE' | translate }}</label>
@@ -73,7 +75,7 @@
 
       <div class="form-row">
         <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DATE_TIME' | translate }}</label>
-        <input type="datetime-local" [(ngModel)]="form['scheduledAt']" class="form-input"/>
+        <input type="datetime-local" [(ngModel)]="form['scheduledAt']" class="form-input" data-testid="form-single-scheduled-at"/>
       </div>
 
       <div class="form-row two-col">
@@ -94,12 +96,6 @@
         </div>
         <div class="form-row">
           <label>{{ 'CLUB_SESSIONS.FORM_LABEL_GPX' | translate }}</label>
-          @if (editingSession.gpxFileName; as gpxName) {
-            <div class="gpx-existing">
-              <span class="gpx-badge">{{ gpxName }}</span>
-              <button class="btn-danger btn-sm" (click)="removeGpx()">{{ 'COMMON.DELETE' | translate }}</button>
-            </div>
-          }
           <input type="file" accept=".gpx" (change)="onGpxFileSelected($event)" class="form-input file-input" />
         </div>
       </div>
@@ -120,9 +116,9 @@
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" (click)="close()" data-testid="btn-cancel-form">{{ 'CLUB_SESSIONS.BTN_CANCEL' | translate }}</button>
-      <button class="btn-primary" (click)="save()" [disabled]="!isFormValid || isSaving" data-testid="btn-save-session">
+      <button class="btn-primary" (click)="save()" [disabled]="!isFormValid || isSaving" data-testid="btn-create-session">
         @if (isSaving) { <span class="btn-spinner"></span> }
-        {{ 'CLUB_SESSIONS.BTN_SAVE' | translate }}
+        {{ 'CLUB_SESSIONS.BTN_CREATE_SESSION_SUBMIT' | translate }}
       </button>
     </div>
   </div>

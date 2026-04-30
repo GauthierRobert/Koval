@@ -12,6 +12,9 @@ import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService
 import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
+import com.koval.trainingplannerbackend.club.recurring.RecurringSessionMaterializer;
+import com.koval.trainingplannerbackend.club.recurring.RecurringSessionTemplate;
+import com.koval.trainingplannerbackend.club.recurring.RecurringSessionTemplateRepository;
 import com.koval.trainingplannerbackend.notification.NotificationService;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +22,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +31,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class ClubSessionService {
+
+    private static final int DEFAULT_PAST_WEEKS = 2;
+    private static final int DEFAULT_FUTURE_WEEKS = 12;
 
     private final ClubTrainingSessionRepository sessionRepository;
     private final ClubMembershipRepository membershipRepository;
@@ -35,6 +43,8 @@ public class ClubSessionService {
     private final SessionTrainingLinkService trainingLinkService;
     private final NotificationService notificationService;
     private final ClubActivityService activityService;
+    private final RecurringSessionMaterializer materializer;
+    private final RecurringSessionTemplateRepository templateRepository;
 
     public ClubSessionService(ClubTrainingSessionRepository sessionRepository,
                               ClubMembershipRepository membershipRepository,
@@ -43,7 +53,9 @@ public class ClubSessionService {
                               ClubAuthorizationService authorizationService,
                               SessionTrainingLinkService trainingLinkService,
                               NotificationService notificationService,
-                              ClubActivityService activityService) {
+                              ClubActivityService activityService,
+                              RecurringSessionMaterializer materializer,
+                              RecurringSessionTemplateRepository templateRepository) {
         this.sessionRepository = sessionRepository;
         this.membershipRepository = membershipRepository;
         this.clubRepository = clubRepository;
@@ -52,6 +64,8 @@ public class ClubSessionService {
         this.trainingLinkService = trainingLinkService;
         this.notificationService = notificationService;
         this.activityService = activityService;
+        this.materializer = materializer;
+        this.templateRepository = templateRepository;
     }
 
     public ClubTrainingSession createSession(String userId, String clubId, CreateSessionRequest req) {
@@ -90,8 +104,7 @@ public class ClubSessionService {
      */
     public ClubTrainingSession duplicateSession(String userId, String clubId, String sessionId,
                                                 LocalDateTime newScheduledAt) {
-        ClubTrainingSession source = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        ClubTrainingSession source = materializer.resolveOrMaterialize(sessionId);
         if (!source.getClubId().equals(clubId)) {
             throw new IllegalArgumentException("Session does not belong to this club");
         }
@@ -131,7 +144,6 @@ public class ClubSessionService {
         copy.setGpxFileName(source.getGpxFileName());
         copy.setRouteCoordinates(source.getRouteCoordinates());
         copy.setGpxData(source.getGpxData());
-        // Reset run-time state
         copy.setParticipantIds(new java.util.ArrayList<>());
         copy.setWaitingList(new java.util.ArrayList<>());
         copy.setCancelled(false);
@@ -152,7 +164,11 @@ public class ClubSessionService {
         List<ClubTrainingSession> all = category != null
                 ? sessionRepository.findByClubIdAndCategoryOrderByScheduledAtDesc(clubId, category)
                 : sessionRepository.findByClubIdOrderByScheduledAtDesc(clubId);
-        return filterByGroupVisibility(userId, clubId, all);
+        LocalDate today = LocalDate.now();
+        LocalDateTime defaultFrom = today.minusWeeks(DEFAULT_PAST_WEEKS).atStartOfDay();
+        LocalDateTime defaultTo = today.plusWeeks(DEFAULT_FUTURE_WEEKS).atStartOfDay();
+        List<ClubTrainingSession> merged = mergeWithVirtuals(clubId, defaultFrom, defaultTo, all, category);
+        return filterByGroupVisibility(userId, clubId, merged);
     }
 
     public List<ClubTrainingSession> listSessions(String userId, String clubId, LocalDateTime from, LocalDateTime to) {
@@ -161,15 +177,15 @@ public class ClubSessionService {
 
     public List<ClubTrainingSession> listSessions(String userId, String clubId, SessionCategory category,
                                                     LocalDateTime from, LocalDateTime to) {
-        List<ClubTrainingSession> all = category != null
+        List<ClubTrainingSession> materialized = category != null
                 ? sessionRepository.findByClubIdAndCategoryAndScheduledAtBetween(clubId, category, from, to)
                 : sessionRepository.findByClubIdAndScheduledAtBetween(clubId, from, to);
-        return filterByGroupVisibility(userId, clubId, all);
+        List<ClubTrainingSession> merged = mergeWithVirtuals(clubId, from, to, materialized, category);
+        return filterByGroupVisibility(userId, clubId, merged);
     }
 
     public ClubTrainingSession cancelEntireSession(String userId, String clubId, String sessionId, String reason) {
-        ClubTrainingSession session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        ClubTrainingSession session = materializer.resolveOrMaterialize(sessionId);
         if (!session.getClubId().equals(clubId)) {
             throw new IllegalArgumentException("Session does not belong to this club");
         }
@@ -180,30 +196,28 @@ public class ClubSessionService {
         session.setCancelled(true);
         session.setCancellationReason(reason);
         session.setCancelledAt(LocalDateTime.now());
-        sessionRepository.save(session);
-        activityService.emitActivity(clubId, ClubActivityType.SESSION_CANCELLED, userId, sessionId, session.getTitle());
+        ClubTrainingSession saved = sessionRepository.save(session);
+        activityService.emitActivity(clubId, ClubActivityType.SESSION_CANCELLED, userId, saved.getId(), saved.getTitle());
 
-        // Notify participants about cancellation
-        if (!session.getParticipantIds().isEmpty()) {
-            String body = getClubName(clubId) + " — \"" + session.getTitle() + "\" (" + formatSessionDate(session) + ") has been cancelled"
+        if (!saved.getParticipantIds().isEmpty()) {
+            String body = getClubName(clubId) + " — \"" + saved.getTitle() + "\" (" + formatSessionDate(saved) + ") has been cancelled"
                     + (reason != null && !reason.isBlank() ? ": " + reason : "");
             notificationService.sendToUsers(
-                    session.getParticipantIds(),
+                    saved.getParticipantIds(),
                     "Session Cancelled",
                     body,
                     Map.of("type", "SESSION_CANCELLED",
                            "clubId", clubId,
-                           "sessionId", sessionId),
+                           "sessionId", saved.getId()),
                     "clubSessionCancelled");
         }
 
-        return session;
+        return saved;
     }
 
     public ClubTrainingSession updateSession(String userId, String clubId, String sessionId,
                                               CreateSessionRequest req) {
-        ClubTrainingSession session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        ClubTrainingSession session = materializer.resolveOrMaterialize(sessionId);
         if (!session.getClubId().equals(clubId)) {
             throw new IllegalArgumentException("Session does not belong to this club");
         }
@@ -229,10 +243,20 @@ public class ClubSessionService {
         Map<String, Club> clubMap = clubRepository.findAllById(clubIds).stream()
                 .collect(Collectors.toMap(Club::getId, c -> c));
 
-        List<ClubTrainingSession> sessions = sessionRepository.findByClubIdInAndScheduledAtBetween(
-                clubIds, start.atStartOfDay(), end.plusDays(1).atStartOfDay());
+        LocalDateTime fromDt = start.atStartOfDay();
+        LocalDateTime toDt = end.plusDays(1).atStartOfDay();
+        List<ClubTrainingSession> materialized = sessionRepository.findByClubIdInAndScheduledAtBetween(
+                clubIds, fromDt, toDt);
 
-        // Batch group queries instead of per-club loops
+        Set<String> coveredKeys = buildCoveredKeys(materialized);
+        List<RecurringSessionTemplate> templates = templateRepository
+                .findActiveAndNotExpiredForClubs(clubIds, LocalDate.now());
+        List<ClubTrainingSession> virtuals = materializer.synthesizeVirtuals(templates, start, end, coveredKeys);
+
+        List<ClubTrainingSession> sessions = new ArrayList<>(materialized);
+        sessions.addAll(virtuals);
+        sessions.sort(Comparator.comparing(ClubTrainingSession::getScheduledAt));
+
         Set<String> userGroupIds = clubGroupRepository.findByClubIdInAndMemberIdsContaining(clubIds, userId)
                 .stream().map(ClubGroup::getId).collect(Collectors.toSet());
 
@@ -254,6 +278,38 @@ public class ClubSessionService {
             result.add(toCalendarResponse(s, userId, club, groupNameMap, userGroupIds));
         }
         return result;
+    }
+
+    private List<ClubTrainingSession> mergeWithVirtuals(String clubId,
+                                                        LocalDateTime from, LocalDateTime to,
+                                                        List<ClubTrainingSession> materialized,
+                                                        SessionCategory categoryFilter) {
+        LocalDate fromDate = from.toLocalDate();
+        LocalDate toDate = to.toLocalDate();
+        Set<String> coveredKeys = buildCoveredKeys(materialized);
+        List<RecurringSessionTemplate> templates = templateRepository
+                .findActiveAndNotExpiredForClub(clubId, LocalDate.now());
+        if (categoryFilter != null) {
+            templates = templates.stream()
+                    .filter(t -> categoryFilter.equals(t.getCategory()))
+                    .toList();
+        }
+        List<ClubTrainingSession> virtuals = materializer.synthesizeVirtuals(templates, fromDate, toDate, coveredKeys);
+        if (virtuals.isEmpty()) return materialized;
+        List<ClubTrainingSession> merged = new ArrayList<>(materialized);
+        merged.addAll(virtuals);
+        merged.sort(Comparator.comparing(ClubTrainingSession::getScheduledAt).reversed());
+        return merged;
+    }
+
+    private Set<String> buildCoveredKeys(List<ClubTrainingSession> materialized) {
+        Set<String> keys = new HashSet<>();
+        for (ClubTrainingSession s : materialized) {
+            if (s.getRecurringTemplateId() != null && s.getScheduledAt() != null) {
+                keys.add(s.getRecurringTemplateId() + ":" + s.getScheduledAt().toLocalDate());
+            }
+        }
+        return keys;
     }
 
     private CalendarClubSessionResponse toCalendarResponse(ClubTrainingSession s, String userId,

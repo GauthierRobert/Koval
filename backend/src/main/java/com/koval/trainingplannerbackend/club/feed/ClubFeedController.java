@@ -8,12 +8,15 @@ import com.koval.trainingplannerbackend.club.feed.dto.ClubFeedResponse;
 import com.koval.trainingplannerbackend.club.feed.dto.CreateAnnouncementRequest;
 import com.koval.trainingplannerbackend.club.feed.dto.KudosResponse;
 import com.koval.trainingplannerbackend.club.feed.dto.PhotoEnrichmentResponse;
+import com.koval.trainingplannerbackend.club.feed.dto.UpdateAnnouncementRequest;
+import com.koval.trainingplannerbackend.club.feed.dto.UpdateCommentRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -62,6 +65,25 @@ public class ClubFeedController {
                 feedService.createCoachAnnouncement(userId, clubId, req.content(), req.mediaIds()));
     }
 
+    @PutMapping("/announcements/{eventId}")
+    public ResponseEntity<ClubFeedEventResponse> updateAnnouncement(
+            @PathVariable String clubId,
+            @PathVariable String eventId,
+            @RequestBody UpdateAnnouncementRequest req) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(
+                feedService.updateCoachAnnouncement(userId, clubId, eventId, req.content(), req.mediaIds()));
+    }
+
+    @DeleteMapping("/announcements/{eventId}")
+    public ResponseEntity<Void> deleteAnnouncement(
+            @PathVariable String clubId,
+            @PathVariable String eventId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        feedService.deleteCoachAnnouncement(userId, clubId, eventId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/{eventId}/kudos")
     public ResponseEntity<KudosResponse> giveKudos(
             @PathVariable String clubId,
@@ -77,6 +99,26 @@ public class ClubFeedController {
             @RequestBody AddCommentRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(feedService.addComment(userId, clubId, eventId, req.content()));
+    }
+
+    @PutMapping("/{eventId}/comments/{commentId}")
+    public ResponseEntity<ClubFeedEvent.CommentEntry> updateComment(
+            @PathVariable String clubId,
+            @PathVariable String eventId,
+            @PathVariable String commentId,
+            @RequestBody UpdateCommentRequest req) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(feedService.updateComment(userId, clubId, eventId, commentId, req.content()));
+    }
+
+    @DeleteMapping("/{eventId}/comments/{commentId}")
+    public ResponseEntity<Void> deleteComment(
+            @PathVariable String clubId,
+            @PathVariable String eventId,
+            @PathVariable String commentId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        feedService.deleteComment(userId, clubId, eventId, commentId);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{eventId}/photos")

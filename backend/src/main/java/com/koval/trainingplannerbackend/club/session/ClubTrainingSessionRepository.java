@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface ClubTrainingSessionRepository extends MongoRepository<ClubTrainingSession, String> {
     List<ClubTrainingSession> findByClubIdOrderByScheduledAtDesc(String clubId);
+    List<ClubTrainingSession> findByRecurringTemplateId(String recurringTemplateId);
     List<ClubTrainingSession> findByRecurringTemplateIdAndScheduledAtBetween(String recurringTemplateId, LocalDateTime start, LocalDateTime end);
     List<ClubTrainingSession> findByClubIdAndScheduledAtBetween(String clubId, LocalDateTime start, LocalDateTime end);
     List<ClubTrainingSession> findByClubIdInAndScheduledAtBetween(List<String> clubIds, LocalDateTime start, LocalDateTime end);

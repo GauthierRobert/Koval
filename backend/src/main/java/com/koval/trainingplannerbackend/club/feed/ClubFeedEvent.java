@@ -111,7 +111,8 @@ public class ClubFeedEvent {
             String displayName,
             String profilePicture,
             String content,
-            LocalDateTime createdAt) {}
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt) {}
 
     public record MediaEnrichment(
             String id,

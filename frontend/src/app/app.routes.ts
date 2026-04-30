@@ -240,6 +240,11 @@ export const routes: Routes = [
   },
   {
     path: 'clubs/:id',
+    pathMatch: 'full',
+    redirectTo: ({ params }) => `/clubs/${params['id']}/sessions`,
+  },
+  {
+    path: 'clubs/:id/:tab',
     loadComponent: () =>
       import('./components/pages/clubs/club-detail-page/club-detail-page.component').then(
         (m) => m.ClubDetailPageComponent,

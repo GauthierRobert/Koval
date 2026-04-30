@@ -2,8 +2,10 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   EventEmitter,
+  inject,
   Input,
   OnChanges,
   OnDestroy,
@@ -11,8 +13,11 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {PacingSegment, RouteCoordinate, SegmentRange} from '../../../../services/pacing.service';
+import {ThemeService} from '../../../../services/theme.service';
+import {CARTO_TILE_OPTIONS, tileUrlForTheme} from '../../../shared/leaflet/tile-themes';
 import * as L from 'leaflet';
 
 // Fix Leaflet default icon paths for bundled assets
@@ -41,7 +46,6 @@ L.Icon.Default.mergeOptions({
         height: 100%;
         border-radius: 12px;
         overflow: hidden;
-        background: #1a1a2e;
       }
     `,
   ],
@@ -56,7 +60,11 @@ export class RouteMapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   @ViewChild('mapContainer', { static: true }) mapContainer!: ElementRef<HTMLDivElement>;
 
+  private themeService = inject(ThemeService);
+  private destroyRef = inject(DestroyRef);
+
   private map: L.Map | null = null;
+  private tileLayer: L.TileLayer | null = null;
   private segmentPolylines: L.Polyline[] = [];
   private highlightPolyline: L.Polyline | null = null;
   private startMarker: L.CircleMarker | null = null;
@@ -108,13 +116,13 @@ export class RouteMapComponent implements AfterViewInit, OnChanges, OnDestroy {
       attributionControl: true,
     });
 
-    // CartoDB Dark Matter - free, no API key, matches dark theme
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd',
-      maxZoom: 19,
-    }).addTo(this.map);
+    this.themeService.theme$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((theme) => {
+        if (!this.map) return;
+        if (this.tileLayer) this.map.removeLayer(this.tileLayer);
+        this.tileLayer = L.tileLayer(tileUrlForTheme(theme), CARTO_TILE_OPTIONS).addTo(this.map);
+      });
   }
 
   private renderRoute(): void {

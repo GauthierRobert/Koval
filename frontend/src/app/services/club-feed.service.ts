@@ -166,6 +166,91 @@ export class ClubFeedService {
     return this.http.post<FeedCommentEntry>(`${this.apiUrl}/${clubId}/feed/${eventId}/comments`, { content });
   }
 
+  updateComment(
+    clubId: string,
+    eventId: string,
+    commentId: string,
+    content: string,
+  ): Observable<FeedCommentEntry> {
+    return this.http.put<FeedCommentEntry>(
+      `${this.apiUrl}/${clubId}/feed/${eventId}/comments/${commentId}`,
+      { content },
+    );
+  }
+
+  deleteComment(clubId: string, eventId: string, commentId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${clubId}/feed/${eventId}/comments/${commentId}`);
+  }
+
+  updateAnnouncement(
+    clubId: string,
+    eventId: string,
+    content: string,
+    mediaIds: string[] = [],
+  ): Observable<ClubFeedEventResponse> {
+    return this.http.put<ClubFeedEventResponse>(
+      `${this.apiUrl}/${clubId}/feed/announcements/${eventId}`,
+      { content, mediaIds },
+    );
+  }
+
+  deleteAnnouncement(clubId: string, eventId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${clubId}/feed/announcements/${eventId}`);
+  }
+
+  replaceFeedEventComment(feedEventId: string, comment: FeedCommentEntry): void {
+    const current = this.feedEventsSubject.value;
+    if (!current) return;
+
+    const updateEvent = (event: ClubFeedEventResponse): ClubFeedEventResponse => {
+      if (event.id !== feedEventId) return event;
+      const comments = (event.comments ?? []).map((c) => (c.id === comment.id ? comment : c));
+      return { ...event, comments };
+    };
+
+    this.feedEventsSubject.next({
+      ...current,
+      pinned: current.pinned.map(updateEvent),
+      items: current.items.map(updateEvent),
+    });
+  }
+
+  removeFeedEventComment(feedEventId: string, commentId: string): void {
+    const current = this.feedEventsSubject.value;
+    if (!current) return;
+
+    const updateEvent = (event: ClubFeedEventResponse): ClubFeedEventResponse => {
+      if (event.id !== feedEventId) return event;
+      return { ...event, comments: (event.comments ?? []).filter((c) => c.id !== commentId) };
+    };
+
+    this.feedEventsSubject.next({
+      ...current,
+      pinned: current.pinned.map(updateEvent),
+      items: current.items.map(updateEvent),
+    });
+  }
+
+  replaceFeedEvent(event: ClubFeedEventResponse): void {
+    const current = this.feedEventsSubject.value;
+    if (!current) return;
+    this.feedEventsSubject.next({
+      ...current,
+      pinned: current.pinned.map((e) => (e.id === event.id ? event : e)),
+      items: current.items.map((e) => (e.id === event.id ? event : e)),
+    });
+  }
+
+  removeFeedEvent(feedEventId: string): void {
+    const current = this.feedEventsSubject.value;
+    if (!current) return;
+    this.feedEventsSubject.next({
+      ...current,
+      pinned: current.pinned.filter((e) => e.id !== feedEventId),
+      items: current.items.filter((e) => e.id !== feedEventId),
+    });
+  }
+
   updateFeedEventComment(feedEventId: string, comment: FeedCommentEntry): void {
     const current = this.feedEventsSubject.value;
     if (!current) return;

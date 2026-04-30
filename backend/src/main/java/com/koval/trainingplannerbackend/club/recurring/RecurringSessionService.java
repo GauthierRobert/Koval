@@ -12,10 +12,7 @@ import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundExcept
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import org.springframework.stereotype.Service;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,10 +48,7 @@ public class RecurringSessionService {
         template.setCreatedBy(userId);
         template.setCreatedAt(LocalDateTime.now());
         SessionPropertyMapper.applyRequest(req, template);
-        template = templateRepository.save(template);
-
-        generateInstances(template, 4);
-        return template;
+        return templateRepository.save(template);
     }
 
     public RecurringSessionTemplate updateTemplate(String userId, String templateId,
@@ -114,69 +108,23 @@ public class RecurringSessionService {
         return templateRepository.findByClubId(clubId);
     }
 
-    public void generateInstances(RecurringSessionTemplate template, int weeksAhead) {
-        LocalDate today = LocalDate.now();
-        DayOfWeek targetDay = template.getDayOfWeek();
-        LocalDate endDate = template.getEndDate();
-
-        List<ClubTrainingSession> toSave = new ArrayList<>();
-        for (int week = 0; week < weeksAhead; week++) {
-            LocalDate targetDate = today.plusWeeks(week).with(TemporalAdjusters.nextOrSame(targetDay));
-            // Skip if the target date is in the past
-            if (targetDate.isBefore(today)) {
-                continue;
-            }
-            // Stop generating if past the end date (inclusive)
-            if (endDate != null && targetDate.isAfter(endDate)) {
-                break;
-            }
-
-            LocalDateTime scheduledAt = targetDate.atTime(template.getTimeOfDay());
-            LocalDateTime dayStart = targetDate.atStartOfDay();
-            LocalDateTime dayEnd = targetDate.plusDays(1).atStartOfDay();
-
-            // Check if an instance already exists for this day
-            List<ClubTrainingSession> existing = sessionRepository
-                    .findByRecurringTemplateIdAndScheduledAtBetween(template.getId(), dayStart, dayEnd);
-            if (!existing.isEmpty()) {
-                continue;
-            }
-
-            ClubTrainingSession session = new ClubTrainingSession();
-            session.setClubId(template.getClubId());
-            session.setCreatedBy(template.getCreatedBy());
-            session.setScheduledAt(scheduledAt);
-            session.setRecurringTemplateId(template.getId());
-            session.setCreatedAt(LocalDateTime.now());
-            SessionPropertyMapper.applyTemplate(template, session);
-            toSave.add(session);
-        }
-        if (!toSave.isEmpty()) {
-            sessionRepository.saveAll(toSave);
-        }
-    }
-
+    /**
+     * Apply template changes to materialized future instances only.
+     * Past sessions are never modified — they remain a faithful record of what happened.
+     */
     public void updateFutureInstances(String templateId) {
         RecurringSessionTemplate template = templateRepository.findById(templateId)
                 .orElseThrow(() -> new ResourceNotFoundException("Template not found"));
-        List<ClubTrainingSession> futureInstances = sessionRepository
+        List<ClubTrainingSession> instances = sessionRepository
                 .findByRecurringTemplateIdAndScheduledAtAfter(templateId, LocalDateTime.now());
-        for (ClubTrainingSession session : futureInstances) {
+        for (ClubTrainingSession session : instances) {
             SessionPropertyMapper.applyTemplate(template, session);
-            // Update time if timeOfDay changed
             if (template.getTimeOfDay() != null && session.getScheduledAt() != null) {
                 session.setScheduledAt(session.getScheduledAt().toLocalDate().atTime(template.getTimeOfDay()));
             }
         }
-        if (!futureInstances.isEmpty()) {
-            sessionRepository.saveAll(futureInstances);
-        }
-    }
-
-    public void generateAllRecurring() {
-        List<RecurringSessionTemplate> templates = templateRepository.findByActiveTrue();
-        for (RecurringSessionTemplate template : templates) {
-            generateInstances(template, 4);
+        if (!instances.isEmpty()) {
+            sessionRepository.saveAll(instances);
         }
     }
 }

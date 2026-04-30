@@ -20,14 +20,13 @@ import {ClubMembersTabComponent} from './tabs/club-members-tab/club-members-tab.
 import {ClubStatsTabComponent} from './tabs/club-stats-tab/club-stats-tab.component';
 import {ClubLeaderboardTabComponent} from './tabs/club-leaderboard-tab/club-leaderboard-tab.component';
 import {ClubRaceGoalsTabComponent} from './tabs/club-race-goals-tab/club-race-goals-tab.component';
-import {ClubOpenSessionsTabComponent} from './tabs/club-open-sessions-tab/club-open-sessions-tab.component';
 import {ClubChatTabComponent} from './tabs/club-chat-tab/club-chat-tab.component';
 import {ClubGazetteTabComponent} from './tabs/club-gazette-tab/club-gazette-tab.component';
 import {TrainingActionModalComponent} from '../../../shared/training-action-modal/training-action-modal.component';
 import {ActionContext} from '../../../../services/ai-action.service';
 import {BehaviorSubject, map, Observable, Subscription} from 'rxjs';
 
-type TabId = 'feed' | 'sessions' | 'open-sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals' | 'chat' | 'gazette';
+type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals' | 'chat' | 'gazette';
 
 @Component({
   selector: 'app-club-detail-page',
@@ -42,7 +41,6 @@ type TabId = 'feed' | 'sessions' | 'open-sessions' | 'members' | 'stats' | 'lead
     ClubStatsTabComponent,
     ClubLeaderboardTabComponent,
     ClubRaceGoalsTabComponent,
-    ClubOpenSessionsTabComponent,
     ClubChatTabComponent,
     ClubGazetteTabComponent,
     TrainingActionModalComponent,
@@ -64,7 +62,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   selectedClub$ = this.clubService.selectedClub$;
   currentUserId: string | null = null;
 
-  activeTab: TabId = 'open-sessions';
+  activeTab: TabId = 'sessions';
   chatView: 'list' | 'chat' = 'list';
   loadedTabs = new Set<TabId>();
 
@@ -87,8 +85,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
 
   readonly tabs: Array<{ id: TabId; label: string; shortLabel: string }> = [
     { id: 'feed', label: 'CLUB_DETAIL.TAB_FEED', shortLabel: 'CLUB_DETAIL.TAB_FEED_SHORT' },
-    { id: 'open-sessions', label: 'CLUB_DETAIL.TAB_SESSIONS', shortLabel: 'CLUB_DETAIL.TAB_SESSIONS_SHORT' },
-    { id: 'sessions', label: 'CLUB_DETAIL.TAB_RECURRING_SESSIONS', shortLabel: 'CLUB_DETAIL.TAB_RECURRING_SESSIONS_SHORT' },
+    { id: 'sessions', label: 'CLUB_DETAIL.TAB_SESSIONS', shortLabel: 'CLUB_DETAIL.TAB_SESSIONS_SHORT' },
     { id: 'members', label: 'CLUB_DETAIL.TAB_MEMBERS', shortLabel: 'CLUB_DETAIL.TAB_MEMBERS_SHORT' },
     { id: 'stats', label: 'CLUB_DETAIL.TAB_STATS', shortLabel: 'CLUB_DETAIL.TAB_STATS_SHORT' },
     { id: 'race-goals', label: 'CLUB_DETAIL.TAB_RACE_GOALS', shortLabel: 'CLUB_DETAIL.TAB_RACE_GOALS_SHORT' },
@@ -104,17 +101,21 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
       })
     );
 
+    let prevId: string | null = null;
     this.subs.add(
       this.route.params.subscribe((params) => {
-        this.clubId = params['id'];
-        this.loadedTabs.clear();
-        this.activeTab = 'open-sessions';
-        this.chatView = 'list';
-        this.clubService.resetDetail();
-        this.clubSessionService.resetDetail();
-        this.clubFeedService.resetDetail();
-        this.clubService.loadClubDetail(this.clubId);
-        this.activateTab('open-sessions');
+        const id = params['id'] as string;
+        if (id !== prevId) {
+          prevId = id;
+          this.clubId = id;
+          this.loadedTabs.clear();
+          this.chatView = 'list';
+          this.clubService.resetDetail();
+          this.clubSessionService.resetDetail();
+          this.clubFeedService.resetDetail();
+          this.clubService.loadClubDetail(this.clubId);
+        }
+        this.applyTab(this.parseTab(params['tab']));
       })
     );
 
@@ -141,21 +142,30 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
     this.clubFeedService.resetDetail();
   }
 
-  activateTab(tab: TabId): void {
+  selectTab(tab: TabId): void {
+    if (tab === this.activeTab) return;
+    this.router.navigate(['/clubs', this.clubId, tab]);
+  }
+
+  private parseTab(raw: string | undefined): TabId {
+    const valid = this.tabs.map((t) => t.id) as readonly string[];
+    return raw && valid.includes(raw) ? (raw as TabId) : 'sessions';
+  }
+
+  private applyTab(tab: TabId): void {
     this.activeTab = tab;
     if (tab !== 'chat') this.chatView = 'list';
-    if (this.loadedTabs.has(tab)) return;
+    if (this.loadedTabs.has(tab)) {
+      this.cdr.markForCheck();
+      return;
+    }
     this.loadedTabs.add(tab);
 
     switch (tab) {
       case 'feed':
-        // Feed tab loads its own data via the component
         break;
       case 'sessions':
         this.clubSessionService.loadRecurringTemplates(this.clubId);
-        this.clubService.loadMembers(this.clubId);
-        break;
-      case 'open-sessions':
         this.clubService.loadMembers(this.clubId);
         this.clubService.loadGroups(this.clubId);
         break;
@@ -173,10 +183,8 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
         this.clubFeedService.loadRaceGoals(this.clubId);
         break;
       case 'chat':
-        // The embedded chat component resolves the room itself on first render.
         break;
       case 'gazette':
-        // The gazette tab loads its own data via ClubGazetteService when [clubId] is set.
         break;
     }
     this.cdr.markForCheck();

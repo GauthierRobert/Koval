@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.club.session;
 
 import com.koval.trainingplannerbackend.club.group.ClubGroupRepository;
 import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService;
+import com.koval.trainingplannerbackend.club.recurring.RecurringSessionMaterializer;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.model.Training;
 import org.slf4j.Logger;
@@ -22,22 +23,24 @@ public class SessionTrainingLinkService {
     private final ClubGroupRepository clubGroupRepository;
     private final ClubAuthorizationService authorizationService;
     private final TrainingService trainingService;
+    private final RecurringSessionMaterializer materializer;
 
     public SessionTrainingLinkService(ClubTrainingSessionRepository sessionRepository,
                                       ClubGroupRepository clubGroupRepository,
                                       ClubAuthorizationService authorizationService,
-                                      TrainingService trainingService) {
+                                      TrainingService trainingService,
+                                      RecurringSessionMaterializer materializer) {
         this.sessionRepository = sessionRepository;
         this.clubGroupRepository = clubGroupRepository;
         this.authorizationService = authorizationService;
         this.trainingService = trainingService;
+        this.materializer = materializer;
     }
 
     public ClubTrainingSession linkTrainingToSession(String userId, String clubId, String sessionId,
                                                        String trainingId, String clubGroupId) {
         authorizationService.requireAdminOrCoach(userId, clubId);
-        ClubTrainingSession session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        ClubTrainingSession session = materializer.resolveOrMaterialize(sessionId);
         if (Boolean.TRUE.equals(session.getCancelled())) {
             throw new IllegalStateException("Cannot link training to a cancelled session");
         }
@@ -73,8 +76,7 @@ public class SessionTrainingLinkService {
     public ClubTrainingSession unlinkTrainingFromSession(String userId, String clubId, String sessionId,
                                                            String clubGroupId) {
         authorizationService.requireAdminOrCoach(userId, clubId);
-        ClubTrainingSession session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        ClubTrainingSession session = materializer.resolveOrMaterialize(sessionId);
         if (!session.getClubId().equals(clubId)) {
             throw new IllegalArgumentException("Session does not belong to this club");
         }

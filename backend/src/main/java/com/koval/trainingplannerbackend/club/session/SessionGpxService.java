@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.club.session;
 
 import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService;
+import com.koval.trainingplannerbackend.club.recurring.RecurringSessionMaterializer;
 import com.koval.trainingplannerbackend.pacing.gpx.GpxParseResult;
 import com.koval.trainingplannerbackend.pacing.gpx.GpxParser;
 import org.springframework.http.HttpHeaders;
@@ -15,18 +16,20 @@ public class SessionGpxService {
     private final ClubTrainingSessionRepository sessionRepository;
     private final ClubAuthorizationService authorizationService;
     private final GpxParser gpxParser;
+    private final RecurringSessionMaterializer materializer;
 
     public SessionGpxService(ClubTrainingSessionRepository sessionRepository,
                              ClubAuthorizationService authorizationService,
-                             GpxParser gpxParser) {
+                             GpxParser gpxParser,
+                             RecurringSessionMaterializer materializer) {
         this.sessionRepository = sessionRepository;
         this.authorizationService = authorizationService;
         this.gpxParser = gpxParser;
+        this.materializer = materializer;
     }
 
     public ClubTrainingSession uploadGpx(String userId, String clubId, String sessionId, MultipartFile file) {
-        ClubTrainingSession session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        ClubTrainingSession session = materializer.resolveOrMaterialize(sessionId);
         if (!session.getClubId().equals(clubId)) {
             throw new IllegalArgumentException("Session does not belong to this club");
         }
@@ -44,8 +47,7 @@ public class SessionGpxService {
     }
 
     public ClubTrainingSession deleteGpx(String userId, String clubId, String sessionId) {
-        ClubTrainingSession session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        ClubTrainingSession session = materializer.resolveOrMaterialize(sessionId);
         if (!session.getClubId().equals(clubId)) {
             throw new IllegalArgumentException("Session does not belong to this club");
         }
@@ -58,8 +60,7 @@ public class SessionGpxService {
 
     public ResponseEntity<byte[]> getGpxDownload(String userId, String clubId, String sessionId) {
         authorizationService.requireActiveMember(userId, clubId);
-        ClubTrainingSession session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        ClubTrainingSession session = materializer.resolveOrMaterialize(sessionId);
         if (session.getGpxData() == null) {
             return ResponseEntity.notFound().build();
         }

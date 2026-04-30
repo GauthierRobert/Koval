@@ -1,7 +1,13 @@
 import {inject, Injectable, NgZone} from '@angular/core';
 import {Subject} from 'rxjs';
 import {environment} from '../../environments/environment';
-import {ClubFeedEventResponse, CommentUpdatePayload, CompletionUpdatePayload} from './club.service';
+import {
+  ClubFeedEventResponse,
+  CommentDeletedPayload,
+  CommentUpdatePayload,
+  CompletionUpdatePayload,
+  FeedEventDeletedPayload,
+} from './club.service';
 
 export interface KudosUpdatePayload {
   feedEventId: string;
@@ -27,6 +33,18 @@ export class ClubFeedSseService {
 
   private commentUpdateSubject = new Subject<CommentUpdatePayload>();
   onCommentUpdate$ = this.commentUpdateSubject.asObservable();
+
+  private commentEditedSubject = new Subject<CommentUpdatePayload>();
+  onCommentEdited$ = this.commentEditedSubject.asObservable();
+
+  private commentDeletedSubject = new Subject<CommentDeletedPayload>();
+  onCommentDeleted$ = this.commentDeletedSubject.asObservable();
+
+  private feedEventUpdatedSubject = new Subject<ClubFeedEventResponse>();
+  onFeedEventUpdated$ = this.feedEventUpdatedSubject.asObservable();
+
+  private feedEventDeletedSubject = new Subject<FeedEventDeletedPayload>();
+  onFeedEventDeleted$ = this.feedEventDeletedSubject.asObservable();
 
   connect(clubId: string): void {
     this.disconnect();
@@ -119,6 +137,18 @@ export class ClubFeedSseService {
             break;
           case 'comment_update':
             this.commentUpdateSubject.next(parsed);
+            break;
+          case 'comment_edited':
+            this.commentEditedSubject.next(parsed);
+            break;
+          case 'comment_deleted':
+            this.commentDeletedSubject.next(parsed);
+            break;
+          case 'feed_event_updated':
+            this.feedEventUpdatedSubject.next(parsed);
+            break;
+          case 'feed_event_deleted':
+            this.feedEventDeletedSubject.next(parsed);
             break;
         }
       });

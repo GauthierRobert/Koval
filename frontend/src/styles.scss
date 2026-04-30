@@ -244,6 +244,13 @@
   font-family: var(--font-body);
 }
 
+/* Leaflet 1.9.4 sets `mix-blend-mode: plus-lighter` on tile images to mask subpixel
+   seams between adjacent tiles. The blend washes tiles out against transparent or dark
+   backgrounds — dark_all becomes nearly invisible and voyager looks faded in dark theme.
+   Reverting to `normal` keeps tiles fully visible; the seam artifact it was masking only
+   appears briefly during fractional-zoom transitions and is acceptable. */
+.leaflet-container img.leaflet-tile { mix-blend-mode: normal; }
+
 body {
   margin: 0;
   background-color: var(--bg-color);
