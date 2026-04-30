@@ -6,6 +6,7 @@ import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserService;
 import com.koval.trainingplannerbackend.pacing.dto.AthleteProfile;
 import com.koval.trainingplannerbackend.pacing.dto.PacingPlanResponse;
+import com.koval.trainingplannerbackend.pacing.dto.SimulationRequestDto;
 import com.koval.trainingplannerbackend.pacing.gpx.GpxParseResult;
 import com.koval.trainingplannerbackend.pacing.gpx.GpxParser;
 import com.koval.trainingplannerbackend.race.Race;
@@ -234,21 +235,30 @@ public class PacingController {
     // ── Simulation Requests ─────────────────────────────────────────────
 
     @PostMapping("/simulation-requests")
-    public ResponseEntity<SimulationRequest> saveSimulationRequest(@RequestBody SimulationRequest request) {
+    public ResponseEntity<SimulationRequestDto> saveSimulationRequest(@RequestBody SimulationRequestDto dto) {
         String userId = SecurityUtils.getCurrentUserId();
-        request.setUserId(userId);
-        request.setCreatedAt(LocalDateTime.now());
-        return ResponseEntity.ok(simulationRequestRepository.save(request));
+        SimulationRequest entity = new SimulationRequest();
+        entity.setId(dto.id());
+        entity.setUserId(userId);
+        entity.setRaceId(dto.raceId());
+        entity.setGoalId(dto.goalId());
+        entity.setDiscipline(dto.discipline());
+        entity.setAthleteProfile(dto.athleteProfile());
+        entity.setBikeLoops(dto.bikeLoops());
+        entity.setRunLoops(dto.runLoops());
+        entity.setLabel(dto.label());
+        entity.setCreatedAt(LocalDateTime.now());
+        return ResponseEntity.ok(SimulationRequestDto.from(simulationRequestRepository.save(entity)));
     }
 
     @GetMapping("/simulation-requests")
-    public ResponseEntity<List<SimulationRequest>> listSimulationRequests(
+    public ResponseEntity<List<SimulationRequestDto>> listSimulationRequests(
             @RequestParam(value = "goalId", required = false) String goalId) {
         String userId = SecurityUtils.getCurrentUserId();
-        if (goalId != null && !goalId.isBlank()) {
-            return ResponseEntity.ok(simulationRequestRepository.findByGoalIdOrderByCreatedAtDesc(goalId));
-        }
-        return ResponseEntity.ok(simulationRequestRepository.findByUserIdOrderByCreatedAtDesc(userId));
+        List<SimulationRequest> results = (goalId != null && !goalId.isBlank())
+                ? simulationRequestRepository.findByGoalIdOrderByCreatedAtDesc(goalId)
+                : simulationRequestRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        return ResponseEntity.ok(results.stream().map(SimulationRequestDto::from).toList());
     }
 
     @DeleteMapping("/simulation-requests/{id}")
