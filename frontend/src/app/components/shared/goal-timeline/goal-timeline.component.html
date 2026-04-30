@@ -35,6 +35,12 @@
       </div>
     </div>
 
+    <div class="rm-grid" aria-hidden="true">
+      @for (line of gridLines; track $index) {
+        <div class="rm-grid-line" [attr.data-type]="line.type" [style.left.%]="line.x"></div>
+      }
+    </div>
+
     <div class="rm-lanes">
       @for (lane of lanes; track lane.key) {
         <div class="rm-row">

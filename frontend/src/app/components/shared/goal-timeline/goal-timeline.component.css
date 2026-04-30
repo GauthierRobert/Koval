@@ -66,14 +66,51 @@
   position: relative;
   --today-x: 0%;
   touch-action: none;
-  cursor: grab;
   user-select: none;
   -webkit-user-select: none;
 }
 
-.rm-canvas.dragging { cursor: grabbing; }
-
 .rm-marker { cursor: pointer; }
+
+/* ── Tiered grid (month / week / day) ─────────────────────────────── */
+.rm-grid {
+  position: absolute;
+  top: 28px;
+  bottom: 0;
+  left: var(--label-w);
+  right: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.rm-grid-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-repeat: repeat-y;
+}
+
+.rm-grid-line[data-type="month"] {
+  background-image: linear-gradient(to bottom,
+    color-mix(in oklch, var(--text-50) 65%, transparent) 50%,
+    transparent 50%);
+  background-size: 1px 14px;
+}
+
+.rm-grid-line[data-type="week"] {
+  background-image: linear-gradient(to bottom,
+    color-mix(in oklch, var(--text-50) 35%, transparent) 50%,
+    transparent 50%);
+  background-size: 1px 7px;
+}
+
+.rm-grid-line[data-type="day"] {
+  background-image: linear-gradient(to bottom,
+    color-mix(in oklch, var(--text-50) 18%, transparent) 50%,
+    transparent 50%);
+  background-size: 1px 3px;
+}
 
 .rm-axis {
   display: grid;

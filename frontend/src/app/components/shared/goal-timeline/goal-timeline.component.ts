@@ -59,9 +59,16 @@ interface AxisTick {
   x: number;
 }
 
+interface GridLine {
+  x: number;
+  type: 'day' | 'week' | 'month';
+}
+
 const DAY_MS = 86_400_000;
 const MIN_SPAN_MS = 30 * DAY_MS;
 const MAX_SPAN_MS = 366 * DAY_MS;
+const WEEK_GRID_THRESHOLD = 120 * DAY_MS;
+const DAY_GRID_THRESHOLD = 45 * DAY_MS;
 const WHEEL_SENSITIVITY = 0.0015;
 
 @Component({
@@ -139,6 +146,10 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
 
   get months(): AxisTick[] {
     return this.buildTicks(this.windowStart, this.windowEndDate, this.spanMs);
+  }
+
+  get gridLines(): GridLine[] {
+    return this.buildGridLines(this.windowStart, this.windowEndDate, this.spanMs);
   }
 
   get windowStartLabel(): string {
@@ -485,6 +496,59 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
   }
 
   // ── Window helpers ─────────────────────────────────────────────────
+
+  private buildGridLines(start: Date, end: Date, spanMs: number): GridLine[] {
+    if (spanMs <= 0) return [];
+    const startMs = start.getTime();
+    const endMs = end.getTime();
+    const lines: GridLine[] = [];
+    const placed = new Set<number>();
+
+    const place = (t: number, type: GridLine['type']) => {
+      if (t < startMs || t > endMs) return;
+      if (placed.has(t)) return;
+      placed.add(t);
+      lines.push({x: ((t - startMs) / spanMs) * 100, type});
+    };
+
+    const monthCursor = new Date(start.getFullYear(), start.getMonth(), 1);
+    if (monthCursor.getTime() < startMs) {
+      monthCursor.setMonth(monthCursor.getMonth() + 1);
+    }
+    while (monthCursor.getTime() <= endMs) {
+      place(monthCursor.getTime(), 'month');
+      monthCursor.setMonth(monthCursor.getMonth() + 1);
+    }
+
+    if (spanMs <= WEEK_GRID_THRESHOLD) {
+      const weekCursor = new Date(start);
+      weekCursor.setHours(0, 0, 0, 0);
+      const dow = weekCursor.getDay(); // 0=Sun, 1=Mon
+      const offset = ((8 - dow) % 7) || 7;
+      weekCursor.setDate(weekCursor.getDate() + offset);
+      if (weekCursor.getTime() < startMs) {
+        weekCursor.setDate(weekCursor.getDate() + 7);
+      }
+      while (weekCursor.getTime() <= endMs) {
+        place(weekCursor.getTime(), 'week');
+        weekCursor.setDate(weekCursor.getDate() + 7);
+      }
+    }
+
+    if (spanMs <= DAY_GRID_THRESHOLD) {
+      const dayCursor = new Date(start);
+      dayCursor.setHours(0, 0, 0, 0);
+      if (dayCursor.getTime() < startMs) {
+        dayCursor.setDate(dayCursor.getDate() + 1);
+      }
+      while (dayCursor.getTime() <= endMs) {
+        place(dayCursor.getTime(), 'day');
+        dayCursor.setDate(dayCursor.getDate() + 1);
+      }
+    }
+
+    return lines;
+  }
 
   private buildTicks(start: Date, end: Date, spanMs: number): AxisTick[] {
     if (spanMs <= 0) return [];
