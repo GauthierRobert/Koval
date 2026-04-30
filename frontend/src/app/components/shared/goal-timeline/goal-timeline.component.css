@@ -87,29 +87,23 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 1px;
-  background-repeat: repeat-y;
+  width: 0;
+  border-left-width: 1px;
+  border-left-style: solid;
 }
 
 .rm-grid-line[data-type="month"] {
-  background-image: linear-gradient(to bottom,
-    color-mix(in oklch, var(--text-50) 65%, transparent) 50%,
-    transparent 50%);
-  background-size: 1px 14px;
+  border-left-style: dashed;
+  border-left-color: color-mix(in oklch, var(--text-50) 60%, transparent);
 }
 
 .rm-grid-line[data-type="week"] {
-  background-image: linear-gradient(to bottom,
-    color-mix(in oklch, var(--text-50) 35%, transparent) 50%,
-    transparent 50%);
-  background-size: 1px 7px;
+  border-left-style: dotted;
+  border-left-color: color-mix(in oklch, var(--text-50) 38%, transparent);
 }
 
 .rm-grid-line[data-type="day"] {
-  background-image: linear-gradient(to bottom,
-    color-mix(in oklch, var(--text-50) 18%, transparent) 50%,
-    transparent 50%);
-  background-size: 1px 3px;
+  border-left-color: color-mix(in oklch, var(--text-50) 14%, transparent);
 }
 
 .rm-axis {
