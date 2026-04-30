@@ -472,13 +472,18 @@ public class ClubStatsService {
                     })
                     .toList();
 
+            String title = race != null ? race.getTitle() : representative.getTitle();
+            String sport = race != null && race.getSport() != null ? race.getSport() : representative.getSport();
+            String distance = race != null && race.getDistance() != null ? race.getDistance() : representative.getDistance();
+            String location = race != null && race.getLocation() != null ? race.getLocation() : representative.getLocation();
+
             return new ClubRaceGoalResponse(
                     representative.getRaceId(),
-                    representative.getTitle(),
-                    representative.getSport(),
+                    title,
+                    sport,
                     race != null ? race.getScheduledDate() : null,
-                    representative.getDistance(),
-                    representative.getLocation(),
+                    distance,
+                    location,
                     participants);
         }).collect(Collectors.toList());
     }

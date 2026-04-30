@@ -1,11 +1,12 @@
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
 import {ActivatedRoute} from '@angular/router';
 import {TranslateModule} from '@ngx-translate/core';
 import {map} from 'rxjs/operators';
 import {AuthService} from '../../../../../../services/auth.service';
 import {ClubFeedService} from '../../../../../../services/club-feed.service';
-import {RaceGoalService} from '../../../../../../services/race-goal.service';
+import {RaceGoal, RaceGoalService} from '../../../../../../services/race-goal.service';
 import {ClubRaceGoalResponse} from '../../../../../../models/club.model';
 import {
   GoalTimelineComponent,
@@ -14,11 +15,12 @@ import {
 } from '../../../../../shared/goal-timeline/goal-timeline.component';
 
 type ViewMode = 'timeline' | 'list';
+type AddPriority = 'A' | 'B' | 'C';
 
 @Component({
   selector: 'app-club-race-goals-tab',
   standalone: true,
-  imports: [CommonModule, TranslateModule, GoalTimelineComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, GoalTimelineComponent],
   templateUrl: './club-race-goals-tab.component.html',
   styleUrl: './club-race-goals-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -52,6 +54,13 @@ export class ClubRaceGoalsTabComponent {
   membersModalGoal: ClubRaceGoalResponse | null = null;
   addingKey: string | null = null;
 
+  // Add-as-my-goal modal state
+  addModalGoal: ClubRaceGoalResponse | null = null;
+  addForm: { priority: AddPriority; targetTime: string; notes: string } = this.emptyAddForm();
+  isSavingAdd = false;
+
+  readonly addPriorities: AddPriority[] = ['A', 'B', 'C'];
+
   setView(mode: ViewMode): void {
     this.view = mode;
   }
@@ -80,37 +89,61 @@ export class ClubRaceGoalsTabComponent {
     return !!userId && goal.participants.some((p) => p.userId === userId);
   }
 
-  addToMyGoals(goal: ClubRaceGoalResponse): void {
-    const key = this.rowKey(goal);
-    if (this.addingKey) return;
-    this.addingKey = key;
+  openAddModal(goal: ClubRaceGoalResponse, event?: Event): void {
+    event?.stopPropagation();
+    this.addModalGoal = goal;
+    this.addForm = this.emptyAddForm();
+    this.membersModalGoal = null;
+  }
+
+  closeAddModal(): void {
+    if (this.isSavingAdd) return;
+    this.addModalGoal = null;
+  }
+
+  confirmAddToMyGoals(): void {
+    const goal = this.addModalGoal;
+    if (!goal || this.isSavingAdd) return;
+
+    this.isSavingAdd = true;
+    this.addingKey = this.rowKey(goal);
     this.cdr.markForCheck();
 
-    this.raceGoalService
-      .createGoal({
-        raceId: goal.raceId,
-        title: goal.title,
-        sport: goal.sport as never,
-        distance: goal.distance,
-        location: goal.location,
-        priority: 'A',
-      })
-      .subscribe({
-        next: () => {
-          const clubId = this.route.parent?.snapshot.params['id'] ?? this.route.snapshot.params['id'];
-          if (clubId) this.clubFeedService.loadRaceGoals(clubId);
-          this.addingKey = null;
-          this.cdr.markForCheck();
-        },
-        error: () => {
-          this.addingKey = null;
-          this.cdr.markForCheck();
-        },
-      });
+    const payload: Partial<RaceGoal> = {
+      raceId: goal.raceId,
+      title: goal.title,
+      sport: goal.sport as RaceGoal['sport'],
+      distance: goal.distance,
+      location: goal.location,
+      priority: this.addForm.priority,
+      targetTime: this.addForm.targetTime?.trim() || undefined,
+      notes: this.addForm.notes?.trim() || undefined,
+    };
+
+    this.raceGoalService.createGoal(payload).subscribe({
+      next: () => {
+        const clubId =
+          this.route.parent?.snapshot.params['id'] ?? this.route.snapshot.params['id'];
+        if (clubId) this.clubFeedService.loadRaceGoals(clubId);
+        this.isSavingAdd = false;
+        this.addingKey = null;
+        this.addModalGoal = null;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.isSavingAdd = false;
+        this.addingKey = null;
+        this.cdr.markForCheck();
+      },
+    });
   }
 
   isAdding(goal: ClubRaceGoalResponse): boolean {
     return this.addingKey === this.rowKey(goal);
+  }
+
+  private emptyAddForm(): { priority: AddPriority; targetTime: string; notes: string } {
+    return { priority: 'A', targetTime: '', notes: '' };
   }
 
   private rowKey(goal: ClubRaceGoalResponse): string {

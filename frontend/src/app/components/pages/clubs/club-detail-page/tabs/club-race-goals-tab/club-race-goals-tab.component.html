@@ -91,7 +91,7 @@
                     <button
                       class="add-to-goals-btn"
                       [disabled]="isAdding(item)"
-                      (click)="addToMyGoals(item)">
+                      (click)="openAddModal(item, $event)">
                       {{ 'CLUB_RACE_GOALS.BTN_ADD_RACE' | translate }}
                     </button>
                   }
@@ -137,6 +137,90 @@
             }
           </div>
         }
+      </div>
+      @if (!isParticipant(membersModalGoal, currentUserId$ | async)) {
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="primary-btn"
+            [disabled]="isAdding(membersModalGoal)"
+            (click)="openAddModal(membersModalGoal, $event)">
+            {{ 'CLUB_RACE_GOALS.BTN_ADD_RACE' | translate }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+@if (addModalGoal) {
+  <div class="modal-backdrop" (click)="closeAddModal()">
+    <div class="modal-panel add-form-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">{{ 'CLUB_RACE_GOALS.ADD_MODAL_TITLE' | translate }}</h3>
+        <button class="modal-close" (click)="closeAddModal()" [disabled]="isSavingAdd">&times;</button>
+      </div>
+      <div class="modal-subtitle">{{ addModalGoal.title }}</div>
+
+      <div class="add-form-body">
+        <div class="form-row">
+          <label>{{ 'CLUB_RACE_GOALS.ADD_FIELD_PRIORITY' | translate }}</label>
+          <div class="priority-pills">
+            @for (p of addPriorities; track p) {
+              <button
+                type="button"
+                class="priority-pill"
+                [class.active]="addForm.priority === p"
+                [attr.data-priority]="p"
+                (click)="addForm.priority = p">
+                {{ ('CLUB_RACE_GOALS.PRIORITY_' + p) | translate }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="add-target-time">{{ 'CLUB_RACE_GOALS.ADD_FIELD_TARGET_TIME' | translate }}</label>
+          <input
+            id="add-target-time"
+            type="text"
+            class="form-input"
+            [(ngModel)]="addForm.targetTime"
+            placeholder="{{ 'CLUB_RACE_GOALS.ADD_FIELD_TARGET_TIME_PLACEHOLDER' | translate }}" />
+        </div>
+
+        <div class="form-row">
+          <label for="add-notes">{{ 'CLUB_RACE_GOALS.ADD_FIELD_NOTES' | translate }}</label>
+          <textarea
+            id="add-notes"
+            class="form-input"
+            rows="3"
+            [(ngModel)]="addForm.notes"
+            placeholder="{{ 'CLUB_RACE_GOALS.ADD_FIELD_NOTES_PLACEHOLDER' | translate }}"></textarea>
+        </div>
+
+        @if (addModalGoal.distance || addModalGoal.location || addModalGoal.raceDate) {
+          <div class="race-meta-summary">
+            @if (addModalGoal.raceDate) {
+              <span>{{ formatDate(addModalGoal.raceDate) }}</span>
+            }
+            @if (addModalGoal.distance) {
+              <span>{{ addModalGoal.distance }}</span>
+            }
+            @if (addModalGoal.location) {
+              <span>{{ addModalGoal.location }}</span>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="ghost-btn" (click)="closeAddModal()" [disabled]="isSavingAdd">
+          {{ 'CLUB_RACE_GOALS.ADD_BTN_CANCEL' | translate }}
+        </button>
+        <button type="button" class="primary-btn" (click)="confirmAddToMyGoals()" [disabled]="isSavingAdd">
+          {{ (isSavingAdd ? 'CLUB_RACE_GOALS.ADD_BTN_SAVING' : 'CLUB_RACE_GOALS.ADD_BTN_CONFIRM') | translate }}
+        </button>
       </div>
     </div>
   </div>

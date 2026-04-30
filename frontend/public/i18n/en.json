@@ -743,7 +743,19 @@
     "MODAL_RACING_SINGULAR": "{{count}} member racing",
     "MODAL_RACING_PLURAL": "{{count}} members racing",
     "VIEW_TIMELINE": "Timeline",
-    "VIEW_LIST": "List"
+    "VIEW_LIST": "List",
+    "ADD_MODAL_TITLE": "Add to my goals",
+    "ADD_FIELD_PRIORITY": "Priority",
+    "ADD_FIELD_TARGET_TIME": "Target time",
+    "ADD_FIELD_TARGET_TIME_PLACEHOLDER": "e.g. 3:30:00",
+    "ADD_FIELD_NOTES": "Notes",
+    "ADD_FIELD_NOTES_PLACEHOLDER": "Goals, strategy, context...",
+    "ADD_BTN_CANCEL": "Cancel",
+    "ADD_BTN_CONFIRM": "Add to my goals",
+    "ADD_BTN_SAVING": "Saving...",
+    "PRIORITY_A": "A — Goal Race",
+    "PRIORITY_B": "B — Target Race",
+    "PRIORITY_C": "C — Training Race"
   },
   "COACH_DASHBOARD": {
     "ATHLETES_HEADING": "ATHLETES",
