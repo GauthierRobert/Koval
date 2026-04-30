@@ -348,7 +348,7 @@ public class SessionService {
             session.setRpe(rpe);
             if (session.getTss() == null) {
                 double intensityFactor = rpe / 10.0;
-                session.setTss(TssCalculator.computeTss(session.getTotalDurationSeconds(), intensityFactor));
+                session.setTss(TssCalculator.computeTss(AnalyticsService.loadDurationSeconds(session), intensityFactor));
                 session.setIntensityFactor(intensityFactor);
             }
         }

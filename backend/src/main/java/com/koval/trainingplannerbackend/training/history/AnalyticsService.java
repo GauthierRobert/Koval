@@ -65,16 +65,26 @@ public class AnalyticsService {
     private void applyRpeFallback(CompletedSession session) {
         if (session.getRpe() != null && session.getRpe() > 0) {
             double intensity = session.getRpe() / 10.0;
-            double tss = TssCalculator.computeTss(session.getTotalDurationSeconds(), intensity);
+            double tss = TssCalculator.computeTss(loadDurationSeconds(session), intensity);
             session.setIntensityFactor(Math.round(intensity * 1000.0) / 1000.0);
             session.setTss(Math.round(tss * 10.0) / 10.0);
         }
     }
 
     private void applyComputedMetrics(CompletedSession session, double intensityFactor) {
-        double tss = TssCalculator.computeTss(session.getTotalDurationSeconds(), intensityFactor);
+        double tss = TssCalculator.computeTss(loadDurationSeconds(session), intensityFactor);
         session.setIntensityFactor(Math.round(intensityFactor * 1000.0) / 1000.0);
         session.setTss(Math.round(tss * 10.0) / 10.0);
+    }
+
+    /**
+     * Duration to attribute physiological load to. Prefers moving time (excludes pauses)
+     * so red-light/photo-stop minutes don't inflate TSS; falls back to elapsed when the
+     * source didn't supply moving time.
+     */
+    static int loadDurationSeconds(CompletedSession session) {
+        Integer moving = session.getMovingTimeSeconds();
+        return moving != null && moving > 0 ? moving : session.getTotalDurationSeconds();
     }
 
     private OptionalDouble computeIntensityFactor(CompletedSession session, User user, SportType sport) {

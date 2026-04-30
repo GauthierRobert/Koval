@@ -228,6 +228,55 @@
 
 .t-status.club { color: #818cf8; }
 
+/* ── Weekly Volume ── */
+
+.weekly-volume-panel {
+  margin-top: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.metric-toggle {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 10px;
+}
+
+.toggle-btn {
+  background: none;
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: all 0.15s;
+}
+
+.toggle-btn:hover {
+  background: var(--accent-subtle);
+  color: var(--text-color);
+}
+
+.toggle-btn.active {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+  color: var(--accent-color);
+}
+
+.volume-chart-host {
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-glass);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  height: 240px;
+  display: flex;
+}
+
 /* ── Recent Sessions Mini Table ── */
 
 .coach-sessions-panel {

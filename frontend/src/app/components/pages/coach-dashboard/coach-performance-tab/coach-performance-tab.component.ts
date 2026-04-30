@@ -8,11 +8,13 @@ import {Training, TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS, TrainingType} from
 import {SportIconComponent} from '../../../shared/sport-icon/sport-icon.component';
 import {SessionData, SessionSummary} from '../../../../models/session-types.model';
 import {formatTimeHMS} from '../../../shared/format/format.utils';
+import {VolumeEntry} from '../../../../services/analytics.service';
+import {DashboardVolumeChartComponent} from '../../dashboard/dashboard-volume-chart/dashboard-volume-chart.component';
 
 @Component({
   selector: 'app-coach-performance-tab',
   standalone: true,
-  imports: [CommonModule, TranslateModule, SportIconComponent],
+  imports: [CommonModule, TranslateModule, SportIconComponent, DashboardVolumeChartComponent],
   templateUrl: './coach-performance-tab.component.html',
   styleUrl: './coach-performance-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,6 +29,7 @@ export class CoachPerformanceTabComponent {
   } | null>;
   @Input() athleteSchedule$!: Observable<ScheduledWorkout[]>;
   @Input() athleteSessions$!: Observable<SessionData[]>;
+  @Input() athleteVolume$!: Observable<VolumeEntry[]>;
   @Input() scheduleWeekStart!: Date;
   @Input() scheduleWeekEnd!: Date;
   @Input() scheduleWeekLabel = '';
@@ -36,6 +39,8 @@ export class CoachPerformanceTabComponent {
   @Output() navigateWeek = new EventEmitter<-1 | 1>();
   @Output() openSessionAnalysis = new EventEmitter<SessionData>();
   @Output() assignWorkout = new EventEmitter<void>();
+
+  volumeMetric: 'time' | 'tss' | 'distance' = 'time';
 
   private readonly translate = inject(TranslateService);
 

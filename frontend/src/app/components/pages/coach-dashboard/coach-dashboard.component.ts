@@ -10,6 +10,7 @@ import {ClubService, MyClubRoleEntry} from '../../../services/club.service';
 import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
 import {Group} from '../../../services/group.service';
 import {MetricsService, PmcDataPoint} from '../../../services/metrics.service';
+import {VolumeEntry} from '../../../services/analytics.service';
 import {TrainingActionModalComponent} from '../../shared/training-action-modal/training-action-modal.component';
 import {InviteCodeModalComponent} from '../../shared/invite-code-modal/invite-code-modal.component';
 import {ShareTrainingModalComponent} from '../../shared/share-training-modal/share-training-modal.component';
@@ -106,6 +107,9 @@ export class CoachDashboardComponent implements OnInit {
 
   private athleteGoalsSubject = new BehaviorSubject<RaceGoal[]>([]);
   athleteGoals$ = this.athleteGoalsSubject.asObservable();
+
+  private athleteVolumeSubject = new BehaviorSubject<VolumeEntry[]>([]);
+  athleteVolume$ = this.athleteVolumeSubject.asObservable();
 
   // Task 7: Real fitness/fatigue/form metrics derived from PMC data
   athleteMetrics$ = this.athletePmc$.pipe(
@@ -238,6 +242,22 @@ export class CoachDashboardComponent implements OnInit {
     this.loadAthletePmc(athlete.id);
     this.loadAthleteGoals(athlete.id);
     this.loadAthleteProjectionSchedule(athlete.id);
+    this.loadAthleteVolume(athlete.id);
+  }
+
+  loadAthleteVolume(athleteId: string): void {
+    const now = new Date();
+    const from = new Date(now); from.setDate(from.getDate() - 70);
+    this.loadAthleteData(
+      this.coachService.getAthleteVolume(
+        athleteId,
+        from.toISOString().split('T')[0],
+        now.toISOString().split('T')[0],
+        'week',
+      ),
+      this.athleteVolumeSubject,
+      []
+    );
   }
 
   private loadAthleteData<T>(

@@ -7,6 +7,7 @@ import {Group} from './group.service';
 import {PmcDataPoint} from './metrics.service';
 import {PlanAnalytics, PlanProgress} from '../models/plan.model';
 import {environment} from '../../environments/environment';
+import {VolumeEntry} from './analytics.service';
 
 export interface InviteCode {
     id: string;
@@ -177,6 +178,14 @@ export class CoachService {
                 params: { from, to },
             })
             .pipe(catchError(() => of([] as PmcDataPoint[])));
+    }
+
+    getAthleteVolume(athleteId: string, from: string, to: string, groupBy: 'week' | 'month' = 'week'): Observable<VolumeEntry[]> {
+        return this.http
+            .get<VolumeEntry[]>(`${this.apiUrl}/athletes/${athleteId}/volume`, {
+                params: { from, to, groupBy },
+            })
+            .pipe(catchError(() => of([] as VolumeEntry[])));
     }
 
     importAthletes(file: File): Observable<AthleteImportResult> {

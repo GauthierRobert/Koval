@@ -115,6 +115,23 @@
   </div>
 </div>
 
+<div class="weekly-volume-panel">
+  <div class="section-title">
+    {{ 'COACH_DASHBOARD.WEEKLY_VOLUME' | translate }}
+    <div class="metric-toggle">
+      <button class="toggle-btn" [class.active]="volumeMetric === 'time'" (click)="volumeMetric = 'time'">{{ 'COACH_DASHBOARD.VOLUME_METRIC_TIME' | translate }}</button>
+      <button class="toggle-btn" [class.active]="volumeMetric === 'tss'" (click)="volumeMetric = 'tss'">{{ 'COACH_DASHBOARD.VOLUME_METRIC_TSS' | translate }}</button>
+      <button class="toggle-btn" [class.active]="volumeMetric === 'distance'" (click)="volumeMetric = 'distance'">{{ 'COACH_DASHBOARD.VOLUME_METRIC_DISTANCE' | translate }}</button>
+    </div>
+  </div>
+  <div class="volume-chart-host">
+    <app-dashboard-volume-chart
+      [data]="(athleteVolume$ | async) ?? []"
+      [metric]="volumeMetric">
+    </app-dashboard-volume-chart>
+  </div>
+</div>
+
 @if (athleteSessions$ | async; as sessions) {
   @if (sessions.length > 0) {
     <div class="coach-sessions-panel">
