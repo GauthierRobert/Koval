@@ -15,12 +15,20 @@
     </div>
   }
 
-  <div class="rm-canvas" [style.--today-x]="todayX">
+  <div
+    class="rm-canvas"
+    #canvasRef
+    [class.dragging]="isDragging"
+    [style.--today-x]="todayX"
+    (pointerdown)="onPointerDown($event)"
+    (pointermove)="onPointerMove($event)"
+    (pointerup)="onPointerUp($event)"
+    (pointercancel)="onPointerCancel($event)">
     <div class="rm-axis">
       <div class="rm-axis-spacer"></div>
       <div class="rm-axis-track" #trackRef>
-        @for (m of months; let i = $index; track i) {
-          <div class="rm-axis-tick" [style.left.%]="(i / 12) * 100">
+        @for (m of months; track $index) {
+          <div class="rm-axis-tick" [style.left.%]="m.x">
             <span>{{ m.label }}</span>
           </div>
         }
@@ -68,9 +76,11 @@
       }
     </div>
 
-    <div class="rm-today">
-      <div class="rm-today-pill">AUJ' · {{ todayShort }}</div>
-      <div class="rm-today-line"></div>
-    </div>
+    @if (todayInWindow) {
+      <div class="rm-today">
+        <div class="rm-today-pill">AUJ' · {{ todayShort }}</div>
+        <div class="rm-today-line"></div>
+      </div>
+    }
   </div>
 </div>

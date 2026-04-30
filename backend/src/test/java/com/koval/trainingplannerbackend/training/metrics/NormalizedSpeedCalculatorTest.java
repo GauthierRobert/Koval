@@ -71,6 +71,22 @@ class NormalizedSpeedCalculatorTest {
             double ngp = NormalizedSpeedCalculator.computeNgp(speed, alt);
             assertEquals(4.0, ngp, 0.01);
         }
+
+        @Test
+        void noisyFlatAltitude_doesNotInflateNgp() {
+            // 1h flat run at 3 m/s with ±5m altitude noise (typical GPS/baro RMS).
+            // The naive per-second derivative would turn this into apparent ±30% grades
+            // and inflate NGP because Minetti's polynomial is asymmetric. A correct
+            // implementation should keep NGP close to the actual 3 m/s.
+            int n = 3600;
+            List<Double> speed = constantList(n, 3.0);
+            List<Double> alt = new ArrayList<>(n);
+            java.util.Random rng = new java.util.Random(42);
+            for (int i = 0; i < n; i++) alt.add(100 + (rng.nextDouble() - 0.5) * 10.0); // ±5m
+            double ngp = NormalizedSpeedCalculator.computeNgp(speed, alt);
+            assertTrue(ngp < 3.15,
+                    "flat-run NGP must not be inflated by altitude noise; got " + ngp);
+        }
     }
 
     @Nested

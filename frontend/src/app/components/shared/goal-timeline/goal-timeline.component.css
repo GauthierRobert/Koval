@@ -65,7 +65,15 @@
 .rm-canvas {
   position: relative;
   --today-x: 0%;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
 }
+
+.rm-canvas.dragging { cursor: grabbing; }
+
+.rm-marker { cursor: pointer; }
 
 .rm-axis {
   display: grid;

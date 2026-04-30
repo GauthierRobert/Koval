@@ -339,8 +339,8 @@
   width: 100%;
 }
 
-/* Chat tab uses the full page width — the chat panel benefits from extra
-   horizontal real estate on desktop. */
+/* Chat and race-goals tabs use the full page width — the chat panel and the
+   timeline roadmap benefit from extra horizontal real estate on desktop. */
 .tab-body--wide {
   max-width: 100%;
   padding: var(--page-padding);

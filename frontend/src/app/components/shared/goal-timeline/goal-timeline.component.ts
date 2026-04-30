@@ -54,6 +54,16 @@ interface LaneDef {
   icon: 'RUNNING' | 'CYCLING' | 'SWIMMING' | 'BRICK';
 }
 
+interface AxisTick {
+  label: string;
+  x: number;
+}
+
+const DAY_MS = 86_400_000;
+const MIN_SPAN_MS = 30 * DAY_MS;
+const MAX_SPAN_MS = 366 * DAY_MS;
+const WHEEL_SENSITIVITY = 0.0015;
+
 @Component({
   selector: 'app-goal-timeline',
   standalone: true,
@@ -64,7 +74,7 @@ interface LaneDef {
 })
 export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDestroy {
   @Input({required: true}) items: TimelineItem<T>[] = [];
-  @Input() panelTitle = 'Roadmap 12 mois';
+  @Input() panelTitle = 'Roadmap';
   @Input() showHeader = true;
   @Input() showLegend = true;
   @Input() emptyLaneLabel = 'Aucun objectif sur cette voie';
@@ -74,6 +84,7 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
   cardFooterTpl = contentChild<TemplateRef<{$implicit: TimelineItem<T>}>>('cardFooter');
 
   @ViewChild('trackRef', {read: ElementRef}) trackRef?: ElementRef<HTMLElement>;
+  @ViewChild('canvasRef', {read: ElementRef}) canvasRef?: ElementRef<HTMLElement>;
 
   readonly lanes: LaneDef[] = [
     {key: 'run', label: 'RUN', icon: 'RUNNING'},
@@ -81,19 +92,76 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
     {key: 'bike', label: 'BIKE', icon: 'CYCLING'},
   ];
 
-  private readonly window = this.computeWindow();
-  readonly months = this.buildMonths(this.window.start);
-  readonly windowStartLabel = this.monthLong(this.window.start);
-  readonly windowEndLabel = this.monthLong(this.window.end);
+  private windowStart: Date;
+  private windowEndDate: Date;
+
+  constructor() {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    this.windowStart = start;
+    this.windowEndDate = new Date(start.getFullYear() + 1, start.getMonth(), 1);
+  }
+
+  isDragging = false;
 
   private readonly cdr = inject(ChangeDetectorRef);
   private resizeObserver?: ResizeObserver;
   private trackWidthPx = 800;
 
+  private readonly wheelHandler = (e: WheelEvent) => this.onWheel(e);
+
+  private drag: {
+    pointerId: number;
+    startClientX: number;
+    startWindowStartMs: number;
+    startTrackWidthPx: number;
+    spanMsAtStart: number;
+    crossedThreshold: boolean;
+  } | null = null;
+
+  private activePointers = new Map<number, {x: number; y: number}>();
+  private pinch: {
+    startDist: number;
+    startMidpointFrac: number;
+    startSpanMs: number;
+    startWindowStartMs: number;
+  } | null = null;
+
+  // ── Window getters ─────────────────────────────────────────────────
+
+  get windowEnd(): Date {
+    return this.windowEndDate;
+  }
+
+  private get spanMs(): number {
+    return this.windowEndDate.getTime() - this.windowStart.getTime();
+  }
+
+  get months(): AxisTick[] {
+    return this.buildTicks(this.windowStart, this.windowEndDate, this.spanMs);
+  }
+
+  get windowStartLabel(): string {
+    return this.spanMs >= 150 * DAY_MS
+      ? this.monthLong(this.windowStart)
+      : this.formatDayMonthYear(this.windowStart);
+  }
+
+  get windowEndLabel(): string {
+    return this.spanMs >= 150 * DAY_MS
+      ? this.monthLong(this.windowEndDate)
+      : this.formatDayMonthYear(this.windowEndDate);
+  }
+
   get todayX(): number {
-    const span = this.window.end.getTime() - this.window.start.getTime();
+    const span = this.spanMs;
     const now = Date.now();
-    return Math.max(0, Math.min(100, ((now - this.window.start.getTime()) / span) * 100));
+    return ((now - this.windowStart.getTime()) / span) * 100;
+  }
+
+  get todayInWindow(): boolean {
+    const now = Date.now();
+    return now >= this.windowStart.getTime() && now <= this.windowEnd.getTime();
   }
 
   get todayShort(): string {
@@ -101,7 +169,7 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
   }
 
   get markersByLane(): Record<LaneKey, TimelineMarker<T>[]> {
-    return this.buildMarkers(this.items, this.window.start, this.window.end);
+    return this.buildMarkers(this.items, this.windowStart, this.windowEnd);
   }
 
   onMarkerClick(marker: TimelineMarker<T>): void {
@@ -109,19 +177,29 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
   }
 
   ngAfterViewInit(): void {
-    if (typeof ResizeObserver === 'undefined' || !this.trackRef) return;
-    this.resizeObserver = new ResizeObserver((entries) => {
-      const w = entries[0]?.contentRect.width ?? 0;
-      if (w > 0 && Math.abs(w - this.trackWidthPx) > 4) {
-        this.trackWidthPx = w;
-        this.cdr.markForCheck();
-      }
-    });
-    this.resizeObserver.observe(this.trackRef.nativeElement);
+    const canvasEl = this.canvasRef?.nativeElement;
+    const trackEl = this.trackRef?.nativeElement;
+    if (canvasEl) {
+      canvasEl.addEventListener('wheel', this.wheelHandler, {passive: false});
+    }
+    if (typeof ResizeObserver !== 'undefined' && trackEl) {
+      this.resizeObserver = new ResizeObserver((entries) => {
+        const w = entries[0]?.contentRect.width ?? 0;
+        if (w > 0 && Math.abs(w - this.trackWidthPx) > 4) {
+          this.trackWidthPx = w;
+          this.cdr.markForCheck();
+        }
+      });
+      this.resizeObserver.observe(trackEl);
+    }
   }
 
   ngOnDestroy(): void {
     this.resizeObserver?.disconnect();
+    const canvasEl = this.canvasRef?.nativeElement;
+    if (canvasEl) {
+      canvasEl.removeEventListener('wheel', this.wheelHandler);
+    }
   }
 
   private get collisionThresholdPct(): number {
@@ -130,22 +208,162 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
     return ((cardMaxPx + buffer) / Math.max(this.trackWidthPx, 1)) * 100;
   }
 
-  // ── Window / months ────────────────────────────────────────────────
+  // ── Wheel zoom ─────────────────────────────────────────────────────
 
-  private computeWindow(): {start: Date; end: Date} {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), 1);
-    const end = new Date(start.getFullYear() + 1, start.getMonth(), 1);
-    return {start, end};
+  private onWheel(e: WheelEvent): void {
+    e.preventDefault();
+
+    const trackEl = this.trackRef?.nativeElement;
+    if (!trackEl) return;
+    const rect = trackEl.getBoundingClientRect();
+    if (rect.width <= 0) return;
+
+    const frac = clamp01((e.clientX - rect.left) / rect.width);
+    const oldSpan = this.spanMs;
+    const anchorMs = this.windowStart.getTime() + frac * oldSpan;
+
+    // Wheel up (deltaY < 0) → zoom in (smaller span). Exponential scales smoothly with
+    // any input — small trackpad deltas are barely noticeable, mouse-wheel ticks are crisp.
+    const factor = Math.exp(e.deltaY * WHEEL_SENSITIVITY);
+    const newSpan = Math.max(MIN_SPAN_MS, Math.min(MAX_SPAN_MS, oldSpan * factor));
+    if (newSpan === oldSpan) return;
+
+    const newStartMs = anchorMs - frac * newSpan;
+    this.windowStart = new Date(newStartMs);
+    this.windowEndDate = new Date(newStartMs + newSpan);
+    this.cdr.markForCheck();
   }
 
-  private buildMonths(start: Date): {label: string}[] {
-    const months: {label: string}[] = [];
-    for (let i = 0; i <= 12; i++) {
-      const d = new Date(start.getFullYear(), start.getMonth() + i, 1);
-      months.push({label: this.monthShort(d)});
+  // ── Pointer / drag / pinch ─────────────────────────────────────────
+
+  onPointerDown(e: PointerEvent): void {
+    const target = e.target as Element | null;
+    if (target?.closest('.rm-marker')) {
+      // Let marker buttons handle their own clicks; don't initiate drag from them.
+      return;
     }
-    return months;
+    this.activePointers.set(e.pointerId, {x: e.clientX, y: e.clientY});
+
+    if (this.activePointers.size === 1) {
+      const trackEl = this.trackRef?.nativeElement;
+      const widthPx = trackEl?.getBoundingClientRect().width ?? this.trackWidthPx;
+      this.drag = {
+        pointerId: e.pointerId,
+        startClientX: e.clientX,
+        startWindowStartMs: this.windowStart.getTime(),
+        startTrackWidthPx: widthPx > 0 ? widthPx : this.trackWidthPx,
+        spanMsAtStart: this.spanMs,
+        crossedThreshold: false,
+      };
+      try {
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      } catch {
+        // Some browsers reject capture on already-captured pointers; safe to ignore.
+      }
+    } else if (this.activePointers.size === 2) {
+      this.drag = null;
+      this.pinch = this.startPinch();
+    }
+  }
+
+  onPointerMove(e: PointerEvent): void {
+    if (!this.activePointers.has(e.pointerId)) return;
+    this.activePointers.set(e.pointerId, {x: e.clientX, y: e.clientY});
+
+    if (this.pinch && this.activePointers.size === 2) {
+      this.applyPinch(e);
+      return;
+    }
+
+    if (this.drag && e.pointerId === this.drag.pointerId) {
+      const dx = e.clientX - this.drag.startClientX;
+      if (!this.drag.crossedThreshold && Math.abs(dx) > 4) {
+        this.drag.crossedThreshold = true;
+        this.isDragging = true;
+        this.cdr.markForCheck();
+      }
+      if (this.drag.crossedThreshold) {
+        const ratio = dx / this.drag.startTrackWidthPx;
+        const newStartMs = this.drag.startWindowStartMs - ratio * this.drag.spanMsAtStart;
+        this.windowStart = new Date(newStartMs);
+        this.windowEndDate = new Date(newStartMs + this.drag.spanMsAtStart);
+        e.preventDefault();
+        this.cdr.markForCheck();
+      }
+    }
+  }
+
+  onPointerUp(e: PointerEvent): void {
+    this.activePointers.delete(e.pointerId);
+
+    if (this.drag && e.pointerId === this.drag.pointerId) {
+      const wasDragging = this.drag.crossedThreshold;
+      try {
+        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      } catch {
+        // Ignore: capture may have been released already.
+      }
+      this.drag = null;
+      this.isDragging = false;
+      if (wasDragging) {
+        this.swallowNextClick();
+      }
+      this.cdr.markForCheck();
+    }
+
+    if (this.pinch && this.activePointers.size < 2) {
+      this.pinch = null;
+    }
+  }
+
+  onPointerCancel(e: PointerEvent): void {
+    this.onPointerUp(e);
+  }
+
+  private startPinch(): GoalTimelineComponent<T>['pinch'] {
+    const pts = Array.from(this.activePointers.values());
+    if (pts.length < 2) return null;
+    const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+    const midX = (pts[0].x + pts[1].x) / 2;
+    const rect = this.trackRef?.nativeElement.getBoundingClientRect();
+    const frac = rect && rect.width > 0 ? clamp01((midX - rect.left) / rect.width) : 0.5;
+    return {
+      startDist: Math.max(dist, 1),
+      startMidpointFrac: frac,
+      startSpanMs: this.spanMs,
+      startWindowStartMs: this.windowStart.getTime(),
+    };
+  }
+
+  private applyPinch(e: PointerEvent): void {
+    if (!this.pinch) return;
+    const pts = Array.from(this.activePointers.values());
+    if (pts.length < 2) return;
+    const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+    const ratio = Math.max(dist / this.pinch.startDist, 0.0001);
+    const effectiveSpan = Math.max(
+      MIN_SPAN_MS,
+      Math.min(MAX_SPAN_MS, this.pinch.startSpanMs / ratio),
+    );
+
+    const anchorMs =
+      this.pinch.startWindowStartMs + this.pinch.startMidpointFrac * this.pinch.startSpanMs;
+    const newStartMs = anchorMs - this.pinch.startMidpointFrac * effectiveSpan;
+    this.windowStart = new Date(newStartMs);
+    this.windowEndDate = new Date(newStartMs + effectiveSpan);
+    this.cdr.markForCheck();
+    e.preventDefault();
+  }
+
+  private swallowNextClick(): void {
+    const swallow = (ev: Event) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      ev.stopImmediatePropagation();
+    };
+    document.addEventListener('click', swallow, {capture: true, once: true});
+    // Safety net: if no click fires (drag ended on empty space), remove the listener anyway.
+    setTimeout(() => document.removeEventListener('click', swallow, true), 0);
   }
 
   // ── Marker building ────────────────────────────────────────────────
@@ -266,14 +484,58 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
     return target.getTime() >= today.getTime();
   }
 
+  // ── Window helpers ─────────────────────────────────────────────────
+
+  private buildTicks(start: Date, end: Date, spanMs: number): AxisTick[] {
+    if (spanMs <= 0) return [];
+    const ticks: AxisTick[] = [];
+
+    // Pick monthly ticks once the window is wider than ~75 days, else weekly.
+    if (spanMs >= 75 * DAY_MS) {
+      const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+      if (cursor.getTime() < start.getTime()) {
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+      while (cursor.getTime() <= end.getTime()) {
+        const x = ((cursor.getTime() - start.getTime()) / spanMs) * 100;
+        if (x >= 0 && x <= 100) {
+          ticks.push({label: this.monthShort(cursor), x});
+        }
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+    } else {
+      // Weekly ticks for short windows. Anchor to the start so labels are stable while panning.
+      for (let i = 0; ; i++) {
+        const t = new Date(start.getTime() + i * 7 * DAY_MS);
+        if (t.getTime() > end.getTime()) break;
+        const x = ((t.getTime() - start.getTime()) / spanMs) * 100;
+        ticks.push({label: this.formatDayMonth(t), x});
+      }
+    }
+
+    return ticks;
+  }
+
   // ── Formatting ─────────────────────────────────────────────────────
 
   private monthShort(d: Date): string {
-    return d.toLocaleDateString('fr-FR', {month: 'short'}).replace('.', '').toUpperCase().slice(0, 3);
+    return d
+      .toLocaleDateString('fr-FR', {month: 'short'})
+      .replace('.', '')
+      .toUpperCase()
+      .slice(0, 3);
   }
 
   private monthLong(d: Date): string {
     return d.toLocaleDateString('fr-FR', {month: 'long', year: 'numeric'});
+  }
+
+  private formatDayMonth(d: Date): string {
+    return `${String(d.getDate()).padStart(2, '0')} ${this.monthShort(d)}`;
+  }
+
+  private formatDayMonthYear(d: Date): string {
+    return `${this.formatDayMonth(d)} ${d.getFullYear()}`;
   }
 
   formatDateShort(dateStr: string | undefined | null): string {
@@ -290,4 +552,8 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
     const month = this.monthShort(d);
     return `${day} ${month}`;
   }
+}
+
+function clamp01(n: number): number {
+  return Math.max(0, Math.min(1, n));
 }

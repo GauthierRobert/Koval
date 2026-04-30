@@ -18,7 +18,8 @@ import java.util.List;
 public final class NormalizedSpeedCalculator {
 
     private static final int ROLLING_WINDOW_SECONDS = 30;
-    private static final double MIN_DX_METERS = 0.5;
+    private static final int GRADE_WINDOW_SECONDS = 30;
+    private static final double MIN_DX_METERS = 5.0;
     private static final double GRADE_CLAMP = 0.30;
     private static final double FLAT_COST = 3.6; // J/kg/m, Minetti C(0)
 
@@ -47,28 +48,44 @@ public final class NormalizedSpeedCalculator {
         return fourthPowerNormalizedAverage(s);
     }
 
+    /**
+     * Compute per-sample flat-equivalent speed by adjusting for grade.
+     *
+     * <p>Grade is taken as the slope over a {@value #GRADE_WINDOW_SECONDS}-second window
+     * rather than between consecutive samples. GPS/barometric altitude has ~3–5m RMS
+     * noise; differentiating it per-second turns even flat terrain into apparent ±30%
+     * grades, and Minetti's cost polynomial is asymmetric (uphill costs more than
+     * downhill saves), so per-sample noise systematically inflates the flat-equivalent
+     * speed. Windowing the grade computation averages noise out before the polynomial.
+     */
     private static double[] gradeAdjustedSpeed(List<Double> speed, List<Double> altitude) {
         int n = speed.size();
         double[] out = new double[n];
         boolean hasAltitude = altitude != null && altitude.size() == n;
         for (int i = 0; i < n; i++) {
             double v = speed.get(i);
-            if (!hasAltitude || v <= 0 || i == 0) {
+            if (!hasAltitude || v <= 0) {
                 out[i] = v;
                 continue;
             }
-            double grade = 0;
-            double a0 = altitude.get(i - 1);
-            double a1 = altitude.get(i);
-            if (!Double.isNaN(a0) && !Double.isNaN(a1)) {
-                double dx = v; // 1 second between samples
-                if (dx > MIN_DX_METERS) {
-                    grade = clamp((a1 - a0) / dx, -GRADE_CLAMP, GRADE_CLAMP);
-                }
-            }
+            double grade = windowedGrade(speed, altitude, i);
             out[i] = v * minettiCostRatio(grade);
         }
         return out;
+    }
+
+    private static double windowedGrade(List<Double> speed, List<Double> altitude, int i) {
+        int start = Math.max(0, i - GRADE_WINDOW_SECONDS);
+        double a0 = altitude.get(start);
+        double a1 = altitude.get(i);
+        if (Double.isNaN(a0) || Double.isNaN(a1)) return 0;
+        double dx = 0;
+        for (int j = start + 1; j <= i; j++) {
+            double s = speed.get(j);
+            if (s > 0) dx += s; // 1s per sample
+        }
+        if (dx < MIN_DX_METERS) return 0;
+        return clamp((a1 - a0) / dx, -GRADE_CLAMP, GRADE_CLAMP);
     }
 
     /**
