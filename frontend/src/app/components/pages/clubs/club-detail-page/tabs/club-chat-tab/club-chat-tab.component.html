@@ -14,7 +14,12 @@
               @case ('OBJECTIVE') { {{ 'CLUB_DETAIL.CHAT_BADGE_OBJECTIVE' | translate }} }
             }
           </span>
-          <span class="room-chip__title">{{ target.title }}</span>
+          <span class="room-chip__text">
+            <span class="room-chip__title">{{ target.title }}</span>
+            @if (target.lastMessagePreview) {
+              <span class="room-chip__preview">{{ target.lastMessagePreview }}</span>
+            }
+          </span>
         </button>
       }
     </div>

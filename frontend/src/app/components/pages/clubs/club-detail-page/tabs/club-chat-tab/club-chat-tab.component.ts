@@ -18,8 +18,9 @@ import { map } from 'rxjs/operators';
 import { AuthService } from '../../../../../../services/auth.service';
 import { ClubService } from '../../../../../../services/club.service';
 import { ClubFeedService } from '../../../../../../services/club-feed.service';
+import { ChatRoomService } from '../../../../../../services/chat-room.service';
 import { EmbeddedChatComponent } from '../../../../../shared/embedded-chat/embedded-chat.component';
-import { ChatRoomScope } from '../../../../../../models/chat.models';
+import { ChatRoomScope, ChatRoomSummary } from '../../../../../../models/chat.models';
 import { ClubGroup, ClubRaceGoalResponse } from '../../../../../../models/club.model';
 
 interface ChatTarget {
@@ -28,6 +29,8 @@ interface ChatTarget {
   refId?: string;
   title: string;
   badge: 'CLUB' | 'GROUP' | 'OBJECTIVE';
+  /** Preview of the latest message in the matching room, if any. */
+  lastMessagePreview?: string | null;
 }
 
 /**
@@ -51,6 +54,7 @@ export class ClubChatTabComponent implements OnInit, OnChanges, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly clubService = inject(ClubService);
   private readonly clubFeedService = inject(ClubFeedService);
+  private readonly chatRoomService = inject(ChatRoomService);
   private readonly cdr = inject(ChangeDetectorRef);
 
   readonly currentUserId$ = this.authService.user$.pipe(map((u) => u?.id ?? null));
@@ -61,7 +65,12 @@ export class ClubChatTabComponent implements OnInit, OnChanges, OnDestroy {
     this.authService.user$,
     this.clubService.groups$,
     this.clubFeedService.raceGoals$,
-  ]).pipe(map(([user, groups, raceGoals]) => this.buildTargets(user?.id ?? null, groups, raceGoals)));
+    this.chatRoomService.rooms$,
+  ]).pipe(
+    map(([user, groups, raceGoals, rooms]) =>
+      this.buildTargets(user?.id ?? null, groups, raceGoals, rooms),
+    ),
+  );
 
   selected: ChatTarget | null = null;
   view: 'list' | 'chat' = 'list';
@@ -121,6 +130,7 @@ export class ClubChatTabComponent implements OnInit, OnChanges, OnDestroy {
     userId: string | null,
     groups: ClubGroup[],
     raceGoals: ClubRaceGoalResponse[],
+    rooms: ChatRoomSummary[],
   ): ChatTarget[] {
     const targets: ChatTarget[] = [this.defaultTarget()];
 
@@ -150,7 +160,20 @@ export class ClubChatTabComponent implements OnInit, OnChanges, OnDestroy {
       }
     }
 
-    return targets;
+    return targets.map((t) => ({
+      ...t,
+      lastMessagePreview: this.findRoomPreview(t, rooms),
+    }));
+  }
+
+  private findRoomPreview(target: ChatTarget, rooms: ChatRoomSummary[]): string | null {
+    const room = rooms.find(
+      (r) =>
+        r.scope === target.scope &&
+        r.clubId === this.clubId &&
+        (r.scopeRefId ?? null) === (target.refId ?? null),
+    );
+    return room?.lastMessagePreview ?? null;
   }
 
   private objectiveKey(goal: ClubRaceGoalResponse): string {
