@@ -1,4 +1,5 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, Input, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {
@@ -8,6 +9,7 @@ import {
   GroupLinkedTraining,
   getEffectiveLinkedTrainings,
 } from '../../../services/club.service';
+import {ResponsiveService} from '../../../services/responsive.service';
 import {SportIconComponent} from '../sport-icon/sport-icon.component';
 import {RouteMapComponent} from '../../pages/pacing/route-map/route-map.component';
 import {RouteCoordinate} from '../../../services/pacing.service';
@@ -42,6 +44,9 @@ export class SessionCardComponent {
   @Output() shareGpx = new EventEmitter<ClubTrainingSession>();
 
   showAllParticipants = false;
+
+  private responsive = inject(ResponsiveService);
+  isMobile = toSignal(this.responsive.isMobile$, { initialValue: false });
 
   constructor(private translate: TranslateService) {}
 
@@ -217,6 +222,7 @@ export class SessionCardComponent {
   // --- Event emitters (stop propagation internally) ---
 
   onCardClick(): void {
+    if (this.isMobile()) return;
     this.toggleDetail.emit(this.session);
   }
 

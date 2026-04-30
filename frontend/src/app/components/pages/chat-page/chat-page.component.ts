@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, map, combineLatest, BehaviorSubject, Observable } from 'rxjs';
 import { ChatRoomService } from '../../../services/chat-room.service';
+import { ChatNotificationService } from '../../../services/chat-notification.service';
 import { ChatRoomScope, ChatRoomSummary } from '../../../models/chat.models';
 import { ChatMessagePanelComponent } from './chat-message-panel/chat-message-panel.component';
 
@@ -22,6 +23,7 @@ interface RoomGroup {
 })
 export class ChatPageComponent implements OnInit, OnDestroy {
   readonly chatRoomService = inject(ChatRoomService);
+  private readonly chatNotifications = inject(ChatNotificationService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -49,7 +51,10 @@ export class ChatPageComponent implements OnInit, OnDestroy {
     this.subs.add(
       this.route.paramMap.subscribe((params) => {
         const roomId = params.get('roomId');
-        if (roomId) this.chatRoomService.openRoom(roomId);
+        if (roomId) {
+          this.chatRoomService.openRoom(roomId);
+          this.chatNotifications.notifyRoomOpened(roomId);
+        }
       }),
     );
   }

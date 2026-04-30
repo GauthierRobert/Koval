@@ -58,6 +58,7 @@ export class ChatMessagePanelComponent implements OnInit, OnChanges, OnDestroy {
 
   sending = false;
   loadingOlder = false;
+  private hasMoreOlder = true;
   private subs = new Subscription();
 
   ngOnInit(): void {
@@ -72,6 +73,7 @@ export class ChatMessagePanelComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['roomId'] && !changes['roomId'].firstChange && this.roomId) {
+      this.hasMoreOlder = true;
       this.chatRoomService.openRoom(this.roomId);
     }
   }
@@ -94,16 +96,27 @@ export class ChatMessagePanelComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onLoadOlder(): void {
-    if (this.loadingOlder || !this.roomId) return;
+    if (this.loadingOlder || !this.hasMoreOlder || !this.roomId) return;
     const msgs = this.chatRoomService.activeRoomMessagesSnapshot;
     if (msgs.length === 0) return;
     this.loadingOlder = true;
-    const prevHeight = this.messageList?.scrollHeight ?? 0;
+    this.cdr.markForCheck();
+    const prevCount = msgs.length;
+    const prevDistFromBottom = this.messageList?.distanceFromBottom ?? 0;
     this.chatRoomService.loadOlderMessages(this.roomId, msgs[0].createdAt).subscribe({
-      next: () => {
-        this.messageList?.preserveScrollAfterPrepend(prevHeight);
-        this.loadingOlder = false;
-        this.cdr.markForCheck();
+      next: (older) => {
+        if (older.length === 0) {
+          this.hasMoreOlder = false;
+          this.loadingOlder = false;
+          this.cdr.markForCheck();
+          return;
+        }
+        const after = this.chatRoomService.activeRoomMessagesSnapshot;
+        if (after.length <= prevCount) this.hasMoreOlder = false;
+        this.messageList?.preserveScrollAfterPrepend(prevDistFromBottom, () => {
+          this.loadingOlder = false;
+          this.cdr.markForCheck();
+        });
       },
       error: () => { this.loadingOlder = false; this.cdr.markForCheck(); },
     });

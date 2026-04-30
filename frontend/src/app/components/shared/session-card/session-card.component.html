@@ -5,6 +5,7 @@
   [class.sc-card--cancelled]="isCancelled()"
   [class.sc-card--has-gpx]="session.routeCoordinates?.length"
   [class.sc-card--has-linked]="hasAnyLinkedTraining()"
+  [class.sc-card--static]="isMobile()"
   (click)="onCardClick()">
 
   <!-- ============================================================

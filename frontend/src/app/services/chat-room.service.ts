@@ -30,6 +30,8 @@ export class ChatRoomService {
 
   get activeRoomMessagesSnapshot(): ChatMessage[] { return this.activeRoomMessagesSubject.value; }
   get activeRoomDetailSnapshot(): ChatRoomDetail | null { return this.activeRoomDetailSubject.value; }
+  get activeRoomIdSnapshot(): string | null { return this.activeRoomIdSubject.value; }
+  get roomsSnapshot(): ChatRoomSummary[] { return this.roomsSubject.value; }
 
   constructor() {
     this.sse.onChatMessage$.subscribe((msg) => this.handleIncomingMessage(msg));

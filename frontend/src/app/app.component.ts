@@ -19,6 +19,9 @@ import {ErrorToastComponent} from './components/shared/error-toast/error-toast.c
 import {CguModalComponent} from './components/shared/cgu-modal/cgu-modal.component';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {ChatSseService} from './services/chat-sse.service';
+import {ChatRoomService} from './services/chat-room.service';
+import {ChatNotificationService} from './services/chat-notification.service';
+import {ChatNotificationToastComponent} from './components/shared/chat-notification-toast/chat-notification-toast.component';
 
 @Component({
   selector: 'app-root',
@@ -31,6 +34,7 @@ import {ChatSseService} from './services/chat-sse.service';
     DeviceManagerComponent,
     SettingsComponent,
     NotificationToastComponent,
+    ChatNotificationToastComponent,
     ErrorToastComponent,
     CguModalComponent,
     TranslateModule
@@ -55,7 +59,10 @@ export class AppComponent {
     private notificationService: NotificationService,
     private translate: TranslateService,
     private chatSse: ChatSseService,
+    private chatRooms: ChatRoomService,
+    private chatNotifications: ChatNotificationService,
   ) {
+    void this.chatNotifications;
     this.selectedTraining$ = this.trainingService.selectedTraining$;
     this.executionState$ = this.executionService.state$;
     this.showDeviceManager$ = this.bluetoothService.showDeviceManager$;
@@ -81,8 +88,18 @@ export class AppComponent {
       });
 
     // Keep the chat SSE channel open for any chat surface (club tab, /messages, etc.).
+    // Also load the user's rooms once on login so notifications can resolve room
+    // titles / mute status without a per-message round-trip.
     this.authService.user$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((u) => (u ? this.chatSse.connect() : this.chatSse.disconnect()));
+      .subscribe((u) => {
+        if (u) {
+          this.chatSse.connect();
+          this.chatRooms.loadMyRooms();
+        } else {
+          this.chatSse.disconnect();
+          this.chatNotifications.dismissAll();
+        }
+      });
   }
 }

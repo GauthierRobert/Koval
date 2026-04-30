@@ -89,6 +89,7 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
   loading = true;
   sending = false;
   loadingOlder = false;
+  private hasMoreOlder = true;
   private roomId: string | null = null;
   private cacheKey: string | null = null;
   private subs = new Subscription();
@@ -140,17 +141,26 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onLoadOlder(): void {
-    if (this.loadingOlder || !this.roomId || this.messages.length === 0) return;
+    if (this.loadingOlder || !this.hasMoreOlder || !this.roomId || this.messages.length === 0) return;
     this.loadingOlder = true;
-    const prevHeight = this.messageList?.scrollHeight ?? 0;
+    this.cdr.markForCheck();
+    const prevDistFromBottom = this.messageList?.distanceFromBottom ?? 0;
     const key = this.cacheKey;
     this.api.getMessages(this.roomId, this.messages[0].createdAt).subscribe({
       next: (older) => {
+        if (older.length === 0) {
+          this.hasMoreOlder = false;
+          this.loadingOlder = false;
+          this.cdr.markForCheck();
+          return;
+        }
         this.messages = [...older, ...this.messages];
         if (key) this.cache.prependMessages(key, older);
-        this.messageList?.preserveScrollAfterPrepend(prevHeight);
-        this.loadingOlder = false;
         this.cdr.markForCheck();
+        this.messageList?.preserveScrollAfterPrepend(prevDistFromBottom, () => {
+          this.loadingOlder = false;
+          this.cdr.markForCheck();
+        });
       },
       error: () => { this.loadingOlder = false; this.cdr.markForCheck(); },
     });
@@ -168,6 +178,7 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
   private resolveRoom(): void {
     const key = ChatRoomCacheService.keyFor(this.scope, this.clubId, this.refId, this.title);
     this.cacheKey = key;
+    this.hasMoreOlder = true;
 
     const cached = this.cache.get(key);
     if (cached) {

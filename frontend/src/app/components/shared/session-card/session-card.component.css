@@ -26,6 +26,13 @@
 .sc-card--waiting   { border-left: 3px solid var(--overlay-15); }
 .sc-card--cancelled { opacity: 0.6; cursor: default; }
 
+.sc-card--static { cursor: default; }
+.sc-card--static:hover:not(.sc-card--cancelled) {
+  transform: none;
+  box-shadow: var(--shadow-glass);
+  border-color: var(--glass-border);
+}
+
 @media (min-width: 768px) {
   .sc-card--has-linked:not(.sc-card--has-gpx) {
     grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);

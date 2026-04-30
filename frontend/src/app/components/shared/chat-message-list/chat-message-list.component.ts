@@ -59,6 +59,7 @@ export class ChatMessageListComponent {
   draft = '';
   menuOpen = false;
   private nearBottom = true;
+  private prevScrollTop = 0;
 
   private static readonly SCROLL_BOTTOM_THRESHOLD = 80;
   private static readonly SCROLL_TOP_THRESHOLD = 60;
@@ -97,7 +98,10 @@ export class ChatMessageListComponent {
     const distanceFromBottom = viewport.measureScrollOffset('bottom');
     const distanceFromTop = viewport.measureScrollOffset('top');
     this.nearBottom = distanceFromBottom < ChatMessageListComponent.SCROLL_BOTTOM_THRESHOLD;
+    const scrolledUp = distanceFromTop < this.prevScrollTop;
+    this.prevScrollTop = distanceFromTop;
     if (
+      scrolledUp &&
       distanceFromTop < ChatMessageListComponent.SCROLL_TOP_THRESHOLD &&
       !this.loadingOlder &&
       this.messages.length > 0
@@ -111,25 +115,41 @@ export class ChatMessageListComponent {
     if (this.nearBottom) requestAnimationFrame(() => this.scrollToBottom());
   }
 
-  /** Preserve scroll position after older messages are prepended. */
-  preserveScrollAfterPrepend(prevHeight: number): void {
+  /**
+   * Preserve scroll position after older messages are prepended.
+   * Anchors to distance-from-bottom (which doesn't change on prepend).
+   * Calls onComplete after the scroll has been applied so callers can
+   * safely re-enable load-older without racing the scroll event.
+   */
+  preserveScrollAfterPrepend(prevDistanceFromBottom: number, onComplete?: () => void): void {
     const viewport = this.viewport;
-    if (!viewport) return;
+    if (!viewport) {
+      onComplete?.();
+      return;
+    }
     requestAnimationFrame(() => {
       viewport.checkViewportSize();
-      const el = viewport.elementRef.nativeElement;
-      viewport.scrollToOffset(Math.max(0, el.scrollHeight - prevHeight));
+      requestAnimationFrame(() => {
+        const el = viewport.elementRef.nativeElement;
+        const target = Math.max(0, el.scrollHeight - el.clientHeight - prevDistanceFromBottom);
+        viewport.scrollToOffset(target);
+        this.prevScrollTop = target;
+        requestAnimationFrame(() => onComplete?.());
+      });
     });
   }
 
-  get scrollHeight(): number {
-    return this.viewport?.elementRef.nativeElement.scrollHeight ?? 0;
+  get distanceFromBottom(): number {
+    return this.viewport?.measureScrollOffset('bottom') ?? 0;
   }
 
   private scrollToBottom(): void {
     const viewport = this.viewport;
     if (!viewport) return;
     viewport.scrollTo({ bottom: 0 });
+    requestAnimationFrame(() => {
+      this.prevScrollTop = viewport.measureScrollOffset('top');
+    });
   }
 
   // --- Mobile header: scope icon + overflow menu ---
