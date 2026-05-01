@@ -29,6 +29,7 @@ import com.koval.trainingplannerbackend.mcp.McpZoneTools;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
+import org.springframework.aot.hint.TypeReference;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportRuntimeHints;
 
@@ -58,6 +59,18 @@ public class NativeImageHints {
             };
             for (Class<?> type : recordTypes) {
                 hints.reflection().registerType(type,
+                        MemberCategory.ACCESS_DECLARED_FIELDS,
+                        MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+                        MemberCategory.INVOKE_DECLARED_METHODS);
+            }
+
+            // Package-private records used as MongoTemplate aggregation projection targets.
+            // Spring Data Mongo invokes the canonical constructor and accessors via reflection.
+            String[] packagePrivateRecordTypes = {
+                    "com.koval.trainingplannerbackend.chat.ChatMessageCustomRepository$UnreadCountResult"
+            };
+            for (String type : packagePrivateRecordTypes) {
+                hints.reflection().registerType(TypeReference.of(type),
                         MemberCategory.ACCESS_DECLARED_FIELDS,
                         MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
                         MemberCategory.INVOKE_DECLARED_METHODS);
