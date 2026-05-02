@@ -5,6 +5,7 @@ import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class StravaActivityMapper {
@@ -82,7 +83,7 @@ public class StravaActivityMapper {
             Double distance = doubleValueOrNull(lap.get("distance"));
 
             return new CompletedSession.BlockSummary(
-                    name != null ? name : "Lap",
+                    Optional.ofNullable(name).orElse("Lap"),
                     sportType,
                     duration,
                     0, power, cadence, hr, distance);
