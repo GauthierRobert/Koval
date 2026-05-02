@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/ai")
@@ -153,7 +154,7 @@ public class AIController {
     }
 
     private void handleAiException(RuntimeException ex) {
-        String msg = ex.getMessage() != null ? ex.getMessage() : "";
+        String msg = Optional.ofNullable(ex.getMessage()).orElse("");
         if (msg.contains("429") || msg.contains("rate_limit")) {
             throw new RateLimitException(
                     "Your request was too large or you've sent too many requests this minute. "

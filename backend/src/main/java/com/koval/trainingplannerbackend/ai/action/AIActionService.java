@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Stateless one-shot AI action service.
@@ -65,9 +66,9 @@ public class AIActionService {
                 return new ActionResult("done", true);
             }
             // AI didn't call a tool — it's asking for clarification
-            return new ActionResult(content != null ? content : "Could not complete the action.", false);
+            return new ActionResult(Optional.ofNullable(content).orElse("Could not complete the action."), false);
         } catch (Exception e) {
-            String msg = e.getMessage() != null ? e.getMessage() : "Unknown error";
+            String msg = Optional.ofNullable(e.getMessage()).orElse("Unknown error");
             return new ActionResult("Action failed: " + msg, false);
         }
     }
@@ -75,12 +76,12 @@ public class AIActionService {
     private String buildSystemContext(UserContext ctx, ActionContext context) {
         StringBuilder sb = new StringBuilder();
         sb.append("userRole = ").append(ctx.role()).append("\n");
-        sb.append("clubId = ").append(context.clubId() != null ? context.clubId() : "null").append("\n");
-        sb.append("clubGroupId = ").append(context.clubGroupId() != null ? context.clubGroupId() : "null").append("\n");
-        sb.append("coachGroupId = ").append(context.coachGroupId() != null ? context.coachGroupId() : "null").append("\n");
-        sb.append("sessionId = ").append(context.sessionId() != null ? context.sessionId() : "null").append("\n");
-        sb.append("sport = ").append(context.sport() != null ? context.sport() : "null").append("\n");
-        sb.append("zoneSystemId = ").append(context.zoneSystemId() != null ? context.zoneSystemId() : "null");
+        sb.append("clubId = ").append(Optional.ofNullable(context.clubId()).orElse("null")).append("\n");
+        sb.append("clubGroupId = ").append(Optional.ofNullable(context.clubGroupId()).orElse("null")).append("\n");
+        sb.append("coachGroupId = ").append(Optional.ofNullable(context.coachGroupId()).orElse("null")).append("\n");
+        sb.append("sessionId = ").append(Optional.ofNullable(context.sessionId()).orElse("null")).append("\n");
+        sb.append("sport = ").append(Optional.ofNullable(context.sport()).orElse("null")).append("\n");
+        sb.append("zoneSystemId = ").append(Optional.ofNullable(context.zoneSystemId()).orElse("null"));
 
         // Append zone system details when available
         String zsId = context.zoneSystemId();

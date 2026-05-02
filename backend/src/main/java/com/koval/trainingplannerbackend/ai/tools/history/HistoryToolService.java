@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * AI-facing tool service for workout history and performance analytics.
@@ -86,7 +87,7 @@ public class HistoryToolService {
                     s.getId(),
                     s.getTitle(),
                     s.getSportType(),
-                    s.getCompletedAt() != null ? s.getCompletedAt().toString() : null,
+                    Optional.ofNullable(s.getCompletedAt()).map(LocalDateTime::toString).orElse(null),
                     s.getTotalDurationSeconds(),
                     s.getAvgPower(),
                     s.getAvgHR(),

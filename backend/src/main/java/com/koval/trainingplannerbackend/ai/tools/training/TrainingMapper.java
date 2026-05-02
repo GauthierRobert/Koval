@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /** Maps AI-facing {@link TrainingRequest} DTOs to rich {@link Training} entities with sport-specific subclass instantiation. */
 @Component
@@ -29,7 +30,7 @@ public class TrainingMapper {
         training.setDescription(request.desc());
 
         // Groups (default to empty list if null)
-        training.setGroupIds(request.groupIds() != null ? request.groupIds() : new ArrayList<>());
+        training.setGroupIds(Optional.ofNullable(request.groupIds()).orElseGet(ArrayList::new));
 
         training.setTrainingType(safeValueOf(TrainingType.class, request.type(), TrainingType.MIXED));
 
