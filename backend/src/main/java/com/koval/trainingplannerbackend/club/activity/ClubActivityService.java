@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -79,12 +80,13 @@ public class ClubActivityService {
         Map<String, User> userMap = userService.findAllById(actorIds).stream()
                 .collect(Collectors.toMap(User::getId, u -> u));
         return activities.stream().map(a -> {
-            User actor = userMap.get(a.getActorId());
-            String actorName = actor != null ? actor.getDisplayName() : a.getActorId();
+            String actorName = Optional.ofNullable(userMap.get(a.getActorId()))
+                    .map(User::getDisplayName)
+                    .orElse(a.getActorId());
             return new ClubActivityResponse(
                     a.getId(), a.getType(), a.getActorId(), actorName,
                     a.getTargetId(), a.getTargetTitle(), a.getOccurredAt());
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
     private void notifyMembersExceptActor(String clubId, String actorId,
@@ -93,13 +95,14 @@ public class ClubActivityService {
         List<String> memberIds = getActiveMemberIds(clubId);
         memberIds.remove(actorId);
         if (memberIds.isEmpty()) return;
-        User actor = userService.findById(actorId).orElse(null);
-        String actorName = actor != null ? actor.getDisplayName() : "Someone";
+        String actorName = userService.findById(actorId)
+                .map(User::getDisplayName)
+                .orElse("Someone");
         notificationService.sendToUsers(memberIds, title, actorName + " " + message, data);
     }
 
     private static String nonNull(String s) {
-        return s != null ? s : "";
+        return Optional.ofNullable(s).orElse("");
     }
 
     List<String> getActiveMemberIds(String clubId) {

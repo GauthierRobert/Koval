@@ -32,8 +32,10 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class ClubStatsService {
@@ -105,7 +107,7 @@ public class ClubStatsService {
         Map<String, Integer> countMap = new LinkedHashMap<>();
         for (CompletedSession s : sessions) {
             String uid = s.getUserId();
-            tssMap.merge(uid, s.getTss() != null ? s.getTss() : 0.0, Double::sum);
+            tssMap.merge(uid, Optional.ofNullable(s.getTss()).orElse(0.0), Double::sum);
             countMap.merge(uid, 1, Integer::sum);
         }
 
@@ -116,19 +118,19 @@ public class ClubStatsService {
         Map<String, User> userMap = userService.findAllById(uids).stream()
                 .collect(Collectors.toMap(User::getId, u -> u));
 
-        List<LeaderboardEntry> leaderboard = new ArrayList<>();
-        for (int i = 0; i < sorted.size(); i++) {
-            String uid = sorted.get(i).getKey();
-            User user = userMap.get(uid);
-            leaderboard.add(new LeaderboardEntry(
-                    uid,
-                    user != null ? user.getDisplayName() : uid,
-                    user != null ? user.getProfilePicture() : null,
-                    sorted.get(i).getValue(),
-                    countMap.getOrDefault(uid, 0),
-                    i + 1));
-        }
-        return leaderboard;
+        return IntStream.range(0, sorted.size())
+                .mapToObj(i -> {
+                    String uid = sorted.get(i).getKey();
+                    Optional<User> uOpt = Optional.ofNullable(userMap.get(uid));
+                    return new LeaderboardEntry(
+                            uid,
+                            uOpt.map(User::getDisplayName).orElse(uid),
+                            uOpt.map(User::getProfilePicture).orElse(null),
+                            sorted.get(i).getValue(),
+                            countMap.getOrDefault(uid, 0),
+                            i + 1);
+                })
+                .toList();
     }
 
     public ClubExtendedStatsResponse getExtendedStats(String userId, String clubId) {
@@ -162,11 +164,14 @@ public class ClubStatsService {
                     .mapToDouble(CompletedSession.BlockSummary::distanceMeters).sum()
                     : 0;
             if (dist == 0 && s.getTotalDistance() != null) dist = s.getTotalDistance();
-            String sport = s.getSportType();
-            if ("SWIMMING".equalsIgnoreCase(sport)) swimKm += dist / 1000.0;
-            else if ("CYCLING".equalsIgnoreCase(sport)) bikeKm += dist / 1000.0;
-            else if ("RUNNING".equalsIgnoreCase(sport)) runKm += dist / 1000.0;
-            totalTss += s.getTss() != null ? s.getTss() : 0;
+            String sportKey = Optional.ofNullable(s.getSportType()).map(String::toUpperCase).orElse("");
+            switch (sportKey) {
+                case "SWIMMING" -> swimKm += dist / 1000.0;
+                case "CYCLING" -> bikeKm += dist / 1000.0;
+                case "RUNNING" -> runKm += dist / 1000.0;
+                default -> { /* unknown/null sport: skip distance bucket */ }
+            }
+            totalTss += Optional.ofNullable(s.getTss()).orElse(0.0);
             totalDurationSec += s.getTotalDurationSeconds();
         }
         double totalDurationHours = totalDurationSec / 3600.0;
@@ -303,10 +308,11 @@ public class ClubStatsService {
                         weekPresence.add(weekSession.getParticipantIds().contains(athleteId));
                     }
                 }
+                Optional<User> uOpt = Optional.ofNullable(user);
                 athleteGrid.add(new ClubExtendedStatsResponse.AthletePresence(
                         athleteId,
-                        user != null ? user.getDisplayName() : athleteId,
-                        user != null ? user.getProfilePicture() : null,
+                        uOpt.map(User::getDisplayName).orElse(athleteId),
+                        uOpt.map(User::getProfilePicture).orElse(null),
                         weekPresence));
             }
 
@@ -319,8 +325,8 @@ public class ClubStatsService {
 
             recurringAttendance.add(new ClubExtendedStatsResponse.RecurringTemplateAttendance(
                     template.getId(), template.getTitle(), template.getSport(),
-                    template.getDayOfWeek() != null ? template.getDayOfWeek().name() : null,
-                    template.getTimeOfDay() != null ? template.getTimeOfDay().toString() : null,
+                    Optional.ofNullable(template.getDayOfWeek()).map(DayOfWeek::name).orElse(null),
+                    Optional.ofNullable(template.getTimeOfDay()).map(Object::toString).orElse(null),
                     template.getClubGroupId(), data.clubGroupName,
                     maxParticipants, eligibleCount,
                     weeks, athleteGrid));
@@ -351,7 +357,7 @@ public class ClubStatsService {
                             && !s.getCompletedAt().isBefore(wStartDt)
                             && s.getCompletedAt().isBefore(wEndDt))
                     .toList();
-            double wTss = wSessions.stream().mapToDouble(s -> s.getTss() != null ? s.getTss() : 0).sum();
+            double wTss = wSessions.stream().mapToDouble(s -> Optional.ofNullable(s.getTss()).orElse(0.0)).sum();
             double wHours = wSessions.stream().mapToLong(CompletedSession::getTotalDurationSeconds).sum() / 3600.0;
 
             List<ClubTrainingSession> wClubSessions = pastClubSessions.stream()
@@ -379,7 +385,7 @@ public class ClubStatsService {
             long[] stats = memberStats.computeIfAbsent(s.getUserId(), k -> new long[3]);
             stats[0] += s.getTotalDurationSeconds();
             stats[1]++;
-            stats[2] += Math.round(s.getTss() != null ? s.getTss() : 0);
+            stats[2] += Math.round(Optional.ofNullable(s.getTss()).orElse(0.0));
         }
         List<String> activeMemberIds = memberStats.entrySet().stream()
                 .sorted((a, b) -> Long.compare(b.getValue()[0], a.getValue()[0]))
@@ -390,11 +396,11 @@ public class ClubStatsService {
         List<ClubExtendedStatsResponse.MemberHighlight> mostActive = activeMemberIds.stream()
                 .map(uid -> {
                     long[] stats = memberStats.get(uid);
-                    User u = activeMemberMap.get(uid);
+                    Optional<User> uOpt = Optional.ofNullable(activeMemberMap.get(uid));
                     return new ClubExtendedStatsResponse.MemberHighlight(
                             uid,
-                            u != null ? u.getDisplayName() : uid,
-                            u != null ? u.getProfilePicture() : null,
+                            uOpt.map(User::getDisplayName).orElse(uid),
+                            uOpt.map(User::getProfilePicture).orElse(null),
                             Math.round(stats[0] / 360.0) / 10.0,
                             (int) stats[1], stats[2]);
                 })
@@ -436,21 +442,17 @@ public class ClubStatsService {
 
         List<RaceGoal> goals = raceGoalRepository.findByAthleteIdIn(memberIds).stream()
                 .filter(g -> {
-                    Race race = resolveRace.apply(g.getRaceId());
-                    String date = race != null ? race.getScheduledDate() : null;
+                    String date = Optional.ofNullable(resolveRace.apply(g.getRaceId()))
+                            .map(Race::getScheduledDate).orElse(null);
                     return date == null || date.compareTo(todayIso) >= 0;
                 })
-                .sorted(Comparator.comparing(g -> {
-                    Race race = resolveRace.apply(g.getRaceId());
-                    String date = race != null ? race.getScheduledDate() : null;
-                    return date == null ? "9999-99-99" : date;
-                }))
+                .sorted(Comparator.comparing(g -> Optional.ofNullable(resolveRace.apply(g.getRaceId()))
+                        .map(Race::getScheduledDate).orElse("9999-99-99")))
                 .toList();
 
         Map<String, List<RaceGoal>> goalsByRace = goals.stream()
-                .collect(Collectors.groupingBy(g ->
-                        g.getRaceId() != null ? g.getRaceId()
-                                : g.getTitle().toLowerCase().trim(),
+                .collect(Collectors.groupingBy(
+                        g -> Optional.ofNullable(g.getRaceId()).orElseGet(() -> g.getTitle().toLowerCase().trim()),
                         LinkedHashMap::new, Collectors.toList()));
 
         List<String> athleteIds = goals.stream().map(RaceGoal::getAthleteId).distinct().toList();
@@ -462,29 +464,25 @@ public class ClubStatsService {
             Race race = resolveRace.apply(representative.getRaceId());
             List<ClubRaceGoalResponse.RaceParticipant> participants = raceGoals.stream()
                     .map(g -> {
-                        User u = userMap.get(g.getAthleteId());
+                        Optional<User> uOpt = Optional.ofNullable(userMap.get(g.getAthleteId()));
                         return new ClubRaceGoalResponse.RaceParticipant(
                                 g.getAthleteId(),
-                                u != null ? u.getDisplayName() : g.getAthleteId(),
-                                u != null ? u.getProfilePicture() : null,
+                                uOpt.map(User::getDisplayName).orElse(g.getAthleteId()),
+                                uOpt.map(User::getProfilePicture).orElse(null),
                                 g.getPriority(),
                                 g.getTargetTime());
                     })
                     .toList();
 
-            String title = race != null ? race.getTitle() : representative.getTitle();
-            String sport = race != null && race.getSport() != null ? race.getSport() : representative.getSport();
-            String distance = race != null && race.getDistance() != null ? race.getDistance() : representative.getDistance();
-            String location = race != null && race.getLocation() != null ? race.getLocation() : representative.getLocation();
-
+            Optional<Race> raceOpt = Optional.ofNullable(race);
             return new ClubRaceGoalResponse(
                     representative.getRaceId(),
-                    title,
-                    sport,
-                    race != null ? race.getScheduledDate() : null,
-                    distance,
-                    location,
+                    raceOpt.map(Race::getTitle).orElseGet(representative::getTitle),
+                    raceOpt.map(Race::getSport).filter(s -> s != null).orElseGet(representative::getSport),
+                    raceOpt.map(Race::getScheduledDate).orElse(null),
+                    raceOpt.map(Race::getDistance).filter(d -> d != null).orElseGet(representative::getDistance),
+                    raceOpt.map(Race::getLocation).filter(l -> l != null).orElseGet(representative::getLocation),
                     participants);
-        }).collect(Collectors.toList());
+        }).toList();
     }
 }

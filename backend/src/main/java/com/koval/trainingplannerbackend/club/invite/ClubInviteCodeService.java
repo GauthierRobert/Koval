@@ -205,8 +205,7 @@ public class ClubInviteCodeService {
     }
 
     private ClubInviteCodeResponse toResponse(ClubInviteCode code, Map<String, String> groupNameMap) {
-        String groupName = code.getClubGroupId() != null ? groupNameMap.get(code.getClubGroupId()) : null;
-        return toResponse(code, groupName);
+        return toResponse(code, Optional.ofNullable(code.getClubGroupId()).map(groupNameMap::get).orElse(null));
     }
 
     private static ClubInviteCodeResponse toResponse(ClubInviteCode code, String groupName) {
@@ -214,8 +213,8 @@ public class ClubInviteCodeService {
                 code.getId(), code.getCode(), code.getClubId(), code.getCreatedBy(),
                 code.getClubGroupId(), groupName,
                 code.getMaxUses(), code.getCurrentUses(),
-                code.getExpiresAt() != null ? code.getExpiresAt().toString() : null,
+                Optional.ofNullable(code.getExpiresAt()).map(LocalDateTime::toString).orElse(null),
                 Boolean.TRUE.equals(code.getActive()),
-                code.getCreatedAt() != null ? code.getCreatedAt().toString() : null);
+                Optional.ofNullable(code.getCreatedAt()).map(LocalDateTime::toString).orElse(null));
     }
 }
