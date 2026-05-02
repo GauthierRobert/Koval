@@ -26,12 +26,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Service for Coach-specific operations.
@@ -92,23 +92,16 @@ public class CoachService {
 
         // Verify all athletes belong to this coach via groups
         Set<String> coachAthleteIds = new HashSet<>(groupService.getAthleteIdsForCoach(coachId));
+        athleteIds.stream()
+                .filter(id -> !coachAthleteIds.contains(id))
+                .findFirst()
+                .ifPresent(id -> {
+                    throw new ValidationException("Athlete " + id + " is not assigned to coach " + coachId);
+                });
 
-        List<ScheduledWorkout> workoutsToSave = new ArrayList<>();
-        for (String athleteId : athleteIds) {
-            if (!coachAthleteIds.contains(athleteId)) {
-                throw new ValidationException("Athlete " + athleteId + " is not assigned to coach " + coachId);
-            }
-
-            ScheduledWorkout workout = new ScheduledWorkout();
-            workout.setTrainingId(trainingId);
-            workout.setAthleteId(athleteId);
-            workout.setAssignedBy(coachId);
-            workout.setScheduledDate(scheduledDate);
-            workout.setNotes(notes);
-            workout.setStatus(ScheduleStatus.PENDING);
-
-            workoutsToSave.add(workout);
-        }
+        List<ScheduledWorkout> workoutsToSave = athleteIds.stream()
+                .map(athleteId -> newPendingWorkout(trainingId, athleteId, coachId, scheduledDate, notes))
+                .toList();
         List<ScheduledWorkout> assignments = scheduledWorkoutRepository.saveAll(workoutsToSave);
 
         // Create ReceivedTraining entries
@@ -122,14 +115,13 @@ public class CoachService {
         }
         if (originName == null) {
             // Infer from the first matching group
-            List<Group> coachGroups = groupService.getGroupsForCoach(coachId);
             Set<String> athleteIdSet = Set.copyOf(athleteIds);
-            for (Group g : coachGroups) {
-                if (g.getAthleteIds().stream().anyMatch(athleteIdSet::contains)) {
-                    originId = g.getId();
-                    originName = g.getName();
-                    break;
-                }
+            var matched = groupService.getGroupsForCoach(coachId).stream()
+                    .filter(g -> g.getAthleteIds().stream().anyMatch(athleteIdSet::contains))
+                    .findFirst();
+            if (matched.isPresent()) {
+                originId = matched.get().getId();
+                originName = matched.get().getName();
             }
         }
         receivedTrainingService.createReceivedTrainings(
@@ -173,27 +165,21 @@ public class CoachService {
         }
 
         // Validate all athletes are active club members
-        List<String> activeMemberIds = clubMembershipService.getActiveMemberIds(clubId);
-        for (String athleteId : athleteIds) {
-            if (!activeMemberIds.contains(athleteId)) {
-                throw new ValidationException("Athlete " + athleteId + " is not an active member of club " + clubId);
-            }
-        }
+        Set<String> activeMemberIds = Set.copyOf(clubMembershipService.getActiveMemberIds(clubId));
+        athleteIds.stream()
+                .filter(id -> !activeMemberIds.contains(id))
+                .findFirst()
+                .ifPresent(id -> {
+                    throw new ValidationException("Athlete " + id + " is not an active member of club " + clubId);
+                });
 
         User coach = userRepository.findById(coachId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", coachId));
 
-        List<ScheduledWorkout> assignments = new ArrayList<>();
-        for (String athleteId : athleteIds) {
-            ScheduledWorkout workout = new ScheduledWorkout();
-            workout.setTrainingId(trainingId);
-            workout.setAthleteId(athleteId);
-            workout.setAssignedBy(coachId);
-            workout.setScheduledDate(scheduledDate);
-            workout.setNotes(notes);
-            workout.setStatus(ScheduleStatus.PENDING);
-            assignments.add(scheduledWorkoutRepository.save(workout));
-        }
+        List<ScheduledWorkout> assignments = athleteIds.stream()
+                .map(athleteId -> scheduledWorkoutRepository.save(
+                        newPendingWorkout(trainingId, athleteId, coachId, scheduledDate, notes)))
+                .toList();
 
         // Create ReceivedTraining entries with CLUB origin
         String clubName = clubRepository.findById(clubId).map(Club::getName).orElse("Unknown Club");
@@ -225,15 +211,20 @@ public class CoachService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId));
 
+        return scheduledWorkoutRepository.save(
+                newPendingWorkout(trainingId, userId, userId, scheduledDate, notes));
+    }
+
+    private static ScheduledWorkout newPendingWorkout(String trainingId, String athleteId,
+                                                       String assignedBy, LocalDate scheduledDate, String notes) {
         ScheduledWorkout workout = new ScheduledWorkout();
         workout.setTrainingId(trainingId);
-        workout.setAthleteId(userId);
-        workout.setAssignedBy(userId);
+        workout.setAthleteId(athleteId);
+        workout.setAssignedBy(assignedBy);
         workout.setScheduledDate(scheduledDate);
         workout.setNotes(notes);
         workout.setStatus(ScheduleStatus.PENDING);
-
-        return scheduledWorkoutRepository.save(workout);
+        return workout;
     }
 
     /**
@@ -251,21 +242,15 @@ public class CoachService {
      */
     public boolean isCoachOfAthlete(String coachId, String athleteId) {
         // Check group-based ownership
-        List<String> groupAthleteIds = groupService.getAthleteIdsForCoach(coachId);
-        if (groupAthleteIds.contains(athleteId)) {
+        if (groupService.getAthleteIdsForCoach(coachId).contains(athleteId)) {
             return true;
         }
         // Check club-based ownership (coach/admin/owner in a club where athlete is a member)
-        var roles = clubMembershipService.getMyClubRoles(coachId);
-        for (var role : roles) {
-            if (role.role() == ClubMemberRole.COACH || role.role() == ClubMemberRole.ADMIN || role.role() == ClubMemberRole.OWNER) {
-                List<String> memberIds = clubMembershipService.getActiveMemberIds(role.clubId());
-                if (memberIds.contains(athleteId)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return clubMembershipService.getMyClubRoles(coachId).stream()
+                .filter(r -> r.role() == ClubMemberRole.COACH
+                        || r.role() == ClubMemberRole.ADMIN
+                        || r.role() == ClubMemberRole.OWNER)
+                .anyMatch(r -> clubMembershipService.getActiveMemberIds(r.clubId()).contains(athleteId));
     }
 
     /**
@@ -281,37 +266,28 @@ public class CoachService {
                 .toList();
 
         Set<String> groupAthleteIds = groupAthletes.stream().map(User::getId).collect(Collectors.toSet());
-        Map<String, List<String>> userClubNames = new HashMap<>();
 
-        for (var role : coachRoles) {
-            List<ClubMembership> members = clubMembershipRepository.findByClubIdAndStatus(role.clubId(), ClubMemberStatus.ACTIVE);
-            for (ClubMembership m : members) {
-                if (!m.getUserId().equals(coachId)) {
-                    userClubNames.computeIfAbsent(m.getUserId(), k -> new ArrayList<>()).add(role.clubName());
-                }
-            }
-        }
+        Map<String, List<String>> userClubNames = coachRoles.stream()
+                .flatMap(role -> clubMembershipRepository.findByClubIdAndStatus(role.clubId(), ClubMemberStatus.ACTIVE).stream()
+                        .filter(m -> !m.getUserId().equals(coachId))
+                        .map(m -> Map.entry(m.getUserId(), role.clubName())))
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getKey,
+                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
 
         Set<String> clubOnlyIds = new HashSet<>(userClubNames.keySet());
         clubOnlyIds.removeAll(groupAthleteIds);
         List<User> clubOnlyUsers = clubOnlyIds.isEmpty() ? List.of() : userRepository.findByIdIn(new ArrayList<>(clubOnlyIds));
 
-        List<AthleteResponse> result = new ArrayList<>();
-
-        for (User athlete : groupAthletes) {
-            List<String> athleteGroupNames = coachGroups.stream()
-                    .filter(group -> group.getAthleteIds().contains(athlete.getId()))
-                    .map(Group::getName)
-                    .toList();
-            result.add(AthleteResponse.from(athlete, athleteGroupNames,
-                    userClubNames.getOrDefault(athlete.getId(), List.of()), true));
-        }
-
-        for (User athlete : clubOnlyUsers) {
-            result.add(AthleteResponse.from(athlete, List.of(),
-                    userClubNames.getOrDefault(athlete.getId(), List.of()), false));
-        }
-
-        return result;
+        return Stream.concat(
+                groupAthletes.stream().map(athlete -> AthleteResponse.from(athlete,
+                        coachGroups.stream()
+                                .filter(group -> group.getAthleteIds().contains(athlete.getId()))
+                                .map(Group::getName)
+                                .toList(),
+                        userClubNames.getOrDefault(athlete.getId(), List.of()), true)),
+                clubOnlyUsers.stream().map(athlete -> AthleteResponse.from(athlete, List.of(),
+                        userClubNames.getOrDefault(athlete.getId(), List.of()), false))
+        ).toList();
     }
 }
