@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import static java.util.Optional.ofNullable;
@@ -160,8 +161,8 @@ public class TrainingService {
                 // fall through to default
             }
         }
-        SportType sport = training.getSportType() != null ? training.getSportType() : SportType.CYCLING;
-        String createdBy = training.getCreatedBy() != null ? training.getCreatedBy() : userId;
+        SportType sport = Optional.ofNullable(training.getSportType()).orElse(SportType.CYCLING);
+        String createdBy = Optional.ofNullable(training.getCreatedBy()).orElse(userId);
         return zoneSystemService.getDefaultZoneSystem(createdBy, sport)
                 .orElseGet(() -> ZoneUtils.getDefaultZoneSystem(sport));
     }
@@ -183,16 +184,16 @@ public class TrainingService {
     private static Zone matchZoneInText(String text, ZoneSystem zoneSystem) {
         if (text == null || text.isBlank()) return null;
         String upper = text.trim().toUpperCase();
-        Zone tokenMatch = null;
-        for (Zone z : zoneSystem.getZones()) {
-            if (z.label() == null || z.label().isBlank()) continue;
-            String zoneLabel = z.label().trim().toUpperCase();
-            if (upper.equals(zoneLabel)) return z;
-            if (tokenMatch == null && containsAsToken(upper, zoneLabel)) {
-                tokenMatch = z;
-            }
-        }
-        return tokenMatch;
+        List<Zone> labeled = zoneSystem.getZones().stream()
+                .filter(z -> z.label() != null && !z.label().isBlank())
+                .toList();
+        return labeled.stream()
+                .filter(z -> upper.equals(z.label().trim().toUpperCase()))
+                .findFirst()
+                .or(() -> labeled.stream()
+                        .filter(z -> containsAsToken(upper, z.label().trim().toUpperCase()))
+                        .findFirst())
+                .orElse(null);
     }
 
     /** Word-boundary contains: "Z4" matches "Z4 Threshold" but not "Z40". */
@@ -202,7 +203,10 @@ public class TrainingService {
     }
 
     private static String formatZoneDisplayLabel(Zone z) {
-        String desc = (z.description() != null && !z.description().isBlank()) ? " - " + z.description() : "";
+        String desc = Optional.ofNullable(z.description())
+                .filter(d -> !d.isBlank())
+                .map(d -> " - " + d)
+                .orElse("");
         return z.label() + desc + " (" + z.low() + "-" + z.high() + "%)";
     }
 

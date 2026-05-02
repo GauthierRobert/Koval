@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.integration.strava;
 
 import com.koval.trainingplannerbackend.auth.StravaOAuthService;
+import com.koval.trainingplannerbackend.auth.StravaTokenResponse;
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.config.exceptions.RateLimitException;
@@ -53,13 +54,13 @@ public class StravaApiClient {
         }
 
         log.info("Refreshing Strava token for user {}", user.getId());
-        StravaOAuthService.StravaTokenResponse response = stravaOAuthService.refreshAccessToken(user.getStravaRefreshToken());
-        user.setStravaAccessToken(response.getAccessToken());
-        user.setStravaRefreshToken(response.getRefreshToken());
-        user.setStravaTokenExpiresAt(response.getExpiresAt());
+        StravaTokenResponse response = stravaOAuthService.refreshAccessToken(user.getStravaRefreshToken());
+        user.setStravaAccessToken(response.accessToken());
+        user.setStravaRefreshToken(response.refreshToken());
+        user.setStravaTokenExpiresAt(response.expiresAt());
         userRepository.save(user);
 
-        return response.getAccessToken();
+        return response.accessToken();
     }
 
     @SuppressWarnings("unchecked")

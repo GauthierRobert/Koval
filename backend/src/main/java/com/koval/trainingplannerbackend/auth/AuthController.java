@@ -64,16 +64,16 @@ public class AuthController {
     @GetMapping("/strava/callback")
     public ResponseEntity<Map<String, Object>> handleStravaCallback(@RequestParam String code) {
         try {
-            StravaOAuthService.StravaTokenResponse tokenResponse = stravaOAuthService.exchangeCodeForToken(code);
+            StravaTokenResponse tokenResponse = stravaOAuthService.exchangeCodeForToken(code);
 
             User user = accountLinkingService.findOrCreateFromStrava(
-                    tokenResponse.getAthleteId(),
-                    tokenResponse.getDisplayName(),
-                    tokenResponse.getProfilePicture(),
-                    tokenResponse.getAccessToken(),
-                    tokenResponse.getRefreshToken(),
-                    tokenResponse.getExpiresAt(),
-                    tokenResponse.getEmail());
+                    tokenResponse.athleteId(),
+                    tokenResponse.displayName(),
+                    tokenResponse.profilePicture(),
+                    tokenResponse.accessToken(),
+                    tokenResponse.refreshToken(),
+                    tokenResponse.expiresAt(),
+                    tokenResponse.email());
 
             String jwt = generateJwtToken(user);
 
@@ -240,9 +240,9 @@ public class AuthController {
     @PostMapping("/link/strava/callback")
     public ResponseEntity<Map<String, Object>> linkStrava(@RequestParam String code) {
         String userId = SecurityUtils.getCurrentUserId();
-        StravaOAuthService.StravaTokenResponse tokenResponse = stravaOAuthService.exchangeCodeForToken(code);
-        User user = accountLinkingService.linkStrava(userId, tokenResponse.getAthleteId(),
-                tokenResponse.getAccessToken(), tokenResponse.getRefreshToken(), tokenResponse.getExpiresAt());
+        StravaTokenResponse tokenResponse = stravaOAuthService.exchangeCodeForToken(code);
+        User user = accountLinkingService.linkStrava(userId, tokenResponse.athleteId(),
+                tokenResponse.accessToken(), tokenResponse.refreshToken(), tokenResponse.expiresAt());
         return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 

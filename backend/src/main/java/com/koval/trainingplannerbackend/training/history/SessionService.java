@@ -378,7 +378,7 @@ public class SessionService {
     private void tryMarkCompleted(String scheduledWorkoutId, CompletedSession session) {
         try {
             scheduledWorkoutService.markCompleted(scheduledWorkoutId,
-                    session.getTss() != null ? session.getTss().intValue() : null,
+                    Optional.ofNullable(session.getTss()).map(Double::intValue).orElse(null),
                     session.getIntensityFactor(),
                     session.getId());
         } catch (IllegalArgumentException | IllegalStateException e) {

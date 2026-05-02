@@ -7,6 +7,8 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 /**
  * Classifies user messages into agent types via a lightweight Haiku LLM call (~150 tokens).
  * Always calls the LLM — the cost of a misrouted request (~10k tokens) far exceeds
@@ -27,7 +29,7 @@ public class RouterService {
 
     public AgentType classify(String userMessage, String userRole, String lastAgentType) {
         try {
-            String lastAgent = lastAgentType != null ? lastAgentType : "NONE";
+            String lastAgent = Optional.ofNullable(lastAgentType).orElse("NONE");
             String systemPrompt = ROUTER_SYSTEM.replace("{lastAgent}", lastAgent);
 
             String result = routerClient.prompt()

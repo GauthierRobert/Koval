@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 class RunPacingService {
@@ -108,7 +109,7 @@ class RunPacingService {
         double fatigue = startFatigue;
         double cumulativeTime = 0.0;
         int lastNutritionMinute = 0;
-        double fr = profile.fatigueResistance() != null ? profile.fatigueResistance() : 0.5;
+        double fr = Optional.ofNullable(profile.fatigueResistance()).orElse(0.5);
 
         for (int i = 0; i < course.size(); i++) {
             CourseSegment seg = course.get(i);

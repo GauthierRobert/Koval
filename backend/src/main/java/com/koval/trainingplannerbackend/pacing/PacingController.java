@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 @RestController
@@ -134,11 +135,11 @@ public class PacingController {
         profile = mergeProfileAndValidate(profile, disc);
 
         PacingPlanResponse plan = pacingService.generatePlan(
-                bikeResult != null ? bikeResult.segments() : null,
-                runResult != null ? runResult.segments() : null,
+                Optional.ofNullable(bikeResult).map(GpxParseResult::segments).orElse(null),
+                Optional.ofNullable(runResult).map(GpxParseResult::segments).orElse(null),
                 profile, disc.name(),
-                bikeResult != null ? bikeResult.routeCoordinates() : null,
-                runResult != null ? runResult.routeCoordinates() : null);
+                Optional.ofNullable(bikeResult).map(GpxParseResult::routeCoordinates).orElse(null),
+                Optional.ofNullable(runResult).map(GpxParseResult::routeCoordinates).orElse(null));
 
         return ResponseEntity.ok(plan);
     }
@@ -296,11 +297,11 @@ public class PacingController {
         AthleteProfile profile = mergeProfileAndValidate(request.profile(), disc);
 
         PacingPlanResponse plan = pacingService.generatePlan(
-                bikeResult != null ? bikeResult.segments() : null,
-                runResult != null ? runResult.segments() : null,
+                Optional.ofNullable(bikeResult).map(GpxParseResult::segments).orElse(null),
+                Optional.ofNullable(runResult).map(GpxParseResult::segments).orElse(null),
                 profile, disc.name(),
-                bikeResult != null ? bikeResult.routeCoordinates() : null,
-                runResult != null ? runResult.routeCoordinates() : null);
+                Optional.ofNullable(bikeResult).map(GpxParseResult::routeCoordinates).orElse(null),
+                Optional.ofNullable(runResult).map(GpxParseResult::routeCoordinates).orElse(null));
 
         return ResponseEntity.ok(plan);
     }

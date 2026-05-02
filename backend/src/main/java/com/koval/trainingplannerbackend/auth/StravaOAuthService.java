@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend.auth;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Service for Strava OAuth2 integration.
@@ -38,8 +40,9 @@ public class StravaOAuthService {
      * Generate the Strava authorization URL.
      */
     public String getAuthorizationUrl(String overrideRedirectUri) {
-        String effectiveRedirectUri = (overrideRedirectUri != null && !overrideRedirectUri.isBlank())
-                ? overrideRedirectUri : redirectUri;
+        String effectiveRedirectUri = Optional.ofNullable(overrideRedirectUri)
+                .filter(s -> !s.isBlank())
+                .orElse(redirectUri);
         return STRAVA_AUTH_URL +
                 "?client_id=" + clientId +
                 "&response_type=code" +
@@ -67,9 +70,9 @@ public class StravaOAuthService {
         StravaTokenResponse tokenResponse = parseTokenResponse(response.getBody());
 
         // Fetch full athlete profile (includes email) — not available in token response
-        fetchAthleteEmail(tokenResponse);
-
-        return tokenResponse;
+        return fetchAthleteEmail(tokenResponse)
+                .map(tokenResponse::withEmail)
+                .orElse(tokenResponse);
     }
 
     /**
@@ -91,124 +94,36 @@ public class StravaOAuthService {
         return parseTokenResponse(response.getBody());
     }
 
-    private void fetchAthleteEmail(StravaTokenResponse tokenResponse) {
+    private Optional<String> fetchAthleteEmail(StravaTokenResponse tokenResponse) {
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(tokenResponse.getAccessToken());
+            headers.setBearerAuth(tokenResponse.accessToken());
             HttpEntity<Void> request = new HttpEntity<>(headers);
             ResponseEntity<Map> response = restTemplate.exchange(
-                    STRAVA_ATHLETE_URL, org.springframework.http.HttpMethod.GET, request, Map.class);
-            Map<String, Object> athlete = response.getBody();
-            if (athlete != null && athlete.get("email") != null) {
-                tokenResponse.setEmail((String) athlete.get("email"));
-            }
+                    STRAVA_ATHLETE_URL, HttpMethod.GET, request, Map.class);
+            return Optional.ofNullable(response.getBody())
+                    .map(athlete -> athlete.get("email"))
+                    .map(String.class::cast);
         } catch (RestClientException e) {
             // Non-critical — proceed without email
+            return Optional.empty();
         }
     }
 
+    @SuppressWarnings("unchecked")
     private StravaTokenResponse parseTokenResponse(Map<String, Object> responseBody) {
         if (responseBody == null) {
             throw new RuntimeException("Empty response from Strava");
         }
-
-        StravaTokenResponse tokenResponse = new StravaTokenResponse();
-        tokenResponse.setAccessToken((String) responseBody.get("access_token"));
-        tokenResponse.setRefreshToken((String) responseBody.get("refresh_token"));
-        tokenResponse.setExpiresAt(((Number) responseBody.get("expires_at")).longValue());
-
-        // Parse athlete info
         Map<String, Object> athlete = (Map<String, Object>) responseBody.get("athlete");
-        if (athlete != null) {
-            tokenResponse.setAthleteId(String.valueOf(athlete.get("id")));
-            tokenResponse.setFirstName((String) athlete.get("firstname"));
-            tokenResponse.setLastName((String) athlete.get("lastname"));
-            tokenResponse.setProfilePicture((String) athlete.get("profile"));
-        }
-
-        return tokenResponse;
-    }
-
-    /**
-     * DTO for Strava token response.
-     */
-    public static class StravaTokenResponse {
-        private String accessToken;
-        private String refreshToken;
-        private Long expiresAt;
-        private String athleteId;
-        private String firstName;
-        private String lastName;
-        private String profilePicture;
-        private String email;
-
-        // Getters and Setters
-        public String getAccessToken() {
-            return accessToken;
-        }
-
-        public void setAccessToken(String accessToken) {
-            this.accessToken = accessToken;
-        }
-
-        public String getRefreshToken() {
-            return refreshToken;
-        }
-
-        public void setRefreshToken(String refreshToken) {
-            this.refreshToken = refreshToken;
-        }
-
-        public Long getExpiresAt() {
-            return expiresAt;
-        }
-
-        public void setExpiresAt(Long expiresAt) {
-            this.expiresAt = expiresAt;
-        }
-
-        public String getAthleteId() {
-            return athleteId;
-        }
-
-        public void setAthleteId(String athleteId) {
-            this.athleteId = athleteId;
-        }
-
-        public String getFirstName() {
-            return firstName;
-        }
-
-        public void setFirstName(String firstName) {
-            this.firstName = firstName;
-        }
-
-        public String getLastName() {
-            return lastName;
-        }
-
-        public void setLastName(String lastName) {
-            this.lastName = lastName;
-        }
-
-        public String getProfilePicture() {
-            return profilePicture;
-        }
-
-        public void setProfilePicture(String profilePicture) {
-            this.profilePicture = profilePicture;
-        }
-
-        public String getEmail() {
-            return email;
-        }
-
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public String getDisplayName() {
-            return (firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "");
-        }
+        return new StravaTokenResponse(
+                (String) responseBody.get("access_token"),
+                (String) responseBody.get("refresh_token"),
+                ((Number) responseBody.get("expires_at")).longValue(),
+                Optional.ofNullable(athlete).map(a -> String.valueOf(a.get("id"))).orElse(null),
+                Optional.ofNullable(athlete).map(a -> (String) a.get("firstname")).orElse(null),
+                Optional.ofNullable(athlete).map(a -> (String) a.get("lastname")).orElse(null),
+                Optional.ofNullable(athlete).map(a -> (String) a.get("profile")).orElse(null),
+                null);
     }
 }

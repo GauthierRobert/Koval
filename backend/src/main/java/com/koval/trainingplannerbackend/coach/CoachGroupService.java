@@ -101,15 +101,15 @@ public class CoachGroupService {
         groupService.removeAthleteFromAllCoachGroups(coachId, athleteId);
 
         // Add to each specified group
-        List<Group> result = new ArrayList<>();
-        for (String groupId : groupIds) {
-            Group group = groupService.getGroupById(groupId);
-            if (!coachId.equals(group.getCoachId())) {
-                throw new ForbiddenOperationException("Group " + groupId + " does not belong to this coach");
-            }
-            result.add(groupService.addAthleteToGroup(groupId, athleteId));
-        }
-        return result;
+        return groupIds.stream()
+                .map(groupId -> {
+                    Group group = groupService.getGroupById(groupId);
+                    if (!coachId.equals(group.getCoachId())) {
+                        throw new ForbiddenOperationException("Group " + groupId + " does not belong to this coach");
+                    }
+                    return groupService.addAthleteToGroup(groupId, athleteId);
+                })
+                .toList();
     }
 
     /**

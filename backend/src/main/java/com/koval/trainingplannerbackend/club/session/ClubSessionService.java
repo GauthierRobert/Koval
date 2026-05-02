@@ -26,6 +26,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -69,7 +70,7 @@ public class ClubSessionService {
     }
 
     public ClubTrainingSession createSession(String userId, String clubId, CreateSessionRequest req) {
-        SessionCategory cat = req.category() != null ? req.category() : SessionCategory.SCHEDULED;
+        SessionCategory cat = Optional.ofNullable(req.category()).orElse(SessionCategory.SCHEDULED);
         if (cat == SessionCategory.OPEN) {
             authorizationService.requireActiveMember(userId, clubId);
         } else {
@@ -108,7 +109,7 @@ public class ClubSessionService {
         if (!source.getClubId().equals(clubId)) {
             throw new IllegalArgumentException("Session does not belong to this club");
         }
-        SessionCategory cat = source.getCategory() != null ? source.getCategory() : SessionCategory.SCHEDULED;
+        SessionCategory cat = Optional.ofNullable(source.getCategory()).orElse(SessionCategory.SCHEDULED);
         if (cat == SessionCategory.OPEN) {
             authorizationService.requireActiveMember(userId, clubId);
         } else {
@@ -121,8 +122,9 @@ public class ClubSessionService {
         copy.setCreatedAt(LocalDateTime.now());
         copy.setTitle(source.getTitle());
         copy.setSport(source.getSport());
-        copy.setScheduledAt(newScheduledAt != null ? newScheduledAt
-                : (source.getScheduledAt() != null ? source.getScheduledAt().plusDays(7) : LocalDateTime.now().plusDays(7)));
+        copy.setScheduledAt(Optional.ofNullable(newScheduledAt)
+                .or(() -> Optional.ofNullable(source.getScheduledAt()).map(d -> d.plusDays(7)))
+                .orElseGet(() -> LocalDateTime.now().plusDays(7)));
         copy.setLocation(source.getLocation());
         copy.setMeetingPointLat(source.getMeetingPointLat());
         copy.setMeetingPointLon(source.getMeetingPointLon());
@@ -130,9 +132,9 @@ public class ClubSessionService {
         copy.setLinkedTrainingId(source.getLinkedTrainingId());
         copy.setLinkedTrainingTitle(source.getLinkedTrainingTitle());
         copy.setLinkedTrainingDescription(source.getLinkedTrainingDescription());
-        copy.setLinkedTrainings(source.getLinkedTrainings() != null
-                ? new java.util.ArrayList<>(source.getLinkedTrainings())
-                : new java.util.ArrayList<>());
+        copy.setLinkedTrainings(Optional.ofNullable(source.getLinkedTrainings())
+                .<List<GroupLinkedTraining>>map(ArrayList::new)
+                .orElseGet(ArrayList::new));
         copy.setClubGroupId(source.getClubGroupId());
         copy.setOpenToAll(source.getOpenToAll());
         copy.setOpenToAllDelayValue(source.getOpenToAllDelayValue());
@@ -327,7 +329,9 @@ public class ClubSessionService {
                         glt.getTrainingId(),
                         glt.getTrainingTitle(),
                         glt.getClubGroupId(),
-                        glt.getClubGroupId() != null ? groupNameMap.getOrDefault(glt.getClubGroupId(), glt.getClubGroupName()) : null,
+                        Optional.ofNullable(glt.getClubGroupId())
+                                .map(id -> groupNameMap.getOrDefault(id, glt.getClubGroupName()))
+                                .orElse(null),
                         glt.getClubGroupId() == null || userGroupIds.contains(glt.getClubGroupId())
                 )).toList();
 
@@ -340,9 +344,9 @@ public class ClubSessionService {
                 joined, onWaitingList, waitingListPosition,
                 s.computeOpenToAllFrom(),
                 Boolean.TRUE.equals(s.getCancelled()), s.getCancellationReason(),
-                resolved != null ? resolved.getTrainingId() : null,
-                resolved != null ? resolved.getTrainingTitle() : null,
-                resolved != null ? resolved.getTrainingDescription() : null,
+                Optional.ofNullable(resolved).map(GroupLinkedTraining::getTrainingId).orElse(null),
+                Optional.ofNullable(resolved).map(GroupLinkedTraining::getTrainingTitle).orElse(null),
+                Optional.ofNullable(resolved).map(GroupLinkedTraining::getTrainingDescription).orElse(null),
                 linkedTrainings);
     }
 
@@ -384,7 +388,9 @@ public class ClubSessionService {
     private static final DateTimeFormatter SESSION_DATE_FMT = DateTimeFormatter.ofPattern("EEE d MMM, HH:mm");
 
     private String formatSessionDate(ClubTrainingSession session) {
-        return session.getScheduledAt() != null ? session.getScheduledAt().format(SESSION_DATE_FMT) : "";
+        return Optional.ofNullable(session.getScheduledAt())
+                .map(SESSION_DATE_FMT::format)
+                .orElse("");
     }
 
     private void authorizeSessionModification(String userId, String clubId, ClubTrainingSession session) {

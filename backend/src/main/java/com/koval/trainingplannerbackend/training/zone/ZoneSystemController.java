@@ -122,10 +122,8 @@ public class ZoneSystemController {
     }
 
     private void addWithoutDuplicates(List<ZoneSystem> result, List<ZoneSystem> additions, Set<String> existingIds) {
-        for (ZoneSystem z : additions) {
-            if (existingIds.add(z.getId())) {
-                result.add(z);
-            }
-        }
+        additions.stream()
+                .filter(z -> existingIds.add(z.getId()))
+                .forEach(result::add);
     }
 }

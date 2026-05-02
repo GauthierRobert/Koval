@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Optional;
+
 @Service
 public class SessionGpxService {
 
@@ -64,7 +66,7 @@ public class SessionGpxService {
         if (session.getGpxData() == null) {
             return ResponseEntity.notFound().build();
         }
-        String filename = session.getGpxFileName() != null ? session.getGpxFileName() : "route.gpx";
+        String filename = Optional.ofNullable(session.getGpxFileName()).orElse("route.gpx");
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .contentType(MediaType.APPLICATION_XML)

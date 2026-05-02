@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -118,25 +119,23 @@ public class ScheduleService {
         session.setUserId(workout.getAthleteId());
         session.setSyntheticCompletion(true);
         session.setScheduledWorkoutId(scheduledWorkoutId);
-        session.setCompletedAt(workout.getScheduledDate() != null
-                ? workout.getScheduledDate().atTime(12, 0) : LocalDateTime.now());
+        session.setCompletedAt(Optional.ofNullable(workout.getScheduledDate())
+                .map(d -> d.atTime(12, 0))
+                .orElseGet(LocalDateTime::now));
 
         if (training != null) {
             session.setTitle(training.getTitle());
-            session.setSportType(training.getSportType() != null ? training.getSportType().name() : "CYCLING");
-            if (training.getEstimatedDurationSeconds() != null)
-                session.setTotalDurationSeconds(training.getEstimatedDurationSeconds());
-            if (training.getEstimatedTss() != null)
-                session.setTss(training.getEstimatedTss().doubleValue());
-            if (training.getEstimatedIf() != null)
-                session.setIntensityFactor(training.getEstimatedIf());
+            session.setSportType(Optional.ofNullable(training.getSportType()).map(Enum::name).orElse("CYCLING"));
+            Optional.ofNullable(training.getEstimatedDurationSeconds()).ifPresent(session::setTotalDurationSeconds);
+            Optional.ofNullable(training.getEstimatedTss()).map(Integer::doubleValue).ifPresent(session::setTss);
+            Optional.ofNullable(training.getEstimatedIf()).ifPresent(session::setIntensityFactor);
         }
 
         CompletedSession saved = completedSessionRepository.save(session);
         analyticsService.recomputeAndSaveUserLoad(workout.getAthleteId());
 
         ScheduledWorkout result = scheduledWorkoutService.markCompleted(scheduledWorkoutId,
-                saved.getTss() != null ? saved.getTss().intValue() : null,
+                Optional.ofNullable(saved.getTss()).map(Double::intValue).orElse(null),
                 saved.getIntensityFactor(),
                 saved.getId());
 
@@ -189,19 +188,19 @@ public class ScheduleService {
 
         return workouts.stream()
                 .map(sw -> {
-                    Training t = trainingsMap.get(sw.getTrainingId());
-                    String title = t != null ? t.getTitle() : null;
-                    var type = t != null ? t.getTrainingType() : null;
-                    Integer duration = t != null ? t.getEstimatedDurationSeconds() : null;
-                    var sport = t != null ? t.getSportType() : null;
-                    Integer estimatedTss = t != null ? t.getEstimatedTss() : null;
-                    Double estimatedIf = t != null ? t.getEstimatedIf() : null;
-                    PlanWeekInfo pwi = planWeekIndex.get(sw.getId());
-                    return ScheduledWorkoutResponse.from(sw, title, type, duration, sport, estimatedTss, estimatedIf,
-                            pwi != null ? pwi.planId() : null,
-                            pwi != null ? pwi.planTitle() : null,
-                            pwi != null ? pwi.weekNumber() : null,
-                            pwi != null ? pwi.weekLabel() : null);
+                    Optional<Training> tOpt = Optional.ofNullable(trainingsMap.get(sw.getTrainingId()));
+                    Optional<PlanWeekInfo> pOpt = Optional.ofNullable(planWeekIndex.get(sw.getId()));
+                    return ScheduledWorkoutResponse.from(sw,
+                            tOpt.map(Training::getTitle).orElse(null),
+                            tOpt.map(Training::getTrainingType).orElse(null),
+                            tOpt.map(Training::getEstimatedDurationSeconds).orElse(null),
+                            tOpt.map(Training::getSportType).orElse(null),
+                            tOpt.map(Training::getEstimatedTss).orElse(null),
+                            tOpt.map(Training::getEstimatedIf).orElse(null),
+                            pOpt.map(PlanWeekInfo::planId).orElse(null),
+                            pOpt.map(PlanWeekInfo::planTitle).orElse(null),
+                            pOpt.map(PlanWeekInfo::weekNumber).orElse(null),
+                            pOpt.map(PlanWeekInfo::weekLabel).orElse(null));
                 })
                 .toList();
     }
@@ -210,28 +209,21 @@ public class ScheduleService {
      * Enrich a single scheduled workout with training metadata and plan context.
      */
     public ScheduledWorkoutResponse enrichSingle(ScheduledWorkout sw) {
-        Training t = sw.getTrainingId() != null ? trainingRepository.findById(sw.getTrainingId()).orElse(null) : null;
-        String planId = null, planTitle = null, weekLabel = null;
-        Integer weekNumber = null;
-
-        if (sw.getPlanId() != null) {
-            PlanWeekInfo pwi = resolvePlanWeekInfo(sw.getPlanId(), sw.getId());
-            if (pwi != null) {
-                planId = pwi.planId();
-                planTitle = pwi.planTitle();
-                weekNumber = pwi.weekNumber();
-                weekLabel = pwi.weekLabel();
-            }
-        }
+        Optional<Training> tOpt = Optional.ofNullable(sw.getTrainingId()).flatMap(trainingRepository::findById);
+        Optional<PlanWeekInfo> pOpt = Optional.ofNullable(sw.getPlanId())
+                .map(planId -> resolvePlanWeekInfo(planId, sw.getId()));
 
         return ScheduledWorkoutResponse.from(sw,
-                t != null ? t.getTitle() : null,
-                t != null ? t.getTrainingType() : null,
-                t != null ? t.getEstimatedDurationSeconds() : null,
-                t != null ? t.getSportType() : null,
-                t != null ? t.getEstimatedTss() : null,
-                t != null ? t.getEstimatedIf() : null,
-                planId, planTitle, weekNumber, weekLabel);
+                tOpt.map(Training::getTitle).orElse(null),
+                tOpt.map(Training::getTrainingType).orElse(null),
+                tOpt.map(Training::getEstimatedDurationSeconds).orElse(null),
+                tOpt.map(Training::getSportType).orElse(null),
+                tOpt.map(Training::getEstimatedTss).orElse(null),
+                tOpt.map(Training::getEstimatedIf).orElse(null),
+                pOpt.map(PlanWeekInfo::planId).orElse(null),
+                pOpt.map(PlanWeekInfo::planTitle).orElse(null),
+                pOpt.map(PlanWeekInfo::weekNumber).orElse(null),
+                pOpt.map(PlanWeekInfo::weekLabel).orElse(null));
     }
 
     /**

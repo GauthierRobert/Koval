@@ -15,6 +15,7 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CoachInviteService {
@@ -50,11 +51,12 @@ public class CoachInviteService {
         }
 
         InviteCode inviteCode = new InviteCode();
-        inviteCode.setCode(customCode != null && !customCode.isBlank()
-                ? customCode.toUpperCase().trim()
-                : generateUniqueCode());
+        inviteCode.setCode(Optional.ofNullable(customCode)
+                .filter(c -> !c.isBlank())
+                .map(c -> c.toUpperCase().trim())
+                .orElseGet(this::generateUniqueCode));
         inviteCode.setCoachId(coachId);
-        inviteCode.setGroupIds(groupIds != null ? groupIds : new ArrayList<>());
+        inviteCode.setGroupIds(Optional.ofNullable(groupIds).orElseGet(ArrayList::new));
         inviteCode.setMaxUses(maxUses);
         inviteCode.setExpiresAt(expiresAt);
         inviteCode.setType("GROUP");
@@ -86,9 +88,7 @@ public class CoachInviteService {
         }
 
         // Add athlete to each Group referenced by the invite code
-        for (String groupId : inviteCode.getGroupIds()) {
-            groupService.addAthleteToGroup(groupId, athleteId);
-        }
+        inviteCode.getGroupIds().forEach(groupId -> groupService.addAthleteToGroup(groupId, athleteId));
 
         // Increment usage
         inviteCode.setCurrentUses(inviteCode.getCurrentUses() + 1);

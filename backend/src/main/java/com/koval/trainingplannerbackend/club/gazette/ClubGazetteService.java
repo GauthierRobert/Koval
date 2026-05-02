@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -240,7 +241,9 @@ public class ClubGazetteService {
 
         applyLink(post, edition, userId, req.linkedSessionId(), req.linkedRaceGoalId());
 
-        post.setMediaIds(req.mediaIds() == null ? new ArrayList<>() : new ArrayList<>(req.mediaIds()));
+        post.setMediaIds(Optional.ofNullable(req.mediaIds())
+                .<List<String>>map(ArrayList::new)
+                .orElseGet(ArrayList::new));
         post.setCreatedAt(LocalDateTime.now());
         post.setUpdatedAt(post.getCreatedAt());
 
@@ -262,8 +265,8 @@ public class ClubGazetteService {
         }
 
         if (req.title() != null || req.content() != null) {
-            String newTitle = req.title() != null ? req.title() : post.getTitle();
-            String newContent = req.content() != null ? req.content() : post.getContent();
+            String newTitle = Optional.ofNullable(req.title()).orElse(post.getTitle());
+            String newContent = Optional.ofNullable(req.content()).orElse(post.getContent());
             validateContent(newTitle, newContent);
             post.setTitle(trimToNull(newTitle));
             post.setContent(newContent.trim());
@@ -456,8 +459,7 @@ public class ClubGazetteService {
         if (goal.getRaceId() == null) return null;
         try {
             Race race = raceService.getRaceById(goal.getRaceId());
-            String iso = race.getScheduledDate();
-            return iso == null ? null : LocalDate.parse(iso);
+            return Optional.ofNullable(race.getScheduledDate()).map(LocalDate::parse).orElse(null);
         } catch (NoSuchElementException e) {
             return null;
         }

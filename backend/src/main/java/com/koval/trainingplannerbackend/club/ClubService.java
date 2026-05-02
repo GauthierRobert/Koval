@@ -62,7 +62,7 @@ public class ClubService {
         club.setDescription(req.description());
         club.setLocation(req.location());
         club.setLogoUrl(req.logoUrl());
-        club.setVisibility(req.visibility() != null ? req.visibility() : ClubVisibility.PUBLIC);
+        club.setVisibility(Optional.ofNullable(req.visibility()).orElse(ClubVisibility.PUBLIC));
         club.setOwnerId(userId);
         club.setMemberCount(1);
         club.setCreatedAt(LocalDateTime.now());

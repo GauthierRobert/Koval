@@ -7,6 +7,7 @@ import com.koval.trainingplannerbackend.training.model.TrainingType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 /**
  * Response DTO that enriches ScheduledWorkout with training metadata.
@@ -49,8 +50,8 @@ public record ScheduledWorkoutResponse(
                 sw.getScheduledDate(),
                 sw.getStatus(),
                 sw.getNotes(),
-                sw.getTss() != null ? sw.getTss() : estimatedTss,
-                sw.getIntensityFactor() != null ? sw.getIntensityFactor() : estimatedIf,
+                Optional.ofNullable(sw.getTss()).orElse(estimatedTss),
+                Optional.ofNullable(sw.getIntensityFactor()).orElse(estimatedIf),
                 sw.getCompletedAt(),
                 sw.getCreatedAt(),
                 trainingTitle,
@@ -81,7 +82,7 @@ public record ScheduledWorkoutResponse(
             trainingType = linkedTraining.getTrainingType();
         } else {
             title = session.getTitle();
-            duration = session.getDurationMinutes() != null ? session.getDurationMinutes() * 60 : null;
+            duration = Optional.ofNullable(session.getDurationMinutes()).map(m -> m * 60).orElse(null);
             sport = SportType.fromStringOrNull(session.getSport());
         }
 
@@ -90,7 +91,7 @@ public record ScheduledWorkoutResponse(
                 session.getLinkedTrainingId(),
                 null,
                 session.getResponsibleCoachId(),
-                session.getScheduledAt() != null ? session.getScheduledAt().toLocalDate() : null,
+                Optional.ofNullable(session.getScheduledAt()).map(LocalDateTime::toLocalDate).orElse(null),
                 ScheduleStatus.PENDING,
                 session.getDescription(),
                 tss,

@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Resolves user context (profile, athletes, clubs) for AI prompt injection.
@@ -50,7 +51,7 @@ public class UserContextResolver {
         }
 
         String role = user.getRole().name();
-        int ftp = user.getFtp() != null ? user.getFtp() : DEFAULT_FTP;
+        int ftp = Optional.ofNullable(user.getFtp()).orElse(DEFAULT_FTP);
         String aiPrePrompt = Boolean.TRUE.equals(user.getAiPrePromptEnabled()) ? user.getAiPrePrompt() : null;
 
         // Full profile fields

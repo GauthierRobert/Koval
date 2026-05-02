@@ -29,6 +29,7 @@ import java.time.format.TextStyle;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -148,9 +149,9 @@ public abstract class BaseAgentService implements TrainingAgent {
 
         if (ctx.ctl() != null || ctx.atl() != null || ctx.tsb() != null) {
             sb.append("\nctl=%.0f atl=%.0f tsb=%.0f".formatted(
-                    ctx.ctl() != null ? ctx.ctl() : 0.0,
-                    ctx.atl() != null ? ctx.atl() : 0.0,
-                    ctx.tsb() != null ? ctx.tsb() : 0.0));
+                    Optional.ofNullable(ctx.ctl()).orElse(0.0),
+                    Optional.ofNullable(ctx.atl()).orElse(0.0),
+                    Optional.ofNullable(ctx.tsb()).orElse(0.0)));
         }
 
         AgentType agent = getAgentType();
@@ -236,7 +237,7 @@ public abstract class BaseAgentService implements TrainingAgent {
     }
 
     private String streamErrorMessage(Throwable ex) {
-        String msg = ex.getMessage() != null ? ex.getMessage() : "";
+        String msg = Optional.ofNullable(ex.getMessage()).orElse("");
         if (msg.contains("429") || msg.contains("rate_limit")) {
             return "{\"code\":\"rate_limit_exceeded\",\"message\":\"Rate limit exceeded. Please shorten your message or wait a moment and try again.\",\"retryable\":true}";
         }

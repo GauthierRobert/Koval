@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/coach")
@@ -60,9 +61,10 @@ public class CoachScheduleController {
     public ResponseEntity<ScheduledWorkout> markCompleted(
             @PathVariable String id,
             @RequestBody(required = false) CompletionRequest request) {
-        Integer tss = request != null ? request.tss() : null;
-        Double intensityFactor = request != null ? request.intensityFactor() : null;
-        return ResponseEntity.ok(scheduledWorkoutService.markCompleted(id, tss, intensityFactor));
+        Optional<CompletionRequest> req = Optional.ofNullable(request);
+        return ResponseEntity.ok(scheduledWorkoutService.markCompleted(id,
+                req.map(CompletionRequest::tss).orElse(null),
+                req.map(CompletionRequest::intensityFactor).orElse(null)));
     }
 
     @PostMapping("/schedule/{id}/skip")

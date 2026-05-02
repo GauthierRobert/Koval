@@ -147,12 +147,10 @@ public class ClubMembershipService {
         List<ClubMembership> memberships = membershipRepository.findByClubIdAndStatus(clubId, ClubMemberStatus.ACTIVE);
 
         List<ClubGroup> allGroups = clubGroupRepository.findByClubId(clubId);
-        Map<String, List<String>> userGroupsMap = new HashMap<>();
-        for (ClubGroup group : allGroups) {
-            for (String memberId : group.getMemberIds()) {
-                userGroupsMap.computeIfAbsent(memberId, k -> new ArrayList<>()).add(group.getName());
-            }
-        }
+        Map<String, List<String>> userGroupsMap = allGroups.stream()
+                .flatMap(g -> g.getMemberIds().stream().map(memberId -> Map.entry(memberId, g.getName())))
+                .collect(Collectors.groupingBy(Map.Entry::getKey,
+                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
 
         // Batch user lookup (N+1 fix)
         List<String> userIds = memberships.stream().map(ClubMembership::getUserId).toList();
@@ -160,13 +158,14 @@ public class ClubMembershipService {
                 .collect(Collectors.toMap(User::getId, u -> u));
 
         return memberships.stream().map(m -> {
-            User user = userMap.get(m.getUserId());
-            String displayName = user != null ? user.getDisplayName() : m.getUserId();
-            String pic = user != null ? user.getProfilePicture() : null;
-            List<String> tags = userGroupsMap.getOrDefault(m.getUserId(), List.of());
+            Optional<User> uOpt = Optional.ofNullable(userMap.get(m.getUserId()));
             return new ClubMemberResponse(
-                    m.getId(), m.getUserId(), displayName, pic, m.getRole(), m.getJoinedAt(), tags);
-        }).collect(Collectors.toList());
+                    m.getId(), m.getUserId(),
+                    uOpt.map(User::getDisplayName).orElse(m.getUserId()),
+                    uOpt.map(User::getProfilePicture).orElse(null),
+                    m.getRole(), m.getJoinedAt(),
+                    userGroupsMap.getOrDefault(m.getUserId(), List.of()));
+        }).toList();
     }
 
     public List<ClubMemberResponse> getPendingRequests(String adminId, String clubId) {
@@ -179,12 +178,13 @@ public class ClubMembershipService {
                 .collect(Collectors.toMap(User::getId, u -> u));
 
         return pending.stream().map(m -> {
-            User user = userMap.get(m.getUserId());
-            String displayName = user != null ? user.getDisplayName() : m.getUserId();
-            String pic = user != null ? user.getProfilePicture() : null;
+            Optional<User> uOpt = Optional.ofNullable(userMap.get(m.getUserId()));
             return new ClubMemberResponse(
-                    m.getId(), m.getUserId(), displayName, pic, m.getRole(), m.getRequestedAt(), List.of());
-        }).collect(Collectors.toList());
+                    m.getId(), m.getUserId(),
+                    uOpt.map(User::getDisplayName).orElse(m.getUserId()),
+                    uOpt.map(User::getProfilePicture).orElse(null),
+                    m.getRole(), m.getRequestedAt(), List.of());
+        }).toList();
     }
 
     public ClubMembership updateMemberRole(String callerId, String clubId, String membershipId, ClubMemberRole newRole) {
