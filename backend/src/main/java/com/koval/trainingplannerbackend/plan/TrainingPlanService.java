@@ -23,7 +23,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 @Service
@@ -65,10 +67,10 @@ public class TrainingPlanService {
     public List<TrainingPlan> listPlans(String userId) {
         List<TrainingPlan> created = planRepository.findByCreatedByOrderByCreatedAtDesc(userId);
         List<TrainingPlan> assigned = planRepository.findByAthleteIdsContaining(userId);
-        Map<String, TrainingPlan> merged = new LinkedHashMap<>();
-        for (TrainingPlan p : created) merged.put(p.getId(), p);
-        for (TrainingPlan p : assigned) merged.putIfAbsent(p.getId(), p);
-        return new ArrayList<>(merged.values());
+        // 'created' wins on conflict (keeps the earlier, more authoritative copy).
+        return Stream.concat(created.stream(), assigned.stream())
+                .collect(Collectors.toMap(TrainingPlan::getId, p -> p, (first, second) -> first, LinkedHashMap::new))
+                .values().stream().toList();
     }
 
     public List<TrainingPlan> listPlansByAthlete(String athleteId) {
@@ -98,30 +100,23 @@ public class TrainingPlanService {
     public ActivePlanSummary getActivePlan(String userId) {
         TrainingPlan plan = planRepository.findByCreatedByAndStatus(userId, PlanStatus.ACTIVE).stream()
                 .findFirst()
+                .or(() -> planRepository.findByAthleteIdsContaining(userId).stream()
+                        .filter(p -> p.getStatus() == PlanStatus.ACTIVE)
+                        .findFirst())
                 .orElse(null);
-
-        // Also check plans assigned to the user as athlete
-        if (plan == null) {
-            plan = planRepository.findByAthleteIdsContaining(userId).stream()
-                    .filter(p -> p.getStatus() == PlanStatus.ACTIVE)
-                    .findFirst()
-                    .orElse(null);
-        }
 
         if (plan == null) return null;
 
         int currentWeek = computeCurrentWeek(plan.getStartDate());
         List<ScheduledWorkout> planWorkouts = scheduledWorkoutRepository.findByPlanId(plan.getId());
 
-        // Build scheduledWorkoutId → weekNumber index
-        Map<String, Integer> swToWeek = new HashMap<>();
-        for (PlanWeek week : plan.getWeeks()) {
-            for (PlanDay day : week.getDays()) {
-                if (day.getScheduledWorkoutId() != null) {
-                    swToWeek.put(day.getScheduledWorkoutId(), week.getWeekNumber());
-                }
-            }
-        }
+        // Build scheduledWorkoutId → weekNumber index. Two scheduled workouts on the
+        // same day across weeks would collide; ((a, b) -> a) keeps the first week seen.
+        Map<String, Integer> swToWeek = plan.getWeeks().stream()
+                .flatMap(week -> week.getDays().stream()
+                        .filter(day -> day.getScheduledWorkoutId() != null)
+                        .map(day -> Map.entry(day.getScheduledWorkoutId(), week.getWeekNumber())))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a));
 
         // Compute current week stats
         PlanWeek currentPlanWeek = plan.getWeeks().stream()
@@ -144,12 +139,13 @@ public class TrainingPlanService {
 
         int completionPercent = planWorkouts.isEmpty() ? 0 : 100 * totalCompleted / planWorkouts.size();
 
+        Optional<PlanWeek> weekOpt = Optional.ofNullable(currentPlanWeek);
         return new ActivePlanSummary(
                 plan.getId(), plan.getTitle(), plan.getStatus(),
                 currentWeek, plan.getDurationWeeks(),
-                currentPlanWeek != null ? currentPlanWeek.getLabel() : null,
+                weekOpt.map(PlanWeek::getLabel).orElse(null),
                 completionPercent, weekRemaining,
-                currentPlanWeek != null ? currentPlanWeek.getTargetTss() : null,
+                weekOpt.map(PlanWeek::getTargetTss).orElse(null),
                 weekActualTss);
     }
 

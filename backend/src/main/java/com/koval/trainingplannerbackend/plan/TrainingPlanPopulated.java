@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Populated view of a TrainingPlan with Training objects resolved from their IDs.
@@ -60,7 +61,7 @@ public record TrainingPlanPopulated(
                                         day.getTrainingId(),
                                         day.getNotes(),
                                         day.getScheduledWorkoutId(),
-                                        day.getTrainingId() != null ? trainingsById.get(day.getTrainingId()) : null
+                                        Optional.ofNullable(day.getTrainingId()).map(trainingsById::get).orElse(null)
                                 ))
                                 .toList()
                 ))
