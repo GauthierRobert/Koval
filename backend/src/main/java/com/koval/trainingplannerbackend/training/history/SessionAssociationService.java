@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.training.history;
 
+import com.koval.trainingplannerbackend.coach.ScheduleStatus;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkoutRepository;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,7 +68,7 @@ public class SessionAssociationService {
                 .findByAthleteIdAndScheduledDate(userId, day);
 
         return candidates.stream()
-                .filter(sw -> "PENDING".equals(sw.getStatus() != null ? sw.getStatus().name() : null))
+                .filter(sw -> sw.getStatus() == ScheduleStatus.PENDING)
                 .toList();
     }
 
@@ -79,20 +81,13 @@ public class SessionAssociationService {
     private ScheduledWorkout findBestMatch(CompletedSession session,
                                            List<ScheduledWorkout> pending,
                                            Map<String, Training> trainingsById) {
-        ScheduledWorkout best = null;
-        int bestScore = 0;
-
-        for (ScheduledWorkout sw : pending) {
-            Training training = trainingsById.get(sw.getTrainingId());
-            if (training == null) continue;
-            int s = scoreCandidate(session, sw, training);
-            if (s > bestScore) {
-                bestScore = s;
-                best = sw;
-            }
-        }
-
-        return bestScore >= ASSOCIATION_THRESHOLD ? best : null;
+        return pending.stream()
+                .filter(sw -> trainingsById.get(sw.getTrainingId()) != null)
+                .map(sw -> Map.entry(sw, scoreCandidate(session, sw, trainingsById.get(sw.getTrainingId()))))
+                .max(Comparator.comparingInt(Map.Entry::getValue))
+                .filter(e -> e.getValue() >= ASSOCIATION_THRESHOLD)
+                .map(Map.Entry::getKey)
+                .orElse(null);
     }
 
     /**

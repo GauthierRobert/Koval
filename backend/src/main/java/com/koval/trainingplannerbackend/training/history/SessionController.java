@@ -25,6 +25,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /** REST API for completed workout sessions: CRUD, FIT file management, analytics, and power curves. */
 @RestController
@@ -89,7 +90,7 @@ public class SessionController {
             @PathVariable String scheduledWorkoutId) {
         String userId = SecurityUtils.getCurrentUserId();
         CompletedSession result = sessionService.linkSessionToSchedule(sessionId, scheduledWorkoutId, userId);
-        return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
+        return ResponseEntity.of(Optional.ofNullable(result));
     }
 
     /** Links a completed session to a club training session. */
@@ -99,7 +100,7 @@ public class SessionController {
             @PathVariable String clubSessionId) {
         String userId = SecurityUtils.getCurrentUserId();
         CompletedSession result = sessionService.linkSessionToClubSession(sessionId, clubSessionId, userId);
-        return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
+        return ResponseEntity.of(Optional.ofNullable(result));
     }
 
     /** Patches session fields (currently supports RPE with automatic TSS fallback). */
@@ -108,7 +109,7 @@ public class SessionController {
             @RequestBody Map<String, Object> body) {
         String userId = SecurityUtils.getCurrentUserId();
         CompletedSession result = sessionService.patchSession(id, body, userId);
-        return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
+        return ResponseEntity.of(Optional.ofNullable(result));
     }
 
     /** Deletes a session and its associated FIT file. */
@@ -143,7 +144,7 @@ public class SessionController {
             // FIT file changed → previously cached/persisted curve is stale, force recompute on next access.
             powerCurveService.invalidateSessionPowerCurve(id);
         }
-        return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
+        return ResponseEntity.of(Optional.ofNullable(result));
     }
 
     /** Downloads the FIT file for a session (accessible to owner or their coach). */

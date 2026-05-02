@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.OptionalDouble;
+import java.util.stream.Collectors;
 
 /**
  * Session analytics: TSS/IF computation, CTL/ATL/TSB load tracking, and PMC chart generation.
@@ -135,7 +137,7 @@ public class AnalyticsService {
     }
 
     private static int orZero(Integer val) {
-        return val != null ? val : 0;
+        return Optional.ofNullable(val).orElse(0);
     }
 
     /**
@@ -242,20 +244,17 @@ public class AnalyticsService {
     }
 
     private Map<LocalDate, Map<String, Double>> buildDailyTssMap(List<CompletedSession> sessions) {
-        Map<LocalDate, Map<String, Double>> map = new HashMap<>();
-        for (CompletedSession s : sessions) {
-            if (s.getTss() == null || s.getCompletedAt() == null)
-                continue;
-            String sport = s.getSportType() != null ? s.getSportType() : "CYCLING";
-            // Swimming excluded from PMC: CSS-based TSS is not directly comparable to
-            // cycling/running TSS and would distort CTL/ATL/TSB load tracking.
-            if ("SWIMMING".equals(sport))
-                continue;
-            LocalDate date = s.getCompletedAt().toLocalDate();
-
-            map.computeIfAbsent(date, k -> new HashMap<>())
-                    .merge(sport, s.getTss(), Double::sum);
-        }
-        return map;
+        // Swimming excluded from PMC: CSS-based TSS is not directly comparable to
+        // cycling/running TSS and would distort CTL/ATL/TSB load tracking.
+        return sessions.stream()
+                .filter(s -> s.getTss() != null && s.getCompletedAt() != null)
+                .filter(s -> !"SWIMMING".equals(Optional.ofNullable(s.getSportType()).orElse("CYCLING")))
+                .collect(Collectors.groupingBy(
+                        s -> s.getCompletedAt().toLocalDate(),
+                        Collectors.toMap(
+                                s -> Optional.ofNullable(s.getSportType()).orElse("CYCLING"),
+                                CompletedSession::getTss,
+                                Double::sum,
+                                HashMap::new)));
     }
 }
