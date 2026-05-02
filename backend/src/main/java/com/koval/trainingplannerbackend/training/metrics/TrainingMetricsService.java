@@ -59,17 +59,10 @@ public class TrainingMetricsService {
             return;
         }
 
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isEmpty()) {
-            return;
-        }
-        User user = userOpt.get();
-        SportType sport = training.getSportType();
-        if (sport == null)
-            sport = SportType.CYCLING;
-
-        MetricsResult result = calculateBlocksMetrics(training, user, sport);
-        applyMetricsResult(training, result);
+        userRepository.findById(userId).ifPresent(user -> {
+            SportType sport = Optional.ofNullable(training.getSportType()).orElse(SportType.CYCLING);
+            applyMetricsResult(training, calculateBlocksMetrics(training, user, sport));
+        });
     }
 
     private void applyMetricsResult(Training training, MetricsResult result) {
@@ -109,7 +102,7 @@ public class TrainingMetricsService {
                 .collect(Collectors.toMap(
                         z -> z.label().toUpperCase(),
                         z -> new ZoneResolution((z.low() + z.high()) / 2,
-                                z.label() + " - " + (z.description() != null ? z.description() : "") + " (" + z.low() + "-" + z.high() + "%)"),
+                                z.label() + " - " + Optional.ofNullable(z.description()).orElse("") + " (" + z.low() + "-" + z.high() + "%)"),
                         (a, b) -> a));
     }
 
@@ -147,10 +140,10 @@ public class TrainingMetricsService {
             } catch (Exception ignored) {}
         }
 
-        SportType sport = training.getSportType() != null ? training.getSportType() : SportType.CYCLING;
+        SportType sport = Optional.ofNullable(training.getSportType()).orElse(SportType.CYCLING);
 
         // 2. Try default zone system for the training creator
-        String createdBy = training.getCreatedBy() != null ? training.getCreatedBy() : userId;
+        String createdBy = Optional.ofNullable(training.getCreatedBy()).orElse(userId);
         return zoneSystemService.getDefaultZoneSystem(createdBy, sport)
                 .orElseGet(() -> groupService.getCoachIdsForAthlete(userId).stream()
                 .map(coachId -> zoneSystemService.getDefaultZoneSystem(coachId, sport))
@@ -166,8 +159,8 @@ public class TrainingMetricsService {
     private record BlockMeasure(int duration, int distance) {}
 
     private MetricsResult calculateBlocksMetrics(Training training, User user, SportType sport) {
-        int ftpPaceSecPerKm = user.getFunctionalThresholdPace() != null ? user.getFunctionalThresholdPace() : DEFAULT_FTP_PACE_SEC_PER_KM;
-        int cssSecPer100m = user.getCriticalSwimSpeed() != null ? user.getCriticalSwimSpeed() : DEFAULT_CSS_SEC_PER_100M;
+        int ftpPaceSecPerKm = Optional.ofNullable(user.getFunctionalThresholdPace()).orElse(DEFAULT_FTP_PACE_SEC_PER_KM);
+        int cssSecPer100m = Optional.ofNullable(user.getCriticalSwimSpeed()).orElse(DEFAULT_CSS_SEC_PER_100M);
 
         int totalDurationSeconds = 0;
         int totalDistance = 0;
@@ -210,7 +203,7 @@ public class TrainingMetricsService {
                 && block.intensityEnd() != null && block.intensityEnd() > 0) {
             return (block.intensityStart() + block.intensityEnd()) / 2.0;
         }
-        return block.intensityTarget() != null && block.intensityTarget() > 0 ? block.intensityTarget() : 50.0;
+        return Optional.ofNullable(block.intensityTarget()).filter(i -> i > 0).map(Integer::doubleValue).orElse(50.0);
     }
 
     private double estimateSpeed(SportType sport, double intensity, int ftpPaceSecPerKm, int cssSecPer100m) {

@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Power curve analysis and volume aggregation across completed sessions.
@@ -58,12 +60,11 @@ public class PowerCurveService {
 
         Map<Integer, Double> bestCurve = initializeEmptyCurve();
 
-        for (CompletedSession session : sessions) {
-            if (!isCycling(session)) continue;
-            Map<Integer, Double> sessionCurve = ensureSessionCurve(session);
-            if (sessionCurve == null || sessionCurve.isEmpty()) continue;
-            mergeBestValues(bestCurve, sessionCurve);
-        }
+        sessions.stream()
+                .filter(PowerCurveService::isCycling)
+                .map(this::ensureSessionCurve)
+                .filter(c -> c != null && !c.isEmpty())
+                .forEach(c -> mergeBestValues(bestCurve, c));
 
         bestCurve.entrySet().removeIf(e -> e.getValue() <= 0);
         return bestCurve;
@@ -148,11 +149,9 @@ public class PowerCurveService {
 
         Map<String, List<CompletedSession>> grouped = groupSessionsByPeriod(sessions, groupBy);
 
-        List<VolumeEntry> result = new ArrayList<>();
-        for (var entry : grouped.entrySet()) {
-            result.add(aggregateVolumeEntry(entry.getKey(), entry.getValue()));
-        }
-        return result;
+        return grouped.entrySet().stream()
+                .map(e -> aggregateVolumeEntry(e.getKey(), e.getValue()))
+                .toList();
     }
 
     // ── Power curve computation ─────────────────────────────────────
@@ -244,16 +243,18 @@ public class PowerCurveService {
     }
 
     private Map<String, List<CompletedSession>> groupSessionsByPeriod(List<CompletedSession> sessions, String groupBy) {
-        Map<String, List<CompletedSession>> grouped = new LinkedHashMap<>();
-        for (CompletedSession s : sessions) {
-            if (s.getCompletedAt() == null) continue;
-            LocalDate date = s.getCompletedAt().toLocalDate();
-            String key = "month".equals(groupBy)
-                    ? date.getYear() + "-" + String.format("%02d", date.getMonthValue())
-                    : date.getYear() + "-W" + String.format("%02d", getIsoWeek(date));
-            grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(s);
-        }
-        return grouped;
+        return sessions.stream()
+                .filter(s -> s.getCompletedAt() != null)
+                .collect(Collectors.groupingBy(
+                        s -> periodKey(s.getCompletedAt().toLocalDate(), groupBy),
+                        LinkedHashMap::new,
+                        Collectors.toList()));
+    }
+
+    private String periodKey(LocalDate date, String groupBy) {
+        return "month".equals(groupBy)
+                ? date.getYear() + "-" + String.format("%02d", date.getMonthValue())
+                : date.getYear() + "-W" + String.format("%02d", getIsoWeek(date));
     }
 
     private VolumeEntry aggregateVolumeEntry(String period, List<CompletedSession> sessions) {
@@ -265,12 +266,12 @@ public class PowerCurveService {
         Map<String, Double> sportDistance = new HashMap<>();
 
         for (CompletedSession s : sessions) {
-            double tss = s.getTss() != null ? s.getTss() : 0;
+            double tss = Optional.ofNullable(s.getTss()).orElse(0.0);
             totalTss += tss;
             totalDuration += s.getTotalDurationSeconds();
             double dist = sessionDistance(s);
             totalDistance += dist;
-            String sport = s.getSportType() != null ? s.getSportType() : "CYCLING";
+            String sport = Optional.ofNullable(s.getSportType()).orElse("CYCLING");
             sportTss.merge(sport, tss, Double::sum);
             sportDuration.merge(sport, (long) s.getTotalDurationSeconds(), Long::sum);
             sportDistance.merge(sport, dist, Double::sum);
