@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class UserResponseMapper {
@@ -68,7 +69,7 @@ public class UserResponseMapper {
         linkedAccounts.put("nolioRead", Boolean.TRUE.equals(user.getTerraProviderNolioConnected()));
         linkedAccounts.put("nolioWrite", user.getNolioAccessToken() != null);
         map.put("linkedAccounts", linkedAccounts);
-        map.put("authProvider", user.getAuthProvider() != null ? user.getAuthProvider().name() : null);
+        map.put("authProvider", Optional.ofNullable(user.getAuthProvider()).map(Enum::name).orElse(null));
         map.put("zwiftAutoSyncWorkouts", user.getZwiftAutoSyncWorkouts());
         map.put("nolioAutoSyncWorkouts", Boolean.TRUE.equals(user.getNolioAutoSyncWorkouts()));
 
