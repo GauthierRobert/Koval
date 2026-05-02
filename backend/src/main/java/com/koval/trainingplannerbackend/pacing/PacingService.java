@@ -9,6 +9,7 @@ import com.koval.trainingplannerbackend.pacing.gpx.CourseSegment;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PacingService {
@@ -27,8 +28,8 @@ public class PacingService {
                                            AthleteProfile profile, String discipline,
                                            List<RouteCoordinate> bikeRouteCoordinates,
                                            List<RouteCoordinate> runRouteCoordinates) {
-        List<CourseSegment> bikeSource = bikeSegments != null ? bikeSegments : List.of();
-        List<CourseSegment> runSource = runSegments != null ? runSegments : List.of();
+        List<CourseSegment> bikeSource = Optional.ofNullable(bikeSegments).orElse(List.of());
+        List<CourseSegment> runSource = Optional.ofNullable(runSegments).orElse(List.of());
 
         boolean isTriathlon = "TRIATHLON".equals(discipline);
 

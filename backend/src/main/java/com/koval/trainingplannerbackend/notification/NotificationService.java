@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class NotificationService {
@@ -60,7 +61,7 @@ public class NotificationService {
         Map<String, List<String>> tokensByUser = new HashMap<>();
 
         List<User> users = userRepository.findAllById(userIds);
-        String type = data != null ? data.getOrDefault("type", preferenceType) : preferenceType;
+        String type = Optional.ofNullable(data).map(d -> d.getOrDefault("type", preferenceType)).orElse(preferenceType);
 
         for (User user : users) {
             if (preferenceType != null && !isPreferenceEnabled(user, preferenceType)) {
@@ -218,8 +219,7 @@ public class NotificationService {
     public NotificationPreferences getPreferences(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
-        NotificationPreferences prefs = user.getNotificationPreferences();
-        return prefs != null ? prefs : new NotificationPreferences();
+        return Optional.ofNullable(user.getNotificationPreferences()).orElseGet(NotificationPreferences::new);
     }
 
     public NotificationPreferences updatePreferences(String userId, NotificationPreferences prefs) {

@@ -54,10 +54,8 @@ public class ScheduledNotificationJob {
         Map<String, List<ScheduledWorkout>> byAthlete = todaysWorkouts.stream()
                 .collect(Collectors.groupingBy(ScheduledWorkout::getAthleteId));
 
-        for (var entry : byAthlete.entrySet()) {
-            String athleteId = entry.getKey();
-            int count = entry.getValue().size();
-
+        byAthlete.forEach((athleteId, workouts) -> {
+            int count = workouts.size();
             String body = count == 1
                     ? "You have 1 workout scheduled for today. Let's go!"
                     : "You have " + count + " workouts scheduled for today. Let's go!";
@@ -68,7 +66,7 @@ public class ScheduledNotificationJob {
                     body,
                     Map.of("type", "WORKOUT_REMINDER"),
                     "workoutReminder");
-        }
+        });
 
         log.info("Sent daily workout reminders to {} athletes", byAthlete.size());
     }
