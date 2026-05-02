@@ -15,6 +15,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * MCP tool adapter for multi-week training plan (periodization) management.
@@ -226,21 +227,19 @@ public class McpPlanTools {
                               String status, String startDate, int durationWeeks,
                               Integer targetFtp, String goalRaceId, List<WeekDetail> weeks) {
         public static PlanDetail from(TrainingPlan p) {
-            List<WeekDetail> weekDetails = new ArrayList<>();
-            for (PlanWeek w : p.getWeeks()) {
-                List<DayDetail> days = new ArrayList<>();
-                for (PlanDay d : w.getDays()) {
-                    days.add(new DayDetail(
-                            d.getDayOfWeek() != null ? d.getDayOfWeek().name() : null,
-                            d.getTrainingId(), d.getNotes(), d.getScheduledWorkoutId()));
-                }
-                weekDetails.add(new WeekDetail(w.getWeekNumber(), w.getLabel(), w.getTargetTss(), days));
-            }
+            List<WeekDetail> weekDetails = p.getWeeks().stream()
+                    .map(w -> new WeekDetail(w.getWeekNumber(), w.getLabel(), w.getTargetTss(),
+                            w.getDays().stream()
+                                    .map(d -> new DayDetail(
+                                            Optional.ofNullable(d.getDayOfWeek()).map(DayOfWeek::name).orElse(null),
+                                            d.getTrainingId(), d.getNotes(), d.getScheduledWorkoutId()))
+                                    .toList()))
+                    .toList();
             return new PlanDetail(
                     p.getId(), p.getTitle(), p.getDescription(),
-                    p.getSportType() != null ? p.getSportType().name() : null,
-                    p.getStatus() != null ? p.getStatus().name() : null,
-                    p.getStartDate() != null ? p.getStartDate().toString() : null,
+                    Optional.ofNullable(p.getSportType()).map(Enum::name).orElse(null),
+                    Optional.ofNullable(p.getStatus()).map(Enum::name).orElse(null),
+                    Optional.ofNullable(p.getStartDate()).map(LocalDate::toString).orElse(null),
                     p.getDurationWeeks(), p.getTargetFtp(), p.getGoalRaceId(), weekDetails);
         }
     }

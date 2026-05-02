@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * MCP tool adapter for club management operations.
@@ -193,10 +194,10 @@ public class McpClubTools {
         public static ClubSessionSummary from(ClubTrainingSession s) {
             return new ClubSessionSummary(
                     s.getId(), s.getTitle(), s.getSport(),
-                    s.getScheduledAt() != null ? s.getScheduledAt().toString() : null,
+                    Optional.ofNullable(s.getScheduledAt()).map(LocalDateTime::toString).orElse(null),
                     s.getLocation(), s.getMaxParticipants(),
                     s.getDurationMinutes(),
-                    s.getParticipantIds() != null ? s.getParticipantIds().size() : 0);
+                    Optional.ofNullable(s.getParticipantIds()).map(List::size).orElse(0));
         }
     }
 
@@ -205,8 +206,8 @@ public class McpClubTools {
         public static RecurringTemplateSummary from(RecurringSessionTemplate t) {
             return new RecurringTemplateSummary(
                     t.getId(), t.getTitle(), t.getSport(),
-                    t.getDayOfWeek() != null ? t.getDayOfWeek().name() : null,
-                    t.getTimeOfDay() != null ? t.getTimeOfDay().toString() : null);
+                    Optional.ofNullable(t.getDayOfWeek()).map(DayOfWeek::name).orElse(null),
+                    Optional.ofNullable(t.getTimeOfDay()).map(LocalTime::toString).orElse(null));
         }
     }
 }

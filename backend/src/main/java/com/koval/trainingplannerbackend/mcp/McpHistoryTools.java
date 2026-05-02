@@ -19,6 +19,7 @@ import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * MCP tool adapter for workout history, power curves, volume aggregation and session
@@ -157,7 +158,7 @@ public class McpHistoryTools {
         public static SessionSummary from(CompletedSession s) {
             return new SessionSummary(
                     s.getId(), s.getTitle(), s.getSportType(),
-                    s.getCompletedAt() != null ? s.getCompletedAt().toString() : null,
+                    Optional.ofNullable(s.getCompletedAt()).map(Object::toString).orElse(null),
                     s.getTotalDurationSeconds(), s.getAvgPower(), s.getAvgHR(),
                     s.getTss(), s.getIntensityFactor());
         }
@@ -172,13 +173,13 @@ public class McpHistoryTools {
         public static SessionDetail from(CompletedSession s) {
             return new SessionDetail(
                     s.getId(), s.getTitle(), s.getSportType(),
-                    s.getCompletedAt() != null ? s.getCompletedAt().toString() : null,
+                    Optional.ofNullable(s.getCompletedAt()).map(Object::toString).orElse(null),
                     s.getTotalDurationSeconds(), s.getMovingTimeSeconds(),
                     s.getAvgPower(), s.getAvgHR(), s.getAvgCadence(), s.getAvgSpeed(),
                     s.getTotalDistance(), s.getTss(), s.getIntensityFactor(),
                     s.getRpe(), s.getFitFileId() != null,
                     s.getScheduledWorkoutId(), s.getClubSessionId(),
-                    s.getBlockSummaries() != null ? s.getBlockSummaries().size() : 0);
+                    Optional.ofNullable(s.getBlockSummaries()).map(List::size).orElse(0));
         }
     }
 }
