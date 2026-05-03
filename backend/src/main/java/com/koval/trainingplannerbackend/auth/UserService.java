@@ -83,22 +83,7 @@ public class UserService {
         user.setVo2maxPace(vo2maxPace);
         user.setPower3MinW(power3MinW);
         user.setPower12MinW(power12MinW);
-        // Derive CP and W' from the 3-min and 12-min all-out test results using the
-        // two-parameter Monod–Scherrer / Skiba linear model:
-        //   P = CP + W'/t  →  CP = (T1·P1 − T2·P2) / (T1 − T2)
-        //   W' = (P3 − CP) × 180 s
-        // Requires P3 > P12 > 0 (otherwise the model is invalid).
-        if (power3MinW != null && power12MinW != null
-                && power3MinW > 0 && power12MinW > 0
-                && power3MinW > power12MinW) {
-            int cp = Math.round((4f * power12MinW - power3MinW) / 3f);
-            int wPrimeJ = Math.round((power3MinW - cp) * 180f);
-            user.setCriticalPower(cp);
-            user.setWPrimeJ(wPrimeJ);
-        } else {
-            user.setCriticalPower(null);
-            user.setWPrimeJ(null);
-        }
+        applyCriticalPowerModel(user, power3MinW, power12MinW);
         if (customZoneReferenceValues != null) {
             user.getCustomZoneReferenceValues().putAll(customZoneReferenceValues);
         }
@@ -130,5 +115,24 @@ public class UserService {
         user.setCguAcceptedAt(LocalDateTime.now());
         user.setCguVersion(CguConstants.CURRENT_VERSION);
         return userRepository.save(user);
+    }
+
+    /**
+     * Derives critical power (CP) and W' (anaerobic work capacity) from 3-min and 12-min all-out
+     * power tests using the two-parameter Monod–Scherrer / Skiba linear model:
+     *   P = CP + W'/t  →  CP = (4·P12 − P3) / 3,  W' = (P3 − CP) · 180s.
+     * Clears both values if either input is missing or the model is invalid (requires P3 > P12 > 0).
+     */
+    private static void applyCriticalPowerModel(User user, Integer power3MinW, Integer power12MinW) {
+        if (power3MinW != null && power12MinW != null
+                && power3MinW > 0 && power12MinW > 0
+                && power3MinW > power12MinW) {
+            int cp = Math.round((4f * power12MinW - power3MinW) / 3f);
+            user.setCriticalPower(cp);
+            user.setWPrimeJ(Math.round((power3MinW - cp) * 180f));
+        } else {
+            user.setCriticalPower(null);
+            user.setWPrimeJ(null);
+        }
     }
 }

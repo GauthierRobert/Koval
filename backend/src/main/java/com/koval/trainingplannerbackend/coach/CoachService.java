@@ -83,62 +83,18 @@ public class CoachService {
             LocalDate scheduledDate,
             String notes,
             String groupId) {
-        User coach = userRepository.findById(coachId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", coachId));
-
+        User coach = requireUser(coachId);
         if (coach.getRole() != UserRole.COACH) {
             throw new ForbiddenOperationException("User is not a coach: " + coachId);
         }
-
-        // Verify all athletes belong to this coach via groups
         Set<String> coachAthleteIds = new HashSet<>(groupService.getAthleteIdsForCoach(coachId));
-        athleteIds.stream()
-                .filter(id -> !coachAthleteIds.contains(id))
-                .findFirst()
-                .ifPresent(id -> {
-                    throw new ValidationException("Athlete " + id + " is not assigned to coach " + coachId);
-                });
+        rejectUnknownAthlete(athleteIds, coachAthleteIds,
+                id -> "Athlete " + id + " is not assigned to coach " + coachId);
 
-        List<ScheduledWorkout> workoutsToSave = athleteIds.stream()
-                .map(athleteId -> newPendingWorkout(trainingId, athleteId, coachId, scheduledDate, notes))
-                .toList();
-        List<ScheduledWorkout> assignments = scheduledWorkoutRepository.saveAll(workoutsToSave);
-
-        // Create ReceivedTraining entries
-        String originId = groupId;
-        String originName = null;
-        if (groupId != null && !groupId.isBlank()) {
-            try {
-                Group group = groupService.getGroupById(groupId);
-                originName = group.getName();
-            } catch (Exception ignored) {}
-        }
-        if (originName == null) {
-            // Infer from the first matching group
-            Set<String> athleteIdSet = Set.copyOf(athleteIds);
-            var matched = groupService.getGroupsForCoach(coachId).stream()
-                    .filter(g -> g.getAthleteIds().stream().anyMatch(athleteIdSet::contains))
-                    .findFirst();
-            if (matched.isPresent()) {
-                originId = matched.get().getId();
-                originName = matched.get().getName();
-            }
-        }
-        receivedTrainingService.createReceivedTrainings(
-                trainingId, athleteIds, coachId,
-                ReceivedTrainingOrigin.COACH_GROUP,
-                originId, originName);
-
-        notificationService.sendToUsers(
-                athleteIds,
-                "New Training Assigned",
-                coach.getDisplayName() + " assigned you a workout for " + scheduledDate,
-                Map.of("type", "TRAINING_ASSIGNED",
-                       "trainingId", trainingId,
-                       "scheduledDate", scheduledDate.toString()),
-                "workoutAssigned");
-
-        return assignments;
+        var origin = resolveGroupOrigin(coachId, groupId, athleteIds);
+        return persistAssignments(coach, trainingId, athleteIds, scheduledDate, notes,
+                ReceivedTrainingOrigin.COACH_GROUP, origin.id(), origin.name(),
+                "New Training Assigned");
     }
 
     /**
@@ -152,51 +108,80 @@ public class CoachService {
             LocalDate scheduledDate,
             String notes,
             String clubId) {
+        requireClubCoachRole(coachId, clubId);
+        Set<String> activeMemberIds = Set.copyOf(clubMembershipService.getActiveMemberIds(clubId));
+        rejectUnknownAthlete(athleteIds, activeMemberIds,
+                id -> "Athlete " + id + " is not an active member of club " + clubId);
 
-        // Validate coach has COACH/ADMIN/OWNER role in club
-        var roles = clubMembershipService.getMyClubRoles(coachId);
-        boolean hasClubRole = roles.stream()
+        User coach = requireUser(coachId);
+        String clubName = clubRepository.findById(clubId).map(Club::getName).orElse("Unknown Club");
+        return persistAssignments(coach, trainingId, athleteIds, scheduledDate, notes,
+                ReceivedTrainingOrigin.CLUB, clubId, clubName, clubName + " — New Training");
+    }
+
+    private User requireUser(String userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
+    }
+
+    private void requireClubCoachRole(String coachId, String clubId) {
+        boolean hasRole = clubMembershipService.getMyClubRoles(coachId).stream()
                 .filter(r -> r.clubId().equals(clubId))
                 .anyMatch(r -> r.role() == ClubMemberRole.COACH
                         || r.role() == ClubMemberRole.ADMIN
                         || r.role() == ClubMemberRole.OWNER);
-        if (!hasClubRole) {
+        if (!hasRole) {
             throw new ForbiddenOperationException("User does not have coach/admin/owner role in club: " + clubId);
         }
+    }
 
-        // Validate all athletes are active club members
-        Set<String> activeMemberIds = Set.copyOf(clubMembershipService.getActiveMemberIds(clubId));
+    private static void rejectUnknownAthlete(List<String> athleteIds, Set<String> allowedIds,
+                                             java.util.function.Function<String, String> errorMessage) {
         athleteIds.stream()
-                .filter(id -> !activeMemberIds.contains(id))
+                .filter(id -> !allowedIds.contains(id))
                 .findFirst()
-                .ifPresent(id -> {
-                    throw new ValidationException("Athlete " + id + " is not an active member of club " + clubId);
-                });
+                .ifPresent(id -> { throw new ValidationException(errorMessage.apply(id)); });
+    }
 
-        User coach = userRepository.findById(coachId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", coachId));
+    private record OriginRef(String id, String name) {}
 
-        List<ScheduledWorkout> assignments = athleteIds.stream()
-                .map(athleteId -> scheduledWorkoutRepository.save(
-                        newPendingWorkout(trainingId, athleteId, coachId, scheduledDate, notes)))
+    private OriginRef resolveGroupOrigin(String coachId, String groupId, List<String> athleteIds) {
+        String name = null;
+        if (groupId != null && !groupId.isBlank()) {
+            try { name = groupService.getGroupById(groupId).getName(); } catch (Exception ignored) {}
+        }
+        if (name != null) return new OriginRef(groupId, name);
+
+        // Infer from the first group containing any of the athletes
+        Set<String> athleteIdSet = Set.copyOf(athleteIds);
+        return groupService.getGroupsForCoach(coachId).stream()
+                .filter(g -> g.getAthleteIds().stream().anyMatch(athleteIdSet::contains))
+                .findFirst()
+                .map(g -> new OriginRef(g.getId(), g.getName()))
+                .orElse(new OriginRef(groupId, null));
+    }
+
+    private List<ScheduledWorkout> persistAssignments(User coach, String trainingId,
+                                                      List<String> athleteIds, LocalDate scheduledDate,
+                                                      String notes, ReceivedTrainingOrigin origin,
+                                                      String originId, String originName,
+                                                      String notificationTitle) {
+        List<ScheduledWorkout> toSave = athleteIds.stream()
+                .map(id -> newPendingWorkout(trainingId, id, coach.getId(), scheduledDate, notes))
                 .toList();
+        List<ScheduledWorkout> assignments = scheduledWorkoutRepository.saveAll(toSave);
 
-        // Create ReceivedTraining entries with CLUB origin
-        String clubName = clubRepository.findById(clubId).map(Club::getName).orElse("Unknown Club");
         receivedTrainingService.createReceivedTrainings(
-                trainingId, athleteIds, coachId,
-                ReceivedTrainingOrigin.CLUB,
-                clubId, clubName);
+                trainingId, athleteIds, coach.getId(), origin, originId, originName);
 
         notificationService.sendToUsers(
                 athleteIds,
-                clubName + " — New Training",
+                notificationTitle,
                 coach.getDisplayName() + " assigned you a workout for " + scheduledDate,
                 Map.of("type", "TRAINING_ASSIGNED",
                        "trainingId", trainingId,
                        "scheduledDate", scheduledDate.toString()),
                 "workoutAssigned");
-
         return assignments;
     }
 
