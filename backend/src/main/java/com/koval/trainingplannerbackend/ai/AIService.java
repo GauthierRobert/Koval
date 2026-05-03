@@ -57,14 +57,9 @@ public class AIService {
 
     @Timed(value = "ai.chat", description = "Time spent in synchronous AI chat call")
     public ChatMessageResponse chat(String userMessage, String userId, String chatHistoryId, AgentType agentType) {
-        UserContext ctx = userContextResolver.resolve(userId);
-        ChatHistory chatHistory = chatHistoryService.findOrCreate(userId, chatHistoryId);
-
-        AgentType resolved = resolveAgent(agentType, userMessage, ctx.role(), chatHistory.getLastAgentType());
-        TrainingAgent agent = agents.get(resolved);
-
-        ChatMessageResponse response = agent.chat(userMessage, userId, chatHistory.getId(), ctx);
-        chatHistoryService.updateAfterResponse(chatHistory, userMessage, resolved);
+        ChatTurn turn = prepareTurn(userMessage, userId, chatHistoryId, agentType);
+        ChatMessageResponse response = turn.agent().chat(userMessage, userId, turn.history().getId(), turn.ctx());
+        chatHistoryService.updateAfterResponse(turn.history(), userMessage, turn.resolvedType());
         return response;
     }
 
@@ -76,21 +71,25 @@ public class AIService {
 
     @Timed(value = "ai.chat.stream", description = "Time to assemble AI streaming response")
     public StreamResponse chatStream(String userMessage, String userId, String chatHistoryId, AgentType agentType) {
-        UserContext ctx = userContextResolver.resolve(userId);
-        ChatHistory chatHistory = chatHistoryService.findOrCreate(userId, chatHistoryId);
-        String conversationId = chatHistory.getId();
-
-        AgentType resolved = resolveAgent(agentType, userMessage, ctx.role(), chatHistory.getLastAgentType());
-        TrainingAgent agent = agents.get(resolved);
-
-        StreamResponse agentResponse = agent.chatStream(userMessage, userId, conversationId, ctx);
+        ChatTurn turn = prepareTurn(userMessage, userId, chatHistoryId, agentType);
+        String conversationId = turn.history().getId();
+        StreamResponse agentResponse = turn.agent().chatStream(userMessage, userId, conversationId, turn.ctx());
 
         // Use doFinally to handle history update on both complete and error (#8)
         Flux<ServerSentEvent<String>> wrappedEvents = agentResponse.events()
-                .doFinally(signal -> chatHistoryService.updateAfterResponse(chatHistory, userMessage, resolved));
+                .doFinally(signal -> chatHistoryService.updateAfterResponse(turn.history(), userMessage, turn.resolvedType()));
 
         return new StreamResponse(conversationId, wrappedEvents);
     }
+
+    private ChatTurn prepareTurn(String userMessage, String userId, String chatHistoryId, AgentType requested) {
+        UserContext ctx = userContextResolver.resolve(userId);
+        ChatHistory history = chatHistoryService.findOrCreate(userId, chatHistoryId);
+        AgentType resolved = resolveAgent(requested, userMessage, ctx.role(), history.getLastAgentType());
+        return new ChatTurn(ctx, history, resolved, agents.get(resolved));
+    }
+
+    private record ChatTurn(UserContext ctx, ChatHistory history, AgentType resolvedType, TrainingAgent agent) {}
 
     public record StreamResponse(String chatHistoryId, Flux<ServerSentEvent<String>> events) {
     }

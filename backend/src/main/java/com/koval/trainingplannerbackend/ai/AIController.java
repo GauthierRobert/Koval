@@ -44,16 +44,12 @@ public class AIController {
     @AuditLog(action = "AI_CHAT")
     @PostMapping("/chat")
     public ResponseEntity<?> chat(@RequestBody ChatRequest request) {
-        validateMessage(request.message());
-        String userId = SecurityUtils.getCurrentUserId();
-        rateLimiter.checkLimit(userId);
+        String userId = checkRateLimitedUser(request.message());
         AgentType agentType = parseAgentType(request.agentType());
         try {
-            var response = aiService.chat(request.message(), userId, request.chatHistoryId(), agentType);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(aiService.chat(request.message(), userId, request.chatHistoryId(), agentType));
         } catch (RuntimeException ex) {
-            handleAiException(ex);
-            throw ex; // unreachable if handleAiException throws, but satisfies compiler
+            throw toApiException(ex);
         }
     }
 
@@ -81,14 +77,11 @@ public class AIController {
     @AuditLog(action = "AI_PLAN")
     @PostMapping("/plan")
     public ResponseEntity<?> plan(@RequestBody ChatRequest request) {
-        validateMessage(request.message());
-        String planUserId = SecurityUtils.getCurrentUserId();
-        rateLimiter.checkLimit(planUserId);
+        checkRateLimitedUser(request.message());
         try {
             return ResponseEntity.ok(aiService.plan(request.message()));
         } catch (RuntimeException ex) {
-            handleAiException(ex);
-            throw ex;
+            throw toApiException(ex);
         }
     }
 
@@ -130,6 +123,14 @@ public class AIController {
 
     // ── Helpers ─────────────────────────────────────────────────────────
 
+    /** Validates the message, resolves the current user, applies rate limiting, and returns the userId. */
+    private String checkRateLimitedUser(String message) {
+        validateMessage(message);
+        String userId = SecurityUtils.getCurrentUserId();
+        rateLimiter.checkLimit(userId);
+        return userId;
+    }
+
     private void validateMessage(String msg) {
         if (msg == null || msg.isBlank()) {
             throw new ValidationException("Message cannot be empty.", "EMPTY_MESSAGE");
@@ -153,12 +154,13 @@ public class AIController {
         }
     }
 
-    private void handleAiException(RuntimeException ex) {
+    private RuntimeException toApiException(RuntimeException ex) {
         String msg = Optional.ofNullable(ex.getMessage()).orElse("");
         if (msg.contains("429") || msg.contains("rate_limit")) {
-            throw new RateLimitException(
+            return new RateLimitException(
                     "Your request was too large or you've sent too many requests this minute. "
                             + "Please shorten your message or wait a moment and try again.");
         }
+        return ex;
     }
 }
