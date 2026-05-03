@@ -77,16 +77,17 @@
       </app-filter-pills>
     </div>
 
-    @if (historyService.loading$ | async) {
-      <app-skeleton [rows]="6"></app-skeleton>
-    } @else if (groupedRows$ | async; as rows) {
-      <div class="session-list stagger-children">
-        @if (rows.length === 0) {
-          <div class="empty-state">
-            <p>{{ 'WORKOUT_HISTORY.EMPTY_NO_ACTIVITIES' | translate }}</p>
-            <p class="empty-hint">{{ 'WORKOUT_HISTORY.EMPTY_HINT_UPLOAD' | translate }}</p>
-          </div>
-        }
+    @if ((historyState$ | async); as state) {
+      @if (state.loading && state.sessions.length === 0) {
+        <app-skeleton [rows]="6"></app-skeleton>
+      } @else if (groupedRows$ | async; as rows) {
+        <div class="session-list stagger-children">
+          @if (rows.length === 0) {
+            <div class="empty-state">
+              <p>{{ 'WORKOUT_HISTORY.EMPTY_NO_ACTIVITIES' | translate }}</p>
+              <p class="empty-hint">{{ 'WORKOUT_HISTORY.EMPTY_HINT_UPLOAD' | translate }}</p>
+            </div>
+          }
 
         @for (row of rows; track trackRow($index, row)) {
           @switch (row.kind) {
@@ -152,7 +153,23 @@
             }
           }
         }
-      </div>
+        </div>
+
+        @if (state.hasMore) {
+          <button
+            type="button"
+            class="load-more-btn"
+            data-testid="load-more-btn"
+            (click)="loadOlder()"
+            [disabled]="state.loading">
+            @if (state.loading) {
+              {{ 'WORKOUT_HISTORY.LOADING_OLDER' | translate }}
+            } @else {
+              {{ 'WORKOUT_HISTORY.LOAD_OLDER' | translate }}
+            }
+          </button>
+        }
+      }
     }
   </aside>
 

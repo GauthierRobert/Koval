@@ -1011,7 +1011,9 @@
     "WEEK_SESSION_COUNT_PLURAL": "{{count}} sessions",
     "INACTIVITY_LABEL": "Inactive",
     "INACTIVITY_WEEKS_SINGULAR": "{{count}} week",
-    "INACTIVITY_WEEKS_PLURAL": "{{count}} weeks"
+    "INACTIVITY_WEEKS_PLURAL": "{{count}} weeks",
+    "LOAD_OLDER": "Load older sessions",
+    "LOADING_OLDER": "Loading…"
   },
   "SESSION_ANALYSIS": {
     "STAT_DURATION": "Duration",

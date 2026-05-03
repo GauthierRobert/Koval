@@ -83,6 +83,27 @@ public class SessionController {
         return ResponseEntity.ok(sessionService.listForCalendar(userId, start, end));
     }
 
+    /**
+     * Returns a Monday-aligned slice of completed sessions for paginated history browsing.
+     * Filters are applied server-side. To page older, pass {@code before = result.windowStart}.
+     */
+    @GetMapping("/window")
+    public ResponseEntity<SessionService.SessionWindowResult> listWindow(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate before,
+            @RequestParam(defaultValue = "8") int weeks,
+            @RequestParam(required = false) String sport,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) Integer durationMinSec,
+            @RequestParam(required = false) Integer durationMaxSec,
+            @RequestParam(required = false) Double tssMin,
+            @RequestParam(required = false) Double tssMax) {
+        String userId = SecurityUtils.getCurrentUserId();
+        SessionService.WindowFilters filters = new SessionService.WindowFilters(
+                sport, from, to, durationMinSec, durationMaxSec, tssMin, tssMax);
+        return ResponseEntity.ok(sessionService.listWindow(userId, before, weeks, filters));
+    }
+
     /** Manually links a completed session to a scheduled workout. */
     @PostMapping("/{sessionId}/link/{scheduledWorkoutId}")
     public ResponseEntity<CompletedSession> linkToSchedule(

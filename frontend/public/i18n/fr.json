@@ -1011,7 +1011,9 @@
     "WEEK_SESSION_COUNT_PLURAL": "{{count}} séances",
     "INACTIVITY_LABEL": "Inactif",
     "INACTIVITY_WEEKS_SINGULAR": "{{count}} semaine",
-    "INACTIVITY_WEEKS_PLURAL": "{{count}} semaines"
+    "INACTIVITY_WEEKS_PLURAL": "{{count}} semaines",
+    "LOAD_OLDER": "Charger les séances plus anciennes",
+    "LOADING_OLDER": "Chargement…"
   },
   "SESSION_ANALYSIS": {
     "STAT_DURATION": "Durée",

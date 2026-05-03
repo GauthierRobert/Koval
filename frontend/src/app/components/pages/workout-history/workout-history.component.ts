@@ -5,14 +5,14 @@ import {FormsModule} from '@angular/forms';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {BehaviorSubject, combineLatest} from 'rxjs';
-import {map, take} from 'rxjs/operators';
+import {debounceTime, distinctUntilChanged, map, take} from 'rxjs/operators';
 import {ResponsiveService} from '../../../services/responsive.service';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
 import {SessionAnalysisComponent} from '../session-analysis/session-analysis.component';
 import {FilterPillsComponent} from '../../shared/filter-pills/filter-pills.component';
 import {ModalShellComponent} from '../../shared/modal-shell/modal-shell.component';
 import {SkeletonComponent} from '../../shared/skeleton/skeleton.component';
-import {HistoryService, SavedSession} from '../../../services/history.service';
+import {HistoryService, SavedSession, SessionFilters} from '../../../services/history.service';
 import {formatTimeText} from '../../shared/format/format.utils';
 
 import {BlockSummary, SessionSummary} from '../../../services/workout-execution.service';
@@ -55,7 +55,8 @@ export class WorkoutHistoryComponent implements OnInit {
     private responsive = inject(ResponsiveService);
     stravaSyncService = inject(StravaSyncService);
 
-    sessions$ = this.historyService.sessions$;
+    sessions$ = this.historyService.historySessions$;
+    historyState$ = this.historyService.historyState$;
     sidebarCollapsed = false;
 
     /**
@@ -76,7 +77,7 @@ export class WorkoutHistoryComponent implements OnInit {
         // Sync the service-level selectedSession with the route param so any
         // downstream consumer that reads `historyService.selectedSession$`
         // sees the current focus.
-        combineLatest([this.sessionIdParam$, this.historyService.sessions$])
+        combineLatest([this.sessionIdParam$, this.sessions$])
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(([id, sessions]) => {
                 if (!id) {
@@ -91,7 +92,7 @@ export class WorkoutHistoryComponent implements OnInit {
         // On desktop, when the user lands on bare /history, jump them to the
         // first session so the detail panel isn't empty.
         combineLatest([
-            this.historyService.sessions$,
+            this.sessions$,
             this.responsive.isMobile$,
             this.sessionIdParam$,
         ])
@@ -101,6 +102,53 @@ export class WorkoutHistoryComponent implements OnInit {
                     this.router.navigate(['/history', sessions[0].id], { replaceUrl: true });
                 }
             });
+
+        // Push filter changes server-side; debounce so each digit typed in
+        // numeric inputs doesn't issue its own request.
+        combineLatest([
+            this.sportFilterSubject,
+            this.dateFromSubject,
+            this.dateToSubject,
+            this.durationMinSubject,
+            this.durationMaxSubject,
+            this.tssMinSubject,
+            this.tssMaxSubject,
+        ]).pipe(
+            // Skip the initial emission — the service has already loaded the
+            // unfiltered first window in its constructor.
+            debounceTime(300),
+            map(([sport, from, to, durMin, durMax, tssMin, tssMax]): SessionFilters => ({
+                sport,
+                from: from || null,
+                to: to || null,
+                durationMinSec: durMin != null ? durMin * 60 : null,
+                durationMaxSec: durMax != null ? durMax * 60 : null,
+                tssMin,
+                tssMax,
+            })),
+            distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
+            takeUntilDestroyed(this.destroyRef),
+        ).subscribe((filters) => {
+            if (this.hasAnyFilter(filters)) {
+                this.historyService.setHistoryFilters(filters);
+            } else if (this.lastAppliedHadFilters) {
+                // Filters were cleared — reload unfiltered first window.
+                this.historyService.setHistoryFilters({});
+            }
+            this.lastAppliedHadFilters = this.hasAnyFilter(filters);
+        });
+    }
+
+    private lastAppliedHadFilters = false;
+
+    private hasAnyFilter(f: SessionFilters): boolean {
+        return !!(f.sport || f.from || f.to
+            || f.durationMinSec != null || f.durationMaxSec != null
+            || f.tssMin != null || f.tssMax != null);
+    }
+
+    loadOlder(): void {
+        this.historyService.loadOlderHistory();
     }
 
     // Filters — labels translated via instant (language known at component init)
@@ -161,51 +209,6 @@ export class WorkoutHistoryComponent implements OnInit {
 
     ftp$ = this.authService.user$.pipe(map((u) => u?.ftp ?? null));
 
-    filteredSessions$ = combineLatest([
-        this.historyService.sessions$,
-        this.sportFilterSubject,
-        this.dateFromSubject,
-        this.dateToSubject,
-        this.durationMinSubject,
-        this.durationMaxSubject,
-        this.tssMinSubject,
-        this.tssMaxSubject,
-        this.ftp$,
-    ]).pipe(
-        map(([sessions, sport, from, to, durMin, durMax, tssMin, tssMax, ftp]) => {
-            let filtered = sessions;
-            if (sport) {
-                filtered = filtered.filter(s => s.sportType === sport);
-            }
-            if (from) {
-                const fromDate = new Date(from + 'T00:00:00');
-                filtered = filtered.filter(s => new Date(s.date) >= fromDate);
-            }
-            if (to) {
-                const toDate = new Date(to + 'T23:59:59');
-                filtered = filtered.filter(s => new Date(s.date) <= toDate);
-            }
-            if (durMin != null) {
-                const minSec = durMin * 60;
-                filtered = filtered.filter(s => (s.totalDuration ?? 0) >= minSec);
-            }
-            if (durMax != null) {
-                const maxSec = durMax * 60;
-                filtered = filtered.filter(s => (s.totalDuration ?? 0) <= maxSec);
-            }
-            if (tssMin != null || tssMax != null) {
-                filtered = filtered.filter(s => {
-                    const tss = this.getTss(s, ftp);
-                    if (tss == null) return false;
-                    if (tssMin != null && tss < tssMin) return false;
-                    if (tssMax != null && tss > tssMax) return false;
-                    return true;
-                });
-            }
-            return filtered;
-        })
-    );
-
     // Week grouping state — tracks which week keys the user has expanded.
     // Seeded once on the first non-empty emission so the most recent active
     // week starts open; subsequent toggles are fully manual.
@@ -213,7 +216,7 @@ export class WorkoutHistoryComponent implements OnInit {
     private expandedSeeded = false;
     private toggleSubject = new BehaviorSubject<void>(undefined);
 
-    groupedRows$ = combineLatest([this.filteredSessions$, this.toggleSubject]).pipe(
+    groupedRows$ = combineLatest([this.sessions$, this.toggleSubject]).pipe(
         map(([sessions]) => {
             if (!this.expandedSeeded && sessions.length > 0) {
                 const firstKey = this.weekKeyOf(new Date(sessions[0].date));
@@ -403,7 +406,7 @@ export class WorkoutHistoryComponent implements OnInit {
     }
 
     exportCsv(): void {
-        combineLatest([this.filteredSessions$, this.ftp$]).pipe(take(1)).subscribe(([sessions, ftp]) => {
+        combineLatest([this.sessions$, this.ftp$]).pipe(take(1)).subscribe(([sessions, ftp]) => {
             this.csvExport.exportSessions(sessions, ftp);
         });
     }
