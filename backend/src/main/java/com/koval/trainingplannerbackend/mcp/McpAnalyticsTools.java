@@ -63,10 +63,9 @@ public class McpAnalyticsTools {
         if (curve.isEmpty()) {
             return "_No cycling power data in this range._";
         }
-        List<Row> rows = new ArrayList<>();
-        for (Map.Entry<Integer, Double> e : curve.entrySet()) {
-            rows.add(new Row(formatDuration(e.getKey()), e.getValue()));
-        }
+        List<Row> rows = curve.entrySet().stream()
+                .map(e -> new Row(formatDuration(e.getKey()), e.getValue()))
+                .toList();
         return MarkdownChartRenderer.barChart(
                 "Best power curve " + from + " → " + to, rows, 30, "W");
     }
@@ -112,10 +111,9 @@ public class McpAnalyticsTools {
         if (entries.isEmpty()) {
             return "_No sessions in this range._";
         }
-        List<Row> rows = new ArrayList<>();
-        for (VolumeEntry v : entries) {
-            rows.add(new Row(v.period(), v.totalTss()));
-        }
+        List<Row> rows = entries.stream()
+                .map(v -> new Row(v.period(), v.totalTss()))
+                .toList();
         return MarkdownChartRenderer.barChart(
                 "Training volume " + from + " → " + to + " (by " + groupBy + ")",
                 rows, 30, "TSS");
@@ -130,14 +128,15 @@ public class McpAnalyticsTools {
         List<ScheduledWorkout> workouts = scheduledWorkoutService.getAthleteSchedule(userId, monday, sunday);
 
         Map<DayOfWeek, List<String>> entries = new HashMap<>();
-        for (ScheduledWorkout sw : workouts) {
-            if (sw.getScheduledDate() == null) continue;
-            String title = resolveTitle(sw.getTrainingId());
-            String marker = sw.getStatus() == ScheduleStatus.COMPLETED ? "✔ "
-                    : sw.getStatus() == ScheduleStatus.SKIPPED ? "✗ " : "○ ";
-            entries.computeIfAbsent(sw.getScheduledDate().getDayOfWeek(), k -> new ArrayList<>())
-                    .add(marker + title);
-        }
+        workouts.stream()
+                .filter(sw -> sw.getScheduledDate() != null)
+                .forEach(sw -> {
+                    String title = resolveTitle(sw.getTrainingId());
+                    String marker = sw.getStatus() == ScheduleStatus.COMPLETED ? "✔ "
+                            : sw.getStatus() == ScheduleStatus.SKIPPED ? "✗ " : "○ ";
+                    entries.computeIfAbsent(sw.getScheduledDate().getDayOfWeek(), k -> new ArrayList<>())
+                            .add(marker + title);
+                });
         StringBuilder sb = new StringBuilder();
         sb.append("**Week of ").append(monday).append("**\n\n");
         sb.append(MarkdownChartRenderer.weekGrid(monday, entries));
@@ -186,10 +185,9 @@ public class McpAnalyticsTools {
 
         Map<Integer, Double> curve = powerCurveService.getSessionPowerCurve(sessionId, userId);
         if (!curve.isEmpty()) {
-            List<Row> rows = new ArrayList<>();
-            for (Map.Entry<Integer, Double> e : curve.entrySet()) {
-                rows.add(new Row(formatDuration(e.getKey()), e.getValue()));
-            }
+            List<Row> rows = curve.entrySet().stream()
+                    .map(e -> new Row(formatDuration(e.getKey()), e.getValue()))
+                    .toList();
             sb.append(MarkdownChartRenderer.barChart("Session power curve", rows, 30, "W"));
         }
 

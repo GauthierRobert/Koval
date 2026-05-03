@@ -69,13 +69,10 @@ public class CleanupScheduler {
     public void cleanOrphanedScheduledWorkouts() {
         // Walk all scheduled workouts and drop those whose training no longer exists.
         List<ScheduledWorkout> all = scheduledWorkoutRepository.findAll();
-        List<String> toDelete = new ArrayList<>();
-        for (ScheduledWorkout sw : all) {
-            String trainingId = sw.getTrainingId();
-            if (trainingId == null || !trainingRepository.existsById(trainingId)) {
-                toDelete.add(sw.getId());
-            }
-        }
+        List<String> toDelete = all.stream()
+                .filter(sw -> sw.getTrainingId() == null || !trainingRepository.existsById(sw.getTrainingId()))
+                .map(ScheduledWorkout::getId)
+                .toList();
         if (!toDelete.isEmpty()) {
             scheduledWorkoutRepository.deleteAllById(toDelete);
         }

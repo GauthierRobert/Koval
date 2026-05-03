@@ -5,8 +5,8 @@ import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 /**
  * Wraps a ChatMemory to compact older messages before they are sent to the AI.
@@ -46,17 +46,10 @@ public class CompactingChatMemory implements ChatMemory {
             return messages;
         }
 
-        List<Message> result = new ArrayList<>(messages.size());
         int compactUntil = messages.size() - KEEP_FULL;
-
-        for (int i = 0; i < messages.size(); i++) {
-            if (i < compactUntil) {
-                result.add(compactMessage(messages.get(i)));
-            } else {
-                result.add(messages.get(i));
-            }
-        }
-        return result;
+        return IntStream.range(0, messages.size())
+                .mapToObj(i -> i < compactUntil ? compactMessage(messages.get(i)) : messages.get(i))
+                .toList();
     }
 
     /** Returns the full, uncompacted messages — for frontend display. */

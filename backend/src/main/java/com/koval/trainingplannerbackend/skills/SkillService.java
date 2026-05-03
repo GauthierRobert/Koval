@@ -13,10 +13,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -79,10 +83,9 @@ public class SkillService {
 
     public void writeAllSkillsZip(OutputStream out) throws IOException {
         ensureLoaded();
-        List<SkillFile> all = new ArrayList<>();
-        for (List<SkillFile> files : cachedFiles.values()) {
-            all.addAll(files);
-        }
+        List<SkillFile> all = cachedFiles.values().stream()
+                .flatMap(Collection::stream)
+                .toList();
         writeFilesAsZip(out, all);
     }
 
@@ -161,19 +164,18 @@ public class SkillService {
             if (rel.isEmpty() || rel.endsWith("/")) continue;
             out.add(new SkillFile(skillName + "/" + rel, asset));
         }
-        out.sort((a, b) -> a.entryName().compareTo(b.entryName()));
+        out.sort(Comparator.comparing(SkillFile::entryName));
         return out;
     }
 
     private List<SkillFile> collectSkillFilesFromKnown(String skillName, Resource skillMd) {
-        List<SkillFile> out = new ArrayList<>();
-        out.add(new SkillFile(skillName + "/SKILL.md", skillMd));
         String[] extra = KNOWN_SKILL_ASSETS.getOrDefault(skillName, new String[0]);
-        for (String rel : extra) {
-            Resource res = new ClassPathResource("skills/" + skillName + "/" + rel);
-            if (res.exists()) out.add(new SkillFile(skillName + "/" + rel, res));
-        }
-        return out;
+        Stream<SkillFile> entry = Stream.of(new SkillFile(skillName + "/SKILL.md", skillMd));
+        Stream<SkillFile> assets = Arrays.stream(extra)
+                .map(rel -> new SkillFile(skillName + "/" + rel,
+                        new ClassPathResource("skills/" + skillName + "/" + rel)))
+                .filter(sf -> sf.resource().exists());
+        return Stream.concat(entry, assets).toList();
     }
 
     private String extractSkillNameFromUri(Resource skillMd) {

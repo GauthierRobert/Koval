@@ -11,6 +11,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.IntStream;
 
 @Component
 public class GpxParser {
@@ -147,43 +149,42 @@ public class GpxParser {
             smoothed[i] = elevSum / weightSum;
         }
 
-        List<GpxTrackPoint> result = new ArrayList<>(n);
-        for (int i = 0; i < n; i++) {
-            GpxTrackPoint pt = points.get(i);
-            result.add(new GpxTrackPoint(pt.lat(), pt.lon(), smoothed[i], pt.cumulativeDistance()));
-        }
-        return result;
+        return IntStream.range(0, n)
+                .mapToObj(i -> {
+                    GpxTrackPoint pt = points.get(i);
+                    return new GpxTrackPoint(pt.lat(), pt.lon(), smoothed[i], pt.cumulativeDistance());
+                })
+                .toList();
     }
 
     /**
      * Build one segment per consecutive pair of GPX track points (no aggregation).
      */
     private List<CourseSegment> buildPointToPointSegments(List<GpxTrackPoint> points) {
-        List<CourseSegment> segments = new ArrayList<>();
+        return IntStream.range(1, points.size())
+                .mapToObj(i -> buildSegment(points.get(i - 1), points.get(i)))
+                .filter(Objects::nonNull)
+                .toList();
+    }
 
-        for (int i = 1; i < points.size(); i++) {
-            GpxTrackPoint prev = points.get(i - 1);
-            GpxTrackPoint curr = points.get(i);
-            double length = curr.cumulativeDistance() - prev.cumulativeDistance();
-            if (length <= 0) continue;
+    private CourseSegment buildSegment(GpxTrackPoint prev, GpxTrackPoint curr) {
+        double length = curr.cumulativeDistance() - prev.cumulativeDistance();
+        if (length <= 0) return null;
 
-            double elevChange = curr.elevation() - prev.elevation();
-            double gradient = (elevChange / length) * 100.0;
-            double elevGain = elevChange > 0 ? elevChange : 0.0;
-            double elevLoss = elevChange < 0 ? Math.abs(elevChange) : 0.0;
+        double elevChange = curr.elevation() - prev.elevation();
+        double gradient = (elevChange / length) * 100.0;
+        double elevGain = elevChange > 0 ? elevChange : 0.0;
+        double elevLoss = elevChange < 0 ? Math.abs(elevChange) : 0.0;
 
-            segments.add(new CourseSegment(
-                    Math.round(prev.cumulativeDistance() * 10.0) / 10.0,
-                    Math.round(curr.cumulativeDistance() * 10.0) / 10.0,
-                    Math.round(gradient * 100.0) / 100.0,
-                    Math.round(elevGain * 10.0) / 10.0,
-                    Math.round(elevLoss * 10.0) / 10.0,
-                    Math.round(prev.elevation() * 10.0) / 10.0,
-                    Math.round(curr.elevation() * 10.0) / 10.0
-            ));
-        }
-
-        return segments;
+        return new CourseSegment(
+                Math.round(prev.cumulativeDistance() * 10.0) / 10.0,
+                Math.round(curr.cumulativeDistance() * 10.0) / 10.0,
+                Math.round(gradient * 100.0) / 100.0,
+                Math.round(elevGain * 10.0) / 10.0,
+                Math.round(elevLoss * 10.0) / 10.0,
+                Math.round(prev.elevation() * 10.0) / 10.0,
+                Math.round(curr.elevation() * 10.0) / 10.0
+        );
     }
 
     /**
