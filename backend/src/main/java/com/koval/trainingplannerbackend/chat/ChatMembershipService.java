@@ -29,20 +29,30 @@ public class ChatMembershipService {
         this.membershipRepository = membershipRepository;
     }
 
-    /** Add or reactivate a single member on a room. Idempotent. */
-    @Transactional
+    /**
+     * Add or reactivate a single member on a room. Idempotent.
+     *
+     * Hot path: called on every chat-tab open via {@code ensure*RoomForMember}. Skips the
+     * {@code save()} when nothing changed so steady-state hits incur zero writes. Always
+     * called from a {@code @Transactional} caller, so no inner annotation needed.
+     */
     public ChatRoomMembership ensureMembership(ChatRoom room, String userId, MembershipSource source, ChatMemberRole role) {
         Optional<ChatRoomMembership> existing = membershipRepository.findByRoomIdAndUserId(room.getId(), userId);
         if (existing.isPresent()) {
             ChatRoomMembership m = existing.get();
-            if (!m.getActive()) {
+            boolean dirty = false;
+            if (!Boolean.TRUE.equals(m.getActive())) {
                 m.setActive(true);
                 m.setJoinedAt(Instant.now());
+                dirty = true;
             }
-            if (m.getSource() == null || m.getSource() == MembershipSource.AUTO) {
-                if (source == MembershipSource.SELF_JOINED) m.setSource(MembershipSource.SELF_JOINED);
+            if ((m.getSource() == null || m.getSource() == MembershipSource.AUTO)
+                    && source == MembershipSource.SELF_JOINED
+                    && m.getSource() != MembershipSource.SELF_JOINED) {
+                m.setSource(MembershipSource.SELF_JOINED);
+                dirty = true;
             }
-            return membershipRepository.save(m);
+            return dirty ? membershipRepository.save(m) : m;
         }
         ChatRoomMembership m = new ChatRoomMembership();
         m.setRoomId(room.getId());

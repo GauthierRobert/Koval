@@ -42,13 +42,15 @@ public class ChatRoomService {
     /**
      * Lazy-create the CLUB room for a requesting active member and ensure their chat membership.
      * Covers legacy clubs that predate the auto-create hooks in ClubService / ClubMembershipService.
+     *
+     * Returns both room and membership so callers don't re-fetch them when building responses.
      */
     @Transactional
-    public ChatRoom ensureClubRoomForMember(String userId, String clubId) {
+    public EnsureRoomResult ensureClubRoomForMember(String userId, String clubId) {
         clubAuthorizationService.requireActiveMember(userId, clubId);
         ChatRoom room = getOrCreateClubRoom(clubId);
-        membershipService.ensureMembership(room, userId, MembershipSource.AUTO, ChatMemberRole.MEMBER);
-        return room;
+        ChatRoomMembership m = membershipService.ensureMembership(room, userId, MembershipSource.AUTO, ChatMemberRole.MEMBER);
+        return new EnsureRoomResult(room, m);
     }
 
     /**
@@ -56,7 +58,7 @@ public class ChatRoomService {
      * Covers legacy groups that predate the auto-create hooks in {@code ClubGroupService}.
      */
     @Transactional
-    public ChatRoom ensureGroupRoomForMember(String userId, String clubId, String groupId) {
+    public EnsureRoomResult ensureGroupRoomForMember(String userId, String clubId, String groupId) {
         clubAuthorizationService.requireActiveMember(userId, clubId);
         ClubGroup group = clubGroupRepository.findById(groupId)
                 .orElseThrow(() -> new ResourceNotFoundException("Group not found"));
@@ -67,8 +69,8 @@ public class ChatRoomService {
             throw new ForbiddenOperationException("Not a member of this group");
         }
         ChatRoom room = getOrCreateGroupRoom(clubId, groupId);
-        membershipService.ensureMembership(room, userId, MembershipSource.AUTO, ChatMemberRole.MEMBER);
-        return room;
+        ChatRoomMembership m = membershipService.ensureMembership(room, userId, MembershipSource.AUTO, ChatMemberRole.MEMBER);
+        return new EnsureRoomResult(room, m);
     }
 
     /**
@@ -76,11 +78,11 @@ public class ChatRoomService {
      * about a shared race objective; engagement on the goal is independent of chat membership.
      */
     @Transactional
-    public ChatRoom ensureObjectiveRoomForMember(String userId, String clubId, String objectiveKey, String title) {
+    public EnsureRoomResult ensureObjectiveRoomForMember(String userId, String clubId, String objectiveKey, String title) {
         clubAuthorizationService.requireActiveMember(userId, clubId);
         ChatRoom room = getOrCreateObjectiveRoom(clubId, objectiveKey, title);
-        membershipService.ensureMembership(room, userId, MembershipSource.AUTO, ChatMemberRole.MEMBER);
-        return room;
+        ChatRoomMembership m = membershipService.ensureMembership(room, userId, MembershipSource.AUTO, ChatMemberRole.MEMBER);
+        return new EnsureRoomResult(room, m);
     }
 
     @Transactional

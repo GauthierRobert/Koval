@@ -62,18 +62,18 @@ public class ChatController {
         String userId = SecurityUtils.getCurrentUserId();
         switch (scope) {
             case CLUB -> {
-                ChatRoom room = chatRoomService.ensureClubRoomForMember(userId, clubId);
-                return ResponseEntity.ok(chatQueryService.getRoomDetail(userId, room.getId()));
+                EnsureRoomResult res = chatRoomService.ensureClubRoomForMember(userId, clubId);
+                return ResponseEntity.ok(chatQueryService.buildRoomResponse(res.room(), res.membership(), userId));
             }
             case GROUP -> {
                 if (refId == null) return ResponseEntity.badRequest().build();
-                ChatRoom room = chatRoomService.ensureGroupRoomForMember(userId, clubId, refId);
-                return ResponseEntity.ok(chatQueryService.getRoomDetail(userId, room.getId()));
+                EnsureRoomResult res = chatRoomService.ensureGroupRoomForMember(userId, clubId, refId);
+                return ResponseEntity.ok(chatQueryService.buildRoomResponse(res.room(), res.membership(), userId));
             }
             case OBJECTIVE -> {
                 if (refId == null) return ResponseEntity.badRequest().build();
-                ChatRoom room = chatRoomService.ensureObjectiveRoomForMember(userId, clubId, refId, title);
-                return ResponseEntity.ok(chatQueryService.getRoomDetail(userId, room.getId()));
+                EnsureRoomResult res = chatRoomService.ensureObjectiveRoomForMember(userId, clubId, refId, title);
+                return ResponseEntity.ok(chatQueryService.buildRoomResponse(res.room(), res.membership(), userId));
             }
             default -> {
                 return chatQueryService.findByParent(scope, clubId, refId)

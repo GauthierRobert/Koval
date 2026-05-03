@@ -83,13 +83,21 @@ public class ChatQueryService {
         ChatRoom room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
         Optional<ChatRoomMembership> maybe = membershipRepository.findByRoomIdAndUserId(roomId, userId);
+        return buildRoomResponse(room, maybe.orElse(null), userId);
+    }
+
+    /**
+     * Build a {@link ChatRoomResponse} from already-loaded room + membership without
+     * re-querying. Used by {@code by-parent} resolution to avoid duplicate reads.
+     */
+    public ChatRoomResponse buildRoomResponse(ChatRoom room, ChatRoomMembership membership, String userId) {
         return new ChatRoomResponse(
                 room.getId(), room.getScope(), room.getClubId(), room.getScopeRefId(),
                 displayTitleFor(room, userId), room.isJoinable(), room.isArchived(),
                 room.getCreatedAt(), room.getCreatedBy(), room.getLastMessageAt(),
-                maybe.map(ChatRoomMembership::getActive).orElse(false),
-                maybe.map(ChatRoomMembership::getMuted).orElse(false),
-                maybe.map(ChatRoomMembership::getLastReadAt).orElse(null),
+                membership != null && Boolean.TRUE.equals(membership.getActive()),
+                membership != null && Boolean.TRUE.equals(membership.getMuted()),
+                membership != null ? membership.getLastReadAt() : null,
                 otherUserIdForDirect(room, userId)
         );
     }

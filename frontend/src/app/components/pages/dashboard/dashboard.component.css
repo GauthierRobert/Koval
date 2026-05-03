@@ -88,7 +88,6 @@
 
 .dash-rail > app-dashboard-focus-card {
   display: flex;
-  min-height: 620px;
 }
 
 .dash-main {
@@ -472,9 +471,6 @@
 @media (max-width: 900px) {
   .dash-split {
     grid-template-columns: 1fr;
-  }
-  .dash-rail > app-dashboard-focus-card {
-    min-height: auto;
   }
 }
 
