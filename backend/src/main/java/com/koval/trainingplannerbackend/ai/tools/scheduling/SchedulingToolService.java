@@ -4,7 +4,8 @@ import com.koval.trainingplannerbackend.ai.tools.coach.ScheduleSummary;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.coach.CoachService;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
-import com.koval.trainingplannerbackend.training.TrainingTitleResolver;
+import com.koval.trainingplannerbackend.training.TrainingRepository;
+import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
@@ -20,11 +21,11 @@ import java.time.LocalDate;
 public class SchedulingToolService {
 
     private final CoachService coachService;
-    private final TrainingTitleResolver trainingTitleResolver;
+    private final TrainingRepository trainingRepository;
 
-    public SchedulingToolService(CoachService coachService, TrainingTitleResolver trainingTitleResolver) {
+    public SchedulingToolService(CoachService coachService, TrainingRepository trainingRepository) {
         this.coachService = coachService;
-        this.trainingTitleResolver = trainingTitleResolver;
+        this.trainingRepository = trainingRepository;
     }
 
     @Tool(description = "Schedule a training for yourself on a date.")
@@ -35,7 +36,8 @@ public class SchedulingToolService {
             ToolContext context) {
         String userId = SecurityUtils.getUserId(context);
         ScheduledWorkout sw = coachService.selfAssignTraining(userId, trainingId, scheduledDate, notes);
-        String title = trainingTitleResolver.resolveTitle(trainingId);
+        String title = trainingRepository.findById(trainingId)
+                .map(Training::getTitle).orElse("Unknown");
         return ScheduleSummary.from(sw, title);
     }
 }

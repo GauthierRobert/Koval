@@ -8,10 +8,9 @@ import org.springframework.ai.chat.messages.Message;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -24,7 +23,6 @@ public class ConversationSummarizer {
 
     private static final Logger log = LoggerFactory.getLogger(ConversationSummarizer.class);
     private static final int SUMMARIZE_THRESHOLD = 10;
-    private static final int SUMMARY_CACHE_MAX_ENTRIES = 1000;
 
     private static final String SUMMARIZE_PROMPT = """
             Summarize this conversation history in 2-3 concise sentences.
@@ -35,18 +33,7 @@ public class ConversationSummarizer {
     private final ChatClient routerClient;
     private final ChatMemory chatMemory;
     private final ChatHistoryRepository chatHistoryRepository;
-
-    /**
-     * Bounded LRU cache (access-order, eldest-eviction) so summary lookups stay fast for hot
-     * conversations without leaking memory across the server lifetime.
-     */
-    private final Map<String, String> summaryCache = Collections.synchronizedMap(
-            new LinkedHashMap<>(SUMMARY_CACHE_MAX_ENTRIES + 1, 0.75f, true) {
-                @Override
-                protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
-                    return size() > SUMMARY_CACHE_MAX_ENTRIES;
-                }
-            });
+    private final Map<String, String> summaryCache = new ConcurrentHashMap<>();
 
     public ConversationSummarizer(@Qualifier("routerClient") ChatClient routerClient,
                                    ChatMemory chatMemory,
@@ -57,21 +44,21 @@ public class ConversationSummarizer {
     }
 
     /**
-     * Returns a previously generated conversation summary, populating the local cache from
-     * persistent storage on first hit. Returns {@code null} when no summary has been generated.
+     * Returns a conversation summary if the conversation is long enough to warrant one.
+     * Returns null for short conversations.
      */
     public String getSummaryIfNeeded(String conversationId) {
         String cached = summaryCache.get(conversationId);
         if (cached != null) return cached;
 
-        String stored = chatHistoryRepository.findById(conversationId)
-                .map(ChatHistory::getConversationSummary)
-                .filter(s -> s != null && !s.isBlank())
-                .orElse(null);
-        if (stored != null) {
-            summaryCache.put(conversationId, stored);
+        List<Message> messages = chatMemory.get(conversationId);
+        if (messages == null || messages.size() < SUMMARIZE_THRESHOLD) {
+            return null;
         }
-        return stored;
+
+        return chatHistoryRepository.findById(conversationId)
+                .map(ChatHistory::getConversationSummary)
+                .orElse(null);
     }
 
     /**
@@ -79,11 +66,12 @@ public class ConversationSummarizer {
      * Called after responses when message count exceeds the threshold.
      */
     public void summarizeIfNeeded(String conversationId) {
-        if (summaryCache.containsKey(conversationId)) {
-            return;
-        }
         List<Message> messages = chatMemory.get(conversationId);
         if (messages == null || messages.size() < SUMMARIZE_THRESHOLD) {
+            return;
+        }
+
+        if (summaryCache.containsKey(conversationId)) {
             return;
         }
 

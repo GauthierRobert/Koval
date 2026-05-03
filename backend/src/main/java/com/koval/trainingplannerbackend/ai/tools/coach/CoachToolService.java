@@ -5,7 +5,8 @@ import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.coach.CoachGroupService;
 import com.koval.trainingplannerbackend.coach.CoachService;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
-import com.koval.trainingplannerbackend.training.TrainingTitleResolver;
+import com.koval.trainingplannerbackend.training.TrainingRepository;
+import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
@@ -23,14 +24,12 @@ public class CoachToolService {
 
     private final CoachService coachService;
     private final CoachGroupService coachGroupService;
-    private final TrainingTitleResolver trainingTitleResolver;
+    private final TrainingRepository trainingRepository;
 
-    public CoachToolService(CoachService coachService,
-                            CoachGroupService coachGroupService,
-                            TrainingTitleResolver trainingTitleResolver) {
+    public CoachToolService(CoachService coachService, CoachGroupService coachGroupService, TrainingRepository trainingRepository) {
         this.coachService = coachService;
         this.coachGroupService = coachGroupService;
-        this.trainingTitleResolver = trainingTitleResolver;
+        this.trainingRepository = trainingRepository;
     }
 
     @Tool(description = "Assign a training to one or more athletes on a date.")
@@ -55,7 +54,7 @@ public class CoachToolService {
         ToolEventEmitter.emitToolCall(context, "assignTraining", "Scheduling for " + athleteIds.size() + " athlete(s)...");
         String coachId = SecurityUtils.getUserId(context);
         List<ScheduledWorkout> workouts = coachService.assignTraining(coachId, trainingId, athleteIds, scheduledDate, notes, null);
-        String title = trainingTitleResolver.resolveTitle(trainingId);
+        String title = resolveTrainingTitle(trainingId);
         List<ScheduleSummary> result = workouts.stream().map(sw -> ScheduleSummary.from(sw, title)).toList();
         ToolEventEmitter.emitToolResult(context, "assignTraining", "Assigned to " + result.size() + " athlete(s)", true);
         return result;
@@ -69,5 +68,10 @@ public class CoachToolService {
         return coachGroupService.getAthletesByGroup(coachId, groupId).stream()
                 .map(AthleteSummary::from)
                 .toList();
+    }
+
+    private String resolveTrainingTitle(String trainingId) {
+        return trainingRepository.findById(trainingId)
+                .map(Training::getTitle).orElse("Unknown");
     }
 }

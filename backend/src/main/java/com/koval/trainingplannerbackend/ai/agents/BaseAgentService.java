@@ -65,11 +65,8 @@ public abstract class BaseAgentService implements TrainingAgent {
 
     @Override
     public StreamResponse chatStream(String userMessage, String userId, String conversationId, UserContext ctx) {
-        // directBestEffort drops events for slow subscribers instead of buffering unbounded,
-        // protecting the pod from OOM when an SSE client stalls. A single chat turn
-        // emits at most a handful of tool events, so the trade-off is acceptable.
         Sinks.Many<ServerSentEvent<String>> toolSink =
-                Sinks.many().multicast().directBestEffort();
+                Sinks.many().multicast().onBackpressureBuffer();
 
         var statusStart = Flux.just(sse("status", "in_progress"));
         var agentEvent = Flux.just(sse("agent", getAgentType().name()));
