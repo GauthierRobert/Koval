@@ -121,6 +121,10 @@
   color: var(--text-muted);
 }
 
+.tooltip-swim-meta {
+  margin-top: 4px;
+}
+
 .block-bar[data-type="FREE"] {
   background: repeating-linear-gradient(45deg,
       #666,

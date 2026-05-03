@@ -82,20 +82,10 @@
                       }
                       @if (isSwim(training) && hasSwimMeta(block)) {
                         <div class="block-swim-meta">
-                          @if (block.strokeType) {
-                            <span class="swim-chip swim-chip-stroke">{{ ('STROKE.' + block.strokeType) | translate }}</span>
-                          }
                           @if (block.cadenceTarget) {
                             <span class="swim-chip">{{ block.cadenceTarget }} {{ 'WORKOUT_DETAIL.LABEL_SPM' | translate }}</span>
                           }
-                          @if (block.sendOffSeconds) {
-                            <span class="swim-chip swim-chip-sendoff" [title]="'WORKOUT_DETAIL.LABEL_SENDOFF' | translate">
-                              {{ 'WORKOUT_DETAIL.LABEL_SENDOFF' | translate }} {{ formatSendOff(block.sendOffSeconds) }}
-                            </span>
-                          }
-                          @for (item of block.equipment ?? []; track item) {
-                            <span class="swim-chip swim-chip-equipment">{{ ('SWIM_EQUIPMENT.' + item) | translate }}</span>
-                          }
+                          <app-swim-meta-chips [block]="block" [sport]="training.sportType" />
                         </div>
                       }
                     </div>

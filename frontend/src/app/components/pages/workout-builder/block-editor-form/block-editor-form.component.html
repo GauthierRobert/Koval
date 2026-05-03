@@ -56,7 +56,7 @@
 
 <div class="form-row-2">
   <div class="form-field">
-    <label>{{ 'BUILDER.CADENCE' | translate }}</label>
+    <label>{{ (isSwim() ? 'BUILDER.STROKE_RATE' : 'BUILDER.CADENCE') | translate }}</label>
     <input type="number" [ngModel]="editCadence" (ngModelChange)="editCadence = $event; editCadenceChange.emit($event)" min="0" [placeholder]="'BUILDER.OPTIONAL' | translate" />
   </div>
   <div class="form-field">
@@ -64,6 +64,45 @@
     <input type="text" [ngModel]="editZone" (ngModelChange)="editZone = $event; editZoneChange.emit($event)" [placeholder]="'BUILDER.ZONE_PLACEHOLDER' | translate" />
   </div>
 </div>
+
+@if (showSwimFields()) {
+  <div class="swim-section">
+    <div class="swim-section-header">{{ 'BUILDER.SWIM_DETAILS' | translate }}</div>
+
+    <div class="form-row-2">
+      <div class="form-field">
+        <label>{{ 'BUILDER.STROKE_TYPE' | translate }}</label>
+        <select [ngModel]="editStrokeType ?? ''" (ngModelChange)="onStrokeChange($event)">
+          <option value="">{{ 'BUILDER.OPTIONAL' | translate }}</option>
+          @for (s of STROKE_TYPES; track s) {
+            <option [value]="s">{{ ('STROKE.' + s) | translate }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-field">
+        <label>{{ 'BUILDER.SENDOFF' | translate }}</label>
+        <div class="sendoff-row">
+          <input type="number" [ngModel]="sendOffMin" (ngModelChange)="onSendOffMinChange($event)" min="0" [placeholder]="'BUILDER.MIN' | translate" />
+          <span class="sendoff-sep">:</span>
+          <input type="number" [ngModel]="sendOffSec" (ngModelChange)="onSendOffSecChange($event)" min="0" max="59" [placeholder]="'BUILDER.SEC' | translate" />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label>{{ 'BUILDER.EQUIPMENT' | translate }}</label>
+      <div class="equipment-chips">
+        @for (item of SWIM_EQUIPMENT_OPTIONS; track item) {
+          <button type="button" class="eq-chip"
+                  [class.active]="isEquipmentSelected(item)"
+                  (click)="toggleEquipment(item)">
+            {{ ('SWIM_EQUIPMENT.' + item) | translate }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}
 
 @if (selectedBlockIndex >= 0) {
   <button class="btn-primary full-width" (click)="update.emit()">{{ 'BUILDER.UPDATE_BLOCK' | translate }}</button>

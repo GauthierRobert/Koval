@@ -24,7 +24,7 @@
                 </div>
                 <div class="set-children">
                   @for (leaf of child.elements; track leaf) {
-                    <div class="step-card set-child-card" [class.ramp]="leaf.type === 'RAMP'" [style.border-left-color]="getBlockColor(leaf)">
+                    <div class="step-card set-child-card" [class.ramp]="leaf.type === 'RAMP'" [style.border-left-color]="getBlockColor(leaf)" [title]="getSwimMetaTooltip(leaf)">
                       <span class="step-label">{{ leaf.label }}</span>
                       <span class="step-duration" [class.estimated]="formatBlockEstimates(leaf).durationEstimated">{{ formatBlockEstimates(leaf).durationEstimated ? '~' : '' }}{{ formatBlockEstimates(leaf).duration }}</span>
                       <span class="step-separator">|</span>
@@ -39,12 +39,13 @@
                         }
                       </span>
                       <span class="step-desc">{{ leaf.description ?? '' }}</span>
+                      <app-swim-meta-chips class="step-swim-meta" [block]="leaf" [sport]="sportType" size="compact" />
                     </div>
                   }
                 </div>
               </div>
             } @else {
-              <div class="step-card set-child-card" [class.ramp]="child.type === 'RAMP'" [style.border-left-color]="getBlockColor(child)">
+              <div class="step-card set-child-card" [class.ramp]="child.type === 'RAMP'" [style.border-left-color]="getBlockColor(child)" [title]="getSwimMetaTooltip(child)">
                 <span class="step-label">{{ child.label }}</span>
                 <span class="step-duration" [class.estimated]="formatBlockEstimates(child).durationEstimated">{{ formatBlockEstimates(child).durationEstimated ? '~' : '' }}{{ formatBlockEstimates(child).duration }}</span>
                 <span class="step-separator">|</span>
@@ -59,6 +60,7 @@
                   }
                 </span>
                 <span class="step-desc">{{ child.description ?? '' }}</span>
+                <app-swim-meta-chips class="step-swim-meta" [block]="child" [sport]="sportType" size="compact" />
               </div>
             }
           }
@@ -66,7 +68,7 @@
       </div>
     } @else {
       <div class="step-card" [class.ramp]="block.type === 'RAMP'"
-        [style.border-left-color]="getBlockColor(block)">
+        [style.border-left-color]="getBlockColor(block)" [title]="getSwimMetaTooltip(block)">
         <span class="step-number">#{{ i + 1 }}</span>
         <span class="step-label">{{ block.label }}</span>
         @if (!(formatBlockEstimates(block).durationEstimated && block.type ==='PAUSE')) {
@@ -88,6 +90,7 @@
           </span>
         }
         <span class="step-desc">{{ block.description ?? '' }}</span>
+        <app-swim-meta-chips class="step-swim-meta" [block]="block" [sport]="sportType" size="compact" />
       </div>
     }
   }

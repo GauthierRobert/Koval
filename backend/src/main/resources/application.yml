@@ -32,7 +32,9 @@ spring:
         repository:
           mongo:
             create-indices: true
-            ttl: 0  # indefinite storage
+            # TTL in seconds for chat memory documents. Override via CHAT_MEMORY_TTL_SECONDS.
+            # Default 90 days — bounded growth while keeping enough history for typical users.
+            ttl: ${CHAT_MEMORY_TTL_SECONDS:7776000}
   mongodb:
     port: 27017
     database: training-planner
@@ -175,10 +177,12 @@ management:
     health:
       show-details: when-authorized
   health:
+    # Rabbit is optional in dev (broker.type defaults to "none"); enabled in prod via the
+    # RabbitAutoConfiguration exclusion in application-prod.yml making the indicator absent.
     rabbit:
       enabled: false
     mongodb:
-      enabled: false
+      enabled: true
   metrics:
     tags:
       application: training-planner-ai

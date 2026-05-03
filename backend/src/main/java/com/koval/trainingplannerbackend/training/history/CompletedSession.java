@@ -3,6 +3,8 @@ package com.koval.trainingplannerbackend.training.history;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -14,12 +16,14 @@ import java.util.Map;
 @Getter
 @Setter
 @Document(collection = "completed_sessions")
+@CompoundIndexes({
+        @CompoundIndex(name = "userId_completedAt_idx", def = "{'userId': 1, 'completedAt': -1}")
+})
 public class CompletedSession {
 
     @Id
     private String id;
 
-    @Indexed
     private String userId;
 
     private String trainingId;

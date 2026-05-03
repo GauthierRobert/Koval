@@ -9,6 +9,8 @@ import { TrainingService } from '../../../services/training.service';
 import { AuthService } from '../../../services/auth.service';
 import {
   isSet,
+  StrokeType,
+  SwimEquipment,
   Training,
   TrainingType,
   TRAINING_TYPES,
@@ -73,6 +75,9 @@ export class WorkoutBuilderComponent implements OnInit {
   editIntensityEnd: number | null = null;
   editCadence: number | null = null;
   editZone = '';
+  editStrokeType: StrokeType | null = null;
+  editEquipment: SwimEquipment[] = [];
+  editSendOffSeconds: number | null = null;
 
   // Set form (create new set)
   showSetForm = false;
@@ -137,11 +142,23 @@ export class WorkoutBuilderComponent implements OnInit {
           : {}),
       ...(this.editCadence ? { cadenceTarget: this.editCadence } : {}),
       ...(this.editZone ? { zoneTarget: this.editZone } : {}),
+      ...this.swimFieldsToBlock(),
     };
 
     const blocks = [...this.blocks, block];
     this.blocksSubject.next(blocks);
     this.resetBlockForm();
+  }
+
+  private swimFieldsToBlock(): Partial<WorkoutBlock> {
+    if (this.sportType !== 'SWIMMING') return {};
+    const out: Partial<WorkoutBlock> = {};
+    if (this.editStrokeType) out.strokeType = this.editStrokeType;
+    if (this.editEquipment.length) out.equipment = [...this.editEquipment];
+    if (this.editSendOffSeconds && this.editSendOffSeconds > 0) {
+      out.sendOffSeconds = this.editSendOffSeconds;
+    }
+    return out;
   }
 
   updateBlock(): void {
@@ -165,6 +182,9 @@ export class WorkoutBuilderComponent implements OnInit {
             : { intensityTarget: undefined, intensityStart: undefined, intensityEnd: undefined }),
         cadenceTarget: this.editCadence ?? undefined,
         zoneTarget: this.editZone || undefined,
+        strokeType: this.sportType === 'SWIMMING' ? (this.editStrokeType ?? undefined) : undefined,
+        equipment: this.sportType === 'SWIMMING' && this.editEquipment.length ? [...this.editEquipment] : undefined,
+        sendOffSeconds: this.sportType === 'SWIMMING' ? (this.editSendOffSeconds ?? undefined) : undefined,
       };
       blocks[this.selectedBlockIndex] = { ...current, elements };
     } else if (isSet(current)) {
@@ -189,6 +209,9 @@ export class WorkoutBuilderComponent implements OnInit {
             : { intensityTarget: undefined, intensityStart: undefined, intensityEnd: undefined }),
         cadenceTarget: this.editCadence ?? undefined,
         zoneTarget: this.editZone || undefined,
+        strokeType: this.sportType === 'SWIMMING' ? (this.editStrokeType ?? undefined) : undefined,
+        equipment: this.sportType === 'SWIMMING' && this.editEquipment.length ? [...this.editEquipment] : undefined,
+        sendOffSeconds: this.sportType === 'SWIMMING' ? (this.editSendOffSeconds ?? undefined) : undefined,
       };
     }
     this.blocksSubject.next(blocks);
@@ -302,6 +325,9 @@ export class WorkoutBuilderComponent implements OnInit {
     this.editIntensityEnd = block.intensityEnd ?? null;
     this.editCadence = block.cadenceTarget ?? null;
     this.editZone = block.zoneTarget || '';
+    this.editStrokeType = block.strokeType ?? null;
+    this.editEquipment = block.equipment ? [...block.equipment] : [];
+    this.editSendOffSeconds = block.sendOffSeconds ?? null;
   }
 
   dropBlock(event: CdkDragDrop<WorkoutBlock[]>): void {
@@ -470,5 +496,8 @@ export class WorkoutBuilderComponent implements OnInit {
     this.editIntensityEnd = null;
     this.editCadence = null;
     this.editZone = '';
+    this.editStrokeType = null;
+    this.editEquipment = [];
+    this.editSendOffSeconds = null;
   }
 }

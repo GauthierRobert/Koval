@@ -49,6 +49,11 @@
   display: none;
 }
 
+.step-swim-meta {
+  grid-column: 1 / -1;
+  margin-top: 2px;
+}
+
 .step-duration,
 .step-distance {
   color: var(--text-color);

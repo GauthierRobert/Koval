@@ -13,7 +13,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
 import { ChatApiService } from '../../../services/chat-api.service';
 import { ChatRoomCacheService } from '../../../services/chat-room-cache.service';
@@ -195,6 +195,39 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
     this.roomId = null;
     this.messages = [];
     this.roomDetail = null;
+
+    // Fast path: if we previously resolved this scope to a roomId, skip the expensive
+    // by-parent endpoint and fetch detail + messages in parallel. Falls back to
+    // by-parent on any error (stale id, room deleted, lost membership, …).
+    const persistedRoomId = this.cache.getPersistedRoomId(key);
+    if (persistedRoomId) {
+      forkJoin({
+        detail: this.api.getRoom(persistedRoomId),
+        messages: this.api.getMessages(persistedRoomId),
+      }).subscribe({
+        next: ({ detail, messages }) => {
+          if (this.cacheKey !== key) return;
+          this.roomId = detail.id;
+          this.roomDetail = detail;
+          this.messages = messages;
+          this.loading = false;
+          this.cache.set(key, { detail, messages });
+          this.cdr.markForCheck();
+          requestAnimationFrame(() => this.messageList?.scrollToBottomIfNeeded());
+        },
+        error: () => {
+          if (this.cacheKey !== key) return;
+          this.cache.clearPersistedRoomId(key);
+          this.fetchByParent(key);
+        },
+      });
+      return;
+    }
+
+    this.fetchByParent(key);
+  }
+
+  private fetchByParent(key: string): void {
     this.api.findByParent(this.scope, this.clubId, this.refId, this.title).subscribe({
       next: (detail) => {
         if (this.cacheKey !== key) return;

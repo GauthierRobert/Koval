@@ -1336,7 +1336,14 @@
     "PASSIVE_REST": "Repos passif (pause, intensité zéro)",
     "PASSIVE_REST_HINT": "Arrêt complet — aucun pédalage ou mouvement",
     "ACTIVE_REST_HINT": "Effort facile à l'intensité spécifiée",
-    "SET_GROUPING_HINT": "Utilisez les cases à cocher pour sélectionner des blocs, puis cliquez sur 'Grouper en set' pour créer un set répétable"
+    "SET_GROUPING_HINT": "Utilisez les cases à cocher pour sélectionner des blocs, puis cliquez sur 'Grouper en set' pour créer un set répétable",
+    "SWIM_DETAILS": "Détails natation",
+    "STROKE_TYPE": "Nage",
+    "STROKE_RATE": "Cadence (cps/min)",
+    "EQUIPMENT": "Matériel",
+    "SENDOFF": "Départ (mm:ss)",
+    "MIN": "min",
+    "SEC": "sec"
   },
   "PLANS": {
     "PAGE_TITLE": "Plans d'entraînement",
