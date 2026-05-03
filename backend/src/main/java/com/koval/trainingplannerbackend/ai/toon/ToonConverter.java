@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.StreamSupport;
 
 /**
  * Converts JSON strings to TOON (Token-Oriented Object Notation) format.
@@ -125,12 +126,7 @@ public final class ToonConverter {
     }
 
     private static boolean allObjects(ArrayNode array) {
-        for (JsonNode element : array) {
-            if (!element.isObject()) {
-                return false;
-            }
-        }
-        return true;
+        return StreamSupport.stream(array.spliterator(), false).allMatch(JsonNode::isObject);
     }
 
     private static Set<String> collectKeys(ArrayNode array) {

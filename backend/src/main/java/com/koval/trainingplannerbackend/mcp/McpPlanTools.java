@@ -16,6 +16,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * MCP tool adapter for multi-week training plan (periodization) management.
@@ -59,12 +61,13 @@ public class McpPlanTools {
         plan.setTargetFtp(targetFtp);
         plan.setGoalRaceId(goalRaceId);
 
-        List<PlanWeek> weeks = new ArrayList<>();
-        for (int i = 1; i <= durationWeeks; i++) {
-            PlanWeek week = new PlanWeek();
-            week.setWeekNumber(i);
-            weeks.add(week);
-        }
+        List<PlanWeek> weeks = IntStream.rangeClosed(1, durationWeeks)
+                .mapToObj(i -> {
+                    PlanWeek week = new PlanWeek();
+                    week.setWeekNumber(i);
+                    return week;
+                })
+                .collect(Collectors.toCollection(ArrayList::new));
         plan.setWeeks(weeks);
 
         return PlanSummary.from(planService.createPlan(plan, userId));
@@ -201,14 +204,13 @@ public class McpPlanTools {
             return new CurrentWeekSummary(planId, currentWeek, null, null, 0, 0);
         }
         var analytics = planService.getAnalytics(planId);
-        int completed = 0;
-        if (analytics != null && analytics.weeklyBreakdown() != null) {
-            for (var w : analytics.weeklyBreakdown()) {
-                if (w.weekNumber() == currentWeek) {
-                    completed = w.workoutsCompleted();
-                }
-            }
-        }
+        int completed = (analytics == null || analytics.weeklyBreakdown() == null)
+                ? 0
+                : analytics.weeklyBreakdown().stream()
+                        .filter(w -> w.weekNumber() == currentWeek)
+                        .mapToInt(w -> w.workoutsCompleted())
+                        .findFirst()
+                        .orElse(0);
         return new CurrentWeekSummary(planId, currentWeek, week.getLabel(),
                 week.getTargetTss(), week.getDays().size(), completed);
     }

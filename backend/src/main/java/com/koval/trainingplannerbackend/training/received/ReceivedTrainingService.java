@@ -62,11 +62,10 @@ public class ReceivedTrainingService {
         Set<String> alreadyReceived = findAlreadyReceivedAthleteIds(trainingId, athleteIds);
 
         LocalDateTime now = LocalDateTime.now();
-        List<ReceivedTraining> toSave = new ArrayList<>();
-        for (String athleteId : athleteIds) {
-            if (alreadyReceived.contains(athleteId)) continue;
-            toSave.add(buildNewReceivedTraining(athleteId, trainingId, assignedById, assignedByName, origin, originId, originName, now));
-        }
+        List<ReceivedTraining> toSave = athleteIds.stream()
+                .filter(id -> !alreadyReceived.contains(id))
+                .map(id -> buildNewReceivedTraining(id, trainingId, assignedById, assignedByName, origin, originId, originName, now))
+                .toList();
         if (!toSave.isEmpty()) {
             receivedTrainingRepository.saveAll(toSave);
         }
@@ -140,19 +139,23 @@ public class ReceivedTrainingService {
     // ── Private helpers for getReceivedTrainings ────────────────────────
 
     private Map<String, ReceivedTrainingResponse> buildExplicitReceivedMap(String athleteId) {
-        Map<String, ReceivedTrainingResponse> byTrainingId = new LinkedHashMap<>();
-        List<ReceivedTraining> received = receivedTrainingRepository.findByAthleteId(athleteId);
-        for (ReceivedTraining rt : received) {
-            byTrainingId.put(rt.getTrainingId(), new ReceivedTrainingResponse(
-                    rt.getId(),
-                    rt.getTrainingId(),
-                    rt.getAssignedByName(),
-                    rt.getOrigin(),
-                    rt.getOriginName(),
-                    rt.getReceivedAt()
-            ));
-        }
-        return byTrainingId;
+        return receivedTrainingRepository.findByAthleteId(athleteId).stream()
+                .collect(Collectors.toMap(
+                        ReceivedTraining::getTrainingId,
+                        this::toExplicitResponse,
+                        (a, b) -> a,
+                        LinkedHashMap::new));
+    }
+
+    private ReceivedTrainingResponse toExplicitResponse(ReceivedTraining rt) {
+        return new ReceivedTrainingResponse(
+                rt.getId(),
+                rt.getTrainingId(),
+                rt.getAssignedByName(),
+                rt.getOrigin(),
+                rt.getOriginName(),
+                rt.getReceivedAt()
+        );
     }
 
     private void appendVirtualSessionEntries(Map<String, ReceivedTrainingResponse> byTrainingId,
@@ -164,11 +167,9 @@ public class ReceivedTrainingService {
         Map<String, String> clubNames = batchLoadClubNames(sessions);
         Map<String, String> coachNames = batchLoadCoachNames(sessions);
 
-        for (ClubTrainingSession session : sessions) {
-            String trainingId = session.getLinkedTrainingId();
-            if (byTrainingId.containsKey(trainingId)) continue;
-            byTrainingId.put(trainingId, toVirtualResponse(session, clubNames, coachNames));
-        }
+        sessions.stream()
+                .filter(s -> !byTrainingId.containsKey(s.getLinkedTrainingId()))
+                .forEach(s -> byTrainingId.put(s.getLinkedTrainingId(), toVirtualResponse(s, clubNames, coachNames)));
     }
 
     private Map<String, String> batchLoadClubNames(List<ClubTrainingSession> sessions) {
