@@ -23,6 +23,8 @@ public class RaceGoal {
     @NotBlank
     private String title;
     private String sport;        // CYCLING | RUNNING | SWIMMING | TRIATHLON | OTHER
+
+    @Indexed
     private String priority;     // A | B | C
     private String distance;
     private String location;
@@ -30,5 +32,6 @@ public class RaceGoal {
     private String targetTime;
     private LocalDateTime createdAt;
 
+    @Indexed
     private String raceId;       // optional reference to Race catalog entry
 }

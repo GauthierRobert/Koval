@@ -18,8 +18,14 @@ Training Planner AI is a full-stack application for creating and executing cycli
 cd backend
 mvn clean install          # Build the project
 mvn spring-boot:run        # Start backend server (port 8080)
-mvn test                   # Run tests (no tests currently exist)
+mvn test                   # Run unit + integration tests (Testcontainers Mongo)
 ```
+
+The test suite under `backend/src/test/java` contains both unit tests (rate limiter,
+pacing services, AI tools, etc.) and integration tests that boot the full Spring
+context against a Testcontainers Mongo instance — see `BaseIntegrationTest` and
+`TestcontainersConfig`. Tests stub Anthropic via the `test` profile (no live API
+calls). Docker must be available locally for the integration suite.
 
 ### Frontend (Angular)
 ```bash

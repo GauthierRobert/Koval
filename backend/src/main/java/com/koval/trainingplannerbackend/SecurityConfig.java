@@ -77,7 +77,15 @@ public class SecurityConfig {
         List<String> allowedOrigins = Arrays.asList(allowedOriginsRaw.split(","));
         configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "Origin",
+                "X-Requested-With",
+                "X-Chat-History-Id",
+                "X-Request-Id",
+                "Last-Event-ID"));
         configuration.addExposedHeader("Content-Disposition");
         configuration.addExposedHeader("X-Chat-History-Id");
         configuration.setAllowCredentials(true);

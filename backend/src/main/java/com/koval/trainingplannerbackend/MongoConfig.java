@@ -1,5 +1,7 @@
 package com.koval.trainingplannerbackend;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.mongodb.autoconfigure.MongoClientSettingsBuilderCustomizer;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Forces LocalDate and LocalDateTime to be stored/read in UTC,
@@ -20,6 +23,21 @@ import java.util.List;
 @Configuration
 @EnableCaching
 public class MongoConfig {
+
+    @Value("${mongo.pool.max-size:100}")
+    private int poolMaxSize;
+
+    @Value("${mongo.pool.min-size:10}")
+    private int poolMinSize;
+
+    @Value("${mongo.pool.max-wait-ms:5000}")
+    private int poolMaxWaitMs;
+
+    @Value("${mongo.pool.max-connection-idle-ms:60000}")
+    private int poolMaxConnectionIdleMs;
+
+    @Value("${mongo.pool.max-connection-life-ms:1800000}")
+    private int poolMaxConnectionLifeMs;
 
     @Bean
     public MongoCustomConversions mongoCustomConversions() {
@@ -30,6 +48,21 @@ public class MongoConfig {
                 new DateToLocalDateTimeConverter(),
                 new IntegerToBooleanConverter()
         ));
+    }
+
+    /**
+     * Tunes the MongoDB connection pool. Defaults are sized for a single Spring Boot instance
+     * handling AI tool storms (each chat turn fans out to several Mongo reads).
+     * Override per-environment via the {@code mongo.pool.*} properties.
+     */
+    @Bean
+    public MongoClientSettingsBuilderCustomizer mongoPoolCustomizer() {
+        return builder -> builder.applyToConnectionPoolSettings(pool -> pool
+                .maxSize(poolMaxSize)
+                .minSize(poolMinSize)
+                .maxWaitTime(poolMaxWaitMs, TimeUnit.MILLISECONDS)
+                .maxConnectionIdleTime(poolMaxConnectionIdleMs, TimeUnit.MILLISECONDS)
+                .maxConnectionLifeTime(poolMaxConnectionLifeMs, TimeUnit.MILLISECONDS));
     }
 
     static class LocalDateToDateConverter implements Converter<LocalDate, Date> {

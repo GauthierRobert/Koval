@@ -4,6 +4,8 @@ import com.koval.trainingplannerbackend.training.model.SportType;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -15,6 +17,9 @@ import java.util.List;
 @Getter
 @Setter
 @Document(collection = "training_plans")
+@CompoundIndexes({
+        @CompoundIndex(name = "athleteIds_status_idx", def = "{'athleteIds': 1, 'status': 1}")
+})
 public class TrainingPlan {
 
     @Id
@@ -27,8 +32,11 @@ public class TrainingPlan {
     @Indexed
     private String createdBy;
 
+    @Indexed
     private LocalDate startDate;
     private int durationWeeks;
+
+    @Indexed
     private PlanStatus status = PlanStatus.DRAFT;
 
     private List<PlanWeek> weeks = new ArrayList<>();
@@ -36,6 +44,7 @@ public class TrainingPlan {
     private String goalRaceId;    // optional link to RaceGoal
     private Integer targetFtp;    // target FTP at plan end
 
+    @Indexed
     private List<String> athleteIds = new ArrayList<>(); // for coach-assigned plans
 
     private LocalDateTime createdAt;
