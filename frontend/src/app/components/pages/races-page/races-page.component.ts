@@ -155,7 +155,9 @@ export class RacesPageComponent implements OnInit {
         if (r.scheduledDate.slice(0, 4) !== '2027') return false;
       }
       return true;
-    }).map(r => cache[r.id] ?? r);
+    })
+      .map(r => cache[r.id] ?? r)
+      .sort((a, b) => a.scheduledDate!.localeCompare(b.scheduledDate!));
   });
 
   readonly selectedRace = computed<Race | null>(() => {

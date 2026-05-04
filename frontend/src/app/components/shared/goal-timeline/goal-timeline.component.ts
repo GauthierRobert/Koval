@@ -32,6 +32,9 @@ export interface TimelineItem<T = unknown> {
   raceDate?: string;
   priority?: TimelinePriority;
   isPrimary?: boolean;
+  /** Structured race-distance enum from the backend (e.g. TRI_OLYMPIC). When present,
+   * drives the short marker label exactly; otherwise we fall back to title-text inference. */
+  distanceCategory?: string | null;
   data?: T;
 }
 
@@ -401,7 +404,7 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
         _passed: passed,
         _statusKey: passed ? 'PASSED' : (item.priority ?? 'C'),
         _statusLabel: passed ? '✓' : (item.priority ?? 'C'),
-        _short: this.shortLabelFor(item),
+        _short: this.shortLabelForCategory(item.distanceCategory) ?? this.shortLabelFor(item),
         _dateShort: this.formatDateShort(item.raceDate),
         _above: false,
       });
@@ -451,6 +454,44 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
         return 'tri';
       default:
         return 'bike';
+    }
+  }
+
+  /** Short marker label derived from the structured DistanceCategory enum.
+   * Returns null when the input is empty or unknown so callers can fall back to title-text inference. */
+  private shortLabelForCategory(category: string | null | undefined): string | null {
+    if (!category) return null;
+    switch (category) {
+      // Triathlon
+      case 'TRI_PROMO': return 'PRO';
+      case 'TRI_SUPER_SPRINT': return 'SSP';
+      case 'TRI_SPRINT': return 'SPR';
+      case 'TRI_OLYMPIC': return 'OLY';
+      case 'TRI_HALF': return '70.3';
+      case 'TRI_IRONMAN': return 'IM';
+      case 'TRI_ULTRA': return 'XXL';
+      case 'TRI_AQUATHLON': return 'AQT';
+      case 'TRI_DUATHLON': return 'DUA';
+      case 'TRI_AQUABIKE': return 'AQB';
+      case 'TRI_CROSS': return 'XTR';
+      // Running
+      case 'RUN_5K': return '5K';
+      case 'RUN_10K': return '10K';
+      case 'RUN_HALF_MARATHON': return '21K';
+      case 'RUN_MARATHON': return 'MAR';
+      case 'RUN_ULTRA': return 'ULT';
+      // Cycling
+      case 'BIKE_GRAN_FONDO': return 'GRF';
+      case 'BIKE_MEDIO_FONDO': return 'MDF';
+      case 'BIKE_TT': return 'TT';
+      case 'BIKE_ULTRA': return 'ULT';
+      // Swimming
+      case 'SWIM_1500M': return '1.5K';
+      case 'SWIM_5K': return '5K';
+      case 'SWIM_10K': return '10K';
+      case 'SWIM_MARATHON': return '25K';
+      case 'SWIM_ULTRA': return 'ULT';
+      default: return null;
     }
   }
 

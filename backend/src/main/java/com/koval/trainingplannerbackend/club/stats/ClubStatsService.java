@@ -17,7 +17,7 @@ import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionReposito
 import com.koval.trainingplannerbackend.goal.RaceGoal;
 import com.koval.trainingplannerbackend.goal.RaceGoalRepository;
 import com.koval.trainingplannerbackend.race.Race;
-import com.koval.trainingplannerbackend.race.RaceService;
+import com.koval.trainingplannerbackend.race.RaceRepository;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
 import org.springframework.stereotype.Service;
@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -43,7 +44,7 @@ public class ClubStatsService {
     private final ClubTrainingSessionRepository sessionRepository;
     private final CompletedSessionRepository completedSessionRepository;
     private final RaceGoalRepository raceGoalRepository;
-    private final RaceService raceService;
+    private final RaceRepository raceRepository;
     private final UserService userService;
     private final ClubMembershipService clubMembershipService;
     private final ClubAuthorizationService authorizationService;
@@ -53,7 +54,7 @@ public class ClubStatsService {
     public ClubStatsService(ClubTrainingSessionRepository sessionRepository,
                             CompletedSessionRepository completedSessionRepository,
                             RaceGoalRepository raceGoalRepository,
-                            RaceService raceService,
+                            RaceRepository raceRepository,
                             UserService userService,
                             ClubMembershipService clubMembershipService,
                             ClubAuthorizationService authorizationService,
@@ -62,7 +63,7 @@ public class ClubStatsService {
         this.sessionRepository = sessionRepository;
         this.completedSessionRepository = completedSessionRepository;
         this.raceGoalRepository = raceGoalRepository;
-        this.raceService = raceService;
+        this.raceRepository = raceRepository;
         this.userService = userService;
         this.clubMembershipService = clubMembershipService;
         this.authorizationService = authorizationService;
@@ -431,16 +432,23 @@ public class ClubStatsService {
         if (memberIds.isEmpty()) return List.of();
 
         String todayIso = LocalDate.now().toString();
-        Map<String, Race> raceCache = new java.util.HashMap<>();
-        java.util.function.Function<String, Race> resolveRace = (raceId) -> {
-            if (raceId == null) return null;
-            return raceCache.computeIfAbsent(raceId, id -> {
-                try { return raceService.getRaceById(id); }
-                catch (java.util.NoSuchElementException ignored) { return null; }
-            });
-        };
+        List<RaceGoal> allGoals = raceGoalRepository.findByAthleteIdIn(memberIds);
 
-        List<RaceGoal> goals = raceGoalRepository.findByAthleteIdIn(memberIds).stream()
+        // Batch-fetch every referenced race in a single Mongo round-trip. Building a
+        // plain map (vs. computeIfAbsent + per-call lookups) means missing/deleted
+        // raceIds resolve to a null map entry once, instead of re-hitting the DB on
+        // every stream pass — the previous pattern caused the /race-goals 504s.
+        Set<String> referencedRaceIds = allGoals.stream()
+                .map(RaceGoal::getRaceId)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<String, Race> raceMap = referencedRaceIds.isEmpty()
+                ? Map.of()
+                : raceRepository.findAllById(referencedRaceIds).stream()
+                        .collect(Collectors.toMap(Race::getId, r -> r));
+        Function<String, Race> resolveRace = raceId -> raceId == null ? null : raceMap.get(raceId);
+
+        List<RaceGoal> goals = allGoals.stream()
                 .filter(g -> {
                     String date = Optional.ofNullable(resolveRace.apply(g.getRaceId()))
                             .map(Race::getScheduledDate).orElse(null);
@@ -481,6 +489,7 @@ public class ClubStatsService {
                     raceOpt.map(Race::getSport).filter(s -> s != null).orElseGet(representative::getSport),
                     raceOpt.map(Race::getScheduledDate).orElse(null),
                     raceOpt.map(Race::getDistance).filter(d -> d != null).orElseGet(representative::getDistance),
+                    raceOpt.map(Race::getDistanceCategory).orElse(null),
                     raceOpt.map(Race::getLocation).filter(l -> l != null).orElseGet(representative::getLocation),
                     participants);
         }).toList();

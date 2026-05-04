@@ -8,7 +8,9 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -234,6 +236,10 @@ public class RaceService {
     }
 
     public Page<Race> browse(String sport, String country, Pageable pageable) {
-        return repository.findBySportIgnoreCaseAndCountryIgnoreCase(sport, country, pageable);
+        Pageable sorted = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.ASC, "scheduledDate"));
+        return repository.findBySportIgnoreCaseAndCountryIgnoreCase(sport, country, sorted);
     }
 }

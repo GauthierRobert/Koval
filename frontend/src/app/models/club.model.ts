@@ -254,6 +254,8 @@ export interface ClubRaceGoalResponse {
   /** YYYY-MM-DD; sourced from the linked race's scheduledDate (may be missing if unlinked). */
   raceDate?: string;
   distance?: string;
+  /** Structured race-distance enum (e.g. TRI_OLYMPIC, RUN_HALF_MARATHON) — sourced from the linked Race. */
+  distanceCategory?: import('../services/race.service').DistanceCategory;
   location?: string;
   participants: {
     userId: string;

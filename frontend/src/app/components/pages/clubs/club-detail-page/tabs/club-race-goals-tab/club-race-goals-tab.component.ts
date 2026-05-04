@@ -46,6 +46,7 @@ export class ClubRaceGoalsTabComponent {
         sport: g.sport,
         raceDate: g.raceDate,
         priority: this.derivePriority(g),
+        distanceCategory: g.distanceCategory,
         data: g,
       })),
     ),

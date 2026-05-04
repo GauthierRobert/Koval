@@ -143,12 +143,10 @@
 }
 
 .block-bar[data-type="WARMUP"] {
-  border: 2px solid var(--chart-warmup);
   backdrop-filter: blur(4px) saturate(1.4);
 }
 
 .block-bar[data-type="COOLDOWN"] {
-  border: 2px solid var(--block-cooldown);
   backdrop-filter: blur(4px) saturate(1.4);
 }
 

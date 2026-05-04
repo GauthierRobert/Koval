@@ -55,6 +55,7 @@ export class GoalsPageComponent implements OnInit {
         raceDate: g.race?.scheduledDate,
         priority: g.priority as TimelinePriority,
         isPrimary: !!primary && primary.id === g.id,
+        distanceCategory: g.race?.distanceCategory,
         data: g,
       }));
     }),

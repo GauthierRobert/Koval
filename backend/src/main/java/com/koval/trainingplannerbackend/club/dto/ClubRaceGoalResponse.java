@@ -1,5 +1,7 @@
 package com.koval.trainingplannerbackend.club.dto;
 
+import com.koval.trainingplannerbackend.race.DistanceCategory;
+
 import java.util.List;
 
 public record ClubRaceGoalResponse(
@@ -8,6 +10,7 @@ public record ClubRaceGoalResponse(
         String sport,
         String raceDate,   // YYYY-MM-DD; sourced from the linked race's scheduledDate
         String distance,
+        DistanceCategory distanceCategory,
         String location,
         List<RaceParticipant> participants
 ) {
