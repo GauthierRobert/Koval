@@ -88,10 +88,10 @@
             }
           </header>
           <div class="rp-chip-list">
-            @for (d of distancePresets(); track d) {
+            @for (d of distancePresets(); track d.value) {
               <button class="rp-chip"
-                      [class.active]="distanceFilters().has(d)"
-                      (click)="toggleDistance(d)">{{ d }}</button>
+                      [class.active]="distanceFilters().has(d.value)"
+                      (click)="toggleDistance(d.value)">{{ d.label }}</button>
             }
           </div>
         </section>
@@ -463,6 +463,16 @@
                 <input class="rp-edit-input" [ngModel]="editForm().distance"
                        (ngModelChange)="onEditFieldChange('distance', $event)"
                        [placeholder]="'RACES.EDIT_FIELD_DISTANCE_PLACEHOLDER' | translate"/>
+              </div>
+              <div class="rp-edit-field">
+                <label>{{ 'RACES.EDIT_FIELD_DISTANCE_CATEGORY' | translate }}</label>
+                <select class="rp-edit-input" [ngModel]="editForm().distanceCategory ?? ''"
+                        (ngModelChange)="onEditFieldChange('distanceCategory', $event || null)">
+                  <option value="">—</option>
+                  @for (d of distancePresetsBySport[editForm().sport ?? '']; track d.value) {
+                    <option [value]="d.value">{{ d.label }}</option>
+                  }
+                </select>
               </div>
               <div class="rp-edit-field">
                 <label>{{ 'RACES.EDIT_FIELD_LOCATION' | translate }}</label>

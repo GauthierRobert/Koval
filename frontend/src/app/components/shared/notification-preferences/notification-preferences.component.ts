@@ -227,7 +227,7 @@ export class NotificationPreferencesComponent implements OnInit {
           this.prefs$.next({
             workoutAssigned: true,
             workoutReminder: true,
-            workoutCompletedCoach: true,
+            workoutCompletedCoach: false,
             clubSessionCreated: true,
             clubSessionCancelled: true,
             waitingListPromoted: true,

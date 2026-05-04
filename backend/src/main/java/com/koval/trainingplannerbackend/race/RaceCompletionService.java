@@ -1,11 +1,12 @@
 package com.koval.trainingplannerbackend.race;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.regex.Matcher;
@@ -19,14 +20,21 @@ public class RaceCompletionService {
 
     private final ChatClient raceCompletionClient;
     private final RaceService raceService;
-    private final ObjectMapper objectMapper;
+    private final ObjectReader leniencyReader;
 
     public RaceCompletionService(@Qualifier("raceCompletionClient") ChatClient raceCompletionClient,
                                   RaceService raceService,
                                   ObjectMapper objectMapper) {
         this.raceCompletionClient = raceCompletionClient;
         this.raceService = raceService;
-        this.objectMapper = objectMapper;
+        // The AI sometimes invents enum values (e.g. for new race formats it doesn't know).
+        // Treat unknown DistanceCategory values as null so the merge still applies the
+        // valid fields; RaceService.backfillDistanceCategory will retry from the display string.
+        this.leniencyReader = objectMapper
+                .reader()
+                .with(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL)
+                .without(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .forType(Race.class);
     }
 
     public Race completeRaceDetails(String raceId) {
@@ -39,7 +47,7 @@ public class RaceCompletionService {
 
         try {
             String json = extractJson(response);
-            Race updates = objectMapper.readValue(json, Race.class);
+            Race updates = leniencyReader.readValue(json);
             return raceService.updateRace(raceId, updates);
         } catch (Exception e) {
             log.error("Failed to parse AI completion response for race {}", raceId, e);

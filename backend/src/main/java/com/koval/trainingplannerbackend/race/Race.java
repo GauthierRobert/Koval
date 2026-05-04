@@ -25,7 +25,9 @@ public class Race {
     private String location;
     private String country;
     private String region;
-    private String distance;     // display string e.g. "140.6 miles"
+    private String distance;     // display string e.g. "140.6 miles" or "1.5km / 40km / 10km"
+    @Indexed
+    private DistanceCategory distanceCategory; // structured filter key — see DistanceCategory
 
     private Double swimDistanceM;
     private Double bikeDistanceM;

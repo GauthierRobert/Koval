@@ -74,7 +74,20 @@ public class RaceService {
     public Race createRace(String userId, Race race) {
         race.setCreatedBy(userId);
         race.setCreatedAt(LocalDateTime.now());
+        backfillDistanceCategory(race);
         return repository.save(race);
+    }
+
+    /**
+     * If a sport+distance pair came in without an explicit DistanceCategory, try
+     * to infer one from the display string. Keeps legacy callers and
+     * loosely-formatted AI output filterable without a separate migration step.
+     */
+    private void backfillDistanceCategory(Race race) {
+        if (race.getDistanceCategory() == null && race.getSport() != null && race.getDistance() != null) {
+            DistanceCategory inferred = DistanceCategory.infer(race.getSport(), race.getDistance());
+            if (inferred != null) race.setDistanceCategory(inferred);
+        }
     }
 
     @Caching(evict = {
@@ -93,6 +106,7 @@ public class RaceService {
         mergeIfPresent(updates.getCountry(), existing::setCountry);
         mergeIfPresent(updates.getRegion(), existing::setRegion);
         mergeIfPresent(updates.getDistance(), existing::setDistance);
+        mergeIfPresent(updates.getDistanceCategory(), existing::setDistanceCategory);
         mergeIfPresent(updates.getSwimDistanceM(), existing::setSwimDistanceM);
         mergeIfPresent(updates.getBikeDistanceM(), existing::setBikeDistanceM);
         mergeIfPresent(updates.getRunDistanceM(), existing::setRunDistanceM);
@@ -103,6 +117,7 @@ public class RaceService {
         mergeIfPresent(updates.getSwimGpxLoops(), existing::setSwimGpxLoops);
         mergeIfPresent(updates.getBikeGpxLoops(), existing::setBikeGpxLoops);
         mergeIfPresent(updates.getRunGpxLoops(), existing::setRunGpxLoops);
+        backfillDistanceCategory(existing);
         return repository.save(existing);
     }
 

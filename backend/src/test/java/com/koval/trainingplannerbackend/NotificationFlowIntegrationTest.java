@@ -65,7 +65,7 @@ class NotificationFlowIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.workoutAssigned").value(true))
                 .andExpect(jsonPath("$.workoutReminder").value(true))
-                .andExpect(jsonPath("$.workoutCompletedCoach").value(true))
+                .andExpect(jsonPath("$.workoutCompletedCoach").value(false))
                 .andExpect(jsonPath("$.clubSessionCreated").value(true))
                 .andExpect(jsonPath("$.clubSessionCancelled").value(true))
                 .andExpect(jsonPath("$.waitingListPromoted").value(true))

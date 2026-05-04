@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.ai.tools.race;
 
+import com.koval.trainingplannerbackend.race.DistanceCategory;
 import com.koval.trainingplannerbackend.race.Race;
 
 /**
@@ -8,6 +9,7 @@ import com.koval.trainingplannerbackend.race.Race;
 public record RaceSummary(
         String id, String title, String sport,
         String location, String country, String region, String distance,
+        DistanceCategory distanceCategory,
         Double swimDistanceM, Double bikeDistanceM, Double runDistanceM,
         Integer elevationGainM, String description, String website,
         String scheduledDate,
@@ -19,6 +21,7 @@ public record RaceSummary(
         return new RaceSummary(
                 r.getId(), r.getTitle(), r.getSport(),
                 r.getLocation(), r.getCountry(), r.getRegion(), r.getDistance(),
+                r.getDistanceCategory(),
                 r.getSwimDistanceM(), r.getBikeDistanceM(), r.getRunDistanceM(),
                 r.getElevationGainM(), r.getDescription(), r.getWebsite(),
                 r.getScheduledDate(),

@@ -5,7 +5,7 @@ import {FormsModule} from '@angular/forms';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {Router} from '@angular/router';
 import {map} from 'rxjs/operators';
-import {CountryFacet, PageResponse, Race, RaceService, SportFacet} from '../../../services/race.service';
+import {CountryFacet, DistanceCategory, PageResponse, Race, RaceService, SportFacet} from '../../../services/race.service';
 import {RaceGoalService} from '../../../services/race-goal.service';
 import {AuthService} from '../../../services/auth.service';
 
@@ -41,7 +41,7 @@ export class RacesPageComponent implements OnInit {
 
   readonly selectedSport = signal<string | null>(null);
   readonly selectedCountry = signal<string | null>(null);
-  readonly distanceFilters = signal<ReadonlySet<string>>(new Set());
+  readonly distanceFilters = signal<ReadonlySet<DistanceCategory>>(new Set());
   readonly searchQuery = signal<string>('');
   readonly datePreset = signal<DatePreset>('12m');
   readonly verifiedFilter = signal<VerifiedFilter>('all');
@@ -69,17 +69,47 @@ export class RacesPageComponent implements OnInit {
     {initialValue: new Set<string>() as ReadonlySet<string>},
   );
 
-  // Distance presets per sport
-  readonly distancePresetsBySport: Record<string, string[]> = {
-    TRIATHLON: ['SPRINT', 'OLYMPIC', '70.3', 'IRONMAN', 'ULTRA'],
-    RUNNING: ['5K', '10K', 'SEMI', 'MARATHON', 'ULTRA'],
-    CYCLING: ['GRAN FONDO', 'MEDIO', 'ULTRA', 'TT'],
-    SWIMMING: ['1.5K', '5K', '10K', 'MARATHON'],
+  // Distance presets per sport — value is the structured DistanceCategory used
+  // for exact-match filtering; label is what the user sees on the chip.
+  readonly distancePresetsBySport: Record<string, { value: DistanceCategory; label: string }[]> = {
+    TRIATHLON: [
+      { value: 'TRI_PROMO', label: 'Promo' },
+      { value: 'TRI_SUPER_SPRINT', label: 'Super Sprint' },
+      { value: 'TRI_SPRINT', label: 'Sprint' },
+      { value: 'TRI_OLYMPIC', label: 'Olympic' },
+      { value: 'TRI_HALF', label: '70.3' },
+      { value: 'TRI_IRONMAN', label: 'Ironman' },
+      { value: 'TRI_ULTRA', label: 'Ultra' },
+      { value: 'TRI_AQUATHLON', label: 'Aquathlon' },
+      { value: 'TRI_DUATHLON', label: 'Duathlon' },
+      { value: 'TRI_AQUABIKE', label: 'Aquabike' },
+      { value: 'TRI_CROSS', label: 'Cross / XTERRA' },
+    ],
+    RUNNING: [
+      { value: 'RUN_5K', label: '5K' },
+      { value: 'RUN_10K', label: '10K' },
+      { value: 'RUN_HALF_MARATHON', label: 'Semi' },
+      { value: 'RUN_MARATHON', label: 'Marathon' },
+      { value: 'RUN_ULTRA', label: 'Ultra' },
+    ],
+    CYCLING: [
+      { value: 'BIKE_GRAN_FONDO', label: 'Gran Fondo' },
+      { value: 'BIKE_MEDIO_FONDO', label: 'Medio' },
+      { value: 'BIKE_TT', label: 'TT' },
+      { value: 'BIKE_ULTRA', label: 'Ultra' },
+    ],
+    SWIMMING: [
+      { value: 'SWIM_1500M', label: '1.5K' },
+      { value: 'SWIM_5K', label: '5K' },
+      { value: 'SWIM_10K', label: '10K' },
+      { value: 'SWIM_MARATHON', label: 'Marathon' },
+      { value: 'SWIM_ULTRA', label: 'Ultra' },
+    ],
     OTHER: [],
   };
 
   // ───── Computed ─────
-  readonly distancePresets = computed<string[]>(
+  readonly distancePresets = computed<{ value: DistanceCategory; label: string }[]>(
     () => this.distancePresetsBySport[this.selectedSport() ?? ''] ?? [],
   );
 
@@ -105,12 +135,9 @@ export class RacesPageComponent implements OnInit {
 
     return results.content.filter(r => {
       if (dists.size > 0) {
-        const dist = (r.distance ?? '').toUpperCase();
-        let match = false;
-        for (const d of dists) {
-          if (dist.includes(d)) { match = true; break; }
-        }
-        if (!match) return false;
+        // Exact match against the structured DistanceCategory enum — no more
+        // substring matching on the free-form display string.
+        if (!r.distanceCategory || !dists.has(r.distanceCategory)) return false;
       }
       if (verified === 'verified' && !r.verified) return false;
       if (verified === 'community' && r.verified) return false;
@@ -220,11 +247,11 @@ export class RacesPageComponent implements OnInit {
 
   // ───── Filtering ─────
 
-  toggleDistance(distance: string): void {
+  toggleDistance(category: DistanceCategory): void {
     this.distanceFilters.update(s => {
       const next = new Set(s);
-      if (next.has(distance)) next.delete(distance);
-      else next.add(distance);
+      if (next.has(category)) next.delete(category);
+      else next.add(category);
       return next;
     });
   }
@@ -443,6 +470,7 @@ export class RacesPageComponent implements OnInit {
       location: r.location ?? '',
       country: r.country ?? '',
       distance: r.distance ?? '',
+      distanceCategory: r.distanceCategory,
       swimDistanceM: r.swimDistanceM,
       bikeDistanceM: r.bikeDistanceM,
       runDistanceM: r.runDistanceM,

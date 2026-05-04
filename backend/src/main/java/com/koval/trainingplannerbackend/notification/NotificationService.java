@@ -104,8 +104,8 @@ public class NotificationService {
     }
 
     private boolean isPreferenceEnabled(User user, String preferenceType) {
-        NotificationPreferences prefs = user.getNotificationPreferences();
-        if (prefs == null) return true;
+        NotificationPreferences prefs = Optional.ofNullable(user.getNotificationPreferences())
+                .orElseGet(NotificationPreferences::new);
         return switch (preferenceType) {
             case "workoutAssigned" -> prefs.workoutAssigned();
             case "workoutReminder" -> prefs.workoutReminder();

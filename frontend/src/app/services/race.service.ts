@@ -5,6 +5,18 @@ import {map, tap} from 'rxjs/operators';
 import {environment} from '../../environments/environment';
 import {AthleteProfile, PacingPlanResponse} from './pacing.service';
 
+export type DistanceCategory =
+  // Triathlon
+  | 'TRI_PROMO' | 'TRI_SUPER_SPRINT' | 'TRI_SPRINT' | 'TRI_OLYMPIC'
+  | 'TRI_HALF' | 'TRI_IRONMAN' | 'TRI_ULTRA'
+  | 'TRI_AQUATHLON' | 'TRI_DUATHLON' | 'TRI_AQUABIKE' | 'TRI_CROSS'
+  // Running
+  | 'RUN_5K' | 'RUN_10K' | 'RUN_HALF_MARATHON' | 'RUN_MARATHON' | 'RUN_ULTRA'
+  // Cycling
+  | 'BIKE_GRAN_FONDO' | 'BIKE_MEDIO_FONDO' | 'BIKE_TT' | 'BIKE_ULTRA'
+  // Swimming
+  | 'SWIM_1500M' | 'SWIM_5K' | 'SWIM_10K' | 'SWIM_MARATHON' | 'SWIM_ULTRA';
+
 export interface Race {
   id: string;
   title: string;
@@ -13,6 +25,7 @@ export interface Race {
   country?: string;
   region?: string;
   distance?: string;
+  distanceCategory?: DistanceCategory;
   swimDistanceM?: number;
   bikeDistanceM?: number;
   runDistanceM?: number;

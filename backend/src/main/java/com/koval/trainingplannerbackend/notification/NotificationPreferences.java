@@ -17,7 +17,7 @@ public record NotificationPreferences(
     public NotificationPreferences {
         workoutAssigned = workoutAssigned != null ? workoutAssigned : true;
         workoutReminder = workoutReminder != null ? workoutReminder : true;
-        workoutCompletedCoach = workoutCompletedCoach != null ? workoutCompletedCoach : true;
+        workoutCompletedCoach = workoutCompletedCoach != null ? workoutCompletedCoach : false;
         clubSessionCreated = clubSessionCreated != null ? clubSessionCreated : true;
         clubSessionCancelled = clubSessionCancelled != null ? clubSessionCancelled : true;
         waitingListPromoted = waitingListPromoted != null ? waitingListPromoted : true;
@@ -27,6 +27,6 @@ public record NotificationPreferences(
     }
 
     public NotificationPreferences() {
-        this(true, true, true, true, true, true, true, true, true);
+        this(true, true, false, true, true, true, true, true, true);
     }
 }
