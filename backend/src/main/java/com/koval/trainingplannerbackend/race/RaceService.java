@@ -71,6 +71,10 @@ public class RaceService {
                 .orElseThrow(() -> new NoSuchElementException("Race not found"));
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "raceSportFacets", allEntries = true),
+            @CacheEvict(value = "raceCountryFacets", allEntries = true)
+    })
     public Race createRace(String userId, Race race) {
         race.setCreatedBy(userId);
         race.setCreatedAt(LocalDateTime.now());
