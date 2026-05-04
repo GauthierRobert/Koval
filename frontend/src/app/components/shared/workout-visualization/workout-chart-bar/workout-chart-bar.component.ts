@@ -9,11 +9,12 @@ import { ResponsiveService } from '../../../../services/responsive.service';
 import { ZoneSystem } from '../../../../services/zone';
 import { formatPace as sharedFormatPace } from '../../format/format.utils';
 import { getBlockColor as sharedGetBlockColor } from '../../block-helpers/block-helpers';
+import { SwimMetaChipsComponent } from '../../swim-meta/swim-meta-chips.component';
 
 @Component({
   selector: 'app-workout-chart-bar',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslateModule, SwimMetaChipsComponent],
   templateUrl: './workout-chart-bar.component.html',
   styleUrl: './workout-chart-bar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -299,4 +300,5 @@ export class WorkoutChartBarComponent implements AfterViewInit, OnDestroy {
     if (m === 0) return `${s}sec`;
     return `${m}m ${s}sec`;
   }
+
 }

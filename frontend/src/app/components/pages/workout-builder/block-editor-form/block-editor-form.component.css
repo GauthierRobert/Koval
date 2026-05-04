@@ -129,6 +129,69 @@ h3 {
   width: 100%;
 }
 
+/* Swim-only section */
+.swim-section {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--glass-border, var(--overlay-8));
+}
+
+.swim-section-header {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent-color, #ff9d00);
+  margin-bottom: 0.5rem;
+  font-family: var(--font-display);
+}
+
+.sendoff-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sendoff-row input {
+  flex: 1;
+  text-align: center;
+}
+
+.sendoff-sep {
+  font-weight: 700;
+  color: var(--text-muted, #8e8ea0);
+}
+
+.equipment-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.eq-chip {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: capitalize;
+  background: transparent;
+  border: 1px solid var(--glass-border, var(--overlay-8));
+  color: var(--text-muted, #8e8ea0);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring-gentle);
+}
+
+.eq-chip:hover {
+  border-color: var(--accent-color, #ff9d00);
+  color: var(--accent-color, #ff9d00);
+}
+
+.eq-chip.active {
+  background: color-mix(in srgb, var(--accent-color, #ff9d00) 15%, transparent);
+  border-color: var(--accent-color, #ff9d00);
+  color: var(--accent-color, #ff9d00);
+}
+
 @media (max-width: 480px) {
   .form-row-2 {
     grid-template-columns: 1fr;

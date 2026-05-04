@@ -1334,7 +1334,14 @@
     "PASSIVE_REST": "Passive rest (pause, zero intensity)",
     "PASSIVE_REST_HINT": "Complete stop — no pedaling or movement",
     "ACTIVE_REST_HINT": "Easy effort at the specified intensity",
-    "SET_GROUPING_HINT": "Use the checkboxes to select blocks, then click 'Group as Set' to create a repeating set"
+    "SET_GROUPING_HINT": "Use the checkboxes to select blocks, then click 'Group as Set' to create a repeating set",
+    "SWIM_DETAILS": "Swim details",
+    "STROKE_TYPE": "Stroke",
+    "STROKE_RATE": "Stroke rate (SPM)",
+    "EQUIPMENT": "Equipment",
+    "SENDOFF": "Send-off (mm:ss)",
+    "MIN": "min",
+    "SEC": "sec"
   },
   "PLANS": {
     "PAGE_TITLE": "Training Plans",

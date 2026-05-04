@@ -1,0 +1,18 @@
+@if (show && block) {
+  @if (block.strokeType) {
+    <span class="swim-chip swim-chip-stroke" [class.compact]="size === 'compact'">
+      {{ ('STROKE.' + block.strokeType) | translate }}
+    </span>
+  }
+  @if (block.sendOffSeconds) {
+    <span class="swim-chip swim-chip-sendoff" [class.compact]="size === 'compact'"
+          [title]="'WORKOUT_DETAIL.LABEL_SENDOFF' | translate">
+      {{ 'WORKOUT_DETAIL.LABEL_SENDOFF' | translate }} {{ formatSendOff(block.sendOffSeconds) }}
+    </span>
+  }
+  @for (item of block.equipment ?? []; track item) {
+    <span class="swim-chip swim-chip-equipment" [class.compact]="size === 'compact'">
+      {{ ('SWIM_EQUIPMENT.' + item) | translate }}
+    </span>
+  }
+}

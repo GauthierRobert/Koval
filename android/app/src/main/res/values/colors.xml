@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="primary">#FFFF9D00</color>
-    <color name="primary_dark">#FFFF6B00</color>
-    <color name="background">#FF09090F</color>
-    <color name="surface">#FF111119</color>
-    <color name="notification_color">#FFFF9D00</color>
-</resources>

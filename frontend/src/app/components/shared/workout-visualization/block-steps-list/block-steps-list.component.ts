@@ -9,11 +9,13 @@ import { Training } from '../../../../models/training.model';
 import { ZoneSystem } from '../../../../services/zone';
 import { formatPace as sharedFormatPace } from '../../format/format.utils';
 import { getBlockColor as sharedGetBlockColor } from '../../block-helpers/block-helpers';
+import { SwimMetaChipsComponent } from '../../swim-meta/swim-meta-chips.component';
+import { swimMetaTooltip } from '../../swim-meta/swim-meta.utils';
 
 @Component({
   selector: 'app-block-steps-list',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslateModule, SwimMetaChipsComponent],
   templateUrl: './block-steps-list.component.html',
   styleUrl: './block-steps-list.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -183,5 +185,9 @@ export class BlockStepsListComponent {
       return `${block.intensityStart || 0}% → ${block.intensityEnd || 0}%`;
     }
     return block.intensityTarget ? `${block.intensityTarget}%` : '-';
+  }
+
+  getSwimMetaTooltip(block: WorkoutBlock): string {
+    return swimMetaTooltip(block, this.translate, this.sportType);
   }
 }

@@ -15,6 +15,8 @@ import {ZoneService} from '../../../services/zone.service';
 import {ZoneSystem} from '../../../services/zone';
 import {AuthService} from '../../../services/auth.service';
 import {formatPace as sharedFormatPace} from '../format/format.utils';
+import {SwimMetaChipsComponent} from '../swim-meta/swim-meta-chips.component';
+import {hasSwimMeta as sharedHasSwimMeta, isSwim as sharedIsSwim} from '../swim-meta/swim-meta.utils';
 import {
   getBlockClipPath as sharedGetBlockClipPath,
   getBlockColor as sharedGetBlockColor,
@@ -35,7 +37,7 @@ const LOADING_STATE: TrainingState = { training: null, loading: true, error: nul
 @Component({
   selector: 'app-workout-detail-modal',
   standalone: true,
-  imports: [CommonModule, TranslateModule, RouterModule, A11yModule],
+  imports: [CommonModule, TranslateModule, RouterModule, A11yModule, SwimMetaChipsComponent],
   templateUrl: './workout-detail-modal.component.html',
   styleUrl: './workout-detail-modal.component.css',
 })
@@ -238,23 +240,12 @@ export class WorkoutDetailModalComponent {
   }
 
   isSwim(training: Training): boolean {
-    return training.sportType === 'SWIMMING';
+    return sharedIsSwim(training.sportType);
   }
 
+  /** True when the block has swim meta OR a cadence target (modal also surfaces SPM). */
   hasSwimMeta(block: WorkoutBlock): boolean {
-    return !!(
-      block.strokeType ||
-      (block.equipment && block.equipment.length) ||
-      block.sendOffSeconds ||
-      block.cadenceTarget
-    );
-  }
-
-  formatSendOff(seconds?: number): string {
-    if (!seconds || seconds <= 0) return '';
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
+    return sharedHasSwimMeta(block) || !!block.cadenceTarget;
   }
 
   calculateIntensityValue(percent: number | undefined, training: Training): string {

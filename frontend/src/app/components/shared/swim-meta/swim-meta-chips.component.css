@@ -1,0 +1,42 @@
+:host {
+  display: none;
+}
+
+:host(.swim-meta-host) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.swim-chip {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.swim-chip.compact {
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+
+.swim-chip-stroke {
+  color: var(--accent-color);
+  border-color: rgba(255, 157, 0, 0.3);
+  background: rgba(255, 157, 0, 0.08);
+}
+
+.swim-chip-sendoff {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-color);
+}
+
+.swim-chip-equipment {
+  text-transform: capitalize;
+}
