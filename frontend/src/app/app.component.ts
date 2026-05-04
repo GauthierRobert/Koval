@@ -18,10 +18,6 @@ import {NotificationToastComponent} from './components/shared/notification-toast
 import {ErrorToastComponent} from './components/shared/error-toast/error-toast.component';
 import {CguModalComponent} from './components/shared/cgu-modal/cgu-modal.component';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {ChatSseService} from './services/chat-sse.service';
-import {ChatRoomService} from './services/chat-room.service';
-import {ChatNotificationService} from './services/chat-notification.service';
-import {ChatNotificationToastComponent} from './components/shared/chat-notification-toast/chat-notification-toast.component';
 
 @Component({
   selector: 'app-root',
@@ -34,7 +30,6 @@ import {ChatNotificationToastComponent} from './components/shared/chat-notificat
     DeviceManagerComponent,
     SettingsComponent,
     NotificationToastComponent,
-    ChatNotificationToastComponent,
     ErrorToastComponent,
     CguModalComponent,
     TranslateModule
@@ -58,11 +53,7 @@ export class AppComponent {
     private authService: AuthService,
     private notificationService: NotificationService,
     private translate: TranslateService,
-    private chatSse: ChatSseService,
-    private chatRooms: ChatRoomService,
-    private chatNotifications: ChatNotificationService,
   ) {
-    void this.chatNotifications;
     this.selectedTraining$ = this.trainingService.selectedTraining$;
     this.executionState$ = this.executionService.state$;
     this.showDeviceManager$ = this.bluetoothService.showDeviceManager$;
@@ -85,21 +76,6 @@ export class AppComponent {
       )
       .subscribe(() => {
         this.notificationService.requestPermissionAndRegisterToken();
-      });
-
-    // Keep the chat SSE channel open for any chat surface (club tab, /messages, etc.).
-    // Also load the user's rooms once on login so notifications can resolve room
-    // titles / mute status without a per-message round-trip.
-    this.authService.user$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((u) => {
-        if (u) {
-          this.chatSse.connect();
-          this.chatRooms.loadMyRooms();
-        } else {
-          this.chatSse.disconnect();
-          this.chatNotifications.dismissAll();
-        }
       });
   }
 }
