@@ -162,9 +162,11 @@ export class CoachService {
         );
     }
 
-    getAthleteSessions(athleteId: string): Observable<any[]> {
+    getAthleteSessions(athleteId: string, limit = 50, page = 0): Observable<any[]> {
         return this.http
-            .get<any[]>(`${this.apiUrl}/athletes/${athleteId}/sessions`)
+            .get<any[]>(`${this.apiUrl}/athletes/${athleteId}/sessions`, {
+                params: { limit, page },
+            })
             .pipe(catchError(() => of([] as any[])));
     }
 

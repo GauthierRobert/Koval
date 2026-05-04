@@ -80,6 +80,7 @@ export class PlanDetailPageComponent implements OnInit {
       this.planService.loadProgress(id);
       this.planService.loadAnalytics(id);
     }
+    this.trainingService.loadTrainings();
     this.isCoach = this.authService.isCoach();
     if (this.isCoach) {
       this.coachService.getAthletes().subscribe((athletes) => {

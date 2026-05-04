@@ -2,7 +2,7 @@ import {DestroyRef, inject, Injectable} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject, Observable, of} from 'rxjs';
-import {filter, tap} from 'rxjs/operators';
+import {shareReplay, tap} from 'rxjs/operators';
 import {environment} from '../../environments/environment';
 import {AuthService} from './auth.service';
 import {ReceivedTraining, Training} from '../models/training.model';
@@ -35,12 +35,16 @@ export class TrainingService {
     private destroyRef = inject(DestroyRef);
 
     constructor() {
+        // Reset per-user cached state on user change. HTTP loads are page-driven —
+        // pages that need the list call loadTrainings() in their own ngOnInit so
+        // navigating to unrelated pages (e.g. /chat) doesn't fetch trainings.
         this.authService.user$.pipe(
-            filter(user => !!user),
             takeUntilDestroyed(this.destroyRef),
         ).subscribe(() => {
             this.selectedTrainingSubject.next(null);
-            this.loadTrainings();
+            this.trainingsSubject.next([]);
+            this.receivedTrainingsSubject.next([]);
+            this.receivedTrainingCache.clear();
         });
     }
 
@@ -57,11 +61,19 @@ export class TrainingService {
         return null;
     }
 
-    loadTrainings(): void {
-        this.http.get<Training[]>(this.apiUrl).subscribe({
-            next: (trainings) => this.trainingsSubject.next(trainings),
-            error: () => this.trainingsSubject.next([]),
-        });
+    loadTrainings(): Observable<Training[]> {
+        // Returns a hot, replayable observable so callers can either fire-and-forget
+        // (`loadTrainings()`) or await the populated list (`loadTrainings().subscribe(...)`).
+        // shareReplay + the eager subscribe below guarantee a single HTTP request.
+        const req$ = this.http.get<Training[]>(this.apiUrl).pipe(
+            tap({
+                next: (trainings) => this.trainingsSubject.next(trainings),
+                error: () => this.trainingsSubject.next([]),
+            }),
+            shareReplay({ bufferSize: 1, refCount: false }),
+        );
+        req$.subscribe({ error: () => {} });
+        return req$;
     }
 
     private receivedTrainingCache = new Map<string, Training>();

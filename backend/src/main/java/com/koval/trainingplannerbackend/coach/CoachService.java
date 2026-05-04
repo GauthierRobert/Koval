@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -240,36 +241,52 @@ public class CoachService {
 
     /**
      * Get all athletes visible to a coach, combining group athletes and club members.
+     *
+     * <p>Designed to stay fast at the 150+ athlete scale: builds a single
+     * athleteId → group-names lookup map (O(N+G) instead of O(N×G)) and issues
+     * one batched club-membership query covering every club the coach manages
+     * (instead of one query per club).
      */
     public List<AthleteResponse> getAthletes(String coachId) {
         List<User> groupAthletes = coachGroupService.getCoachAthletes(coachId);
         List<Group> coachGroups = groupService.getGroupsForCoach(coachId);
 
-        List<MyClubRoleEntry> myRoles = clubMembershipService.getMyClubRoles(coachId);
-        List<MyClubRoleEntry> coachRoles = myRoles.stream()
-                .filter(r -> r.role() == ClubMemberRole.COACH || r.role() == ClubMemberRole.ADMIN || r.role() == ClubMemberRole.OWNER)
+        List<MyClubRoleEntry> coachRoles = clubMembershipService.getMyClubRoles(coachId).stream()
+                .filter(r -> r.role() == ClubMemberRole.COACH
+                        || r.role() == ClubMemberRole.ADMIN
+                        || r.role() == ClubMemberRole.OWNER)
                 .toList();
 
-        Set<String> groupAthleteIds = groupAthletes.stream().map(User::getId).collect(Collectors.toSet());
+        // athleteId → group names (built once, looked up O(1) per athlete below)
+        Map<String, List<String>> athleteGroupNames = new HashMap<>();
+        for (Group group : coachGroups) {
+            for (String athleteId : group.getAthleteIds()) {
+                athleteGroupNames.computeIfAbsent(athleteId, k -> new ArrayList<>()).add(group.getName());
+            }
+        }
 
-        Map<String, List<String>> userClubNames = coachRoles.stream()
-                .flatMap(role -> clubMembershipRepository.findByClubIdAndStatus(role.clubId(), ClubMemberStatus.ACTIVE).stream()
+        // Single batched query for club memberships across all coach-managed clubs,
+        // then map clubId → clubName to attach names without re-querying.
+        Map<String, String> clubIdToName = coachRoles.stream()
+                .collect(Collectors.toMap(MyClubRoleEntry::clubId, MyClubRoleEntry::clubName, (a, b) -> a));
+        Map<String, List<String>> userClubNames = clubIdToName.isEmpty()
+                ? Map.of()
+                : clubMembershipRepository
+                        .findByClubIdInAndStatus(new ArrayList<>(clubIdToName.keySet()), ClubMemberStatus.ACTIVE)
+                        .stream()
                         .filter(m -> !m.getUserId().equals(coachId))
-                        .map(m -> Map.entry(m.getUserId(), role.clubName())))
-                .collect(Collectors.groupingBy(
-                        Map.Entry::getKey,
-                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
+                        .collect(Collectors.groupingBy(
+                                ClubMembership::getUserId,
+                                Collectors.mapping(m -> clubIdToName.get(m.getClubId()), Collectors.toList())));
 
+        Set<String> groupAthleteIds = groupAthletes.stream().map(User::getId).collect(Collectors.toSet());
         Set<String> clubOnlyIds = new HashSet<>(userClubNames.keySet());
         clubOnlyIds.removeAll(groupAthleteIds);
         List<User> clubOnlyUsers = clubOnlyIds.isEmpty() ? List.of() : userRepository.findByIdIn(new ArrayList<>(clubOnlyIds));
 
         return Stream.concat(
                 groupAthletes.stream().map(athlete -> AthleteResponse.from(athlete,
-                        coachGroups.stream()
-                                .filter(group -> group.getAthleteIds().contains(athlete.getId()))
-                                .map(Group::getName)
-                                .toList(),
+                        athleteGroupNames.getOrDefault(athlete.getId(), List.of()),
                         userClubNames.getOrDefault(athlete.getId(), List.of()), true)),
                 clubOnlyUsers.stream().map(athlete -> AthleteResponse.from(athlete, List.of(),
                         userClubNames.getOrDefault(athlete.getId(), List.of()), false))

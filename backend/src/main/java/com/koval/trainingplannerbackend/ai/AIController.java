@@ -7,6 +7,7 @@ import com.koval.trainingplannerbackend.config.exceptions.RateLimitException;
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
@@ -88,9 +90,13 @@ public class AIController {
     // ── History ─────────────────────────────────────────────────────────
 
     @GetMapping("/history")
-    public ResponseEntity<List<ChatHistory>> getUserHistory() {
+    public ResponseEntity<List<ChatHistory>> getUserHistory(
+            @RequestParam(defaultValue = "30") int limit,
+            @RequestParam(defaultValue = "0") int page) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(chatHistoryService.findByUser(userId));
+        // Capped to keep the sidebar load bounded; clients needing more must page.
+        int safeLimit = Math.min(Math.max(limit, 1), 100);
+        return ResponseEntity.ok(chatHistoryService.findByUser(userId, PageRequest.of(page, safeLimit)));
     }
 
     @GetMapping("/history/{chatHistoryId}")

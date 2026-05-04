@@ -7,6 +7,7 @@ import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
 import com.koval.trainingplannerbackend.training.metrics.PowerCurveService;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,10 +42,18 @@ public class CoachAnalyticsController {
     }
 
     @GetMapping("/athletes/{athleteId}/sessions")
-    public ResponseEntity<List<CompletedSession>> getAthleteSessions(@PathVariable String athleteId) {
+    public ResponseEntity<List<CompletedSession>> getAthleteSessions(
+            @PathVariable String athleteId,
+            @RequestParam(defaultValue = "50") int limit,
+            @RequestParam(defaultValue = "0") int page) {
         String coachId = SecurityUtils.getCurrentUserId();
         if (!coachService.isCoachOfAthlete(coachId, athleteId)) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(sessionRepository.findByUserIdOrderByCompletedAtDesc(athleteId));
+        // Cap to protect against accidental huge fetches; CompletedSession includes full powerCurve maps
+        int safeLimit = Math.min(Math.max(limit, 1), 200);
+        return ResponseEntity.ok(
+                sessionRepository
+                        .findByUserIdOrderByCompletedAtDesc(athleteId, PageRequest.of(page, safeLimit))
+                        .getContent());
     }
 
     @GetMapping("/athletes/{athleteId}/pmc")

@@ -200,6 +200,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
   private activateDemoMode(): void {
     this.bluetoothService.toggleSimulation(true);
     if (this.executionService.currentState.training) return;
+    this.trainingService.loadTrainings();
     this.trainingService.trainings$
       .pipe(filter((list) => list.length > 0), take(1), takeUntilDestroyed(this.destroyRef))
       .subscribe((list) => {

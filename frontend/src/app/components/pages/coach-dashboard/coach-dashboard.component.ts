@@ -155,6 +155,7 @@ export class CoachDashboardComponent implements OnInit {
       }
     });
     this.coachTrainings$ = this.trainingService.trainings$;
+    this.trainingService.loadTrainings();
   }
 
   private getMondayOfWeek(d: Date): Date {

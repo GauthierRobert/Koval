@@ -99,6 +99,7 @@ export class WorkoutSelectionComponent implements OnInit {
   );
 
   ngOnInit(): void {
+    this.trainingService.loadTrainings();
     this.trainingService.loadReceivedTrainings();
 
     // Keep the service-level selectedTraining in sync with the route param.

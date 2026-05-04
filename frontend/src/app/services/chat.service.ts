@@ -1,6 +1,6 @@
 import {inject, Injectable, NgZone} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject} from 'rxjs';
+import {BehaviorSubject, firstValueFrom} from 'rxjs';
 import {skip, take} from 'rxjs/operators';
 import {TranslateService} from '@ngx-translate/core';
 import {TrainingService} from './training.service';
@@ -134,8 +134,18 @@ export class ChatService {
       return;
     }
 
+    // Snapshot trainings BEFORE the AI runs so we can diff after the response and
+    // attach `createdTraining` to the assistant message. We don't rely on a prior
+    // page-init load — pull a fresh list here, falling back to whatever is cached.
     const knownIds = new Set<string>();
-    this.trainingService.trainings$.pipe(take(1)).subscribe((ts) => ts.forEach((t) => knownIds.add(t.id)));
+    try {
+      const ts = await firstValueFrom(this.trainingService.loadTrainings());
+      ts.forEach((t) => knownIds.add(t.id));
+    } catch {
+      this.trainingService.trainings$
+        .pipe(take(1))
+        .subscribe((ts) => ts.forEach((t) => knownIds.add(t.id)));
+    }
 
     this.addMessage({ role: 'user', content: message, timestamp: new Date() });
 

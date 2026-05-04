@@ -109,7 +109,7 @@ export class WorkoutBuilderComponent implements OnInit {
   }
 
   private loadTraining(id: string): void {
-    // Use existing trainings from service
+    this.trainingService.loadTrainings();
     const sub = this.trainingService.trainings$.subscribe((trainings) => {
       const training = trainings.find((t) => t.id === id);
       if (training) {

@@ -31,6 +31,7 @@ export class ShareTrainingModalComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen) {
+      this.trainingService.loadTrainings();
       this.trainingService.trainings$.subscribe(t => this.allTrainings = t);
       if (this.training) {
         this.activeTraining = this.training;

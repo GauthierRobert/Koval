@@ -70,6 +70,10 @@ public class ChatHistoryService {
         return chatHistoryRepository.findByUserIdOrderByLastUpdatedAtDesc(userId);
     }
 
+    public List<ChatHistory> findByUser(String userId, org.springframework.data.domain.Pageable pageable) {
+        return chatHistoryRepository.findByUserIdOrderByLastUpdatedAtDesc(userId, pageable);
+    }
+
     public ChatHistory findById(String chatHistoryId) {
         return chatHistoryRepository.findById(chatHistoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chat history", chatHistoryId));
