@@ -98,18 +98,6 @@ export const routes: Routes = [
       import('./components/pages/ai-chat-page/ai-chat-page.component').then((m) => m.AIChatPageComponent),
     canActivate: [authGuard, coachGuard],
   },
-  {
-    path: 'messages',
-    loadComponent: () =>
-      import('./components/pages/chat-page/chat-page.component').then((m) => m.ChatPageComponent),
-    canActivate: [authGuard],
-  },
-  {
-    path: 'messages/:roomId',
-    loadComponent: () =>
-      import('./components/pages/chat-page/chat-page.component').then((m) => m.ChatPageComponent),
-    canActivate: [authGuard],
-  },
   // Legacy redirect — old `/analysis/:sessionId` URLs go to `/history/:sessionId`.
   {
     path: 'analysis/:sessionId',

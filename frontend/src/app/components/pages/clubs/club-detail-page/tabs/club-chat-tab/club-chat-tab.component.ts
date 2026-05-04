@@ -13,14 +13,15 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
-import { Subscription, combineLatest } from 'rxjs';
+import { BehaviorSubject, Subscription, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AuthService } from '../../../../../../services/auth.service';
 import { ClubService } from '../../../../../../services/club.service';
 import { ClubFeedService } from '../../../../../../services/club-feed.service';
-import { ChatRoomService } from '../../../../../../services/chat-room.service';
+import { ChatApiService } from '../../../../../../services/chat-api.service';
+import { ChatSseService } from '../../../../../../services/chat-sse.service';
 import { EmbeddedChatComponent } from '../../../../../shared/embedded-chat/embedded-chat.component';
-import { ChatRoomScope, ChatRoomSummary } from '../../../../../../models/chat.models';
+import { ChatMessage, ChatRoomScope, ChatRoomSummary } from '../../../../../../models/chat.models';
 import { ClubGroup, ClubRaceGoalResponse } from '../../../../../../models/club.model';
 
 interface ChatTarget {
@@ -54,18 +55,24 @@ export class ClubChatTabComponent implements OnInit, OnChanges, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly clubService = inject(ClubService);
   private readonly clubFeedService = inject(ClubFeedService);
-  private readonly chatRoomService = inject(ChatRoomService);
+  private readonly chatApi = inject(ChatApiService);
+  private readonly chatSse = inject(ChatSseService);
   private readonly cdr = inject(ChangeDetectorRef);
 
   readonly currentUserId$ = this.authService.user$.pipe(map((u) => u?.id ?? null));
 
   readonly club$ = this.clubService.selectedClub$;
 
+  // Local rooms list, populated only on tab mount. Used to render
+  // last-message previews on the chat target list — no global state.
+  private readonly roomsSubject = new BehaviorSubject<ChatRoomSummary[]>([]);
+  readonly rooms$ = this.roomsSubject.asObservable();
+
   readonly targets$ = combineLatest([
     this.authService.user$,
     this.clubService.groups$,
     this.clubFeedService.raceGoals$,
-    this.chatRoomService.rooms$,
+    this.rooms$,
   ]).pipe(
     map(([user, groups, raceGoals, rooms]) =>
       this.buildTargets(user?.id ?? null, groups, raceGoals, rooms),
@@ -80,6 +87,24 @@ export class ClubChatTabComponent implements OnInit, OnChanges, OnDestroy {
     this.clubService.loadGroups(this.clubId);
     this.clubFeedService.loadRaceGoals(this.clubId);
     this.selected = this.defaultTarget();
+
+    // Open the SSE stream for this chat-tab visit and fetch the rooms list
+    // once. Both shut down in ngOnDestroy when the user leaves the tab.
+    this.chatSse.connect();
+
+    this.subs.add(
+      this.chatApi.getRooms().subscribe({
+        next: (rooms) => {
+          this.roomsSubject.next(rooms);
+          this.cdr.markForCheck();
+        },
+        error: () => this.roomsSubject.next([]),
+      }),
+    );
+
+    this.subs.add(
+      this.chatSse.onChatMessage$.subscribe((msg) => this.handleIncomingMessage(msg)),
+    );
 
     this.subs.add(
       this.targets$.subscribe((targets) => {
@@ -100,7 +125,11 @@ export class ClubChatTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Drop subscriptions first so no SSE event reaches us after teardown,
+    // then close the underlying network stream and cancel any pending
+    // reconnect timer inside ChatSseService.
     this.subs.unsubscribe();
+    this.chatSse.disconnect();
   }
 
   selectTarget(target: ChatTarget): void {
@@ -124,6 +153,22 @@ export class ClubChatTabComponent implements OnInit, OnChanges, OnDestroy {
 
   private defaultTarget(): ChatTarget {
     return { key: `CLUB:${this.clubId}`, scope: 'CLUB', title: 'Club', badge: 'CLUB' };
+  }
+
+  /** Keep last-message previews live while the chat tab is open. */
+  private handleIncomingMessage(msg: ChatMessage): void {
+    const rooms = this.roomsSubject.value;
+    const idx = rooms.findIndex((r) => r.id === msg.roomId);
+    if (idx < 0) return;
+    const next = [...rooms];
+    next[idx] = {
+      ...next[idx],
+      lastMessageAt: msg.createdAt,
+      lastMessagePreview: msg.content,
+      lastMessageSenderId: msg.senderId,
+    };
+    this.roomsSubject.next(next);
+    this.cdr.markForCheck();
   }
 
   private buildTargets(

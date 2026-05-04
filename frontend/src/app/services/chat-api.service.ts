@@ -13,8 +13,11 @@ import { generateNonce } from '../utils/chat-message.utils';
 /**
  * Pure HTTP client for the chat REST API. No state, no BehaviorSubjects.
  *
- * Consumed by {@link ChatRoomService} (global state facade) and
- * {@link EmbeddedChatComponent} (isolated local state).
+ * Consumed only from inside the club detail page — by {@link ClubChatTabComponent}
+ * (rooms list for last-message previews) and {@link EmbeddedChatComponent}
+ * (isolated per-room state). The chat API must never be called outside the
+ * club page; do not import this service from app boot, layout, or any other
+ * route.
  */
 @Injectable({ providedIn: 'root' })
 export class ChatApiService {
