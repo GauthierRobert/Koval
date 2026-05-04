@@ -33,7 +33,7 @@ description: Use during onboarding or when the user asks to set up, configure, o
 6. **Create a Coggan-style zone system** via `createZoneSystem(name, sportType, referenceType, referenceName, referenceUnit, zones)` with:
    - Cycling (FTP): Z1 0-55, Z2 56-75, Z3 76-90, Z4 91-105, Z5 106-120, Z6 121-150, Z7 151-300
    - Running (threshold pace): equivalent 7-zone system based on % of threshold pace
-   - Swimming (% CSS speed): Z1 70-80 Recovery, Z2 81-88 Endurance, Z3 89-95 Tempo, Z4 96-102 Threshold, Z5 103-110 VO2max, Z6 111-130 Sprint
+   - Swimming (% CSS speed): Z1 80-87 Recovery, Z2 88-93 Endurance, Z3 94-100 Tempo, Z4 101-105 Threshold, Z5 106-145 VO2max / Sprint
 7. **Confirm** with `listZoneSystems` and a one-line summary.
 8. **Suggest follow-up:** *"Want me to capture the rest of your training preferences now (available days, goals, voice)?"* → hand off to `koval-athlete-onboarding` so the new athlete ends up with a full profile, not just zones.
 

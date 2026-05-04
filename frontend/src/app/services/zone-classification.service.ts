@@ -6,8 +6,7 @@ import {WorkoutBlock} from '../models/training.model';
 /**
  * Color stops along the intensity-percent axis, per sport. Stops are positioned so that each sport's
  * default zone means land on a distinct palette color: Z2→blue, Z3→green, Z4→yellow, Z5→orange, and
- * for cycling/swim Z6→red. Cycling adds Z7 (dark red); running (5 zones) reserves red / dark red for
- * efforts above Z5.
+ * for cycling Z6→red, Z7→dark red. Run/swim (5 zones) reserve red / dark red for efforts above Z5.
  */
 export const INTENSITY_COLOR_STOPS_BY_SPORT: Record<SportType, ReadonlyArray<{percent: number; hex: string}>> = {
     CYCLING: [
@@ -29,13 +28,14 @@ export const INTENSITY_COLOR_STOPS_BY_SPORT: Record<SportType, ReadonlyArray<{pe
         {percent: 150, hex: '#c0392b'}, // dark red  — extreme
     ],
     SWIMMING: [
-        {percent: 0,   hex: '#b2bec3'}, // gray      — Z1 recovery   (mean ~40)
-        {percent: 84,  hex: '#3498db'}, // blue      — Z2 endurance  (mean ~84)
-        {percent: 91,  hex: '#2ecc71'}, // green     — Z3 tempo      (mean ~91)
-        {percent: 99,  hex: '#f1c40f'}, // yellow    — Z4 threshold  (mean ~99)
-        {percent: 106, hex: '#e67e22'}, // orange    — Z5 VO2max     (mean ~106)
-        {percent: 120, hex: '#e74c3c'}, // red       — Z6 sprint     (mean ~120)
-        {percent: 150, hex: '#c0392b'}, // dark red  — extreme
+        {percent: 0,   hex: '#b2bec3'}, // gray      — far below recovery
+        {percent: 80,  hex: '#b2bec3'}, // gray      — Z1 recovery low (anchor — mean ~84)
+        {percent: 90,  hex: '#3498db'}, // blue      — Z2 endurance (mean ~90)
+        {percent: 97,  hex: '#2ecc71'}, // green     — Z3 tempo (mean ~97)
+        {percent: 103, hex: '#f1c40f'}, // yellow    — Z4 threshold (mean ~103)
+        {percent: 120, hex: '#e67e22'}, // orange    — Z5 VO2max region
+        {percent: 140, hex: '#e74c3c'}, // red       — Z5 sprint region
+        {percent: 160, hex: '#c0392b'}, // dark red  — extreme
     ],
 };
 
@@ -122,12 +122,11 @@ export class ZoneClassificationService {
             {label: 'Z5', low: 105, high: 120, description: 'VO2max'},
         ],
         SWIMMING: [
-            {label: 'Z1', low: 70, high: 80, description: 'Recovery'},
-            {label: 'Z2', low: 80, high: 88, description: 'Endurance'},
-            {label: 'Z3', low: 88, high: 95, description: 'Tempo'},
-            {label: 'Z4', low: 95, high: 102, description: 'Threshold'},
-            {label: 'Z5', low: 102, high: 110, description: 'VO2max'},
-            {label: 'Z6', low: 110, high: 130, description: 'Sprint'},
+            {label: 'Z1', low: 80, high: 87, description: 'Recovery'},
+            {label: 'Z2', low: 87, high: 93, description: 'Endurance'},
+            {label: 'Z3', low: 93, high: 100, description: 'Tempo'},
+            {label: 'Z4', low: 100, high: 105, description: 'Threshold'},
+            {label: 'Z5', low: 105, high: 145, description: 'VO2max / Sprint'},
         ],
     };
 

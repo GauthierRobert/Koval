@@ -37,16 +37,19 @@ public final class ZoneUtils {
             new Zone("Z4", 96,  105, "Threshold"),
             new Zone("Z5", 106, 130, "VO2max"));
 
-    /** 6-zone swim model — % of CSS speed (higher % = faster than CSS pace). */
+    /**
+     * 5-zone swim model — % of CSS speed (higher % = faster than CSS pace).
+     * Bounds derived from the pace formula: Z1 115–125% CSS pace, Z2 108–115%, Z3 100–108%,
+     * Z4 95–100%, Z5 &lt;95% — converted via speed% = 10000 / pace%.
+     */
     private static final ZoneSystem SWIMMING_DEFAULT = build(
             SportType.SWIMMING, "Default Swim Zones (% CSS)",
             ZoneReferenceType.CSS, "CSS", "%",
-            new Zone("Z1", 70,  80,  "Recovery"),
-            new Zone("Z2", 81,  88,  "Endurance"),
-            new Zone("Z3", 89,  95,  "Tempo"),
-            new Zone("Z4", 96,  102, "Threshold"),
-            new Zone("Z5", 103, 110, "VO2max"),
-            new Zone("Z6", 111, 130, "Sprint"));
+            new Zone("Z1", 80,  87,  "Recovery"),
+            new Zone("Z2", 88,  93,  "Endurance"),
+            new Zone("Z3", 94,  100, "Tempo"),
+            new Zone("Z4", 101, 105, "Threshold"),
+            new Zone("Z5", 106, 145, "VO2max / Sprint"));
 
     /** Brick uses cycling defaults — bike legs dominate intensity targets. */
     private static final ZoneSystem BRICK_DEFAULT = CYCLING_DEFAULT;

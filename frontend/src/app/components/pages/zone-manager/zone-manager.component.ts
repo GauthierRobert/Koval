@@ -92,12 +92,11 @@ export class ZoneManagerComponent implements OnInit {
       { label: 'Z5', low: 106, high: 120, description: 'VO2max' },
     ],
     SWIMMING: [
-      { label: 'Z1', low: 70, high: 80, description: 'Recovery' },
-      { label: 'Z2', low: 81, high: 88, description: 'Endurance' },
-      { label: 'Z3', low: 89, high: 95, description: 'Tempo' },
-      { label: 'Z4', low: 96, high: 102, description: 'Threshold' },
-      { label: 'Z5', low: 103, high: 110, description: 'VO2max' },
-      { label: 'Z6', low: 111, high: 130, description: 'Sprint' },
+      { label: 'Z1', low: 80, high: 87, description: 'Recovery' },
+      { label: 'Z2', low: 88, high: 93, description: 'Endurance' },
+      { label: 'Z3', low: 94, high: 100, description: 'Tempo' },
+      { label: 'Z4', low: 101, high: 105, description: 'Threshold' },
+      { label: 'Z5', low: 106, high: 145, description: 'VO2max / Sprint' },
     ],
   };
 
