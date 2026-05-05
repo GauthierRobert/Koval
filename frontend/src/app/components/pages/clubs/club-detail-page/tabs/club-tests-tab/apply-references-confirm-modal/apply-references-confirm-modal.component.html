@@ -1,0 +1,49 @@
+<div class="modal-backdrop" (click)="cancel.emit()">
+  <div class="modal glass" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <header class="modal-header">
+      <h3>{{ 'CLUB_TESTS.APPLY_REFS_TITLE' | translate }}</h3>
+      <button class="close-btn" (click)="cancel.emit()" aria-label="close">×</button>
+    </header>
+
+    <div class="modal-body">
+      <p class="modal-hint">{{ 'CLUB_TESTS.APPLY_REFS_HINT' | translate }}</p>
+
+      <ul class="rules-list">
+        @for (r of rules(); track r.id) {
+          @let isComputable = computedFor(r.id) !== undefined;
+          <li class="rule-item" [class.is-disabled]="!isComputable">
+            <label class="rule-label">
+              <input type="checkbox"
+                     class="rule-checkbox"
+                     [checked]="isSelected(r.id)"
+                     [disabled]="!isComputable"
+                     (change)="toggle(r.id)" />
+              <div class="rule-text">
+                <span class="rule-name">{{ r.label || r.target }}</span>
+                <span class="rule-target">→ {{ r.target }}{{ r.customKey ? ' (' + r.customKey + ')' : '' }}</span>
+              </div>
+              <span class="rule-value" [class.rule-value--missing]="!isComputable">
+                @if (isComputable) {
+                  <span class="rule-value__num mono">{{ computedFor(r.id) | number:'1.0-1' }}</span>
+                  <span class="rule-value__unit">{{ r.unit }}</span>
+                } @else {
+                  {{ 'CLUB_TESTS.NOT_COMPUTABLE' | translate }}
+                }
+              </span>
+            </label>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <footer class="modal-footer">
+      <button class="btn-secondary" (click)="cancel.emit()">
+        {{ 'CLUB_TESTS.CANCEL' | translate }}
+      </button>
+      <button class="btn-primary" (click)="apply()" [disabled]="selected.size === 0"
+              data-testid="btn-confirm-apply">
+        {{ 'CLUB_TESTS.APPLY' | translate }}
+      </button>
+    </footer>
+  </div>
+</div>

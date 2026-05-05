@@ -22,11 +22,13 @@ import {ClubLeaderboardTabComponent} from './tabs/club-leaderboard-tab/club-lead
 import {ClubRaceGoalsTabComponent} from './tabs/club-race-goals-tab/club-race-goals-tab.component';
 import {ClubChatTabComponent} from './tabs/club-chat-tab/club-chat-tab.component';
 import {ClubGazetteTabComponent} from './tabs/club-gazette-tab/club-gazette-tab.component';
+import {ClubTestsTabComponent} from './tabs/club-tests-tab/club-tests-tab.component';
+import {ClubTestService} from '../../../../services/club-test.service';
 import {TrainingActionModalComponent} from '../../../shared/training-action-modal/training-action-modal.component';
 import {ActionContext} from '../../../../services/ai-action.service';
 import {BehaviorSubject, map, Observable, Subscription} from 'rxjs';
 
-type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals' | 'chat' | 'gazette';
+type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals' | 'chat' | 'gazette' | 'tests';
 
 @Component({
   selector: 'app-club-detail-page',
@@ -43,6 +45,7 @@ type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-g
     ClubRaceGoalsTabComponent,
     ClubChatTabComponent,
     ClubGazetteTabComponent,
+    ClubTestsTabComponent,
     TrainingActionModalComponent,
   ],
   templateUrl: './club-detail-page.component.html',
@@ -55,6 +58,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   private clubService = inject(ClubService);
   private clubSessionService = inject(ClubSessionService);
   private clubFeedService = inject(ClubFeedService);
+  private clubTestService = inject(ClubTestService);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
   private translate = inject(TranslateService);
@@ -89,6 +93,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
     { id: 'members', label: 'CLUB_DETAIL.TAB_MEMBERS', shortLabel: 'CLUB_DETAIL.TAB_MEMBERS_SHORT' },
     { id: 'stats', label: 'CLUB_DETAIL.TAB_STATS', shortLabel: 'CLUB_DETAIL.TAB_STATS_SHORT' },
     { id: 'race-goals', label: 'CLUB_DETAIL.TAB_RACE_GOALS', shortLabel: 'CLUB_DETAIL.TAB_RACE_GOALS_SHORT' },
+    { id: 'tests', label: 'CLUB_DETAIL.TAB_TESTS', shortLabel: 'CLUB_DETAIL.TAB_TESTS_SHORT' },
     { id: 'gazette', label: 'CLUB_DETAIL.TAB_GAZETTE', shortLabel: 'CLUB_DETAIL.TAB_GAZETTE_SHORT' },
     { id: 'chat', label: 'CLUB_DETAIL.TAB_CHAT', shortLabel: 'CLUB_DETAIL.TAB_CHAT_SHORT' },
   ];
@@ -140,6 +145,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
     this.clubService.resetDetail();
     this.clubSessionService.resetDetail();
     this.clubFeedService.resetDetail();
+    this.clubTestService.resetDetail();
   }
 
   selectTab(tab: TabId): void {
@@ -185,6 +191,10 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
       case 'chat':
         break;
       case 'gazette':
+        break;
+      case 'tests':
+        this.clubTestService.loadTests(this.clubId);
+        this.clubTestService.loadPresets(this.clubId);
         break;
     }
     this.cdr.markForCheck();

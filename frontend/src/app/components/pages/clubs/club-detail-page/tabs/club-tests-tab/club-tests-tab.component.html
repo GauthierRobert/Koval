@@ -1,0 +1,16 @@
+@if (view === 'list') {
+  <app-test-list
+    [club]="club"
+    [tests]="(tests$ | async) ?? []"
+    [isCoach]="isCoach()"
+    [loading]="(loading$ | async) ?? false"
+    (open)="openTest($event)">
+  </app-test-list>
+} @else if (view === 'detail' && selectedTestId) {
+  <app-test-detail
+    [club]="club"
+    [testId]="selectedTestId"
+    [isCoach]="isCoach()"
+    (back)="backToList()">
+  </app-test-detail>
+}

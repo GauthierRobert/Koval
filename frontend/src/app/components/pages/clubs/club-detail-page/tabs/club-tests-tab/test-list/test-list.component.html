@@ -1,0 +1,96 @@
+<header class="tests-header">
+  <div class="tests-header__text">
+    <h4 class="section-title">{{ 'CLUB_TESTS.TITLE' | translate }}</h4>
+    <p class="tests-header__count">
+      {{ 'CLUB_TESTS.COUNT' | translate: { count: tests.length } }}
+    </p>
+  </div>
+  @if (isCoach) {
+    <button class="btn-primary" data-testid="btn-create-test" (click)="startCreate()">
+      + {{ 'CLUB_TESTS.NEW_TEST' | translate }}
+    </button>
+  }
+</header>
+
+@if (loading && tests.length === 0) {
+  <div class="empty-tab">
+    <div class="loading-pulse"></div>
+    <p>{{ 'CLUB_TESTS.LOADING' | translate }}</p>
+  </div>
+} @else if (tests.length === 0) {
+  <div class="empty-tab">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4"/>
+      <path d="M9 11V5a3 3 0 0 1 6 0v6"/>
+      <path d="M12 15v3"/>
+    </svg>
+    <p>{{ 'CLUB_TESTS.EMPTY' | translate }}</p>
+    @if (isCoach) {
+      <span class="empty-hint">{{ 'CLUB_TESTS.EMPTY_HINT_COACH' | translate }}</span>
+    }
+  </div>
+} @else {
+  <ul class="test-grid">
+    @for (t of tests; track trackById($index, t)) {
+      <li class="test-card glass" data-testid="test-card"
+          (click)="open.emit(t.id)"
+          (keydown.enter)="open.emit(t.id)"
+          (keydown.space)="open.emit(t.id)"
+          tabindex="0"
+          role="button"
+          [attr.aria-label]="t.name">
+        <div class="test-card__head">
+          <span class="test-card__name">{{ t.name }}</span>
+          <div class="test-card__badges">
+            @if (t.competitionMode) {
+              <span class="badge badge--competition">
+                {{ 'CLUB_TESTS.COMPETITION_BADGE' | translate }}
+              </span>
+            }
+            @if (t.archived) {
+              <span class="badge badge--archived">
+                {{ 'CLUB_TESTS.ARCHIVED' | translate }}
+              </span>
+            }
+          </div>
+        </div>
+
+        @if (t.description) {
+          <p class="test-card__desc">{{ t.description }}</p>
+        }
+
+        <div class="test-card__stats">
+          <div class="stat-pill">
+            <span class="stat-pill__value mono">{{ t.segmentCount }}</span>
+            <span class="stat-pill__label">{{ 'CLUB_TESTS.SEGMENTS_LABEL' | translate }}</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-pill__value mono">{{ t.ruleCount }}</span>
+            <span class="stat-pill__label">{{ 'CLUB_TESTS.RULES_LABEL' | translate }}</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-pill__value mono">{{ t.iterationCount }}</span>
+            <span class="stat-pill__label">{{ 'CLUB_TESTS.ITERATIONS_LABEL' | translate }}</span>
+          </div>
+        </div>
+
+        @if (t.currentIterationLabel) {
+          <div class="test-card__iteration">
+            <span class="dot"></span>
+            {{ 'CLUB_TESTS.CURRENT_ITERATION' | translate: { label: t.currentIterationLabel } }}
+          </div>
+        }
+      </li>
+    }
+  </ul>
+}
+
+@if (showCreateModal) {
+  <app-test-form-modal
+    [club]="club"
+    [test]="null"
+    (cancel)="cancelCreate()"
+    (save)="saveCreated($event)">
+  </app-test-form-modal>
+}
