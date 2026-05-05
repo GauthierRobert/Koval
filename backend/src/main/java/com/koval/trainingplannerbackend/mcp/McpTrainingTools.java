@@ -1,7 +1,5 @@
 package com.koval.trainingplannerbackend.mcp;
 
-import com.koval.trainingplannerbackend.ai.tools.training.TrainingRequest;
-import com.koval.trainingplannerbackend.ai.tools.training.TrainingToolService;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.training.TrainingAccessService;
 import com.koval.trainingplannerbackend.training.TrainingService;
@@ -18,6 +16,10 @@ import java.util.List;
 /**
  * MCP tool adapter for Training CRUD operations.
  * Delegates to business services using SecurityUtils for auth context.
+ *
+ * <p>For create/update, MCP clients send the verbose {@link McpTrainingInput} (mirrors
+ * the {@code Training} entity field-for-field) rather than the abbreviated AI-internal DTO,
+ * so the tool schema is self-documenting for external Claude clients.</p>
  */
 @Service
 public class McpTrainingTools {
@@ -25,16 +27,16 @@ public class McpTrainingTools {
     private final TrainingService trainingService;
     private final TrainingAccessService trainingAccessService;
     private final TrainingMetricsService trainingMetricsService;
-    private final com.koval.trainingplannerbackend.ai.tools.training.TrainingMapper trainingMapper;
+    private final McpTrainingMapper mcpTrainingMapper;
 
     public McpTrainingTools(TrainingService trainingService,
                             TrainingAccessService trainingAccessService,
                             TrainingMetricsService trainingMetricsService,
-                            com.koval.trainingplannerbackend.ai.tools.training.TrainingMapper trainingMapper) {
+                            McpTrainingMapper mcpTrainingMapper) {
         this.trainingService = trainingService;
         this.trainingAccessService = trainingAccessService;
         this.trainingMetricsService = trainingMetricsService;
-        this.trainingMapper = trainingMapper;
+        this.mcpTrainingMapper = mcpTrainingMapper;
     }
 
     @Tool(description = "List the user's training workouts with pagination. Returns summaries including title, type, duration, and sport. Trainings are cycling/running/swimming/triathlon workout plans with structured blocks (warmup, intervals, steady, ramps, cooldown).")
@@ -60,23 +62,32 @@ public class McpTrainingTools {
         return training;
     }
 
-    @Tool(description = "Create a new training workout plan. Requires a title and at least one workout block. Blocks can be: WARMUP, INTERVAL, STEADY, RAMP, COOLDOWN, FREE, PAUSE, TRANSITION. Intensities are expressed as percentage of FTP (cycling), threshold pace (running), or CSS (swimming). Use 'reps' and 'elements' for repeated sets.")
+    @Tool(description = """
+            Create a new training workout plan. Input mirrors the Training entity:
+            top-level fields are sportType, title, description, trainingType, blocks (ordered list of WorkoutElement),
+            and optional groupIds. Each WorkoutElement is either a leaf block (type + durationSeconds or
+            distanceMeters + label + intensityTarget) or a set (repetitions + elements + optional rest).
+            Block types: WARMUP, STEADY, INTERVAL, COOLDOWN, RAMP, FREE, PAUSE, TRANSITION. Intensities are
+            % of FTP (cycling), threshold pace (running), or CSS (swimming). For sets, restDurationSeconds and
+            restIntensity follow the manual builder UI: null/0 duration = no rest; duration > 0 with null/0
+            intensity = passive rest (full pause); duration > 0 with intensity > 0 = active rest at that %.
+            """)
     public Object createTraining(
-            @ToolParam(description = "The training to create") TrainingRequest create) {
-        String validationError = TrainingToolService.validateTrainingRequest(create);
+            @ToolParam(description = "The training to create (verbose schema mirroring the Training entity)") McpTrainingInput create) {
+        String validationError = McpTrainingMapper.validate(create);
         if (validationError != null) return validationError;
         String userId = SecurityUtils.getCurrentUserId();
-        Training training = trainingMapper.mapToEntity(create);
+        Training training = mcpTrainingMapper.mapToEntity(create);
         return McpTrainingSummary.from(trainingService.createTraining(training, userId));
     }
 
-    @Tool(description = "Update an existing training workout by ID. Provide the full updated training structure (title, blocks, etc.).")
+    @Tool(description = "Update an existing training workout by ID. Provide the full updated training (same schema as createTraining): sportType, title, blocks, etc. The training is replaced wholesale, not merged.")
     public Object updateTraining(
             @ToolParam(description = "The training ID to update") String trainingId,
-            @ToolParam(description = "The updated training data") TrainingRequest updates) {
-        String validationError = TrainingToolService.validateTrainingRequest(updates);
+            @ToolParam(description = "The updated training (verbose schema mirroring the Training entity)") McpTrainingInput updates) {
+        String validationError = McpTrainingMapper.validate(updates);
         if (validationError != null) return validationError;
-        Training training = trainingMapper.mapToEntity(updates);
+        Training training = mcpTrainingMapper.mapToEntity(updates);
         return McpTrainingSummary.from(trainingService.updateTraining(trainingId, training));
     }
 

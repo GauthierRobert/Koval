@@ -17,9 +17,9 @@ public record WorkoutElementRequest(
         Integer reps,
         @JsonPropertyDescription("Children elements (leaf blocks or nested sets)")
         List<WorkoutElementRequest> elements,
-        @JsonPropertyDescription("Rest duration (seconds) between reps (restDur or restPct, Never Both)")
+        @JsonPropertyDescription("Rest duration (sec) between reps. null/0 = no rest at all; >0 = insert a rest block (passive if restPct is null/0, active at restPct% otherwise).")
         Integer restDur,
-        @JsonPropertyDescription("Rest intensity % between reps (default ~60)")
+        @JsonPropertyDescription("Rest intensity % between reps (only used when restDur > 0). null/0 = passive rest (full pause). Typical active value: 60.")
         Integer restPct,
         @JsonPropertyDescription("WARMUP|INTERVAL|STEADY|COOLDOWN|RAMP|FREE|PAUSE|TRANSITION")
         BlockType type,

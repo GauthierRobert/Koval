@@ -8,7 +8,6 @@ import com.koval.trainingplannerbackend.training.model.SwimmingTraining;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.model.TrainingType;
 import com.koval.trainingplannerbackend.training.model.WorkoutElement;
-import com.koval.trainingplannerbackend.training.model.TransitionType;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

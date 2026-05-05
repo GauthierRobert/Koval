@@ -30,57 +30,63 @@ Read `athlete-profile.md` if present. Use `favouriteSessionTypes`, `avoid`, `for
 ---
 
 ## STRUCTURE RULES
-- Element = **leaf** (has `type`) or **set** (has `reps` + `elements`). Never both.
-- **One of** `dur` or `dist` per leaf, never both. Prefer `dur` for CYCLING; `dist` for RUNNING / SWIMMING.
-- Use `reps` + `elements` for repeated sets.
+- Element = **leaf** (has `type`) or **set** (has `repetitions` + `elements`). Never both.
+- **One of** `durationSeconds` or `distanceMeters` per leaf, never both. Prefer `durationSeconds` for CYCLING; `distanceMeters` for RUNNING / SWIMMING.
+- Use `repetitions` + `elements` for repeated sets.
 - Block types: `WARMUP`, `INTERVAL`, `STEADY`, `RAMP`, `COOLDOWN`, `FREE`, `PAUSE`, `TRANSITION`.
 - SWIM rest: duration → `PAUSE` (passive); distance → `STEADY` (active).
-- RAMP uses `pctFrom` / `pctTo` instead of `pct`.
+- RAMP uses `intensityStart` / `intensityEnd` instead of `intensityTarget`.
 
-#### Example: 2 sets of 10×30/30, 2min rest between sets
+### Set rest semantics (matches the manual builder UI)
+On a set, two fields control rest between reps:
+- `restDurationSeconds = null` or `0` → **no rest at all** between reps (UI: "No rest" checkbox).
+- `restDurationSeconds > 0` and `restIntensity = null` or `0` → **passive rest** of that length (UI: "Passive rest" checkbox). Materialized server-side as a `PAUSE` block at 0% intensity.
+- `restDurationSeconds > 0` and `restIntensity > 0` → **active rest** of that length at that % of FTP / threshold pace / CSS (UI: explicit value, typically 60).
+
+#### Example: 2 sets of 10×30/30, 2min active rest between sets
 ```json
-{"reps":2,"restDur":120,"restPct":40,"elements":[
-  {"reps":10,"elements":[
-    {"type":"INTERVAL","dur":30,"label":"Z5","pct":120},
-    {"type":"STEADY","dur":30,"label":"Recovery","pct":55}
+{"repetitions":2,"restDurationSeconds":120,"restIntensity":40,"elements":[
+  {"repetitions":10,"elements":[
+    {"type":"INTERVAL","durationSeconds":30,"label":"Z5","intensityTarget":120},
+    {"type":"STEADY","durationSeconds":30,"label":"Recovery","intensityTarget":55}
   ]}
 ]}
 ```
 
 ## SWIM-SPECIFIC RULES
-- Always set `stroke`: `FREESTYLE`, `BACKSTROKE`, `BREASTSTROKE`, `BUTTERFLY`, `IM`, `KICK`, `PULL`, `DRILL`, `CHOICE`.
-- Use `dist` (meters) — swimming is distance-based.
-- **Send-off intervals**: use `sendOff` (seconds) for "10×100m on 1:45". Rest is implicit (`sendOff − swim time`). Do NOT also set `restDur`.
+- Always set `strokeType`: `FREESTYLE`, `BACKSTROKE`, `BREASTSTROKE`, `BUTTERFLY`, `IM`, `KICK`, `PULL`, `DRILL`, `CHOICE`.
+- Use `distanceMeters` — swimming is distance-based.
+- **Send-off intervals**: use `sendOffSeconds` for "10×100m on 1:45". Rest is implicit (`sendOffSeconds − swim time`). Do NOT also set `restDurationSeconds`.
 - **Equipment** when applicable: `PADDLES`, `PULL_BUOY`, `FINS`, `SNORKEL`, `BAND`, `KICKBOARD`.
 - Set `poolLength` (25 or 50) on the request. Null for open water.
 - Include equipment + stroke in the block `label` (e.g. `"4×50m Kick w/ Fins"`).
-- Swim cadence (`cad`) = strokes per minute (SPM), typical 50-80.
+- Swim cadence (`cadenceTarget`) = strokes per minute (SPM), typical 50-80.
 
 ## TRANSITION BLOCKS (TRIATHLON / BRICK)
-- `type: TRANSITION` with `transition: T1` (swim→bike) or `transition: T2` (bike→run).
-- Use `dur` (target seconds). No intensity needed.
+- `type: TRANSITION` with `transitionType: T1` (swim→bike) or `transitionType: T2` (bike→run).
+- Use `durationSeconds` (target seconds). No intensity needed.
 - Include between discipline changes in BRICK / TRIATHLON workouts.
-- Example: `{"type":"TRANSITION","dur":120,"label":"T2 Bike-to-Run","transition":"T2","desc":"Quick change, start easy"}`
+- Example: `{"type":"TRANSITION","durationSeconds":120,"label":"T2 Bike-to-Run","transitionType":"T2","description":"Quick change, start easy"}`
 
 ## INTENSITY
-- **Cycling**: `pct` = %FTP (Coggan).
-- **Running**: `pct` = %Threshold Pace, `cad` ≈ 170+.
-- **Swimming**: `pct` = %CSS (Critical Swim Speed), `cad` = SPM (50-80).
+- **Cycling**: `intensityTarget` = %FTP (Coggan).
+- **Running**: `intensityTarget` = %Threshold Pace, `cadenceTarget` ≈ 170+.
+- **Swimming**: `intensityTarget` = %CSS (Critical Swim Speed), `cadenceTarget` = SPM (50-80).
 
 ## ZONE SYSTEM
 If a **Default Zone System** exists for the sport:
-- Set `zoneSystemId`, use zone labels in block labels, set `zone` to the label (e.g. `"Z2"`).
-- ONLY IF intensity not in the request: set `pct` to the zone midpoint.
+- Set `zoneSystemId`, use zone labels in block labels, set `zoneTarget` to the label (e.g. `"Z2"`).
+- ONLY IF intensity not in the request: set `intensityTarget` to the zone midpoint.
 - Respect zone **annotations** (coach conventions).
 - When the coach references zones by name, map to the **custom zone** boundaries, not generic Coggan.
 If none exists, fall back to standard Coggan / pace / CSS conventions.
 
 ## TSS — compute BEFORE `createTraining`
-**Formula:** `TSS = Σ (dur_s × (pct/100)²) / 36`
-- `STEADY` / `INTERVAL` / `WARMUP` / `COOLDOWN`: use `pct`.
-- `RAMP`: use the average of `pctFrom`, `pctTo`.
+**Formula:** `TSS = Σ (durationSeconds × (intensityTarget/100)²) / 36`
+- `STEADY` / `INTERVAL` / `WARMUP` / `COOLDOWN`: use `intensityTarget`.
+- `RAMP`: use the average of `intensityStart`, `intensityEnd`.
 - `FREE` / `PAUSE`: 50 or 0.
-- Sets: per-rep TSS × reps + rest TSS.
+- Sets: per-rep TSS × repetitions + rest TSS.
 - Examples: 60min @ 75% → **56**. 5×4min @ 110% / 3min @ 50% → **44**. Round to integer.
 - Sanity check: recovery 30-40, endurance 50-70, threshold 70-90, VO2max 80-120.
 

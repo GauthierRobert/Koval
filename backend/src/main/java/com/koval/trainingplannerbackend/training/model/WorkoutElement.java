@@ -21,10 +21,18 @@ public record WorkoutElement(
         @JsonPropertyDescription("Child elements (blocks or nested sets)")
         List<WorkoutElement> elements,
 
-        @JsonPropertyDescription("Passive rest duration (sec) between repetitions")
+        @JsonPropertyDescription("""
+                Rest duration in seconds between repetitions of this set.
+                  • null or 0 → NO rest between reps (matches the 'No rest' checkbox in the manual builder).
+                  • > 0       → A PAUSE block of this length is inserted between reps; combine with restIntensity
+                                to choose passive vs active rest.""")
         Integer restDurationSeconds,
 
-        @JsonPropertyDescription("Intensity % during rest between repetitions (default ~40)")
+        @JsonPropertyDescription("""
+                Intensity (% of FTP / threshold pace / CSS) during the rest between reps. Only used when
+                restDurationSeconds > 0.
+                  • null or 0 → PASSIVE rest (full pause, no target — matches the 'Passive rest' checkbox).
+                  • > 0       → ACTIVE rest at this percentage (typical: 60).""")
         Integer restIntensity,
 
         // ── LEAF FIELDS (same as former WorkoutBlock) ──

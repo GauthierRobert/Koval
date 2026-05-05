@@ -73,6 +73,18 @@
     "allDeclaredFields": true
   },
   {
+    "name": "com.koval.trainingplannerbackend.mcp.McpTrainingInput",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.mcp.McpWorkoutElementInput",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
     "name": "com.koval.trainingplannerbackend.ai.tools.training.TrainingSummary",
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true,
