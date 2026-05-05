@@ -20,6 +20,7 @@ import { BlockEditorFormComponent } from './block-editor-form/block-editor-form.
 import { SetEditorFormComponent } from './set-editor-form/set-editor-form.component';
 import { BlockListItemComponent } from './block-list-item/block-list-item.component';
 import { SetBlockItemComponent } from './set-block-item/set-block-item.component';
+import { WorkoutChartBarComponent } from '../../shared/workout-visualization/workout-chart-bar/workout-chart-bar.component';
 import { getBlockColor as sharedGetBlockColor, formatBlockSize } from '../../shared/block-helpers/block-helpers';
 type SportType = 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK';
 type BlockType = WorkoutBlock['type'];
@@ -37,6 +38,7 @@ type BlockType = WorkoutBlock['type'];
     SetEditorFormComponent,
     BlockListItemComponent,
     SetBlockItemComponent,
+    WorkoutChartBarComponent,
   ],
   templateUrl: './workout-builder.component.html',
   styleUrl: './workout-builder.component.css',
@@ -127,6 +129,20 @@ export class WorkoutBuilderComponent implements OnInit {
     return this.blocksSubject.value;
   }
 
+  /** Synthetic Training reflecting the current builder state for live preview. */
+  get previewTraining(): Training {
+    return {
+      id: 'builder-preview',
+      title: this.title,
+      description: this.description,
+      blocks: this.blocks,
+      sportType: this.sportType,
+      trainingType: this.trainingType,
+      estimatedTss: this.estimatedTss,
+      estimatedDurationSeconds: this.estimatedDuration,
+    };
+  }
+
   // ── Block management ──────────────────────────────────────────────
 
   addBlock(): void {
@@ -215,9 +231,12 @@ export class WorkoutBuilderComponent implements OnInit {
       };
     }
     this.blocksSubject.next(blocks);
-    this.selectedBlockIndex = -1;
-    this.selectedChildIndex = -1;
-    this.resetBlockForm();
+  }
+
+  /** Auto-commit edits to the selected block on every form change. No-op when nothing is selected. */
+  autoUpdateBlock(): void {
+    if (this.selectedBlockIndex < 0) return;
+    this.updateBlock();
   }
 
   removeBlock(index: number): void {
@@ -237,6 +256,12 @@ export class WorkoutBuilderComponent implements OnInit {
   }
 
   selectBlock(index: number): void {
+    // Re-clicking the currently-selected block deselects it.
+    if (this.selectedBlockIndex === index && this.selectedChildIndex === -1) {
+      this.selectedBlockIndex = -1;
+      this.resetBlockForm();
+      return;
+    }
     this.selectedBlockIndex = index;
     this.selectedChildIndex = -1;
     const block = this.blocks[index];
@@ -255,6 +280,13 @@ export class WorkoutBuilderComponent implements OnInit {
   }
 
   selectChildBlock(parentIndex: number, childIndex: number): void {
+    // Re-clicking the currently-selected child deselects it.
+    if (this.selectedBlockIndex === parentIndex && this.selectedChildIndex === childIndex) {
+      this.selectedBlockIndex = -1;
+      this.selectedChildIndex = -1;
+      this.resetBlockForm();
+      return;
+    }
     this.selectedBlockIndex = parentIndex;
     this.selectedChildIndex = childIndex;
     const parent = this.blocks[parentIndex];

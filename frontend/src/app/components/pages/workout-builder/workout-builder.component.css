@@ -226,6 +226,57 @@
   gap: 0.5rem;
 }
 
+/* Preview chart */
+.preview-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.preview-chart-host {
+  margin: 0 -0.25rem;
+}
+
+/* Compact override of the shared chart-bar component so it fits the 340px side panel */
+.preview-chart-host ::ng-deep .chart-wrapper {
+  height: 180px;
+  padding: 12px 10px 10px;
+  border-radius: var(--radius-sm, 6px);
+}
+
+.preview-chart-host ::ng-deep .y-axis {
+  font-size: 9px;
+  padding-right: 6px;
+}
+
+.preview-chart-host ::ng-deep .chart-area {
+  padding-left: 6px;
+  gap: 1px;
+}
+
+.preview-chart-host ::ng-deep .block-bar {
+  border-radius: 2px 2px 0 0;
+}
+
+.preview-chart-host ::ng-deep .block-label {
+  display: none;
+}
+
+.preview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 120px;
+  border: 1px dashed var(--glass-border, var(--overlay-8));
+  border-radius: var(--radius-sm, 6px);
+  color: var(--text-dim, #6e6e80);
+  font-size: 11px;
+  text-align: center;
+  padding: 0 0.75rem;
+}
+
 /* Metrics */
 .metrics-section {
   margin-top: auto;

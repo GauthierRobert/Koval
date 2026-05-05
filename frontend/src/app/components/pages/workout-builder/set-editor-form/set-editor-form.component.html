@@ -85,9 +85,11 @@
 </div>
 
 <div class="editor-actions">
-  <button class="btn-primary full-width" (click)="update.emit()">{{ 'BUILDER.UPDATE_SET' | translate }}</button>
-  <div class="editor-secondary-row">
-    <button class="btn-ghost" (click)="deselect.emit()">{{ 'BUILDER.DESELECT' | translate }}</button>
-    <button class="btn-ghost btn-dissociate" (click)="dissociate.emit()">{{ 'BUILDER.DISSOCIATE_SET' | translate }}</button>
-  </div>
+  <p class="autosave-hint">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+    {{ 'BUILDER.AUTOSAVE_HINT' | translate }}
+  </p>
+  <button class="btn-ghost btn-dissociate full-width" (click)="dissociate.emit()">{{ 'BUILDER.DISSOCIATE_SET' | translate }}</button>
 </div>

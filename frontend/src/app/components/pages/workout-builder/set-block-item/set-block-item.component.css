@@ -32,7 +32,10 @@
   background: linear-gradient(180deg, var(--accent-color, #ff9d00), rgba(255, 157, 0, 0.3));
 }
 
-.set-group.set-selected {
+/* Set-selected: only paint the bg/border when not also being edited, so the
+   orange "edit-selected" indicator never gets overridden. The strengthened
+   purple ::before rail and checkbox always show. */
+.set-group.set-selected:not(.selected) {
   border-color: rgba(139, 92, 246, 0.55);
   background: rgba(139, 92, 246, 0.1);
 }

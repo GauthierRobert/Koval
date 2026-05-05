@@ -105,8 +105,12 @@
 }
 
 @if (selectedBlockIndex >= 0) {
-  <button class="btn-primary full-width" (click)="update.emit()">{{ 'BUILDER.UPDATE_BLOCK' | translate }}</button>
-  <button class="btn-ghost full-width" (click)="deselect.emit()" style="margin-top: 0.35rem">{{ 'BUILDER.DESELECT' | translate }}</button>
+  <p class="autosave-hint">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+    {{ 'BUILDER.AUTOSAVE_HINT' | translate }}
+  </p>
 } @else {
   <button class="btn-primary full-width" (click)="add.emit()">{{ 'BUILDER.ADD_BLOCK_BTN' | translate }}</button>
 }

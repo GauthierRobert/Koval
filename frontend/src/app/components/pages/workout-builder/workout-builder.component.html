@@ -64,6 +64,30 @@
         </div>
       </div>
 
+      <div class="panel-section preview-section">
+        <h3>{{ 'BUILDER.PREVIEW' | translate }}</h3>
+        @if ((blocks$ | async)?.length) {
+          <div class="preview-chart-host">
+            <app-workout-chart-bar
+              [blocks]="blocks"
+              [sportType]="sportType"
+              [training]="previewTraining"
+              [displayUnit]="'PERCENT'"
+              [currentZoneSystem]="null">
+            </app-workout-chart-bar>
+          </div>
+        } @else {
+          <div class="preview-empty">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"/>
+              <line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            <span>{{ 'BUILDER.PREVIEW_EMPTY' | translate }}</span>
+          </div>
+        }
+      </div>
+
       <div class="panel-section metrics-section">
         <h3>{{ 'BUILDER.METRICS' | translate }}</h3>
         <div class="metrics-grid">
@@ -258,15 +282,13 @@
           [editLabel]="editLabel"
           [setElements]="blocks[selectedBlockIndex]?.elements ?? []"
           [sportType]="sportType"
-          (editSetRepsChange)="editSetReps = $event"
-          (editSetNoRestChange)="editSetNoRest = $event"
-          (editSetRestDurationChange)="editSetRestDuration = $event"
-          (editSetRestIntensityChange)="editSetRestIntensity = $event"
-          (editSetPassiveRestChange)="editSetPassiveRest = $event"
-          (editLabelChange)="editLabel = $event"
-          (update)="updateBlock()"
+          (editSetRepsChange)="editSetReps = $event; autoUpdateBlock()"
+          (editSetNoRestChange)="editSetNoRest = $event; autoUpdateBlock()"
+          (editSetRestDurationChange)="editSetRestDuration = $event; autoUpdateBlock()"
+          (editSetRestIntensityChange)="editSetRestIntensity = $event; autoUpdateBlock()"
+          (editSetPassiveRestChange)="editSetPassiveRest = $event; autoUpdateBlock()"
+          (editLabelChange)="editLabel = $event; autoUpdateBlock()"
           (dissociate)="dissociateSet(selectedBlockIndex)"
-          (deselect)="deselectBlock()"
         />
       } @else {
         <app-block-editor-form
@@ -286,22 +308,20 @@
           [selectedBlockIndex]="selectedBlockIndex"
           [BLOCK_TYPES]="BLOCK_TYPES"
           [sportType]="sportType"
-          (editTypeChange)="editType = $event"
-          (editLabelChange)="editLabel = $event"
-          (editDurationMinChange)="editDurationMin = $event"
-          (editDurationSecChange)="editDurationSec = $event"
-          (editDistanceMetersChange)="editDistanceMeters = $event"
-          (editIntensityChange)="editIntensity = $event"
-          (editIntensityStartChange)="editIntensityStart = $event"
-          (editIntensityEndChange)="editIntensityEnd = $event"
-          (editCadenceChange)="editCadence = $event"
-          (editZoneChange)="editZone = $event"
-          (editStrokeTypeChange)="editStrokeType = $event"
-          (editEquipmentChange)="editEquipment = $event"
-          (editSendOffSecondsChange)="editSendOffSeconds = $event"
+          (editTypeChange)="editType = $event; autoUpdateBlock()"
+          (editLabelChange)="editLabel = $event; autoUpdateBlock()"
+          (editDurationMinChange)="editDurationMin = $event; autoUpdateBlock()"
+          (editDurationSecChange)="editDurationSec = $event; autoUpdateBlock()"
+          (editDistanceMetersChange)="editDistanceMeters = $event; autoUpdateBlock()"
+          (editIntensityChange)="editIntensity = $event; autoUpdateBlock()"
+          (editIntensityStartChange)="editIntensityStart = $event; autoUpdateBlock()"
+          (editIntensityEndChange)="editIntensityEnd = $event; autoUpdateBlock()"
+          (editCadenceChange)="editCadence = $event; autoUpdateBlock()"
+          (editZoneChange)="editZone = $event; autoUpdateBlock()"
+          (editStrokeTypeChange)="editStrokeType = $event; autoUpdateBlock()"
+          (editEquipmentChange)="editEquipment = $event; autoUpdateBlock()"
+          (editSendOffSecondsChange)="editSendOffSeconds = $event; autoUpdateBlock()"
           (add)="addBlock()"
-          (update)="updateBlock()"
-          (deselect)="deselectBlock()"
         />
       }
     </div>

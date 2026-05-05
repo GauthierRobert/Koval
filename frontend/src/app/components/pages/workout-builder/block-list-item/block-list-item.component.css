@@ -23,14 +23,25 @@
   background: var(--accent-subtle, rgba(255, 157, 0, 0.08));
 }
 
+/* Set-selected: only paint border/bg when not also being edited, so the
+   orange "edit-selected" indicator never gets overridden. The purple inset
+   rail and the checkbox at the start always show, so set-selection is
+   visible even while editing. */
 .block-item.set-selected {
-  border-color: rgba(139, 92, 246, 0.55);
-  background: rgba(139, 92, 246, 0.1);
   box-shadow: inset 3px 0 0 #a78bfa;
 }
 
-.block-item.set-selected:hover {
+.block-item.set-selected:not(.selected) {
+  border-color: rgba(139, 92, 246, 0.55);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.block-item.set-selected:not(.selected):hover {
   background: rgba(139, 92, 246, 0.14);
+}
+
+.block-item.selected.set-selected:hover {
+  background: rgba(255, 157, 0, 0.12);
 }
 
 /* Always-visible "select for set" checkbox */
