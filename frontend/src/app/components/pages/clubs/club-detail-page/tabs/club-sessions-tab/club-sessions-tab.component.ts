@@ -397,7 +397,10 @@ export class ClubSessionsTabComponent implements OnInit {
         endDate: form['endDate'] || undefined,
       };
       this.clubSessionService.updateRecurringTemplateWithInstances(this.club.id, event.editingSession.recurringTemplateId, data).subscribe({
-        next: () => this.finishEdit(),
+        next: () => {
+          this.clubSessionService.loadRecurringTemplates(this.club.id);
+          this.finishEdit();
+        },
         error: () => this.isSavingSession$.next(false),
       });
       return;
@@ -479,7 +482,10 @@ export class ClubSessionsTabComponent implements OnInit {
       endDate: form['endDate'] || undefined,
     };
     this.clubSessionService.createRecurringTemplate(this.club.id, data).subscribe({
-      next: () => this.finishCreateRecurring(),
+      next: () => {
+        this.clubSessionService.loadRecurringTemplates(this.club.id);
+        this.finishCreateRecurring();
+      },
       error: () => this.isSavingSession$.next(false),
     });
   }
@@ -651,6 +657,7 @@ export class ClubSessionsTabComponent implements OnInit {
         .cancelRecurringSessions(this.club.id, this.cancelTargetSession.recurringTemplateId, cancelReason || undefined)
         .subscribe({
           next: () => {
+            this.clubSessionService.loadRecurringTemplates(this.club.id);
             this.closeCancelSessionModal();
             this.loadCalendarSessions();
             this.cdr.markForCheck();

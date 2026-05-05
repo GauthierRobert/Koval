@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { WorkoutBlock } from '../../../../models/training.model';
-import { getBlockColor as sharedGetBlockColor } from '../../../shared/block-helpers/block-helpers';
+import { getBlockColor as sharedGetBlockColor, formatBlockSize } from '../../../shared/block-helpers/block-helpers';
 
 @Component({
   selector: 'app-set-block-item',
@@ -33,16 +33,13 @@ export class SetBlockItemComponent {
   }
 
   formatBlockDuration(block: WorkoutBlock): string {
-    const sec = block.durationSeconds ?? 0;
-    if (sec < 60) return `${sec}s`;
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return s > 0 ? `${m}m${s}s` : `${m}m`;
+    return formatBlockSize(block);
   }
 
   formatSeconds(sec: number): string {
+    if (sec < 60) return `${sec}s`;
     const m = Math.floor(sec / 60);
     const s = sec % 60;
-    return s > 0 ? `${m}m${s}s` : `${m}m`;
+    return s > 0 ? `${m}min ${s}s` : `${m}min`;
   }
 }

@@ -78,115 +78,36 @@ export class ClubSessionService {
   }
 
   createSession(clubId: string, data: CreateSessionData): Observable<ClubTrainingSession> {
-    return new Observable((observer) => {
-      this.http.post<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions`, data).subscribe({
-        next: (session) => {
-          this.ngZone.run(() => {
-            this.loadSessions(clubId);
-            observer.next(session);
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+    return this.http.post<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions`, data);
   }
 
   updateSession(clubId: string, sessionId: string, data: CreateSessionData): Observable<ClubTrainingSession> {
-    return new Observable((observer) => {
-      this.http.put<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions/${sessionId}`, data).subscribe({
-        next: (session) => {
-          this.ngZone.run(() => {
-            this.loadSessions(clubId);
-            observer.next(session);
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+    return this.http.put<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions/${sessionId}`, data);
   }
 
   duplicateSession(clubId: string, sessionId: string, newScheduledAt?: string): Observable<ClubTrainingSession> {
     const url = `${this.apiUrl}/${clubId}/sessions/${sessionId}/duplicate` +
       (newScheduledAt ? `?newScheduledAt=${encodeURIComponent(newScheduledAt)}` : '');
-    return new Observable((observer) => {
-      this.http.post<ClubTrainingSession>(url, {}).subscribe({
-        next: (session) => {
-          this.ngZone.run(() => {
-            this.loadSessions(clubId);
-            observer.next(session);
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+    return this.http.post<ClubTrainingSession>(url, {});
   }
 
   joinSession(clubId: string, sessionId: string): Observable<void> {
-    return new Observable((observer) => {
-      this.http.post<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/join`, {}).subscribe({
-        next: () => {
-          this.ngZone.run(() => {
-            this.loadSessions(clubId);
-            observer.next();
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+    return this.http.post<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/join`, {});
   }
 
   cancelSession(clubId: string, sessionId: string): Observable<void> {
-    return new Observable((observer) => {
-      this.http.delete<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/join`).subscribe({
-        next: () => {
-          this.ngZone.run(() => {
-            this.loadSessions(clubId);
-            observer.next();
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+    return this.http.delete<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/join`);
   }
 
   cancelEntireSession(clubId: string, sessionId: string, reason?: string): Observable<void> {
-    return new Observable((observer) => {
-      this.http.put<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/cancel`, { reason: reason || null }).subscribe({
-        next: () => {
-          this.ngZone.run(() => {
-            this.loadSessions(clubId);
-            observer.next();
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+    return this.http.put<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/cancel`, { reason: reason || null });
   }
 
   cancelRecurringSessions(clubId: string, templateId: string, reason?: string): Observable<{ cancelledCount: number }> {
-    return new Observable((observer) => {
-      this.http
-        .put<{ cancelledCount: number }>(`${this.apiUrl}/${clubId}/recurring-sessions/${templateId}/cancel-future`, {
-          reason: reason || null,
-        })
-        .subscribe({
-          next: (result) => {
-            this.ngZone.run(() => {
-              this.loadSessions(clubId);
-              this.loadRecurringTemplates(clubId);
-              observer.next(result);
-              observer.complete();
-            });
-          },
-          error: (err) => observer.error(err),
-        });
-    });
+    return this.http.put<{ cancelledCount: number }>(
+      `${this.apiUrl}/${clubId}/recurring-sessions/${templateId}/cancel-future`,
+      { reason: reason || null },
+    );
   }
 
   uploadSessionGpx(clubId: string, sessionId: string, file: File): Observable<ClubTrainingSession> {
@@ -230,65 +151,19 @@ export class ClubSessionService {
   }
 
   createRecurringTemplate(clubId: string, data: CreateRecurringSessionData): Observable<RecurringSessionTemplate> {
-    return new Observable((observer) => {
-      this.http.post<RecurringSessionTemplate>(`${this.apiUrl}/${clubId}/recurring-sessions`, data).subscribe({
-        next: (template) => {
-          this.ngZone.run(() => {
-            this.loadRecurringTemplates(clubId);
-            this.loadSessions(clubId);
-            observer.next(template);
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+    return this.http.post<RecurringSessionTemplate>(`${this.apiUrl}/${clubId}/recurring-sessions`, data);
   }
 
   updateRecurringTemplate(clubId: string, templateId: string, data: CreateRecurringSessionData): Observable<RecurringSessionTemplate> {
-    return new Observable((observer) => {
-      this.http.put<RecurringSessionTemplate>(`${this.apiUrl}/${clubId}/recurring-sessions/${templateId}`, data).subscribe({
-        next: (template) => {
-          this.ngZone.run(() => {
-            this.loadRecurringTemplates(clubId);
-            observer.next(template);
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+    return this.http.put<RecurringSessionTemplate>(`${this.apiUrl}/${clubId}/recurring-sessions/${templateId}`, data);
   }
 
   updateRecurringTemplateWithInstances(clubId: string, templateId: string, data: CreateRecurringSessionData): Observable<RecurringSessionTemplate> {
-    return new Observable((observer) => {
-      this.http.put<RecurringSessionTemplate>(`${this.apiUrl}/${clubId}/recurring-sessions/${templateId}/with-instances`, data).subscribe({
-        next: (template) => {
-          this.ngZone.run(() => {
-            this.loadRecurringTemplates(clubId);
-            this.loadSessions(clubId);
-            observer.next(template);
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+    return this.http.put<RecurringSessionTemplate>(`${this.apiUrl}/${clubId}/recurring-sessions/${templateId}/with-instances`, data);
   }
 
   deleteRecurringTemplate(clubId: string, templateId: string): Observable<void> {
-    return new Observable((observer) => {
-      this.http.delete<void>(`${this.apiUrl}/${clubId}/recurring-sessions/${templateId}`).subscribe({
-        next: () => {
-          this.ngZone.run(() => {
-            this.loadRecurringTemplates(clubId);
-            observer.next();
-            observer.complete();
-          });
-        },
-        error: (err) => observer.error(err),
-      });
-    });
+    return this.http.delete<void>(`${this.apiUrl}/${clubId}/recurring-sessions/${templateId}`);
   }
 
   resetDetail(): void {

@@ -24,7 +24,50 @@
 }
 
 .block-item.set-selected {
+  border-color: rgba(139, 92, 246, 0.55);
+  background: rgba(139, 92, 246, 0.1);
+  box-shadow: inset 3px 0 0 #a78bfa;
+}
+
+.block-item.set-selected:hover {
+  background: rgba(139, 92, 246, 0.14);
+}
+
+/* Always-visible "select for set" checkbox */
+.set-select-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  padding: 0;
+  border-radius: 4px;
+  border: 1.5px solid var(--text-dim, #6e6e80);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.18s var(--ease-spring-gentle);
+}
+
+.set-select-checkbox:hover {
   border-color: #a78bfa;
+  background: rgba(139, 92, 246, 0.12);
+}
+
+.set-select-checkbox.checked {
+  background: #a78bfa;
+  border-color: #a78bfa;
+}
+
+.set-select-checkbox.checked:hover {
+  background: #8b5cf6;
+  border-color: #8b5cf6;
+}
+
+.set-select-checkbox:focus-visible {
+  outline: 2px solid #a78bfa;
+  outline-offset: 2px;
 }
 
 .block-drag-handle {

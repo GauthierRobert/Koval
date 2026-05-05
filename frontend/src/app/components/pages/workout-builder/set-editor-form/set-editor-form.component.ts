@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { WorkoutBlock } from '../../../../models/training.model';
-import { getBlockColor as sharedGetBlockColor } from '../../../shared/block-helpers/block-helpers';
+import { getBlockColor as sharedGetBlockColor, formatBlockSize } from '../../../shared/block-helpers/block-helpers';
 
 @Component({
   selector: 'app-set-editor-form',
@@ -34,15 +34,24 @@ export class SetEditorFormComponent {
   @Output() dissociate = new EventEmitter<void>();
   @Output() deselect = new EventEmitter<void>();
 
+  setRestMode(mode: 'NONE' | 'ACTIVE' | 'PASSIVE'): void {
+    if (mode === 'NONE') {
+      this.editSetNoRest = true;
+      this.editSetNoRestChange.emit(true);
+      return;
+    }
+    this.editSetNoRest = false;
+    this.editSetNoRestChange.emit(false);
+    const isPassive = mode === 'PASSIVE';
+    this.editSetPassiveRest = isPassive;
+    this.editSetPassiveRestChange.emit(isPassive);
+  }
+
   blockColor(block: WorkoutBlock): string {
     return sharedGetBlockColor(block, this.sportType);
   }
 
   formatBlockDuration(block: WorkoutBlock): string {
-    const sec = block.durationSeconds ?? 0;
-    if (sec < 60) return `${sec}s`;
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return s > 0 ? `${m}m${s}s` : `${m}m`;
+    return formatBlockSize(block);
   }
 }

@@ -212,6 +212,13 @@ input:checked + .slider:before {
 
 /* ── Responsive ────────────────────────────────────────── */
 @media (max-width: 768px) {
+  :host {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+  }
+
   .sidebar {
     width: 100%;
     flex: 1;

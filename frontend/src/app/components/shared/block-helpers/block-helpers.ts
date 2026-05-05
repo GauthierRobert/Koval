@@ -81,3 +81,30 @@ export function getDisplayIntensity(block: WorkoutBlock): string {
   if (block.type === 'RAMP') return `${block.intensityStart}%-${block.intensityEnd}%`;
   return `${block.intensityTarget}%`;
 }
+
+/**
+ * Format the "size" of a block: duration (e.g. "5min", "30s") if set, otherwise
+ * fall back to distance (e.g. "100m", "1.5km"). Returns "0s" only when the
+ * block has neither duration nor distance.
+ *
+ * Time uses "min" (not "m") so it cannot be confused with meters when both
+ * appear in the same list (e.g. swimming blocks mixing duration and distance).
+ */
+export function formatBlockSize(block: WorkoutBlock): string {
+  const sec = block.durationSeconds ?? 0;
+  if (sec > 0) {
+    if (sec < 60) return `${sec}s`;
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return s > 0 ? `${m}min ${s}s` : `${m}min`;
+  }
+  const meters = block.distanceMeters ?? 0;
+  if (meters > 0) {
+    if (meters >= 1000) {
+      const km = meters / 1000;
+      return `${Number.isInteger(km) ? km : km.toFixed(1)}km`;
+    }
+    return `${meters}m`;
+  }
+  return '0s';
+}

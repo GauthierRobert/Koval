@@ -87,57 +87,107 @@
     <div class="panel timeline-panel">
       <div class="timeline-header">
         <h3>{{ 'BUILDER.BLOCKS_TIMELINE' | translate }}</h3>
-        <div class="timeline-actions">
-          @if (selectedForSet.size > 0) {
+      </div>
+
+      @if (selectedForSet.size > 0 && !showSetForm) {
+        <div class="set-selection-banner">
+          <div class="set-selection-info">
+            <span class="set-selection-count">{{ selectedForSet.size }}</span>
+            <span class="set-selection-label">{{ 'BUILDER.BLOCKS_SELECTED' | translate }}</span>
+          </div>
+          <div class="set-selection-actions">
+            <button class="btn-ghost btn-sm" (click)="selectedForSet.clear()">{{ 'COMMON.CANCEL' | translate }}</button>
             <button class="btn-set btn-set-highlight" (click)="showSetForm = true">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M17 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2"/>
                 <path d="M12 8v8"/><path d="M8 12h8"/>
               </svg>
-              {{ 'BUILDER.GROUP_AS_SET' | translate }} ({{ selectedForSet.size }})
+              {{ 'BUILDER.GROUP_AS_SET' | translate }}
             </button>
-          }
+          </div>
         </div>
-      </div>
-      <div class="set-hint">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        {{ 'BUILDER.SET_GROUPING_HINT' | translate }}
-      </div>
+      } @else if (!showSetForm) {
+        <div class="set-hint">
+          <span class="set-hint-checkbox" aria-hidden="true">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </span>
+          <span class="set-hint-text">{{ 'BUILDER.SET_GROUPING_HINT' | translate }}</span>
+        </div>
+      }
 
       @if (showSetForm) {
         <div class="set-form glass">
-          <div class="set-form-row">
-            <label>{{ 'BUILDER.REPS' | translate }}</label>
-            <input type="number" [(ngModel)]="setReps" min="1" max="20" />
-          </div>
-          <div class="set-form-row">
-            <label class="passive-rest-toggle">
-              <input type="checkbox" [(ngModel)]="setNoRest" />
-              {{ 'BUILDER.NO_REST' | translate }}
-            </label>
-            <span class="rest-hint">{{ 'BUILDER.NO_REST_HINT' | translate }}</span>
-          </div>
-          @if (!setNoRest) {
-            <div class="set-form-row">
-              <label>{{ 'BUILDER.REST_DURATION' | translate }}</label>
-              <input type="number" [(ngModel)]="setRestDuration" min="0" /> s
+          <div class="set-form-header">
+            <div class="set-form-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2"/>
+                <path d="M12 8v8"/><path d="M8 12h8"/>
+              </svg>
             </div>
-            <div class="set-form-row">
-              <label class="passive-rest-toggle">
-                <input type="checkbox" [(ngModel)]="setPassiveRest" />
-                {{ 'BUILDER.PASSIVE_REST' | translate }}
-              </label>
-              <span class="rest-hint">{{ setPassiveRest ? ('BUILDER.PASSIVE_REST_HINT' | translate) : ('BUILDER.ACTIVE_REST_HINT' | translate) }}</span>
+            <div class="set-form-titles">
+              <div class="set-form-title">{{ 'BUILDER.NEW_SET' | translate }}</div>
+              <div class="set-form-subtitle">
+                {{ selectedForSet.size }} {{ 'BUILDER.BLOCKS_IN_SET' | translate | lowercase }} ·
+                {{ 'BUILDER.WILL_REPEAT' | translate }} <strong>{{ setReps }}×</strong>
+              </div>
             </div>
-            @if (!setPassiveRest) {
-              <div class="set-form-row">
-                <label>{{ 'BUILDER.REST_INTENSITY' | translate }}</label>
-                <input type="number" [(ngModel)]="setRestIntensity" min="1" max="100" /> %
+            <button class="set-form-close" (click)="showSetForm = false; selectedForSet.clear()" [title]="'COMMON.CANCEL' | translate">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+
+          <div class="set-form-section">
+            <div class="section-label-row">
+              <span class="section-label">{{ 'BUILDER.REPS' | translate }}</span>
+            </div>
+            <div class="reps-input">
+              <input type="number" [(ngModel)]="setReps" min="1" max="50" />
+              <span class="reps-x-suffix">×</span>
+            </div>
+          </div>
+
+          <div class="set-form-section">
+            <div class="section-label-row">
+              <span class="section-label">{{ 'BUILDER.REST_BETWEEN_REPS' | translate }}</span>
+            </div>
+            <div class="rest-mode-tabs">
+              <button class="rest-mode-tab" [class.active]="setNoRest"
+                      (click)="setNoRest = true">{{ 'BUILDER.REST_MODE_NONE' | translate }}</button>
+              <button class="rest-mode-tab" [class.active]="!setNoRest && !setPassiveRest"
+                      (click)="setNoRest = false; setPassiveRest = false">{{ 'BUILDER.REST_MODE_ACTIVE' | translate }}</button>
+              <button class="rest-mode-tab" [class.active]="!setNoRest && setPassiveRest"
+                      (click)="setNoRest = false; setPassiveRest = true">{{ 'BUILDER.REST_MODE_PASSIVE' | translate }}</button>
+            </div>
+            <div class="rest-mode-hint">
+              @if (setNoRest) { {{ 'BUILDER.REST_MODE_NONE_HINT' | translate }} }
+              @else if (setPassiveRest) { {{ 'BUILDER.REST_MODE_PASSIVE_HINT' | translate }} }
+              @else { {{ 'BUILDER.REST_MODE_ACTIVE_HINT' | translate }} }
+            </div>
+
+            @if (!setNoRest) {
+              <div class="rest-detail-row">
+                <div class="rest-field">
+                  <label>{{ 'BUILDER.DURATION_LABEL' | translate }}</label>
+                  <div class="input-with-suffix">
+                    <input type="number" [(ngModel)]="setRestDuration" min="0" />
+                    <span class="suffix">s</span>
+                  </div>
+                </div>
+                @if (!setPassiveRest) {
+                  <div class="rest-field">
+                    <label>{{ 'BUILDER.INTENSITY_LABEL' | translate }}</label>
+                    <div class="input-with-suffix">
+                      <input type="number" [(ngModel)]="setRestIntensity" min="1" max="100" />
+                      <span class="suffix">%</span>
+                    </div>
+                  </div>
+                }
               </div>
             }
-          }
+          </div>
+
           <div class="set-form-actions">
             <button class="btn-ghost" (click)="showSetForm = false; selectedForSet.clear()">{{ 'COMMON.CANCEL' | translate }}</button>
             <button class="btn-primary" (click)="createSet()">{{ 'BUILDER.CREATE_SET' | translate }}</button>

@@ -1,55 +1,93 @@
-<h3>{{ 'BUILDER.EDIT_SET' | translate }}</h3>
-
-<div class="form-field">
-  <label>{{ 'BUILDER.LABEL' | translate }}</label>
-  <input type="text" [ngModel]="editLabel" (ngModelChange)="editLabel = $event; editLabelChange.emit($event)" placeholder="e.g. 3x Set" />
+<div class="editor-header">
+  <div class="editor-icon">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M17 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2"/>
+      <path d="M12 8v8"/><path d="M8 12h8"/>
+    </svg>
+  </div>
+  <h3>{{ 'BUILDER.EDIT_SET' | translate }}</h3>
+  <span class="reps-badge">{{ editSetReps }}×</span>
 </div>
 
-<div class="form-field">
-  <label>{{ 'BUILDER.REPS' | translate }}</label>
-  <input type="number" [ngModel]="editSetReps" (ngModelChange)="editSetReps = $event; editSetRepsChange.emit($event)" min="1" max="50" />
-</div>
-
-<div class="form-field">
-  <label class="passive-rest-toggle">
-    <input type="checkbox" [ngModel]="editSetNoRest" (ngModelChange)="editSetNoRest = $event; editSetNoRestChange.emit($event)" />
-    {{ 'BUILDER.NO_REST' | translate }}
-  </label>
-  <span class="rest-hint">{{ 'BUILDER.NO_REST_HINT' | translate }}</span>
-</div>
-
-@if (!editSetNoRest) {
+<!-- Identity section -->
+<div class="form-group">
+  <div class="form-group-label">{{ 'BUILDER.SET_IDENTITY' | translate }}</div>
   <div class="form-field">
-    <label>{{ 'BUILDER.REST_DURATION' | translate }} (s)</label>
-    <input type="number" [ngModel]="editSetRestDuration" (ngModelChange)="editSetRestDuration = $event; editSetRestDurationChange.emit($event)" min="0" />
+    <label>{{ 'BUILDER.LABEL' | translate }}</label>
+    <input type="text" [ngModel]="editLabel" (ngModelChange)="editLabel = $event; editLabelChange.emit($event)" placeholder="e.g. 3x Set" />
+  </div>
+  <div class="form-field">
+    <label>{{ 'BUILDER.REPS' | translate }}</label>
+    <div class="reps-input">
+      <input type="number" [ngModel]="editSetReps" (ngModelChange)="editSetReps = $event; editSetRepsChange.emit($event)" min="1" max="50" />
+      <span class="reps-x-suffix">×</span>
+    </div>
+  </div>
+</div>
+
+<!-- Rest section -->
+<div class="form-group">
+  <div class="form-group-label">{{ 'BUILDER.REST_BETWEEN_REPS' | translate }}</div>
+  <div class="rest-mode-tabs">
+    <button class="rest-mode-tab" [class.active]="editSetNoRest"
+            (click)="setRestMode('NONE')">{{ 'BUILDER.REST_MODE_NONE' | translate }}</button>
+    <button class="rest-mode-tab" [class.active]="!editSetNoRest && !editSetPassiveRest"
+            (click)="setRestMode('ACTIVE')">{{ 'BUILDER.REST_MODE_ACTIVE' | translate }}</button>
+    <button class="rest-mode-tab" [class.active]="!editSetNoRest && editSetPassiveRest"
+            (click)="setRestMode('PASSIVE')">{{ 'BUILDER.REST_MODE_PASSIVE' | translate }}</button>
+  </div>
+  <div class="rest-mode-hint">
+    @if (editSetNoRest) { {{ 'BUILDER.REST_MODE_NONE_HINT' | translate }} }
+    @else if (editSetPassiveRest) { {{ 'BUILDER.REST_MODE_PASSIVE_HINT' | translate }} }
+    @else { {{ 'BUILDER.REST_MODE_ACTIVE_HINT' | translate }} }
   </div>
 
-  <div class="form-field">
-    <label class="passive-rest-toggle">
-      <input type="checkbox" [ngModel]="editSetPassiveRest" (ngModelChange)="editSetPassiveRest = $event; editSetPassiveRestChange.emit($event)" />
-      {{ 'BUILDER.PASSIVE_REST' | translate }}
-    </label>
-    <span class="rest-hint">{{ editSetPassiveRest ? ('BUILDER.PASSIVE_REST_HINT' | translate) : ('BUILDER.ACTIVE_REST_HINT' | translate) }}</span>
-  </div>
-  @if (!editSetPassiveRest) {
-    <div class="form-field">
-      <label>{{ 'BUILDER.REST_INTENSITY' | translate }} (%)</label>
-      <input type="number" [ngModel]="editSetRestIntensity" (ngModelChange)="editSetRestIntensity = $event; editSetRestIntensityChange.emit($event)" min="1" max="100" />
-    </div>
-  }
-}
-
-<div class="set-contents">
-  <label class="set-contents-label">{{ 'BUILDER.SET_CONTENTS' | translate }}</label>
-  @for (el of setElements; track $index) {
-    <div class="set-element-row">
-      <div class="block-color-bar" [style.background]="blockColor(el)"></div>
-      <span class="set-element-name">{{ el.label || el.type }}</span>
-      <span class="set-element-meta">{{ formatBlockDuration(el) }}</span>
+  @if (!editSetNoRest) {
+    <div class="rest-detail-row">
+      <div class="rest-field">
+        <label>{{ 'BUILDER.DURATION_LABEL' | translate }}</label>
+        <div class="input-with-suffix">
+          <input type="number" [ngModel]="editSetRestDuration" (ngModelChange)="editSetRestDuration = $event; editSetRestDurationChange.emit($event)" min="0" />
+          <span class="suffix">s</span>
+        </div>
+      </div>
+      @if (!editSetPassiveRest) {
+        <div class="rest-field">
+          <label>{{ 'BUILDER.INTENSITY_LABEL' | translate }}</label>
+          <div class="input-with-suffix">
+            <input type="number" [ngModel]="editSetRestIntensity" (ngModelChange)="editSetRestIntensity = $event; editSetRestIntensityChange.emit($event)" min="1" max="100" />
+            <span class="suffix">%</span>
+          </div>
+        </div>
+      }
     </div>
   }
 </div>
 
-<button class="btn-primary full-width" (click)="update.emit()">{{ 'BUILDER.UPDATE_SET' | translate }}</button>
-<button class="btn-ghost full-width btn-dissociate" (click)="dissociate.emit()" style="margin-top: 0.35rem">{{ 'BUILDER.DISSOCIATE_SET' | translate }}</button>
-<button class="btn-ghost full-width" (click)="deselect.emit()" style="margin-top: 0.35rem">{{ 'BUILDER.DESELECT' | translate }}</button>
+<!-- Set contents section -->
+<div class="form-group">
+  <div class="form-group-label">
+    {{ 'BUILDER.BLOCKS_IN_SET' | translate }}
+    <span class="form-group-count">{{ setElements.length }}</span>
+  </div>
+  <div class="set-contents-list">
+    @for (el of setElements; track $index) {
+      <div class="set-content-row">
+        <span class="set-content-number">{{ $index + 1 }}</span>
+        <div class="block-color-bar" [style.background]="blockColor(el)"></div>
+        <div class="set-content-info">
+          <span class="set-content-name">{{ el.label || el.type }}</span>
+          <span class="set-content-meta">{{ formatBlockDuration(el) }}</span>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<div class="editor-actions">
+  <button class="btn-primary full-width" (click)="update.emit()">{{ 'BUILDER.UPDATE_SET' | translate }}</button>
+  <div class="editor-secondary-row">
+    <button class="btn-ghost" (click)="deselect.emit()">{{ 'BUILDER.DESELECT' | translate }}</button>
+    <button class="btn-ghost btn-dissociate" (click)="dissociate.emit()">{{ 'BUILDER.DISSOCIATE_SET' | translate }}</button>
+  </div>
+</div>

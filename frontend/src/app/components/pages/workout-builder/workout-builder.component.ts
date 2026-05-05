@@ -20,7 +20,7 @@ import { BlockEditorFormComponent } from './block-editor-form/block-editor-form.
 import { SetEditorFormComponent } from './set-editor-form/set-editor-form.component';
 import { BlockListItemComponent } from './block-list-item/block-list-item.component';
 import { SetBlockItemComponent } from './set-block-item/set-block-item.component';
-import { getBlockColor as sharedGetBlockColor } from '../../shared/block-helpers/block-helpers';
+import { getBlockColor as sharedGetBlockColor, formatBlockSize } from '../../shared/block-helpers/block-helpers';
 type SportType = 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'BRICK';
 type BlockType = WorkoutBlock['type'];
 
@@ -384,7 +384,7 @@ export class WorkoutBuilderComponent implements OnInit {
     const total = this.estimatedDuration;
     const h = Math.floor(total / 3600);
     const m = Math.floor((total % 3600) / 60);
-    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+    return h > 0 ? `${h}h ${m}min` : `${m}min`;
   }
 
   private computeTss(blocks: WorkoutBlock[]): number {
@@ -472,17 +472,14 @@ export class WorkoutBuilderComponent implements OnInit {
   }
 
   formatSeconds(sec: number): string {
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return s > 0 ? `${m}m${s}s` : `${m}m`;
-  }
-
-  formatBlockDuration(block: WorkoutBlock): string {
-    const sec = block.durationSeconds ?? 0;
     if (sec < 60) return `${sec}s`;
     const m = Math.floor(sec / 60);
     const s = sec % 60;
-    return s > 0 ? `${m}m${s}s` : `${m}m`;
+    return s > 0 ? `${m}min ${s}s` : `${m}min`;
+  }
+
+  formatBlockDuration(block: WorkoutBlock): string {
+    return formatBlockSize(block);
   }
 
   private resetBlockForm(): void {
