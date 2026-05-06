@@ -24,7 +24,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import static java.util.Optional.ofNullable;
@@ -196,10 +198,13 @@ public class TrainingService {
                 .orElse(null);
     }
 
+    private static final Map<String, Pattern> TOKEN_PATTERNS = new ConcurrentHashMap<>();
+
     /** Word-boundary contains: "Z4" matches "Z4 Threshold" but not "Z40". */
     private static boolean containsAsToken(String text, String token) {
-        String regex = "(?:^|[^A-Z0-9])" + Pattern.quote(token) + "(?:[^A-Z0-9]|$)";
-        return Pattern.compile(regex).matcher(text).find();
+        Pattern pattern = TOKEN_PATTERNS.computeIfAbsent(token,
+                t -> Pattern.compile("(?:^|[^A-Z0-9])" + Pattern.quote(t) + "(?:[^A-Z0-9]|$)"));
+        return pattern.matcher(text).find();
     }
 
     private static String formatZoneDisplayLabel(Zone z) {

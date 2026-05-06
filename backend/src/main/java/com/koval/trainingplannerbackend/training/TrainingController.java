@@ -95,7 +95,7 @@ public class TrainingController {
     public ResponseEntity<List<Training>> listTrainings() {
         String userId = SecurityUtils.getCurrentUserId();
         List<Training> trainings = trainingService.listTrainingsByUser(userId);
-        trainings.forEach(t -> metricsService.enrichTrainingForUser(t, userId));
+        metricsService.enrichTrainings(trainings, userId);
         return ResponseEntity.ok(trainings);
     }
 
@@ -111,7 +111,7 @@ public class TrainingController {
     public ResponseEntity<List<Training>> listClubTrainings() {
         String userId = SecurityUtils.getCurrentUserId();
         List<Training> trainings = trainingService.discoverClubTrainings(userId);
-        trainings.forEach(t -> metricsService.enrichTrainingForUser(t, userId));
+        metricsService.enrichTrainings(trainings, userId);
         return ResponseEntity.ok(trainings);
     }
 
@@ -120,7 +120,7 @@ public class TrainingController {
     public ResponseEntity<Page<Training>> listTrainings(Pageable pageable) {
         String userId = SecurityUtils.getCurrentUserId();
         Page<Training> page = trainingService.listTrainingsByUser(userId, pageable);
-        page.getContent().forEach(t -> metricsService.enrichTrainingForUser(t, userId));
+        metricsService.enrichTrainings(page.getContent(), userId);
         return ResponseEntity.ok(page);
     }
 
