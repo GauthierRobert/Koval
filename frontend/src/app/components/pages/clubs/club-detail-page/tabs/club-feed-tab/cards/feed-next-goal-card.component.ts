@@ -1,13 +1,14 @@
-import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, Input, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
-import {ClubFeedEventResponse} from '../../../../../../../services/club.service';
+import {ClubFeedEventResponse, ReactionEmoji} from '../../../../../../../services/club.service';
 import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon.component';
+import {FeedReactionBarComponent} from '../../../../../../shared/feed-reaction-bar/feed-reaction-bar.component';
 
 @Component({
   selector: 'app-feed-next-goal-card',
   standalone: true,
-  imports: [CommonModule, TranslateModule, SportIconComponent],
+  imports: [CommonModule, TranslateModule, SportIconComponent, FeedReactionBarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="feed-card feed-card--goal">
@@ -47,6 +48,12 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
           <span class="athlete-count">{{ event.engagedAthletes.length }} {{ 'CLUB_FEED.ATHLETES_ENGAGED' | translate }}</span>
         </div>
       }
+
+      <app-feed-reaction-bar
+        [reactions]="event.reactions"
+        [currentUserId]="currentUserId"
+        (toggle)="reacted.emit({eventId: event.id, emoji: $event})">
+      </app-feed-reaction-bar>
     </div>
   `,
   styles: `
@@ -68,6 +75,8 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
 })
 export class FeedNextGoalCardComponent {
   @Input() event!: ClubFeedEventResponse;
+  @Input() currentUserId: string | null = null;
+  @Output() reacted = new EventEmitter<{eventId: string; emoji: ReactionEmoji}>();
 
   get daysUntil(): number {
     if (!this.event.goalDate) return 0;

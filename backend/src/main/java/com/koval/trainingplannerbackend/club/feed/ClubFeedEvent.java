@@ -10,8 +10,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Getter
@@ -19,7 +21,8 @@ import java.util.Set;
 @Document(collection = "club_feed_events")
 @CompoundIndexes({
         @CompoundIndex(name = "club_pinned_idx", def = "{'clubId': 1, 'pinned': 1, 'createdAt': -1}"),
-        @CompoundIndex(name = "club_session_type_idx", def = "{'clubSessionId': 1, 'type': 1}")
+        @CompoundIndex(name = "club_session_type_idx", def = "{'clubSessionId': 1, 'type': 1}"),
+        @CompoundIndex(name = "club_spotlight_expiry_idx", def = "{'type': 1, 'spotlightExpiresAt': 1}")
 })
 public class ClubFeedEvent {
 
@@ -73,6 +76,21 @@ public class ClubFeedEvent {
     // --- Photo enrichments (any event type) ---
     private List<MediaEnrichment> photoEnrichments = new ArrayList<>();
 
+    // --- Reactions: emoji code -> set of userIds (any event type) ---
+    private Map<String, Set<String>> reactions = new HashMap<>();
+
+    // --- Mentions denormalized (used for notification de-dupe and quick lookup) ---
+    private List<MentionRef> mentionRefs = new ArrayList<>();
+
+    // --- MEMBER_SPOTLIGHT fields ---
+    private String spotlightedUserId;
+    private String spotlightedDisplayName;
+    private String spotlightedProfilePicture;
+    private String spotlightTitle;
+    private String spotlightMessage;
+    private SpotlightBadge spotlightBadge;
+    private LocalDateTime spotlightExpiresAt;
+
     // --- Embedded records ---
 
     public record CompletionEntry(
@@ -112,7 +130,10 @@ public class ClubFeedEvent {
             String profilePicture,
             String content,
             LocalDateTime createdAt,
-            LocalDateTime updatedAt) {}
+            LocalDateTime updatedAt,
+            String parentCommentId,
+            Map<String, Set<String>> reactions,
+            List<MentionRef> mentions) {}
 
     public record MediaEnrichment(
             String id,
@@ -126,4 +147,10 @@ public class ClubFeedEvent {
             String id,
             String mediaId,
             LocalDateTime addedAt) {}
+
+    public record MentionRef(
+            String userId,
+            String displayName,
+            String contextType,
+            String contextId) {}
 }

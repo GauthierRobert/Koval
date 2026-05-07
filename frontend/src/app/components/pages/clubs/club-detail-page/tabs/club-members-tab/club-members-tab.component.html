@@ -1,4 +1,8 @@
 <div class="members-tab">
+  @if (canSeeInsights) {
+    <app-engagement-insights-panel [clubId]="club.id"></app-engagement-insights-panel>
+  }
+
   @if (tags$ | async; as allTags) {
 
     <!-- Group Management (coach/admin/owner) -->

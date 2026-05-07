@@ -5,15 +5,17 @@
     <!-- Announcement composer (coach/admin only) -->
     @if (isCoachOrAdmin) {
       <div data-testid="feed-composer" class="composer" [class.composer--expanded]="composerExpanded">
-        <textarea
-          data-testid="feed-composer-input"
-          class="composer-input"
+        <app-koval-mention-input
+          [clubId]="club.id"
+          [multiline]="true"
+          [rows]="composerExpanded ? 4 : 1"
           [placeholder]="'CLUB_FEED.COMPOSER_PLACEHOLDER' | translate"
-          [(ngModel)]="announcementText"
-          (focus)="composerExpanded = true"
-          rows="1"
-          [style.height]="composerExpanded ? '80px' : '36px'"
-        ></textarea>
+          [value]="announcementText"
+          [resetSignal]="announcementResetTick"
+          (textChange)="announcementText = $event; composerExpanded = composerExpanded || announcementText.length > 0"
+          (mentionsChange)="announcementMentionIds = $event">
+        </app-koval-mention-input>
+
         @if (composerExpanded) {
           <div class="composer-attachments">
             <koval-attachment-uploader
@@ -28,12 +30,25 @@
             <button class="composer-cancel" (click)="cancelAnnouncement()">
               {{ 'CLUB_FEED.CANCEL' | translate }}
             </button>
-            <button data-testid="feed-post-btn" class="btn-primary" [disabled]="!announcementText.trim()" (click)="submitAnnouncement()">
+            <button class="composer-spotlight-btn" (click)="openSpotlightComposer()">
+              {{ 'CLUB_FEED.SPOTLIGHT_OPEN' | translate }}
+            </button>
+            <button data-testid="feed-post-btn" class="btn-primary"
+                    [disabled]="!announcementText.trim()"
+                    (click)="submitAnnouncement()">
               {{ 'CLUB_FEED.POST' | translate }}
             </button>
           </div>
         }
       </div>
+
+      @if (spotlightOpen) {
+        <app-spotlight-composer
+          [clubId]="club.id"
+          (submitted)="submitSpotlight($event)"
+          (cancel)="cancelSpotlightComposer()">
+        </app-spotlight-composer>
+      }
     }
 
     @if (feedEvents$ | async; as feed) {
@@ -44,26 +59,53 @@
             @switch (event.type) {
               @case ('SESSION_COMPLETION') {
                 <app-feed-session-completion-card
+                  [clubId]="club.id"
                   [event]="event"
                   [currentUserId]="currentUserId"
                   (kudosRequested)="onGiveKudos($event)"
                   (commentSubmitted)="onCommentSubmitted($event)"
+                  (replySubmitted)="onReplySubmitted($event)"
                   (commentEdited)="onCommentEdited($event)"
-                  (commentDeleted)="onCommentDeleted($event)">
+                  (commentDeleted)="onCommentDeleted($event)"
+                  (commentReacted)="onCommentReacted($event)"
+                  (reacted)="onEventReacted($event)">
                 </app-feed-session-completion-card>
               }
               @case ('RACE_COMPLETION') {
                 <app-feed-race-completion-card
+                  [clubId]="club.id"
                   [event]="event"
                   [currentUserId]="currentUserId"
                   (kudosRequested)="onGiveKudos($event)"
                   (commentSubmitted)="onCommentSubmitted($event)"
+                  (replySubmitted)="onReplySubmitted($event)"
                   (commentEdited)="onCommentEdited($event)"
-                  (commentDeleted)="onCommentDeleted($event)">
+                  (commentDeleted)="onCommentDeleted($event)"
+                  (commentReacted)="onCommentReacted($event)"
+                  (reacted)="onEventReacted($event)">
                 </app-feed-race-completion-card>
               }
               @case ('NEXT_GOAL') {
-                <app-feed-next-goal-card [event]="event"></app-feed-next-goal-card>
+                <app-feed-next-goal-card
+                  [event]="event"
+                  [currentUserId]="currentUserId"
+                  (reacted)="onEventReacted($event)">
+                </app-feed-next-goal-card>
+              }
+              @case ('MEMBER_SPOTLIGHT') {
+                <app-feed-spotlight-card
+                  [clubId]="club.id"
+                  [event]="event"
+                  [currentUserId]="currentUserId"
+                  [canManage]="isCoachOrAdmin"
+                  (commentSubmitted)="onCommentSubmitted($event)"
+                  (replySubmitted)="onReplySubmitted($event)"
+                  (commentEdited)="onCommentEdited($event)"
+                  (commentDeleted)="onCommentDeleted($event)"
+                  (commentReacted)="onCommentReacted($event)"
+                  (reacted)="onEventReacted($event)"
+                  (spotlightDeleted)="onSpotlightDeleted($event)">
+                </app-feed-spotlight-card>
               }
             }
           }
@@ -77,37 +119,68 @@
             @switch (event.type) {
               @case ('COACH_ANNOUNCEMENT') {
                 <app-feed-announcement-card
+                  [clubId]="club.id"
                   [event]="event"
                   [currentUserId]="currentUserId"
                   (commentSubmitted)="onCommentSubmitted($event)"
+                  (replySubmitted)="onReplySubmitted($event)"
                   (commentEdited)="onCommentEdited($event)"
                   (commentDeleted)="onCommentDeleted($event)"
+                  (commentReacted)="onCommentReacted($event)"
+                  (reacted)="onEventReacted($event)"
                   (announcementEdited)="onAnnouncementEdited($event)"
                   (announcementDeleted)="onAnnouncementDeleted($event)">
                 </app-feed-announcement-card>
               }
               @case ('SESSION_COMPLETION') {
                 <app-feed-session-completion-card
+                  [clubId]="club.id"
                   [event]="event"
                   [currentUserId]="currentUserId"
                   (kudosRequested)="onGiveKudos($event)"
                   (commentSubmitted)="onCommentSubmitted($event)"
+                  (replySubmitted)="onReplySubmitted($event)"
                   (commentEdited)="onCommentEdited($event)"
-                  (commentDeleted)="onCommentDeleted($event)">
+                  (commentDeleted)="onCommentDeleted($event)"
+                  (commentReacted)="onCommentReacted($event)"
+                  (reacted)="onEventReacted($event)">
                 </app-feed-session-completion-card>
               }
               @case ('RACE_COMPLETION') {
                 <app-feed-race-completion-card
+                  [clubId]="club.id"
                   [event]="event"
                   [currentUserId]="currentUserId"
                   (kudosRequested)="onGiveKudos($event)"
                   (commentSubmitted)="onCommentSubmitted($event)"
+                  (replySubmitted)="onReplySubmitted($event)"
                   (commentEdited)="onCommentEdited($event)"
-                  (commentDeleted)="onCommentDeleted($event)">
+                  (commentDeleted)="onCommentDeleted($event)"
+                  (commentReacted)="onCommentReacted($event)"
+                  (reacted)="onEventReacted($event)">
                 </app-feed-race-completion-card>
               }
               @case ('NEXT_GOAL') {
-                <app-feed-next-goal-card [event]="event"></app-feed-next-goal-card>
+                <app-feed-next-goal-card
+                  [event]="event"
+                  [currentUserId]="currentUserId"
+                  (reacted)="onEventReacted($event)">
+                </app-feed-next-goal-card>
+              }
+              @case ('MEMBER_SPOTLIGHT') {
+                <app-feed-spotlight-card
+                  [clubId]="club.id"
+                  [event]="event"
+                  [currentUserId]="currentUserId"
+                  [canManage]="isCoachOrAdmin"
+                  (commentSubmitted)="onCommentSubmitted($event)"
+                  (replySubmitted)="onReplySubmitted($event)"
+                  (commentEdited)="onCommentEdited($event)"
+                  (commentDeleted)="onCommentDeleted($event)"
+                  (commentReacted)="onCommentReacted($event)"
+                  (reacted)="onEventReacted($event)"
+                  (spotlightDeleted)="onSpotlightDeleted($event)">
+                </app-feed-spotlight-card>
               }
             }
           }

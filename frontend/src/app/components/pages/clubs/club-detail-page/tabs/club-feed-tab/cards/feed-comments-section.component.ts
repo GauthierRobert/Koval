@@ -2,12 +2,35 @@ import {ChangeDetectionStrategy, Component, EventEmitter, inject, Input, Output}
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {FeedCommentEntry} from '../../../../../../../services/club.service';
+import {FeedCommentEntry, ReactionEmoji} from '../../../../../../../services/club.service';
+import {KovalMentionInputComponent} from '../../../../../../shared/koval-mention-input/koval-mention-input.component';
+import {KovalMentionTextComponent} from '../../../../../../shared/koval-mention-text/koval-mention-text.component';
+import {FeedReactionBarComponent} from '../../../../../../shared/feed-reaction-bar/feed-reaction-bar.component';
+
+interface CommentReplyEvent {
+  eventId: string;
+  parentCommentId: string;
+  content: string;
+  mentionUserIds: string[];
+}
+
+interface CommentReactionEvent {
+  eventId: string;
+  commentId: string;
+  emoji: ReactionEmoji;
+}
 
 @Component({
   selector: 'app-feed-comments-section',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TranslateModule,
+    KovalMentionInputComponent,
+    KovalMentionTextComponent,
+    FeedReactionBarComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="comments-section">
@@ -29,71 +52,49 @@ import {FeedCommentEntry} from '../../../../../../../services/club.service';
 
       @if (expanded) {
         <div class="comments-list">
-          @for (c of comments; track c.id) {
-            <div class="comment-item">
-              <div class="comment-avatar">
-                @if (c.profilePicture) {
-                  <img [src]="c.profilePicture" [alt]="c.displayName" />
-                } @else {
-                  {{ c.displayName.charAt(0).toUpperCase() }}
-                }
-              </div>
-              <div class="comment-body">
-                <div class="comment-meta">
-                  <span class="comment-author">{{ c.displayName }}</span>
-                  <span class="comment-time">{{ relativeTime(c.createdAt) }}</span>
-                  @if (c.updatedAt) {
-                    <span class="comment-edited">· {{ 'CLUB_FEED.EDITED' | translate }}</span>
-                  }
+          @for (parent of topLevelComments; track parent.id) {
+            <div class="comment-thread">
+              <ng-container [ngTemplateOutlet]="commentTpl"
+                            [ngTemplateOutletContext]="{c: parent, isReply: false}"></ng-container>
+
+              @for (reply of repliesOf(parent.id); track reply.id) {
+                <div class="reply-row">
+                  <ng-container [ngTemplateOutlet]="commentTpl"
+                                [ngTemplateOutletContext]="{c: reply, isReply: true}"></ng-container>
                 </div>
-                @if (editingId === c.id) {
-                  <div class="comment-edit-row">
-                    <input
-                      class="comment-input"
-                      [(ngModel)]="editText"
-                      (keydown.enter)="confirmEdit(c)"
-                      (keydown.escape)="cancelEdit()"
-                      (click)="$event.stopPropagation()"
-                    />
-                    <button class="comment-action-btn comment-action-btn--primary"
-                            [disabled]="!editText.trim() || editText.trim() === c.content"
-                            (click)="confirmEdit(c); $event.stopPropagation()">
-                      {{ 'COMMON.SAVE' | translate }}
-                    </button>
-                    <button class="comment-action-btn"
-                            (click)="cancelEdit(); $event.stopPropagation()">
-                      {{ 'COMMON.CANCEL' | translate }}
-                    </button>
-                  </div>
-                } @else {
-                  <div class="comment-text">{{ c.content }}</div>
-                  @if (c.userId === currentUserId) {
-                    <div class="comment-actions">
-                      <button class="comment-action-link"
-                              (click)="startEdit(c); $event.stopPropagation()">
-                        {{ 'COMMON.EDIT' | translate }}
-                      </button>
-                      <button class="comment-action-link comment-action-link--danger"
-                              (click)="confirmDelete(c); $event.stopPropagation()">
-                        {{ 'COMMON.DELETE' | translate }}
-                      </button>
-                    </div>
-                  }
-                }
-              </div>
+              }
+
+              @if (replyOpenFor === parent.id) {
+                <div class="reply-input-row">
+                  <app-koval-mention-input
+                    [clubId]="clubId"
+                    [placeholder]="'CLUB_FEED.REPLY_PLACEHOLDER' | translate"
+                    [value]="replyText"
+                    [resetSignal]="replyResetTick"
+                    (textChange)="replyText = $event"
+                    (mentionsChange)="replyMentionIds = $event"
+                    (submitted)="submitReply(parent)">
+                  </app-koval-mention-input>
+                  <button class="comment-post-btn" [disabled]="!replyText.trim()"
+                          (click)="submitReply(parent); $event.stopPropagation()">
+                    {{ 'CLUB_FEED.COMMENT_POST' | translate }}
+                  </button>
+                </div>
+              }
             </div>
           }
         </div>
 
         <div class="comment-input-row">
-          <input
-            data-testid="comment-input"
-            class="comment-input"
+          <app-koval-mention-input
+            [clubId]="clubId"
             [placeholder]="'CLUB_FEED.COMMENT_PLACEHOLDER' | translate"
-            [(ngModel)]="commentText"
-            (keydown.enter)="submitComment()"
-            (click)="$event.stopPropagation()"
-          />
+            [value]="commentText"
+            [resetSignal]="commentResetTick"
+            (textChange)="commentText = $event"
+            (mentionsChange)="commentMentionIds = $event"
+            (submitted)="submitComment()">
+          </app-koval-mention-input>
           <button class="comment-post-btn" [disabled]="!commentText.trim()"
                   (click)="submitComment(); $event.stopPropagation()">
             {{ 'CLUB_FEED.COMMENT_POST' | translate }}
@@ -101,6 +102,74 @@ import {FeedCommentEntry} from '../../../../../../../services/club.service';
         </div>
       }
     </div>
+
+    <ng-template #commentTpl let-c="c" let-isReply="isReply">
+      <div class="comment-item" [class.reply-item]="isReply">
+        <div class="comment-avatar">
+          @if (c.profilePicture) {
+            <img [src]="c.profilePicture" [alt]="c.displayName" />
+          } @else {
+            {{ c.displayName.charAt(0).toUpperCase() }}
+          }
+        </div>
+        <div class="comment-body">
+          <div class="comment-meta">
+            <span class="comment-author">{{ c.displayName }}</span>
+            <span class="comment-time">{{ relativeTime(c.createdAt) }}</span>
+            @if (c.updatedAt) {
+              <span class="comment-edited">· {{ 'CLUB_FEED.EDITED' | translate }}</span>
+            }
+          </div>
+          @if (editingId === c.id) {
+            <div class="comment-edit-row">
+              <input
+                class="comment-input"
+                [(ngModel)]="editText"
+                (keydown.enter)="confirmEdit(c)"
+                (keydown.escape)="cancelEdit()"
+                (click)="$event.stopPropagation()"
+              />
+              <button class="comment-action-btn comment-action-btn--primary"
+                      [disabled]="!editText.trim() || editText.trim() === c.content"
+                      (click)="confirmEdit(c); $event.stopPropagation()">
+                {{ 'COMMON.SAVE' | translate }}
+              </button>
+              <button class="comment-action-btn"
+                      (click)="cancelEdit(); $event.stopPropagation()">
+                {{ 'COMMON.CANCEL' | translate }}
+              </button>
+            </div>
+          } @else {
+            <div class="comment-text">
+              <app-koval-mention-text [text]="c.content" [mentions]="c.mentions ?? []"></app-koval-mention-text>
+            </div>
+            <app-feed-reaction-bar
+              [reactions]="c.reactions"
+              [currentUserId]="currentUserId"
+              (toggle)="onCommentReact(c, $event)">
+            </app-feed-reaction-bar>
+            <div class="comment-actions">
+              @if (!isReply) {
+                <button class="comment-action-link"
+                        (click)="openReply(c); $event.stopPropagation()">
+                  {{ 'CLUB_FEED.REPLY' | translate }}
+                </button>
+              }
+              @if (c.userId === currentUserId) {
+                <button class="comment-action-link"
+                        (click)="startEdit(c); $event.stopPropagation()">
+                  {{ 'COMMON.EDIT' | translate }}
+                </button>
+                <button class="comment-action-link comment-action-link--danger"
+                        (click)="confirmDelete(c); $event.stopPropagation()">
+                  {{ 'COMMON.DELETE' | translate }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </ng-template>
   `,
   styles: `
     .comments-section { margin-top: var(--space-sm); padding-top: var(--space-sm); border-top: 1px solid var(--glass-border); }
@@ -109,6 +178,9 @@ import {FeedCommentEntry} from '../../../../../../../services/club.service';
     .expand-chevron { transition: transform 0.2s; }
     .expand-chevron.rotated { transform: rotate(180deg); }
     .comments-list { display: flex; flex-direction: column; gap: 8px; margin-top: var(--space-sm); }
+    .comment-thread { display: flex; flex-direction: column; gap: 6px; }
+    .reply-row { padding-left: 32px; border-left: 2px solid var(--glass-border); }
+    .reply-input-row { display: flex; gap: 6px; padding-left: 32px; align-items: flex-start; }
     .comment-item { display: flex; gap: var(--space-sm); }
     .comment-avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--surface-elevated); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; color: var(--text-muted); overflow: hidden; flex-shrink: 0; }
     .comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -127,7 +199,7 @@ import {FeedCommentEntry} from '../../../../../../../services/club.service';
     .comment-action-btn:hover { background: var(--glass-bg); }
     .comment-action-btn--primary { background: var(--primary); color: #000; border-color: var(--primary); }
     .comment-action-btn--primary:disabled { opacity: 0.4; cursor: not-allowed; }
-    .comment-input-row { display: flex; gap: 6px; margin-top: var(--space-sm); }
+    .comment-input-row { display: flex; gap: 6px; margin-top: var(--space-sm); align-items: flex-start; }
     .comment-input { flex: 1; background: var(--surface-elevated); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 6px 10px; font-size: var(--text-xs); color: var(--text-color); outline: none; }
     .comment-input::placeholder { color: var(--text-muted); }
     .comment-input:focus { border-color: var(--primary); }
@@ -137,23 +209,40 @@ import {FeedCommentEntry} from '../../../../../../../services/club.service';
   `,
 })
 export class FeedCommentsSectionComponent {
+  @Input({required: true}) clubId!: string;
   @Input() eventId!: string;
   @Input() comments: FeedCommentEntry[] = [];
   @Input() currentUserId: string | null = null;
 
-  @Output() commentSubmitted = new EventEmitter<{eventId: string; content: string}>();
+  @Output() commentSubmitted = new EventEmitter<{eventId: string; content: string; mentionUserIds: string[]}>();
+  @Output() replySubmitted = new EventEmitter<CommentReplyEvent>();
   @Output() commentEdited = new EventEmitter<{eventId: string; commentId: string; content: string}>();
   @Output() commentDeleted = new EventEmitter<{eventId: string; commentId: string}>();
+  @Output() commentReacted = new EventEmitter<CommentReactionEvent>();
 
   private translate = inject(TranslateService);
 
   expanded = false;
   commentText = '';
+  commentMentionIds: string[] = [];
+  commentResetTick = 0;
+  replyText = '';
+  replyMentionIds: string[] = [];
+  replyResetTick = 0;
+  replyOpenFor: string | null = null;
   editingId: string | null = null;
   editText = '';
 
   get commentCount(): number {
     return this.comments?.length ?? 0;
+  }
+
+  get topLevelComments(): FeedCommentEntry[] {
+    return (this.comments ?? []).filter((c) => !c.parentCommentId);
+  }
+
+  repliesOf(parentId: string): FeedCommentEntry[] {
+    return (this.comments ?? []).filter((c) => c.parentCommentId === parentId);
   }
 
   toggleExpanded(ev: Event): void {
@@ -164,8 +253,40 @@ export class FeedCommentsSectionComponent {
   submitComment(): void {
     const text = this.commentText.trim();
     if (!text) return;
-    this.commentSubmitted.emit({eventId: this.eventId, content: text});
+    this.commentSubmitted.emit({
+      eventId: this.eventId,
+      content: text,
+      mentionUserIds: this.commentMentionIds,
+    });
     this.commentText = '';
+    this.commentMentionIds = [];
+    this.commentResetTick++;
+  }
+
+  openReply(c: FeedCommentEntry): void {
+    this.replyOpenFor = this.replyOpenFor === c.id ? null : c.id;
+    this.replyText = '';
+    this.replyMentionIds = [];
+    this.replyResetTick++;
+  }
+
+  submitReply(parent: FeedCommentEntry): void {
+    const text = this.replyText.trim();
+    if (!text) return;
+    this.replySubmitted.emit({
+      eventId: this.eventId,
+      parentCommentId: parent.id,
+      content: text,
+      mentionUserIds: this.replyMentionIds,
+    });
+    this.replyText = '';
+    this.replyMentionIds = [];
+    this.replyOpenFor = null;
+    this.replyResetTick++;
+  }
+
+  onCommentReact(c: FeedCommentEntry, emoji: ReactionEmoji): void {
+    this.commentReacted.emit({eventId: this.eventId, commentId: c.id, emoji});
   }
 
   startEdit(c: FeedCommentEntry): void {
