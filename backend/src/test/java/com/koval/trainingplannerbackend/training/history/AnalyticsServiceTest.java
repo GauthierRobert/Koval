@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -210,7 +212,7 @@ class AnalyticsServiceTest {
 
         @Test
         void emptyHistory_producesDecayOnlyPoints() {
-            when(sessionRepository.findByUserIdOrderByCompletedAtAsc("u1")).thenReturn(List.of());
+            when(sessionRepository.findByUserIdAndCompletedAtGreaterThanEqualOrderByCompletedAtAsc(eq("u1"), any())).thenReturn(List.of());
 
             LocalDate from = LocalDate.of(2024, 1, 1);
             LocalDate to = LocalDate.of(2024, 1, 3);
@@ -231,7 +233,7 @@ class AnalyticsServiceTest {
             s.setTss(100.0);
             s.setCompletedAt(LocalDateTime.of(2024, 1, 1, 10, 0));
 
-            when(sessionRepository.findByUserIdOrderByCompletedAtAsc("u1")).thenReturn(List.of(s));
+            when(sessionRepository.findByUserIdAndCompletedAtGreaterThanEqualOrderByCompletedAtAsc(eq("u1"), any())).thenReturn(List.of(s));
 
             LocalDate from = LocalDate.of(2024, 1, 1);
             LocalDate to = LocalDate.of(2024, 1, 2);
@@ -255,7 +257,7 @@ class AnalyticsServiceTest {
             swim.setTss(80.0);
             swim.setCompletedAt(LocalDateTime.of(2024, 1, 1, 10, 0));
 
-            when(sessionRepository.findByUserIdOrderByCompletedAtAsc("u1")).thenReturn(List.of(swim));
+            when(sessionRepository.findByUserIdAndCompletedAtGreaterThanEqualOrderByCompletedAtAsc(eq("u1"), any())).thenReturn(List.of(swim));
 
             var pmc = service.generatePmc("u1", LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1));
 
@@ -268,7 +270,7 @@ class AnalyticsServiceTest {
             s.setTss(100.0);
             s.setCompletedAt(LocalDateTime.of(2024, 1, 1, 10, 0));
 
-            when(sessionRepository.findByUserIdOrderByCompletedAtAsc("u1")).thenReturn(List.of(s));
+            when(sessionRepository.findByUserIdAndCompletedAtGreaterThanEqualOrderByCompletedAtAsc(eq("u1"), any())).thenReturn(List.of(s));
 
             var pmc = service.generatePmc("u1", LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 5));
 
