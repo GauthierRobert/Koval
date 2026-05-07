@@ -81,7 +81,7 @@ public class ClubInviteCodeService {
     }
 
     @Caching(evict = {
-        @CacheEvict(value = "clubInviteCodes", allEntries = true),
+        @CacheEvict(value = "clubInviteCodes", key = "#result.clubId", condition = "#result != null"),
         @CacheEvict(value = "userClubs", key = "#userId")
     })
     public ClubMembership redeemClubInviteCode(String userId, String code) {

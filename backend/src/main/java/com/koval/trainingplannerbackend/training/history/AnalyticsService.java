@@ -7,6 +7,7 @@ import com.koval.trainingplannerbackend.training.model.SportType;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +26,9 @@ public class AnalyticsService {
     private static final int ATL_TIME_CONSTANT = 7;
     private static final double K_CTL = 1.0 - Math.exp(-1.0 / CTL_TIME_CONSTANT);
     private static final double K_ATL = 1.0 - Math.exp(-1.0 / ATL_TIME_CONSTANT);
+
+    // ~8.7×CTL_TIME_CONSTANT — older contributions to the EMA are <0.02% and effectively zero.
+    private static final int LOAD_HISTORY_WINDOW_DAYS = 365;
 
     private final CompletedSessionRepository sessionRepository;
     private final UserRepository userRepository;
@@ -164,13 +168,16 @@ public class AnalyticsService {
      */
     public void recomputeAndSaveUserLoad(String userId) {
         userRepository.findById(userId).ifPresent(user -> {
-            List<CompletedSession> sessions = sessionRepository.findByUserIdOrderByCompletedAtAsc(userId);
+            LocalDate today = LocalDate.now();
+            LocalDateTime windowStart = today.minusDays(LOAD_HISTORY_WINDOW_DAYS).atStartOfDay();
+            List<CompletedSession> sessions = sessionRepository
+                    .findByUserIdAndCompletedAtGreaterThanEqualOrderByCompletedAtAsc(userId, windowStart);
             if (sessions.isEmpty())
                 return;
 
             Map<LocalDate, Map<String, Double>> dailyTssMap = buildDailyTssMap(sessions);
             LocalDate firstDate = sessions.get(0).getCompletedAt().toLocalDate();
-            EmaState state = runEma(new EmaState(0, 0), firstDate, LocalDate.now(), dailyTssMap);
+            EmaState state = runEma(new EmaState(0, 0), firstDate, today, dailyTssMap);
 
             updateUserLoadMetrics(user, state);
         });
@@ -188,7 +195,9 @@ public class AnalyticsService {
      * days.
      */
     public List<PmcDataPoint> generatePmc(String userId, LocalDate from, LocalDate to) {
-        List<CompletedSession> sessions = sessionRepository.findByUserIdOrderByCompletedAtAsc(userId);
+        LocalDateTime windowStart = from.minusDays(LOAD_HISTORY_WINDOW_DAYS).atStartOfDay();
+        List<CompletedSession> sessions = sessionRepository
+                .findByUserIdAndCompletedAtGreaterThanEqualOrderByCompletedAtAsc(userId, windowStart);
         Map<LocalDate, Map<String, Double>> dailyTssMap = buildDailyTssMap(sessions);
 
         LocalDate startDate = determineEmaStartDate(sessions, from);
