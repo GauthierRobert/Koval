@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.club.membership;
 
+import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,13 +14,15 @@ public class ClubAuthorizationService {
 
     public ClubMembership requireMembership(String userId, String clubId) {
         return membershipRepository.findByClubIdAndUserId(clubId, userId)
-                .orElseThrow(() -> new IllegalStateException("Not a member"));
+                .orElseThrow(() -> new ForbiddenOperationException(
+                        "Not a member of this club", "CLUB_NOT_A_MEMBER"));
     }
 
     public ClubMembership requireActiveMember(String userId, String clubId) {
         ClubMembership m = requireMembership(userId, clubId);
         if (m.getStatus() != ClubMemberStatus.ACTIVE) {
-            throw new IllegalStateException("Active membership required");
+            throw new ForbiddenOperationException(
+                    "Active membership required", "CLUB_MEMBERSHIP_NOT_ACTIVE");
         }
         return m;
     }
@@ -27,7 +30,8 @@ public class ClubAuthorizationService {
     public ClubMembership requireAdminOrOwner(String userId, String clubId) {
         ClubMembership m = requireMembership(userId, clubId);
         if (m.getRole() != ClubMemberRole.OWNER && m.getRole() != ClubMemberRole.ADMIN) {
-            throw new IllegalStateException("Admin or owner role required");
+            throw new ForbiddenOperationException(
+                    "Admin or owner role required", "CLUB_INSUFFICIENT_ROLE");
         }
         return m;
     }
@@ -41,10 +45,12 @@ public class ClubAuthorizationService {
     public ClubMembership requireAdminOrCoach(String userId, String clubId) {
         ClubMembership m = requireMembership(userId, clubId);
         if (m.getRole() == ClubMemberRole.MEMBER) {
-            throw new IllegalStateException("Coach, admin, or owner role required");
+            throw new ForbiddenOperationException(
+                    "Coach, admin, or owner role required", "CLUB_INSUFFICIENT_ROLE");
         }
         if (m.getStatus() != ClubMemberStatus.ACTIVE) {
-            throw new IllegalStateException("Active membership required");
+            throw new ForbiddenOperationException(
+                    "Active membership required", "CLUB_MEMBERSHIP_NOT_ACTIVE");
         }
         return m;
     }

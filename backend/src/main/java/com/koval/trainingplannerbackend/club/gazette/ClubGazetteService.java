@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend.club.gazette;
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserService;
 import com.koval.trainingplannerbackend.club.Club;
+import com.koval.trainingplannerbackend.club.ClubProperties;
 import com.koval.trainingplannerbackend.club.ClubRepository;
 import com.koval.trainingplannerbackend.club.gazette.dto.ClubGazetteEditionResponse;
 import com.koval.trainingplannerbackend.club.gazette.dto.ClubGazetteEditionSummary;
@@ -12,15 +13,9 @@ import com.koval.trainingplannerbackend.club.gazette.dto.ClubGazettePostsRespons
 import com.koval.trainingplannerbackend.club.gazette.dto.CreateGazettePostRequest;
 import com.koval.trainingplannerbackend.club.gazette.dto.UpdateGazettePostRequest;
 import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService;
-import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
-import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
-import com.koval.trainingplannerbackend.goal.RaceGoal;
-import com.koval.trainingplannerbackend.goal.RaceGoalRepository;
 import com.koval.trainingplannerbackend.media.MediaPurpose;
 import com.koval.trainingplannerbackend.media.MediaService;
 import com.koval.trainingplannerbackend.media.dto.MediaResponse;
-import com.koval.trainingplannerbackend.race.Race;
-import com.koval.trainingplannerbackend.race.RaceService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +25,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -47,41 +41,36 @@ import java.util.UUID;
 @Service
 public class ClubGazetteService {
 
-    private static final int MAX_TITLE_LENGTH = 100;
-    private static final int MAX_CONTENT_LENGTH = 2000;
     private static final int MAX_MEDIA_PER_POST = 4;
 
     private final ClubGazetteEditionRepository editionRepository;
     private final ClubGazettePostRepository postRepository;
     private final ClubAuthorizationService authorizationService;
     private final UserService userService;
-    private final ClubTrainingSessionRepository clubSessionRepository;
-    private final RaceGoalRepository raceGoalRepository;
-    private final RaceService raceService;
     private final MediaService mediaService;
     private final ClubGazetteSnapshotService snapshotService;
     private final ClubRepository clubRepository;
+    private final ClubProperties clubProperties;
+    private final PostLinkResolver postLinkResolver;
 
     public ClubGazetteService(ClubGazetteEditionRepository editionRepository,
                               ClubGazettePostRepository postRepository,
                               ClubAuthorizationService authorizationService,
                               UserService userService,
-                              ClubTrainingSessionRepository clubSessionRepository,
-                              RaceGoalRepository raceGoalRepository,
-                              RaceService raceService,
                               MediaService mediaService,
                               ClubGazetteSnapshotService snapshotService,
-                              ClubRepository clubRepository) {
+                              ClubRepository clubRepository,
+                              ClubProperties clubProperties,
+                              PostLinkResolver postLinkResolver) {
         this.editionRepository = editionRepository;
         this.postRepository = postRepository;
         this.authorizationService = authorizationService;
         this.userService = userService;
-        this.clubSessionRepository = clubSessionRepository;
-        this.raceGoalRepository = raceGoalRepository;
-        this.raceService = raceService;
         this.mediaService = mediaService;
         this.snapshotService = snapshotService;
         this.clubRepository = clubRepository;
+        this.clubProperties = clubProperties;
+        this.postLinkResolver = postLinkResolver;
     }
 
     // ── Editions ─────────────────────────────────────────────────────────────
@@ -221,7 +210,7 @@ public class ClubGazetteService {
             throw new IllegalArgumentException("Post type is required");
         }
         validateContent(req.title(), req.content());
-        validateLinksForType(req.type(), req.linkedSessionId(), req.linkedRaceGoalId());
+        postLinkResolver.validateLinksForType(req.type(), req.linkedSessionId(), req.linkedRaceGoalId());
         validateMediaIds(userId, req.mediaIds());
 
         ClubGazettePost post = new ClubGazettePost();
@@ -239,7 +228,7 @@ public class ClubGazetteService {
         post.setTitle(trimToNull(req.title()));
         post.setContent(req.content().trim());
 
-        applyLink(post, edition, userId, req.linkedSessionId(), req.linkedRaceGoalId());
+        postLinkResolver.applyLink(post, edition, userId, req.linkedSessionId(), req.linkedRaceGoalId());
 
         post.setMediaIds(Optional.ofNullable(req.mediaIds())
                 .<List<String>>map(ArrayList::new)
@@ -274,8 +263,8 @@ public class ClubGazetteService {
 
         // Link can be modified — re-validate against the post's existing type
         if (req.linkedSessionId() != null || req.linkedRaceGoalId() != null) {
-            validateLinksForType(post.getType(), req.linkedSessionId(), req.linkedRaceGoalId());
-            applyLink(post, edition, userId, req.linkedSessionId(), req.linkedRaceGoalId());
+            postLinkResolver.validateLinksForType(post.getType(), req.linkedSessionId(), req.linkedRaceGoalId());
+            postLinkResolver.applyLink(post, edition, userId, req.linkedSessionId(), req.linkedRaceGoalId());
         }
 
         if (req.mediaIds() != null) {
@@ -369,99 +358,15 @@ public class ClubGazetteService {
         if (content == null || content.isBlank()) {
             throw new IllegalArgumentException("Post content is required");
         }
-        if (content.length() > MAX_CONTENT_LENGTH) {
+        int maxContent = clubProperties.getGazette().getMaxContentLength();
+        int maxTitle = clubProperties.getGazette().getMaxTitleLength();
+        if (content.length() > maxContent) {
             throw new IllegalArgumentException(
-                    "Content exceeds maximum length of " + MAX_CONTENT_LENGTH);
+                    "Content exceeds maximum length of " + maxContent);
         }
-        if (title != null && title.length() > MAX_TITLE_LENGTH) {
+        if (title != null && title.length() > maxTitle) {
             throw new IllegalArgumentException(
-                    "Title exceeds maximum length of " + MAX_TITLE_LENGTH);
-        }
-    }
-
-    private void validateLinksForType(GazettePostType type, String sessionId, String raceGoalId) {
-        switch (type) {
-            case SESSION_RECAP -> {
-                if (sessionId == null || sessionId.isBlank()) {
-                    throw new IllegalArgumentException("SESSION_RECAP requires linkedSessionId");
-                }
-                if (raceGoalId != null && !raceGoalId.isBlank()) {
-                    throw new IllegalArgumentException("SESSION_RECAP cannot also link a race goal");
-                }
-            }
-            case RACE_RESULT -> {
-                if (raceGoalId == null || raceGoalId.isBlank()) {
-                    throw new IllegalArgumentException("RACE_RESULT requires linkedRaceGoalId");
-                }
-                if (sessionId != null && !sessionId.isBlank()) {
-                    throw new IllegalArgumentException("RACE_RESULT cannot also link a session");
-                }
-            }
-            case PERSONAL_WIN, SHOUTOUT, REFLECTION -> {
-                if ((sessionId != null && !sessionId.isBlank())
-                        || (raceGoalId != null && !raceGoalId.isBlank())) {
-                    throw new IllegalArgumentException(type + " posts cannot have a link");
-                }
-            }
-        }
-    }
-
-    private void applyLink(ClubGazettePost post, ClubGazetteEdition edition, String userId,
-                           String sessionId, String raceGoalId) {
-        post.setLinkedSessionId(null);
-        post.setLinkedRaceGoalId(null);
-        post.setLinkedSessionSnapshot(null);
-        post.setLinkedRaceGoalSnapshot(null);
-
-        if (post.getType() == GazettePostType.SESSION_RECAP) {
-            ClubTrainingSession session = clubSessionRepository.findById(sessionId)
-                    .orElseThrow(() -> new IllegalArgumentException("Linked session not found"));
-            if (!session.getClubId().equals(post.getClubId())) {
-                throw new IllegalArgumentException("Linked session does not belong to this club");
-            }
-            if (!session.getParticipantIds().contains(userId)) {
-                throw new IllegalArgumentException("You must be a participant of the linked session");
-            }
-            if (session.getScheduledAt() == null
-                    || session.getScheduledAt().isBefore(edition.getPeriodStart())
-                    || !session.getScheduledAt().isBefore(edition.getPeriodEnd())) {
-                throw new IllegalArgumentException(
-                        "Linked session is not within the gazette period");
-            }
-            post.setLinkedSessionId(sessionId);
-            post.setLinkedSessionSnapshot(new ClubGazettePost.LinkedSessionSnapshot(
-                    session.getId(), session.getTitle(), session.getSport(),
-                    session.getScheduledAt(), session.getLocation()));
-        } else if (post.getType() == GazettePostType.RACE_RESULT) {
-            RaceGoal goal = raceGoalRepository.findById(raceGoalId)
-                    .orElseThrow(() -> new IllegalArgumentException("Linked race goal not found"));
-            if (!goal.getAthleteId().equals(userId)) {
-                throw new IllegalArgumentException("Race goal must belong to you");
-            }
-            LocalDate raceDate = resolveRaceDate(goal);
-            if (raceDate == null) {
-                throw new IllegalArgumentException("Linked race has no date set");
-            }
-            LocalDateTime raceAt = raceDate.atStartOfDay();
-            if (raceAt.isBefore(edition.getPeriodStart())
-                    || !raceAt.isBefore(edition.getPeriodEnd())) {
-                throw new IllegalArgumentException(
-                        "Linked race is not within the gazette period");
-            }
-            post.setLinkedRaceGoalId(raceGoalId);
-            post.setLinkedRaceGoalSnapshot(new ClubGazettePost.LinkedRaceGoalSnapshot(
-                    goal.getId(), goal.getTitle(), goal.getSport(),
-                    raceDate, goal.getDistance(), goal.getTargetTime(), null));
-        }
-    }
-
-    private LocalDate resolveRaceDate(RaceGoal goal) {
-        if (goal.getRaceId() == null) return null;
-        try {
-            Race race = raceService.getRaceById(goal.getRaceId());
-            return Optional.ofNullable(race.getScheduledDate()).map(LocalDate::parse).orElse(null);
-        } catch (NoSuchElementException e) {
-            return null;
+                    "Title exceeds maximum length of " + maxTitle);
         }
     }
 

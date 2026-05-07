@@ -10,7 +10,6 @@ import com.koval.trainingplannerbackend.notification.NotificationService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -108,10 +107,10 @@ public class SessionParticipationService {
         return 0;
     }
 
-    private static final DateTimeFormatter SESSION_DATE_FMT = DateTimeFormatter.ofPattern("EEE d MMM, HH:mm");
-
     private String formatSessionDate(ClubTrainingSession session) {
-        return session.getScheduledAt() != null ? session.getScheduledAt().format(SESSION_DATE_FMT) : "";
+        return session.getScheduledAt() != null
+                ? session.getScheduledAt().format(SessionPropertyMapper.SESSION_DATE_FMT)
+                : "";
     }
 
     private String getClubName(String clubId) {
