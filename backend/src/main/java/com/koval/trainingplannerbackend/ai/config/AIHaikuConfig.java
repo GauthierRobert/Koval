@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend.ai.config;
 import com.koval.trainingplannerbackend.ai.CompactingChatMemory;
 import com.koval.trainingplannerbackend.ai.ConversationSummarizer;
 import com.koval.trainingplannerbackend.ai.agents.AgentType;
+import com.koval.trainingplannerbackend.ai.logger.PromptLogger;
 import com.koval.trainingplannerbackend.ai.agents.SpecialistAgentService;
 import com.koval.trainingplannerbackend.ai.agents.TrainingAgent;
 import com.koval.trainingplannerbackend.ai.logger.UsageTracker;
@@ -27,6 +28,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.scheduler.Schedulers;
 
+import java.util.Optional;
+
 /**
  * Haiku-powered agents for lightweight operations: scheduling, analysis,
  * management queries, routing, and planning.
@@ -35,6 +38,10 @@ import reactor.core.scheduler.Schedulers;
 public class AIHaikuConfig extends AIConfig {
 
     private static final int CHAT_MEMORY_WINDOW_SIZE = 20;
+
+    public AIHaikuConfig(Optional<PromptLogger> promptLogger) {
+        super(promptLogger);
+    }
 
     @Bean
     public ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository) {
