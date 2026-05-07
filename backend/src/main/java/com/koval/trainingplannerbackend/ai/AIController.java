@@ -6,6 +6,9 @@ import com.koval.trainingplannerbackend.config.audit.AuditLog;
 import com.koval.trainingplannerbackend.config.exceptions.RateLimitException;
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
@@ -22,7 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/ai")
@@ -45,7 +47,7 @@ public class AIController {
 
     @AuditLog(action = "AI_CHAT")
     @PostMapping("/chat")
-    public ResponseEntity<?> chat(@RequestBody ChatRequest request) {
+    public ResponseEntity<?> chat(@Valid @RequestBody ChatRequest request) {
         String userId = checkRateLimitedUser(request.message());
         AgentType agentType = parseAgentType(request.agentType());
         try {
@@ -59,17 +61,15 @@ public class AIController {
     public Flux<ServerSentEvent<String>> chatStream(
             @RequestBody ChatRequest request,
             HttpServletResponse response) {
-        String msg = request.message();
-        if (msg == null || msg.isBlank() || msg.length() > MAX_MESSAGE_CHARS) {
-            String errMsg = (msg == null || msg.isBlank())
-                    ? "Message cannot be empty."
-                    : "Your message is too long. Please keep it under " + MAX_MESSAGE_CHARS + " characters.";
-            return Flux.just(ServerSentEvent.<String>builder().event("error").data(errMsg).build());
+        try {
+            validateMessage(request.message());
+        } catch (ValidationException e) {
+            return Flux.just(sseError(e.getMessage()));
         }
         String userId = SecurityUtils.getCurrentUserId();
         rateLimiter.checkLimit(userId);
         AgentType agentType = parseAgentType(request.agentType());
-        var streamResponse = aiService.chatStream(msg, userId, request.chatHistoryId(), agentType);
+        var streamResponse = aiService.chatStream(request.message(), userId, request.chatHistoryId(), agentType);
         response.setHeader("X-Chat-History-Id", streamResponse.chatHistoryId());
         return streamResponse.events();
     }
@@ -78,7 +78,7 @@ public class AIController {
 
     @AuditLog(action = "AI_PLAN")
     @PostMapping("/plan")
-    public ResponseEntity<?> plan(@RequestBody ChatRequest request) {
+    public ResponseEntity<?> plan(@Valid @RequestBody ChatRequest request) {
         checkRateLimitedUser(request.message());
         try {
             return ResponseEntity.ok(aiService.plan(request.message()));
@@ -123,7 +123,12 @@ public class AIController {
 
     // ── DTOs ──────────────────────────────────────────────────
 
-    public record ChatRequest(String message, String chatHistoryId, String agentType) {}
+    public record ChatRequest(
+            @NotBlank(message = "Message cannot be empty.")
+            @Size(max = MAX_MESSAGE_CHARS, message = "Message must be at most " + MAX_MESSAGE_CHARS + " characters.")
+            String message,
+            String chatHistoryId,
+            String agentType) {}
     public record ConversationMessage(String role, String content) {}
     public record ChatHistoryDetail(ChatHistory metadata, List<ConversationMessage> messages) {}
 
@@ -161,12 +166,15 @@ public class AIController {
     }
 
     private RuntimeException toApiException(RuntimeException ex) {
-        String msg = Optional.ofNullable(ex.getMessage()).orElse("");
-        if (msg.contains("429") || msg.contains("rate_limit")) {
+        if (AiErrorClassifier.isRateLimit(ex)) {
             return new RateLimitException(
                     "Your request was too large or you've sent too many requests this minute. "
                             + "Please shorten your message or wait a moment and try again.");
         }
         return ex;
+    }
+
+    private static ServerSentEvent<String> sseError(String message) {
+        return ServerSentEvent.<String>builder().event("error").data(message).build();
     }
 }

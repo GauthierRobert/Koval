@@ -14,10 +14,12 @@ import com.koval.trainingplannerbackend.club.membership.ClubMembership;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -39,19 +41,22 @@ public class ClubInviteCodeService {
     private final ClubRepository clubRepository;
     private final ClubAuthorizationService authorizationService;
     private final ClubActivityService activityService;
+    private final CacheManager cacheManager;
 
     public ClubInviteCodeService(ClubInviteCodeRepository clubInviteCodeRepository,
                                  ClubGroupRepository clubGroupRepository,
                                  ClubMembershipRepository membershipRepository,
                                  ClubRepository clubRepository,
                                  ClubAuthorizationService authorizationService,
-                                 ClubActivityService activityService) {
+                                 ClubActivityService activityService,
+                                 CacheManager cacheManager) {
         this.clubInviteCodeRepository = clubInviteCodeRepository;
         this.clubGroupRepository = clubGroupRepository;
         this.membershipRepository = membershipRepository;
         this.clubRepository = clubRepository;
         this.authorizationService = authorizationService;
         this.activityService = activityService;
+        this.cacheManager = cacheManager;
     }
 
     @CacheEvict(value = "clubInviteCodes", key = "#clubId")
@@ -74,16 +79,14 @@ public class ClubInviteCodeService {
         inviteCode.setClubGroupId(clubGroupId != null && !clubGroupId.isBlank() ? clubGroupId : null);
         inviteCode.setMaxUses(maxUses);
         inviteCode.setExpiresAt(expiresAt);
-        inviteCode.setType("CLUB");
+        inviteCode.setType(InviteCodeType.CLUB);
         inviteCode.setCreatedAt(LocalDateTime.now());
 
         return clubInviteCodeRepository.save(inviteCode);
     }
 
-    @Caching(evict = {
-        @CacheEvict(value = "clubInviteCodes", key = "#result.clubId", condition = "#result != null"),
-        @CacheEvict(value = "userClubs", key = "#userId")
-    })
+    @CacheEvict(value = "userClubs", key = "#userId")
+    @Transactional
     public ClubMembership redeemClubInviteCode(String userId, String code) {
         ClubInviteCode inviteCode = clubInviteCodeRepository.findByCode(code.toUpperCase().trim())
                 .orElseThrow(() -> new ResourceNotFoundException("Invalid invite code"));
@@ -133,7 +136,15 @@ public class ClubInviteCodeService {
         inviteCode.setCurrentUses(inviteCode.getCurrentUses() + 1);
         clubInviteCodeRepository.save(inviteCode);
 
+        evictInviteCodesCache(clubId);
         return membership;
+    }
+
+    private void evictInviteCodesCache(String clubId) {
+        Cache cache = cacheManager.getCache("clubInviteCodes");
+        if (cache != null) {
+            cache.evict(clubId);
+        }
     }
 
     public List<ClubInviteCode> getClubInviteCodes(String userId, String clubId) {

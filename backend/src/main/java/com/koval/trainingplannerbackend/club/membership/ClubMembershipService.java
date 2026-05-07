@@ -94,6 +94,7 @@ public class ClubMembershipService {
     }
 
     @CacheEvict(value = "userClubs", key = "#userId")
+    @Transactional
     public void leaveClub(String userId, String clubId) {
         ClubMembership membership = membershipRepository.findByClubIdAndUserId(clubId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Not a member"));
@@ -115,6 +116,7 @@ public class ClubMembershipService {
     }
 
     @CacheEvict(value = "userClubs", key = "#adminId")
+    @Transactional
     public ClubMembership approveRequest(String adminId, String membershipId) {
         ClubMembership target = membershipRepository.findById(membershipId)
                 .orElseThrow(() -> new ResourceNotFoundException("Membership not found"));

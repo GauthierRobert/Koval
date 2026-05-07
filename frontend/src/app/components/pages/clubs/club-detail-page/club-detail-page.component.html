@@ -157,6 +157,11 @@
           <app-club-chat-tab [clubId]="clubId" (viewChange)="onChatViewChange($event)"></app-club-chat-tab>
         </div>
       }
+      @if (activeTab === 'tests') {
+        <div role="tabpanel" id="tabpanel-tests" aria-labelledby="tab-btn-tests">
+          <app-club-tests-tab [club]="club"></app-club-tests-tab>
+        </div>
+      }
     </div>
 
     <app-training-action-modal

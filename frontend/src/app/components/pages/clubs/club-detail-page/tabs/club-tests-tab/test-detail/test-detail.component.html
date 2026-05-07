@@ -1,0 +1,240 @@
+@if (test$ | async; as test) {
+  <div class="test-detail">
+    <header class="test-detail__head">
+      <button class="btn-back" (click)="back.emit()" data-testid="btn-back-tests"
+              [attr.aria-label]="'CLUB_TESTS.BACK' | translate">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+      </button>
+
+      <div class="test-detail__title">
+        <h4 class="section-title">{{ 'CLUB_TESTS.TITLE' | translate }}</h4>
+        <div class="test-detail__title-row">
+          <h2 class="test-detail__name">{{ test.name }}</h2>
+          @if (test.competitionMode) {
+            <span class="badge badge--competition">
+              {{ 'CLUB_TESTS.COMPETITION_BADGE' | translate }}
+            </span>
+          }
+        </div>
+        @if (test.description) {
+          <p class="test-detail__desc">{{ test.description }}</p>
+        }
+      </div>
+
+      @if (isCoach) {
+        <div class="test-detail__actions">
+          <button class="btn-secondary" (click)="showEditModal = true" data-testid="btn-edit-test">
+            {{ 'CLUB_TESTS.EDIT' | translate }}
+          </button>
+          <button class="btn-ghost-danger" (click)="archive()" data-testid="btn-archive-test">
+            {{ 'CLUB_TESTS.ARCHIVE' | translate }}
+          </button>
+        </div>
+      }
+    </header>
+
+    <section class="iterations-bar glass">
+      <div class="iterations-bar__select">
+        <label class="form-label">{{ 'CLUB_TESTS.ITERATION_LABEL' | translate }}</label>
+        <select
+          class="form-input"
+          [ngModel]="(selectedIterationId$ | async) ?? ''"
+          (ngModelChange)="onIterationChange($event)"
+          data-testid="iteration-select">
+          @for (it of (iterations$ | async) ?? []; track it.id) {
+            <option [value]="it.id">
+              {{ it.label }} · {{ (it.status === 'OPEN' ? 'CLUB_TESTS.OPEN_STATUS' : 'CLUB_TESTS.CLOSED_STATUS') | translate }}
+            </option>
+          }
+        </select>
+      </div>
+
+      @if (isCoach) {
+        <div class="iterations-bar__new">
+          <label class="form-label">{{ 'CLUB_TESTS.START_ITERATION' | translate }}</label>
+          <div class="iterations-bar__new-inputs">
+            <input
+              class="form-input"
+              type="text"
+              [(ngModel)]="newIterationLabel"
+              [placeholder]="'CLUB_TESTS.NEW_ITERATION_PLACEHOLDER' | translate"
+              data-testid="input-new-iteration-label" />
+            <button class="btn-primary"
+                    (click)="startNewIteration()"
+                    [disabled]="!newIterationLabel.trim()"
+                    data-testid="btn-start-iteration">
+              + {{ 'CLUB_TESTS.START_ITERATION' | translate }}
+            </button>
+          </div>
+        </div>
+      }
+    </section>
+
+    @let iterations = (iterations$ | async) ?? [];
+    @let selectedIterId = selectedIterationId$ | async;
+    @let activeIter = selectedIteration(iterations, selectedIterId);
+
+    @if (activeIter) {
+      <section class="segments-section">
+        <header class="section-head">
+          <h4 class="section-title">{{ 'CLUB_TESTS.SEGMENTS' | translate }}</h4>
+          <span class="section-head__count">{{ activeIter.segments.length }}</span>
+        </header>
+        <ul class="segments-list">
+          @for (s of activeIter.segments; track s.id) {
+            <li class="segment-row">
+              <span class="seg-order mono">{{ ($index + 1) }}</span>
+              <span class="seg-label">{{ s.label }}</span>
+              <span class="seg-chip seg-chip--sport"
+                    [style.background]="sportColor(s.sportType).bg"
+                    [style.color]="sportColor(s.sportType).text"
+                    [style.border-color]="sportColor(s.sportType).border + '55'">
+                {{ s.sportType }}
+              </span>
+              @if (s.distanceMeters) {
+                <span class="seg-chip">{{ s.distanceMeters }}&nbsp;m</span>
+              }
+              @if (s.durationSeconds) {
+                <span class="seg-chip">{{ s.durationSeconds / 60 }}&nbsp;min</span>
+              }
+              <span class="seg-unit">{{ s.resultUnit }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <section class="results-section">
+        <header class="section-head section-head--results">
+          <h4 class="section-title">{{ 'CLUB_TESTS.RESULTS' | translate }}</h4>
+          @let results = (results$ | async) ?? [];
+          @let myResult = ownResult(results);
+          <div class="section-head__actions">
+            @if (activeIter.status === 'OPEN') {
+              <button class="btn-primary" (click)="openRecordOwn()" data-testid="btn-record-own">
+                {{ myResult ? ('CLUB_TESTS.UPDATE_MY_RESULT' | translate) : ('CLUB_TESTS.RECORD_MY_RESULT' | translate) }}
+              </button>
+            }
+            @if (isCoach && activeIter.status === 'OPEN') {
+              <button class="btn-secondary" (click)="closeIteration(activeIter)" data-testid="btn-close-iteration">
+                {{ 'CLUB_TESTS.CLOSE_ITERATION' | translate }}
+              </button>
+            }
+          </div>
+        </header>
+
+        @let visible = visibleResults(test, results);
+        @if (visible.length === 0) {
+          <div class="empty-tab">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 3v18h18"/>
+              <path d="m7 14 4-4 4 4 5-5"/>
+            </svg>
+            <p>{{ 'CLUB_TESTS.RESULTS_EMPTY' | translate }}</p>
+          </div>
+        } @else {
+          <div class="results-table-wrapper">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  @if (test.competitionMode) {
+                    <th class="col-rank">#</th>
+                  }
+                  <th>{{ 'CLUB_TESTS.ATHLETE' | translate }}</th>
+                  @for (s of activeIter.segments; track s.id) {
+                    <th class="col-num">{{ s.label }}</th>
+                  }
+                  @for (r of activeIter.referenceUpdates; track r.id) {
+                    <th class="col-num col-ref">{{ r.label || r.target }}</th>
+                  }
+                  <th class="col-actions">{{ 'CLUB_TESTS.ACTIONS' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (res of visible; track trackByResultId($index, res)) {
+                  <tr [class.is-self]="res.athleteId === currentUserId">
+                    @if (test.competitionMode) {
+                      <td class="col-rank">
+                        <span class="rank-badge"
+                              [class.rank-1]="res.rank === 1"
+                              [class.rank-2]="res.rank === 2"
+                              [class.rank-3]="res.rank === 3">
+                          {{ res.rank ?? '—' }}
+                        </span>
+                      </td>
+                    }
+                    <td class="col-athlete">{{ res.athleteDisplayName ?? res.athleteId }}</td>
+                    @for (s of activeIter.segments; track s.id) {
+                      <td class="col-num mono">{{ formatSegmentValue(s, res.segmentResults[s.id]?.value) }}</td>
+                    }
+                    @for (r of activeIter.referenceUpdates; track r.id) {
+                      <td class="col-num col-ref mono">
+                        {{ res.computedReferences[r.id] !== undefined ? (res.computedReferences[r.id] | number:'1.0-1') : '—' }}
+                      </td>
+                    }
+                    <td class="col-actions">
+                      @if (res.athleteId === currentUserId || isCoach) {
+                        <div class="row-actions">
+                          <button class="btn-link" (click)="openEditExisting(res)" data-testid="btn-edit-result">
+                            {{ 'CLUB_TESTS.EDIT_RESULT' | translate }}
+                          </button>
+                          @if (activeIter.referenceUpdates.length > 0) {
+                            <button class="btn-link btn-link--accent" (click)="openApply(res)" data-testid="btn-apply-refs">
+                              {{ 'CLUB_TESTS.APPLY_REFS' | translate }}
+                            </button>
+                          }
+                        </div>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    } @else {
+      <div class="empty-tab">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v4"/>
+          <path d="M12 16h.01"/>
+        </svg>
+        <p>{{ 'CLUB_TESTS.NO_ITERATIONS' | translate }}</p>
+      </div>
+    }
+
+    @if (showEditModal) {
+      <app-test-form-modal
+        [club]="club"
+        [test]="test"
+        (cancel)="showEditModal = false"
+        (save)="saveEdited($event)">
+      </app-test-form-modal>
+    }
+
+    @if (showResultModal && activeIter) {
+      <app-result-entry-modal
+        [iteration]="activeIter"
+        [existing]="resultModalResult"
+        [recordingForAthleteId]="resultModalRecordingFor"
+        [coachMode]="isCoach"
+        (cancel)="showResultModal = false"
+        (save)="saveResult($event, activeIter.id)">
+      </app-result-entry-modal>
+    }
+
+    @if (showApplyModal && applyModalResult && activeIter) {
+      <app-apply-references-confirm-modal
+        [iteration]="activeIter"
+        [result]="applyModalResult"
+        (cancel)="showApplyModal = false; applyModalResult = null"
+        (confirm)="applyReferences($event, activeIter.id)">
+      </app-apply-references-confirm-modal>
+    }
+  </div>
+}

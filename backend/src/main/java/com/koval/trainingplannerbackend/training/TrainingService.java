@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.training;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
@@ -24,7 +25,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import static java.util.Optional.ofNullable;
@@ -73,7 +76,7 @@ public class TrainingService {
             // JSON round-trip handles polymorphism (CyclingTraining, RunningTraining, etc.)
             String json = objectMapper.writeValueAsString(source);
             copy = objectMapper.readValue(json, Training.class);
-        } catch (Exception e) {
+        } catch (JsonProcessingException e) {
             throw new IllegalStateException("Failed to clone training: " + e.getMessage(), e);
         }
         copy.setId(null);
@@ -196,10 +199,13 @@ public class TrainingService {
                 .orElse(null);
     }
 
+    private static final Map<String, Pattern> TOKEN_PATTERNS = new ConcurrentHashMap<>();
+
     /** Word-boundary contains: "Z4" matches "Z4 Threshold" but not "Z40". */
     private static boolean containsAsToken(String text, String token) {
-        String regex = "(?:^|[^A-Z0-9])" + Pattern.quote(token) + "(?:[^A-Z0-9]|$)";
-        return Pattern.compile(regex).matcher(text).find();
+        Pattern pattern = TOKEN_PATTERNS.computeIfAbsent(token,
+                t -> Pattern.compile("(?:^|[^A-Z0-9])" + Pattern.quote(t) + "(?:[^A-Z0-9]|$)"));
+        return pattern.matcher(text).find();
     }
 
     private static String formatZoneDisplayLabel(Zone z) {

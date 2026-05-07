@@ -83,8 +83,9 @@ public class UserContextResolver {
             return coachGroupService.getCoachAthletes(coachId).stream()
                     .map(u -> new AthleteSummary(u.getId(), u.getDisplayName()))
                     .toList();
-        } catch (Exception e) {
-            log.warn("Failed to resolve athletes for coach {}: {}", coachId, e.getMessage());
+        } catch (RuntimeException e) {
+            log.warn("Failed to resolve athletes for coach {} ({}): {}",
+                    coachId, e.getClass().getSimpleName(), e.getMessage());
             return List.of();
         }
     }
@@ -94,28 +95,33 @@ public class UserContextResolver {
             return coachGroupService.getAthleteGroupsForCoach(coachId).stream()
                     .map(g -> new GroupSummary(g.getId(), g.getName()))
                     .toList();
-        } catch (Exception e) {
-            log.warn("Failed to resolve groups for coach {}: {}", coachId, e.getMessage());
+        } catch (RuntimeException e) {
+            log.warn("Failed to resolve groups for coach {} ({}): {}",
+                    coachId, e.getClass().getSimpleName(), e.getMessage());
             return List.of();
         }
     }
 
     private List<ClubContext> resolveClubs(String userId) {
         try {
-            List<ClubSummaryResponse> userClubs = clubService.getUserClubs(userId);
-            return userClubs.stream().map(c -> {
-                List<GroupSummary> groups;
-                try {
-                    groups = clubGroupService.listGroups(userId, c.id()).stream()
-                            .map(g -> new GroupSummary(g.getId(), g.getName()))
-                            .toList();
-                } catch (Exception e) {
-                    groups = List.of();
-                }
-                return new ClubContext(c.id(), c.name(), groups);
-            }).toList();
-        } catch (Exception e) {
-            log.warn("Failed to resolve clubs for user {}: {}", userId, e.getMessage());
+            return clubService.getUserClubs(userId).stream()
+                    .map(c -> new ClubContext(c.id(), c.name(), resolveClubGroups(userId, c)))
+                    .toList();
+        } catch (RuntimeException e) {
+            log.warn("Failed to resolve clubs for user {} ({}): {}",
+                    userId, e.getClass().getSimpleName(), e.getMessage());
+            return List.of();
+        }
+    }
+
+    private List<GroupSummary> resolveClubGroups(String userId, ClubSummaryResponse club) {
+        try {
+            return clubGroupService.listGroups(userId, club.id()).stream()
+                    .map(g -> new GroupSummary(g.getId(), g.getName()))
+                    .toList();
+        } catch (RuntimeException e) {
+            log.debug("Failed to resolve groups for club {} ({}): {}",
+                    club.id(), e.getClass().getSimpleName(), e.getMessage());
             return List.of();
         }
     }
