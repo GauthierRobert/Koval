@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.training;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
@@ -75,7 +76,7 @@ public class TrainingService {
             // JSON round-trip handles polymorphism (CyclingTraining, RunningTraining, etc.)
             String json = objectMapper.writeValueAsString(source);
             copy = objectMapper.readValue(json, Training.class);
-        } catch (Exception e) {
+        } catch (JsonProcessingException e) {
             throw new IllegalStateException("Failed to clone training: " + e.getMessage(), e);
         }
         copy.setId(null);

@@ -10,7 +10,6 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -18,9 +17,9 @@ import org.springframework.core.io.ClassPathResource;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Shared AI infrastructure: model constants, prompt loading, option builders,
@@ -35,15 +34,14 @@ public class AIConfig {
     protected static final String HAIKU = "claude-haiku-4-5-20251001";
 
     protected final String commonRules;
-
-    @Autowired(required = false)
-    protected PromptLogger promptLogger;
+    protected final PromptLogger promptLogger;
 
     @Value("${app.ai.toon-responses:true}")
     protected boolean toonResponses;
 
-    public AIConfig() {
+    public AIConfig(Optional<PromptLogger> promptLogger) {
         this.commonRules = loadPrompt("common-rules");
+        this.promptLogger = promptLogger.orElse(null);
     }
 
     // ── Shared helpers ─────────────────────────────────────────────────
@@ -77,46 +75,38 @@ public class AIConfig {
     // ── Options helpers ─────────────────────────────────────────────────
 
     protected AnthropicChatOptions sonnetOptions() {
-        return AnthropicChatOptions.builder()
-                .model(SONNET)
-                .temperature(0.7)
-                .maxTokens(2048)
-                .cacheOptions(cacheOptions())
-                .build();
+        return anthropicOptions(SONNET, 0.7, 2048);
     }
 
     protected AnthropicChatOptions haikuOptions() {
-        return AnthropicChatOptions.builder()
-                .model(HAIKU)
-                .temperature(0.7)
-                .maxTokens(512)
-                .cacheOptions(cacheOptions())
-                .build();
+        return anthropicOptions(HAIKU, 0.7, 512);
     }
 
     protected AnthropicChatOptions haikuActionOptions() {
-        return AnthropicChatOptions.builder()
-                .model(HAIKU)
-                .temperature(0.3)
-                .maxTokens(512)
-                .cacheOptions(cacheOptions())
-                .build();
+        return anthropicOptions(HAIKU, 0.3, 512);
     }
 
     protected AnthropicChatOptions sonnetCachedActionOptions() {
+        return anthropicOptions(SONNET, 0.3, 2048);
+    }
+
+    private AnthropicChatOptions anthropicOptions(String model, double temperature, int maxTokens) {
         return AnthropicChatOptions.builder()
-                .model(SONNET)
-                .temperature(0.3)
-                .maxTokens(2048)
+                .model(model)
+                .temperature(temperature)
+                .maxTokens(maxTokens)
                 .cacheOptions(cacheOptions())
                 .build();
     }
 
     protected AnthropicCacheOptions cacheOptions() {
+        Map<MessageType, AnthropicCacheTtl> ttl = new EnumMap<>(MessageType.class);
+        for (MessageType mt : MessageType.values()) {
+            ttl.put(mt, AnthropicCacheTtl.FIVE_MINUTES);
+        }
         return AnthropicCacheOptions.builder()
                 .strategy(AnthropicCacheStrategy.SYSTEM_AND_TOOLS)
-                .messageTypeTtl(Stream.of(MessageType.values())
-                        .collect(Collectors.toMap(mt -> mt, ignored -> AnthropicCacheTtl.FIVE_MINUTES, (m1, m2) -> m1, HashMap::new)))
+                .messageTypeTtl(ttl)
                 .build();
     }
 }

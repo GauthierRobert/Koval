@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -66,39 +67,32 @@ public class ConversationSummarizer {
      * Called after responses when message count exceeds the threshold.
      */
     public void summarizeIfNeeded(String conversationId) {
-        List<Message> messages = chatMemory.get(conversationId);
-        if (messages == null || messages.size() < SUMMARIZE_THRESHOLD) {
-            return;
-        }
+        Optional.ofNullable(chatMemory.get(conversationId))
+                .filter(msgs -> msgs.size() >= SUMMARIZE_THRESHOLD)
+                .filter(msgs -> !summaryCache.containsKey(conversationId))
+                .ifPresent(msgs -> doSummarize(conversationId, msgs));
+    }
 
-        if (summaryCache.containsKey(conversationId)) {
-            return;
-        }
-
+    private void doSummarize(String conversationId, List<Message> messages) {
+        List<Message> olderMessages = messages.subList(0, messages.size() / 2);
+        String conversationText = olderMessages.stream()
+                .map(m -> m.getMessageType().name() + ": " + m.getText())
+                .collect(Collectors.joining("\n"));
         try {
-            int halfPoint = messages.size() / 2;
-            List<Message> olderMessages = messages.subList(0, halfPoint);
-
-            String conversationText = olderMessages.stream()
-                    .map(m -> m.getMessageType().name() + ": " + m.getText())
-                    .collect(Collectors.joining("\n"));
-
             String summary = routerClient.prompt()
                     .system(SUMMARIZE_PROMPT)
                     .user(conversationText)
                     .call()
                     .content();
-
             summaryCache.put(conversationId, summary);
-
             chatHistoryRepository.findById(conversationId).ifPresent(history -> {
                 history.setConversationSummary(summary);
                 chatHistoryRepository.save(history);
             });
-
             log.debug("Generated conversation summary for {}: {} chars", conversationId, summary.length());
-        } catch (Exception e) {
-            log.warn("Failed to generate conversation summary for {}: {}", conversationId, e.getMessage());
+        } catch (RuntimeException e) {
+            log.warn("Failed to generate conversation summary for {} ({}): {}",
+                    conversationId, e.getClass().getSimpleName(), e.getMessage());
         }
     }
 }

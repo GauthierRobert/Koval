@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.ai;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.koval.trainingplannerbackend.ai.UserContextResolver.UserContext;
@@ -100,22 +101,25 @@ public class AIService {
 
     public List<PlanTask> plan(String userMessage) {
         String json = plannerClient.prompt().user(userMessage).call().content();
+        String preview = truncate(userMessage, 80);
         try {
-            // Strip markdown code fences if present
-            String cleaned = json.trim();
-            if (cleaned.startsWith("```")) {
-                cleaned = cleaned.replaceAll("(?s)^```[a-z]*\\n?", "").replaceAll("```$", "").trim();
-            }
-            List<PlanTask> tasks = objectMapper.readValue(cleaned, new TypeReference<List<PlanTask>>() {});
-            log.debug("Plan decomposed into {} task(s) for message: '{}'", tasks.size(),
-                    userMessage.length() > 80 ? userMessage.substring(0, 80) + "..." : userMessage);
+            List<PlanTask> tasks = objectMapper.readValue(stripJsonFences(json), new TypeReference<>() {});
+            log.debug("Plan decomposed into {} task(s) for message: '{}'", tasks.size(), preview);
             return tasks;
-        } catch (Exception e) {
-            log.warn("Plan decomposition failed for message '{}': {}",
-                    userMessage.length() > 80 ? userMessage.substring(0, 80) + "..." : userMessage,
-                    e.getMessage());
+        } catch (JsonProcessingException e) {
+            log.warn("Plan decomposition failed for message '{}': {}", preview, e.getMessage());
             return List.of(new PlanTask(userMessage, "GENERAL"));
         }
+    }
+
+    private static String stripJsonFences(String json) {
+        String trimmed = json.trim();
+        if (!trimmed.startsWith("```")) return trimmed;
+        return trimmed.replaceAll("(?s)^```[a-z]*\\n?", "").replaceAll("```$", "").trim();
+    }
+
+    private static String truncate(String s, int max) {
+        return s.length() > max ? s.substring(0, max) + "..." : s;
     }
 
     // ── Internals ───────────────────────────────────────────────────────
