@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.club.session;
 
 import com.koval.trainingplannerbackend.club.Club;
+import com.koval.trainingplannerbackend.club.ClubProperties;
 import com.koval.trainingplannerbackend.club.ClubRepository;
 import com.koval.trainingplannerbackend.club.activity.ClubActivityService;
 import com.koval.trainingplannerbackend.club.activity.ClubActivityType;
@@ -20,7 +21,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -33,9 +33,6 @@ import java.util.stream.Collectors;
 @Service
 public class ClubSessionService {
 
-    private static final int DEFAULT_PAST_WEEKS = 2;
-    private static final int DEFAULT_FUTURE_WEEKS = 12;
-
     private final ClubTrainingSessionRepository sessionRepository;
     private final ClubMembershipRepository membershipRepository;
     private final ClubRepository clubRepository;
@@ -46,6 +43,7 @@ public class ClubSessionService {
     private final ClubActivityService activityService;
     private final RecurringSessionMaterializer materializer;
     private final RecurringSessionTemplateRepository templateRepository;
+    private final ClubProperties clubProperties;
 
     public ClubSessionService(ClubTrainingSessionRepository sessionRepository,
                               ClubMembershipRepository membershipRepository,
@@ -56,7 +54,8 @@ public class ClubSessionService {
                               NotificationService notificationService,
                               ClubActivityService activityService,
                               RecurringSessionMaterializer materializer,
-                              RecurringSessionTemplateRepository templateRepository) {
+                              RecurringSessionTemplateRepository templateRepository,
+                              ClubProperties clubProperties) {
         this.sessionRepository = sessionRepository;
         this.membershipRepository = membershipRepository;
         this.clubRepository = clubRepository;
@@ -67,6 +66,7 @@ public class ClubSessionService {
         this.activityService = activityService;
         this.materializer = materializer;
         this.templateRepository = templateRepository;
+        this.clubProperties = clubProperties;
     }
 
     public ClubTrainingSession createSession(String userId, String clubId, CreateSessionRequest req) {
@@ -167,8 +167,8 @@ public class ClubSessionService {
                 ? sessionRepository.findByClubIdAndCategoryOrderByScheduledAtDesc(clubId, category)
                 : sessionRepository.findByClubIdOrderByScheduledAtDesc(clubId);
         LocalDate today = LocalDate.now();
-        LocalDateTime defaultFrom = today.minusWeeks(DEFAULT_PAST_WEEKS).atStartOfDay();
-        LocalDateTime defaultTo = today.plusWeeks(DEFAULT_FUTURE_WEEKS).atStartOfDay();
+        LocalDateTime defaultFrom = today.minusWeeks(clubProperties.getSession().getDefaultPastWeeks()).atStartOfDay();
+        LocalDateTime defaultTo = today.plusWeeks(clubProperties.getSession().getDefaultFutureWeeks()).atStartOfDay();
         List<ClubTrainingSession> merged = mergeWithVirtuals(clubId, defaultFrom, defaultTo, all, category);
         return filterByGroupVisibility(userId, clubId, merged);
     }
@@ -259,20 +259,19 @@ public class ClubSessionService {
         sessions.addAll(virtuals);
         sessions.sort(Comparator.comparing(ClubTrainingSession::getScheduledAt));
 
-        Set<String> userGroupIds = clubGroupRepository.findByClubIdInAndMemberIdsContaining(clubIds, userId)
-                .stream().map(ClubGroup::getId).collect(Collectors.toSet());
-
-        Map<String, String> groupNameMap = clubGroupRepository.findByClubIdIn(clubIds).stream()
+        // Single group lookup powers both the user's group set and the id→name map.
+        List<ClubGroup> allGroups = clubGroupRepository.findByClubIdIn(clubIds);
+        Set<String> userGroupIds = allGroups.stream()
+                .filter(g -> g.getMemberIds() != null && g.getMemberIds().contains(userId))
+                .map(ClubGroup::getId)
+                .collect(Collectors.toSet());
+        Map<String, String> groupNameMap = allGroups.stream()
                 .collect(Collectors.toMap(ClubGroup::getId, ClubGroup::getName));
 
+        LocalDateTime now = LocalDateTime.now();
         List<CalendarClubSessionResponse> result = new ArrayList<>();
         for (ClubTrainingSession s : sessions) {
-            if (s.getClubGroupId() != null && !s.getClubGroupId().isBlank()) {
-                if (!userGroupIds.contains(s.getClubGroupId())) {
-                    LocalDateTime openFrom = s.computeOpenToAllFrom();
-                    if (openFrom == null || LocalDateTime.now().isBefore(openFrom)) continue;
-                }
-            }
+            if (!isVisibleToUser(s, userGroupIds, now)) continue;
 
             Club club = clubMap.get(s.getClubId());
             if (club == null) continue;
@@ -280,6 +279,13 @@ public class ClubSessionService {
             result.add(toCalendarResponse(s, userId, club, groupNameMap, userGroupIds));
         }
         return result;
+    }
+
+    private boolean isVisibleToUser(ClubTrainingSession s, Set<String> userGroupIds, LocalDateTime now) {
+        if (s.getClubGroupId() == null || s.getClubGroupId().isBlank()) return true;
+        if (userGroupIds.contains(s.getClubGroupId())) return true;
+        LocalDateTime openFrom = s.computeOpenToAllFrom();
+        return openFrom != null && !now.isBefore(openFrom);
     }
 
     private List<ClubTrainingSession> mergeWithVirtuals(String clubId,
@@ -385,11 +391,9 @@ public class ClubSessionService {
         return clubRepository.findById(clubId).map(Club::getName).orElse("Club");
     }
 
-    private static final DateTimeFormatter SESSION_DATE_FMT = DateTimeFormatter.ofPattern("EEE d MMM, HH:mm");
-
     private String formatSessionDate(ClubTrainingSession session) {
         return Optional.ofNullable(session.getScheduledAt())
-                .map(SESSION_DATE_FMT::format)
+                .map(SessionPropertyMapper.SESSION_DATE_FMT::format)
                 .orElse("");
     }
 
