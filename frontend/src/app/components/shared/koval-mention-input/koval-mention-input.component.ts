@@ -27,6 +27,7 @@ import {MentionSuggestion} from '../../../models/club.model';
         <textarea
           #inputEl
           class="mention-input"
+          [attr.data-testid]="testId || null"
           [rows]="rows"
           [placeholder]="placeholder"
           [(ngModel)]="text"
@@ -38,6 +39,7 @@ import {MentionSuggestion} from '../../../models/club.model';
           #inputEl
           type="text"
           class="mention-input"
+          [attr.data-testid]="testId || null"
           [placeholder]="placeholder"
           [(ngModel)]="text"
           (ngModelChange)="onTextChange()"
@@ -131,6 +133,7 @@ export class KovalMentionInputComponent implements OnDestroy {
   @Input() placeholder = '';
   @Input() multiline = false;
   @Input() rows = 3;
+  @Input() testId = '';
   @Input() set value(v: string) {
     if (v !== this.text) {
       this.text = v ?? '';

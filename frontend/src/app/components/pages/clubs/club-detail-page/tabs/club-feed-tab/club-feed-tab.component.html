@@ -4,7 +4,9 @@
 
     <!-- Announcement composer (coach/admin only) -->
     @if (isCoachOrAdmin) {
-      <div data-testid="feed-composer" class="composer" [class.composer--expanded]="composerExpanded">
+      <div data-testid="feed-composer" class="composer"
+           [class.composer--expanded]="composerExpanded"
+           (focusin)="composerExpanded = true">
         <app-koval-mention-input
           [clubId]="club.id"
           [multiline]="true"
@@ -12,6 +14,7 @@
           [placeholder]="'CLUB_FEED.COMPOSER_PLACEHOLDER' | translate"
           [value]="announcementText"
           [resetSignal]="announcementResetTick"
+          testId="feed-composer-input"
           (textChange)="announcementText = $event; composerExpanded = composerExpanded || announcementText.length > 0"
           (mentionsChange)="announcementMentionIds = $event">
         </app-koval-mention-input>
@@ -30,7 +33,8 @@
             <button class="composer-cancel" (click)="cancelAnnouncement()">
               {{ 'CLUB_FEED.CANCEL' | translate }}
             </button>
-            <button class="composer-spotlight-btn" (click)="openSpotlightComposer()">
+            <button data-testid="spotlight-open-btn" class="composer-spotlight-btn"
+                    (click)="openSpotlightComposer()">
               {{ 'CLUB_FEED.SPOTLIGHT_OPEN' | translate }}
             </button>
             <button data-testid="feed-post-btn" class="btn-primary"

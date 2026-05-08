@@ -34,7 +34,7 @@ interface CommentReactionEvent {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="comments-section">
-      <button class="comments-toggle" (click)="toggleExpanded($event)">
+      <button data-testid="comments-toggle" class="comments-toggle" (click)="toggleExpanded($event)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
              stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -65,17 +65,19 @@ interface CommentReactionEvent {
               }
 
               @if (replyOpenFor === parent.id) {
-                <div class="reply-input-row">
+                <div class="reply-input-row" data-testid="reply-input-row">
                   <app-koval-mention-input
                     [clubId]="clubId"
                     [placeholder]="'CLUB_FEED.REPLY_PLACEHOLDER' | translate"
                     [value]="replyText"
                     [resetSignal]="replyResetTick"
+                    testId="reply-input"
                     (textChange)="replyText = $event"
                     (mentionsChange)="replyMentionIds = $event"
                     (submitted)="submitReply(parent)">
                   </app-koval-mention-input>
-                  <button class="comment-post-btn" [disabled]="!replyText.trim()"
+                  <button data-testid="reply-post-btn"
+                          class="comment-post-btn" [disabled]="!replyText.trim()"
                           (click)="submitReply(parent); $event.stopPropagation()">
                     {{ 'CLUB_FEED.COMMENT_POST' | translate }}
                   </button>
@@ -91,11 +93,13 @@ interface CommentReactionEvent {
             [placeholder]="'CLUB_FEED.COMMENT_PLACEHOLDER' | translate"
             [value]="commentText"
             [resetSignal]="commentResetTick"
+            testId="comment-input"
             (textChange)="commentText = $event"
             (mentionsChange)="commentMentionIds = $event"
             (submitted)="submitComment()">
           </app-koval-mention-input>
-          <button class="comment-post-btn" [disabled]="!commentText.trim()"
+          <button data-testid="comment-post-btn"
+                  class="comment-post-btn" [disabled]="!commentText.trim()"
                   (click)="submitComment(); $event.stopPropagation()">
             {{ 'CLUB_FEED.COMMENT_POST' | translate }}
           </button>
@@ -150,7 +154,7 @@ interface CommentReactionEvent {
             </app-feed-reaction-bar>
             <div class="comment-actions">
               @if (!isReply) {
-                <button class="comment-action-link"
+                <button data-testid="reply-btn" class="comment-action-link"
                         (click)="openReply(c); $event.stopPropagation()">
                   {{ 'CLUB_FEED.REPLY' | translate }}
                 </button>

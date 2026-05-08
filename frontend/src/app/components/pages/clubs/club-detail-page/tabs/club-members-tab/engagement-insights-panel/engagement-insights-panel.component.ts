@@ -13,7 +13,7 @@ type SortColumn = 'name' | 'comments' | 'reactions' | 'sessions' | 'lastActive';
   imports: [CommonModule, FormsModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="insights-panel">
+    <section class="insights-panel" data-testid="engagement-insights-panel">
       <header class="insights-header">
         <div class="insights-title">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -56,7 +56,7 @@ type SortColumn = 'name' | 'comments' | 'reactions' | 'sessions' | 'lastActive';
           </thead>
           <tbody>
             @for (m of sortedRows(insights); track m.userId) {
-              <tr [class.dormant]="isDormant(m)">
+              <tr data-testid="insights-row" [class.dormant]="isDormant(m)">
                 <td class="member-cell">
                   <span class="member-avatar">
                     @if (m.profilePicture) {

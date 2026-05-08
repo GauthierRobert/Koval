@@ -28,7 +28,7 @@ const EXPIRY_OPTIONS = [3, 7, 14];
   imports: [CommonModule, FormsModule, TranslateModule, KovalMentionInputComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="composer-card">
+    <div class="composer-card" data-testid="spotlight-composer">
       <div class="composer-header">
         <h4>{{ 'CLUB_FEED.SPOTLIGHT_COMPOSER_TITLE' | translate }}</h4>
         <button class="composer-close" (click)="cancel.emit()" [attr.aria-label]="'COMMON.CANCEL' | translate">×</button>
@@ -36,7 +36,7 @@ const EXPIRY_OPTIONS = [3, 7, 14];
 
       <div class="composer-row">
         <label>{{ 'CLUB_FEED.SPOTLIGHT_MEMBER' | translate }}</label>
-        <select class="composer-input" [(ngModel)]="spotlightedUserId">
+        <select data-testid="spotlight-member-select" class="composer-input" [(ngModel)]="spotlightedUserId">
           <option value="" disabled>{{ 'CLUB_FEED.SPOTLIGHT_PICK_MEMBER' | translate }}</option>
           @for (m of members$ | async; track m.userId) {
             <option [value]="m.userId">{{ m.displayName }}</option>
@@ -58,7 +58,7 @@ const EXPIRY_OPTIONS = [3, 7, 14];
 
       <div class="composer-row">
         <label>{{ 'CLUB_FEED.SPOTLIGHT_TITLE' | translate }}</label>
-        <input class="composer-input"
+        <input data-testid="spotlight-title-input" class="composer-input"
                [placeholder]="'CLUB_FEED.SPOTLIGHT_TITLE_PLACEHOLDER' | translate"
                [(ngModel)]="title" maxlength="120" />
       </div>
@@ -92,7 +92,8 @@ const EXPIRY_OPTIONS = [3, 7, 14];
         <button class="composer-cancel" (click)="cancel.emit()">
           {{ 'COMMON.CANCEL' | translate }}
         </button>
-        <button class="btn-primary" [disabled]="!canSubmit" (click)="onSubmit()">
+        <button data-testid="spotlight-publish-btn" class="btn-primary"
+                [disabled]="!canSubmit" (click)="onSubmit()">
           {{ 'CLUB_FEED.SPOTLIGHT_PUBLISH' | translate }}
         </button>
       </div>

@@ -24,19 +24,20 @@ interface ReactionRow {
   imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="reaction-bar" (click)="$event.stopPropagation()">
+    <div class="reaction-bar" data-testid="reaction-bar" (click)="$event.stopPropagation()">
       @for (r of rows; track r.emoji) {
         @if (r.count > 0 || pickerOpen) {
           <button
             type="button"
             class="reaction-chip"
+            [attr.data-testid]="'reaction-chip-' + r.emoji"
             [class.active]="r.active"
             (click)="onToggle(r.emoji)"
             [attr.aria-pressed]="r.active"
             [attr.aria-label]="'react with ' + r.emoji">
             <span class="emoji">{{ r.glyph }}</span>
             @if (r.count > 0) {
-              <span class="count">{{ r.count }}</span>
+              <span data-testid="reaction-chip-count" class="count">{{ r.count }}</span>
             }
           </button>
         }
@@ -44,6 +45,7 @@ interface ReactionRow {
       <button
         type="button"
         class="reaction-add"
+        data-testid="reaction-add"
         (click)="pickerOpen = !pickerOpen"
         [attr.aria-label]="'add reaction'">
         @if (!pickerOpen) {
