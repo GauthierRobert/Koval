@@ -422,7 +422,7 @@
           @for (sw of nearby; track sw.id) {
             <div class="link-picker-item" (click)="confirmLink(sw.id)">
               <span>{{ sw.trainingTitle || ('CALENDAR_WEEK.WORKOUT_FALLBACK_TITLE' | translate) }}</span>
-              <span style="color: var(--text-muted); font-size: 0.7rem; margin-left: auto;">{{ sw.scheduledDate | date:'MMM d' }}</span>
+              <span class="link-picker-meta">{{ sw.scheduledDate | date:'MMM d' }}</span>
             </div>
           }
         }
@@ -453,7 +453,7 @@
           @for (cs of nearby; track cs.id) {
             <div class="link-picker-item" (click)="confirmClubSessionLink(cs.id)">
               <span>{{ cs.clubName }} &mdash; {{ cs.title }}</span>
-              <span style="color: var(--text-muted); font-size: 0.7rem; margin-left: auto;">{{ cs.scheduledAt | date:'MMM d, HH:mm' }}</span>
+              <span class="link-picker-meta">{{ cs.scheduledAt | date:'MMM d, HH:mm' }}</span>
             </div>
           }
         }

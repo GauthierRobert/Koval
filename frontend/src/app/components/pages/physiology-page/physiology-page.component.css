@@ -127,6 +127,12 @@
   user-select: none;
 }
 
+.zone-row-dim .zone-dot { opacity: 0.3; }
+.zone-row-dim .zone-label,
+.zone-row-dim .zone-name,
+.zone-row-dim .zone-pct { opacity: 0.4; }
+.zone-row-dim .zone-actual { opacity: 0.25; }
+
 /* Sport tabs */
 .sport-tabs {
   display: flex;

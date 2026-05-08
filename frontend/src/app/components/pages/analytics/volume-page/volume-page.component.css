@@ -4,8 +4,7 @@
 .date-filters { display: flex; align-items: center; gap: 0.5rem; }
 .date-filters input { padding: 0.4rem 0.6rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--overlay-5); color: var(--text-color); font-size: 0.8rem; }
 .date-sep { color: var(--text-dim); }
-.empty-state { text-align: center; padding: 4rem 2rem; }
-.empty-state h3 { color: var(--text-color); margin: 0 0 0.5rem; }
+.empty-state h3 { color: var(--text-color); margin: 0 0 var(--space-sm); }
 
 /* Volume controls */
 .volume-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 1rem; }

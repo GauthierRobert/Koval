@@ -34,7 +34,7 @@
   <div class="tags-body">
     @if (groupData$ | async; as tags) {
       @if (tags.length === 0) {
-        <div class="empty-state">
+        <div class="empty-state-dashed">
           {{ 'GROUP_MANAGEMENT.EMPTY_GROUPS' | translate }}
         </div>
       }
@@ -72,7 +72,6 @@
                 }
                 @for (athlete of tag.groupAthletes; track athlete.id) {
                   <div class="athlete-row"
-                    style="cursor: pointer"
                     (click)="navigateToCoach(athlete.id)"
                     [title]="'GROUP_MANAGEMENT.ATHLETE_ROW_TITLE' | translate">
                     <div class="avatar-sm">{{ athlete.displayName[0].toUpperCase() }}</div>

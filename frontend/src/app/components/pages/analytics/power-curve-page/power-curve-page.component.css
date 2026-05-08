@@ -4,9 +4,8 @@
 .date-filters { display: flex; align-items: center; gap: 0.5rem; }
 .date-filters input { padding: 0.4rem 0.6rem; border: 1px solid var(--border, var(--overlay-10)); border-radius: 6px; background: var(--input-bg, rgba(0, 0, 0, 0.2)); color: var(--text-primary, #f0f0f0); font-size: 0.8rem; }
 .date-sep { color: var(--text-tertiary, #707070); }
-.empty-state { text-align: center; padding: 4rem 2rem; }
-.empty-state h3 { color: var(--text-primary, #f0f0f0); margin: 0 0 0.5rem; }
-.empty-state p { color: var(--text-secondary, #a0a0a0); font-size: 0.85rem; }
+.empty-state h3 { color: var(--text-color); margin: 0 0 var(--space-sm); }
+.empty-state p { color: var(--text-muted); font-size: var(--text-sm); }
 
 /* FRI Card */
 .fri-card { padding: 1.25rem 1.5rem; border-radius: 12px; margin-top: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }

@@ -339,13 +339,6 @@
   overflow: hidden;
 }
 
-.empty-state {
-  text-align: center;
-  color: #475569;
-  font-size: 0.82rem;
-  padding: 24px 0;
-}
-
 /* --- Date picker --- */
 input[type="date"].field-select {
   color-scheme: dark;

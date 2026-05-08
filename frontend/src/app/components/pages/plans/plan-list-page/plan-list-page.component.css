@@ -233,10 +233,8 @@
 }
 
 /* ── Empty & loading states ──────────────────────────── */
-.empty-state {
+.empty-state-grid {
   grid-column: 1 / -1;
-  text-align: center;
-  padding: 4rem var(--space-xl);
 }
 
 .empty-icon {
