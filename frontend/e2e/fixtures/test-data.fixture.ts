@@ -598,6 +598,139 @@ export async function getFeedEvents(
   return response.json();
 }
 
+// ---------- Club Engagement (reactions, spotlights, insights, replies) ----------
+
+export async function toggleEventReaction(
+  api: APIRequestContext,
+  token: string,
+  clubId: string,
+  eventId: string,
+  emoji: string,
+): Promise<{ feedEventId: string; emoji: string; count: number; userReacted: boolean }> {
+  const response = await api.post(
+    `${API_URL}/api/clubs/${clubId}/feed/${eventId}/reactions`,
+    { headers: headers(token), data: { emoji } },
+  );
+  if (!response.ok()) {
+    throw new Error(`toggleEventReaction failed: ${response.status()} ${await response.text()}`);
+  }
+  return response.json();
+}
+
+export async function addComment(
+  api: APIRequestContext,
+  token: string,
+  clubId: string,
+  eventId: string,
+  content: string,
+  mentionUserIds: string[] = [],
+): Promise<any> {
+  const response = await api.post(
+    `${API_URL}/api/clubs/${clubId}/feed/${eventId}/comments`,
+    { headers: headers(token), data: { content, mentionUserIds } },
+  );
+  if (!response.ok()) {
+    throw new Error(`addComment failed: ${response.status()} ${await response.text()}`);
+  }
+  return response.json();
+}
+
+export async function addReply(
+  api: APIRequestContext,
+  token: string,
+  clubId: string,
+  eventId: string,
+  parentCommentId: string,
+  content: string,
+  mentionUserIds: string[] = [],
+): Promise<any> {
+  const response = await api.post(
+    `${API_URL}/api/clubs/${clubId}/feed/${eventId}/comments/${parentCommentId}/replies`,
+    { headers: headers(token), data: { content, mentionUserIds } },
+  );
+  if (!response.ok()) {
+    throw new Error(`addReply failed: ${response.status()} ${await response.text()}`);
+  }
+  return response.json();
+}
+
+export async function createSpotlight(
+  api: APIRequestContext,
+  token: string,
+  clubId: string,
+  data: {
+    spotlightedUserId: string;
+    title: string;
+    message?: string;
+    badge: 'MILESTONE' | 'COMEBACK' | 'NEW_MEMBER' | 'PR' | 'GRIT' | 'CUSTOM';
+    expiresInDays?: number;
+    mentionUserIds?: string[];
+  },
+): Promise<any> {
+  const response = await api.post(`${API_URL}/api/clubs/${clubId}/feed/spotlights`, {
+    headers: headers(token),
+    data: {
+      spotlightedUserId: data.spotlightedUserId,
+      title: data.title,
+      message: data.message ?? '',
+      badge: data.badge,
+      mediaIds: [],
+      expiresInDays: data.expiresInDays ?? 7,
+      mentionUserIds: data.mentionUserIds ?? [],
+    },
+  });
+  if (!response.ok()) {
+    throw new Error(`createSpotlight failed: ${response.status()} ${await response.text()}`);
+  }
+  return response.json();
+}
+
+export async function deleteSpotlight(
+  api: APIRequestContext,
+  token: string,
+  clubId: string,
+  eventId: string,
+): Promise<void> {
+  const response = await api.delete(`${API_URL}/api/clubs/${clubId}/feed/spotlights/${eventId}`, {
+    headers: headers(token),
+  });
+  if (!response.ok()) {
+    throw new Error(`deleteSpotlight failed: ${response.status()} ${await response.text()}`);
+  }
+}
+
+export async function getEngagementInsights(
+  api: APIRequestContext,
+  token: string,
+  clubId: string,
+  days: number = 30,
+): Promise<{ members: any[]; days: number; generatedAt: string }> {
+  const response = await api.get(
+    `${API_URL}/api/clubs/${clubId}/feed/engagement-insights?days=${days}`,
+    { headers: headers(token) },
+  );
+  if (!response.ok()) {
+    throw new Error(`getEngagementInsights failed: ${response.status()} ${await response.text()}`);
+  }
+  return response.json();
+}
+
+export async function suggestMentions(
+  api: APIRequestContext,
+  token: string,
+  clubId: string,
+  query: string,
+): Promise<{ userId: string; displayName: string; role: string }[]> {
+  const response = await api.get(
+    `${API_URL}/api/clubs/${clubId}/feed/mentions/suggest?q=${encodeURIComponent(query)}`,
+    { headers: headers(token) },
+  );
+  if (!response.ok()) {
+    throw new Error(`suggestMentions failed: ${response.status()} ${await response.text()}`);
+  }
+  return response.json();
+}
+
 // ---------- Recurring Sessions ----------
 
 export async function createRecurringTemplate(

@@ -26,8 +26,12 @@ import org.springframework.stereotype.Service;
 import com.koval.trainingplannerbackend.club.feed.dto.CommentUpdatePayload;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -45,6 +49,7 @@ public class ClubFeedService {
     private final ClubFeedSseBroadcaster broadcaster;
     private final StravaApiClient stravaApiClient;
     private final MediaService mediaService;
+    private final MentionResolver mentionResolver;
 
     public ClubFeedService(ClubFeedEventRepository feedEventRepository,
                            ClubTrainingSessionRepository clubSessionRepository,
@@ -54,7 +59,8 @@ public class ClubFeedService {
                            NotificationService notificationService,
                            ClubFeedSseBroadcaster broadcaster,
                            StravaApiClient stravaApiClient,
-                           MediaService mediaService) {
+                           MediaService mediaService,
+                           MentionResolver mentionResolver) {
         this.feedEventRepository = feedEventRepository;
         this.clubSessionRepository = clubSessionRepository;
         this.authorizationService = authorizationService;
@@ -64,6 +70,7 @@ public class ClubFeedService {
         this.broadcaster = broadcaster;
         this.stravaApiClient = stravaApiClient;
         this.mediaService = mediaService;
+        this.mentionResolver = mentionResolver;
     }
 
     /** Resolve a mediaId to its full read DTO, or null if not found / not confirmed. */
@@ -176,6 +183,16 @@ public class ClubFeedService {
      */
     public ClubFeedEventResponse createCoachAnnouncement(String userId, String clubId, String content,
                                                          List<String> mediaIds) {
+        return createCoachAnnouncement(userId, clubId, content, mediaIds, List.of());
+    }
+
+    /**
+     * Create a coach announcement with optional @mentions.
+     * Mentioned users are notified with a high-priority {@code clubMention} channel
+     * (deduped against the broadcast {@code clubAnnouncement} so they don't receive both).
+     */
+    public ClubFeedEventResponse createCoachAnnouncement(String userId, String clubId, String content,
+                                                         List<String> mediaIds, List<String> mentionUserIds) {
         authorizationService.requireAdminOrCoach(userId, clubId);
 
         if (mediaIds != null && !mediaIds.isEmpty()) {
@@ -200,15 +217,35 @@ public class ClubFeedService {
                         UUID.randomUUID().toString(), mediaId, now));
             }
         }
-        feedEventRepository.save(event);
 
-        // Broadcast via SSE
+        // Resolve and persist mentions before saving so the event id is available as context.
+        feedEventRepository.save(event);
+        List<ClubFeedEvent.MentionRef> refs = mentionResolver.resolve(
+                clubId, mentionUserIds, MentionResolver.CONTEXT_ANNOUNCEMENT, event.getId());
+        if (!refs.isEmpty()) {
+            event.setMentionRefs(refs);
+            feedEventRepository.save(event);
+        }
+
         ClubFeedEventResponse response = ClubFeedEventResponse.from(event, this::resolveMedia);
         broadcaster.broadcast(clubId, "new_feed_event", response);
 
-        // Send push notification to all club members
+        Set<String> mentionedIds = mentionResolver.idsOf(refs);
+        mentionedIds.remove(userId);
+
+        // Push notification to mentioned users (high-priority channel)
+        if (!mentionedIds.isEmpty()) {
+            notificationService.sendToUsers(new ArrayList<>(mentionedIds),
+                    "You were mentioned",
+                    author.getDisplayName() + " mentioned you: " + truncate(content, 100),
+                    Map.of("type", "CLUB_MENTION", "clubId", clubId, "feedEventId", event.getId()),
+                    "clubMention");
+        }
+
+        // Broadcast push notification to remaining active members (excluding author + mentioned)
         List<String> memberIds = getActiveMemberIds(clubId);
         memberIds.remove(userId);
+        memberIds.removeAll(mentionedIds);
         if (!memberIds.isEmpty()) {
             notificationService.sendToUsers(memberIds,
                     "Coach Announcement",
@@ -220,33 +257,86 @@ public class ClubFeedService {
         return response;
     }
 
-    /**
-     * Add a comment to a feed event.
-     */
+    /** Add a top-level comment to a feed event (no parent, no mentions). */
     public ClubFeedEvent.CommentEntry addComment(String userId, String clubId, String feedEventId, String content) {
+        return addComment(userId, clubId, feedEventId, content, null, List.of());
+    }
+
+    /**
+     * Add a comment or reply to a feed event with optional mentions.
+     * Pass {@code parentCommentId} to make this a reply; replies must point at a
+     * top-level comment (single-level enforcement).
+     */
+    public ClubFeedEvent.CommentEntry addComment(String userId, String clubId, String feedEventId,
+                                                 String content, String parentCommentId,
+                                                 List<String> mentionUserIds) {
         authorizationService.requireActiveMember(userId, clubId);
 
         ClubFeedEvent event = feedEventRepository.findById(feedEventId)
                 .filter(e -> clubId.equals(e.getClubId()))
                 .orElseThrow(() -> new IllegalArgumentException("Feed event not found"));
 
+        ClubFeedEvent.CommentEntry parent = null;
+        if (parentCommentId != null) {
+            parent = event.getComments().stream()
+                    .filter(c -> c.id().equals(parentCommentId))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Parent comment not found"));
+            if (parent.parentCommentId() != null) {
+                throw new IllegalStateException("Replies are limited to one level deep");
+            }
+        }
+
         User author = userService.findById(userId).orElseThrow();
+        String commentId = UUID.randomUUID().toString();
+
+        List<ClubFeedEvent.MentionRef> mentions = mentionResolver.resolve(
+                clubId, mentionUserIds,
+                parentCommentId == null ? MentionResolver.CONTEXT_COMMENT : MentionResolver.CONTEXT_REPLY,
+                commentId);
 
         ClubFeedEvent.CommentEntry comment = new ClubFeedEvent.CommentEntry(
-                UUID.randomUUID().toString(),
+                commentId,
                 userId,
                 author.getDisplayName(),
                 author.getProfilePicture(),
                 content,
                 LocalDateTime.now(),
-                null);
+                null,
+                parentCommentId,
+                new HashMap<>(),
+                mentions);
 
         event.getComments().add(comment);
         event.setUpdatedAt(LocalDateTime.now());
         feedEventRepository.save(event);
 
-        broadcaster.broadcast(clubId, "comment_update",
+        String broadcastEvent = parentCommentId == null ? "comment_update" : "comment_reply_added";
+        broadcaster.broadcast(clubId, broadcastEvent,
                 new CommentUpdatePayload(feedEventId, comment));
+
+        // Notifications: parent author (for replies) + mentioned users.
+        Set<String> notified = new HashSet<>();
+        if (parent != null && !parent.userId().equals(userId)) {
+            notificationService.sendToUsers(List.of(parent.userId()),
+                    "New reply",
+                    author.getDisplayName() + " replied: " + truncate(content, 100),
+                    Map.of("type", "CLUB_REPLY", "clubId", clubId, "feedEventId", feedEventId,
+                            "commentId", commentId),
+                    "clubReply");
+            notified.add(parent.userId());
+        }
+        Set<String> mentionedIds = mentionResolver.idsOf(mentions);
+        mentionedIds.remove(userId);
+        mentionedIds.removeAll(notified);
+        if (!mentionedIds.isEmpty()) {
+            notificationService.sendToUsers(new ArrayList<>(mentionedIds),
+                    "You were mentioned",
+                    author.getDisplayName() + " mentioned you: " + truncate(content, 100),
+                    Map.of("type", "CLUB_MENTION", "clubId", clubId, "feedEventId", feedEventId,
+                            "commentId", commentId),
+                    "clubMention");
+        }
 
         return comment;
     }
@@ -257,6 +347,12 @@ public class ClubFeedService {
      */
     public ClubFeedEventResponse updateCoachAnnouncement(String userId, String clubId, String feedEventId,
                                                          String content, List<String> mediaIds) {
+        return updateCoachAnnouncement(userId, clubId, feedEventId, content, mediaIds, List.of());
+    }
+
+    public ClubFeedEventResponse updateCoachAnnouncement(String userId, String clubId, String feedEventId,
+                                                         String content, List<String> mediaIds,
+                                                         List<String> mentionUserIds) {
         authorizationService.requireActiveMember(userId, clubId);
 
         ClubFeedEvent event = feedEventRepository.findById(feedEventId)
@@ -295,6 +391,11 @@ public class ClubFeedService {
                         : new ClubFeedEvent.AnnouncementAttachment(UUID.randomUUID().toString(), mediaId, now));
             }
             event.setAnnouncementAttachments(rebuilt);
+        }
+
+        if (mentionUserIds != null) {
+            event.setMentionRefs(mentionResolver.resolve(
+                    clubId, mentionUserIds, MentionResolver.CONTEXT_ANNOUNCEMENT, event.getId()));
         }
 
         feedEventRepository.save(event);
@@ -355,7 +456,10 @@ public class ClubFeedService {
         LocalDateTime now = LocalDateTime.now();
         ClubFeedEvent.CommentEntry updated = new ClubFeedEvent.CommentEntry(
                 existing.id(), existing.userId(), existing.displayName(), existing.profilePicture(),
-                content, existing.createdAt(), now);
+                content, existing.createdAt(), now,
+                existing.parentCommentId(),
+                existing.reactions() != null ? existing.reactions() : new HashMap<>(),
+                existing.mentions() != null ? existing.mentions() : List.of());
 
         int idx = event.getComments().indexOf(existing);
         event.getComments().set(idx, updated);
@@ -390,7 +494,10 @@ public class ClubFeedService {
             throw new IllegalStateException("Only the author or an admin can delete this comment");
         }
 
-        event.getComments().removeIf(c -> c.id().equals(commentId));
+        // If deleting a top-level comment, cascade-remove its replies.
+        boolean isTopLevel = existing.parentCommentId() == null;
+        event.getComments().removeIf(c -> c.id().equals(commentId)
+                || (isTopLevel && commentId.equals(c.parentCommentId())));
         event.setUpdatedAt(LocalDateTime.now());
         feedEventRepository.save(event);
 

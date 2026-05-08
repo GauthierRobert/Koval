@@ -83,6 +83,21 @@
   color: var(--text-color);
 }
 
+.composer-spotlight-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--warning, #f59e0b);
+  border-radius: var(--radius-sm);
+  background: rgba(245, 158, 11, 0.08);
+  color: var(--warning, #f59e0b);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: auto;
+}
+.composer-spotlight-btn:hover {
+  background: rgba(245, 158, 11, 0.16);
+}
+
 .composer-submit {
   padding: 6px 18px;
   border: none;

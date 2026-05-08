@@ -28,7 +28,11 @@ import {FeedAnnouncementCardComponent} from './cards/feed-announcement-card.comp
 import {FeedNextGoalCardComponent} from './cards/feed-next-goal-card.component';
 import {FeedRaceCompletionCardComponent} from './cards/feed-race-completion-card.component';
 import {FeedSessionsUpcomingComponent} from './cards/feed-sessions-upcoming.component';
+import {FeedSpotlightCardComponent} from './cards/feed-spotlight-card.component';
+import {SpotlightComposerComponent} from './cards/spotlight-composer.component';
 import {KovalAttachmentUploaderComponent} from '../../../../../shared/koval-attachment-uploader/koval-attachment-uploader.component';
+import {KovalMentionInputComponent} from '../../../../../shared/koval-mention-input/koval-mention-input.component';
+import {CreateSpotlightData, ReactionEmoji} from '../../../../../../models/club.model';
 
 @Component({
   selector: 'app-club-feed-tab',
@@ -42,7 +46,10 @@ import {KovalAttachmentUploaderComponent} from '../../../../../shared/koval-atta
     FeedNextGoalCardComponent,
     FeedRaceCompletionCardComponent,
     FeedSessionsUpcomingComponent,
+    FeedSpotlightCardComponent,
+    SpotlightComposerComponent,
     KovalAttachmentUploaderComponent,
+    KovalMentionInputComponent,
   ],
   templateUrl: './club-feed-tab.component.html',
   styleUrl: './club-feed-tab.component.css',
@@ -69,7 +76,12 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
   announcementText = '';
   composerExpanded = false;
   announcementMediaIds: string[] = [];
+  announcementMentionIds: string[] = [];
+  announcementResetTick = 0;
   isCoachOrAdmin = false;
+
+  // Spotlight composer
+  spotlightOpen = false;
 
   private subs = new Subscription();
 
@@ -141,6 +153,20 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
         this.cdr.markForCheck();
       }),
     );
+
+    this.subs.add(
+      this.sseService.onReactionUpdate$.subscribe((payload) => {
+        this.clubFeedService.applyReactionUpdate(payload);
+        this.cdr.markForCheck();
+      }),
+    );
+
+    this.subs.add(
+      this.sseService.onCommentReplyAdded$.subscribe((payload) => {
+        this.clubFeedService.updateFeedEventComment(payload.feedEventId, payload.comment);
+        this.cdr.markForCheck();
+      }),
+    );
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -207,11 +233,18 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
   submitAnnouncement(): void {
     if (!this.announcementText.trim()) return;
     this.clubFeedService
-      .createAnnouncement(this.club.id, this.announcementText.trim(), this.announcementMediaIds)
+      .createAnnouncement(
+        this.club.id,
+        this.announcementText.trim(),
+        this.announcementMediaIds,
+        this.announcementMentionIds,
+      )
       .subscribe({
         next: () => {
           this.announcementText = '';
           this.announcementMediaIds = [];
+          this.announcementMentionIds = [];
+          this.announcementResetTick++;
           this.composerExpanded = false;
           this.cdr.markForCheck();
         },
@@ -226,12 +259,102 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
     this.composerExpanded = false;
     this.announcementText = '';
     this.announcementMediaIds = [];
+    this.announcementMentionIds = [];
+    this.announcementResetTick++;
   }
 
-  onCommentSubmitted(ev: {eventId: string; content: string}): void {
-    this.clubFeedService.addComment(this.club.id, ev.eventId, ev.content).subscribe({
-      next: (comment) => {
-        this.clubFeedService.updateFeedEventComment(ev.eventId, comment);
+  onCommentSubmitted(ev: {eventId: string; content: string; mentionUserIds: string[]}): void {
+    this.clubFeedService
+      .addComment(this.club.id, ev.eventId, ev.content, ev.mentionUserIds ?? [])
+      .subscribe({
+        next: (comment) => {
+          this.clubFeedService.updateFeedEventComment(ev.eventId, comment);
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  onReplySubmitted(ev: {
+    eventId: string;
+    parentCommentId: string;
+    content: string;
+    mentionUserIds: string[];
+  }): void {
+    this.clubFeedService
+      .addReply(this.club.id, ev.eventId, ev.parentCommentId, ev.content, ev.mentionUserIds ?? [])
+      .subscribe({
+        next: (reply) => {
+          this.clubFeedService.updateFeedEventComment(ev.eventId, reply);
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  onEventReacted(ev: {eventId: string; emoji: ReactionEmoji}): void {
+    if (!this.currentUserId) return;
+    // Optimistic apply: invert based on whether user already reacted with this emoji.
+    const userId = this.currentUserId;
+    const current = this.clubFeedService['feedEventsSubject'].value;
+    const event =
+      (current?.pinned ?? []).find((e) => e.id === ev.eventId) ??
+      (current?.items ?? []).find((e) => e.id === ev.eventId);
+    const alreadyReacted = !!event?.reactions?.[ev.emoji]?.includes(userId);
+    this.clubFeedService.applyReactionUpdate({
+      feedEventId: ev.eventId,
+      commentId: null,
+      emoji: ev.emoji,
+      count: 0, // recomputed by applyReactionUpdate
+      actorUserId: userId,
+      added: !alreadyReacted,
+    });
+    this.clubFeedService
+      .toggleEventReaction(this.club.id, ev.eventId, ev.emoji)
+      .subscribe({error: () => this.cdr.markForCheck()});
+  }
+
+  onCommentReacted(ev: {eventId: string; commentId: string; emoji: ReactionEmoji}): void {
+    if (!this.currentUserId) return;
+    const userId = this.currentUserId;
+    this.clubFeedService
+      .toggleCommentReaction(this.club.id, ev.eventId, ev.commentId, ev.emoji)
+      .subscribe({
+        next: (state) => {
+          this.clubFeedService.applyReactionUpdate({
+            feedEventId: ev.eventId,
+            commentId: ev.commentId,
+            emoji: ev.emoji,
+            count: state.count,
+            actorUserId: userId,
+            added: state.userReacted,
+          });
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  // --- Spotlights ---
+
+  openSpotlightComposer(): void {
+    this.spotlightOpen = true;
+  }
+
+  cancelSpotlightComposer(): void {
+    this.spotlightOpen = false;
+  }
+
+  submitSpotlight(data: CreateSpotlightData): void {
+    this.clubFeedService.createSpotlight(this.club.id, data).subscribe({
+      next: () => {
+        this.spotlightOpen = false;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  onSpotlightDeleted(eventId: string): void {
+    this.clubFeedService.deleteSpotlight(this.club.id, eventId).subscribe({
+      next: () => {
+        this.clubFeedService.removeFeedEvent(eventId);
         this.cdr.markForCheck();
       },
     });

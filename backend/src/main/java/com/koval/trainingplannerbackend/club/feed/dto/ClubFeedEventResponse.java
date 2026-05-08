@@ -2,11 +2,14 @@ package com.koval.trainingplannerbackend.club.feed.dto;
 
 import com.koval.trainingplannerbackend.club.feed.ClubFeedEvent;
 import com.koval.trainingplannerbackend.club.feed.ClubFeedEventType;
+import com.koval.trainingplannerbackend.club.feed.SpotlightBadge;
 import com.koval.trainingplannerbackend.media.dto.MediaResponse;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -49,7 +52,19 @@ public record ClubFeedEventResponse(
         // COMMENTS
         List<ClubFeedEvent.CommentEntry> comments,
         // PHOTO ENRICHMENTS
-        List<PhotoEnrichmentResponse> photoEnrichments) {
+        List<PhotoEnrichmentResponse> photoEnrichments,
+        // REACTIONS (emoji code -> set of userIds)
+        Map<String, Set<String>> reactions,
+        // MENTIONS (denormalized refs to mentioned users)
+        List<ClubFeedEvent.MentionRef> mentionRefs,
+        // MEMBER_SPOTLIGHT
+        String spotlightedUserId,
+        String spotlightedDisplayName,
+        String spotlightedProfilePicture,
+        String spotlightTitle,
+        String spotlightMessage,
+        SpotlightBadge spotlightBadge,
+        LocalDateTime spotlightExpiresAt) {
 
     /** Plain mapping with no media resolution — photoEnrichments will be empty. */
     public static ClubFeedEventResponse from(ClubFeedEvent e) {
@@ -69,6 +84,12 @@ public record ClubFeedEventResponse(
                 : e.getAnnouncementAttachments().stream()
                         .map(a -> AnnouncementAttachmentResponse.from(a, mediaResolver))
                         .toList();
+        Map<String, Set<String>> reactions = e.getReactions() == null
+                ? new HashMap<>()
+                : e.getReactions();
+        List<ClubFeedEvent.MentionRef> mentions = e.getMentionRefs() == null
+                ? List.of()
+                : e.getMentionRefs();
         return new ClubFeedEventResponse(
                 e.getId(), e.getType(), Boolean.TRUE.equals(e.getPinned()), e.getCreatedAt(), e.getUpdatedAt(),
                 e.getClubSessionId(), e.getSessionTitle(), e.getSessionSport(), e.getSessionScheduledAt(),
@@ -80,6 +101,9 @@ public record ClubFeedEventResponse(
                 e.getGazetteEditionId(), e.getGazetteEditionNumber(),
                 e.getGazettePeriodStart(), e.getGazettePeriodEnd(), e.getGazettePostCount(),
                 e.getComments(),
-                photos);
+                photos,
+                reactions, mentions,
+                e.getSpotlightedUserId(), e.getSpotlightedDisplayName(), e.getSpotlightedProfilePicture(),
+                e.getSpotlightTitle(), e.getSpotlightMessage(), e.getSpotlightBadge(), e.getSpotlightExpiresAt());
     }
 }

@@ -2,14 +2,24 @@ import {ChangeDetectionStrategy, Component, EventEmitter, inject, Input, Output}
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {AnnouncementAttachmentResponse, ClubFeedEventResponse} from '../../../../../../../services/club.service';
+import {AnnouncementAttachmentResponse, ClubFeedEventResponse, ReactionEmoji} from '../../../../../../../services/club.service';
 import {KovalImageComponent} from '../../../../../../shared/koval-image/koval-image.component';
+import {KovalMentionTextComponent} from '../../../../../../shared/koval-mention-text/koval-mention-text.component';
+import {FeedReactionBarComponent} from '../../../../../../shared/feed-reaction-bar/feed-reaction-bar.component';
 import {FeedCommentsSectionComponent} from './feed-comments-section.component';
 
 @Component({
   selector: 'app-feed-announcement-card',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, KovalImageComponent, FeedCommentsSectionComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TranslateModule,
+    KovalImageComponent,
+    KovalMentionTextComponent,
+    FeedReactionBarComponent,
+    FeedCommentsSectionComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div data-testid="feed-event" class="feed-card feed-card--announcement">
@@ -57,7 +67,10 @@ import {FeedCommentsSectionComponent} from './feed-comments-section.component';
         </div>
       } @else {
         <div class="announcement-content">
-          {{ event.announcementContent }}
+          <app-koval-mention-text
+            [text]="event.announcementContent ?? ''"
+            [mentions]="event.mentionRefs ?? []">
+          </app-koval-mention-text>
           @if (event.updatedAt && event.updatedAt !== event.createdAt) {
             <span class="ann-edited-tag">· {{ 'CLUB_FEED.EDITED' | translate }}</span>
           }
@@ -106,13 +119,22 @@ import {FeedCommentsSectionComponent} from './feed-comments-section.component';
         </ul>
       }
 
+      <app-feed-reaction-bar
+        [reactions]="event.reactions"
+        [currentUserId]="currentUserId"
+        (toggle)="reacted.emit({eventId: event.id, emoji: $event})">
+      </app-feed-reaction-bar>
+
       <app-feed-comments-section
+        [clubId]="clubId"
         [eventId]="event.id"
         [comments]="event.comments ?? []"
         [currentUserId]="currentUserId"
         (commentSubmitted)="commentSubmitted.emit($event)"
+        (replySubmitted)="replySubmitted.emit($event)"
         (commentEdited)="commentEdited.emit($event)"
-        (commentDeleted)="commentDeleted.emit($event)">
+        (commentDeleted)="commentDeleted.emit($event)"
+        (commentReacted)="commentReacted.emit($event)">
       </app-feed-comments-section>
     </div>
   `,
@@ -158,12 +180,16 @@ import {FeedCommentsSectionComponent} from './feed-comments-section.component';
   `,
 })
 export class FeedAnnouncementCardComponent {
+  @Input({required: true}) clubId!: string;
   @Input() event!: ClubFeedEventResponse;
   @Input() currentUserId: string | null = null;
 
-  @Output() commentSubmitted = new EventEmitter<{eventId: string; content: string}>();
+  @Output() commentSubmitted = new EventEmitter<{eventId: string; content: string; mentionUserIds: string[]}>();
+  @Output() replySubmitted = new EventEmitter<{eventId: string; parentCommentId: string; content: string; mentionUserIds: string[]}>();
   @Output() commentEdited = new EventEmitter<{eventId: string; commentId: string; content: string}>();
   @Output() commentDeleted = new EventEmitter<{eventId: string; commentId: string}>();
+  @Output() commentReacted = new EventEmitter<{eventId: string; commentId: string; emoji: ReactionEmoji}>();
+  @Output() reacted = new EventEmitter<{eventId: string; emoji: ReactionEmoji}>();
   @Output() announcementEdited = new EventEmitter<{eventId: string; content: string; mediaIds: string[]}>();
   @Output() announcementDeleted = new EventEmitter<string>();
 
