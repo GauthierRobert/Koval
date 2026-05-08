@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, Input, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
 
 export interface FilterPillOption {
@@ -13,6 +13,7 @@ export interface FilterPillOption {
   imports: [CommonModule],
   templateUrl: './filter-pills.component.html',
   styleUrl: './filter-pills.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FilterPillsComponent {
   @Input() options: FilterPillOption[] = [];

@@ -1,10 +1,9 @@
-import {Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
-import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import {TranslateModule} from '@ngx-translate/core';
 import {BehaviorSubject, combineLatest, map, Observable} from 'rxjs';
 import {CoachService, InviteCode} from '../../../services/coach.service';
-import {AuthService} from '../../../services/auth.service';
 import {Group, GroupService} from '../../../services/group.service';
 import {ModalShellComponent} from '../modal-shell/modal-shell.component';
 
@@ -14,6 +13,7 @@ import {ModalShellComponent} from '../modal-shell/modal-shell.component';
   imports: [CommonModule, FormsModule, TranslateModule, ModalShellComponent],
   templateUrl: './invite-code-modal.component.html',
   styleUrl: './invite-code-modal.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InviteCodeModalComponent implements OnChanges {
   @Input() isOpen = false;
@@ -30,7 +30,9 @@ export class InviteCodeModalComponent implements OnChanges {
   showInactive = false;
   unassignedTags: Group[] = [];
 
-  private userId = '';
+  private coachService = inject(CoachService);
+  private groupService = inject(GroupService);
+
   private inviteCodesSubject = new BehaviorSubject<InviteCode[]>([]);
   inviteCodes$ = this.inviteCodesSubject.asObservable();
 
@@ -46,16 +48,6 @@ export class InviteCodeModalComponent implements OnChanges {
   ]).pipe(
     map(([codes, show]) => show ? codes : codes.filter(c => c.active))
   );
-
-  constructor(
-    private coachService: CoachService,
-    private authService: AuthService,
-    private groupService: GroupService
-  ) {
-    this.authService.user$.subscribe(u => {
-      if (u) this.userId = u.id;
-    });
-  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen) {

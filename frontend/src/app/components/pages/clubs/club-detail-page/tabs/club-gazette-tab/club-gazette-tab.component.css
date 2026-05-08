@@ -260,6 +260,8 @@
 }
 .gz-back-btn:hover { color: var(--text-color); }
 
+.skeleton-gz-card { height: 110px; }
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .gz-list-hd { flex-direction: column; align-items: flex-start; }

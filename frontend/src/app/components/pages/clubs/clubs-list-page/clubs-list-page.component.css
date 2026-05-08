@@ -255,10 +255,10 @@
 }
 
 /* ─── Empty state ─────────────────────────────────────────── */
-.empty-state {
+.empty-state-flex {
   display: flex;
   justify-content: center;
-  padding: var(--space-xl, 32px) 0;
+  padding: var(--space-xl) 0;
 }
 
 .empty-card {

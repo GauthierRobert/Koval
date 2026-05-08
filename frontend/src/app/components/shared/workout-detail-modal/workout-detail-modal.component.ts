@@ -1,4 +1,4 @@
-import {Component, EventEmitter, HostListener, inject, Input, Output} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, HostListener, inject, Input, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
 import {Router, RouterModule} from '@angular/router';
@@ -40,6 +40,7 @@ const LOADING_STATE: TrainingState = { training: null, loading: true, error: nul
   imports: [CommonModule, TranslateModule, RouterModule, A11yModule, SwimMetaChipsComponent],
   templateUrl: './workout-detail-modal.component.html',
   styleUrl: './workout-detail-modal.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkoutDetailModalComponent {
   @Input() set workout(value: ScheduledWorkout | null) {
@@ -48,11 +49,18 @@ export class WorkoutDetailModalComponent {
       this.trainingService.getTrainingById(value.trainingId).subscribe(training => {
         if (training?.zoneSystemId) {
           this.zoneService.getZoneSystemById(training.zoneSystemId).subscribe({
-            next: (zs) => this.currentZoneSystem = zs,
-            error: () => this.currentZoneSystem = null
+            next: (zs) => {
+              this.currentZoneSystem = zs;
+              this.cdr.markForCheck();
+            },
+            error: () => {
+              this.currentZoneSystem = null;
+              this.cdr.markForCheck();
+            },
           });
         } else {
           this.currentZoneSystem = null;
+          this.cdr.markForCheck();
         }
       });
     }
@@ -68,6 +76,7 @@ export class WorkoutDetailModalComponent {
   private durationService = inject(DurationEstimationService);
   private zoneService = inject(ZoneService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
   private currentZoneSystem: ZoneSystem | null = null;
 
   showBlockDetails = false;

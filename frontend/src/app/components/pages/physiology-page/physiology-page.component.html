@@ -151,11 +151,11 @@
       <div class="zones-table zones-table-preview">
         @for (z of zones[activeSport]; let i = $index; track i) {
           <div class="zone-row zone-row-dim">
-            <span class="zone-dot" [style.background]="getZoneColor(i)" style="opacity:0.3"></span>
-            <span class="zone-label" style="opacity:0.4">{{ z.label }}</span>
-            <span class="zone-name" style="opacity:0.4">{{ z.description }}</span>
-            <span class="zone-pct" style="opacity:0.4">{{ z.low }}–{{ z.high }}%</span>
-            <span class="zone-actual" style="opacity:0.25">—</span>
+            <span class="zone-dot" [style.background]="getZoneColor(i)"></span>
+            <span class="zone-label">{{ z.label }}</span>
+            <span class="zone-name">{{ z.description }}</span>
+            <span class="zone-pct">{{ z.low }}–{{ z.high }}%</span>
+            <span class="zone-actual">—</span>
           </div>
         }
       </div>

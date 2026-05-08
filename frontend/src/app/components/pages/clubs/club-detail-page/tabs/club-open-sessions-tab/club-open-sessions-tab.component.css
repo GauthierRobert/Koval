@@ -176,20 +176,14 @@
   gap: 6px;
 }
 
-/* --- Empty state --- */
-.empty-state {
-  text-align: center;
-  padding: 32px 16px;
-  color: var(--text-muted);
-}
-
+/* --- Empty state nested elements --- */
 .empty-state p {
-  margin: 4px 0;
-  font-size: 13px;
+  margin: var(--space-xs) 0;
+  font-size: var(--text-sm);
 }
 
 .empty-state .hint {
-  font-size: 11px;
+  font-size: var(--text-xs);
   opacity: 0.6;
 }
 

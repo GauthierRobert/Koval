@@ -4,7 +4,7 @@
 
 .hint {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--text-muted);
   margin: 0;
 }
 
@@ -138,7 +138,7 @@
 
 .training-description {
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--text-muted);
   margin-top: 6px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -146,9 +146,3 @@
   overflow: hidden;
 }
 
-.empty-state {
-  text-align: center;
-  color: #475569;
-  font-size: 0.82rem;
-  padding: 24px 0;
-}

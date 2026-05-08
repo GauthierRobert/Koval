@@ -2,8 +2,8 @@ import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Router} from '@angular/router';
-import {AuthService} from '../../../services/auth.service';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import {AuthService} from '../../../services/auth.service';
 
 @Component({
     selector: 'app-onboarding',
@@ -29,8 +29,8 @@ export class OnboardingComponent {
     error = '';
 
     private translate = inject(TranslateService);
-
-    constructor(private authService: AuthService, private router: Router) {}
+    private authService = inject(AuthService);
+    private router = inject(Router);
 
     get cssTotal(): number | undefined {
         if (this.cssMinutes == null && this.cssSeconds == null) return undefined;

@@ -1,7 +1,7 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
-import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import {TranslateService, TranslateModule} from '@ngx-translate/core';
 import {
   ClubGroup,
   ClubMember,
@@ -46,9 +46,8 @@ export class SessionCardComponent {
   showAllParticipants = false;
 
   private responsive = inject(ResponsiveService);
+  private translate = inject(TranslateService);
   isMobile = toSignal(this.responsive.isMobile$, { initialValue: false });
-
-  constructor(private translate: TranslateService) {}
 
   // --- Status helpers ---
 

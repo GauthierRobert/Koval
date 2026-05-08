@@ -342,13 +342,6 @@
   overflow: hidden;
 }
 
-.empty-state {
-  text-align: center;
-  color: #475569;
-  font-size: 0.82rem;
-  padding: 24px 0;
-}
-
 @media (max-width: 480px) {
   .modal-panel {
     width: calc(100vw - 24px);
