@@ -16,7 +16,26 @@ import {CommonModule} from '@angular/common';
 import {FitRecord} from '../../../../services/metrics.service';
 import {BlockSummary} from '../../../../services/workout-execution.service';
 import {ZoneBlock} from '../../../../services/zone';
-import {formatPaceWithUnit} from '../../../shared/format/format.utils';
+import {
+    accentAlphaFromRgb,
+    cssToRgb,
+    downsample,
+    getCadBlockFromValue,
+    getCadFromRecord,
+    marginsForWidth,
+    pickTickInterval,
+    resolveThemeColors,
+    speedToPlotValue,
+    ThemeColors,
+} from './fit-timeseries-chart.utils';
+import {
+    buildTooltipContent,
+    HoverContext,
+    hoverCadence,
+    hoverEfficiency,
+    hoverHR,
+    hoverPrimaryValue,
+} from './fit-timeseries-chart-tooltip';
 
 @Component({
     selector: 'app-fit-timeseries-chart',
@@ -230,20 +249,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     private resizeObserver: ResizeObserver | null = null;
     private observedCanvases = new Set<HTMLCanvasElement>();
 
-    /** Side margins shrink on narrow viewports so the plot keeps usable width on phones. */
-    private margins(W: number): { mL: number; mR: number } {
-        return W < 500 ? { mL: 28, mR: 16 } : { mL: 48, mR: 48 };
-    }
-
-    // Canvas-safe colors resolved from CSS variables
-    private _accentRgb: [number, number, number] = [255, 157, 0];
-    private _accentHex = 'rgb(255,157,0)';
-    private _textAlpha40 = 'rgba(200,200,200,0.4)';
-    private _textAlpha30 = 'rgba(200,200,200,0.3)';
-    private _gridAlpha15 = 'rgba(200,200,200,0.15)';
-    private _gridAlpha12 = 'rgba(200,200,200,0.12)';
-    private _crosshairAlpha = 'rgba(200,200,200,0.25)';
-    private _dotStroke = 'rgba(255,255,255,0.8)';
+    private theme: ThemeColors = resolveThemeColors();
 
     get isCycling(): boolean { return this.sportType === 'CYCLING'; }
     get isSwimming(): boolean { return this.sportType === 'SWIMMING'; }
@@ -252,72 +258,9 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         if (this.isSwimming) return 'Pace';
         return 'Speed';
     }
-    private get cadUnit(): string { return this.sportType === 'RUNNING' ? 'spm' : 'rpm'; }
 
-    /** Convert speed in km/h to pace in seconds per 100m for swimming. Returns NaN for stops. */
-    private kmhToPace(speedKmh: number): number {
-        return speedKmh > 0.5 ? 360 / speedKmh : NaN;
-    }
-
-    /** Map a km/h speed to the value used by yOf (km/h normally, sec/100m for swimming). */
     private speedToPlotValue(speedKmh: number): number {
-        if (!this.isSwimming) return speedKmh;
-        const p = this.kmhToPace(speedKmh);
-        return isNaN(p) ? this._primaryMax : p;
-    }
-
-    /** Convert any CSS color (including oklch) to [r, g, b]. */
-    private cssToRgb(css: string): [number, number, number] {
-        const ctx = document.createElement('canvas').getContext('2d')!;
-        ctx.fillStyle = css;
-        const out = ctx.fillStyle; // '#rrggbb' or 'rgba(r, g, b, a)'
-        if (out.startsWith('#')) {
-            return [
-                parseInt(out.slice(1, 3), 16),
-                parseInt(out.slice(3, 5), 16),
-                parseInt(out.slice(5, 7), 16),
-            ];
-        }
-        const m = out.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
-        return m ? [+m[1], +m[2], +m[3]] : [255, 157, 0];
-    }
-
-    /** Build canvas-safe theme colors from CSS custom properties. */
-    private resolveThemeColors(): void {
-        const s = getComputedStyle(document.documentElement);
-        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-        const raw = s.getPropertyValue('--accent-color').trim();
-        this._accentRgb = raw ? this.cssToRgb(raw) : [255, 157, 0];
-        this._accentHex = `rgb(${this._accentRgb.join(',')})`;
-        if (isDark) {
-            this._textAlpha40 = 'rgba(255,255,255,0.4)';
-            this._textAlpha30 = 'rgba(255,255,255,0.3)';
-            this._gridAlpha15 = 'rgba(255,255,255,0.15)';
-            this._gridAlpha12 = 'rgba(255,255,255,0.12)';
-            this._crosshairAlpha = 'rgba(255,255,255,0.25)';
-            this._dotStroke = 'rgba(255,255,255,0.8)';
-        } else {
-            this._textAlpha40 = 'rgba(0,0,0,0.45)';
-            this._textAlpha30 = 'rgba(0,0,0,0.35)';
-            this._gridAlpha15 = 'rgba(0,0,0,0.12)';
-            this._gridAlpha12 = 'rgba(0,0,0,0.08)';
-            this._crosshairAlpha = 'rgba(0,0,0,0.2)';
-            this._dotStroke = 'rgba(0,0,0,0.6)';
-        }
-    }
-
-    /** Return the accent color with fractional alpha (0–1). */
-    private accentAlpha(a: number): string {
-        const [r, g, b] = this._accentRgb;
-        return `rgba(${r},${g},${b},${a})`;
-    }
-
-    private getCad(r: FitRecord): number {
-        return this.sportType === 'RUNNING' ? r.cadence * 2 : r.cadence;
-    }
-
-    private getCadBlock(c: number): number {
-        return this.sportType === 'RUNNING' ? c * 2 : c;
+        return speedToPlotValue(speedKmh, this.isSwimming, this._primaryMax);
     }
 
     ngAfterViewInit(): void {
@@ -375,7 +318,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
 
     ngOnChanges(): void {
         this.updateHasElevation();
-        this._ds = this.downsample(this.records, 30);
+        this._ds = downsample(this.records, 30);
         if (!this.blocksDefaultApplied && (this.zoneBlocks.length > 0 || this.blockSummaries.length > 0)) {
             this.showBlocks = true;
             this.blocksDefaultApplied = true;
@@ -499,7 +442,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         const n = this.records.length;
         const t0 = this.records[0].timestamp;
         const totalSec = this.records[n - 1].timestamp - t0 || n;
-        const { mL, mR } = this.margins(cssW);
+        const { mL, mR } = marginsForWidth(cssW);
         const cW = cssW - mL - mR;
 
         const targetT = t0 + ((x - mL) / cW) * totalSec;
@@ -607,7 +550,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         ctx.clearRect(0, 0, W, H);
         if (!this.records.length) return null;
 
-        const { mL, mR } = this.margins(W);
+        const { mL, mR } = marginsForWidth(W);
         const mT = 6, mB = 6;
         const cW = W - mL - mR;
         const t0 = this.records[0].timestamp;
@@ -621,7 +564,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     private drawCrosshair(ctx: CanvasRenderingContext2D, x: number, top: number, bottom: number): void {
         if (this.hoverIdx === null) return;
         ctx.save();
-        ctx.strokeStyle = this._crosshairAlpha;
+        ctx.strokeStyle = this.theme.crosshairAlpha;
         ctx.lineWidth = 1;
         ctx.setLineDash([]);
         ctx.beginPath();
@@ -636,7 +579,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         ctx.arc(x, y, 4, 0, Math.PI * 2);
         ctx.fillStyle = color;
         ctx.fill();
-        ctx.strokeStyle = this._dotStroke;
+        ctx.strokeStyle = this.theme.dotStroke;
         ctx.lineWidth = 1.5;
         ctx.stroke();
     }
@@ -645,7 +588,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         if (!this.blockSummaries.length || this.showBlocks) return;
         ctx.save();
         ctx.setLineDash([4, 4]);
-        ctx.strokeStyle = this._gridAlpha12;
+        ctx.strokeStyle = this.theme.gridAlpha12;
         ctx.lineWidth = 1;
         let acc = 0;
         for (let i = 0; i < this.blockSummaries.length - 1; i++) {
@@ -665,7 +608,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
     // ── Draw All ─────────────────────────────────────────────────────────
 
     drawAll(): void {
-        this.resolveThemeColors();
+        this.theme = resolveThemeColors();
         this.drawPrimary();
         this.drawHR();
         this.drawEfficiency();
@@ -680,7 +623,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         const s = this.initCanvas(this.pRef);
         if (!s) return;
         const { ctx, W, H, cW, xOf, xOfT, mT, mB, mL, mR } = s;
-        const accent = this._accentHex;
+        const accent = this.theme.accentHex;
         const n = this.records.length;
         const t0 = this.records[0].timestamp;
         const totalSec = this.records[n - 1].timestamp - t0 || n;
@@ -728,7 +671,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
                 const x1 = xOf(b.startIndex), x2 = xOf(b.endIndex);
                 const val = this.isCycling ? b.avgPower : this.speedToPlotValue(b.avgSpeed);
                 const y = yOf(val);
-                const [br, bg, bb] = this.cssToRgb(b.color);
+                const [br, bg, bb] = cssToRgb(b.color);
                 const hb = `rgb(${br},${bg},${bb})`;
                 ctx.fillStyle = `rgba(${br},${bg},${bb},0.25)`;
                 ctx.fillRect(x1, y, x2 - x1, bottom - y);
@@ -749,11 +692,11 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
                 if (b.targetPower > 0) {
                     const yt = yOf(b.targetPower);
                     ctx.save(); ctx.setLineDash([3, 3]);
-                    ctx.strokeStyle = this._gridAlpha15; ctx.lineWidth = 1;
+                    ctx.strokeStyle = this.theme.gridAlpha15; ctx.lineWidth = 1;
                     ctx.beginPath(); ctx.moveTo(x1, yt); ctx.lineTo(x2, yt); ctx.stroke();
                     ctx.restore();
                 }
-                const [cr, cg, cb] = this.cssToRgb(this.blockColors[bi] || accent);
+                const [cr, cg, cb] = cssToRgb(this.blockColors[bi] || accent);
                 const bColor = `rgb(${cr},${cg},${cb})`;
                 ctx.fillStyle = `rgba(${cr},${cg},${cb},0.25)`;
                 ctx.fillRect(x1, y, x2 - x1, bottom - y);
@@ -769,10 +712,10 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
                 if (this.ftp) {
                     const fy = yOf(this.ftp);
                     ctx.save(); ctx.setLineDash([4, 4]);
-                    ctx.strokeStyle = this._gridAlpha15; ctx.lineWidth = 1;
+                    ctx.strokeStyle = this.theme.gridAlpha15; ctx.lineWidth = 1;
                     ctx.beginPath(); ctx.moveTo(mL, fy); ctx.lineTo(W - mR, fy); ctx.stroke();
                     ctx.restore();
-                    ctx.fillStyle = this._textAlpha30;
+                    ctx.fillStyle = this.theme.textAlpha30;
                     ctx.font = '9px monospace'; ctx.textAlign = 'left';
                     ctx.fillText('FTP', mL + 2, fy - 3);
                 }
@@ -783,7 +726,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
                     ctx.lineTo(dsX(ds.length - 1), bottom);
                     ctx.closePath();
                     const g = ctx.createLinearGradient(0, top, 0, bottom);
-                    g.addColorStop(0, this.accentAlpha(0.5)); g.addColorStop(1, this.accentAlpha(0.03));
+                    g.addColorStop(0, accentAlphaFromRgb(this.theme.accentRgb,0.5)); g.addColorStop(1, accentAlphaFromRgb(this.theme.accentRgb,0.03));
                     ctx.fillStyle = g; ctx.fill();
                     ctx.beginPath();
                     ctx.moveTo(dsX(0), yOf(vals[0]));
@@ -799,7 +742,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
                     ctx.lineTo(dsX(ds.length - 1), bottom);
                     ctx.closePath();
                     const g = ctx.createLinearGradient(0, top, 0, bottom);
-                    g.addColorStop(0, this.accentAlpha(0.5)); g.addColorStop(1, this.accentAlpha(0.03));
+                    g.addColorStop(0, accentAlphaFromRgb(this.theme.accentRgb,0.5)); g.addColorStop(1, accentAlphaFromRgb(this.theme.accentRgb,0.03));
                     ctx.fillStyle = g; ctx.fill();
                     ctx.beginPath();
                     ctx.moveTo(dsX(0), yOf(vals[0]));
@@ -810,7 +753,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         }
 
         // Y-axis labels
-        ctx.fillStyle = this._textAlpha40;
+        ctx.fillStyle = this.theme.textAlpha40;
         ctx.font = '9px monospace';
         ctx.textAlign = 'right';
         if (this.isCycling) {
@@ -1022,18 +965,18 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         const top = mT, bottom = mT + chartH;
         const color = '#3b82f6';
 
-        const cads = this.records.map(r => this.getCad(r)).filter(v => v > 0);
+        const cads = this.records.map(r => getCadFromRecord(r, this.sportType)).filter(v => v > 0);
         const minCad = this.sportType === 'RUNNING' ? 140 : 40;
         const maxCad = cads.length ? Math.max(Math.max(...cads) * 1.05, minCad + 20) : 120;
         const yOf = (c: number) => top + chartH * (1 - (Math.max(c, minCad) - minCad) / (maxCad - minCad));
 
         if (this.useZB) {
             this.drawSteppedLine(ctx, xOf, yOf, this.zoneBlocks.map(b => ({
-                s: b.startIndex, e: b.endIndex, v: this.getCadBlock(b.avgCadence),
+                s: b.startIndex, e: b.endIndex, v: getCadBlockFromValue(b.avgCadence, this.sportType),
             })), color);
         } else if (this.usePB) {
             this.drawSteppedBlockLine(ctx, xOfT, yOf, this.blockSummaries.map(b => ({
-                dur: b.durationSeconds, v: this.getCadBlock(b.actualCadence),
+                dur: b.durationSeconds, v: getCadBlockFromValue(b.actualCadence, this.sportType),
             })), color);
         } else {
             const ds = this._ds;
@@ -1041,7 +984,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
             let first = true;
             ds.forEach((r) => {
                 if (!r.cadence) return;
-                const c = this.getCad(r);
+                const c = getCadFromRecord(r, this.sportType);
                 const x = xOfT(r.timestamp - t0);
                 if (first) { ctx.moveTo(x, yOf(c)); first = false; }
                 else ctx.lineTo(x, yOf(c));
@@ -1146,14 +1089,14 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, W, H);
 
-        const { mL, mR } = this.margins(W);
+        const { mL, mR } = marginsForWidth(W);
         const n = this.records.length;
         const t0 = this.records[0].timestamp;
         const totalSec = this.records[n - 1].timestamp - t0 || n;
         const cW = W - mL - mR;
 
-        const tick = this.pickTickInterval(totalSec);
-        ctx.fillStyle = this._textAlpha40;
+        const tick = pickTickInterval(totalSec);
+        ctx.fillStyle = this.theme.textAlpha40;
         ctx.font = '9px monospace';
         ctx.textAlign = 'center';
         for (let s = 0; s <= totalSec; s += tick) {
@@ -1165,7 +1108,7 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         if (this.hoverIdx !== null) {
             const hx = mL + ((this.records[this.hoverIdx].timestamp - t0) / totalSec) * cW;
             ctx.save();
-            ctx.strokeStyle = this._crosshairAlpha;
+            ctx.strokeStyle = this.theme.crosshairAlpha;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(hx, 0); ctx.lineTo(hx, 4);
@@ -1218,226 +1161,50 @@ export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, Af
         ctx.stroke();
     }
 
-    // ── Tooltip ──────────────────────────────────────────────────────────
+    // ── Tooltip / hover delegates ─────────────────────────────────────────
 
-    private buildTooltip(): void {
-        if (this.hoverIdx === null) { this.ttRows = []; return; }
-        const rec = this.records[this.hoverIdx];
-        const t0 = this.records[0].timestamp;
-        const accent = this._accentHex;
-
-        // Block context
-        let blockLabel: string | null = null;
-        let blockDuration: number | null = null;
-        let bp: number | null = null, bpMax: number | null = null;
-        let bhr: number | null = null, bcad: number | null = null;
-        if (this.useZB) {
-            const zb = this.zoneBlocks.find(b => this.hoverIdx! >= b.startIndex && this.hoverIdx! <= b.endIndex);
-            if (zb) {
-                bp = this.isCycling ? zb.avgPower : zb.avgSpeed;
-                bpMax = this.isCycling ? zb.maxPower : zb.maxSpeed;
-                bhr = zb.avgHR;
-                bcad = this.getCadBlock(zb.avgCadence);
-                blockLabel = `${zb.zoneLabel} · ${zb.zoneDescription}`;
-                blockDuration = this.records[zb.endIndex].timestamp - this.records[zb.startIndex].timestamp;
-            }
-        } else if (this.usePB) {
-            const elapsed = rec.timestamp - t0;
-            let acc = 0;
-            for (const b of this.blockSummaries) {
-                if (elapsed >= acc && elapsed < acc + b.durationSeconds) {
-                    bp = this.isCycling ? b.actualPower
-                        : (b.distanceMeters && b.durationSeconds > 0 ? (b.distanceMeters / b.durationSeconds) * 3.6 : 0);
-                    bhr = b.actualHR;
-                    bcad = this.getCadBlock(b.actualCadence);
-                    blockLabel = b.label;
-                    blockDuration = b.durationSeconds;
-                    break;
-                }
-                acc += b.durationSeconds;
-            }
-        }
-        const inBlock = (this.useZB || this.usePB) && bp !== null;
-
-        // Header
-        const elapsed = rec.timestamp - t0;
-        const em = Math.floor(elapsed / 60);
-        const es = elapsed % 60;
-        const elapsedStr = `${em}:${String(es).padStart(2, '0')}`;
-        this.ttHeader = blockLabel ?? elapsedStr;
-
-        // Rows
-        const rows: Array<{ label: string; value: string; color: string }> = [];
-        if (blockLabel) {
-            rows.push({ label: 'Time', value: elapsedStr, color: 'var(--text-color)' });
-        }
-        if (inBlock && blockDuration != null) {
-            const dm = Math.floor(blockDuration / 60);
-            const ds = Math.round(blockDuration % 60);
-            rows.push({ label: 'Duration', value: `${dm}:${String(ds).padStart(2, '0')}`, color: 'var(--text-color)' });
-        }
-        if (this.showPrimary) {
-            if (inBlock) {
-                if (this.isCycling) {
-                    rows.push({ label: 'Avg Power', value: `${Math.round(bp!)}W`, color: accent });
-                    if (bpMax) rows.push({ label: 'Max Power', value: `${Math.round(bpMax)}W`, color: accent });
-                } else if (this.isSwimming) {
-                    // bp/bpMax are in km/h here; convert to pace.
-                    const avgPace = this.kmhToPace(bp!);
-                    rows.push({ label: 'Avg Pace', value: isNaN(avgPace) ? '\u2014' : formatPaceWithUnit(avgPace, 'SWIMMING'), color: accent });
-                    if (bpMax) {
-                        const bestPace = this.kmhToPace(bpMax); // max speed → fastest pace
-                        if (!isNaN(bestPace)) rows.push({ label: 'Best Pace', value: formatPaceWithUnit(bestPace, 'SWIMMING'), color: accent });
-                    }
-                } else {
-                    rows.push({ label: 'Avg Speed', value: `${bp!.toFixed(1)} km/h`, color: accent });
-                    if (bpMax) rows.push({ label: 'Max Speed', value: `${bpMax.toFixed(1)} km/h`, color: accent });
-                }
-            } else {
-                if (this.isCycling) {
-                    rows.push({ label: 'Power', value: `${Math.round(rec.power)}W`, color: accent });
-                } else if (this.isSwimming) {
-                    const pace = this.kmhToPace((rec.speed || 0) * 3.6);
-                    rows.push({ label: 'Pace', value: isNaN(pace) ? '\u2014' : formatPaceWithUnit(pace, 'SWIMMING'), color: accent });
-                } else {
-                    rows.push({ label: 'Speed', value: `${((rec.speed || 0) * 3.6).toFixed(1)} km/h`, color: accent });
-                }
-            }
-        }
-        if (this.showHR) {
-            const hr = inBlock ? bhr : rec.heartRate;
-            if (hr) rows.push({ label: inBlock ? 'Avg HR' : 'HR', value: `${Math.round(hr)} bpm`, color: '#e74c3c' });
-        }
-        if (this.showCadence) {
-            const cad = inBlock ? bcad : this.getCad(rec);
-            if (cad) rows.push({ label: inBlock ? 'Avg Cad' : 'Cadence', value: `${Math.round(cad)} ${this.cadUnit}`, color: '#3b82f6' });
-        }
-        if (this.showEfficiency && this._effSmoothed.length > 0 && this.hoverIdx !== null) {
-            const eff = this.hoverEfficiency(this.hoverIdx, t0);
-            if (!isNaN(eff)) {
-                rows.push({ label: inBlock ? 'Avg Eff.' : 'Eff.', value: eff.toFixed(2), color: '#a855f7' });
-            }
-        }
-        if (this._hasElevation && rec.elevation != null) {
-            rows.push({ label: 'Elevation', value: `${Math.round(rec.elevation)}m`, color: '#4caf50' });
-        }
-        this.ttRows = rows;
+    private hoverContext(): HoverContext | null {
+        if (this.hoverIdx === null) return null;
+        return {
+            records: this.records,
+            downsampled: this._ds,
+            effSmoothed: this._effSmoothed,
+            sportType: this.sportType,
+            zoneBlocks: this.zoneBlocks,
+            blockSummaries: this.blockSummaries,
+            showBlocks: this.showBlocks,
+            primaryMax: this._primaryMax,
+            showPrimary: this.showPrimary,
+            showHR: this.showHR,
+            showCadence: this.showCadence,
+            showEfficiency: this.showEfficiency,
+            hasElevation: this._hasElevation,
+            accentHex: this.theme.accentHex,
+            hoverIdx: this.hoverIdx,
+        };
     }
 
-    // ── Hover value helpers (block-aware) ───────────────────────────────
-
-    private findPlannedBlock(idx: number, t0: number): BlockSummary | null {
-        const elapsed = this.records[idx].timestamp - t0;
-        let acc = 0;
-        for (const b of this.blockSummaries) {
-            if (elapsed >= acc && elapsed < acc + b.durationSeconds) return b;
-            acc += b.durationSeconds;
-        }
-        return null;
+    private buildTooltip(): void {
+        const ctx = this.hoverContext();
+        if (!ctx) { this.ttRows = []; return; }
+        const content = buildTooltipContent(ctx);
+        this.ttHeader = content.header;
+        this.ttRows = content.rows;
     }
 
     private hoverPrimaryValue(idx: number, t0: number): number {
-        if (this.useZB) {
-            const zb = this.zoneBlocks.find(b => idx >= b.startIndex && idx <= b.endIndex);
-            if (zb) return this.isCycling ? zb.avgPower : this.speedToPlotValue(zb.avgSpeed);
-        } else if (this.usePB) {
-            const pb = this.findPlannedBlock(idx, t0);
-            if (pb) {
-                if (this.isCycling) return pb.actualPower;
-                const speedKmh = pb.distanceMeters && pb.durationSeconds > 0 ? (pb.distanceMeters / pb.durationSeconds) * 3.6 : 0;
-                return this.speedToPlotValue(speedKmh);
-            }
-        }
-        const rec = this.records[idx];
-        if (this.isCycling) return rec.power;
-        return this.speedToPlotValue((rec.speed || 0) * 3.6);
+        return hoverPrimaryValue(this.hoverContext()!, idx, t0);
     }
 
     private hoverHR(idx: number, t0: number): number {
-        if (this.useZB) {
-            const zb = this.zoneBlocks.find(b => idx >= b.startIndex && idx <= b.endIndex);
-            if (zb) return zb.avgHR;
-        } else if (this.usePB) {
-            const pb = this.findPlannedBlock(idx, t0);
-            if (pb) return pb.actualHR;
-        }
-        return this.records[idx].heartRate;
+        return hoverHR(this.hoverContext()!, idx, t0);
     }
 
     private hoverCadence(idx: number, t0: number): number {
-        if (this.useZB) {
-            const zb = this.zoneBlocks.find(b => idx >= b.startIndex && idx <= b.endIndex);
-            if (zb) return this.getCadBlock(zb.avgCadence);
-        } else if (this.usePB) {
-            const pb = this.findPlannedBlock(idx, t0);
-            if (pb) return this.getCadBlock(pb.actualCadence);
-        }
-        return this.getCad(this.records[idx]);
+        return hoverCadence(this.hoverContext()!, idx, t0);
     }
 
     private hoverEfficiency(idx: number, t0: number): number {
-        const effOf = (power: number, speed: number, hr: number): number => {
-            if (hr <= 0) return NaN;
-            const metric = this.isCycling ? power : speed * 3.6;
-            return metric > 0 ? metric / hr : NaN;
-        };
-        if (this.useZB) {
-            const zb = this.zoneBlocks.find(b => idx >= b.startIndex && idx <= b.endIndex);
-            if (zb) return effOf(zb.avgPower, zb.avgSpeed, zb.avgHR);
-        } else if (this.usePB) {
-            const pb = this.findPlannedBlock(idx, t0);
-            if (pb) {
-                const speed = pb.distanceMeters && pb.durationSeconds > 0 ? pb.distanceMeters / pb.durationSeconds : 0;
-                return effOf(pb.actualPower, speed, pb.actualHR);
-            }
-        }
-        // Raw: find nearest downsampled point
-        const hoverT = this.records[idx].timestamp;
-        const ds = this._ds;
-        let nearest = 0;
-        for (let i = 1; i < ds.length; i++) {
-            if (Math.abs(ds[i].timestamp - hoverT) < Math.abs(ds[nearest].timestamp - hoverT)) nearest = i;
-        }
-        return this._effSmoothed[nearest];
-    }
-
-    // ── Utilities ────────────────────────────────────────────────────────
-
-    private pickTickInterval(totalSec: number): number {
-        const targets = [60, 300, 600, 900, 1800, 3600];
-        const desired = totalSec / 8;
-        return targets.reduce((a, b) => Math.abs(a - desired) < Math.abs(b - desired) ? a : b);
-    }
-
-    /** Downsample records into fixed-duration buckets by averaging all fields. */
-    private downsample(records: FitRecord[], bucketSec: number): FitRecord[] {
-        if (records.length < 2) return [...records];
-        const result: FitRecord[] = [];
-        const t0 = records[0].timestamp;
-        let bStart = 0;
-        for (let i = 1; i <= records.length; i++) {
-            if (i < records.length && records[i].timestamp - records[bStart].timestamp < bucketSec) continue;
-            const slice = records.slice(bStart, i);
-            const n = slice.length;
-            let power = 0, hr = 0, cad = 0, speed = 0, elev = 0, elevCount = 0;
-            for (const r of slice) {
-                power += r.power;
-                hr += r.heartRate;
-                cad += r.cadence;
-                speed += r.speed;
-                if (r.elevation != null) { elev += r.elevation; elevCount++; }
-            }
-            result.push({
-                timestamp: slice[Math.floor(n / 2)].timestamp,
-                power: power / n,
-                heartRate: hr / n,
-                cadence: cad / n,
-                speed: speed / n,
-                distance: slice[n - 1].distance,
-                elevation: elevCount > 0 ? elev / elevCount : undefined as any,
-            });
-            bStart = i;
-        }
-        return result;
+        return hoverEfficiency(this.hoverContext()!, idx, t0);
     }
 }
