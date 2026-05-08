@@ -76,7 +76,7 @@
 }
 
 /* Divider between stacked columns on mobile */
-@media (max-width: 767.98px) {
+@media (max-width: 768px) {
   .sc-col + .sc-col {
     border-top: 1px solid var(--overlay-8);
   }
@@ -699,7 +699,7 @@
    Responsive — stack on small screens
    ============================================================ */
 
-@media (max-width: 767.98px) {
+@media (max-width: 768px) {
   .sc-card { grid-template-columns: 1fr !important; }
 
   .sc-col { padding: var(--space-md); gap: var(--space-md); }
@@ -710,7 +710,7 @@
   .sc-actions__buttons .sc-btn { flex: 1 1 auto; }
 }
 
-@media (max-width: 479.98px) {
+@media (max-width: 480px) {
   .sc-metrics { grid-template-columns: 1fr; }
   .sc-title { font-size: var(--text-base, 0.9375rem); }
 }
@@ -758,7 +758,7 @@
   height: 16px;
 }
 
-@media (max-width: 479.98px) {
+@media (max-width: 480px) {
   .sc-card--has-gpx.sc-card--has-linked .sc-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
