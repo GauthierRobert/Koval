@@ -1,5 +1,6 @@
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
   Component,
   ElementRef,
   EventEmitter,
@@ -43,6 +44,7 @@ function getSportColor(sport?: string): string {
         .pmc-chart-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; touch-action: pan-y; }
         .pmc-canvas { width: 100%; flex: 1; min-height: 320px; display: block; cursor: crosshair; touch-action: pan-y; }
     `],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PmcChartComponent implements OnChanges, AfterViewInit, OnDestroy {
     @Input() data: PmcDataPoint[] | null = [];

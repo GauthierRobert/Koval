@@ -411,13 +411,15 @@ export class CalendarComponent implements OnInit {
   }
 
   private loadClubPrefsData(): void {
-    this.clubService.myClubRoles$.subscribe(roles => {
+    this.clubService.myClubRoles$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(roles => {
       this.myClubRoles = roles;
       for (const r of roles) {
-        this.clubService.getClubGroups(r.clubId).subscribe(groups => {
+        this.clubService.getClubGroups(r.clubId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(groups => {
           this.clubGroupsMap.set(r.clubId, groups);
+          this.cdr.markForCheck();
         });
       }
+      this.cdr.markForCheck();
     });
     this.clubService.loadMyClubRoles();
   }

@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, Component, OnInit, inject} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {AuthService} from '../../../services/auth.service';
 import {TranslateModule} from '@ngx-translate/core';
@@ -8,14 +8,13 @@ import {TranslateModule} from '@ngx-translate/core';
     standalone: true,
     imports: [TranslateModule],
     templateUrl: './auth-callback.component.html',
-    styleUrl: './auth-callback.component.css'
+    styleUrl: './auth-callback.component.css',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuthCallbackComponent implements OnInit {
-    constructor(
-        private route: ActivatedRoute,
-        private router: Router,
-        private authService: AuthService
-    ) { }
+    private route = inject(ActivatedRoute);
+    private router = inject(Router);
+    private authService = inject(AuthService);
 
     ngOnInit() {
         this.route.queryParams.subscribe(params => {

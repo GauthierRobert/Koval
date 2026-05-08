@@ -1,6 +1,7 @@
 import {
   AfterViewChecked,
   AfterViewInit,
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   ElementRef,
@@ -178,6 +179,7 @@ import {formatPaceWithUnit} from '../../../shared/format/format.utils';
         .chart-wrap.compact .xaxis-h { flex: 0 0 16px; height: 16px; }
         .chart-wrap.compact .mc { cursor: default; }
     `],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FitTimeseriesChartComponent implements OnChanges, AfterViewInit, AfterViewChecked, OnDestroy {
     @Input() records: FitRecord[] = [];

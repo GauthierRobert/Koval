@@ -1,4 +1,4 @@
-import {Component, inject, Input} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, Input} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {Router} from '@angular/router';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
@@ -35,7 +35,8 @@ import {ZoneClassificationService} from '../../../services/zone-classification.s
   standalone: true,
   imports: [CommonModule, TrainingActionModalComponent, TranslateModule, BlockStepsListComponent, WorkoutChartBarComponent],
   templateUrl: './workout-visualization.component.html',
-  styleUrl: './workout-visualization.component.css'
+  styleUrl: './workout-visualization.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkoutVisualizationComponent {
   @Input() training: Training | null = null;
@@ -51,12 +52,19 @@ export class WorkoutVisualizationComponent {
   private router = inject(Router);
   currentZoneSystem: ZoneSystem | null = null;
   private translate = inject(TranslateService);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnChanges() {
     if (this.training?.zoneSystemId) {
       this.zoneService.getZoneSystemById(this.training.zoneSystemId).subscribe({
-        next: (zs) => this.currentZoneSystem = zs,
-        error: () => this.currentZoneSystem = null
+        next: (zs) => {
+          this.currentZoneSystem = zs;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.currentZoneSystem = null;
+          this.cdr.markForCheck();
+        },
       });
     } else {
       this.currentZoneSystem = null;

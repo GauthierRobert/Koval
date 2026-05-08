@@ -1,4 +1,4 @@
-import {Component, inject, Input, OnDestroy} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, Input, OnDestroy} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
 import {BehaviorSubject, combineLatest, from, Observable, of, Subject} from 'rxjs';
@@ -36,6 +36,7 @@ interface FitState {
     imports: [CommonModule, TranslateModule, FitTimeseriesChartComponent, SessionStatsHeaderComponent, ZoneDistributionPanelComponent, BlockBreakdownTableComponent, PowerCurveChartComponent, DecouplingGaugeComponent, CadenceDistributionPanelComponent, ClimbsPanelComponent, WPrimeBalanceChartComponent],
     templateUrl: './session-analysis.component.html',
     styleUrl: './session-analysis.component.css',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SessionAnalysisComponent implements OnDestroy {
     private authService = inject(AuthService);

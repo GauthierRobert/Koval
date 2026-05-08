@@ -1,4 +1,4 @@
-import {Component, DestroyRef, inject, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
@@ -35,6 +35,7 @@ import {CreateWithAiModalComponent} from '../../shared/create-with-ai-modal/crea
   ],
   templateUrl: './workout-selection.component.html',
   styleUrl: './workout-selection.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkoutSelectionComponent implements OnInit {
   private trainingService = inject(TrainingService);

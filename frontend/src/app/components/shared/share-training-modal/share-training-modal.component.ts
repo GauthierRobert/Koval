@@ -1,7 +1,8 @@
-import {Component, EventEmitter, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
-import {CommonModule} from '@angular/common';
+import {ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject} from '@angular/core';
+import {CommonModule, AsyncPipe} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule} from '@ngx-translate/core';
+import {Observable, tap} from 'rxjs';
 import {TrainingService} from '../../../services/training.service';
 import {Training} from '../../../models/training.model';
 import {Group} from '../../../services/group.service';
@@ -10,9 +11,10 @@ import {ModalShellComponent} from '../modal-shell/modal-shell.component';
 @Component({
   selector: 'app-share-training-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, ModalShellComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, ModalShellComponent, AsyncPipe],
   templateUrl: './share-training-modal.component.html',
-  styleUrl: './share-training-modal.component.css'
+  styleUrl: './share-training-modal.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ShareTrainingModalComponent implements OnChanges {
   @Input() isOpen = false;
@@ -21,18 +23,24 @@ export class ShareTrainingModalComponent implements OnChanges {
   @Output() closed = new EventEmitter<void>();
   @Output() shared = new EventEmitter<Training>();
 
-  allTrainings: Training[] = [];
+  private trainingService = inject(TrainingService);
+
+  trainings$: Observable<Training[]> = this.trainingService.trainings$;
   selectedTrainingId = '';
   activeTraining: Training | null = null;
   selectedTagIds: string[] = [];
   saving = false;
+  private latestTrainings: Training[] = [];
 
-  constructor(private trainingService: TrainingService) {}
+  constructor() {
+    this.trainings$ = this.trainingService.trainings$.pipe(
+      tap(trainings => (this.latestTrainings = trainings)),
+    );
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen) {
       this.trainingService.loadTrainings();
-      this.trainingService.trainings$.subscribe(t => this.allTrainings = t);
       if (this.training) {
         this.activeTraining = this.training;
         this.selectedTrainingId = this.training.id;
@@ -46,7 +54,7 @@ export class ShareTrainingModalComponent implements OnChanges {
   }
 
   onTrainingSelected(): void {
-    this.activeTraining = this.allTrainings.find(t => t.id === this.selectedTrainingId) || null;
+    this.activeTraining = this.latestTrainings.find(t => t.id === this.selectedTrainingId) || null;
     this.selectedTagIds = [...(this.activeTraining?.groupIds || [])];
   }
 
