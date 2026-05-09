@@ -4,256 +4,158 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Training Planner AI is a full-stack application for creating and executing cycling/triathlon training workouts. It features AI-powered workout generation using Spring AI with Anthropic Claude, Bluetooth device integration for live training sessions, and a coach-athlete relationship system with Strava OAuth authentication.
+**Koval Training Planner AI** is a full-stack application for cycling/triathlon athletes and coaches. It combines AI-powered workout planning (Spring AI + Anthropic Claude), Bluetooth-driven live training, multi-sport workout/plan/race/zone/club management, and an MCP server that exposes the same capabilities to external Claude clients.
 
-**Architecture**: Monorepo with separate frontend and backend directories.
+Monorepo layout:
+- `backend/` — Spring Boot 4.0.4, Java 25, MongoDB, Spring AI 2.0.0-M2 (Anthropic). Package root: `com.koval.trainingplannerbackend`.
+- `frontend/` — Angular 21 (standalone components, lazy routes), TypeScript 5.9, RxJS, Vitest, Playwright.
+- `skills/` — End-user skill markdown bundles distributed alongside the MCP connector (NOT developer skills).
+- `openapi/` — Per-domain OpenAPI specs (auth, ai, clubs, coach, goals, groups, notifications, pacing, races, schedule, sessions, strava, trainings, zones).
+- `docs/` — Design notes (club gazette plan, local GCS setup).
+- `.claude/skills/` — Developer skills enforced when editing code in this repo (see "Required Skills" below).
 
-- **Frontend**: Angular 21 (standalone components), TypeScript, RxJS — **REQUIRED:** Follow `.claude/skills/angular-development/SKILL.md` for all frontend work
-- **Backend**: Spring Boot 4.0.2, Java 25, MongoDB, Spring AI (2.0.0) with Anthropic
+## Required Skills
+
+Editing code in this repo is governed by the skills in `.claude/skills/`. Invoke them when their scope matches:
+
+- **`spring-boot-development`** — any Java backend code (controllers, services, repositories, models, DTOs, config). Enforces SOLID, feature-first packaging, constructor injection, record DTOs, centralized error handling, MongoDB best practices.
+- **`angular-development`** — any frontend component/service/template. Enforces RxJS-first reactive patterns, `| async` in templates, file size limits, single responsibility.
+- **`ui-ux-design`** — HTML/CSS for Angular. Enforces project's dark-first glassmorphism design language, spacing rhythm, accessibility.
+- **`mcp-server-development`** — anything under `backend/.../mcp/` or new `@Tool` adapters. Enforces tool description quality, lean summaries, auth context, consistent patterns.
 
 ## Development Commands
 
-### Backend (Spring Boot)
+### Local infra (docker-compose.yml)
+Starts MongoDB (`27017`), RabbitMQ (`5672`/`15672`), Pub/Sub emulator (`8085`), and fake-gcs-server (`4443`):
+```bash
+docker compose up -d
+```
+
+### Backend
 ```bash
 cd backend
-mvn clean install          # Build the project
-mvn spring-boot:run        # Start backend server (port 8080)
-mvn test                   # Run unit + integration tests (Testcontainers Mongo)
+mvn spring-boot:run                     # Run on :8080
+mvn test                                # Unit + integration tests (Testcontainers Mongo — Docker required)
+mvn test -Dtest=ClassName               # Single test class
+mvn test -Dtest=ClassName#methodName    # Single test method
+mvn -Pnative native:compile             # GraalVM native image (used by Dockerfile)
 ```
 
-The test suite under `backend/src/test/java` contains both unit tests (rate limiter,
-pacing services, AI tools, etc.) and integration tests that boot the full Spring
-context against a Testcontainers Mongo instance — see `BaseIntegrationTest` and
-`TestcontainersConfig`. Tests stub Anthropic via the `test` profile (no live API
-calls). Docker must be available locally for the integration suite.
+Tests run under the `test` Spring profile, which stubs Anthropic via `MockAIConfig` — no live API calls. Integration tests extend `BaseIntegrationTest` and pull config from `TestcontainersConfig`. Lombok is on the build path; ensure your IDE has the Lombok plugin.
 
-### Frontend (Angular)
+### Frontend
 ```bash
 cd frontend
-npm install                # Install dependencies
-npm start                  # Start dev server (port 4200)
-npm run build              # Production build
-npm test                   # Run Vitest tests
-npm run watch              # Watch mode build
+npm start                               # ng serve on :4200 (runs prestart: scripts/set-env.js)
+npm run build                           # Production build → dist/
+npm test                                # Vitest (ng test)
+npm run e2e                             # Playwright headless
+npm run e2e:ui                          # Playwright UI mode
 ```
 
-### Running the Full Stack
-1. Start MongoDB on localhost:27017
-2. Set environment variables: `ANTHROPIC_API_KEY`, `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `JWT_SECRET`
-3. Start backend: `cd backend && mvn spring-boot:run`
-4. Start frontend: `cd frontend && npm start`
-5. Access at http://localhost:4200
+`scripts/set-env.js` reads `frontend/.env` (Firebase keys — see `.env.template`) and writes `src/environments/environment.ts` before build/serve.
 
-## Code Architecture
+### Required environment variables (backend)
+`ANTHROPIC_API_KEY`, `JWT_SECRET`, `MONGODB_URI`, `ALLOWED_ORIGINS`, `STRAVA_CLIENT_ID/SECRET/REDIRECT_URI`, `GOOGLE_CLIENT_ID/SECRET/REDIRECT_URI`, `ADMIN_SECRET`, `FIREBASE_SERVICE_ACCOUNT_JSON`, `FIREBASE_PROJECT_ID`. Optional: Strava webhook tokens, Garmin OAuth, GCP project for Pub/Sub.
 
-### Backend Structure
+## Architecture
 
-**Package Organization** (under `com.example.trainingplannerbackend`):
-- `ai/`: Spring AI integration with Anthropic Claude Sonnet 4.5
-  - `AIService`: Manages chat conversations with prompt caching and streaming support
-  - `AIController`: REST endpoints at `/api/ai/*` (chat, streaming, history management)
-  - `AIConfig`: Configures ChatClient with Claude Sonnet 4.5, prompt caching, and chat memory
-  - `ChatHistory`: MongoDB document for conversation persistence
-  - `ChatHistoryRepository`: MongoDB repository for chat history
-  - `HistoryToolService`: @Tool methods for AI to access workout history
+### Backend — feature-first packages (`com.koval.trainingplannerbackend`)
 
-- `auth/`: Authentication and user management
-  - `SecurityConfig`: Spring Security configuration with JWT
-  - `StravaOAuthService`: Handles Strava OAuth2 flow
-  - `AuthController`: Login/callback endpoints
-  - `User`: MongoDB document with roles (ATHLETE/COACH)
-  - `UserService`: User CRUD operations
+Top-level packages map to product domains, not technical layers:
 
-- `training/`: Core workout management
-  - `Training`: MongoDB document representing a workout plan
-  - `WorkoutBlock`: Embedded document for workout segments (WARMUP, INTERVAL, STEADY, RAMP, FREE, COOLDOWN)
-  - `TrainingManagementService`: CRUD operations exposed as AI tools via `@Tool` annotation
-  - `TrainingController`: REST API at `/api/trainings`
-  - `HistoryService`: Manages workout execution history
+`ai/` — Spring AI integration with multi-agent routing.
+  - `AIService`, `AIController` (`/api/ai/chat`, `/api/ai/chat/stream` SSE), `ChatHistory`, `CompactingChatMemory`, `ConversationSummarizer`, `AiRateLimiter`, `UserContextResolver`, `ToolEventEmitter`.
+  - `agents/` — **Router/specialist pattern**: `RouterService` classifies user intent (training-creation, scheduling, analysis, coach-management, club-management, race-completion, planner, action) and delegates to a `SpecialistAgentService` instance per `AgentType`. System prompts live in `src/main/resources/prompts/*.md` (per agent + `common-rules.md`).
+  - `tools/` — `@Tool` adapters organized by domain: `training/`, `coach/`, `history/`, `plan/`, `race/`, `club/`, `zone/`, `goal/`, `action/`, `scheduling/`. These are what the chat-side AI sees.
+  - `config/` — `AIConfig` wires `ChatClient` with Anthropic Claude Sonnet 4.6, `MessageChatMemoryAdvisor`, prompt caching (`AnthropicCacheOptions`), retry/backoff.
+  - `toon/`, `logger/`, `action/` — output formatting, call logging, action tracking.
 
-- `coach/`: Coach-athlete relationship features
-  - `CoachService`: Assign workouts to athletes (also exposed as `@Tool` for AI)
-  - `ScheduledWorkout`: MongoDB document linking athletes to assigned trainings
-  - `CoachController`: REST API for coach operations
+`mcp/` — Same capabilities re-exposed to **external** Claude clients (Claude Desktop / Claude.ai) via `spring-ai-starter-mcp-server-webmvc` at `/mcp/sse` (STREAMABLE protocol). One adapter class per domain: `McpTrainingTools`, `McpSchedulingTools`, `McpCoachTools`, `McpClubTools`, `McpGazetteTools`, `McpGoalTools`, `McpHistoryTools`, `McpPlanTools`, `McpProfileTools`, `McpRaceTools`, `McpZoneTools`, `McpAnalyticsTools`. `McpServerConfig` registers them. `mcp/render/` produces markdown reports (PMC, power curve, FRI, week schedule, session summary, volume, gazette PDFs).
 
-**AI Integration Pattern** (Claude Sonnet 4.5):
-- Uses Spring AI's `ChatClient` with Anthropic Claude Sonnet 4.5
-- **Prompt Caching**: Enabled via `AnthropicCacheOptions` for 90% cost reduction on repeated tokens
-  - System messages and tools cached automatically
-  - Conversation history caching for multi-turn chats
-- **Chat Memory**: `MessageChatMemoryAdvisor` provides automatic conversation tracking
-- **Streaming**: Supports SSE streaming via `Flux<String>` for real-time responses
-- **Tool Access**: Three service categories exposed via `@Tool` annotations:
-  - `TrainingManagementService`: CRUD operations (create, update, delete, list trainings)
-  - `CoachService`: Coach operations (assign workouts, manage athletes, view schedules)
-  - `HistoryToolService`: History access (workout history, search, public templates)
-- System prompt includes `{userId}`, `{userRole}`, and `{userFtp}` for context-aware execution
-- Usage metadata tracking: input/output tokens and cache performance metrics
+`training/` — `Training` (polymorphic: `CyclingTraining`, `RunningTraining`, `SwimmingTraining`, `BrickTraining`), `WorkoutElement` (with `BlockType`: WARMUP / INTERVAL / STEADY / RAMP / FREE / COOLDOWN), `WorkoutElementFlattener`, `TrainingService`, `TrainingAccessService`, `TrainingController`. Sub-packages: `history/` (executed sessions, PMC, metrics), `metrics/` (TSS/IF/NP), `zone/` (zone systems per sport), `group/` (training groups), `received/` (Strava-imported sessions).
 
-**MCP Server + End-User Skills:**
-- The backend also exposes ~70 tools via the **MCP server** (`spring-ai-starter-mcp-server-webmvc`) for external Claude clients (Claude Desktop, Claude.ai). Adapters live in `backend/src/main/java/com/koval/trainingplannerbackend/mcp/` — see `.claude/skills/mcp-server-development/SKILL.md` for conventions.
-- Top-level **`skills/`** directory contains end-user-facing skill markdown files (`koval-analyze-last-ride.md`, `koval-form-check.md`, `koval-plan-my-week.md`, etc.) that ride on top of the MCP tools. These are NOT developer skills — they are distributed alongside the MCP connector to Claude Desktop / Claude.ai users so Claude knows which tools to chain for common workflows. See `skills/README.md`.
+`coach/` — Coach↔athlete relationships. `ScheduledWorkout`, `ScheduleService`, `CoachService`, `InviteCode`, `CoachGroupService`. Roles enforced by `coachGuard` on the frontend and `@PreAuthorize` on the backend.
 
-### Frontend Structure
+`plan/` — Multi-week training plans (`TrainingPlan` → `PlanWeek` → `PlanDay`), with status (DRAFT/ACTIVE/PAUSED/COMPLETED), progress tracking (`PlanProgress`), analytics (`PlanAnalytics`/`PlanWeekAnalytics`), activation, cloning.
 
-**Component Architecture** (under `src/app/components`):
-- `workout-selection/`: Main dashboard, select from existing workouts
-- `live-dashboard/`: Active training session with real-time metrics visualization
-- `workout-history/`: Past workout sessions and analytics
-- `calendar/`: Schedule view for planned workouts
-- `coach-dashboard/`: Coach interface for managing athletes
-- `ai-chat-page/`: Chat interface to generate workouts with AI
-- `device-manager/`: Bluetooth device connection UI
-- `auth/`: Login and OAuth callback components
+`club/` — Group features. Sub-packages: `feed/` (SSE-driven activity feed; broker abstracted over RabbitMQ vs GCP Pub/Sub via `CLUB_FEED_BROKER_TYPE`), `gazette/` (publish PDF newsletters), `session/` + `recurring/` (club workouts), `invite/`, `membership/`, `stats/`, `activity/`.
 
-**Services** (under `src/app/services`):
-- `training.service.ts`: Manages workout data, chat messages, and FTP. Contains mock data fallback.
-- `auth.service.ts`: JWT authentication with Strava OAuth. Falls back to mock user if backend unavailable.
-- `bluetooth.service.ts`: Web Bluetooth API integration for fitness devices (trainers, heart rate monitors, power meters, cadence sensors). Includes simulation mode.
-- `workout-execution.service.ts`: Manages active workout state during live sessions
-- `calendar.service.ts`: Handles scheduled workout operations
-- `coach.service.ts`: Coach-specific API calls
-- `history.service.ts`: Workout history and analytics
-- `export.service.ts`: Export workout data (FIT, TCX formats)
-- `pip.service.ts`: Picture-in-picture mode for workouts
+`race/` — `Race`, `RaceService`, `WebSearchRaceService` (search public races), `RaceCompletionService`, `DistanceCategory`. `goal/` — `RaceGoal` linking races to plans.
 
-**State Management**:
-- RxJS BehaviorSubjects for reactive state
-- No external state library; services expose observables ending with `$`
-- Example pattern: `private subject = new BehaviorSubject<T>(initial); public observable$ = subject.asObservable();`
-- **IMPORTANT**: Always use `| async` pipe in templates to subscribe to observables. Never manually subscribe in components to set plain properties for template binding — use `Observable` + `| async` instead. This ensures proper change detection and automatic unsubscription.
+`auth/` — Strava + Google OAuth, `User`/`UserRole` (ATHLETE/COACH), `JwtAuthenticationFilter`, `AccountLinkingService`, `CguConstants`, `SecurityUtils`.
 
-**Routing**: Defined in `app.routes.ts`
-- `/dashboard` → Workout selection
-- `/active-session` → Live training session
-- `/history` → Workout history
-- `/calendar` → Calendar view
-- `/coach` → Coach dashboard
-- `/chat` → AI chat interface
-- `/login` → Authentication
-- `/auth/callback` → OAuth callback
+`pacing/` — GPX parsing (`pacing/gpx/`) and pacing strategy DTOs.
 
-### Data Models
+`integration/`, `media/` (GCS uploads + Thumbnailator), `notification/` (Firebase push + in-app), `oauth/` (third-party OAuth client management), `chat/` (real-time DM/club chat with SSE), `skills/` (server-side end-user-skill packaging), `maintenance/`, `config/` (audit, exception handlers).
 
-**WorkoutBlock Types**:
-- `WARMUP`: Gradual intensity increase
-- `STEADY`: Constant power target
-- `INTERVAL`: Repeated high-intensity efforts
-- `RAMP`: Progressive power increase/decrease
-- `COOLDOWN`: Recovery period
-- `FREE`: Unstructured riding
+### Backend cross-cutting
 
-**Key Fields**:
-- Power targets expressed as percentage of FTP (Functional Threshold Power)
-- Duration in seconds
-- Optional cadence targets, repeats, labels
-- For RAMP blocks: `powerStartPercent` and `powerEndPercent` instead of `powerTargetPercent`
+- **Prompt caching**: `AnthropicCacheOptions` caches system prompts, tool definitions, and conversation history. ~90% input-token savings on multi-turn chats.
+- **Chat memory**: persisted via `spring-ai-starter-model-chat-memory-repository-mongodb` with TTL (`CHAT_MEMORY_TTL_SECONDS`, default 90 days) + `CompactingChatMemory` for summarization on long conversations.
+- **Native image**: GraalVM native build via `mvn -Pnative native:compile`. Reflection config at `backend/src/main/resources/META-INF/native-image/...` — keep in sync when moving classes between packages.
+- **Brokers**: `application-prod.yml` switches the club feed broker to GCP Pub/Sub via `CLUB_FEED_BROKER_TYPE=pubsub`. Local dev uses RabbitMQ (autoconfigured-out by default — `RabbitAutoConfiguration` is excluded in `application.yml`).
+- **Auth**: JWT (24h) issued after Strava/Google OAuth callback. `JwtAuthenticationFilter` resolves `User` and stamps `SecurityContext`. `SecurityUtils.currentUserId()` is the canonical way to get the caller.
 
-### API Endpoints
+### Frontend — `frontend/src/app/`
 
-Backend serves on `http://localhost:8080`:
+```
+components/
+├─ pages/        # Route components (lazy-loaded). One folder per top-level page.
+├─ layout/       # sidebar, top-bar, settings, training-history, training-load-chart
+└─ shared/       # Reusable UI: modals, charts, cards, koval-image, leaflet, skeletons
+services/        # ~50 services — feature services + utility services + cache layers
+guards/          # authGuard, coachGuard
+interceptors/    # JWT, error, etc.
+models/          # TS interfaces shared across services
+utils/           # workout-notation parser, training math, parsers
+```
 
-**AI Endpoints:**
-- `POST /api/ai/chat` - Send message to AI, returns response with usage metadata
-- `POST /api/ai/chat/stream` - Streaming chat (SSE) for real-time responses
-- `GET /api/ai/history` - List all chat histories for a user
-- `GET /api/ai/history/{id}` - Get specific chat history
-- `DELETE /api/ai/history/{id}` - Delete chat history
+Routing (`app.routes.ts`): all routes are `loadComponent: () => import(...)` (lazy) and gated by `authGuard` (and `coachGuard` for coach/AI-chat areas). Note path renaming: `/dashboard`, `/trainings`, `/trainings/new`, `/trainings/:id/edit`, `/active-session`, `/history`, `/calendar`, `/coach`, `/zones`, `/chat`, `/clubs`, `/plans`, `/races`, `/goals`, `/pmc`, `/analytics`, `/pacing`, `/onboarding`, `/oauth-clients`, `/auth/callback`. Legacy `/builder` redirects to `/trainings/new`.
 
-**Training Endpoints:**
-- `GET /api/trainings` - List user's trainings
-- `POST /api/trainings` - Create training (typically used by AI via tool)
+State management: RxJS `BehaviorSubject` exposed as `observable$` from services. **Always use `| async` in templates — never manually subscribe to set component properties** (enforced by `angular-development` skill). SSE consumers exist for chat (`chat-sse.service.ts`), club feed (`club-feed-sse.service.ts`), and AI streaming.
 
-**Auth Endpoints:**
-- `GET /api/auth/strava` - Get Strava OAuth URL
-- `GET /api/auth/strava/callback` - Handle OAuth callback
-- `GET /api/auth/me` - Get current user info
+Mock fallbacks: `auth.service.ts` and `training.service.ts` ship a mock COACH user + 3 sample workouts so the frontend works standalone if the backend is down.
 
-**Coach Endpoints:**
-- `POST /api/coach/assign` - Assign workout to athlete
-- `GET /api/coach/athletes` - List coach's athletes
+PWA: Angular service worker (`ngsw-config.json`) + custom `custom-sw.js` for push notifications via Firebase. `pwa-install.service.ts` handles install prompts.
 
-### Configuration Notes
+### Bluetooth (Web Bluetooth API)
 
-**Backend** (`application.yml`):
-- MongoDB defaults to `localhost:27017/training-planner`
-- Spring AI Anthropic configuration:
-  - Model: `claude-sonnet-4-5`
-  - Temperature: 0.7
-  - Max tokens: 4096
-  - Retry: 3 attempts with exponential backoff
-- Requires `ANTHROPIC_API_KEY` environment variable
-- Spring AI version: 1.0.0-SNAPSHOT (requires Spring Snapshots repository)
-- JWT expiration: 24 hours (86400000ms)
+`bluetooth.service.ts` + `bluetooth-parsers.util.ts` handle GATT services per Bluetooth SIG specs:
+- `fitness_machine` — indoor trainer (Indoor Bike Data characteristic)
+- `cycling_power` — power meters
+- `heart_rate` — HR monitors
+- `cycling_speed_and_cadence` — CSC
 
-**Frontend**:
-- Uses Angular standalone components (no NgModules)
-- Vitest for testing (not Karma/Jasmine)
-- Prettier configured: 100 char line width, single quotes
-- Angular CLI version 21.1.2
-- Target ES2022+ (TypeScript 5.9.2)
+Simulation mode is built in for testing without devices. `workout-execution.service.ts` consumes the streams during a live session.
 
-### Bluetooth Integration
+### MCP server vs end-user skills
 
-The app connects to fitness devices via Web Bluetooth API:
-- **Trainer**: `fitness_machine` service → indoor bike data
-- **Heart Rate**: `heart_rate` service → HR measurements
-- **Power Meter**: `cycling_power` service → power measurements
-- **Cadence**: `cycling_speed_and_cadence` service → CSC measurements
+Two separate "skills" concepts, do not confuse them:
 
-Data parsing follows Bluetooth SIG specifications for characteristic value structures (flags, offsets, endianness).
+- `.claude/skills/*/SKILL.md` — **developer skills** for Claude Code editing this repo. Required reading before touching the matching code area.
+- `skills/koval-*/SKILL.md` — **end-user skills** distributed to Claude Desktop/Claude.ai users alongside the MCP connector. Each is a markdown playbook telling Claude which MCP tools to chain for a workflow ("analyze my last ride", "plan my training week", "publish club gazette"). Build artifacts via `node skills/package-skills.mjs` → `skills/dist/*.zip`. The MCP connector itself is the Spring server at `/mcp/sse`.
 
-Simulation mode available for testing without physical devices.
+### Data model conventions
 
-### Mock Data Fallback
+- Power targets are `% of FTP` (athlete-stored). RAMP blocks use `powerStartPercent` + `powerEndPercent`; all other block types use `powerTargetPercent`.
+- Durations are **seconds**.
+- Sport types: `CYCLING`, `RUNNING`, `SWIMMING`, `BRICK` (multi-discipline). Polymorphic `Training` deserialization keyed on `sport`.
+- Zones are stored per-athlete per-sport in `ZoneSystem`s (default plus custom). `ZoneClassificationService` maps measured power/HR/pace to zone labels.
+- Workout notation parser (`workout-notation-parser.ts`) converts text like `4x(5min @ 105%, 3min @ 60%)` into `WorkoutElement[]`.
 
-Both frontend services (`AuthService`, `TrainingService`) include mock data:
-- Frontend operates standalone if backend is unavailable
-- Mock user has COACH role to enable all UI features
-- Three sample workouts included: "FTP Booster - Over-Unders", "Sprints & Explosiveness", "Endurance with Ramps & Free Ride"
+## Deployment
 
-### Authentication Flow
+GitHub Actions (`.github/workflows/deploy.yml`) on push to `main`:
+- Backend → Cloud Run via Artifact Registry (`europe-west1`), profile `prod`, secrets injected from Google Secret Manager.
+- Frontend → Firebase Hosting (`frontend/dist/training-planner-frontend/browser`).
 
-1. User clicks "Login with Strava"
-2. Frontend calls `GET /api/auth/strava` → receives OAuth URL
-3. Redirect to Strava authorization
-4. Strava redirects to `/auth/callback?code=...`
-5. Frontend calls `GET /api/auth/strava/callback?code=...`
-6. Backend exchanges code for Strava tokens, creates/updates User, returns JWT
-7. Frontend stores JWT in localStorage, loads user profile
+`backend/Dockerfile` builds a GraalVM native image. `cloudbuild.yaml` is an alternative GCB recipe.
 
-### AI Chat and Workout Generation Flow
+## Conventions
 
-**Standard Chat:**
-1. User sends message in chat interface
-2. Frontend: `POST /api/ai/chat` with `{ message: "...", chatHistoryId: "..." }`
-3. Backend `AIService.chat()`:
-   - Loads user context (role, FTP)
-   - Retrieves or creates chat history
-   - Calls Claude Sonnet 4.5 with:
-     - System prompt (cached)
-     - Tools: TrainingManagementService, CoachService, HistoryToolService (cached)
-     - Conversation history (cached after first turn)
-     - Chat memory advisor for automatic context
-   - AI may invoke `@Tool` methods like `createTraining()` or `assignTraining()`
-   - Saves conversation to MongoDB
-   - Returns text response, chatHistoryId, and usage metadata
-4. Frontend displays response and usage stats
-
-**Streaming Chat:**
-1. Frontend: `POST /api/ai/chat/stream` (same request format)
-2. Backend returns `Flux<String>` as Server-Sent Events
-3. Frontend receives and displays tokens in real-time
-4. Full response saved to history when stream completes
-
-**Caching Benefits:**
-- First message: ~350 tokens input (system + tools + user message)
-- Subsequent messages: ~50 tokens input + 300 cached tokens (90% cost reduction)
-- Conversation history cached for multi-turn chats
-
-**Tool Access:**
-The AI has full access to:
-- Training CRUD (create, update, delete, list)
-- Workout history and analytics
-- Coach operations (if user role is COACH)
-- Public workout templates for inspiration
+- **Java**: feature-first packaging (do NOT split by `controllers/`/`services/`/`models/`); constructor injection (no `@Autowired` on fields); records for DTOs; `@PreAuthorize` for role checks; centralized exception handling under `config/exceptions/`.
+- **Frontend**: standalone components only (no NgModules); Vitest, not Jasmine; Prettier 100-col + single quotes; `| async` everywhere; service observables end with `$`.
+- **Tools**: every `@Tool` (Spring AI) and `@McpTool` adapter must have a clear, action-oriented description — these are read by Claude at runtime. See `mcp-server-development` skill.
+- **Reflection config**: when moving classes between packages, update `backend/src/main/resources/META-INF/native-image/.../reflect-config.json` or the native build will break.
+- **Prompts**: system prompts live in `backend/src/main/resources/prompts/*.md` and are loaded by `SpecialistAgentService`. Edit there, not in code.
