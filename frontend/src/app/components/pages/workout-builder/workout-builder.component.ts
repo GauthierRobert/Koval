@@ -1,10 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { BehaviorSubject } from 'rxjs';
+import { filter, map, take } from 'rxjs/operators';
 import { TrainingService } from '../../../services/training.service';
 import { AuthService } from '../../../services/auth.service';
 import {
@@ -49,6 +51,7 @@ export class WorkoutBuilderComponent implements OnInit {
   private router = inject(Router);
   private trainingService = inject(TrainingService);
   private authService = inject(AuthService);
+  private destroyRef = inject(DestroyRef);
 
   // Metadata
   title = '';
@@ -65,6 +68,7 @@ export class WorkoutBuilderComponent implements OnInit {
   selectedChildIndex = -1; // child within a set (-1 = set itself selected)
   isEditing = false; // true when editing existing training
   trainingId: string | null = null;
+  saving = false;
 
   // Block form (inline editor)
   editType: BlockType = 'STEADY';
@@ -112,17 +116,20 @@ export class WorkoutBuilderComponent implements OnInit {
 
   private loadTraining(id: string): void {
     this.trainingService.loadTrainings();
-    const sub = this.trainingService.trainings$.subscribe((trainings) => {
-      const training = trainings.find((t) => t.id === id);
-      if (training) {
+    this.trainingService.trainings$
+      .pipe(
+        map((trainings) => trainings.find((t) => t.id === id)),
+        filter((training): training is Training => !!training),
+        take(1),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((training) => {
         this.title = training.title;
         this.description = training.description || '';
         this.sportType = training.sportType;
         this.trainingType = training.trainingType || 'MIXED';
         this.blocksSubject.next([...(training.blocks || [])]);
-        sub.unsubscribe();
-      }
-    });
+      });
   }
 
   get blocks(): WorkoutBlock[] {
@@ -458,7 +465,7 @@ export class WorkoutBuilderComponent implements OnInit {
   // ── Save ──────────────────────────────────────────────────────────
 
   save(): void {
-    if (!this.title.trim() || this.blocks.length === 0) return;
+    if (this.saving || !this.title.trim() || this.blocks.length === 0) return;
 
     const training: Partial<Training> = {
       title: this.title.trim(),
@@ -470,19 +477,26 @@ export class WorkoutBuilderComponent implements OnInit {
       estimatedDurationSeconds: this.estimatedDuration,
     };
 
-    if (this.isEditing && this.trainingId) {
-      this.trainingService.updateTraining(this.trainingId, training).subscribe({
-        next: (updated) => this.router.navigate(['/trainings', updated.id]),
-      });
-    } else {
-      this.trainingService.createTraining(training).subscribe({
-        next: (created) => this.router.navigate(['/trainings', created.id]),
-      });
-    }
+    this.saving = true;
+    const op$ = this.isEditing && this.trainingId
+      ? this.trainingService.updateTraining(this.trainingId, training)
+      : this.trainingService.createTraining(training);
+
+    op$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (result) => {
+        this.saving = false;
+        this.router.navigate(['/trainings', result.id]);
+      },
+      error: (err) => {
+        this.saving = false;
+        const message = err?.error?.message || err?.message || 'Failed to save training. Please try again.';
+        alert(message);
+      },
+    });
   }
 
   canSave(): boolean {
-    return this.title.trim().length > 0 && this.blocks.length > 0;
+    return !this.saving && this.title.trim().length > 0 && this.blocks.length > 0;
   }
 
   // ── Helpers ───────────────────────────────────────────────────────

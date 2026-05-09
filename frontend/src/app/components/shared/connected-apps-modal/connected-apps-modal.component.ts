@@ -1,7 +1,9 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, HostListener, inject, OnDestroy, OnInit, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, DestroyRef, EventEmitter, HostListener, inject, OnDestroy, OnInit, Output} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {HttpClient} from '@angular/common/http';
+import {Observable} from 'rxjs';
 import {AuthService, User} from '../../../services/auth.service';
 import {NolioSyncService} from '../../../services/nolio-sync.service';
 import {TranslateModule} from '@ngx-translate/core';
@@ -19,6 +21,7 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
   private nolioSync = inject(NolioSyncService);
+  private destroyRef = inject(DestroyRef);
 
   @Output() closed = new EventEmitter<void>();
 
@@ -62,7 +65,7 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
 
   unlinkApp(provider: 'strava' | 'google' | 'garmin' | 'zwift' | 'nolioRead' | 'nolioWrite') {
     this.unlinking = true;
-    let obs: any;
+    let obs: Observable<unknown>;
     switch (provider) {
       case 'strava': obs = this.authService.unlinkStrava(); break;
       case 'google': obs = this.authService.unlinkGoogle(); break;
@@ -71,51 +74,63 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
       case 'nolioRead': obs = this.nolioSync.disconnectRead(); break;
       case 'nolioWrite': obs = this.nolioSync.disconnectWrite(); break;
     }
-    obs.subscribe({
+    obs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => this.unlinking = false,
       error: () => this.unlinking = false,
     });
   }
 
   connectStrava(): void {
-    this.authService.getStravaAuthUrl().subscribe(({authUrl}) => {
-      const url = new URL(authUrl);
-      url.searchParams.set('state', 'link');
-      window.open(url.toString(), '_blank', 'width=600,height=700');
-    });
+    this.authService.getStravaAuthUrl()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(({authUrl}) => {
+        const url = new URL(authUrl);
+        url.searchParams.set('state', 'link');
+        window.open(url.toString(), '_blank', 'width=600,height=700');
+      });
   }
 
   connectGoogle(): void {
-    this.authService.getGoogleAuthUrl().subscribe(({authUrl}) => {
-      const url = new URL(authUrl);
-      url.searchParams.set('state', 'link');
-      window.open(url.toString(), '_blank', 'width=600,height=700');
-    });
+    this.authService.getGoogleAuthUrl()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(({authUrl}) => {
+        const url = new URL(authUrl);
+        url.searchParams.set('state', 'link');
+        window.open(url.toString(), '_blank', 'width=600,height=700');
+      });
   }
 
   connectGarmin(): void {
-    this.http.get<{authUrl: string}>(`${environment.apiUrl}/api/integration/garmin/auth`).subscribe({
-      next: ({authUrl}) => window.open(authUrl, '_blank', 'width=600,height=700'),
-      error: () => {},
-    });
+    this.http.get<{authUrl: string}>(`${environment.apiUrl}/api/integration/garmin/auth`)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({authUrl}) => window.open(authUrl, '_blank', 'width=600,height=700'),
+        error: () => {},
+      });
   }
 
   toggleZwiftAutoSync(enabled: boolean): void {
-    this.http.put<any>(`${environment.apiUrl}/api/integration/zwift/auto-sync`, {enabled}).subscribe({
-      next: () => this.authService.refreshUser(),
-    });
+    this.http.put<unknown>(`${environment.apiUrl}/api/integration/zwift/auto-sync`, {enabled})
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => this.authService.refreshUser(),
+      });
   }
 
   connectNolioRead(): void {
-    this.nolioSync.connectRead().subscribe({
-      error: (err) => this.reportConnectError(err, 'Nolio activities'),
-    });
+    this.nolioSync.connectRead()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        error: (err) => this.reportConnectError(err, 'Nolio activities'),
+      });
   }
 
   connectNolioWrite(): void {
-    this.nolioSync.connectWrite().subscribe({
-      error: (err) => this.reportConnectError(err, 'Nolio workout push'),
-    });
+    this.nolioSync.connectWrite()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        error: (err) => this.reportConnectError(err, 'Nolio workout push'),
+      });
   }
 
   private reportConnectError(err: any, label: string): void {
@@ -127,7 +142,9 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
   }
 
   toggleNolioAutoSync(enabled: boolean): void {
-    this.nolioSync.setAutoSync(enabled).subscribe();
+    this.nolioSync.setAutoSync(enabled)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
   }
 
   @HostListener('document:keydown.escape')
