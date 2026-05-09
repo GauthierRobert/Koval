@@ -145,11 +145,19 @@ export class TrainingService {
         }
     }
 
-    loadReceivedTrainings(): void {
-        this.http.get<ReceivedTraining[]>(`${this.apiUrl}/received`).subscribe({
-            next: (received) => this.receivedTrainingsSubject.next(received),
-            error: () => this.receivedTrainingsSubject.next([]),
-        });
+    loadReceivedTrainings(): Observable<ReceivedTraining[]> {
+        // Mirror loadTrainings(): hot, replayable observable so callers can
+        // fire-and-forget or await the populated list. shareReplay + the eager
+        // subscribe guarantee a single HTTP request.
+        const req$ = this.http.get<ReceivedTraining[]>(`${this.apiUrl}/received`).pipe(
+            tap({
+                next: (received) => this.receivedTrainingsSubject.next(received),
+                error: () => this.receivedTrainingsSubject.next([]),
+            }),
+            shareReplay({ bufferSize: 1, refCount: false }),
+        );
+        req$.subscribe({ error: () => {} });
+        return req$;
     }
 
     updateTrainingGroups(trainingId: string, groupIds: string[]): Observable<Training> {

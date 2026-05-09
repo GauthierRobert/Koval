@@ -219,6 +219,7 @@ export class WorkoutExecutionService {
     }
 
     private startTimer() {
+        this.timerSubscription?.unsubscribe();
         this.timerSubscription = interval(1000).subscribe(() => {
             this.tick();
         });
@@ -265,6 +266,7 @@ export class WorkoutExecutionService {
     }
 
     private subscribeToMetrics() {
+        this.metricsSubscription?.unsubscribe();
         this.metricsSubscription = this.bluetoothService.metrics$.subscribe(metrics => {
             const state = this.stateSubject.value;
             if (!state.isActive || state.isPaused) return;

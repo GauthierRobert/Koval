@@ -1,10 +1,10 @@
-import {Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
+import {Component, DestroyRef, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
-import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import {TranslateModule} from '@ngx-translate/core';
 import {BehaviorSubject, combineLatest, map, Observable} from 'rxjs';
 import {CoachService, InviteCode} from '../../../services/coach.service';
-import {AuthService} from '../../../services/auth.service';
 import {Group, GroupService} from '../../../services/group.service';
 import {ModalShellComponent} from '../modal-shell/modal-shell.component';
 
@@ -21,6 +21,10 @@ export class InviteCodeModalComponent implements OnChanges {
   @Output() closed = new EventEmitter<void>();
   @Output() codeGenerated = new EventEmitter<InviteCode>();
 
+  private coachService = inject(CoachService);
+  private groupService = inject(GroupService);
+  private destroyRef = inject(DestroyRef);
+
   selectedTagId: string | null = null;
   maxUses = 0;
   generating = false;
@@ -30,7 +34,6 @@ export class InviteCodeModalComponent implements OnChanges {
   showInactive = false;
   unassignedTags: Group[] = [];
 
-  private userId = '';
   private inviteCodesSubject = new BehaviorSubject<InviteCode[]>([]);
   inviteCodes$ = this.inviteCodesSubject.asObservable();
 
@@ -47,16 +50,6 @@ export class InviteCodeModalComponent implements OnChanges {
     map(([codes, show]) => show ? codes : codes.filter(c => c.active))
   );
 
-  constructor(
-    private coachService: CoachService,
-    private authService: AuthService,
-    private groupService: GroupService
-  ) {
-    this.authService.user$.subscribe(u => {
-      if (u) this.userId = u.id;
-    });
-  }
-
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen) {
       this.generatedCode = null;
@@ -69,12 +62,14 @@ export class InviteCodeModalComponent implements OnChanges {
   }
 
   loadCodes(): void {
-    this.coachService.getInviteCodes().subscribe({
-      next: (codes) => {
-        this.inviteCodesSubject.next(codes);
-        this.computeUnassignedTags(codes);
-      },
-    });
+    this.coachService.getInviteCodes()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (codes) => {
+          this.inviteCodesSubject.next(codes);
+          this.computeUnassignedTags(codes);
+        },
+      });
   }
 
   private computeUnassignedTags(codes: InviteCode[]): void {
@@ -99,25 +94,29 @@ export class InviteCodeModalComponent implements OnChanges {
   addNewTag(): void {
     const name = this.newTagInput.trim();
     if (!name) return;
-    this.groupService.createGroup(name).subscribe({
-      next: (tag) => {
-        if (!this.availableTags.find(t => t.id === tag.id)) {
-          this.availableTags = [...this.availableTags, tag];
-        }
-        this.newTagInput = '';
-        // Auto-generate invite code using tag name as the code
-        this.generating = true;
-        this.coachService.generateInviteCode([tag.id], this.maxUses, name.toUpperCase()).subscribe({
-          next: (inviteCode) => {
-            this.generatedCode = inviteCode.code;
-            this.generating = false;
-            this.codeGenerated.emit(inviteCode);
-            this.loadCodes();
-          },
-          error: () => { this.generating = false; },
-        });
-      },
-    });
+    this.groupService.createGroup(name)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (tag) => {
+          if (!this.availableTags.find(t => t.id === tag.id)) {
+            this.availableTags = [...this.availableTags, tag];
+          }
+          this.newTagInput = '';
+          // Auto-generate invite code using tag name as the code
+          this.generating = true;
+          this.coachService.generateInviteCode([tag.id], this.maxUses, name.toUpperCase())
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: (inviteCode) => {
+                this.generatedCode = inviteCode.code;
+                this.generating = false;
+                this.codeGenerated.emit(inviteCode);
+                this.loadCodes();
+              },
+              error: () => { this.generating = false; },
+            });
+        },
+      });
   }
 
   resolveTagName(groupId: string): string {
@@ -127,17 +126,19 @@ export class InviteCodeModalComponent implements OnChanges {
 
   generate(): void {
     this.generating = true;
-    this.coachService.generateInviteCode(this.selectedTagId ? [this.selectedTagId] : [], this.maxUses).subscribe({
-      next: (code) => {
-        this.generatedCode = code.code;
-        this.generating = false;
-        this.codeGenerated.emit(code);
-        this.loadCodes();
-      },
-      error: () => {
-        this.generating = false;
-      },
-    });
+    this.coachService.generateInviteCode(this.selectedTagId ? [this.selectedTagId] : [], this.maxUses)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (code) => {
+          this.generatedCode = code.code;
+          this.generating = false;
+          this.codeGenerated.emit(code);
+          this.loadCodes();
+        },
+        error: () => {
+          this.generating = false;
+        },
+      });
   }
 
   copyCode(): void {
@@ -149,9 +150,11 @@ export class InviteCodeModalComponent implements OnChanges {
   }
 
   deactivate(code: InviteCode): void {
-    this.coachService.deactivateInviteCode(code.id).subscribe({
-      next: () => this.loadCodes(),
-    });
+    this.coachService.deactivateInviteCode(code.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => this.loadCodes(),
+      });
   }
 
   close(): void {
