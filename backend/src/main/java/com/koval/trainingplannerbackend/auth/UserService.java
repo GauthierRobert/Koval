@@ -62,6 +62,73 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    /**
+     * Single-field reference value update used by club tests. Does not touch unrelated reference values.
+     * Returns the previous value (for audit logging) and persists the new value. When the target is
+     * {@code POWER_3MIN} or {@code POWER_12MIN}, re-runs the critical-power model so derived
+     * {@code criticalPower}/{@code wPrimeJ} stay consistent.
+     *
+     * @param target the User reference field to update
+     * @param customKey for {@code CUSTOM} target only — the key inside {@code customZoneReferenceValues}
+     * @param newValue the new integer value (callers responsible for rounding)
+     * @return the previous value before the update (null if unset)
+     */
+    public Integer applyTestReferenceUpdate(String userId,
+                                             com.koval.trainingplannerbackend.club.test.ReferenceTarget target,
+                                             String customKey,
+                                             Integer newValue) {
+        User user = getUserById(userId);
+        Integer previous = switch (target) {
+            case FTP -> user.getFtp();
+            case CRITICAL_SWIM_SPEED -> user.getCriticalSwimSpeed();
+            case FUNCTIONAL_THRESHOLD_PACE -> user.getFunctionalThresholdPace();
+            case PACE_5K -> user.getPace5k();
+            case PACE_10K -> user.getPace10k();
+            case PACE_HALF_MARATHON -> user.getPaceHalfMarathon();
+            case PACE_MARATHON -> user.getPaceMarathon();
+            case VO2MAX_POWER -> user.getVo2maxPower();
+            case VO2MAX_PACE -> user.getVo2maxPace();
+            case POWER_3MIN -> user.getPower3MinW();
+            case POWER_12MIN -> user.getPower12MinW();
+            case WEIGHT_KG -> user.getWeightKg();
+            case CUSTOM -> {
+                if (customKey == null || customKey.isBlank()) {
+                    throw new IllegalArgumentException("customKey is required for CUSTOM reference target");
+                }
+                yield user.getCustomZoneReferenceValues().get(customKey);
+            }
+        };
+        switch (target) {
+            case FTP -> user.setFtp(newValue);
+            case CRITICAL_SWIM_SPEED -> user.setCriticalSwimSpeed(newValue);
+            case FUNCTIONAL_THRESHOLD_PACE -> user.setFunctionalThresholdPace(newValue);
+            case PACE_5K -> user.setPace5k(newValue);
+            case PACE_10K -> user.setPace10k(newValue);
+            case PACE_HALF_MARATHON -> user.setPaceHalfMarathon(newValue);
+            case PACE_MARATHON -> user.setPaceMarathon(newValue);
+            case VO2MAX_POWER -> user.setVo2maxPower(newValue);
+            case VO2MAX_PACE -> user.setVo2maxPace(newValue);
+            case POWER_3MIN -> {
+                user.setPower3MinW(newValue);
+                applyCriticalPowerModel(user, user.getPower3MinW(), user.getPower12MinW());
+            }
+            case POWER_12MIN -> {
+                user.setPower12MinW(newValue);
+                applyCriticalPowerModel(user, user.getPower3MinW(), user.getPower12MinW());
+            }
+            case WEIGHT_KG -> user.setWeightKg(newValue);
+            case CUSTOM -> {
+                if (newValue == null) {
+                    user.getCustomZoneReferenceValues().remove(customKey);
+                } else {
+                    user.getCustomZoneReferenceValues().put(customKey, newValue);
+                }
+            }
+        }
+        userRepository.save(user);
+        return previous;
+    }
+
     public User updateSettings(String userId, Integer ftp, Integer weightKg, Integer functionalThresholdPace,
             Integer criticalSwimSpeed, Integer pace5k, Integer pace10k,
             Integer paceHalfMarathon, Integer paceMarathon,

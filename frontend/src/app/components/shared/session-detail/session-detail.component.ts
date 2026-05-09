@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild,} from '@angular/core';
+import {AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild,} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
 import {SavedSession} from '../../../services/history.service';
@@ -11,6 +11,7 @@ import {BlockSummary, LiveMetrics} from '../../../services/workout-execution.ser
     imports: [CommonModule, TranslateModule],
     templateUrl: './session-detail.component.html',
     styleUrls: ['./session-detail.component.css'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SessionDetailComponent implements AfterViewInit, OnChanges {
     @Input() session!: SavedSession;

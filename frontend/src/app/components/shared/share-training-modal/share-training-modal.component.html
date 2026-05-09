@@ -8,7 +8,7 @@
       <label>{{ 'SHARE_TRAINING.LABEL_TRAINING' | translate }}</label>
       <select [(ngModel)]="selectedTrainingId" (ngModelChange)="onTrainingSelected()">
         <option value="" disabled>{{ 'SHARE_TRAINING.SELECT_TRAINING_PLACEHOLDER' | translate }}</option>
-        @for (t of allTrainings; track t.id) {
+        @for (t of trainings$ | async; track t.id) {
           <option [value]="t.id">{{ t.title }}</option>
         }
       </select>

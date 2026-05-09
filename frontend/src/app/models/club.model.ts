@@ -281,7 +281,93 @@ export interface ClubInviteCode {
 }
 
 // --- Feed Event Types ---
-export type ClubFeedEventType = 'SESSION_COMPLETION' | 'RACE_COMPLETION' | 'COACH_ANNOUNCEMENT' | 'NEXT_GOAL';
+export type ClubFeedEventType =
+  | 'SESSION_COMPLETION'
+  | 'RACE_COMPLETION'
+  | 'COACH_ANNOUNCEMENT'
+  | 'NEXT_GOAL'
+  | 'GAZETTE_PUBLISHED'
+  | 'MEMBER_SPOTLIGHT';
+
+export type SpotlightBadge = 'MILESTONE' | 'COMEBACK' | 'NEW_MEMBER' | 'PR' | 'GRIT' | 'CUSTOM';
+
+export type ReactionEmoji = 'fire' | 'muscle' | 'clap' | 'heart' | 'party' | 'raise';
+
+export const ALLOWED_REACTION_EMOJI: ReactionEmoji[] = [
+  'fire',
+  'muscle',
+  'clap',
+  'heart',
+  'party',
+  'raise',
+];
+
+export interface MentionRef {
+  userId: string;
+  displayName: string;
+  contextType: string;
+  contextId: string;
+}
+
+export interface MentionSuggestion {
+  userId: string;
+  displayName: string;
+  profilePicture?: string;
+  role: ClubMemberRole;
+}
+
+export interface ReactionUpdatePayload {
+  feedEventId: string;
+  commentId: string | null;
+  emoji: ReactionEmoji;
+  count: number;
+  actorUserId: string;
+  added: boolean;
+}
+
+export interface ReactionStateResponse {
+  feedEventId: string;
+  commentId: string | null;
+  emoji: ReactionEmoji;
+  count: number;
+  userReacted: boolean;
+}
+
+export interface CreateSpotlightData {
+  spotlightedUserId: string;
+  title: string;
+  message: string;
+  badge: SpotlightBadge;
+  mediaIds: string[];
+  expiresInDays: number;
+  mentionUserIds: string[];
+}
+
+export interface UpdateSpotlightData {
+  title?: string;
+  message?: string;
+  badge?: SpotlightBadge;
+  mediaIds?: string[];
+  expiresInDays?: number;
+  mentionUserIds?: string[];
+}
+
+export interface MemberEngagement {
+  userId: string;
+  displayName: string;
+  profilePicture?: string;
+  role: ClubMemberRole;
+  commentsPosted: number;
+  reactionsGiven: number;
+  sessionsCompleted: number;
+  lastActiveAt?: string;
+}
+
+export interface EngagementInsightsResponse {
+  members: MemberEngagement[];
+  days: number;
+  generatedAt: string;
+}
 
 export interface CompletionEntry {
   userId: string;
@@ -316,6 +402,9 @@ export interface FeedCommentEntry {
   content: string;
   createdAt: string;
   updatedAt?: string;
+  parentCommentId?: string | null;
+  reactions?: { [emoji: string]: string[] };
+  mentions?: MentionRef[];
 }
 
 export interface AnnouncementAttachmentResponse {
@@ -356,6 +445,27 @@ export interface ClubFeedEventResponse {
   engagedAthletes?: EngagedAthlete[];
   // COMMENTS
   comments?: FeedCommentEntry[];
+  // PHOTO ENRICHMENTS
+  photoEnrichments?: {
+    id: string;
+    contributedByUserId: string;
+    contributedByDisplayName: string;
+    contributedByProfilePicture?: string;
+    addedAt: string;
+    file: import('./media.model').MediaResponse | null;
+  }[];
+  // REACTIONS — emoji code -> set of userIds
+  reactions?: { [emoji: string]: string[] };
+  // MENTIONS
+  mentionRefs?: MentionRef[];
+  // MEMBER_SPOTLIGHT
+  spotlightedUserId?: string;
+  spotlightedDisplayName?: string;
+  spotlightedProfilePicture?: string;
+  spotlightTitle?: string;
+  spotlightMessage?: string;
+  spotlightBadge?: SpotlightBadge;
+  spotlightExpiresAt?: string;
 }
 
 export interface ClubFeedResponse {

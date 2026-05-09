@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  DestroyRef,
   EventEmitter,
   HostListener,
   inject,
@@ -10,6 +11,7 @@ import {
   Output,
 } from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {BehaviorSubject} from 'rxjs';
 
 import {Router, RouterModule} from '@angular/router';
@@ -68,6 +70,7 @@ export class ClubSessionsTabComponent implements OnInit {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private translate = inject(TranslateService);
+  private destroyRef = inject(DestroyRef);
 
   sessions$ = this.clubSessionService.sessions$;
   currentUserId: string | null = null;
@@ -111,7 +114,7 @@ export class ClubSessionsTabComponent implements OnInit {
   showOtherGroupSessions = localStorage.getItem(ClubSessionsTabComponent.SHOW_OTHER_GROUPS_KEY) !== 'false';
 
   ngOnInit(): void {
-    this.authService.user$.subscribe((u) => {
+    this.authService.user$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((u) => {
       this.currentUserId = u?.id ?? null;
       this.cdr.markForCheck();
     });
@@ -120,11 +123,11 @@ export class ClubSessionsTabComponent implements OnInit {
       this.clubSessionService.loadRecurringTemplates(this.club.id);
       this.loadCalendarSessions();
       this.clubService.loadGroups(this.club.id);
-      this.clubService.groups$.subscribe((groups) => {
+      this.clubService.groups$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((groups) => {
         this.clubGroups = groups;
         this.cdr.markForCheck();
       });
-      this.clubService.members$.subscribe((members) => {
+      this.clubService.members$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((members) => {
         this.coachMembers = members.filter(
           (m) => m.role === 'COACH' || m.role === 'ADMIN' || m.role === 'OWNER',
         );

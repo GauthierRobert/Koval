@@ -11,6 +11,7 @@ import com.koval.trainingplannerbackend.training.zone.ZoneSystem;
 import com.koval.trainingplannerbackend.training.zone.ZoneSystemService;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -42,11 +43,27 @@ public class TrainingMetricsService {
      * requesting user's reference values instead of the creator's.
      */
     public void enrichTrainingForUser(Training training, String userId) {
-        if (training.getBlocks() == null || training.getBlocks().isEmpty()) {
-            return;
-        }
-        resolveZoneTargets(training, userId);
-        calculateTrainingMetrics(training, userId);
+        enrichTrainings(List.of(training), userId);
+    }
+
+    /**
+     * Batch variant: fetches the user and athlete-coach IDs once, and memoises
+     * zone-system lookups across trainings. Use this for list endpoints to avoid
+     * an N+1 user/zone-system fetch per training.
+     */
+    public void enrichTrainings(List<Training> trainings, String userId) {
+        if (trainings == null || trainings.isEmpty()) return;
+        User user = userRepository.findById(userId).orElse(null);
+        List<String> athleteCoachIds = groupService.getCoachIdsForAthlete(userId);
+        Map<String, ZoneSystem> zoneCache = new HashMap<>();
+        trainings.forEach(t -> enrichOne(t, userId, user, athleteCoachIds, zoneCache));
+    }
+
+    private void enrichOne(Training training, String userId, User user,
+                           List<String> athleteCoachIds, Map<String, ZoneSystem> zoneCache) {
+        if (training.getBlocks() == null || training.getBlocks().isEmpty()) return;
+        resolveZoneTargetsCached(training, userId, athleteCoachIds, zoneCache);
+        if (user != null) applyMetricsForUser(training, user);
     }
 
     /**
@@ -58,11 +75,12 @@ public class TrainingMetricsService {
             training.setEstimatedIf(0.0);
             return;
         }
+        userRepository.findById(userId).ifPresent(user -> applyMetricsForUser(training, user));
+    }
 
-        userRepository.findById(userId).ifPresent(user -> {
-            SportType sport = Optional.ofNullable(training.getSportType()).orElse(SportType.CYCLING);
-            applyMetricsResult(training, calculateBlocksMetrics(training, user, sport));
-        });
+    private void applyMetricsForUser(Training training, User user) {
+        SportType sport = Optional.ofNullable(training.getSportType()).orElse(SportType.CYCLING);
+        applyMetricsResult(training, calculateBlocksMetrics(training, user, sport));
     }
 
     private void applyMetricsResult(Training training, MetricsResult result) {
@@ -80,20 +98,29 @@ public class TrainingMetricsService {
 
     // ── Zone resolution ─────────────────────────────────────────────────────
 
-    private void resolveZoneTargets(Training training, String userId) {
-        boolean hasZoneTargets = hasZoneTargetsRecursive(training.getBlocks());
-        if (!hasZoneTargets) return;
+    private void resolveZoneTargetsCached(Training training, String userId,
+                                          List<String> athleteCoachIds,
+                                          Map<String, ZoneSystem> zoneCache) {
+        if (!hasZoneTargetsRecursive(training.getBlocks())) return;
 
-        ZoneSystem zoneSystem = resolveZoneSystem(training, userId);
+        ZoneSystem zoneSystem = zoneCache.computeIfAbsent(
+                zoneCacheKey(training, userId),
+                k -> resolveZoneSystem(training, userId, athleteCoachIds));
         if (zoneSystem == null || zoneSystem.getZones() == null || zoneSystem.getZones().isEmpty()) return;
 
         Map<String, ZoneResolution> zoneMap = buildZoneMap(zoneSystem);
-
-        List<WorkoutElement> resolvedBlocks = training.getBlocks().stream()
+        training.setBlocks(training.getBlocks().stream()
                 .map(block -> resolveElementZones(block, zoneMap))
-                .toList();
+                .toList());
+    }
 
-        training.setBlocks(resolvedBlocks);
+    private static String zoneCacheKey(Training training, String userId) {
+        if (training.getZoneSystemId() != null && !training.getZoneSystemId().isBlank()) {
+            return "id:" + training.getZoneSystemId();
+        }
+        SportType sport = Optional.ofNullable(training.getSportType()).orElse(SportType.CYCLING);
+        String createdBy = Optional.ofNullable(training.getCreatedBy()).orElse(userId);
+        return "default:" + createdBy + ":" + sport;
     }
 
     private Map<String, ZoneResolution> buildZoneMap(ZoneSystem zoneSystem) {
@@ -132,7 +159,7 @@ public class TrainingMetricsService {
 
     private record ZoneResolution(int midpoint, String displayLabel) {}
 
-    private ZoneSystem resolveZoneSystem(Training training, String userId) {
+    private ZoneSystem resolveZoneSystem(Training training, String userId, List<String> athleteCoachIds) {
         // 1. Try training's explicit zone system
         if (training.getZoneSystemId() != null && !training.getZoneSystemId().isBlank()) {
             try {
@@ -141,15 +168,14 @@ public class TrainingMetricsService {
         }
 
         SportType sport = Optional.ofNullable(training.getSportType()).orElse(SportType.CYCLING);
-
-        // 2. Try default zone system for the training creator
+        // 2. Default for the training creator, else first match across the requesting athlete's coaches.
         String createdBy = Optional.ofNullable(training.getCreatedBy()).orElse(userId);
         return zoneSystemService.getDefaultZoneSystem(createdBy, sport)
-                .orElseGet(() -> groupService.getCoachIdsForAthlete(userId).stream()
-                .map(coachId -> zoneSystemService.getDefaultZoneSystem(coachId, sport))
-                .flatMap(Optional::stream)
-                .findFirst()
-                .orElse(null));
+                .orElseGet(() -> athleteCoachIds.stream()
+                        .map(coachId -> zoneSystemService.getDefaultZoneSystem(coachId, sport))
+                        .flatMap(Optional::stream)
+                        .findFirst()
+                        .orElse(null));
     }
 
     // ── Block-level metrics ─────────────────────────────────────────────────

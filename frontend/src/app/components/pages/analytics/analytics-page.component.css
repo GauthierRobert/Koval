@@ -195,20 +195,15 @@
   color: var(--accent, #6366f1);
 }
 
-/* Empty state */
-.empty-state {
-  text-align: center;
-  padding: 4rem 2rem;
-}
-
+/* Empty state nested elements */
 .empty-state h3 {
-  color: var(--text-primary, #f0f0f0);
-  margin: 0 0 0.5rem;
+  color: var(--text-color);
+  margin: 0 0 var(--space-sm);
 }
 
 .empty-state p {
-  color: var(--text-secondary, #a0a0a0);
-  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
 }
 
 /* ── Responsive ────────────────────────────────────────── */

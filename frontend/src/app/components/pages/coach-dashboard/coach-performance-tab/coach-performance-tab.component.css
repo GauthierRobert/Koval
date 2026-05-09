@@ -93,6 +93,10 @@
   font-family: var(--font-display);
 }
 
+.section-title-spaced {
+  margin-top: var(--space-lg);
+}
+
 .week-nav {
   display: inline-flex;
   align-items: center;

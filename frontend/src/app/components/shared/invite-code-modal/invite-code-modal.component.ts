@@ -1,4 +1,4 @@
-import {Component, DestroyRef, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
+import {ChangeDetectionStrategy, Component, DestroyRef, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
@@ -14,6 +14,7 @@ import {ModalShellComponent} from '../modal-shell/modal-shell.component';
   imports: [CommonModule, FormsModule, TranslateModule, ModalShellComponent],
   templateUrl: './invite-code-modal.component.html',
   styleUrl: './invite-code-modal.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InviteCodeModalComponent implements OnChanges {
   @Input() isOpen = false;

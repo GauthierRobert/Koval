@@ -1,10 +1,11 @@
-import {Component, Input} from '@angular/core';
+import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
 import {CommonModule} from '@angular/common';
 
 @Component({
     selector: 'app-sport-icon',
     standalone: true,
     imports: [CommonModule],
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
     <svg
       [attr.width]="size"

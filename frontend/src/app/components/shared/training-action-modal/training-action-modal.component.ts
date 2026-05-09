@@ -1,4 +1,6 @@
 import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   DestroyRef,
   EventEmitter,
@@ -38,6 +40,7 @@ export type TrainingActionMode = 'session' | 'self-schedule' | 'coach-assign' | 
   imports: [CommonModule, FormsModule, TranslateModule, A11yModule, AiPromptFormComponent, TrainingSearchListComponent, AthleteTagSelectorComponent],
   templateUrl: './training-action-modal.component.html',
   styleUrl: './training-action-modal.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TrainingActionModalComponent implements OnInit, OnChanges {
   @Input() isOpen = false;
@@ -66,6 +69,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
   private ngZone = inject(NgZone);
   private destroyRef = inject(DestroyRef);
   private translate = inject(TranslateService);
+  private cdr = inject(ChangeDetectorRef);
 
   // Tab state
   tab: 'ai' | 'select' = 'ai';
@@ -209,7 +213,10 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.trainingService.trainings$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(t => {
-      this.ngZone.run(() => (this.availableTrainings = t));
+      this.ngZone.run(() => {
+        this.availableTrainings = t;
+        this.cdr.markForCheck();
+      });
     });
     this.authService.user$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(u => {
       if (u) this.userId = u.id;
@@ -247,6 +254,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
           this.ngZone.run(() => {
             this.availableGroups = groups;
             this.clubGroups = groups;
+            this.cdr.markForCheck();
           });
         });
       }
@@ -267,6 +275,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
             if (this.preselectedAthletes?.length) {
               this.selectedAthleteIds = this.preselectedAthletes.map(a => a.id);
             }
+            this.cdr.markForCheck();
           });
         });
         this.clubService.groups$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(groups => {
@@ -274,6 +283,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
             this.availableTags = groups.map(g => g.name);
             this.clubGroups = groups;
             this.enrichAthletesWithGroups();
+            this.cdr.markForCheck();
           });
         });
       }

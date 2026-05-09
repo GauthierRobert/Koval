@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.ai.config;
 
 import com.koval.trainingplannerbackend.ai.ConversationSummarizer;
 import com.koval.trainingplannerbackend.ai.agents.AgentType;
+import com.koval.trainingplannerbackend.ai.logger.PromptLogger;
 import com.koval.trainingplannerbackend.ai.agents.SpecialistAgentService;
 import com.koval.trainingplannerbackend.ai.agents.TrainingAgent;
 import com.koval.trainingplannerbackend.ai.logger.UsageTracker;
@@ -20,12 +21,18 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.scheduler.Schedulers;
 
+import java.util.Optional;
+
 /**
  * Sonnet-powered agents for complex creation tasks: training workouts,
  * zone systems, training+session combos, and race completion.
  */
 @Configuration
 public class AISonnetConfig extends AIConfig {
+
+    public AISonnetConfig(Optional<PromptLogger> promptLogger) {
+        super(promptLogger);
+    }
 
     @Bean
     public ChatClient trainingCreationClient(AnthropicChatModel chatModel,

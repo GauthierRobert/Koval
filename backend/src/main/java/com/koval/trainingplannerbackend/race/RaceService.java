@@ -25,6 +25,11 @@ import java.util.NoSuchElementException;
 @Service
 public class RaceService {
 
+    /** Default page size applied to the unpaginated overload (AI/MCP tool callers). */
+    private static final int DEFAULT_SEARCH_PAGE_SIZE = 50;
+    /** Hard cap on per-page results regardless of caller-supplied size. */
+    private static final int MAX_SEARCH_PAGE_SIZE = 200;
+
     private final RaceRepository repository;
     private final GpxParser gpxParser;
     private final MongoTemplate mongoTemplate;
@@ -36,35 +41,29 @@ public class RaceService {
     }
 
     public List<Race> searchRaces(String query, String sport, String region) {
-        if (query != null && !query.isBlank() && sport != null && !sport.isBlank()) {
-            return repository.findByTitleContainingIgnoreCaseAndSportIgnoreCase(query.trim(), sport.trim());
-        }
-        if (query != null && !query.isBlank()) {
-            return repository.findByTitleContainingIgnoreCase(query.trim());
-        }
-        if (sport != null && !sport.isBlank()) {
-            return repository.findBySportIgnoreCase(sport.trim());
-        }
-        if (region != null && !region.isBlank()) {
-            return repository.findByCountryIgnoreCaseOrRegionIgnoreCase(region.trim(), region.trim());
-        }
-        return repository.findAll();
+        return searchRaces(query, sport, region, PageRequest.of(0, DEFAULT_SEARCH_PAGE_SIZE)).getContent();
     }
 
     public Page<Race> searchRaces(String query, String sport, String region, Pageable pageable) {
+        Pageable bounded = capPageSize(pageable);
         if (query != null && !query.isBlank() && sport != null && !sport.isBlank()) {
-            return repository.findByTitleContainingIgnoreCaseAndSportIgnoreCase(query.trim(), sport.trim(), pageable);
+            return repository.findByTitleContainingIgnoreCaseAndSportIgnoreCase(query.trim(), sport.trim(), bounded);
         }
         if (query != null && !query.isBlank()) {
-            return repository.findByTitleContainingIgnoreCase(query.trim(), pageable);
+            return repository.findByTitleContainingIgnoreCase(query.trim(), bounded);
         }
         if (sport != null && !sport.isBlank()) {
-            return repository.findBySportIgnoreCase(sport.trim(), pageable);
+            return repository.findBySportIgnoreCase(sport.trim(), bounded);
         }
         if (region != null && !region.isBlank()) {
-            return repository.findByCountryIgnoreCaseOrRegionIgnoreCase(region.trim(), region.trim(), pageable);
+            return repository.findByCountryIgnoreCaseOrRegionIgnoreCase(region.trim(), region.trim(), bounded);
         }
-        return repository.findAll(pageable);
+        return repository.findAll(bounded);
+    }
+
+    private Pageable capPageSize(Pageable pageable) {
+        if (pageable.getPageSize() <= MAX_SEARCH_PAGE_SIZE) return pageable;
+        return PageRequest.of(pageable.getPageNumber(), MAX_SEARCH_PAGE_SIZE, pageable.getSort());
     }
 
     @Cacheable(value = "races", key = "#id")
@@ -139,7 +138,7 @@ public class RaceService {
 
     @Caching(evict = {
         @CacheEvict(value = "races", key = "#raceId"),
-        @CacheEvict(value = "raceRoutes", allEntries = true),
+        @CacheEvict(value = "raceRoutes", key = "#raceId + '_' + #discipline.toLowerCase()"),
         @CacheEvict(value = "raceSportFacets", allEntries = true),
         @CacheEvict(value = "raceCountryFacets", allEntries = true)
     })
@@ -156,7 +155,7 @@ public class RaceService {
 
     @Caching(evict = {
         @CacheEvict(value = "races", key = "#raceId"),
-        @CacheEvict(value = "raceRoutes", allEntries = true)
+        @CacheEvict(value = "raceRoutes", key = "#raceId + '_' + #discipline.toLowerCase()")
     })
     public void deleteGpx(String raceId, String discipline) {
         Race race = getRaceById(raceId);

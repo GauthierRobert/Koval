@@ -1,4 +1,4 @@
-import {Component, inject} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 
 import {CommonModule} from '@angular/common';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
@@ -23,6 +23,7 @@ import {TranslateModule, TranslateService} from '@ngx-translate/core';
     imports: [CommonModule, RouterLink, SportIconComponent, TranslateModule],
     templateUrl: './training-history.component.html',
     styleUrl: './training-history.component.css',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TrainingHistoryComponent {
     private trainingService = inject(TrainingService);

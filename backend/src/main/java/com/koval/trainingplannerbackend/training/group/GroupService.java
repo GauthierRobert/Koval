@@ -1,5 +1,7 @@
 package com.koval.trainingplannerbackend.training.group;
 
+import com.koval.trainingplannerbackend.auth.User;
+import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
@@ -7,15 +9,50 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /** Manages coach-athlete groupings: CRUD, membership, and cross-group queries. */
 @Service
 public class GroupService {
 
     private final GroupRepository groupRepository;
+    private final UserRepository userRepository;
 
-    public GroupService(GroupRepository groupRepository) {
+    public GroupService(GroupRepository groupRepository, UserRepository userRepository) {
         this.groupRepository = groupRepository;
+        this.userRepository = userRepository;
+    }
+
+    /** Returns groups visible to {@code userId}: coach sees their own; athlete sees memberships. */
+    public List<Group> getGroupsForUser(String userId) {
+        return userRepository.findById(userId)
+                .map(u -> u.isCoach() ? getGroupsForCoach(userId) : getGroupsForAthlete(userId))
+                .orElse(List.of());
+    }
+
+    /** Creates a group on behalf of a coach; throws 403 if the caller isn't a coach. */
+    public Group createGroupAsCoach(String userId, String name, int maxAthletes) {
+        requireCoach(userId);
+        return getOrCreateGroup(name, userId, maxAthletes);
+    }
+
+    /** Renames a group on behalf of a coach; throws 403 if the caller isn't a coach. */
+    public Group renameGroupAsCoach(String userId, String groupId, String newName) {
+        requireCoach(userId);
+        return renameGroup(groupId, newName, userId);
+    }
+
+    /** Deletes a group on behalf of a coach; throws 403 if the caller isn't a coach. */
+    public void deleteGroupAsCoach(String userId, String groupId) {
+        requireCoach(userId);
+        deleteGroup(groupId, userId);
+    }
+
+    private void requireCoach(String userId) {
+        Optional<User> user = userRepository.findById(userId);
+        if (user.isEmpty() || !user.get().isCoach()) {
+            throw new ForbiddenOperationException("Only coaches can perform this operation");
+        }
     }
 
     /**

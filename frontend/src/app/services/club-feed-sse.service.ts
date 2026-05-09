@@ -7,6 +7,7 @@ import {
   CommentUpdatePayload,
   CompletionUpdatePayload,
   FeedEventDeletedPayload,
+  ReactionUpdatePayload,
 } from './club.service';
 
 export interface KudosUpdatePayload {
@@ -45,6 +46,12 @@ export class ClubFeedSseService {
 
   private feedEventDeletedSubject = new Subject<FeedEventDeletedPayload>();
   onFeedEventDeleted$ = this.feedEventDeletedSubject.asObservable();
+
+  private reactionUpdateSubject = new Subject<ReactionUpdatePayload>();
+  onReactionUpdate$ = this.reactionUpdateSubject.asObservable();
+
+  private commentReplyAddedSubject = new Subject<CommentUpdatePayload>();
+  onCommentReplyAdded$ = this.commentReplyAddedSubject.asObservable();
 
   connect(clubId: string): void {
     this.disconnect();
@@ -149,6 +156,12 @@ export class ClubFeedSseService {
             break;
           case 'feed_event_deleted':
             this.feedEventDeletedSubject.next(parsed);
+            break;
+          case 'reaction_update':
+            this.reactionUpdateSubject.next(parsed);
+            break;
+          case 'comment_reply_added':
+            this.commentReplyAddedSubject.next(parsed);
             break;
         }
       });

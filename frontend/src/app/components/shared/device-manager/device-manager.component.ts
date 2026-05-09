@@ -1,4 +1,4 @@
-import {Component, HostListener, inject} from '@angular/core';
+import {ChangeDetectionStrategy, Component, HostListener, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
 import {BluetoothService} from '../../../services/bluetooth.service';
@@ -9,7 +9,8 @@ import {A11yModule} from '@angular/cdk/a11y';
   standalone: true,
   imports: [CommonModule, TranslateModule, A11yModule],
   templateUrl: './device-manager.component.html',
-  styleUrl: './device-manager.component.css'
+  styleUrl: './device-manager.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DeviceManagerComponent {
   private bluetoothService = inject(BluetoothService);

@@ -2,13 +2,14 @@ import {ChangeDetectionStrategy, Component, EventEmitter, Input, Output} from '@
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule} from '@ngx-translate/core';
-import {ClubFeedEventResponse} from '../../../../../../../services/club.service';
+import {ClubFeedEventResponse, ReactionEmoji} from '../../../../../../../services/club.service';
+import {FeedReactionBarComponent} from '../../../../../../shared/feed-reaction-bar/feed-reaction-bar.component';
 import {FeedCommentsSectionComponent} from './feed-comments-section.component';
 
 @Component({
   selector: 'app-feed-race-completion-card',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, FeedCommentsSectionComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, FeedReactionBarComponent, FeedCommentsSectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="feed-card feed-card--pinned">
@@ -67,13 +68,22 @@ import {FeedCommentsSectionComponent} from './feed-comments-section.component';
         }
       </div>
 
+      <app-feed-reaction-bar
+        [reactions]="event.reactions"
+        [currentUserId]="currentUserId"
+        (toggle)="reacted.emit({eventId: event.id, emoji: $event})">
+      </app-feed-reaction-bar>
+
       <app-feed-comments-section
+        [clubId]="clubId"
         [eventId]="event.id"
         [comments]="event.comments ?? []"
         [currentUserId]="currentUserId"
         (commentSubmitted)="commentSubmitted.emit($event)"
+        (replySubmitted)="replySubmitted.emit($event)"
         (commentEdited)="commentEdited.emit($event)"
-        (commentDeleted)="commentDeleted.emit($event)">
+        (commentDeleted)="commentDeleted.emit($event)"
+        (commentReacted)="commentReacted.emit($event)">
       </app-feed-comments-section>
     </div>
   `,
@@ -103,12 +113,16 @@ import {FeedCommentsSectionComponent} from './feed-comments-section.component';
   `,
 })
 export class FeedRaceCompletionCardComponent {
+  @Input({required: true}) clubId!: string;
   @Input() event!: ClubFeedEventResponse;
   @Input() currentUserId: string | null = null;
   @Output() kudosRequested = new EventEmitter<string>();
-  @Output() commentSubmitted = new EventEmitter<{eventId: string; content: string}>();
+  @Output() commentSubmitted = new EventEmitter<{eventId: string; content: string; mentionUserIds: string[]}>();
+  @Output() replySubmitted = new EventEmitter<{eventId: string; parentCommentId: string; content: string; mentionUserIds: string[]}>();
   @Output() commentEdited = new EventEmitter<{eventId: string; commentId: string; content: string}>();
   @Output() commentDeleted = new EventEmitter<{eventId: string; commentId: string}>();
+  @Output() commentReacted = new EventEmitter<{eventId: string; commentId: string; emoji: ReactionEmoji}>();
+  @Output() reacted = new EventEmitter<{eventId: string; emoji: ReactionEmoji}>();
 
   kudosLoading = false;
 

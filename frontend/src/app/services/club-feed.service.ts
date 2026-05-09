@@ -10,9 +10,16 @@ import {
   ClubFeedResponse,
   ClubRaceGoalResponse,
   ClubWeeklyStats,
+  CreateSpotlightData,
+  EngagementInsightsResponse,
   FeedCommentEntry,
   KudosResponse,
   LeaderboardEntry,
+  MentionSuggestion,
+  ReactionEmoji,
+  ReactionStateResponse,
+  ReactionUpdatePayload,
+  UpdateSpotlightData,
 } from '../models/club.model';
 
 @Injectable({ providedIn: 'root' })
@@ -38,6 +45,9 @@ export class ClubFeedService {
 
   private feedEventsSubject = new BehaviorSubject<ClubFeedResponse | null>(null);
   feedEvents$ = this.feedEventsSubject.asObservable();
+
+  private engagementInsightsSubject = new BehaviorSubject<EngagementInsightsResponse | null>(null);
+  engagementInsights$ = this.engagementInsightsSubject.asObservable();
 
   loadFeed(id: string): void {
     this.http
@@ -97,10 +107,12 @@ export class ClubFeedService {
     clubId: string,
     content: string,
     mediaIds: string[] = [],
+    mentionUserIds: string[] = [],
   ): Observable<ClubFeedEventResponse> {
     return this.http.post<ClubFeedEventResponse>(`${this.apiUrl}/${clubId}/feed/announcements`, {
       content,
       mediaIds,
+      mentionUserIds,
     });
   }
 
@@ -162,8 +174,29 @@ export class ClubFeedService {
     });
   }
 
-  addComment(clubId: string, eventId: string, content: string): Observable<FeedCommentEntry> {
-    return this.http.post<FeedCommentEntry>(`${this.apiUrl}/${clubId}/feed/${eventId}/comments`, { content });
+  addComment(
+    clubId: string,
+    eventId: string,
+    content: string,
+    mentionUserIds: string[] = [],
+  ): Observable<FeedCommentEntry> {
+    return this.http.post<FeedCommentEntry>(`${this.apiUrl}/${clubId}/feed/${eventId}/comments`, {
+      content,
+      mentionUserIds,
+    });
+  }
+
+  addReply(
+    clubId: string,
+    eventId: string,
+    parentCommentId: string,
+    content: string,
+    mentionUserIds: string[] = [],
+  ): Observable<FeedCommentEntry> {
+    return this.http.post<FeedCommentEntry>(
+      `${this.apiUrl}/${clubId}/feed/${eventId}/comments/${parentCommentId}/replies`,
+      { content, mentionUserIds },
+    );
   }
 
   updateComment(
@@ -187,10 +220,11 @@ export class ClubFeedService {
     eventId: string,
     content: string,
     mediaIds: string[] = [],
+    mentionUserIds: string[] = [],
   ): Observable<ClubFeedEventResponse> {
     return this.http.put<ClubFeedEventResponse>(
       `${this.apiUrl}/${clubId}/feed/announcements/${eventId}`,
-      { content, mediaIds },
+      { content, mediaIds, mentionUserIds },
     );
   }
 
@@ -271,6 +305,114 @@ export class ClubFeedService {
     });
   }
 
+  // --- Reactions ---
+
+  toggleEventReaction(
+    clubId: string,
+    eventId: string,
+    emoji: ReactionEmoji,
+  ): Observable<ReactionStateResponse> {
+    return this.http.post<ReactionStateResponse>(
+      `${this.apiUrl}/${clubId}/feed/${eventId}/reactions`,
+      { emoji },
+    );
+  }
+
+  toggleCommentReaction(
+    clubId: string,
+    eventId: string,
+    commentId: string,
+    emoji: ReactionEmoji,
+  ): Observable<ReactionStateResponse> {
+    return this.http.post<ReactionStateResponse>(
+      `${this.apiUrl}/${clubId}/feed/${eventId}/comments/${commentId}/reactions`,
+      { emoji },
+    );
+  }
+
+  /** Apply a reaction delta from SSE or HTTP response onto the in-memory feed. */
+  applyReactionUpdate(payload: ReactionUpdatePayload): void {
+    const current = this.feedEventsSubject.value;
+    if (!current) return;
+
+    const updateEvent = (event: ClubFeedEventResponse): ClubFeedEventResponse => {
+      if (event.id !== payload.feedEventId) return event;
+
+      if (!payload.commentId) {
+        const reactions = { ...(event.reactions ?? {}) };
+        const users = new Set(reactions[payload.emoji] ?? []);
+        if (payload.added) users.add(payload.actorUserId);
+        else users.delete(payload.actorUserId);
+        if (users.size === 0) delete reactions[payload.emoji];
+        else reactions[payload.emoji] = Array.from(users);
+        return { ...event, reactions };
+      }
+
+      const comments = (event.comments ?? []).map((c) => {
+        if (c.id !== payload.commentId) return c;
+        const reactions = { ...(c.reactions ?? {}) };
+        const users = new Set(reactions[payload.emoji] ?? []);
+        if (payload.added) users.add(payload.actorUserId);
+        else users.delete(payload.actorUserId);
+        if (users.size === 0) delete reactions[payload.emoji];
+        else reactions[payload.emoji] = Array.from(users);
+        return { ...c, reactions };
+      });
+      return { ...event, comments };
+    };
+
+    this.feedEventsSubject.next({
+      ...current,
+      pinned: current.pinned.map(updateEvent),
+      items: current.items.map(updateEvent),
+    });
+  }
+
+  // --- Mentions ---
+
+  suggestMentions(clubId: string, query: string): Observable<MentionSuggestion[]> {
+    return this.http
+      .get<MentionSuggestion[]>(`${this.apiUrl}/${clubId}/feed/mentions/suggest`, {
+        params: { q: query ?? '' },
+      })
+      .pipe(catchError(() => of([] as MentionSuggestion[])));
+  }
+
+  // --- Spotlights ---
+
+  createSpotlight(clubId: string, data: CreateSpotlightData): Observable<ClubFeedEventResponse> {
+    return this.http.post<ClubFeedEventResponse>(
+      `${this.apiUrl}/${clubId}/feed/spotlights`,
+      data,
+    );
+  }
+
+  updateSpotlight(
+    clubId: string,
+    eventId: string,
+    data: UpdateSpotlightData,
+  ): Observable<ClubFeedEventResponse> {
+    return this.http.put<ClubFeedEventResponse>(
+      `${this.apiUrl}/${clubId}/feed/spotlights/${eventId}`,
+      data,
+    );
+  }
+
+  deleteSpotlight(clubId: string, eventId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${clubId}/feed/spotlights/${eventId}`);
+  }
+
+  // --- Engagement insights ---
+
+  loadEngagementInsights(clubId: string, days = 30): void {
+    this.http
+      .get<EngagementInsightsResponse>(`${this.apiUrl}/${clubId}/feed/engagement-insights`, {
+        params: { days: days.toString() },
+      })
+      .pipe(catchError(() => of(null as EngagementInsightsResponse | null)))
+      .subscribe((resp) => this.ngZone.run(() => this.engagementInsightsSubject.next(resp)));
+  }
+
   resetDetail(): void {
     this.feedSubject.next([]);
     this.weeklyStatsSubject.next(null);
@@ -278,5 +420,6 @@ export class ClubFeedService {
     this.leaderboardSubject.next([]);
     this.raceGoalsSubject.next([]);
     this.feedEventsSubject.next(null);
+    this.engagementInsightsSubject.next(null);
   }
 }

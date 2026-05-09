@@ -4,6 +4,7 @@ import com.koval.trainingplannerbackend.club.dto.CreateRecurringSessionRequest;
 import com.koval.trainingplannerbackend.club.dto.CreateSessionRequest;
 import com.koval.trainingplannerbackend.club.recurring.RecurringSessionTemplate;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +13,8 @@ import java.util.List;
  * from either a RecurringSessionTemplate or a CreateSessionRequest.
  */
 public final class SessionPropertyMapper {
+
+    public static final DateTimeFormatter SESSION_DATE_FMT = DateTimeFormatter.ofPattern("EEE d MMM, HH:mm");
 
     private SessionPropertyMapper() {}
 

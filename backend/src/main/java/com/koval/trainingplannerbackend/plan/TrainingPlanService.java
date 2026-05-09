@@ -7,7 +7,6 @@ import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationExce
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.notification.NotificationService;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
-import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.received.ReceivedTrainingOrigin;
 import com.koval.trainingplannerbackend.training.received.ReceivedTrainingService;
@@ -23,6 +22,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -34,20 +34,17 @@ public class TrainingPlanService {
     private final TrainingPlanRepository planRepository;
     private final TrainingRepository trainingRepository;
     private final ScheduledWorkoutRepository scheduledWorkoutRepository;
-    private final TrainingService trainingService;
     private final NotificationService notificationService;
     private final ReceivedTrainingService receivedTrainingService;
 
     public TrainingPlanService(TrainingPlanRepository planRepository,
                                TrainingRepository trainingRepository,
                                ScheduledWorkoutRepository scheduledWorkoutRepository,
-                               TrainingService trainingService,
                                NotificationService notificationService,
                                ReceivedTrainingService receivedTrainingService) {
         this.planRepository = planRepository;
         this.trainingRepository = trainingRepository;
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
-        this.trainingService = trainingService;
         this.notificationService = notificationService;
         this.receivedTrainingService = receivedTrainingService;
     }
@@ -177,60 +174,92 @@ public class TrainingPlanService {
 
     private void syncFutureScheduledWorkouts(TrainingPlan plan, String userId) {
         LocalDate today = LocalDate.now();
-        List<ScheduledWorkout> planWorkouts = scheduledWorkoutRepository.findByPlanId(plan.getId());
 
         // Delete future PENDING scheduled workouts; preserve past, completed, skipped.
-        for (ScheduledWorkout sw : planWorkouts) {
-            if (sw.getStatus() == ScheduleStatus.PENDING
-                    && !sw.getScheduledDate().isBefore(today)) {
-                scheduledWorkoutRepository.deleteById(sw.getId());
-            }
-        }
+        List<String> futurePendingIds = scheduledWorkoutRepository.findByPlanId(plan.getId()).stream()
+                .filter(sw -> sw.getStatus() == ScheduleStatus.PENDING
+                        && !sw.getScheduledDate().isBefore(today))
+                .map(ScheduledWorkout::getId)
+                .toList();
+        scheduledWorkoutRepository.deleteAllById(futurePendingIds);
 
         // Clear stale scheduledWorkoutId references on future days so we re-link below.
-        for (PlanWeek week : plan.getWeeks()) {
-            for (PlanDay day : week.getDays()) {
-                LocalDate date = computeDate(plan.getStartDate(), week.getWeekNumber(), day.getDayOfWeek());
-                if (!date.isBefore(today)) {
-                    day.setScheduledWorkoutId(null);
-                }
-            }
-        }
+        plan.getWeeks().forEach(week -> week.getDays().forEach(day -> {
+            LocalDate date = computeDate(plan.getStartDate(), week.getWeekNumber(), day.getDayOfWeek());
+            if (!date.isBefore(today)) day.setScheduledWorkoutId(null);
+        }));
 
         List<String> targetAthleteIds = plan.getAthleteIds().isEmpty()
                 ? List.of(userId)
                 : plan.getAthleteIds();
 
-        // Recreate future scheduled workouts from the updated plan structure.
-        for (PlanWeek week : plan.getWeeks()) {
-            for (PlanDay day : week.getDays()) {
-                if (day.getTrainingId() == null) continue;
-                LocalDate date = computeDate(plan.getStartDate(), week.getWeekNumber(), day.getDayOfWeek());
-                if (date.isBefore(today)) continue;
+        buildAndPersistScheduledWorkouts(plan, targetAthleteIds, userId, today, fetchTrainingsForPlan(plan));
+    }
 
-                for (String athleteId : targetAthleteIds) {
-                    ScheduledWorkout sw = new ScheduledWorkout();
-                    sw.setTrainingId(day.getTrainingId());
-                    sw.setAthleteId(athleteId);
-                    sw.setAssignedBy(userId);
-                    sw.setScheduledDate(date);
-                    sw.setNotes(day.getNotes());
-                    sw.setPlanId(plan.getId());
-                    sw.setStatus(ScheduleStatus.PENDING);
+    /** Fetches all distinct trainings referenced by a plan in one query. */
+    private Map<String, Training> fetchTrainingsForPlan(TrainingPlan plan) {
+        List<String> ids = plan.getWeeks().stream()
+                .flatMap(w -> w.getDays().stream())
+                .map(PlanDay::getTrainingId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        if (ids.isEmpty()) return Map.of();
+        return StreamSupport.stream(trainingRepository.findAllById(ids).spliterator(), false)
+                .collect(Collectors.toMap(Training::getId, t -> t, (a, b) -> a));
+    }
 
-                    try {
-                        Training training = trainingService.getTrainingById(day.getTrainingId());
-                        if (training != null && training.getEstimatedTss() != null) {
-                            sw.setTss(training.getEstimatedTss());
-                            sw.setIntensityFactor(training.getEstimatedIf());
-                        }
-                    } catch (Exception ignored) {}
+    /**
+     * Builds {@link ScheduledWorkout}s for every (week, day, athlete) combination scheduled on or
+     * after {@code cutoff}, persists them in one batch, and links the saved IDs back onto each
+     * {@link PlanDay}. When multiple athletes share a day, the last athlete's id wins on the day —
+     * matching the previous imperative behaviour.
+     */
+    private void buildAndPersistScheduledWorkouts(TrainingPlan plan, List<String> athleteIds,
+                                                  String assignedBy, LocalDate cutoff,
+                                                  Map<String, Training> trainingById) {
+        record DayWorkout(PlanDay day, ScheduledWorkout sw) {}
 
-                    ScheduledWorkout saved = scheduledWorkoutRepository.save(sw);
-                    day.setScheduledWorkoutId(saved.getId());
-                }
-            }
+        List<DayWorkout> pairs = plan.getWeeks().stream()
+                .flatMap(week -> week.getDays().stream()
+                        .filter(day -> day.getTrainingId() != null)
+                        .map(day -> Map.entry(week, day)))
+                .filter(e -> !computeDate(plan.getStartDate(), e.getKey().getWeekNumber(),
+                        e.getValue().getDayOfWeek()).isBefore(cutoff))
+                .flatMap(e -> {
+                    PlanDay day = e.getValue();
+                    LocalDate date = computeDate(plan.getStartDate(), e.getKey().getWeekNumber(), day.getDayOfWeek());
+                    Training training = trainingById.get(day.getTrainingId());
+                    return athleteIds.stream().map(athleteId ->
+                            new DayWorkout(day, newScheduledWorkout(plan.getId(), day, athleteId,
+                                    assignedBy, date, training)));
+                })
+                .toList();
+
+        if (pairs.isEmpty()) return;
+
+        List<ScheduledWorkout> saved = scheduledWorkoutRepository.saveAll(
+                pairs.stream().map(DayWorkout::sw).toList());
+        for (int i = 0; i < pairs.size(); i++) {
+            pairs.get(i).day().setScheduledWorkoutId(saved.get(i).getId());
         }
+    }
+
+    private static ScheduledWorkout newScheduledWorkout(String planId, PlanDay day, String athleteId,
+                                                        String assignedBy, LocalDate date, Training training) {
+        ScheduledWorkout sw = new ScheduledWorkout();
+        sw.setTrainingId(day.getTrainingId());
+        sw.setAthleteId(athleteId);
+        sw.setAssignedBy(assignedBy);
+        sw.setScheduledDate(date);
+        sw.setNotes(day.getNotes());
+        sw.setPlanId(planId);
+        sw.setStatus(ScheduleStatus.PENDING);
+        if (training != null && training.getEstimatedTss() != null) {
+            sw.setTss(training.getEstimatedTss());
+            sw.setIntensityFactor(training.getEstimatedIf());
+        }
+        return sw;
     }
 
     public TrainingPlan activatePlan(String planId, String userId, LocalDate startDate) {
@@ -268,37 +297,8 @@ public class TrainingPlanService {
                 ? List.of(userId) // self-assigned plan
                 : plan.getAthleteIds();
 
-        for (PlanWeek week : plan.getWeeks()) {
-            for (PlanDay day : week.getDays()) {
-                if (day.getTrainingId() == null) continue;
-
-                LocalDate date = computeDate(plan.getStartDate(), week.getWeekNumber(), day.getDayOfWeek());
-                if (date.isBefore(LocalDate.now())) continue; // skip past dates
-
-                for (String athleteId : targetAthleteIds) {
-                    ScheduledWorkout sw = new ScheduledWorkout();
-                    sw.setTrainingId(day.getTrainingId());
-                    sw.setAthleteId(athleteId);
-                    sw.setAssignedBy(userId);
-                    sw.setScheduledDate(date);
-                    sw.setNotes(day.getNotes());
-                    sw.setPlanId(planId);
-                    sw.setStatus(ScheduleStatus.PENDING);
-
-                    // Enrich with TSS from training
-                    try {
-                        Training training = trainingService.getTrainingById(day.getTrainingId());
-                        if (training != null && training.getEstimatedTss() != null) {
-                            sw.setTss(training.getEstimatedTss());
-                            sw.setIntensityFactor(training.getEstimatedIf());
-                        }
-                    } catch (Exception ignored) {}
-
-                    ScheduledWorkout saved = scheduledWorkoutRepository.save(sw);
-                    day.setScheduledWorkoutId(saved.getId());
-                }
-            }
-        }
+        Map<String, Training> trainingById = fetchTrainingsForPlan(plan);
+        buildAndPersistScheduledWorkouts(plan, targetAthleteIds, userId, LocalDate.now(), trainingById);
 
         plan.setStatus(PlanStatus.ACTIVE);
         plan.setActivatedAt(LocalDateTime.now());
@@ -306,17 +306,9 @@ public class TrainingPlanService {
 
         // Create ReceivedTraining entries for coach-assigned plans
         if (!plan.getAthleteIds().isEmpty()) {
-            List<String> uniqueTrainingIds = plan.getWeeks().stream()
-                    .flatMap(w -> w.getDays().stream())
-                    .map(PlanDay::getTrainingId)
-                    .filter(id -> id != null)
-                    .distinct()
-                    .toList();
-
-            for (String trainingId : uniqueTrainingIds) {
-                receivedTrainingService.createReceivedTrainings(trainingId, plan.getAthleteIds(),
-                        userId, ReceivedTrainingOrigin.PLAN, planId, plan.getTitle());
-            }
+            trainingById.keySet().forEach(trainingId ->
+                    receivedTrainingService.createReceivedTrainings(trainingId, plan.getAthleteIds(),
+                            userId, ReceivedTrainingOrigin.PLAN, planId, plan.getTitle()));
         }
 
         // Notify athletes if coach-assigned
@@ -340,26 +332,21 @@ public class TrainingPlanService {
             throw new ForbiddenOperationException("Only active plans can be paused");
         }
 
+        LocalDate today = LocalDate.now();
+
         // Cancel future pending scheduled workouts for this plan
-        List<ScheduledWorkout> planWorkouts = scheduledWorkoutRepository.findByPlanId(planId);
-        for (ScheduledWorkout sw : planWorkouts) {
-            if (sw.getStatus() == ScheduleStatus.PENDING
-                    && sw.getScheduledDate().isAfter(LocalDate.now())) {
-                scheduledWorkoutRepository.deleteById(sw.getId());
-            }
-        }
+        List<String> futureIds = scheduledWorkoutRepository.findByPlanId(planId).stream()
+                .filter(sw -> sw.getStatus() == ScheduleStatus.PENDING
+                        && sw.getScheduledDate().isAfter(today))
+                .map(ScheduledWorkout::getId)
+                .toList();
+        scheduledWorkoutRepository.deleteAllById(futureIds);
 
         // Clear scheduledWorkoutIds for cancelled days
-        for (PlanWeek week : plan.getWeeks()) {
-            for (PlanDay day : week.getDays()) {
-                if (day.getScheduledWorkoutId() != null) {
-                    LocalDate date = computeDate(plan.getStartDate(), week.getWeekNumber(), day.getDayOfWeek());
-                    if (date.isAfter(LocalDate.now())) {
-                        day.setScheduledWorkoutId(null);
-                    }
-                }
-            }
-        }
+        plan.getWeeks().forEach(week -> week.getDays().stream()
+                .filter(day -> day.getScheduledWorkoutId() != null)
+                .filter(day -> computeDate(plan.getStartDate(), week.getWeekNumber(), day.getDayOfWeek()).isAfter(today))
+                .forEach(day -> day.setScheduledWorkoutId(null)));
 
         plan.setStatus(PlanStatus.PAUSED);
         return planRepository.save(plan);
@@ -380,21 +367,15 @@ public class TrainingPlanService {
 
     public PlanProgress getProgress(String planId) {
         TrainingPlan plan = getPlan(planId);
-        List<ScheduledWorkout> planWorkouts = scheduledWorkoutRepository.findByPlanId(planId);
+        Map<ScheduleStatus, Long> counts = scheduledWorkoutRepository.findByPlanId(planId).stream()
+                .collect(Collectors.groupingBy(ScheduledWorkout::getStatus, Collectors.counting()));
 
-        int completed = 0, skipped = 0, pending = 0;
-        for (ScheduledWorkout sw : planWorkouts) {
-            switch (sw.getStatus()) {
-                case COMPLETED -> completed++;
-                case SKIPPED -> skipped++;
-                case PENDING -> pending++;
-            }
-        }
+        int completed = counts.getOrDefault(ScheduleStatus.COMPLETED, 0L).intValue();
+        int skipped = counts.getOrDefault(ScheduleStatus.SKIPPED, 0L).intValue();
+        int pending = counts.getOrDefault(ScheduleStatus.PENDING, 0L).intValue();
 
-        int total = completed + skipped + pending;
-        int currentWeek = computeCurrentWeek(plan.getStartDate());
-
-        return PlanProgress.of(planId, total, completed, skipped, pending, currentWeek);
+        return PlanProgress.of(planId, completed + skipped + pending, completed, skipped, pending,
+                computeCurrentWeek(plan.getStartDate()));
     }
 
     /**
@@ -521,12 +502,11 @@ public class TrainingPlanService {
 
         // Delete associated scheduled workouts if plan was active
         if (plan.getStatus() == PlanStatus.ACTIVE) {
-            List<ScheduledWorkout> planWorkouts = scheduledWorkoutRepository.findByPlanId(planId);
-            for (ScheduledWorkout sw : planWorkouts) {
-                if (sw.getStatus() == ScheduleStatus.PENDING) {
-                    scheduledWorkoutRepository.deleteById(sw.getId());
-                }
-            }
+            List<String> pendingIds = scheduledWorkoutRepository.findByPlanId(planId).stream()
+                    .filter(sw -> sw.getStatus() == ScheduleStatus.PENDING)
+                    .map(ScheduledWorkout::getId)
+                    .toList();
+            scheduledWorkoutRepository.deleteAllById(pendingIds);
         }
 
         planRepository.deleteById(planId);

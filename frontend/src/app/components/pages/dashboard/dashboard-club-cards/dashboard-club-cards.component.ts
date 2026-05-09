@@ -1,7 +1,8 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {Router} from '@angular/router';
 import {TranslateModule} from '@ngx-translate/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {forkJoin, of} from 'rxjs';
 import {map, switchMap, catchError} from 'rxjs/operators';
 import {ClubService} from '../../../../services/club.service';
@@ -30,12 +31,13 @@ export class DashboardClubCardsComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
 
   rows: ClubRow[] = [];
   loading = true;
 
   ngOnInit(): void {
-    this.authService.user$.subscribe(u => {
+    this.authService.user$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(u => {
       if (u?.id) {
         this.loadClubs();
       }
@@ -46,6 +48,7 @@ export class DashboardClubCardsComponent implements OnInit {
     this.loading = true;
     this.clubService.loadUserClubs();
     this.clubService.userClubs$.pipe(
+      takeUntilDestroyed(this.destroyRef),
       switchMap(clubs => {
         if (clubs.length === 0) {
           return of([] as ClubRow[]);

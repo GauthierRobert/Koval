@@ -29,6 +29,8 @@ public interface CompletedSessionRepository extends MongoRepository<CompletedSes
     List<CompletedSession> findByUserIdOrderByCompletedAtDesc(String userId);
     Page<CompletedSession> findByUserIdOrderByCompletedAtDesc(String userId, Pageable pageable);
     List<CompletedSession> findByUserIdOrderByCompletedAtAsc(String userId);
+    List<CompletedSession> findByUserIdAndCompletedAtGreaterThanEqualOrderByCompletedAtAsc(
+            String userId, LocalDateTime from);
     List<CompletedSession> findByUserIdAndCompletedAtBetween(
             String userId, LocalDateTime from, LocalDateTime to);
     Optional<CompletedSession> findByIdAndUserId(String id, String userId);

@@ -139,25 +139,80 @@ public class ClubStatsService {
         List<String> memberIds = clubMembershipService.getActiveMemberIds(clubId);
         int memberCount = memberIds.size();
 
-        LocalDate today = LocalDate.now();
-        LocalDate weekStart = today.with(DayOfWeek.MONDAY);
+        LocalDate weekStart = LocalDate.now().with(DayOfWeek.MONDAY);
         LocalDateTime weekStartDt = weekStart.atStartOfDay();
         LocalDateTime weekEndDt = weekStartDt.plusDays(7);
-
-        // --- Weekly completed sessions ---
         LocalDateTime fourWeeksAgo = weekStart.minusWeeks(4).atStartOfDay();
+        List<LocalDate> weekStarts = buildPastFourWeekStarts(weekStart);
+
         List<CompletedSession> allCompletedSessions = completedSessionRepository
                 .findByUserIdInAndCompletedAtBetween(memberIds, fourWeeksAgo, weekEndDt);
+        List<CompletedSession> weeklySessions = filterBetween(allCompletedSessions,
+                CompletedSession::getCompletedAt, weekStartDt, weekEndDt);
 
-        // Filter current week for volume stats
-        List<CompletedSession> weeklySessions = allCompletedSessions.stream()
-                .filter(s -> s.getCompletedAt() != null
-                        && !s.getCompletedAt().isBefore(weekStartDt)
-                        && s.getCompletedAt().isBefore(weekEndDt))
+        WeeklyVolume volume = computeWeeklyVolume(weeklySessions);
+
+        List<ClubTrainingSession> allClubSessions = sessionRepository
+                .findByClubIdAndScheduledAtBetween(clubId, fourWeeksAgo, weekEndDt);
+        List<ClubTrainingSession> nonCancelledSessions = allClubSessions.stream()
+                .filter(s -> !Boolean.TRUE.equals(s.getCancelled())).toList();
+        LocalDateTime now = LocalDateTime.now();
+        List<ClubTrainingSession> pastClubSessions = nonCancelledSessions.stream()
+                .filter(s -> s.getScheduledAt() != null && s.getScheduledAt().isBefore(now))
                 .toList();
 
-        double swimKm = 0, bikeKm = 0, runKm = 0, totalTss = 0;
-        long totalDurationSec = 0;
+        int clubSessionsThisWeek = (int) nonCancelledSessions.stream()
+                .filter(s -> s.getScheduledAt() != null
+                        && !s.getScheduledAt().isBefore(weekStartDt)
+                        && s.getScheduledAt().isBefore(weekEndDt))
+                .count();
+        double attendanceRate = computeAttendanceRate(pastClubSessions, memberCount);
+
+        List<ClubExtendedStatsResponse.RecurringTemplateAttendance> recurringAttendance =
+                computeRecurringAttendance(clubId, allClubSessions, memberIds, weekStarts);
+        Map<String, Double> sportDistribution = computeSportDistribution(weeklySessions);
+        List<ClubExtendedStatsResponse.WeeklyTrend> weeklyTrends =
+                computeWeeklyTrends(weekStarts, allCompletedSessions, pastClubSessions, memberCount);
+        List<ClubExtendedStatsResponse.MemberHighlight> mostActive = computeMostActive(weeklySessions);
+
+        double avgTssPerMember = memberCount > 0 ? volume.totalTss() / memberCount : 0;
+        return new ClubExtendedStatsResponse(
+                volume.swimKm(), volume.bikeKm(), volume.runKm(),
+                weeklySessions.size(), memberCount,
+                Math.round(volume.totalDurationHours() * 10.0) / 10.0,
+                Math.round(volume.totalTss() * 10.0) / 10.0,
+                Math.round(attendanceRate * 1000.0) / 1000.0,
+                clubSessionsThisWeek,
+                recurringAttendance,
+                sportDistribution, Math.round(avgTssPerMember * 10.0) / 10.0,
+                weeklyTrends, mostActive);
+    }
+
+    private static List<LocalDate> buildPastFourWeekStarts(LocalDate currentWeekStart) {
+        List<LocalDate> starts = new ArrayList<>(4);
+        for (int w = 3; w >= 0; w--) starts.add(currentWeekStart.minusWeeks(w));
+        return starts;
+    }
+
+    private static <T> List<T> filterBetween(List<T> items, Function<T, LocalDateTime> at,
+                                             LocalDateTime startInclusive, LocalDateTime endExclusive) {
+        return items.stream()
+                .filter(s -> at.apply(s) != null
+                        && !at.apply(s).isBefore(startInclusive)
+                        && at.apply(s).isBefore(endExclusive))
+                .toList();
+    }
+
+    private static double computeAttendanceRate(List<ClubTrainingSession> pastSessions, int memberCount) {
+        if (pastSessions.isEmpty() || memberCount <= 0) return 0;
+        return pastSessions.stream()
+                .mapToDouble(s -> (double) s.getParticipantIds().size() / memberCount)
+                .average().orElse(0);
+    }
+
+    private static WeeklyVolume computeWeeklyVolume(List<CompletedSession> weeklySessions) {
+        double swim = 0, bike = 0, run = 0, tss = 0;
+        long durationSec = 0;
         for (CompletedSession s : weeklySessions) {
             double dist = s.getBlockSummaries() != null
                     ? s.getBlockSummaries().stream()
@@ -167,256 +222,183 @@ public class ClubStatsService {
             if (dist == 0 && s.getTotalDistance() != null) dist = s.getTotalDistance();
             String sportKey = Optional.ofNullable(s.getSportType()).map(String::toUpperCase).orElse("");
             switch (sportKey) {
-                case "SWIMMING" -> swimKm += dist / 1000.0;
-                case "CYCLING" -> bikeKm += dist / 1000.0;
-                case "RUNNING" -> runKm += dist / 1000.0;
+                case "SWIMMING" -> swim += dist / 1000.0;
+                case "CYCLING" -> bike += dist / 1000.0;
+                case "RUNNING" -> run += dist / 1000.0;
                 default -> { /* unknown/null sport: skip distance bucket */ }
             }
-            totalTss += Optional.ofNullable(s.getTss()).orElse(0.0);
-            totalDurationSec += s.getTotalDurationSeconds();
+            tss += Optional.ofNullable(s.getTss()).orElse(0.0);
+            durationSec += s.getTotalDurationSeconds();
         }
-        double totalDurationHours = totalDurationSec / 3600.0;
+        return new WeeklyVolume(swim, bike, run, tss, durationSec / 3600.0);
+    }
 
-        // --- Club sessions past 4 weeks ---
-        List<ClubTrainingSession> allClubSessions = sessionRepository
-                .findByClubIdAndScheduledAtBetween(clubId, fourWeeksAgo, weekEndDt);
+    private List<ClubExtendedStatsResponse.RecurringTemplateAttendance> computeRecurringAttendance(
+            String clubId, List<ClubTrainingSession> allClubSessions,
+            List<String> memberIds, List<LocalDate> weekStarts) {
 
-        List<ClubTrainingSession> nonCancelledSessions = allClubSessions.stream()
-                .filter(s -> !Boolean.TRUE.equals(s.getCancelled())).toList();
-
-        LocalDateTime now = LocalDateTime.now();
-        List<ClubTrainingSession> pastClubSessions = nonCancelledSessions.stream()
-                .filter(s -> s.getScheduledAt() != null && s.getScheduledAt().isBefore(now))
-                .toList();
-
-        // Club sessions this week
-        int clubSessionsThisWeek = (int) nonCancelledSessions.stream()
-                .filter(s -> s.getScheduledAt() != null
-                        && !s.getScheduledAt().isBefore(weekStartDt)
-                        && s.getScheduledAt().isBefore(weekEndDt))
-                .count();
-
-        // Overall attendance rate (past sessions)
-        double attendanceRate = 0;
-        if (!pastClubSessions.isEmpty() && memberCount > 0) {
-            attendanceRate = pastClubSessions.stream()
-                    .mapToDouble(s -> (double) s.getParticipantIds().size() / memberCount)
-                    .average().orElse(0);
-        }
-
-        // --- Recurring template attendance ---
         List<RecurringSessionTemplate> templates = recurringTemplateRepository.findByClubId(clubId);
         Map<String, ClubGroup> groupMap = clubGroupRepository.findByClubId(clubId).stream()
                 .collect(Collectors.toMap(ClubGroup::getId, g -> g));
-
-        // Group all club sessions (including cancelled) by recurringTemplateId
         Map<String, List<ClubTrainingSession>> sessionsByTemplate = allClubSessions.stream()
                 .filter(s -> s.getRecurringTemplateId() != null)
                 .collect(Collectors.groupingBy(ClubTrainingSession::getRecurringTemplateId));
 
-        // Build 4 week boundaries
-        DateTimeFormatter weekFmt = DateTimeFormatter.ofPattern("dd MMM");
-        List<LocalDate> weekStarts = new ArrayList<>();
-        for (int w = 3; w >= 0; w--) {
-            weekStarts.add(weekStart.minusWeeks(w));
-        }
-
-        // Collect all eligible user IDs across all templates for batch lookup
         Set<String> allEligibleIds = new HashSet<>();
         List<RecurringTemplateData> templateDataList = new ArrayList<>();
-
         for (RecurringSessionTemplate template : templates) {
             List<ClubTrainingSession> templateSessions = sessionsByTemplate.getOrDefault(template.getId(), List.of());
-
-            // Determine eligible members
-            List<String> eligibleIds;
+            List<String> eligibleIds = memberIds;
             String clubGroupName = null;
             if (template.getClubGroupId() != null) {
                 ClubGroup group = groupMap.get(template.getClubGroupId());
                 if (group != null) {
                     eligibleIds = group.getMemberIds();
                     clubGroupName = group.getName();
-                } else {
-                    eligibleIds = memberIds;
                 }
-            } else {
-                eligibleIds = memberIds;
             }
-
             allEligibleIds.addAll(eligibleIds);
             templateDataList.add(new RecurringTemplateData(template, templateSessions, eligibleIds, clubGroupName));
         }
 
-        // Batch user lookup
         Map<String, User> eligibleUserMap = userService.findAllById(new ArrayList<>(allEligibleIds)).stream()
                 .collect(Collectors.toMap(User::getId, u -> u));
 
-        // Build recurring attendance for each template
-        List<ClubExtendedStatsResponse.RecurringTemplateAttendance> recurringAttendance = new ArrayList<>();
-
+        List<ClubExtendedStatsResponse.RecurringTemplateAttendance> result = new ArrayList<>();
         for (RecurringTemplateData data : templateDataList) {
-            RecurringSessionTemplate template = data.template;
-            List<ClubTrainingSession> templateSessions = data.sessions;
-            List<String> eligibleIds = data.eligibleIds;
-            int eligibleCount = eligibleIds.size();
-
-            // Denominator for fill %
-            Integer maxParticipants = template.getMaxParticipants();
-
-            // Build week attendance
-            List<ClubExtendedStatsResponse.WeekAttendance> weeks = new ArrayList<>();
-            // Track sessions per week for athlete grid
-            List<ClubTrainingSession> weeklySessionSlots = new ArrayList<>();
-
-            for (LocalDate wStart : weekStarts) {
-                LocalDateTime wStartDt = wStart.atStartOfDay();
-                LocalDateTime wEndDt = wStartDt.plusDays(7);
-                String label = wStart.format(weekFmt);
-
-                // Find session for this week (should be 0 or 1)
-                ClubTrainingSession weekSession = templateSessions.stream()
-                        .filter(s -> s.getScheduledAt() != null
-                                && !s.getScheduledAt().isBefore(wStartDt)
-                                && s.getScheduledAt().isBefore(wEndDt))
-                        .findFirst().orElse(null);
-
-                weeklySessionSlots.add(weekSession);
-
-                if (weekSession == null) {
-                    weeks.add(new ClubExtendedStatsResponse.WeekAttendance(
-                            label, null, false, 0, 0, 0));
-                } else {
-                    int participantCount = weekSession.getParticipantIds().size();
-                    int denominator = (maxParticipants != null && maxParticipants > 0) ? maxParticipants : eligibleCount;
-                    double fillPercent = denominator > 0
-                            ? Math.round(participantCount * 1000.0 / denominator) / 10.0
-                            : 0;
-                    weeks.add(new ClubExtendedStatsResponse.WeekAttendance(
-                            label, weekSession.getId(), Boolean.TRUE.equals(weekSession.getCancelled()),
-                            participantCount, denominator, fillPercent));
-                }
-            }
-
-            // Build athlete grid (only eligible athletes)
-            List<ClubExtendedStatsResponse.AthletePresence> athleteGrid = new ArrayList<>();
-            for (String athleteId : eligibleIds) {
-                User user = eligibleUserMap.get(athleteId);
-                List<Boolean> weekPresence = new ArrayList<>();
-                for (ClubTrainingSession weekSession : weeklySessionSlots) {
-                    if (weekSession == null || Boolean.TRUE.equals(weekSession.getCancelled())) {
-                        weekPresence.add(null);
-                    } else {
-                        weekPresence.add(weekSession.getParticipantIds().contains(athleteId));
-                    }
-                }
-                Optional<User> uOpt = Optional.ofNullable(user);
-                athleteGrid.add(new ClubExtendedStatsResponse.AthletePresence(
-                        athleteId,
-                        uOpt.map(User::getDisplayName).orElse(athleteId),
-                        uOpt.map(User::getProfilePicture).orElse(null),
-                        weekPresence));
-            }
-
-            // Sort athlete grid: most present first
-            athleteGrid.sort((a, b) -> {
-                long aPresent = a.weekPresence().stream().filter(Boolean.TRUE::equals).count();
-                long bPresent = b.weekPresence().stream().filter(Boolean.TRUE::equals).count();
-                return Long.compare(bPresent, aPresent);
-            });
-
-            recurringAttendance.add(new ClubExtendedStatsResponse.RecurringTemplateAttendance(
-                    template.getId(), template.getTitle(), template.getSport(),
-                    Optional.ofNullable(template.getDayOfWeek()).map(DayOfWeek::name).orElse(null),
-                    Optional.ofNullable(template.getTimeOfDay()).map(Object::toString).orElse(null),
-                    template.getClubGroupId(), data.clubGroupName,
-                    maxParticipants, eligibleCount,
-                    weeks, athleteGrid));
+            result.add(buildTemplateAttendance(data, weekStarts, eligibleUserMap));
         }
+        return result;
+    }
 
-        // --- Sport distribution (this week) ---
-        Map<String, Long> sportCounts = weeklySessions.stream()
-                .filter(s -> s.getSportType() != null)
-                .collect(Collectors.groupingBy(CompletedSession::getSportType, Collectors.counting()));
-        long totalForDist = sportCounts.values().stream().mapToLong(Long::longValue).sum();
-        Map<String, Double> sportDistribution = sportCounts.entrySet().stream()
-                .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> totalForDist > 0 ? Math.round(e.getValue() * 1000.0 / totalForDist) / 10.0 : 0,
-                        (a, b) -> a, LinkedHashMap::new));
+    private static ClubExtendedStatsResponse.RecurringTemplateAttendance buildTemplateAttendance(
+            RecurringTemplateData data, List<LocalDate> weekStarts, Map<String, User> userMap) {
+        DateTimeFormatter weekFmt = DateTimeFormatter.ofPattern("dd MMM");
+        RecurringSessionTemplate template = data.template;
+        Integer maxParticipants = template.getMaxParticipants();
+        int eligibleCount = data.eligibleIds.size();
 
-        // Avg TSS per member
-        double avgTssPerMember = memberCount > 0 ? totalTss / memberCount : 0;
-
-        // --- Weekly trends (past 4 weeks, using pre-fetched data) ---
-        List<ClubExtendedStatsResponse.WeeklyTrend> weeklyTrends = new ArrayList<>();
+        List<ClubExtendedStatsResponse.WeekAttendance> weeks = new ArrayList<>();
+        List<ClubTrainingSession> weeklySlots = new ArrayList<>();
         for (LocalDate wStart : weekStarts) {
             LocalDateTime wStartDt = wStart.atStartOfDay();
             LocalDateTime wEndDt = wStartDt.plusDays(7);
-
-            List<CompletedSession> wSessions = allCompletedSessions.stream()
-                    .filter(s -> s.getCompletedAt() != null
-                            && !s.getCompletedAt().isBefore(wStartDt)
-                            && s.getCompletedAt().isBefore(wEndDt))
-                    .toList();
-            double wTss = wSessions.stream().mapToDouble(s -> Optional.ofNullable(s.getTss()).orElse(0.0)).sum();
-            double wHours = wSessions.stream().mapToLong(CompletedSession::getTotalDurationSeconds).sum() / 3600.0;
-
-            List<ClubTrainingSession> wClubSessions = pastClubSessions.stream()
+            ClubTrainingSession ws = data.sessions.stream()
                     .filter(s -> s.getScheduledAt() != null
                             && !s.getScheduledAt().isBefore(wStartDt)
                             && s.getScheduledAt().isBefore(wEndDt))
-                    .toList();
-            double wAttendance = 0;
-            if (!wClubSessions.isEmpty() && memberCount > 0) {
-                wAttendance = wClubSessions.stream()
-                        .mapToDouble(s -> (double) s.getParticipantIds().size() / memberCount)
-                        .average().orElse(0);
+                    .findFirst().orElse(null);
+            weeklySlots.add(ws);
+            String label = wStart.format(weekFmt);
+            if (ws == null) {
+                weeks.add(new ClubExtendedStatsResponse.WeekAttendance(label, null, false, 0, 0, 0));
+            } else {
+                int participantCount = ws.getParticipantIds().size();
+                int denominator = (maxParticipants != null && maxParticipants > 0) ? maxParticipants : eligibleCount;
+                double fillPercent = denominator > 0
+                        ? Math.round(participantCount * 1000.0 / denominator) / 10.0 : 0;
+                weeks.add(new ClubExtendedStatsResponse.WeekAttendance(
+                        label, ws.getId(), Boolean.TRUE.equals(ws.getCancelled()),
+                        participantCount, denominator, fillPercent));
             }
+        }
+
+        List<ClubExtendedStatsResponse.AthletePresence> athleteGrid = new ArrayList<>();
+        for (String athleteId : data.eligibleIds) {
+            List<Boolean> presence = new ArrayList<>();
+            for (ClubTrainingSession ws : weeklySlots) {
+                if (ws == null || Boolean.TRUE.equals(ws.getCancelled())) presence.add(null);
+                else presence.add(ws.getParticipantIds().contains(athleteId));
+            }
+            Optional<User> uOpt = Optional.ofNullable(userMap.get(athleteId));
+            athleteGrid.add(new ClubExtendedStatsResponse.AthletePresence(
+                    athleteId,
+                    uOpt.map(User::getDisplayName).orElse(athleteId),
+                    uOpt.map(User::getProfilePicture).orElse(null),
+                    presence));
+        }
+        athleteGrid.sort((a, b) -> Long.compare(
+                b.weekPresence().stream().filter(Boolean.TRUE::equals).count(),
+                a.weekPresence().stream().filter(Boolean.TRUE::equals).count()));
+
+        return new ClubExtendedStatsResponse.RecurringTemplateAttendance(
+                template.getId(), template.getTitle(), template.getSport(),
+                Optional.ofNullable(template.getDayOfWeek()).map(DayOfWeek::name).orElse(null),
+                Optional.ofNullable(template.getTimeOfDay()).map(Object::toString).orElse(null),
+                template.getClubGroupId(), data.clubGroupName,
+                maxParticipants, eligibleCount, weeks, athleteGrid);
+    }
+
+    private static Map<String, Double> computeSportDistribution(List<CompletedSession> weeklySessions) {
+        Map<String, Long> counts = weeklySessions.stream()
+                .filter(s -> s.getSportType() != null)
+                .collect(Collectors.groupingBy(CompletedSession::getSportType, Collectors.counting()));
+        long total = counts.values().stream().mapToLong(Long::longValue).sum();
+        return counts.entrySet().stream()
+                .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        e -> total > 0 ? Math.round(e.getValue() * 1000.0 / total) / 10.0 : 0,
+                        (a, b) -> a, LinkedHashMap::new));
+    }
+
+    private static List<ClubExtendedStatsResponse.WeeklyTrend> computeWeeklyTrends(
+            List<LocalDate> weekStarts, List<CompletedSession> allCompletedSessions,
+            List<ClubTrainingSession> pastClubSessions, int memberCount) {
+        DateTimeFormatter weekFmt = DateTimeFormatter.ofPattern("dd MMM");
+        List<ClubExtendedStatsResponse.WeeklyTrend> trends = new ArrayList<>();
+        for (LocalDate wStart : weekStarts) {
+            LocalDateTime wStartDt = wStart.atStartOfDay();
+            LocalDateTime wEndDt = wStartDt.plusDays(7);
+            List<CompletedSession> wSessions = filterBetween(
+                    allCompletedSessions, CompletedSession::getCompletedAt, wStartDt, wEndDt);
+            double wTss = wSessions.stream().mapToDouble(s -> Optional.ofNullable(s.getTss()).orElse(0.0)).sum();
+            double wHours = wSessions.stream().mapToLong(CompletedSession::getTotalDurationSeconds).sum() / 3600.0;
+            List<ClubTrainingSession> wClubSessions = filterBetween(
+                    pastClubSessions, ClubTrainingSession::getScheduledAt, wStartDt, wEndDt);
+            double wAttendance = computeAttendanceRate(wClubSessions, memberCount);
 
             String label = wStart.format(weekFmt) + " - " + wStart.plusDays(6).format(weekFmt);
-            weeklyTrends.add(new ClubExtendedStatsResponse.WeeklyTrend(
+            trends.add(new ClubExtendedStatsResponse.WeeklyTrend(
                     label, Math.round(wTss * 10.0) / 10.0,
                     Math.round(wHours * 10.0) / 10.0,
                     wSessions.size(), Math.round(wAttendance * 1000.0) / 1000.0));
         }
+        return trends;
+    }
 
-        // --- Most active members (this week, top 5 by hours) ---
-        Map<String, long[]> memberStats = new LinkedHashMap<>();
+    private List<ClubExtendedStatsResponse.MemberHighlight> computeMostActive(List<CompletedSession> weeklySessions) {
+        Map<String, MemberActivity> stats = new LinkedHashMap<>();
         for (CompletedSession s : weeklySessions) {
-            long[] stats = memberStats.computeIfAbsent(s.getUserId(), k -> new long[3]);
-            stats[0] += s.getTotalDurationSeconds();
-            stats[1]++;
-            stats[2] += Math.round(Optional.ofNullable(s.getTss()).orElse(0.0));
+            stats.merge(s.getUserId(),
+                    new MemberActivity(s.getTotalDurationSeconds(), 1,
+                            Math.round(Optional.ofNullable(s.getTss()).orElse(0.0))),
+                    MemberActivity::plus);
         }
-        List<String> activeMemberIds = memberStats.entrySet().stream()
-                .sorted((a, b) -> Long.compare(b.getValue()[0], a.getValue()[0]))
+        List<String> activeIds = stats.entrySet().stream()
+                .sorted((a, b) -> Long.compare(b.getValue().durationSec(), a.getValue().durationSec()))
                 .limit(5).map(Map.Entry::getKey).toList();
-        Map<String, User> activeMemberMap = userService.findAllById(activeMemberIds).stream()
+        Map<String, User> userMap = userService.findAllById(activeIds).stream()
                 .collect(Collectors.toMap(User::getId, u -> u));
+        return activeIds.stream().map(uid -> {
+            MemberActivity a = stats.get(uid);
+            Optional<User> uOpt = Optional.ofNullable(userMap.get(uid));
+            return new ClubExtendedStatsResponse.MemberHighlight(
+                    uid,
+                    uOpt.map(User::getDisplayName).orElse(uid),
+                    uOpt.map(User::getProfilePicture).orElse(null),
+                    Math.round(a.durationSec() / 360.0) / 10.0,
+                    a.count(), a.tss());
+        }).toList();
+    }
 
-        List<ClubExtendedStatsResponse.MemberHighlight> mostActive = activeMemberIds.stream()
-                .map(uid -> {
-                    long[] stats = memberStats.get(uid);
-                    Optional<User> uOpt = Optional.ofNullable(activeMemberMap.get(uid));
-                    return new ClubExtendedStatsResponse.MemberHighlight(
-                            uid,
-                            uOpt.map(User::getDisplayName).orElse(uid),
-                            uOpt.map(User::getProfilePicture).orElse(null),
-                            Math.round(stats[0] / 360.0) / 10.0,
-                            (int) stats[1], stats[2]);
-                })
-                .toList();
+    private record WeeklyVolume(double swimKm, double bikeKm, double runKm,
+                                double totalTss, double totalDurationHours) {}
 
-        return new ClubExtendedStatsResponse(
-                swimKm, bikeKm, runKm,
-                weeklySessions.size(), memberCount,
-                Math.round(totalDurationHours * 10.0) / 10.0,
-                Math.round(totalTss * 10.0) / 10.0,
-                Math.round(attendanceRate * 1000.0) / 1000.0,
-                clubSessionsThisWeek,
-                recurringAttendance,
-                sportDistribution, Math.round(avgTssPerMember * 10.0) / 10.0,
-                weeklyTrends, mostActive);
+    private record MemberActivity(long durationSec, int count, long tss) {
+        MemberActivity plus(MemberActivity other) {
+            return new MemberActivity(durationSec + other.durationSec,
+                    count + other.count, tss + other.tss);
+        }
     }
 
     private record RecurringTemplateData(
