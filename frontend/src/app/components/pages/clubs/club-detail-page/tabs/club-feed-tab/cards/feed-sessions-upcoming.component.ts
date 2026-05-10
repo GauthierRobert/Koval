@@ -212,8 +212,8 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
 
     /* --- Goal panel --- */
     .goal-header { display: flex; align-items: center; gap: var(--space-sm); }
-    .goal-flag { color: var(--warning, #f59e0b); flex-shrink: 0; }
-    .goal-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--warning, #f59e0b); flex: 1; }
+    .goal-flag { color: var(--dev-accent-color); flex-shrink: 0; }
+    .goal-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dev-accent-color); flex: 1; }
     .goal-countdown { font-size: var(--text-sm); font-weight: 700; color: var(--accent-color); }
     .goal-info { display: flex; align-items: center; gap: var(--space-xs); }
     .goal-title { font-size: var(--text-sm); font-weight: 600; color: var(--text-color); }
@@ -237,16 +237,16 @@ import {SportIconComponent} from '../../../../../../shared/sport-icon/sport-icon
     .empty-sessions { padding: var(--space-md) 0; text-align: center; }
     .empty-text { font-size: var(--text-xs); color: var(--text-muted); }
     .session-card { background: var(--surface-elevated); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 10px; cursor: pointer; transition: border-color 0.15s; }
-    .session-card:hover { border-color: var(--primary); }
+    .session-card:hover { border-color: var(--accent-color); }
     .session-card--cancelled { opacity: 0.5; }
-    .session-card--selected { border-color: var(--primary); background: rgba(255,157,0,0.05); }
+    .session-card--selected { border-color: var(--accent-color); background: var(--accent-subtle); }
     .session-row { display: flex; align-items: center; gap: var(--space-sm); }
     .session-info { flex: 1; display: flex; flex-direction: column; min-width: 0; }
     .session-title { font-size: 11px; font-weight: 600; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .session-time { font-size: 9px; color: var(--text-muted); font-family: monospace; }
     .session-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
     .participant-count { font-size: 9px; color: var(--text-muted); font-family: monospace; }
-    .joined-pill { font-size: 8px; font-weight: 700; text-transform: uppercase; padding: 1px 5px; border-radius: 3px; background: rgba(34,197,94,0.15); color: var(--success); }
+    .joined-pill { font-size: 8px; font-weight: 700; text-transform: uppercase; padding: 1px 5px; border-radius: 3px; background: var(--success-subtle); color: var(--success-color); }
     .waiting-pill { font-size: 8px; font-weight: 700; padding: 1px 5px; border-radius: 3px; background: rgba(255,157,0,0.15); color: var(--accent-color); }
     .full-pill { font-size: 8px; font-weight: 700; text-transform: uppercase; padding: 1px 5px; border-radius: 3px; background: rgba(239,68,68,0.15); color: var(--danger); }
     .session-detail { margin-top: var(--space-sm); padding-top: var(--space-sm); border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 4px; }
@@ -325,9 +325,9 @@ export class FeedSessionsUpcomingComponent {
   }
 
   formatGoalDate(dateStr: string | undefined | null): string {
-    if (!dateStr) return '—';
+    if (!dateStr) return 'Ã¢â‚¬â€';
     const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return '—';
+    if (isNaN(d.getTime())) return 'Ã¢â‚¬â€';
     return d.toLocaleDateString('en-US', {
       weekday: 'short', month: 'short', day: 'numeric',
     });
@@ -338,6 +338,6 @@ export class FeedSessionsUpcomingComponent {
     const d = new Date(dateStr);
     const day = d.toLocaleDateString('en-US', {weekday: 'short', month: 'short', day: 'numeric'});
     const time = d.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'});
-    return `${day} · ${time}`;
+    return `${day} Ã‚Â· ${time}`;
   }
 }

@@ -27,8 +27,8 @@ interface Segment {
   styles: `
     .mention-text { white-space: pre-wrap; word-break: break-word; }
     .mention {
-      color: var(--primary);
-      background: rgba(125, 211, 252, 0.12);
+      color: var(--accent-color);
+      background: var(--accent-subtle);
       padding: 0 4px;
       border-radius: var(--radius-sm);
       font-weight: 500;

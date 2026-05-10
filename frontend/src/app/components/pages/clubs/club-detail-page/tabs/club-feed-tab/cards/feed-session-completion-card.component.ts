@@ -119,19 +119,19 @@ import {FeedCommentsSectionComponent} from './feed-comments-section.component';
   `,
   styles: `
     .feed-card { background: var(--glass-bg); border-radius: var(--radius-md); padding: var(--space-md); }
-    .feed-card--pinned { border-left: 3px solid var(--primary); }
-    .card-pin-badge { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary); margin-bottom: var(--space-xs); }
+    .feed-card--pinned { border-left: 3px solid var(--accent-color); }
+    .card-pin-badge { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-color); margin-bottom: var(--space-xs); }
     .card-header { display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm); }
     .card-header-info { flex: 1; display: flex; flex-direction: column; }
     .card-title { font-size: var(--text-sm); font-weight: 600; color: var(--text-color); }
     .card-subtitle { font-size: var(--text-xs); color: var(--text-muted); }
-    .completion-count { font-size: var(--text-lg); font-weight: 700; color: var(--primary); min-width: 28px; text-align: center; }
+    .completion-count { font-size: var(--text-lg); font-weight: 700; color: var(--accent-color); min-width: 28px; text-align: center; }
     .completion-summary { display: flex; align-items: center; gap: var(--space-sm); cursor: pointer; padding: var(--space-xs) 0; }
     .avatar-stack { display: flex; }
     .avatar-circle { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-elevated); border: 2px solid var(--bg-color); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: var(--text-muted); margin-left: -8px; overflow: hidden; flex-shrink: 0; }
     .avatar-circle:first-child { margin-left: 0; }
     .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
-    .avatar-extra { background: var(--primary); color: #000; font-size: 9px; }
+    .avatar-extra { background: var(--accent-color); color: #000; font-size: 9px; }
     .completion-label { flex: 1; font-size: var(--text-xs); color: var(--text-muted); }
     .expand-chevron { color: var(--text-muted); transition: transform 0.2s; flex-shrink: 0; }
     .expand-chevron.rotated { transform: rotate(180deg); }
@@ -146,7 +146,7 @@ import {FeedCommentsSectionComponent} from './feed-comments-section.component';
     .kudos-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border: none; border-radius: var(--radius-sm); background: #fc4c02; color: #fff; font-size: var(--text-xs); font-weight: 600; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; }
     .kudos-btn:hover:not(:disabled) { opacity: 0.9; }
     .kudos-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .kudos-given { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; font-size: var(--text-xs); font-weight: 600; color: var(--success); white-space: nowrap; }
+    .kudos-given { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; font-size: var(--text-xs); font-weight: 600; color: var(--success-color); white-space: nowrap; }
     .spinner-sm { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
   `,

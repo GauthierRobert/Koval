@@ -1,4 +1,4 @@
-/* ── Athlete List (left panel) ── */
+/* â”€â”€ Athlete List (left panel) â”€â”€ */
 
 :host {
   width: var(--sidebar-width);
@@ -176,7 +176,7 @@
   font-style: italic;
 }
 
-/* ── Club Filter ── */
+/* â”€â”€ Club Filter â”€â”€ */
 
 .club-filters {
   margin-bottom: 8px;
@@ -198,7 +198,7 @@
   color: #818cf8;
 }
 
-/* ── Responsive ── */
+/* â”€â”€ Responsive â”€â”€ */
 @media (max-width: 768px) {
   :host {
     width: 100%;
@@ -225,7 +225,7 @@
 .multi-select-toggle.active,
 .multi-select-toggle:hover {
   background: rgba(94, 177, 255, 0.15);
-  border-color: var(--accent, #5eb1ff);
+  border-color: var(--accent-color);
 }
 .bulk-action-bar {
   display: flex;
@@ -279,7 +279,7 @@
 }
 .athlete-row.multi-selected {
   background: rgba(94, 177, 255, 0.1);
-  border-left: 3px solid var(--accent, #5eb1ff);
+  border-left: 3px solid var(--accent-color);
 }
 .athlete-multi-checkbox {
   margin-right: 8px;

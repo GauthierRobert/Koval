@@ -4,6 +4,8 @@ import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.auth.UserRole;
 import com.koval.trainingplannerbackend.auth.UserService;
+import com.koval.trainingplannerbackend.club.invite.ClubInviteCodeRepository;
+import com.koval.trainingplannerbackend.club.invite.ClubInviteCodeService;
 import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
@@ -34,13 +36,18 @@ class CoachInviteServiceTest {
     @Mock
     private InviteCodeRepository inviteCodeRepository;
     @Mock
+    private ClubInviteCodeRepository clubInviteCodeRepository;
+    @Mock
+    private ClubInviteCodeService clubInviteCodeService;
+    @Mock
     private GroupService groupService;
 
     private CoachInviteService service;
 
     @BeforeEach
     void setUp() {
-        service = new CoachInviteService(userRepository, userService, inviteCodeRepository, groupService);
+        service = new CoachInviteService(userRepository, userService, inviteCodeRepository,
+                clubInviteCodeRepository, clubInviteCodeService, groupService);
         lenient().when(inviteCodeRepository.save(any(InviteCode.class))).thenAnswer(inv -> inv.getArgument(0));
     }
 

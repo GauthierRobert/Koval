@@ -10,13 +10,11 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import {CommonModule} from '@angular/common';
 import {PacingSegment, SegmentRange} from '../../../../services/pacing.service';
 
 @Component({
   selector: 'app-elevation-chart',
   standalone: true,
-  imports: [CommonModule],
   template: `
     <div class="chart-wrapper">
       <canvas
@@ -24,41 +22,48 @@ import {PacingSegment, SegmentRange} from '../../../../services/pacing.service';
         (mousemove)="onMouseMove($event)"
         (mouseleave)="onMouseLeave()"
       ></canvas>
-      <div
-        class="tooltip"
-        *ngIf="tooltipVisible"
-        [style.left.px]="tooltipX"
-        [style.top.px]="tooltipY"
-      >
-        <div class="tooltip-line">
-          <span class="tooltip-label">Distance:</span>
-          <span>{{ tooltipData.distance }}</span>
+      @if (tooltipVisible) {
+        <div
+          class="tooltip"
+          [style.left.px]="tooltipX"
+          [style.top.px]="tooltipY"
+        >
+          <div class="tooltip-line">
+            <span class="tooltip-label">Distance:</span>
+            <span>{{ tooltipData.distance }}</span>
+          </div>
+          <div class="tooltip-line">
+            <span class="tooltip-label">Elevation:</span>
+            <span>{{ tooltipData.elevation }}</span>
+          </div>
+          <div class="tooltip-line">
+            <span class="tooltip-label">Gradient:</span>
+            <span>{{ tooltipData.gradient }}</span>
+          </div>
+          @if (tooltipData.power) {
+            <div class="tooltip-line">
+              <span class="tooltip-label">Power:</span>
+              <span>{{ tooltipData.power }}</span>
+            </div>
+          }
+          @if (tooltipData.speed) {
+            <div class="tooltip-line">
+              <span class="tooltip-label">Speed:</span>
+              <span>{{ tooltipData.speed }}</span>
+            </div>
+          }
+          @if (tooltipData.pace) {
+            <div class="tooltip-line">
+              <span class="tooltip-label">Pace:</span>
+              <span>{{ tooltipData.pace }}</span>
+            </div>
+          }
+          <div class="tooltip-line">
+            <span class="tooltip-label">Fatigue:</span>
+            <span>{{ tooltipData.fatigue }}</span>
+          </div>
         </div>
-        <div class="tooltip-line">
-          <span class="tooltip-label">Elevation:</span>
-          <span>{{ tooltipData.elevation }}</span>
-        </div>
-        <div class="tooltip-line">
-          <span class="tooltip-label">Gradient:</span>
-          <span>{{ tooltipData.gradient }}</span>
-        </div>
-        <div class="tooltip-line" *ngIf="tooltipData.power">
-          <span class="tooltip-label">Power:</span>
-          <span>{{ tooltipData.power }}</span>
-        </div>
-        <div class="tooltip-line" *ngIf="tooltipData.speed">
-          <span class="tooltip-label">Speed:</span>
-          <span>{{ tooltipData.speed }}</span>
-        </div>
-        <div class="tooltip-line" *ngIf="tooltipData.pace">
-          <span class="tooltip-label">Pace:</span>
-          <span>{{ tooltipData.pace }}</span>
-        </div>
-        <div class="tooltip-line">
-          <span class="tooltip-label">Fatigue:</span>
-          <span>{{ tooltipData.fatigue }}</span>
-        </div>
-      </div>
+      }
     </div>
   `,
   styles: [
@@ -71,8 +76,8 @@ import {PacingSegment, SegmentRange} from '../../../../services/pacing.service';
         position: relative;
         width: 100%;
         height: 100%;
-        background: var(--surface-color, #1a1a2e);
-        border-radius: 12px;
+        background: var(--surface-color);
+        border-radius: var(--radius-lg);
         overflow: hidden;
       }
       canvas {
@@ -82,14 +87,15 @@ import {PacingSegment, SegmentRange} from '../../../../services/pacing.service';
       }
       .tooltip {
         position: absolute;
-        background: rgba(0, 0, 0, 0.85);
-        border: 1px solid var(--primary-color, #ff9d00);
-        border-radius: 8px;
+        background: var(--glass-bg);
+        border: 1px solid var(--accent-color);
+        border-radius: var(--radius-md);
         padding: 8px 12px;
         pointer-events: none;
         z-index: 10;
-        font-size: 12px;
+        font-size: var(--text-sm);
         min-width: 160px;
+        color: var(--text-color);
       }
       .tooltip-line {
         display: flex;
@@ -98,7 +104,7 @@ import {PacingSegment, SegmentRange} from '../../../../services/pacing.service';
         padding: 1px 0;
       }
       .tooltip-label {
-        color: rgba(255, 255, 255, 0.6);
+        color: var(--text-muted);
       }
     `,
   ],

@@ -95,7 +95,7 @@ const BADGE_GLYPH: Record<SpotlightBadge, string> = {
         </span>
         @if (event.spotlightExpiresAt) {
           <span class="spotlight-expires">
-            · {{ 'CLUB_FEED.SPOTLIGHT_EXPIRES' | translate }} {{ daysRemainingLabel }}
+            Ãƒâ€šÃ‚Â· {{ 'CLUB_FEED.SPOTLIGHT_EXPIRES' | translate }} {{ daysRemainingLabel }}
           </span>
         }
       </div>
@@ -122,13 +122,13 @@ const BADGE_GLYPH: Record<SpotlightBadge, string> = {
   styles: `
     .spotlight-card {
       position: relative;
-      background: linear-gradient(135deg, rgba(125, 211, 252, 0.10), rgba(245, 158, 11, 0.06));
+      background: linear-gradient(135deg, var(--accent-subtle), var(--success-subtle));
       border: 1px solid var(--glass-border);
       border-radius: var(--radius-md);
       padding: var(--space-md);
       overflow: hidden;
     }
-    .spotlight-card--pinned { border-left: 3px solid var(--warning, #f59e0b); }
+    .spotlight-card--pinned { border-left: 3px solid var(--dev-accent-color); }
     .spotlight-pin-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); }
     .spotlight-badge {
       display: inline-flex;
@@ -142,15 +142,15 @@ const BADGE_GLYPH: Record<SpotlightBadge, string> = {
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: var(--warning, #f59e0b);
+      color: var(--dev-accent-color);
     }
-    .spotlight-badge[data-badge="PR"] { color: var(--primary); }
-    .spotlight-badge[data-badge="GRIT"] { color: var(--danger, #ef4444); }
-    .spotlight-badge[data-badge="NEW_MEMBER"] { color: var(--success); }
+    .spotlight-badge[data-badge="PR"] { color: var(--accent-color); }
+    .spotlight-badge[data-badge="GRIT"] { color: var(--danger-color); }
+    .spotlight-badge[data-badge="NEW_MEMBER"] { color: var(--success-color); }
     .spotlight-badge-glyph { font-size: 13px; line-height: 1; }
     .spotlight-action-link { background: none; border: none; padding: 0; font-size: 10px; color: var(--text-muted); cursor: pointer; font-weight: 500; }
-    .spotlight-action-link:hover { color: var(--primary); }
-    .spotlight-action-link--danger:hover { color: var(--danger, #ef4444); }
+    .spotlight-action-link:hover { color: var(--accent-color); }
+    .spotlight-action-link--danger:hover { color: var(--danger-color); }
     .spotlight-hero { display: flex; align-items: center; gap: var(--space-sm); margin-top: var(--space-sm); }
     .spotlight-avatar {
       width: 56px; height: 56px; border-radius: 50%;
@@ -158,12 +158,12 @@ const BADGE_GLYPH: Record<SpotlightBadge, string> = {
       display: flex; align-items: center; justify-content: center;
       overflow: hidden; flex-shrink: 0;
       font-size: 20px; font-weight: 700; color: var(--text-muted);
-      border: 2px solid var(--warning, #f59e0b);
+      border: 2px solid var(--dev-accent-color);
     }
     .spotlight-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .spotlight-headline { display: flex; flex-direction: column; flex: 1; min-width: 0; }
     .spotlight-name { font-size: var(--text-sm); font-weight: 600; color: var(--text-color); }
-    .spotlight-title { font-size: var(--text-md, 16px); font-weight: 700; color: var(--text-color); line-height: 1.2; }
+    .spotlight-title { font-size: var(--text-lg); font-weight: 700; color: var(--text-color); line-height: 1.2; }
     .spotlight-message {
       margin-top: var(--space-sm);
       font-size: var(--text-sm);

@@ -1,5 +1,4 @@
 import {ChangeDetectionStrategy, Component, inject, input, output, signal} from '@angular/core';
-import {NgFor, NgIf} from '@angular/common';
 import {MediaService} from '../../../services/media.service';
 import {ConfirmUploadResponse, MediaPurpose} from '../../../models/media.model';
 
@@ -18,7 +17,6 @@ interface UploadingFile {
 @Component({
   selector: 'koval-photo-uploader',
   standalone: true,
-  imports: [NgIf, NgFor],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
@@ -37,31 +35,38 @@ interface UploadingFile {
       />
       <p>Click or drop up to {{maxPhotos()}} photo(s) (max 8 MB each)</p>
     </div>
-    <ul *ngIf="files().length > 0" class="uploads">
-      <li *ngFor="let f of files()">
-        <span class="name">{{f.name}}</span>
-        <span class="status" [class]="f.status">{{f.status}}</span>
-        <span class="error" *ngIf="f.error">{{f.error}}</span>
-      </li>
-    </ul>
+    @if (files().length > 0) {
+      <ul class="uploads">
+        @for (f of files(); track f.name) {
+          <li>
+            <span class="name">{{f.name}}</span>
+            <span class="status" [class]="f.status">{{f.status}}</span>
+            @if (f.error) {
+              <span class="error">{{f.error}}</span>
+            }
+          </li>
+        }
+      </ul>
+    }
   `,
   styles: [`
     .uploader {
-      border: 2px dashed #444;
-      padding: 24px;
+      border: 2px dashed var(--glass-border);
+      padding: var(--space-lg);
       text-align: center;
       cursor: pointer;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
+      color: var(--text-muted);
     }
-    .uploader:hover { border-color: #666; }
-    .uploads { list-style: none; padding: 0; margin-top: 12px; }
-    .uploads li { display: flex; gap: 12px; align-items: center; padding: 4px 0; font-size: 0.9em; }
-    .name { flex: 1; }
-    .status.pending { color: #999; }
-    .status.uploading { color: #fa0; }
-    .status.done { color: #6c6; }
-    .status.failed { color: #f55; }
-    .error { color: #f55; }
+    .uploader:hover { border-color: var(--accent-color); color: var(--text-color); }
+    .uploads { list-style: none; padding: 0; margin-top: var(--space-sm); }
+    .uploads li { display: flex; gap: var(--space-sm); align-items: center; padding: 4px 0; font-size: 0.9em; }
+    .name { flex: 1; color: var(--text-color); }
+    .status.pending { color: var(--text-muted); }
+    .status.uploading { color: var(--dev-accent-color); }
+    .status.done { color: var(--success-color); }
+    .status.failed { color: var(--danger-color); }
+    .error { color: var(--danger-color); }
   `],
 })
 export class KovalPhotoUploaderComponent {

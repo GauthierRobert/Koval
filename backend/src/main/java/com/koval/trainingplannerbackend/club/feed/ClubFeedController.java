@@ -21,6 +21,7 @@ import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService
 import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -92,7 +93,7 @@ public class ClubFeedController {
     @PostMapping("/announcements")
     public ResponseEntity<ClubFeedEventResponse> createAnnouncement(
             @PathVariable String clubId,
-            @RequestBody CreateAnnouncementRequest req) {
+            @Valid @RequestBody CreateAnnouncementRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(
                 feedService.createCoachAnnouncement(userId, clubId, req.content(), req.mediaIds(),
@@ -103,7 +104,7 @@ public class ClubFeedController {
     public ResponseEntity<ClubFeedEventResponse> updateAnnouncement(
             @PathVariable String clubId,
             @PathVariable String eventId,
-            @RequestBody UpdateAnnouncementRequest req) {
+            @Valid @RequestBody UpdateAnnouncementRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(
                 feedService.updateCoachAnnouncement(userId, clubId, eventId, req.content(), req.mediaIds(),
@@ -131,7 +132,7 @@ public class ClubFeedController {
     public ResponseEntity<ReactionStateResponse> toggleEventReaction(
             @PathVariable String clubId,
             @PathVariable String eventId,
-            @RequestBody ToggleReactionRequest req) {
+            @Valid @RequestBody ToggleReactionRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(reactionService.toggleEventReaction(userId, clubId, eventId, req.emoji()));
     }
@@ -141,7 +142,7 @@ public class ClubFeedController {
             @PathVariable String clubId,
             @PathVariable String eventId,
             @PathVariable String commentId,
-            @RequestBody ToggleReactionRequest req) {
+            @Valid @RequestBody ToggleReactionRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(reactionService.toggleCommentReaction(
                 userId, clubId, eventId, commentId, req.emoji()));
@@ -151,7 +152,7 @@ public class ClubFeedController {
     public ResponseEntity<ClubFeedEvent.CommentEntry> addComment(
             @PathVariable String clubId,
             @PathVariable String eventId,
-            @RequestBody AddCommentRequest req) {
+            @Valid @RequestBody AddCommentRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(feedService.addComment(
                 userId, clubId, eventId, req.content(), null, req.mentionUserIds()));
@@ -162,7 +163,7 @@ public class ClubFeedController {
             @PathVariable String clubId,
             @PathVariable String eventId,
             @PathVariable String parentCommentId,
-            @RequestBody AddCommentRequest req) {
+            @Valid @RequestBody AddCommentRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(feedService.addComment(
                 userId, clubId, eventId, req.content(), parentCommentId, req.mentionUserIds()));
@@ -173,7 +174,7 @@ public class ClubFeedController {
             @PathVariable String clubId,
             @PathVariable String eventId,
             @PathVariable String commentId,
-            @RequestBody UpdateCommentRequest req) {
+            @Valid @RequestBody UpdateCommentRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(feedService.updateComment(userId, clubId, eventId, commentId, req.content()));
     }

@@ -72,7 +72,7 @@ import {FeedCommentsSectionComponent} from './feed-comments-section.component';
             [mentions]="event.mentionRefs ?? []">
           </app-koval-mention-text>
           @if (event.updatedAt && event.updatedAt !== event.createdAt) {
-            <span class="ann-edited-tag">· {{ 'CLUB_FEED.EDITED' | translate }}</span>
+            <span class="ann-edited-tag">Ã‚Â· {{ 'CLUB_FEED.EDITED' | translate }}</span>
           }
         </div>
       }
@@ -102,7 +102,7 @@ import {FeedCommentsSectionComponent} from './feed-comments-section.component';
                 <span class="ann-file-name" [title]="a.file?.originalFileName || ''">
                   {{ a.file?.originalFileName || ('CLUB_FEED.DOWNLOAD' | translate) }}
                 </span>
-                <span class="ann-file-meta">{{ formatBytes(a.file?.sizeBytes) }} · {{ shortType(a.file?.contentType) }}</span>
+                <span class="ann-file-meta">{{ formatBytes(a.file?.sizeBytes) }} Ã‚Â· {{ shortType(a.file?.contentType) }}</span>
               </div>
               <a class="ann-file-dl" [href]="a.file?.originalUrl" target="_blank" rel="noopener"
                  [attr.aria-label]="'CLUB_FEED.DOWNLOAD' | translate"
@@ -145,22 +145,22 @@ import {FeedCommentsSectionComponent} from './feed-comments-section.component';
     .author-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .author-info { flex: 1; display: flex; flex-direction: column; }
     .author-name { font-size: var(--text-sm); font-weight: 600; color: var(--text-color); }
-    .author-role { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary); }
+    .author-role { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-color); }
     .announcement-time { font-size: 9px; color: var(--text-muted); font-family: monospace; white-space: nowrap; }
     .announcement-content { font-size: var(--text-sm); line-height: 1.5; color: var(--text-color); white-space: pre-wrap; word-break: break-word; }
     .ann-edited-tag { font-size: 9px; color: var(--text-muted); font-style: italic; margin-left: 4px; }
 
     .ann-actions { display: flex; gap: 8px; flex-shrink: 0; }
     .ann-action-link { background: none; border: none; padding: 0; font-size: 10px; color: var(--text-muted); cursor: pointer; font-weight: 500; }
-    .ann-action-link:hover { color: var(--primary); }
-    .ann-action-link--danger:hover { color: var(--danger, #ef4444); }
+    .ann-action-link:hover { color: var(--accent-color); }
+    .ann-action-link--danger:hover { color: var(--danger-color); }
 
     .ann-edit-textarea { width: 100%; background: var(--surface-elevated); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 8px 10px; font-size: var(--text-sm); color: var(--text-color); outline: none; resize: vertical; font-family: inherit; }
-    .ann-edit-textarea:focus { border-color: var(--primary); }
+    .ann-edit-textarea:focus { border-color: var(--accent-color); }
     .ann-edit-actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: var(--space-xs); }
     .composer-cancel { background: none; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 6px 12px; font-size: var(--text-xs); color: var(--text-muted); cursor: pointer; }
     .composer-cancel:hover { color: var(--text-color); }
-    .btn-primary { background: var(--primary); color: #000; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: var(--text-xs); font-weight: 600; cursor: pointer; }
+    .btn-primary { background: var(--accent-color); color: #000; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: var(--text-xs); font-weight: 600; cursor: pointer; }
     .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-primary:hover:not(:disabled) { opacity: 0.9; }
 
@@ -171,12 +171,12 @@ import {FeedCommentsSectionComponent} from './feed-comments-section.component';
 
     .ann-files { list-style: none; padding: 0; margin: var(--space-sm) 0 0; display: flex; flex-direction: column; gap: 6px; }
     .ann-file { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--surface-elevated); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); }
-    .ann-file-icon { color: var(--primary); flex-shrink: 0; display: inline-flex; }
+    .ann-file-icon { color: var(--accent-color); flex-shrink: 0; display: inline-flex; }
     .ann-file-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
     .ann-file-name { font-size: var(--text-xs); font-weight: 600; color: var(--text-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ann-file-meta { font-size: 9px; color: var(--text-muted); font-family: monospace; }
     .ann-file-dl { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-sm); color: var(--text-muted); text-decoration: none; flex-shrink: 0; }
-    .ann-file-dl:hover { background: var(--glass-bg); color: var(--primary); }
+    .ann-file-dl:hover { background: var(--glass-bg); color: var(--accent-color); }
   `,
 })
 export class FeedAnnouncementCardComponent {

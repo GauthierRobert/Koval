@@ -4,6 +4,9 @@ import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.auth.UserRole;
 import com.koval.trainingplannerbackend.auth.UserService;
+import com.koval.trainingplannerbackend.club.invite.ClubInviteCode;
+import com.koval.trainingplannerbackend.club.invite.ClubInviteCodeRepository;
+import com.koval.trainingplannerbackend.club.invite.ClubInviteCodeService;
 import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
@@ -27,16 +30,47 @@ public class CoachInviteService {
     private final UserRepository userRepository;
     private final UserService userService;
     private final InviteCodeRepository inviteCodeRepository;
+    private final ClubInviteCodeRepository clubInviteCodeRepository;
+    private final ClubInviteCodeService clubInviteCodeService;
     private final GroupService groupService;
 
     public CoachInviteService(UserRepository userRepository,
             UserService userService,
             InviteCodeRepository inviteCodeRepository,
+            ClubInviteCodeRepository clubInviteCodeRepository,
+            ClubInviteCodeService clubInviteCodeService,
             GroupService groupService) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.inviteCodeRepository = inviteCodeRepository;
+        this.clubInviteCodeRepository = clubInviteCodeRepository;
+        this.clubInviteCodeService = clubInviteCodeService;
         this.groupService = groupService;
+    }
+
+    public enum RedeemResult { GROUP, CLUB }
+
+    /**
+     * Redeem an invite code that may belong to either a coach (Group) or a club.
+     * Returns which kind of code was redeemed.
+     */
+    @Transactional
+    public RedeemResult redeemAnyInviteCode(String userId, String rawCode) {
+        String code = rawCode == null ? "" : rawCode.toUpperCase().trim();
+
+        Optional<InviteCode> coachCode = inviteCodeRepository.findByCode(code);
+        if (coachCode.isPresent()) {
+            redeemInviteCode(userId, code);
+            return RedeemResult.GROUP;
+        }
+
+        Optional<ClubInviteCode> clubCode = clubInviteCodeRepository.findByCode(code);
+        if (clubCode.isPresent()) {
+            clubInviteCodeService.redeemClubInviteCode(userId, code);
+            return RedeemResult.CLUB;
+        }
+
+        throw new ValidationException("Invalid invite code");
     }
 
     /**

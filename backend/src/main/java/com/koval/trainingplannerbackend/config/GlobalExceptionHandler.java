@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.config;
 
+import com.koval.trainingplannerbackend.config.exceptions.ExternalServiceException;
 import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
 import com.koval.trainingplannerbackend.config.exceptions.RateLimitException;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
@@ -61,6 +62,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.of(400, "Bad Request", "INVALID_STATE", ex.getMessage(), request.getRequestURI()));
+    }
+
+    @ExceptionHandler(ExternalServiceException.class)
+    public ResponseEntity<ErrorResponse> handleExternalService(ExternalServiceException ex, HttpServletRequest request) {
+        log.warn("External service failure: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(ErrorResponse.of(502, "Bad Gateway", ex.getCode(), ex.getMessage(), request.getRequestURI()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

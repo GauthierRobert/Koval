@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -391,7 +392,7 @@ public class SessionService {
                         GridFsResource resource = gridFsOperations.getResource(gridFile);
                         return new FitFileResult(resource.getInputStream().readAllBytes(), s.getId() + ".fit");
                     } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        throw new UncheckedIOException("Failed to read FIT file for session " + s.getId(), e);
                     }
                 });
     }
