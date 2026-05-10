@@ -7,6 +7,7 @@ import com.koval.trainingplannerbackend.club.dto.RedeemInviteCodeRequest;
 import com.koval.trainingplannerbackend.club.invite.ClubInviteCode;
 import com.koval.trainingplannerbackend.club.invite.ClubInviteCodeService;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,7 +54,7 @@ public class ClubInviteController {
     }
 
     @PostMapping("/redeem-invite")
-    public ResponseEntity<ClubMembership> redeemInviteCode(@RequestBody RedeemInviteCodeRequest req) {
+    public ResponseEntity<ClubMembership> redeemInviteCode(@Valid @RequestBody RedeemInviteCodeRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(clubInviteCodeService.redeemClubInviteCode(userId, req.code()));
     }

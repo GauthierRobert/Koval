@@ -121,7 +121,7 @@ interface CommentReactionEvent {
             <span class="comment-author">{{ c.displayName }}</span>
             <span class="comment-time">{{ relativeTime(c.createdAt) }}</span>
             @if (c.updatedAt) {
-              <span class="comment-edited">· {{ 'CLUB_FEED.EDITED' | translate }}</span>
+              <span class="comment-edited">Ã‚Â· {{ 'CLUB_FEED.EDITED' | translate }}</span>
             }
           </div>
           @if (editingId === c.id) {
@@ -196,18 +196,18 @@ interface CommentReactionEvent {
     .comment-text { font-size: var(--text-xs); color: var(--text-color); line-height: 1.4; word-break: break-word; }
     .comment-actions { display: flex; gap: 8px; margin-top: 2px; }
     .comment-action-link { background: none; border: none; padding: 0; font-size: 10px; color: var(--text-muted); cursor: pointer; font-weight: 500; }
-    .comment-action-link:hover { color: var(--primary); }
-    .comment-action-link--danger:hover { color: var(--danger, #ef4444); }
+    .comment-action-link:hover { color: var(--accent-color); }
+    .comment-action-link--danger:hover { color: var(--danger-color); }
     .comment-edit-row { display: flex; gap: 6px; margin-top: 2px; align-items: center; flex-wrap: wrap; }
     .comment-action-btn { background: var(--surface-elevated); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 4px 8px; font-size: 10px; color: var(--text-color); cursor: pointer; font-weight: 600; }
     .comment-action-btn:hover { background: var(--glass-bg); }
-    .comment-action-btn--primary { background: var(--primary); color: #000; border-color: var(--primary); }
+    .comment-action-btn--primary { background: var(--accent-color); color: #000; border-color: var(--accent-color); }
     .comment-action-btn--primary:disabled { opacity: 0.4; cursor: not-allowed; }
     .comment-input-row { display: flex; gap: 6px; margin-top: var(--space-sm); align-items: flex-start; }
     .comment-input { flex: 1; background: var(--surface-elevated); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 6px 10px; font-size: var(--text-xs); color: var(--text-color); outline: none; }
     .comment-input::placeholder { color: var(--text-muted); }
-    .comment-input:focus { border-color: var(--primary); }
-    .comment-post-btn { background: var(--primary); color: #000; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: var(--text-xs); font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .comment-input:focus { border-color: var(--accent-color); }
+    .comment-post-btn { background: var(--accent-color); color: #000; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: var(--text-xs); font-weight: 600; cursor: pointer; white-space: nowrap; }
     .comment-post-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .comment-post-btn:hover:not(:disabled) { opacity: 0.9; }
   `,

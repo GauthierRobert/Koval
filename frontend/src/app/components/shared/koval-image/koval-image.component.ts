@@ -1,5 +1,4 @@
 import {ChangeDetectionStrategy, Component, computed, input, signal} from '@angular/core';
-import {NgIf, NgStyle} from '@angular/common';
 import {decode as decodeBlurHash} from 'blurhash';
 import {MediaResponse} from '../../../models/media.model';
 
@@ -19,35 +18,38 @@ type VariantSize = 'thumb' | 'small' | 'medium' | 'large';
 @Component({
   selector: 'koval-image',
   standalone: true,
-  imports: [NgIf, NgStyle],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
       class="koval-image-wrapper"
-      [ngStyle]="wrapperStyle()"
+      [style.aspect-ratio]="aspectRatio()"
     >
-      <div
-        *ngIf="placeholderUri() && !loaded()"
-        class="koval-image-placeholder"
-        [ngStyle]="{'background-image': 'url(' + placeholderUri() + ')'}"
-      ></div>
-      <img
-        *ngIf="resolvedUrl() as url"
-        [src]="url"
-        [alt]="alt()"
-        loading="lazy"
-        decoding="async"
-        (load)="onLoad()"
-        class="koval-image-img"
-        [class.loaded]="loaded()"
-      />
+      @if (placeholderUri(); as uri) {
+        @if (!loaded()) {
+          <div
+            class="koval-image-placeholder"
+            [style.background-image]="'url(' + uri + ')'"
+          ></div>
+        }
+      }
+      @if (resolvedUrl(); as url) {
+        <img
+          [src]="url"
+          [alt]="alt()"
+          loading="lazy"
+          decoding="async"
+          (load)="onLoad()"
+          class="koval-image-img"
+          [class.loaded]="loaded()"
+        />
+      }
     </div>
   `,
   styles: [`
     .koval-image-wrapper {
       position: relative;
       overflow: hidden;
-      background: #1a1a1a;
+      background: var(--surface-elevated);
     }
     .koval-image-placeholder {
       position: absolute;
@@ -82,7 +84,6 @@ export class KovalImageComponent {
     if (!m) return null;
     const v = m.variants?.[this.size()];
     if (v) return v.url;
-    // Try other variants in descending size order before falling back to original
     for (const fallback of ['large', 'medium', 'small', 'thumb'] as VariantSize[]) {
       const candidate = m.variants?.[fallback];
       if (candidate) return candidate.url;
@@ -90,18 +91,11 @@ export class KovalImageComponent {
     return m.originalUrl;
   });
 
-  readonly wrapperStyle = computed(() => {
+  readonly aspectRatio = computed(() => {
     const m = this.media();
-    if (m?.width && m?.height) {
-      return {'aspect-ratio': `${m.width} / ${m.height}`};
-    }
-    return {'aspect-ratio': '16 / 9'};
+    return m?.width && m?.height ? `${m.width} / ${m.height}` : '16 / 9';
   });
 
-  /**
-   * Returns a data-URI for the BlurHash placeholder, or null if the
-   * `blurhash` package is unavailable. Decoded once on demand.
-   */
   readonly placeholderUri = computed(() => {
     const hash = this.media()?.blurHash;
     if (!hash) return null;

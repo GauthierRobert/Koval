@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.integration.garmin;
 
+import com.koval.trainingplannerbackend.config.exceptions.ExternalServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -159,7 +160,7 @@ public class GarminOAuthService {
             mac.init(new SecretKeySpec(signingKey.getBytes(StandardCharsets.UTF_8), "HmacSHA1"));
             return Base64.getEncoder().encodeToString(mac.doFinal(baseString.getBytes(StandardCharsets.UTF_8)));
         } catch (java.security.GeneralSecurityException e) {
-            throw new RuntimeException("Failed to generate OAuth signature", e);
+            throw new ExternalServiceException("Garmin", "Failed to generate OAuth signature", e);
         }
     }
 

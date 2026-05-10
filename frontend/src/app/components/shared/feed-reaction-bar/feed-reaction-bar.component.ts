@@ -1,5 +1,4 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, Input, Output} from '@angular/core';
-import {CommonModule} from '@angular/common';
+import {ChangeDetectionStrategy, Component, computed, input, output, signal} from '@angular/core';
 import {ALLOWED_REACTION_EMOJI, ReactionEmoji} from '../../../models/club.model';
 
 const EMOJI_GLYPH: Record<ReactionEmoji, string> = {
@@ -21,12 +20,11 @@ interface ReactionRow {
 @Component({
   selector: 'app-feed-reaction-bar',
   standalone: true,
-  imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="reaction-bar" data-testid="reaction-bar" (click)="$event.stopPropagation()">
-      @for (r of rows; track r.emoji) {
-        @if (r.count > 0 || pickerOpen) {
+      @for (r of rows(); track r.emoji) {
+        @if (r.count > 0 || pickerOpen()) {
           <button
             type="button"
             class="reaction-chip"
@@ -46,9 +44,9 @@ interface ReactionRow {
         type="button"
         class="reaction-add"
         data-testid="reaction-add"
-        (click)="pickerOpen = !pickerOpen"
+        (click)="togglePicker()"
         [attr.aria-label]="'add reaction'">
-        @if (!pickerOpen) {
+        @if (!pickerOpen()) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/>
@@ -88,9 +86,9 @@ interface ReactionRow {
     }
     .reaction-chip:hover { background: var(--glass-bg); }
     .reaction-chip.active {
-      background: rgba(125, 211, 252, 0.15);
-      border-color: var(--primary);
-      color: var(--primary);
+      background: var(--accent-subtle);
+      border-color: var(--accent-border);
+      color: var(--accent-color);
     }
     .reaction-chip .emoji { font-size: 13px; }
     .reaction-chip .count { font-size: 10px; font-variant-numeric: tabular-nums; opacity: 0.8; }
@@ -106,31 +104,36 @@ interface ReactionRow {
       color: var(--text-muted);
       cursor: pointer;
     }
-    .reaction-add:hover { color: var(--primary); border-color: var(--primary); }
+    .reaction-add:hover { color: var(--accent-color); border-color: var(--accent-color); }
   `,
 })
 export class FeedReactionBarComponent {
-  @Input() reactions: { [emoji: string]: string[] } | undefined;
-  @Input() currentUserId: string | null = null;
-  @Output() toggle = new EventEmitter<ReactionEmoji>();
+  readonly reactions = input<{ [emoji: string]: string[] } | undefined>(undefined);
+  readonly currentUserId = input<string | null>(null);
+  readonly toggle = output<ReactionEmoji>();
 
-  pickerOpen = false;
+  readonly pickerOpen = signal(false);
 
-  get rows(): ReactionRow[] {
-    const r = this.reactions ?? {};
+  readonly rows = computed<ReactionRow[]>(() => {
+    const map = this.reactions() ?? {};
+    const userId = this.currentUserId();
     return ALLOWED_REACTION_EMOJI.map((emoji) => {
-      const users = r[emoji] ?? [];
+      const users = map[emoji] ?? [];
       return {
         emoji,
         glyph: EMOJI_GLYPH[emoji],
         count: users.length,
-        active: this.currentUserId != null && users.includes(this.currentUserId),
+        active: userId != null && users.includes(userId),
       };
     });
+  });
+
+  togglePicker(): void {
+    this.pickerOpen.update((open) => !open);
   }
 
   onToggle(emoji: ReactionEmoji): void {
     this.toggle.emit(emoji);
-    this.pickerOpen = false;
+    this.pickerOpen.set(false);
   }
 }

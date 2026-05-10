@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.auth;
 
+import com.koval.trainingplannerbackend.config.exceptions.ExternalServiceException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -113,7 +114,7 @@ public class StravaOAuthService {
     @SuppressWarnings("unchecked")
     private StravaTokenResponse parseTokenResponse(Map<String, Object> responseBody) {
         if (responseBody == null) {
-            throw new RuntimeException("Empty response from Strava");
+            throw new ExternalServiceException("Strava", "Empty token response");
         }
         Map<String, Object> athlete = (Map<String, Object>) responseBody.get("athlete");
         return new StravaTokenResponse(

@@ -85,7 +85,7 @@ import {MentionSuggestion} from '../../../models/club.model';
       font-family: inherit;
     }
     .mention-input::placeholder { color: var(--text-muted); }
-    .mention-input:focus { border-color: var(--primary); }
+    .mention-input:focus { border-color: var(--accent-color); }
     textarea.mention-input { resize: vertical; min-height: 40px; }
     .mention-dropdown {
       position: absolute;

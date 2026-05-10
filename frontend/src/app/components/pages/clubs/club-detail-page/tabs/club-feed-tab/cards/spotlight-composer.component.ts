@@ -31,7 +31,7 @@ const EXPIRY_OPTIONS = [3, 7, 14];
     <div class="composer-card" data-testid="spotlight-composer">
       <div class="composer-header">
         <h4>{{ 'CLUB_FEED.SPOTLIGHT_COMPOSER_TITLE' | translate }}</h4>
-        <button class="composer-close" (click)="cancel.emit()" [attr.aria-label]="'COMMON.CANCEL' | translate">×</button>
+        <button class="composer-close" (click)="cancel.emit()" [attr.aria-label]="'COMMON.CANCEL' | translate">Ãƒâ€”</button>
       </div>
 
       <div class="composer-row">
@@ -102,7 +102,7 @@ const EXPIRY_OPTIONS = [3, 7, 14];
   styles: `
     .composer-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: var(--space-md); display: flex; flex-direction: column; gap: var(--space-sm); }
     .composer-header { display: flex; align-items: center; justify-content: space-between; }
-    .composer-header h4 { font-size: var(--text-md, 16px); margin: 0; color: var(--text-color); }
+    .composer-header h4 { font-size: var(--text-lg); margin: 0; color: var(--text-color); }
     .composer-close { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; line-height: 1; }
     .composer-close:hover { color: var(--text-color); }
     .composer-row { display: flex; flex-direction: column; gap: 4px; }
@@ -116,7 +116,7 @@ const EXPIRY_OPTIONS = [3, 7, 14];
       color: var(--text-color);
       outline: none;
     }
-    .composer-input:focus { border-color: var(--primary); }
+    .composer-input:focus { border-color: var(--accent-color); }
     .badge-grid { display: flex; flex-wrap: wrap; gap: 6px; }
     .badge-pill {
       padding: 4px 10px;
@@ -130,11 +130,11 @@ const EXPIRY_OPTIONS = [3, 7, 14];
       cursor: pointer;
     }
     .badge-pill:hover { color: var(--text-color); }
-    .badge-pill.active { background: rgba(125, 211, 252, 0.15); border-color: var(--primary); color: var(--primary); }
+    .badge-pill.active { background: var(--accent-subtle); border-color: var(--accent-color); color: var(--accent-color); }
     .composer-actions { display: flex; gap: 6px; justify-content: flex-end; }
     .composer-cancel { background: none; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 6px 12px; font-size: var(--text-xs); color: var(--text-muted); cursor: pointer; }
     .composer-cancel:hover { color: var(--text-color); }
-    .btn-primary { background: var(--primary); color: #000; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: var(--text-xs); font-weight: 600; cursor: pointer; }
+    .btn-primary { background: var(--accent-color); color: #000; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: var(--text-xs); font-weight: 600; cursor: pointer; }
     .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-primary:hover:not(:disabled) { opacity: 0.9; }
   `,

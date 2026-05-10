@@ -75,8 +75,8 @@ const DEFAULT_ACCEPT =
               <span class="kau-size">{{ formatSize(f.sizeBytes) }}</span>
               <span class="kau-status" [class]="f.status">
                 @switch (f.status) {
-                  @case ('uploading') { … }
-                  @case ('done') { ✓ }
+                  @case ('uploading') { â€¦ }
+                  @case ('done') { âœ“ }
                   @case ('failed') { ! }
                 }
               </span>
@@ -104,7 +104,7 @@ const DEFAULT_ACCEPT =
       cursor: pointer;
       align-self: flex-start;
     }
-    .kau-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+    .kau-btn:hover:not(:disabled) { border-color: var(--accent-color); color: var(--accent-color); }
     .kau-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .kau-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
     .kau-chip {
@@ -117,7 +117,7 @@ const DEFAULT_ACCEPT =
     }
     .kau-chip.failed { border-color: var(--danger-color, #f55); }
     .kau-icon { color: var(--text-muted); flex-shrink: 0; display: inline-flex; }
-    .kau-icon[data-kind='image'] { color: var(--primary); }
+    .kau-icon[data-kind='image'] { color: var(--accent-color); }
     .kau-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-color); }
     .kau-size { color: var(--text-muted); font-family: monospace; font-size: 9px; flex-shrink: 0; }
     .kau-status { font-family: monospace; font-size: 11px; flex-shrink: 0; }
@@ -175,7 +175,7 @@ export class KovalAttachmentUploaderComponent {
     this.emitConfirmed();
   }
 
-  /** Reset state — host calls this after successfully posting. */
+  /** Reset state â€” host calls this after successfully posting. */
   reset(): void {
     this.files.set([]);
     this.emitConfirmed();

@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.integration.zwift;
 
+import com.koval.trainingplannerbackend.config.exceptions.ExternalServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,7 +56,7 @@ public class ZwiftAuthService {
                 TOKEN_URL, HttpMethod.POST, new HttpEntity<>(body, headers), Map.class);
 
         Map<String, Object> tokenBody = response.getBody();
-        if (tokenBody == null) throw new RuntimeException("Empty Zwift token response");
+        if (tokenBody == null) throw new ExternalServiceException("Zwift", "Empty token response");
 
         String accessToken = (String) tokenBody.get("access_token");
         String refreshToken = (String) tokenBody.get("refresh_token");
@@ -83,7 +84,7 @@ public class ZwiftAuthService {
                 TOKEN_URL, HttpMethod.POST, new HttpEntity<>(body, headers), Map.class);
 
         Map<String, Object> tokenBody = response.getBody();
-        if (tokenBody == null) throw new RuntimeException("Empty Zwift token refresh response");
+        if (tokenBody == null) throw new ExternalServiceException("Zwift", "Empty token refresh response");
 
         String newAccessToken = (String) tokenBody.get("access_token");
         String newRefreshToken = (String) tokenBody.get("refresh_token");

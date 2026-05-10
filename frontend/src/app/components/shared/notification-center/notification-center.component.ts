@@ -71,7 +71,7 @@ import {NotificationCenterService, PersistedNotification} from '../../../service
     .notif-center-header h3 { margin: 0; font-size: 15px; }
     .notif-center-actions { display: flex; align-items: center; gap: 8px; }
     .link-btn {
-      background: none; border: none; color: var(--accent, #5eb1ff);
+      background: none; border: none; color: var(--accent-color);
       cursor: pointer; font-size: 12px; padding: 4px 6px;
     }
     .icon-btn {

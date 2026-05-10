@@ -82,7 +82,7 @@ type SortColumn = 'name' | 'comments' | 'reactions' | 'sessions' | 'lastActive';
           <p class="insights-empty">{{ 'CLUB_MEMBERS.NO_INSIGHTS' | translate }}</p>
         }
       } @else {
-        <p class="insights-empty">{{ 'COMMON.LOADING' | translate }}…</p>
+        <p class="insights-empty">{{ 'COMMON.LOADING' | translate }}â€¦</p>
       }
     </section>
   `,
@@ -104,9 +104,9 @@ type SortColumn = 'name' | 'comments' | 'reactions' | 'sessions' | 'lastActive';
     .member-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .member-name { font-weight: 500; }
     .role-pill { font-size: 8px; font-weight: 700; padding: 2px 6px; border-radius: 999px; background: var(--surface-elevated); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-    .role-pill[data-role="OWNER"] { background: rgba(245, 158, 11, 0.15); color: var(--warning, #f59e0b); }
-    .role-pill[data-role="ADMIN"] { background: rgba(125, 211, 252, 0.15); color: var(--primary); }
-    .role-pill[data-role="COACH"] { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+    .role-pill[data-role="OWNER"] { background: var(--accent-subtle); color: var(--dev-accent-color); }
+    .role-pill[data-role="ADMIN"] { background: var(--accent-subtle); color: var(--accent-color); }
+    .role-pill[data-role="COACH"] { background: var(--success-subtle); color: var(--success-color); }
     .insights-empty { font-size: var(--text-xs); color: var(--text-muted); padding: var(--space-sm); margin: 0; }
   `,
 })
@@ -139,7 +139,7 @@ export class EngagementInsightsPanelComponent implements OnInit {
 
   sortIndicator(col: SortColumn): string {
     if (this.sortBy !== col) return '';
-    return this.sortDir === 'asc' ? ' ▲' : ' ▼';
+    return this.sortDir === 'asc' ? ' â–²' : ' â–¼';
   }
 
   sortedRows(insights: EngagementInsightsResponse): MemberEngagement[] {
@@ -170,7 +170,7 @@ export class EngagementInsightsPanelComponent implements OnInit {
   }
 
   relativeTime(dateStr: string | undefined): string {
-    if (!dateStr) return '—';
+    if (!dateStr) return 'â€”';
     const diff = Date.now() - new Date(dateStr).getTime();
     const days = Math.floor(diff / 86400000);
     if (days === 0) return 'today';

@@ -1,4 +1,4 @@
-import {Component, EventEmitter, inject, Input, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, inject, Input, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {BlockSummary, SessionSummary} from '../../../../services/workout-execution.service';
@@ -11,7 +11,8 @@ import {formatTimeMS} from '../../../shared/format/format.utils';
     standalone: true,
     imports: [CommonModule, TranslateModule],
     templateUrl: './session-summary.component.html',
-    styleUrl: './session-summary.component.css'
+    styleUrl: './session-summary.component.css',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SessionSummaryComponent {
     @Input() summary!: SessionSummary;

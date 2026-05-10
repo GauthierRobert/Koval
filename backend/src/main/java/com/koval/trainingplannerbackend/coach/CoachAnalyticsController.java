@@ -5,7 +5,7 @@ import com.koval.trainingplannerbackend.goal.RaceGoalResponse;
 import com.koval.trainingplannerbackend.goal.RaceGoalService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
-import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
+import com.koval.trainingplannerbackend.training.history.SessionService;
 import com.koval.trainingplannerbackend.training.metrics.PowerCurveService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -24,18 +24,18 @@ import java.util.List;
 public class CoachAnalyticsController {
 
     private final CoachService coachService;
-    private final CompletedSessionRepository sessionRepository;
+    private final SessionService sessionService;
     private final AnalyticsService analyticsService;
     private final RaceGoalService raceGoalService;
     private final PowerCurveService powerCurveService;
 
     public CoachAnalyticsController(CoachService coachService,
-                                    CompletedSessionRepository sessionRepository,
+                                    SessionService sessionService,
                                     AnalyticsService analyticsService,
                                     RaceGoalService raceGoalService,
                                     PowerCurveService powerCurveService) {
         this.coachService = coachService;
-        this.sessionRepository = sessionRepository;
+        this.sessionService = sessionService;
         this.analyticsService = analyticsService;
         this.raceGoalService = raceGoalService;
         this.powerCurveService = powerCurveService;
@@ -51,9 +51,7 @@ public class CoachAnalyticsController {
         // Cap to protect against accidental huge fetches; CompletedSession includes full powerCurve maps
         int safeLimit = Math.min(Math.max(limit, 1), 200);
         return ResponseEntity.ok(
-                sessionRepository
-                        .findByUserIdOrderByCompletedAtDesc(athleteId, PageRequest.of(page, safeLimit))
-                        .getContent());
+                sessionService.listSessions(athleteId, PageRequest.of(page, safeLimit)).getContent());
     }
 
     @GetMapping("/athletes/{athleteId}/pmc")

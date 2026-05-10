@@ -1,3 +1,6 @@
 package com.koval.trainingplannerbackend.club.feed.dto;
 
-public record UpdateCommentRequest(String content) {}
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public record UpdateCommentRequest(@NotBlank @Size(max = 2000) String content) {}

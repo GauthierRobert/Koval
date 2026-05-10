@@ -59,9 +59,9 @@ import {FeedReactionBarComponent} from '../../../../../../shared/feed-reaction-b
   styles: `
     .feed-card--goal { background: var(--glass-bg); border-radius: var(--radius-md); padding: var(--space-md); }
     .goal-header { display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm); }
-    .goal-flag { color: var(--warning, #f59e0b); display: flex; }
-    .goal-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--warning, #f59e0b); flex: 1; }
-    .goal-countdown { font-size: var(--text-sm); font-weight: 700; color: var(--primary); }
+    .goal-flag { color: var(--dev-accent-color); display: flex; }
+    .goal-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dev-accent-color); flex: 1; }
+    .goal-countdown { font-size: var(--text-sm); font-weight: 700; color: var(--accent-color); }
     .goal-info { display: flex; align-items: center; gap: var(--space-xs); margin-bottom: 4px; }
     .goal-title { font-size: var(--text-sm); font-weight: 600; color: var(--text-color); }
     .goal-date, .goal-location { display: block; font-size: var(--text-xs); color: var(--text-muted); }

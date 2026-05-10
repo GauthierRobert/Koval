@@ -246,7 +246,7 @@
 }
 
 .rename-input {
-  background: var(--input-bg, var(--overlay-8));
+  background: var(--surface-elevated);
   border: 1px solid var(--accent-color);
   border-radius: 4px;
   color: var(--text-color);

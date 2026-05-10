@@ -68,9 +68,17 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
   @ViewChild('canvas') canvas!: ElementRef<HTMLCanvasElement>;
   private ctx!: CanvasRenderingContext2D;
   private animationFrame?: number;
+  private chartColors = {
+    grid: 'rgba(255, 255, 255, 0.1)',
+    label: 'rgba(255, 255, 255, 0.5)',
+    axis: 'rgba(255, 255, 255, 0.3)',
+    line: '#ff9d00',
+    fill: 'rgba(52, 152, 219, 0.1)',
+  };
 
   ngAfterViewInit() {
     this.ctx = this.canvas.nativeElement.getContext('2d')!;
+    this.resolveChartColors();
     this.resizeCanvas();
     this.drawGraph();
 
@@ -101,6 +109,13 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     this.canvas.nativeElement.height = parent.clientHeight;
   }
 
+  // Canvas APIs can't use var(), so we pull computed values once and cache them.
+  private resolveChartColors(): void {
+    const styles = getComputedStyle(document.documentElement);
+    const accent = styles.getPropertyValue('--accent-color').trim();
+    if (accent) this.chartColors.line = accent;
+  }
+
   drawGraph() {
     const state = this.executionService.currentState;
     const canvas = this.canvas.nativeElement;
@@ -112,8 +127,8 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw Y-Axis Labels & Grid
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.strokeStyle = this.chartColors.grid;
+    ctx.fillStyle = this.chartColors.label;
     ctx.font = '10px Inter';
     ctx.textAlign = 'right';
     ctx.lineWidth = 1;
@@ -136,7 +151,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     }
 
     // Draw Base Line (X-Axis)
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.strokeStyle = this.chartColors.axis;
     ctx.beginPath();
     ctx.moveTo(padding.left, padding.top + chartHeight);
     ctx.lineTo(padding.left + chartWidth, padding.top + chartHeight);
@@ -144,7 +159,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
 
     if (state.history.length > 0) {
       ctx.beginPath();
-      ctx.strokeStyle = 'var(--accent-color)';
+      ctx.strokeStyle = this.chartColors.line;
       ctx.lineWidth = 2;
 
       const step = chartWidth / Math.max(state.history.length, 300);
@@ -161,7 +176,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
       // Fill secondary area
       ctx.lineTo(padding.left + (state.history.length - 1) * step, padding.top + chartHeight);
       ctx.lineTo(padding.left, padding.top + chartHeight);
-      ctx.fillStyle = 'rgba(52, 152, 219, 0.1)';
+      ctx.fillStyle = this.chartColors.fill;
       ctx.fill();
     }
 
