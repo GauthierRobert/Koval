@@ -1,8 +1,10 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnDestroy, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject, OnDestroy, OnInit} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {
+  canManageClub,
   ClubDetail,
   ClubGroup,
   ClubInviteCode,
@@ -26,7 +28,7 @@ import {ClubTestsTabComponent} from './tabs/club-tests-tab/club-tests-tab.compon
 import {ClubTestService} from '../../../../services/club-test.service';
 import {TrainingActionModalComponent} from '../../../shared/training-action-modal/training-action-modal.component';
 import {ActionContext} from '../../../../services/ai-action.service';
-import {BehaviorSubject, map, Observable, Subscription} from 'rxjs';
+import {BehaviorSubject, map, Observable} from 'rxjs';
 
 type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals' | 'chat' | 'gazette' | 'tests';
 
@@ -78,7 +80,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   aiExistingLinkedTrainings: GroupLinkedTraining[] = [];
   aiSessionGroupId?: string;
   private clubGroups: ClubGroup[] = [];
-  private subs = new Subscription();
+  private destroyRef = inject(DestroyRef);
 
   copiedClubCodeId: string | null = null;
   readonly isJoiningClub$ = new BehaviorSubject(false);
@@ -99,49 +101,40 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   ];
 
   ngOnInit(): void {
-    this.subs.add(
-      this.authService.user$.subscribe((u) => {
-        this.currentUserId = u?.id ?? null;
-        this.cdr.markForCheck();
-      })
-    );
+    this.authService.user$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((u) => {
+      this.currentUserId = u?.id ?? null;
+      this.cdr.markForCheck();
+    });
 
     let prevId: string | null = null;
-    this.subs.add(
-      this.route.params.subscribe((params) => {
-        const id = params['id'] as string;
-        if (id !== prevId) {
-          prevId = id;
-          this.clubId = id;
-          this.loadedTabs.clear();
-          this.chatView = 'list';
-          this.clubService.resetDetail();
-          this.clubSessionService.resetDetail();
-          this.clubFeedService.resetDetail();
-          this.clubService.loadClubDetail(this.clubId);
-        }
-        this.applyTab(this.parseTab(params['tab']));
-      })
-    );
+    this.route.params.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const id = params['id'] as string;
+      if (id !== prevId) {
+        prevId = id;
+        this.clubId = id;
+        this.loadedTabs.clear();
+        this.chatView = 'list';
+        this.clubService.resetDetail();
+        this.clubSessionService.resetDetail();
+        this.clubFeedService.resetDetail();
+        this.clubService.loadClubDetail(this.clubId);
+      }
+      this.applyTab(this.parseTab(params['tab']));
+    });
 
     // Load invite codes early for header display (gated by role in template)
-    this.subs.add(
-      this.selectedClub$.subscribe((club) => {
-        if (club && this.canManageInvites(club)) {
-          this.clubService.loadInviteCodes(club.id);
-        }
-      })
-    );
+    this.selectedClub$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((club) => {
+      if (club && this.canManageInvites(club)) {
+        this.clubService.loadInviteCodes(club.id);
+      }
+    });
 
-    this.subs.add(
-      this.clubService.groups$.subscribe((groups) => {
-        this.clubGroups = groups;
-      })
-    );
+    this.clubService.groups$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((groups) => {
+      this.clubGroups = groups;
+    });
   }
 
   ngOnDestroy(): void {
-    this.subs.unsubscribe();
     this.clubService.resetDetail();
     this.clubSessionService.resetDetail();
     this.clubFeedService.resetDetail();
@@ -285,8 +278,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
   }
 
   canManageInvites(club: ClubDetail): boolean {
-    const role = club?.currentMemberRole;
-    return role === 'OWNER' || role === 'ADMIN' || role === 'COACH';
+    return canManageClub(club?.currentMemberRole);
   }
 
   copyClubInviteLink(code: string, codeId: string): void {

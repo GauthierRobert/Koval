@@ -1,22 +1,29 @@
-import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, Input} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
-import {ClubExtendedStats} from '../../../../../../services/club.service';
+import {canManageClub, ClubDetail, ClubExtendedStats} from '../../../../../../services/club.service';
 import {ClubFeedService} from '../../../../../../services/club-feed.service';
 import {SportIconComponent} from '../../../../../shared/sport-icon/sport-icon.component';
+import {EngagementInsightsPanelComponent} from '../club-members-tab/engagement-insights-panel/engagement-insights-panel.component';
 
 @Component({
   selector: 'app-club-stats-tab',
   standalone: true,
-  imports: [CommonModule, TranslateModule, SportIconComponent],
+  imports: [CommonModule, TranslateModule, SportIconComponent, EngagementInsightsPanelComponent],
   templateUrl: './club-stats-tab.component.html',
   styleUrl: './club-stats-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClubStatsTabComponent {
+  @Input() club!: ClubDetail;
+
   private clubFeedService = inject(ClubFeedService);
   extendedStats$ = this.clubFeedService.extendedStats$;
   expandedTemplates = new Set<string>();
+
+  get canSeeInsights(): boolean {
+    return canManageClub(this.club?.currentMemberRole);
+  }
 
   toggleExpand(templateId: string): void {
     if (this.expandedTemplates.has(templateId)) {

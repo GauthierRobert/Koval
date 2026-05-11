@@ -269,4 +269,9 @@
       <p>{{ 'CLUB_STATS.LOADING' | translate }}</p>
     </div>
   }
+
+  <!-- SECTION 6: COMMUNITY ENGAGEMENT (coaches/admins/owners only) -->
+  @if (canSeeInsights) {
+    <app-engagement-insights-panel [clubId]="club.id" class="section-gap"></app-engagement-insights-panel>
+  }
 </div>

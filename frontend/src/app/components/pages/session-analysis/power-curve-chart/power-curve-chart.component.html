@@ -1,0 +1,24 @@
+@if (hasData()) {
+  <div class="power-curve glass">
+    <div class="pc-header">
+      <div class="section-label">{{ 'SESSION_ANALYSIS.POWER_CURVE_TITLE' | translate }}</div>
+    </div>
+    <div class="pc-stack" #stack (mouseleave)="onMouseLeave()">
+      <canvas #canvas class="pc-canvas"
+        (mousemove)="onHover($event)"
+        (touchstart)="onTouchStart($event)"
+        (touchend)="onTouchEnd()"
+        (touchcancel)="onTouchEnd()"></canvas>
+      @if (hoverIdx() !== null) {
+        <div class="tt" [style.left.px]="ttX()" [style.top.px]="ttY()">
+          <div class="tt-hdr">{{ ttHeader() }}</div>
+          <div class="tt-sep"></div>
+          <div class="tt-row">
+            <span class="tt-lbl">{{ 'SESSION_ANALYSIS.STAT_AVG_POWER' | translate }}</span>
+            <span class="tt-val">{{ ttPower() }}W</span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}

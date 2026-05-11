@@ -20,32 +20,22 @@ import {DisciplineSelectorComponent} from './discipline-selector/discipline-sele
 import {PacingParameterBarComponent} from './pacing-parameter-bar/pacing-parameter-bar.component';
 import {PacingSummaryCardsComponent} from './pacing-summary-cards/pacing-summary-cards.component';
 import {PacingSettingsModalComponent} from './pacing-settings-modal/pacing-settings-modal.component';
-import {BehaviorSubject} from 'rxjs';
-
-interface NutritionEvent {
-  distance: number;
-  suggestion: string;
-}
-
-interface RacePlanGroup {
-  index: number;
-  segmentStart: number;
-  segmentEnd: number;
-  startDistance: number;
-  endDistance: number;
-  targetPower?: number;
-  powerLower?: number;
-  powerUpper?: number;
-  targetPace?: string;
-  meanGradient: number;
-  elevationChange: number;
-  totalTime: number;
-  meanSpeed?: number;
-  fatigueStart: number;
-  fatigueEnd: number;
-  nutritionEvents: NutritionEvent[];
-  terrainLabel: string;
-}
+import {BehaviorSubject, Observable} from 'rxjs';
+import {
+  groupingCacheKey,
+  groupPacingSegments,
+  RacePlanGroup,
+} from './pacing-plan-grouping';
+import {
+  activeRouteCoordinates,
+  activeSegments,
+  availableTabsForPlan,
+  disciplineFromRaceSport,
+  formatPacingDistance,
+  formatPacingTime,
+  generateBlockedReason,
+  terrainLabel,
+} from './pacing-page.helpers';
 
 @Component({
   selector: 'app-pacing-page',
@@ -133,123 +123,17 @@ export class PacingPageComponent implements OnInit {
   }
 
   getGroupedPlan(segments: PacingSegment[]): RacePlanGroup[] {
-    const first = segments[0];
-    const last = segments[segments.length - 1];
-    const key = segments.length + ':' + (first?.startDistance ?? '') + ':' + (last?.endDistance ?? '') + ':' + this.groupBandW + ':' + (first?.targetPower ?? first?.targetPace ?? '') + ':' + (last?.targetPower ?? last?.targetPace ?? '');
+    const key = groupingCacheKey(segments, this.groupBandW);
     if (this.groupedPlanCache?.key === key) {
       return this.groupedPlanCache.result;
     }
-
-    const groups: RacePlanGroup[] = [];
-    if (!segments.length) return groups;
-
-    let groupStart = 0;
-    // Track time-weighted mean power for the current group (bike 10W band merging)
-    const firstSeg = segments[0];
-    let groupWeightedPower = (firstSeg.targetPower ?? 0) * firstSeg.estimatedSegmentTime;
-    let groupTotalTime = firstSeg.estimatedSegmentTime;
-
-    for (let i = 1; i <= segments.length; i++) {
-      const prev = segments[i - 1];
-      const curr = i < segments.length ? segments[i] : null;
-
-      let changed: boolean;
-      if (!curr) {
-        changed = true;
-      } else if (prev.targetPace != null) {
-        // Run segments: exact pace match
-        changed = curr.targetPace !== prev.targetPace;
-      } else if (prev.targetPower != null && curr.targetPower != null) {
-        // Bike segments: check 10W band (mean ± 5W)
-        const currentMean = groupTotalTime > 0 ? groupWeightedPower / groupTotalTime : prev.targetPower;
-        changed = Math.abs(curr.targetPower - currentMean) > this.groupBandW;
-      } else {
-        changed = true;
-      }
-
-      if (!changed) {
-        // Accumulate time-weighted power for the growing group
-        groupWeightedPower += (curr!.targetPower ?? 0) * curr!.estimatedSegmentTime;
-        groupTotalTime += curr!.estimatedSegmentTime;
-      }
-
-      if (changed) {
-        const groupSegments = segments.slice(groupStart, i);
-        const first = groupSegments[0];
-        const last = groupSegments[groupSegments.length - 1];
-
-        let totalDist = 0;
-        let weightedGradient = 0;
-        let totalTime = 0;
-        const nutritionEvents: NutritionEvent[] = [];
-
-        for (const seg of groupSegments) {
-          const segDist = seg.endDistance - seg.startDistance;
-          totalDist += segDist;
-          weightedGradient += seg.gradient * segDist;
-          totalTime += seg.estimatedSegmentTime;
-
-          if (seg.nutritionSuggestion) {
-            nutritionEvents.push({
-              distance: (seg.startDistance + seg.endDistance) / 2,
-              suggestion: seg.nutritionSuggestion,
-            });
-          }
-        }
-
-        const meanGradient = totalDist > 0 ? weightedGradient / totalDist : 0;
-        const elevationChange = Math.round(last.elevation - first.elevation);
-        const meanSpeed = totalTime > 0 ? (totalDist / 1000) / (totalTime / 3600) : undefined;
-
-        // Compute time-weighted mean power for the finalized group
-        const groupMeanPower = first.targetPower != null && groupTotalTime > 0
-          ? Math.round(groupWeightedPower / groupTotalTime)
-          : first.targetPower;
-
-        groups.push({
-          index: groups.length + 1,
-          segmentStart: groupStart,
-          segmentEnd: i - 1,
-          startDistance: first.startDistance,
-          endDistance: last.endDistance,
-          targetPower: groupMeanPower,
-          powerLower: groupMeanPower != null ? groupMeanPower - this.groupBandW : undefined,
-          powerUpper: groupMeanPower != null ? groupMeanPower + this.groupBandW : undefined,
-          targetPace: first.targetPace,
-          meanGradient,
-          elevationChange,
-          totalTime,
-          meanSpeed,
-          fatigueStart: first.cumulativeFatigue,
-          fatigueEnd: last.cumulativeFatigue,
-          nutritionEvents,
-          terrainLabel: this.getTerrainLabel(meanGradient),
-        });
-
-        // Reset tracking for next group
-        groupStart = i;
-        if (curr) {
-          groupWeightedPower = curr.targetPower != null ? curr.targetPower * curr.estimatedSegmentTime : 0;
-          groupTotalTime = curr.estimatedSegmentTime;
-        } else {
-          groupWeightedPower = 0;
-          groupTotalTime = 0;
-        }
-      }
-    }
-
-    this.groupedPlanCache = { key, result: groups };
-    return groups;
+    const result = groupPacingSegments(segments, this.groupBandW, (g) => this.terrainLabel(g));
+    this.groupedPlanCache = {key, result};
+    return result;
   }
 
-  private getTerrainLabel(gradient: number): string {
-    if (gradient > 6) return this.translate.instant('PACING.TERRAIN_STEEP_CLIMB');
-    if (gradient > 3) return this.translate.instant('PACING.TERRAIN_CLIMB');
-    if (gradient > 1) return this.translate.instant('PACING.TERRAIN_SLIGHT_CLIMB');
-    if (gradient >= -1) return this.translate.instant('PACING.TERRAIN_FLAT');
-    if (gradient >= -3) return this.translate.instant('PACING.TERRAIN_SLIGHT_DESCENT');
-    if (gradient >= -6) return this.translate.instant('PACING.TERRAIN_DESCENT');
-    return this.translate.instant('PACING.TERRAIN_STEEP_DESCENT');
+  private terrainLabel(gradient: number): string {
+    return terrainLabel(gradient, this.translate);
   }
 
   ngOnInit(): void {
@@ -263,26 +147,18 @@ export class PacingPageComponent implements OnInit {
       },
     });
 
-    // Check for race pre-fill from query params
     this.route.queryParams.subscribe((params) => {
       const raceId = params['raceId'];
-      const goalId = params['goalId'];
-      if (raceId) {
-        this.linkedGoalId = goalId ?? null;
-        this.raceService.getRace(raceId).subscribe({
-          next: (race) => {
-            this.linkedRace = race;
-            // Pre-fill discipline from race sport
-            if (race.sport === 'TRIATHLON') this.discipline = 'TRIATHLON';
-            else if (race.sport === 'CYCLING') this.discipline = 'BIKE';
-            else if (race.sport === 'RUNNING') this.discipline = 'RUN';
-            else if (race.sport === 'SWIMMING') this.discipline = 'SWIM';
-            // Pre-fill swim distance
-            if (race.swimDistanceM) this.profile.swimDistanceM = race.swimDistanceM;
-            this.cdr.markForCheck();
-          },
-        });
-      }
+      if (!raceId) return;
+      this.linkedGoalId = params['goalId'] ?? null;
+      this.raceService.getRace(raceId).subscribe({
+        next: (race) => {
+          this.linkedRace = race;
+          this.discipline = disciplineFromRaceSport(race.sport) ?? this.discipline;
+          if (race.swimDistanceM) this.profile.swimDistanceM = race.swimDistanceM;
+          this.cdr.markForCheck();
+        },
+      });
     });
   }
 
@@ -329,76 +205,17 @@ export class PacingPageComponent implements OnInit {
   }
 
   getGenerateBlockedReason(): string | null {
-    if (this.linkedRace) {
-      if (this.discipline === 'SWIM') return null;
-      if (this.discipline === 'TRIATHLON') {
-        const missing: string[] = [];
-        if (!this.linkedRace.hasBikeGpx) missing.push(this.translate.instant('PACING.GPX_INDICATOR_BIKE'));
-        if (!this.linkedRace.hasRunGpx) missing.push(this.translate.instant('PACING.GPX_INDICATOR_RUN'));
-        return missing.length ? this.translate.instant('PACING.BLOCKED_RACE_MISSING_MULTI', { missing: missing.join(' and ') }) : null;
-      }
-      if (this.discipline === 'BIKE') return this.linkedRace.hasBikeGpx ? null : this.translate.instant('PACING.BLOCKED_RACE_MISSING_BIKE');
-      if (this.discipline === 'RUN') return this.linkedRace.hasRunGpx ? null : this.translate.instant('PACING.BLOCKED_RACE_MISSING_RUN');
-    }
-    if (this.discipline === 'SWIM') return null;
-    if (this.discipline === 'TRIATHLON') {
-      const missing: string[] = [];
-      if (!this.bikeGpxFile) missing.push(this.translate.instant('PACING.GPX_INDICATOR_BIKE'));
-      if (!this.runGpxFile) missing.push(this.translate.instant('PACING.GPX_INDICATOR_RUN'));
-      return missing.length ? this.translate.instant('PACING.ERROR_UPLOAD_BIKE_RUN', { missing: missing.join(' and ') }) : null;
-    }
-    return this.gpxFile ? null : this.translate.instant('PACING.ERROR_UPLOAD_REQUIRED');
+    return generateBlockedReason({
+      discipline: this.discipline,
+      linkedRace: this.linkedRace,
+      bikeGpxFile: this.bikeGpxFile,
+      runGpxFile: this.runGpxFile,
+      gpxFile: this.gpxFile,
+    }, this.translate);
   }
 
   generate(): void {
-    if (!this.canGenerate()) {
-      this.errorSubject.next(this.translate.instant('PACING.ERROR_UPLOAD_REQUIRED_FILES'));
-      return;
-    }
-    this.errorSubject.next(null);
-
-    // Use race-based generation if linked to a race
-    if (this.linkedRace) {
-      this.pacingService
-        .generateFromRace(
-          this.linkedRace.id,
-          this.profile,
-          this.discipline,
-          this.bikeLoops,
-          this.runLoops,
-        )
-        .subscribe({
-          next: (plan) => {
-            this.setDefaultTab(plan);
-            this.saveSimulationRequest();
-          },
-          error: (err) => {
-            const msg = err.error?.error || err.message || this.translate.instant('PACING.ERROR_FAILED_GENERATE');
-            this.errorSubject.next(msg);
-          },
-        });
-      return;
-    }
-
-    this.pacingService
-      .generatePacingPlan(
-        this.gpxFile,
-        this.bikeGpxFile,
-        this.runGpxFile,
-        this.profile,
-        this.discipline,
-        this.bikeLoops,
-        this.runLoops,
-      )
-      .subscribe({
-        next: (plan) => {
-          this.setDefaultTab(plan);
-        },
-        error: (err) => {
-          const msg = err.error?.error || err.message || this.translate.instant('PACING.ERROR_FAILED_GENERATE');
-          this.errorSubject.next(msg);
-        },
-      });
+    this.runPlanGeneration({saveRequest: true});
   }
 
   private saveSimulationRequest(): void {
@@ -462,100 +279,59 @@ export class PacingPageComponent implements OnInit {
     return null;
   }
 
-  getAvailableTabs(plan: PacingPlanResponse): string[] {
-    const tabs: string[] = [];
-    if (plan.swimSummary) tabs.push('SWIM');
-    if (plan.bikeSegments?.length) tabs.push('BIKE');
-    if (plan.runSegments?.length) tabs.push('RUN');
-    return tabs;
-  }
-
-  getActiveSegments(plan: PacingPlanResponse): PacingSegment[] {
-    if (this.activeTab === 'BIKE' && plan.bikeSegments?.length) {
-      return plan.bikeSegments;
-    }
-    if (this.activeTab === 'RUN' && plan.runSegments?.length) {
-      return plan.runSegments;
-    }
-    return plan.bikeSegments || plan.runSegments || [];
-  }
-
+  getAvailableTabs(plan: PacingPlanResponse): string[] { return availableTabsForPlan(plan); }
+  getActiveSegments(plan: PacingPlanResponse): PacingSegment[] { return activeSegments(plan, this.activeTab); }
   getActiveRouteCoordinates(plan: PacingPlanResponse): RouteCoordinate[] | null {
-    if (this.activeTab === 'RUN' && plan.runRouteCoordinates?.length) {
-      return plan.runRouteCoordinates;
-    }
-    if (plan.bikeRouteCoordinates?.length) {
-      return plan.bikeRouteCoordinates;
-    }
-    return plan.runRouteCoordinates;
+    return activeRouteCoordinates(plan, this.activeTab);
   }
 
-  formatTime(seconds: number): string {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = Math.round(seconds % 60);
-    if (h > 0) return `${h}h ${m}m ${s}s`;
-    if (m > 0) return `${m}m ${s}s`;
-    return `${s}s`;
-  }
-
-  formatDistance(meters: number): string {
-    if (meters >= 1000) return (meters / 1000).toFixed(1) + ' km';
-    return Math.round(meters) + ' m';
-  }
+  formatTime(seconds: number): string { return formatPacingTime(seconds); }
+  formatDistance(meters: number): string { return formatPacingDistance(meters); }
 
   closeSettingsModal(): void {
     this.showSettingsModal = false;
   }
 
   regenerate(): void {
+    this.showSettingsModal = false;
+    this.runPlanGeneration({saveRequest: false});
+  }
+
+  private runPlanGeneration(opts: {saveRequest: boolean}): void {
     if (!this.canGenerate()) {
       this.errorSubject.next(this.translate.instant('PACING.ERROR_UPLOAD_REQUIRED_FILES'));
       return;
     }
     this.errorSubject.next(null);
-    this.showSettingsModal = false;
 
-    if (this.linkedRace) {
-      this.pacingService
-        .generateFromRace(
+    const source$: Observable<PacingPlanResponse> = this.linkedRace
+      ? this.pacingService.generateFromRace(
           this.linkedRace.id,
           this.profile,
           this.discipline,
           this.bikeLoops,
           this.runLoops,
         )
-        .subscribe({
-          next: (plan) => {
-            this.setDefaultTab(plan);
-          },
-          error: (err) => {
-            const msg = err.error?.error || err.message || this.translate.instant('PACING.ERROR_FAILED_GENERATE');
-            this.errorSubject.next(msg);
-          },
-        });
-      return;
-    }
+      : this.pacingService.generatePacingPlan(
+          this.gpxFile,
+          this.bikeGpxFile,
+          this.runGpxFile,
+          this.profile,
+          this.discipline,
+          this.bikeLoops,
+          this.runLoops,
+        );
 
-    this.pacingService
-      .generatePacingPlan(
-        this.gpxFile,
-        this.bikeGpxFile,
-        this.runGpxFile,
-        this.profile,
-        this.discipline,
-        this.bikeLoops,
-        this.runLoops,
-      )
-      .subscribe({
-        next: (plan) => {
-          this.setDefaultTab(plan);
-        },
-        error: (err) => {
-          const msg = err.error?.error || err.message || this.translate.instant('PACING.ERROR_FAILED_GENERATE');
-          this.errorSubject.next(msg);
-        },
-      });
+    source$.subscribe({
+      next: (plan) => {
+        this.setDefaultTab(plan);
+        if (opts.saveRequest && this.linkedRace) this.saveSimulationRequest();
+      },
+      error: (err) => {
+        const msg = err.error?.error || err.message || this.translate.instant('PACING.ERROR_FAILED_GENERATE');
+        this.errorSubject.next(msg);
+      },
+    });
   }
 
   clearPlan(): void {

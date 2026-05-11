@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  DestroyRef,
   inject,
   Input,
   OnChanges,
@@ -9,16 +10,17 @@ import {
   OnInit,
   SimpleChanges,
 } from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule} from '@ngx-translate/core';
-import {Subscription} from 'rxjs';
+import {Observable} from 'rxjs';
 import {
+  canManageClub,
   ClubDetail,
   ClubFeedEventResponse,
   ClubFeedResponse,
-  ClubTrainingSession,
-} from '../../../../../../services/club.service';  // types re-exported from club.service
+} from '../../../../../../services/club.service';
 import {AuthService} from '../../../../../../services/auth.service';
 import {ClubFeedSseService} from '../../../../../../services/club-feed-sse.service';
 import {ClubFeedService} from '../../../../../../services/club-feed.service';
@@ -63,6 +65,7 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
   private authService = inject(AuthService);
   private sseService = inject(ClubFeedSseService);
   private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
 
   feedEvents$ = this.clubFeedService.feedEvents$;
   sessions$ = this.clubSessionService.sessions$;
@@ -83,98 +86,18 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
   // Spotlight composer
   spotlightOpen = false;
 
-  private subs = new Subscription();
-
   ngOnInit(): void {
-    this.subs.add(
-      this.authService.user$.subscribe((u) => {
-        this.currentUserId = u?.id ?? null;
-        this.cdr.markForCheck();
-      }),
-    );
+    this.authService.user$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((u) => {
+      this.currentUserId = u?.id ?? null;
+      this.cdr.markForCheck();
+    });
 
-    // SSE subscriptions
-    this.subs.add(
-      this.sseService.onCompletionUpdate$.subscribe((payload) => {
-        this.clubFeedService.updateFeedEventCompletion(
-          payload.feedEventId,
-          payload.completionCount,
-          payload.latestCompletion,
-        );
-        this.cdr.markForCheck();
-      }),
-    );
-
-    this.subs.add(
-      this.sseService.onNewFeedEvent$.subscribe((event) => {
-        this.clubFeedService.addFeedEvent(event);
-        this.cdr.markForCheck();
-      }),
-    );
-
-    this.subs.add(
-      this.sseService.onKudosUpdate$.subscribe((payload) => {
-        this.clubFeedService.markKudosGiven(payload.feedEventId, payload.givenByUserId);
-        this.cdr.markForCheck();
-      }),
-    );
-
-    this.subs.add(
-      this.sseService.onCommentUpdate$.subscribe((payload) => {
-        this.clubFeedService.updateFeedEventComment(payload.feedEventId, payload.comment);
-        this.cdr.markForCheck();
-      }),
-    );
-
-    this.subs.add(
-      this.sseService.onCommentEdited$.subscribe((payload) => {
-        this.clubFeedService.replaceFeedEventComment(payload.feedEventId, payload.comment);
-        this.cdr.markForCheck();
-      }),
-    );
-
-    this.subs.add(
-      this.sseService.onCommentDeleted$.subscribe((payload) => {
-        this.clubFeedService.removeFeedEventComment(payload.feedEventId, payload.commentId);
-        this.cdr.markForCheck();
-      }),
-    );
-
-    this.subs.add(
-      this.sseService.onFeedEventUpdated$.subscribe((event) => {
-        this.clubFeedService.replaceFeedEvent(event);
-        this.cdr.markForCheck();
-      }),
-    );
-
-    this.subs.add(
-      this.sseService.onFeedEventDeleted$.subscribe((payload) => {
-        this.clubFeedService.removeFeedEvent(payload.feedEventId);
-        this.cdr.markForCheck();
-      }),
-    );
-
-    this.subs.add(
-      this.sseService.onReactionUpdate$.subscribe((payload) => {
-        this.clubFeedService.applyReactionUpdate(payload);
-        this.cdr.markForCheck();
-      }),
-    );
-
-    this.subs.add(
-      this.sseService.onCommentReplyAdded$.subscribe((payload) => {
-        this.clubFeedService.updateFeedEventComment(payload.feedEventId, payload.comment);
-        this.cdr.markForCheck();
-      }),
-    );
+    this.wireSseSubscriptions();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['club'] && this.club) {
-      this.isCoachOrAdmin =
-        this.club.currentMemberRole === 'OWNER' ||
-        this.club.currentMemberRole === 'ADMIN' ||
-        this.club.currentMemberRole === 'COACH';
+      this.isCoachOrAdmin = canManageClub(this.club.currentMemberRole);
 
       this.clubFeedService.loadFeedEvents(this.club.id);
       this.clubFeedService.loadRaceGoals(this.club.id);
@@ -184,7 +107,6 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnDestroy(): void {
-    this.subs.unsubscribe();
     this.sseService.disconnect();
   }
 
@@ -241,10 +163,7 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
       )
       .subscribe({
         next: () => {
-          this.announcementText = '';
-          this.announcementMediaIds = [];
-          this.announcementMentionIds = [];
-          this.announcementResetTick++;
+          this.resetAnnouncementComposer();
           this.composerExpanded = false;
           this.cdr.markForCheck();
         },
@@ -257,10 +176,7 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
 
   cancelAnnouncement(): void {
     this.composerExpanded = false;
-    this.announcementText = '';
-    this.announcementMediaIds = [];
-    this.announcementMentionIds = [];
-    this.announcementResetTick++;
+    this.resetAnnouncementComposer();
   }
 
   onCommentSubmitted(ev: {eventId: string; content: string; mentionUserIds: string[]}): void {
@@ -292,21 +208,7 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
 
   onEventReacted(ev: {eventId: string; emoji: ReactionEmoji}): void {
     if (!this.currentUserId) return;
-    // Optimistic apply: invert based on whether user already reacted with this emoji.
-    const userId = this.currentUserId;
-    const current = this.clubFeedService['feedEventsSubject'].value;
-    const event =
-      (current?.pinned ?? []).find((e) => e.id === ev.eventId) ??
-      (current?.items ?? []).find((e) => e.id === ev.eventId);
-    const alreadyReacted = !!event?.reactions?.[ev.emoji]?.includes(userId);
-    this.clubFeedService.applyReactionUpdate({
-      feedEventId: ev.eventId,
-      commentId: null,
-      emoji: ev.emoji,
-      count: 0, // recomputed by applyReactionUpdate
-      actorUserId: userId,
-      added: !alreadyReacted,
-    });
+    this.clubFeedService.optimisticToggleEventReaction(ev.eventId, ev.emoji, this.currentUserId);
     this.clubFeedService
       .toggleEventReaction(this.club.id, ev.eventId, ev.emoji)
       .subscribe({error: () => this.cdr.markForCheck()});
@@ -402,6 +304,57 @@ export class ClubFeedTabComponent implements OnInit, OnDestroy, OnChanges {
 
   trackByEventId(_i: number, event: ClubFeedEventResponse): string {
     return event.id;
+  }
+
+  private resetAnnouncementComposer(): void {
+    this.announcementText = '';
+    this.announcementMediaIds = [];
+    this.announcementMentionIds = [];
+    this.announcementResetTick++;
+  }
+
+  private wireSseSubscriptions(): void {
+    this.bindSse(this.sseService.onCompletionUpdate$, (payload) =>
+      this.clubFeedService.updateFeedEventCompletion(
+        payload.feedEventId,
+        payload.completionCount,
+        payload.latestCompletion,
+      ),
+    );
+    this.bindSse(this.sseService.onNewFeedEvent$, (event) =>
+      this.clubFeedService.addFeedEvent(event),
+    );
+    this.bindSse(this.sseService.onKudosUpdate$, (payload) =>
+      this.clubFeedService.markKudosGiven(payload.feedEventId, payload.givenByUserId),
+    );
+    this.bindSse(this.sseService.onCommentUpdate$, (payload) =>
+      this.clubFeedService.updateFeedEventComment(payload.feedEventId, payload.comment),
+    );
+    this.bindSse(this.sseService.onCommentEdited$, (payload) =>
+      this.clubFeedService.replaceFeedEventComment(payload.feedEventId, payload.comment),
+    );
+    this.bindSse(this.sseService.onCommentDeleted$, (payload) =>
+      this.clubFeedService.removeFeedEventComment(payload.feedEventId, payload.commentId),
+    );
+    this.bindSse(this.sseService.onFeedEventUpdated$, (event) =>
+      this.clubFeedService.replaceFeedEvent(event),
+    );
+    this.bindSse(this.sseService.onFeedEventDeleted$, (payload) =>
+      this.clubFeedService.removeFeedEvent(payload.feedEventId),
+    );
+    this.bindSse(this.sseService.onReactionUpdate$, (payload) =>
+      this.clubFeedService.applyReactionUpdate(payload),
+    );
+    this.bindSse(this.sseService.onCommentReplyAdded$, (payload) =>
+      this.clubFeedService.updateFeedEventComment(payload.feedEventId, payload.comment),
+    );
+  }
+
+  private bindSse<T>(stream$: Observable<T>, handle: (payload: T) => void): void {
+    stream$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((payload) => {
+      handle(payload);
+      this.cdr.markForCheck();
+    });
   }
 
   private loadSessionsForWeek(): void {

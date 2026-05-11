@@ -1,5 +1,20 @@
 export type ClubVisibility = 'PUBLIC' | 'PRIVATE';
 export type ClubMemberRole = 'OWNER' | 'ADMIN' | 'COACH' | 'MEMBER';
+
+/** True for roles that can manage club content (members, sessions, invites, groups, gazette). */
+export function canManageClub(role: ClubMemberRole | undefined | null): boolean {
+  return role === 'OWNER' || role === 'ADMIN' || role === 'COACH';
+}
+
+/** True for roles with full administrative power (owner/admin). */
+export function isClubAdmin(role: ClubMemberRole | undefined | null): boolean {
+  return role === 'OWNER' || role === 'ADMIN';
+}
+
+/** True for roles that can lead/coach (owner counts implicitly). */
+export function isClubCoach(role: ClubMemberRole | undefined | null): boolean {
+  return role === 'OWNER' || role === 'COACH';
+}
 export type ClubActivityType =
   | 'MEMBER_JOINED'
   | 'MEMBER_LEFT'

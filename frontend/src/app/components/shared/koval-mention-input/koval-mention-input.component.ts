@@ -1,17 +1,18 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   EventEmitter,
   inject,
   Input,
-  OnDestroy,
   Output,
   ViewChild,
 } from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
-import {Subject, Subscription} from 'rxjs';
+import {Subject} from 'rxjs';
 import {debounceTime, switchMap} from 'rxjs/operators';
 import {ClubFeedService} from '../../../services/club-feed.service';
 import {MentionSuggestion} from '../../../models/club.model';
@@ -128,7 +129,7 @@ import {MentionSuggestion} from '../../../models/club.model';
     .mention-suggestion .role { font-size: 9px; color: var(--text-muted); text-transform: uppercase; }
   `,
 })
-export class KovalMentionInputComponent implements OnDestroy {
+export class KovalMentionInputComponent {
   @Input({required: true}) clubId!: string;
   @Input() placeholder = '';
   @Input() multiline = false;
@@ -158,6 +159,7 @@ export class KovalMentionInputComponent implements OnDestroy {
   @ViewChild('inputEl') inputEl?: ElementRef<HTMLInputElement | HTMLTextAreaElement>;
 
   private feedService = inject(ClubFeedService);
+  private destroyRef = inject(DestroyRef);
 
   text = '';
   suggestions: MentionSuggestion[] = [];
@@ -166,24 +168,20 @@ export class KovalMentionInputComponent implements OnDestroy {
 
   private confirmedMentions = new Map<string, string>(); // userId -> displayName
   private query$ = new Subject<string>();
-  private querySub: Subscription;
   private mentionStart = -1;
 
   constructor() {
-    this.querySub = this.query$
+    this.query$
       .pipe(
         debounceTime(150),
         switchMap((q) => this.feedService.suggestMentions(this.clubId, q)),
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((list) => {
         this.suggestions = list;
         this.activeIndex = 0;
         this.suggestionsOpen = list.length > 0 && this.mentionStart >= 0;
       });
-  }
-
-  ngOnDestroy(): void {
-    this.querySub.unsubscribe();
   }
 
   onTextChange(): void {

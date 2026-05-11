@@ -21,6 +21,14 @@ import {
   ReactionUpdatePayload,
   UpdateSpotlightData,
 } from '../models/club.model';
+import {
+  appendCommentIfMissing,
+  applyReactionUpdateToEvent,
+  mapFeedEvents,
+  removeCommentById,
+  replaceCommentById,
+  updateEvent,
+} from './club-feed.helpers';
 
 @Injectable({ providedIn: 'root' })
 export class ClubFeedService {
@@ -125,11 +133,7 @@ export class ClubFeedService {
     completionCount: number,
     latestCompletion: { userId: string; displayName: string; profilePicture?: string },
   ): void {
-    const current = this.feedEventsSubject.value;
-    if (!current) return;
-
-    const updateEvent = (event: ClubFeedEventResponse): ClubFeedEventResponse => {
-      if (event.id !== feedEventId) return event;
+    this.mutateFeed(updateEvent(feedEventId, (event) => {
       const completions = [...(event.completions ?? [])];
       if (!completions.find((c) => c.userId === latestCompletion.userId)) {
         completions.push({
@@ -141,13 +145,7 @@ export class ClubFeedService {
         });
       }
       return { ...event, completions };
-    };
-
-    this.feedEventsSubject.next({
-      ...current,
-      pinned: current.pinned.map(updateEvent),
-      items: current.items.map(updateEvent),
-    });
+    }));
   }
 
   addFeedEvent(event: ClubFeedEventResponse): void {
@@ -161,17 +159,10 @@ export class ClubFeedService {
   }
 
   markKudosGiven(feedEventId: string, userId: string): void {
-    const current = this.feedEventsSubject.value;
-    if (!current) return;
-    const updateEvent = (event: ClubFeedEventResponse): ClubFeedEventResponse => {
-      if (event.id !== feedEventId) return event;
-      return { ...event, kudosGivenBy: [...(event.kudosGivenBy ?? []), userId] };
-    };
-    this.feedEventsSubject.next({
-      ...current,
-      pinned: current.pinned.map(updateEvent),
-      items: current.items.map(updateEvent),
-    });
+    this.mutateFeed(updateEvent(feedEventId, (event) => ({
+      ...event,
+      kudosGivenBy: [...(event.kudosGivenBy ?? []), userId],
+    })));
   }
 
   addComment(
@@ -233,46 +224,15 @@ export class ClubFeedService {
   }
 
   replaceFeedEventComment(feedEventId: string, comment: FeedCommentEntry): void {
-    const current = this.feedEventsSubject.value;
-    if (!current) return;
-
-    const updateEvent = (event: ClubFeedEventResponse): ClubFeedEventResponse => {
-      if (event.id !== feedEventId) return event;
-      const comments = (event.comments ?? []).map((c) => (c.id === comment.id ? comment : c));
-      return { ...event, comments };
-    };
-
-    this.feedEventsSubject.next({
-      ...current,
-      pinned: current.pinned.map(updateEvent),
-      items: current.items.map(updateEvent),
-    });
+    this.mutateFeed(updateEvent(feedEventId, (event) => replaceCommentById(event, comment)));
   }
 
   removeFeedEventComment(feedEventId: string, commentId: string): void {
-    const current = this.feedEventsSubject.value;
-    if (!current) return;
-
-    const updateEvent = (event: ClubFeedEventResponse): ClubFeedEventResponse => {
-      if (event.id !== feedEventId) return event;
-      return { ...event, comments: (event.comments ?? []).filter((c) => c.id !== commentId) };
-    };
-
-    this.feedEventsSubject.next({
-      ...current,
-      pinned: current.pinned.map(updateEvent),
-      items: current.items.map(updateEvent),
-    });
+    this.mutateFeed(updateEvent(feedEventId, (event) => removeCommentById(event, commentId)));
   }
 
   replaceFeedEvent(event: ClubFeedEventResponse): void {
-    const current = this.feedEventsSubject.value;
-    if (!current) return;
-    this.feedEventsSubject.next({
-      ...current,
-      pinned: current.pinned.map((e) => (e.id === event.id ? event : e)),
-      items: current.items.map((e) => (e.id === event.id ? event : e)),
-    });
+    this.mutateFeed(updateEvent(event.id, () => event));
   }
 
   removeFeedEvent(feedEventId: string): void {
@@ -286,23 +246,7 @@ export class ClubFeedService {
   }
 
   updateFeedEventComment(feedEventId: string, comment: FeedCommentEntry): void {
-    const current = this.feedEventsSubject.value;
-    if (!current) return;
-
-    const updateEvent = (event: ClubFeedEventResponse): ClubFeedEventResponse => {
-      if (event.id !== feedEventId) return event;
-      const comments = [...(event.comments ?? [])];
-      if (!comments.find((c) => c.id === comment.id)) {
-        comments.push(comment);
-      }
-      return { ...event, comments };
-    };
-
-    this.feedEventsSubject.next({
-      ...current,
-      pinned: current.pinned.map(updateEvent),
-      items: current.items.map(updateEvent),
-    });
+    this.mutateFeed(updateEvent(feedEventId, (event) => appendCommentIfMissing(event, comment)));
   }
 
   // --- Reactions ---
@@ -332,40 +276,29 @@ export class ClubFeedService {
 
   /** Apply a reaction delta from SSE or HTTP response onto the in-memory feed. */
   applyReactionUpdate(payload: ReactionUpdatePayload): void {
+    this.mutateFeed(updateEvent(payload.feedEventId, (event) => applyReactionUpdateToEvent(event, payload)));
+  }
+
+  /** Look up a feed event in the current snapshot (pinned or items). */
+  findEvent(eventId: string): ClubFeedEventResponse | undefined {
     const current = this.feedEventsSubject.value;
-    if (!current) return;
+    if (!current) return undefined;
+    return current.pinned.find((e) => e.id === eventId) ?? current.items.find((e) => e.id === eventId);
+  }
 
-    const updateEvent = (event: ClubFeedEventResponse): ClubFeedEventResponse => {
-      if (event.id !== payload.feedEventId) return event;
-
-      if (!payload.commentId) {
-        const reactions = { ...(event.reactions ?? {}) };
-        const users = new Set(reactions[payload.emoji] ?? []);
-        if (payload.added) users.add(payload.actorUserId);
-        else users.delete(payload.actorUserId);
-        if (users.size === 0) delete reactions[payload.emoji];
-        else reactions[payload.emoji] = Array.from(users);
-        return { ...event, reactions };
-      }
-
-      const comments = (event.comments ?? []).map((c) => {
-        if (c.id !== payload.commentId) return c;
-        const reactions = { ...(c.reactions ?? {}) };
-        const users = new Set(reactions[payload.emoji] ?? []);
-        if (payload.added) users.add(payload.actorUserId);
-        else users.delete(payload.actorUserId);
-        if (users.size === 0) delete reactions[payload.emoji];
-        else reactions[payload.emoji] = Array.from(users);
-        return { ...c, reactions };
-      });
-      return { ...event, comments };
-    };
-
-    this.feedEventsSubject.next({
-      ...current,
-      pinned: current.pinned.map(updateEvent),
-      items: current.items.map(updateEvent),
+  /** Optimistically toggle the given reaction on a feed event for `userId`. Returns whether it was added. */
+  optimisticToggleEventReaction(eventId: string, emoji: ReactionEmoji, userId: string): boolean {
+    const event = this.findEvent(eventId);
+    const alreadyReacted = !!event?.reactions?.[emoji]?.includes(userId);
+    this.applyReactionUpdate({
+      feedEventId: eventId,
+      commentId: null,
+      emoji,
+      count: 0, // recomputed by applyReactionUpdateToEvent via Set semantics
+      actorUserId: userId,
+      added: !alreadyReacted,
     });
+    return !alreadyReacted;
   }
 
   // --- Mentions ---
@@ -421,5 +354,12 @@ export class ClubFeedService {
     this.raceGoalsSubject.next([]);
     this.feedEventsSubject.next(null);
     this.engagementInsightsSubject.next(null);
+  }
+
+  /** Internal: apply an updater to every event in the in-memory feed. */
+  private mutateFeed(updater: (event: ClubFeedEventResponse) => ClubFeedEventResponse): void {
+    const current = this.feedEventsSubject.value;
+    if (!current) return;
+    this.feedEventsSubject.next(mapFeedEvents(current, updater));
   }
 }

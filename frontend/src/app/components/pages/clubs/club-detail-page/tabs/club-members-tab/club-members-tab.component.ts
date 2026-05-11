@@ -2,13 +2,19 @@ import {ChangeDetectionStrategy, Component, inject, Input, OnInit} from '@angula
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule} from '@ngx-translate/core';
-import {ClubDetail, ClubGroup, ClubMemberRole, ClubService,} from '../../../../../../services/club.service';
-import {EngagementInsightsPanelComponent} from './engagement-insights-panel/engagement-insights-panel.component';
+import {
+  canManageClub,
+  ClubDetail,
+  ClubGroup,
+  ClubMemberRole,
+  ClubService,
+  isClubAdmin,
+} from '../../../../../../services/club.service';
 
 @Component({
   selector: 'app-club-members-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, EngagementInsightsPanelComponent],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './club-members-tab.component.html',
   styleUrl: './club-members-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,8 +31,7 @@ export class ClubMembersTabComponent implements OnInit {
   roleChangeInProgress = new Set<string>();
 
   get isAdmin(): boolean {
-    const role = this.club?.currentMemberRole;
-    return role === 'OWNER' || role === 'ADMIN';
+    return isClubAdmin(this.club?.currentMemberRole);
   }
 
   get isOwner(): boolean {
@@ -34,13 +39,7 @@ export class ClubMembersTabComponent implements OnInit {
   }
 
   get canManageGroups(): boolean {
-    const role = this.club?.currentMemberRole;
-    return role === 'OWNER' || role === 'ADMIN' || role === 'COACH';
-  }
-
-  get canSeeInsights(): boolean {
-    const role = this.club?.currentMemberRole;
-    return role === 'OWNER' || role === 'ADMIN' || role === 'COACH';
+    return canManageClub(this.club?.currentMemberRole);
   }
 
   ngOnInit(): void {

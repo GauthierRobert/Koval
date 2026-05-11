@@ -214,6 +214,7 @@ public class ZoneSystemService {
      * @param athleteId the athlete's user ID
      * @return the list of zone systems from the athlete's coaches, or an empty list if the athlete has no coaches
      */
+    @Cacheable(value = "athleteZoneSystems", key = "#athleteId")
     public List<ZoneSystem> getZoneSystemsForAthlete(String athleteId) {
         List<String> coachIds = groupService.getCoachIdsForAthlete(athleteId);
         if (coachIds.isEmpty()) return List.of();
@@ -223,6 +224,7 @@ public class ZoneSystemService {
     /**
      * Returns zone systems from all coaches in clubs where the user is an active member.
      */
+    @Cacheable(value = "clubCoachZoneSystems", key = "#userId")
     public List<ZoneSystem> getZoneSystemsFromClubCoaches(String userId) {
         List<ClubMembership> userMemberships = clubMembershipRepository.findByUserId(userId).stream()
                 .filter(m -> m.getStatus() == ClubMemberStatus.ACTIVE)

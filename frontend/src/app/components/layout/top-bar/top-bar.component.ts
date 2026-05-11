@@ -101,7 +101,7 @@ export class TopBarComponent {
   }
 
   user$ = this.authService.user$;
-  isCoach$ = this.authService.user$.pipe(map(u => u?.role === 'COACH'));
+  isCoach$ = this.authService.isCoach$;
 
   connectedCount$ = combineLatest([
     this.bluetoothService.trainerStatus$,

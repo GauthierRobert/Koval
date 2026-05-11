@@ -6,6 +6,7 @@ import {BehaviorSubject} from 'rxjs';
 import {Router} from '@angular/router';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {
+  canManageClub,
   ClubDetail,
   ClubGroup,
   ClubMember,
@@ -13,6 +14,7 @@ import {
   ClubTrainingSession,
   CreateSessionData,
   GroupLinkedTraining,
+  isClubCoach,
 } from '../../../../../../services/club.service';
 import {ClubSessionService} from '../../../../../../services/club-session.service';
 import {AuthService} from '../../../../../../services/auth.service';
@@ -70,13 +72,11 @@ export class ClubOpenSessionsTabComponent implements OnInit {
   }
 
   get isCoach(): boolean {
-    const role = this.club?.currentMemberRole;
-    return role === 'OWNER' || role === 'COACH';
+    return isClubCoach(this.club?.currentMemberRole);
   }
 
   get canManage(): boolean {
-    const role = this.club?.currentMemberRole;
-    return role === 'OWNER' || role === 'ADMIN' || role === 'COACH';
+    return canManageClub(this.club?.currentMemberRole);
   }
 
   ngOnInit(): void {

@@ -5,6 +5,7 @@ import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
+import com.koval.trainingplannerbackend.training.history.SessionFitFileService;
 import com.koval.trainingplannerbackend.training.history.SessionService;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -30,17 +31,20 @@ public class StravaActivitySyncService {
     private final StravaActivityMapper mapper = new StravaActivityMapper();
     private final CompletedSessionRepository sessionRepository;
     private final SessionService sessionService;
+    private final SessionFitFileService fitFileService;
     private final UserRepository userRepository;
     private final GridFsOperations gridFsOperations;
 
     public StravaActivitySyncService(StravaApiClient stravaApiClient,
                                      CompletedSessionRepository sessionRepository,
                                      SessionService sessionService,
+                                     SessionFitFileService fitFileService,
                                      UserRepository userRepository,
                                      GridFsOperations gridFsOperations) {
         this.stravaApiClient = stravaApiClient;
         this.sessionRepository = sessionRepository;
         this.sessionService = sessionService;
+        this.fitFileService = fitFileService;
         this.userRepository = userRepository;
         this.gridFsOperations = gridFsOperations;
     }
@@ -235,7 +239,7 @@ public class StravaActivitySyncService {
                 "application/octet-stream");
 
         session.setFitFileId(fileId.toHexString());
-        return sessionService.recomputeMetricsAfterFitChange(session);
+        return fitFileService.recomputeMetricsAfterFitChange(session);
     }
 
     public record SyncResult(

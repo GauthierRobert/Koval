@@ -5,6 +5,7 @@ import com.koval.trainingplannerbackend.club.dto.ClubExtendedStatsResponse;
 import com.koval.trainingplannerbackend.club.dto.ClubRaceGoalResponse;
 import com.koval.trainingplannerbackend.club.dto.ClubWeeklyStatsResponse;
 import com.koval.trainingplannerbackend.club.dto.LeaderboardEntry;
+import com.koval.trainingplannerbackend.club.stats.ClubRaceGoalQueryService;
 import com.koval.trainingplannerbackend.club.stats.ClubStatsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,9 +20,12 @@ import java.util.List;
 public class ClubStatsController {
 
     private final ClubStatsService clubStatsService;
+    private final ClubRaceGoalQueryService raceGoalQueryService;
 
-    public ClubStatsController(ClubStatsService clubStatsService) {
+    public ClubStatsController(ClubStatsService clubStatsService,
+                               ClubRaceGoalQueryService raceGoalQueryService) {
         this.clubStatsService = clubStatsService;
+        this.raceGoalQueryService = raceGoalQueryService;
     }
 
     @GetMapping("/{id}/stats/weekly")
@@ -45,6 +49,6 @@ public class ClubStatsController {
     @GetMapping("/{id}/race-goals")
     public ResponseEntity<List<ClubRaceGoalResponse>> getRaceGoals(@PathVariable String id) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(clubStatsService.getRaceGoals(userId, id));
+        return ResponseEntity.ok(raceGoalQueryService.getRaceGoals(userId, id));
     }
 }

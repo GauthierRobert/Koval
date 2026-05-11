@@ -7,6 +7,7 @@ import com.koval.trainingplannerbackend.club.dto.ClubMemberResponse;
 import com.koval.trainingplannerbackend.club.dto.CreateRecurringSessionRequest;
 import com.koval.trainingplannerbackend.club.dto.CreateSessionRequest;
 import com.koval.trainingplannerbackend.club.feed.ClubEngagementInsightsService;
+import com.koval.trainingplannerbackend.club.feed.ClubAnnouncementService;
 import com.koval.trainingplannerbackend.club.feed.ClubFeedService;
 import com.koval.trainingplannerbackend.club.feed.ClubFeedSpotlightService;
 import com.koval.trainingplannerbackend.club.feed.SpotlightBadge;
@@ -45,6 +46,7 @@ public class McpClubTools {
     private final ClubService clubService;
     private final SessionParticipationService participationService;
     private final ClubFeedService feedService;
+    private final ClubAnnouncementService announcementService;
     private final ClubFeedSpotlightService spotlightService;
     private final ClubEngagementInsightsService insightsService;
 
@@ -55,6 +57,7 @@ public class McpClubTools {
                         ClubService clubService,
                         SessionParticipationService participationService,
                         ClubFeedService feedService,
+                        ClubAnnouncementService announcementService,
                         ClubFeedSpotlightService spotlightService,
                         ClubEngagementInsightsService insightsService) {
         this.sessionService = sessionService;
@@ -64,6 +67,7 @@ public class McpClubTools {
         this.clubService = clubService;
         this.participationService = participationService;
         this.feedService = feedService;
+        this.announcementService = announcementService;
         this.spotlightService = spotlightService;
         this.insightsService = insightsService;
     }
@@ -194,7 +198,7 @@ public class McpClubTools {
         if (clubId == null || clubId.isBlank()) throw new IllegalArgumentException("clubId is required.");
         if (content == null || content.isBlank()) throw new IllegalArgumentException("content is required.");
         String userId = SecurityUtils.getCurrentUserId();
-        return feedService.createCoachAnnouncement(userId, clubId, content, List.of(),
+        return announcementService.create(userId, clubId, content, List.of(),
                 mentionUserIds == null ? List.of() : mentionUserIds);
     }
 

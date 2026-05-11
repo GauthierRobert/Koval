@@ -124,12 +124,6 @@
           </div>
 
           <div class="modal-actions">
-            <!-- TODO Disable temporary - Start training button -->
-            <!-- @if (training.sportType === 'CYCLING') {
-              <button class="start-btn" (click)="startTraining(training)">
-                <span class="play-icon">&#9654;</span> {{ 'WORKOUT_DETAIL.BTN_START_TRAINING' | translate }}
-              </button>
-            } -->
             @if (workout.status === 'PENDING') {
               <button class="complete-btn" [disabled]="isFutureDate(workout.scheduledDate)"
                 (click)="markComplete()">{{ 'WORKOUT_DETAIL.BTN_MARK_COMPLETE' | translate }}</button>

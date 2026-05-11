@@ -4,7 +4,7 @@ import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
 import com.koval.trainingplannerbackend.plan.AthletePlanSummary;
-import com.koval.trainingplannerbackend.plan.TrainingPlanService;
+import com.koval.trainingplannerbackend.plan.PlanAnalyticsService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,18 +25,18 @@ import java.util.Optional;
 public class CoachScheduleController {
 
     private final ScheduledWorkoutService scheduledWorkoutService;
-    private final ScheduleService scheduleService;
+    private final ScheduledWorkoutEnrichmentService enrichmentService;
     private final ClubTrainingSessionRepository clubSessionRepository;
-    private final TrainingPlanService trainingPlanService;
+    private final PlanAnalyticsService planAnalyticsService;
 
     public CoachScheduleController(ScheduledWorkoutService scheduledWorkoutService,
-                                   ScheduleService scheduleService,
+                                   ScheduledWorkoutEnrichmentService enrichmentService,
                                    ClubTrainingSessionRepository clubSessionRepository,
-                                   TrainingPlanService trainingPlanService) {
+                                   PlanAnalyticsService planAnalyticsService) {
         this.scheduledWorkoutService = scheduledWorkoutService;
-        this.scheduleService = scheduleService;
+        this.enrichmentService = enrichmentService;
         this.clubSessionRepository = clubSessionRepository;
-        this.trainingPlanService = trainingPlanService;
+        this.planAnalyticsService = planAnalyticsService;
     }
 
     public record CompletionRequest(Integer tss, Double intensityFactor) {}
@@ -51,9 +51,9 @@ public class CoachScheduleController {
                 ? scheduledWorkoutService.getAthleteSchedule(athleteId, start, end)
                 : scheduledWorkoutService.getAthleteSchedule(athleteId);
         if (start != null && end != null) {
-            return ResponseEntity.ok(scheduleService.getUnifiedSchedule(workouts, athleteId, start, end));
+            return ResponseEntity.ok(enrichmentService.getUnifiedSchedule(workouts, athleteId, start, end));
         } else {
-            return ResponseEntity.ok(scheduleService.enrichList(workouts));
+            return ResponseEntity.ok(enrichmentService.enrichList(workouts));
         }
     }
 
@@ -74,7 +74,7 @@ public class CoachScheduleController {
 
     @GetMapping("/athlete/{athleteId}/plans")
     public ResponseEntity<List<AthletePlanSummary>> getAthletePlans(@PathVariable String athleteId) {
-        return ResponseEntity.ok(trainingPlanService.listPlansByAthleteWithProgress(athleteId));
+        return ResponseEntity.ok(planAnalyticsService.listPlansByAthleteWithProgress(athleteId));
     }
 
     @GetMapping("/session-reminders")

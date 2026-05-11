@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  DestroyRef,
   EventEmitter,
   inject,
   Input,
@@ -11,9 +12,10 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
-import { BehaviorSubject, Subscription, combineLatest } from 'rxjs';
+import { BehaviorSubject, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AuthService } from '../../../../../../services/auth.service';
 import { ClubService } from '../../../../../../services/club.service';
@@ -81,7 +83,7 @@ export class ClubChatTabComponent implements OnInit, OnChanges, OnDestroy {
 
   selected: ChatTarget | null = null;
   view: 'list' | 'chat' = 'list';
-  private subs = new Subscription();
+  private destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
     this.clubService.loadGroups(this.clubId);
@@ -89,30 +91,26 @@ export class ClubChatTabComponent implements OnInit, OnChanges, OnDestroy {
     this.selected = this.defaultTarget();
 
     // Open the SSE stream for this chat-tab visit and fetch the rooms list
-    // once. Both shut down in ngOnDestroy when the user leaves the tab.
+    // once. The stream is shut down in ngOnDestroy when the user leaves the tab.
     this.chatSse.connect();
 
-    this.subs.add(
-      this.chatApi.getRooms().subscribe({
-        next: (rooms) => {
-          this.roomsSubject.next(rooms);
-          this.cdr.markForCheck();
-        },
-        error: () => this.roomsSubject.next([]),
-      }),
-    );
-
-    this.subs.add(
-      this.chatSse.onChatMessage$.subscribe((msg) => this.handleIncomingMessage(msg)),
-    );
-
-    this.subs.add(
-      this.targets$.subscribe((targets) => {
-        const stillExists = this.selected && targets.some((t) => t.key === this.selected!.key);
-        if (!stillExists) this.selected = targets[0] ?? this.defaultTarget();
+    this.chatApi.getRooms().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (rooms) => {
+        this.roomsSubject.next(rooms);
         this.cdr.markForCheck();
-      }),
-    );
+      },
+      error: () => this.roomsSubject.next([]),
+    });
+
+    this.chatSse.onChatMessage$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((msg) => this.handleIncomingMessage(msg));
+
+    this.targets$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((targets) => {
+      const stillExists = this.selected && targets.some((t) => t.key === this.selected!.key);
+      if (!stillExists) this.selected = targets[0] ?? this.defaultTarget();
+      this.cdr.markForCheck();
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -125,10 +123,8 @@ export class ClubChatTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Drop subscriptions first so no SSE event reaches us after teardown,
-    // then close the underlying network stream and cancel any pending
-    // reconnect timer inside ChatSseService.
-    this.subs.unsubscribe();
+    // takeUntilDestroyed drops subscriptions before this fires; just close the
+    // underlying SSE stream and cancel its reconnect timer.
     this.chatSse.disconnect();
   }
 

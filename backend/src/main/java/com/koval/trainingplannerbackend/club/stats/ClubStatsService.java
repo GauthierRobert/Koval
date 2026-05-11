@@ -3,7 +3,6 @@ package com.koval.trainingplannerbackend.club.stats;
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserService;
 import com.koval.trainingplannerbackend.club.dto.ClubExtendedStatsResponse;
-import com.koval.trainingplannerbackend.club.dto.ClubRaceGoalResponse;
 import com.koval.trainingplannerbackend.club.dto.ClubWeeklyStatsResponse;
 import com.koval.trainingplannerbackend.club.dto.LeaderboardEntry;
 import com.koval.trainingplannerbackend.club.group.ClubGroup;
@@ -14,10 +13,6 @@ import com.koval.trainingplannerbackend.club.recurring.RecurringSessionTemplate;
 import com.koval.trainingplannerbackend.club.recurring.RecurringSessionTemplateRepository;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSession;
 import com.koval.trainingplannerbackend.club.session.ClubTrainingSessionRepository;
-import com.koval.trainingplannerbackend.goal.RaceGoal;
-import com.koval.trainingplannerbackend.goal.RaceGoalRepository;
-import com.koval.trainingplannerbackend.race.Race;
-import com.koval.trainingplannerbackend.race.RaceRepository;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
 import org.springframework.stereotype.Service;
@@ -27,7 +22,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -43,8 +37,6 @@ public class ClubStatsService {
 
     private final ClubTrainingSessionRepository sessionRepository;
     private final CompletedSessionRepository completedSessionRepository;
-    private final RaceGoalRepository raceGoalRepository;
-    private final RaceRepository raceRepository;
     private final UserService userService;
     private final ClubMembershipService clubMembershipService;
     private final ClubAuthorizationService authorizationService;
@@ -53,8 +45,6 @@ public class ClubStatsService {
 
     public ClubStatsService(ClubTrainingSessionRepository sessionRepository,
                             CompletedSessionRepository completedSessionRepository,
-                            RaceGoalRepository raceGoalRepository,
-                            RaceRepository raceRepository,
                             UserService userService,
                             ClubMembershipService clubMembershipService,
                             ClubAuthorizationService authorizationService,
@@ -62,8 +52,6 @@ public class ClubStatsService {
                             ClubGroupRepository clubGroupRepository) {
         this.sessionRepository = sessionRepository;
         this.completedSessionRepository = completedSessionRepository;
-        this.raceGoalRepository = raceGoalRepository;
-        this.raceRepository = raceRepository;
         this.userService = userService;
         this.clubMembershipService = clubMembershipService;
         this.authorizationService = authorizationService;
@@ -407,73 +395,4 @@ public class ClubStatsService {
             List<String> eligibleIds,
             String clubGroupName
     ) {}
-
-    public List<ClubRaceGoalResponse> getRaceGoals(String userId, String clubId) {
-        authorizationService.requireActiveMember(userId, clubId);
-        List<String> memberIds = clubMembershipService.getActiveMemberIds(clubId);
-        if (memberIds.isEmpty()) return List.of();
-
-        String todayIso = LocalDate.now().toString();
-        List<RaceGoal> allGoals = raceGoalRepository.findByAthleteIdIn(memberIds);
-
-        // Batch-fetch every referenced race in a single Mongo round-trip. Building a
-        // plain map (vs. computeIfAbsent + per-call lookups) means missing/deleted
-        // raceIds resolve to a null map entry once, instead of re-hitting the DB on
-        // every stream pass — the previous pattern caused the /race-goals 504s.
-        Set<String> referencedRaceIds = allGoals.stream()
-                .map(RaceGoal::getRaceId)
-                .filter(java.util.Objects::nonNull)
-                .collect(Collectors.toSet());
-        Map<String, Race> raceMap = referencedRaceIds.isEmpty()
-                ? Map.of()
-                : raceRepository.findAllById(referencedRaceIds).stream()
-                        .collect(Collectors.toMap(Race::getId, r -> r));
-        Function<String, Race> resolveRace = raceId -> raceId == null ? null : raceMap.get(raceId);
-
-        List<RaceGoal> goals = allGoals.stream()
-                .filter(g -> {
-                    String date = Optional.ofNullable(resolveRace.apply(g.getRaceId()))
-                            .map(Race::getScheduledDate).orElse(null);
-                    return date == null || date.compareTo(todayIso) >= 0;
-                })
-                .sorted(Comparator.comparing(g -> Optional.ofNullable(resolveRace.apply(g.getRaceId()))
-                        .map(Race::getScheduledDate).orElse("9999-99-99")))
-                .toList();
-
-        Map<String, List<RaceGoal>> goalsByRace = goals.stream()
-                .collect(Collectors.groupingBy(
-                        g -> Optional.ofNullable(g.getRaceId()).orElseGet(() -> g.getTitle().toLowerCase().trim()),
-                        LinkedHashMap::new, Collectors.toList()));
-
-        List<String> athleteIds = goals.stream().map(RaceGoal::getAthleteId).distinct().toList();
-        Map<String, User> userMap = userService.findAllById(athleteIds).stream()
-                .collect(Collectors.toMap(User::getId, u -> u));
-
-        return goalsByRace.values().stream().map(raceGoals -> {
-            RaceGoal representative = raceGoals.getFirst();
-            Race race = resolveRace.apply(representative.getRaceId());
-            List<ClubRaceGoalResponse.RaceParticipant> participants = raceGoals.stream()
-                    .map(g -> {
-                        Optional<User> uOpt = Optional.ofNullable(userMap.get(g.getAthleteId()));
-                        return new ClubRaceGoalResponse.RaceParticipant(
-                                g.getAthleteId(),
-                                uOpt.map(User::getDisplayName).orElse(g.getAthleteId()),
-                                uOpt.map(User::getProfilePicture).orElse(null),
-                                g.getPriority(),
-                                g.getTargetTime());
-                    })
-                    .toList();
-
-            Optional<Race> raceOpt = Optional.ofNullable(race);
-            return new ClubRaceGoalResponse(
-                    representative.getRaceId(),
-                    raceOpt.map(Race::getTitle).orElseGet(representative::getTitle),
-                    raceOpt.map(Race::getSport).filter(s -> s != null).orElseGet(representative::getSport),
-                    raceOpt.map(Race::getScheduledDate).orElse(null),
-                    raceOpt.map(Race::getDistance).filter(d -> d != null).orElseGet(representative::getDistance),
-                    raceOpt.map(Race::getDistanceCategory).orElse(null),
-                    raceOpt.map(Race::getLocation).filter(l -> l != null).orElseGet(representative::getLocation),
-                    participants);
-        }).toList();
-    }
 }

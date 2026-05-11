@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend.media;
 import net.coobird.thumbnailator.Thumbnails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.awt.image.BufferedImage;
@@ -53,6 +54,19 @@ public class MediaProcessingService {
     public MediaProcessingService(MediaRepository mediaRepository, MediaStorageService storage) {
         this.mediaRepository = mediaRepository;
         this.storage = storage;
+    }
+
+    /**
+     * Async entry point used by upload confirmation: re-fetches the Media doc by
+     * id (so we don't race on the caller's reference) and runs the pipeline on
+     * the bounded async pool, freeing the request thread.
+     *
+     * <p>Callers should set {@code processingStatus = PENDING} synchronously
+     * before invoking this so clients see a PENDING placeholder immediately.
+     */
+    @Async
+    public void processAsync(String mediaId, byte[] originalBytes) {
+        mediaRepository.findById(mediaId).ifPresent(m -> process(m, originalBytes));
     }
 
     /**

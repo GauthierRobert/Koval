@@ -20,6 +20,8 @@ import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationExce
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,7 +63,10 @@ public class ClubMembershipService {
         this.chatMembershipService = chatMembershipService;
     }
 
-    @CacheEvict(value = "userClubs", key = "#userId")
+    @Caching(evict = {
+            @CacheEvict(value = "userClubs", key = "#userId"),
+            @CacheEvict(value = "clubActiveMemberIds", key = "#clubId")
+    })
     @Transactional
     public ClubMembership joinClub(String userId, String clubId) {
         Club club = clubRepository.findById(clubId)
@@ -93,7 +98,10 @@ public class ClubMembershipService {
         return membershipRepository.save(membership);
     }
 
-    @CacheEvict(value = "userClubs", key = "#userId")
+    @Caching(evict = {
+            @CacheEvict(value = "userClubs", key = "#userId"),
+            @CacheEvict(value = "clubActiveMemberIds", key = "#clubId")
+    })
     @Transactional
     public void leaveClub(String userId, String clubId) {
         ClubMembership membership = membershipRepository.findByClubIdAndUserId(clubId, userId)
@@ -115,7 +123,10 @@ public class ClubMembershipService {
         chatMembershipService.deactivateAllForUserInClub(clubId, userId);
     }
 
-    @CacheEvict(value = "userClubs", key = "#adminId")
+    @Caching(evict = {
+            @CacheEvict(value = "userClubs", key = "#adminId"),
+            @CacheEvict(value = "clubActiveMemberIds", key = "#result.clubId", condition = "#result != null")
+    })
     @Transactional
     public ClubMembership approveRequest(String adminId, String membershipId) {
         ClubMembership target = membershipRepository.findById(membershipId)
@@ -231,8 +242,13 @@ public class ClubMembershipService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Returns the active member ids for a club. Result is cached; callers must not
+     * mutate the returned list.
+     */
+    @Cacheable(value = "clubActiveMemberIds", key = "#clubId")
     public List<String> getActiveMemberIds(String clubId) {
         return membershipRepository.findByClubIdAndStatus(clubId, ClubMemberStatus.ACTIVE)
-                .stream().map(ClubMembership::getUserId).collect(Collectors.toList());
+                .stream().map(ClubMembership::getUserId).toList();
     }
 }

@@ -1,4 +1,15 @@
-import {Component, EventEmitter, Input, OnDestroy, OnInit, Output} from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  inject,
+  Input,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  Output,
+} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
 
@@ -7,12 +18,16 @@ import {TranslateModule} from '@ngx-translate/core';
   standalone: true,
   imports: [CommonModule, TranslateModule],
   templateUrl: './zombie-game.component.html',
-  styleUrl: './zombie-game.component.css'
+  styleUrl: './zombie-game.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ZombieGameComponent implements OnInit, OnDestroy {
   @Input() targetPower: number = 200;
   @Input() currentPower: number = 0;
   @Output() gameEnded = new EventEmitter<void>();
+
+  private readonly ngZone = inject(NgZone);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   bgPos = 0;
   playerX = 400;
@@ -24,7 +39,10 @@ export class ZombieGameComponent implements OnInit, OnDestroy {
   private lastUpdate = Date.now();
 
   ngOnInit() {
-    this.gameLoop();
+    // requestAnimationFrame fires every frame; running it inside the Angular zone
+    // would trigger global change detection 60×/sec. Stay outside the zone and
+    // markForCheck only on this component.
+    this.ngZone.runOutsideAngular(() => this.gameLoop());
   }
 
   ngOnDestroy() {
@@ -37,6 +55,7 @@ export class ZombieGameComponent implements OnInit, OnDestroy {
     this.lastUpdate = now;
 
     this.updateSystem(dt);
+    this.cdr.markForCheck();
     this.animationId = requestAnimationFrame(this.gameLoop);
   }
 
@@ -73,21 +92,18 @@ export class ZombieGameComponent implements OnInit, OnDestroy {
 
   private loseLife() {
     this.lives--;
-    this.zombieX = -200; // Reset zombie distance
-    if (this.lives === 0) {
-      // Pause for a bit?
-    }
+    this.zombieX = -200;
   }
 
   getPowerColor(): string {
     const ratio = this.currentPower / this.targetPower;
-    if (ratio < 0.85) return '#e74c3c'; // Red
-    if (ratio < 0.95) return '#f1c40f'; // Yellow
-    if (ratio < 1.15) return '#2ecc71'; // Green
-    return '#e67e22'; // Orange (too fast)
+    if (ratio < 0.85) return '#e74c3c';
+    if (ratio < 0.95) return '#f1c40f';
+    if (ratio < 1.15) return '#2ecc71';
+    return '#e67e22';
   }
 
   closeGame() {
-    this.gameEnded.emit();
+    this.ngZone.run(() => this.gameEnded.emit());
   }
 }

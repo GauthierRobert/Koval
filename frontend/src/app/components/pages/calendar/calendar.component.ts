@@ -20,123 +20,39 @@ import {ClubGroup, ClubService, MyClubRoleEntry} from '../../../services/club.se
 import {ClubSessionService} from '../../../services/club-session.service';
 import {PlanService} from '../../../services/plan.service';
 import {TrainingPlan} from '../../../models/plan.model';
+import {
+  BannersByRow,
+  buildEntriesByDay,
+  buildMonth,
+  buildWeek,
+  CalendarDay,
+  ClubCalendarPreferences,
+  computeBannerSegments,
+  computeVisiblePlans,
+  DAYS_IN_WEEK,
+  EntriesByDay,
+  groupByDay,
+  toDateKey,
+  VisiblePlan,
+  WorkoutsByDay,
+} from './calendar.utils';
 
-export interface CalendarDay {
-  date: Date;
-  key: string;
-  isToday: boolean;
-}
+export {toDateKey} from './calendar.utils';
+export type {
+  CalendarDay,
+  CalendarEntry,
+  ClubSessionEntry,
+  EntriesByDay,
+  FusedEntry,
+  PlanBannerSegment,
+  BannersByRow,
+  ScheduledEntry,
+  StandaloneEntry,
+  VisiblePlan,
+  WorkoutsByDay,
+} from './calendar.utils';
 
-export interface ScheduledEntry { kind: 'scheduled'; scheduled: ScheduledWorkout; }
-export interface FusedEntry      { kind: 'fused'; scheduled: ScheduledWorkout; session: SavedSession; }
-export interface StandaloneEntry { kind: 'standalone'; session: SavedSession; }
-export interface ClubSessionEntry { kind: 'club-session'; clubSession: CalendarClubSession; linkedSession?: SavedSession; }
-export type CalendarEntry = ScheduledEntry | FusedEntry | StandaloneEntry | ClubSessionEntry;
-
-export interface ClubCalendarPreferences {
-  hiddenClubIds: string[];
-  hiddenGroupIds: string[];
-}
-export type EntriesByDay = Map<string, CalendarEntry[]>;
-export type WorkoutsByDay = Map<string, ScheduledWorkout[]>;
 export type GoalsByDay = Map<string, RaceGoal[]>;
-
-export interface VisiblePlan {
-  id: string;
-  title: string;
-  currentWeek: number;
-  totalWeeks: number;
-  weekLabel: string | null;
-  sportType: string;
-}
-
-export interface PlanBannerSegment {
-  planId: string;
-  title: string;
-  sportType: string;
-  startCol: number;   // 1-7 (CSS grid 1-based)
-  spanCols: number;
-  row: number;        // 0-5 (which week-row in month grid)
-  isStart: boolean;   // plan starts in this row → left rounded corner
-  isEnd: boolean;     // plan ends in this row → right rounded corner
-  weekNumber: number;
-  weekLabel: string | null;
-}
-export type BannersByRow = Map<number, PlanBannerSegment[]>;
-
-const DAYS_IN_WEEK = 7;
-
-export function toDateKey(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-function buildWeek(baseDate: Date): CalendarDay[] {
-  const monday = new Date(baseDate);
-  const dayOfWeek = monday.getDay();
-  const offset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  monday.setDate(baseDate.getDate() + offset);
-  const todayStr = new Date().toDateString();
-
-  return Array.from({ length: DAYS_IN_WEEK }, (_, i) => {
-    const date = new Date(monday);
-    date.setDate(monday.getDate() + i);
-    return { date, key: toDateKey(date), isToday: date.toDateString() === todayStr };
-  });
-}
-
-function groupByDay(schedule: ScheduledWorkout[]): WorkoutsByDay {
-  const byDay: WorkoutsByDay = new Map();
-  for (const w of schedule) {
-    const list = byDay.get(w.scheduledDate);
-    if (list) { list.push(w); } else { byDay.set(w.scheduledDate, [w]); }
-  }
-  return byDay;
-}
-
-function buildEntriesByDay(scheduled: ScheduledWorkout[], sessions: SavedSession[], clubSessions: CalendarClubSession[] = []): EntriesByDay {
-  const byDay: EntriesByDay = new Map();
-  const sessionById = new Map(sessions.map(s => [s.id, s]));
-  const consumed = new Set<string>();
-
-  for (const sw of scheduled) {
-    if (!byDay.has(sw.scheduledDate)) byDay.set(sw.scheduledDate, []);
-    if (sw.status === 'COMPLETED' && sw.sessionId && sessionById.has(sw.sessionId)) {
-      consumed.add(sw.sessionId);
-      byDay.get(sw.scheduledDate)!.push({ kind: 'fused', scheduled: sw, session: sessionById.get(sw.sessionId)! });
-    } else {
-      byDay.get(sw.scheduledDate)!.push({ kind: 'scheduled', scheduled: sw });
-    }
-  }
-
-  // Build reverse map from clubSessionId to SavedSession
-  const sessionByClubSessionId = new Map<string, SavedSession>();
-  for (const sess of sessions) {
-    if (sess.clubSessionId) {
-      sessionByClubSessionId.set(sess.clubSessionId, sess);
-      consumed.add(sess.id);
-    }
-  }
-
-  for (const sess of sessions) {
-    if (consumed.has(sess.id)) continue;
-    const key = toDateKey(new Date(sess.date));
-    if (!byDay.has(key)) byDay.set(key, []);
-    byDay.get(key)!.push({ kind: 'standalone', session: sess });
-  }
-
-  for (const cs of clubSessions) {
-    if (!cs.scheduledAt) continue;
-    const key = cs.scheduledAt.split('T')[0];
-    if (!byDay.has(key)) byDay.set(key, []);
-    const linkedSession = sessionByClubSessionId.get(cs.id);
-    byDay.get(key)!.push({ kind: 'club-session', clubSession: cs, linkedSession });
-  }
-
-  return byDay;
-}
 
 @Component({
   selector: 'app-calendar',
@@ -265,11 +181,11 @@ export class CalendarComponent implements OnInit {
       })
     );
     this.visiblePlans$ = combineLatest([this.planService.plans$, this.reload$]).pipe(
-      map(([plans]) => this.computeVisiblePlans(plans))
+      map(([plans]) => computeVisiblePlans(plans, this.startDate, this.endDate))
     );
 
     this.bannersByRow$ = combineLatest([this.planService.plans$, this.reload$]).pipe(
-      map(([plans]) => this.computeBannerSegments(plans, this.monthDays))
+      map(([plans]) => computeBannerSegments(plans, this.monthDays))
     );
 
     this.raceGoalService.loadGoals();
@@ -424,91 +340,6 @@ export class CalendarComponent implements OnInit {
     this.clubService.loadMyClubRoles();
   }
 
-  private computeBannerSegments(plans: TrainingPlan[], monthDays: CalendarDay[]): BannersByRow {
-    if (!monthDays.length) return new Map();
-
-    const result: BannersByRow = new Map();
-    const MS_PER_DAY = 1000 * 60 * 60 * 24;
-
-    const eligiblePlans = plans.filter(
-      (p) => (p.status === 'ACTIVE' || p.status === 'COMPLETED' || p.status === 'PAUSED') && p.startDate
-    );
-
-    for (const plan of eligiblePlans) {
-      const planStart = new Date(plan.startDate);
-      const planEnd = new Date(planStart);
-      planEnd.setDate(planStart.getDate() + plan.durationWeeks * 7 - 1);
-
-      for (let row = 0; row < 6; row++) {
-        const rowStart = monthDays[row * 7].date;
-        const rowEnd = monthDays[row * 7 + 6].date;
-
-        if (planStart > rowEnd || planEnd < rowStart) continue;
-
-        const segStart = planStart > rowStart ? planStart : rowStart;
-        const segEnd = planEnd < rowEnd ? planEnd : rowEnd;
-
-        const startCol = Math.round((segStart.getTime() - rowStart.getTime()) / MS_PER_DAY) + 1;
-        const spanCols = Math.round((segEnd.getTime() - segStart.getTime()) / MS_PER_DAY) + 1;
-
-        const isStart = planStart >= rowStart && planStart <= rowEnd;
-        const isEnd = planEnd >= rowStart && planEnd <= rowEnd;
-
-        const daysSincePlanStart = Math.floor((segStart.getTime() - planStart.getTime()) / MS_PER_DAY);
-        const weekNumber = Math.floor(daysSincePlanStart / 7) + 1;
-        const week = plan.weeks?.find((w) => w.weekNumber === weekNumber);
-
-        const seg: PlanBannerSegment = {
-          planId: plan.id,
-          title: plan.title,
-          sportType: plan.sportType,
-          startCol,
-          spanCols,
-          row,
-          isStart,
-          isEnd,
-          weekNumber,
-          weekLabel: week?.label ?? null,
-        };
-
-        if (!result.has(row)) result.set(row, []);
-        result.get(row)!.push(seg);
-      }
-    }
-
-    return result;
-  }
-
-  private computeVisiblePlans(plans: TrainingPlan[]): VisiblePlan[] {
-    const viewStart = this.startDate;
-    const viewEnd = this.endDate;
-    if (!viewStart || !viewEnd) return [];
-
-    return plans
-      .filter(p => p.status === 'ACTIVE' || p.status === 'COMPLETED' || p.status === 'PAUSED')
-      .filter(p => {
-        if (!p.startDate) return false;
-        const planStart = new Date(p.startDate);
-        const planEnd = new Date(planStart);
-        planEnd.setDate(planEnd.getDate() + p.durationWeeks * 7 - 1);
-        return planStart <= viewEnd && planEnd >= viewStart;
-      })
-      .map(p => {
-        const planStart = new Date(p.startDate);
-        const daysSinceStart = Math.floor((viewStart.getTime() - planStart.getTime()) / (1000 * 60 * 60 * 24));
-        const currentWeek = Math.max(1, Math.min(p.durationWeeks, Math.floor(daysSinceStart / 7) + 1));
-        const week = p.weeks?.find(w => w.weekNumber === currentWeek);
-        return {
-          id: p.id,
-          title: p.title,
-          currentWeek,
-          totalWeeks: p.durationWeeks,
-          weekLabel: week?.label ?? null,
-          sportType: p.sportType,
-        };
-      });
-  }
-
   private startDateKey(): string {
     return this.viewMode === 'week' ? this.weekDays[0].key : this.monthDays[0].key;
   }
@@ -524,21 +355,9 @@ export class CalendarComponent implements OnInit {
   }
 
   private setMonth(baseDate: Date): void {
-    const startOfMonth = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
-    const dayOfWeek = startOfMonth.getDay();
-    const offset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const startGrid = new Date(startOfMonth);
-    startGrid.setDate(startOfMonth.getDate() + offset);
-
-    const days: CalendarDay[] = [];
-    const todayStr = new Date().toDateString();
-    for (let i = 0; i < 42; i++) {
-      const date = new Date(startGrid);
-      date.setDate(startGrid.getDate() + i);
-      days.push({ date, key: toDateKey(date), isToday: date.toDateString() === todayStr });
-    }
+    const {days, startOfMonth, endOfMonth} = buildMonth(baseDate);
     this.monthDays = days;
     this.startDate = startOfMonth;
-    this.endDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0);
+    this.endDate = endOfMonth;
   }
 }

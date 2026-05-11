@@ -51,4 +51,27 @@ public class AsyncConfig implements AsyncConfigurer {
     public org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
         return new SimpleAsyncUncaughtExceptionHandler();
     }
+
+    /**
+     * Dedicated pool for SSE fan-out so a slow consumer can't starve other
+     * {@code @Async} work, and one club's broadcast can't block another's.
+     * Per-send timeouts plus this pool's bounded queue cap the worst case.
+     */
+    @Bean(name = "sseExecutor")
+    public Executor sseExecutor(
+            @Value("${async.sse-executor.core-size:4}") int coreSize,
+            @Value("${async.sse-executor.max-size:16}") int maxSize,
+            @Value("${async.sse-executor.queue-capacity:1000}") int queueCapacity) {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(coreSize);
+        executor.setMaxPoolSize(maxSize);
+        executor.setQueueCapacity(queueCapacity);
+        executor.setKeepAliveSeconds(60);
+        executor.setThreadNamePrefix("sse-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(15);
+        executor.initialize();
+        return executor;
+    }
 }

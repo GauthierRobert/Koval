@@ -22,9 +22,12 @@ import java.util.Optional;
 public class TrainingPlanController {
 
     private final TrainingPlanService planService;
+    private final PlanAnalyticsService analyticsService;
 
-    public TrainingPlanController(TrainingPlanService planService) {
+    public TrainingPlanController(TrainingPlanService planService,
+                                  PlanAnalyticsService analyticsService) {
         this.planService = planService;
+        this.analyticsService = analyticsService;
     }
 
     @PostMapping
@@ -43,7 +46,7 @@ public class TrainingPlanController {
     @GetMapping("/active")
     public ResponseEntity<ActivePlanSummary> getActivePlan() {
         String userId = SecurityUtils.getCurrentUserId();
-        ActivePlanSummary summary = planService.getActivePlan(userId);
+        ActivePlanSummary summary = analyticsService.getActivePlan(userId);
         if (summary == null) return ResponseEntity.noContent().build();
         return ResponseEntity.ok(summary);
     }
@@ -88,12 +91,12 @@ public class TrainingPlanController {
 
     @GetMapping("/{id}/progress")
     public ResponseEntity<PlanProgress> getProgress(@PathVariable String id) {
-        return ResponseEntity.ok(planService.getProgress(id));
+        return ResponseEntity.ok(analyticsService.getProgress(id));
     }
 
     @GetMapping("/{id}/analytics")
     public ResponseEntity<PlanAnalytics> getAnalytics(@PathVariable String id) {
-        return ResponseEntity.ok(planService.getAnalytics(id));
+        return ResponseEntity.ok(analyticsService.getAnalytics(id));
     }
 
     @DeleteMapping("/{id}")

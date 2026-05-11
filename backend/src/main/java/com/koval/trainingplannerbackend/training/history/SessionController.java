@@ -33,13 +33,19 @@ import java.util.Optional;
 public class SessionController {
 
     private final SessionService sessionService;
+    private final SessionHistoryQueryService historyQueryService;
+    private final SessionFitFileService fitFileService;
     private final AnalyticsService analyticsService;
     private final PowerCurveService powerCurveService;
 
     public SessionController(SessionService sessionService,
+                             SessionHistoryQueryService historyQueryService,
+                             SessionFitFileService fitFileService,
                              AnalyticsService analyticsService,
                              PowerCurveService powerCurveService) {
         this.sessionService = sessionService;
+        this.historyQueryService = historyQueryService;
+        this.fitFileService = fitFileService;
         this.analyticsService = analyticsService;
         this.powerCurveService = powerCurveService;
     }
@@ -88,7 +94,7 @@ public class SessionController {
      * Filters are applied server-side. To page older, pass {@code before = result.windowStart}.
      */
     @GetMapping("/window")
-    public ResponseEntity<SessionService.SessionWindowResult> listWindow(
+    public ResponseEntity<SessionHistoryQueryService.SessionWindowResult> listWindow(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate before,
             @RequestParam(defaultValue = "8") int weeks,
             @RequestParam(required = false) String sport,
@@ -99,9 +105,9 @@ public class SessionController {
             @RequestParam(required = false) Double tssMin,
             @RequestParam(required = false) Double tssMax) {
         String userId = SecurityUtils.getCurrentUserId();
-        SessionService.WindowFilters filters = new SessionService.WindowFilters(
+        SessionHistoryQueryService.WindowFilters filters = new SessionHistoryQueryService.WindowFilters(
                 sport, from, to, durationMinSec, durationMaxSec, tssMin, tssMax);
-        return ResponseEntity.ok(sessionService.listWindow(userId, before, weeks, filters));
+        return ResponseEntity.ok(historyQueryService.listWindow(userId, before, weeks, filters));
     }
 
     /** Manually links a completed session to a scheduled workout. */
@@ -160,7 +166,7 @@ public class SessionController {
     public ResponseEntity<CompletedSession> uploadFit(@PathVariable String id,
             @RequestParam("file") MultipartFile file) throws IOException {
         String userId = SecurityUtils.getCurrentUserId();
-        CompletedSession result = sessionService.uploadFitFile(id, userId, file.getInputStream());
+        CompletedSession result = fitFileService.uploadFitFile(id, userId, file.getInputStream());
         if (result != null) {
             // FIT file changed → previously cached/persisted curve is stale, force recompute on next access.
             powerCurveService.invalidateSessionPowerCurve(id);
@@ -170,9 +176,9 @@ public class SessionController {
 
     /** Downloads the FIT file for a session (accessible to owner or their coach). */
     @GetMapping("/{id}/fit")
-    public ResponseEntity<?> downloadFit(@PathVariable String id) throws IOException {
+    public ResponseEntity<?> downloadFit(@PathVariable String id) {
         String userId = SecurityUtils.getCurrentUserId();
-        return sessionService.downloadFitFile(id, userId)
+        return fitFileService.downloadFitFile(id, userId)
                 .map(fit -> ResponseEntity.ok()
                         .header(HttpHeaders.CONTENT_DISPOSITION,
                                 "attachment; filename=\"" + fit.filename() + "\"")

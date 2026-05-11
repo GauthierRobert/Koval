@@ -1,7 +1,8 @@
-import {ChangeDetectionStrategy, Component, inject, NgZone, OnDestroy, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, Component, DestroyRef, inject, NgZone, OnDestroy, OnInit} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {Router} from '@angular/router';
-import {BehaviorSubject, Subscription} from 'rxjs';
+import {BehaviorSubject} from 'rxjs';
 import {filter} from 'rxjs/operators';
 import {NotificationService} from '../../../services/notification.service';
 import {ClubSessionService} from '../../../services/club-session.service';
@@ -115,7 +116,7 @@ export class NotificationToastComponent implements OnInit, OnDestroy {
   private readonly clubSessionService = inject(ClubSessionService);
   private readonly router = inject(Router);
   private readonly ngZone = inject(NgZone);
-  private sub: Subscription | null = null;
+  private readonly destroyRef = inject(DestroyRef);
   private dismissTimer: ReturnType<typeof setTimeout> | null = null;
 
   visible$ = new BehaviorSubject<boolean>(false);
@@ -124,8 +125,11 @@ export class NotificationToastComponent implements OnInit, OnDestroy {
   data: Record<string, string> = {};
 
   ngOnInit(): void {
-    this.sub = this.notificationService.foregroundNotification$
-      .pipe(filter((p): p is MessagePayload => p !== null))
+    this.notificationService.foregroundNotification$
+      .pipe(
+        filter((p): p is MessagePayload => p !== null),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe((payload) => {
         this.title = payload.notification?.title || 'Notification';
         this.body = payload.notification?.body || '';
@@ -167,7 +171,6 @@ export class NotificationToastComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.sub?.unsubscribe();
     if (this.dismissTimer) clearTimeout(this.dismissTimer);
   }
 }

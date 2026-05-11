@@ -124,4 +124,27 @@ public class TrainingController {
         return ResponseEntity.ok(page);
     }
 
+    /**
+     * Lightweight summary list: same filter as {@link #listTrainings()} but the
+     * {@code blocks} array is stripped at the DB level — use this for cards and
+     * pickers, and call {@link #getTraining(String)} to load the full document.
+     */
+    @GetMapping("/summary")
+    public ResponseEntity<List<TrainingSummary>> listTrainingSummaries() {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(trainingService.listSummariesByUser(userId));
+    }
+
+    @GetMapping(value = "/summary", params = "page")
+    public ResponseEntity<Page<TrainingSummary>> listTrainingSummaries(Pageable pageable) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(trainingService.listSummariesByUser(userId, pageable));
+    }
+
+    @GetMapping("/club-trainings/summary")
+    public ResponseEntity<List<TrainingSummary>> listClubTrainingSummaries() {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(trainingService.discoverClubTrainingSummaries(userId));
+    }
+
 }

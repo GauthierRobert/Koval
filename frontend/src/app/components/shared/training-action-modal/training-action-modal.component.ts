@@ -18,7 +18,7 @@ import {FormsModule} from '@angular/forms';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {A11yModule} from '@angular/cdk/a11y';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {ActionContext, ActionResult, AIActionService, AIActionType} from '../../../services/ai-action.service';
+import {AIActionService} from '../../../services/ai-action.service';
 import {ClubGroup, ClubService, GroupLinkedTraining} from '../../../services/club.service';
 import {ClubSessionService} from '../../../services/club-session.service';
 import {ZoneService} from '../../../services/zone.service';
@@ -31,8 +31,20 @@ import {AuthService, User} from '../../../services/auth.service';
 import {AiPromptFormComponent} from './ai-prompt-form/ai-prompt-form.component';
 import {TrainingSearchListComponent} from './training-search-list/training-search-list.component';
 import {AthleteTagSelectorComponent} from './athlete-tag-selector/athlete-tag-selector.component';
+import {TrainingActionMode} from './training-action-mode.type';
+import {
+  canLinkTraining as canLinkTrainingFn,
+  enrichAthletesWithGroups,
+  getLoadingLabel,
+  getModalTitle,
+  getSubmitLabel,
+  sessionAvailableGroups as sessionAvailableGroupsFn,
+  sessionShowNoGroupOption as sessionShowNoGroupOptionFn,
+  toggleTagSelection,
+} from './training-action-modal.helpers';
+import {submitAi as submitAiFlow, submitSelect as submitSelectFlow, SubmitDeps} from './training-action-modal.submit';
 
-export type TrainingActionMode = 'session' | 'self-schedule' | 'coach-assign' | 'group-assign';
+export type {TrainingActionMode};
 
 @Component({
   selector: 'app-training-action-modal',
@@ -105,91 +117,28 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
   successMessage = '';
   private userId = '';
 
-  get modalTitle(): string {
-    switch (this.mode) {
-      case 'session': return this.translate.instant('TRAINING_ACTION.MODAL_TITLE_LINK_TRAINING');
-      case 'self-schedule': return this.translate.instant('TRAINING_ACTION.MODAL_TITLE_SCHEDULE_WORKOUT');
-      case 'coach-assign':
-      case 'group-assign': return this.translate.instant('TRAINING_ACTION.MODAL_TITLE_ASSIGN_WORKOUT');
-    }
-  }
+  get modalTitle(): string { return getModalTitle(this.mode, this.translate); }
+  get submitLabel(): string { return getSubmitLabel(this.mode, this.tab, this.selectedAthleteIds.length, this.translate); }
+  get loadingLabel(): string { return getLoadingLabel(this.mode, this.tab, this.translate); }
 
-  get submitLabel(): string {
-    if (this.tab === 'ai') return this.translate.instant('TRAINING_ACTION.SUBMIT_GENERATE');
-    switch (this.mode) {
-      case 'session': return this.translate.instant('TRAINING_ACTION.SUBMIT_LINK_TRAINING');
-      case 'self-schedule': return this.translate.instant('TRAINING_ACTION.SUBMIT_SCHEDULE');
-      case 'coach-assign': return this.translate.instant('TRAINING_ACTION.SUBMIT_ASSIGN');
-      case 'group-assign': return this.translate.instant('TRAINING_ACTION.SUBMIT_ASSIGN_TO_N_ATHLETES', { count: this.selectedAthleteIds.length });
-    }
-  }
+  get showSessionBanner(): boolean { return this.mode === 'session' && !!this.sessionInfo; }
+  get showDatePicker(): boolean { return this.mode !== 'session'; }
+  get showAthleteSelect(): boolean { return this.mode === 'group-assign'; }
+  get showAthleteChip(): boolean { return this.mode === 'coach-assign' && !!this.preselectedAthletes?.length; }
+  get showTagFilter(): boolean { return this.mode === 'group-assign' && this.availableTags.length > 0; }
+  get showNotes(): boolean { return this.mode !== 'session'; }
+  get showTabs(): boolean { return !this.preselectedTrainingId; }
 
-  get loadingLabel(): string {
-    if (this.tab === 'ai') return this.translate.instant('TRAINING_ACTION.LOADING_GENERATING');
-    switch (this.mode) {
-      case 'session': return this.translate.instant('TRAINING_ACTION.LOADING_LINKING');
-      case 'self-schedule': return this.translate.instant('TRAINING_ACTION.LOADING_SCHEDULING');
-      case 'coach-assign':
-      case 'group-assign': return this.translate.instant('TRAINING_ACTION.LOADING_ASSIGNING');
-    }
-  }
-
-  get showSessionBanner(): boolean {
-    return this.mode === 'session' && !!this.sessionInfo;
-  }
-
-  get showDatePicker(): boolean {
-    if (this.mode === 'session') return false;
-    return true;
-  }
-
-  get showAthleteSelect(): boolean {
-    return this.mode === 'group-assign';
-  }
-
-  get showAthleteChip(): boolean {
-    return this.mode === 'coach-assign' && !!this.preselectedAthletes?.length;
-  }
-
-  get showTagFilter(): boolean {
-    return this.mode === 'group-assign' && this.availableTags.length > 0;
-  }
-
-  get showNotes(): boolean {
-    return this.mode !== 'session';
-  }
-
-  get showTabs(): boolean {
-    if (this.preselectedTrainingId) return false;
-    return true;
-  }
-
-  /** Groups still available for linking (excludes already-linked groups). */
   get sessionAvailableGroups(): ClubGroup[] {
-    if (this.mode !== 'session') return this.availableGroups;
-    // Session already belongs to a specific group — no selector needed, auto-set
-    if (this.sessionGroupId) return [];
-    // If a club-level training is already linked, no groups available
-    if (this.existingLinkedTrainings.some(glt => !glt.clubGroupId)) return [];
-    const linkedGroupIds = new Set(this.existingLinkedTrainings.filter(g => g.clubGroupId).map(g => g.clubGroupId));
-    return this.availableGroups.filter(g => !linkedGroupIds.has(g.id));
+    return sessionAvailableGroupsFn(this.mode, this.availableGroups, this.existingLinkedTrainings, this.sessionGroupId);
   }
 
-  /** Show "Entire club" option only if no group-level training is linked yet. */
   get sessionShowNoGroupOption(): boolean {
-    if (this.mode !== 'session') return true;
-    return !this.existingLinkedTrainings.some(glt => !!glt.clubGroupId);
+    return sessionShowNoGroupOptionFn(this.mode, this.existingLinkedTrainings);
   }
 
-  /** False when all slots are taken (club-level linked OR all groups linked). */
   get canLinkTraining(): boolean {
-    if (this.mode !== 'session') return true;
-    // Club-level linked → no more linking
-    if (this.existingLinkedTrainings.some(glt => !glt.clubGroupId)) return false;
-    // No groups exist → can link only if nothing linked yet
-    if (this.availableGroups.length === 0) return this.existingLinkedTrainings.length === 0;
-    // All groups linked
-    return this.sessionAvailableGroups.length > 0 || this.sessionShowNoGroupOption;
+    return canLinkTrainingFn(this.mode, this.availableGroups, this.existingLinkedTrainings, this.sessionGroupId);
   }
 
   get canSubmit(): boolean {
@@ -318,19 +267,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
   }
 
   toggleTag(tag: string): void {
-    if (this.activeTags.has(tag)) {
-      this.activeTags.delete(tag);
-      const taggedIds = this.availableAthletes.filter(a => a.groups?.includes(tag)).map(a => a.id);
-      this.selectedAthleteIds = this.selectedAthleteIds.filter(id => !taggedIds.includes(id));
-    } else {
-      this.activeTags.add(tag);
-      const taggedIds = this.availableAthletes.filter(a => a.groups?.includes(tag)).map(a => a.id);
-      for (const id of taggedIds) {
-        if (!this.selectedAthleteIds.includes(id)) {
-          this.selectedAthleteIds.push(id);
-        }
-      }
-    }
+    this.selectedAthleteIds = toggleTagSelection(tag, this.activeTags, this.availableAthletes, this.selectedAthleteIds);
   }
 
   // --- Submit ---
@@ -359,176 +296,61 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
 
   // --- Private ---
 
-  private submitAi(): void {
-    this.loading = true;
-    this.errorMessage = '';
-    this.successMessage = '';
+  private get submitDeps(): SubmitDeps {
+    return {
+      aiActionService: this.aiActionService,
+      clubSessionService: this.clubSessionService,
+      calendarService: this.calendarService,
+      coachService: this.coachService,
+      translate: this.translate,
+      ngZone: this.ngZone,
+    };
+  }
 
-    if (this.mode === 'session') {
-      // Session mode: AI creates + links in one step
-      const ctx: ActionContext = {
-        clubId: this.clubId,
-        sessionId: this.sessionId,
-        clubGroupId: this.selectedGroupId || undefined,
-        sport: this.selectedSport || undefined,
-        zoneSystemId: this.selectedZoneSystemId || undefined,
-      };
-      this.aiActionService.executeAction(this.prompt.trim(), 'TRAINING_WITH_SESSION', ctx).subscribe({
-        next: (result) => {
-          this.ngZone.run(() => {
-            this.loading = false;
-            if (result.success) {
-              this.successMessage = result.content;
-              this.completed.emit({ success: true, content: result.content });
-            } else {
-              this.errorMessage = result.content;
-            }
-          });
-        },
-        error: (err) => {
-          this.ngZone.run(() => {
-            this.loading = false;
-            this.errorMessage = err?.error?.message ?? this.translate.instant('TRAINING_ACTION.ERROR_UNEXPECTED');
-          });
-        },
-      });
-    } else {
-      // Non-session modes: AI generates training, then switch to select tab
-      const ctx: ActionContext = {
-        sport: this.selectedSport || undefined,
-        zoneSystemId: this.selectedZoneSystemId || undefined,
-        clubId: this.clubId,
-        clubGroupId: this.selectedGroupId || undefined,
-        coachGroupId: this.groupId,
-      };
-      this.aiActionService.executeAction(this.prompt.trim(), 'TRAINING_CREATION', ctx).subscribe({
-        next: () => {
-          this.ngZone.run(() => {
-            this.loading = false;
-            this.prompt = '';
-            this.successMessage = this.translate.instant('TRAINING_ACTION.SUCCESS_TRAINING_CREATED');
-            this.trainingService.loadTrainings();
-            this.tab = 'select';
-          });
-        },
-        error: (err) => {
-          this.ngZone.run(() => {
-            this.loading = false;
-            this.errorMessage = err?.error?.message ?? this.translate.instant('TRAINING_ACTION.ERROR_FAILED_GENERATE');
-          });
-        },
-      });
-    }
+  private get submitCallbacks() {
+    return {
+      setLoading: (v: boolean) => { this.loading = v; this.cdr.markForCheck(); },
+      setError: (msg: string) => { this.errorMessage = msg; this.cdr.markForCheck(); },
+      setSuccess: (msg: string) => { this.successMessage = msg; this.cdr.markForCheck(); },
+      emitCompleted: (p: {success: boolean; content?: string}) => this.completed.emit(p),
+      close: () => this.closed.emit(),
+    };
+  }
+
+  private submitAi(): void {
+    submitAiFlow(this.submitDeps, {
+      ...this.submitCallbacks,
+      onAiCreated: () => {
+        this.prompt = '';
+        this.trainingService.loadTrainings();
+        this.tab = 'select';
+        this.cdr.markForCheck();
+      },
+    }, {
+      prompt: this.prompt,
+      mode: this.mode,
+      clubId: this.clubId,
+      sessionId: this.sessionId,
+      groupId: this.groupId,
+      selectedGroupId: this.selectedGroupId,
+      selectedSport: this.selectedSport,
+      selectedZoneSystemId: this.selectedZoneSystemId,
+    });
   }
 
   private submitSelect(): void {
     if (!this.selectedTrainingId) return;
-
-    this.loading = true;
-    this.errorMessage = '';
-    this.successMessage = '';
-
-    switch (this.mode) {
-      case 'session':
-        this.submitSessionLink();
-        break;
-      case 'self-schedule':
-        this.submitSelfSchedule();
-        break;
-      case 'coach-assign':
-        this.submitCoachAssign();
-        break;
-      case 'group-assign':
-        this.submitGroupAssign();
-        break;
-    }
-  }
-
-  private submitSessionLink(): void {
-    if (!this.clubId || !this.sessionId || !this.selectedTrainingId) return;
-    this.clubSessionService.linkTrainingToSession(this.clubId, this.sessionId, this.selectedTrainingId, this.selectedGroupId || undefined).subscribe({
-      next: () => {
-        this.ngZone.run(() => {
-          this.loading = false;
-          this.successMessage = this.translate.instant('TRAINING_ACTION.SUCCESS_TRAINING_LINKED');
-          this.completed.emit({ success: true, content: 'Training linked.' });
-        });
-      },
-      error: (err: any) => {
-        this.ngZone.run(() => {
-          this.loading = false;
-          this.errorMessage = err?.error?.message ?? this.translate.instant('TRAINING_ACTION.ERROR_FAILED_LINK');
-        });
-      },
-    });
-  }
-
-  private submitSelfSchedule(): void {
-    if (!this.selectedTrainingId) return;
-    this.calendarService.scheduleWorkout(this.selectedTrainingId, this.selectedDate, this.notes || undefined).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: () => {
-        this.ngZone.run(() => {
-          this.loading = false;
-          this.completed.emit({ success: true });
-          this.closed.emit();
-        });
-      },
-      error: (err) => {
-        this.ngZone.run(() => {
-          this.loading = false;
-          this.errorMessage = err?.error?.message ?? this.translate.instant('TRAINING_ACTION.ERROR_FAILED_SCHEDULE');
-        });
-      },
-    });
-  }
-
-  private submitCoachAssign(): void {
-    if (!this.selectedTrainingId || !this.preselectedAthletes?.length) return;
-    const athleteIds = this.preselectedAthletes.map(a => a.id);
-    this.coachService.assignTraining(this.selectedTrainingId, athleteIds, this.selectedDate, this.notes || undefined).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: () => {
-        this.ngZone.run(() => {
-          this.loading = false;
-          this.completed.emit({ success: true });
-          this.closed.emit();
-        });
-      },
-      error: (err) => {
-        this.ngZone.run(() => {
-          this.loading = false;
-          this.errorMessage = err?.error?.message ?? this.translate.instant('TRAINING_ACTION.ERROR_FAILED_ASSIGN');
-        });
-      },
-    });
-  }
-
-  private submitGroupAssign(): void {
-    if (!this.selectedTrainingId || this.selectedAthleteIds.length === 0) return;
-    this.coachService.assignTraining(
-      this.selectedTrainingId,
-      this.selectedAthleteIds,
-      this.selectedDate,
-      this.notes || undefined,
-      this.clubId,
-      this.groupId
-    ).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.ngZone.run(() => {
-          this.loading = false;
-          this.completed.emit({ success: true });
-          this.closed.emit();
-        });
-      },
-      error: (err) => {
-        this.ngZone.run(() => {
-          this.loading = false;
-          this.errorMessage = err?.error?.message ?? this.translate.instant('TRAINING_ACTION.ERROR_FAILED_ASSIGN');
-        });
-      },
+    submitSelectFlow(this.submitDeps, this.submitCallbacks, {
+      mode: this.mode,
+      clubId: this.clubId,
+      groupId: this.groupId,
+      sessionId: this.sessionId,
+      selectedTrainingId: this.selectedTrainingId,
+      selectedGroupId: this.selectedGroupId,
+      selectedDate: this.selectedDate,
+      notes: this.notes,
+      preselectedAthleteIds: this.preselectedAthletes?.map(a => a.id) ?? [],
+      selectedAthleteIds: this.selectedAthleteIds,
     });
   }
 
@@ -549,12 +371,7 @@ export class TrainingActionModalComponent implements OnInit, OnChanges {
   }
 
   private enrichAthletesWithGroups(): void {
-    if (!this.clubGroups.length || !this.availableAthletes.length) return;
-    for (const athlete of this.availableAthletes) {
-      athlete.groups = this.clubGroups
-        .filter(g => g.memberIds.includes(athlete.id))
-        .map(g => g.name);
-    }
+    enrichAthletesWithGroups(this.availableAthletes, this.clubGroups as ClubGroup[]);
   }
 
   private resetState(): void {

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
-import { ClubDetail } from '../../../../../../models/club.model';
+import { canManageClub, ClubDetail } from '../../../../../../models/club.model';
 import { ClubTestService } from '../../../../../../services/club-test.service';
 import { TestListComponent } from './test-list/test-list.component';
 import { TestDetailComponent } from './test-detail/test-detail.component';
@@ -41,7 +41,6 @@ export class ClubTestsTabComponent {
   }
 
   isCoach(): boolean {
-    const role = this.club?.currentMemberRole;
-    return role === 'OWNER' || role === 'ADMIN' || role === 'COACH';
+    return canManageClub(this.club?.currentMemberRole);
   }
 }

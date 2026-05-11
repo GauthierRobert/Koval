@@ -9,22 +9,23 @@ import {
   ViewChild,
 } from '@angular/core';
 import {VolumeEntry} from '../../../../services/analytics.service';
-
-type VolumeMetric = 'time' | 'tss' | 'distance';
-
-const SPORT_STACK = ['SWIMMING', 'CYCLING', 'RUNNING'] as const;
-
-const SPORT_COLORS: Record<string, string> = {
-  SWIMMING: '#00a0e9',
-  CYCLING: '#34d399',
-  RUNNING: '#f87171',
-};
-
-const SPORT_LABELS: Record<string, string> = {
-  SWIMMING: 'Swim',
-  CYCLING: 'Bike',
-  RUNNING: 'Run',
-};
+import {
+  SPORT_COLORS,
+  SPORT_LABELS,
+  SPORT_STACK,
+  StackSegment,
+  VolumeMetric,
+  buildStacks,
+  formatAxisValue,
+  formatTooltipValue,
+  formatWeekLabel,
+  getLast10Weeks,
+  getTotalValue,
+  hexToRgba,
+  niceMaxY,
+  parseColor,
+  roundRectPath,
+} from './dashboard-volume-chart.utils';
 
 @Component({
   selector: 'app-dashboard-volume-chart',
@@ -63,6 +64,9 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
   private readonly MT = 8;
   private readonly MB = 24;
 
+  private themeRgb: [number, number, number] = [255, 255, 255];
+  private themeBgRgb: [number, number, number] = [16, 16, 22];
+
   ngAfterViewInit(): void {
     this.ready = true;
     this.ro = new ResizeObserver(() => this.draw());
@@ -82,67 +86,31 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
   }
 
   onMouseMove(event: MouseEvent): void {
-    const idx = this.hitTestWeek(event.clientX);
-    if (idx !== this.hoverIdx) { this.hoverIdx = idx; this.draw(); }
+    this.updateHover(this.hitTestWeek(event.clientX));
   }
 
   onMouseLeave(): void {
-    if (this.hoverIdx !== null) { this.hoverIdx = null; this.draw(); }
+    this.updateHover(null);
   }
 
   onTouchStart(event: TouchEvent): void {
     if (event.touches.length === 1) {
-      const idx = this.hitTestWeek(event.touches[0].clientX);
-      if (idx !== this.hoverIdx) { this.hoverIdx = idx; this.draw(); }
+      this.updateHover(this.hitTestWeek(event.touches[0].clientX));
     }
   }
 
   onTouchMove(event: TouchEvent): void {
     if (event.touches.length === 1) {
-      const idx = this.hitTestWeek(event.touches[0].clientX);
-      if (idx !== this.hoverIdx) { this.hoverIdx = idx; this.draw(); }
+      this.updateHover(this.hitTestWeek(event.touches[0].clientX));
     }
   }
 
   onTouchEnd(): void {}
 
-  private getSportValue(entry: VolumeEntry, sport: string): number {
-    switch (this.metric) {
-      case 'tss': return entry.sportTss?.[sport] ?? 0;
-      case 'time': return (entry.sportDurationSeconds?.[sport] ?? 0) / 3600; // hours
-      case 'distance': return (entry.sportDistanceMeters?.[sport] ?? 0) / 1000; // km
-    }
-  }
-
-  private getTotalValue(entry: VolumeEntry): number {
-    switch (this.metric) {
-      case 'tss': return entry.totalTss;
-      case 'time': return entry.totalDurationSeconds / 3600;
-      case 'distance': return entry.totalDistanceMeters / 1000;
-    }
-  }
-
-  private formatValue(val: number): string {
-    switch (this.metric) {
-      case 'tss': return `${Math.round(val)}`;
-      case 'time': {
-        const h = Math.floor(val);
-        const m = Math.round((val - h) * 60);
-        return h > 0 ? `${h}h${m > 0 ? String(m).padStart(2, '0') : ''}` : `${m}m`;
-      }
-      case 'distance': return `${val.toFixed(1)}km`;
-    }
-  }
-
-  private formatTooltipValue(val: number): string {
-    switch (this.metric) {
-      case 'tss': return `${Math.round(val)} TSS`;
-      case 'time': {
-        const h = Math.floor(val);
-        const m = Math.round((val - h) * 60);
-        return h > 0 ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`;
-      }
-      case 'distance': return `${val.toFixed(1)} km`;
+  private updateHover(idx: number | null): void {
+    if (idx !== this.hoverIdx) {
+      this.hoverIdx = idx;
+      this.draw();
     }
   }
 
@@ -153,7 +121,7 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
     const scaleX = canvas.width / rect.width;
     const mouseX = (clientX - rect.left) * scaleX;
     const cW = canvas.width - this.ML - this.MR;
-    const entries = this.getLast10Weeks();
+    const entries = getLast10Weeks(this.data);
     const n = entries.length;
     const step = n > 1 ? cW / (n - 1) : cW;
 
@@ -166,32 +134,15 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
     return bestDist < step * 0.7 ? bestIdx : null;
   }
 
-  private themeRgb: [number, number, number] = [255, 255, 255];
-  private themeBgRgb: [number, number, number] = [16, 16, 22];
-
   private refreshThemeColors(): void {
     const styles = getComputedStyle(this.canvasRef.nativeElement);
-    this.themeRgb = this.parseColor(styles.getPropertyValue('--text-color').trim()) ?? [255, 255, 255];
-    this.themeBgRgb = this.parseColor(styles.getPropertyValue('--bg-color').trim()) ?? [16, 16, 22];
+    this.themeRgb = parseColor(styles.getPropertyValue('--text-color').trim()) ?? [255, 255, 255];
+    this.themeBgRgb = parseColor(styles.getPropertyValue('--bg-color').trim()) ?? [16, 16, 22];
   }
 
   private fg(alpha: number): string {
     const [r, g, b] = this.themeRgb;
     return `rgba(${r},${g},${b},${alpha})`;
-  }
-
-  private parseColor(raw: string): [number, number, number] | null {
-    if (!raw) return null;
-    const hex = raw.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
-    if (hex) {
-      const h = hex[1].length === 3
-        ? hex[1].split('').map(c => c + c).join('')
-        : hex[1];
-      return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
-    }
-    const rgb = raw.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
-    if (rgb) return [parseInt(rgb[1]), parseInt(rgb[2]), parseInt(rgb[3])];
-    return null;
   }
 
   private draw(): void {
@@ -215,32 +166,35 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
       return;
     }
 
-    const entries = this.getLast10Weeks();
-
+    const entries = getLast10Weeks(this.data);
     const {ML, MR, MT, MB} = this;
     const cW = cssW - ML - MR;
     const cH = cssH - MT - MB;
     const n = entries.length;
     const step = n > 1 ? cW / (n - 1) : cW;
 
-    // Compute stacks
-    const stacks = entries.map((e) => {
-      let cum = 0;
-      return SPORT_STACK.map((sport) => {
-        const val = this.getSportValue(e, sport);
-        const bottom = cum;
-        cum += val;
-        return {sport, bottom, top: cum, val};
-      });
-    });
-
+    const stacks = buildStacks(entries, this.metric);
     const maxY = Math.max(...stacks.map((s) => s[s.length - 1].top), 0.1);
-    const niceMax = this.niceNum(maxY);
+    const niceMax = niceMaxY(maxY);
 
     const toX = (i: number) => ML + i * step;
     const toY = (val: number) => MT + cH - (val / niceMax) * cH;
 
-    // Grid lines
+    this.drawGrid(ctx, cssW, niceMax, toY);
+    this.drawStacks(ctx, stacks, n, toX, toY);
+    this.drawXLabels(ctx, entries, n, toX, cssH);
+
+    if (this.hoverIdx !== null && this.hoverIdx < n) {
+      this.drawHover(ctx, cssW, cssH, this.hoverIdx, stacks, entries, toX, toY);
+    }
+  }
+
+  private drawGrid(
+    ctx: CanvasRenderingContext2D,
+    cssW: number,
+    niceMax: number,
+    toY: (val: number) => number,
+  ): void {
     const gridCount = 4;
     ctx.strokeStyle = this.fg(0.12);
     ctx.lineWidth = 1;
@@ -249,18 +203,25 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
       const val = (niceMax / gridCount) * g;
       const y = toY(val);
       ctx.beginPath();
-      ctx.moveTo(ML, y);
-      ctx.lineTo(cssW - MR, y);
+      ctx.moveTo(this.ML, y);
+      ctx.lineTo(cssW - this.MR, y);
       ctx.stroke();
 
       ctx.fillStyle = this.fg(0.55);
       ctx.font = '10px monospace';
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
-      ctx.fillText(this.formatValue(val), ML - 8, y);
+      ctx.fillText(formatAxisValue(val, this.metric), this.ML - 8, y);
     }
+  }
 
-    // Stacked areas
+  private drawStacks(
+    ctx: CanvasRenderingContext2D,
+    stacks: StackSegment[][],
+    n: number,
+    toX: (i: number) => number,
+    toY: (val: number) => number,
+  ): void {
     for (let si = 0; si < SPORT_STACK.length; si++) {
       const color = SPORT_COLORS[SPORT_STACK[si]];
 
@@ -274,75 +235,88 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
         ctx.lineTo(toX(i), toY(stacks[i][si].bottom));
       }
       ctx.closePath();
-      ctx.fillStyle = this.hexToRgba(color, 0.55);
+      ctx.fillStyle = hexToRgba(color, 0.55);
       ctx.fill();
 
-      // Stroke top line
       ctx.beginPath();
       for (let i = 0; i < n; i++) {
         const x = toX(i);
         const y = toY(stacks[i][si].top);
         i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
       }
-      ctx.strokeStyle = this.hexToRgba(color, 0.7);
+      ctx.strokeStyle = hexToRgba(color, 0.7);
       ctx.lineWidth = 1;
       ctx.stroke();
     }
+  }
 
-    // X labels
+  private drawXLabels(
+    ctx: CanvasRenderingContext2D,
+    entries: VolumeEntry[],
+    n: number,
+    toX: (i: number) => number,
+    cssH: number,
+  ): void {
     ctx.fillStyle = this.fg(0.6);
     ctx.font = '10px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     for (let i = 0; i < n; i++) {
-      ctx.fillText(this.formatWeekLabel(entries[i].period), toX(i), cssH - MB + 6);
+      ctx.fillText(formatWeekLabel(entries[i].period), toX(i), cssH - this.MB + 6);
     }
+  }
 
-    // Hover
-    if (this.hoverIdx !== null && this.hoverIdx < n) {
-      const hi = this.hoverIdx;
-      const x = toX(hi);
+  private drawHover(
+    ctx: CanvasRenderingContext2D,
+    cssW: number,
+    cssH: number,
+    hi: number,
+    stacks: StackSegment[][],
+    entries: VolumeEntry[],
+    toX: (i: number) => number,
+    toY: (val: number) => number,
+  ): void {
+    const x = toX(hi);
 
-      ctx.strokeStyle = this.fg(0.4);
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = this.fg(0.4);
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x, this.MT);
+    ctx.lineTo(x, cssH - this.MB);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    for (let si = 0; si < SPORT_STACK.length; si++) {
+      const y = toY(stacks[hi][si].top);
+      ctx.fillStyle = SPORT_COLORS[SPORT_STACK[si]];
       ctx.beginPath();
-      ctx.moveTo(x, MT);
-      ctx.lineTo(x, cssH - MB);
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+      ctx.lineWidth = 1;
       ctx.stroke();
-      ctx.setLineDash([]);
-
-      for (let si = 0; si < SPORT_STACK.length; si++) {
-        const y = toY(stacks[hi][si].top);
-        ctx.fillStyle = SPORT_COLORS[SPORT_STACK[si]];
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
-
-      this.drawTooltip(ctx, cssW, cssH, x, stacks[hi], entries[hi]);
     }
+
+    this.drawTooltip(ctx, cssW, cssH, x, stacks[hi], entries[hi]);
   }
 
   private drawTooltip(
     ctx: CanvasRenderingContext2D, cssW: number, cssH: number, anchorX: number,
-    stack: {sport: string; bottom: number; top: number; val: number}[],
+    stack: StackSegment[],
     entry: VolumeEntry,
   ): void {
     const padding = 10;
     const lineH = 18;
     const dotR = 4;
-    const weekLabel = this.formatWeekLabel(entry.period);
-    const totalVal = this.getTotalValue(entry);
+    const weekLabel = formatWeekLabel(entry.period);
+    const totalVal = getTotalValue(entry, this.metric);
 
     const lines = [
-      {label: weekLabel, value: this.formatTooltipValue(totalVal), color: ''},
+      {label: weekLabel, value: formatTooltipValue(totalVal, this.metric), color: ''},
       ...stack.filter((s) => s.val > 0).reverse().map((s) => ({
         label: SPORT_LABELS[s.sport] || s.sport,
-        value: this.formatTooltipValue(s.val),
+        value: formatTooltipValue(s.val, this.metric),
         color: SPORT_COLORS[s.sport],
       })),
     ];
@@ -361,7 +335,7 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
     ctx.fillStyle = `rgba(${br},${bg},${bb},0.95)`;
     ctx.strokeStyle = this.fg(0.2);
     ctx.lineWidth = 1;
-    this.roundRect(ctx, tx, ty, boxW, boxH, 8);
+    roundRectPath(ctx, tx, ty, boxW, boxH, 8);
     ctx.fill();
     ctx.stroke();
 
@@ -391,81 +365,5 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('No volume data', w / 2, h / 2);
-  }
-
-  private formatWeekLabel(period: string): string {
-    const match = period.match(/W(\d+)$/);
-    return match ? `W${match[1]}` : period;
-  }
-
-  /** Round up to a clean grid-friendly number just above val. */
-  private niceNum(val: number): number {
-    if (val <= 0) return 1;
-    const gridCount = 4;
-    const raw = val * 1.2; // 20% headroom
-    const step = raw / gridCount;
-    const orderStep = Math.pow(10, Math.floor(Math.log10(step)));
-    const fracStep = step / orderStep;
-    let niceStep: number;
-    if (fracStep <= 1) niceStep = 1;
-    else if (fracStep <= 1.5) niceStep = 1.5;
-    else if (fracStep <= 2) niceStep = 2;
-    else if (fracStep <= 2.5) niceStep = 2.5;
-    else if (fracStep <= 5) niceStep = 5;
-    else niceStep = 10;
-    return niceStep * orderStep * gridCount;
-  }
-
-  /** Always returns exactly 10 weeks (current + 9 prior), filling gaps with empty entries. */
-  private getLast10Weeks(): VolumeEntry[] {
-    const weeks: string[] = [];
-    const now = new Date();
-    for (let i = 9; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i * 7);
-      weeks.push(this.isoWeekKey(d));
-    }
-
-    const dataMap = new Map<string, VolumeEntry>();
-    for (const e of (this.data ?? [])) {
-      dataMap.set(e.period, e);
-    }
-
-    const empty: VolumeEntry = {
-      period: '', totalTss: 0, totalDurationSeconds: 0, totalDistanceMeters: 0,
-      sportTss: {}, sportDurationSeconds: {}, sportDistanceMeters: {},
-    };
-
-    return weeks.map((w) => dataMap.get(w) ?? {...empty, period: w});
-  }
-
-  private isoWeekKey(d: Date): string {
-    // Compute ISO week number and year
-    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
-    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-    const weekNo = Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-    return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
-  }
-
-  private hexToRgba(hex: string, alpha: number): string {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r},${g},${b},${alpha})`;
-  }
-
-  private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number): void {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    ctx.lineTo(x + r, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.closePath();
   }
 }

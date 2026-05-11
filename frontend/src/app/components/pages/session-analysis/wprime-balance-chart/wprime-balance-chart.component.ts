@@ -2,6 +2,7 @@ import {
     AfterViewInit,
     ChangeDetectionStrategy,
     Component,
+    DestroyRef,
     ElementRef,
     inject,
     Input,
@@ -10,9 +11,9 @@ import {
     SimpleChanges,
     ViewChild,
 } from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {Subscription} from 'rxjs';
 import {FitRecord} from '../../../../services/metrics.service';
 import {formatTimeHMS} from '../../../shared/format/format.utils';
 
@@ -65,17 +66,19 @@ export class WPrimeBalanceChartComponent implements AfterViewInit, OnChanges, On
     /** Effective W' capacity used by the most recent compute, in joules. Read by draw(). */
     private effectiveWPrime = DEFAULT_WPRIME_J;
     private translate = inject(TranslateService);
-    private langSub?: Subscription;
+    private destroyRef = inject(DestroyRef);
     private axisFull = 'Full';
     private axisHalf = 'Half';
     private axisEmpty = 'Empty';
 
     ngAfterViewInit(): void {
         this.refreshAxisLabels();
-        this.langSub = this.translate.onLangChange.subscribe(() => {
-            this.refreshAxisLabels();
-            this.draw();
-        });
+        this.translate.onLangChange
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => {
+                this.refreshAxisLabels();
+                this.draw();
+            });
         this.recompute();
         this.attachResize();
     }
@@ -98,7 +101,6 @@ export class WPrimeBalanceChartComponent implements AfterViewInit, OnChanges, On
 
     ngOnDestroy(): void {
         this.resizeObserver?.disconnect();
-        this.langSub?.unsubscribe();
     }
 
     private refreshAxisLabels(): void {

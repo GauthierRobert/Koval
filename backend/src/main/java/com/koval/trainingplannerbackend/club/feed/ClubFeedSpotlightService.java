@@ -9,10 +9,8 @@ import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService
 import com.koval.trainingplannerbackend.club.membership.ClubMemberStatus;
 import com.koval.trainingplannerbackend.club.membership.ClubMembership;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipRepository;
-import com.koval.trainingplannerbackend.media.Media;
 import com.koval.trainingplannerbackend.media.MediaPurpose;
 import com.koval.trainingplannerbackend.media.MediaService;
-import com.koval.trainingplannerbackend.media.dto.MediaResponse;
 import com.koval.trainingplannerbackend.notification.NotificationService;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +41,7 @@ public class ClubFeedSpotlightService {
     private final NotificationService notificationService;
     private final ClubFeedSseBroadcaster broadcaster;
     private final MentionResolver mentionResolver;
+    private final ClubFeedMediaResolver mediaResolver;
 
     public ClubFeedSpotlightService(ClubFeedEventRepository feedEventRepository,
                                     ClubAuthorizationService authorizationService,
@@ -51,7 +50,8 @@ public class ClubFeedSpotlightService {
                                     MediaService mediaService,
                                     NotificationService notificationService,
                                     ClubFeedSseBroadcaster broadcaster,
-                                    MentionResolver mentionResolver) {
+                                    MentionResolver mentionResolver,
+                                    ClubFeedMediaResolver mediaResolver) {
         this.feedEventRepository = feedEventRepository;
         this.authorizationService = authorizationService;
         this.membershipRepository = membershipRepository;
@@ -60,6 +60,7 @@ public class ClubFeedSpotlightService {
         this.notificationService = notificationService;
         this.broadcaster = broadcaster;
         this.mentionResolver = mentionResolver;
+        this.mediaResolver = mediaResolver;
     }
 
     public ClubFeedEventResponse createSpotlight(String userId, String clubId, CreateSpotlightRequest req) {
@@ -128,7 +129,7 @@ public class ClubFeedSpotlightService {
             feedEventRepository.save(event);
         }
 
-        ClubFeedEventResponse response = ClubFeedEventResponse.from(event, this::resolveMedia);
+        ClubFeedEventResponse response = ClubFeedEventResponse.from(event, mediaResolver::resolve);
         broadcaster.broadcast(clubId, "new_feed_event", response);
 
         // Notify the spotlighted user (priority)
@@ -223,7 +224,7 @@ public class ClubFeedSpotlightService {
         event.setUpdatedAt(now);
         feedEventRepository.save(event);
 
-        ClubFeedEventResponse response = ClubFeedEventResponse.from(event, this::resolveMedia);
+        ClubFeedEventResponse response = ClubFeedEventResponse.from(event, mediaResolver::resolve);
         broadcaster.broadcast(clubId, "feed_event_updated", response);
         return response;
     }
@@ -251,16 +252,9 @@ public class ClubFeedSpotlightService {
             event.setUpdatedAt(LocalDateTime.now());
             feedEventRepository.save(event);
             broadcaster.broadcast(event.getClubId(), "feed_event_updated",
-                    ClubFeedEventResponse.from(event, this::resolveMedia));
+                    ClubFeedEventResponse.from(event, mediaResolver::resolve));
         }
         return expired.size();
-    }
-
-    private MediaResponse resolveMedia(String mediaId) {
-        return mediaService.findById(mediaId)
-                .filter(Media::isConfirmed)
-                .map(mediaService::buildMediaResponse)
-                .orElse(null);
     }
 
     private void requireActiveMember(String clubId, String userId) {

@@ -2,6 +2,7 @@ package com.koval.trainingplannerbackend.mcp;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.plan.PlanAnalytics;
+import com.koval.trainingplannerbackend.plan.PlanAnalyticsService;
 import com.koval.trainingplannerbackend.plan.PlanDay;
 import com.koval.trainingplannerbackend.plan.PlanWeek;
 import com.koval.trainingplannerbackend.plan.TrainingPlan;
@@ -26,9 +27,12 @@ import java.util.stream.IntStream;
 public class McpPlanTools {
 
     private final TrainingPlanService planService;
+    private final PlanAnalyticsService analyticsService;
 
-    public McpPlanTools(TrainingPlanService planService) {
+    public McpPlanTools(TrainingPlanService planService,
+                        PlanAnalyticsService analyticsService) {
         this.planService = planService;
+        this.analyticsService = analyticsService;
     }
 
     @Tool(description = "List all training plans for the user. Training plans are multi-week periodized programs with workouts assigned to specific days. Plans can be DRAFT, ACTIVE, PAUSED, COMPLETED, or CANCELLED.")
@@ -112,7 +116,7 @@ public class McpPlanTools {
     @Tool(description = "Get progress of a training plan: how many workouts are completed, skipped, or pending.")
     public Object getPlanProgress(
             @ToolParam(description = "Plan ID") String planId) {
-        return planService.getProgress(planId);
+        return analyticsService.getProgress(planId);
     }
 
     @Tool(description = "Get the full structure of a training plan: title, description, sport, status, start date, weeks with their target TSS labels, and the planned workouts per day (training id, day of week, notes).")
@@ -203,7 +207,7 @@ public class McpPlanTools {
         if (week == null) {
             return new CurrentWeekSummary(planId, currentWeek, null, null, 0, 0);
         }
-        var analytics = planService.getAnalytics(planId);
+        var analytics = analyticsService.getAnalytics(planId);
         int completed = (analytics == null || analytics.weeklyBreakdown() == null)
                 ? 0
                 : analytics.weeklyBreakdown().stream()
@@ -253,7 +257,7 @@ public class McpPlanTools {
     @Tool(description = "Get detailed analytics for a training plan including weekly TSS adherence (actual vs target), completion rates per week, and overall adherence percentage.")
     public PlanAnalytics getPlanAnalytics(
             @ToolParam(description = "Plan ID") String planId) {
-        return planService.getAnalytics(planId);
+        return analyticsService.getAnalytics(planId);
     }
 
     public record PlanSummary(String id, String title, String sport, String status,

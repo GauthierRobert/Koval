@@ -1,7 +1,7 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject, Observable} from 'rxjs';
-import {tap} from 'rxjs/operators';
+import {map, tap} from 'rxjs/operators';
 import {Router} from '@angular/router';
 import {environment} from '../../environments/environment';
 import {NotificationService} from './notification.service';
@@ -17,6 +17,7 @@ export class AuthService {
     private apiUrl = `${environment.apiUrl}/api/auth`;
     private userSubject = new BehaviorSubject<User | null>(null);
     user$ = this.userSubject.asObservable();
+    isCoach$ = this.user$.pipe(map(u => u?.role === 'COACH'));
 
     private readonly UI_MODE_KEY = 'uiMode';
     private uiModeSubject = new BehaviorSubject<'athlete' | 'coach'>(

@@ -1,0 +1,49 @@
+<div class="chart-wrapper">
+  <canvas
+    #chartCanvas
+    (mousemove)="onMouseMove($event)"
+    (mouseleave)="onMouseLeave()"
+  ></canvas>
+  @if (tooltipVisible) {
+    <div
+      class="tooltip"
+      [style.left.px]="tooltipX"
+      [style.top.px]="tooltipY"
+    >
+      <div class="tooltip-line">
+        <span class="tooltip-label">Distance:</span>
+        <span>{{ tooltipData.distance }}</span>
+      </div>
+      <div class="tooltip-line">
+        <span class="tooltip-label">Elevation:</span>
+        <span>{{ tooltipData.elevation }}</span>
+      </div>
+      <div class="tooltip-line">
+        <span class="tooltip-label">Gradient:</span>
+        <span>{{ tooltipData.gradient }}</span>
+      </div>
+      @if (tooltipData.power) {
+        <div class="tooltip-line">
+          <span class="tooltip-label">Power:</span>
+          <span>{{ tooltipData.power }}</span>
+        </div>
+      }
+      @if (tooltipData.speed) {
+        <div class="tooltip-line">
+          <span class="tooltip-label">Speed:</span>
+          <span>{{ tooltipData.speed }}</span>
+        </div>
+      }
+      @if (tooltipData.pace) {
+        <div class="tooltip-line">
+          <span class="tooltip-label">Pace:</span>
+          <span>{{ tooltipData.pace }}</span>
+        </div>
+      }
+      <div class="tooltip-line">
+        <span class="tooltip-label">Fatigue:</span>
+        <span>{{ tooltipData.fatigue }}</span>
+      </div>
+    </div>
+  }
+</div>

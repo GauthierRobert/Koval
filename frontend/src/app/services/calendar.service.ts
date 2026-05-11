@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable, of} from 'rxjs';
 import {catchError, map} from 'rxjs/operators';
@@ -46,9 +46,8 @@ const BASE = environment.apiUrl;
     providedIn: 'root',
 })
 export class CalendarService {
-    private apiUrl = `${BASE}/api/schedule`;
-
-    constructor(private http: HttpClient) { }
+    private readonly http = inject(HttpClient);
+    private readonly apiUrl = `${BASE}/api/schedule`;
 
     getMySchedule(start: string, end: string, includeClubSessions = false): Observable<ScheduledWorkout[]> {
         const params: Record<string, string> = { start, end };

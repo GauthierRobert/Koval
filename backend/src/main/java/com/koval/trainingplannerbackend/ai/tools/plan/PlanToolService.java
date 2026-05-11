@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend.ai.tools.plan;
 import com.koval.trainingplannerbackend.ai.ToolEventEmitter;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.plan.PlanAnalytics;
+import com.koval.trainingplannerbackend.plan.PlanAnalyticsService;
 import com.koval.trainingplannerbackend.plan.PlanDay;
 import com.koval.trainingplannerbackend.plan.PlanProgress;
 import com.koval.trainingplannerbackend.plan.PlanWeek;
@@ -27,9 +28,12 @@ import java.util.List;
 public class PlanToolService {
 
     private final TrainingPlanService planService;
+    private final PlanAnalyticsService analyticsService;
 
-    public PlanToolService(TrainingPlanService planService) {
+    public PlanToolService(TrainingPlanService planService,
+                           PlanAnalyticsService analyticsService) {
         this.planService = planService;
+        this.analyticsService = analyticsService;
     }
 
     @Tool(description = "Create a new multi-week training plan template (periodization). Returns the plan with its ID. The plan starts in DRAFT status — add workouts with addDayToPlan, then call activatePlan with a start date to populate the calendar.")
@@ -182,7 +186,7 @@ public class PlanToolService {
             @ToolParam(description = "The plan ID") String planId,
             ToolContext context) {
         ToolEventEmitter.emitToolCall(context, "getPlanProgress", "Checking progress...");
-        PlanProgress progress = planService.getProgress(planId);
+        PlanProgress progress = analyticsService.getProgress(planId);
         ToolEventEmitter.emitToolResult(context, "getPlanProgress",
                 progress.completionPercent() + "% complete", true);
         return progress;
@@ -193,7 +197,7 @@ public class PlanToolService {
             @ToolParam(description = "The plan ID") String planId,
             ToolContext context) {
         ToolEventEmitter.emitToolCall(context, "getPlanAnalytics", "Analyzing plan...");
-        PlanAnalytics analytics = planService.getAnalytics(planId);
+        PlanAnalytics analytics = analyticsService.getAnalytics(planId);
         ToolEventEmitter.emitToolResult(context, "getPlanAnalytics",
                 String.format("%.0f%% adherence, %d/%d TSS", analytics.overallAdherencePercent(),
                         analytics.totalActualTss(), analytics.totalTargetTss()), true);

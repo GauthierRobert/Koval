@@ -7,13 +7,26 @@ import {
   flattenElements,
   hasDurationEstimate,
   isSet,
-  SPORT_OPTIONS,
   Training,
-  TRAINING_TYPE_COLORS,
-  TRAINING_TYPE_LABELS,
-  TrainingType,
   WorkoutBlock,
 } from '../../../models/training.model';
+import {
+  blockClipPath,
+  blockEstimateDisplay,
+  blockHeightPercent,
+  effectiveIntensity,
+  formatBlockDuration,
+  formatDistanceMeters,
+  formatTotalSeconds,
+  intensityValueFromUser,
+  maxFlatIntensity,
+  sportColorFor,
+  sportLabelFor,
+  sportUnitFor,
+  trainingTypeColorFor,
+  trainingTypeLabelFor,
+  yAxisLabels,
+} from './workout-visualization.utils';
 import {WorkoutExecutionService} from '../../../services/workout-execution.service';
 import {HttpClient} from '@angular/common/http';
 import {ExportService} from '../../../services/export.service';
@@ -134,49 +147,15 @@ export class WorkoutVisualizationComponent {
   }
 
   getEffectiveIntensity(block: WorkoutBlock, type: 'TARGET' | 'START' | 'END' = 'TARGET'): number {
-    let percent: number | undefined;
-    if (type === 'TARGET') percent = block.intensityTarget;
-    else if (type === 'START') percent = block.intensityStart;
-    else if (type === 'END') percent = block.intensityEnd;
-
-    if (percent !== undefined && percent !== null) return percent;
-    return 0;
+    return effectiveIntensity(block, type);
   }
 
   getBlockHeight(block: WorkoutBlock): number {
-    const maxI = this.getMaxIntensity();
-    if (block.type === 'PAUSE') return 100;
-    if (block.type === 'FREE') return (65 / maxI) * 100;
-    if (block.type === 'TRANSITION') return (30 / maxI) * 100;
-
-    // Use effective intensity
-    const target = this.getEffectiveIntensity(block, 'TARGET');
-    const start = this.getEffectiveIntensity(block, 'START');
-    const end = this.getEffectiveIntensity(block, 'END');
-
-    const intensity = block.type === 'RAMP' ? Math.max(start, end) : target;
-    return (intensity / maxI) * 100;
+    return blockHeightPercent(block, this.getMaxIntensity());
   }
 
   getBlockClipPath(block: WorkoutBlock): string {
-    if (block.type !== 'RAMP') return 'none';
-
-    const maxI = this.getMaxIntensity();
-    const startVal = this.getEffectiveIntensity(block, 'START');
-    const endVal = this.getEffectiveIntensity(block, 'END');
-
-    const startH = (startVal / maxI) * 100;
-    const endH = (endVal / maxI) * 100;
-    const currentH = Math.max(startH, endH);
-
-    // Calculate relative heights within the bar's own bounding box
-    // Avoid division by zero
-    if (currentH === 0) return 'none';
-
-    const startRel = 100 - (startH / currentH) * 100;
-    const endRel = 100 - (endH / currentH) * 100;
-
-    return `polygon(0% ${startRel}%, 100% ${endRel}%, 100% 100%, 0% 100%)`;
+    return blockClipPath(block, this.getMaxIntensity(), effectiveIntensity);
   }
 
   getBlockColor(block: WorkoutBlock): string {
@@ -205,27 +184,11 @@ export class WorkoutVisualizationComponent {
   }
 
   getMaxIntensity(): number {
-    if (!this.training) return 150;
-
-    // Scan all flat blocks for max effective intensity
-    const intensities = this.displayFlatBlocks.flatMap(b => [
-      this.getEffectiveIntensity(b, 'TARGET'),
-      this.getEffectiveIntensity(b, 'START'),
-      this.getEffectiveIntensity(b, 'END')
-    ]);
-
-    const maxBlockIntensity = intensities.length > 0 ? Math.max(...intensities) : 0;
-    return Math.max(150, maxBlockIntensity + 20);
+    return this.training ? maxFlatIntensity(this.displayFlatBlocks) : 150;
   }
 
   getYAxisLabels(): number[] {
-    const maxI = this.getMaxIntensity();
-    const step = maxI > 200 ? 100 : 50;
-    const labels = [];
-    for (let i = 0; i <= maxI; i += step) {
-      labels.unshift(i);
-    }
-    return labels;
+    return yAxisLabels(this.getMaxIntensity());
   }
 
   getNumericalTotalDuration(): number {
@@ -245,34 +208,17 @@ export class WorkoutVisualizationComponent {
   }
 
   getTotalDuration(): string {
-    const totalSeconds = this.getNumericalTotalDuration();
-    if (totalSeconds === 0) return '0 min';
-    const m = Math.floor(totalSeconds / 60);
-    return `${m}m`;
+    return formatTotalSeconds(this.getNumericalTotalDuration());
   }
 
   formatDuration(seconds: number | undefined, block?: WorkoutBlock): string {
-    // If undefined provided, try to estimate from block if given?
-    if (seconds === undefined && block) {
-      seconds = this.getEstimatedBlockDuration(block);
-    }
-    if (seconds === undefined) return '0min';
-
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    if (s === 0) return `${m}min`;
-    if(m === 0) return `${s}sec`
-    return `${m}m ${s}sec`;
+    const resolved = seconds ?? (block ? this.getEstimatedBlockDuration(block) : undefined);
+    return formatBlockDuration(resolved);
   }
 
-  /**
-   * Returns the display string for a block's duration/distance.
-   * When no duration is set but distance is, shows the distance.
-   */
   formatBlockDurationOrDistance(block: WorkoutBlock): string {
     if (!block.durationSeconds && block.distanceMeters) {
-      const km = block.distanceMeters / 1000;
-      return km >= 1 ? `${km}km` : `${block.distanceMeters}m`;
+      return formatDistanceMeters(block.distanceMeters);
     }
     return this.formatDuration(block.durationSeconds, block);
   }
@@ -286,70 +232,19 @@ export class WorkoutVisualizationComponent {
   }
 
   calculateIntensityValue(percent: number | undefined): string {
-    if (percent === undefined || percent === 0 || !this.training) return '-';
-
-    const user = this.authService.currentUser;
-
-    if (this.training.sportType === 'CYCLING') {
-      if (!user?.ftp) return `${percent}%`;
-      return Math.round((percent * user.ftp) / 100).toString() + 'W';
-    }
-
-    if (this.training.sportType === 'RUNNING') {
-      if (!user?.functionalThresholdPace) return `${percent}%`;
-      const secondsPerKm = user.functionalThresholdPace / (percent / 100);
-      if (!isFinite(secondsPerKm)) return '-';
-      return this.formatPace(secondsPerKm) + '/km';
-    }
-
-    if (this.training.sportType === 'SWIMMING') {
-      if (!user?.criticalSwimSpeed) return `${percent}%`;
-      const secondsPer100m = user.criticalSwimSpeed / (percent / 100);
-      if (!isFinite(secondsPer100m)) return '-';
-      return this.formatPace(secondsPer100m) + '/100m';
-    }
-
-    return percent.toString() + '%';
+    if (!this.training) return '-';
+    return intensityValueFromUser(percent, this.training, this.authService.currentUser);
   }
 
   formatPace(totalSeconds: number): string {
     return sharedFormatPace(totalSeconds);
   }
 
-  getSportLabel(): string {
-    if (!this.training) return '';
-    const opt = SPORT_OPTIONS.find((o) => o.value === this.training!.sportType);
-    return opt?.label ?? this.training.sportType;
-  }
-
-  getSportColor(): string {
-    if (!this.training) return 'var(--text-muted)';
-    switch (this.training.sportType) {
-      case 'SWIMMING': return '#06b6d4';
-      case 'CYCLING': return '#22c55e';
-      case 'RUNNING': return '#f97316';
-      case 'BRICK': return '#a855f7';
-      default: return 'var(--text-muted)';
-    }
-  }
-
-  getTrainingTypeLabel(): string {
-    if (!this.training?.trainingType) return '';
-    return TRAINING_TYPE_LABELS[this.training.trainingType as TrainingType] ?? this.training.trainingType;
-  }
-
-  getTrainingTypeColor(): string {
-    if (!this.training?.trainingType) return 'var(--accent-color)';
-    return TRAINING_TYPE_COLORS[this.training.trainingType as TrainingType] ?? 'var(--accent-color)';
-  }
-
-  getSportUnit(): string {
-    if (!this.training) return '%';
-    if (this.training.sportType === 'CYCLING') return 'W';
-    if (this.training.sportType === 'RUNNING') return 'min/km';
-    if (this.training.sportType === 'SWIMMING') return 'min/100m';
-    return '%';
-  }
+  getSportLabel(): string { return sportLabelFor(this.training); }
+  getSportColor(): string { return sportColorFor(this.training); }
+  getTrainingTypeLabel(): string { return trainingTypeLabelFor(this.training); }
+  getTrainingTypeColor(): string { return trainingTypeColorFor(this.training); }
+  getSportUnit(): string { return sportUnitFor(this.training); }
 
   private closeDropdownListener = () => {
     this.isExportDropdownOpen = false;
@@ -369,11 +264,9 @@ export class WorkoutVisualizationComponent {
 
   exportToZwift(): void {
     if (!this.training) return;
-    this.closeDropdownListener(); // Close menu
-    // Use current FTP value from service, default to 250
-    this.trainingService.ftp$.subscribe(ftp => {
-      this.exportService.exportToZwift(this.training!, ftp ?? undefined);
-    }).unsubscribe();
+    this.closeDropdownListener();
+    const ftp = this.trainingService.currentFtp;
+    this.exportService.exportToZwift(this.training, ftp ?? undefined);
   }
 
   exportToJSON(): void {
@@ -472,39 +365,12 @@ export class WorkoutVisualizationComponent {
     return this.durationService.estimateDistance(block, this.training, this.currentZoneSystem);
   }
 
-  formatBlockEstimates(block: WorkoutBlock): { duration: string; durationEstimated: boolean; distance: string; distanceEstimated: boolean } {
-    const hasDuration = (block.durationSeconds ?? 0) > 0;
-    const hasDistance = (block.distanceMeters ?? 0) > 0;
-
-    let duration: string;
-    let durationEstimated: boolean;
-    if (hasDuration) {
-      duration = this.formatDuration(block.durationSeconds);
-      durationEstimated = false;
-    } else {
-      const est = this.getEstimatedBlockDuration(block);
-      duration = est > 0 ? this.formatDuration(est) : '-';
-      durationEstimated = est > 0;
-    }
-
-    let distance: string;
-    let distanceEstimated: boolean;
-    if (hasDistance) {
-      const km = block.distanceMeters! / 1000;
-      distance = km >= 1 ? `${km.toFixed(1)}km` : `${block.distanceMeters}m`;
-      distanceEstimated = false;
-    } else {
-      const est = this.getEstimatedBlockDistance(block);
-      if (est > 0) {
-        const km = est / 1000;
-        distance = km >= 1 ? `${km.toFixed(1)}km` : `${est}m`;
-      } else {
-        distance = '-';
-      }
-      distanceEstimated = est > 0;
-    }
-
-    return { duration, durationEstimated, distance, distanceEstimated };
+  formatBlockEstimates(block: WorkoutBlock) {
+    return blockEstimateDisplay(
+      block,
+      () => this.getEstimatedBlockDuration(block),
+      () => this.getEstimatedBlockDistance(block),
+    );
   }
 
   getBlockIntensityDisplay(block: WorkoutBlock): string {

@@ -1,0 +1,69 @@
+.chart-wrap { display: flex; flex-direction: column; gap: 8px; }
+.chart-toggles { display: flex; gap: 8px; padding: 0 var(--page-padding); flex-wrap: wrap; }
+.toggle-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--overlay-5);
+  border: none;
+  color: var(--text-muted);
+  padding: 4px 10px; border-radius: 6px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.05em;
+  cursor: pointer; transition: all 0.15s;
+}
+.toggle-btn.active {
+  background: var(--overlay-10, rgba(0,0,0,0.1));
+  color: var(--text-color);
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot.power { background: var(--accent-color, #ff9d00); }
+.dot.hr { background: #e74c3c; }
+.dot.cad { background: #3b82f6; }
+.dot.eff { background: #a855f7; }
+.dot.blocks { background: #2ecc71; }
+.toggle-sep { width: 1px; height: 16px; background: var(--overlay-10); margin: 0 2px; }
+.charts-stack { position: relative; display: flex; flex-direction: column; gap: 4px; min-height: 0; }
+.mc {
+  width: 100%; display: block; cursor: crosshair; min-height: 0;
+  touch-action: pan-y;
+  -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+}
+.primary-h { flex: 6 1 0; min-height: 250px; }
+.hr-h { flex: 2.8 1 0; min-height: 100px; }
+.cad-h { flex: 2.8 1 0; min-height: 100px; }
+.eff-h { flex: 2 1 0; min-height: 80px; }
+.elev-h { flex: 1.4 1 0; min-height: 80px; }
+.xaxis-h { flex: 0 0 22px; height: 22px; cursor: default; }
+.tt {
+  position: absolute; z-index: 10; pointer-events: none;
+  background: var(--surface-card, rgba(32, 34, 52, 0.97));
+  border: 1px solid var(--glass-border, rgba(255,255,255,0.22));
+  border-radius: 8px; padding: 8px 10px;
+  min-width: 120px; white-space: nowrap;
+}
+.tt-hdr { color: var(--text-80); font: 9px monospace; }
+.tt-sep { height: 1px; background: var(--overlay-15); margin: 5px 0; }
+.tt-row { display: flex; justify-content: space-between; gap: 16px; line-height: 17px; }
+.tt-lbl { color: var(--text-muted); font: 9px monospace; }
+.tt-val { font: bold 10px monospace; text-align: right; }
+
+@media (max-width: 768px) {
+  .chart-toggles { gap: 4px; }
+  .toggle-btn { padding: 3px 8px; font-size: 9px; }
+  .primary-h { min-height: 200px; }
+  .hr-h { min-height: 120px; }
+  .cad-h { min-height: 120px; }
+  .eff-h { min-height: 80px; }
+  .elev-h { min-height: 70px; }
+}
+
+:host { display: block; }
+.chart-wrap.compact { gap: 0; height: 100%; }
+.chart-wrap.compact .charts-stack { flex: 1 1 0; min-height: 0; }
+.chart-wrap.compact .chart-toggles { padding: 0; }
+.chart-wrap.compact .primary-h { min-height: 0; flex: 1 1 0; }
+.chart-wrap.compact .hr-h { min-height: 0; flex: 1 1 0; }
+.chart-wrap.compact .cad-h { min-height: 0; flex: 1 1 0; }
+.chart-wrap.compact .eff-h { min-height: 0; flex: 1 1 0; }
+.chart-wrap.compact .elev-h { min-height: 0; flex: 1 1 0; }
+.chart-wrap.compact .xaxis-h { flex: 0 0 16px; height: 16px; }
+.chart-wrap.compact .mc { cursor: default; }

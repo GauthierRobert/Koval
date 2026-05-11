@@ -26,13 +26,16 @@ public class ScheduleController {
 
     private final ScheduledWorkoutService scheduledWorkoutService;
     private final ScheduleService scheduleService;
+    private final ScheduledWorkoutEnrichmentService enrichmentService;
     private final ClubSessionService clubSessionService;
 
     public ScheduleController(ScheduledWorkoutService scheduledWorkoutService,
             ScheduleService scheduleService,
+            ScheduledWorkoutEnrichmentService enrichmentService,
             ClubSessionService clubSessionService) {
         this.scheduledWorkoutService = scheduledWorkoutService;
         this.scheduleService = scheduleService;
+        this.enrichmentService = enrichmentService;
         this.clubSessionService = clubSessionService;
     }
 
@@ -63,7 +66,7 @@ public class ScheduleController {
     @PostMapping("/{id}/complete")
     public ResponseEntity<ScheduledWorkoutResponse> markCompleted(@PathVariable String id) {
         ScheduledWorkout updated = scheduleService.markCompleted(id);
-        return ResponseEntity.ok(scheduleService.enrichSingle(updated));
+        return ResponseEntity.ok(enrichmentService.enrichSingle(updated));
     }
 
     @PatchMapping("/{id}/reschedule")
@@ -77,7 +80,7 @@ public class ScheduleController {
     @PostMapping("/{id}/skip")
     public ResponseEntity<ScheduledWorkoutResponse> markSkipped(@PathVariable String id) {
         ScheduledWorkout updated = scheduledWorkoutService.markSkipped(id);
-        return ResponseEntity.ok(scheduleService.enrichSingle(updated));
+        return ResponseEntity.ok(enrichmentService.enrichSingle(updated));
     }
 
     @GetMapping("/club-sessions")

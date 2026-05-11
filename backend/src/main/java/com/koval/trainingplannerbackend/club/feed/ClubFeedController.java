@@ -46,6 +46,9 @@ public class ClubFeedController {
     private static final int MAX_MENTION_SUGGESTIONS = 8;
 
     private final ClubFeedService feedService;
+    private final ClubAnnouncementService announcementService;
+    private final ClubFeedCommentService commentService;
+    private final ClubFeedPhotoService photoService;
     private final ClubFeedReactionService reactionService;
     private final ClubFeedSpotlightService spotlightService;
     private final ClubEngagementInsightsService insightsService;
@@ -56,6 +59,9 @@ public class ClubFeedController {
     private final UserService userService;
 
     public ClubFeedController(ClubFeedService feedService,
+                              ClubAnnouncementService announcementService,
+                              ClubFeedCommentService commentService,
+                              ClubFeedPhotoService photoService,
                               ClubFeedReactionService reactionService,
                               ClubFeedSpotlightService spotlightService,
                               ClubEngagementInsightsService insightsService,
@@ -65,6 +71,9 @@ public class ClubFeedController {
                               ClubMembershipRepository membershipRepository,
                               UserService userService) {
         this.feedService = feedService;
+        this.announcementService = announcementService;
+        this.commentService = commentService;
+        this.photoService = photoService;
         this.reactionService = reactionService;
         this.spotlightService = spotlightService;
         this.insightsService = insightsService;
@@ -96,7 +105,7 @@ public class ClubFeedController {
             @Valid @RequestBody CreateAnnouncementRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(
-                feedService.createCoachAnnouncement(userId, clubId, req.content(), req.mediaIds(),
+                announcementService.create(userId, clubId, req.content(), req.mediaIds(),
                         req.mentionUserIds()));
     }
 
@@ -107,7 +116,7 @@ public class ClubFeedController {
             @Valid @RequestBody UpdateAnnouncementRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(
-                feedService.updateCoachAnnouncement(userId, clubId, eventId, req.content(), req.mediaIds(),
+                announcementService.update(userId, clubId, eventId, req.content(), req.mediaIds(),
                         req.mentionUserIds()));
     }
 
@@ -116,7 +125,7 @@ public class ClubFeedController {
             @PathVariable String clubId,
             @PathVariable String eventId) {
         String userId = SecurityUtils.getCurrentUserId();
-        feedService.deleteCoachAnnouncement(userId, clubId, eventId);
+        announcementService.delete(userId, clubId, eventId);
         return ResponseEntity.noContent().build();
     }
 
@@ -154,7 +163,7 @@ public class ClubFeedController {
             @PathVariable String eventId,
             @Valid @RequestBody AddCommentRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(feedService.addComment(
+        return ResponseEntity.ok(commentService.addComment(
                 userId, clubId, eventId, req.content(), null, req.mentionUserIds()));
     }
 
@@ -165,7 +174,7 @@ public class ClubFeedController {
             @PathVariable String parentCommentId,
             @Valid @RequestBody AddCommentRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(feedService.addComment(
+        return ResponseEntity.ok(commentService.addComment(
                 userId, clubId, eventId, req.content(), parentCommentId, req.mentionUserIds()));
     }
 
@@ -176,7 +185,7 @@ public class ClubFeedController {
             @PathVariable String commentId,
             @Valid @RequestBody UpdateCommentRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(feedService.updateComment(userId, clubId, eventId, commentId, req.content()));
+        return ResponseEntity.ok(commentService.updateComment(userId, clubId, eventId, commentId, req.content()));
     }
 
     @DeleteMapping("/{eventId}/comments/{commentId}")
@@ -185,7 +194,7 @@ public class ClubFeedController {
             @PathVariable String eventId,
             @PathVariable String commentId) {
         String userId = SecurityUtils.getCurrentUserId();
-        feedService.deleteComment(userId, clubId, eventId, commentId);
+        commentService.deleteComment(userId, clubId, eventId, commentId);
         return ResponseEntity.noContent().build();
     }
 
@@ -195,7 +204,7 @@ public class ClubFeedController {
             @PathVariable String eventId,
             @RequestBody AttachPhotosRequest req) {
         String userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(feedService.attachPhotos(userId, clubId, eventId, req.mediaIds()));
+        return ResponseEntity.ok(photoService.attachPhotos(userId, clubId, eventId, req.mediaIds()));
     }
 
     @DeleteMapping("/{eventId}/photos/{enrichmentId}")
@@ -204,7 +213,7 @@ public class ClubFeedController {
             @PathVariable String eventId,
             @PathVariable String enrichmentId) {
         String userId = SecurityUtils.getCurrentUserId();
-        feedService.detachPhoto(userId, clubId, eventId, enrichmentId);
+        photoService.detachPhoto(userId, clubId, eventId, enrichmentId);
         return ResponseEntity.noContent().build();
     }
 

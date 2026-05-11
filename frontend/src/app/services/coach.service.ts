@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable, of} from 'rxjs';
 import {catchError} from 'rxjs/operators';
@@ -78,9 +78,8 @@ export interface AthletePlanSummary {
     providedIn: 'root',
 })
 export class CoachService {
-    private apiUrl = `${environment.apiUrl}/api/coach`;
-
-    constructor(private http: HttpClient) { }
+    private readonly http = inject(HttpClient);
+    private readonly apiUrl = `${environment.apiUrl}/api/coach`;
 
     getAthletes(): Observable<User[]> {
         return this.http.get<User[]>(`${this.apiUrl}/athletes`).pipe(

@@ -3,7 +3,7 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule} from '@ngx-translate/core';
-import {BehaviorSubject, combineLatest, map, Observable, of} from 'rxjs';
+import {BehaviorSubject, combineLatest, map, Observable, of, take} from 'rxjs';
 import {CoachService, ScheduledWorkout} from '../../../services/coach.service';
 import {AuthService, User} from '../../../services/auth.service';
 import {ClubService, MyClubRoleEntry} from '../../../services/club.service';
@@ -27,6 +27,20 @@ import {CoachPerformanceTabComponent} from './coach-performance-tab/coach-perfor
 import {CoachGoalsTabComponent} from './coach-goals-tab/coach-goals-tab.component';
 import {CoachHistoryTabComponent} from './coach-history-tab/coach-history-tab.component';
 import {CoachPlansTabComponent} from './coach-plans-tab/coach-plans-tab.component';
+import {
+  PMC_WINDOW_DAYS,
+  PROJECTION_DAYS,
+  VOLUME_WINDOW_DAYS,
+  buildProjectionTssMap,
+  dateOffsetKey,
+  deriveAthleteMetrics,
+  filterAthletes,
+  formatScheduleWeekLabel,
+  getMondayOfWeek,
+  getSundayOfWeek,
+  mapSessionToSavedSession,
+  toDateKey,
+} from './coach-dashboard.utils';
 
 @Component({
   selector: 'app-coach-dashboard',
@@ -48,8 +62,8 @@ export class CoachDashboardComponent implements OnInit {
   activeTagFilter: string | null = null;
   activeTab: 'performance' | 'physiology' | 'history' | 'pmc' | 'goals' | 'plans' = 'performance';
 
-  scheduleWeekStart: Date = this.getMondayOfWeek(new Date());
-  scheduleWeekEnd: Date = this.getSundayOfWeek(new Date());
+  scheduleWeekStart: Date = getMondayOfWeek(new Date());
+  scheduleWeekEnd: Date = getSundayOfWeek(new Date());
 
   private userId = '';
 
@@ -72,14 +86,7 @@ export class CoachDashboardComponent implements OnInit {
     this.athletes$,
     this.tagFilterSubject,
     this.clubFilterSubject,
-  ]).pipe(
-    map(([athletes, tagFilter, clubFilter]) => {
-      let result = athletes;
-      if (tagFilter) result = result.filter(a => a.groups?.includes(tagFilter));
-      if (clubFilter) result = result.filter(a => a.clubs?.includes(clubFilter));
-      return result;
-    })
-  );
+  ]).pipe(map(([athletes, tag, club]) => filterAthletes(athletes, tag, club)));
 
   private scheduleSubject = new BehaviorSubject<ScheduledWorkout[]>([]);
   athleteSchedule$ = this.scheduleSubject.asObservable();
@@ -101,7 +108,7 @@ export class CoachDashboardComponent implements OnInit {
   fullAthletePmc$ = combineLatest([this.athletePmc$, this.athleteScheduleTssSubject]).pipe(
     map(([real, tssMap]) => [
       ...real,
-      ...this.metricsService.projectPmcFromSchedule(real, tssMap, 30),
+      ...this.metricsService.projectPmcFromSchedule(real, tssMap, PROJECTION_DAYS),
     ]),
   );
 
@@ -111,23 +118,7 @@ export class CoachDashboardComponent implements OnInit {
   private athleteVolumeSubject = new BehaviorSubject<VolumeEntry[]>([]);
   athleteVolume$ = this.athleteVolumeSubject.asObservable();
 
-  // Task 7: Real fitness/fatigue/form metrics derived from PMC data
-  athleteMetrics$ = this.athletePmc$.pipe(
-    map(data => {
-      if (!data.length) return null;
-      const real = data.filter(d => !d.predicted);
-      if (!real.length) return null;
-      const latest = real[real.length - 1];
-      const tenDaysAgo = real.length > 10 ? real[real.length - 11] : null;
-      return {
-        ctl: latest?.ctl ?? 0,
-        atl: latest?.atl ?? 0,
-        tsb: latest?.tsb ?? 0,
-        ctlTrend: tenDaysAgo ? latest.ctl - tenDaysAgo.ctl : 0,
-        atlTrend: tenDaysAgo ? latest.atl - tenDaysAgo.atl : 0,
-      };
-    })
-  );
+  athleteMetrics$ = this.athletePmc$.pipe(map(deriveAthleteMetrics));
 
   coachTrainings$: Observable<Training[]> = of([]);
 
@@ -158,22 +149,6 @@ export class CoachDashboardComponent implements OnInit {
     this.trainingService.loadTrainings();
   }
 
-  private getMondayOfWeek(d: Date): Date {
-    const day = d.getDay();
-    const offset = day === 0 ? -6 : 1 - day;
-    const m = new Date(d);
-    m.setDate(d.getDate() + offset);
-    m.setHours(0, 0, 0, 0);
-    return m;
-  }
-
-  private getSundayOfWeek(d: Date): Date {
-    const mon = this.getMondayOfWeek(d);
-    const sun = new Date(mon);
-    sun.setDate(mon.getDate() + 6);
-    return sun;
-  }
-
   navigateScheduleWeek(dir: -1 | 1): void {
     this.scheduleWeekStart.setDate(this.scheduleWeekStart.getDate() + dir * 7);
     this.scheduleWeekEnd.setDate(this.scheduleWeekEnd.getDate() + dir * 7);
@@ -183,15 +158,13 @@ export class CoachDashboardComponent implements OnInit {
   }
 
   get scheduleWeekLabel(): string {
-    const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
-    return `${this.scheduleWeekStart.toLocaleDateString('en-US', opts)} – ${this.scheduleWeekEnd.toLocaleDateString('en-US', opts)}`;
+    return formatScheduleWeekLabel(this.scheduleWeekStart, this.scheduleWeekEnd);
   }
 
   loadAthletes() {
     this.coachService.getAthletes().subscribe({
       next: (data) => this.ngZone.run(() => {
         this.athletesSubject.next(data);
-        // Task 6: Auto-select athlete from query params after athletes load
         const athleteId = this.route.snapshot.queryParamMap.get('athleteId');
         if (athleteId) {
           const athlete = data.find(a => a.id === athleteId);
@@ -233,8 +206,8 @@ export class CoachDashboardComponent implements OnInit {
   }
 
   selectAthlete(athlete: User) {
-    this.scheduleWeekStart = this.getMondayOfWeek(new Date());
-    this.scheduleWeekEnd = this.getSundayOfWeek(new Date());
+    this.scheduleWeekStart = getMondayOfWeek(new Date());
+    this.scheduleWeekEnd = getSundayOfWeek(new Date());
     this.athleteScheduleTssSubject.next(new Map());
     this.selectedAthleteSessionSubject.next(null);
     this.selectedAthlete = athlete;
@@ -247,13 +220,11 @@ export class CoachDashboardComponent implements OnInit {
   }
 
   loadAthleteVolume(athleteId: string): void {
-    const now = new Date();
-    const from = new Date(now); from.setDate(from.getDate() - 70);
     this.loadAthleteData(
       this.coachService.getAthleteVolume(
         athleteId,
-        from.toISOString().split('T')[0],
-        now.toISOString().split('T')[0],
+        dateOffsetKey(-VOLUME_WINDOW_DAYS),
+        dateOffsetKey(0),
         'week',
       ),
       this.athleteVolumeSubject,
@@ -280,7 +251,6 @@ export class CoachDashboardComponent implements OnInit {
     );
   }
 
-  // Task 3: Wrap athleteSessionsSubject.next() in ngZone.run()
   loadAthleteSessions(athleteId: string): void {
     this.athleteSessionsErrorSubject.next(false);
     this.coachService.getAthleteSessions(athleteId).subscribe({
@@ -296,13 +266,11 @@ export class CoachDashboardComponent implements OnInit {
   }
 
   loadAthletePmc(athleteId: string): void {
-    const now = new Date();
-    const from = new Date(now); from.setDate(from.getDate() - 90);
     this.loadAthleteData(
       this.coachService.getAthletePmc(
         athleteId,
-        from.toISOString().split('T')[0],
-        now.toISOString().split('T')[0]
+        dateOffsetKey(-PMC_WINDOW_DAYS),
+        dateOffsetKey(0),
       ),
       this.athletePmcSubject,
       []
@@ -310,20 +278,10 @@ export class CoachDashboardComponent implements OnInit {
   }
 
   private loadAthleteProjectionSchedule(athleteId: string): void {
-    const today = new Date().toISOString().split('T')[0];
-    const future = new Date();
-    future.setDate(future.getDate() + 30);
-    const futureStr = future.toISOString().split('T')[0];
-    this.coachService.getAthleteSchedule(athleteId, today, futureStr).subscribe({
-      next: (workouts) => {
-        const m = new Map<string, number>();
-        for (const w of workouts) {
-          if (w.status === 'PENDING' && w.tss) {
-            m.set(w.scheduledDate, (m.get(w.scheduledDate) ?? 0) + w.tss);
-          }
-        }
-        this.ngZone.run(() => this.athleteScheduleTssSubject.next(m));
-      },
+    this.coachService.getAthleteSchedule(athleteId, dateOffsetKey(0), dateOffsetKey(PROJECTION_DAYS)).subscribe({
+      next: (workouts) => this.ngZone.run(
+        () => this.athleteScheduleTssSubject.next(buildProjectionTssMap(workouts)),
+      ),
       error: () => this.ngZone.run(() => this.athleteScheduleTssSubject.next(new Map())),
     });
   }
@@ -333,20 +291,13 @@ export class CoachDashboardComponent implements OnInit {
   }
 
   loadAthleteSchedule(athleteId: string) {
-    const start = this.toDateKey(this.scheduleWeekStart);
-    const end = this.toDateKey(this.scheduleWeekEnd);
+    const start = toDateKey(this.scheduleWeekStart);
+    const end = toDateKey(this.scheduleWeekEnd);
 
     this.coachService.getAthleteSchedule(athleteId, start, end).subscribe({
       next: (data) => this.ngZone.run(() => this.scheduleSubject.next(data)),
       error: (err) => console.error('Error loading schedule', err)
     });
-  }
-
-  private toDateKey(d: Date): string {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
   }
 
   removeTag(athlete: User | null, tag: string) {
@@ -373,12 +324,12 @@ export class CoachDashboardComponent implements OnInit {
   }
 
   openShareModal() {
-    this.coachTrainings$.subscribe(trainings => {
+    this.coachTrainings$.pipe(take(1)).subscribe(trainings => {
       if (trainings.length > 0) {
         this.trainingToShare = trainings[0];
         this.isShareModalOpen = true;
       }
-    }).unsubscribe;
+    });
   }
 
   onTrainingShared() {
@@ -419,7 +370,6 @@ export class CoachDashboardComponent implements OnInit {
   onScheduled() {
     this.isScheduleModalOpen = false;
     if (this.bulkAssignAthletes.length > 0) {
-      // Refresh schedule for the currently focused athlete (if any).
       this.bulkAssignAthletes = [];
       this.multiSelectedIds = new Set();
       this.multiSelectMode = false;
@@ -431,28 +381,9 @@ export class CoachDashboardComponent implements OnInit {
 
   openSessionAnalysis(session: SessionData): void {
     this.coachService.getSessionById(session.id).subscribe({
-      next: (s: any) => this.ngZone.run(() => {
-        const saved: SavedSession = {
-          id: s.id,
-          title: s.title,
-          totalDuration: s.totalDurationSeconds,
-          avgPower: s.avgPower,
-          avgHR: s.avgHR,
-          avgCadence: s.avgCadence,
-          avgSpeed: s.avgSpeed || 0,
-          blockSummaries: s.blockSummaries || [],
-          history: [],
-          sportType: s.sportType,
-          date: new Date(s.completedAt),
-          syncedToStrava: false,
-          syncedToGarmin: false,
-          tss: s.tss ?? undefined,
-          intensityFactor: s.intensityFactor ?? undefined,
-          fitFileId: s.fitFileId ?? undefined,
-          stravaActivityId: s.stravaActivityId ?? undefined,
-        };
-        this.selectedAthleteSessionSubject.next(saved);
-      }),
+      next: (s: any) => this.ngZone.run(
+        () => this.selectedAthleteSessionSubject.next(mapSessionToSavedSession(s)),
+      ),
       error: () => {},
     });
   }

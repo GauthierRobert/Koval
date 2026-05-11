@@ -1,7 +1,7 @@
-import {ChangeDetectionStrategy, Component, ElementRef, inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, OnInit, ViewChild} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
-import {Subscription} from 'rxjs';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
 import {AgentType, ChatService, PlanTask} from '../../../services/chat.service';
 import {Training} from '../../../models/training.model';
@@ -21,16 +21,16 @@ interface AgentOption {
   styleUrl: './ai-chat-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AIChatPageComponent implements OnInit, OnDestroy {
+export class AIChatPageComponent implements OnInit {
   @ViewChild('scrollMe') private scrollContainer!: ElementRef;
 
   chatService = inject(ChatService);
   private trainingService = inject(TrainingService);
   private translate = inject(TranslateService);
+  private destroyRef = inject(DestroyRef);
   userInput = '';
   fetchedTrainings: Record<string, Training> = {};
   private nearBottom = true;
-  private subscription!: Subscription;
 
   chatSidebarOpen = false;
   selectedAgentIndex = 0;
@@ -47,23 +47,20 @@ export class AIChatPageComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.chatService.loadHistories();
 
-    this.subscription = this.chatService.chatMessages$.subscribe((messages) => {
-      if (this.nearBottom) {
-        requestAnimationFrame(() => this.scrollToBottom());
-      }
-      // Fetch full training data for any created trainings not yet loaded
-      for (const msg of messages) {
-        if (msg.createdTraining?.id && !this.fetchedTrainings[msg.createdTraining.id]) {
-          this.trainingService.getTrainingById(msg.createdTraining.id).subscribe({
-            next: (training) => this.fetchedTrainings[training.id] = training,
-          });
+    this.chatService.chatMessages$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((messages) => {
+        if (this.nearBottom) {
+          requestAnimationFrame(() => this.scrollToBottom());
         }
-      }
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.subscription?.unsubscribe();
+        for (const msg of messages) {
+          if (msg.createdTraining?.id && !this.fetchedTrainings[msg.createdTraining.id]) {
+            this.trainingService.getTrainingById(msg.createdTraining.id).subscribe({
+              next: (training) => (this.fetchedTrainings[training.id] = training),
+            });
+          }
+        }
+      });
   }
 
   onScroll(): void {

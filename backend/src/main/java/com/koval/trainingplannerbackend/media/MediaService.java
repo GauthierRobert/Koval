@@ -107,12 +107,14 @@ public class MediaService {
         media.setSizeBytes(actualSize);
         media.setConfirmed(true);
         media.setConfirmedAt(LocalDateTime.now());
+        media.setProcessingStatus(MediaProcessingStatus.PENDING);
         mediaRepository.save(media);
 
-        // Run the optimisation pipeline synchronously: variants, BlurHash, dimensions.
-        // The pipeline saves the Media doc with READY/FAILED status.
+        // Run the optimisation pipeline off-thread (variants, BlurHash, dimensions).
+        // The pipeline updates the Media doc to READY/FAILED when finished; the client
+        // sees PENDING in this response and polls (or subscribes) for the final state.
         byte[] originalBytes = blob.getContent();
-        processingService.process(media, originalBytes);
+        processingService.processAsync(media.getId(), originalBytes);
 
         return new ConfirmUploadResponse(
                 media.getId(), true, media.getSizeBytes(),

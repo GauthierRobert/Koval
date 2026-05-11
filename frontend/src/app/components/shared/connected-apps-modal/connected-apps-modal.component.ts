@@ -6,6 +6,7 @@ import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {AuthService, User} from '../../../services/auth.service';
 import {NolioSyncService} from '../../../services/nolio-sync.service';
+import {ErrorToastService} from '../../../services/error-toast.service';
 import {TranslateModule} from '@ngx-translate/core';
 import {environment} from '../../../../environments/environment';
 
@@ -22,6 +23,7 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private nolioSync = inject(NolioSyncService);
   private destroyRef = inject(DestroyRef);
+  private toast = inject(ErrorToastService);
 
   @Output() closed = new EventEmitter<void>();
 
@@ -138,7 +140,7 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
     const message = backendMessage
       ? `${label}: ${backendMessage}`
       : `${label}: connection failed (status ${err?.status ?? 'unknown'}).`;
-    alert(message);
+    this.toast.show(message, 'error');
   }
 
   toggleNolioAutoSync(enabled: boolean): void {

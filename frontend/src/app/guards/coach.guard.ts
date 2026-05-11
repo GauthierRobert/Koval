@@ -9,9 +9,8 @@ export const coachGuard: CanActivateFn = () => {
     const authService = inject(AuthService);
 
     // Fast path: user already loaded
-    const current = authService.currentUser;
-    if (current !== null) {
-        if (current.role === 'COACH') return true;
+    if (authService.currentUser !== null) {
+        if (authService.isCoach()) return true;
         router.navigate(['/dashboard']);
         return false;
     }
@@ -20,8 +19,8 @@ export const coachGuard: CanActivateFn = () => {
     return authService.user$.pipe(
         filter(u => u !== null),
         take(1),
-        map(u => {
-            if (u?.role === 'COACH') return true;
+        map(() => {
+            if (authService.isCoach()) return true;
             router.navigate(['/dashboard']);
             return false;
         }),

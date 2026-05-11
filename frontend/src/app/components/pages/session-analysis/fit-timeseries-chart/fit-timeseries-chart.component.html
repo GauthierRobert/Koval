@@ -1,0 +1,81 @@
+<div class="chart-wrap" [class.compact]="compact">
+  @if (showToggles) {
+    <div class="chart-toggles">
+      <button class="toggle-btn" [class.active]="showPrimary" (click)="toggle('showPrimary')">
+        <span class="dot power"></span> {{ primaryLabel }}
+      </button>
+      <button class="toggle-btn" [class.active]="showHR" (click)="toggle('showHR')">
+        <span class="dot hr"></span> Heart Rate
+      </button>
+      <button class="toggle-btn" [class.active]="showCadence" (click)="toggle('showCadence')">
+        <span class="dot cad"></span> Cadence
+      </button>
+      @if (sportType !== 'SWIMMING') {
+        <button class="toggle-btn" [class.active]="showEfficiency" (click)="toggle('showEfficiency')">
+          <span class="dot eff"></span> Efficiency
+        </button>
+      }
+      @if (zoneBlocks.length > 0 || blockSummaries.length > 0) {
+        <span class="toggle-sep"></span>
+        <button class="toggle-btn" [class.active]="showBlocks" (click)="toggle('showBlocks')">
+          <span class="dot blocks"></span> Blocks
+        </button>
+      }
+    </div>
+  }
+  <div class="charts-stack" #stack (mouseleave)="onMouseLeave()">
+    @if (showPrimary) {
+      <canvas #primaryCanvas class="mc primary-h"
+        (mousemove)="onHover($event)"
+        (touchstart)="onTouchStart($event)"
+        (touchend)="onTouchEnd()"
+        (touchcancel)="onTouchEnd()"></canvas>
+    }
+    @if (showHR) {
+      <canvas #hrCanvas class="mc hr-h"
+        (mousemove)="onHover($event)"
+        (touchstart)="onTouchStart($event)"
+        (touchend)="onTouchEnd()"
+        (touchcancel)="onTouchEnd()"></canvas>
+    }
+    @if (showEfficiency) {
+      <canvas #effCanvas class="mc eff-h"
+        (mousemove)="onHover($event)"
+        (touchstart)="onTouchStart($event)"
+        (touchend)="onTouchEnd()"
+        (touchcancel)="onTouchEnd()"></canvas>
+    }
+    @if (showCadence) {
+      <canvas #cadCanvas class="mc cad-h"
+        (mousemove)="onHover($event)"
+        (touchstart)="onTouchStart($event)"
+        (touchend)="onTouchEnd()"
+        (touchcancel)="onTouchEnd()"></canvas>
+    }
+    @if (_hasElevation) {
+      <canvas #elevCanvas class="mc elev-h"
+        (mousemove)="onHover($event)"
+        (touchstart)="onTouchStart($event)"
+        (touchend)="onTouchEnd()"
+        (touchcancel)="onTouchEnd()"></canvas>
+    }
+    @if (showXAxis) {
+      <canvas #xCanvas class="mc xaxis-h"></canvas>
+    }
+    @if (hoverIdx !== null && showTooltip) {
+      <div #ttEl class="tt"
+        [style.left.px]="ttX"
+        [style.top.px]="ttY"
+        [style.transform]="'translate(calc(-50% + ' + ttShift + 'px), -100%)'">
+        <div class="tt-hdr">{{ ttHeader }}</div>
+        <div class="tt-sep"></div>
+        @for (r of ttRows; track r.label) {
+          <div class="tt-row">
+            <span class="tt-lbl">{{ r.label }}</span>
+            <span class="tt-val" [style.color]="r.color">{{ r.value }}</span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

@@ -39,7 +39,17 @@ public class CacheConfig {
                 // Goals for an athlete; evicted on goal mutation.
                 build("athleteGoals", 50_000, Duration.ofMinutes(15)),
                 // Coach-defined zone systems; evicted on system mutation.
-                build("coachZoneSystems", 5_000, Duration.ofMinutes(30))
+                build("coachZoneSystems", 5_000, Duration.ofMinutes(30)),
+                // Active member ids for a club (announcement fan-out, feed enrichment).
+                // Evicted on join/leave/approve/reject/role-change.
+                build("clubActiveMemberIds", 10_000, Duration.ofMinutes(10)),
+                // Zone systems visible to an athlete (via their coaches). Evicting cleanly
+                // would require knowing every athlete linked to a coach, so we rely on
+                // a short TTL instead.
+                build("athleteZoneSystems", 50_000, Duration.ofMinutes(5)),
+                // Zone systems from coaches in clubs the user belongs to. TTL-only for
+                // the same fan-out reason as athleteZoneSystems.
+                build("clubCoachZoneSystems", 50_000, Duration.ofMinutes(5))
         ));
         return manager;
     }

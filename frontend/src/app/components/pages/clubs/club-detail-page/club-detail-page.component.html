@@ -134,7 +134,7 @@
       }
       @if (activeTab === 'stats') {
         <div role="tabpanel" id="tabpanel-stats" aria-labelledby="tab-btn-stats">
-          <app-club-stats-tab></app-club-stats-tab>
+          <app-club-stats-tab [club]="club"></app-club-stats-tab>
         </div>
       }
       @if (activeTab === 'leaderboard') {

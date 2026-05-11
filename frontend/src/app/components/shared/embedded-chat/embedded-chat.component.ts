@@ -2,18 +2,19 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  DestroyRef,
   EventEmitter,
   inject,
   Input,
   OnChanges,
-  OnDestroy,
   OnInit,
   Output,
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { forkJoin, Subscription } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
 import { ChatApiService } from '../../../services/chat-api.service';
 import { ChatRoomCacheService } from '../../../services/chat-room-cache.service';
@@ -64,7 +65,7 @@ import { ChatMessageListComponent } from '../chat-message-list/chat-message-list
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
+export class EmbeddedChatComponent implements OnInit, OnChanges {
   @Input({ required: true }) scope!: ChatRoomScope;
   @Input({ required: true }) clubId!: string;
   @Input() refId?: string;
@@ -92,15 +93,13 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
   private hasMoreOlder = true;
   private roomId: string | null = null;
   private cacheKey: string | null = null;
-  private subs = new Subscription();
+  private destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
     this.resolveRoom();
-    this.subs.add(
-      this.sse.onChatMessage$.subscribe((msg) => {
-        this.handleIncomingMessage(msg);
-      }),
-    );
+    this.sse.onChatMessage$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((msg) => this.handleIncomingMessage(msg));
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -108,8 +107,6 @@ export class EmbeddedChatComponent implements OnInit, OnChanges, OnDestroy {
       this.resolveRoom();
     }
   }
-
-  ngOnDestroy(): void { this.subs.unsubscribe(); }
 
   onSend(text: string): void {
     if (!this.roomId) return;
