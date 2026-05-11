@@ -36,44 +36,48 @@
       }
     </header>
 
-    <section class="iterations-bar glass">
-      <div class="iterations-bar__select">
-        <label class="form-label">{{ 'CLUB_TESTS.ITERATION_LABEL' | translate }}</label>
-        <select
-          class="form-input"
-          [ngModel]="(selectedIterationId$ | async) ?? ''"
-          (ngModelChange)="onIterationChange($event)"
-          data-testid="iteration-select">
-          @for (it of (iterations$ | async) ?? []; track it.id) {
-            <option [value]="it.id">
-              {{ it.label }} · {{ (it.status === 'OPEN' ? 'CLUB_TESTS.OPEN_STATUS' : 'CLUB_TESTS.CLOSED_STATUS') | translate }}
-            </option>
-          }
-        </select>
-        <p class="iterations-bar__hint">{{ 'CLUB_TESTS.ITERATION_HINT' | translate }}</p>
-      </div>
+    <div class="iterations-bar">
+      <section class="iterations-card glass">
+        <div class="iterations-card__body">
+          <label class="form-label">{{ 'CLUB_TESTS.ITERATION_LABEL' | translate }}</label>
+          <select
+            class="form-input"
+            [ngModel]="(selectedIterationId$ | async) ?? ''"
+            (ngModelChange)="onIterationChange($event)"
+            data-testid="iteration-select">
+            @for (it of (iterations$ | async) ?? []; track it.id) {
+              <option [value]="it.id">
+                {{ it.label }} · {{ (it.status === 'OPEN' ? 'CLUB_TESTS.OPEN_STATUS' : 'CLUB_TESTS.CLOSED_STATUS') | translate }}
+              </option>
+            }
+          </select>
+          <p class="iterations-bar__hint">{{ 'CLUB_TESTS.ITERATION_HINT' | translate }}</p>
+        </div>
+      </section>
 
       @if (isCoach) {
-        <div class="iterations-bar__new">
-          <label class="form-label">{{ 'CLUB_TESTS.START_ITERATION' | translate }}</label>
-          <div class="iterations-bar__new-inputs">
-            <input
-              class="form-input"
-              type="text"
-              [(ngModel)]="newIterationLabel"
-              [placeholder]="'CLUB_TESTS.NEW_ITERATION_PLACEHOLDER' | translate"
-              data-testid="input-new-iteration-label" />
-            <button class="btn-primary"
-                    (click)="startNewIteration()"
-                    [disabled]="!newIterationLabel.trim()"
-                    data-testid="btn-start-iteration">
-              + {{ 'CLUB_TESTS.START_ITERATION' | translate }}
-            </button>
+        <section class="iterations-card glass">
+          <div class="iterations-card__body">
+            <label class="form-label">{{ 'CLUB_TESTS.START_ITERATION' | translate }}</label>
+            <div class="iterations-bar__new-inputs">
+              <input
+                class="form-input"
+                type="text"
+                [(ngModel)]="newIterationLabel"
+                [placeholder]="'CLUB_TESTS.NEW_ITERATION_PLACEHOLDER' | translate"
+                data-testid="input-new-iteration-label" />
+              <button class="btn-primary"
+                      (click)="startNewIteration()"
+                      [disabled]="!newIterationLabel.trim()"
+                      data-testid="btn-start-iteration">
+                + {{ 'CLUB_TESTS.START_ITERATION' | translate }}
+              </button>
+            </div>
+            <p class="iterations-bar__hint">{{ 'CLUB_TESTS.START_ITERATION_HINT' | translate }}</p>
           </div>
-          <p class="iterations-bar__hint">{{ 'CLUB_TESTS.START_ITERATION_HINT' | translate }}</p>
-        </div>
+        </section>
       }
-    </section>
+    </div>
 
     @let iterations = (iterations$ | async) ?? [];
     @let selectedIterId = selectedIterationId$ | async;

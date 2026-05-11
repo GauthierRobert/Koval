@@ -56,31 +56,34 @@
   opacity: 0.55;
 }
 
-.item-favorite {
-  position: absolute;
-  right: 6px;
-  top: 6px;
-  z-index: 1;
-}
-
-/* Slide the action row left so it doesn't collide with the favorite star. */
-.history-item:not(.is-favorite) .item-actions,
-.history-item.is-favorite .item-actions {
-  right: 32px;
-}
-
+/* Single action row: edit / duplicate / delete (hover-only) + favorite star
+   (always visible). Sharing one flex container guarantees every control sits
+   on the same vertical baseline. */
 .item-actions {
   position: absolute;
-  right: 4px;
+  right: 6px;
   top: 4px;
   display: flex;
+  align-items: center;
   gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-md);
+  z-index: 2;
   flex-shrink: 0;
+}
+
+.item-actions .hover-action {
   opacity: 0;
   transition: opacity var(--transition-fast);
 }
 
 .history-item:hover .item-actions {
+  background: color-mix(in oklch, var(--bg-color) 78%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.history-item:hover .item-actions .hover-action {
   opacity: 1;
 }
 
@@ -319,7 +322,7 @@
     font-size: 8px;
   }
 
-  .item-actions {
+  .item-actions .hover-action {
     opacity: 1;
   }
 }

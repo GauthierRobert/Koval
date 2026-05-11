@@ -31,7 +31,7 @@ const EXPIRY_OPTIONS = [3, 7, 14];
     <div class="composer-card" data-testid="spotlight-composer">
       <div class="composer-header">
         <h4>{{ 'CLUB_FEED.SPOTLIGHT_COMPOSER_TITLE' | translate }}</h4>
-        <button class="composer-close" (click)="cancel.emit()" [attr.aria-label]="'COMMON.CANCEL' | translate">Ãƒâ€”</button>
+        <button class="composer-close" (click)="cancel.emit()" [attr.aria-label]="'COMMON.CANCEL' | translate">×</button>
       </div>
 
       <div class="composer-row">

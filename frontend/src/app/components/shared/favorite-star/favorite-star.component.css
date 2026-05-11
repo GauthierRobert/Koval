@@ -1,6 +1,6 @@
 .fav-btn {
     background: none;
-    border: 1px solid transparent;
+    border: none;
     border-radius: var(--radius-sm);
     color: var(--text-dim);
     cursor: pointer;
@@ -8,7 +8,7 @@
     align-items: center;
     justify-content: center;
     padding: 0;
-    transition: all var(--transition-fast);
+    transition: color var(--transition-fast), transform var(--transition-fast);
     flex-shrink: 0;
 }
 
@@ -20,8 +20,6 @@
 
 .fav-btn:hover {
     color: var(--accent-color);
-    background: var(--accent-subtle);
-    border-color: var(--accent-border);
 }
 
 .fav-btn:hover svg {
@@ -38,7 +36,8 @@
 
 .fav-btn:focus-visible {
     outline: 2px solid var(--accent-color);
-    outline-offset: 1px;
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
 }
 
 /* ── Sizes ──────────────────────────────────────────────── */

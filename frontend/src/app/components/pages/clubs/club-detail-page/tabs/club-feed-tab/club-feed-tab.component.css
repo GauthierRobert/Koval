@@ -85,7 +85,7 @@
 
 .composer-spotlight-btn {
   padding: 6px 14px;
-  border: 1px solid var(--dev-accent-color);
+  border: none;
   border-radius: var(--radius-sm);
   background: rgba(245, 158, 11, 0.08);
   color: var(--dev-accent-color);

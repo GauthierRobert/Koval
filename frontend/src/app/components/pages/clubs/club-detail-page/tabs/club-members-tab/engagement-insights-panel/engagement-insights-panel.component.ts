@@ -87,7 +87,7 @@ type SortColumn = 'name' | 'comments' | 'reactions' | 'sessions' | 'lastActive';
     </section>
   `,
   styles: `
-    .insights-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: var(--space-md); margin-bottom: var(--space-md); }
+    .insights-panel { background: var(--glass-bg); border: none; border-radius: var(--radius-md); padding: var(--space-md); margin-bottom: var(--space-md); }
     .insights-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-sm); }
     .insights-title { display: flex; align-items: center; gap: 8px; color: var(--text-color); }
     .insights-title h3 { font-size: var(--text-sm); font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.06em; }

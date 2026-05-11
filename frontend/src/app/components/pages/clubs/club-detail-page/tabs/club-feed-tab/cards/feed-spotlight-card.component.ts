@@ -95,7 +95,7 @@ const BADGE_GLYPH: Record<SpotlightBadge, string> = {
         </span>
         @if (event.spotlightExpiresAt) {
           <span class="spotlight-expires">
-            Ãƒâ€šÃ‚Â· {{ 'CLUB_FEED.SPOTLIGHT_EXPIRES' | translate }} {{ daysRemainingLabel }}
+            · {{ 'CLUB_FEED.SPOTLIGHT_EXPIRES' | translate }} {{ daysRemainingLabel }}
           </span>
         }
       </div>

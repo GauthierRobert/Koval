@@ -20,7 +20,6 @@ import {WorkoutVisualizationComponent} from '../../shared/workout-visualization/
 import {SidebarComponent} from '../../layout/sidebar/sidebar.component';
 import {FilterPillOption, FilterPillsComponent} from '../../shared/filter-pills/filter-pills.component';
 import {CreateWithAiModalComponent} from '../../shared/create-with-ai-modal/create-with-ai-modal.component';
-import {FavoriteStarComponent} from '../../shared/favorite-star/favorite-star.component';
 
 @Component({
   selector: 'app-workout-selection',
@@ -33,7 +32,6 @@ import {FavoriteStarComponent} from '../../shared/favorite-star/favorite-star.co
     SidebarComponent,
     FilterPillsComponent,
     CreateWithAiModalComponent,
-    FavoriteStarComponent,
   ],
   templateUrl: './workout-selection.component.html',
   styleUrl: './workout-selection.component.css',
