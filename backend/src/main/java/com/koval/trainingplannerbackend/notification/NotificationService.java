@@ -16,6 +16,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class NotificationService {
@@ -130,36 +133,50 @@ public class NotificationService {
         }
 
         String sendUrl = "/v1/projects/" + fcmConfig.getProjectId() + "/messages:send";
-        int successCount = 0;
-        int failureCount = 0;
-        List<String> staleTokens = new ArrayList<>();
+        AtomicInteger successCount = new AtomicInteger();
+        AtomicInteger failureCount = new AtomicInteger();
+        ConcurrentLinkedQueue<String> staleTokens = new ConcurrentLinkedQueue<>();
 
-        for (String token : tokens) {
-            Map<String, Object> message = buildMessage(token, title, body, data);
-            try {
-                fcmRestClient.post()
-                        .uri(sendUrl)
-                        .header("Authorization", "Bearer " + accessToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(Map.of("message", message))
-                        .retrieve()
-                        .toBodilessEntity();
-                successCount++;
-            } catch (org.springframework.web.client.RestClientException e) {
-                failureCount++;
-                String errorMsg = e.getMessage();
-                log.warn("FCM send failed for token: {}", errorMsg);
-                if (errorMsg != null && (errorMsg.contains("UNREGISTERED") || errorMsg.contains("INVALID_ARGUMENT"))) {
-                    staleTokens.add(token);
-                }
-            }
-        }
+        // Fan out token sends in parallel — one slow/timeout token shouldn't block the rest.
+        // Uses the common ForkJoinPool which is sized to CPU count; FCM POSTs are short-lived
+        // and HTTP/JSON-bound, so we trade a bit of pool pressure for substantially lower
+        // total latency on large recipient lists.
+        List<CompletableFuture<Void>> futures = tokens.stream()
+                .map(token -> CompletableFuture.runAsync(() -> sendOne(
+                        token, sendUrl, accessToken, title, body, data,
+                        successCount, failureCount, staleTokens)))
+                .toList();
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
 
         if (!staleTokens.isEmpty()) {
-            removeStaleTokens(staleTokens, tokensByUser);
+            removeStaleTokens(new ArrayList<>(staleTokens), tokensByUser);
         }
 
-        log.info("FCM notification sent: {} success, {} failure", successCount, failureCount);
+        log.info("FCM notification sent: {} success, {} failure", successCount.get(), failureCount.get());
+    }
+
+    private void sendOne(String token, String sendUrl, String accessToken,
+                         String title, String body, Map<String, String> data,
+                         AtomicInteger successCount, AtomicInteger failureCount,
+                         ConcurrentLinkedQueue<String> staleTokens) {
+        Map<String, Object> message = buildMessage(token, title, body, data);
+        try {
+            fcmRestClient.post()
+                    .uri(sendUrl)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("message", message))
+                    .retrieve()
+                    .toBodilessEntity();
+            successCount.incrementAndGet();
+        } catch (org.springframework.web.client.RestClientException e) {
+            failureCount.incrementAndGet();
+            String errorMsg = e.getMessage();
+            log.warn("FCM send failed for token: {}", errorMsg);
+            if (errorMsg != null && (errorMsg.contains("UNREGISTERED") || errorMsg.contains("INVALID_ARGUMENT"))) {
+                staleTokens.add(token);
+            }
+        }
     }
 
     private Map<String, Object> buildMessage(String token, String title, String body, Map<String, String> data) {

@@ -11,4 +11,6 @@ public interface ClubMembershipRepository extends MongoRepository<ClubMembership
     List<ClubMembership> findByClubIdAndStatus(String clubId, ClubMemberStatus status);
     Optional<ClubMembership> findByClubIdAndUserId(String clubId, String userId);
     List<ClubMembership> findByClubIdInAndStatus(List<String> clubIds, ClubMemberStatus status);
+
+    boolean existsByClubIdInAndUserIdAndStatus(List<String> clubIds, String userId, ClubMemberStatus status);
 }

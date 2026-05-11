@@ -11,6 +11,7 @@ import com.koval.trainingplannerbackend.training.metrics.PowerCurveService;
 import com.koval.trainingplannerbackend.training.metrics.PowerCurveService.VolumeEntry;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -49,8 +50,9 @@ public class McpHistoryTools {
             @ToolParam(description = "Maximum number of sessions to return (default 10, max 50)") Integer limit) {
         String userId = SecurityUtils.getCurrentUserId();
         int effectiveLimit = (limit != null && limit > 0) ? Math.min(limit, 50) : 10;
-        return sessionRepository.findByUserIdOrderByCompletedAtDesc(userId).stream()
-                .limit(effectiveLimit)
+        return sessionRepository
+                .findByUserIdOrderByCompletedAtDesc(userId, PageRequest.of(0, effectiveLimit))
+                .stream()
                 .map(SessionSummary::from)
                 .toList();
     }

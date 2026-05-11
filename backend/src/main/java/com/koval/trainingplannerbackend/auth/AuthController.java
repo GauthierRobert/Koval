@@ -7,6 +7,8 @@ import jakarta.validation.constraints.Positive;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,6 +39,7 @@ public class AuthController {
     private final AccountLinkingService accountLinkingService;
     private final UserResponseMapper userResponseMapper;
     private final UserRepository userRepository;
+    private final Environment environment;
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -44,15 +47,19 @@ public class AuthController {
     @Value("${jwt.expiration:86400000}")
     private long jwtExpiration;
 
+    private volatile SecretKey signingKey;
+
     public AuthController(StravaOAuthService stravaOAuthService, GoogleOAuthService googleOAuthService,
             UserService userService, AccountLinkingService accountLinkingService,
-            UserResponseMapper userResponseMapper, UserRepository userRepository) {
+            UserResponseMapper userResponseMapper, UserRepository userRepository,
+            Environment environment) {
         this.stravaOAuthService = stravaOAuthService;
         this.googleOAuthService = googleOAuthService;
         this.userService = userService;
         this.accountLinkingService = accountLinkingService;
         this.userResponseMapper = userResponseMapper;
         this.userRepository = userRepository;
+        this.environment = environment;
     }
 
     // --- Strava OAuth ---
@@ -124,7 +131,8 @@ public class AuthController {
             response.put("user", userResponseMapper.userToMap(user));
 
             return ResponseEntity.ok(response);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            log.warn("Google authentication failed ({}): {}", e.getClass().getSimpleName(), e.getMessage(), e);
             Map<String, Object> error = new HashMap<>();
             error.put("error", "Authentication failed: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
@@ -154,9 +162,11 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.FOUND)
                     .header("Location", deepLink)
                     .build();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            log.warn("Google mobile authentication failed ({}): {}", e.getClass().getSimpleName(), e.getMessage(), e);
+            String message = e.getMessage() != null ? e.getMessage() : "authentication_failed";
             String errorLink = "koval://auth/callback?error=" +
-                    java.net.URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
+                    java.net.URLEncoder.encode(message, StandardCharsets.UTF_8);
             return ResponseEntity.status(HttpStatus.FOUND)
                     .header("Location", errorLink)
                     .build();
@@ -170,6 +180,9 @@ public class AuthController {
 
     @PostMapping("/dev/login")
     public ResponseEntity<Map<String, Object>> devLogin(@RequestBody DevLoginRequest request) {
+        if (environment.acceptsProfiles(Profiles.of("prod"))) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
         String userId = request.userId();
         if (userId == null || userId.isBlank()) {
             return ResponseEntity.badRequest().build();
@@ -306,16 +319,23 @@ public class AuthController {
     }
 
     private String generateJwtToken(User user) {
-        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-
         return Jwts.builder()
                 .subject(user.getId())
                 .claim("role", user.getRole().name())
                 .claim("name", user.getDisplayName())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
-                .signWith(key)
+                .signWith(signingKey())
                 .compact();
+    }
+
+    private SecretKey signingKey() {
+        SecretKey key = signingKey;
+        if (key == null) {
+            key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+            signingKey = key;
+        }
+        return key;
     }
 
     public record ZoneReferenceRequest(String zoneSystemId, int value) {}

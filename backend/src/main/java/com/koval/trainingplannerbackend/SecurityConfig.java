@@ -5,6 +5,8 @@ import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -23,6 +25,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final Environment environment;
 
     @Value("${cors.allowed-origins:http://localhost:4200,http://localhost:3000}")
     private String allowedOriginsRaw;
@@ -30,12 +33,14 @@ public class SecurityConfig {
     @Value("${oauth.issuer:http://localhost:8080}")
     private String issuer;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, Environment environment) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.environment = environment;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        boolean prod = environment.acceptsProfiles(Profiles.of("prod"));
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
@@ -49,23 +54,26 @@ public class SecurityConfig {
                             }
                             response.sendError(401, "Unauthorized");
                         }))
-                .authorizeHttpRequests(auth -> auth
-                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/strava", "/api/auth/strava/callback",
-                                "/api/auth/google", "/api/auth/google/callback",
-                                "/api/auth/google/mobile-callback",
-                                "/api/auth/dev/login").permitAll()
-                        .requestMatchers("/api/integration/strava/webhook", "/api/integration/strava/webhook/**").permitAll()
-                        .requestMatchers("/api/webhooks/terra").permitAll()
-                        .requestMatchers("/api/integration/nolio/callback").permitAll()
-                        .requestMatchers("/.well-known/oauth-authorization-server",
-                                "/.well-known/oauth-protected-resource",
-                                "/.well-known/oauth-protected-resource/**",
-                                "/oauth/register", "/oauth/authorize", "/oauth/token").permitAll()
-                        .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/skills", "/api/skills/**").permitAll()
-                        .anyRequest().authenticated())
+                .authorizeHttpRequests(auth -> {
+                    auth.dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
+                            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                            .requestMatchers("/api/auth/strava", "/api/auth/strava/callback",
+                                    "/api/auth/google", "/api/auth/google/callback",
+                                    "/api/auth/google/mobile-callback").permitAll();
+                    if (!prod) {
+                        auth.requestMatchers("/api/auth/dev/login").permitAll();
+                    }
+                    auth.requestMatchers("/api/integration/strava/webhook", "/api/integration/strava/webhook/**").permitAll()
+                            .requestMatchers("/api/webhooks/terra").permitAll()
+                            .requestMatchers("/api/integration/nolio/callback").permitAll()
+                            .requestMatchers("/.well-known/oauth-authorization-server",
+                                    "/.well-known/oauth-protected-resource",
+                                    "/.well-known/oauth-protected-resource/**",
+                                    "/oauth/register", "/oauth/authorize", "/oauth/token").permitAll()
+                            .requestMatchers("/actuator/health").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/skills", "/api/skills/**").permitAll()
+                            .anyRequest().authenticated();
+                })
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

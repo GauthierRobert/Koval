@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class StravaKudosService {
@@ -51,31 +52,30 @@ public class StravaKudosService {
             throw new IllegalStateException("Kudos already given by this user");
         }
 
+        List<ClubFeedEvent.CompletionEntry> targets = event.getCompletions().stream()
+                .filter(c -> c.stravaActivityId() != null)
+                .filter(c -> !c.userId().equals(requestingUserId))
+                .toList();
+
+        // Each Strava POST is independent network I/O — fan out so total latency
+        // is dominated by the slowest call rather than the sum of all calls.
+        List<CompletableFuture<KudosCallOutcome>> futures = targets.stream()
+                .map(c -> CompletableFuture.supplyAsync(() -> postOneKudos(requestingUser, c)))
+                .toList();
+
         List<KudosResponse.KudosResultDto> results = new ArrayList<>();
         int successCount = 0;
         int failCount = 0;
+        LocalDateTime now = LocalDateTime.now();
 
-        for (ClubFeedEvent.CompletionEntry completion : event.getCompletions()) {
-            if (completion.stravaActivityId() == null) continue;
-            if (completion.userId().equals(requestingUserId)) continue; // skip self
-
-            try {
-                stravaApiClient.giveKudos(requestingUser, completion.stravaActivityId());
-                results.add(new KudosResponse.KudosResultDto(
-                        completion.displayName(), completion.stravaActivityId(), true, null));
-                event.getKudosResults().add(new ClubFeedEvent.KudosResult(
-                        completion.userId(), completion.stravaActivityId(),
-                        requestingUserId, true, null, LocalDateTime.now()));
-                successCount++;
-            } catch (Exception e) {
-                log.warn("Failed to give kudos to activity {}: {}", completion.stravaActivityId(), e.getMessage());
-                results.add(new KudosResponse.KudosResultDto(
-                        completion.displayName(), completion.stravaActivityId(), false, e.getMessage()));
-                event.getKudosResults().add(new ClubFeedEvent.KudosResult(
-                        completion.userId(), completion.stravaActivityId(),
-                        requestingUserId, false, e.getMessage(), LocalDateTime.now()));
-                failCount++;
-            }
+        for (CompletableFuture<KudosCallOutcome> f : futures) {
+            KudosCallOutcome o = f.join();
+            results.add(new KudosResponse.KudosResultDto(
+                    o.completion.displayName(), o.completion.stravaActivityId(), o.success, o.errorMessage));
+            event.getKudosResults().add(new ClubFeedEvent.KudosResult(
+                    o.completion.userId(), o.completion.stravaActivityId(),
+                    requestingUserId, o.success, o.errorMessage, now));
+            if (o.success) successCount++; else failCount++;
         }
 
         event.getKudosGivenBy().add(requestingUserId);
@@ -87,6 +87,18 @@ public class StravaKudosService {
 
         return new KudosResponse(results, successCount, failCount);
     }
+
+    private KudosCallOutcome postOneKudos(User requestingUser, ClubFeedEvent.CompletionEntry completion) {
+        try {
+            stravaApiClient.giveKudos(requestingUser, completion.stravaActivityId());
+            return new KudosCallOutcome(completion, true, null);
+        } catch (RuntimeException e) {
+            log.warn("Failed to give kudos to activity {}: {}", completion.stravaActivityId(), e.getMessage());
+            return new KudosCallOutcome(completion, false, e.getMessage());
+        }
+    }
+
+    private record KudosCallOutcome(ClubFeedEvent.CompletionEntry completion, boolean success, String errorMessage) {}
 
     private record KudosUpdatePayload(String feedEventId, String givenByUserId, int successCount) {}
 }

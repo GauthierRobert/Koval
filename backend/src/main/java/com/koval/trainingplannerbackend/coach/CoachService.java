@@ -149,7 +149,11 @@ public class CoachService {
     private OriginRef resolveGroupOrigin(String coachId, String groupId, List<String> athleteIds) {
         String name = null;
         if (groupId != null && !groupId.isBlank()) {
-            try { name = groupService.getGroupById(groupId).getName(); } catch (Exception ignored) {}
+            try {
+                name = groupService.getGroupById(groupId).getName();
+            } catch (ResourceNotFoundException ignored) {
+                // Group was deleted between assignment request and lookup — fall through to infer.
+            }
         }
         if (name != null) return new OriginRef(groupId, name);
 
@@ -227,16 +231,20 @@ public class CoachService {
      * Check whether a coach has access to a given athlete (via groups or clubs).
      */
     public boolean isCoachOfAthlete(String coachId, String athleteId) {
-        // Check group-based ownership
         if (groupService.getAthleteIdsForCoach(coachId).contains(athleteId)) {
             return true;
         }
-        // Check club-based ownership (coach/admin/owner in a club where athlete is a member)
-        return clubMembershipService.getMyClubRoles(coachId).stream()
+        List<String> managedClubIds = clubMembershipService.getMyClubRoles(coachId).stream()
                 .filter(r -> r.role() == ClubMemberRole.COACH
                         || r.role() == ClubMemberRole.ADMIN
                         || r.role() == ClubMemberRole.OWNER)
-                .anyMatch(r -> clubMembershipService.getActiveMemberIds(r.clubId()).contains(athleteId));
+                .map(MyClubRoleEntry::clubId)
+                .toList();
+        if (managedClubIds.isEmpty()) {
+            return false;
+        }
+        return clubMembershipRepository.existsByClubIdInAndUserIdAndStatus(
+                managedClubIds, athleteId, ClubMemberStatus.ACTIVE);
     }
 
     /**

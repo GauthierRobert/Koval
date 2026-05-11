@@ -13,13 +13,20 @@ import com.koval.trainingplannerbackend.training.history.AnalyticsService.PmcDat
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
 import com.koval.trainingplannerbackend.training.metrics.PowerCurveService;
+import com.koval.trainingplannerbackend.training.TrainingRepository;
+import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * MCP tool adapter for coach operations.
@@ -31,6 +38,7 @@ public class McpCoachTools {
     private final CoachService coachService;
     private final ScheduledWorkoutService scheduledWorkoutService;
     private final TrainingService trainingService;
+    private final TrainingRepository trainingRepository;
     private final UserService userService;
     private final CompletedSessionRepository sessionRepository;
     private final AnalyticsService analyticsService;
@@ -39,6 +47,7 @@ public class McpCoachTools {
     public McpCoachTools(CoachService coachService,
                          ScheduledWorkoutService scheduledWorkoutService,
                          TrainingService trainingService,
+                         TrainingRepository trainingRepository,
                          UserService userService,
                          CompletedSessionRepository sessionRepository,
                          AnalyticsService analyticsService,
@@ -46,6 +55,7 @@ public class McpCoachTools {
         this.coachService = coachService;
         this.scheduledWorkoutService = scheduledWorkoutService;
         this.trainingService = trainingService;
+        this.trainingRepository = trainingRepository;
         this.userService = userService;
         this.sessionRepository = sessionRepository;
         this.analyticsService = analyticsService;
@@ -82,11 +92,12 @@ public class McpCoachTools {
             @ToolParam(description = "Athlete ID") String athleteId,
             @ToolParam(description = "Start date inclusive (YYYY-MM-DD)") LocalDate from,
             @ToolParam(description = "End date inclusive (YYYY-MM-DD)") LocalDate to) {
-        return scheduledWorkoutService.getAthleteSchedule(athleteId, from, to).stream()
-                .map(sw -> {
-                    String title = resolveTitle(sw.getTrainingId());
-                    return McpSchedulingTools.ScheduleSummary.from(sw, title);
-                }).toList();
+        List<ScheduledWorkout> workouts = scheduledWorkoutService.getAthleteSchedule(athleteId, from, to);
+        Map<String, String> titles = batchResolveTitles(workouts);
+        return workouts.stream()
+                .map(sw -> McpSchedulingTools.ScheduleSummary.from(
+                        sw, titles.getOrDefault(sw.getTrainingId(), "Unknown")))
+                .toList();
     }
 
     @Tool(description = "Get a coached athlete's profile: name, FTP, weight, threshold pace, swim CSS, and current training load (CTL/ATL/TSB). Requires the current user to be the athlete's coach.")
@@ -105,8 +116,9 @@ public class McpCoachTools {
         String coachId = SecurityUtils.getCurrentUserId();
         verifyCoach(coachId, athleteId);
         int effectiveLimit = (limit != null && limit > 0) ? Math.min(limit, 50) : 10;
-        return sessionRepository.findByUserIdOrderByCompletedAtDesc(athleteId).stream()
-                .limit(effectiveLimit)
+        return sessionRepository
+                .findByUserIdOrderByCompletedAtDesc(athleteId, PageRequest.of(0, effectiveLimit))
+                .stream()
                 .map(McpHistoryTools.SessionSummary::from)
                 .toList();
     }
@@ -149,12 +161,16 @@ public class McpCoachTools {
         }
     }
 
-    private String resolveTitle(String trainingId) {
-        if (trainingId == null) return "Unknown";
-        try {
-            return trainingService.getTrainingById(trainingId).getTitle();
-        } catch (Exception e) {
-            return "Unknown";
+    private Map<String, String> batchResolveTitles(List<ScheduledWorkout> workouts) {
+        Set<String> trainingIds = workouts.stream()
+                .map(ScheduledWorkout::getTrainingId)
+                .filter(id -> id != null && !id.isBlank())
+                .collect(Collectors.toSet());
+        if (trainingIds.isEmpty()) return Map.of();
+        Map<String, String> titles = new HashMap<>(trainingIds.size());
+        for (Training t : trainingRepository.findAllById(new ArrayList<>(trainingIds))) {
+            titles.put(t.getId(), t.getTitle());
         }
+        return titles;
     }
 }

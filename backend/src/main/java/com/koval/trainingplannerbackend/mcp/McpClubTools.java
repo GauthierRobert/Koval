@@ -72,13 +72,20 @@ public class McpClubTools {
         this.insightsService = insightsService;
     }
 
-    @Tool(description = "List club training sessions in a date range. Returns scheduled group workouts with title, sport, date/time, and participant info.")
+    private static final int MAX_SESSION_WINDOW_DAYS = 180;
+    private static final int MAX_MEMBER_LIST_SIZE = 200;
+
+    @Tool(description = "List club training sessions in a date range. Returns scheduled group workouts with title, sport, date/time, and participant info. The window is capped at 180 days; pass a tighter range for large clubs to avoid noisy results.")
     public Object listClubSessions(
             @ToolParam(description = "Club ID") String clubId,
             @ToolParam(description = "Start date (YYYY-MM-DD)") LocalDate from,
             @ToolParam(description = "End date (YYYY-MM-DD)") LocalDate to) {
         if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
         if (from == null || to == null) return "Error: from and to dates are required.";
+        if (to.isBefore(from)) return "Error: 'to' must be on or after 'from'.";
+        if (java.time.temporal.ChronoUnit.DAYS.between(from, to) > MAX_SESSION_WINDOW_DAYS) {
+            return "Error: range too wide — maximum " + MAX_SESSION_WINDOW_DAYS + " days. Narrow the window and call again.";
+        }
 
         String userId = SecurityUtils.getCurrentUserId();
         List<ClubTrainingSession> sessions = sessionService.listSessions(
@@ -144,12 +151,14 @@ public class McpClubTools {
         return "Session cancelled.";
     }
 
-    @Tool(description = "List active club members with their roles (OWNER, ADMIN, COACH, MEMBER).")
+    @Tool(description = "List active club members with their roles (OWNER, ADMIN, COACH, MEMBER). For very large clubs the list is truncated to the first 200 members; ask for a specific name or role if you need more.")
     public Object listClubMembers(
             @ToolParam(description = "Club ID") String clubId) {
         if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
         String userId = SecurityUtils.getCurrentUserId();
-        return membershipService.getMembers(userId, clubId);
+        List<ClubMemberResponse> members = membershipService.getMembers(userId, clubId);
+        if (members.size() <= MAX_MEMBER_LIST_SIZE) return members;
+        return members.subList(0, MAX_MEMBER_LIST_SIZE);
     }
 
     @Tool(description = "Get full detail of a single club: name, description, location, logo, visibility, member count, owner, and the current user's membership status/role within it.")

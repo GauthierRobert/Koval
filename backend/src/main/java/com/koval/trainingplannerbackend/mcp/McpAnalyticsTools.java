@@ -6,7 +6,8 @@ import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkoutService;
 import com.koval.trainingplannerbackend.mcp.render.MarkdownChartRenderer;
 import com.koval.trainingplannerbackend.mcp.render.MarkdownChartRenderer.Row;
-import com.koval.trainingplannerbackend.training.TrainingService;
+import com.koval.trainingplannerbackend.training.TrainingRepository;
+import com.koval.trainingplannerbackend.training.model.Training;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService.PmcDataPoint;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
@@ -26,6 +27,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * MCP tool adapter that returns ready-to-render Markdown — bar charts, sparklines,
@@ -40,18 +43,18 @@ public class McpAnalyticsTools {
     private final AnalyticsService analyticsService;
     private final SessionService sessionService;
     private final ScheduledWorkoutService scheduledWorkoutService;
-    private final TrainingService trainingService;
+    private final TrainingRepository trainingRepository;
 
     public McpAnalyticsTools(PowerCurveService powerCurveService,
                              AnalyticsService analyticsService,
                              SessionService sessionService,
                              ScheduledWorkoutService scheduledWorkoutService,
-                             TrainingService trainingService) {
+                             TrainingRepository trainingRepository) {
         this.powerCurveService = powerCurveService;
         this.analyticsService = analyticsService;
         this.sessionService = sessionService;
         this.scheduledWorkoutService = scheduledWorkoutService;
-        this.trainingService = trainingService;
+        this.trainingRepository = trainingRepository;
     }
 
     @Tool(description = "Render a Markdown power curve report (bar chart of best mean-maximal watts at each standard duration: 5s, 15s, 30s, 1m, 2m, 5m, 10m, 20m, 30m, 1h, 1.5h, 2h) for the user's cycling sessions in a date range. Output is a fenced code block with unicode block bars — drop directly into a chat reply.")
@@ -126,12 +129,13 @@ public class McpAnalyticsTools {
         LocalDate monday = weekStart.minusDays((weekStart.getDayOfWeek().getValue() - 1));
         LocalDate sunday = monday.plusDays(6);
         List<ScheduledWorkout> workouts = scheduledWorkoutService.getAthleteSchedule(userId, monday, sunday);
+        Map<String, String> titles = batchResolveTitles(workouts);
 
         Map<DayOfWeek, List<String>> entries = new HashMap<>();
         workouts.stream()
                 .filter(sw -> sw.getScheduledDate() != null)
                 .forEach(sw -> {
-                    String title = resolveTitle(sw.getTrainingId());
+                    String title = titles.getOrDefault(sw.getTrainingId(), "Unknown");
                     String marker = sw.getStatus() == ScheduleStatus.COMPLETED ? "✔ "
                             : sw.getStatus() == ScheduleStatus.SKIPPED ? "✗ " : "○ ";
                     entries.computeIfAbsent(sw.getScheduledDate().getDayOfWeek(), k -> new ArrayList<>())
@@ -223,13 +227,17 @@ public class McpAnalyticsTools {
 
     // ── Helpers ────────────────────────────────────────────────────
 
-    private String resolveTitle(String trainingId) {
-        if (trainingId == null) return "Unknown";
-        try {
-            return trainingService.getTrainingById(trainingId).getTitle();
-        } catch (Exception e) {
-            return "Unknown";
+    private Map<String, String> batchResolveTitles(List<ScheduledWorkout> workouts) {
+        Set<String> trainingIds = workouts.stream()
+                .map(ScheduledWorkout::getTrainingId)
+                .filter(id -> id != null && !id.isBlank())
+                .collect(Collectors.toSet());
+        if (trainingIds.isEmpty()) return Map.of();
+        Map<String, String> titles = new HashMap<>(trainingIds.size());
+        for (Training t : trainingRepository.findAllById(new ArrayList<>(trainingIds))) {
+            titles.put(t.getId(), t.getTitle());
         }
+        return titles;
     }
 
     private static String formatDuration(int seconds) {

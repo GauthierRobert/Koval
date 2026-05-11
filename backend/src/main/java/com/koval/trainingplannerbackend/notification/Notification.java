@@ -1,7 +1,8 @@
 package com.koval.trainingplannerbackend.notification;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -13,12 +14,15 @@ import java.util.Map;
  * delivery.
  */
 @Document(collection = "notifications")
+@CompoundIndexes({
+        @CompoundIndex(name = "userId_createdAt", def = "{'userId': 1, 'createdAt': -1}"),
+        @CompoundIndex(name = "userId_read", def = "{'userId': 1, 'read': 1}")
+})
 public class Notification {
 
     @Id
     private String id;
 
-    @Indexed
     private String userId;
 
     private String type;
@@ -26,12 +30,10 @@ public class Notification {
     private String body;
     private Map<String, String> data;
 
-    @Indexed
     private Boolean read;
 
     private Instant readAt;
 
-    @Indexed
     private Instant createdAt;
 
     public Notification() {
