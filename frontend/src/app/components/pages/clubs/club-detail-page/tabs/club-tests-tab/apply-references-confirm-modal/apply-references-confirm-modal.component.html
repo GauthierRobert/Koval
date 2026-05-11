@@ -19,8 +19,8 @@
                      [disabled]="!isComputable"
                      (change)="toggle(r.id)" />
               <div class="rule-text">
-                <span class="rule-name">{{ r.label || r.target }}</span>
-                <span class="rule-target">→ {{ r.target }}{{ r.customKey ? ' (' + r.customKey + ')' : '' }}</span>
+                <span class="rule-name">{{ r.label || (targetLabelKey(r.target) | translate) }}</span>
+                <span class="rule-target">→ {{ targetLabelKey(r.target) | translate }}{{ r.customKey ? ' (' + r.customKey + ')' : '' }}</span>
               </div>
               <span class="rule-value" [class.rule-value--missing]="!isComputable">
                 @if (isComputable) {

@@ -33,6 +33,8 @@ import {ExportService} from '../../../services/export.service';
 import {TrainingActionModalComponent} from '../training-action-modal/training-action-modal.component';
 import {BlockStepsListComponent} from './block-steps-list/block-steps-list.component';
 import {WorkoutChartBarComponent} from './workout-chart-bar/workout-chart-bar.component';
+import {FavoriteStarComponent} from '../favorite-star/favorite-star.component';
+import {TrainingTagEditorComponent} from '../training-tag-editor/training-tag-editor.component';
 import {AuthService} from '../../../services/auth.service';
 import {NolioSyncService} from '../../../services/nolio-sync.service';
 import {DurationEstimationService} from '../../../services/duration-estimation.service';
@@ -46,7 +48,7 @@ import {ZoneClassificationService} from '../../../services/zone-classification.s
 @Component({
   selector: 'app-workout-visualization',
   standalone: true,
-  imports: [CommonModule, TrainingActionModalComponent, TranslateModule, BlockStepsListComponent, WorkoutChartBarComponent],
+  imports: [CommonModule, TrainingActionModalComponent, TranslateModule, BlockStepsListComponent, WorkoutChartBarComponent, FavoriteStarComponent, TrainingTagEditorComponent],
   templateUrl: './workout-visualization.component.html',
   styleUrl: './workout-visualization.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -110,6 +112,16 @@ export class WorkoutVisualizationComponent {
     if (this.training?.id) {
       this.router.navigate(['/trainings', this.training.id, 'edit']);
     }
+  }
+
+  onToggleFavorite(): void {
+    if (!this.training?.id) return;
+    this.trainingService.toggleFavorite(this.training.id).subscribe({ error: () => {} });
+  }
+
+  onTagsChange(tags: string[]): void {
+    if (!this.training?.id) return;
+    this.trainingService.updateTrainingTags(this.training.id, tags).subscribe({ error: () => {} });
   }
 
   hasReferenceValue(): boolean {

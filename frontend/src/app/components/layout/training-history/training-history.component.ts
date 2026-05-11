@@ -4,6 +4,7 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {SportIconComponent} from '../../shared/sport-icon/sport-icon.component';
+import {FavoriteStarComponent} from '../../shared/favorite-star/favorite-star.component';
 import {TrainingService} from '../../../services/training.service';
 import {TrainingFilterService} from '../../../services/training-filter.service';
 import {
@@ -21,7 +22,7 @@ import {TranslateModule, TranslateService} from '@ngx-translate/core';
 @Component({
     selector: 'app-training-history',
     standalone: true,
-    imports: [CommonModule, RouterLink, SportIconComponent, TranslateModule],
+    imports: [CommonModule, RouterLink, SportIconComponent, FavoriteStarComponent, TranslateModule],
     templateUrl: './training-history.component.html',
     styleUrl: './training-history.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -67,6 +68,13 @@ export class TrainingHistoryComponent {
                     if (wasActive) this.router.navigate(['/trainings']);
                 },
             });
+    }
+
+    onToggleFavorite(event: Event, training: Training): void {
+        event.stopPropagation();
+        this.trainingService.toggleFavorite(training.id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({ error: () => {} });
     }
 
     onDuplicate(event: Event, training: Training): void {

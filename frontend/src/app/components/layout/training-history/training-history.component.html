@@ -2,7 +2,9 @@
   <div class="history-list stagger-children">
     @for (training of filteredTrainings$ | async; track training.id) {
       <div class="history-item"
-        [class.selected]="(activeTrainingId$ | async) === training.id" (click)="onSelect(training)">
+        [class.selected]="(activeTrainingId$ | async) === training.id"
+        [class.is-favorite]="training.favorite"
+        (click)="onSelect(training)">
         <div class="item-icon">
           <app-sport-icon [sport]="training.sportType" [size]="20"></app-sport-icon>
         </div>
@@ -33,6 +35,14 @@
             </span>
           }
 
+          @if (training.tags?.length) {
+            <div class="item-tags">
+              @for (tag of training.tags; track tag) {
+                <span class="user-tag-chip">#{{ tag }}</span>
+              }
+            </div>
+          }
+
           @if (training.groupIds?.length && !training._receivedMeta) {
             <div class="item-tags">
               @for (tag of training.groupIds; track tag) {
@@ -41,6 +51,19 @@
             </div>
           }
         </div>
+
+        <!-- Favorite star: pinned top-right, always visible (filled when active) -->
+        @if ((activeContext$ | async) === 'mine') {
+          <div class="item-favorite">
+            <app-favorite-star
+              size="sm"
+              [active]="!!training.favorite"
+              [label]="(training.favorite ? 'TRAINING_HISTORY.BTN_UNFAVORITE_TITLE' : 'TRAINING_HISTORY.BTN_FAVORITE_TITLE') | translate"
+              (toggle)="onToggleFavorite($event, training)">
+            </app-favorite-star>
+          </div>
+        }
+
         @if ((activeContext$ | async) === 'mine') {
           <div class="item-actions">
             <button class="edit-btn desktop-only" [title]="'TRAINING_HISTORY.BTN_EDIT_TITLE' | translate" (click)="onEdit($event, training)">

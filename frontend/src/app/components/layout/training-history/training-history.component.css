@@ -42,6 +42,33 @@
   box-shadow: 0 0 12px color-mix(in oklch, var(--accent-color) 10%, transparent);
 }
 
+/* Subtle left rail on favorited items — a quiet, persistent cue that survives
+   any filter/sort context. */
+.history-item.is-favorite::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  background: var(--accent-color);
+  opacity: 0.55;
+}
+
+.item-favorite {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  z-index: 1;
+}
+
+/* Slide the action row left so it doesn't collide with the favorite star. */
+.history-item:not(.is-favorite) .item-actions,
+.history-item.is-favorite .item-actions {
+  right: 32px;
+}
+
 .item-actions {
   position: absolute;
   right: 4px;
@@ -104,7 +131,7 @@
 
 .item-title-row {
   display: flex;
-  max-width: 84%;
+  max-width: calc(100% - 28px);
   padding: 2px 0 0 0;
   align-items: center;
   gap: 6px;
@@ -175,6 +202,18 @@
   font-weight: 700;
   padding: 2px 7px;
   border-radius: var(--radius-sm);
+  background: var(--overlay-5);
+  color: var(--text-muted);
+  border: 1px solid var(--glass-border);
+  letter-spacing: 0.03em;
+}
+
+/* User-defined tag — distinct from coach groups: accent fill, hash prefix. */
+.user-tag-chip {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
   background: var(--accent-subtle);
   color: var(--accent-color);
   letter-spacing: 0.03em;

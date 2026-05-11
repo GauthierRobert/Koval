@@ -6,108 +6,103 @@
     </header>
 
     <div class="modal-body">
-      @if (!isEdit) {
+      <!-- ── Basics ────────────────────────────────────────────── -->
+      <section class="form-section">
+        <h4 class="form-section__title">{{ 'CLUB_TESTS.FORM_SECTION_BASICS' | translate }}</h4>
+
+        @if (!isEdit) {
+          <div class="form-row">
+            <label>{{ 'CLUB_TESTS.PRESET_LABEL' | translate }}</label>
+            <select class="form-input" [value]="selectedPresetId"
+                    (change)="selectPresetByEvent($event)" data-testid="preset-select">
+              <option value="">— {{ 'CLUB_TESTS.PRESET_NONE' | translate }} —</option>
+              @for (p of presets$ | async; track p.id) {
+                <option [value]="p.id">{{ p.labelKey | translate }}</option>
+              }
+            </select>
+            <p class="form-row__hint">{{ 'CLUB_TESTS.PRESET_HINT' | translate }}</p>
+          </div>
+        }
+
         <div class="form-row">
-          <label>{{ 'CLUB_TESTS.PRESET_LABEL' | translate }}</label>
-          <select class="form-input" [value]="selectedPresetId"
-                  (change)="selectPresetByEvent($event)" data-testid="preset-select">
-            <option value="">— {{ 'CLUB_TESTS.PRESET_NONE' | translate }} —</option>
-            @for (p of presets$ | async; track p.id) {
-              <option [value]="p.id">{{ p.labelKey | translate }}</option>
-            }
-          </select>
+          <label>{{ 'CLUB_TESTS.NAME' | translate }}</label>
+          <input type="text" class="form-input"
+                 [(ngModel)]="name"
+                 [placeholder]="'CLUB_TESTS.NAME_PLACEHOLDER' | translate"
+                 data-testid="input-test-name" />
         </div>
-      }
 
-      <div class="form-row">
-        <label>{{ 'CLUB_TESTS.NAME' | translate }}</label>
-        <input type="text" class="form-input" [(ngModel)]="name" data-testid="input-test-name" />
-      </div>
-
-      <div class="form-row">
-        <label>{{ 'CLUB_TESTS.DESCRIPTION' | translate }}</label>
-        <textarea class="form-input" rows="2" [(ngModel)]="description" data-testid="input-test-desc"></textarea>
-      </div>
-
-      <label class="toggle-row">
-        <input type="checkbox" class="toggle-input"
-               [(ngModel)]="competitionMode" data-testid="input-competition" />
-        <span class="toggle-switch"></span>
-        <span class="toggle-text">{{ 'CLUB_TESTS.COMPETITION_MODE' | translate }}</span>
-      </label>
-
-      @if (competitionMode) {
-        <div class="form-row form-row--three">
-          <div class="form-row">
-            <label>{{ 'CLUB_TESTS.RANKING_METRIC' | translate }}</label>
-            <select class="form-input" [(ngModel)]="rankingMetric">
-              <option [ngValue]="null">—</option>
-              @for (m of metrics; track m) {
-                <option [ngValue]="m">{{ m }}</option>
-              }
-            </select>
-          </div>
-          <div class="form-row">
-            <label>{{ 'CLUB_TESTS.RANKING_TARGET' | translate }}</label>
-            <select class="form-input" [(ngModel)]="rankingTarget">
-              <option [ngValue]="null">—</option>
-              @if (rankingMetric === 'TIME_OF_SEGMENT') {
-                @for (s of segments; track s.id) {
-                  <option [ngValue]="s.id">{{ s.label || s.id }}</option>
-                }
-              } @else if (rankingMetric === 'COMPUTED_REFERENCE') {
-                @for (r of rules; track r.id) {
-                  <option [ngValue]="r.id">{{ r.label || r.target }}</option>
-                }
-              }
-            </select>
-          </div>
-          <div class="form-row">
-            <label>{{ 'CLUB_TESTS.RANKING_DIRECTION' | translate }}</label>
-            <select class="form-input" [(ngModel)]="rankingDirection">
-              <option value="ASC">↓ {{ 'CLUB_TESTS.LOWER_IS_BETTER' | translate }}</option>
-              <option value="DESC">↑ {{ 'CLUB_TESTS.HIGHER_IS_BETTER' | translate }}</option>
-            </select>
-          </div>
+        <div class="form-row">
+          <label>{{ 'CLUB_TESTS.DESCRIPTION' | translate }}</label>
+          <textarea class="form-input" rows="2"
+                    [(ngModel)]="description"
+                    [placeholder]="'CLUB_TESTS.DESCRIPTION_PLACEHOLDER' | translate"
+                    data-testid="input-test-desc"></textarea>
         </div>
-      }
+      </section>
 
-      <section class="builder">
-        <header class="builder__head">
-          <h4 class="builder__title">{{ 'CLUB_TESTS.SEGMENTS' | translate }}</h4>
+      <!-- ── Segments ──────────────────────────────────────────── -->
+      <section class="form-section">
+        <header class="form-section__head">
+          <div>
+            <h4 class="form-section__title">{{ 'CLUB_TESTS.FORM_SECTION_SEGMENTS' | translate }}</h4>
+            <p class="form-section__subtitle">{{ 'CLUB_TESTS.SEGMENTS_SUBTITLE' | translate }}</p>
+          </div>
           <button class="btn-secondary" (click)="addSegment()"
                   [disabled]="hasResults" data-testid="btn-add-segment">
             + {{ 'CLUB_TESTS.ADD_SEGMENT' | translate }}
           </button>
         </header>
+
         @if (hasResults) {
           <p class="builder__warn">⚠ {{ 'CLUB_TESTS.EDIT_LOCK_HINT' | translate }}</p>
         }
+
         @if (segments.length === 0) {
-          <p class="builder__empty">{{ 'CLUB_TESTS.SEGMENTS' | translate }} —</p>
+          <p class="form-section__empty">{{ 'CLUB_TESTS.SEGMENTS_SUBTITLE' | translate }}</p>
         }
+
         @for (s of segments; track s) {
           <div class="builder-row">
             <div class="builder-row__index mono">{{ $index + 1 }}</div>
             <div class="builder-row__fields">
-              <input type="text" class="form-input"
-                     [(ngModel)]="s.label"
-                     [placeholder]="'CLUB_TESTS.SEGMENT_LABEL' | translate" />
-              <select class="form-input" [(ngModel)]="s.sportType" [disabled]="hasResults">
-                @for (sp of sports; track sp) { <option [value]="sp">{{ sp }}</option> }
-              </select>
-              <input type="number" class="form-input"
-                     [(ngModel)]="s.distanceMeters"
-                     [placeholder]="'CLUB_TESTS.DISTANCE_M' | translate"
-                     [disabled]="hasResults" />
-              <input type="number" class="form-input"
-                     [(ngModel)]="s.durationSeconds"
-                     [placeholder]="'CLUB_TESTS.DURATION_S' | translate"
-                     [disabled]="hasResults" />
-              <select class="form-input" [(ngModel)]="s.resultUnit" [disabled]="hasResults">
-                @for (u of units; track u) { <option [value]="u">{{ u }}</option> }
-              </select>
-              @if (s.id) { <code class="builder-row__hint">{{ variableHint(s) }}</code> }
+              <label class="field">
+                <span class="field__label">{{ 'CLUB_TESTS.SEGMENT_LABEL' | translate }}</span>
+                <input type="text" class="form-input" [(ngModel)]="s.label" />
+              </label>
+              <label class="field">
+                <span class="field__label">{{ 'CLUB_TESTS.SEGMENT_SPORT' | translate }}</span>
+                <select class="form-input" [(ngModel)]="s.sportType" [disabled]="hasResults">
+                  @for (sp of sports; track sp) {
+                    <option [value]="sp">{{ sportLabelKey(sp) | translate }}</option>
+                  }
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">{{ 'CLUB_TESTS.SEGMENT_DISTANCE' | translate }}</span>
+                <input type="number" class="form-input"
+                       [(ngModel)]="s.distanceMeters"
+                       [placeholder]="'CLUB_TESTS.DISTANCE_M' | translate"
+                       [disabled]="hasResults" />
+              </label>
+              <label class="field">
+                <span class="field__label">{{ 'CLUB_TESTS.SEGMENT_DURATION' | translate }}</span>
+                <input type="number" class="form-input"
+                       [(ngModel)]="s.durationSeconds"
+                       [placeholder]="'CLUB_TESTS.DURATION_S' | translate"
+                       [disabled]="hasResults" />
+              </label>
+              <label class="field">
+                <span class="field__label">{{ 'CLUB_TESTS.SEGMENT_UNIT' | translate }}</span>
+                <select class="form-input" [(ngModel)]="s.resultUnit" [disabled]="hasResults">
+                  @for (u of units; track u) {
+                    <option [value]="u">{{ unitLabelKey(u) | translate }}</option>
+                  }
+                </select>
+              </label>
+              @if (s.id && showAdvanced) {
+                <code class="builder-row__hint">{{ variableHint(s) }}</code>
+              }
             </div>
             <button class="btn-remove" (click)="removeSegment($index)"
                     [disabled]="hasResults" aria-label="remove">×</button>
@@ -115,45 +110,146 @@
         }
       </section>
 
-      <section class="builder">
-        <header class="builder__head">
-          <h4 class="builder__title">{{ 'CLUB_TESTS.REFERENCE_RULES' | translate }}</h4>
-          <button class="btn-secondary" (click)="addRule()"
-                  [disabled]="hasResults" data-testid="btn-add-rule">
-            + {{ 'CLUB_TESTS.ADD_RULE' | translate }}
-          </button>
-        </header>
-        @for (r of rules; track r) {
-          <div class="rule-row">
-            <div class="rule-row__top">
-              <select class="form-input" [(ngModel)]="r.target" [disabled]="hasResults">
-                @for (t of targets; track t) { <option [value]="t">{{ t }}</option> }
+      <!-- ── Competition / Leaderboard toggle ───────────────────── -->
+      <section class="form-section">
+        <h4 class="form-section__title">{{ 'CLUB_TESTS.FORM_SECTION_RANKING' | translate }}</h4>
+
+        <label class="toggle-row">
+          <input type="checkbox" class="toggle-input"
+                 [(ngModel)]="competitionMode" data-testid="input-competition" />
+          <span class="toggle-switch"></span>
+          <span class="toggle-text">{{ 'CLUB_TESTS.COMPETITION_MODE' | translate }}</span>
+        </label>
+        <p class="form-row__hint form-row__hint--toggle">{{ 'CLUB_TESTS.COMPETITION_MODE_HINT' | translate }}</p>
+
+        @if (competitionMode) {
+          <p class="form-row__hint">{{ 'CLUB_TESTS.RANKING_METRIC_HINT' | translate }}</p>
+          <div class="form-row form-row--three">
+            <div class="form-row">
+              <label>{{ 'CLUB_TESTS.RANKING_METRIC' | translate }}</label>
+              <select class="form-input" [(ngModel)]="rankingMetric">
+                <option [ngValue]="null">—</option>
+                @for (m of metrics; track m) {
+                  <option [ngValue]="m">{{ metricLabelKey(m) | translate }}</option>
+                }
               </select>
-              @if (r.target === 'CUSTOM') {
-                <input type="text" class="form-input"
-                       [(ngModel)]="r.customKey"
-                       [placeholder]="'CLUB_TESTS.CUSTOM_KEY' | translate" />
-              }
-              <input type="text" class="form-input"
-                     [(ngModel)]="r.label"
-                     [placeholder]="'CLUB_TESTS.RULE_LABEL' | translate" />
-              <input type="text" class="form-input"
-                     [(ngModel)]="r.unit"
-                     [placeholder]="'CLUB_TESTS.RULE_UNIT' | translate" />
-              <button class="btn-remove" (click)="removeRule($index)"
-                      [disabled]="hasResults" aria-label="remove">×</button>
             </div>
-            <input type="text" class="form-input rule-row__formula"
-                   [(ngModel)]="r.formulaExpression"
-                   [placeholder]="'CLUB_TESTS.RULE_FORMULA' | translate"
-                   data-testid="rule-formula-input" />
-            <label class="auto-apply">
-              <input type="checkbox" [(ngModel)]="r.autoApply" />
-              <span>{{ 'CLUB_TESTS.AUTO_APPLY' | translate }}</span>
-            </label>
+            <div class="form-row">
+              <label>{{ 'CLUB_TESTS.RANKING_TARGET' | translate }}</label>
+              <select class="form-input" [(ngModel)]="rankingTarget">
+                <option [ngValue]="null">—</option>
+                @if (rankingMetric === 'TIME_OF_SEGMENT') {
+                  @for (s of segments; track s.id) {
+                    <option [ngValue]="s.id">{{ s.label || ('CLUB_TESTS.SEGMENTS' | translate) }}</option>
+                  }
+                } @else if (rankingMetric === 'COMPUTED_REFERENCE') {
+                  @for (r of rules; track r.id) {
+                    <option [ngValue]="r.id">{{ r.label || (targetLabelKey(r.target) | translate) }}</option>
+                  }
+                }
+              </select>
+            </div>
+            <div class="form-row">
+              <label>{{ 'CLUB_TESTS.RANKING_DIRECTION' | translate }}</label>
+              <select class="form-input" [(ngModel)]="rankingDirection">
+                <option value="ASC">↓ {{ 'CLUB_TESTS.LOWER_IS_BETTER' | translate }}</option>
+                <option value="DESC">↑ {{ 'CLUB_TESTS.HIGHER_IS_BETTER' | translate }}</option>
+              </select>
+            </div>
           </div>
         }
-        <p class="builder__hint">{{ 'CLUB_TESTS.RULE_FORMULA_HELP' | translate }}</p>
+      </section>
+
+      <!-- ── Reference updates (advanced) ──────────────────────── -->
+      <section class="form-section form-section--advanced">
+        <header class="form-section__head form-section__head--clickable"
+                (click)="showAdvanced = !showAdvanced"
+                (keydown.enter)="showAdvanced = !showAdvanced"
+                (keydown.space)="showAdvanced = !showAdvanced; $event.preventDefault()"
+                tabindex="0"
+                role="button"
+                [attr.aria-expanded]="showAdvanced">
+          <div>
+            <h4 class="form-section__title">
+              <span class="chevron" [class.chevron--open]="showAdvanced" aria-hidden="true">›</span>
+              {{ 'CLUB_TESTS.ADVANCED_TOGGLE' | translate }}
+              @if (rules.length > 0) {
+                <span class="form-section__count">{{ rules.length }}</span>
+              }
+            </h4>
+            <p class="form-section__subtitle">{{ 'CLUB_TESTS.ADVANCED_HINT' | translate }}</p>
+          </div>
+        </header>
+
+        @if (showAdvanced) {
+          <div class="advanced-body">
+            <header class="form-section__head form-section__head--inner">
+              <div>
+                <h5 class="form-section__title form-section__title--inner">
+                  {{ 'CLUB_TESTS.FORM_SECTION_UPDATES' | translate }}
+                </h5>
+                <p class="form-section__subtitle">{{ 'CLUB_TESTS.REFERENCE_RULES_SUBTITLE' | translate }}</p>
+              </div>
+              <button class="btn-secondary" (click)="addRule()"
+                      [disabled]="hasResults" data-testid="btn-add-rule">
+                + {{ 'CLUB_TESTS.ADD_RULE' | translate }}
+              </button>
+            </header>
+
+            @if (rules.length === 0) {
+              <p class="form-section__empty">{{ 'CLUB_TESTS.REFERENCE_RULES_EMPTY' | translate }}</p>
+            }
+
+            @for (r of rules; track r) {
+              <div class="rule-row">
+                <div class="rule-row__top">
+                  <label class="field">
+                    <span class="field__label">{{ 'CLUB_TESTS.RULE_TARGET' | translate }}</span>
+                    <select class="form-input" [(ngModel)]="r.target" [disabled]="hasResults">
+                      @for (t of targets; track t) {
+                        <option [value]="t">{{ targetLabelKey(t) | translate }}</option>
+                      }
+                    </select>
+                  </label>
+                  @if (r.target === 'CUSTOM') {
+                    <label class="field">
+                      <span class="field__label">{{ 'CLUB_TESTS.CUSTOM_KEY' | translate }}</span>
+                      <input type="text" class="form-input"
+                             [(ngModel)]="r.customKey"
+                             [placeholder]="'CLUB_TESTS.CUSTOM_KEY' | translate" />
+                    </label>
+                  }
+                  <label class="field">
+                    <span class="field__label">{{ 'CLUB_TESTS.RULE_LABEL' | translate }}</span>
+                    <input type="text" class="form-input"
+                           [(ngModel)]="r.label"
+                           [placeholder]="'CLUB_TESTS.RULE_LABEL_PLACEHOLDER' | translate" />
+                  </label>
+                  <label class="field">
+                    <span class="field__label">{{ 'CLUB_TESTS.RULE_UNIT' | translate }}</span>
+                    <input type="text" class="form-input"
+                           [(ngModel)]="r.unit"
+                           [placeholder]="'CLUB_TESTS.RULE_UNIT_PLACEHOLDER' | translate" />
+                  </label>
+                  <button class="btn-remove" (click)="removeRule($index)"
+                          [disabled]="hasResults" aria-label="remove">×</button>
+                </div>
+                <label class="field field--full">
+                  <span class="field__label">{{ 'CLUB_TESTS.RULE_FORMULA' | translate }}</span>
+                  <input type="text" class="form-input rule-row__formula"
+                         [(ngModel)]="r.formulaExpression"
+                         [placeholder]="'CLUB_TESTS.RULE_FORMULA_PLACEHOLDER' | translate"
+                         data-testid="rule-formula-input" />
+                </label>
+                <label class="auto-apply">
+                  <input type="checkbox" [(ngModel)]="r.autoApply" />
+                  <span>{{ 'CLUB_TESTS.AUTO_APPLY' | translate }}</span>
+                </label>
+              </div>
+            }
+            <p class="builder__hint">{{ 'CLUB_TESTS.RULE_FORMULA_HELP' | translate }}</p>
+          </div>
+        }
       </section>
     </div>
 
@@ -163,7 +259,7 @@
       </button>
       <button class="btn-primary" (click)="submit()"
               [disabled]="!name.trim()" data-testid="btn-save-test">
-        {{ 'CLUB_TESTS.SAVE' | translate }}
+        {{ (isEdit ? 'CLUB_TESTS.SAVE_TEST' : 'CLUB_TESTS.CREATE_TEST') | translate }}
       </button>
     </footer>
   </div>

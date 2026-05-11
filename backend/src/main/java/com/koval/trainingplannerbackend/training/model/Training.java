@@ -55,6 +55,11 @@ public abstract class Training {
     private List<String> clubIds = new ArrayList<>();
     private List<String> clubGroupIds = new ArrayList<>(); // Optional: club groups within clubs
 
+    // User-defined organization
+    private List<String> tags = new ArrayList<>();
+    @Indexed
+    private Boolean favorite = Boolean.FALSE;
+
     // Nolio sync state (write path - push to user's Nolio account)
     private String nolioWorkoutId;
     private NolioSyncStatus nolioSyncStatus = NolioSyncStatus.NONE;

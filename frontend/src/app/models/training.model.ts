@@ -162,6 +162,8 @@ export interface Training {
     createdAt?: string;
     clubIds?: string[];
     clubGroupIds?: string[];
+    tags?: string[];
+    favorite?: boolean;
     nolioWorkoutId?: string;
     nolioSyncStatus?: NolioSyncStatus;
     nolioLastSyncedAt?: string;

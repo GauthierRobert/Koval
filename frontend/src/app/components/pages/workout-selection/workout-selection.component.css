@@ -153,6 +153,119 @@
   margin: 0 2px;
 }
 
+/* ─── Favorites toggle ───────────────────────────────────── */
+.fav-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 4px 4px;
+  border-radius: var(--radius-pill);
+  background: var(--overlay-5);
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.25s var(--ease-spring-gentle);
+}
+
+.fav-toggle:hover {
+  background: var(--overlay-10);
+  color: var(--text-color);
+}
+
+.fav-toggle.active {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+  color: var(--accent-color);
+  box-shadow: 0 0 10px color-mix(in oklch, var(--accent-color) 18%, transparent);
+}
+
+.fav-toggle-count {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--overlay-10);
+  color: inherit;
+  min-width: 18px;
+  text-align: center;
+}
+
+.fav-toggle.active .fav-toggle-count {
+  background: color-mix(in oklch, var(--accent-color) 18%, transparent);
+}
+
+/* ─── User tag pills (multi-select, AND semantics) ──────── */
+.filter-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-right: 4px;
+}
+
+.user-tag-group {
+  align-items: center;
+}
+
+.user-tag-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.user-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--overlay-5);
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring-gentle);
+}
+
+.user-tag-pill:hover {
+  background: var(--overlay-10);
+  color: var(--text-color);
+}
+
+.user-tag-pill.active {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+  color: var(--accent-color);
+  box-shadow: 0 0 8px color-mix(in oklch, var(--accent-color) 18%, transparent);
+}
+
+.user-tag-hash {
+  opacity: 0.55;
+  font-weight: 800;
+}
+
+.user-tag-count {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: var(--overlay-10);
+  min-width: 14px;
+  text-align: center;
+  opacity: 0.75;
+}
+
+.user-tag-pill.active .user-tag-count {
+  background: color-mix(in oklch, var(--accent-color) 18%, transparent);
+  opacity: 1;
+}
+
 .content-area {
   flex: 1;
   min-height: 0;

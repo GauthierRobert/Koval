@@ -50,6 +50,7 @@
             </option>
           }
         </select>
+        <p class="iterations-bar__hint">{{ 'CLUB_TESTS.ITERATION_HINT' | translate }}</p>
       </div>
 
       @if (isCoach) {
@@ -69,6 +70,7 @@
               + {{ 'CLUB_TESTS.START_ITERATION' | translate }}
             </button>
           </div>
+          <p class="iterations-bar__hint">{{ 'CLUB_TESTS.START_ITERATION_HINT' | translate }}</p>
         </div>
       }
     </section>
@@ -83,6 +85,7 @@
           <h4 class="section-title">{{ 'CLUB_TESTS.SEGMENTS' | translate }}</h4>
           <span class="section-head__count">{{ activeIter.segments.length }}</span>
         </header>
+        <p class="section-subtitle">{{ 'CLUB_TESTS.SEGMENTS_SUBTITLE' | translate }}</p>
         <ul class="segments-list">
           @for (s of activeIter.segments; track s.id) {
             <li class="segment-row">
@@ -92,7 +95,7 @@
                     [style.background]="sportColor(s.sportType).bg"
                     [style.color]="sportColor(s.sportType).text"
                     [style.border-color]="sportColor(s.sportType).border + '55'">
-                {{ s.sportType }}
+                {{ sportLabelKey(s.sportType) | translate }}
               </span>
               @if (s.distanceMeters) {
                 <span class="seg-chip">{{ s.distanceMeters }}&nbsp;m</span>
@@ -100,7 +103,7 @@
               @if (s.durationSeconds) {
                 <span class="seg-chip">{{ s.durationSeconds / 60 }}&nbsp;min</span>
               }
-              <span class="seg-unit">{{ s.resultUnit }}</span>
+              <span class="seg-unit">{{ unitLabelKey(s.resultUnit) | translate }}</span>
             </li>
           }
         </ul>
@@ -148,9 +151,9 @@
                     <th class="col-num">{{ s.label }}</th>
                   }
                   @for (r of activeIter.referenceUpdates; track r.id) {
-                    <th class="col-num col-ref">{{ r.label || r.target }}</th>
+                    <th class="col-num col-ref">{{ r.label || (targetLabelKey(r.target) | translate) }}</th>
                   }
-                  <th class="col-actions">{{ 'CLUB_TESTS.ACTIONS' | translate }}</th>
+                  <th class="col-actions" aria-label="actions"></th>
                 </tr>
               </thead>
               <tbody>

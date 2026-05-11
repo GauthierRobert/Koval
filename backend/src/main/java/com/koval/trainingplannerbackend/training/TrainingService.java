@@ -18,7 +18,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 
 import static java.util.Optional.ofNullable;
 
@@ -126,6 +128,47 @@ public class TrainingService {
         ofNullable(updates.getTrainingType()).ifPresent(training::setTrainingType);
         ofNullable(updates.getClubIds()).ifPresent(training::setClubIds);
         ofNullable(updates.getClubGroupIds()).ifPresent(training::setClubGroupIds);
+        ofNullable(updates.getTags()).ifPresent(tags -> training.setTags(normalizeTags(tags)));
+        ofNullable(updates.getFavorite()).ifPresent(training::setFavorite);
+    }
+
+    /**
+     * Normalize user tags: trim, lowercase, drop blanks, dedupe (case-insensitive),
+     * cap length and count to keep documents bounded.
+     */
+    private List<String> normalizeTags(List<String> raw) {
+        if (raw == null) return new ArrayList<>();
+        LinkedHashSet<String> seen = new LinkedHashSet<>();
+        for (String tag : raw) {
+            if (tag == null) continue;
+            String trimmed = tag.trim().toLowerCase(Locale.ROOT);
+            if (trimmed.isEmpty() || trimmed.length() > 32) continue;
+            seen.add(trimmed);
+            if (seen.size() >= 16) break;
+        }
+        return new ArrayList<>(seen);
+    }
+
+    /**
+     * Toggle the favorite flag on a training. Atomic and idempotent — returns the
+     * new state so the client doesn't need to refetch.
+     */
+    public Training toggleFavorite(String trainingId) {
+        Training training = trainingRepository.findById(trainingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Training", trainingId));
+        training.setFavorite(!Boolean.TRUE.equals(training.getFavorite()));
+        return trainingRepository.save(training);
+    }
+
+    /**
+     * Replace the tag set on a training (normalized). Useful for the inline tag
+     * editor on the detail page — sends one PUT instead of fiddling with PATCH.
+     */
+    public Training setTags(String trainingId, List<String> tags) {
+        Training training = trainingRepository.findById(trainingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Training", trainingId));
+        training.setTags(normalizeTags(tags));
+        return trainingRepository.save(training);
     }
 
     /**

@@ -16,6 +16,7 @@ import {
   TestPreset,
   TestSegment,
 } from '../../../../../../../services/club-test.service';
+import { metricLabelKey, sportLabelKey, targetLabelKey, unitLabelKey } from '../test-display.utils';
 
 const SPORTS: SportType[] = ['CYCLING', 'RUNNING', 'SWIMMING', 'BRICK'];
 const UNITS: SegmentResultUnit[] = ['SECONDS', 'WATTS', 'PACE_S_PER_KM', 'PACE_S_PER_100M', 'METERS'];
@@ -73,6 +74,7 @@ export class TestFormModalComponent implements OnInit {
   /** When true, segment/rule add+remove and sport/distance/unit edits are blocked (edit-safety). */
   hasResults = false;
   isEdit = false;
+  showAdvanced = false;
 
   ngOnInit(): void {
     this.testService.loadPresets(this.club.id);
@@ -150,6 +152,19 @@ export class TestFormModalComponent implements OnInit {
 
   trackById(_index: number, x: { id: string }): string {
     return x.id;
+  }
+
+  sportLabelKey(s: SportType | string): string {
+    return sportLabelKey(s);
+  }
+  unitLabelKey(u: SegmentResultUnit | string): string {
+    return unitLabelKey(u);
+  }
+  targetLabelKey(t: ReferenceTarget | string): string {
+    return targetLabelKey(t);
+  }
+  metricLabelKey(m: RankingMetric | string): string {
+    return metricLabelKey(m);
   }
 
   variableHint(seg: TestSegment): string {

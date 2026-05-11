@@ -82,6 +82,90 @@ export interface PageResponse<T> {
   size: number;
 }
 
+// ── Race briefing pack ─────────────────────────────────────────────────────
+export interface RaceBriefing {
+  race: BriefingRaceHeader;
+  courses: BriefingCourseSummary[];
+  targetZones: BriefingZoneTarget[];
+  weather: BriefingWeather | null;
+  gear: BriefingGearChecklist;
+  generatedAt: string;
+}
+
+export interface BriefingRaceHeader {
+  id: string;
+  title: string;
+  sport: string;
+  category?: DistanceCategory;
+  distance?: string;
+  location?: string;
+  country?: string;
+  scheduledDate?: string;
+  website?: string;
+  description?: string;
+}
+
+export interface BriefingCourseSummary {
+  discipline: string;
+  distanceM: number;
+  elevationGainM: number;
+  elevationLossM: number;
+  maxGradientPercent: number;
+  avgGradientPercent: number;
+  keySegments: BriefingKeySegment[];
+  start: { lat: number; lon: number } | null;
+}
+
+export interface BriefingKeySegment {
+  startDistanceM: number;
+  endDistanceM: number;
+  gradientPercent: number;
+  elevationGainM: number;
+  label: string;
+}
+
+export interface BriefingZoneTarget {
+  sportType: string;
+  systemName: string;
+  referenceType?: string;
+  referenceName?: string;
+  referenceUnit?: string;
+  zones: BriefingZoneRow[];
+}
+
+export interface BriefingZoneRow {
+  label: string;
+  low: number;
+  high: number;
+  description?: string;
+}
+
+export interface BriefingWeather {
+  latitude: number;
+  longitude: number;
+  timezone?: string;
+  source: string;
+  hourly: BriefingHourly[];
+  warning?: string;
+}
+
+export interface BriefingHourly {
+  time: string;
+  temperatureC?: number;
+  precipitationMm?: number;
+  windSpeedKmh?: number;
+  weatherCode?: number;
+}
+
+export interface BriefingGearChecklist {
+  groups: BriefingGearGroup[];
+}
+
+export interface BriefingGearGroup {
+  name: string;
+  items: string[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class RaceService {
   private http = inject(HttpClient);
@@ -137,6 +221,10 @@ export class RaceService {
 
   getRouteCoordinates(raceId: string, discipline: string): Observable<RouteCoordinate[]> {
     return this.http.get<RouteCoordinate[]>(`${this.apiUrl}/${raceId}/route/${discipline}`);
+  }
+
+  getBriefing(raceId: string): Observable<RaceBriefing> {
+    return this.http.get<RaceBriefing>(`${this.apiUrl}/${raceId}/briefing`);
   }
 
   getSportFacets(): Observable<SportFacet[]> {

@@ -32,6 +32,22 @@
         <div class="filter-sep"></div>
       </div>
 
+      <!-- Favorites toggle: a star pill with live count -->
+      @if ((filterService.activeContext$ | async) === 'mine' && ((favoritesCount$ | async) ?? 0) > 0) {
+        <div class="filter-group">
+          <button type="button"
+                  class="fav-toggle"
+                  [class.active]="(favoritesOnly$ | async)"
+                  [attr.aria-pressed]="(favoritesOnly$ | async)"
+                  (click)="toggleFavoritesOnly()">
+            <app-favorite-star size="sm" [active]="!!(favoritesOnly$ | async)"></app-favorite-star>
+            <span>{{ 'TRAINING_TAGS.FILTER_FAVORITES' | translate }}</span>
+            <span class="fav-toggle-count">{{ favoritesCount$ | async }}</span>
+          </button>
+          <div class="filter-sep"></div>
+        </div>
+      }
+
       @if ((filterService.activeContext$ | async) === 'mine' && (filterService.availableTags$ | async)?.length) {
         <div class="filter-group">
         <app-filter-pills
@@ -41,6 +57,25 @@
         </app-filter-pills>
         <div class="filter-sep"></div>
       </div>
+      }
+
+      <!-- User-defined tag filter (multi-select, AND semantics) -->
+      @if ((filterService.activeContext$ | async) === 'mine' && ((userTagEntries$ | async)?.length ?? 0) > 0) {
+        <div class="filter-group user-tag-group">
+          <span class="filter-label">{{ 'TRAINING_TAGS.FILTER_LABEL' | translate }}</span>
+          <div class="user-tag-pills">
+            @for (entry of userTagEntries$ | async; track entry.tag) {
+              <button type="button"
+                      class="user-tag-pill"
+                      [class.active]="isUserTagActive(entry.tag, (activeUserTags$ | async) ?? emptyTagSet)"
+                      (click)="toggleUserTag(entry.tag)">
+                <span class="user-tag-hash">#</span>{{ entry.tag }}
+                <span class="user-tag-count">{{ entry.count }}</span>
+              </button>
+            }
+          </div>
+          <div class="filter-sep"></div>
+        </div>
       }
 
       <!-- Sport filter -->

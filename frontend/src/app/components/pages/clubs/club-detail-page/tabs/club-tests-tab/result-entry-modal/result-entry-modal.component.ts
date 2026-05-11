@@ -9,6 +9,7 @@ import {
   SegmentResultUnit,
   TestSegment,
 } from '../../../../../../../services/club-test.service';
+import { unitLabelKey } from '../test-display.utils';
 
 interface SegmentEntry {
   segment: TestSegment;
@@ -49,6 +50,10 @@ export class ResultEntryModalComponent implements OnInit {
 
   isTimeUnit(u: SegmentResultUnit): boolean {
     return u === 'SECONDS' || u === 'PACE_S_PER_KM' || u === 'PACE_S_PER_100M';
+  }
+
+  unitLabelKey(u: SegmentResultUnit | string): string {
+    return unitLabelKey(u);
   }
 
   trackBySegId(_idx: number, e: SegmentEntry): string {

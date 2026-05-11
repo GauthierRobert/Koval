@@ -19,13 +19,19 @@ export class TrainingFilterService {
     activeContext$ = this.activeContextSubject.asObservable();
 
     // ── Filter state ──────────────────────────────────────────────────────
+    // NB: `tagFilterSubject` filters by coach `groupIds` (legacy name predating
+    // user tags). User-defined tags use `userTagsSubject` below.
     private tagFilterSubject = new BehaviorSubject<string | null>('__mine__');
     private sportFilterSubject = new BehaviorSubject<SportFilter>(null);
     private typeFilterSubject = new BehaviorSubject<TrainingType | null>(null);
+    private userTagsSubject = new BehaviorSubject<Set<string>>(new Set());
+    private favoritesOnlySubject = new BehaviorSubject<boolean>(false);
 
     activeTagFilter$ = this.tagFilterSubject.asObservable();
     activeSportFilter$ = this.sportFilterSubject.asObservable();
     activeTypeFilter$ = this.typeFilterSubject.asObservable();
+    activeUserTags$ = this.userTagsSubject.asObservable();
+    favoritesOnly$ = this.favoritesOnlySubject.asObservable();
 
     availableTags$ = this.trainingService.trainings$.pipe(
         map((trainings) => {
@@ -33,6 +39,26 @@ export class TrainingFilterService {
             trainings.forEach((t) => t.groupIds?.forEach((tag) => tagSet.add(tag)));
             return Array.from(tagSet).sort();
         }),
+    );
+
+    /**
+     * User-defined tags across all of the current user's trainings, with usage
+     * counts so the UI can surface the most-used ones first.
+     */
+    availableUserTags$ = this.trainingService.trainings$.pipe(
+        map((trainings) => {
+            const counts = new Map<string, number>();
+            trainings.forEach((t) =>
+                t.tags?.forEach((tag) => counts.set(tag, (counts.get(tag) ?? 0) + 1)),
+            );
+            return Array.from(counts.entries())
+                .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+                .map(([tag, count]) => ({ tag, count }));
+        }),
+    );
+
+    favoritesCount$ = this.trainingService.trainings$.pipe(
+        map((trainings) => trainings.filter((t) => t.favorite).length),
     );
 
     receivedTrainings$ = this.trainingService.receivedTrainings$;
@@ -44,21 +70,23 @@ export class TrainingFilterService {
         this.tagFilterSubject,
         this.sportFilterSubject,
         this.typeFilterSubject,
+        this.userTagsSubject,
+        this.favoritesOnlySubject,
     ]).pipe(
-        switchMap(([mine, received, context, tag, sport, type]) => {
+        switchMap(([mine, received, context, tag, sport, type, userTags, favoritesOnly]) => {
             if (context === 'mine') {
                 let result = mine;
                 if (tag === '__mine__') result = result.filter((t) => !t.groupIds?.length);
                 else if (tag) result = result.filter((t) => t.groupIds?.includes(tag));
                 if (sport) result = result.filter((t) => t.sportType === sport);
                 if (type) result = result.filter((t) => t.trainingType === type);
-                return of(
-                    [...result].sort((a, b) => {
-                        const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-                        const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-                        return db - da;
-                    }),
-                );
+                if (favoritesOnly) result = result.filter((t) => t.favorite);
+                if (userTags.size > 0) {
+                    result = result.filter((t) =>
+                        Array.from(userTags).every((tag) => t.tags?.includes(tag)),
+                    );
+                }
+                return of(this.sortFavoritesFirst(result));
             }
 
             const filtered = received.filter((r) => r.originName === context);
@@ -86,15 +114,27 @@ export class TrainingFilterService {
                     let result = trainings.filter((t): t is Training => t !== null);
                     if (sport) result = result.filter((t) => t.sportType === sport);
                     if (type) result = result.filter((t) => t.trainingType === type);
-                    return [...result].sort((a, b) => {
-                        const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-                        const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-                        return db - da;
-                    });
+                    return this.sortFavoritesFirst(result);
                 }),
             );
         }),
     );
+
+    /**
+     * Default sort: favorites first, then most-recently-created.
+     * Favorites are always pinned to the top — even when the favorites-only
+     * filter is off, your starred workouts stay one glance away.
+     */
+    private sortFavoritesFirst(trainings: Training[]): Training[] {
+        return [...trainings].sort((a, b) => {
+            const fa = a.favorite ? 1 : 0;
+            const fb = b.favorite ? 1 : 0;
+            if (fa !== fb) return fb - fa;
+            const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return db - da;
+        });
+    }
 
     setTagFilter(value: string): void {
         this.tagFilterSubject.next(this.tagFilterSubject.value === value ? null : value);
@@ -106,6 +146,26 @@ export class TrainingFilterService {
 
     setTypeFilter(value: TrainingType): void {
         this.typeFilterSubject.next(this.typeFilterSubject.value === value ? null : value);
+    }
+
+    /** Toggle a single user-defined tag in the active filter set. */
+    toggleUserTag(tag: string): void {
+        const next = new Set(this.userTagsSubject.value);
+        if (next.has(tag)) next.delete(tag);
+        else next.add(tag);
+        this.userTagsSubject.next(next);
+    }
+
+    clearUserTags(): void {
+        this.userTagsSubject.next(new Set());
+    }
+
+    setFavoritesOnly(value: boolean): void {
+        this.favoritesOnlySubject.next(value);
+    }
+
+    toggleFavoritesOnly(): void {
+        this.favoritesOnlySubject.next(!this.favoritesOnlySubject.value);
     }
 
     setContext(context: string): void {

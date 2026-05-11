@@ -164,4 +164,45 @@ export class TrainingService {
         return this.http.put<Training>(`${this.apiUrl}/${trainingId}`, { groupIds });
     }
 
+    /**
+     * Toggle the favorite flag. Optimistic-update the cached list so the star
+     * flips instantly; the server response then reconciles.
+     */
+    toggleFavorite(trainingId: string): Observable<Training> {
+        const current = this.trainingsSubject.value;
+        const idx = current.findIndex(t => t.id === trainingId);
+        if (idx !== -1) {
+            const optimistic = { ...current[idx], favorite: !current[idx].favorite };
+            const next = [...current];
+            next[idx] = optimistic;
+            this.trainingsSubject.next(next);
+            if (this.selectedTrainingSubject.value?.id === trainingId) {
+                this.selectedTrainingSubject.next(optimistic);
+            }
+        }
+        return this.http.post<Training>(`${this.apiUrl}/${trainingId}/favorite`, {}).pipe(
+            tap(updated => this.reconcileTraining(updated)),
+        );
+    }
+
+    /** Replace the tag set on a training. */
+    updateTrainingTags(trainingId: string, tags: string[]): Observable<Training> {
+        return this.http.put<Training>(`${this.apiUrl}/${trainingId}/tags`, { tags }).pipe(
+            tap(updated => this.reconcileTraining(updated)),
+        );
+    }
+
+    private reconcileTraining(updated: Training): void {
+        const current = this.trainingsSubject.value;
+        const idx = current.findIndex(t => t.id === updated.id);
+        if (idx !== -1) {
+            const next = [...current];
+            next[idx] = { ...next[idx], ...updated };
+            this.trainingsSubject.next(next);
+        }
+        if (this.selectedTrainingSubject.value?.id === updated.id) {
+            this.selectedTrainingSubject.next({ ...this.selectedTrainingSubject.value, ...updated });
+        }
+    }
+
 }

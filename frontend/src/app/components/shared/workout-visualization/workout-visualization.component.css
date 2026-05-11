@@ -115,6 +115,27 @@
   opacity: 0.85;
 }
 
+.hero-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.hero-title-row .hero-title {
+  flex: 1;
+  margin: 0;
+}
+
+.hero-title-row app-favorite-star {
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.hero-tags-row {
+  margin-top: 6px;
+}
+
 .hero-title {
   font-family: var(--font-display);
   font-size: 30px;

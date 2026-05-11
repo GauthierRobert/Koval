@@ -1,0 +1,616 @@
+:host {
+    display: block;
+    background: var(--bg-color);
+    min-height: 100%;
+}
+
+.briefing-page {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 24px 24px 80px;
+}
+
+.briefing-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    background: var(--surface-elevated);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    backdrop-filter: blur(12px);
+}
+
+.briefing-toolbar-title {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+}
+
+.briefing-btn {
+    border: 1px solid var(--glass-border);
+    background: transparent;
+    color: var(--text-color);
+    padding: 7px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: all 0.25s var(--ease-spring-gentle);
+}
+
+.briefing-btn:hover {
+    border-color: var(--accent-border);
+    color: var(--accent-color);
+    background: var(--accent-subtle);
+}
+
+.briefing-btn--primary {
+    background: var(--accent-color);
+    color: var(--bg-color);
+    border-color: var(--accent-color);
+}
+
+.briefing-btn--primary:hover {
+    background: color-mix(in oklch, var(--accent-color) 88%, white);
+    color: var(--bg-color);
+}
+
+/* ─── The sheet ───────────────────────────────────────────── */
+.briefing-sheet {
+    background: var(--surface-elevated);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 36px 40px;
+    box-shadow: var(--shadow-lg);
+    color: var(--text-color);
+}
+
+/* ─── Header ──────────────────────────────────────────────── */
+.bf-header {
+    border-bottom: 2px solid var(--glass-border);
+    padding-bottom: 18px;
+    margin-bottom: 24px;
+}
+
+.bf-eyebrow {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent-color);
+    margin-bottom: 4px;
+}
+
+.bf-title {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0 0 10px;
+    color: var(--text-color);
+}
+
+.bf-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.bf-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.bf-date {
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.bf-pill {
+    background: var(--accent-subtle);
+    color: var(--accent-color);
+    padding: 2px 9px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.bf-desc {
+    margin: 12px 0 0;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.55;
+    white-space: pre-line;
+}
+
+/* ─── Sections ────────────────────────────────────────────── */
+.bf-section {
+    margin-bottom: 28px;
+}
+
+.bf-section-title {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin: 0 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+/* ─── Course summary cards ───────────────────────────────── */
+.bf-course-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+.bf-course-card {
+    background: var(--surface);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+}
+
+.bf-course-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.bf-course-icon {
+    font-size: 20px;
+}
+
+.bf-course-name {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-color);
+}
+
+.bf-course-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed var(--glass-border);
+}
+
+.bf-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.bf-stat-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+}
+
+.bf-stat-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.bf-segments-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+}
+
+.bf-segments-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.bf-segments-list li {
+    display: grid;
+    grid-template-columns: 90px 1fr auto;
+    gap: 8px;
+    font-size: 12px;
+    align-items: center;
+}
+
+.bf-seg-marker {
+    font-weight: 700;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.bf-seg-label {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.bf-seg-detail {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ─── Weather ─────────────────────────────────────────────── */
+.bf-weather-strip {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(64px, 1fr);
+    gap: 6px;
+    padding: 12px;
+    background: var(--surface);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+}
+
+.bf-weather-hour {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 2px;
+    text-align: center;
+    font-size: 11px;
+}
+
+.bf-w-hour {
+    font-weight: 800;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.bf-w-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.bf-w-temp {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text-color);
+    font-variant-numeric: tabular-nums;
+}
+
+.bf-w-secondary {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    font-size: 9px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.bf-weather-warning,
+.bf-weather-empty {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin: 8px 0 0;
+}
+
+.bf-source {
+    font-size: 9px;
+    color: var(--text-dim);
+    text-align: right;
+    margin-top: 6px;
+    letter-spacing: 0.08em;
+}
+
+/* ─── Zones ───────────────────────────────────────────────── */
+.bf-zones-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+}
+
+.bf-zones-block {
+    background: var(--surface);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+}
+
+.bf-zones-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed var(--glass-border);
+}
+
+.bf-zones-sport {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-color);
+}
+
+.bf-zones-ref {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+}
+
+.bf-zone-rows {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.bf-zone-row {
+    display: grid;
+    grid-template-columns: 100px 70px 1fr;
+    gap: 10px;
+    align-items: center;
+    font-size: 11px;
+}
+
+.bf-zone-label {
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.bf-zone-range {
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+
+.bf-zone-bar {
+    position: relative;
+    height: 8px;
+    background: var(--overlay-5);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bf-zone-fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: var(--accent-gradient);
+    border-radius: 4px;
+}
+
+/* ─── Gear ────────────────────────────────────────────────── */
+.bf-gear-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.bf-gear-block {
+    background: var(--surface);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    break-inside: avoid;
+}
+
+.bf-gear-title {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-color);
+}
+
+.bf-gear-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.bf-gear-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    line-height: 1.35;
+    color: var(--text-color);
+}
+
+.bf-checkbox {
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid var(--text-muted);
+    border-radius: 3px;
+    display: inline-block;
+}
+
+/* ─── Footer ──────────────────────────────────────────────── */
+.bf-footer {
+    margin-top: 28px;
+    padding-top: 14px;
+    border-top: 1px solid var(--glass-border);
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+}
+
+.bf-footer-link {
+    font-variant-numeric: tabular-nums;
+}
+
+.briefing-error {
+    text-align: center;
+    padding: 60px 40px;
+}
+
+.briefing-loading {
+    text-align: center;
+    padding: 60px;
+    color: var(--text-muted);
+}
+
+/* ─── Print styles ────────────────────────────────────────── */
+@media print {
+    :host,
+    .briefing-page,
+    .briefing-sheet {
+        background: white !important;
+        color: black !important;
+    }
+
+    .briefing-page {
+        max-width: none;
+        padding: 0;
+    }
+
+    .briefing-sheet {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        border-radius: 0;
+    }
+
+    .no-print,
+    app-sidebar,
+    nav,
+    .briefing-toolbar {
+        display: none !important;
+    }
+
+    /* Force readable colors on white paper */
+    .bf-title,
+    .bf-stat-value,
+    .bf-zone-label,
+    .bf-gear-list li,
+    .bf-seg-label,
+    .bf-w-temp,
+    .bf-course-name,
+    .bf-section-title {
+        color: black !important;
+    }
+
+    .bf-meta,
+    .bf-desc,
+    .bf-stat-label,
+    .bf-zones-ref,
+    .bf-zone-range,
+    .bf-source,
+    .bf-footer,
+    .bf-seg-marker,
+    .bf-seg-detail,
+    .bf-w-hour,
+    .bf-w-secondary,
+    .bf-segments-label {
+        color: #444 !important;
+    }
+
+    .bf-eyebrow,
+    .bf-zones-sport,
+    .bf-gear-title,
+    .bf-pill {
+        color: #b25800 !important;
+    }
+
+    .bf-section,
+    .bf-gear-block,
+    .bf-course-card,
+    .bf-zones-block,
+    .bf-weather-strip {
+        background: white !important;
+        border-color: #ccc !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    .bf-zone-bar {
+        background: #e5e5e5 !important;
+    }
+
+    .bf-zone-fill {
+        background: #ff8c00 !important;
+    }
+
+    .bf-checkbox {
+        border-color: #888 !important;
+    }
+
+    .bf-section-title,
+    .bf-header {
+        border-color: #999 !important;
+    }
+
+    @page {
+        margin: 14mm 12mm;
+        size: A4 portrait;
+    }
+}
+
+/* ─── Responsive ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .briefing-page {
+        padding: 12px;
+    }
+
+    .briefing-sheet {
+        padding: 20px 16px;
+    }
+
+    .bf-title {
+        font-size: 24px;
+    }
+
+    .bf-course-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+    }
+
+    .bf-zone-row {
+        grid-template-columns: 80px 60px 1fr;
+        font-size: 10px;
+    }
+
+    .bf-segments-list li {
+        grid-template-columns: 70px 1fr;
+    }
+
+    .bf-seg-detail {
+        grid-column: 1 / -1;
+    }
+}

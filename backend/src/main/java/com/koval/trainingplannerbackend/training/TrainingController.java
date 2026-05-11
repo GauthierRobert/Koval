@@ -147,4 +147,25 @@ public class TrainingController {
         return ResponseEntity.ok(trainingService.discoverClubTrainingSummaries(userId));
     }
 
+    /** Toggle the favorite flag on a training. Returns the new {@code favorite} state. */
+    @PostMapping("/{id}/favorite")
+    public ResponseEntity<Training> toggleFavorite(@PathVariable String id) {
+        Training existing = trainingService.getTrainingById(id);
+        String userId = SecurityUtils.getCurrentUserId();
+        trainingAccessService.verifyAccess(userId, existing);
+        return ResponseEntity.ok(trainingService.toggleFavorite(id));
+    }
+
+    /** Replace the tag set on a training (normalized server-side). */
+    @PutMapping("/{id}/tags")
+    public ResponseEntity<Training> setTags(@PathVariable String id,
+                                            @RequestBody TagsRequest request) {
+        Training existing = trainingService.getTrainingById(id);
+        String userId = SecurityUtils.getCurrentUserId();
+        trainingAccessService.verifyAccess(userId, existing);
+        return ResponseEntity.ok(trainingService.setTags(id, request.tags()));
+    }
+
+    public record TagsRequest(List<String> tags) {}
+
 }

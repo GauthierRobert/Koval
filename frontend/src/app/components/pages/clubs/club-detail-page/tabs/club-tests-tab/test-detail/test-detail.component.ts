@@ -18,6 +18,8 @@ import { TestFormModalComponent } from '../test-form-modal/test-form-modal.compo
 import { ResultEntryModalComponent } from '../result-entry-modal/result-entry-modal.component';
 import { ApplyReferencesConfirmModalComponent } from '../apply-references-confirm-modal/apply-references-confirm-modal.component';
 import { AuthService } from '../../../../../../../services/auth.service';
+import { TranslateService } from '@ngx-translate/core';
+import { sportLabelKey, targetLabelKey, unitLabelKey } from '../test-display.utils';
 
 @Component({
   selector: 'app-test-detail',
@@ -42,6 +44,7 @@ export class TestDetailComponent implements OnChanges {
 
   private readonly testService = inject(ClubTestService);
   private readonly authService = inject(AuthService);
+  private readonly translate = inject(TranslateService);
 
   readonly test$ = this.testService.selectedTest$;
   readonly iterations$ = this.testService.iterations$;
@@ -87,7 +90,8 @@ export class TestDetailComponent implements OnChanges {
   }
 
   closeIteration(iteration: ClubTestIteration): void {
-    if (!confirm(`Close iteration "${iteration.label}"?`)) return;
+    const msg = this.translate.instant('CLUB_TESTS.CLOSE_ITERATION_CONFIRM', { label: iteration.label });
+    if (!confirm(msg)) return;
     this.testService.closeIteration(this.club.id, this.testId, iteration.id).subscribe();
   }
 
@@ -139,10 +143,20 @@ export class TestDetailComponent implements OnChanges {
   }
 
   archive(): void {
-    if (!confirm('Archive this test?')) return;
+    if (!confirm(this.translate.instant('CLUB_TESTS.ARCHIVE_CONFIRM'))) return;
     this.testService.archiveTest(this.club.id, this.testId).subscribe({
       next: () => this.back.emit(),
     });
+  }
+
+  sportLabelKey(s: string): string {
+    return sportLabelKey(s);
+  }
+  unitLabelKey(u: string): string {
+    return unitLabelKey(u);
+  }
+  targetLabelKey(t: string): string {
+    return targetLabelKey(t);
   }
 
   ownResult(results: ClubTestResult[]): ClubTestResult | undefined {

@@ -118,6 +118,31 @@ textarea.form-input {
   min-height: 60px;
 }
 
+.modal-intro {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
+}
+
+.form-row--coach {
+  padding: 12px;
+  border: 1px dashed var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-color);
+}
+
+.form-row__hint {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
 /* ── Entries ──────────────────────────────────────────────── */
 .entries {
   display: flex;
@@ -163,9 +188,15 @@ textarea.form-input {
 
 .entry__time {
   display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.entry__time-pair {
+  display: flex;
   align-items: center;
   gap: 6px;
-  flex-shrink: 0;
 }
 
 .entry__sep {

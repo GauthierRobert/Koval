@@ -175,6 +175,14 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'races/:id/briefing',
+    loadComponent: () =>
+      import('./components/pages/race-briefing/race-briefing.component').then(
+        (m) => m.RaceBriefingComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
     path: 'pacing',
     loadComponent: () =>
       import('./components/pages/pacing/pacing-page.component').then((m) => m.PacingPageComponent),

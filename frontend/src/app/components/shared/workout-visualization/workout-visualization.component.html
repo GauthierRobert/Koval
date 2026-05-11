@@ -38,10 +38,27 @@
             </span>
           }
         </div>
-        <h1 class="hero-title">{{ training.title }}</h1>
+        <div class="hero-title-row">
+          <h1 class="hero-title">{{ training.title }}</h1>
+          @if (isOwner()) {
+            <app-favorite-star
+              size="lg"
+              [active]="!!training.favorite"
+              [label]="(training.favorite ? 'TRAINING_TAGS.STAR_REMOVE' : 'TRAINING_TAGS.STAR_ADD') | translate"
+              (toggle)="onToggleFavorite()">
+            </app-favorite-star>
+          }
+        </div>
         @if (training.description) {
           <p class="hero-subtitle">{{ training.description }}</p>
         }
+        <div class="hero-tags-row">
+          <app-training-tag-editor
+            [tags]="training.tags ?? []"
+            [readonly]="!isOwner()"
+            (tagsChange)="onTagsChange($event)">
+          </app-training-tag-editor>
+        </div>
         <div class="stat-row">
           <div class="s">
             <small>{{ 'WORKOUT_VIZ.STAT_DURATION' | translate }}</small>

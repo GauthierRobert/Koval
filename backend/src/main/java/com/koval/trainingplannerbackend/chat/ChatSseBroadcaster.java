@@ -3,14 +3,15 @@ package com.koval.trainingplannerbackend.chat;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
 
 /**
  * Per-user SSE fan-out for chat events.
@@ -30,15 +31,21 @@ public class ChatSseBroadcaster {
 
     private static final Logger log = LoggerFactory.getLogger(ChatSseBroadcaster.class);
 
+    /** Cap how long a single emitter can stay open. Clients reconnect after this. */
+    private static final long EMITTER_TIMEOUT_MS = Duration.ofMinutes(30).toMillis();
+
     private final ConcurrentHashMap<String, CopyOnWriteArrayList<SseEmitter>> emitters = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper;
+    private final Executor sseExecutor;
 
-    public ChatSseBroadcaster(ObjectMapper objectMapper) {
+    public ChatSseBroadcaster(ObjectMapper objectMapper,
+                              @Qualifier("sseExecutor") Executor sseExecutor) {
         this.objectMapper = objectMapper;
+        this.sseExecutor = sseExecutor;
     }
 
     public SseEmitter register(String userId) {
-        SseEmitter emitter = new SseEmitter(0L); // no timeout
+        SseEmitter emitter = new SseEmitter(EMITTER_TIMEOUT_MS);
         emitters.computeIfAbsent(userId, k -> new CopyOnWriteArrayList<>()).add(emitter);
         emitter.onCompletion(() -> removeEmitter(userId, emitter));
         emitter.onTimeout(() -> removeEmitter(userId, emitter));
@@ -65,36 +72,42 @@ public class ChatSseBroadcaster {
             return;
         }
 
-        List<SseEmitter> dead = new ArrayList<>();
         for (SseEmitter emitter : list) {
-            try {
-                emitter.send(SseEmitter.event().name(eventName).data(json));
-            } catch (Exception e) {
-                dead.add(emitter);
-            }
+            sseExecutor.execute(() -> sendOrDrop(userId, emitter, eventName, json));
         }
-        dead.forEach(e -> removeEmitter(userId, e));
     }
 
     /**
      * Send a lightweight heartbeat to every connected emitter every 30 seconds.
      * Proxies/load-balancers often close idle connections; the heartbeat keeps
      * them alive. Failed sends trigger cleanup of stale emitters.
+     *
+     * Sends run on the {@code sseExecutor} so a single broken socket can't
+     * raise an exception out of the scheduler thread (which is what was
+     * surfacing client-abort IOExceptions to the global exception handler).
      */
     @Scheduled(fixedRate = 30_000)
     public void heartbeat() {
         emitters.forEach((userId, list) -> {
             if (list.isEmpty()) return;
-            List<SseEmitter> dead = new ArrayList<>();
             for (SseEmitter emitter : list) {
-                try {
-                    emitter.send(SseEmitter.event().name("heartbeat").data(""));
-                } catch (Exception e) {
-                    dead.add(emitter);
-                }
+                sseExecutor.execute(() -> sendOrDrop(userId, emitter, "heartbeat", ""));
             }
-            dead.forEach(e -> removeEmitter(userId, e));
         });
+    }
+
+    private void sendOrDrop(String userId, SseEmitter emitter, String eventName, String data) {
+        try {
+            emitter.send(SseEmitter.event().name(eventName).data(data));
+        } catch (Exception e) {
+            // Closed connection, slow client that filled the buffer, etc.
+            removeEmitter(userId, emitter);
+            try {
+                emitter.completeWithError(e);
+            } catch (Exception ignored) {
+                // Emitter may already be completed.
+            }
+        }
     }
 
     private void removeEmitter(String userId, SseEmitter emitter) {

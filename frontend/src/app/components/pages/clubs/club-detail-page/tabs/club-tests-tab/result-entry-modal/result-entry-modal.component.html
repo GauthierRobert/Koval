@@ -6,14 +6,16 @@
     </header>
 
     <div class="modal-body">
+      <p class="modal-intro">{{ 'CLUB_TESTS.RESULT_ENTRY_INTRO' | translate }}</p>
+
       @if (coachMode) {
-        <div class="form-row">
+        <div class="form-row form-row--coach">
           <label>{{ 'CLUB_TESTS.ATHLETE_ID' | translate }}</label>
           <input type="text" class="form-input"
                  [(ngModel)]="athleteIdInput"
-                 [placeholder]="'CLUB_TESTS.ATHLETE_ID_HINT' | translate"
                  [disabled]="!!existing"
                  data-testid="input-athlete-id" />
+          <p class="form-row__hint">{{ 'CLUB_TESTS.ATHLETE_ID_HINT' | translate }}</p>
         </div>
       }
 
@@ -30,26 +32,28 @@
             </div>
             @if (isTimeUnit(e.segment.resultUnit)) {
               <div class="entry__time">
-                <input type="number" min="0"
-                       class="form-input form-input--num"
-                       [(ngModel)]="e.minutes"
-                       [placeholder]="'CLUB_TESTS.MM' | translate"
-                       data-testid="input-minutes" />
-                <span class="entry__sep">:</span>
-                <input type="number" min="0" max="59"
-                       class="form-input form-input--num"
-                       [(ngModel)]="e.seconds"
-                       [placeholder]="'CLUB_TESTS.SS' | translate"
-                       data-testid="input-seconds" />
+                <span class="entry__time-pair">
+                  <input type="number" min="0"
+                         class="form-input form-input--num"
+                         [(ngModel)]="e.minutes"
+                         data-testid="input-minutes" />
+                  <span class="entry__unit">{{ 'CLUB_TESTS.MM' | translate }}</span>
+                </span>
+                <span class="entry__time-pair">
+                  <input type="number" min="0" max="59"
+                         class="form-input form-input--num"
+                         [(ngModel)]="e.seconds"
+                         data-testid="input-seconds" />
+                  <span class="entry__unit">{{ 'CLUB_TESTS.SS' | translate }}</span>
+                </span>
               </div>
             } @else {
               <div class="entry__numeric">
                 <input type="number"
                        class="form-input form-input--num"
                        [(ngModel)]="e.numericValue"
-                       [placeholder]="e.segment.resultUnit"
                        data-testid="input-numeric" />
-                <span class="entry__unit">{{ e.segment.resultUnit }}</span>
+                <span class="entry__unit">{{ unitLabelKey(e.segment.resultUnit) | translate }}</span>
               </div>
             }
           </div>
@@ -58,7 +62,9 @@
 
       <div class="form-row">
         <label>{{ 'CLUB_TESTS.NOTES' | translate }}</label>
-        <textarea class="form-input" rows="2" [(ngModel)]="notes"></textarea>
+        <textarea class="form-input" rows="2"
+                  [(ngModel)]="notes"
+                  [placeholder]="'CLUB_TESTS.NOTES_PLACEHOLDER' | translate"></textarea>
       </div>
     </div>
 

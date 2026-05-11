@@ -20,6 +20,7 @@ import {WorkoutVisualizationComponent} from '../../shared/workout-visualization/
 import {SidebarComponent} from '../../layout/sidebar/sidebar.component';
 import {FilterPillOption, FilterPillsComponent} from '../../shared/filter-pills/filter-pills.component';
 import {CreateWithAiModalComponent} from '../../shared/create-with-ai-modal/create-with-ai-modal.component';
+import {FavoriteStarComponent} from '../../shared/favorite-star/favorite-star.component';
 
 @Component({
   selector: 'app-workout-selection',
@@ -32,6 +33,7 @@ import {CreateWithAiModalComponent} from '../../shared/create-with-ai-modal/crea
     SidebarComponent,
     FilterPillsComponent,
     CreateWithAiModalComponent,
+    FavoriteStarComponent,
   ],
   templateUrl: './workout-selection.component.html',
   styleUrl: './workout-selection.component.css',
@@ -45,6 +47,7 @@ export class WorkoutSelectionComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   showAiModal = false;
+  readonly emptyTagSet = new Set<string>();
 
   /**
    * The detail view is driven by the `:id` URL segment:
@@ -99,6 +102,12 @@ export class WorkoutSelectionComponent implements OnInit {
     ]),
   );
 
+  /** User-defined tags with usage counts, sorted by popularity. */
+  userTagEntries$ = this.filterService.availableUserTags$;
+  activeUserTags$ = this.filterService.activeUserTags$;
+  favoritesOnly$ = this.filterService.favoritesOnly$;
+  favoritesCount$ = this.filterService.favoritesCount$;
+
   ngOnInit(): void {
     this.trainingService.loadTrainings();
     this.trainingService.loadReceivedTrainings();
@@ -125,6 +134,18 @@ export class WorkoutSelectionComponent implements OnInit {
 
   setTagFilter(value: string | null): void {
     this.filterService.setTagFilter(value as string);
+  }
+
+  toggleUserTag(tag: string): void {
+    this.filterService.toggleUserTag(tag);
+  }
+
+  toggleFavoritesOnly(): void {
+    this.filterService.toggleFavoritesOnly();
+  }
+
+  isUserTagActive(tag: string, active: Set<string>): boolean {
+    return active.has(tag);
   }
 
   onAiCreated(_result: { success: boolean; content?: string }): void {

@@ -1,0 +1,183 @@
+<div class="briefing-page">
+    @if (state$ | async; as s) {
+        @if (s.error) {
+            <div class="briefing-error glass">
+                <h2>{{ 'RACE_BRIEFING.ERROR_TITLE' | translate }}</h2>
+                <p>{{ 'RACE_BRIEFING.ERROR_HINT' | translate }}</p>
+                <button class="briefing-btn" (click)="back()">{{ 'COMMON.BACK' | translate }}</button>
+            </div>
+        } @else if (s.briefing; as b) {
+            <!-- Top action bar — hidden in print -->
+            <div class="briefing-toolbar no-print">
+                <button class="briefing-btn briefing-btn--ghost" (click)="back()">← {{ 'COMMON.BACK' | translate }}</button>
+                <div class="briefing-toolbar-title">{{ 'RACE_BRIEFING.PAGE_TITLE' | translate }}</div>
+                <button class="briefing-btn briefing-btn--primary" (click)="print()">
+                    🖨 {{ 'RACE_BRIEFING.BTN_PRINT' | translate }}
+                </button>
+            </div>
+
+            <article class="briefing-sheet">
+                <!-- Header -->
+                <header class="bf-header">
+                    <div class="bf-eyebrow">{{ 'RACE_BRIEFING.EYEBROW' | translate }}</div>
+                    <h1 class="bf-title">{{ b.race.title }}</h1>
+                    <div class="bf-meta">
+                        @if (b.race.scheduledDate) {
+                            <span class="bf-meta-item bf-date">{{ b.race.scheduledDate }}</span>
+                        }
+                        @if (b.race.location) {
+                            <span class="bf-meta-item">📍 {{ b.race.location }}{{ b.race.country ? ', ' + b.race.country : '' }}</span>
+                        }
+                        @if (b.race.sport) {
+                            <span class="bf-meta-item bf-pill">{{ b.race.sport }}</span>
+                        }
+                        @if (b.race.distance) {
+                            <span class="bf-meta-item">{{ b.race.distance }}</span>
+                        }
+                    </div>
+                    @if (b.race.description) {
+                        <p class="bf-desc">{{ b.race.description }}</p>
+                    }
+                </header>
+
+                <!-- Course summary per discipline -->
+                @if (b.courses.length) {
+                    <section class="bf-section">
+                        <h2 class="bf-section-title">{{ 'RACE_BRIEFING.SECTION_COURSE' | translate }}</h2>
+                        <div class="bf-course-grid">
+                            @for (course of b.courses; track course.discipline) {
+                                <div class="bf-course-card">
+                                    <div class="bf-course-head">
+                                        <span class="bf-course-icon">
+                                            @switch (course.discipline) {
+                                                @case ('swim') { 🏊 }
+                                                @case ('bike') { 🚴 }
+                                                @case ('run') { 🏃 }
+                                                @default { · }
+                                            }
+                                        </span>
+                                        <span class="bf-course-name">{{ disciplineLabel(course.discipline) }}</span>
+                                    </div>
+                                    <div class="bf-course-stats">
+                                        <div class="bf-stat">
+                                            <span class="bf-stat-label">{{ 'RACE_BRIEFING.STAT_DISTANCE' | translate }}</span>
+                                            <span class="bf-stat-value">{{ formatDistance(course.distanceM) }}</span>
+                                        </div>
+                                        <div class="bf-stat">
+                                            <span class="bf-stat-label">{{ 'RACE_BRIEFING.STAT_GAIN' | translate }}</span>
+                                            <span class="bf-stat-value">↑ {{ formatElevation(course.elevationGainM) }}</span>
+                                        </div>
+                                        <div class="bf-stat">
+                                            <span class="bf-stat-label">{{ 'RACE_BRIEFING.STAT_MAX_GRADE' | translate }}</span>
+                                            <span class="bf-stat-value">{{ formatGradient(course.maxGradientPercent) }}</span>
+                                        </div>
+                                    </div>
+                                    @if (course.keySegments.length) {
+                                        <div class="bf-segments">
+                                            <div class="bf-segments-label">{{ 'RACE_BRIEFING.KEY_SEGMENTS' | translate }}</div>
+                                            <ul class="bf-segments-list">
+                                                @for (seg of course.keySegments; track seg.startDistanceM) {
+                                                    <li>
+                                                        <span class="bf-seg-marker">@ km {{ (seg.startDistanceM / 1000).toFixed(1) }}</span>
+                                                        <span class="bf-seg-label">{{ seg.label }}</span>
+                                                        <span class="bf-seg-detail">{{ formatGradient(seg.gradientPercent) }} · ↑ {{ formatElevation(seg.elevationGainM) }}</span>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+
+                <!-- Weather -->
+                @if (b.weather) {
+                    <section class="bf-section">
+                        <h2 class="bf-section-title">{{ 'RACE_BRIEFING.SECTION_WEATHER' | translate }}</h2>
+                        @if (b.weather.warning) {
+                            <p class="bf-weather-warning">{{ b.weather.warning }}</p>
+                        } @else if (raceHours(b.weather.hourly).length) {
+                            <div class="bf-weather-strip">
+                                @for (h of raceHours(b.weather.hourly); track h.time) {
+                                    <div class="bf-weather-hour">
+                                        <div class="bf-w-hour">{{ h.time.slice(11, 16) }}</div>
+                                        <div class="bf-w-icon">{{ weatherIcon(h.weatherCode) }}</div>
+                                        <div class="bf-w-temp">{{ h.temperatureC?.toFixed(0) }}°</div>
+                                        <div class="bf-w-secondary">
+                                            <span title="Wind">💨 {{ h.windSpeedKmh?.toFixed(0) }} km/h</span>
+                                            @if ((h.precipitationMm ?? 0) > 0) {
+                                                <span title="Precipitation">💧 {{ h.precipitationMm?.toFixed(1) }} mm</span>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        } @else {
+                            <p class="bf-weather-empty">{{ 'RACE_BRIEFING.WEATHER_UNAVAILABLE' | translate }}</p>
+                        }
+                        <div class="bf-source">{{ 'RACE_BRIEFING.WEATHER_SOURCE' | translate }} · {{ b.weather.source }}</div>
+                    </section>
+                }
+
+                <!-- Target zones -->
+                @if (b.targetZones.length) {
+                    <section class="bf-section">
+                        <h2 class="bf-section-title">{{ 'RACE_BRIEFING.SECTION_ZONES' | translate }}</h2>
+                        <div class="bf-zones-grid">
+                            @for (target of b.targetZones; track target.sportType) {
+                                <div class="bf-zones-block">
+                                    <div class="bf-zones-head">
+                                        <span class="bf-zones-sport">{{ target.sportType }}</span>
+                                        <span class="bf-zones-ref">
+                                            {{ target.referenceName ?? target.referenceType }} {{ target.referenceUnit ? '(' + target.referenceUnit + ')' : '' }}
+                                        </span>
+                                    </div>
+                                    <ul class="bf-zone-rows">
+                                        @for (z of target.zones; track z.label) {
+                                            <li class="bf-zone-row">
+                                                <span class="bf-zone-label">{{ z.label }}</span>
+                                                <span class="bf-zone-range">{{ z.low }}–{{ z.high }}</span>
+                                                <span class="bf-zone-bar">
+                                                    <span class="bf-zone-fill" [style]="zoneBarStyle(z)"></span>
+                                                </span>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+
+                <!-- Gear checklist -->
+                <section class="bf-section bf-section--gear">
+                    <h2 class="bf-section-title">{{ 'RACE_BRIEFING.SECTION_GEAR' | translate }}</h2>
+                    <div class="bf-gear-grid">
+                        @for (group of b.gear.groups; track group.name) {
+                            <div class="bf-gear-block">
+                                <h3 class="bf-gear-title">{{ group.name }}</h3>
+                                <ul class="bf-gear-list">
+                                    @for (item of group.items; track item) {
+                                        <li><span class="bf-checkbox" aria-hidden="true"></span>{{ item }}</li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                <!-- Footer -->
+                <footer class="bf-footer no-print-fade">
+                    <span>{{ 'RACE_BRIEFING.GENERATED' | translate }} · {{ b.generatedAt | date:'medium' }}</span>
+                    @if (b.race.website) {
+                        <span class="bf-footer-link">{{ b.race.website }}</span>
+                    }
+                </footer>
+            </article>
+        } @else {
+            <div class="briefing-loading">{{ 'RACE_BRIEFING.LOADING' | translate }}</div>
+        }
+    }
+</div>

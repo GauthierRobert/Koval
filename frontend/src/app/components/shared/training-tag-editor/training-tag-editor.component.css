@@ -1,0 +1,138 @@
+.tag-editor {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px 3px 7px;
+    border-radius: var(--radius-pill);
+    background: var(--accent-subtle);
+    border: 1px solid var(--accent-border);
+    color: var(--accent-color);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    transition: all 0.2s var(--ease-spring-gentle);
+}
+
+.chip-hash {
+    opacity: 0.55;
+    font-weight: 800;
+}
+
+.chip:hover {
+    box-shadow: 0 0 8px color-mix(in oklch, var(--accent-color) 18%, transparent);
+}
+
+.chip-remove {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.55;
+    font-size: 14px;
+    line-height: 1;
+    transition: all var(--transition-fast);
+}
+
+.chip-remove:hover {
+    opacity: 1;
+    background: var(--accent-color);
+    color: var(--surface);
+}
+
+.add-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    border: 1px dashed var(--glass-border);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 0.2s var(--ease-spring-gentle);
+}
+
+.add-chip:hover {
+    border-color: var(--accent-border);
+    color: var(--accent-color);
+    background: var(--accent-subtle);
+}
+
+.chip-input {
+    background: var(--surface-elevated);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-pill);
+    color: var(--text-color);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    min-width: 110px;
+    outline: none;
+    transition: box-shadow 0.2s var(--ease-spring-gentle);
+}
+
+.chip-input:focus {
+    box-shadow: 0 0 0 2px color-mix(in oklch, var(--accent-color) 30%, transparent);
+}
+
+.suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 4px 0 0;
+}
+
+.suggestion {
+    background: var(--overlay-5);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-pill);
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.suggestion:hover {
+    background: var(--accent-subtle);
+    color: var(--accent-color);
+    border-color: var(--accent-border);
+}
+
+.tag-editor.readonly .chip {
+    cursor: default;
+}
+
+@media (max-width: 768px) {
+    .chip,
+    .add-chip,
+    .chip-input {
+        font-size: 10px;
+    }
+}

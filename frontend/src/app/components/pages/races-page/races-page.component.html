@@ -420,6 +420,11 @@
                     (click)="simulateRace(race)">
               ▶ {{ 'RACES.BTN_SIMULATE' | translate }}
             </button>
+            <button class="rp-action-ghost"
+                    [routerLink]="['/races', race.id, 'briefing']"
+                    [title]="'RACES.BTN_BRIEFING_TITLE' | translate">
+              📋 {{ 'RACES.BTN_BRIEFING' | translate }}
+            </button>
             @if (isOwnRace(race)) {
               <button class="rp-action-icon" (click)="startEdit(race)" [title]="'RACES.BTN_EDIT_RACE_TITLE' | translate">
                 ✎

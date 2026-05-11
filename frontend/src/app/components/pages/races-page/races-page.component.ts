@@ -3,7 +3,7 @@ import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {Router} from '@angular/router';
+import {Router, RouterLink} from '@angular/router';
 import {map} from 'rxjs/operators';
 import {CountryFacet, DistanceCategory, PageResponse, Race, RaceService, SportFacet} from '../../../services/race.service';
 import {RaceGoalService} from '../../../services/race-goal.service';
@@ -44,7 +44,7 @@ interface SportOption {
 @Component({
   selector: 'app-races-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, RouterLink],
   templateUrl: './races-page.component.html',
   styleUrl: './races-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

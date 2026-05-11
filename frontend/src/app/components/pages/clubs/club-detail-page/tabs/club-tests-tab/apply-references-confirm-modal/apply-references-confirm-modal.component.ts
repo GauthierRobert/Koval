@@ -7,6 +7,7 @@ import {
   ClubTestResult,
   ReferenceUpdateRule,
 } from '../../../../../../../services/club-test.service';
+import { targetLabelKey } from '../test-display.utils';
 
 @Component({
   selector: 'app-apply-references-confirm-modal',
@@ -48,6 +49,10 @@ export class ApplyReferencesConfirmModalComponent implements OnInit {
 
   rules(): ReferenceUpdateRule[] {
     return this.iteration.referenceUpdates;
+  }
+
+  targetLabelKey(t: string): string {
+    return targetLabelKey(t);
   }
 
   apply(): void {

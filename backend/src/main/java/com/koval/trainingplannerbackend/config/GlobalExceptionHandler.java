@@ -6,6 +6,7 @@ import com.koval.trainingplannerbackend.config.exceptions.RateLimitException;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.catalina.connector.ClientAbortException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -14,7 +15,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 
+import java.io.IOException;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -82,6 +85,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.withFieldErrors(400, "Bad Request", "VALIDATION_FAILED",
                         "Validation failed", request.getRequestURI(), fieldErrors));
+    }
+
+    /**
+     * Client-disconnect on an async/SSE response. The response is committed with
+     * {@code text/event-stream}, so writing a JSON error body fails. Just log at
+     * debug and return — Spring won't attempt to serialize a {@code void} return.
+     */
+    @ExceptionHandler({
+            AsyncRequestNotUsableException.class,
+            ClientAbortException.class,
+            IOException.class
+    })
+    public void handleClientDisconnect(Exception ex) {
+        log.debug("Client disconnected during response: {}", ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

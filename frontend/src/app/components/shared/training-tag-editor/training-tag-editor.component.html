@@ -1,0 +1,39 @@
+<div class="tag-editor" [class.editing]="editing" [class.readonly]="readonly">
+    <div class="chips">
+        @for (tag of _tags; track tag; let i = $index) {
+            <span class="chip">
+                <span class="chip-hash">#</span>{{ tag }}
+                @if (!readonly) {
+                    <button type="button" class="chip-remove" [attr.aria-label]="'Remove tag ' + tag" (click)="removeAt(i)">×</button>
+                }
+            </span>
+        }
+        @if (!readonly && !editing) {
+            <button type="button" class="add-chip" (click)="startEditing()">
+                <span aria-hidden="true">+</span>
+                <span>{{ (_tags.length ? 'TRAINING_TAGS.ADD' : 'TRAINING_TAGS.ADD_FIRST') | translate }}</span>
+            </button>
+        }
+        @if (editing) {
+            <input #input
+                   class="chip-input"
+                   type="text"
+                   maxlength="32"
+                   [(ngModel)]="draft"
+                   (ngModelChange)="onInput()"
+                   (keydown)="onKey($event)"
+                   (blur)="stopEditing()"
+                   [placeholder]="'TRAINING_TAGS.PLACEHOLDER' | translate" />
+        }
+    </div>
+
+    @if (editing && suggestions.length) {
+        <div class="suggestions" role="listbox">
+            @for (s of suggestions; track s) {
+                <button type="button"
+                        class="suggestion"
+                        (mousedown)="pickSuggestion(s)">#{{ s }}</button>
+            }
+        </div>
+    }
+</div>

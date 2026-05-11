@@ -30,7 +30,9 @@ public record TrainingSummary(
         LocalDateTime createdAt,
         List<String> clubIds,
         List<String> clubGroupIds,
-        List<String> groupIds
+        List<String> groupIds,
+        List<String> tags,
+        Boolean favorite
 ) {
 
     public static TrainingSummary from(Training t) {
@@ -49,6 +51,8 @@ public record TrainingSummary(
                 t.getCreatedAt(),
                 t.getClubIds(),
                 t.getClubGroupIds(),
-                t.getGroupIds());
+                t.getGroupIds(),
+                t.getTags(),
+                t.getFavorite());
     }
 }
