@@ -71,7 +71,7 @@
     <span class="form-group-count">{{ setElements.length }}</span>
   </div>
   <div class="set-contents-list">
-    @for (el of setElements; track $index) {
+    @for (el of setElements; track el) {
       <div class="set-content-row">
         <span class="set-content-number">{{ $index + 1 }}</span>
         <div class="block-color-bar" [style.background]="blockColor(el)"></div>

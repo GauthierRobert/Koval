@@ -1,8 +1,10 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject} from '@angular/core';
+import {ChangeDetectionStrategy, Component, DestroyRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule, AsyncPipe} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule} from '@ngx-translate/core';
-import {Observable, tap} from 'rxjs';
+import {Observable} from 'rxjs';
+import {take} from 'rxjs/operators';
 import {TrainingService} from '../../../services/training.service';
 import {Training} from '../../../models/training.model';
 import {Group} from '../../../services/group.service';
@@ -24,19 +26,13 @@ export class ShareTrainingModalComponent implements OnChanges {
   @Output() shared = new EventEmitter<Training>();
 
   private trainingService = inject(TrainingService);
+  private destroyRef = inject(DestroyRef);
 
   trainings$: Observable<Training[]> = this.trainingService.trainings$;
   selectedTrainingId = '';
   activeTraining: Training | null = null;
   selectedTagIds: string[] = [];
   saving = false;
-  private latestTrainings: Training[] = [];
-
-  constructor() {
-    this.trainings$ = this.trainingService.trainings$.pipe(
-      tap(trainings => (this.latestTrainings = trainings)),
-    );
-  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen) {
@@ -54,8 +50,12 @@ export class ShareTrainingModalComponent implements OnChanges {
   }
 
   onTrainingSelected(): void {
-    this.activeTraining = this.latestTrainings.find(t => t.id === this.selectedTrainingId) || null;
-    this.selectedTagIds = [...(this.activeTraining?.groupIds || [])];
+    this.trainings$
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe(trainings => {
+        this.activeTraining = trainings.find(t => t.id === this.selectedTrainingId) || null;
+        this.selectedTagIds = [...(this.activeTraining?.groupIds || [])];
+      });
   }
 
   toggleTag(group: Group): void {
@@ -70,16 +70,18 @@ export class ShareTrainingModalComponent implements OnChanges {
   save(): void {
     if (!this.activeTraining) return;
     this.saving = true;
-    this.trainingService.updateTrainingGroups(this.activeTraining.id, this.selectedTagIds).subscribe({
-      next: (updated) => {
-        this.saving = false;
-        this.shared.emit(updated);
-        this.close();
-      },
-      error: () => {
-        this.saving = false;
-      },
-    });
+    this.trainingService.updateTrainingGroups(this.activeTraining.id, this.selectedTagIds)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updated) => {
+          this.saving = false;
+          this.shared.emit(updated);
+          this.close();
+        },
+        error: () => {
+          this.saving = false;
+        },
+      });
   }
 
   close(): void {

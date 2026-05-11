@@ -185,7 +185,9 @@ export class ReferenceValuesPageComponent implements OnInit {
       settings.customZoneReferenceValues = customZoneReferenceValues;
     }
 
-    this.authService.updateSettings(settings).subscribe({
+    this.authService.updateSettings(settings)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: () => {
         this.saving = false;
         this.saved = true;

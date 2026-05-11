@@ -11,7 +11,7 @@
     <!-- Session reminders (coach only) -->
     @if (vm.user?.role === 'COACH' && vm.reminders.length > 0) {
       <div class="session-reminders">
-        @for (r of vm.reminders; track $index) {
+        @for (r of vm.reminders; track r.id) {
           <div class="reminder-card glass">
             <span class="reminder-icon">&#9888;</span>
             <div class="reminder-info">

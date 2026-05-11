@@ -3,7 +3,7 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
 import {BehaviorSubject, combineLatest, Observable} from 'rxjs';
-import {filter, map, shareReplay, startWith, switchMap, tap} from 'rxjs/operators';
+import {filter, map, shareReplay, startWith, switchMap} from 'rxjs/operators';
 import {Router} from '@angular/router';
 import {ResponsiveService} from '../../../services/responsive.service';
 
@@ -110,7 +110,6 @@ export class CalendarComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
 
-  private userId = '';
   private savedWeekDate: Date | null = null;
   private savedMonthDate: Date | null = null;
 
@@ -138,10 +137,7 @@ export class CalendarComponent implements OnInit {
     this.setWeek(new Date());
     this.loadPreferences();
 
-    const user$ = this.authService.user$.pipe(
-      filter((u) => !!u),
-      tap((user) => (this.userId = user!.id))
-    );
+    const user$ = this.authService.user$.pipe(filter((u) => !!u));
 
     const trigger$ = combineLatest([user$, this.reload$]);
 
@@ -234,19 +230,27 @@ export class CalendarComponent implements OnInit {
   }
 
   markComplete(workout: ScheduledWorkout): void {
-    this.calendarService.markCompleted(workout.id).subscribe(() => this.reload$.next());
+    this.calendarService.markCompleted(workout.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.reload$.next());
   }
 
   markSkipped(workout: ScheduledWorkout): void {
-    this.calendarService.markSkipped(workout.id).subscribe(() => this.reload$.next());
+    this.calendarService.markSkipped(workout.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.reload$.next());
   }
 
   deleteWorkout(workout: ScheduledWorkout): void {
-    this.calendarService.deleteScheduledWorkout(workout.id).subscribe(() => this.reload$.next());
+    this.calendarService.deleteScheduledWorkout(workout.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.reload$.next());
   }
 
   onReschedule(workout: ScheduledWorkout, newDate: string): void {
-    this.calendarService.rescheduleWorkout(workout.id, newDate).subscribe(() => this.reload$.next());
+    this.calendarService.rescheduleWorkout(workout.id, newDate)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.reload$.next());
   }
 
   selectWorkout(workout: ScheduledWorkout): void { this.selectedWorkout = workout; }
@@ -262,11 +266,15 @@ export class CalendarComponent implements OnInit {
   // --- Club session handlers ---
 
   joinClubSession(session: CalendarClubSession): void {
-    this.clubSessionService.joinSession(session.clubId, session.id).subscribe(() => this.reload$.next());
+    this.clubSessionService.joinSession(session.clubId, session.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.reload$.next());
   }
 
   cancelClubSession(session: CalendarClubSession): void {
-    this.clubSessionService.cancelSession(session.clubId, session.id).subscribe(() => this.reload$.next());
+    this.clubSessionService.cancelSession(session.clubId, session.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.reload$.next());
   }
 
   // --- Preferences ---

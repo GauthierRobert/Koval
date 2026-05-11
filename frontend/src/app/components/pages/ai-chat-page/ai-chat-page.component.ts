@@ -55,9 +55,11 @@ export class AIChatPageComponent implements OnInit {
         }
         for (const msg of messages) {
           if (msg.createdTraining?.id && !this.fetchedTrainings[msg.createdTraining.id]) {
-            this.trainingService.getTrainingById(msg.createdTraining.id).subscribe({
-              next: (training) => (this.fetchedTrainings[training.id] = training),
-            });
+            this.trainingService.getTrainingById(msg.createdTraining.id)
+              .pipe(takeUntilDestroyed(this.destroyRef))
+              .subscribe({
+                next: (training) => (this.fetchedTrainings[training.id] = training),
+              });
           }
         }
       });

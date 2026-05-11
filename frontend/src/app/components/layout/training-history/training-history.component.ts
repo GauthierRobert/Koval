@@ -1,4 +1,5 @@
-import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {ChangeDetectionStrategy, Component, DestroyRef, inject} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
 import {CommonModule} from '@angular/common';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
@@ -33,6 +34,7 @@ export class TrainingHistoryComponent {
     private translate = inject(TranslateService);
     private router = inject(Router);
     private route = inject(ActivatedRoute);
+    private destroyRef = inject(DestroyRef);
 
     /** Highlight the row whose id is in the URL — the route is the source of truth. */
     activeTrainingId$ = this.route.paramMap.pipe(map((p) => p.get('id')));
@@ -53,24 +55,28 @@ export class TrainingHistoryComponent {
         event.stopPropagation();
         if (!confirm(this.translate.instant('TRAINING_HISTORY.DELETE_CONFIRM', { title: training.title }))) return;
         const wasActive = this.route.snapshot.paramMap.get('id') === training.id;
-        this.trainingService.deleteTraining(training.id).subscribe({
-            next: () => {
-                this.trainingService.removeTrainingLocally(training.id);
-                if (wasActive) this.router.navigate(['/trainings']);
-            },
-            error: () => {
-                this.trainingService.removeTrainingLocally(training.id);
-                if (wasActive) this.router.navigate(['/trainings']);
-            },
-        });
+        this.trainingService.deleteTraining(training.id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: () => {
+                    this.trainingService.removeTrainingLocally(training.id);
+                    if (wasActive) this.router.navigate(['/trainings']);
+                },
+                error: () => {
+                    this.trainingService.removeTrainingLocally(training.id);
+                    if (wasActive) this.router.navigate(['/trainings']);
+                },
+            });
     }
 
     onDuplicate(event: Event, training: Training): void {
         event.stopPropagation();
-        this.trainingService.duplicateTraining(training.id).subscribe({
-            next: (copy) => this.router.navigate(['/trainings', copy.id]),
-            error: (err) => console.error('Failed to duplicate training', err),
-        });
+        this.trainingService.duplicateTraining(training.id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (copy) => this.router.navigate(['/trainings', copy.id]),
+                error: (err) => console.error('Failed to duplicate training', err),
+            });
     }
 
     getDuration(training: Training): string {

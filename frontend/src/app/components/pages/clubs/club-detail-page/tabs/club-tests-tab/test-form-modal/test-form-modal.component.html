@@ -86,7 +86,7 @@
         @if (segments.length === 0) {
           <p class="builder__empty">{{ 'CLUB_TESTS.SEGMENTS' | translate }} —</p>
         }
-        @for (s of segments; track $index) {
+        @for (s of segments; track s) {
           <div class="builder-row">
             <div class="builder-row__index mono">{{ $index + 1 }}</div>
             <div class="builder-row__fields">
@@ -123,7 +123,7 @@
             + {{ 'CLUB_TESTS.ADD_RULE' | translate }}
           </button>
         </header>
-        @for (r of rules; track $index) {
+        @for (r of rules; track r) {
           <div class="rule-row">
             <div class="rule-row__top">
               <select class="form-input" [(ngModel)]="r.target" [disabled]="hasResults">
