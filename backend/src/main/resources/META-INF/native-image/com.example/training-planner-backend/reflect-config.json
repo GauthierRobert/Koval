@@ -266,6 +266,24 @@
     "allDeclaredFields": true
   },
   {
+    "name": "com.koval.trainingplannerbackend.coach.CoachNote",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.history.AiAnalysis",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.config.Provenance",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
     "name": "com.koval.trainingplannerbackend.plan.TrainingPlan",
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true,

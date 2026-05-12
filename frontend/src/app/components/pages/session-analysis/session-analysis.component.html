@@ -147,6 +147,9 @@
         </app-block-breakdown-table>
       }
 
+      <!-- AI-generated analyses (published via MCP or AI chat) -->
+      <app-ai-feedback-panel [sessionId]="session.id"></app-ai-feedback-panel>
+
   </div>
 } @else {
   <div class="analysis-page skeleton-stack" aria-busy="true" aria-hidden="true">

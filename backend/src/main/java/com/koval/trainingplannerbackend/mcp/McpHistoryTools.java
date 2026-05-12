@@ -1,6 +1,9 @@
 package com.koval.trainingplannerbackend.mcp;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
+import com.koval.trainingplannerbackend.config.Provenance;
+import com.koval.trainingplannerbackend.training.history.AiAnalysis;
+import com.koval.trainingplannerbackend.training.history.AiAnalysisService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService.PmcDataPoint;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
@@ -34,15 +37,18 @@ public class McpHistoryTools {
     private final AnalyticsService analyticsService;
     private final SessionService sessionService;
     private final PowerCurveService powerCurveService;
+    private final AiAnalysisService aiAnalysisService;
 
     public McpHistoryTools(CompletedSessionRepository sessionRepository,
                            AnalyticsService analyticsService,
                            SessionService sessionService,
-                           PowerCurveService powerCurveService) {
+                           PowerCurveService powerCurveService,
+                           AiAnalysisService aiAnalysisService) {
         this.sessionRepository = sessionRepository;
         this.analyticsService = analyticsService;
         this.sessionService = sessionService;
         this.powerCurveService = powerCurveService;
+        this.aiAnalysisService = aiAnalysisService;
     }
 
     @Tool(description = "Get the user's most recent completed workout sessions. Returns metrics like duration, average power, heart rate, TSS (Training Stress Score), and IF (Intensity Factor).")
@@ -152,6 +158,33 @@ public class McpHistoryTools {
         String userId = SecurityUtils.getCurrentUserId();
         boolean removed = sessionService.deleteSession(sessionId, userId);
         return removed ? "Session deleted." : "Error: session not found or not owned by user.";
+    }
+
+    @Tool(description = "Publish an AI-generated analysis of a completed workout session back to Koval. " +
+            "Attaches a short summary plus a full markdown body (and optional highlights) to the session " +
+            "so it appears in the athlete's history with an AI-source badge. Use after analyzing a session " +
+            "in detail — the user does NOT have to copy/paste it themselves. Callable by the session owner " +
+            "or by a coach managing the athlete.")
+    public AiAnalysisSummary publishSessionAnalysis(
+            @ToolParam(description = "Completed session ID to attach the analysis to") String sessionId,
+            @ToolParam(description = "Short 1-3 line summary shown in history lists (max 500 chars)") String summary,
+            @ToolParam(description = "Full analysis body in markdown (max 20000 chars)") String body,
+            @ToolParam(description = "Optional bullet list of 3-6 key takeaways (max 10 items)") List<String> highlights) {
+        String userId = SecurityUtils.getCurrentUserId();
+        AiAnalysis saved = aiAnalysisService.publish(
+                userId, sessionId, summary, body, highlights, Provenance.mcp());
+        return AiAnalysisSummary.from(saved);
+    }
+
+    public record AiAnalysisSummary(String id, String sessionId, String athleteId, String authorId,
+                                     String summary, String createdAt, String source) {
+        public static AiAnalysisSummary from(AiAnalysis a) {
+            return new AiAnalysisSummary(
+                    a.getId(), a.getSessionId(), a.getAthleteId(), a.getAuthorId(),
+                    a.getSummary(),
+                    Optional.ofNullable(a.getCreatedAt()).map(Object::toString).orElse(null),
+                    a.getProvenance() != null ? a.getProvenance().source() : null);
+        }
     }
 
     public record SessionSummary(String id, String title, String sportType, String completedAt,

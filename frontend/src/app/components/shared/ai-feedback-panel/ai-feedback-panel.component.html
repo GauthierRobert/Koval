@@ -1,0 +1,38 @@
+@if (state$ | async; as state) {
+  @if (state.items.length || state.loading) {
+    <section class="feedback-panel glass">
+      <header class="feedback-header">
+        <span class="feedback-title">AI analyses</span>
+      </header>
+
+      @if (state.loading) {
+        <div class="feedback-empty">Loading...</div>
+      } @else if (state.error) {
+        <div class="feedback-empty error">Could not load analyses.</div>
+      } @else {
+        <ul class="feedback-list">
+          @for (item of state.items; track trackById($index, item)) {
+            <li class="feedback-card">
+              <header class="card-header">
+                <span class="card-kind">AI analysis</span>
+                @if (isMcpSourced(item)) {
+                  <span class="ai-badge" title="Published via an external AI client (MCP)">AI · MCP</span>
+                }
+                <time class="card-time">{{ item.createdAt | date:'short' }}</time>
+              </header>
+              <h4 class="card-summary">{{ item.summary }}</h4>
+              <p class="card-body">{{ item.body }}</p>
+              @if (item.highlights && item.highlights.length) {
+                <ul class="card-highlights">
+                  @for (h of item.highlights; track h) {
+                    <li>{{ h }}</li>
+                  }
+                </ul>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+}

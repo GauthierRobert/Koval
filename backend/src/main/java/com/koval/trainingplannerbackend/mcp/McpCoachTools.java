@@ -3,10 +3,13 @@ package com.koval.trainingplannerbackend.mcp;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserService;
+import com.koval.trainingplannerbackend.coach.CoachNote;
+import com.koval.trainingplannerbackend.coach.CoachNoteService;
 import com.koval.trainingplannerbackend.coach.CoachService;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkoutService;
 import com.koval.trainingplannerbackend.coach.dto.AthleteResponse;
+import com.koval.trainingplannerbackend.config.Provenance;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService.PmcDataPoint;
@@ -43,6 +46,7 @@ public class McpCoachTools {
     private final CompletedSessionRepository sessionRepository;
     private final AnalyticsService analyticsService;
     private final PowerCurveService powerCurveService;
+    private final CoachNoteService coachNoteService;
 
     public McpCoachTools(CoachService coachService,
                          ScheduledWorkoutService scheduledWorkoutService,
@@ -51,7 +55,8 @@ public class McpCoachTools {
                          UserService userService,
                          CompletedSessionRepository sessionRepository,
                          AnalyticsService analyticsService,
-                         PowerCurveService powerCurveService) {
+                         PowerCurveService powerCurveService,
+                         CoachNoteService coachNoteService) {
         this.coachService = coachService;
         this.scheduledWorkoutService = scheduledWorkoutService;
         this.trainingService = trainingService;
@@ -60,6 +65,7 @@ public class McpCoachTools {
         this.sessionRepository = sessionRepository;
         this.analyticsService = analyticsService;
         this.powerCurveService = powerCurveService;
+        this.coachNoteService = coachNoteService;
     }
 
     @Tool(description = "List all athletes coached by the current user. Returns athlete profiles with FTP, weight, and performance metrics. Requires COACH role.")
@@ -143,9 +149,33 @@ public class McpCoachTools {
         return powerCurveService.getBestPowerCurve(athleteId, from, to);
     }
 
+    @Tool(description = "Append a coach note about an athlete you manage. Use this to leave AI-drafted " +
+            "feedback after reviewing the athlete's recent work — the note shows up on the athlete's coach " +
+            "view with an AI-source badge. Pass sessionId to tie the note to a specific completed session, " +
+            "or omit it for a general note. Requires the current user to be the athlete's coach.")
+    public CoachNoteSummary appendCoachNote(
+            @ToolParam(description = "Athlete user ID") String athleteId,
+            @ToolParam(description = "Note body in markdown (max 10000 chars)") String body,
+            @ToolParam(description = "Optional completed session ID this note refers to") String sessionId) {
+        String coachId = SecurityUtils.getCurrentUserId();
+        CoachNote saved = coachNoteService.append(coachId, athleteId, sessionId, body, Provenance.mcp());
+        return CoachNoteSummary.from(saved);
+    }
+
     private void verifyCoach(String coachId, String athleteId) {
         if (!coachService.isCoachOfAthlete(coachId, athleteId)) {
             throw new IllegalStateException("Not authorized: you are not the coach of this athlete.");
+        }
+    }
+
+    public record CoachNoteSummary(String id, String coachId, String athleteId, String sessionId,
+                                    String body, String createdAt, String source) {
+        public static CoachNoteSummary from(CoachNote n) {
+            return new CoachNoteSummary(
+                    n.getId(), n.getCoachId(), n.getAthleteId(), n.getSessionId(),
+                    n.getBody(),
+                    n.getCreatedAt() != null ? n.getCreatedAt().toString() : null,
+                    n.getProvenance() != null ? n.getProvenance().source() : null);
         }
     }
 

@@ -22,6 +22,7 @@ import {CadenceDistributionPanelComponent} from './cadence-distribution-panel/ca
 import {ClimbsPanelComponent} from './climbs-panel/climbs-panel.component';
 import {WPrimeBalanceChartComponent} from './wprime-balance-chart/wprime-balance-chart.component';
 import {ChartPanelSkeletonComponent} from '../../shared/skeleton/chart-panel-skeleton/chart-panel-skeleton.component';
+import {AiFeedbackPanelComponent} from '../../shared/ai-feedback-panel/ai-feedback-panel.component';
 import {
     formatBlockDistance,
     formatLongDate,
@@ -47,7 +48,7 @@ interface FitState {
 @Component({
     selector: 'app-session-analysis',
     standalone: true,
-    imports: [CommonModule, TranslateModule, FitTimeseriesChartComponent, SessionStatsHeaderComponent, ZoneDistributionPanelComponent, BlockBreakdownTableComponent, PowerCurveChartComponent, DecouplingGaugeComponent, CadenceDistributionPanelComponent, ClimbsPanelComponent, WPrimeBalanceChartComponent, ChartPanelSkeletonComponent],
+    imports: [CommonModule, TranslateModule, FitTimeseriesChartComponent, SessionStatsHeaderComponent, ZoneDistributionPanelComponent, BlockBreakdownTableComponent, PowerCurveChartComponent, DecouplingGaugeComponent, CadenceDistributionPanelComponent, ClimbsPanelComponent, WPrimeBalanceChartComponent, ChartPanelSkeletonComponent, AiFeedbackPanelComponent],
     templateUrl: './session-analysis.component.html',
     styleUrl: './session-analysis.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
