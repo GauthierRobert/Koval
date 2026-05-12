@@ -76,7 +76,7 @@ interface ReactionRow {
       gap: 4px;
       padding: 2px 8px;
       border-radius: 999px;
-      border: 1px solid var(--glass-border);
+      border: none;
       background: var(--surface-elevated);
       color: var(--text-color);
       font-size: var(--text-xs);
@@ -87,7 +87,6 @@ interface ReactionRow {
     .reaction-chip:hover { background: var(--glass-bg); }
     .reaction-chip.active {
       background: var(--accent-subtle);
-      border-color: var(--accent-border);
       color: var(--accent-color);
     }
     .reaction-chip .emoji { font-size: 13px; }

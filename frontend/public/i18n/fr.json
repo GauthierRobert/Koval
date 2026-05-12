@@ -2045,9 +2045,6 @@
     "PRESET_CP_TWO_TEST": "Critical Power (3 min + 12 min)",
     "PRESET_CP_TWO_TEST_DESC": "Deux efforts maximaux à vélo nourrissent le modèle linéaire CP/W' sur le profil."
   },
-  "COMMON": {
-    "BACK": "Retour"
-  },
   "RACE_BRIEFING": {
     "PAGE_TITLE": "BRIEFING COURSE",
     "EYEBROW": "Briefing course",

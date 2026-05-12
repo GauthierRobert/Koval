@@ -20,7 +20,6 @@
   gap: var(--space-md);
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Composer Ã¢â€â‚¬Ã¢â€â‚¬ */
 .composer {
   background: var(--glass-bg);
   box-shadow: var(--shadow-glass);
@@ -70,7 +69,7 @@
 
 .composer-cancel {
   padding: 6px 14px;
-  border: 1px solid var(--glass-border);
+  border: none;
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-muted);

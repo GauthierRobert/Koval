@@ -2045,9 +2045,6 @@
     "PRESET_CP_TWO_TEST": "Critical Power (3 min + 12 min)",
     "PRESET_CP_TWO_TEST_DESC": "Two all-out bike efforts feed the linear CP/W' model on your profile."
   },
-  "COMMON": {
-    "BACK": "Back"
-  },
   "RACE_BRIEFING": {
     "PAGE_TITLE": "RACE-DAY BRIEFING",
     "EYEBROW": "Race-day briefing",

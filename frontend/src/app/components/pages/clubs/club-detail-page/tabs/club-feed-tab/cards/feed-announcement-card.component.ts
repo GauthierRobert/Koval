@@ -155,10 +155,10 @@ import {FeedCommentsSectionComponent} from './feed-comments-section.component';
     .ann-action-link:hover { color: var(--accent-color); }
     .ann-action-link--danger:hover { color: var(--danger-color); }
 
-    .ann-edit-textarea { width: 100%; background: var(--surface-elevated); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 8px 10px; font-size: var(--text-sm); color: var(--text-color); outline: none; resize: vertical; font-family: inherit; }
+    .ann-edit-textarea { width: 100%; background: var(--surface-elevated); border: none; border-radius: var(--radius-sm); padding: 8px 10px; font-size: var(--text-sm); color: var(--text-color); outline: none; resize: vertical; font-family: inherit; }
     .ann-edit-textarea:focus { border-color: var(--accent-color); }
     .ann-edit-actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: var(--space-xs); }
-    .composer-cancel { background: none; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 6px 12px; font-size: var(--text-xs); color: var(--text-muted); cursor: pointer; }
+    .composer-cancel { background: none; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: var(--text-xs); color: var(--text-muted); cursor: pointer; }
     .composer-cancel:hover { color: var(--text-color); }
     .btn-primary { background: var(--accent-color); color: #000; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: var(--text-xs); font-weight: 600; cursor: pointer; }
     .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }

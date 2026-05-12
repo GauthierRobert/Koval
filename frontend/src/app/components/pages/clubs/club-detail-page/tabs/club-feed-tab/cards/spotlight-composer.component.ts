@@ -100,7 +100,7 @@ const EXPIRY_OPTIONS = [3, 7, 14];
     </div>
   `,
   styles: `
-    .composer-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: var(--space-md); display: flex; flex-direction: column; gap: var(--space-sm); }
+    .composer-card { background: var(--glass-bg); border: none; border-radius: var(--radius-md); padding: var(--space-md); display: flex; flex-direction: column; gap: var(--space-sm); }
     .composer-header { display: flex; align-items: center; justify-content: space-between; }
     .composer-header h4 { font-size: var(--text-lg); margin: 0; color: var(--text-color); }
     .composer-close { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; line-height: 1; }
@@ -109,7 +109,7 @@ const EXPIRY_OPTIONS = [3, 7, 14];
     .composer-row label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
     .composer-input {
       background: var(--surface-elevated);
-      border: 1px solid var(--glass-border);
+      border: none;
       border-radius: var(--radius-sm);
       padding: 6px 10px;
       font-size: var(--text-xs);
@@ -121,7 +121,7 @@ const EXPIRY_OPTIONS = [3, 7, 14];
     .badge-pill {
       padding: 4px 10px;
       border-radius: 999px;
-      border: 1px solid var(--glass-border);
+      border: none;
       background: var(--surface-elevated);
       color: var(--text-muted);
       font-size: 10px;
@@ -130,9 +130,9 @@ const EXPIRY_OPTIONS = [3, 7, 14];
       cursor: pointer;
     }
     .badge-pill:hover { color: var(--text-color); }
-    .badge-pill.active { background: var(--accent-subtle); border-color: var(--accent-color); color: var(--accent-color); }
+    .badge-pill.active { background: var(--accent-subtle); color: var(--accent-color); }
     .composer-actions { display: flex; gap: 6px; justify-content: flex-end; }
-    .composer-cancel { background: none; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 6px 12px; font-size: var(--text-xs); color: var(--text-muted); cursor: pointer; }
+    .composer-cancel { background: none; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: var(--text-xs); color: var(--text-muted); cursor: pointer; }
     .composer-cancel:hover { color: var(--text-color); }
     .btn-primary { background: var(--accent-color); color: #000; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: var(--text-xs); font-weight: 600; cursor: pointer; }
     .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }

@@ -76,7 +76,7 @@ import {MentionSuggestion} from '../../../models/club.model';
     .mention-input {
       width: 100%;
       background: var(--surface-elevated);
-      border: 1px solid var(--glass-border);
+      border: none;
       border-radius: var(--radius-sm);
       padding: 6px 10px;
       font-size: var(--text-xs);
