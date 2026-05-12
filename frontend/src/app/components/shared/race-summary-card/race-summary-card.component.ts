@@ -4,6 +4,7 @@ import {FormsModule} from '@angular/forms';
 import {TranslateModule} from '@ngx-translate/core';
 import {Race} from '../../../services/race.service';
 import {SportIconComponent} from '../sport-icon/sport-icon.component';
+import {sportMeta} from '../../../models/sport.registry';
 
 @Component({
   selector: 'app-race-summary-card',
@@ -36,13 +37,7 @@ export class RaceSummaryCardComponent {
   @Output() loopsChanged = new EventEmitter<{race: Race; discipline: string; event: Event}>();
 
   getSportColor(): string {
-    switch (this.race.sport?.toUpperCase()) {
-      case 'CYCLING': return 'var(--success-color)';
-      case 'RUNNING': return '#fb923c';
-      case 'SWIMMING': return 'var(--info-text)';
-      case 'TRIATHLON': return 'var(--accent-color)';
-      default: return 'var(--text-30)';
-    }
+    return sportMeta(this.race.sport).color;
   }
 
   isPast(): boolean {
@@ -50,14 +45,8 @@ export class RaceSummaryCardComponent {
     return new Date(this.race.scheduledDate + 'T00:00:00') < new Date();
   }
 
-  getGpxDisciplines(): string[] {
-    switch (this.race.sport?.toUpperCase()) {
-      case 'TRIATHLON': return ['swim', 'bike', 'run'];
-      case 'CYCLING': return ['bike'];
-      case 'RUNNING': return ['run'];
-      case 'SWIMMING': return ['swim'];
-      default: return ['bike'];
-    }
+  getGpxDisciplines(): readonly string[] {
+    return sportMeta(this.race.sport).gpxDisciplines;
   }
 
   hasGpx(discipline: string): boolean {

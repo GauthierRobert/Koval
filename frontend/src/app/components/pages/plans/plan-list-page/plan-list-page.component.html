@@ -46,9 +46,9 @@
     @if (plans$ | async; as plans) {
       @if (plans.length === 0 && !showCreateForm) {
         @if (loading$ | async) {
-          <div class="loading-state">
-            <div class="loading-spinner"></div>
-          </div>
+          @for (r of [0,1,2,3,4,5]; track r) {
+            <div class="skeleton skeleton-block skeleton-plan-card" aria-busy="true" aria-hidden="true"></div>
+          }
         } @else {
           <div class="empty-state empty-state-grid">
             <div class="empty-icon">

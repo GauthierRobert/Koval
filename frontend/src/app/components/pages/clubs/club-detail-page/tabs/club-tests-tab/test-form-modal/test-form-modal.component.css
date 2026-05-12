@@ -14,8 +14,8 @@
 
 .modal {
   width: 100%;
-  max-width: 760px;
-  max-height: 90vh;
+  max-width: 1100px;
+  max-height: 92vh;
   border-radius: var(--radius-xl);
   overflow: hidden;
   display: flex;
@@ -460,6 +460,63 @@ select.form-input {
 .rule-row__formula {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 12px;
+}
+
+.rule-row__vars {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.rule-row__vars-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  opacity: 0.75;
+  text-transform: uppercase;
+}
+
+.var-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: var(--overlay-5);
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1.4;
+  transition: all 0.2s var(--ease-spring-gentle);
+}
+
+.var-chip:hover {
+  border-color: var(--accent-color);
+  background: var(--accent-subtle);
+  color: var(--accent-color);
+}
+
+.var-chip code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+}
+
+.var-chip__label {
+  color: var(--text-muted);
+  font-size: 10px;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.var-chip:hover .var-chip__label {
+  color: var(--accent-color);
+  opacity: 0.85;
 }
 
 .auto-apply {

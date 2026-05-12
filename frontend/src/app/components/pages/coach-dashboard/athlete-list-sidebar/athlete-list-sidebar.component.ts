@@ -31,6 +31,9 @@ export class AthleteListSidebarComponent {
     atlTrend: number;
   } | null>;
   @Input() totalAthleteCount = 0;
+  @Input() loading = false;
+
+  readonly skeletonRows = Array.from({ length: 10 }, (_, i) => i);
 
   @Output() selectAthlete = new EventEmitter<User>();
   @Output() toggleTagFilter = new EventEmitter<string>();

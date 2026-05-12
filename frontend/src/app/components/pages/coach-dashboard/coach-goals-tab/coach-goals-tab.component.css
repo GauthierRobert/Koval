@@ -81,3 +81,5 @@
   font-size: var(--text-sm);
   font-style: italic;
 }
+
+.skeleton-goal-card { height: 140px; }

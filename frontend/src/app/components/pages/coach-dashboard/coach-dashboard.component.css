@@ -414,3 +414,10 @@
     padding: 0.75rem;
   }
 }
+
+/* ── Skeleton placeholders ── */
+.skeleton-stat-num {
+  display: inline-block;
+  width: 36px;
+  vertical-align: middle;
+}

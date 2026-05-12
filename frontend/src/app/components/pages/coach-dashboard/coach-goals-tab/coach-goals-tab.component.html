@@ -50,4 +50,10 @@
   } @else {
     <div class="empty-tab">{{ 'COACH_DASHBOARD.EMPTY_RACE_GOALS' | translate }}</div>
   }
+} @else {
+  <div class="skeleton-stack skeleton-stack--tight" aria-busy="true" aria-hidden="true">
+    @for (r of [0,1,2,3]; track r) {
+      <div class="skeleton skeleton-block skeleton-goal-card"></div>
+    }
+  </div>
 }

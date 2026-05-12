@@ -74,10 +74,7 @@
             }
           }
           @if (fit.loading) {
-            <div class="no-fit-msg">
-              <div class="loading-dots"><span></span><span></span><span></span></div>
-              <p>{{ 'SESSION_ANALYSIS.LOADING_FIT' | translate }}</p>
-            </div>
+            <app-chart-panel-skeleton height="380px" [showHeader]="false"></app-chart-panel-skeleton>
           }
           @if (fit.error) {
             <div class="no-fit-msg error">
@@ -150,5 +147,24 @@
         </app-block-breakdown-table>
       }
 
+  </div>
+} @else {
+  <div class="analysis-page skeleton-stack" aria-busy="true" aria-hidden="true">
+    <div class="skeleton skeleton-block skeleton-block--xl skeleton-stats-header"></div>
+    <app-chart-panel-skeleton height="380px"></app-chart-panel-skeleton>
+    <app-chart-panel-skeleton height="220px"></app-chart-panel-skeleton>
+    <app-chart-panel-skeleton height="220px"></app-chart-panel-skeleton>
+    <app-chart-panel-skeleton height="220px"></app-chart-panel-skeleton>
+    <div class="skeleton-panel skeleton-panel--xl">
+      @for (r of [0,1,2,3,4,5,6,7]; track r) {
+        <div class="skeleton-row" style="--skeleton-cols: 5">
+          <div class="skeleton skeleton-cell"></div>
+          <div class="skeleton skeleton-cell"></div>
+          <div class="skeleton skeleton-cell"></div>
+          <div class="skeleton skeleton-cell"></div>
+          <div class="skeleton skeleton-cell"></div>
+        </div>
+      }
+    </div>
   </div>
 }

@@ -100,8 +100,10 @@
                   }
                 </select>
               </label>
-              @if (s.id && showAdvanced) {
-                <code class="builder-row__hint">{{ variableHint(s) }}</code>
+              @if (showAdvanced && s.id) {
+                <code class="builder-row__hint" [title]="'CLUB_TESTS.SEGMENT_VARIABLE_HINT' | translate">
+                  {{ variableHint(s) }}
+                </code>
               }
             </div>
             <button class="btn-remove" (click)="removeSegment($index)"
@@ -240,6 +242,19 @@
                          [(ngModel)]="r.formulaExpression"
                          [placeholder]="'CLUB_TESTS.RULE_FORMULA_PLACEHOLDER' | translate"
                          data-testid="rule-formula-input" />
+                  @if (segments.length > 0) {
+                    <div class="rule-row__vars">
+                      <span class="rule-row__vars-label">{{ 'CLUB_TESTS.AVAILABLE_VARS' | translate }}:</span>
+                      @for (s of segments; track s.id) {
+                        <button type="button" class="var-chip"
+                                (click)="insertVariable(r, s)"
+                                [title]="'CLUB_TESTS.INSERT_VAR_HINT' | translate">
+                          <code>{{ variableHint(s) }}</code>
+                          @if (s.label) { <span class="var-chip__label">{{ s.label }}</span> }
+                        </button>
+                      }
+                    </div>
+                  }
                 </label>
                 <label class="auto-apply">
                   <input type="checkbox" [(ngModel)]="r.autoApply" />

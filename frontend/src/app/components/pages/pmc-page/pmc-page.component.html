@@ -32,6 +32,12 @@
             <span class="badge-desc">{{ m.tsb >= 0 ? ('PMC.BADGE_TSB_FRESH' | translate) : ('PMC.BADGE_TSB_FATIGUED' | translate) }}</span>
           </div>
         </div>
+      } @else {
+        <div class="load-badges" aria-busy="true" aria-hidden="true">
+          <div class="skeleton skeleton-block skeleton-block--md skeleton-load-badge"></div>
+          <div class="skeleton skeleton-block skeleton-block--md skeleton-load-badge"></div>
+          <div class="skeleton skeleton-block skeleton-block--md skeleton-load-badge"></div>
+        </div>
       }
 
       <button data-testid="pmc-refresh-btn" class="refresh-btn" (click)="loadPmc()" [disabled]="loading">
@@ -85,8 +91,12 @@
       </div>
 
       <div class="chart-area">
-        <app-pmc-chart data-testid="pmc-chart" [data]="fullPmcData$ | async" [goals]="displayGoals$ | async"
-            (viewRangeChange)="onViewRangeChange($event)"></app-pmc-chart>
+        @if (fullPmcData$ | async; as pmcData) {
+          <app-pmc-chart data-testid="pmc-chart" [data]="pmcData" [goals]="displayGoals$ | async"
+              (viewRangeChange)="onViewRangeChange($event)"></app-pmc-chart>
+        } @else {
+          <app-chart-panel-skeleton height="440px" [showHeader]="false"></app-chart-panel-skeleton>
+        }
       </div>
     </div>
 

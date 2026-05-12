@@ -48,6 +48,13 @@
     </div>
   }
 
+  @if (loading && athletes.length === 0) {
+    <div class="athletes" aria-busy="true" aria-hidden="true">
+      @for (i of skeletonRows; track i) {
+        <div class="skeleton skeleton-block skeleton-block--md skeleton-athlete-row"></div>
+      }
+    </div>
+  }
   @if (athletes.length > 0) {
     <div class="athletes">
       @for (athlete of athletes; track trackAthleteById(athlete)) {

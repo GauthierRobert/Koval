@@ -177,9 +177,14 @@
     </app-training-action-modal>
 
   } @else {
-    <div class="loading-state">
-      <div class="loading-spinner ai-generating"></div>
-      <span>{{ 'CLUB_DETAIL.LOADING' | translate }}</span>
+    <div class="club-skeleton skeleton-stack" aria-busy="true" aria-hidden="true">
+      <div class="skeleton skeleton-block skeleton-block--xl skeleton-hero"></div>
+      <div class="skeleton-tab-strip">
+        @for (t of [0,1,2,3,4,5,6,7]; track t) {
+          <div class="skeleton skeleton-block skeleton-block--md skeleton-tab-pill"></div>
+        }
+      </div>
+      <app-chart-panel-skeleton height="400px"></app-chart-panel-skeleton>
     </div>
   }
 </div>

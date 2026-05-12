@@ -21,6 +21,7 @@ import {DecouplingGaugeComponent} from './decoupling-gauge/decoupling-gauge.comp
 import {CadenceDistributionPanelComponent} from './cadence-distribution-panel/cadence-distribution-panel.component';
 import {ClimbsPanelComponent} from './climbs-panel/climbs-panel.component';
 import {WPrimeBalanceChartComponent} from './wprime-balance-chart/wprime-balance-chart.component';
+import {ChartPanelSkeletonComponent} from '../../shared/skeleton/chart-panel-skeleton/chart-panel-skeleton.component';
 import {
     formatBlockDistance,
     formatLongDate,
@@ -46,7 +47,7 @@ interface FitState {
 @Component({
     selector: 'app-session-analysis',
     standalone: true,
-    imports: [CommonModule, TranslateModule, FitTimeseriesChartComponent, SessionStatsHeaderComponent, ZoneDistributionPanelComponent, BlockBreakdownTableComponent, PowerCurveChartComponent, DecouplingGaugeComponent, CadenceDistributionPanelComponent, ClimbsPanelComponent, WPrimeBalanceChartComponent],
+    imports: [CommonModule, TranslateModule, FitTimeseriesChartComponent, SessionStatsHeaderComponent, ZoneDistributionPanelComponent, BlockBreakdownTableComponent, PowerCurveChartComponent, DecouplingGaugeComponent, CadenceDistributionPanelComponent, ClimbsPanelComponent, WPrimeBalanceChartComponent, ChartPanelSkeletonComponent],
     templateUrl: './session-analysis.component.html',
     styleUrl: './session-analysis.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,

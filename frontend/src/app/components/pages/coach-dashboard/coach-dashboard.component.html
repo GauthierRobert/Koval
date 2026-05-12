@@ -11,6 +11,7 @@
     [multiSelectedIds]="multiSelectedIds"
     [athleteMetrics$]="athleteMetrics$"
     [totalAthleteCount]="(athletes$ | async)?.length || 0"
+    [loading]="(athletesLoading$ | async) ?? false"
     (selectAthlete)="selectAthlete($event)"
     (toggleTagFilter)="toggleTagFilter($event)"
     (toggleClubFilter)="toggleClubFilter($event)"
@@ -34,7 +35,11 @@
       <div class="header-right">
         <div class="stat">
           <span class="label">{{ 'COACH_DASHBOARD.STAT_ROSTER' | translate }}</span>
-          <span class="value">{{ (athletes$ | async)?.length || 0 }}</span>
+          @if (athletesLoading$ | async) {
+            <span class="skeleton skeleton-cell skeleton-stat-num" aria-hidden="true"></span>
+          } @else {
+            <span class="value">{{ (athletes$ | async)?.length || 0 }}</span>
+          }
         </div>
         <div class="stat">
           <span class="label">{{ 'COACH_DASHBOARD.STAT_PENDING' | translate }}</span>
@@ -127,6 +132,8 @@
             @if (pmcData.length === 0) {
               <div class="empty-tab">{{ 'COACH_DASHBOARD.EMPTY_PMC' | translate }}</div>
             }
+          } @else {
+            <app-chart-panel-skeleton height="320px"></app-chart-panel-skeleton>
           }
         }
 

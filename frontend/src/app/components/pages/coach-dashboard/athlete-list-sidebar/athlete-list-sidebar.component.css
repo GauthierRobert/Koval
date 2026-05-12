@@ -285,3 +285,8 @@
   margin-right: 8px;
   cursor: pointer;
 }
+
+.skeleton-athlete-row {
+  height: 64px;
+  margin: 4px 0;
+}

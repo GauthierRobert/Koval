@@ -796,3 +796,6 @@
   color: var(--text-muted);
   margin-bottom: 20px;
 }
+
+/* ── Skeleton heights (scaffolding in global styles.scss) ── */
+.skeleton-stats-header { height: 96px; }

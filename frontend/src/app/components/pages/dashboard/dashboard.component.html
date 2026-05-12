@@ -193,19 +193,22 @@
     <div class="dashboard-body">
       <div class="dash-split">
         <aside class="dash-rail">
-          <div class="skeleton skeleton-rail-tall"></div>
-          <div class="skeleton skeleton-rail-short"></div>
+          <div class="skeleton skeleton-block skeleton-block--xl skeleton-rail-tall"></div>
+          <div class="skeleton skeleton-block skeleton-block--xl skeleton-rail-short"></div>
         </aside>
-        <section class="dash-main">
+        <section class="dash-main" aria-busy="true">
           <div class="kpi-strip">
-            <div class="skeleton skeleton-kpi"></div>
-            <div class="skeleton skeleton-kpi"></div>
-            <div class="skeleton skeleton-kpi"></div>
-            <div class="skeleton skeleton-kpi"></div>
-            <div class="skeleton skeleton-kpi"></div>
+            <div class="skeleton skeleton-block skeleton-kpi" aria-hidden="true"></div>
+            <div class="skeleton skeleton-block skeleton-kpi" aria-hidden="true"></div>
+            <div class="skeleton skeleton-block skeleton-kpi" aria-hidden="true"></div>
+            <div class="skeleton skeleton-block skeleton-kpi" aria-hidden="true"></div>
+            <div class="skeleton skeleton-block skeleton-kpi" aria-hidden="true"></div>
           </div>
-          <div class="skeleton skeleton-chart-lg"></div>
-          <div class="skeleton skeleton-chart-sm"></div>
+          <div class="volume-mix-row">
+            <div class="skeleton skeleton-block skeleton-block--xl skeleton-chart-lg" aria-hidden="true"></div>
+            <div class="skeleton skeleton-block skeleton-block--xl skeleton-mix" aria-hidden="true"></div>
+          </div>
+          <div class="skeleton skeleton-block skeleton-block--xl skeleton-chart-sm" aria-hidden="true"></div>
         </section>
       </div>
     </div>

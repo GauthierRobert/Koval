@@ -10,12 +10,13 @@ import {MetricsService, PmcDataPoint} from '../../../services/metrics.service';
 import {CalendarService} from '../../../services/calendar.service';
 import {CoachService} from '../../../services/coach.service';
 import {PmcChartComponent} from '../../shared/pmc-chart/pmc-chart.component';
+import {ChartPanelSkeletonComponent} from '../../shared/skeleton/chart-panel-skeleton/chart-panel-skeleton.component';
 import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
 
 @Component({
     selector: 'app-pmc-page',
     standalone: true,
-    imports: [CommonModule, TranslateModule, PmcChartComponent],
+    imports: [CommonModule, TranslateModule, PmcChartComponent, ChartPanelSkeletonComponent],
     templateUrl: './pmc-page.component.html',
     styleUrl: './pmc-page.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,

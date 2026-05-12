@@ -59,7 +59,6 @@
   padding: 16px 18px;
   border-radius: var(--radius-lg);
   cursor: pointer;
-  border: 1px solid var(--glass-border);
   transition: all 0.25s var(--ease-spring-gentle);
 }
 

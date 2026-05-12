@@ -303,3 +303,5 @@
     padding: var(--space-sm);
   }
 }
+
+.skeleton-load-badge { height: 88px; }

@@ -787,6 +787,45 @@ textarea:focus-visible {
   50% { opacity: 1; }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    opacity: 0.8;
+  }
+}
+
+/* ── Skeleton scaffolding utilities (compose with .skeleton) ── */
+.skeleton-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.skeleton-stack--tight { gap: var(--space-sm); }
+
+.skeleton-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+}
+.skeleton-panel--xl { border-radius: var(--radius-xl); }
+
+.skeleton-row {
+  display: grid;
+  gap: var(--space-sm);
+  grid-template-columns: repeat(var(--skeleton-cols, 4), 1fr);
+}
+
+.skeleton-cell { height: 22px; border-radius: var(--radius-sm); }
+.skeleton-cell--sm { height: 16px; }
+
+.skeleton-block { border-radius: var(--radius-lg); }
+.skeleton-block--md { border-radius: var(--radius-md); }
+.skeleton-block--xl { border-radius: var(--radius-xl); }
+
 /* ── AI-native generating indicator ── */
 @keyframes aiPulse {
   0%, 100% { opacity: 0.5; transform: scale(1); }

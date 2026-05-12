@@ -32,4 +32,10 @@
   } @else {
     <div class="empty-tab">{{ 'COACH_DASHBOARD.PLANS_EMPTY' | translate }}</div>
   }
+} @else {
+  <div class="skeleton-stack skeleton-stack--tight" aria-busy="true" aria-hidden="true">
+    @for (r of [0,1,2]; track r) {
+      <div class="skeleton skeleton-block skeleton-plan-card"></div>
+    }
+  </div>
 }

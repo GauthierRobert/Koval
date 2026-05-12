@@ -319,3 +319,8 @@
   margin-top: 0.25rem;
   line-height: 1.4;
 }
+
+/* ── Skeleton heights (scaffolding in global styles.scss) ── */
+.skeleton-chart { height: 320px; }
+.skeleton-fri-card { height: 120px; }
+.skeleton-record-card { height: 96px; }

@@ -102,3 +102,8 @@
     display: none;
   }
 }
+
+.skeleton-session-row {
+  height: 72px;
+  margin-bottom: var(--space-sm);
+}

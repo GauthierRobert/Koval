@@ -97,14 +97,14 @@ const DEFAULT_ACCEPT =
     .kau-btn {
       display: inline-flex; align-items: center; gap: 6px;
       background: var(--surface-elevated); color: var(--text-color);
-      border: 1px solid var(--glass-border);
+      border: none;
       border-radius: var(--radius-sm);
       padding: 6px 12px;
       font-size: var(--text-xs); font-weight: 600;
       cursor: pointer;
       align-self: flex-start;
     }
-    .kau-btn:hover:not(:disabled) { border-color: var(--accent-color); color: var(--accent-color); }
+    .kau-btn:hover:not(:disabled) { color: var(--accent-color); }
     .kau-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .kau-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
     .kau-chip {

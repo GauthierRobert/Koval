@@ -454,13 +454,14 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   SKELETON SIZE HELPERS
+   SKELETON HEIGHTS (scaffolding in global styles.scss)
    ═══════════════════════════════════════════════════════════════ */
-.skeleton-rail-tall { width: 100%; height: 520px; border-radius: var(--radius-xl); }
-.skeleton-rail-short { width: 100%; height: 220px; border-radius: var(--radius-xl); }
+.skeleton-rail-tall { height: 520px; }
+.skeleton-rail-short { height: 220px; }
 .skeleton-kpi { height: 88px; }
-.skeleton-chart-lg { height: 280px; border-radius: var(--radius-xl); }
-.skeleton-chart-sm { height: 200px; border-radius: var(--radius-xl); }
+.skeleton-chart-lg { height: 280px; }
+.skeleton-chart-sm { height: 200px; }
+.skeleton-mix { height: 360px; }
 
 /* ═══════════════════════════════════════════════════════════════
    RESPONSIVE

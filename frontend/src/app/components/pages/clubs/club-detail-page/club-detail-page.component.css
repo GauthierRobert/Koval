@@ -488,3 +488,18 @@
     padding: 3px 8px;
   }
 }
+
+/* ── Skeleton heights / fixed-width pills (scaffolding in global styles.scss) ── */
+.club-skeleton { padding: var(--space-md); }
+.skeleton-hero { height: 180px; }
+
+.skeleton-tab-strip {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.skeleton-tab-pill {
+  width: 96px;
+  height: 36px;
+}

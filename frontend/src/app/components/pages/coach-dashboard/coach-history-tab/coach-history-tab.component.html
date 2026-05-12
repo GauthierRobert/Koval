@@ -37,5 +37,11 @@
     @if (sessions.length === 0 && !(athleteSessionsError$ | async)) {
       <div class="empty-tab">{{ 'COACH_DASHBOARD.NO_RECORDED_SESSIONS' | translate }}</div>
     }
+  } @else {
+    <div class="history-table" aria-busy="true" aria-hidden="true">
+      @for (r of [0,1,2,3,4,5]; track r) {
+        <div class="skeleton skeleton-block skeleton-block--md skeleton-session-row"></div>
+      }
+    </div>
   }
 }

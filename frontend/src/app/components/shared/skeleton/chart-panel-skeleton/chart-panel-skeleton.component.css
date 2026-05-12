@@ -1,0 +1,8 @@
+.chart-panel-skeleton {
+  padding: var(--space-md);
+  border-radius: var(--radius-xl);
+}
+
+.cps-header { display: flex; }
+
+.cps-title { height: 18px; }

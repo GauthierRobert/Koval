@@ -27,6 +27,7 @@ import {ClubGazetteTabComponent} from './tabs/club-gazette-tab/club-gazette-tab.
 import {ClubTestsTabComponent} from './tabs/club-tests-tab/club-tests-tab.component';
 import {ClubTestService} from '../../../../services/club-test.service';
 import {TrainingActionModalComponent} from '../../../shared/training-action-modal/training-action-modal.component';
+import {ChartPanelSkeletonComponent} from '../../../shared/skeleton/chart-panel-skeleton/chart-panel-skeleton.component';
 import {ActionContext} from '../../../../services/ai-action.service';
 import {BehaviorSubject, map, Observable} from 'rxjs';
 
@@ -49,6 +50,7 @@ type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-g
     ClubGazetteTabComponent,
     ClubTestsTabComponent,
     TrainingActionModalComponent,
+    ChartPanelSkeletonComponent,
   ],
   templateUrl: './club-detail-page.component.html',
   styleUrl: './club-detail-page.component.css',

@@ -111,6 +111,18 @@
           <span class="t-empty">{{ 'COACH_DASHBOARD.SCHEDULE_EMPTY' | translate }}</span>
         </div>
       }
+    } @else {
+      @for (r of [0,1,2,3,4,5,6]; track r) {
+        <div class="table-row" aria-busy="true" aria-hidden="true">
+          <span class="skeleton skeleton-cell skeleton-cell--sm"></span>
+          <span class="skeleton skeleton-cell skeleton-cell--sm"></span>
+          <span class="skeleton skeleton-cell skeleton-cell--sm"></span>
+          <span class="skeleton skeleton-cell skeleton-cell--sm"></span>
+          <span class="skeleton skeleton-cell skeleton-cell--sm"></span>
+          <span class="skeleton skeleton-cell skeleton-cell--sm"></span>
+          <span class="skeleton skeleton-cell skeleton-cell--sm"></span>
+        </div>
+      }
     }
   </div>
 </div>

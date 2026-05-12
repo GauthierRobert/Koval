@@ -113,7 +113,7 @@ export class TestFormModalComponent implements OnInit {
     this.segments = [
       ...this.segments,
       {
-        id: '',
+        id: TestFormModalComponent.newId('s', this.segments.map((x) => x.id)),
         order: this.segments.length,
         label: '',
         sportType: 'CYCLING',
@@ -134,7 +134,7 @@ export class TestFormModalComponent implements OnInit {
     this.rules = [
       ...this.rules,
       {
-        id: '',
+        id: TestFormModalComponent.newId('r', this.rules.map((x) => x.id)),
         target: 'FTP',
         customKey: null,
         label: '',
@@ -143,6 +143,16 @@ export class TestFormModalComponent implements OnInit {
         autoApply: true,
       },
     ];
+  }
+
+  /** SpEL-safe short ID — `<prefix><8 hex chars>`. Retries on the rare collision with existing IDs. */
+  private static newId(prefix: 's' | 'r', existing: string[]): string {
+    const taken = new Set(existing);
+    for (let i = 0; i < 8; i++) {
+      const candidate = prefix + Math.random().toString(16).slice(2, 10).padEnd(8, '0');
+      if (!taken.has(candidate)) return candidate;
+    }
+    return prefix + Date.now().toString(16);
   }
 
   removeRule(idx: number): void {
@@ -170,6 +180,13 @@ export class TestFormModalComponent implements OnInit {
   variableHint(seg: TestSegment): string {
     if (!seg.id) return '';
     return `#seg_${seg.id}`;
+  }
+
+  insertVariable(rule: ReferenceUpdateRule, seg: TestSegment): void {
+    const token = this.variableHint(seg);
+    if (!token) return;
+    const current = rule.formulaExpression ?? '';
+    rule.formulaExpression = current.length === 0 ? token : `${current.trimEnd()} ${token}`;
   }
 
   submit(): void {

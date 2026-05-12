@@ -27,6 +27,7 @@ import {CoachPerformanceTabComponent} from './coach-performance-tab/coach-perfor
 import {CoachGoalsTabComponent} from './coach-goals-tab/coach-goals-tab.component';
 import {CoachHistoryTabComponent} from './coach-history-tab/coach-history-tab.component';
 import {CoachPlansTabComponent} from './coach-plans-tab/coach-plans-tab.component';
+import {ChartPanelSkeletonComponent} from '../../shared/skeleton/chart-panel-skeleton/chart-panel-skeleton.component';
 import {
   PMC_WINDOW_DAYS,
   PROJECTION_DAYS,
@@ -45,7 +46,7 @@ import {
 @Component({
   selector: 'app-coach-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, TrainingActionModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, PmcChartComponent, PhysiologyPageComponent, AthleteListSidebarComponent, CoachPerformanceTabComponent, CoachGoalsTabComponent, CoachHistoryTabComponent, CoachPlansTabComponent],
+  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, TrainingActionModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, PmcChartComponent, PhysiologyPageComponent, AthleteListSidebarComponent, CoachPerformanceTabComponent, CoachGoalsTabComponent, CoachHistoryTabComponent, CoachPlansTabComponent, ChartPanelSkeletonComponent],
   templateUrl: './coach-dashboard.component.html',
   styleUrl: './coach-dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -70,6 +71,9 @@ export class CoachDashboardComponent implements OnInit {
   // Reactive state
   private athletesSubject = new BehaviorSubject<User[]>([]);
   athletes$ = this.athletesSubject.asObservable();
+
+  private athletesLoadingSubject = new BehaviorSubject<boolean>(true);
+  athletesLoading$ = this.athletesLoadingSubject.asObservable();
 
   private groupsSubject = new BehaviorSubject<Group[]>([]);
   allTags$ = this.groupsSubject.asObservable();
@@ -165,13 +169,17 @@ export class CoachDashboardComponent implements OnInit {
     this.coachService.getAthletes().subscribe({
       next: (data) => this.ngZone.run(() => {
         this.athletesSubject.next(data);
+        this.athletesLoadingSubject.next(false);
         const athleteId = this.route.snapshot.queryParamMap.get('athleteId');
         if (athleteId) {
           const athlete = data.find(a => a.id === athleteId);
           if (athlete) this.selectAthlete(athlete);
         }
       }),
-      error: (err) => console.error('Error loading athletes', err)
+      error: (err) => {
+        this.ngZone.run(() => this.athletesLoadingSubject.next(false));
+        console.error('Error loading athletes', err);
+      }
     });
   }
 

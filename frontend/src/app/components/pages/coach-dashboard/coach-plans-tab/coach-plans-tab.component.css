@@ -115,3 +115,5 @@
   font-size: var(--text-sm);
   font-style: italic;
 }
+
+.skeleton-plan-card { height: 120px; }

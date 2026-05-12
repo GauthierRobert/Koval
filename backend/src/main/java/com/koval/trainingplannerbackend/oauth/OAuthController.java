@@ -39,6 +39,8 @@ public class OAuthController {
         Map<String, Object> meta = new LinkedHashMap<>();
         meta.put("resource", issuer);
         meta.put("authorization_servers", List.of(issuer));
+        meta.put("scopes_supported", List.of("mcp"));
+        meta.put("bearer_methods_supported", List.of("header"));
         return meta;
     }
 
@@ -53,27 +55,38 @@ public class OAuthController {
         meta.put("grant_types_supported", List.of("authorization_code"));
         meta.put("code_challenge_methods_supported", List.of("S256"));
         meta.put("token_endpoint_auth_methods_supported", List.of("client_secret_post"));
+        meta.put("scopes_supported", List.of("mcp"));
         return meta;
     }
 
-    public record RegisterRequest(String client_name, List<String> redirect_uris) {}
-
     @PostMapping("/oauth/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody RegisterRequest request) {
-        if (request.client_name() == null || request.client_name().isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "client_name is required"));
+    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, Object> request) {
+        Object redirectUrisObj = request.get("redirect_uris");
+        if (!(redirectUrisObj instanceof List<?> rawList) || rawList.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "invalid_redirect_uri",
+                    "error_description", "redirect_uris is required"));
         }
-        if (request.redirect_uris() == null || request.redirect_uris().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "redirect_uris is required"));
-        }
+        List<String> redirectUris = rawList.stream().map(String::valueOf).toList();
 
-        var result = oAuthService.registerClient(request.client_name(), request.redirect_uris());
+        String clientName = request.get("client_name") instanceof String s && !s.isBlank() ? s : "MCP Client";
+
+        var result = oAuthService.registerClient(clientName, redirectUris);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("client_id", result.clientId());
         response.put("client_secret", result.clientSecret());
+        response.put("client_id_issued_at", java.time.Instant.now().getEpochSecond());
+        response.put("client_secret_expires_at", 0);
         response.put("client_name", result.clientName());
         response.put("redirect_uris", result.redirectUris());
+        response.put("grant_types", List.of("authorization_code"));
+        response.put("response_types", List.of("code"));
+        response.put("token_endpoint_auth_method", "client_secret_post");
+        if (request.get("scope") instanceof String scope && !scope.isBlank()) {
+            response.put("scope", scope);
+        } else {
+            response.put("scope", "mcp");
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

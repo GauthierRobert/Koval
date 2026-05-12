@@ -226,7 +226,7 @@ public class ClubTestService {
         for (int i = 0; i < segments.size(); i++) {
             TestSegment s = segments.get(i);
             if (s.getId() == null || s.getId().isBlank()) {
-                s.setId(UUID.randomUUID().toString());
+                s.setId(newSpelSafeId("s"));
             }
             s.setOrder(i);
         }
@@ -236,9 +236,14 @@ public class ClubTestService {
         if (rules == null) return;
         for (ReferenceUpdateRule r : rules) {
             if (r.getId() == null || r.getId().isBlank()) {
-                r.setId(UUID.randomUUID().toString());
+                r.setId(newSpelSafeId("r"));
             }
         }
+    }
+
+    /** Hyphens are illegal in SpEL identifiers — strip them so {@code #seg_<id>} stays parseable. */
+    private static String newSpelSafeId(String prefix) {
+        return prefix + UUID.randomUUID().toString().replace("-", "");
     }
 
     private static void assertNoDestructiveSegmentChanges(List<TestSegment> oldSegs, List<TestSegment> newSegs) {

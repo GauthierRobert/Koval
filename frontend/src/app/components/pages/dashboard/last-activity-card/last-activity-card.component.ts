@@ -5,7 +5,7 @@ import {TranslateModule} from '@ngx-translate/core';
 import {BehaviorSubject, Observable, combineLatest, of} from 'rxjs';
 import {catchError, distinctUntilChanged, map, startWith, switchMap} from 'rxjs/operators';
 import {SavedSession} from '../../../../services/history.service';
-import {AuthService, User} from '../../../../services/auth.service';
+import {AuthService} from '../../../../services/auth.service';
 import {FitRecord, MetricsService} from '../../../../services/metrics.service';
 import {ZoneClassificationService} from '../../../../services/zone-classification.service';
 import {ZoneInterpolationService} from '../../../../services/zone-interpolation.service';
@@ -13,6 +13,7 @@ import {SportType, ZoneBlock} from '../../../../services/zone';
 import {SportIconComponent} from '../../../shared/sport-icon/sport-icon.component';
 import {FitTimeseriesChartComponent} from '../../session-analysis/fit-timeseries-chart/fit-timeseries-chart.component';
 import {formatTrainingDuration} from '../../../shared/format/format.utils';
+import {sportMeta} from '../../../../models/sport.registry';
 
 interface ChartData {
   records: FitRecord[];
@@ -68,7 +69,7 @@ export class LastActivityCardComponent {
     map(([session, records, user]) => {
       if (!session || !records.length) return null;
       const sport = this.resolveSport(session.sportType);
-      const ref = this.resolveReference(sport, user);
+      const ref = sportMeta(sport).resolveThreshold(user);
       const ftp = user?.ftp ?? null;
       if (!ref) return {records, zoneBlocks: [] as ZoneBlock[], sportType: sport, ftp};
       const zones = this.zoneCls.defaultZonesBySport[sport];
@@ -98,16 +99,5 @@ export class LastActivityCardComponent {
 
   private resolveSport(sport: SavedSession['sportType']): SportType {
     return sport === 'RUNNING' || sport === 'SWIMMING' ? sport : 'CYCLING';
-  }
-
-  private resolveReference(sport: SportType, user: User | null): number | null {
-    if (!user) return null;
-    if (sport === 'CYCLING') return user.ftp ?? null;
-    if (sport === 'RUNNING') {
-      const ftpPace = user.functionalThresholdPace;
-      return ftpPace ? 1000 / ftpPace : null;
-    }
-    const css = user.criticalSwimSpeed;
-    return css ? 100 / css : null;
   }
 }

@@ -63,6 +63,11 @@
             </div>
           }
         }
+      } @else {
+        <div class="skeleton-stack" aria-busy="true" aria-hidden="true">
+          <div class="skeleton skeleton-block skeleton-block--xl skeleton-chart"></div>
+          <div class="skeleton skeleton-block skeleton-fri-card"></div>
+        </div>
       }
     </div>
   }
@@ -116,6 +121,20 @@
             </table>
           </div>
         }
+      } @else {
+        <div class="skeleton-stack" aria-busy="true" aria-hidden="true">
+          <div class="skeleton skeleton-block skeleton-block--xl skeleton-chart"></div>
+          <div class="skeleton-panel">
+            @for (r of [0,1,2,3,4,5,6,7]; track r) {
+              <div class="skeleton-row">
+                <div class="skeleton skeleton-cell"></div>
+                <div class="skeleton skeleton-cell"></div>
+                <div class="skeleton skeleton-cell"></div>
+                <div class="skeleton skeleton-cell"></div>
+              </div>
+            }
+          </div>
+        </div>
       }
     </div>
   }
@@ -139,6 +158,12 @@
             }
           </div>
         }
+      } @else {
+        <div class="records-grid" aria-busy="true" aria-hidden="true">
+          @for (r of [0,1,2,3,4,5,6,7]; track r) {
+            <div class="skeleton skeleton-block skeleton-record-card"></div>
+          }
+        </div>
       }
     </div>
   }
