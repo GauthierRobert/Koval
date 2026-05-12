@@ -52,6 +52,9 @@ export class PlanDetailPageComponent implements OnInit {
   pickerDayOfWeek: DayOfWeek = 'MONDAY';
   pickerCurrentTrainingId?: string;
   pickerCurrentNotes?: string;
+  // Index of the training inside the day's trainingIds list being edited.
+  // null = appending a new workout to the day.
+  pickerEditIndex: number | null = null;
 
   // Inline editing state
   editingWeek: number | null = null;
@@ -95,13 +98,36 @@ export class PlanDetailPageComponent implements OnInit {
 
   // ── Workout Picker ──────────────────────────────────────
 
-  openWorkoutPicker(plan: TrainingPlan, week: PlanWeek, day: DayOfWeek): void {
+  /**
+   * Open the picker to add another workout to a day. Use this for the "+ add"
+   * affordance on a day slot — triathletes often schedule 2+ sessions per day.
+   */
+  openWorkoutPickerForAdd(plan: TrainingPlan, week: PlanWeek, day: DayOfWeek): void {
     if (!this.isEditable(plan)) return;
-    const existingDay = this.getTrainingForDay(week, day);
+    const existingDay = this.getPlanDay(week, day);
     this.pickerWeekNumber = week.weekNumber;
     this.pickerDayOfWeek = day;
-    this.pickerCurrentTrainingId = existingDay?.trainingId;
+    this.pickerCurrentTrainingId = undefined;
     this.pickerCurrentNotes = existingDay?.notes;
+    this.pickerEditIndex = null;
+    this.pickerOpen = true;
+  }
+
+  /** Open the picker to edit / replace one specific workout within a day. */
+  openWorkoutPickerForEdit(
+    plan: TrainingPlan,
+    week: PlanWeek,
+    day: DayOfWeek,
+    trainingIndex: number,
+  ): void {
+    if (!this.isEditable(plan)) return;
+    const planDay = this.getPlanDay(week, day);
+    if (!planDay) return;
+    this.pickerWeekNumber = week.weekNumber;
+    this.pickerDayOfWeek = day;
+    this.pickerCurrentTrainingId = planDay.trainingIds[trainingIndex];
+    this.pickerCurrentNotes = planDay.notes;
+    this.pickerEditIndex = trainingIndex;
     this.pickerOpen = true;
   }
 
@@ -109,22 +135,36 @@ export class PlanDetailPageComponent implements OnInit {
     const week = plan.weeks.find((w) => w.weekNumber === this.pickerWeekNumber);
     if (!week) return;
 
+    let day = this.getPlanDay(week, this.pickerDayOfWeek);
+
     if (result === null) {
-      // Remove workout from day
-      week.days = week.days.filter((d) => d.dayOfWeek !== this.pickerDayOfWeek);
-    } else {
-      // Add or update workout
-      const existingIdx = week.days.findIndex((d) => d.dayOfWeek === this.pickerDayOfWeek);
-      const newDay: PlanDay = {
-        dayOfWeek: this.pickerDayOfWeek,
-        trainingId: result.trainingId,
-        notes: result.notes || undefined,
-      };
-      if (existingIdx >= 0) {
-        week.days[existingIdx] = newDay;
-      } else {
-        week.days.push(newDay);
+      if (!day) {
+        this.pickerOpen = false;
+        return;
       }
+      if (this.pickerEditIndex !== null && this.pickerEditIndex < day.trainingIds.length) {
+        day.trainingIds.splice(this.pickerEditIndex, 1);
+      } else {
+        day.trainingIds = [];
+      }
+      if (day.trainingIds.length === 0) {
+        week.days = week.days.filter((d) => d.dayOfWeek !== this.pickerDayOfWeek);
+      }
+    } else {
+      if (!day) {
+        day = {
+          dayOfWeek: this.pickerDayOfWeek,
+          trainingIds: [],
+          scheduledWorkoutIds: [],
+        };
+        week.days.push(day);
+      }
+      if (this.pickerEditIndex !== null && this.pickerEditIndex < day.trainingIds.length) {
+        day.trainingIds[this.pickerEditIndex] = result.trainingId;
+      } else if (!day.trainingIds.includes(result.trainingId)) {
+        day.trainingIds.push(result.trainingId);
+      }
+      day.notes = result.notes || undefined;
     }
 
     this.planService.updatePlan(plan.id, plan).subscribe();
@@ -239,8 +279,13 @@ export class PlanDetailPageComponent implements OnInit {
 
   // ── Helpers ─────────────────────────────────────────────
 
-  getTrainingForDay(week: PlanWeek, day: DayOfWeek): PlanDay | undefined {
+  getPlanDay(week: PlanWeek, day: DayOfWeek): PlanDay | undefined {
     return week.days?.find((d) => d.dayOfWeek === day);
+  }
+
+  dayHasWorkouts(week: PlanWeek, day: DayOfWeek): boolean {
+    const planDay = this.getPlanDay(week, day);
+    return !!planDay && planDay.trainingIds.length > 0;
   }
 
   getTrainingTitle(trainingId: string | undefined, trainingMap: Map<string, Training>): string {

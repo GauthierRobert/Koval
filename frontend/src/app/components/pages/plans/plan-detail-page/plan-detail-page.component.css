@@ -597,16 +597,72 @@
   background: var(--surface-elevated);
 }
 
-.day-slot.editable {
-  cursor: pointer;
-  transition: all 0.25s var(--ease-spring-gentle);
+.day-workouts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
 }
 
-.day-slot.editable:hover {
+.day-workout-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--overlay-5);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+  text-align: left;
+  color: inherit;
+  font-family: inherit;
+  cursor: default;
+  transition: all 0.2s var(--ease-spring-gentle);
+}
+
+.day-workout-card.editable {
+  cursor: pointer;
+}
+
+.day-workout-card.editable:hover {
+  border-color: var(--accent-border);
   background: var(--surface-hover);
 }
 
-.day-slot.editable.has-workout:hover {
+.day-workout-card .day-type-badge {
+  margin-top: 0;
+}
+
+.day-add-empty,
+.day-add-more {
+  background: transparent;
+  border: 1px dashed var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring-gentle);
+}
+
+.day-add-empty {
+  flex: 1;
+  margin-top: var(--space-xs);
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.day-add-more {
+  margin-top: 4px;
+  padding: 3px 6px;
+  align-self: stretch;
+}
+
+.day-add-empty:hover,
+.day-add-more:hover {
+  border-color: var(--accent-border);
+  color: var(--accent-color);
   background: var(--surface-hover);
 }
 
@@ -666,9 +722,8 @@
 .day-add-hint {
   font-size: var(--text-xl);
   color: var(--text-dim);
-  margin-top: auto;
   text-align: center;
-  opacity: 0;
+  opacity: 0.6;
   transition: all 0.25s var(--ease-spring-gentle);
 }
 

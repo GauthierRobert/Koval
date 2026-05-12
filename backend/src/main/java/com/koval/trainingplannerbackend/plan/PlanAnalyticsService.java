@@ -78,8 +78,8 @@ public class PlanAnalyticsService {
         // same day across weeks would collide; ((a, b) -> a) keeps the first week seen.
         Map<String, Integer> swToWeek = plan.getWeeks().stream()
                 .flatMap(week -> week.getDays().stream()
-                        .filter(day -> day.getScheduledWorkoutId() != null)
-                        .map(day -> Map.entry(day.getScheduledWorkoutId(), week.getWeekNumber())))
+                        .flatMap(day -> day.getScheduledWorkoutIds().stream()
+                                .map(swId -> Map.entry(swId, week.getWeekNumber()))))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a));
 
         PlanWeek currentPlanWeek = plan.getWeeks().stream()
@@ -142,8 +142,8 @@ public class PlanAnalyticsService {
         Map<String, Integer> swToWeek = new HashMap<>();
         for (PlanWeek week : plan.getWeeks()) {
             for (PlanDay day : week.getDays()) {
-                if (day.getScheduledWorkoutId() != null) {
-                    swToWeek.put(day.getScheduledWorkoutId(), week.getWeekNumber());
+                for (String swId : day.getScheduledWorkoutIds()) {
+                    swToWeek.put(swId, week.getWeekNumber());
                 }
             }
         }

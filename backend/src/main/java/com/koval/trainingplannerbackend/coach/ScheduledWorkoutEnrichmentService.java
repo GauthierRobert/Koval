@@ -219,8 +219,8 @@ public class ScheduledWorkoutEnrichmentService {
         for (TrainingPlan plan : plansMap.values()) {
             for (PlanWeek week : plan.getWeeks()) {
                 for (PlanDay day : week.getDays()) {
-                    if (day.getScheduledWorkoutId() != null) {
-                        index.put(day.getScheduledWorkoutId(),
+                    for (String swId : day.getScheduledWorkoutIds()) {
+                        index.put(swId,
                                 new PlanWeekInfo(plan.getId(), plan.getTitle(), week.getWeekNumber(), week.getLabel()));
                     }
                 }
@@ -234,7 +234,7 @@ public class ScheduledWorkoutEnrichmentService {
                 .map(plan -> {
                     for (PlanWeek week : plan.getWeeks()) {
                         for (PlanDay day : week.getDays()) {
-                            if (scheduledWorkoutId.equals(day.getScheduledWorkoutId())) {
+                            if (day.getScheduledWorkoutIds().contains(scheduledWorkoutId)) {
                                 return new PlanWeekInfo(plan.getId(), plan.getTitle(), week.getWeekNumber(), week.getLabel());
                             }
                         }

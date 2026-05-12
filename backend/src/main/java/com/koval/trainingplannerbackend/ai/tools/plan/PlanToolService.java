@@ -80,18 +80,22 @@ public class PlanToolService {
         return PlanSummary.from(created);
     }
 
-    @Tool(description = "Add a workout to a specific day in a specific week of a training plan. Call this after creating both the plan and the training workout.")
+    @Tool(description = "Add a workout to a specific day in a specific week of a training plan. Call this after creating both the plan and the training workout. Days can hold multiple workouts (e.g. AM swim + PM bike for triathletes) — calling this repeatedly for the same day appends additional workouts.")
     public Object addDayToPlan(
             @ToolParam(description = "The plan ID") String planId,
             @ToolParam(description = "Week number (1-based)") int weekNumber,
             @ToolParam(description = "Day of week: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, or SUNDAY") String dayOfWeek,
             @ToolParam(description = "Training ID to schedule on this day") String trainingId,
-            @ToolParam(description = "Optional notes for this day", required = false) String notes,
+            @ToolParam(description = "Optional notes for this day. Replaces existing notes when provided.", required = false) String notes,
             ToolContext context) {
 
         if (planId == null || planId.isBlank()) {
             ToolEventEmitter.emitToolResult(context, "addDayToPlan", "Validation failed", false);
             return "Error: planId is required.";
+        }
+        if (trainingId == null || trainingId.isBlank()) {
+            ToolEventEmitter.emitToolResult(context, "addDayToPlan", "Validation failed", false);
+            return "Error: trainingId is required.";
         }
 
         ToolEventEmitter.emitToolCall(context, "addDayToPlan", "Adding workout to week " + weekNumber);
@@ -107,16 +111,27 @@ public class PlanToolService {
             return "Error: week " + weekNumber + " not found in plan (plan has " + plan.getDurationWeeks() + " weeks).";
         }
 
-        PlanDay day = new PlanDay();
-        day.setDayOfWeek(DayOfWeek.valueOf(dayOfWeek.toUpperCase()));
-        day.setTrainingId(trainingId);
-        day.setNotes(notes);
-        week.getDays().add(day);
+        DayOfWeek dow = DayOfWeek.valueOf(dayOfWeek.toUpperCase());
+        PlanDay day = week.getDays().stream()
+                .filter(d -> d.getDayOfWeek() == dow)
+                .findFirst()
+                .orElseGet(() -> {
+                    PlanDay nd = new PlanDay();
+                    nd.setDayOfWeek(dow);
+                    week.getDays().add(nd);
+                    return nd;
+                });
+        if (!day.getTrainingIds().contains(trainingId)) {
+            day.getTrainingIds().add(trainingId);
+        }
+        if (notes != null && !notes.isBlank()) day.setNotes(notes);
 
         String userId = SecurityUtils.getUserId(context);
         planService.updatePlan(planId, plan, userId);
-        ToolEventEmitter.emitToolResult(context, "addDayToPlan", "Added to week " + weekNumber + " " + dayOfWeek, true);
-        return "Added training to week " + weekNumber + ", " + dayOfWeek;
+        ToolEventEmitter.emitToolResult(context, "addDayToPlan",
+                "Added to week " + weekNumber + " " + dayOfWeek + " (" + day.getTrainingIds().size() + " workout(s))", true);
+        return "Added training to week " + weekNumber + ", " + dayOfWeek
+                + " (" + day.getTrainingIds().size() + " workout(s) now scheduled).";
     }
 
     @Tool(description = "Set the label and optional target TSS for a week in the plan. Use to annotate periodization phases (e.g. 'Base Phase', 'Build', 'Recovery').")
@@ -160,12 +175,13 @@ public class PlanToolService {
         try {
             String userId = SecurityUtils.getUserId(context);
             TrainingPlan activated = planService.activatePlan(planId, userId, startDate);
-            int totalDays = activated.getWeeks().stream()
-                    .mapToInt(w -> w.getDays().size())
+            int totalWorkouts = activated.getWeeks().stream()
+                    .flatMap(w -> w.getDays().stream())
+                    .mapToInt(d -> d.getTrainingIds().size())
                     .sum();
             ToolEventEmitter.emitToolResult(context, "activatePlan",
-                    "Activated: " + totalDays + " workouts scheduled", true);
-            return "Plan activated! " + totalDays + " workouts have been added to the calendar starting "
+                    "Activated: " + totalWorkouts + " workouts scheduled", true);
+            return "Plan activated! " + totalWorkouts + " workouts have been added to the calendar starting "
                     + activated.getStartDate();
         } catch (Exception e) {
             ToolEventEmitter.emitToolResult(context, "activatePlan", e.getMessage(), false);
@@ -217,7 +233,8 @@ public class PlanToolService {
     ) {
         public static PlanSummary from(TrainingPlan plan) {
             int totalWorkouts = plan.getWeeks().stream()
-                    .mapToInt(w -> w.getDays().size())
+                    .flatMap(w -> w.getDays().stream())
+                    .mapToInt(d -> d.getTrainingIds().size())
                     .sum();
             return new PlanSummary(
                     plan.getId(),

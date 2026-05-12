@@ -4,12 +4,14 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.DayOfWeek;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
 public class PlanDay {
     private DayOfWeek dayOfWeek;
-    private String trainingId;
+    private List<String> trainingIds = new ArrayList<>();
     private String notes;
-    private String scheduledWorkoutId; // populated after activation
+    private List<String> scheduledWorkoutIds = new ArrayList<>(); // populated after activation, parallel to trainingIds
 }

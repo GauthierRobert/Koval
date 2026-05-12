@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Populated view of a TrainingPlan with Training objects resolved from their IDs.
@@ -33,10 +32,10 @@ public record TrainingPlanPopulated(
 
     public record DayPopulated(
             DayOfWeek dayOfWeek,
-            String trainingId,
+            List<String> trainingIds,
             String notes,
-            String scheduledWorkoutId,
-            Training training
+            List<String> scheduledWorkoutIds,
+            List<Training> trainings
     ) {}
 
     public record WeekPopulated(
@@ -58,10 +57,13 @@ public record TrainingPlanPopulated(
                         week.getDays().stream()
                                 .map(day -> new DayPopulated(
                                         day.getDayOfWeek(),
-                                        day.getTrainingId(),
+                                        List.copyOf(day.getTrainingIds()),
                                         day.getNotes(),
-                                        day.getScheduledWorkoutId(),
-                                        Optional.ofNullable(day.getTrainingId()).map(trainingsById::get).orElse(null)
+                                        List.copyOf(day.getScheduledWorkoutIds()),
+                                        day.getTrainingIds().stream()
+                                                .map(trainingsById::get)
+                                                .filter(Objects::nonNull)
+                                                .toList()
                                 ))
                                 .toList()
                 ))
@@ -91,7 +93,7 @@ public record TrainingPlanPopulated(
     public static List<String> collectTrainingIds(TrainingPlan plan) {
         return plan.getWeeks().stream()
                 .flatMap(week -> week.getDays().stream())
-                .map(PlanDay::getTrainingId)
+                .flatMap(day -> day.getTrainingIds().stream())
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();

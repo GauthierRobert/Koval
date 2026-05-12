@@ -37,7 +37,7 @@ public class PlanScheduleSyncService {
     public Map<String, Training> fetchTrainingsForPlan(TrainingPlan plan) {
         List<String> ids = plan.getWeeks().stream()
                 .flatMap(w -> w.getDays().stream())
-                .map(PlanDay::getTrainingId)
+                .flatMap(d -> d.getTrainingIds().stream())
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
@@ -62,7 +62,7 @@ public class PlanScheduleSyncService {
 
         plan.getWeeks().forEach(week -> week.getDays().forEach(day -> {
             LocalDate date = computeDate(plan.getStartDate(), week.getWeekNumber(), day.getDayOfWeek());
-            if (!date.isBefore(today)) day.setScheduledWorkoutId(null);
+            if (!date.isBefore(today)) day.getScheduledWorkoutIds().clear();
         }));
 
         List<String> targetAthleteIds = plan.getAthleteIds().isEmpty()
@@ -73,10 +73,10 @@ public class PlanScheduleSyncService {
     }
 
     /**
-     * Builds {@link ScheduledWorkout}s for every (week, day, athlete) combination scheduled on or
-     * after {@code cutoff}, persists them in one batch, and links the saved IDs back onto each
-     * {@link PlanDay}. When multiple athletes share a day, the last athlete's id wins on the day —
-     * matching the previous imperative behaviour.
+     * Builds {@link ScheduledWorkout}s for every (week, day, training, athlete) combination
+     * scheduled on or after {@code cutoff}, persists them in one batch, and appends the saved
+     * IDs back onto each {@link PlanDay#getScheduledWorkoutIds()}. Days may hold multiple
+     * trainings (e.g. AM swim + PM bike) and each generates its own ScheduledWorkout per athlete.
      */
     public void buildAndPersistScheduledWorkouts(TrainingPlan plan, List<String> athleteIds,
                                                  String assignedBy, LocalDate cutoff,
@@ -84,18 +84,20 @@ public class PlanScheduleSyncService {
         record DayWorkout(PlanDay day, ScheduledWorkout sw) {}
 
         List<DayWorkout> pairs = plan.getWeeks().stream()
-                .flatMap(week -> week.getDays().stream()
-                        .filter(day -> day.getTrainingId() != null)
-                        .map(day -> Map.entry(week, day)))
+                .flatMap(week -> week.getDays().stream().map(day -> Map.entry(week, day)))
                 .filter(e -> !computeDate(plan.getStartDate(), e.getKey().getWeekNumber(),
                         e.getValue().getDayOfWeek()).isBefore(cutoff))
                 .flatMap(e -> {
                     PlanDay day = e.getValue();
                     LocalDate date = computeDate(plan.getStartDate(), e.getKey().getWeekNumber(), day.getDayOfWeek());
-                    Training training = trainingById.get(day.getTrainingId());
-                    return athleteIds.stream().map(athleteId ->
-                            new DayWorkout(day, newScheduledWorkout(plan.getId(), day, athleteId,
-                                    assignedBy, date, training)));
+                    return day.getTrainingIds().stream()
+                            .filter(Objects::nonNull)
+                            .flatMap(trainingId -> {
+                                Training training = trainingById.get(trainingId);
+                                return athleteIds.stream().map(athleteId ->
+                                        new DayWorkout(day, newScheduledWorkout(plan.getId(), trainingId,
+                                                day, athleteId, assignedBy, date, training)));
+                            });
                 })
                 .toList();
 
@@ -104,7 +106,7 @@ public class PlanScheduleSyncService {
         List<ScheduledWorkout> saved = scheduledWorkoutRepository.saveAll(
                 pairs.stream().map(DayWorkout::sw).toList());
         for (int i = 0; i < pairs.size(); i++) {
-            pairs.get(i).day().setScheduledWorkoutId(saved.get(i).getId());
+            pairs.get(i).day().getScheduledWorkoutIds().add(saved.get(i).getId());
         }
     }
 
@@ -123,9 +125,9 @@ public class PlanScheduleSyncService {
         scheduledWorkoutRepository.deleteAllById(futureIds);
 
         plan.getWeeks().forEach(week -> week.getDays().stream()
-                .filter(day -> day.getScheduledWorkoutId() != null)
+                .filter(day -> !day.getScheduledWorkoutIds().isEmpty())
                 .filter(day -> computeDate(plan.getStartDate(), week.getWeekNumber(), day.getDayOfWeek()).isAfter(today))
-                .forEach(day -> day.setScheduledWorkoutId(null)));
+                .forEach(day -> day.getScheduledWorkoutIds().clear()));
     }
 
     /** Delete only PENDING scheduled workouts for the plan; completed/skipped history is kept. */
@@ -137,10 +139,11 @@ public class PlanScheduleSyncService {
         scheduledWorkoutRepository.deleteAllById(pendingIds);
     }
 
-    private static ScheduledWorkout newScheduledWorkout(String planId, PlanDay day, String athleteId,
+    private static ScheduledWorkout newScheduledWorkout(String planId, String trainingId,
+                                                        PlanDay day, String athleteId,
                                                         String assignedBy, LocalDate date, Training training) {
         ScheduledWorkout sw = new ScheduledWorkout();
-        sw.setTrainingId(day.getTrainingId());
+        sw.setTrainingId(trainingId);
         sw.setAthleteId(athleteId);
         sw.setAssignedBy(assignedBy);
         sw.setScheduledDate(date);

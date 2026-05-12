@@ -194,33 +194,60 @@
               </div>
               <div class="week-days">
                 @for (day of DAYS; track day) {
-                  <div class="day-slot" [class.has-workout]="getTrainingForDay(week, day)"
-                    [class.editable]="isEditable(plan)"
-                    (click)="openWorkoutPicker(plan, week, day)">
+                  <div class="day-slot"
+                    [class.has-workout]="dayHasWorkouts(week, day)"
+                    [class.editable]="isEditable(plan)">
                     <span class="day-label">{{ DAY_LABELS[day] }}</span>
                     <span class="day-date">{{ computeDate(plan.startDate, week.weekNumber, day) }}</span>
-                    @if (getTrainingForDay(week, day); as planDay) {
-                      @let dayTraining = getTraining(planDay.trainingId, trainingMap);
-                      @if (dayTraining?.trainingType) {
-                        <span class="day-type-badge"
-                          [style.background]="getTypeColor(dayTraining!.trainingType) + '22'"
-                          [style.color]="getTypeColor(dayTraining!.trainingType)"
-                          [style.border-color]="getTypeColor(dayTraining!.trainingType)">
-                          {{ getTypeLabel(dayTraining!.trainingType) }}
-                        </span>
-                      }
-                      <div class="day-workout">
-                        @if (dayTraining) {
-                          <app-sport-icon [sport]="dayTraining.sportType" [size]="12" class="day-sport-icon"></app-sport-icon>
+                    @if (getPlanDay(week, day); as planDay) {
+                      @if (planDay.trainingIds.length) {
+                        <div class="day-workouts">
+                          @for (tid of planDay.trainingIds; track tid; let i = $index) {
+                            @let dayTraining = getTraining(tid, trainingMap);
+                            <button type="button" class="day-workout-card"
+                              [class.editable]="isEditable(plan)"
+                              [disabled]="!isEditable(plan)"
+                              (click)="openWorkoutPickerForEdit(plan, week, day, i)">
+                              @if (dayTraining?.trainingType) {
+                                <span class="day-type-badge"
+                                  [style.background]="getTypeColor(dayTraining!.trainingType) + '22'"
+                                  [style.color]="getTypeColor(dayTraining!.trainingType)"
+                                  [style.border-color]="getTypeColor(dayTraining!.trainingType)">
+                                  {{ getTypeLabel(dayTraining!.trainingType) }}
+                                </span>
+                              }
+                              <div class="day-workout">
+                                @if (dayTraining) {
+                                  <app-sport-icon [sport]="dayTraining.sportType" [size]="12" class="day-sport-icon"></app-sport-icon>
+                                }
+                                {{ getTrainingTitle(tid, trainingMap) }}
+                              </div>
+                            </button>
+                          }
+                        </div>
+                        @if (planDay.notes) {
+                          <div class="day-notes">{{ planDay.notes }}</div>
                         }
-                        {{ getTrainingTitle(planDay.trainingId, trainingMap) }}
-                      </div>
-                      @if (planDay.notes) {
-                        <div class="day-notes">{{ planDay.notes }}</div>
+                        @if (isEditable(plan)) {
+                          <button type="button" class="day-add-more"
+                            (click)="openWorkoutPickerForAdd(plan, week, day)">
+                            + {{ 'PLANS.ADD_ANOTHER' | translate }}
+                          </button>
+                        }
+                      } @else if (isEditable(plan)) {
+                        <button type="button" class="day-add-empty"
+                          (click)="openWorkoutPickerForAdd(plan, week, day)">
+                          <span class="day-add-hint">+</span>
+                        </button>
+                      } @else {
+                        <div class="day-rest">{{ 'PLANS.REST' | translate }}</div>
                       }
                     } @else {
                       @if (isEditable(plan)) {
-                        <div class="day-add-hint">+</div>
+                        <button type="button" class="day-add-empty"
+                          (click)="openWorkoutPickerForAdd(plan, week, day)">
+                          <span class="day-add-hint">+</span>
+                        </button>
                       } @else {
                         <div class="day-rest">{{ 'PLANS.REST' | translate }}</div>
                       }

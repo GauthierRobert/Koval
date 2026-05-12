@@ -77,14 +77,15 @@ public class McpPlanTools {
         return PlanSummary.from(planService.createPlan(plan, userId));
     }
 
-    @Tool(description = "Add a training workout to a specific day in a specific week of a plan. The training must exist first.")
+    @Tool(description = "Add a training workout to a specific day in a specific week of a plan. The training must exist first. Multiple workouts can be assigned to the same day (e.g. AM swim + PM bike for triathletes) — calling this repeatedly for the same day appends additional workouts.")
     public Object addDayToPlan(
             @ToolParam(description = "Plan ID") String planId,
             @ToolParam(description = "Week number (1-based)") int weekNumber,
             @ToolParam(description = "Day: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY") String dayOfWeek,
             @ToolParam(description = "Training ID to assign") String trainingId,
-            @ToolParam(description = "Optional notes for this day") String notes) {
+            @ToolParam(description = "Optional notes for this day. When appending to a day that already has notes, the new value replaces the existing notes if provided.") String notes) {
         if (planId == null || planId.isBlank()) return "Error: planId is required.";
+        if (trainingId == null || trainingId.isBlank()) return "Error: trainingId is required.";
 
         TrainingPlan plan = planService.getPlan(planId);
         PlanWeek week = plan.getWeeks().stream()
@@ -92,15 +93,25 @@ public class McpPlanTools {
                 .findFirst().orElse(null);
         if (week == null) return "Error: week " + weekNumber + " not found.";
 
-        PlanDay day = new PlanDay();
-        day.setDayOfWeek(DayOfWeek.valueOf(dayOfWeek.toUpperCase()));
-        day.setTrainingId(trainingId);
-        day.setNotes(notes);
-        week.getDays().add(day);
+        DayOfWeek dow = DayOfWeek.valueOf(dayOfWeek.toUpperCase());
+        PlanDay day = week.getDays().stream()
+                .filter(d -> d.getDayOfWeek() == dow)
+                .findFirst()
+                .orElseGet(() -> {
+                    PlanDay nd = new PlanDay();
+                    nd.setDayOfWeek(dow);
+                    week.getDays().add(nd);
+                    return nd;
+                });
+        if (!day.getTrainingIds().contains(trainingId)) {
+            day.getTrainingIds().add(trainingId);
+        }
+        if (notes != null && !notes.isBlank()) day.setNotes(notes);
 
         String userId = SecurityUtils.getCurrentUserId();
         planService.updatePlan(planId, plan, userId);
-        return "Added training to week " + weekNumber + ", " + dayOfWeek;
+        return "Added training to week " + weekNumber + ", " + dayOfWeek
+                + " (" + day.getTrainingIds().size() + " workout(s) now scheduled).";
     }
 
     @Tool(description = "Activate a training plan, creating scheduled workouts in the calendar for all planned days. Only works on DRAFT or PAUSED plans. Requires a start date.")
@@ -109,8 +120,11 @@ public class McpPlanTools {
             @ToolParam(description = "Start date in YYYY-MM-DD format (should be a Monday)") LocalDate startDate) {
         String userId = SecurityUtils.getCurrentUserId();
         TrainingPlan activated = planService.activatePlan(planId, userId, startDate);
-        int totalDays = activated.getWeeks().stream().mapToInt(w -> w.getDays().size()).sum();
-        return "Plan activated! " + totalDays + " workouts scheduled starting " + activated.getStartDate();
+        int totalWorkouts = activated.getWeeks().stream()
+                .flatMap(w -> w.getDays().stream())
+                .mapToInt(d -> d.getTrainingIds().size())
+                .sum();
+        return "Plan activated! " + totalWorkouts + " workouts scheduled starting " + activated.getStartDate();
     }
 
     @Tool(description = "Get progress of a training plan: how many workouts are completed, skipped, or pending.")
@@ -163,11 +177,12 @@ public class McpPlanTools {
         return PlanSummary.from(planService.resumePlan(planId, userId));
     }
 
-    @Tool(description = "Remove a planned training day from a specific week of a plan. Inverse of addDayToPlan. Removes the first matching day in that week.")
+    @Tool(description = "Remove planned workouts from a specific day of a week. If trainingId is provided, removes only that workout from the day (leaving any others). If trainingId is null/blank, removes the entire day with all its workouts.")
     public Object removeDayFromPlan(
             @ToolParam(description = "Plan ID") String planId,
             @ToolParam(description = "Week number (1-based)") int weekNumber,
-            @ToolParam(description = "Day: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY") String dayOfWeek) {
+            @ToolParam(description = "Day: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY") String dayOfWeek,
+            @ToolParam(description = "Optional training ID — when provided, removes only this workout from the day; when null, clears the entire day.") String trainingId) {
         if (planId == null || planId.isBlank()) return "Error: planId is required.";
         TrainingPlan plan = planService.getPlan(planId);
         PlanWeek week = plan.getWeeks().stream()
@@ -176,15 +191,28 @@ public class McpPlanTools {
         if (week == null) return "Error: week " + weekNumber + " not found.";
 
         DayOfWeek dow = DayOfWeek.valueOf(dayOfWeek.toUpperCase());
-        boolean removed = week.getDays().removeIf(d -> d.getDayOfWeek() == dow);
-        if (!removed) return "Error: no planned day found for " + dayOfWeek + " in week " + weekNumber + ".";
+
+        if (trainingId == null || trainingId.isBlank()) {
+            boolean removed = week.getDays().removeIf(d -> d.getDayOfWeek() == dow);
+            if (!removed) return "Error: no planned day found for " + dayOfWeek + " in week " + weekNumber + ".";
+        } else {
+            PlanDay day = week.getDays().stream()
+                    .filter(d -> d.getDayOfWeek() == dow)
+                    .findFirst().orElse(null);
+            if (day == null) return "Error: no planned day found for " + dayOfWeek + " in week " + weekNumber + ".";
+            if (!day.getTrainingIds().remove(trainingId)) {
+                return "Error: training " + trainingId + " is not scheduled on " + dayOfWeek + " of week " + weekNumber + ".";
+            }
+            if (day.getTrainingIds().isEmpty()) {
+                week.getDays().remove(day);
+            }
+        }
 
         String userId = SecurityUtils.getCurrentUserId();
-        // updatePlan only replaces weeks if non-empty; pass the full updated plan as updates
         TrainingPlan updates = new TrainingPlan();
         updates.setWeeks(plan.getWeeks());
         planService.updatePlan(planId, updates, userId);
-        return "Removed " + dayOfWeek + " from week " + weekNumber + ".";
+        return "Removed from " + dayOfWeek + " of week " + weekNumber + ".";
     }
 
     @Tool(description = "Clone an existing training plan as a new DRAFT, copying all weeks and planned days. Useful for reusing a plan as a template with a new start date.")
@@ -215,8 +243,9 @@ public class McpPlanTools {
                         .mapToInt(w -> w.workoutsCompleted())
                         .findFirst()
                         .orElse(0);
+        int planned = week.getDays().stream().mapToInt(d -> d.getTrainingIds().size()).sum();
         return new CurrentWeekSummary(planId, currentWeek, week.getLabel(),
-                week.getTargetTss(), week.getDays().size(), completed);
+                week.getTargetTss(), planned, completed);
     }
 
     private static int computeCurrentWeek(LocalDate startDate) {
@@ -238,7 +267,9 @@ public class McpPlanTools {
                             w.getDays().stream()
                                     .map(d -> new DayDetail(
                                             Optional.ofNullable(d.getDayOfWeek()).map(DayOfWeek::name).orElse(null),
-                                            d.getTrainingId(), d.getNotes(), d.getScheduledWorkoutId()))
+                                            List.copyOf(d.getTrainingIds()),
+                                            d.getNotes(),
+                                            List.copyOf(d.getScheduledWorkoutIds())))
                                     .toList()))
                     .toList();
             return new PlanDetail(
@@ -252,7 +283,7 @@ public class McpPlanTools {
 
     public record WeekDetail(int weekNumber, String label, Integer targetTss, List<DayDetail> days) {}
 
-    public record DayDetail(String dayOfWeek, String trainingId, String notes, String scheduledWorkoutId) {}
+    public record DayDetail(String dayOfWeek, List<String> trainingIds, String notes, List<String> scheduledWorkoutIds) {}
 
     @Tool(description = "Get detailed analytics for a training plan including weekly TSS adherence (actual vs target), completion rates per week, and overall adherence percentage.")
     public PlanAnalytics getPlanAnalytics(
@@ -263,7 +294,10 @@ public class McpPlanTools {
     public record PlanSummary(String id, String title, String sport, String status,
                                int durationWeeks, String startDate, int totalWorkouts) {
         public static PlanSummary from(TrainingPlan p) {
-            int total = p.getWeeks().stream().mapToInt(w -> w.getDays().size()).sum();
+            int total = p.getWeeks().stream()
+                    .flatMap(w -> w.getDays().stream())
+                    .mapToInt(d -> d.getTrainingIds().size())
+                    .sum();
             return new PlanSummary(
                     p.getId(), p.getTitle(),
                     p.getSportType() != null ? p.getSportType().name() : null,

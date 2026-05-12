@@ -225,7 +225,7 @@ public class TrainingPlanService {
             for (PlanDay d : w.getDays()) {
                 PlanDay dc = new PlanDay();
                 dc.setDayOfWeek(d.getDayOfWeek());
-                dc.setTrainingId(d.getTrainingId());
+                dc.setTrainingIds(new ArrayList<>(d.getTrainingIds()));
                 dc.setNotes(d.getNotes());
                 daysCopy.add(dc);
             }

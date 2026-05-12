@@ -13,9 +13,9 @@ export type DayOfWeek =
 
 export interface PlanDay {
   dayOfWeek: DayOfWeek;
-  trainingId?: string;
+  trainingIds: string[];
   notes?: string;
-  scheduledWorkoutId?: string;
+  scheduledWorkoutIds: string[];
 }
 
 export interface PlanWeek {
