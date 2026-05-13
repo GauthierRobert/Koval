@@ -115,7 +115,7 @@ Routing (`app.routes.ts`): all routes are `loadComponent: () => import(...)` (la
 
 State management: RxJS `BehaviorSubject` exposed as `observable$` from services. **Always use `| async` in templates — never manually subscribe to set component properties** (enforced by `angular-development` skill). SSE consumers exist for chat (`chat-sse.service.ts`), club feed (`club-feed-sse.service.ts`), and AI streaming.
 
-Mock fallbacks: `auth.service.ts` and `training.service.ts` ship a mock COACH user + 3 sample workouts so the frontend works standalone if the backend is down.
+API failures: there are no mock data fallbacks. When the backend is unreachable, requests fail through `error.interceptor.ts` and surface via `ErrorToastService`; lists render empty rather than serving fake data.
 
 PWA: Angular service worker (`ngsw-config.json`) + custom `custom-sw.js` for push notifications via Firebase. `pwa-install.service.ts` handles install prompts.
 

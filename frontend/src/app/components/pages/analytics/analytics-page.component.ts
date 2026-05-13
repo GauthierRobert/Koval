@@ -5,6 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { AnalyticsService, DURATION_LABELS } from '../../../services/analytics.service';
 import { PowerCurveChartComponent } from '../session-analysis/power-curve-chart/power-curve-chart.component';
 import { DashboardVolumeChartComponent } from '../dashboard/dashboard-volume-chart/dashboard-volume-chart.component';
+import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 
 type Tab = 'power-curve' | 'volume' | 'records';
 type VolumeMetric = 'time' | 'tss' | 'distance';
@@ -12,7 +13,14 @@ type VolumeMetric = 'time' | 'tss' | 'distance';
 @Component({
   selector: 'app-analytics-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, PowerCurveChartComponent, DashboardVolumeChartComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TranslateModule,
+    PowerCurveChartComponent,
+    DashboardVolumeChartComponent,
+    EmptyStateComponent,
+  ],
   templateUrl: './analytics-page.component.html',
   styleUrl: './analytics-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -55,7 +63,9 @@ export class AnalyticsPageComponent implements OnInit {
   }
 
   // Power curve helpers
-  powerCurveEntries(data: Record<number, number>): { duration: number; label: string; power: number }[] {
+  powerCurveEntries(
+    data: Record<number, number>,
+  ): { duration: number; label: string; power: number }[] {
     return Object.entries(data)
       .map(([dur, power]) => ({
         duration: Number(dur),
@@ -86,7 +96,9 @@ export class AnalyticsPageComponent implements OnInit {
   }
 
   // Records helpers
-  recordEntries(data: Record<number, number>): { duration: number; label: string; power: number }[] {
+  recordEntries(
+    data: Record<number, number>,
+  ): { duration: number; label: string; power: number }[] {
     return this.powerCurveEntries(data);
   }
 

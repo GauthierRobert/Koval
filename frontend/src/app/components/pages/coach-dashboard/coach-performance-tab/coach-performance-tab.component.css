@@ -218,19 +218,23 @@
 
 /* ── Club Session Rows ── */
 
-.club-session-row { border-left: 3px solid #818cf8; }
+.club-session-row {
+  border-left: 3px solid var(--ai-color);
+}
 
 .club-badge {
   font-size: 8px;
   font-weight: 800;
   padding: 1px 6px;
-  border-radius: 4px;
-  background: rgba(99, 102, 241, 0.15);
-  color: #818cf8;
+  border-radius: var(--radius-sm);
+  background: var(--ai-subtle-strong);
+  color: var(--ai-color);
   margin-left: 6px;
 }
 
-.t-status.club { color: #818cf8; }
+.t-status.club {
+  color: var(--ai-color);
+}
 
 /* ── Weekly Volume ── */
 
@@ -320,9 +324,15 @@
   transition: background 0.15s;
 }
 
-.sm-row:hover { background: var(--surface-elevated); }
+.sm-row:hover {
+  background: var(--surface-elevated);
+}
 
-.sm-sport { display: flex; align-items: center; color: var(--success-color); }
+.sm-sport {
+  display: flex;
+  align-items: center;
+  color: var(--success-color);
+}
 
 .sm-title {
   white-space: nowrap;
@@ -425,4 +435,3 @@
     grid-template-columns: 24px 1fr 50px;
   }
 }
-

@@ -86,9 +86,18 @@
   letter-spacing: 0.08em;
 }
 
-.gpx-indicator.swim { background: var(--info-subtle); color: var(--info-text); }
-.gpx-indicator.bike { background: var(--success-subtle); color: var(--success-color); }
-.gpx-indicator.run { background: var(--accent-subtle); color: var(--accent-color); }
+.gpx-indicator.swim {
+  background: var(--info-subtle);
+  color: var(--info-text);
+}
+.gpx-indicator.bike {
+  background: var(--success-subtle);
+  color: var(--success-color);
+}
+.gpx-indicator.run {
+  background: var(--accent-subtle);
+  color: var(--accent-color);
+}
 
 /* ═══ CARD LABELS ════════════════════════════════════════════ */
 .card-label {
@@ -335,7 +344,9 @@
 
 .generate-btn:hover:not(:disabled) {
   transform: translateY(-3px);
-  box-shadow: 0 8px 28px oklch(0.75 0.18 65 / 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 8px 28px oklch(0.75 0.18 65 / 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .generate-btn:active:not(:disabled) {
@@ -1106,6 +1117,15 @@
   border-radius: 4px;
 }
 
-.gpx-indicator.swim { background: rgba(56, 189, 248, 0.15); color: var(--info-text); }
-.gpx-indicator.bike { background: rgba(52, 211, 153, 0.15); color: var(--success-color); }
-.gpx-indicator.run { background: rgba(251, 146, 60, 0.15); color: #fb923c; }
+.gpx-indicator.swim {
+  background: var(--sport-swimming-subtle);
+  color: var(--sport-swimming);
+}
+.gpx-indicator.bike {
+  background: var(--sport-cycling-subtle);
+  color: var(--sport-cycling);
+}
+.gpx-indicator.run {
+  background: var(--sport-running-subtle);
+  color: var(--sport-running);
+}

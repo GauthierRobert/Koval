@@ -1,7 +1,6 @@
 <div class="pacing-page" [class.results-active]="pacingPlan$ | async">
-
   <!-- Initial Form (no results yet) -->
-  @if (!(pacingPlan$ | async)) {
+  @if ((pacingPlan$ | async) === null) {
     <!-- Ambient depth -->
     <div class="ambient-orbs">
       <div class="orb orb--accent"></div>
@@ -40,7 +39,6 @@
 
     <!-- ═══ BENTO GRID ═══ -->
     <div class="bento-grid stagger-children">
-
       <!-- ▌ DISCIPLINE HERO — span 8 -->
       <div class="bento-card bento-8 bento-tall inner-glow discipline-hero">
         <span class="card-label">{{ 'PACING.FIELD_DISCIPLINE_LABEL' | translate }}</span>
@@ -49,8 +47,8 @@
           [bikeType]="profile.bikeType || 'ROAD_AERO'"
           [showBikeType]="needsBike()"
           (disciplineChange)="onDisciplineChange($event)"
-          (bikeTypeChange)="onBikeTypeChange($event)">
-        </app-discipline-selector>
+          (bikeTypeChange)="onBikeTypeChange($event)"
+        />
       </div>
 
       <!-- ▌ ATHLETE PROFILE — span 4 -->
@@ -64,19 +62,37 @@
             </div>
             <div class="pf-field">
               <label>{{ 'PACING.FIELD_WEIGHT_LABEL' | translate }}</label>
-              <input type="number" [(ngModel)]="profile.weightKg" placeholder="75" min="30" max="200" />
+              <input
+                type="number"
+                [(ngModel)]="profile.weightKg"
+                placeholder="75"
+                min="30"
+                max="200"
+              />
             </div>
           }
           @if (needsRun()) {
             <div class="pf-field">
               <label>{{ 'PACING.FIELD_THRESHOLD_PACE_LABEL' | translate }}</label>
-              <input type="number" [(ngModel)]="profile.thresholdPaceSec" placeholder="270" min="120" max="600" />
+              <input
+                type="number"
+                [(ngModel)]="profile.thresholdPaceSec"
+                placeholder="270"
+                min="120"
+                max="600"
+              />
             </div>
           }
           @if (needsSwim()) {
             <div class="pf-field">
               <label>{{ 'PACING.FIELD_SWIM_CSS_LABEL' | translate }}</label>
-              <input type="number" [(ngModel)]="profile.swimCssSec" placeholder="95" min="40" max="200" />
+              <input
+                type="number"
+                [(ngModel)]="profile.swimCssSec"
+                placeholder="95"
+                min="40"
+                max="200"
+              />
             </div>
           }
         </div>
@@ -85,7 +101,9 @@
       <!-- ▌ GPX UPLOAD — span 6 (conditional) -->
       @if ((needsBike() || needsRun()) && !linkedRace) {
         <div class="bento-card glow-card gpx-card bento-6">
-          <span class="card-label">{{ 'PACING.SECTION_GPX_UPLOAD' | translate: { default: 'COURSE GPX' } }}</span>
+          <span class="card-label">{{
+            'PACING.SECTION_GPX_UPLOAD' | translate: { default: 'COURSE GPX' }
+          }}</span>
           <div class="gpx-grid">
             @if (needsBike()) {
               <app-gpx-upload-zone
@@ -94,9 +112,11 @@
                 [loops]="bikeLoops"
                 [showLoops]="true"
                 [hint]="'PACING.DROPZONE_HINT_BIKE' | translate"
-                (fileSelected)="discipline === 'BIKE' ? onGpxFileSelected($event) : onBikeGpxFileSelected($event)"
-                (loopsChange)="bikeLoops = $event">
-              </app-gpx-upload-zone>
+                (fileSelected)="
+                  discipline === 'BIKE' ? onGpxFileSelected($event) : onBikeGpxFileSelected($event)
+                "
+                (loopsChange)="bikeLoops = $event"
+              />
             }
             @if (needsRun()) {
               <app-gpx-upload-zone
@@ -105,9 +125,11 @@
                 [loops]="runLoops"
                 [showLoops]="true"
                 [hint]="'PACING.DROPZONE_HINT_RUN' | translate"
-                (fileSelected)="discipline === 'RUN' ? onGpxFileSelected($event) : onRunGpxFileSelected($event)"
-                (loopsChange)="runLoops = $event">
-              </app-gpx-upload-zone>
+                (fileSelected)="
+                  discipline === 'RUN' ? onGpxFileSelected($event) : onRunGpxFileSelected($event)
+                "
+                (loopsChange)="runLoops = $event"
+              />
             }
           </div>
         </div>
@@ -118,15 +140,41 @@
         <div class="card-label-row">
           <span class="card-label">{{ 'PACING.SECTION_RACE_TARGETS' | translate }}</span>
           @if (discipline === 'TRIATHLON') {
-            <span class="tooltip-trigger">?
+            <span class="tooltip-trigger"
+              >?
               <span class="tooltip-text tooltip-wide">
                 <strong>{{ 'PACING.TOOLTIP_TRIATHLON_TITLE' | translate }}</strong>
                 <table class="tooltip-table">
-                  <tr><th>{{ 'PACING.TOOLTIP_DISTANCE' | translate }}</th><th>{{ 'PACING.TOOLTIP_BEGINNER' | translate }}</th><th>{{ 'PACING.TOOLTIP_INTERMEDIATE' | translate }}</th><th>{{ 'PACING.TOOLTIP_ELITE' | translate }}</th></tr>
-                  <tr><td>{{ 'PACING.TOOLTIP_SPRINT' | translate }}</td><td>80–85%</td><td>90–95%</td><td>95–105%</td></tr>
-                  <tr><td>{{ 'PACING.TOOLTIP_OLYMPIC' | translate }}</td><td>70–80%</td><td>82–88%</td><td>90–95%</td></tr>
-                  <tr><td>{{ 'PACING.TOOLTIP_70_3' | translate }}</td><td>65–75%</td><td>78–84%</td><td>85–90%</td></tr>
-                  <tr><td>{{ 'PACING.TOOLTIP_IRONMAN' | translate }}</td><td>60–70%</td><td>70–78%</td><td>78–85%</td></tr>
+                  <tr>
+                    <th>{{ 'PACING.TOOLTIP_DISTANCE' | translate }}</th>
+                    <th>{{ 'PACING.TOOLTIP_BEGINNER' | translate }}</th>
+                    <th>{{ 'PACING.TOOLTIP_INTERMEDIATE' | translate }}</th>
+                    <th>{{ 'PACING.TOOLTIP_ELITE' | translate }}</th>
+                  </tr>
+                  <tr>
+                    <td>{{ 'PACING.TOOLTIP_SPRINT' | translate }}</td>
+                    <td>80–85%</td>
+                    <td>90–95%</td>
+                    <td>95–105%</td>
+                  </tr>
+                  <tr>
+                    <td>{{ 'PACING.TOOLTIP_OLYMPIC' | translate }}</td>
+                    <td>70–80%</td>
+                    <td>82–88%</td>
+                    <td>90–95%</td>
+                  </tr>
+                  <tr>
+                    <td>{{ 'PACING.TOOLTIP_70_3' | translate }}</td>
+                    <td>65–75%</td>
+                    <td>78–84%</td>
+                    <td>85–90%</td>
+                  </tr>
+                  <tr>
+                    <td>{{ 'PACING.TOOLTIP_IRONMAN' | translate }}</td>
+                    <td>60–70%</td>
+                    <td>70–78%</td>
+                    <td>78–85%</td>
+                  </tr>
                 </table>
               </span>
             </span>
@@ -136,7 +184,14 @@
           @if (needsBike()) {
             <div class="pf-field">
               <label>{{ 'PACING.FIELD_TARGET_POWER_LABEL' | translate }}</label>
-              <input type="number" [ngModel]="targetPowerPct" (ngModelChange)="onTargetPowerPctChange($event)" [placeholder]="'PACING.FIELD_HINT_AUTO' | translate" min="30" max="120" />
+              <input
+                type="number"
+                [ngModel]="targetPowerPct"
+                (ngModelChange)="onTargetPowerPctChange($event)"
+                [placeholder]="'PACING.FIELD_HINT_AUTO' | translate"
+                min="30"
+                max="120"
+              />
               @if (computedPowerWatts(); as w) {
                 <span class="field-hint computed">= {{ w }}W</span>
               }
@@ -148,7 +203,14 @@
           @if (needsRun()) {
             <div class="pf-field">
               <label>{{ 'PACING.FIELD_TARGET_PACE_LABEL' | translate }}</label>
-              <input type="number" [ngModel]="targetPacePct" (ngModelChange)="onTargetPacePctChange($event)" [placeholder]="'PACING.FIELD_HINT_AUTO' | translate" min="80" max="150" />
+              <input
+                type="number"
+                [ngModel]="targetPacePct"
+                (ngModelChange)="onTargetPacePctChange($event)"
+                [placeholder]="'PACING.FIELD_HINT_AUTO' | translate"
+                min="80"
+                max="150"
+              />
               @if (computedPaceDisplay(); as p) {
                 <span class="field-hint computed">= {{ p }}</span>
               }
@@ -160,13 +222,24 @@
           @if (needsSwim()) {
             <div class="pf-field">
               <label>{{ 'PACING.FIELD_SWIM_DISTANCE_LABEL' | translate }}</label>
-              <input type="number" [(ngModel)]="profile.swimDistanceM" placeholder="1900" min="100" max="10000" />
+              <input
+                type="number"
+                [(ngModel)]="profile.swimDistanceM"
+                placeholder="1900"
+                min="100"
+                max="10000"
+              />
             </div>
           }
           @if (needsSwim() && (discipline === 'TRIATHLON' || profile.swimDistanceM)) {
             <div class="pf-field">
               <label>{{ 'PACING.FIELD_SWIM_PACE_LABEL' | translate }}</label>
-              <input type="number" [(ngModel)]="profile.targetSwimPaceSecPer100m" min="40" max="300" />
+              <input
+                type="number"
+                [(ngModel)]="profile.targetSwimPaceSecPer100m"
+                min="40"
+                max="300"
+              />
               @if (!profile.targetSwimPaceSecPer100m) {
                 <span class="field-hint">{{ 'PACING.FIELD_HINT_AUTO' | translate }}</span>
               }
@@ -190,13 +263,26 @@
       </div>
 
       <!-- ▌ GENERATE — span 6 -->
-      <div class="bento-card bento-6 generate-card" [class.ai-glow]="(loading$ | async)">
+      <div class="bento-card bento-6 generate-card" [class.ai-glow]="loading$ | async">
         @if (localError$ | async; as err) {
           <div class="gen-error">{{ err }}</div>
         }
-        <button class="generate-btn" (click)="generate()" [disabled]="(loading$ | async) || !canGenerate()">
-          @if (!(loading$ | async)) {
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <button
+          class="generate-btn"
+          (click)="generate()"
+          [disabled]="(loading$ | async) || !canGenerate()"
+        >
+          @if ((loading$ | async) !== true) {
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
             <span>{{ 'PACING.BTN_GENERATE_PLAN' | translate }}</span>
           }
           @if (loading$ | async) {
@@ -208,170 +294,209 @@
           <span class="generate-hint">{{ reason }}</span>
         }
       </div>
-
     </div>
   }
 
   <!-- Results View -->
   @if (pacingPlan$ | async; as plan) {
     <div class="results-view">
+      <!-- Compact Parameter Bar -->
+      <app-pacing-parameter-bar
+        [plan]="plan"
+        [gpxFileName]="gpxFileName"
+        [bikeGpxFileName]="bikeGpxFileName"
+        [runGpxFileName]="runGpxFileName"
+        [bikeLoops]="bikeLoops"
+        [runLoops]="runLoops"
+        [discipline]="discipline"
+        [ftp]="profile.ftp"
+        [weightKg]="profile.weightKg"
+        [targetPowerPct]="targetPowerPct"
+        [computedPowerWatts]="computedPowerWatts()"
+        [targetPacePct]="targetPacePct"
+        [computedPaceDisplay]="computedPaceDisplay()"
+        [swimCssSec]="profile.swimCssSec"
+        [bikeType]="profile.bikeType"
+        [activeTab]="activeTab"
+        [availableTabs]="getAvailableTabs(plan)"
+        [needsBike]="needsBike()"
+        [needsRun]="needsRun()"
+        [needsSwim]="needsSwim()"
+        (tabChange)="activeTab = $event"
+        (modify)="showSettingsModal = true"
+        (clear)="clearPlan()"
+      />
 
-    <!-- Compact Parameter Bar -->
-    <app-pacing-parameter-bar
-      [plan]="plan"
-      [gpxFileName]="gpxFileName"
-      [bikeGpxFileName]="bikeGpxFileName"
-      [runGpxFileName]="runGpxFileName"
-      [bikeLoops]="bikeLoops"
-      [runLoops]="runLoops"
-      [discipline]="discipline"
-      [ftp]="profile.ftp"
-      [weightKg]="profile.weightKg"
-      [targetPowerPct]="targetPowerPct"
-      [computedPowerWatts]="computedPowerWatts()"
-      [targetPacePct]="targetPacePct"
-      [computedPaceDisplay]="computedPaceDisplay()"
-      [swimCssSec]="profile.swimCssSec"
-      [bikeType]="profile.bikeType"
-      [activeTab]="activeTab"
-      [availableTabs]="getAvailableTabs(plan)"
-      [needsBike]="needsBike()"
-      [needsRun]="needsRun()"
-      [needsSwim]="needsSwim()"
-      (tabChange)="activeTab = $event"
-      (modify)="showSettingsModal = true"
-      (clear)="clearPlan()">
-    </app-pacing-parameter-bar>
+      <!-- Summary Cards -->
+      <app-pacing-summary-cards
+        [swimSummary]="plan.swimSummary"
+        [bikeSummary]="plan.bikeSummary"
+        [runSummary]="plan.runSummary"
+        [bikeShowSpeed]="bikeShowSpeed"
+        [showGroupMean]="showGroupMean"
+        (bikeShowSpeedChange)="bikeShowSpeed = $event"
+        (showGroupMeanChange)="showGroupMean = $event"
+      />
 
-    <!-- Summary Cards -->
-    <app-pacing-summary-cards
-      [swimSummary]="plan.swimSummary"
-      [bikeSummary]="plan.bikeSummary"
-      [runSummary]="plan.runSummary"
-      [bikeShowSpeed]="bikeShowSpeed"
-      [showGroupMean]="showGroupMean"
-      (bikeShowSpeedChange)="bikeShowSpeed = $event"
-      (showGroupMeanChange)="showGroupMean = $event">
-    </app-pacing-summary-cards>
-
-    <!-- Main content: two-column for BIKE/RUN -->
-    @if (activeTab !== 'SWIM') {
-      <div class="main-panel">
-      <div class="map-column glass">
-        @if (getActiveRouteCoordinates(plan)?.length) {
-          <app-route-map
-            [routeCoordinates]="getActiveRouteCoordinates(plan)!"
-            [segments]="getActiveSegments(plan)"
-            [highlightedRange]="highlightedRange$ | async"
-            [showSpeed]="bikeShowSpeed && activeTab === 'BIKE'"
-            (segmentHovered)="onSegmentHover($event)">
-          </app-route-map>
-        }
-      </div>
-      <div class="detail-column">
-        <app-elevation-chart
-          [segments]="getActiveSegments(plan)"
-          [highlightedRange]="highlightedRange$ | async"
-          [showSpeed]="bikeShowSpeed && activeTab === 'BIKE'"
-          [groupMeanPowers]="showGroupMean && activeTab === 'BIKE' ? getGroupMeanPowers(getActiveSegments(plan)) : null"
-          (segmentHovered)="onSegmentHover($event)">
-        </app-elevation-chart>
-        <div class="race-plan glass">
-          <div class="race-plan-header">
-            <h3 class="race-plan-title">{{ 'PACING.RACE_PLAN_TITLE' | translate }}</h3>
-            @if (activeTab === 'BIKE') {
-            <div class="race-plan-controls">
-              <label class="band-slider-label">&plusmn; {{ groupBandW }}W</label>
-              <input type="range" class="band-slider" [(ngModel)]="groupBandW" [attr.min]="1" [attr.max]="20" [attr.step]="1" />
-            </div>
+      <!-- Main content: two-column for BIKE/RUN -->
+      @if (activeTab !== 'SWIM') {
+        <div class="main-panel">
+          <div class="map-column glass">
+            @if (getActiveRouteCoordinates(plan)?.length) {
+              @defer (on viewport) {
+                <app-route-map
+                  [routeCoordinates]="getActiveRouteCoordinates(plan)!"
+                  [segments]="getActiveSegments(plan)"
+                  [highlightedRange]="highlightedRange$ | async"
+                  [showSpeed]="bikeShowSpeed && activeTab === 'BIKE'"
+                  (segmentHovered)="onSegmentHover($event)"
+                />
+              } @placeholder {
+                <div class="skeleton skeleton-block" style="height: 100%; min-height: 320px"></div>
+              }
             }
           </div>
-          <div class="race-plan-list">
-            @for (group of getGroupedPlan(getActiveSegments(plan)); let i = $index; track i) {
-              <div class="race-plan-item"
-                   [class.climb]="group.meanGradient > 1"
-                   [class.descent]="group.meanGradient < -1"
-                   [class.highlighted]="highlightedGroup === i"
-                   (mouseenter)="onGroupHover(group, i)"
-                   (mouseleave)="onGroupHover(null, null)">
-
-              <!-- Group header -->
-              <div class="rp-header">
-                <span class="rp-number">{{ group.index }}</span>
-                <span class="rp-terrain">{{ group.terrainLabel }}</span>
-                @if (group.powerLower != null && !(bikeShowSpeed && activeTab === 'BIKE')) {
-                  <span class="rp-target">
-                    @if (group.targetPower != null) {
-                      <span class="rp-avg-inline">{{ group.targetPower }}W</span>
-                    }
-                    {{ group.powerLower }}–{{ group.powerUpper }}W
-                  </span>
-                }
-                @if (group.meanSpeed && bikeShowSpeed && activeTab === 'BIKE') {
-                  <span class="rp-target speed">{{ group.meanSpeed.toFixed(1) }} km/h</span>
-                }
-                @if (group.targetPace) {
-                  <span class="rp-target pace">{{ group.targetPace }}</span>
-                }
-              </div>
-
-              <!-- Group stats -->
-              <div class="rp-stats">
-                <div class="rp-stat">
-                  <span class="rp-stat-label">{{ 'PACING.PLAN_STAT_DISTANCE' | translate }}</span>
-                  <span class="rp-stat-value">{{ formatDistance(group.startDistance) }} → {{ formatDistance(group.endDistance) }}</span>
-                </div>
-                <div class="rp-stat">
-                  <span class="rp-stat-label">{{ 'PACING.PLAN_STAT_LENGTH' | translate }}</span>
-                  <span class="rp-stat-value">{{ formatDistance(group.endDistance - group.startDistance) }}</span>
-                </div>
-                <div class="rp-stat">
-                  <span class="rp-stat-label">{{ 'PACING.PLAN_STAT_SLOPE' | translate }}</span>
-                  <span class="rp-stat-value" [class.positive]="group.meanGradient > 0" [class.negative]="group.meanGradient < 0">
-                    {{ group.meanGradient > 0 ? '+' : '' }}{{ group.meanGradient.toFixed(1) }}%
-                  </span>
-                </div>
-                <div class="rp-stat">
-                  <span class="rp-stat-label">{{ 'PACING.PLAN_STAT_ELEVATION' | translate }}</span>
-                  <span class="rp-stat-value">{{ group.elevationChange > 0 ? '+' : '' }}{{ group.elevationChange }}m</span>
-                </div>
-                <div class="rp-stat">
-                  <span class="rp-stat-label">{{ 'PACING.PLAN_STAT_TIME' | translate }}</span>
-                  <span class="rp-stat-value">{{ formatTime(group.totalTime) }}</span>
-                </div>
-                @if (group.meanSpeed) {
-                  <div class="rp-stat">
-                    <span class="rp-stat-label">{{ 'PACING.PLAN_STAT_SPEED' | translate }}</span>
-                    <span class="rp-stat-value">{{ group.meanSpeed.toFixed(1) }} km/h</span>
+          <div class="detail-column">
+            <app-elevation-chart
+              [segments]="getActiveSegments(plan)"
+              [highlightedRange]="highlightedRange$ | async"
+              [showSpeed]="bikeShowSpeed && activeTab === 'BIKE'"
+              [groupMeanPowers]="
+                showGroupMean && activeTab === 'BIKE'
+                  ? getGroupMeanPowers(getActiveSegments(plan))
+                  : null
+              "
+              (segmentHovered)="onSegmentHover($event)"
+            />
+            <div class="race-plan glass">
+              <div class="race-plan-header">
+                <h3 class="race-plan-title">{{ 'PACING.RACE_PLAN_TITLE' | translate }}</h3>
+                @if (activeTab === 'BIKE') {
+                  <div class="race-plan-controls">
+                    <label class="band-slider-label">&plusmn; {{ groupBandW }}W</label>
+                    <input
+                      type="range"
+                      class="band-slider"
+                      [(ngModel)]="groupBandW"
+                      [attr.min]="1"
+                      [attr.max]="20"
+                      [attr.step]="1"
+                    />
                   </div>
                 }
               </div>
+              <div class="race-plan-list">
+                @for (group of getGroupedPlan(getActiveSegments(plan)); let i = $index; track i) {
+                  <div
+                    class="race-plan-item"
+                    [class.climb]="group.meanGradient > 1"
+                    [class.descent]="group.meanGradient < -1"
+                    [class.highlighted]="highlightedGroup === i"
+                    (mouseenter)="onGroupHover(group, i)"
+                    (mouseleave)="onGroupHover(null, null)"
+                  >
+                    <!-- Group header -->
+                    <div class="rp-header">
+                      <span class="rp-number">{{ group.index }}</span>
+                      <span class="rp-terrain">{{ group.terrainLabel }}</span>
+                      @if (group.powerLower !== null && !(bikeShowSpeed && activeTab === 'BIKE')) {
+                        <span class="rp-target">
+                          @if (group.targetPower !== null) {
+                            <span class="rp-avg-inline">{{ group.targetPower }}W</span>
+                          }
+                          {{ group.powerLower }}–{{ group.powerUpper }}W
+                        </span>
+                      }
+                      @if (group.meanSpeed && bikeShowSpeed && activeTab === 'BIKE') {
+                        <span class="rp-target speed">{{ group.meanSpeed.toFixed(1) }} km/h</span>
+                      }
+                      @if (group.targetPace) {
+                        <span class="rp-target pace">{{ group.targetPace }}</span>
+                      }
+                    </div>
 
-              <!-- Nutrition events -->
-              @for (n of group.nutritionEvents; track n.distance) {
-                <div class="rp-nutrition">
-                  <span class="rp-nutrition-icon">{{ 'PACING.NUTRITION_ICON' | translate }}</span>
-                  <span class="rp-nutrition-text">
-                    {{ n.suggestion }} (at {{ formatDistance(n.distance) }})
-                  </span>
-                </div>
-              }
+                    <!-- Group stats -->
+                    <div class="rp-stats">
+                      <div class="rp-stat">
+                        <span class="rp-stat-label">{{
+                          'PACING.PLAN_STAT_DISTANCE' | translate
+                        }}</span>
+                        <span class="rp-stat-value"
+                          >{{ formatDistance(group.startDistance) }} →
+                          {{ formatDistance(group.endDistance) }}</span
+                        >
+                      </div>
+                      <div class="rp-stat">
+                        <span class="rp-stat-label">{{
+                          'PACING.PLAN_STAT_LENGTH' | translate
+                        }}</span>
+                        <span class="rp-stat-value">{{
+                          formatDistance(group.endDistance - group.startDistance)
+                        }}</span>
+                      </div>
+                      <div class="rp-stat">
+                        <span class="rp-stat-label">{{
+                          'PACING.PLAN_STAT_SLOPE' | translate
+                        }}</span>
+                        <span
+                          class="rp-stat-value"
+                          [class.positive]="group.meanGradient > 0"
+                          [class.negative]="group.meanGradient < 0"
+                        >
+                          {{ group.meanGradient > 0 ? '+' : ''
+                          }}{{ group.meanGradient.toFixed(1) }}%
+                        </span>
+                      </div>
+                      <div class="rp-stat">
+                        <span class="rp-stat-label">{{
+                          'PACING.PLAN_STAT_ELEVATION' | translate
+                        }}</span>
+                        <span class="rp-stat-value"
+                          >{{ group.elevationChange > 0 ? '+' : ''
+                          }}{{ group.elevationChange }}m</span
+                        >
+                      </div>
+                      <div class="rp-stat">
+                        <span class="rp-stat-label">{{ 'PACING.PLAN_STAT_TIME' | translate }}</span>
+                        <span class="rp-stat-value">{{ formatTime(group.totalTime) }}</span>
+                      </div>
+                      @if (group.meanSpeed) {
+                        <div class="rp-stat">
+                          <span class="rp-stat-label">{{
+                            'PACING.PLAN_STAT_SPEED' | translate
+                          }}</span>
+                          <span class="rp-stat-value">{{ group.meanSpeed.toFixed(1) }} km/h</span>
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Nutrition events -->
+                    @for (n of group.nutritionEvents; track n.distance) {
+                      <div class="rp-nutrition">
+                        <span class="rp-nutrition-icon">{{
+                          'PACING.NUTRITION_ICON' | translate
+                        }}</span>
+                        <span class="rp-nutrition-text">
+                          {{ n.suggestion }} (at {{ formatDistance(n.distance) }})
+                        </span>
+                      </div>
+                    }
+                  </div>
+                }
               </div>
-            }
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-    }
+      }
 
-    <!-- Swim panel (no map/chart for swim) -->
-    @if (activeTab === 'SWIM') {
-      <div class="swim-panel glass">
-        <h3>{{ 'PACING.SWIM_PANEL_TITLE' | translate }}</h3>
-        <p>{{ 'PACING.SWIM_PANEL_DESC' | translate }}</p>
-      </div>
-    }
-  </div>
+      <!-- Swim panel (no map/chart for swim) -->
+      @if (activeTab === 'SWIM') {
+        <div class="swim-panel glass">
+          <h3>{{ 'PACING.SWIM_PANEL_TITLE' | translate }}</h3>
+          <p>{{ 'PACING.SWIM_PANEL_DESC' | translate }}</p>
+        </div>
+      }
+    </div>
   }
 
   <!-- Settings Modal -->
@@ -402,6 +527,6 @@
     (bikeGpxFileSelected)="onBikeGpxFileSelected($event)"
     (runGpxFileSelected)="onRunGpxFileSelected($event)"
     (bikeLoopsChange)="bikeLoops = $event"
-    (runLoopsChange)="runLoops = $event">
-  </app-pacing-settings-modal>
+    (runLoopsChange)="runLoops = $event"
+  />
 </div>

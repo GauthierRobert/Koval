@@ -1,7 +1,7 @@
 .analytics-page {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: var(--space-xl) var(--space-lg);
 }
 
 .page-header {
@@ -35,7 +35,7 @@
 }
 
 .date-sep {
-  color: var(--text-tertiary, #707070);
+  color: var(--text-dim);
 }
 
 /* Tabs */
@@ -55,7 +55,9 @@
   padding: 0.6rem 1rem;
   cursor: pointer;
   border-bottom: 2px solid transparent;
-  transition: color 0.15s, border-color 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
 }
 
 .tab:hover {
@@ -99,7 +101,7 @@
   padding: 0.4rem 0.6rem;
   border: 1px solid var(--glass-border);
   border-radius: 6px;
-  background: var(--surface-elevated));
+  background: var(--surface-elevated);
   color: var(--text-color);
   font-size: 0.8rem;
 }
@@ -133,7 +135,7 @@
 
 .toggle-btn.active {
   background: var(--accent-color);
-  color: #000;
+  color: var(--on-primary-color);
 }
 
 /* Volume table */
@@ -154,7 +156,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--text-tertiary, #707070);
+  color: var(--text-dim);
   padding: 0.5rem;
   border-bottom: 1px solid var(--glass-border);
 }
@@ -185,7 +187,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--text-tertiary, #707070);
+  color: var(--text-dim);
   margin-bottom: 0.5rem;
 }
 
@@ -278,7 +280,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--text-tertiary, #707070);
+  color: var(--text-dim);
 }
 
 .fri-badge {
@@ -286,8 +288,8 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   padding: 2px 8px;
-  border-radius: 999px;
-  color: #000;
+  border-radius: var(--radius-pill);
+  color: var(--on-primary-color);
   text-transform: uppercase;
 }
 
@@ -309,7 +311,7 @@
 }
 
 .fri-sep {
-  color: var(--text-tertiary, #707070);
+  color: var(--text-dim);
 }
 
 .fri-interpretation {
@@ -321,6 +323,12 @@
 }
 
 /* ── Skeleton heights (scaffolding in global styles.scss) ── */
-.skeleton-chart { height: 320px; }
-.skeleton-fri-card { height: 120px; }
-.skeleton-record-card { height: 96px; }
+.skeleton-chart {
+  height: 320px;
+}
+.skeleton-fri-card {
+  height: 120px;
+}
+.skeleton-record-card {
+  height: 96px;
+}

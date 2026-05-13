@@ -10,7 +10,12 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "e2e": "npx playwright test",
-    "e2e:ui": "npx playwright test --ui"
+    "e2e:ui": "npx playwright test --ui",
+    "lint": "eslint \"src/**/*.{ts,html}\"",
+    "lint:fix": "eslint \"src/**/*.{ts,html}\" --fix",
+    "lint:styles": "stylelint \"src/**/*.{css,scss}\"",
+    "lint:styles:fix": "stylelint \"src/**/*.{css,scss}\" --fix",
+    "prepare": "cd .. && husky frontend/.husky"
   },
   "prettier": {
     "printWidth": 100,
@@ -22,6 +27,20 @@
           "parser": "angular"
         }
       }
+    ]
+  },
+  "lint-staged": {
+    "src/**/*.ts": [
+      "eslint --fix --no-warn-ignored",
+      "prettier --write"
+    ],
+    "src/**/*.html": [
+      "eslint --fix --no-warn-ignored",
+      "prettier --write"
+    ],
+    "src/**/*.{css,scss}": [
+      "stylelint --fix",
+      "prettier --write"
     ]
   },
   "private": true,
@@ -49,11 +68,21 @@
     "@angular/build": "^21.1.2",
     "@angular/cli": "^21.1.2",
     "@angular/compiler-cli": "^21.1.0",
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.58.2",
     "@types/leaflet": "^1.9.21",
+    "angular-eslint": "^21.3.1",
+    "eslint": "^10.3.0",
+    "husky": "^9.1.7",
     "jsdom": "^27.1.0",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.3",
     "sharp": "^0.34.5",
+    "stylelint": "^17.11.0",
+    "stylelint-config-standard-scss": "^17.0.0",
+    "stylelint-declaration-strict-value": "^1.11.1",
     "typescript": "~5.9.2",
+    "typescript-eslint": "^8.59.3",
     "vitest": "^4.0.8"
   }
 }

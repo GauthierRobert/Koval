@@ -8,6 +8,9 @@
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
+    // TODO(quality): enable noUncheckedIndexedAccess. Trial run produced
+    // 493 errors across charts, calendar, dashboard, and pacing — needs
+    // a dedicated cleanup pass. Tracked in the deferred Phase 3 batch.
     "skipLibCheck": true,
     "isolatedModules": true,
     "experimentalDecorators": true,

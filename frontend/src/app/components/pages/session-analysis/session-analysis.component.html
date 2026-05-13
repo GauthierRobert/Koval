@@ -1,165 +1,200 @@
 @if (session$ | async; as session) {
-  @let ftp = (ftp$ | async);
+  @let ftp = ftp$ | async;
   @let displayBlocks = (displayBlocks$ | async) ?? [];
   <div class="analysis-page">
+    <!-- Header + Key metrics -->
+    <app-session-stats-header
+      [session]="session"
+      [tss]="getTss(session, ftp)"
+      [intensityFactor]="getIF(session, ftp)"
+      [ftp]="ftp"
+      [movingTime]="(movingTime$ | async) ?? null"
+      (rpeChanged)="selectRpe(session, $event)"
+    />
 
-      <!-- Header + Key metrics -->
-      <app-session-stats-header
-        [session]="session"
-        [tss]="getTss(session, ftp)"
-        [intensityFactor]="getIF(session, ftp)"
-        [ftp]="ftp"
-        [movingTime]="(movingTime$ | async) ?? null"
-        (rpeChanged)="selectRpe(session, $event)">
-      </app-session-stats-header>
-
-      <!-- FIT timeseries chart -->
-      @if (fitState$ | async; as fit) {
-        <div class="chart-section glass">
-          <div class="chart-header-row">
-            <div class="section-label">{{ 'SESSION_ANALYSIS.CHART_FIT_TIME_SERIES' | translate }}</div>
-            <div class="chart-controls">
-              @if (blockView === 'interpolated' || !displayBlocks.length) {
-                @if (!fit.loading && !fit.error && fit.records.length > 0 && (zoneBlocks$ | async)?.length) {
-                  <div class="smooth-control">
-                    <span class="smooth-label">{{ 'SESSION_ANALYSIS.SMOOTH_LABEL' | translate }}</span>
-                    <input type="range" min="1" max="30" step="1"
-                      class="smooth-slider"
-                      [value]="smoothFactor$.value"
-                      (input)="smoothFactor$.next(+$any($event.target).value)" />
-                    <span class="smooth-value">{{ smoothFactor$.value }}</span>
-                  </div>
-                }
-              }
-              @if (displayBlocks.length && (zoneBlocks$ | async)?.length) {
-                <div class="view-toggle">
-                  <button data-testid="block-view-toggle" class="toggle-pill" [class.active]="blockView === 'planned'" (click)="blockView = 'planned'">{{ 'SESSION_ANALYSIS.TOGGLE_PLANNED' | translate }}</button>
-                  <button data-testid="block-view-toggle" class="toggle-pill" [class.active]="blockView === 'interpolated'" (click)="blockView = 'interpolated'">{{ 'SESSION_ANALYSIS.TOGGLE_INTERPOLATED' | translate }}</button>
+    <!-- FIT timeseries chart -->
+    @if (fitState$ | async; as fit) {
+      <div class="chart-section glass">
+        <div class="chart-header-row">
+          <div class="section-label">
+            {{ 'SESSION_ANALYSIS.CHART_FIT_TIME_SERIES' | translate }}
+          </div>
+          <div class="chart-controls">
+            @if (blockView === 'interpolated' || !displayBlocks.length) {
+              @if (
+                !fit.loading &&
+                !fit.error &&
+                fit.records.length > 0 &&
+                (zoneBlocks$ | async)?.length
+              ) {
+                <div class="smooth-control">
+                  <span class="smooth-label">{{
+                    'SESSION_ANALYSIS.SMOOTH_LABEL' | translate
+                  }}</span>
+                  <input
+                    type="range"
+                    min="1"
+                    max="30"
+                    step="1"
+                    class="smooth-slider"
+                    [value]="smoothFactor$.value"
+                    (input)="smoothFactor$.next(+$any($event.target).value)"
+                  />
+                  <span class="smooth-value">{{ smoothFactor$.value }}</span>
                 </div>
               }
-            </div>
+            }
+            @if (displayBlocks.length && (zoneBlocks$ | async)?.length) {
+              <div class="view-toggle">
+                <button
+                  data-testid="block-view-toggle"
+                  class="toggle-pill"
+                  [class.active]="blockView === 'planned'"
+                  (click)="blockView = 'planned'"
+                >
+                  {{ 'SESSION_ANALYSIS.TOGGLE_PLANNED' | translate }}
+                </button>
+                <button
+                  data-testid="block-view-toggle"
+                  class="toggle-pill"
+                  [class.active]="blockView === 'interpolated'"
+                  (click)="blockView = 'interpolated'"
+                >
+                  {{ 'SESSION_ANALYSIS.TOGGLE_INTERPOLATED' | translate }}
+                </button>
+              </div>
+            }
           </div>
-          @if (!fit.loading && !fit.error && fit.records.length > 0) {
-            <app-fit-timeseries-chart [records]="fit.records"
-              [ftp]="ftp" [sportType]="session.sportType" [blockSummaries]="displayBlocks"
-              [blockColors]="(blockColors$ | async) ?? []"
-              [zoneBlocks]="(blockView === 'interpolated' ? (zoneBlocks$ | async) : null) ?? []">
-            </app-fit-timeseries-chart>
-          }
-          @if (!fit.loading && !fit.error && fit.records.length === 0) {
-            @if (displayBlocks.length > 0) {
-              @let sTotal = syntheticTotalDuration(displayBlocks);
-              @let sMax = syntheticMaxPower(displayBlocks, ftp);
-              <div class="synthetic-chart" data-testid="synthetic-block-chart">
-                @for (block of displayBlocks; track $index) {
-                  <div class="synthetic-bar"
-                    [style.width.%]="syntheticBarWidthPct(block, sTotal)"
-                    [style.height.%]="syntheticBarHeightPct(block, sMax)"
-                    [style.background]="syntheticBarColor(block, ftp)"
-                    [attr.title]="block.label + ' · ' + (block.actualPower || block.targetPower) + 'W'">
-                  </div>
-                }
-              </div>
-              <p class="synthetic-hint">{{ 'SESSION_ANALYSIS.NO_FIT_HINT' | translate }}</p>
-            } @else {
-              <div class="no-fit-msg">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                  opacity="0.4">
-                  <path d="M3 3l18 18M10.5 10.677A2 2 0 0 0 10 12a2 2 0 0 0 4 0 2 2 0 0 0-.5-1.323" />
-                  <path d="M3 10l3 2 2-4 2 7 2-5 2 2h5" />
-                </svg>
-                <p>{{ 'SESSION_ANALYSIS.NO_FIT_DATA' | translate }}</p>
-                <p class="hint">{{ 'SESSION_ANALYSIS.NO_FIT_HINT' | translate }}</p>
-              </div>
-            }
-          }
-          @if (fit.loading) {
-            <app-chart-panel-skeleton height="380px" [showHeader]="false"></app-chart-panel-skeleton>
-          }
-          @if (fit.error) {
-            <div class="no-fit-msg error">
-              {{ 'SESSION_ANALYSIS.FIT_LOAD_ERROR' | translate }}
+        </div>
+        @if (!fit.loading && !fit.error && fit.records.length > 0) {
+          <app-fit-timeseries-chart
+            [records]="fit.records"
+            [ftp]="ftp"
+            [sportType]="session.sportType"
+            [blockSummaries]="displayBlocks"
+            [blockColors]="(blockColors$ | async) ?? []"
+            [zoneBlocks]="(blockView === 'interpolated' ? (zoneBlocks$ | async) : null) ?? []"
+          />
+        }
+        @if (!fit.loading && !fit.error && fit.records.length === 0) {
+          @if (displayBlocks.length > 0) {
+            @let sTotal = syntheticTotalDuration(displayBlocks);
+            @let sMax = syntheticMaxPower(displayBlocks, ftp);
+            <div class="synthetic-chart" data-testid="synthetic-block-chart">
+              @for (block of displayBlocks; track $index) {
+                <div
+                  class="synthetic-bar"
+                  [style.width.%]="syntheticBarWidthPct(block, sTotal)"
+                  [style.height.%]="syntheticBarHeightPct(block, sMax)"
+                  [style.background]="syntheticBarColor(block, ftp)"
+                  [attr.title]="
+                    block.label + ' · ' + (block.actualPower || block.targetPower) + 'W'
+                  "
+                ></div>
+              }
+            </div>
+            <p class="synthetic-hint">{{ 'SESSION_ANALYSIS.NO_FIT_HINT' | translate }}</p>
+          } @else {
+            <div class="no-fit-msg">
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                opacity="0.4"
+              >
+                <path d="M3 3l18 18M10.5 10.677A2 2 0 0 0 10 12a2 2 0 0 0 4 0 2 2 0 0 0-.5-1.323" />
+                <path d="M3 10l3 2 2-4 2 7 2-5 2 2h5" />
+              </svg>
+              <p>{{ 'SESSION_ANALYSIS.NO_FIT_DATA' | translate }}</p>
+              <p class="hint">{{ 'SESSION_ANALYSIS.NO_FIT_HINT' | translate }}</p>
             </div>
           }
-        </div>
+        }
+        @if (fit.loading) {
+          <app-chart-panel-skeleton height="380px" [showHeader]="false" />
+        }
+        @if (fit.error) {
+          <div class="no-fit-msg error">
+            {{ 'SESSION_ANALYSIS.FIT_LOAD_ERROR' | translate }}
+          </div>
+        }
+      </div>
 
-        <!-- Zone Distribution -->
-        @if (!fit.loading && !fit.error && fit.records.length > 0) {
-          @if (zoneDistribution$ | async; as zones) {
-            @if (zones.length > 0) {
-              <app-zone-distribution-panel
-                [zoneDistribution]="zones"
-                [userZoneSystems]="(userZoneSystems$ | async) ?? []"
-                [currentZoneSystemId]="selectedZoneSystemId$.value"
-                (zoneSystemChange)="onZoneSystemChange($event)">
-              </app-zone-distribution-panel>
-            }
+      <!-- Zone Distribution -->
+      @if (!fit.loading && !fit.error && fit.records.length > 0) {
+        @if (zoneDistribution$ | async; as zones) {
+          @if (zones.length > 0) {
+            <app-zone-distribution-panel
+              [zoneDistribution]="zones"
+              [userZoneSystems]="(userZoneSystems$ | async) ?? []"
+              [currentZoneSystemId]="selectedZoneSystemId$.value"
+              (zoneSystemChange)="onZoneSystemChange($event)"
+            />
           }
+        }
 
-          <!-- Aerobic Decoupling gauge -->
-          <app-decoupling-gauge
-            [records]="fit.records"
-            [sportType]="session.sportType">
-          </app-decoupling-gauge>
+        <!-- Aerobic Decoupling gauge -->
+        <app-decoupling-gauge [records]="fit.records" [sportType]="session.sportType" />
 
-          <!-- Cadence distribution (cycling only, hidden when no cadence data) -->
-          <app-cadence-distribution-panel
-            [records]="fit.records"
-            [sportType]="session.sportType">
-          </app-cadence-distribution-panel>
+        <!-- Cadence distribution (cycling only, hidden when no cadence data) -->
+        <app-cadence-distribution-panel [records]="fit.records" [sportType]="session.sportType" />
 
-          <!-- W' balance trace (cycling w/ FTP and power data) -->
+        <!-- W' balance trace (cycling w/ FTP and power data) -->
+        @defer (on viewport) {
           <app-wprime-balance-chart
             [records]="fit.records"
             [sportType]="session.sportType"
             [ftp]="ftp"
             [criticalPower]="(criticalPower$ | async) ?? null"
-            [userWPrimeJ]="(wPrimeJ$ | async) ?? null">
-          </app-wprime-balance-chart>
+            [userWPrimeJ]="(wPrimeJ$ | async) ?? null"
+          />
+        } @placeholder {
+          <div class="skeleton skeleton-block" style="height: 240px"></div>
+        }
 
-          <!-- Climbs (any sport with elevation data) -->
-          <app-climbs-panel
-            [records]="fit.records"
-            [sportType]="session.sportType">
-          </app-climbs-panel>
+        <!-- Climbs (any sport with elevation data) -->
+        <app-climbs-panel [records]="fit.records" [sportType]="session.sportType" />
 
-          <!-- Power curve (cycling only, hidden when no power data) -->
-          <app-power-curve-chart
-            [sessionId]="session.id"
-            [sportType]="session.sportType">
-          </app-power-curve-chart>
+        <!-- Power curve (cycling only, hidden when no power data) -->
+        @defer (on viewport) {
+          <app-power-curve-chart [sessionId]="session.id" [sportType]="session.sportType" />
+        } @placeholder {
+          <div class="skeleton skeleton-block" style="height: 280px"></div>
         }
       }
+    }
 
-      <!-- Block breakdown -->
-      @if (displayBlocks.length || (zoneBlocks$ | async)?.length) {
-        <app-block-breakdown-table
-          [blockView]="blockView"
-          [plannedBlocks]="(filteredPlannedBlocks$ | async) ?? []"
-          [zoneBlocks]="(filteredZoneBlocks$ | async) ?? []"
-          [availableZoneChips]="(availableZoneChips$ | async) ?? []"
-          [zoneFilters]="zoneFilters$.value"
-          [ftp]="ftp"
-          [sportType]="session.sportType"
-          (blockViewChange)="blockView = $event"
-          (toggleZoneFilter)="toggleZoneFilter($event)"
-          (clearZoneFilters)="clearZoneFilters()">
-        </app-block-breakdown-table>
-      }
+    <!-- Block breakdown -->
+    @if (displayBlocks.length || (zoneBlocks$ | async)?.length) {
+      <app-block-breakdown-table
+        [blockView]="blockView"
+        [plannedBlocks]="(filteredPlannedBlocks$ | async) ?? []"
+        [zoneBlocks]="(filteredZoneBlocks$ | async) ?? []"
+        [availableZoneChips]="(availableZoneChips$ | async) ?? []"
+        [zoneFilters]="zoneFilters$.value"
+        [ftp]="ftp"
+        [sportType]="session.sportType"
+        (blockViewChange)="blockView = $event"
+        (toggleZoneFilter)="toggleZoneFilter($event)"
+        (clearZoneFilters)="clearZoneFilters()"
+      />
+    }
 
-      <!-- AI-generated analyses (published via MCP or AI chat) -->
-      <app-ai-feedback-panel [sessionId]="session.id"></app-ai-feedback-panel>
-
+    <!-- AI-generated analyses (published via MCP or AI chat) -->
+    <app-ai-feedback-panel [sessionId]="session.id" />
   </div>
 } @else {
   <div class="analysis-page skeleton-stack" aria-busy="true" aria-hidden="true">
     <div class="skeleton skeleton-block skeleton-block--xl skeleton-stats-header"></div>
-    <app-chart-panel-skeleton height="380px"></app-chart-panel-skeleton>
-    <app-chart-panel-skeleton height="220px"></app-chart-panel-skeleton>
-    <app-chart-panel-skeleton height="220px"></app-chart-panel-skeleton>
-    <app-chart-panel-skeleton height="220px"></app-chart-panel-skeleton>
+    <app-chart-panel-skeleton height="380px" />
+    <app-chart-panel-skeleton height="220px" />
+    <app-chart-panel-skeleton height="220px" />
+    <app-chart-panel-skeleton height="220px" />
     <div class="skeleton-panel skeleton-panel--xl">
-      @for (r of [0,1,2,3,4,5,6,7]; track r) {
+      @for (r of [0, 1, 2, 3, 4, 5, 6, 7]; track r) {
         <div class="skeleton-row" style="--skeleton-cols: 5">
           <div class="skeleton skeleton-cell"></div>
           <div class="skeleton skeleton-cell"></div>

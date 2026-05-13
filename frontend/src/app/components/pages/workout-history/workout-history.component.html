@@ -1,7 +1,10 @@
 <div class="history-layout">
-
   <!-- Left panel: session list -->
-  <aside class="history-sidebar glass" [class.mobile-detail-active]="!(isListView$ | async)" [class.desktop-collapsed]="sidebarCollapsed">
+  <aside
+    class="history-sidebar glass"
+    [class.mobile-detail-active]="(isListView$ | async) === false"
+    [class.desktop-collapsed]="sidebarCollapsed"
+  >
     <div class="sidebar-header">
       <h3 class="sidebar-title">{{ 'WORKOUT_HISTORY.SIDEBAR_TITLE' | translate }}</h3>
       <div class="sidebar-actions">
@@ -10,46 +13,123 @@
           class="icon-btn filters-icon-btn"
           [class.has-active]="activeAdvancedFilterCount > 0"
           (click)="openFilters()"
-          [title]="'WORKOUT_HISTORY.BTN_FILTERS' | translate">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+          [title]="'WORKOUT_HISTORY.BTN_FILTERS' | translate"
+          [attr.aria-label]="'WORKOUT_HISTORY.BTN_FILTERS' | translate"
+        >
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
           </svg>
           @if (activeAdvancedFilterCount > 0) {
             <span class="filters-badge">{{ activeAdvancedFilterCount }}</span>
           }
         </button>
-        <button data-testid="strava-sync-btn" class="icon-btn strava-btn" (click)="importStravaHistory()" [disabled]="(syncing$ | async) === true"
-          [title]="(syncing$ | async) ? ('WORKOUT_HISTORY.BTN_SYNCING' | translate) : ('WORKOUT_HISTORY.BTN_STRAVA_SYNC' | translate)">
+        <button
+          data-testid="strava-sync-btn"
+          class="icon-btn strava-btn"
+          (click)="importStravaHistory()"
+          [disabled]="(syncing$ | async) === true"
+          [title]="
+            (syncing$ | async)
+              ? ('WORKOUT_HISTORY.BTN_SYNCING' | translate)
+              : ('WORKOUT_HISTORY.BTN_STRAVA_SYNC' | translate)
+          "
+          [attr.aria-label]="
+            (syncing$ | async)
+              ? ('WORKOUT_HISTORY.BTN_SYNCING' | translate)
+              : ('WORKOUT_HISTORY.BTN_STRAVA_SYNC' | translate)
+          "
+        >
           @if ((syncing$ | async) === true) {
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FC4C02" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round" class="spin">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#FC4C02"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="spin"
+            >
               <path d="M21 12a9 9 0 1 1-6.219-8.56" />
             </svg>
           } @else {
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="#FC4C02"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#FC4C02">
+              <path
+                d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"
+              />
+            </svg>
           }
         </button>
-        <button class="icon-btn" (click)="triggerUpload()" [disabled]="importing"
-          [title]="importing ? ('WORKOUT_HISTORY.BTN_IMPORTING' | translate) : ('WORKOUT_HISTORY.BTN_IMPORT_FIT' | translate)">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
+        <button
+          class="icon-btn"
+          (click)="triggerUpload()"
+          [disabled]="importing"
+          [title]="
+            importing
+              ? ('WORKOUT_HISTORY.BTN_IMPORTING' | translate)
+              : ('WORKOUT_HISTORY.BTN_IMPORT_FIT' | translate)
+          "
+          [attr.aria-label]="
+            importing
+              ? ('WORKOUT_HISTORY.BTN_IMPORTING' | translate)
+              : ('WORKOUT_HISTORY.BTN_IMPORT_FIT' | translate)
+          "
+        >
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="17 8 12 3 7 8" />
             <line x1="12" y1="3" x2="12" y2="15" />
           </svg>
         </button>
-        <button class="icon-btn" (click)="exportCsv()"
-          [title]="'WORKOUT_HISTORY.EXPORT_CSV_TITLE' | translate">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
+        <button
+          class="icon-btn"
+          (click)="exportCsv()"
+          [title]="'WORKOUT_HISTORY.EXPORT_CSV_TITLE' | translate"
+          [attr.aria-label]="'WORKOUT_HISTORY.EXPORT_CSV_TITLE' | translate"
+        >
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
         </button>
       </div>
-      <input #fitInput data-testid="fit-upload-input" type="file" accept=".fit" class="fit-input" (change)="onFileSelected($event)" />
+      <input
+        #fitInput
+        data-testid="fit-upload-input"
+        type="file"
+        accept=".fit"
+        class="fit-input"
+        (change)="onFileSelected($event)"
+      />
     </div>
 
     @if (syncResult$ | async; as result) {
@@ -73,13 +153,13 @@
       <app-filter-pills
         [options]="sportOptions"
         [selected]="activeSportFilter"
-        (selectionChange)="setSportFilter($event)">
-      </app-filter-pills>
+        (selectionChange)="setSportFilter($event)"
+      />
     </div>
 
-    @if ((historyState$ | async); as state) {
+    @if (historyState$ | async; as state) {
       @if (state.loading && state.sessions.length === 0) {
-        <app-skeleton [rows]="6"></app-skeleton>
+        <app-skeleton [rows]="6" />
       } @else if (groupedRows$ | async; as rows) {
         <div class="session-list stagger-children">
           @if (rows.length === 0) {
@@ -89,70 +169,107 @@
             </div>
           }
 
-        @for (row of rows; track trackRow($index, row)) {
-          @switch (row.kind) {
-            @case ('week') {
-              <button
-                type="button"
-                class="week-header"
-                [class.expanded]="isExpanded(row.weekKey)"
-                [attr.aria-expanded]="isExpanded(row.weekKey)"
-                (click)="toggleWeek(row.weekKey)">
-                <svg class="week-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
-                <span class="week-range">{{ formatWeekRange(row.start, row.end) }}</span>
-                <span class="week-count">
-                  · {{ (row.count === 1
-                          ? 'WORKOUT_HISTORY.WEEK_SESSION_COUNT_SINGULAR'
-                          : 'WORKOUT_HISTORY.WEEK_SESSION_COUNT_PLURAL')
-                       | translate: { count: row.count } }}
-                </span>
-              </button>
-            }
-            @case ('inactivity') {
-              <div class="inactivity-row">
-                <span class="inactivity-label">{{ 'WORKOUT_HISTORY.INACTIVITY_LABEL' | translate }}</span>
-                <span class="inactivity-range">· {{ formatWeekRange(row.start, row.end) }}</span>
-                <span class="inactivity-weeks">
-                  · {{ (row.weeks === 1
-                          ? 'WORKOUT_HISTORY.INACTIVITY_WEEKS_SINGULAR'
-                          : 'WORKOUT_HISTORY.INACTIVITY_WEEKS_PLURAL')
-                       | translate: { count: row.weeks } }}
-                </span>
-              </div>
-            }
-            @case ('session') {
-              <div
-                data-testid="session-item"
-                class="session-item"
-                [class.active]="(historyService.selectedSession$ | async)?.id === row.session.id"
-                (click)="onSelect(row.session)">
-                <div class="item-sport">
-                  <app-sport-icon [sport]="row.session.sportType" [size]="18"></app-sport-icon>
-                </div>
-                <div class="item-info">
-                  <span class="item-title">{{ row.session.title }}</span>
-                  <span class="item-date">{{ formatDate(row.session.date) }}</span>
-                  <div class="item-metrics">
-                    <span class="metric-chip tss">{{ getTss(row.session, ftp$ | async) }} TSS</span>
-                    <span class="metric-chip dur">{{ formatTime(row.session.totalDuration) }}</span>
-                    <span class="metric-chip if">{{ getIF(row.session, ftp$ | async) | number:'1.2-2' }} IF</span>
-                  </div>
-                </div>
-                <button class="dl-btn" (click)="downloadFit($event, row.session)" [title]="'WORKOUT_HISTORY.DOWNLOAD_FIT_TITLE' | translate">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
+          @for (row of rows; track trackRow($index, row)) {
+            @switch (row.kind) {
+              @case ('week') {
+                <button
+                  type="button"
+                  class="week-header"
+                  [class.expanded]="isExpanded(row.weekKey)"
+                  [attr.aria-expanded]="isExpanded(row.weekKey)"
+                  (click)="toggleWeek(row.weekKey)"
+                >
+                  <svg
+                    class="week-chevron"
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
                   </svg>
+                  <span class="week-range">{{ formatWeekRange(row.start, row.end) }}</span>
+                  <span class="week-count">
+                    ·
+                    {{
+                      (row.count === 1
+                        ? 'WORKOUT_HISTORY.WEEK_SESSION_COUNT_SINGULAR'
+                        : 'WORKOUT_HISTORY.WEEK_SESSION_COUNT_PLURAL'
+                      ) | translate: { count: row.count }
+                    }}
+                  </span>
                 </button>
-              </div>
+              }
+              @case ('inactivity') {
+                <div class="inactivity-row">
+                  <span class="inactivity-label">{{
+                    'WORKOUT_HISTORY.INACTIVITY_LABEL' | translate
+                  }}</span>
+                  <span class="inactivity-range">· {{ formatWeekRange(row.start, row.end) }}</span>
+                  <span class="inactivity-weeks">
+                    ·
+                    {{
+                      (row.weeks === 1
+                        ? 'WORKOUT_HISTORY.INACTIVITY_WEEKS_SINGULAR'
+                        : 'WORKOUT_HISTORY.INACTIVITY_WEEKS_PLURAL'
+                      ) | translate: { count: row.weeks }
+                    }}
+                  </span>
+                </div>
+              }
+              @case ('session') {
+                <div
+                  data-testid="session-item"
+                  class="session-item"
+                  [class.active]="(historyService.selectedSession$ | async)?.id === row.session.id"
+                  (click)="onSelect(row.session)"
+                >
+                  <div class="item-sport">
+                    <app-sport-icon [sport]="row.session.sportType" [size]="18" />
+                  </div>
+                  <div class="item-info">
+                    <span class="item-title">{{ row.session.title }}</span>
+                    <span class="item-date">{{ formatDate(row.session.date) }}</span>
+                    <div class="item-metrics">
+                      <span class="metric-chip tss"
+                        >{{ getTss(row.session, ftp$ | async) }} TSS</span
+                      >
+                      <span class="metric-chip dur">{{
+                        formatTime(row.session.totalDuration)
+                      }}</span>
+                      <span class="metric-chip if"
+                        >{{ getIF(row.session, ftp$ | async) | number: '1.2-2' }} IF</span
+                      >
+                    </div>
+                  </div>
+                  <button
+                    class="dl-btn"
+                    (click)="downloadFit($event, row.session)"
+                    [title]="'WORKOUT_HISTORY.DOWNLOAD_FIT_TITLE' | translate"
+                  >
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                  </button>
+                </div>
+              }
             }
           }
-        }
         </div>
 
         @if (state.hasMore) {
@@ -161,7 +278,8 @@
             class="load-more-btn"
             data-testid="load-more-btn"
             (click)="loadOlder()"
-            [disabled]="state.loading">
+            [disabled]="state.loading"
+          >
             @if (state.loading) {
               {{ 'WORKOUT_HISTORY.LOADING_OLDER' | translate }}
             } @else {
@@ -174,33 +292,58 @@
   </aside>
 
   <!-- Sidebar toggle (desktop) -->
-  <button class="sidebar-toggle desktop-only" [class.collapsed]="sidebarCollapsed" (click)="toggleSidebar()" [title]="sidebarCollapsed ? 'Show history' : 'Hide history'">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <polyline [attr.points]="sidebarCollapsed ? '9 18 15 12 9 6' : '15 18 9 12 15 6'"/>
+  <button
+    class="sidebar-toggle desktop-only"
+    [class.collapsed]="sidebarCollapsed"
+    (click)="toggleSidebar()"
+    [title]="sidebarCollapsed ? 'Show history' : 'Hide history'"
+  >
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <polyline [attr.points]="sidebarCollapsed ? '9 18 15 12 9 6' : '15 18 9 12 15 6'" />
     </svg>
   </button>
 
   <!-- Right panel: analysis or empty state -->
-  <main class="history-main" [class.mobile-list-active]="(isListView$ | async)">
+  <main class="history-main" [class.mobile-list-active]="isListView$ | async">
     <div class="header glass desktop-only">
       <div class="header-left">
         <div class="header-avatar">A</div>
         <div class="header-info">
-          <span class="header-title">{{ 'WORKOUT_HISTORY.HEADER_TITLE' | translate }} <span class="dim">{{ 'WORKOUT_HISTORY.HEADER_TITLE_DIM' | translate }}</span></span>
+          <span class="header-title"
+            >{{ 'WORKOUT_HISTORY.HEADER_TITLE' | translate }}
+            <span class="dim">{{ 'WORKOUT_HISTORY.HEADER_TITLE_DIM' | translate }}</span></span
+          >
           <span class="header-subtitle">{{ 'WORKOUT_HISTORY.HEADER_SUBTITLE' | translate }}</span>
         </div>
       </div>
     </div>
     @if (historyService.selectedSession$ | async; as session) {
-      <app-session-analysis [session]="session"></app-session-analysis>
+      <app-session-analysis [session]="session" />
     } @else {
       <div class="empty-main">
         <div class="empty-card glass">
           <h2>{{ 'WORKOUT_HISTORY.EMPTY_MAIN_HEADING' | translate }}</h2>
           <p>{{ 'WORKOUT_HISTORY.EMPTY_MAIN_DESC' | translate }}</p>
           <button class="import-cta" (click)="triggerUpload()" [disabled]="importing">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="17 8 12 3 7 8" />
               <line x1="12" y1="3" x2="12" y2="15" />
@@ -217,53 +360,101 @@
   <app-modal-shell
     [title]="'WORKOUT_HISTORY.FILTERS_TITLE' | translate"
     size="sm"
-    (closed)="closeFilters()">
+    (closed)="closeFilters()"
+  >
     <div class="filters-modal-body">
       <div class="filters-group">
-        <span class="filters-group-label">{{ 'WORKOUT_HISTORY.FILTERS_DATE_RANGE' | translate }}</span>
+        <span class="filters-group-label">{{
+          'WORKOUT_HISTORY.FILTERS_DATE_RANGE' | translate
+        }}</span>
         <div class="filters-row">
           <label class="filters-field">
             <span>{{ 'WORKOUT_HISTORY.DATE_FILTER_FROM' | translate }}</span>
-            <input data-testid="date-from" type="date" class="date-input" [ngModel]="dateFrom" (ngModelChange)="onDateFromChange($event)" />
+            <input
+              data-testid="date-from"
+              type="date"
+              class="date-input"
+              [ngModel]="dateFrom"
+              (ngModelChange)="onDateFromChange($event)"
+            />
           </label>
           <label class="filters-field">
             <span>{{ 'WORKOUT_HISTORY.DATE_FILTER_TO' | translate }}</span>
-            <input data-testid="date-to" type="date" class="date-input" [ngModel]="dateTo" (ngModelChange)="onDateToChange($event)" />
+            <input
+              data-testid="date-to"
+              type="date"
+              class="date-input"
+              [ngModel]="dateTo"
+              (ngModelChange)="onDateToChange($event)"
+            />
           </label>
         </div>
       </div>
 
       <div class="filters-group">
-        <span class="filters-group-label">{{ 'WORKOUT_HISTORY.FILTERS_DURATION_RANGE' | translate }}</span>
+        <span class="filters-group-label">{{
+          'WORKOUT_HISTORY.FILTERS_DURATION_RANGE' | translate
+        }}</span>
         <div class="filters-row">
           <label class="filters-field">
             <span>{{ 'WORKOUT_HISTORY.FILTER_DURATION_MIN' | translate }}</span>
-            <input type="number" min="0" class="date-input" [ngModel]="durationMin" (ngModelChange)="onDurationMinChange($event)" />
+            <input
+              type="number"
+              min="0"
+              class="date-input"
+              [ngModel]="durationMin"
+              (ngModelChange)="onDurationMinChange($event)"
+            />
           </label>
           <label class="filters-field">
             <span>{{ 'WORKOUT_HISTORY.FILTER_DURATION_MAX' | translate }}</span>
-            <input type="number" min="0" class="date-input" [ngModel]="durationMax" (ngModelChange)="onDurationMaxChange($event)" />
+            <input
+              type="number"
+              min="0"
+              class="date-input"
+              [ngModel]="durationMax"
+              (ngModelChange)="onDurationMaxChange($event)"
+            />
           </label>
         </div>
       </div>
 
       <div class="filters-group">
-        <span class="filters-group-label">{{ 'WORKOUT_HISTORY.FILTERS_TSS_RANGE' | translate }}</span>
+        <span class="filters-group-label">{{
+          'WORKOUT_HISTORY.FILTERS_TSS_RANGE' | translate
+        }}</span>
         <div class="filters-row">
           <label class="filters-field">
             <span>{{ 'WORKOUT_HISTORY.FILTER_TSS_MIN' | translate }}</span>
-            <input type="number" min="0" class="date-input" [ngModel]="tssMin" (ngModelChange)="onTssMinChange($event)" />
+            <input
+              type="number"
+              min="0"
+              class="date-input"
+              [ngModel]="tssMin"
+              (ngModelChange)="onTssMinChange($event)"
+            />
           </label>
           <label class="filters-field">
             <span>{{ 'WORKOUT_HISTORY.FILTER_TSS_MAX' | translate }}</span>
-            <input type="number" min="0" class="date-input" [ngModel]="tssMax" (ngModelChange)="onTssMaxChange($event)" />
+            <input
+              type="number"
+              min="0"
+              class="date-input"
+              [ngModel]="tssMax"
+              (ngModelChange)="onTssMaxChange($event)"
+            />
           </label>
         </div>
       </div>
     </div>
 
     <div modal-footer class="filters-modal-footer">
-      <button type="button" class="filters-reset-btn" (click)="resetAdvancedFilters()" [disabled]="activeAdvancedFilterCount === 0">
+      <button
+        type="button"
+        class="filters-reset-btn"
+        (click)="resetAdvancedFilters()"
+        [disabled]="activeAdvancedFilterCount === 0"
+      >
         {{ 'WORKOUT_HISTORY.FILTERS_RESET' | translate }}
       </button>
       <button type="button" class="filters-done-btn" (click)="closeFilters()">
