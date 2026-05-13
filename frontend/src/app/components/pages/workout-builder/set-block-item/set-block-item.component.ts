@@ -3,7 +3,10 @@ import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { WorkoutBlock } from '../../../../models/training.model';
-import { getBlockColor as sharedGetBlockColor, formatBlockSize } from '../../../shared/block-helpers/block-helpers';
+import {
+  getBlockColor as sharedGetBlockColor,
+  formatBlockSize,
+} from '../../../shared/block-helpers/block-helpers';
 
 @Component({
   selector: 'app-set-block-item',
@@ -19,9 +22,9 @@ export class SetBlockItemComponent {
   @Input() isSelected = false;
   @Input() selectedChildIndex = -1;
   @Input() isSelectedForSet = false;
-  @Input() sportType: string = 'CYCLING';
+  @Input() sportType = 'CYCLING';
 
-  @Output() select = new EventEmitter<number>();
+  @Output() blockSelect = new EventEmitter<number>();
   @Output() selectChild = new EventEmitter<{ parentIndex: number; childIndex: number }>();
   @Output() selectForSet = new EventEmitter<number>();
   @Output() duplicate = new EventEmitter<number>();

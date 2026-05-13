@@ -3,9 +3,13 @@ package com.koval.trainingplannerbackend.mcp.render;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.DoubleSummaryStatistics;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Pure-Java markdown chart rendering helpers used by MCP analytics tools.
@@ -60,46 +64,39 @@ public final class MarkdownChartRenderer {
 
     /** Build a single bar of {@code maxWidth} characters representing fraction in [0,1]. */
     private static String bar(double fraction, int maxWidth) {
-        if (fraction < 0) fraction = 0;
-        if (fraction > 1) fraction = 1;
-        double total = fraction * maxWidth;
+        double clamped = Math.clamp(fraction, 0.0, 1.0);
+        double total = clamped * maxWidth;
         int full = (int) Math.floor(total);
         double remainder = total - full;
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < full; i++) sb.append('█');
+        String body = "█".repeat(full);
         if (full < maxWidth && remainder > 0) {
-            int idx = (int) Math.floor(remainder * BLOCKS.length);
-            if (idx >= BLOCKS.length) idx = BLOCKS.length - 1;
-            sb.append(BLOCKS[idx]);
+            int idx = Math.min((int) Math.floor(remainder * BLOCKS.length), BLOCKS.length - 1);
+            return body + BLOCKS[idx];
         }
-        return sb.toString();
+        return body;
     }
 
     /** Inline unicode sparkline of values, e.g. {@code ▁▃▅▇█▆▄}. */
     public static String sparkline(List<? extends Number> series) {
         if (series == null || series.isEmpty()) return "";
-        double min = Double.POSITIVE_INFINITY, max = Double.NEGATIVE_INFINITY;
-        for (Number n : series) {
-            if (n == null) continue;
-            double v = n.doubleValue();
-            if (v < min) min = v;
-            if (v > max) max = v;
+        DoubleSummaryStatistics stats = series.stream()
+                .filter(Objects::nonNull)
+                .mapToDouble(Number::doubleValue)
+                .summaryStatistics();
+        if (stats.getCount() == 0 || stats.getMax() == stats.getMin()) {
+            return String.valueOf(SPARK[0]).repeat(series.size());
         }
-        if (Double.isInfinite(min) || max == min) return repeat(SPARK[0], series.size());
-        StringBuilder sb = new StringBuilder(series.size());
-        double range = max - min;
-        for (Number n : series) {
-            if (n == null) {
-                sb.append(' ');
-                continue;
-            }
-            double frac = (n.doubleValue() - min) / range;
-            int idx = (int) Math.round(frac * (SPARK.length - 1));
-            if (idx < 0) idx = 0;
-            if (idx >= SPARK.length) idx = SPARK.length - 1;
-            sb.append(SPARK[idx]);
-        }
-        return sb.toString();
+        double min = stats.getMin();
+        double range = stats.getMax() - min;
+        return series.stream()
+                .map(n -> {
+                    if (n == null) return " ";
+                    int idx = Math.clamp(
+                            (int) Math.round((n.doubleValue() - min) / range * (SPARK.length - 1)),
+                            0, SPARK.length - 1);
+                    return String.valueOf(SPARK[idx]);
+                })
+                .collect(Collectors.joining());
     }
 
     /** Render an ordered key/value map as a 2-column markdown table. */
@@ -111,10 +108,11 @@ public final class MarkdownChartRenderer {
             return sb.toString();
         }
         sb.append("| Field | Value |\n|---|---|\n");
-        for (Map.Entry<String, String> e : rows.entrySet()) {
-            sb.append("| ").append(escape(e.getKey())).append(" | ")
-                    .append(escape(e.getValue() == null ? "—" : e.getValue())).append(" |\n");
-        }
+        String body = rows.entrySet().stream()
+                .map(e -> "| " + escape(e.getKey()) + " | "
+                        + escape(e.getValue() == null ? "—" : e.getValue()) + " |")
+                .collect(Collectors.joining("\n", "", "\n"));
+        sb.append(body);
         return sb.toString();
     }
 
@@ -123,26 +121,19 @@ public final class MarkdownChartRenderer {
      * that day (joined with {@code <br>}). Empty days show a dash.
      */
     public static String weekGrid(LocalDate weekStart, Map<DayOfWeek, List<String>> entries) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("| ");
-        for (DayOfWeek d : DayOfWeek.values()) {
-            LocalDate date = weekStart.plusDays(d.getValue() - 1);
-            sb.append(date.format(HEADER_FMT)).append(" | ");
-        }
-        sb.append("\n|");
-        for (int i = 0; i < 7; i++) sb.append("---|");
-        sb.append("\n| ");
-        for (DayOfWeek d : DayOfWeek.values()) {
-            List<String> dayEntries = entries == null ? null : entries.get(d);
-            if (dayEntries == null || dayEntries.isEmpty()) {
-                sb.append("—");
-            } else {
-                sb.append(String.join("<br>", dayEntries));
-            }
-            sb.append(" | ");
-        }
-        sb.append("\n");
-        return sb.toString();
+        String header = Stream.of(DayOfWeek.values())
+                .map(d -> weekStart.plusDays(d.getValue() - 1).format(HEADER_FMT))
+                .collect(Collectors.joining(" | ", "| ", " | "));
+        String separator = "|" + "---|".repeat(DayOfWeek.values().length);
+        String row = Stream.of(DayOfWeek.values())
+                .map(d -> {
+                    List<String> dayEntries = entries == null ? null : entries.get(d);
+                    return (dayEntries == null || dayEntries.isEmpty())
+                            ? "—"
+                            : String.join("<br>", dayEntries);
+                })
+                .collect(Collectors.joining(" | ", "| ", " | "));
+        return header + "\n" + separator + "\n" + row + "\n";
     }
 
     /** Format a numeric value with at most one decimal place, dropping trailing zeros. */
@@ -154,17 +145,7 @@ public final class MarkdownChartRenderer {
     }
 
     private static String padRight(String s, int width) {
-        if (s.length() >= width) return s;
-        StringBuilder sb = new StringBuilder(width);
-        sb.append(s);
-        for (int i = s.length(); i < width; i++) sb.append(' ');
-        return sb.toString();
-    }
-
-    private static String repeat(char c, int n) {
-        char[] arr = new char[n];
-        java.util.Arrays.fill(arr, c);
-        return new String(arr);
+        return s.length() >= width ? s : s + " ".repeat(width - s.length());
     }
 
     private static String escape(String s) {

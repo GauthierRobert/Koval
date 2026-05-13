@@ -88,9 +88,9 @@ interface FeedSessionsView {
           [session]="view.session"
           [participation]="view.participation"
           [selected]="selectedSessionId === view.session.id"
-          (toggle)="toggleSession($event)"
+          (selectionToggle)="toggleSession($event)"
           (join)="joinClicked.emit($event)"
-          (cancel)="cancelClicked.emit($event)"
+          (cancelRequest)="cancelClicked.emit($event)"
         />
       }
     </div>
@@ -106,9 +106,9 @@ interface FeedSessionsView {
             [session]="view.session"
             [participation]="view.participation"
             [selected]="selectedSessionId === view.session.id"
-            (toggle)="toggleSession($event)"
+            (selectionToggle)="toggleSession($event)"
             (join)="joinClicked.emit($event)"
-            (cancel)="cancelClicked.emit($event)"
+            (cancelRequest)="cancelClicked.emit($event)"
           />
         }
       </div>

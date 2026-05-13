@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CyclingTraining extends Training {
+public final class CyclingTraining extends Training {
     public CyclingTraining() {
         setSportType(SportType.CYCLING);
     }

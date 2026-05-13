@@ -29,7 +29,8 @@ import java.util.List;
         @JsonSubTypes.Type(value = SwimmingTraining.class, name = "SWIMMING"),
         @JsonSubTypes.Type(value = BrickTraining.class, name = "BRICK")
 })
-public abstract class Training {
+public abstract sealed class Training
+        permits CyclingTraining, RunningTraining, SwimmingTraining, BrickTraining {
     // Getters/Setters
     @Id
     private String id;

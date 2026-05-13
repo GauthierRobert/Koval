@@ -1,7 +1,10 @@
-<div class="set-group" cdkDrag
-     [class.selected]="isSelected && selectedChildIndex === -1"
-     [class.set-selected]="isSelectedForSet">
-  <div class="block-item set-header" (click)="select.emit(index)">
+<div
+  class="set-group"
+  cdkDrag
+  [class.selected]="isSelected && selectedChildIndex === -1"
+  [class.set-selected]="isSelectedForSet"
+>
+  <div class="block-item set-header" (click)="blockSelect.emit(index)">
     <button
       type="button"
       class="set-select-checkbox"
@@ -9,60 +12,112 @@
       [attr.aria-checked]="isSelectedForSet"
       role="checkbox"
       (click)="selectForSet.emit(index); $event.stopPropagation()"
-      [title]="'BUILDER.SELECT_FOR_SET' | translate">
+      [title]="'BUILDER.SELECT_FOR_SET' | translate"
+    >
       @if (isSelectedForSet) {
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"/>
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="3.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="20 6 9 17 4 12" />
         </svg>
       }
     </button>
     <div class="block-drag-handle" cdkDragHandle>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-        <circle cx="8" cy="6" r="2"/><circle cx="16" cy="6" r="2"/>
-        <circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/>
-        <circle cx="8" cy="18" r="2"/><circle cx="16" cy="18" r="2"/>
+        <circle cx="8" cy="6" r="2" />
+        <circle cx="16" cy="6" r="2" />
+        <circle cx="8" cy="12" r="2" />
+        <circle cx="16" cy="12" r="2" />
+        <circle cx="8" cy="18" r="2" />
+        <circle cx="16" cy="18" r="2" />
       </svg>
     </div>
     <div class="set-icon">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M17 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2"/>
-        <path d="M12 8v8"/><path d="M8 12h8"/>
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M17 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2" />
+        <path d="M12 8v8" />
+        <path d="M8 12h8" />
       </svg>
     </div>
-    <div class="set-reps-badge" [title]="'BUILDER.REPS' | translate">{{ block.repetitions ?? 1 }}×</div>
+    <div class="set-reps-badge" [title]="'BUILDER.REPS' | translate">
+      {{ block.repetitions ?? 1 }}×
+    </div>
     <div class="block-info">
       <span class="block-label">{{ block.label || ('BUILDER.NEW_SET' | translate) }}</span>
       <span class="block-meta">
         {{ block.elements?.length }} blocks
         @if (block.restDurationSeconds) {
           · {{ formatSeconds(block.restDurationSeconds) }}
-          @if ((block.restIntensity ?? 60) === 0) { passive } @else { @ {{ block.restIntensity ?? 60 }}% }
+          @if ((block.restIntensity ?? 60) === 0) {
+            passive
+          } @else {
+            @ {{ block.restIntensity ?? 60 }}%
+          }
         } @else if ((block.repetitions ?? 1) > 1) {
           · {{ 'WORKOUT_VIZ.SET_NO_REST_LABEL' | translate }}
         }
       </span>
     </div>
     <div class="block-actions">
-      <button class="block-action-btn" (click)="duplicate.emit(index); $event.stopPropagation()"
-              [title]="'BUILDER.DUPLICATE' | translate">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="9" y="9" width="13" height="13" rx="2"/>
-          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+      <button
+        class="block-action-btn"
+        (click)="duplicate.emit(index); $event.stopPropagation()"
+        [title]="'BUILDER.DUPLICATE' | translate"
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <rect x="9" y="9" width="13" height="13" rx="2" />
+          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
         </svg>
       </button>
-      <button class="block-action-btn delete" (click)="remove.emit(index); $event.stopPropagation()"
-              [title]="'COMMON.DELETE' | translate">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      <button
+        class="block-action-btn delete"
+        (click)="remove.emit(index); $event.stopPropagation()"
+        [title]="'COMMON.DELETE' | translate"
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
     </div>
   </div>
   <div class="set-children">
     @for (el of block.elements ?? []; let ci = $index; track ci) {
-      <div class="set-child-item"
-           [class.selected]="isSelected && selectedChildIndex === ci"
-           (click)="selectChild.emit({ parentIndex: index, childIndex: ci }); $event.stopPropagation()">
+      <div
+        class="set-child-item"
+        [class.selected]="isSelected && selectedChildIndex === ci"
+        (click)="selectChild.emit({ parentIndex: index, childIndex: ci }); $event.stopPropagation()"
+      >
         <div class="block-color-bar" [style.background]="blockColor(el)"></div>
         <div class="block-info">
           <span class="block-label">{{ el.label || el.type }}</span>
@@ -77,10 +132,23 @@
           </span>
         </div>
         <div class="child-actions">
-          <button class="block-action-btn delete" (click)="removeChild.emit({ parentIndex: index, childIndex: ci }); $event.stopPropagation()"
-                  [title]="'COMMON.DELETE' | translate">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          <button
+            class="block-action-btn delete"
+            (click)="
+              removeChild.emit({ parentIndex: index, childIndex: ci }); $event.stopPropagation()
+            "
+            [title]="'COMMON.DELETE' | translate"
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
@@ -91,7 +159,10 @@
         @if ((block.restIntensity ?? 60) === 0) {
           <span>{{ formatSeconds(block.restDurationSeconds) }} passive rest</span>
         } @else {
-          <span>{{ formatSeconds(block.restDurationSeconds) }} active rest @ {{ block.restIntensity ?? 60 }}%</span>
+          <span
+            >{{ formatSeconds(block.restDurationSeconds) }} active rest @
+            {{ block.restIntensity ?? 60 }}%</span
+          >
         }
       </div>
     } @else if ((block.repetitions ?? 1) > 1) {

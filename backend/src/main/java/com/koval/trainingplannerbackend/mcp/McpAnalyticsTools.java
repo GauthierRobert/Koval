@@ -85,7 +85,7 @@ public class McpAnalyticsTools {
         List<Double> ctl = pmc.stream().map(PmcDataPoint::ctl).toList();
         List<Double> atl = pmc.stream().map(PmcDataPoint::atl).toList();
         List<Double> tsb = pmc.stream().map(PmcDataPoint::tsb).toList();
-        PmcDataPoint last = pmc.get(pmc.size() - 1);
+        PmcDataPoint last = pmc.getLast();
 
         StringBuilder sb = new StringBuilder();
         sb.append("**PMC ").append(from).append(" → ").append(to).append("**\n\n");

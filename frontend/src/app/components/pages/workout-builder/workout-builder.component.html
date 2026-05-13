@@ -345,7 +345,7 @@
                 [selectedChildIndex]="selectedBlockIndex === bi ? selectedChildIndex : -1"
                 [isSelectedForSet]="selectedForSet.has(bi)"
                 [sportType]="sportType"
-                (select)="selectBlock($event)"
+                (blockSelect)="selectBlock($event)"
                 (selectChild)="selectChildBlock($event.parentIndex, $event.childIndex)"
                 (selectForSet)="toggleSetSelection($event)"
                 (duplicate)="duplicateBlock($event)"

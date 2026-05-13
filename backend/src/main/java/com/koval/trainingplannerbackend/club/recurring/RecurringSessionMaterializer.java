@@ -53,7 +53,7 @@ public class RecurringSessionMaterializer {
                 .findByRecurringTemplateIdAndScheduledAtBetween(
                         templateId, date.atStartOfDay(), date.plusDays(1).atStartOfDay());
         if (!existing.isEmpty()) {
-            return existing.get(0);
+            return existing.getFirst();
         }
 
         RecurringSessionTemplate template = templateRepository.findById(templateId)

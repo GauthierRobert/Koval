@@ -176,7 +176,7 @@ public class AnalyticsService {
                 return;
 
             Map<LocalDate, Map<String, Double>> dailyTssMap = buildDailyTssMap(sessions);
-            LocalDate firstDate = sessions.get(0).getCompletedAt().toLocalDate();
+            LocalDate firstDate = sessions.getFirst().getCompletedAt().toLocalDate();
             EmaState state = runEma(new EmaState(0, 0), firstDate, today, dailyTssMap);
 
             updateUserLoadMetrics(user, state);
@@ -210,7 +210,7 @@ public class AnalyticsService {
 
     private LocalDate determineEmaStartDate(List<CompletedSession> sessions, LocalDate from) {
         // Start EMA from the earliest session or from 'from' date, whichever is earlier
-        LocalDate startDate = sessions.isEmpty() ? from : sessions.get(0).getCompletedAt().toLocalDate();
+        LocalDate startDate = sessions.isEmpty() ? from : sessions.getFirst().getCompletedAt().toLocalDate();
         if (from.isBefore(startDate)) startDate = from;
         return startDate;
     }

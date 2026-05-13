@@ -3,20 +3,26 @@
     <div class="orb orb--accent"></div>
     <div class="orb orb--secondary"></div>
   </div>
-  <app-sidebar [class.mobile-detail-active]="!(isListView$ | async)"></app-sidebar>
+  <app-sidebar [class.mobile-detail-active]="(isListView$ | async) === false" />
 
-  <main class="selection-main" [class.mobile-list-active]="(isListView$ | async)">
-
+  <main class="selection-main" [class.mobile-list-active]="isListView$ | async">
     <div class="lib-tophd">
       <div class="lib-tophd-left">
         <div class="lib-tophd-title">
-          <span class="crumb">{{ 'WORKOUT_SELECTION.HEADER_TITLE' | translate }} · {{ 'WORKOUT_SELECTION.HEADER_TITLE_DIM' | translate }}</span>
+          <span class="crumb"
+            >{{ 'WORKOUT_SELECTION.HEADER_TITLE' | translate }} ·
+            {{ 'WORKOUT_SELECTION.HEADER_TITLE_DIM' | translate }}</span
+          >
           <h2 class="page-h2">Parcourir &amp; gérer <b>vos séances</b></h2>
         </div>
       </div>
       <div class="lib-tophd-actions">
-        <button class="tab-btn tab-btn--manual desktop-only" routerLink="/trainings/new">+ {{ 'WORKOUT_SELECTION.BTN_CREATE_MANUALLY' | translate }}</button>
-        <button class="tab-btn tab-btn--ai tab-btn--ai-background" (click)="showAiModal = true">✦ {{ 'WORKOUT_SELECTION.BTN_CREATE_WITH_AI' | translate }}</button>
+        <button class="tab-btn tab-btn--manual desktop-only" routerLink="/trainings/new">
+          + {{ 'WORKOUT_SELECTION.BTN_CREATE_MANUALLY' | translate }}
+        </button>
+        <button class="tab-btn tab-btn--ai tab-btn--ai-background" (click)="showAiModal = true">
+          ✦ {{ 'WORKOUT_SELECTION.BTN_CREATE_WITH_AI' | translate }}
+        </button>
       </div>
     </div>
 
@@ -27,28 +33,36 @@
         <app-filter-pills
           [options]="(sourceOptions$ | async) ?? []"
           [selected]="(filterService.activeContext$ | async) ?? 'mine'"
-          (selectionChange)="onContextChange($event)">
-        </app-filter-pills>
+          (selectionChange)="onContextChange($event)"
+        />
         <div class="filter-sep"></div>
       </div>
 
       <!-- Favorites toggle: a star pill with live count -->
-      @if ((filterService.activeContext$ | async) === 'mine' && ((favoritesCount$ | async) ?? 0) > 0) {
+      @if (
+        (filterService.activeContext$ | async) === 'mine' && ((favoritesCount$ | async) ?? 0) > 0
+      ) {
         <div class="filter-group">
-          <button type="button"
-                  class="fav-toggle"
-                  [class.active]="(favoritesOnly$ | async)"
-                  [attr.aria-pressed]="(favoritesOnly$ | async)"
-                  (click)="toggleFavoritesOnly()">
-            <svg class="fav-toggle-star"
-                 viewBox="0 0 24 24"
-                 [attr.fill]="(favoritesOnly$ | async) ? 'currentColor' : 'none'"
-                 stroke="currentColor"
-                 stroke-width="2"
-                 stroke-linecap="round"
-                 stroke-linejoin="round"
-                 aria-hidden="true">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          <button
+            type="button"
+            class="fav-toggle"
+            [class.active]="favoritesOnly$ | async"
+            [attr.aria-pressed]="favoritesOnly$ | async"
+            (click)="toggleFavoritesOnly()"
+          >
+            <svg
+              class="fav-toggle-star"
+              viewBox="0 0 24 24"
+              [attr.fill]="(favoritesOnly$ | async) ? 'currentColor' : 'none'"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <polygon
+                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+              />
             </svg>
             <span>{{ 'TRAINING_TAGS.FILTER_FAVORITES' | translate }}</span>
             <span class="fav-toggle-count">{{ favoritesCount$ | async }}</span>
@@ -57,27 +71,37 @@
         </div>
       }
 
-      @if ((filterService.activeContext$ | async) === 'mine' && (filterService.availableTags$ | async)?.length) {
+      @if (
+        (filterService.activeContext$ | async) === 'mine' &&
+        (filterService.availableTags$ | async)?.length
+      ) {
         <div class="filter-group">
-        <app-filter-pills
-          [options]="(tagOptions$ | async) ?? []"
-          [selected]="(filterService.activeTagFilter$ | async) ?? null"
-          (selectionChange)="setTagFilter($event)">
-        </app-filter-pills>
-        <div class="filter-sep"></div>
-      </div>
+          <app-filter-pills
+            [options]="(tagOptions$ | async) ?? []"
+            [selected]="(filterService.activeTagFilter$ | async) ?? null"
+            (selectionChange)="setTagFilter($event)"
+          />
+          <div class="filter-sep"></div>
+        </div>
       }
 
       <!-- User-defined tag filter (multi-select, AND semantics) -->
-      @if ((filterService.activeContext$ | async) === 'mine' && ((userTagEntries$ | async)?.length ?? 0) > 0) {
+      @if (
+        (filterService.activeContext$ | async) === 'mine' &&
+        ((userTagEntries$ | async)?.length ?? 0) > 0
+      ) {
         <div class="filter-group user-tag-group">
           <span class="filter-label">{{ 'TRAINING_TAGS.FILTER_LABEL' | translate }}</span>
           <div class="user-tag-pills">
             @for (entry of userTagEntries$ | async; track entry.tag) {
-              <button type="button"
-                      class="user-tag-pill"
-                      [class.active]="isUserTagActive(entry.tag, (activeUserTags$ | async) ?? emptyTagSet)"
-                      (click)="toggleUserTag(entry.tag)">
+              <button
+                type="button"
+                class="user-tag-pill"
+                [class.active]="
+                  isUserTagActive(entry.tag, (activeUserTags$ | async) ?? emptyTagSet)
+                "
+                (click)="toggleUserTag(entry.tag)"
+              >
                 <span class="user-tag-hash">#</span>{{ entry.tag }}
                 <span class="user-tag-count">{{ entry.count }}</span>
               </button>
@@ -92,8 +116,8 @@
         <app-filter-pills
           [options]="sportOptions"
           [selected]="(filterService.activeSportFilter$ | async) ?? null"
-          (selectionChange)="onSportChange($event)">
-        </app-filter-pills>
+          (selectionChange)="onSportChange($event)"
+        />
       </div>
 
       <div class="filter-sep"></div>
@@ -103,8 +127,8 @@
         <app-filter-pills
           [options]="typeOptions"
           [selected]="(filterService.activeTypeFilter$ | async) ?? null"
-          (selectionChange)="onTypeChange($event)">
-        </app-filter-pills>
+          (selectionChange)="onTypeChange($event)"
+        />
       </div>
     </div>
 
@@ -113,24 +137,25 @@
       [isOpen]="showAiModal"
       actionType="TRAINING_CREATION"
       (closed)="showAiModal = false"
-      (created)="onAiCreated($event)">
-    </app-create-with-ai-modal>
+      (created)="onAiCreated($event)"
+    />
 
     <!-- Content area -->
     <div class="content-area">
-
       @if (selectedTraining$ | async; as training) {
-        <app-workout-visualization [training]="training"></app-workout-visualization>
+        <app-workout-visualization [training]="training" />
       }
 
-      @if (!(selectedTraining$ | async)) {
+      @if ((selectedTraining$ | async) === null) {
         <div class="empty-state-centered">
-        <div class="hero-content glass">
-          <h1>{{ 'WORKOUT_SELECTION.EMPTY_STATE_HEADING' | translate }}</h1>
-          <p>{{ 'WORKOUT_SELECTION.EMPTY_STATE_DESC' | translate }}</p>
-          <button class="cta-btn" routerLink="/chat">{{ 'WORKOUT_SELECTION.BTN_CHAT_ASSISTANT' | translate }}</button>
+          <div class="hero-content glass">
+            <h1>{{ 'WORKOUT_SELECTION.EMPTY_STATE_HEADING' | translate }}</h1>
+            <p>{{ 'WORKOUT_SELECTION.EMPTY_STATE_DESC' | translate }}</p>
+            <button class="cta-btn" routerLink="/chat">
+              {{ 'WORKOUT_SELECTION.BTN_CHAT_ASSISTANT' | translate }}
+            </button>
+          </div>
         </div>
-      </div>
       }
     </div>
   </main>

@@ -31,8 +31,10 @@ public final class AiErrorClassifier {
     }
 
     public static boolean isTransient(Throwable ex) {
-        if (ex instanceof WebClientRequestException || ex instanceof SocketException) return true;
-        return ex.getCause() instanceof IOException;
+        return switch (ex) {
+            case WebClientRequestException _, SocketException _ -> true;
+            default -> ex.getCause() instanceof IOException;
+        };
     }
 
     public static String toSseErrorJson(Throwable ex) {

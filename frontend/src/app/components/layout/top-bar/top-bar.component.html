@@ -1,6 +1,6 @@
-<app-install-banner></app-install-banner>
+<app-install-banner />
 
-<header class="top-bar" [class.disabled]="!(user$ | async)">
+<header class="top-bar" [class.disabled]="(user$ | async) === null">
   <!-- Glass layer -->
   <div class="top-bar-glass"></div>
 
@@ -11,8 +11,16 @@
 
   <!-- Hamburger button for mobile -->
   <button class="hamburger-btn mobile-only" (click)="toggleMobileMenu()" aria-label="Toggle menu">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      stroke-linecap="round" stroke-linejoin="round">
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
       @if (mobileMenuOpen) {
         <line x1="18" y1="6" x2="6" y2="18" />
         <line x1="6" y1="6" x2="18" y2="18" />
@@ -25,8 +33,26 @@
   </button>
 
   <nav class="nav-links" [class.nav-open]="mobileMenuOpen">
-    <a routerLink="/dashboard" routerLinkActive="active" class="nav-link" (click)="closeMobileMenu()">
-      <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <a
+      routerLink="/dashboard"
+      routerLinkActive="active"
+      class="nav-link"
+      (click)="closeMobileMenu()"
+    >
+      <svg
+        class="nav-icon"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+      >
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </svg>
       {{ 'TOP_BAR.NAV_DASHBOARD' | translate }}
     </a>
 
@@ -37,13 +63,39 @@
         [class.active]="isClubsOpen"
         [attr.aria-expanded]="isClubsOpen"
         aria-haspopup="true"
-        (click)="toggleClubs($event)">
-        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        (click)="toggleClubs($event)"
+      >
+        <svg
+          class="nav-icon"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
         {{ 'TOP_BAR.NAV_CLUBS' | translate }}
-        <svg class="dropdown-chevron" [class.open]="isClubsOpen"
-          width="8" height="8" viewBox="0 0 10 6" fill="none" aria-hidden="true">
-          <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5"
-            stroke-linecap="round" stroke-linejoin="round"/>
+        <svg
+          class="dropdown-chevron"
+          [class.open]="isClubsOpen"
+          width="8"
+          height="8"
+          viewBox="0 0 10 6"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M1 1l4 4 4-4"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
       </button>
       @if (isClubsOpen) {
@@ -53,8 +105,11 @@
               <div class="club-dropdown-empty">{{ 'TOP_BAR.CLUBS_EMPTY' | translate }}</div>
             }
             @for (club of clubs; track club.id) {
-              <a class="dropdown-item club-dropdown-item" role="menuitem"
-                 (click)="selectClub(club)">
+              <a
+                class="dropdown-item club-dropdown-item"
+                role="menuitem"
+                (click)="selectClub(club)"
+              >
                 <span class="dropdown-label">{{ club.name }}</span>
                 <span class="dropdown-desc">
                   @if (getMembershipLabel(club.membershipStatus); as role) {
@@ -65,7 +120,12 @@
             }
           }
           <div class="club-dropdown-sep"></div>
-          <a class="dropdown-item club-dropdown-create" role="menuitem" routerLink="/clubs" (click)="closeClubs(); closeMobileMenu()">
+          <a
+            class="dropdown-item club-dropdown-create"
+            role="menuitem"
+            routerLink="/clubs"
+            (click)="closeClubs(); closeMobileMenu()"
+          >
             <span class="dropdown-label">{{ 'TOP_BAR.CLUB_LIST_LABEL' | translate }}</span>
             <span class="dropdown-desc">{{ 'TOP_BAR.CLUB_LIST_DESC' | translate }}</span>
           </a>
@@ -80,52 +140,110 @@
         [class.active]="isTrainingOpen"
         [attr.aria-expanded]="isTrainingOpen"
         aria-haspopup="true"
-        (click)="toggleTraining($event)">
-        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        (click)="toggleTraining($event)"
+      >
+        <svg
+          class="nav-icon"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+        </svg>
         {{ 'TOP_BAR.NAV_TRAINING' | translate }}
-        <svg class="dropdown-chevron" [class.open]="isTrainingOpen"
-          width="8" height="8" viewBox="0 0 10 6" fill="none" aria-hidden="true">
-          <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5"
-            stroke-linecap="round" stroke-linejoin="round"/>
+        <svg
+          class="dropdown-chevron"
+          [class.open]="isTrainingOpen"
+          width="8"
+          height="8"
+          viewBox="0 0 10 6"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M1 1l4 4 4-4"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
       </button>
       @if (isTrainingOpen) {
         <div class="nav-dropdown" role="menu" (click)="$event.stopPropagation()">
-        <a routerLink="/trainings" routerLinkActive="active" class="dropdown-item" role="menuitem"
-          (click)="closeTraining(); closeMobileMenu()">
-          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_TRAININGS_LABEL' | translate }}</span>
-          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_TRAININGS_DESC' | translate }}</span>
-        </a>
-        <a routerLink="/plans" routerLinkActive="active" class="dropdown-item" role="menuitem"
-          (click)="closeTraining(); closeMobileMenu()">
-          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PLANS_LABEL' | translate }}</span>
-          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PLANS_DESC' | translate }}</span>
-        </a>
-        <a routerLink="/history" routerLinkActive="active" class="dropdown-item" role="menuitem"
-          (click)="closeTraining(); closeMobileMenu()">
-          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_HISTORY_LABEL' | translate }}</span>
-          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_HISTORY_DESC' | translate }}</span>
-        </a>
-        <a routerLink="/calendar" routerLinkActive="active" class="dropdown-item" role="menuitem"
-          (click)="closeTraining(); closeMobileMenu()">
-          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_CALENDAR_LABEL' | translate }}</span>
-          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_CALENDAR_DESC' | translate }}</span>
-        </a>
-        <a routerLink="/goals" routerLinkActive="active" class="dropdown-item" role="menuitem"
-          (click)="closeTraining(); closeMobileMenu()">
-          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_GOALS_LABEL' | translate }}</span>
-          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_GOALS_DESC' | translate }}</span>
-        </a>
-        <a routerLink="/races" routerLinkActive="active" class="dropdown-item" role="menuitem"
-          (click)="closeTraining(); closeMobileMenu()">
-          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_RACES_LABEL' | translate }}</span>
-          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_RACES_DESC' | translate }}</span>
-        </a>
-        <a routerLink="/pacing" routerLinkActive="active" class="dropdown-item" role="menuitem"
-          (click)="closeTraining(); closeMobileMenu()">
-          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PACING_LABEL' | translate }}</span>
-          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PACING_DESC' | translate }}</span>
-        </a>
+          <a
+            routerLink="/trainings"
+            routerLinkActive="active"
+            class="dropdown-item"
+            role="menuitem"
+            (click)="closeTraining(); closeMobileMenu()"
+          >
+            <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_TRAININGS_LABEL' | translate }}</span>
+            <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_TRAININGS_DESC' | translate }}</span>
+          </a>
+          <a
+            routerLink="/plans"
+            routerLinkActive="active"
+            class="dropdown-item"
+            role="menuitem"
+            (click)="closeTraining(); closeMobileMenu()"
+          >
+            <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PLANS_LABEL' | translate }}</span>
+            <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PLANS_DESC' | translate }}</span>
+          </a>
+          <a
+            routerLink="/history"
+            routerLinkActive="active"
+            class="dropdown-item"
+            role="menuitem"
+            (click)="closeTraining(); closeMobileMenu()"
+          >
+            <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_HISTORY_LABEL' | translate }}</span>
+            <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_HISTORY_DESC' | translate }}</span>
+          </a>
+          <a
+            routerLink="/calendar"
+            routerLinkActive="active"
+            class="dropdown-item"
+            role="menuitem"
+            (click)="closeTraining(); closeMobileMenu()"
+          >
+            <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_CALENDAR_LABEL' | translate }}</span>
+            <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_CALENDAR_DESC' | translate }}</span>
+          </a>
+          <a
+            routerLink="/goals"
+            routerLinkActive="active"
+            class="dropdown-item"
+            role="menuitem"
+            (click)="closeTraining(); closeMobileMenu()"
+          >
+            <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_GOALS_LABEL' | translate }}</span>
+            <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_GOALS_DESC' | translate }}</span>
+          </a>
+          <a
+            routerLink="/races"
+            routerLinkActive="active"
+            class="dropdown-item"
+            role="menuitem"
+            (click)="closeTraining(); closeMobileMenu()"
+          >
+            <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_RACES_LABEL' | translate }}</span>
+            <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_RACES_DESC' | translate }}</span>
+          </a>
+          <a
+            routerLink="/pacing"
+            routerLinkActive="active"
+            class="dropdown-item"
+            role="menuitem"
+            (click)="closeTraining(); closeMobileMenu()"
+          >
+            <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PACING_LABEL' | translate }}</span>
+            <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PACING_DESC' | translate }}</span>
+          </a>
         </div>
       }
     </div>
@@ -137,47 +255,110 @@
         [class.active]="isAnalyticsOpen"
         [attr.aria-expanded]="isAnalyticsOpen"
         aria-haspopup="true"
-        (click)="toggleAnalytics($event)">
-        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        (click)="toggleAnalytics($event)"
+      >
+        <svg
+          class="nav-icon"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path d="M18 20V10" />
+          <path d="M12 20V4" />
+          <path d="M6 20v-6" />
+        </svg>
         {{ 'TOP_BAR.NAV_ANALYTICS' | translate }}
-        <svg class="dropdown-chevron" [class.open]="isAnalyticsOpen"
-          width="8" height="8" viewBox="0 0 10 6" fill="none" aria-hidden="true">
-          <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5"
-            stroke-linecap="round" stroke-linejoin="round"/>
+        <svg
+          class="dropdown-chevron"
+          [class.open]="isAnalyticsOpen"
+          width="8"
+          height="8"
+          viewBox="0 0 10 6"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M1 1l4 4 4-4"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
       </button>
       @if (isAnalyticsOpen) {
         <div class="nav-dropdown" role="menu" (click)="$event.stopPropagation()">
-        <a routerLink="/analytics/reference-values" routerLinkActive="active" class="dropdown-item" role="menuitem"
-          (click)="closeAnalytics(); closeMobileMenu()">
-          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_REFERENCE_VALUES_LABEL' | translate }}</span>
-          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_REFERENCE_VALUES_DESC' | translate }}</span>
-        </a>
-        <a routerLink="/pmc"        routerLinkActive="active" class="dropdown-item" role="menuitem"
-          (click)="closeAnalytics(); closeMobileMenu()">
-          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PMC_LABEL' | translate }}</span>
-          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PMC_DESC' | translate }}</span>
-        </a>
-        <a routerLink="/analytics/power-curve" routerLinkActive="active" class="dropdown-item" role="menuitem"
-          (click)="closeAnalytics(); closeMobileMenu()">
-          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_POWER_CURVE_LABEL' | translate }}</span>
-          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_POWER_CURVE_DESC' | translate }}</span>
-        </a>
-        <a routerLink="/analytics/volume" routerLinkActive="active" class="dropdown-item" role="menuitem"
-          (click)="closeAnalytics(); closeMobileMenu()">
-          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_VOLUME_LABEL' | translate }}</span>
-          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_VOLUME_DESC' | translate }}</span>
-        </a>
-        <a routerLink="/analytics/records" routerLinkActive="active" class="dropdown-item" role="menuitem"
-          (click)="closeAnalytics(); closeMobileMenu()">
-          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_RECORDS_LABEL' | translate }}</span>
-          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_RECORDS_DESC' | translate }}</span>
-        </a>
-        <a routerLink="/physiology" routerLinkActive="active" class="dropdown-item" role="menuitem"
-          (click)="closeAnalytics(); closeMobileMenu()">
-          <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PHYSIOLOGY_LABEL' | translate }}</span>
-          <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PHYSIOLOGY_DESC' | translate }}</span>
-        </a>
+          <a
+            routerLink="/analytics/reference-values"
+            routerLinkActive="active"
+            class="dropdown-item"
+            role="menuitem"
+            (click)="closeAnalytics(); closeMobileMenu()"
+          >
+            <span class="dropdown-label">{{
+              'TOP_BAR.DROPDOWN_REFERENCE_VALUES_LABEL' | translate
+            }}</span>
+            <span class="dropdown-desc">{{
+              'TOP_BAR.DROPDOWN_REFERENCE_VALUES_DESC' | translate
+            }}</span>
+          </a>
+          <a
+            routerLink="/pmc"
+            routerLinkActive="active"
+            class="dropdown-item"
+            role="menuitem"
+            (click)="closeAnalytics(); closeMobileMenu()"
+          >
+            <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_PMC_LABEL' | translate }}</span>
+            <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PMC_DESC' | translate }}</span>
+          </a>
+          <a
+            routerLink="/analytics/power-curve"
+            routerLinkActive="active"
+            class="dropdown-item"
+            role="menuitem"
+            (click)="closeAnalytics(); closeMobileMenu()"
+          >
+            <span class="dropdown-label">{{
+              'TOP_BAR.DROPDOWN_POWER_CURVE_LABEL' | translate
+            }}</span>
+            <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_POWER_CURVE_DESC' | translate }}</span>
+          </a>
+          <a
+            routerLink="/analytics/volume"
+            routerLinkActive="active"
+            class="dropdown-item"
+            role="menuitem"
+            (click)="closeAnalytics(); closeMobileMenu()"
+          >
+            <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_VOLUME_LABEL' | translate }}</span>
+            <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_VOLUME_DESC' | translate }}</span>
+          </a>
+          <a
+            routerLink="/analytics/records"
+            routerLinkActive="active"
+            class="dropdown-item"
+            role="menuitem"
+            (click)="closeAnalytics(); closeMobileMenu()"
+          >
+            <span class="dropdown-label">{{ 'TOP_BAR.DROPDOWN_RECORDS_LABEL' | translate }}</span>
+            <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_RECORDS_DESC' | translate }}</span>
+          </a>
+          <a
+            routerLink="/physiology"
+            routerLinkActive="active"
+            class="dropdown-item"
+            role="menuitem"
+            (click)="closeAnalytics(); closeMobileMenu()"
+          >
+            <span class="dropdown-label">{{
+              'TOP_BAR.DROPDOWN_PHYSIOLOGY_LABEL' | translate
+            }}</span>
+            <span class="dropdown-desc">{{ 'TOP_BAR.DROPDOWN_PHYSIOLOGY_DESC' | translate }}</span>
+          </a>
         </div>
       }
     </div>
@@ -191,31 +372,77 @@
           [class.active]="isCoachingOpen"
           [attr.aria-expanded]="isCoachingOpen"
           aria-haspopup="true"
-          (click)="toggleCoaching($event)">
-          <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          (click)="toggleCoaching($event)"
+        >
+          <svg
+            class="nav-icon"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
           {{ 'TOP_BAR.NAV_COACHING' | translate }}
-          <svg class="dropdown-chevron" [class.open]="isCoachingOpen"
-            width="8" height="8" viewBox="0 0 10 6" fill="none" aria-hidden="true">
-            <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5"
-              stroke-linecap="round" stroke-linejoin="round"/>
+          <svg
+            class="dropdown-chevron"
+            [class.open]="isCoachingOpen"
+            width="8"
+            height="8"
+            viewBox="0 0 10 6"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M1 1l4 4 4-4"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </button>
         @if (isCoachingOpen) {
           <div class="nav-dropdown" role="menu" (click)="$event.stopPropagation()">
-            <a routerLink="/coach" routerLinkActive="active" class="dropdown-item" role="menuitem"
-              (click)="closeCoaching(); closeMobileMenu()">
+            <a
+              routerLink="/coach"
+              routerLinkActive="active"
+              class="dropdown-item"
+              role="menuitem"
+              (click)="closeCoaching(); closeMobileMenu()"
+            >
               <span class="dropdown-label">{{ 'TOP_BAR.NAV_COACHING' | translate }}</span>
             </a>
-            <a routerLink="/groups" routerLinkActive="active" class="dropdown-item" role="menuitem"
-              (click)="closeCoaching(); closeMobileMenu()">
+            <a
+              routerLink="/groups"
+              routerLinkActive="active"
+              class="dropdown-item"
+              role="menuitem"
+              (click)="closeCoaching(); closeMobileMenu()"
+            >
               <span class="dropdown-label">{{ 'TOP_BAR.NAV_GROUPS' | translate }}</span>
             </a>
-            <a routerLink="/zones" routerLinkActive="active" class="dropdown-item" role="menuitem"
-              (click)="closeCoaching(); closeMobileMenu()">
+            <a
+              routerLink="/zones"
+              routerLinkActive="active"
+              class="dropdown-item"
+              role="menuitem"
+              (click)="closeCoaching(); closeMobileMenu()"
+            >
               <span class="dropdown-label">{{ 'TOP_BAR.NAV_ZONES' | translate }}</span>
             </a>
-            <a routerLink="/chat" routerLinkActive="active" class="dropdown-item" role="menuitem"
-              (click)="closeCoaching(); closeMobileMenu()">
+            <a
+              routerLink="/chat"
+              routerLinkActive="active"
+              class="dropdown-item"
+              role="menuitem"
+              (click)="closeCoaching(); closeMobileMenu()"
+            >
               <span class="dropdown-label">{{ 'TOP_BAR.NAV_ASSISTANT' | translate }}</span>
             </a>
           </div>
@@ -227,19 +454,59 @@
     <div class="mobile-controls mobile-only">
       <div class="nav-sep"></div>
       <div class="mobile-controls-row">
-        <button class="control-btn" (click)="toggleMemberships(); closeMobileMenu()" [attr.aria-label]="'TOP_BAR.BTN_MY_MEMBERSHIPS_TITLE' | translate">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        <button
+          class="control-btn"
+          (click)="toggleMemberships(); closeMobileMenu()"
+          [attr.aria-label]="'TOP_BAR.BTN_MY_MEMBERSHIPS_TITLE' | translate"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
           </svg>
         </button>
-        <button class="control-btn" (click)="showConnectedApps = !showConnectedApps; closeMobileMenu()" [attr.aria-label]="'TOP_BAR.BTN_CONNECTED_APPS_TITLE' | translate">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+        <button
+          class="control-btn"
+          (click)="showConnectedApps = !showConnectedApps; closeMobileMenu()"
+          [attr.aria-label]="'TOP_BAR.BTN_CONNECTED_APPS_TITLE' | translate"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
           </svg>
         </button>
-        <button class="control-btn" (click)="toggleSettings(); closeMobileMenu()" [attr.aria-label]="'TOP_BAR.BTN_REFERENCE_VALUES_TITLE' | translate">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+        <button
+          class="control-btn"
+          (click)="toggleSettings(); closeMobileMenu()"
+          [attr.aria-label]="'TOP_BAR.BTN_REFERENCE_VALUES_TITLE' | translate"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"
+            />
           </svg>
         </button>
       </div>
@@ -248,27 +515,57 @@
 
   <div class="right-section">
     <div class="topbar-controls">
-      <button class="control-btn mobile-visible" (click)="themeService.toggle()" [attr.aria-label]="'TOP_BAR.BTN_THEME_TOGGLE' | translate">
+      <button
+        class="control-btn mobile-visible"
+        (click)="themeService.toggle()"
+        [attr.aria-label]="'TOP_BAR.BTN_THEME_TOGGLE' | translate"
+      >
         @if ((themeService.theme$ | async) === 'dark') {
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="12" cy="12" r="5"/>
-            <line x1="12" y1="1" x2="12" y2="3"/>
-            <line x1="12" y1="21" x2="12" y2="23"/>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-            <line x1="1" y1="12" x2="3" y2="12"/>
-            <line x1="21" y1="12" x2="23" y2="12"/>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
           </svg>
         } @else {
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
           </svg>
         }
       </button>
-      <button class="control-btn" (click)="toggleMemberships()" [title]="'TOP_BAR.BTN_MY_MEMBERSHIPS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_MY_MEMBERSHIPS_TITLE' | translate">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <button
+        class="control-btn"
+        (click)="toggleMemberships()"
+        [title]="'TOP_BAR.BTN_MY_MEMBERSHIPS_TITLE' | translate"
+        [attr.aria-label]="'TOP_BAR.BTN_MY_MEMBERSHIPS_TITLE' | translate"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
           <circle cx="9" cy="7" r="4" />
           <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -276,22 +573,60 @@
         </svg>
       </button>
 
-      <button class="control-btn" (click)="showConnectedApps = !showConnectedApps" [title]="'TOP_BAR.BTN_CONNECTED_APPS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_CONNECTED_APPS_TITLE' | translate">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <button
+        class="control-btn"
+        (click)="showConnectedApps = !showConnectedApps"
+        [title]="'TOP_BAR.BTN_CONNECTED_APPS_TITLE' | translate"
+        [attr.aria-label]="'TOP_BAR.BTN_CONNECTED_APPS_TITLE' | translate"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
           <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
           <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
         </svg>
       </button>
 
-      <button class="control-btn mobile-visible" (click)="goToAiAssistants()" [title]="'TOP_BAR.BTN_AI_ASSISTANTS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_AI_ASSISTANTS_TITLE' | translate">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8L12 3z"/>
-          <path d="M19 14l.9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14z"/>
+      <button
+        class="control-btn mobile-visible"
+        (click)="goToAiAssistants()"
+        [title]="'TOP_BAR.BTN_AI_ASSISTANTS_TITLE' | translate"
+        [attr.aria-label]="'TOP_BAR.BTN_AI_ASSISTANTS_TITLE' | translate"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8L12 3z" />
+          <path d="M19 14l.9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14z" />
         </svg>
       </button>
 
-      <button class="control-btn notif-bell mobile-visible" (click)="toggleNotifCenter()" [title]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <button
+        class="control-btn notif-bell mobile-visible"
+        (click)="toggleNotifCenter()"
+        [title]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate"
+        [attr.aria-label]="'TOP_BAR.BTN_NOTIFICATIONS_TITLE' | translate"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.73 21a2 2 0 0 1-3.46 0" />
         </svg>
@@ -302,11 +637,24 @@
         }
       </button>
 
-      <button class="control-btn" (click)="toggleSettings()" [title]="'TOP_BAR.BTN_REFERENCE_VALUES_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_REFERENCE_VALUES_TITLE' | translate">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <button
+        class="control-btn"
+        (click)="toggleSettings()"
+        [title]="'TOP_BAR.BTN_REFERENCE_VALUES_TITLE' | translate"
+        [attr.aria-label]="'TOP_BAR.BTN_REFERENCE_VALUES_TITLE' | translate"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
           <circle cx="12" cy="12" r="3" />
           <path
-            d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+            d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"
+          />
         </svg>
       </button>
     </div>
@@ -314,7 +662,11 @@
     @if (user$ | async; as u) {
       <div class="user-pill">
         @if (u.profilePicture) {
-          <img class="avatar-img" [src]="u.profilePicture" [alt]="'TOP_BAR.PROFILE_PICTURE_ALT' | translate" />
+          <img
+            class="avatar-img"
+            [src]="u.profilePicture"
+            [alt]="'TOP_BAR.PROFILE_PICTURE_ALT' | translate"
+          />
         } @else {
           <div class="avatar">{{ u.displayName.charAt(0).toUpperCase() }}</div>
         }
@@ -322,9 +674,22 @@
           <span class="name">{{ u.displayName }}</span>
           <span class="status">{{ u.role }}</span>
         </div>
-        <button class="logout-btn" (click)="logout()" [title]="'TOP_BAR.BTN_LOGOUT_TITLE' | translate" [attr.aria-label]="'TOP_BAR.BTN_LOGOUT_TITLE' | translate">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-               stroke-linecap="round" stroke-linejoin="round">
+        <button
+          class="logout-btn"
+          (click)="logout()"
+          [title]="'TOP_BAR.BTN_LOGOUT_TITLE' | translate"
+          [attr.aria-label]="'TOP_BAR.BTN_LOGOUT_TITLE' | translate"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
             <polyline points="16 17 21 12 16 7" />
             <line x1="21" y1="12" x2="9" y2="12" />
@@ -355,17 +720,20 @@
 }
 
 @if (showMemberships) {
-  <app-memberships-modal (closed)="showMemberships = false"></app-memberships-modal>
+  <app-memberships-modal (closed)="showMemberships = false" />
 }
 
 @if (showNotifPrefs) {
-  <app-notification-preferences (close)="showNotifPrefs = false"></app-notification-preferences>
+  <app-notification-preferences (close)="showNotifPrefs = false" />
 }
 
 @if (showNotifCenter) {
-  <app-notification-center (close)="showNotifCenter = false" (openPrefs)="showNotifCenter = false; showNotifPrefs = true"></app-notification-center>
+  <app-notification-center
+    (close)="showNotifCenter = false"
+    (openPrefs)="showNotifCenter = false; showNotifPrefs = true"
+  />
 }
 
 @if (showConnectedApps) {
-  <app-connected-apps-modal (closed)="showConnectedApps = false"></app-connected-apps-modal>
+  <app-connected-apps-modal (closed)="showConnectedApps = false" />
 }
