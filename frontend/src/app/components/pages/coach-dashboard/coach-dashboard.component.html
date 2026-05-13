@@ -19,8 +19,8 @@
     (clearFilters)="clearFilters()"
     (toggleMultiSelect)="toggleMultiSelectMode()"
     (toggleAthleteSelection)="toggleAthleteSelection($event)"
-    (bulkAssign)="bulkAssign()">
-  </app-athlete-list-sidebar>
+    (bulkAssign)="bulkAssign()"
+  />
 
   <!-- Right area: always visible, contains header + tabs -->
   <div class="main-area">
@@ -28,7 +28,10 @@
       <div class="header-left">
         <div class="header-avatar">C</div>
         <div class="header-info">
-          <span class="header-title">{{ 'COACH_DASHBOARD.HEADER_TITLE' | translate }} <span class="dim">{{ 'COACH_DASHBOARD.HEADER_TITLE_DIM' | translate }}</span></span>
+          <span class="header-title"
+            >{{ 'COACH_DASHBOARD.HEADER_TITLE' | translate }}
+            <span class="dim">{{ 'COACH_DASHBOARD.HEADER_TITLE_DIM' | translate }}</span></span
+          >
           <span class="header-subtitle">{{ 'COACH_DASHBOARD.HEADER_SUBTITLE' | translate }}</span>
         </div>
       </div>
@@ -61,26 +64,104 @@
                   @for (tag of selectedAthlete.groups || []; track trackByValue(tag)) {
                     <span class="editable-tag">
                       {{ tag }}
-                      <button class="tag-remove" (click)="removeTag(selectedAthlete, tag)">&times;</button>
+                      <button class="tag-remove" (click)="removeTag(selectedAthlete, tag)">
+                        &times;
+                      </button>
                     </span>
                   }
                 </div>
               </div>
             </div>
             <div class="actions">
-              <button class="share-btn" data-testid="share-btn" (click)="openShareModal()">{{ 'COACH_DASHBOARD.SHARE_BTN' | translate }}</button>
-              <button class="ai-btn-corner" data-testid="assign-btn" (click)="assignWorkout()">{{ 'COACH_DASHBOARD.ASSIGN_BTN' | translate }}</button>
+              <button class="share-btn" data-testid="share-btn" (click)="openShareModal()">
+                {{ 'COACH_DASHBOARD.SHARE_BTN' | translate }}
+              </button>
+              <button class="ai-btn-corner" data-testid="assign-btn" (click)="assignWorkout()">
+                {{ 'COACH_DASHBOARD.ASSIGN_BTN' | translate }}
+              </button>
             </div>
           </div>
 
           <!-- Task 2: Added PMC tab -->
           <div class="physiological-tabs" role="tablist">
-            <div class="tab" role="tab" id="coach-tab-performance" data-testid="tab-performance" [attr.aria-selected]="activeTab === 'performance'" [class.active]="activeTab === 'performance'" (click)="activeTab = 'performance'" tabindex="0" (keydown.enter)="activeTab = 'performance'">{{ 'COACH_DASHBOARD.TAB_PERFORMANCE' | translate }}</div>
-            <div class="tab" role="tab" id="coach-tab-physiology" data-testid="tab-physiology" [attr.aria-selected]="activeTab === 'physiology'" [class.active]="activeTab === 'physiology'" (click)="activeTab = 'physiology'" tabindex="0" (keydown.enter)="activeTab = 'physiology'">{{ 'COACH_DASHBOARD.TAB_PHYSIOLOGY' | translate }}</div>
-            <div class="tab" role="tab" id="coach-tab-history" data-testid="tab-history" [attr.aria-selected]="activeTab === 'history'" [class.active]="activeTab === 'history'" (click)="activeTab = 'history'" tabindex="0" (keydown.enter)="activeTab = 'history'">{{ 'COACH_DASHBOARD.TAB_HISTORY' | translate }}</div>
-            <div class="tab" role="tab" id="coach-tab-pmc" data-testid="tab-pmc" [attr.aria-selected]="activeTab === 'pmc'" [class.active]="activeTab === 'pmc'" (click)="activeTab = 'pmc'" tabindex="0" (keydown.enter)="activeTab = 'pmc'">{{ 'COACH_DASHBOARD.TAB_PMC' | translate }}</div>
-            <div class="tab" role="tab" id="coach-tab-goals" data-testid="tab-goals" [attr.aria-selected]="activeTab === 'goals'" [class.active]="activeTab === 'goals'" (click)="activeTab = 'goals'" tabindex="0" (keydown.enter)="activeTab = 'goals'">{{ 'COACH_DASHBOARD.TAB_GOALS' | translate }}</div>
-            <div class="tab" role="tab" id="coach-tab-plans" data-testid="tab-plans" [attr.aria-selected]="activeTab === 'plans'" [class.active]="activeTab === 'plans'" (click)="activeTab = 'plans'" tabindex="0" (keydown.enter)="activeTab = 'plans'">{{ 'COACH_DASHBOARD.TAB_PLANS' | translate }}</div>
+            <div
+              class="tab"
+              role="tab"
+              id="coach-tab-performance"
+              data-testid="tab-performance"
+              [attr.aria-selected]="activeTab === 'performance'"
+              [class.active]="activeTab === 'performance'"
+              (click)="activeTab = 'performance'"
+              tabindex="0"
+              (keydown.enter)="activeTab = 'performance'"
+            >
+              {{ 'COACH_DASHBOARD.TAB_PERFORMANCE' | translate }}
+            </div>
+            <div
+              class="tab"
+              role="tab"
+              id="coach-tab-physiology"
+              data-testid="tab-physiology"
+              [attr.aria-selected]="activeTab === 'physiology'"
+              [class.active]="activeTab === 'physiology'"
+              (click)="activeTab = 'physiology'"
+              tabindex="0"
+              (keydown.enter)="activeTab = 'physiology'"
+            >
+              {{ 'COACH_DASHBOARD.TAB_PHYSIOLOGY' | translate }}
+            </div>
+            <div
+              class="tab"
+              role="tab"
+              id="coach-tab-history"
+              data-testid="tab-history"
+              [attr.aria-selected]="activeTab === 'history'"
+              [class.active]="activeTab === 'history'"
+              (click)="activeTab = 'history'"
+              tabindex="0"
+              (keydown.enter)="activeTab = 'history'"
+            >
+              {{ 'COACH_DASHBOARD.TAB_HISTORY' | translate }}
+            </div>
+            <div
+              class="tab"
+              role="tab"
+              id="coach-tab-pmc"
+              data-testid="tab-pmc"
+              [attr.aria-selected]="activeTab === 'pmc'"
+              [class.active]="activeTab === 'pmc'"
+              (click)="activeTab = 'pmc'"
+              tabindex="0"
+              (keydown.enter)="activeTab = 'pmc'"
+            >
+              {{ 'COACH_DASHBOARD.TAB_PMC' | translate }}
+            </div>
+            <div
+              class="tab"
+              role="tab"
+              id="coach-tab-goals"
+              data-testid="tab-goals"
+              [attr.aria-selected]="activeTab === 'goals'"
+              [class.active]="activeTab === 'goals'"
+              (click)="activeTab = 'goals'"
+              tabindex="0"
+              (keydown.enter)="activeTab = 'goals'"
+            >
+              {{ 'COACH_DASHBOARD.TAB_GOALS' | translate }}
+            </div>
+            <div
+              class="tab"
+              role="tab"
+              id="coach-tab-plans"
+              data-testid="tab-plans"
+              [attr.aria-selected]="activeTab === 'plans'"
+              [class.active]="activeTab === 'plans'"
+              (click)="activeTab = 'plans'"
+              tabindex="0"
+              (keydown.enter)="activeTab = 'plans'"
+            >
+              {{ 'COACH_DASHBOARD.TAB_PLANS' | translate }}
+            </div>
           </div>
         </div>
 
@@ -97,13 +178,13 @@
             [coachTrainings$]="coachTrainings$"
             (navigateWeek)="navigateScheduleWeek($event)"
             (openSessionAnalysis)="openSessionAnalysis($event)"
-            (assignWorkout)="assignWorkout()">
-          </app-coach-performance-tab>
+            (assignWorkout)="assignWorkout()"
+          />
         }
 
         @if (activeTab === 'physiology') {
           <div role="tabpanel" aria-labelledby="coach-tab-physiology">
-            <app-physiology-page [overrideUser]="selectedAthlete" [embedded]="true"></app-physiology-page>
+            <app-physiology-page [overrideUser]="selectedAthlete" [embedded]="true" />
           </div>
         }
 
@@ -114,8 +195,8 @@
             [selectedAthleteSession$]="selectedAthleteSession$"
             [selectedAthlete]="selectedAthlete"
             (openSessionAnalysis)="openSessionAnalysis($event)"
-            (closeSessionAnalysis)="closeSessionAnalysis()">
-          </app-coach-history-tab>
+            (closeSessionAnalysis)="closeSessionAnalysis()"
+          />
         }
 
         @if (activeTab === 'pmc') {
@@ -124,42 +205,48 @@
               <div class="coach-pmc-panel">
                 <div class="coach-pmc-header">
                   <div class="section-title">{{ 'COACH_DASHBOARD.PMC_90_DAYS' | translate }}</div>
-                  <button class="view-pmc-btn" (click)="viewAthletePmc(selectedAthlete!.id)">{{ 'COACH_DASHBOARD.VIEW_FULL_PMC' | translate }}</button>
+                  <button class="view-pmc-btn" (click)="viewAthletePmc(selectedAthlete!.id)">
+                    {{ 'COACH_DASHBOARD.VIEW_FULL_PMC' | translate }}
+                  </button>
                 </div>
-                <app-pmc-chart [data]="pmcData" [goals]="athleteGoals$ | async"></app-pmc-chart>
+                <app-pmc-chart [data]="pmcData" [goals]="athleteGoals$ | async" />
               </div>
             }
             @if (pmcData.length === 0) {
               <div class="empty-tab">{{ 'COACH_DASHBOARD.EMPTY_PMC' | translate }}</div>
             }
           } @else {
-            <app-chart-panel-skeleton height="320px"></app-chart-panel-skeleton>
+            <app-chart-panel-skeleton height="320px" />
           }
         }
 
         @if (activeTab === 'goals') {
-          <app-coach-goals-tab
-            [athleteGoals$]="athleteGoals$">
-          </app-coach-goals-tab>
+          <app-coach-goals-tab [athleteGoals$]="athleteGoals$" />
         }
 
         @if (activeTab === 'plans') {
-          <app-coach-plans-tab
-            [athleteId]="selectedAthlete!.id">
-          </app-coach-plans-tab>
+          <app-coach-plans-tab [athleteId]="selectedAthlete!.id" />
         }
-
       </div>
     } @else {
       <div class="placeholder-detail">
         <div class="empty-detail">
-        <div class="empty-icon-ring">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
-        </div>
-        <h3>{{ 'COACH_DASHBOARD.PLACEHOLDER_SELECT_ATHLETE' | translate }}</h3>
+          <div class="empty-icon-ring">
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </div>
+          <h3>{{ 'COACH_DASHBOARD.PLACEHOLDER_SELECT_ATHLETE' | translate }}</h3>
           <p>{{ 'COACH_DASHBOARD.PLACEHOLDER_SELECT_ATHLETE_DESC' | translate }}</p>
         </div>
       </div>
@@ -167,13 +254,31 @@
   </div>
 </div>
 
-<app-training-action-modal [isOpen]="isScheduleModalOpen" mode="coach-assign"
-  [preselectedAthletes]="bulkAssignAthletes.length > 0 ? bulkAssignAthletes : (selectedAthlete ? [selectedAthlete] : undefined)"
-  (closed)="isScheduleModalOpen = false" (completed)="onScheduled()"></app-training-action-modal>
+<app-training-action-modal
+  [isOpen]="isScheduleModalOpen"
+  mode="coach-assign"
+  [preselectedAthletes]="
+    bulkAssignAthletes.length > 0
+      ? bulkAssignAthletes
+      : selectedAthlete
+        ? [selectedAthlete]
+        : undefined
+  "
+  (closed)="isScheduleModalOpen = false"
+  (completed)="onScheduled()"
+/>
 
-<app-invite-code-modal [isOpen]="isInviteCodeModalOpen" [availableTags]="(allTags$ | async) || []"
-  (closed)="isInviteCodeModalOpen = false" (codeGenerated)="onCodeGenerated()"></app-invite-code-modal>
+<app-invite-code-modal
+  [isOpen]="isInviteCodeModalOpen"
+  [availableTags]="(allTags$ | async) || []"
+  (closed)="isInviteCodeModalOpen = false"
+  (codeGenerated)="onCodeGenerated()"
+/>
 
-<app-share-training-modal [isOpen]="isShareModalOpen" [training]="trainingToShare"
-  [availableTags]="(allTags$ | async) || []" (closed)="isShareModalOpen = false"
-  (shared)="onTrainingShared()"></app-share-training-modal>
+<app-share-training-modal
+  [isOpen]="isShareModalOpen"
+  [training]="trainingToShare"
+  [availableTags]="(allTags$ | async) || []"
+  (closed)="isShareModalOpen = false"
+  (shared)="onTrainingShared()"
+/>

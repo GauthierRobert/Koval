@@ -52,7 +52,7 @@ export class BlockEditorFormComponent {
   @Input() editSendOffSeconds: number | null = null;
   @Input() selectedBlockIndex = -1;
   @Input() BLOCK_TYPES: BlockType[] = [];
-  @Input() sportType: string = 'CYCLING';
+  @Input() sportType = 'CYCLING';
 
   @Output() editTypeChange = new EventEmitter<BlockType>();
   @Output() editLabelChange = new EventEmitter<string>();

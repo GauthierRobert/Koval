@@ -7,8 +7,16 @@
   <!-- Physical Profile -->
   <section class="ref-card">
     <div class="card-header">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <circle cx="12" cy="7" r="4"/><path d="M5.2 20a7 7 0 0 1 13.6 0"/>
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+      >
+        <circle cx="12" cy="7" r="4" />
+        <path d="M5.2 20a7 7 0 0 1 13.6 0" />
       </svg>
       <h3>{{ 'SETTINGS.SECTION_PHYSICAL_PROFILE' | translate }}</h3>
     </div>
@@ -19,7 +27,15 @@
           <span class="hint">{{ 'SETTINGS.FIELD_BODY_WEIGHT_HINT' | translate }}</span>
         </div>
         <div class="field-input ftp-input-group">
-          <input id="ref-weight" type="number" [(ngModel)]="weightKg" min="30" max="200" class="value-input numeric" placeholder="—" />
+          <input
+            id="ref-weight"
+            type="number"
+            [(ngModel)]="weightKg"
+            min="30"
+            max="200"
+            class="value-input numeric"
+            placeholder="—"
+          />
           <span class="unit">{{ 'SETTINGS.FIELD_BODY_WEIGHT_UNIT' | translate }}</span>
         </div>
       </div>
@@ -29,7 +45,7 @@
   <!-- Cycling -->
   <section class="ref-card">
     <div class="card-header">
-      <app-sport-icon sport="CYCLING" [size]="22"></app-sport-icon>
+      <app-sport-icon sport="CYCLING" [size]="22" />
       <h3>{{ 'SETTINGS.SECTION_CYCLING' | translate }}</h3>
     </div>
     <div class="card-body">
@@ -39,17 +55,35 @@
           <span class="hint">{{ 'SETTINGS.FIELD_FTP_HINT' | translate }}</span>
         </div>
         <div class="field-input ftp-input-group">
-          <input id="ref-ftp" type="number" [(ngModel)]="ftp" min="50" max="600" class="value-input numeric" placeholder="—" />
+          <input
+            id="ref-ftp"
+            type="number"
+            [(ngModel)]="ftp"
+            min="50"
+            max="600"
+            class="value-input numeric"
+            placeholder="—"
+          />
           <span class="unit">{{ 'SETTINGS.FIELD_FTP_UNIT' | translate }}</span>
         </div>
       </div>
       <div class="field-row">
         <div class="field-info">
-          <label for="ref-vo2max-power">{{ 'SETTINGS.FIELD_VO2MAX_POWER_LABEL' | translate }}</label>
+          <label for="ref-vo2max-power">{{
+            'SETTINGS.FIELD_VO2MAX_POWER_LABEL' | translate
+          }}</label>
           <span class="hint">{{ 'SETTINGS.FIELD_VO2MAX_POWER_HINT' | translate }}</span>
         </div>
         <div class="field-input ftp-input-group">
-          <input id="ref-vo2max-power" type="number" [(ngModel)]="vo2maxPower" min="50" max="800" class="value-input numeric" placeholder="—" />
+          <input
+            id="ref-vo2max-power"
+            type="number"
+            [(ngModel)]="vo2maxPower"
+            min="50"
+            max="800"
+            class="value-input numeric"
+            placeholder="—"
+          />
           <span class="unit">{{ 'SETTINGS.FIELD_FTP_UNIT' | translate }}</span>
         </div>
       </div>
@@ -57,14 +91,31 @@
       <div class="cp-test-block">
         <div class="cp-test-header">
           <div class="label-with-info">
-            <span class="cp-test-title">{{ 'SETTINGS.FIELD_CP_TEST_SECTION_LABEL' | translate }}</span>
-            <button type="button" class="info-btn" [class.active]="showCpHelp"
+            <span class="cp-test-title">{{
+              'SETTINGS.FIELD_CP_TEST_SECTION_LABEL' | translate
+            }}</span>
+            <button
+              type="button"
+              class="info-btn"
+              [class.active]="showCpHelp"
               [attr.aria-label]="'SETTINGS.FIELD_CP_TEST_TITLE' | translate"
-              [attr.aria-expanded]="showCpHelp" (click)="toggleCpHelp()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="16" x2="12" y2="12"></line>
-                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              [attr.aria-expanded]="showCpHelp"
+              (click)="toggleCpHelp()"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="16" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12.01" y2="8" />
               </svg>
             </button>
           </div>
@@ -76,7 +127,15 @@
             <span class="hint">{{ 'SETTINGS.FIELD_P3MIN_HINT' | translate }}</span>
           </div>
           <div class="field-input ftp-input-group">
-            <input id="ref-p3min" type="number" [(ngModel)]="power3MinW" min="50" max="800" class="value-input numeric" placeholder="—" />
+            <input
+              id="ref-p3min"
+              type="number"
+              [(ngModel)]="power3MinW"
+              min="50"
+              max="800"
+              class="value-input numeric"
+              placeholder="—"
+            />
             <span class="unit">{{ 'SETTINGS.FIELD_FTP_UNIT' | translate }}</span>
           </div>
         </div>
@@ -87,7 +146,15 @@
             <span class="hint">{{ 'SETTINGS.FIELD_P12MIN_HINT' | translate }}</span>
           </div>
           <div class="field-input ftp-input-group">
-            <input id="ref-p12min" type="number" [(ngModel)]="power12MinW" min="50" max="600" class="value-input numeric" placeholder="—" />
+            <input
+              id="ref-p12min"
+              type="number"
+              [(ngModel)]="power12MinW"
+              min="50"
+              max="600"
+              class="value-input numeric"
+              placeholder="—"
+            />
             <span class="unit">{{ 'SETTINGS.FIELD_FTP_UNIT' | translate }}</span>
           </div>
         </div>
@@ -97,7 +164,9 @@
             <span class="cp-derived-label">{{ 'SETTINGS.CP_DERIVED_LABEL' | translate }}</span>
             <div class="cp-derived-values">
               <span class="cp-derived-pair">
-                <span class="cp-derived-name">{{ 'SETTINGS.FIELD_CRITICAL_POWER_LABEL' | translate }}</span>
+                <span class="cp-derived-name">{{
+                  'SETTINGS.FIELD_CRITICAL_POWER_LABEL' | translate
+                }}</span>
                 <span class="cp-derived-num mono">{{ derivedCp }} W</span>
               </span>
               <span class="cp-derived-sep">·</span>
@@ -115,7 +184,11 @@
       </div>
 
       @if (showCpHelp) {
-        <div class="cp-help" role="region" [attr.aria-label]="'SETTINGS.FIELD_CP_TEST_TITLE' | translate">
+        <div
+          class="cp-help"
+          role="region"
+          [attr.aria-label]="'SETTINGS.FIELD_CP_TEST_TITLE' | translate"
+        >
           <h4>{{ 'SETTINGS.FIELD_CP_TEST_TITLE' | translate }}</h4>
           <p>{{ 'SETTINGS.FIELD_CP_TEST_BODY' | translate }}</p>
           <ol>
@@ -133,7 +206,7 @@
   <!-- Running -->
   <section class="ref-card">
     <div class="card-header">
-      <app-sport-icon sport="RUNNING" [size]="22"></app-sport-icon>
+      <app-sport-icon sport="RUNNING" [size]="22" />
       <h3>{{ 'SETTINGS.SECTION_RUNNING' | translate }}</h3>
     </div>
     <div class="card-body">
@@ -144,20 +217,39 @@
             <span class="hint">{{ field.hintKey | translate }}</span>
           </div>
           <div class="field-input pace-input-group">
-            <input type="number" [(ngModel)]="field.minutes" min="0" max="15"
-              class="value-input pace-part" placeholder="—" [attr.aria-label]="(field.labelKey | translate) + ' minutes'" />
+            <input
+              type="number"
+              [(ngModel)]="field.minutes"
+              min="0"
+              max="15"
+              class="value-input pace-part"
+              placeholder="—"
+              [attr.aria-label]="(field.labelKey | translate) + ' minutes'"
+            />
             <span class="pace-sep">:</span>
-            <input type="number" [(ngModel)]="field.seconds" min="0" max="59"
-              class="value-input pace-part" placeholder="00" [attr.aria-label]="(field.labelKey | translate) + ' seconds'" />
+            <input
+              type="number"
+              [(ngModel)]="field.seconds"
+              min="0"
+              max="59"
+              class="value-input pace-part"
+              placeholder="00"
+              [attr.aria-label]="(field.labelKey | translate) + ' seconds'"
+            />
             <span class="unit">{{ 'SETTINGS.PACE_UNIT_PER_KM' | translate }}</span>
           </div>
         </div>
       }
 
-      <div class="toggle-row" role="button" tabindex="0" [attr.aria-expanded]="showSecondaryRunning"
+      <div
+        class="toggle-row"
+        role="button"
+        tabindex="0"
+        [attr.aria-expanded]="showSecondaryRunning"
         (click)="showSecondaryRunning = !showSecondaryRunning"
         (keydown.enter)="showSecondaryRunning = !showSecondaryRunning"
-        (keydown.space)="showSecondaryRunning = !showSecondaryRunning; $event.preventDefault()">
+        (keydown.space)="showSecondaryRunning = !showSecondaryRunning; $event.preventDefault()"
+      >
         <span class="toggle-label">{{ 'SETTINGS.TOGGLE_RACE_PACES' | translate }}</span>
         <span class="toggle-arrow">{{ showSecondaryRunning ? '▾' : '▸' }}</span>
       </div>
@@ -170,11 +262,25 @@
               <span class="hint">{{ field.hintKey | translate }}</span>
             </div>
             <div class="field-input pace-input-group">
-              <input type="number" [(ngModel)]="field.minutes" min="0" max="15"
-                class="value-input pace-part" placeholder="—" [attr.aria-label]="(field.labelKey | translate) + ' minutes'" />
+              <input
+                type="number"
+                [(ngModel)]="field.minutes"
+                min="0"
+                max="15"
+                class="value-input pace-part"
+                placeholder="—"
+                [attr.aria-label]="(field.labelKey | translate) + ' minutes'"
+              />
               <span class="pace-sep">:</span>
-              <input type="number" [(ngModel)]="field.seconds" min="0" max="59"
-                class="value-input pace-part" placeholder="00" [attr.aria-label]="(field.labelKey | translate) + ' seconds'" />
+              <input
+                type="number"
+                [(ngModel)]="field.seconds"
+                min="0"
+                max="59"
+                class="value-input pace-part"
+                placeholder="00"
+                [attr.aria-label]="(field.labelKey | translate) + ' seconds'"
+              />
               <span class="unit">{{ 'SETTINGS.PACE_UNIT_PER_KM' | translate }}</span>
             </div>
           </div>
@@ -186,7 +292,7 @@
   <!-- Swimming -->
   <section class="ref-card">
     <div class="card-header">
-      <app-sport-icon sport="SWIMMING" [size]="22"></app-sport-icon>
+      <app-sport-icon sport="SWIMMING" [size]="22" />
       <h3>{{ 'SETTINGS.SECTION_SWIMMING' | translate }}</h3>
     </div>
     <div class="card-body">
@@ -197,11 +303,25 @@
             <span class="hint">{{ field.hintKey | translate }}</span>
           </div>
           <div class="field-input pace-input-group">
-            <input type="number" [(ngModel)]="field.minutes" min="0" max="10"
-              class="value-input pace-part" placeholder="—" [attr.aria-label]="(field.labelKey | translate) + ' minutes'" />
+            <input
+              type="number"
+              [(ngModel)]="field.minutes"
+              min="0"
+              max="10"
+              class="value-input pace-part"
+              placeholder="—"
+              [attr.aria-label]="(field.labelKey | translate) + ' minutes'"
+            />
             <span class="pace-sep">:</span>
-            <input type="number" [(ngModel)]="field.seconds" min="0" max="59"
-              class="value-input pace-part" placeholder="00" [attr.aria-label]="(field.labelKey | translate) + ' seconds'" />
+            <input
+              type="number"
+              [(ngModel)]="field.seconds"
+              min="0"
+              max="59"
+              class="value-input pace-part"
+              placeholder="00"
+              [attr.aria-label]="(field.labelKey | translate) + ' seconds'"
+            />
             <span class="unit">{{ 'SETTINGS.PACE_UNIT_PER_100M' | translate }}</span>
           </div>
         </div>
@@ -214,8 +334,15 @@
     @if (customZoneSystems.length > 0) {
       <section class="ref-card">
         <div class="card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M12 20v-6M6 20V10M18 20V4"/>
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path d="M12 20v-6M6 20V10M18 20V4" />
           </svg>
           <h3>{{ 'SETTINGS.SECTION_CUSTOM_ZONES' | translate }}</h3>
         </div>
@@ -224,11 +351,22 @@
             <div class="field-row">
               <div class="field-info">
                 <label>{{ sys.referenceName || sys.name }}</label>
-                <span class="hint">{{ sys.name }}@if (sys.referenceUnit) { — {{ 'SETTINGS.FIELD_CUSTOM_ZONE_HINT_UNIT' | translate }} {{ sys.referenceUnit }} }</span>
+                <span class="hint"
+                  >{{ sys.name }}
+                  @if (sys.referenceUnit) {
+                    — {{ 'SETTINGS.FIELD_CUSTOM_ZONE_HINT_UNIT' | translate }}
+                    {{ sys.referenceUnit }}
+                  }
+                </span>
               </div>
               <div class="field-input ftp-input-group">
-                <input type="number" [(ngModel)]="customRefValues[sys.id!]"
-                  min="0" class="value-input numeric" placeholder="—" />
+                <input
+                  type="number"
+                  [(ngModel)]="customRefValues[sys.id!]"
+                  min="0"
+                  class="value-input numeric"
+                  placeholder="—"
+                />
                 @if (sys.referenceUnit) {
                   <span class="unit">{{ sys.referenceUnit }}</span>
                 }

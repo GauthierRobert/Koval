@@ -1,11 +1,24 @@
 @if (test$ | async; as test) {
   <div class="test-detail">
     <header class="test-detail__head">
-      <button class="btn-back" (click)="back.emit()" data-testid="btn-back-tests"
-              [attr.aria-label]="'CLUB_TESTS.BACK' | translate">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="m15 18-6-6 6-6"/>
+      <button
+        class="btn-back"
+        (click)="back.emit()"
+        data-testid="btn-back-tests"
+        [attr.aria-label]="'CLUB_TESTS.BACK' | translate"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m15 18-6-6 6-6" />
         </svg>
       </button>
 
@@ -44,10 +57,15 @@
             class="form-input"
             [ngModel]="(selectedIterationId$ | async) ?? ''"
             (ngModelChange)="onIterationChange($event)"
-            data-testid="iteration-select">
+            data-testid="iteration-select"
+          >
             @for (it of (iterations$ | async) ?? []; track it.id) {
               <option [value]="it.id">
-                {{ it.label }} · {{ (it.status === 'OPEN' ? 'CLUB_TESTS.OPEN_STATUS' : 'CLUB_TESTS.CLOSED_STATUS') | translate }}
+                {{ it.label }} ·
+                {{
+                  (it.status === 'OPEN' ? 'CLUB_TESTS.OPEN_STATUS' : 'CLUB_TESTS.CLOSED_STATUS')
+                    | translate
+                }}
               </option>
             }
           </select>
@@ -65,11 +83,14 @@
                 type="text"
                 [(ngModel)]="newIterationLabel"
                 [placeholder]="'CLUB_TESTS.NEW_ITERATION_PLACEHOLDER' | translate"
-                data-testid="input-new-iteration-label" />
-              <button class="btn-primary"
-                      (click)="startNewIteration()"
-                      [disabled]="!newIterationLabel.trim()"
-                      data-testid="btn-start-iteration">
+                data-testid="input-new-iteration-label"
+              />
+              <button
+                class="btn-primary"
+                (click)="startNewIteration()"
+                [disabled]="!newIterationLabel.trim()"
+                data-testid="btn-start-iteration"
+              >
                 + {{ 'CLUB_TESTS.START_ITERATION' | translate }}
               </button>
             </div>
@@ -93,12 +114,14 @@
         <ul class="segments-list">
           @for (s of activeIter.segments; track s.id) {
             <li class="segment-row">
-              <span class="seg-order mono">{{ ($index + 1) }}</span>
+              <span class="seg-order mono">{{ $index + 1 }}</span>
               <span class="seg-label">{{ s.label }}</span>
-              <span class="seg-chip seg-chip--sport"
-                    [style.background]="sportColor(s.sportType).bg"
-                    [style.color]="sportColor(s.sportType).text"
-                    [style.border-color]="sportColor(s.sportType).border + '55'">
+              <span
+                class="seg-chip seg-chip--sport"
+                [style.background]="sportColor(s.sportType).bg"
+                [style.color]="sportColor(s.sportType).text"
+                [style.border-color]="sportColor(s.sportType).border + '55'"
+              >
                 {{ sportLabelKey(s.sportType) | translate }}
               </span>
               @if (s.distanceMeters) {
@@ -121,11 +144,19 @@
           <div class="section-head__actions">
             @if (activeIter.status === 'OPEN') {
               <button class="btn-primary" (click)="openRecordOwn()" data-testid="btn-record-own">
-                {{ myResult ? ('CLUB_TESTS.UPDATE_MY_RESULT' | translate) : ('CLUB_TESTS.RECORD_MY_RESULT' | translate) }}
+                {{
+                  myResult
+                    ? ('CLUB_TESTS.UPDATE_MY_RESULT' | translate)
+                    : ('CLUB_TESTS.RECORD_MY_RESULT' | translate)
+                }}
               </button>
             }
             @if (isCoach && activeIter.status === 'OPEN') {
-              <button class="btn-secondary" (click)="closeIteration(activeIter)" data-testid="btn-close-iteration">
+              <button
+                class="btn-secondary"
+                (click)="closeIteration(activeIter)"
+                data-testid="btn-close-iteration"
+              >
                 {{ 'CLUB_TESTS.CLOSE_ITERATION' | translate }}
               </button>
             }
@@ -135,10 +166,19 @@
         @let visible = visibleResults(test, results);
         @if (visible.length === 0) {
           <div class="empty-tab">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M3 3v18h18"/>
-              <path d="m7 14 4-4 4 4 5-5"/>
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M3 3v18h18" />
+              <path d="m7 14 4-4 4 4 5-5" />
             </svg>
             <p>{{ 'CLUB_TESTS.RESULTS_EMPTY' | translate }}</p>
           </div>
@@ -155,7 +195,9 @@
                     <th class="col-num">{{ s.label }}</th>
                   }
                   @for (r of activeIter.referenceUpdates; track r.id) {
-                    <th class="col-num col-ref">{{ r.label || (targetLabelKey(r.target) | translate) }}</th>
+                    <th class="col-num col-ref">
+                      {{ r.label || (targetLabelKey(r.target) | translate) }}
+                    </th>
                   }
                   <th class="col-actions" aria-label="actions"></th>
                 </tr>
@@ -165,31 +207,47 @@
                   <tr [class.is-self]="res.athleteId === currentUserId">
                     @if (test.competitionMode) {
                       <td class="col-rank">
-                        <span class="rank-badge"
-                              [class.rank-1]="res.rank === 1"
-                              [class.rank-2]="res.rank === 2"
-                              [class.rank-3]="res.rank === 3">
+                        <span
+                          class="rank-badge"
+                          [class.rank-1]="res.rank === 1"
+                          [class.rank-2]="res.rank === 2"
+                          [class.rank-3]="res.rank === 3"
+                        >
                           {{ res.rank ?? '—' }}
                         </span>
                       </td>
                     }
                     <td class="col-athlete">{{ res.athleteDisplayName ?? res.athleteId }}</td>
                     @for (s of activeIter.segments; track s.id) {
-                      <td class="col-num mono">{{ formatSegmentValue(s, res.segmentResults[s.id]?.value) }}</td>
+                      <td class="col-num mono">
+                        {{ formatSegmentValue(s, res.segmentResults[s.id]?.value) }}
+                      </td>
                     }
                     @for (r of activeIter.referenceUpdates; track r.id) {
                       <td class="col-num col-ref mono">
-                        {{ res.computedReferences[r.id] !== undefined ? (res.computedReferences[r.id] | number:'1.0-1') : '—' }}
+                        {{
+                          res.computedReferences[r.id] !== undefined
+                            ? (res.computedReferences[r.id] | number: '1.0-1')
+                            : '—'
+                        }}
                       </td>
                     }
                     <td class="col-actions">
                       @if (res.athleteId === currentUserId || isCoach) {
                         <div class="row-actions">
-                          <button class="btn-link" (click)="openEditExisting(res)" data-testid="btn-edit-result">
+                          <button
+                            class="btn-link"
+                            (click)="openEditExisting(res)"
+                            data-testid="btn-edit-result"
+                          >
                             {{ 'CLUB_TESTS.EDIT_RESULT' | translate }}
                           </button>
                           @if (activeIter.referenceUpdates.length > 0) {
-                            <button class="btn-link btn-link--accent" (click)="openApply(res)" data-testid="btn-apply-refs">
+                            <button
+                              class="btn-link btn-link--accent"
+                              (click)="openApply(res)"
+                              data-testid="btn-apply-refs"
+                            >
                               {{ 'CLUB_TESTS.APPLY_REFS' | translate }}
                             </button>
                           }
@@ -205,11 +263,20 @@
       </section>
     } @else {
       <div class="empty-tab">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M12 8v4"/>
-          <path d="M12 16h.01"/>
+        <svg
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8v4" />
+          <path d="M12 16h.01" />
         </svg>
         <p>{{ 'CLUB_TESTS.NO_ITERATIONS' | translate }}</p>
       </div>
@@ -220,8 +287,8 @@
         [club]="club"
         [test]="test"
         (cancel)="showEditModal = false"
-        (save)="saveEdited($event)">
-      </app-test-form-modal>
+        (save)="saveEdited($event)"
+      />
     }
 
     @if (showResultModal && activeIter) {
@@ -231,8 +298,8 @@
         [recordingForAthleteId]="resultModalRecordingFor"
         [coachMode]="isCoach"
         (cancel)="showResultModal = false"
-        (save)="saveResult($event, activeIter.id)">
-      </app-result-entry-modal>
+        (save)="saveResult($event, activeIter.id)"
+      />
     }
 
     @if (showApplyModal && applyModalResult && activeIter) {
@@ -240,8 +307,8 @@
         [iteration]="activeIter"
         [result]="applyModalResult"
         (cancel)="showApplyModal = false; applyModalResult = null"
-        (confirm)="applyReferences($event, activeIter.id)">
-      </app-apply-references-confirm-modal>
+        (confirm)="applyReferences($event, activeIter.id)"
+      />
     }
   </div>
 }

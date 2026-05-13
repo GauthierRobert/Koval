@@ -2,9 +2,19 @@
   <div class="page-header">
     <h1>{{ 'ANALYTICS.POWER_CURVE_TITLE' | translate }}</h1>
     <div class="date-filters">
-      <input data-testid="analytics-date-from" type="date" [(ngModel)]="dateFrom" (change)="loadData()" />
+      <input
+        data-testid="analytics-date-from"
+        type="date"
+        [(ngModel)]="dateFrom"
+        (change)="loadData()"
+      />
       <span class="date-sep">—</span>
-      <input data-testid="analytics-date-to" type="date" [(ngModel)]="dateTo" (change)="loadData()" />
+      <input
+        data-testid="analytics-date-to"
+        type="date"
+        [(ngModel)]="dateTo"
+        (change)="loadData()"
+      />
     </div>
   </div>
 
@@ -15,7 +25,7 @@
         <p>{{ 'ANALYTICS.NO_POWER_DATA_DESC' | translate }}</p>
       </div>
     } @else {
-      <app-power-curve-chart [data]="data"></app-power-curve-chart>
+      <app-power-curve-chart [data]="data" />
 
       <!-- Fatigue Resistance Index card -->
       @if (computeFri(data); as fri) {
@@ -24,10 +34,18 @@
             <span class="fri-label">{{ 'ANALYTICS.FRI_TITLE' | translate }}</span>
             <span class="fri-badge" [style.background]="fri.color">
               @switch (fri.level) {
-                @case ('excellent') { {{ 'ANALYTICS.FRI_EXCELLENT_LABEL' | translate }} }
-                @case ('good') { {{ 'ANALYTICS.FRI_GOOD_LABEL' | translate }} }
-                @case ('moderate') { {{ 'ANALYTICS.FRI_MODERATE_LABEL' | translate }} }
-                @case ('developing') { {{ 'ANALYTICS.FRI_DEVELOPING_LABEL' | translate }} }
+                @case ('excellent') {
+                  {{ 'ANALYTICS.FRI_EXCELLENT_LABEL' | translate }}
+                }
+                @case ('good') {
+                  {{ 'ANALYTICS.FRI_GOOD_LABEL' | translate }}
+                }
+                @case ('moderate') {
+                  {{ 'ANALYTICS.FRI_MODERATE_LABEL' | translate }}
+                }
+                @case ('developing') {
+                  {{ 'ANALYTICS.FRI_DEVELOPING_LABEL' | translate }}
+                }
               }
             </span>
           </div>
@@ -39,10 +57,18 @@
           </div>
           <div class="fri-interpretation">
             @switch (fri.level) {
-              @case ('excellent') { {{ 'ANALYTICS.FRI_EXCELLENT' | translate }} }
-              @case ('good') { {{ 'ANALYTICS.FRI_GOOD' | translate }} }
-              @case ('moderate') { {{ 'ANALYTICS.FRI_MODERATE' | translate }} }
-              @case ('developing') { {{ 'ANALYTICS.FRI_DEVELOPING' | translate }} }
+              @case ('excellent') {
+                {{ 'ANALYTICS.FRI_EXCELLENT' | translate }}
+              }
+              @case ('good') {
+                {{ 'ANALYTICS.FRI_GOOD' | translate }}
+              }
+              @case ('moderate') {
+                {{ 'ANALYTICS.FRI_MODERATE' | translate }}
+              }
+              @case ('developing') {
+                {{ 'ANALYTICS.FRI_DEVELOPING' | translate }}
+              }
             }
           </div>
         </div>

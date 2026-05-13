@@ -2,9 +2,11 @@
   <div class="activity-tile glass">
     <div class="activity-head">
       <div class="activity-head-text">
-        <span class="eyebrow eyebrow--accent mono">{{ 'DASHBOARD.CARD_LATEST_ACTIVITY' | translate }} · {{ formatDate(fit.date) }}</span>
+        <span class="eyebrow eyebrow--accent mono"
+          >{{ 'DASHBOARD.CARD_LATEST_ACTIVITY' | translate }} · {{ formatDate(fit.date) }}</span
+        >
         <h3 class="activity-title">
-          <app-sport-icon [sport]="fit.sportType" [size]="16"></app-sport-icon>
+          <app-sport-icon [sport]="fit.sportType" [size]="16" />
           <span>{{ fit.title }}</span>
         </h3>
       </div>
@@ -26,8 +28,8 @@
             [compact]="true"
             [showHR]="false"
             [showCadence]="false"
-            [showEfficiency]="false">
-          </app-fit-timeseries-chart>
+            [showEfficiency]="false"
+          />
         </div>
       }
     }
@@ -44,13 +46,15 @@
       @if (fit.avgPower) {
         <div class="stat-cell">
           <span class="stat-label">{{ 'DASHBOARD.STATS_AVG_POWER' | translate }}</span>
-          <span class="stat-value accent">{{ fit.avgPower | number:'1.0-0' }}<small>W</small></span>
+          <span class="stat-value accent"
+            >{{ fit.avgPower | number: '1.0-0' }}<small>W</small></span
+          >
         </div>
       }
       @if (fit.tss) {
         <div class="stat-cell">
           <span class="stat-label">{{ 'DASHBOARD.STATS_TSS' | translate }}</span>
-          <span class="stat-value">{{ fit.tss | number:'1.0-0' }}</span>
+          <span class="stat-value">{{ fit.tss | number: '1.0-0' }}</span>
         </div>
       }
     </div>

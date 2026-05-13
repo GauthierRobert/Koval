@@ -1,22 +1,21 @@
 <div class="stats-tab">
   @if (extendedStats$ | async; as stats) {
-
     <!-- SECTION 1: WEEKLY VOLUME -->
     <h4 class="section-title">{{ 'CLUB_STATS.SECTION_THIS_WEEK' | translate }}</h4>
     <div class="stats-grid">
       <div class="stat-card glass">
-        <app-sport-icon sport="SWIMMING" [size]="22" color="var(--accent-color)"></app-sport-icon>
-        <div class="stat-value">{{ stats.totalSwimKm | number:'1.1-1' }}</div>
+        <app-sport-icon sport="SWIMMING" [size]="22" color="var(--accent-color)" />
+        <div class="stat-value">{{ stats.totalSwimKm | number: '1.1-1' }}</div>
         <div class="stat-label">{{ 'CLUB_STATS.STAT_SWIM_KM' | translate }}</div>
       </div>
       <div class="stat-card glass">
-        <app-sport-icon sport="CYCLING" [size]="22" color="var(--accent-color)"></app-sport-icon>
-        <div class="stat-value">{{ stats.totalBikeKm | number:'1.1-1' }}</div>
+        <app-sport-icon sport="CYCLING" [size]="22" color="var(--accent-color)" />
+        <div class="stat-value">{{ stats.totalBikeKm | number: '1.1-1' }}</div>
         <div class="stat-label">{{ 'CLUB_STATS.STAT_BIKE_KM' | translate }}</div>
       </div>
       <div class="stat-card glass">
-        <app-sport-icon sport="RUNNING" [size]="22" color="var(--accent-color)"></app-sport-icon>
-        <div class="stat-value">{{ stats.totalRunKm | number:'1.1-1' }}</div>
+        <app-sport-icon sport="RUNNING" [size]="22" color="var(--accent-color)" />
+        <div class="stat-value">{{ stats.totalRunKm | number: '1.1-1' }}</div>
         <div class="stat-label">{{ 'CLUB_STATS.STAT_RUN_KM' | translate }}</div>
       </div>
       <div class="stat-card glass">
@@ -25,24 +24,52 @@
         <div class="stat-label">{{ 'CLUB_STATS.TOTAL_HOURS' | translate }}</div>
       </div>
       <div class="stat-card glass">
-        <svg class="stat-icon-text" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        <div class="stat-value">{{ stats.totalTss | number:'1.0-0' }}</div>
+        <svg
+          class="stat-icon-text"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        </svg>
+        <div class="stat-value">{{ stats.totalTss | number: '1.0-0' }}</div>
         <div class="stat-label">{{ 'CLUB_STATS.TOTAL_TSS' | translate }}</div>
       </div>
       <div class="stat-card glass">
-        <svg class="stat-icon-text" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
-        <div class="stat-value">{{ stats.avgTssPerMember | number:'1.0-0' }}</div>
+        <svg
+          class="stat-icon-text"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="18" x2="18" y1="20" y2="10" />
+          <line x1="12" x2="12" y1="20" y2="4" />
+          <line x1="6" x2="6" y1="20" y2="14" />
+        </svg>
+        <div class="stat-value">{{ stats.avgTssPerMember | number: '1.0-0' }}</div>
         <div class="stat-label">{{ 'CLUB_STATS.AVG_TSS_MEMBER' | translate }}</div>
       </div>
     </div>
-    <p class="stat-note">{{ 'CLUB_STATS.ACTIVE_MEMBERS_NOTE' | translate: { count: stats.memberCount } }}</p>
+    <p class="stat-note">
+      {{ 'CLUB_STATS.ACTIVE_MEMBERS_NOTE' | translate: { count: stats.memberCount } }}
+    </p>
 
     <!-- SECTION 2: ATTENDANCE SUMMARY -->
     <h4 class="section-title section-gap">{{ 'CLUB_STATS.SECTION_ATTENDANCE' | translate }}</h4>
     <div class="attendance-summary">
       <div class="att-card glass">
         <div class="att-value" [style.color]="getAttendanceColor(stats.attendanceRate)">
-          {{ stats.attendanceRate * 100 | number:'1.0-0' }}%
+          {{ stats.attendanceRate * 100 | number: '1.0-0' }}%
         </div>
         <div class="att-label">{{ 'CLUB_STATS.ATTENDANCE_RATE' | translate }}</div>
         <div class="att-sub">{{ 'CLUB_STATS.PAST_4_WEEKS' | translate }}</div>
@@ -64,7 +91,7 @@
             <div class="recurring-header">
               <div class="recurring-title-row">
                 @if (tmpl.sport) {
-                  <app-sport-icon [sport]="$any(tmpl.sport)" [size]="16"></app-sport-icon>
+                  <app-sport-icon [sport]="$any(tmpl.sport)" [size]="16" />
                 }
                 <span class="recurring-name">{{ tmpl.templateTitle }}</span>
                 @if (tmpl.clubGroupName) {
@@ -78,7 +105,9 @@
                 @if (tmpl.timeOfDay) {
                   <span class="meta-chip">{{ formatTime(tmpl.timeOfDay) }}</span>
                 }
-                <span class="meta-chip">{{ tmpl.eligibleCount }} {{ 'CLUB_STATS.ELIGIBLE' | translate }}</span>
+                <span class="meta-chip"
+                  >{{ tmpl.eligibleCount }} {{ 'CLUB_STATS.ELIGIBLE' | translate }}</span
+                >
                 @if (tmpl.maxParticipants) {
                   <span class="meta-chip capacity">max {{ tmpl.maxParticipants }}</span>
                 }
@@ -96,13 +125,18 @@
                     <div class="week-cancelled">{{ 'CLUB_STATS.CANCELLED' | translate }}</div>
                   } @else {
                     <div class="week-fill-bar-track">
-                      <div class="week-fill-bar"
+                      <div
+                        class="week-fill-bar"
                         [style.width.%]="week.fillPercent"
-                        [style.background]="getFillColor(week.fillPercent)">
-                      </div>
+                        [style.background]="getFillColor(week.fillPercent)"
+                      ></div>
                     </div>
-                    <span class="week-pct" [style.color]="getFillColor(week.fillPercent)">{{ week.fillPercent | number:'1.0-0' }}%</span>
-                    <span class="week-count">{{ week.participantCount }}/{{ week.eligibleCount }}</span>
+                    <span class="week-pct" [style.color]="getFillColor(week.fillPercent)"
+                      >{{ week.fillPercent | number: '1.0-0' }}%</span
+                    >
+                    <span class="week-count"
+                      >{{ week.participantCount }}/{{ week.eligibleCount }}</span
+                    >
                   }
                 </div>
               }
@@ -111,8 +145,14 @@
             <!-- Expand toggle -->
             @if (tmpl.athleteGrid.length > 0) {
               <button class="expand-toggle" (click)="toggleExpand(tmpl.templateId)">
-                <span class="expand-chevron" [class.expanded]="isExpanded(tmpl.templateId)">&#9662;</span>
-                {{ isExpanded(tmpl.templateId) ? ('CLUB_STATS.HIDE_ATHLETES' | translate) : ('CLUB_STATS.SHOW_ATHLETES' | translate) }}
+                <span class="expand-chevron" [class.expanded]="isExpanded(tmpl.templateId)"
+                  >&#9662;</span
+                >
+                {{
+                  isExpanded(tmpl.templateId)
+                    ? ('CLUB_STATS.HIDE_ATHLETES' | translate)
+                    : ('CLUB_STATS.SHOW_ATHLETES' | translate)
+                }}
               </button>
             }
 
@@ -133,7 +173,9 @@
                       @if (athlete.profilePicture) {
                         <img class="ag-avatar" [src]="athlete.profilePicture" alt="" />
                       } @else {
-                        <span class="ag-avatar-placeholder">{{ (athlete.displayName || '?').charAt(0).toUpperCase() }}</span>
+                        <span class="ag-avatar-placeholder">{{
+                          (athlete.displayName || '?').charAt(0).toUpperCase()
+                        }}</span>
                       }
                       <span class="ag-athlete-name">{{ athlete.displayName }}</span>
                     </span>
@@ -166,11 +208,14 @@
           <div class="trend-bars">
             @for (w of stats.weeklyTrends; track w.weekLabel) {
               <div class="trend-col" [title]="w.weekLabel + ': ' + w.totalTss">
-                <div class="trend-bar"
-                  [style.height.%]="(w.totalTss / getMaxTrend(stats.weeklyTrends, 'totalTss')) * 100"
-                  [class.current-week]="$last">
-                </div>
-                <span class="trend-val">{{ w.totalTss | number:'1.0-0' }}</span>
+                <div
+                  class="trend-bar"
+                  [style.height.%]="
+                    (w.totalTss / getMaxTrend(stats.weeklyTrends, 'totalTss')) * 100
+                  "
+                  [class.current-week]="$last"
+                ></div>
+                <span class="trend-val">{{ w.totalTss | number: '1.0-0' }}</span>
               </div>
             }
           </div>
@@ -180,11 +225,14 @@
           <div class="trend-bars">
             @for (w of stats.weeklyTrends; track w.weekLabel) {
               <div class="trend-col" [title]="w.weekLabel + ': ' + w.totalHours + 'h'">
-                <div class="trend-bar"
-                  [style.height.%]="(w.totalHours / getMaxTrend(stats.weeklyTrends, 'totalHours')) * 100"
-                  [class.current-week]="$last">
-                </div>
-                <span class="trend-val">{{ w.totalHours | number:'1.0-0' }}h</span>
+                <div
+                  class="trend-bar"
+                  [style.height.%]="
+                    (w.totalHours / getMaxTrend(stats.weeklyTrends, 'totalHours')) * 100
+                  "
+                  [class.current-week]="$last"
+                ></div>
+                <span class="trend-val">{{ w.totalHours | number: '1.0-0' }}h</span>
               </div>
             }
           </div>
@@ -194,10 +242,13 @@
           <div class="trend-bars">
             @for (w of stats.weeklyTrends; track w.weekLabel) {
               <div class="trend-col" [title]="w.weekLabel + ': ' + w.sessionCount">
-                <div class="trend-bar"
-                  [style.height.%]="(w.sessionCount / getMaxTrend(stats.weeklyTrends, 'sessionCount')) * 100"
-                  [class.current-week]="$last">
-                </div>
+                <div
+                  class="trend-bar"
+                  [style.height.%]="
+                    (w.sessionCount / getMaxTrend(stats.weeklyTrends, 'sessionCount')) * 100
+                  "
+                  [class.current-week]="$last"
+                ></div>
                 <span class="trend-val">{{ w.sessionCount }}</span>
               </div>
             }
@@ -207,13 +258,17 @@
           <div class="trend-label">{{ 'CLUB_STATS.ATTENDANCE_RATE' | translate }}</div>
           <div class="trend-bars">
             @for (w of stats.weeklyTrends; track w.weekLabel) {
-              <div class="trend-col" [title]="w.weekLabel + ': ' + (w.attendanceRate * 100 | number:'1.0-0') + '%'">
-                <div class="trend-bar"
+              <div
+                class="trend-col"
+                [title]="w.weekLabel + ': ' + (w.attendanceRate * 100 | number: '1.0-0') + '%'"
+              >
+                <div
+                  class="trend-bar"
                   [style.height.%]="w.attendanceRate * 100"
                   [style.background]="getAttendanceColor(w.attendanceRate)"
-                  [class.current-week]="$last">
-                </div>
-                <span class="trend-val">{{ w.attendanceRate * 100 | number:'1.0-0' }}%</span>
+                  [class.current-week]="$last"
+                ></div>
+                <span class="trend-val">{{ w.attendanceRate * 100 | number: '1.0-0' }}%</span>
               </div>
             }
           </div>
@@ -223,16 +278,18 @@
 
     <!-- SECTION 4: SPORT DISTRIBUTION -->
     @if (sportEntries(stats.sportDistribution).length > 0) {
-      <h4 class="section-title section-gap">{{ 'CLUB_STATS.SECTION_SPORT_DISTRIBUTION' | translate }}</h4>
+      <h4 class="section-title section-gap">
+        {{ 'CLUB_STATS.SECTION_SPORT_DISTRIBUTION' | translate }}
+      </h4>
       <div class="sport-dist glass">
         @for (entry of sportEntries(stats.sportDistribution); track entry.sport) {
           <div class="sport-row">
-            <app-sport-icon [sport]="entry.sport" [size]="16"></app-sport-icon>
+            <app-sport-icon [sport]="entry.sport" [size]="16" />
             <span class="sport-name">{{ entry.sport }}</span>
             <div class="sport-bar-track">
               <div class="sport-bar" [style.width.%]="entry.pct"></div>
             </div>
-            <span class="sport-pct">{{ entry.pct | number:'1.0-0' }}%</span>
+            <span class="sport-pct">{{ entry.pct | number: '1.0-0' }}%</span>
           </div>
         }
       </div>
@@ -248,30 +305,46 @@
             @if (m.profilePicture) {
               <img class="avatar" [src]="m.profilePicture" alt="" />
             } @else {
-              <div class="avatar-placeholder">{{ (m.displayName || '?').charAt(0).toUpperCase() }}</div>
+              <div class="avatar-placeholder">
+                {{ (m.displayName || '?').charAt(0).toUpperCase() }}
+              </div>
             }
             <div class="active-info">
               <span class="active-name">{{ m.displayName }}</span>
             </div>
             <div class="active-metrics">
               <span class="metric-chip hours">{{ formatHours(m.totalHours) }}</span>
-              <span class="metric-chip sessions">{{ m.sessionCount }} {{ 'CLUB_STATS.STAT_SESSIONS' | translate }}</span>
-              <span class="metric-chip tss">{{ m.totalTss | number:'1.0-0' }} TSS</span>
+              <span class="metric-chip sessions"
+                >{{ m.sessionCount }} {{ 'CLUB_STATS.STAT_SESSIONS' | translate }}</span
+              >
+              <span class="metric-chip tss">{{ m.totalTss | number: '1.0-0' }} TSS</span>
             </div>
           </div>
         }
       </div>
     }
-
   } @else {
     <div class="empty-tab">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+      <svg
+        width="32"
+        height="32"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <line x1="18" x2="18" y1="20" y2="10" />
+        <line x1="12" x2="12" y1="20" y2="4" />
+        <line x1="6" x2="6" y1="20" y2="14" />
+      </svg>
       <p>{{ 'CLUB_STATS.LOADING' | translate }}</p>
     </div>
   }
 
   <!-- SECTION 6: COMMUNITY ENGAGEMENT (coaches/admins/owners only) -->
   @if (canSeeInsights) {
-    <app-engagement-insights-panel [clubId]="club.id" class="section-gap"></app-engagement-insights-panel>
+    <app-engagement-insights-panel [clubId]="club.id" class="section-gap" />
   }
 </div>

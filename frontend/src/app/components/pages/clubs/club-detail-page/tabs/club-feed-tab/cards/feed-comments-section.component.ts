@@ -1,11 +1,18 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, inject, Input, Output} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {FeedCommentEntry, ReactionEmoji} from '../../../../../../../services/club.service';
-import {KovalMentionInputComponent} from '../../../../../../shared/koval-mention-input/koval-mention-input.component';
-import {KovalMentionTextComponent} from '../../../../../../shared/koval-mention-text/koval-mention-text.component';
-import {FeedReactionBarComponent} from '../../../../../../shared/feed-reaction-bar/feed-reaction-bar.component';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  inject,
+  Input,
+  Output,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { FeedCommentEntry, ReactionEmoji } from '../../../../../../../services/club.service';
+import { KovalMentionInputComponent } from '../../../../../../shared/koval-mention-input/koval-mention-input.component';
+import { KovalMentionTextComponent } from '../../../../../../shared/koval-mention-text/koval-mention-text.component';
+import { FeedReactionBarComponent } from '../../../../../../shared/feed-reaction-bar/feed-reaction-bar.component';
 
 interface CommentReplyEvent {
   eventId: string;
@@ -34,19 +41,41 @@ interface CommentReactionEvent {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="comments-section">
-      <button data-testid="comments-toggle" class="comments-toggle" (click)="toggleExpanded($event)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      <button
+        data-testid="comments-toggle"
+        class="comments-toggle"
+        (click)="toggleExpanded($event)"
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </svg>
         @if (commentCount === 1) {
           {{ 'CLUB_FEED.COMMENT_COUNT_ONE' | translate }}
         } @else {
-          {{ 'CLUB_FEED.COMMENT_COUNT' | translate: {count: commentCount} }}
+          {{ 'CLUB_FEED.COMMENT_COUNT' | translate: { count: commentCount } }}
         }
-        <svg class="expand-chevron" [class.rotated]="expanded" width="12" height="12" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="6 9 12 15 18 9"/>
+        <svg
+          class="expand-chevron"
+          [class.rotated]="expanded"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
 
@@ -54,13 +83,17 @@ interface CommentReactionEvent {
         <div class="comments-list">
           @for (parent of topLevelComments; track parent.id) {
             <div class="comment-thread">
-              <ng-container [ngTemplateOutlet]="commentTpl"
-                            [ngTemplateOutletContext]="{c: parent, isReply: false}"></ng-container>
+              <ng-container
+                [ngTemplateOutlet]="commentTpl"
+                [ngTemplateOutletContext]="{ c: parent, isReply: false }"
+              />
 
               @for (reply of repliesOf(parent.id); track reply.id) {
                 <div class="reply-row">
-                  <ng-container [ngTemplateOutlet]="commentTpl"
-                                [ngTemplateOutletContext]="{c: reply, isReply: true}"></ng-container>
+                  <ng-container
+                    [ngTemplateOutlet]="commentTpl"
+                    [ngTemplateOutletContext]="{ c: reply, isReply: true }"
+                  />
                 </div>
               }
 
@@ -74,11 +107,14 @@ interface CommentReactionEvent {
                     testId="reply-input"
                     (textChange)="replyText = $event"
                     (mentionsChange)="replyMentionIds = $event"
-                    (submitted)="submitReply(parent)">
-                  </app-koval-mention-input>
-                  <button data-testid="reply-post-btn"
-                          class="comment-post-btn" [disabled]="!replyText.trim()"
-                          (click)="submitReply(parent); $event.stopPropagation()">
+                    (submitted)="submitReply(parent)"
+                  />
+                  <button
+                    data-testid="reply-post-btn"
+                    class="comment-post-btn"
+                    [disabled]="!replyText.trim()"
+                    (click)="submitReply(parent); $event.stopPropagation()"
+                  >
                     {{ 'CLUB_FEED.COMMENT_POST' | translate }}
                   </button>
                 </div>
@@ -96,11 +132,14 @@ interface CommentReactionEvent {
             testId="comment-input"
             (textChange)="commentText = $event"
             (mentionsChange)="commentMentionIds = $event"
-            (submitted)="submitComment()">
-          </app-koval-mention-input>
-          <button data-testid="comment-post-btn"
-                  class="comment-post-btn" [disabled]="!commentText.trim()"
-                  (click)="submitComment(); $event.stopPropagation()">
+            (submitted)="submitComment()"
+          />
+          <button
+            data-testid="comment-post-btn"
+            class="comment-post-btn"
+            [disabled]="!commentText.trim()"
+            (click)="submitComment(); $event.stopPropagation()"
+          >
             {{ 'CLUB_FEED.COMMENT_POST' | translate }}
           </button>
         </div>
@@ -133,39 +172,47 @@ interface CommentReactionEvent {
                 (keydown.escape)="cancelEdit()"
                 (click)="$event.stopPropagation()"
               />
-              <button class="comment-action-btn comment-action-btn--primary"
-                      [disabled]="!editText.trim() || editText.trim() === c.content"
-                      (click)="confirmEdit(c); $event.stopPropagation()">
+              <button
+                class="comment-action-btn comment-action-btn--primary"
+                [disabled]="!editText.trim() || editText.trim() === c.content"
+                (click)="confirmEdit(c); $event.stopPropagation()"
+              >
                 {{ 'COMMON.SAVE' | translate }}
               </button>
-              <button class="comment-action-btn"
-                      (click)="cancelEdit(); $event.stopPropagation()">
+              <button class="comment-action-btn" (click)="cancelEdit(); $event.stopPropagation()">
                 {{ 'COMMON.CANCEL' | translate }}
               </button>
             </div>
           } @else {
             <div class="comment-text">
-              <app-koval-mention-text [text]="c.content" [mentions]="c.mentions ?? []"></app-koval-mention-text>
+              <app-koval-mention-text [text]="c.content" [mentions]="c.mentions ?? []" />
             </div>
             <app-feed-reaction-bar
               [reactions]="c.reactions"
               [currentUserId]="currentUserId"
-              (toggle)="onCommentReact(c, $event)">
-            </app-feed-reaction-bar>
+              (toggle)="onCommentReact(c, $event)"
+            />
             <div class="comment-actions">
               @if (!isReply) {
-                <button data-testid="reply-btn" class="comment-action-link"
-                        (click)="openReply(c); $event.stopPropagation()">
+                <button
+                  data-testid="reply-btn"
+                  class="comment-action-link"
+                  (click)="openReply(c); $event.stopPropagation()"
+                >
                   {{ 'CLUB_FEED.REPLY' | translate }}
                 </button>
               }
               @if (c.userId === currentUserId) {
-                <button class="comment-action-link"
-                        (click)="startEdit(c); $event.stopPropagation()">
+                <button
+                  class="comment-action-link"
+                  (click)="startEdit(c); $event.stopPropagation()"
+                >
                   {{ 'COMMON.EDIT' | translate }}
                 </button>
-                <button class="comment-action-link comment-action-link--danger"
-                        (click)="confirmDelete(c); $event.stopPropagation()">
+                <button
+                  class="comment-action-link comment-action-link--danger"
+                  (click)="confirmDelete(c); $event.stopPropagation()"
+                >
                   {{ 'COMMON.DELETE' | translate }}
                 </button>
               }
@@ -176,52 +223,214 @@ interface CommentReactionEvent {
     </ng-template>
   `,
   styles: `
-    .comments-section { margin-top: var(--space-sm); padding-top: var(--space-sm); border-top: 1px solid var(--glass-border); }
-    .comments-toggle { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--text-muted); font-size: var(--text-xs); cursor: pointer; padding: 0; }
-    .comments-toggle:hover { color: var(--text-color); }
-    .expand-chevron { transition: transform 0.2s; }
-    .expand-chevron.rotated { transform: rotate(180deg); }
-    .comments-list { display: flex; flex-direction: column; gap: 8px; margin-top: var(--space-sm); }
-    .comment-thread { display: flex; flex-direction: column; gap: 6px; }
-    .reply-row { padding-left: 32px; border-left: 2px solid var(--glass-border); }
-    .reply-input-row { display: flex; gap: 6px; padding-left: 32px; align-items: flex-start; }
-    .comment-item { display: flex; gap: var(--space-sm); }
-    .comment-avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--surface-elevated); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; color: var(--text-muted); overflow: hidden; flex-shrink: 0; }
-    .comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .comment-body { flex: 1; min-width: 0; }
-    .comment-meta { display: flex; align-items: center; gap: var(--space-xs); }
-    .comment-author { font-size: var(--text-xs); font-weight: 600; color: var(--text-color); }
-    .comment-time { font-size: 9px; color: var(--text-muted); font-family: monospace; }
-    .comment-edited { font-size: 9px; color: var(--text-muted); font-style: italic; }
-    .comment-text { font-size: var(--text-xs); color: var(--text-color); line-height: 1.4; word-break: break-word; }
-    .comment-actions { display: flex; gap: 8px; margin-top: 2px; }
-    .comment-action-link { background: none; border: none; padding: 0; font-size: 10px; color: var(--text-muted); cursor: pointer; font-weight: 500; }
-    .comment-action-link:hover { color: var(--accent-color); }
-    .comment-action-link--danger:hover { color: var(--danger-color); }
-    .comment-edit-row { display: flex; gap: 6px; margin-top: 2px; align-items: center; flex-wrap: wrap; }
-    .comment-action-btn { background: var(--surface-elevated); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 4px 8px; font-size: 10px; color: var(--text-color); cursor: pointer; font-weight: 600; }
-    .comment-action-btn:hover { background: var(--glass-bg); }
-    .comment-action-btn--primary { background: var(--accent-color); color: #000; border-color: var(--accent-color); }
-    .comment-action-btn--primary:disabled { opacity: 0.4; cursor: not-allowed; }
-    .comment-input-row { display: flex; gap: 6px; margin-top: var(--space-sm); align-items: flex-start; }
-    .comment-input { flex: 1; background: var(--surface-elevated); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 6px 10px; font-size: var(--text-xs); color: var(--text-color); outline: none; }
-    .comment-input::placeholder { color: var(--text-muted); }
-    .comment-input:focus { border-color: var(--accent-color); }
-    .comment-post-btn { background: var(--accent-color); color: #000; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: var(--text-xs); font-weight: 600; cursor: pointer; white-space: nowrap; }
-    .comment-post-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .comment-post-btn:hover:not(:disabled) { opacity: 0.9; }
+    .comments-section {
+      margin-top: var(--space-sm);
+      padding-top: var(--space-sm);
+      border-top: 1px solid var(--glass-border);
+    }
+    .comments-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: var(--text-xs);
+      cursor: pointer;
+      padding: 0;
+    }
+    .comments-toggle:hover {
+      color: var(--text-color);
+    }
+    .expand-chevron {
+      transition: transform 0.2s;
+    }
+    .expand-chevron.rotated {
+      transform: rotate(180deg);
+    }
+    .comments-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: var(--space-sm);
+    }
+    .comment-thread {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .reply-row {
+      padding-left: 32px;
+      border-left: 2px solid var(--glass-border);
+    }
+    .reply-input-row {
+      display: flex;
+      gap: 6px;
+      padding-left: 32px;
+      align-items: flex-start;
+    }
+    .comment-item {
+      display: flex;
+      gap: var(--space-sm);
+    }
+    .comment-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--surface-elevated);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--text-muted);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .comment-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .comment-body {
+      flex: 1;
+      min-width: 0;
+    }
+    .comment-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+    .comment-author {
+      font-size: var(--text-xs);
+      font-weight: 600;
+      color: var(--text-color);
+    }
+    .comment-time {
+      font-size: 9px;
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+    .comment-edited {
+      font-size: 9px;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+    .comment-text {
+      font-size: var(--text-xs);
+      color: var(--text-color);
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    .comment-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 2px;
+    }
+    .comment-action-link {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 10px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .comment-action-link:hover {
+      color: var(--accent-color);
+    }
+    .comment-action-link--danger:hover {
+      color: var(--danger-color);
+    }
+    .comment-edit-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 2px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .comment-action-btn {
+      background: var(--surface-elevated);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      padding: 4px 8px;
+      font-size: 10px;
+      color: var(--text-color);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .comment-action-btn:hover {
+      background: var(--glass-bg);
+    }
+    .comment-action-btn--primary {
+      background: var(--accent-color);
+      color: #000;
+      border-color: var(--accent-color);
+    }
+    .comment-action-btn--primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .comment-input-row {
+      display: flex;
+      gap: 6px;
+      margin-top: var(--space-sm);
+      align-items: flex-start;
+    }
+    .comment-input {
+      flex: 1;
+      background: var(--surface-elevated);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      font-size: var(--text-xs);
+      color: var(--text-color);
+      outline: none;
+    }
+    .comment-input::placeholder {
+      color: var(--text-muted);
+    }
+    .comment-input:focus {
+      border-color: var(--accent-color);
+    }
+    .comment-post-btn {
+      background: var(--accent-color);
+      color: #000;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      font-size: var(--text-xs);
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .comment-post-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .comment-post-btn:hover:not(:disabled) {
+      opacity: 0.9;
+    }
   `,
 })
 export class FeedCommentsSectionComponent {
-  @Input({required: true}) clubId!: string;
+  @Input({ required: true }) clubId!: string;
   @Input() eventId!: string;
   @Input() comments: FeedCommentEntry[] = [];
   @Input() currentUserId: string | null = null;
 
-  @Output() commentSubmitted = new EventEmitter<{eventId: string; content: string; mentionUserIds: string[]}>();
+  @Output() commentSubmitted = new EventEmitter<{
+    eventId: string;
+    content: string;
+    mentionUserIds: string[];
+  }>();
   @Output() replySubmitted = new EventEmitter<CommentReplyEvent>();
-  @Output() commentEdited = new EventEmitter<{eventId: string; commentId: string; content: string}>();
-  @Output() commentDeleted = new EventEmitter<{eventId: string; commentId: string}>();
+  @Output() commentEdited = new EventEmitter<{
+    eventId: string;
+    commentId: string;
+    content: string;
+  }>();
+  @Output() commentDeleted = new EventEmitter<{ eventId: string; commentId: string }>();
   @Output() commentReacted = new EventEmitter<CommentReactionEvent>();
 
   private translate = inject(TranslateService);
@@ -290,7 +499,7 @@ export class FeedCommentsSectionComponent {
   }
 
   onCommentReact(c: FeedCommentEntry, emoji: ReactionEmoji): void {
-    this.commentReacted.emit({eventId: this.eventId, commentId: c.id, emoji});
+    this.commentReacted.emit({ eventId: this.eventId, commentId: c.id, emoji });
   }
 
   startEdit(c: FeedCommentEntry): void {
@@ -309,13 +518,13 @@ export class FeedCommentsSectionComponent {
       this.cancelEdit();
       return;
     }
-    this.commentEdited.emit({eventId: this.eventId, commentId: c.id, content: text});
+    this.commentEdited.emit({ eventId: this.eventId, commentId: c.id, content: text });
     this.cancelEdit();
   }
 
   confirmDelete(c: FeedCommentEntry): void {
     if (!confirm(this.translate.instant('CLUB_FEED.CONFIRM_DELETE_COMMENT'))) return;
-    this.commentDeleted.emit({eventId: this.eventId, commentId: c.id});
+    this.commentDeleted.emit({ eventId: this.eventId, commentId: c.id });
   }
 
   relativeTime(dateStr?: string): string {

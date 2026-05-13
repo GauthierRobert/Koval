@@ -1,7 +1,9 @@
-<div class="workout-card clickable"
+<div
+  class="workout-card clickable"
   [class.workout-card--completed]="scheduled.status === 'COMPLETED'"
   [class.workout-card--skipped]="scheduled.status === 'SKIPPED'"
-  (click)="select.emit(scheduled)">
+  (click)="select.emit(scheduled)"
+>
   <div class="card-top">
     <div class="card-top-left">
       @if (scheduled.trainingType) {
@@ -16,33 +18,92 @@
     </div>
     <div class="card-top-right">
       @if (scheduled.status === 'COMPLETED' && scheduled.sessionId) {
-        <a class="analysis-link" [routerLink]="['/history', scheduled.sessionId]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        <a
+          class="analysis-link"
+          [routerLink]="['/history', scheduled.sessionId]"
+          (click)="$event.stopPropagation()"
+          [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate"
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
           </svg>
         </a>
       }
       <div class="card-actions">
         @if (scheduled.status === 'PENDING') {
-          <button class="btn-complete" [disabled]="isFuture"
-            (click)="complete.emit(scheduled); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_MARK_COMPLETE_TITLE' | translate" data-testid="btn-complete">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
+          <button
+            class="btn-complete"
+            [disabled]="isFuture"
+            (click)="complete.emit(scheduled); $event.stopPropagation()"
+            [title]="'CALENDAR_WEEK.BTN_MARK_COMPLETE_TITLE' | translate"
+            data-testid="btn-complete"
+          >
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
             </svg>
           </button>
-          <button class="btn-skip" (click)="skip.emit(scheduled); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_SKIP_TITLE' | translate" data-testid="btn-skip">
+          <button
+            class="btn-skip"
+            (click)="skip.emit(scheduled); $event.stopPropagation()"
+            [title]="'CALENDAR_WEEK.BTN_SKIP_TITLE' | translate"
+            data-testid="btn-skip"
+          >
             <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
-              <polygon points="5 4 15 12 5 20"/>
-              <rect x="17" y="4" width="3" height="16"/>
+              <polygon points="5 4 15 12 5 20" />
+              <rect x="17" y="4" width="3" height="16" />
             </svg>
           </button>
-          <button class="btn-reschedule" (click)="reschedule.emit({ workout: scheduled, event: $event }); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_RESCHEDULE_TITLE' | translate" data-testid="btn-reschedule">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          <button
+            class="btn-reschedule"
+            (click)="
+              reschedule.emit({ workout: scheduled, event: $event }); $event.stopPropagation()
+            "
+            [title]="'CALENDAR_WEEK.BTN_RESCHEDULE_TITLE' | translate"
+            data-testid="btn-reschedule"
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
           </button>
         }
-        <button class="delete-btn" (click)="delete.emit(scheduled); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_REMOVE_TITLE' | translate" data-testid="btn-delete">&times;</button>
+        <button
+          class="delete-btn"
+          (click)="delete.emit(scheduled); $event.stopPropagation()"
+          [title]="'CALENDAR_WEEK.BTN_REMOVE_TITLE' | translate"
+          data-testid="btn-delete"
+        >
+          &times;
+        </button>
       </div>
     </div>
   </div>
@@ -52,14 +113,22 @@
         <span class="plan-badge-title">{{ scheduled.planTitle }}</span>
         @if (scheduled.weekLabel || scheduled.weekNumber) {
           <span class="plan-badge-sep">&middot;</span>
-          <span class="plan-badge-week">{{ scheduled.weekLabel || (('CALENDAR_WEEK.PLAN_WEEK' | translate) + ' ' + scheduled.weekNumber) }}</span>
+          <span class="plan-badge-week">{{
+            scheduled.weekLabel ||
+              ('CALENDAR_WEEK.PLAN_WEEK' | translate) + ' ' + scheduled.weekNumber
+          }}</span>
         }
       </div>
     }
     <div class="title-row">
-      <app-sport-icon [sport]="scheduled.sportType" [size]="14"></app-sport-icon>
+      <app-sport-icon [sport]="scheduled.sportType" [size]="14" />
       <span class="workout-title">
-        {{ scheduled.trainingTitle || scheduled.title || ('CALENDAR_WEEK.SESSION_FALLBACK_TITLE' | translate) + scheduled.trainingId.substring(0, 6) }}
+        {{
+          scheduled.trainingTitle ||
+            scheduled.title ||
+            ('CALENDAR_WEEK.SESSION_FALLBACK_TITLE' | translate) +
+              scheduled.trainingId.substring(0, 6)
+        }}
       </span>
     </div>
     <div class="metrics-row">

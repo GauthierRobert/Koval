@@ -3,20 +3,31 @@
   <div class="builder-banner glass">
     <div class="banner-left">
       <a routerLink="/trainings" class="back-link">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M19 12H5" />
+          <polyline points="12 19 5 12 12 5" />
         </svg>
       </a>
       <div class="banner-avatar">W</div>
       <div class="banner-info">
         <span class="banner-title">
-          {{ isEditing ? ('BUILDER.EDIT_TITLE' | translate) : ('BUILDER.CREATE_TITLE' | translate) }}
+          {{
+            isEditing ? ('BUILDER.EDIT_TITLE' | translate) : ('BUILDER.CREATE_TITLE' | translate)
+          }}
           <span class="dim">{{ 'BUILDER.SUBTITLE' | translate }}</span>
         </span>
         <span class="banner-subtitle">
-          {{ (blocks$ | async)?.length ?? 0 }} {{ 'BUILDER.BLOCKS' | translate }}
-          &bull; {{ formattedDuration }}
-          &bull; {{ estimatedTss }} TSS
+          {{ (blocks$ | async)?.length ?? 0 }} {{ 'BUILDER.BLOCKS' | translate }} &bull;
+          {{ formattedDuration }} &bull; {{ estimatedTss }} TSS
         </span>
       </div>
     </div>
@@ -36,12 +47,20 @@
 
         <div class="form-field">
           <label>{{ 'BUILDER.FIELD_TITLE' | translate }}</label>
-          <input type="text" [(ngModel)]="title" [placeholder]="'BUILDER.PLACEHOLDER_TITLE' | translate" />
+          <input
+            type="text"
+            [(ngModel)]="title"
+            [placeholder]="'BUILDER.PLACEHOLDER_TITLE' | translate"
+          />
         </div>
 
         <div class="form-field">
           <label>{{ 'BUILDER.FIELD_DESCRIPTION' | translate }}</label>
-          <textarea [(ngModel)]="description" rows="4" [placeholder]="'BUILDER.PLACEHOLDER_DESC' | translate"></textarea>
+          <textarea
+            [(ngModel)]="description"
+            rows="4"
+            [placeholder]="'BUILDER.PLACEHOLDER_DESC' | translate"
+          ></textarea>
         </div>
 
         <div class="form-row-2">
@@ -73,15 +92,24 @@
               [sportType]="sportType"
               [training]="previewTraining"
               [displayUnit]="'PERCENT'"
-              [currentZoneSystem]="null">
-            </app-workout-chart-bar>
+              [currentZoneSystem]="null"
+            />
           </div>
         } @else {
           <div class="preview-empty">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="20" x2="18" y2="10"/>
-              <line x1="12" y1="20" x2="12" y2="4"/>
-              <line x1="6" y1="20" x2="6" y2="14"/>
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
             </svg>
             <span>{{ 'BUILDER.PREVIEW_EMPTY' | translate }}</span>
           </div>
@@ -120,11 +148,23 @@
             <span class="set-selection-label">{{ 'BUILDER.BLOCKS_SELECTED' | translate }}</span>
           </div>
           <div class="set-selection-actions">
-            <button class="btn-ghost btn-sm" (click)="selectedForSet.clear()">{{ 'COMMON.CANCEL' | translate }}</button>
+            <button class="btn-ghost btn-sm" (click)="selectedForSet.clear()">
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
             <button class="btn-set btn-set-highlight" (click)="showSetForm = true">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2"/>
-                <path d="M12 8v8"/><path d="M8 12h8"/>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M17 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2" />
+                <path d="M12 8v8" />
+                <path d="M8 12h8" />
               </svg>
               {{ 'BUILDER.GROUP_AS_SET' | translate }}
             </button>
@@ -133,8 +173,17 @@
       } @else if (!showSetForm) {
         <div class="set-hint">
           <span class="set-hint-checkbox" aria-hidden="true">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
             </svg>
           </span>
           <span class="set-hint-text">{{ 'BUILDER.SET_GROUPING_HINT' | translate }}</span>
@@ -145,9 +194,19 @@
         <div class="set-form glass">
           <div class="set-form-header">
             <div class="set-form-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2"/>
-                <path d="M12 8v8"/><path d="M8 12h8"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M17 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2" />
+                <path d="M12 8v8" />
+                <path d="M8 12h8" />
               </svg>
             </div>
             <div class="set-form-titles">
@@ -157,8 +216,22 @@
                 {{ 'BUILDER.WILL_REPEAT' | translate }} <strong>{{ setReps }}×</strong>
               </div>
             </div>
-            <button class="set-form-close" (click)="showSetForm = false; selectedForSet.clear()" [title]="'COMMON.CANCEL' | translate">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <button
+              class="set-form-close"
+              (click)="showSetForm = false; selectedForSet.clear()"
+              [title]="'COMMON.CANCEL' | translate"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
           </div>
 
@@ -177,17 +250,32 @@
               <span class="section-label">{{ 'BUILDER.REST_BETWEEN_REPS' | translate }}</span>
             </div>
             <div class="rest-mode-tabs">
-              <button class="rest-mode-tab" [class.active]="setNoRest"
-                      (click)="setNoRest = true">{{ 'BUILDER.REST_MODE_NONE' | translate }}</button>
-              <button class="rest-mode-tab" [class.active]="!setNoRest && !setPassiveRest"
-                      (click)="setNoRest = false; setPassiveRest = false">{{ 'BUILDER.REST_MODE_ACTIVE' | translate }}</button>
-              <button class="rest-mode-tab" [class.active]="!setNoRest && setPassiveRest"
-                      (click)="setNoRest = false; setPassiveRest = true">{{ 'BUILDER.REST_MODE_PASSIVE' | translate }}</button>
+              <button class="rest-mode-tab" [class.active]="setNoRest" (click)="setNoRest = true">
+                {{ 'BUILDER.REST_MODE_NONE' | translate }}
+              </button>
+              <button
+                class="rest-mode-tab"
+                [class.active]="!setNoRest && !setPassiveRest"
+                (click)="setNoRest = false; setPassiveRest = false"
+              >
+                {{ 'BUILDER.REST_MODE_ACTIVE' | translate }}
+              </button>
+              <button
+                class="rest-mode-tab"
+                [class.active]="!setNoRest && setPassiveRest"
+                (click)="setNoRest = false; setPassiveRest = true"
+              >
+                {{ 'BUILDER.REST_MODE_PASSIVE' | translate }}
+              </button>
             </div>
             <div class="rest-mode-hint">
-              @if (setNoRest) { {{ 'BUILDER.REST_MODE_NONE_HINT' | translate }} }
-              @else if (setPassiveRest) { {{ 'BUILDER.REST_MODE_PASSIVE_HINT' | translate }} }
-              @else { {{ 'BUILDER.REST_MODE_ACTIVE_HINT' | translate }} }
+              @if (setNoRest) {
+                {{ 'BUILDER.REST_MODE_NONE_HINT' | translate }}
+              } @else if (setPassiveRest) {
+                {{ 'BUILDER.REST_MODE_PASSIVE_HINT' | translate }}
+              } @else {
+                {{ 'BUILDER.REST_MODE_ACTIVE_HINT' | translate }}
+              }
             </div>
 
             @if (!setNoRest) {
@@ -213,8 +301,12 @@
           </div>
 
           <div class="set-form-actions">
-            <button class="btn-ghost" (click)="showSetForm = false; selectedForSet.clear()">{{ 'COMMON.CANCEL' | translate }}</button>
-            <button class="btn-primary" (click)="createSet()">{{ 'BUILDER.CREATE_SET' | translate }}</button>
+            <button class="btn-ghost" (click)="showSetForm = false; selectedForSet.clear()">
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+            <button class="btn-primary" (click)="createSet()">
+              {{ 'BUILDER.CREATE_SET' | translate }}
+            </button>
           </div>
         </div>
       }
@@ -225,10 +317,19 @@
           @if (blocks.length === 0) {
             <div class="empty-timeline">
               <div class="empty-icon">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/>
-                  <line x1="12" y1="8" x2="12" y2="16"/>
-                  <line x1="8" y1="12" x2="16" y2="12"/>
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <line x1="12" y1="8" x2="12" y2="16" />
+                  <line x1="8" y1="12" x2="16" y2="12" />
                 </svg>
               </div>
               <p>{{ 'BUILDER.EMPTY_BLOCKS' | translate }}</p>
@@ -271,7 +372,6 @@
 
     <!-- Right panel: Block editor -->
     <div class="panel editor-panel glass">
-
       @if (isSelectedBlockASet()) {
         <app-set-editor-form
           [editSetReps]="editSetReps"

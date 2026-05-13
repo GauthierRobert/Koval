@@ -2,30 +2,39 @@
   <div class="metrics-dashboard" role="tabpanel" aria-labelledby="coach-tab-performance">
     <div class="m-card">
       <span class="m-label">{{ 'COACH_DASHBOARD.METRIC_FITNESS_CTL' | translate }}</span>
-      <span class="m-value">{{ metrics.ctl | number:'1.1-1' }}</span>
+      <span class="m-value">{{ metrics.ctl | number: '1.1-1' }}</span>
       <span class="m-trend" [class.up]="metrics.ctlTrend >= 0" [class.down]="metrics.ctlTrend < 0">
-        {{ metrics.ctlTrend >= 0 ? '↑' : '↓' }} {{ (metrics.ctlTrend < 0 ? -metrics.ctlTrend : metrics.ctlTrend) | number:'1.1-1' }}
+        {{ metrics.ctlTrend >= 0 ? '↑' : '↓' }}
+        {{ (metrics.ctlTrend < 0 ? -metrics.ctlTrend : metrics.ctlTrend) | number: '1.1-1' }}
       </span>
     </div>
     <div class="m-card">
       <span class="m-label">{{ 'COACH_DASHBOARD.METRIC_FATIGUE_ATL' | translate }}</span>
-      <span class="m-value">{{ metrics.atl | number:'1.1-1' }}</span>
+      <span class="m-value">{{ metrics.atl | number: '1.1-1' }}</span>
       <span class="m-trend" [class.up]="metrics.atlTrend < 0" [class.down]="metrics.atlTrend >= 0">
-        {{ metrics.atlTrend >= 0 ? '↑' : '↓' }} {{ (metrics.atlTrend < 0 ? -metrics.atlTrend : metrics.atlTrend) | number:'1.1-1' }}
+        {{ metrics.atlTrend >= 0 ? '↑' : '↓' }}
+        {{ (metrics.atlTrend < 0 ? -metrics.atlTrend : metrics.atlTrend) | number: '1.1-1' }}
       </span>
     </div>
     <div class="m-card">
       <span class="m-label">{{ 'COACH_DASHBOARD.METRIC_FORM_TSB' | translate }}</span>
-      <span class="m-value">{{ metrics.tsb > 0 ? '+' : '' }}{{ metrics.tsb | number:'1.1-1' }}</span>
-      <span class="m-condition"
+      <span class="m-value"
+        >{{ metrics.tsb > 0 ? '+' : '' }}{{ metrics.tsb | number: '1.1-1' }}</span
+      >
+      <span
+        class="m-condition"
         [class.fresh]="metrics.tsb > 5"
         [class.tired]="metrics.tsb < -10"
-        [class.neutral]="metrics.tsb >= -10 && metrics.tsb <= 5">{{ getFormCondition(metrics.tsb) }}</span>
+        [class.neutral]="metrics.tsb >= -10 && metrics.tsb <= 5"
+        >{{ getFormCondition(metrics.tsb) }}</span
+      >
     </div>
     <div class="m-card">
       <span class="m-label">{{ 'COACH_DASHBOARD.METRIC_FTP_EST' | translate }}</span>
       <span class="m-value">{{ selectedAthlete.ftp ? selectedAthlete.ftp + 'W' : '—' }}</span>
-      <span class="m-meta">{{ selectedAthlete.ftp ? (selectedAthlete.ftp / 70 | number:'1.1-1') + ' W/kg' : '—' }}</span>
+      <span class="m-meta">{{
+        selectedAthlete.ftp ? (selectedAthlete.ftp / 70 | number: '1.1-1') + ' W/kg' : '—'
+      }}</span>
     </div>
   </div>
 } @else {
@@ -45,7 +54,9 @@
     <div class="m-card">
       <span class="m-label">{{ 'COACH_DASHBOARD.METRIC_FTP_EST' | translate }}</span>
       <span class="m-value">{{ selectedAthlete.ftp ? selectedAthlete.ftp + 'W' : '—' }}</span>
-      <span class="m-meta">{{ selectedAthlete.ftp ? (selectedAthlete.ftp / 70 | number:'1.1-1') + ' W/kg' : '—' }}</span>
+      <span class="m-meta">{{
+        selectedAthlete.ftp ? (selectedAthlete.ftp / 70 | number: '1.1-1') + ' W/kg' : '—'
+      }}</span>
     </div>
   </div>
 }
@@ -54,9 +65,13 @@
   <div class="section-title">
     {{ 'COACH_DASHBOARD.TECHNICAL_SCHEDULE' | translate }}
     <div class="week-nav">
-      <button class="week-nav-btn" data-testid="schedule-week-prev" (click)="navigateWeek.emit(-1)">‹</button>
+      <button class="week-nav-btn" data-testid="schedule-week-prev" (click)="navigateWeek.emit(-1)">
+        ‹
+      </button>
       <span class="week-label">{{ scheduleWeekLabel }}</span>
-      <button class="week-nav-btn" data-testid="schedule-week-next" (click)="navigateWeek.emit(1)">›</button>
+      <button class="week-nav-btn" data-testid="schedule-week-next" (click)="navigateWeek.emit(1)">
+        ›
+      </button>
     </div>
   </div>
   <div class="schedule-table" data-testid="schedule-table">
@@ -71,9 +86,12 @@
     </div>
     @if (athleteSchedule$ | async; as schedule) {
       @for (workout of schedule; track trackScheduleById(workout)) {
-        <div class="table-row" data-testid="schedule-row"
-          [class.club-session-row]="workout.isClubSession">
-          <span class="t-date">{{ workout.scheduledDate | date:'MMM d, EEE' }}</span>
+        <div
+          class="table-row"
+          data-testid="schedule-row"
+          [class.club-session-row]="workout.isClubSession"
+        >
+          <span class="t-date">{{ workout.scheduledDate | date: 'MMM d, EEE' }}</span>
           <span class="t-title">
             {{ getWorkoutTitle(workout) }}
             @if (workout.isClubSession) {
@@ -87,11 +105,13 @@
           </span>
           <span class="t-type">
             @if (workout.trainingType) {
-              <span class="schedule-type-badge"
+              <span
+                class="schedule-type-badge"
                 [style.background]="getTypeColor(workout.trainingType) + '20'"
                 [style.color]="getTypeColor(workout.trainingType)"
-                [style.border-color]="getTypeColor(workout.trainingType) + '40'">{{ getTypeLabel(workout.trainingType)
-                }}</span>
+                [style.border-color]="getTypeColor(workout.trainingType) + '40'"
+                >{{ getTypeLabel(workout.trainingType) }}</span
+              >
             } @else {
               <span>-</span>
             }
@@ -99,10 +119,14 @@
           <span class="t-dur">{{ getWorkoutDuration(workout) }}</span>
           <span class="t-if">{{ workout.intensityFactor || workout.if || '-' }}</span>
           <span class="t-tss">{{ workout.tss || '-' }}</span>
-          <span class="t-status"
+          <span
+            class="t-status"
             [class.pending]="workout.status === 'PENDING' && !workout.isClubSession"
-            [class.club]="workout.isClubSession">
-            {{ workout.isClubSession ? ('COACH_DASHBOARD.CLUB_STATUS' | translate) : workout.status }}
+            [class.club]="workout.isClubSession"
+          >
+            {{
+              workout.isClubSession ? ('COACH_DASHBOARD.CLUB_STATUS' | translate) : workout.status
+            }}
           </span>
         </div>
       }
@@ -112,7 +136,7 @@
         </div>
       }
     } @else {
-      @for (r of [0,1,2,3,4,5,6]; track r) {
+      @for (r of [0, 1, 2, 3, 4, 5, 6]; track r) {
         <div class="table-row" aria-busy="true" aria-hidden="true">
           <span class="skeleton skeleton-cell skeleton-cell--sm"></span>
           <span class="skeleton skeleton-cell skeleton-cell--sm"></span>
@@ -131,16 +155,31 @@
   <div class="section-title">
     {{ 'COACH_DASHBOARD.WEEKLY_VOLUME' | translate }}
     <div class="metric-toggle">
-      <button class="toggle-btn" [class.active]="volumeMetric === 'time'" (click)="volumeMetric = 'time'">{{ 'COACH_DASHBOARD.VOLUME_METRIC_TIME' | translate }}</button>
-      <button class="toggle-btn" [class.active]="volumeMetric === 'tss'" (click)="volumeMetric = 'tss'">{{ 'COACH_DASHBOARD.VOLUME_METRIC_TSS' | translate }}</button>
-      <button class="toggle-btn" [class.active]="volumeMetric === 'distance'" (click)="volumeMetric = 'distance'">{{ 'COACH_DASHBOARD.VOLUME_METRIC_DISTANCE' | translate }}</button>
+      <button
+        class="toggle-btn"
+        [class.active]="volumeMetric === 'time'"
+        (click)="volumeMetric = 'time'"
+      >
+        {{ 'COACH_DASHBOARD.VOLUME_METRIC_TIME' | translate }}
+      </button>
+      <button
+        class="toggle-btn"
+        [class.active]="volumeMetric === 'tss'"
+        (click)="volumeMetric = 'tss'"
+      >
+        {{ 'COACH_DASHBOARD.VOLUME_METRIC_TSS' | translate }}
+      </button>
+      <button
+        class="toggle-btn"
+        [class.active]="volumeMetric === 'distance'"
+        (click)="volumeMetric = 'distance'"
+      >
+        {{ 'COACH_DASHBOARD.VOLUME_METRIC_DISTANCE' | translate }}
+      </button>
     </div>
   </div>
   <div class="volume-chart-host">
-    <app-dashboard-volume-chart
-      [data]="(athleteVolume$ | async) ?? []"
-      [metric]="volumeMetric">
-    </app-dashboard-volume-chart>
+    <app-dashboard-volume-chart [data]="(athleteVolume$ | async) ?? []" [metric]="volumeMetric" />
   </div>
 </div>
 
@@ -157,20 +196,22 @@
         </div>
         @for (s of sessions.slice(0, 5); track trackSessionById(s)) {
           <div class="sm-row">
-            <span class="sm-sport"><app-sport-icon [sport]="$any(s.sportType)" [size]="12"></app-sport-icon></span>
+            <span class="sm-sport"><app-sport-icon [sport]="$any(s.sportType)" [size]="12" /></span>
             <span class="sm-title">{{ s.title }}</span>
-            <span class="sm-badge tss">{{ s.tss | number:'1.0-0' }}</span>
-            <span class="sm-badge if">{{ s.intensityFactor | number:'1.2-2' }}</span>
+            <span class="sm-badge tss">{{ s.tss | number: '1.0-0' }}</span>
+            <span class="sm-badge if">{{ s.intensityFactor | number: '1.2-2' }}</span>
           </div>
         }
       </div>
     </div>
 
-    <div class="section-title section-title-spaced">{{ 'COACH_DASHBOARD.SPORT_DISTRIBUTION' | translate }}</div>
+    <div class="section-title section-title-spaced">
+      {{ 'COACH_DASHBOARD.SPORT_DISTRIBUTION' | translate }}
+    </div>
     <div class="sport-dist">
       @for (d of getSportDistribution(sessions); track trackDistBySport(d)) {
         <div class="dist-row">
-          <app-sport-icon [sport]="$any(d.sport)" [size]="12"></app-sport-icon>
+          <app-sport-icon [sport]="$any(d.sport)" [size]="12" />
           <span class="dist-label">{{ d.sport }}</span>
           <div class="dist-bar-wrap">
             <div class="dist-bar" [style.width.%]="d.pct"></div>

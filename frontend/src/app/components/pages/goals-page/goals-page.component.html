@@ -1,288 +1,353 @@
 <div class="rm-page">
   @if (loading$ | async) {
-    <app-skeleton [rows]="5"></app-skeleton>
+    <app-skeleton [rows]="5" />
   } @else if (allGoals$ | async; as allGoals) {
+    <div class="rm-header">
+      <div>
+        <span class="rm-eyebrow">ENTRAÎNEMENT · OBJECTIFS · ROADMAP</span>
+        <h1 class="rm-title">Roadmap <span class="accent">compétitive</span></h1>
+      </div>
+      <div class="rm-actions">
+        <div class="rm-seg">
+          <button type="button" disabled>Liste</button>
+          <button type="button" class="active">Roadmap</button>
+          <button type="button" disabled>Saisons</button>
+        </div>
+        <button class="btn-primary" (click)="openCreate()">+ Nouvel objectif</button>
+      </div>
+    </div>
 
-      <div class="rm-header">
-        <div>
-          <span class="rm-eyebrow">ENTRAÎNEMENT · OBJECTIFS · ROADMAP</span>
-          <h1 class="rm-title">Roadmap <span class="accent">compétitive</span></h1>
-        </div>
-        <div class="rm-actions">
-          <div class="rm-seg">
-            <button type="button" disabled>Liste</button>
-            <button type="button" class="active">Roadmap</button>
-            <button type="button" disabled>Saisons</button>
-          </div>
-          <button class="btn-primary" (click)="openCreate()">+ Nouvel objectif</button>
-        </div>
+    <!-- Stats row -->
+    <div class="rm-stats">
+      <div class="rm-stat glass">
+        <small>OBJECTIFS ACTIFS</small>
+        <b>{{ countActive(allGoals) }}</b>
       </div>
 
-      <!-- Stats row -->
-      <div class="rm-stats">
+      @if (primaryGoal$ | async; as primary) {
         <div class="rm-stat glass">
-          <small>OBJECTIFS ACTIFS</small>
-          <b>{{ countActive(allGoals) }}</b>
+          <small>A-RACE</small>
+          <b class="accent">{{ primary.title | uppercase }}</b>
+          @if (daysUntil(effectiveDate(primary)); as d) {
+            <span class="mono dim">{{ d }}j restants</span>
+          } @else {
+            <span class="mono dim">date à définir</span>
+          }
         </div>
+      } @else {
+        <div class="rm-stat glass">
+          <small>A-RACE</small>
+          <b class="dim">—</b>
+        </div>
+      }
 
+      <div class="rm-stat glass">
+        <small>FENÊTRE</small>
+        <b class="info">12 MOIS</b>
+        <span class="mono dim">12 prochains mois</span>
+      </div>
+
+      <div class="rm-stat glass">
+        <small>PROCHAIN B</small>
+        @if (findNextB(allGoals); as nextB) {
+          <b>{{ nextB.title }}</b>
+          @if (daysUntil(effectiveDate(nextB)); as d) {
+            <span class="mono dim">{{ d }}j</span>
+          }
+        } @else {
+          <b class="dim">—</b>
+        }
+      </div>
+
+      <div class="rm-stat glass">
+        <small>HISTORIQUE</small>
+        <b>{{ allGoals.length - countActive(allGoals) }}</b>
+        <span class="mono dim">course(s) passée(s)</span>
+      </div>
+    </div>
+
+    <!-- Roadmap panel (shared timeline) -->
+    @if (timelineItems$ | async; as items) {
+      <app-goal-timeline [items]="items" (itemClick)="onMarkerClick($event)">
+        <ng-template #cardFooter let-item>
+          @if (item.data?.targetTime) {
+            <div class="rm-card-time-row mono">{{ item.data.targetTime }}</div>
+          }
+        </ng-template>
+      </app-goal-timeline>
+    }
+
+    <!-- Bottom: focus + history -->
+    <div class="rm-bottom">
+      <div class="rm-focus glass">
         @if (primaryGoal$ | async; as primary) {
-          <div class="rm-stat glass">
-            <small>A-RACE</small>
-            <b class="accent">{{ primary.title | uppercase }}</b>
+          <div class="rm-focus-hd">
+            <div>
+              <div class="eyebrow eyebrow-orange">★ A-Race · Focus principal</div>
+              <h3 class="rm-focus-title">{{ primary.title }}</h3>
+              <div class="rm-focus-sub">
+                @if (primary.location) {
+                  <span>{{ primary.location }}</span>
+                }
+                @if (primary.location && primary.distance) {
+                  <span class="sep">·</span>
+                }
+                @if (primary.distance) {
+                  <span>{{ primary.distance }}</span>
+                }
+              </div>
+            </div>
             @if (daysUntil(effectiveDate(primary)); as d) {
-              <span class="mono dim">{{ d }}j restants</span>
-            } @else {
-              <span class="mono dim">date à définir</span>
+              <div class="rm-focus-days mono">{{ d }}<small>j</small></div>
+            }
+          </div>
+
+          <div class="rm-focus-kpis">
+            <div class="rm-kpi">
+              <div class="lbl">DATE</div>
+              <div class="val mono">{{ formatDateShort(effectiveDate(primary)) }}</div>
+            </div>
+            <div class="rm-kpi">
+              <div class="lbl">SPORT</div>
+              <div class="val">{{ primary.sport }}</div>
+            </div>
+            <div class="rm-kpi">
+              <div class="lbl">TEMPS CIBLE</div>
+              <div class="val mono accent">{{ primary.targetTime || '—' }}</div>
+            </div>
+            <div class="rm-kpi">
+              <div class="lbl">PRIORITÉ</div>
+              <div class="val accent">{{ primary.priority }}</div>
+            </div>
+          </div>
+
+          <div class="rm-focus-actions">
+            <button class="btn-primary" (click)="openEdit(primary)">Modifier l'objectif →</button>
+            @if (primary.raceId) {
+              <a
+                class="btn-ghost"
+                [routerLink]="['/pacing']"
+                [queryParams]="{ raceId: primary.raceId, goalId: primary.id }"
+              >
+                Simuler la course
+              </a>
             }
           </div>
         } @else {
-          <div class="rm-stat glass">
-            <small>A-RACE</small>
-            <b class="dim">—</b>
+          <div class="rm-focus-empty">
+            <div class="eyebrow eyebrow-orange">★ A-Race · Focus principal</div>
+            <p>Aucune A-Race planifiée. Ajoute ton prochain objectif majeur.</p>
+            <button class="btn-primary" (click)="openCreate()">+ Nouvel objectif</button>
           </div>
         }
-
-        <div class="rm-stat glass">
-          <small>FENÊTRE</small>
-          <b class="info">12 MOIS</b>
-          <span class="mono dim">12 prochains mois</span>
-        </div>
-
-        <div class="rm-stat glass">
-          <small>PROCHAIN B</small>
-          @if (findNextB(allGoals); as nextB) {
-            <b>{{ nextB.title }}</b>
-            @if (daysUntil(effectiveDate(nextB)); as d) {
-              <span class="mono dim">{{ d }}j</span>
-            }
-          } @else {
-            <b class="dim">—</b>
-          }
-        </div>
-
-        <div class="rm-stat glass">
-          <small>HISTORIQUE</small>
-          <b>{{ allGoals.length - countActive(allGoals) }}</b>
-          <span class="mono dim">course(s) passée(s)</span>
-        </div>
       </div>
 
-      <!-- Roadmap panel (shared timeline) -->
-      @if (timelineItems$ | async; as items) {
-        <app-goal-timeline
-          [items]="items"
-          (itemClick)="onMarkerClick($event)">
-          <ng-template #cardFooter let-item>
-            @if (item.data?.targetTime) {
-              <div class="rm-card-time-row mono">{{ item.data.targetTime }}</div>
-            }
-          </ng-template>
-        </app-goal-timeline>
-      }
-
-      <!-- Bottom: focus + history -->
-      <div class="rm-bottom">
-        <div class="rm-focus glass">
-          @if (primaryGoal$ | async; as primary) {
-            <div class="rm-focus-hd">
-              <div>
-                <div class="eyebrow eyebrow-orange">★ A-Race · Focus principal</div>
-                <h3 class="rm-focus-title">{{ primary.title }}</h3>
-                <div class="rm-focus-sub">
-                  @if (primary.location) { <span>{{ primary.location }}</span> }
-                  @if (primary.location && primary.distance) { <span class="sep">·</span> }
-                  @if (primary.distance) { <span>{{ primary.distance }}</span> }
-                </div>
-              </div>
-              @if (daysUntil(effectiveDate(primary)); as d) {
-                <div class="rm-focus-days mono">{{ d }}<small>j</small></div>
-              }
-            </div>
-
-            <div class="rm-focus-kpis">
-              <div class="rm-kpi">
-                <div class="lbl">DATE</div>
-                <div class="val mono">{{ formatDateShort(effectiveDate(primary)) }}</div>
-              </div>
-              <div class="rm-kpi">
-                <div class="lbl">SPORT</div>
-                <div class="val">{{ primary.sport }}</div>
-              </div>
-              <div class="rm-kpi">
-                <div class="lbl">TEMPS CIBLE</div>
-                <div class="val mono accent">{{ primary.targetTime || '—' }}</div>
-              </div>
-              <div class="rm-kpi">
-                <div class="lbl">PRIORITÉ</div>
-                <div class="val accent">{{ primary.priority }}</div>
-              </div>
-            </div>
-
-            <div class="rm-focus-actions">
-              <button class="btn-primary" (click)="openEdit(primary)">Modifier l'objectif →</button>
-              @if (primary.raceId) {
-                <a class="btn-ghost" [routerLink]="['/pacing']" [queryParams]="{ raceId: primary.raceId, goalId: primary.id }">
-                  Simuler la course
-                </a>
-              }
-            </div>
-          } @else {
-            <div class="rm-focus-empty">
-              <div class="eyebrow eyebrow-orange">★ A-Race · Focus principal</div>
-              <p>Aucune A-Race planifiée. Ajoute ton prochain objectif majeur.</p>
-              <button class="btn-primary" (click)="openCreate()">+ Nouvel objectif</button>
-            </div>
-          }
+      <div class="rm-history glass">
+        <div class="rm-hist-hd">
+          <div class="eyebrow eyebrow-orange">Historique · Records</div>
         </div>
-
-        <div class="rm-history glass">
-          <div class="rm-hist-hd">
-            <div class="eyebrow eyebrow-orange">Historique · Records</div>
-          </div>
-          @if (pastGoals$ | async; as past) {
-            @if (past.length > 0) {
-              <div class="rm-hist-list">
-                @for (g of past; track g.id) {
-                  <div class="rm-hist-row" (click)="openEdit(g)">
-                    <div class="rm-hist-status">✓</div>
-                    <div class="rm-hist-body">
-                      <div class="rm-hist-name">{{ g.title }}</div>
-                      <div class="rm-hist-meta mono">{{ formatDateShort(effectiveDate(g)) }}</div>
-                    </div>
-                    <div class="rm-hist-result">
-                      <b class="mono">{{ g.targetTime || '—' }}</b>
-                      <small>{{ g.priority }}-Race</small>
-                    </div>
+        @if (pastGoals$ | async; as past) {
+          @if (past.length > 0) {
+            <div class="rm-hist-list">
+              @for (g of past; track g.id) {
+                <div class="rm-hist-row" (click)="openEdit(g)">
+                  <div class="rm-hist-status">✓</div>
+                  <div class="rm-hist-body">
+                    <div class="rm-hist-name">{{ g.title }}</div>
+                    <div class="rm-hist-meta mono">{{ formatDateShort(effectiveDate(g)) }}</div>
                   </div>
-                }
-              </div>
-            } @else {
-              <div class="rm-hist-empty">Aucune course passée pour l'instant.</div>
-            }
+                  <div class="rm-hist-result">
+                    <b class="mono">{{ g.targetTime || '—' }}</b>
+                    <small>{{ g.priority }}-Race</small>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="rm-hist-empty">Aucune course passée pour l'instant.</div>
           }
-        </div>
+        }
       </div>
-
+    </div>
   }
 </div>
 
 <!-- Goal Form Modal (preserved from previous design) -->
 @if (isFormOpen) {
-<div class="modal-backdrop" (click)="closeForm()">
-  <div class="modal glass" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>{{ editingGoal ? ('GOALS.MODAL_EDIT_TITLE' | translate) : (formStep === 'search' ? ('GOALS.MODAL_FIND_RACE_TITLE' | translate) : ('GOALS.MODAL_GOAL_DETAILS_TITLE' | translate)) }}</h3>
-      <button class="close-btn" (click)="closeForm()">&times;</button>
-    </div>
-
-    @if (formStep === 'search' && !editingGoal) {
-    <div class="modal-body">
-      <div class="form-row">
-        <label>{{ 'GOALS.SEARCH_LABEL' | translate }}</label>
-        <input [(ngModel)]="raceSearchQuery" (ngModelChange)="onSearchChange($event)"
-          [placeholder]="'GOALS.SEARCH_PLACEHOLDER' | translate" class="form-input" />
+  <div class="modal-backdrop" (click)="closeForm()">
+    <div class="modal glass" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>
+          {{
+            editingGoal
+              ? ('GOALS.MODAL_EDIT_TITLE' | translate)
+              : formStep === 'search'
+                ? ('GOALS.MODAL_FIND_RACE_TITLE' | translate)
+                : ('GOALS.MODAL_GOAL_DETAILS_TITLE' | translate)
+          }}
+        </h3>
+        <button class="close-btn" (click)="closeForm()">&times;</button>
       </div>
 
-      @if (searchResults$ | async; as results) {
-        <div class="search-results">
-          @for (race of results; track race.id) {
-            <div class="search-result-item" (click)="selectRace(race)">
-              <div class="result-title">{{ race.title }}</div>
-              <div class="result-meta">
-                @if (race.sport) { <span>{{ race.sport }}</span> }
-                @if (race.location) { <span>{{ race.location }}</span> }
-                @if (race.distance) { <span>{{ race.distance }}</span> }
-              </div>
-            </div>
-          }
-          @if (results.length === 0 && raceSearchQuery.length >= 2) {
-            <div class="no-results">
-              {{ 'GOALS.NO_RACES_FOUND' | translate: { query: raceSearchQuery } }}
-              <a class="browse-link" routerLink="/races">{{ 'GOALS.BROWSE_RACE_CATALOG' | translate }}</a>
-            </div>
-          }
-        </div>
-      }
-    </div>
-    }
-
-    @if (formStep === 'details') {
-    <div class="modal-body">
-      @if (selectedRace) {
-        <div class="selected-race-banner">
-          <div class="banner-title">{{ selectedRace.title }}</div>
-          <div class="banner-meta">
-            @if (selectedRace.sport) { <span>{{ selectedRace.sport }}</span> }
-            @if (selectedRace.location) { <span>{{ selectedRace.location }}</span> }
-            @if (selectedRace.distance) { <span>{{ selectedRace.distance }}</span> }
+      @if (formStep === 'search' && !editingGoal) {
+        <div class="modal-body">
+          <div class="form-row">
+            <label>{{ 'GOALS.SEARCH_LABEL' | translate }}</label>
+            <input
+              [(ngModel)]="raceSearchQuery"
+              (ngModelChange)="onSearchChange($event)"
+              [placeholder]="'GOALS.SEARCH_PLACEHOLDER' | translate"
+              class="form-input"
+            />
           </div>
-          @if (!editingGoal) {
-            <button class="btn-change" (click)="backToSearch()">{{ 'GOALS.BTN_CHANGE' | translate }}</button>
+
+          @if (searchResults$ | async; as results) {
+            <div class="search-results">
+              @for (race of results; track race.id) {
+                <div class="search-result-item" (click)="selectRace(race)">
+                  <div class="result-title">{{ race.title }}</div>
+                  <div class="result-meta">
+                    @if (race.sport) {
+                      <span>{{ race.sport }}</span>
+                    }
+                    @if (race.location) {
+                      <span>{{ race.location }}</span>
+                    }
+                    @if (race.distance) {
+                      <span>{{ race.distance }}</span>
+                    }
+                  </div>
+                </div>
+              }
+              @if (results.length === 0 && raceSearchQuery.length >= 2) {
+                <div class="no-results">
+                  {{ 'GOALS.NO_RACES_FOUND' | translate: { query: raceSearchQuery } }}
+                  <a class="browse-link" routerLink="/races">{{
+                    'GOALS.BROWSE_RACE_CATALOG' | translate
+                  }}</a>
+                </div>
+              }
+            </div>
           }
         </div>
       }
 
-      <div class="form-row">
-        <label>{{ 'GOALS.FIELD_RACE_NAME_LABEL' | translate }}</label>
-        <input [(ngModel)]="form.title" [placeholder]="'GOALS.FIELD_RACE_NAME_PLACEHOLDER' | translate" class="form-input" />
-      </div>
-      <div class="form-row two-col">
-        <div>
-          <label>{{ 'GOALS.FIELD_SPORT_LABEL' | translate }}</label>
-          <select [(ngModel)]="form.sport" class="form-input">
-            @for (s of sports; track s) { <option [value]="s">{{ s }}</option> }
-          </select>
-        </div>
-        <div>
-          <label>{{ 'GOALS.FIELD_PRIORITY_LABEL' | translate }}</label>
-          <select [(ngModel)]="form.priority" class="form-input">
-            @for (p of priorities; track p.value) { <option [value]="p.value">{{ p.label }}</option> }
-          </select>
-        </div>
-      </div>
-      @if (selectedRace?.scheduledDate) {
-        <div class="form-row">
-          <label>{{ 'GOALS.FIELD_RACE_DATE_LABEL' | translate }}</label>
-          <div class="form-readonly mono">{{ selectedRace?.scheduledDate }}</div>
-        </div>
-      } @else if (selectedRace) {
-        <div class="form-row">
-          <label>{{ 'GOALS.FIELD_RACE_DATE_LABEL' | translate }}</label>
-          <div class="form-readonly dim">Aucune date dans le catalogue de la course</div>
-        </div>
-      }
-      <div class="form-row two-col">
-        <div>
-          <label>{{ 'GOALS.FIELD_DISTANCE_LABEL' | translate }}</label>
-          <input [(ngModel)]="form.distance" [placeholder]="'GOALS.FIELD_DISTANCE_PLACEHOLDER' | translate" class="form-input" />
-        </div>
-        <div>
-          <label>{{ 'GOALS.FIELD_TARGET_TIME_LABEL' | translate }}</label>
-          <input [(ngModel)]="form.targetTime" [placeholder]="'GOALS.FIELD_TARGET_TIME_PLACEHOLDER' | translate" class="form-input" />
-        </div>
-      </div>
-      <div class="form-row">
-        <label>{{ 'GOALS.FIELD_LOCATION_LABEL' | translate }}</label>
-        <input [(ngModel)]="form.location" [placeholder]="'GOALS.FIELD_LOCATION_PLACEHOLDER' | translate" class="form-input" />
-      </div>
-      <div class="form-row">
-        <label>{{ 'GOALS.FIELD_NOTES_LABEL' | translate }}</label>
-        <textarea [(ngModel)]="form.notes" [placeholder]="'GOALS.FIELD_NOTES_PLACEHOLDER' | translate" class="form-input" rows="3"></textarea>
-      </div>
-    </div>
+      @if (formStep === 'details') {
+        <div class="modal-body">
+          @if (selectedRace) {
+            <div class="selected-race-banner">
+              <div class="banner-title">{{ selectedRace.title }}</div>
+              <div class="banner-meta">
+                @if (selectedRace.sport) {
+                  <span>{{ selectedRace.sport }}</span>
+                }
+                @if (selectedRace.location) {
+                  <span>{{ selectedRace.location }}</span>
+                }
+                @if (selectedRace.distance) {
+                  <span>{{ selectedRace.distance }}</span>
+                }
+              </div>
+              @if (!editingGoal) {
+                <button class="btn-change" (click)="backToSearch()">
+                  {{ 'GOALS.BTN_CHANGE' | translate }}
+                </button>
+              }
+            </div>
+          }
 
-    @let isSaving = isSavingGoal$ | async;
-    <div class="modal-footer">
-      @if (editingGoal) {
-        <button class="btn-secondary danger" (click)="delete(editingGoal); closeForm()">{{ 'GOALS.BTN_DELETE_TITLE' | translate }}</button>
+          <div class="form-row">
+            <label>{{ 'GOALS.FIELD_RACE_NAME_LABEL' | translate }}</label>
+            <input
+              [(ngModel)]="form.title"
+              [placeholder]="'GOALS.FIELD_RACE_NAME_PLACEHOLDER' | translate"
+              class="form-input"
+            />
+          </div>
+          <div class="form-row two-col">
+            <div>
+              <label>{{ 'GOALS.FIELD_SPORT_LABEL' | translate }}</label>
+              <select [(ngModel)]="form.sport" class="form-input">
+                @for (s of sports; track s) {
+                  <option [value]="s">{{ s }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label>{{ 'GOALS.FIELD_PRIORITY_LABEL' | translate }}</label>
+              <select [(ngModel)]="form.priority" class="form-input">
+                @for (p of priorities; track p.value) {
+                  <option [value]="p.value">{{ p.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          @if (selectedRace?.scheduledDate) {
+            <div class="form-row">
+              <label>{{ 'GOALS.FIELD_RACE_DATE_LABEL' | translate }}</label>
+              <div class="form-readonly mono">{{ selectedRace?.scheduledDate }}</div>
+            </div>
+          } @else if (selectedRace) {
+            <div class="form-row">
+              <label>{{ 'GOALS.FIELD_RACE_DATE_LABEL' | translate }}</label>
+              <div class="form-readonly dim">Aucune date dans le catalogue de la course</div>
+            </div>
+          }
+          <div class="form-row two-col">
+            <div>
+              <label>{{ 'GOALS.FIELD_DISTANCE_LABEL' | translate }}</label>
+              <input
+                [(ngModel)]="form.distance"
+                [placeholder]="'GOALS.FIELD_DISTANCE_PLACEHOLDER' | translate"
+                class="form-input"
+              />
+            </div>
+            <div>
+              <label>{{ 'GOALS.FIELD_TARGET_TIME_LABEL' | translate }}</label>
+              <input
+                [(ngModel)]="form.targetTime"
+                [placeholder]="'GOALS.FIELD_TARGET_TIME_PLACEHOLDER' | translate"
+                class="form-input"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <label>{{ 'GOALS.FIELD_LOCATION_LABEL' | translate }}</label>
+            <input
+              [(ngModel)]="form.location"
+              [placeholder]="'GOALS.FIELD_LOCATION_PLACEHOLDER' | translate"
+              class="form-input"
+            />
+          </div>
+          <div class="form-row">
+            <label>{{ 'GOALS.FIELD_NOTES_LABEL' | translate }}</label>
+            <textarea
+              [(ngModel)]="form.notes"
+              [placeholder]="'GOALS.FIELD_NOTES_PLACEHOLDER' | translate"
+              class="form-input"
+              rows="3"
+            ></textarea>
+          </div>
+        </div>
+
+        @let isSaving = isSavingGoal$ | async;
+        <div class="modal-footer">
+          @if (editingGoal) {
+            <button class="btn-secondary danger" (click)="delete(editingGoal); closeForm()">
+              {{ 'GOALS.BTN_DELETE_TITLE' | translate }}
+            </button>
+          }
+          <button class="btn-secondary" (click)="closeForm()">
+            {{ 'GOALS.BTN_CANCEL' | translate }}
+          </button>
+          <button class="btn-primary" (click)="save()" [disabled]="!form.title || isSaving">
+            @if (isSaving) {
+              <span class="btn-spinner"></span>
+            }
+            {{ 'GOALS.BTN_SAVE' | translate }}
+          </button>
+        </div>
       }
-      <button class="btn-secondary" (click)="closeForm()">{{ 'GOALS.BTN_CANCEL' | translate }}</button>
-      <button class="btn-primary" (click)="save()" [disabled]="!form.title || isSaving">
-        @if (isSaving) { <span class="btn-spinner"></span> }
-        {{ 'GOALS.BTN_SAVE' | translate }}
-      </button>
     </div>
-    }
   </div>
-</div>
 }

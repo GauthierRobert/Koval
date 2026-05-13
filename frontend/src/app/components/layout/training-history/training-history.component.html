@@ -1,36 +1,45 @@
 <div class="history-container">
   <div class="history-list stagger-children">
     @for (training of filteredTrainings$ | async; track training.id) {
-      <div class="history-item"
+      <div
+        class="history-item"
         [class.selected]="(activeTrainingId$ | async) === training.id"
         [class.is-favorite]="training.favorite"
-        (click)="onSelect(training)">
+        (click)="onSelect(training)"
+      >
         <div class="item-icon">
-          <app-sport-icon [sport]="training.sportType" [size]="20"></app-sport-icon>
+          <app-sport-icon [sport]="training.sportType" [size]="20" />
         </div>
         <div class="item-details">
           <div class="item-title-row">
             <span class="item-title">{{ training.title }}</span>
           </div>
           <span class="item-meta">
-            <span [style.font-style]="isDurationEstimated(training) ? 'italic' : ''">{{ getDuration(training) }}</span>
+            <span [style.font-style]="isDurationEstimated(training) ? 'italic' : ''">{{
+              getDuration(training)
+            }}</span>
             @if (training.createdAt) {
-              &bull; <span class="item-date">{{ training.createdAt | date:'shortDate' }}</span>
+              &bull; <span class="item-date">{{ training.createdAt | date: 'shortDate' }}</span>
             }
             <div>
               @if (training.trainingType) {
-              <span class="type-indicator">
-                <span class="type-dot" [style.background]="getTypeColor(training.trainingType)"></span>
-                {{ getTypeLabel(training.trainingType) }}
-              </span>
+                <span class="type-indicator">
+                  <span
+                    class="type-dot"
+                    [style.background]="getTypeColor(training.trainingType)"
+                  ></span>
+                  {{ getTypeLabel(training.trainingType) }}
+                </span>
               }
             </div>
           </span>
           @if (training._receivedMeta) {
             <span class="received-meta">
-              {{ 'TRAINING_HISTORY.META_RECEIVED_FROM' | translate }} {{ training._receivedMeta.assignedByName }}
+              {{ 'TRAINING_HISTORY.META_RECEIVED_FROM' | translate }}
+              {{ training._receivedMeta.assignedByName }}
               @if (training._receivedMeta.originName) {
-                {{ 'TRAINING_HISTORY.META_RECEIVED_VIA' | translate }} {{ training._receivedMeta.originName }}
+                {{ 'TRAINING_HISTORY.META_RECEIVED_VIA' | translate }}
+                {{ training._receivedMeta.originName }}
               }
             </span>
           }
@@ -54,35 +63,81 @@
 
         @if ((activeContext$ | async) === 'mine') {
           <div class="item-actions">
-            <button class="edit-btn desktop-only hover-action" [title]="'TRAINING_HISTORY.BTN_EDIT_TITLE' | translate" (click)="onEdit($event, training)">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            <button
+              class="edit-btn desktop-only hover-action"
+              [title]="'TRAINING_HISTORY.BTN_EDIT_TITLE' | translate"
+              (click)="onEdit($event, training)"
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
             </button>
-            <button class="duplicate-btn desktop-only hover-action" [title]="'TRAINING_HISTORY.BTN_DUPLICATE_TITLE' | translate" (click)="onDuplicate($event, training)">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            <button
+              class="duplicate-btn desktop-only hover-action"
+              [title]="'TRAINING_HISTORY.BTN_DUPLICATE_TITLE' | translate"
+              (click)="onDuplicate($event, training)"
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
               </svg>
             </button>
-            <button class="delete-btn hover-action" [title]="'TRAINING_HISTORY.BTN_DELETE_TITLE' | translate" (click)="onDelete($event, training)">&times;</button>
+            <button
+              class="delete-btn hover-action"
+              [title]="'TRAINING_HISTORY.BTN_DELETE_TITLE' | translate"
+              (click)="onDelete($event, training)"
+            >
+              &times;
+            </button>
             <app-favorite-star
               size="sm"
               [active]="!!training.favorite"
-              [label]="(training.favorite ? 'TRAINING_HISTORY.BTN_UNFAVORITE_TITLE' : 'TRAINING_HISTORY.BTN_FAVORITE_TITLE') | translate"
-              (toggle)="onToggleFavorite($event, training)">
-            </app-favorite-star>
+              [label]="
+                (training.favorite
+                  ? 'TRAINING_HISTORY.BTN_UNFAVORITE_TITLE'
+                  : 'TRAINING_HISTORY.BTN_FAVORITE_TITLE'
+                ) | translate
+              "
+              (toggle)="onToggleFavorite($event, training)"
+            />
           </div>
         }
       </div>
     } @empty {
       <div class="empty-list">
-        <svg class="empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="5" width="18" height="14" rx="2"/>
-          <path d="M3 10h18"/>
-          <path d="M8 15h4"/>
+        <svg
+          class="empty-icon"
+          width="40"
+          height="40"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <path d="M3 10h18" />
+          <path d="M8 15h4" />
         </svg>
         <p class="empty-title">{{ 'TRAINING_HISTORY.EMPTY_NO_TRAININGS' | translate }}</p>
         <p class="empty-hint">{{ 'TRAINING_HISTORY.EMPTY_HINT' | translate }}</p>

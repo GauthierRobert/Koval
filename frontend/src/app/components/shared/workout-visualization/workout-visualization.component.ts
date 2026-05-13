@@ -1,8 +1,15 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, Input} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {Router} from '@angular/router';
-import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {TrainingService} from '../../../services/training.service';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  inject,
+  Input,
+  OnChanges,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TrainingService } from '../../../services/training.service';
 import {
   flattenElements,
   hasDurationEstimate,
@@ -27,33 +34,44 @@ import {
   trainingTypeLabelFor,
   yAxisLabels,
 } from './workout-visualization.utils';
-import {WorkoutExecutionService} from '../../../services/workout-execution.service';
-import {HttpClient} from '@angular/common/http';
-import {ExportService} from '../../../services/export.service';
-import {TrainingActionModalComponent} from '../training-action-modal/training-action-modal.component';
-import {BlockStepsListComponent} from './block-steps-list/block-steps-list.component';
-import {WorkoutChartBarComponent} from './workout-chart-bar/workout-chart-bar.component';
-import {FavoriteStarComponent} from '../favorite-star/favorite-star.component';
-import {TrainingTagEditorComponent} from '../training-tag-editor/training-tag-editor.component';
-import {AuthService} from '../../../services/auth.service';
-import {NolioSyncService} from '../../../services/nolio-sync.service';
-import {DurationEstimationService} from '../../../services/duration-estimation.service';
-import {ZoneService} from '../../../services/zone.service';
-import {ZoneSystem} from '../../../services/zone';
-import {formatPace as sharedFormatPace} from '../format/format.utils';
-import {environment} from '../../../../environments/environment';
-import {getBlockColor as sharedGetBlockColor, normalizeSport} from '../block-helpers/block-helpers';
-import {ZoneClassificationService} from '../../../services/zone-classification.service';
+import { WorkoutExecutionService } from '../../../services/workout-execution.service';
+import { HttpClient } from '@angular/common/http';
+import { ExportService } from '../../../services/export.service';
+import { TrainingActionModalComponent } from '../training-action-modal/training-action-modal.component';
+import { BlockStepsListComponent } from './block-steps-list/block-steps-list.component';
+import { WorkoutChartBarComponent } from './workout-chart-bar/workout-chart-bar.component';
+import { FavoriteStarComponent } from '../favorite-star/favorite-star.component';
+import { TrainingTagEditorComponent } from '../training-tag-editor/training-tag-editor.component';
+import { AuthService } from '../../../services/auth.service';
+import { NolioSyncService } from '../../../services/nolio-sync.service';
+import { DurationEstimationService } from '../../../services/duration-estimation.service';
+import { ZoneService } from '../../../services/zone.service';
+import { ZoneSystem } from '../../../services/zone';
+import { formatPace as sharedFormatPace } from '../format/format.utils';
+import { environment } from '../../../../environments/environment';
+import {
+  getBlockColor as sharedGetBlockColor,
+  normalizeSport,
+} from '../block-helpers/block-helpers';
+import { ZoneClassificationService } from '../../../services/zone-classification.service';
 
 @Component({
   selector: 'app-workout-visualization',
   standalone: true,
-  imports: [CommonModule, TrainingActionModalComponent, TranslateModule, BlockStepsListComponent, WorkoutChartBarComponent, FavoriteStarComponent, TrainingTagEditorComponent],
+  imports: [
+    CommonModule,
+    TrainingActionModalComponent,
+    TranslateModule,
+    BlockStepsListComponent,
+    WorkoutChartBarComponent,
+    FavoriteStarComponent,
+    TrainingTagEditorComponent,
+  ],
   templateUrl: './workout-visualization.component.html',
   styleUrl: './workout-visualization.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class WorkoutVisualizationComponent {
+export class WorkoutVisualizationComponent implements OnChanges {
   @Input() training: Training | null = null;
   @Input() compact = false;
   private trainingService = inject(TrainingService);
@@ -155,7 +173,7 @@ export class WorkoutVisualizationComponent {
     if (!this.training) return 0;
     const totalDuration = this.getNumericalTotalDuration();
     if (totalDuration === 0) return 0;
-    return ((this.getEstimatedBlockDuration(block)) / totalDuration) * 100;
+    return (this.getEstimatedBlockDuration(block) / totalDuration) * 100;
   }
 
   getEffectiveIntensity(block: WorkoutBlock, type: 'TARGET' | 'START' | 'END' = 'TARGET'): number {
@@ -175,8 +193,10 @@ export class WorkoutVisualizationComponent {
   }
 
   getDisplayIntensity(block: WorkoutBlock): string {
-    if (block.type === 'PAUSE') return this.translate.instant('WORKOUT_VIZ.INTENSITY_PAUSE').toUpperCase();
-    if (block.type === 'FREE') return this.translate.instant('WORKOUT_VIZ.INTENSITY_FREE').toUpperCase();
+    if (block.type === 'PAUSE')
+      return this.translate.instant('WORKOUT_VIZ.INTENSITY_PAUSE').toUpperCase();
+    if (block.type === 'FREE')
+      return this.translate.instant('WORKOUT_VIZ.INTENSITY_FREE').toUpperCase();
     if (block.type === 'TRANSITION') return block.transitionType ?? 'T';
 
     const start = this.getEffectiveIntensity(block, 'START');
@@ -252,11 +272,21 @@ export class WorkoutVisualizationComponent {
     return sharedFormatPace(totalSeconds);
   }
 
-  getSportLabel(): string { return sportLabelFor(this.training); }
-  getSportColor(): string { return sportColorFor(this.training); }
-  getTrainingTypeLabel(): string { return trainingTypeLabelFor(this.training); }
-  getTrainingTypeColor(): string { return trainingTypeColorFor(this.training); }
-  getSportUnit(): string { return sportUnitFor(this.training); }
+  getSportLabel(): string {
+    return sportLabelFor(this.training);
+  }
+  getSportColor(): string {
+    return sportColorFor(this.training);
+  }
+  getTrainingTypeLabel(): string {
+    return trainingTypeLabelFor(this.training);
+  }
+  getTrainingTypeColor(): string {
+    return trainingTypeColorFor(this.training);
+  }
+  getSportUnit(): string {
+    return sportUnitFor(this.training);
+  }
 
   private closeDropdownListener = () => {
     this.isExportDropdownOpen = false;
@@ -290,9 +320,11 @@ export class WorkoutVisualizationComponent {
   sendToZwift(): void {
     if (!this.training) return;
     this.closeDropdownListener();
-    this.http.post(`${environment.apiUrl}/api/integration/zwift/push-workout/${this.training.id}`, {}).subscribe({
-      error: () => {},
-    });
+    this.http
+      .post(`${environment.apiUrl}/api/integration/zwift/push-workout/${this.training.id}`, {})
+      .subscribe({
+        error: () => {},
+      });
   }
 
   pushToNolio(): void {
@@ -362,7 +394,7 @@ export class WorkoutVisualizationComponent {
     const sorted = [...zoneMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 
     return sorted.map(([label, seconds]) => {
-      const zi = zones.findIndex(z => z.label.toUpperCase() === label);
+      const zi = zones.findIndex((z) => z.label.toUpperCase() === label);
       return {
         label,
         color: zi >= 0 ? this.zoneCls.getZoneColor(zi, zones, sport) : '#636e72',

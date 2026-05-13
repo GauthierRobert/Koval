@@ -1,6 +1,6 @@
-import {inject, Injectable, NgZone} from '@angular/core';
-import {Subject} from 'rxjs';
-import {environment} from '../../environments/environment';
+import { inject, Injectable, NgZone } from '@angular/core';
+import { Subject } from 'rxjs';
+import { environment } from '../../environments/environment';
 import {
   ClubFeedEventResponse,
   CommentDeletedPayload,
@@ -16,7 +16,7 @@ export interface KudosUpdatePayload {
   successCount: number;
 }
 
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class ClubFeedSseService {
   private ngZone = inject(NgZone);
   private abortController: AbortController | null = null;
@@ -80,7 +80,7 @@ export class ClubFeedSseService {
   private async startStream(clubId: string, token: string): Promise<void> {
     try {
       const response = await fetch(`${environment.apiUrl}/api/clubs/${clubId}/feed/stream`, {
-        headers: {Authorization: `Bearer ${token}`},
+        headers: { Authorization: `Bearer ${token}` },
         signal: this.abortController?.signal,
       });
 
@@ -91,10 +91,10 @@ export class ClubFeedSseService {
       let buffer = '';
 
       while (true) {
-        const {done, value} = await reader.read();
+        const { done, value } = await reader.read();
         if (done) break;
 
-        buffer += decoder.decode(value, {stream: true});
+        buffer += decoder.decode(value, { stream: true });
         buffer = buffer.replace(/\r\n/g, '\n');
         const events = buffer.split('\n\n');
         buffer = events.pop() ?? '';
@@ -116,7 +116,7 @@ export class ClubFeedSseService {
   private parseEvent(raw: string): void {
     const lines = raw.trim().split('\n');
     let eventName = '';
-    let dataLines: string[] = [];
+    const dataLines: string[] = [];
 
     for (const line of lines) {
       if (line.startsWith('event:')) {

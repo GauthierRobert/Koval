@@ -1,12 +1,13 @@
-<div class="rc-card"
-     [class.rc-card--expanded]="isExpanded"
-     [class.rc-card--past]="isPast()"
-     [style.border-left-color]="getSportColor()"
-     (click)="toggleExpand.emit(race)">
-
+<div
+  class="rc-card"
+  [class.rc-card--expanded]="isExpanded"
+  [class.rc-card--past]="isPast()"
+  [style.border-left-color]="getSportColor()"
+  (click)="toggleExpand.emit(race)"
+>
   <!-- ZONE 1: Header -->
   <div class="rc-header">
-    <app-sport-icon [sport]="$any(race.sport)" [size]="16"></app-sport-icon>
+    <app-sport-icon [sport]="$any(race.sport)" [size]="16" />
     <span class="rc-title">{{ race.title }}</span>
     @if (race.scheduledDate) {
       <span class="rc-year">{{ race.scheduledDate.substring(0, 4) }}</span>
@@ -21,7 +22,7 @@
   <div class="rc-stats">
     @if (race.scheduledDate) {
       <span class="rc-chip" [class.rc-chip--accent]="!isPast()">
-        {{ race.scheduledDate | date:'mediumDate' }}
+        {{ race.scheduledDate | date: 'mediumDate' }}
       </span>
     }
     @if (race.location) {
@@ -41,19 +42,31 @@
       @if (race.swimDistanceM) {
         <span class="rc-disc rc-disc--swim">
           S: {{ formatDistance(race.swimDistanceM) }}
-          <span class="rc-gpx-dot" [class.rc-gpx-dot--ok]="hasGpx('swim')" [title]="hasGpx('swim') ? 'GPX uploaded' : 'No GPX'"></span>
+          <span
+            class="rc-gpx-dot"
+            [class.rc-gpx-dot--ok]="hasGpx('swim')"
+            [title]="hasGpx('swim') ? 'GPX uploaded' : 'No GPX'"
+          ></span>
         </span>
       }
       @if (race.bikeDistanceM) {
         <span class="rc-disc rc-disc--bike">
           B: {{ formatDistance(race.bikeDistanceM) }}
-          <span class="rc-gpx-dot" [class.rc-gpx-dot--ok]="hasGpx('bike')" [title]="hasGpx('bike') ? 'GPX uploaded' : 'No GPX'"></span>
+          <span
+            class="rc-gpx-dot"
+            [class.rc-gpx-dot--ok]="hasGpx('bike')"
+            [title]="hasGpx('bike') ? 'GPX uploaded' : 'No GPX'"
+          ></span>
         </span>
       }
       @if (race.runDistanceM) {
         <span class="rc-disc rc-disc--run">
           R: {{ formatDistance(race.runDistanceM) }}
-          <span class="rc-gpx-dot" [class.rc-gpx-dot--ok]="hasGpx('run')" [title]="hasGpx('run') ? 'GPX uploaded' : 'No GPX'"></span>
+          <span
+            class="rc-gpx-dot"
+            [class.rc-gpx-dot--ok]="hasGpx('run')"
+            [title]="hasGpx('run') ? 'GPX uploaded' : 'No GPX'"
+          ></span>
         </span>
       }
     </div>
@@ -61,20 +74,28 @@
 
   <!-- ZONE 4: Actions -->
   <div class="rc-actions" (click)="$event.stopPropagation()">
-    <button class="rc-btn rc-btn--simulate"
-            [disabled]="!canSimulate"
-            [title]="canSimulate ? ('RACES.BTN_SIMULATE' | translate) : simulateDisabledReason"
-            (click)="simulate.emit(race)">
+    <button
+      class="rc-btn rc-btn--simulate"
+      [disabled]="!canSimulate"
+      [title]="canSimulate ? ('RACES.BTN_SIMULATE' | translate) : simulateDisabledReason"
+      (click)="simulate.emit(race)"
+    >
       &#9889; {{ 'RACES.BTN_SIMULATE' | translate }}
     </button>
-    <button class="rc-btn rc-btn--goal"
-            [class.rc-btn--added]="isAdded"
-            [disabled]="isAdded"
-            (click)="addToGoals.emit(race)">
+    <button
+      class="rc-btn rc-btn--goal"
+      [class.rc-btn--added]="isAdded"
+      [disabled]="isAdded"
+      (click)="addToGoals.emit(race)"
+    >
       {{ isAdded ? ('RACES.BTN_ADDED' | translate) : ('RACES.BTN_ADD_TO_GOALS' | translate) }}
     </button>
     @if (isOwnRace && !isEditing) {
-      <button class="rc-btn rc-btn--edit" (click)="startEdit.emit(race)" [title]="'RACES.BTN_EDIT_RACE_TITLE' | translate">
+      <button
+        class="rc-btn rc-btn--edit"
+        (click)="startEdit.emit(race)"
+        [title]="'RACES.BTN_EDIT_RACE_TITLE' | translate"
+      >
         &#9998;
       </button>
     }
@@ -89,11 +110,19 @@
           <div class="rc-edit-grid">
             <div class="rc-edit-field">
               <label>{{ 'RACES.EDIT_FIELD_TITLE' | translate }}</label>
-              <input class="rc-input" [ngModel]="editForm.title" (ngModelChange)="onEditFormFieldChange('title', $event)"/>
+              <input
+                class="rc-input"
+                [ngModel]="editForm.title"
+                (ngModelChange)="onEditFormFieldChange('title', $event)"
+              />
             </div>
             <div class="rc-edit-field">
               <label>{{ 'RACES.EDIT_FIELD_SPORT' | translate }}</label>
-              <select class="rc-input" [ngModel]="editForm.sport" (ngModelChange)="onEditFormFieldChange('sport', $event)">
+              <select
+                class="rc-input"
+                [ngModel]="editForm.sport"
+                (ngModelChange)="onEditFormFieldChange('sport', $event)"
+              >
                 <option value="CYCLING">{{ 'RACES.SPORT_CYCLING' | translate }}</option>
                 <option value="RUNNING">{{ 'RACES.SPORT_RUNNING' | translate }}</option>
                 <option value="SWIMMING">{{ 'RACES.SPORT_SWIMMING' | translate }}</option>
@@ -103,51 +132,106 @@
             </div>
             <div class="rc-edit-field">
               <label>{{ 'RACES.EDIT_FIELD_LOCATION' | translate }}</label>
-              <input class="rc-input" [ngModel]="editForm.location" (ngModelChange)="onEditFormFieldChange('location', $event)"/>
+              <input
+                class="rc-input"
+                [ngModel]="editForm.location"
+                (ngModelChange)="onEditFormFieldChange('location', $event)"
+              />
             </div>
             <div class="rc-edit-field">
               <label>{{ 'RACES.EDIT_FIELD_COUNTRY' | translate }}</label>
-              <input class="rc-input" [ngModel]="editForm.country" (ngModelChange)="onEditFormFieldChange('country', $event)"/>
+              <input
+                class="rc-input"
+                [ngModel]="editForm.country"
+                (ngModelChange)="onEditFormFieldChange('country', $event)"
+              />
             </div>
             <div class="rc-edit-field">
               <label>{{ 'RACES.EDIT_FIELD_DISTANCE' | translate }}</label>
-              <input class="rc-input" [ngModel]="editForm.distance" (ngModelChange)="onEditFormFieldChange('distance', $event)"
-                     [placeholder]="'RACES.EDIT_FIELD_DISTANCE_PLACEHOLDER' | translate"/>
+              <input
+                class="rc-input"
+                [ngModel]="editForm.distance"
+                (ngModelChange)="onEditFormFieldChange('distance', $event)"
+                [placeholder]="'RACES.EDIT_FIELD_DISTANCE_PLACEHOLDER' | translate"
+              />
             </div>
             <div class="rc-edit-field">
               <label>{{ 'RACES.EDIT_FIELD_SCHEDULED_DATE' | translate }}</label>
-              <input class="rc-input" type="date" [ngModel]="editForm.scheduledDate" (ngModelChange)="onEditFormFieldChange('scheduledDate', $event)"/>
+              <input
+                class="rc-input"
+                type="date"
+                [ngModel]="editForm.scheduledDate"
+                (ngModelChange)="onEditFormFieldChange('scheduledDate', $event)"
+              />
             </div>
             <div class="rc-edit-field">
               <label>{{ 'RACES.EDIT_FIELD_ELEVATION' | translate }}</label>
-              <input class="rc-input" type="number" [ngModel]="editForm.elevationGainM" (ngModelChange)="onEditFormFieldChange('elevationGainM', $event)"/>
+              <input
+                class="rc-input"
+                type="number"
+                [ngModel]="editForm.elevationGainM"
+                (ngModelChange)="onEditFormFieldChange('elevationGainM', $event)"
+              />
             </div>
             <div class="rc-edit-field">
               <label>{{ 'RACES.EDIT_FIELD_SWIM' | translate }}</label>
-              <input class="rc-input" type="number" [ngModel]="editForm.swimDistanceM" (ngModelChange)="onEditFormFieldChange('swimDistanceM', $event)"/>
+              <input
+                class="rc-input"
+                type="number"
+                [ngModel]="editForm.swimDistanceM"
+                (ngModelChange)="onEditFormFieldChange('swimDistanceM', $event)"
+              />
             </div>
             <div class="rc-edit-field">
               <label>{{ 'RACES.EDIT_FIELD_BIKE' | translate }}</label>
-              <input class="rc-input" type="number" [ngModel]="editForm.bikeDistanceM" (ngModelChange)="onEditFormFieldChange('bikeDistanceM', $event)"/>
+              <input
+                class="rc-input"
+                type="number"
+                [ngModel]="editForm.bikeDistanceM"
+                (ngModelChange)="onEditFormFieldChange('bikeDistanceM', $event)"
+              />
             </div>
             <div class="rc-edit-field">
               <label>{{ 'RACES.EDIT_FIELD_RUN' | translate }}</label>
-              <input class="rc-input" type="number" [ngModel]="editForm.runDistanceM" (ngModelChange)="onEditFormFieldChange('runDistanceM', $event)"/>
+              <input
+                class="rc-input"
+                type="number"
+                [ngModel]="editForm.runDistanceM"
+                (ngModelChange)="onEditFormFieldChange('runDistanceM', $event)"
+              />
             </div>
             <div class="rc-edit-field rc-edit-field--full">
               <label>{{ 'RACES.EDIT_FIELD_WEBSITE' | translate }}</label>
-              <input class="rc-input" [ngModel]="editForm.website" (ngModelChange)="onEditFormFieldChange('website', $event)" placeholder="https://..."/>
+              <input
+                class="rc-input"
+                [ngModel]="editForm.website"
+                (ngModelChange)="onEditFormFieldChange('website', $event)"
+                placeholder="https://..."
+              />
             </div>
             <div class="rc-edit-field rc-edit-field--full">
               <label>{{ 'RACES.EDIT_FIELD_DESCRIPTION' | translate }}</label>
-              <textarea class="rc-input rc-textarea" [ngModel]="editForm.description" (ngModelChange)="onEditFormFieldChange('description', $event)" rows="3"></textarea>
+              <textarea
+                class="rc-input rc-textarea"
+                [ngModel]="editForm.description"
+                (ngModelChange)="onEditFormFieldChange('description', $event)"
+                rows="3"
+              ></textarea>
             </div>
           </div>
           <div class="rc-edit-actions">
-            <button class="rc-btn rc-btn--primary" (click)="saveEdit.emit(race)" [disabled]="isSavingEdit">
+            <button
+              class="rc-btn rc-btn--primary"
+              (click)="saveEdit.emit(race)"
+              [disabled]="isSavingEdit"
+            >
               {{ isSavingEdit ? ('RACES.BTN_SAVING' | translate) : ('RACES.BTN_SAVE' | translate) }}
             </button>
-            <button class="rc-btn rc-btn--secondary" (click)="cancelEdit.emit()" [disabled]="isSavingEdit">
+            <button
+              class="rc-btn rc-btn--secondary"
+              (click)="cancelEdit.emit()"
+              [disabled]="isSavingEdit"
+            >
               {{ 'RACES.BTN_CANCEL' | translate }}
             </button>
           </div>
@@ -162,8 +246,13 @@
           </div>
         }
         @if (race.website) {
-          <a class="rc-website" [href]="race.website" target="_blank" rel="noopener"
-             (click)="$event.stopPropagation()">
+          <a
+            class="rc-website"
+            [href]="race.website"
+            target="_blank"
+            rel="noopener"
+            (click)="$event.stopPropagation()"
+          >
             {{ race.website }}
           </a>
         }
@@ -173,23 +262,38 @@
           <div class="rc-gpx-section">
             @for (disc of getGpxDisciplines(); track disc) {
               <div class="rc-gpx-row">
-                <span class="rc-gpx-label"
-                      [class.rc-gpx-label--swim]="disc === 'swim'"
-                      [class.rc-gpx-label--bike]="disc === 'bike'"
-                      [class.rc-gpx-label--run]="disc === 'run'">
+                <span
+                  class="rc-gpx-label"
+                  [class.rc-gpx-label--swim]="disc === 'swim'"
+                  [class.rc-gpx-label--bike]="disc === 'bike'"
+                  [class.rc-gpx-label--run]="disc === 'run'"
+                >
                   {{ disc | uppercase }}
                 </span>
                 @if (hasGpx(disc)) {
-                  <span class="rc-gpx-chip rc-gpx-chip--done">&#10003; {{ 'RACES.GPX_DONE' | translate }}</span>
+                  <span class="rc-gpx-chip rc-gpx-chip--done"
+                    >&#10003; {{ 'RACES.GPX_DONE' | translate }}</span
+                  >
                   <label class="rc-gpx-reupload">
                     &#8593;
-                    <input type="file" accept=".gpx" hidden
-                           (change)="gpxFileSelected.emit({race: race, discipline: disc, event: $event})">
+                    <input
+                      type="file"
+                      accept=".gpx"
+                      hidden
+                      (change)="
+                        gpxFileSelected.emit({ race: race, discipline: disc, event: $event })
+                      "
+                    />
                   </label>
                   <span class="rc-loops">
-                    <input type="number" class="rc-loops-input" min="1" max="99"
-                           [value]="getLoopCount(disc)"
-                           (change)="loopsChanged.emit({race: race, discipline: disc, event: $event})">
+                    <input
+                      type="number"
+                      class="rc-loops-input"
+                      min="1"
+                      max="99"
+                      [value]="getLoopCount(disc)"
+                      (change)="loopsChanged.emit({ race: race, discipline: disc, event: $event })"
+                    />
                     <span class="rc-loops-label">{{ 'RACES.LOOPS_LABEL' | translate }}</span>
                   </span>
                 } @else {
@@ -199,8 +303,14 @@
                     } @else {
                       <span>&#8593; {{ 'RACES.GPX_UPLOAD' | translate }}</span>
                     }
-                    <input type="file" accept=".gpx" hidden
-                           (change)="gpxFileSelected.emit({race: race, discipline: disc, event: $event})">
+                    <input
+                      type="file"
+                      accept=".gpx"
+                      hidden
+                      (change)="
+                        gpxFileSelected.emit({ race: race, discipline: disc, event: $event })
+                      "
+                    />
                   </label>
                 }
               </div>

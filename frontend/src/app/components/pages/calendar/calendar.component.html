@@ -7,9 +7,23 @@
     <h1>{{ 'CALENDAR.HEADING' | translate }}</h1>
     <div class="header-right">
       <div class="prefs-wrapper">
-        <button class="prefs-btn" (click)="togglePrefsDropdown()" [title]="'CALENDAR.FILTER_BTN_TITLE' | translate" data-testid="prefs-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+        <button
+          class="prefs-btn"
+          (click)="togglePrefsDropdown()"
+          [title]="'CALENDAR.FILTER_BTN_TITLE' | translate"
+          data-testid="prefs-btn"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
           </svg>
         </button>
         @if (showPrefsDropdown) {
@@ -21,7 +35,11 @@
             @for (role of myClubRoles; track role.clubId) {
               <div class="prefs-club-row">
                 <label class="prefs-toggle">
-                  <input type="checkbox" [checked]="isClubVisible(role.clubId)" (change)="toggleClub(role.clubId)">
+                  <input
+                    type="checkbox"
+                    [checked]="isClubVisible(role.clubId)"
+                    (change)="toggleClub(role.clubId)"
+                  />
                   <span class="prefs-club-name">{{ role.clubName }}</span>
                 </label>
                 @if (clubGroupsMap.get(role.clubId)?.length) {
@@ -29,7 +47,11 @@
                     @for (group of clubGroupsMap.get(role.clubId); track group.id) {
                       <div class="prefs-group-row">
                         <label class="prefs-toggle">
-                          <input type="checkbox" [checked]="isGroupVisible(group.id)" (change)="toggleGroup(group.id)">
+                          <input
+                            type="checkbox"
+                            [checked]="isGroupVisible(group.id)"
+                            (change)="toggleGroup(group.id)"
+                          />
                           <span class="prefs-group-name">{{ group.name }}</span>
                         </label>
                       </div>
@@ -41,20 +63,50 @@
           </div>
         }
       </div>
-<div class="view-selector">
-        <button [class.active]="viewMode === 'week'" (click)="setViewMode('week')" data-testid="view-selector-week">{{ 'CALENDAR.VIEW_WEEK' | translate }}</button>
-        <button [class.active]="viewMode === 'month'" (click)="setViewMode('month')" data-testid="view-selector-month">{{ 'CALENDAR.VIEW_MONTH' | translate }}</button>
+      <div class="view-selector">
+        <button
+          [class.active]="viewMode === 'week'"
+          (click)="setViewMode('week')"
+          data-testid="view-selector-week"
+        >
+          {{ 'CALENDAR.VIEW_WEEK' | translate }}
+        </button>
+        <button
+          [class.active]="viewMode === 'month'"
+          (click)="setViewMode('month')"
+          data-testid="view-selector-month"
+        >
+          {{ 'CALENDAR.VIEW_MONTH' | translate }}
+        </button>
       </div>
       <div class="nav-controls">
-        <button (click)="navigateWeek(-1)" data-testid="nav-btn-prev">&lt; {{ viewMode === 'week' ? ('CALENDAR.NAV_PREV_WEEK' | translate) : ('CALENDAR.NAV_PREV_MONTH' | translate) }}</button>
-        <button class="today-btn" (click)="goToToday()" data-testid="nav-btn-today">{{ 'CALENDAR.NAV_TODAY' | translate }}</button>
+        <button (click)="navigateWeek(-1)" data-testid="nav-btn-prev">
+          &lt;
+          {{
+            viewMode === 'week'
+              ? ('CALENDAR.NAV_PREV_WEEK' | translate)
+              : ('CALENDAR.NAV_PREV_MONTH' | translate)
+          }}
+        </button>
+        <button class="today-btn" (click)="goToToday()" data-testid="nav-btn-today">
+          {{ 'CALENDAR.NAV_TODAY' | translate }}
+        </button>
         @if (viewMode === 'week') {
-          <span class="date-range">{{ startDate | date : 'MMM d' }} - {{ endDate | date : 'MMM d, y' }}</span>
+          <span class="date-range"
+            >{{ startDate | date: 'MMM d' }} - {{ endDate | date: 'MMM d, y' }}</span
+          >
         }
         @if (viewMode === 'month') {
-          <span class="date-range">{{ startDate | date : 'MMMM yyyy' }}</span>
+          <span class="date-range">{{ startDate | date: 'MMMM yyyy' }}</span>
         }
-        <button (click)="navigateWeek(1)" data-testid="nav-btn-next">{{ viewMode === 'week' ? ('CALENDAR.NAV_NEXT_WEEK' | translate) : ('CALENDAR.NAV_NEXT_MONTH' | translate) }} &gt;</button>
+        <button (click)="navigateWeek(1)" data-testid="nav-btn-next">
+          {{
+            viewMode === 'week'
+              ? ('CALENDAR.NAV_NEXT_WEEK' | translate)
+              : ('CALENDAR.NAV_NEXT_MONTH' | translate)
+          }}
+          &gt;
+        </button>
       </div>
     </div>
   </div>
@@ -76,8 +128,8 @@
         (rescheduled)="onReschedule($event.workout, $event.newDate)"
         (linked)="reload$.next()"
         (joinClubSession)="joinClubSession($event)"
-        (cancelClubSession)="cancelClubSession($event)">
-      </app-calendar-week-view>
+        (cancelClubSession)="cancelClubSession($event)"
+      />
     }
 
     @if (viewMode === 'month') {
@@ -92,14 +144,23 @@
         (sessionSelected)="selectSession($event)"
         (rescheduled)="onReschedule($event.workout, $event.newDate)"
         (joinClubSession)="joinClubSession($event)"
-        (cancelClubSession)="cancelClubSession($event)">
-      </app-calendar-month-view>
+        (cancelClubSession)="cancelClubSession($event)"
+      />
     }
   }
 </div>
 
-<app-training-action-modal [isOpen]="isScheduleModalOpen" mode="self-schedule" [preselectedDate]="selectedDate ?? undefined"
-  (closed)="isScheduleModalOpen = false" (completed)="onScheduled()"></app-training-action-modal>
+<app-training-action-modal
+  [isOpen]="isScheduleModalOpen"
+  mode="self-schedule"
+  [preselectedDate]="selectedDate ?? undefined"
+  (closed)="isScheduleModalOpen = false"
+  (completed)="onScheduled()"
+/>
 
-<app-workout-detail-modal [workout]="selectedWorkout" (closed)="onDetailClosed()" (started)="onDetailStarted()"
-  (statusChanged)="onDetailStatusChanged()"></app-workout-detail-modal>
+<app-workout-detail-modal
+  [workout]="selectedWorkout"
+  (closed)="onDetailClosed()"
+  (started)="onDetailStarted()"
+  (statusChanged)="onDetailStatusChanged()"
+/>

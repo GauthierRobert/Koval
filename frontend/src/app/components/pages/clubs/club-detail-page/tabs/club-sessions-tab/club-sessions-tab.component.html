@@ -6,9 +6,15 @@
     </div>
     <div class="session-header__actions">
       <div class="session-header__nav">
-        <button class="nav-btn" (click)="prevWeek()" data-testid="sessions-nav-prev">&lsaquo;</button>
-        <button class="nav-btn nav-btn--today" (click)="goToday()" data-testid="sessions-nav-today">{{ 'CLUB_SESSIONS.NAV_TODAY' | translate }}</button>
-        <button class="nav-btn" (click)="nextWeek()" data-testid="sessions-nav-next">&rsaquo;</button>
+        <button class="nav-btn" (click)="prevWeek()" data-testid="sessions-nav-prev">
+          &lsaquo;
+        </button>
+        <button class="nav-btn nav-btn--today" (click)="goToday()" data-testid="sessions-nav-today">
+          {{ 'CLUB_SESSIONS.NAV_TODAY' | translate }}
+        </button>
+        <button class="nav-btn" (click)="nextWeek()" data-testid="sessions-nav-next">
+          &rsaquo;
+        </button>
       </div>
       @if (canCreateSingle) {
         <div class="create-menu" (click)="$event.stopPropagation()">
@@ -18,7 +24,8 @@
             (click)="toggleCreateMenu()"
             [attr.aria-expanded]="isCreateMenuOpen"
             aria-haspopup="menu"
-            data-testid="btn-add-session">
+            data-testid="btn-add-session"
+          >
             {{ 'CLUB_SESSIONS.BTN_CREATE_SESSION' | translate }}
             <span class="caret" aria-hidden="true">▾</span>
           </button>
@@ -29,7 +36,8 @@
                 role="menuitem"
                 class="create-menu__item"
                 (click)="startCreate('single')"
-                data-testid="btn-create-single">
+                data-testid="btn-create-single"
+              >
                 {{ 'CLUB_SESSIONS.BTN_CREATE_SINGLE' | translate }}
               </button>
               <button
@@ -38,12 +46,19 @@
                 class="create-menu__item"
                 [class.is-disabled]="!canCreateRecurring"
                 [disabled]="!canCreateRecurring"
-                [attr.title]="!canCreateRecurring ? ('CLUB_SESSIONS.CREATE_RECURRING_DISABLED_HINT' | translate) : null"
+                [attr.title]="
+                  !canCreateRecurring
+                    ? ('CLUB_SESSIONS.CREATE_RECURRING_DISABLED_HINT' | translate)
+                    : null
+                "
                 (click)="startCreate('recurring')"
-                data-testid="btn-create-recurring">
+                data-testid="btn-create-recurring"
+              >
                 {{ 'CLUB_SESSIONS.BTN_CREATE_RECURRING' | translate }}
                 @if (!canCreateRecurring) {
-                  <span class="create-menu__hint">{{ 'CLUB_SESSIONS.CREATE_RECURRING_DISABLED_HINT' | translate }}</span>
+                  <span class="create-menu__hint">{{
+                    'CLUB_SESSIONS.CREATE_RECURRING_DISABLED_HINT' | translate
+                  }}</span>
                 }
               </button>
             </div>
@@ -63,8 +78,9 @@
           class="day-cell"
           [class.day-cell--selected]="isSelectedDay(day)"
           [class.day-cell--today]="isToday(day)"
-          (click)="selectDay(day)">
-          <span class="day-cell__weekday">{{ day | date:'EEE' | uppercase }}</span>
+          (click)="selectDay(day)"
+        >
+          <span class="day-cell__weekday">{{ day | date: 'EEE' | uppercase }}</span>
           <span class="day-cell__num">{{ day.getDate() }}</span>
           <div class="day-cell__dots">
             @for (s of getSessionsForDay(filtered, day); track s.id) {
@@ -78,7 +94,11 @@
     @if (clubGroups.length > 0) {
       <div class="filter-row">
         <label class="filter-checkbox">
-          <input type="checkbox" [checked]="showOtherGroupSessions" (change)="toggleShowOtherGroupSessions()"/>
+          <input
+            type="checkbox"
+            [checked]="showOtherGroupSessions"
+            (change)="toggleShowOtherGroupSessions()"
+          />
           <span>{{ 'CLUB_SESSIONS.SHOW_OTHER_GROUPS' | translate }}</span>
         </label>
       </div>
@@ -106,16 +126,34 @@
             (toggleDetail)="toggleSessionDetail($event)"
             (navigateToTraining)="navigateToTraining($event)"
             (downloadGpx)="downloadGpx($event)"
-            (shareGpx)="shareGpx($event)">
-          </app-session-card>
+            (shareGpx)="shareGpx($event)"
+          />
         }
       </div>
     } @else {
       <div class="empty-tab">
-        <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="10" y1="14" x2="14" y2="14"/><line x1="12" y1="12" x2="12" y2="16"/></svg>
+        <svg
+          class="empty-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+          <line x1="10" y1="14" x2="14" y2="14" />
+          <line x1="12" y1="12" x2="12" y2="16" />
+        </svg>
         <p>{{ 'CLUB_SESSIONS.EMPTY_NO_SESSIONS_DAY' | translate }}</p>
         @if (canCreateSingle) {
-          <button class="btn-primary" (click)="startCreate('single')">{{ 'CLUB_SESSIONS.BTN_SCHEDULE_SESSION' | translate }}</button>
+          <button class="btn-primary" (click)="startCreate('single')">
+            {{ 'CLUB_SESSIONS.BTN_SCHEDULE_SESSION' | translate }}
+          </button>
         }
       </div>
     }
@@ -129,8 +167,8 @@
   [coachMembers]="coachMembers"
   [sports]="sports"
   (closed)="closeCreateSingle()"
-  (saved)="onCreateSingleSaved($event)">
-</app-create-single-session-modal>
+  (saved)="onCreateSingleSaved($event)"
+/>
 
 <app-create-recurring-template-modal
   [isOpen]="isCreateRecurringModalOpen"
@@ -140,22 +178,42 @@
   [sports]="sports"
   [daysOfWeek]="daysOfWeek"
   (closed)="closeCreateRecurring()"
-  (saved)="onCreateRecurringSaved($event)">
-</app-create-recurring-template-modal>
+  (saved)="onCreateRecurringSaved($event)"
+/>
 
 @if (showEditRecurringChoice) {
   <div class="modal-backdrop" (click)="closeEditRecurringChoice()">
-    <div class="modal glass small-modal" (click)="$event.stopPropagation()" data-testid="recurring-edit-dialog">
+    <div
+      class="modal glass small-modal"
+      (click)="$event.stopPropagation()"
+      data-testid="recurring-edit-dialog"
+    >
       <div class="modal-header">
         <h3>{{ 'CLUB_SESSIONS.RECURRING_EDIT_DIALOG_TITLE' | translate }}</h3>
         <button class="close-btn" (click)="closeEditRecurringChoice()">&times;</button>
       </div>
       <div class="modal-body">
-        <p class="recurring-choice-text">{{ 'CLUB_SESSIONS.RECURRING_EDIT_PART_OF_SERIES' | translate }}</p>
+        <p class="recurring-choice-text">
+          {{ 'CLUB_SESSIONS.RECURRING_EDIT_PART_OF_SERIES' | translate }}
+        </p>
         <div class="recurring-choice-actions">
-          <button class="btn-primary" (click)="editThisSessionOnly()" data-testid="btn-edit-this-only">{{ 'CLUB_SESSIONS.RECURRING_EDIT_THIS_ONLY' | translate }}</button>
-          <button class="btn-primary" (click)="editEntireTemplate()" data-testid="btn-edit-all-future">{{ 'CLUB_SESSIONS.RECURRING_EDIT_ALL_FUTURE' | translate }}</button>
-          <button class="btn-ghost-neutral" (click)="closeEditRecurringChoice()">{{ 'CLUB_SESSIONS.RECURRING_CANCEL_GO_BACK' | translate }}</button>
+          <button
+            class="btn-primary"
+            (click)="editThisSessionOnly()"
+            data-testid="btn-edit-this-only"
+          >
+            {{ 'CLUB_SESSIONS.RECURRING_EDIT_THIS_ONLY' | translate }}
+          </button>
+          <button
+            class="btn-primary"
+            (click)="editEntireTemplate()"
+            data-testid="btn-edit-all-future"
+          >
+            {{ 'CLUB_SESSIONS.RECURRING_EDIT_ALL_FUTURE' | translate }}
+          </button>
+          <button class="btn-ghost-neutral" (click)="closeEditRecurringChoice()">
+            {{ 'CLUB_SESSIONS.RECURRING_CANCEL_GO_BACK' | translate }}
+          </button>
         </div>
       </div>
     </div>
@@ -171,8 +229,8 @@
   [coachMembers]="coachMembers"
   [sports]="sports"
   (closed)="closeEditForm()"
-  (saved)="onEditFormSaved($event)">
-</app-session-form-modal>
+  (saved)="onEditFormSaved($event)"
+/>
 
 <app-cancel-session-dialogs
   [showCancelRecurringChoice]="showCancelRecurringChoice"
@@ -183,5 +241,5 @@
   (cancelAllFuture)="cancelAllFuture()"
   (closeCancelRecurringChoice)="closeCancelRecurringChoice()"
   (closeCancelConfirm)="closeCancelSessionModal()"
-  (confirmCancel)="confirmCancelSession($event)">
-</app-cancel-session-dialogs>
+  (confirmCancel)="confirmCancelSession($event)"
+/>

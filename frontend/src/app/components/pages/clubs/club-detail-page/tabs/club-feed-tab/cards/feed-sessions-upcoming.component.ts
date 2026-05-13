@@ -1,10 +1,24 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {TranslateModule} from '@ngx-translate/core';
-import {ClubDetail, ClubRaceGoalResponse, ClubTrainingSession} from '../../../../../../../models/club.model';
-import {ClubSessionParticipationService, SessionParticipation} from '../../../../../../../services/club/club-session-participation.service';
-import {FeedSessionCardComponent} from './feed-session-card.component';
-import {FeedGoalPanelComponent} from './feed-goal-panel.component';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  inject,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+import {
+  ClubDetail,
+  ClubRaceGoalResponse,
+  ClubTrainingSession,
+} from '../../../../../../../models/club.model';
+import {
+  ClubSessionParticipationService,
+  SessionParticipation,
+} from '../../../../../../../services/club/club-session-participation.service';
+import { FeedSessionCardComponent } from './feed-session-card.component';
+import { FeedGoalPanelComponent } from './feed-goal-panel.component';
 
 interface SessionView {
   session: ClubTrainingSession;
@@ -24,7 +38,7 @@ interface FeedSessionsView {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (vm.nextGoal) {
-      <app-feed-goal-panel [goal]="vm.nextGoal"></app-feed-goal-panel>
+      <app-feed-goal-panel [goal]="vm.nextGoal" />
     }
 
     <div class="sidebar-panel">
@@ -32,11 +46,33 @@ interface FeedSessionsView {
         <span class="panel-title">{{ 'CLUB_FEED.RECURRING_SESSIONS' | translate }}</span>
         <div class="week-nav">
           <button class="nav-btn" (click)="weekChange.emit(-1)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
           </button>
           <span class="week-label">{{ weekLabel }}</span>
           <button class="nav-btn" (click)="weekChange.emit(1)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
           </button>
         </div>
       </div>
@@ -54,8 +90,8 @@ interface FeedSessionsView {
           [selected]="selectedSessionId === view.session.id"
           (toggle)="toggleSession($event)"
           (join)="joinClicked.emit($event)"
-          (cancel)="cancelClicked.emit($event)">
-        </app-feed-session-card>
+          (cancel)="cancelClicked.emit($event)"
+        />
       }
     </div>
 
@@ -72,8 +108,8 @@ interface FeedSessionsView {
             [selected]="selectedSessionId === view.session.id"
             (toggle)="toggleSession($event)"
             (join)="joinClicked.emit($event)"
-            (cancel)="cancelClicked.emit($event)">
-          </app-feed-session-card>
+            (cancel)="cancelClicked.emit($event)"
+          />
         }
       </div>
     }
@@ -92,14 +128,51 @@ interface FeedSessionsView {
       border-radius: var(--radius-md);
       padding: var(--space-md);
     }
-    .panel-header { display: flex; align-items: center; justify-content: space-between; }
-    .panel-title { font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
-    .week-nav { display: flex; align-items: center; gap: 4px; }
-    .nav-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; border-radius: 4px; display: flex; }
-    .nav-btn:hover { background: var(--surface-elevated); color: var(--text-color); }
-    .week-label { font-size: 10px; font-weight: 600; color: var(--text-muted); min-width: 80px; text-align: center; }
-    .empty-sessions { padding: var(--space-md) 0; text-align: center; }
-    .empty-text { font-size: var(--text-xs); color: var(--text-muted); }
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-title {
+      font-size: var(--text-xs);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+    .week-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .nav-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 2px;
+      border-radius: 4px;
+      display: flex;
+    }
+    .nav-btn:hover {
+      background: var(--surface-elevated);
+      color: var(--text-color);
+    }
+    .week-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      min-width: 80px;
+      text-align: center;
+    }
+    .empty-sessions {
+      padding: var(--space-md) 0;
+      text-align: center;
+    }
+    .empty-text {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+    }
   `,
 })
 export class FeedSessionsUpcomingComponent {
@@ -138,7 +211,7 @@ export class FeedSessionsUpcomingComponent {
   @Output() weekChange = new EventEmitter<number>();
 
   selectedSessionId: string | null = null;
-  vm: FeedSessionsView = {nextGoal: null, recurring: [], open: []};
+  vm: FeedSessionsView = { nextGoal: null, recurring: [], open: [] };
 
   private _sessions: ClubTrainingSession[] = [];
   private _currentUserId: string | null = null;
@@ -159,7 +232,7 @@ export class FeedSessionsUpcomingComponent {
       if (session.recurringTemplateId) recurring.push(view);
       else open.push(view);
     }
-    this.vm = {nextGoal: this.computeNextGoal(), recurring, open};
+    this.vm = { nextGoal: this.computeNextGoal(), recurring, open };
   }
 
   private computeNextGoal(): ClubRaceGoalResponse | null {

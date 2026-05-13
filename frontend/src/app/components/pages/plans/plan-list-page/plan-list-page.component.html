@@ -14,11 +14,19 @@
       <h3>{{ 'PLANS.CREATE_TITLE' | translate }}</h3>
       <div class="form-row">
         <label>{{ 'PLANS.FIELD_TITLE' | translate }}</label>
-        <input type="text" [(ngModel)]="newTitle" [placeholder]="'PLANS.PLACEHOLDER_TITLE' | translate" />
+        <input
+          type="text"
+          [(ngModel)]="newTitle"
+          [placeholder]="'PLANS.PLACEHOLDER_TITLE' | translate"
+        />
       </div>
       <div class="form-row">
         <label>{{ 'PLANS.FIELD_DESCRIPTION' | translate }}</label>
-        <textarea [(ngModel)]="newDescription" rows="2" [placeholder]="'PLANS.PLACEHOLDER_DESCRIPTION' | translate"></textarea>
+        <textarea
+          [(ngModel)]="newDescription"
+          rows="2"
+          [placeholder]="'PLANS.PLACEHOLDER_DESCRIPTION' | translate"
+        ></textarea>
       </div>
       <div class="form-grid">
         <div class="form-row">
@@ -36,8 +44,12 @@
         </div>
       </div>
       <div class="form-actions">
-        <button class="btn-secondary" (click)="showCreateForm = false">{{ 'COMMON.CANCEL' | translate }}</button>
-        <button class="btn-primary" (click)="createPlan()" [disabled]="!newTitle.trim()">{{ 'COMMON.CREATE' | translate }}</button>
+        <button class="btn-secondary" (click)="showCreateForm = false">
+          {{ 'COMMON.CANCEL' | translate }}
+        </button>
+        <button class="btn-primary" (click)="createPlan()" [disabled]="!newTitle.trim()">
+          {{ 'COMMON.CREATE' | translate }}
+        </button>
       </div>
     </div>
   }
@@ -46,16 +58,28 @@
     @if (plans$ | async; as plans) {
       @if (plans.length === 0 && !showCreateForm) {
         @if (loading$ | async) {
-          @for (r of [0,1,2,3,4,5]; track r) {
-            <div class="skeleton skeleton-block skeleton-plan-card" aria-busy="true" aria-hidden="true"></div>
+          @for (r of [0, 1, 2, 3, 4, 5]; track r) {
+            <div
+              class="skeleton skeleton-block skeleton-plan-card"
+              aria-busy="true"
+              aria-hidden="true"
+            ></div>
           }
         } @else {
           <div class="empty-state empty-state-grid">
             <div class="empty-icon">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
-                <rect x="9" y="3" width="6" height="4" rx="1"/>
-                <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+                <rect x="9" y="3" width="6" height="4" rx="1" />
+                <line x1="9" y1="12" x2="15" y2="12" />
+                <line x1="9" y1="16" x2="13" y2="16" />
               </svg>
             </div>
             <h3>{{ 'PLANS.EMPTY_TITLE' | translate }}</h3>
@@ -67,7 +91,7 @@
         <div class="plan-card glass" (click)="openPlan(plan)">
           <div class="plan-card-header">
             <div class="plan-title-row">
-              <app-sport-icon [sport]="plan.sportType" [size]="20"></app-sport-icon>
+              <app-sport-icon [sport]="plan.sportType" [size]="20" />
               <h3 class="plan-title">{{ plan.title }}</h3>
             </div>
             <span class="status-badge" [class]="'status-badge ' + statusClass(plan.status)">
@@ -86,9 +110,22 @@
             <span class="meta-sep">·</span>
             <span class="meta-item">{{ workoutCount(plan) }} workouts</span>
           </div>
-          <button class="btn-delete" (click)="confirmDelete($event, plan)" [title]="'COMMON.DELETE' | translate">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+          <button
+            class="btn-delete"
+            (click)="confirmDelete($event, plan)"
+            [title]="'COMMON.DELETE' | translate"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
+              />
             </svg>
           </button>
         </div>
@@ -108,8 +145,12 @@
       <div class="modal-body">
         <p class="confirm-text">{{ 'PLANS.CONFIRM_DELETE_BODY' | translate }}</p>
         <div class="confirm-actions">
-          <button class="btn-secondary" (click)="cancelDelete()">{{ 'COMMON.CANCEL' | translate }}</button>
-          <button class="btn-danger" (click)="deletePlan()">{{ 'PLANS.CONFIRM_DELETE_BTN' | translate }}</button>
+          <button class="btn-secondary" (click)="cancelDelete()">
+            {{ 'COMMON.CANCEL' | translate }}
+          </button>
+          <button class="btn-danger" (click)="deletePlan()">
+            {{ 'PLANS.CONFIRM_DELETE_BTN' | translate }}
+          </button>
         </div>
       </div>
     </div>

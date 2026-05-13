@@ -14,9 +14,27 @@
       <option value="month">{{ 'ANALYTICS.BY_MONTH' | translate }}</option>
     </select>
     <div class="metric-toggle">
-      <button class="toggle-btn" [class.active]="volumeMetric === 'time'" (click)="volumeMetric = 'time'">Time</button>
-      <button class="toggle-btn" [class.active]="volumeMetric === 'tss'" (click)="volumeMetric = 'tss'">TSS</button>
-      <button class="toggle-btn" [class.active]="volumeMetric === 'distance'" (click)="volumeMetric = 'distance'">Distance</button>
+      <button
+        class="toggle-btn"
+        [class.active]="volumeMetric === 'time'"
+        (click)="volumeMetric = 'time'"
+      >
+        Time
+      </button>
+      <button
+        class="toggle-btn"
+        [class.active]="volumeMetric === 'tss'"
+        (click)="volumeMetric = 'tss'"
+      >
+        TSS
+      </button>
+      <button
+        class="toggle-btn"
+        [class.active]="volumeMetric === 'distance'"
+        (click)="volumeMetric = 'distance'"
+      >
+        Distance
+      </button>
     </div>
   </div>
 
@@ -27,7 +45,7 @@
       </div>
     } @else {
       <div class="chart-container glass">
-        <app-dashboard-volume-chart [data]="entries" [metric]="volumeMetric"></app-dashboard-volume-chart>
+        <app-dashboard-volume-chart [data]="entries" [metric]="volumeMetric" />
       </div>
 
       <div class="volume-table glass">
@@ -44,7 +62,7 @@
             @for (entry of entries; track entry.period) {
               <tr>
                 <td>{{ entry.period }}</td>
-                <td>{{ entry.totalTss | number:'1.0-0' }}</td>
+                <td>{{ entry.totalTss | number: '1.0-0' }}</td>
                 <td>{{ formatDuration(entry.totalDurationSeconds) }}</td>
                 <td>{{ formatDistance(entry.totalDistanceMeters) }}</td>
               </tr>

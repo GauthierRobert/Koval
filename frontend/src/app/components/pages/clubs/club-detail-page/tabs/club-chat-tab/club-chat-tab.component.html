@@ -6,12 +6,19 @@
           type="button"
           class="room-chip"
           [class.is-active]="selected?.key === target.key"
-          (click)="selectTarget(target)">
+          (click)="selectTarget(target)"
+        >
           <span class="room-chip__badge" [attr.data-scope]="target.badge">
             @switch (target.badge) {
-              @case ('CLUB') { {{ 'CLUB_DETAIL.CHAT_BADGE_CLUB' | translate }} }
-              @case ('GROUP') { {{ 'CLUB_DETAIL.CHAT_BADGE_GROUP' | translate }} }
-              @case ('OBJECTIVE') { {{ 'CLUB_DETAIL.CHAT_BADGE_OBJECTIVE' | translate }} }
+              @case ('CLUB') {
+                {{ 'CLUB_DETAIL.CHAT_BADGE_CLUB' | translate }}
+              }
+              @case ('GROUP') {
+                {{ 'CLUB_DETAIL.CHAT_BADGE_GROUP' | translate }}
+              }
+              @case ('OBJECTIVE') {
+                {{ 'CLUB_DETAIL.CHAT_BADGE_OBJECTIVE' | translate }}
+              }
             }
           </span>
           <span class="room-chip__text">
@@ -35,8 +42,8 @@
           [clubName]="(club$ | async)?.name"
           [clubLogoUrl]="(club$ | async)?.logoUrl"
           [showBackButton]="true"
-          (backClick)="backToList()">
-        </app-embedded-chat>
+          (backClick)="backToList()"
+        />
       </div>
     }
   </div>
