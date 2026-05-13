@@ -46,7 +46,7 @@ export class PipService {
       await document.exitPictureInPicture();
     } else {
       this.updateCanvas(data);
-      const stream = (this.canvas as any).captureStream(10); // 10 FPS is enough for metrics
+      const stream = this.canvas.captureStream(10); // 10 FPS is enough for metrics
       this.video.srcObject = stream;
 
       // Always play to ensure PiP opens successfully

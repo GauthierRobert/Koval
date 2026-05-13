@@ -1,23 +1,23 @@
-import {ChangeDetectionStrategy, Component, DestroyRef, inject} from '@angular/core';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {CommonModule} from '@angular/common';
-import {RouterOutlet} from '@angular/router';
-import {WorkoutExecutionService} from './services/workout-execution.service';
-import {LiveDashboardComponent} from './components/pages/live-session/live-dashboard.component';
-import {TopBarComponent} from './components/layout/top-bar/top-bar.component';
-import {TrainingService} from './services/training.service';
-import {Training} from './models/training.model';
-import {Observable} from 'rxjs';
-import {filter} from 'rxjs/operators';
-import {DeviceManagerComponent} from './components/shared/device-manager/device-manager.component';
-import {SettingsComponent} from './components/layout/settings/settings.component';
-import {BluetoothService} from './services/bluetooth.service';
-import {AuthService} from './services/auth.service';
-import {NotificationService} from './services/notification.service';
-import {NotificationToastComponent} from './components/shared/notification-toast/notification-toast.component';
-import {ErrorToastComponent} from './components/shared/error-toast/error-toast.component';
-import {CguModalComponent} from './components/shared/cgu-modal/cgu-modal.component';
-import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CommonModule } from '@angular/common';
+import { RouterOutlet } from '@angular/router';
+import { ActiveSessionState, WorkoutExecutionService } from './services/workout-execution.service';
+import { LiveDashboardComponent } from './components/pages/live-session/live-dashboard.component';
+import { TopBarComponent } from './components/layout/top-bar/top-bar.component';
+import { TrainingService } from './services/training.service';
+import { Training } from './models/training.model';
+import { Observable } from 'rxjs';
+import { filter } from 'rxjs/operators';
+import { DeviceManagerComponent } from './components/shared/device-manager/device-manager.component';
+import { SettingsComponent } from './components/layout/settings/settings.component';
+import { BluetoothService } from './services/bluetooth.service';
+import { AuthService } from './services/auth.service';
+import { NotificationService } from './services/notification.service';
+import { NotificationToastComponent } from './components/shared/notification-toast/notification-toast.component';
+import { ErrorToastComponent } from './components/shared/error-toast/error-toast.component';
+import { CguModalComponent } from './components/shared/cgu-modal/cgu-modal.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-root',
@@ -32,7 +32,7 @@ import {TranslateModule, TranslateService} from '@ngx-translate/core';
     NotificationToastComponent,
     ErrorToastComponent,
     CguModalComponent,
-    TranslateModule
+    TranslateModule,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
@@ -40,7 +40,7 @@ import {TranslateModule, TranslateService} from '@ngx-translate/core';
 })
 export class AppComponent {
   selectedTraining$: Observable<Training | null>;
-  executionState$: Observable<any>;
+  executionState$: Observable<ActiveSessionState>;
   showDeviceManager$: Observable<boolean>;
   showSettings$: Observable<boolean>;
 

@@ -24,7 +24,10 @@ export class CalendarSessionCardComponent {
   @Output() linkToClubSession = new EventEmitter<SavedSession>();
 
   get session(): SavedSession {
-    return (this.entry as any).session;
+    if (this.entry.kind !== 'standalone' && this.entry.kind !== 'fused') {
+      throw new Error(`Expected standalone or fused entry, got ${this.entry.kind}`);
+    }
+    return this.entry.session;
   }
 
   formatSessionDuration(session: SavedSession): string {

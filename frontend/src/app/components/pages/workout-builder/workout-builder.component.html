@@ -359,7 +359,7 @@
                 [isSelected]="selectedBlockIndex === bi"
                 [isSelectedForSet]="selectedForSet.has(bi)"
                 [blockColor]="blockColor(block)"
-                (select)="selectBlock($event)"
+                (blockSelect)="selectBlock($event)"
                 (selectForSet)="toggleSetSelection($event)"
                 (duplicate)="duplicateBlock($event)"
                 (remove)="removeBlock($event)"

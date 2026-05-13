@@ -136,7 +136,7 @@ import { FeedCommentsSectionComponent } from './feed-comments-section.component'
       <app-feed-reaction-bar
         [reactions]="event.reactions"
         [currentUserId]="currentUserId"
-        (toggle)="reacted.emit({ eventId: event.id, emoji: $event })"
+        (toggled)="reacted.emit({ eventId: event.id, emoji: $event })"
       />
 
       <app-feed-comments-section

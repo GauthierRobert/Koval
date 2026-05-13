@@ -1,22 +1,22 @@
-import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {Router, RouterModule} from '@angular/router';
-import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {BehaviorSubject, combineLatest} from 'rxjs';
-import {filter, map, shareReplay, startWith, switchMap} from 'rxjs/operators';
-import {AuthService} from '../../../services/auth.service';
-import {CalendarService} from '../../../services/calendar.service';
-import {HistoryService, SavedSession} from '../../../services/history.service';
-import {MetricsService, PmcDataPoint} from '../../../services/metrics.service';
-import {CoachService, ScheduledWorkout} from '../../../services/coach.service';
-import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
-import {AnalyticsService, VolumeEntry} from '../../../services/analytics.service';
-import {WorkoutDetailModalComponent} from '../../shared/workout-detail-modal/workout-detail-modal.component';
-import {daysUntil, formatTrainingDuration} from '../../shared/format/format.utils';
-import {DashboardFocusCardComponent} from './dashboard-focus-card/dashboard-focus-card.component';
-import {DashboardClubCardsComponent} from './dashboard-club-cards/dashboard-club-cards.component';
-import {DashboardVolumeChartComponent} from './dashboard-volume-chart/dashboard-volume-chart.component';
-import {LastActivityCardComponent} from './last-activity-card/last-activity-card.component';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { BehaviorSubject, combineLatest } from 'rxjs';
+import { filter, map, shareReplay, startWith, switchMap } from 'rxjs/operators';
+import { AuthService } from '../../../services/auth.service';
+import { CalendarService } from '../../../services/calendar.service';
+import { HistoryService, SavedSession } from '../../../services/history.service';
+import { MetricsService, PmcDataPoint } from '../../../services/metrics.service';
+import { CoachService, ScheduledWorkout } from '../../../services/coach.service';
+import { RaceGoal, RaceGoalService } from '../../../services/race-goal.service';
+import { AnalyticsService, VolumeEntry } from '../../../services/analytics.service';
+import { WorkoutDetailModalComponent } from '../../shared/workout-detail-modal/workout-detail-modal.component';
+import { daysUntil, formatTrainingDuration } from '../../shared/format/format.utils';
+import { DashboardFocusCardComponent } from './dashboard-focus-card/dashboard-focus-card.component';
+import { DashboardClubCardsComponent } from './dashboard-club-cards/dashboard-club-cards.component';
+import { DashboardVolumeChartComponent } from './dashboard-volume-chart/dashboard-volume-chart.component';
+import { LastActivityCardComponent } from './last-activity-card/last-activity-card.component';
 
 function toDateKey(d: Date): string {
   const y = d.getFullYear();
@@ -82,7 +82,16 @@ function computeWeekMetrics(sessions: SavedSession[]): WeekMetrics {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, WorkoutDetailModalComponent, TranslateModule, DashboardFocusCardComponent, DashboardClubCardsComponent, DashboardVolumeChartComponent, LastActivityCardComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    WorkoutDetailModalComponent,
+    TranslateModule,
+    DashboardFocusCardComponent,
+    DashboardClubCardsComponent,
+    DashboardVolumeChartComponent,
+    LastActivityCardComponent,
+  ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -108,14 +117,19 @@ export class DashboardComponent {
   private schedule$ = this.authService.user$.pipe(
     filter((u) => !!u),
     switchMap(() => this.reload$),
-    switchMap(() => this.calendarService.getMySchedule(this.sevenDaysAgoKey, this.fourteenDaysAhead)),
+    switchMap(() =>
+      this.calendarService.getMySchedule(this.sevenDaysAgoKey, this.fourteenDaysAhead),
+    ),
     shareReplay(1),
   );
 
   overdueWorkouts$ = this.schedule$.pipe(
     map((ws) =>
       ws.filter(
-        (w) => w.status === 'PENDING' && w.scheduledDate >= this.sevenDaysAgoKey && w.scheduledDate < this.todayKey,
+        (w) =>
+          w.status === 'PENDING' &&
+          w.scheduledDate >= this.sevenDaysAgoKey &&
+          w.scheduledDate < this.todayKey,
       ),
     ),
     startWith([] as ScheduledWorkout[]),
@@ -127,18 +141,26 @@ export class DashboardComponent {
   );
 
   completedLastWeek$ = this.schedule$.pipe(
-    map((ws) => ws.filter((w) => w.status === 'COMPLETED' && w.scheduledDate >= this.sevenDaysAgoKey)),
+    map((ws) =>
+      ws.filter((w) => w.status === 'COMPLETED' && w.scheduledDate >= this.sevenDaysAgoKey),
+    ),
     startWith([] as ScheduledWorkout[]),
   );
 
   plannedLastWeek$ = this.schedule$.pipe(
-    map((ws) => ws.filter((w) => w.scheduledDate >= this.sevenDaysAgoKey && w.scheduledDate <= this.todayKey)),
+    map((ws) =>
+      ws.filter((w) => w.scheduledDate >= this.sevenDaysAgoKey && w.scheduledDate <= this.todayKey),
+    ),
     startWith([] as ScheduledWorkout[]),
   );
 
-  weekMetrics$ = this.historyService.sessions$.pipe(map((sessions) => computeWeekMetrics(sessions)));
+  weekMetrics$ = this.historyService.sessions$.pipe(
+    map((sessions) => computeWeekMetrics(sessions)),
+  );
 
-  latestFit$ = this.historyService.sessions$.pipe(map((ss) => ss.find((s) => !!s.fitFileId) ?? null));
+  latestFit$ = this.historyService.sessions$.pipe(
+    map((ss) => ss.find((s) => !!s.fitFileId) ?? null),
+  );
 
   pmcData$ = this.authService.user$.pipe(
     filter((u) => !!u),
@@ -155,9 +177,9 @@ export class DashboardComponent {
   );
 
   sessionReminders$ = this.authService.user$.pipe(
-    filter(u => !!u && u.role === 'COACH'),
+    filter((u) => !!u && u.role === 'COACH'),
     switchMap(() => this.coachService.getSessionReminders()),
-    startWith([] as any[]),
+    startWith([] as ScheduledWorkout[]),
   );
 
   formStats$ = combineLatest([this.pmcData$, this.authService.user$]).pipe(
@@ -207,7 +229,7 @@ export class DashboardComponent {
     return formatTrainingDuration(s);
   }
 
-  navigateToLinkTraining(session: any): void {
+  navigateToLinkTraining(session: ScheduledWorkout & { clubId?: string }): void {
     this.router.navigate(['/clubs', session.clubId]);
   }
 
@@ -219,8 +241,12 @@ export class DashboardComponent {
     this.router.navigate(['/active-session']);
   }
 
-  onDetailClosed(): void { this.selectedScheduledWorkout = null; }
-  onDetailStarted(): void { this.selectedScheduledWorkout = null; }
+  onDetailClosed(): void {
+    this.selectedScheduledWorkout = null;
+  }
+  onDetailStarted(): void {
+    this.selectedScheduledWorkout = null;
+  }
   onDetailStatusChanged(): void {
     this.selectedScheduledWorkout = null;
     this.reload$.next();
@@ -253,10 +279,14 @@ export class DashboardComponent {
 
   sportLabel(sport: string): string {
     switch (sport) {
-      case 'CYCLING': return 'DASHBOARD.MIX_BIKE';
-      case 'RUNNING': return 'DASHBOARD.MIX_RUN';
-      case 'SWIMMING': return 'DASHBOARD.MIX_SWIM';
-      default: return sport;
+      case 'CYCLING':
+        return 'DASHBOARD.MIX_BIKE';
+      case 'RUNNING':
+        return 'DASHBOARD.MIX_RUN';
+      case 'SWIMMING':
+        return 'DASHBOARD.MIX_SWIM';
+      default:
+        return sport;
     }
   }
 
@@ -331,13 +361,19 @@ export class DashboardComponent {
   }
 
   /* Compliance = completed / (completed + overdue) */
-  complianceStats(vm: { completedLastWeek: ScheduledWorkout[]; overdue: ScheduledWorkout[] }): { done: number; total: number } {
+  complianceStats(vm: { completedLastWeek: ScheduledWorkout[]; overdue: ScheduledWorkout[] }): {
+    done: number;
+    total: number;
+  } {
     const done = vm.completedLastWeek.length;
     const total = done + vm.overdue.length;
     return { done, total: total || done };
   }
 
-  compliancePct(vm: { completedLastWeek: ScheduledWorkout[]; overdue: ScheduledWorkout[] }): number {
+  compliancePct(vm: {
+    completedLastWeek: ScheduledWorkout[];
+    overdue: ScheduledWorkout[];
+  }): number {
     const { done, total } = this.complianceStats(vm);
     if (total <= 0) return 100;
     return (done / total) * 100;

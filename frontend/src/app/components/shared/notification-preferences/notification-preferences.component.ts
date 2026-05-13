@@ -1,10 +1,19 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, inject, isDevMode, NgZone, OnInit, Output} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject} from 'rxjs';
-import {environment} from '../../../../environments/environment';
-import {TranslateModule} from '@ngx-translate/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  inject,
+  isDevMode,
+  NgZone,
+  OnInit,
+  Output,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { TranslateModule } from '@ngx-translate/core';
 
 export interface NotificationPreferences {
   workoutAssigned: boolean;
@@ -22,48 +31,84 @@ export interface NotificationPreferences {
   imports: [CommonModule, FormsModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="notif-prefs-overlay" (click)="close.emit()">
+    <div class="notif-prefs-overlay" (click)="closed.emit()">
       <div class="notif-prefs-panel glass" (click)="$event.stopPropagation()">
         <div class="notif-prefs-header">
           <h3>{{ 'NOTIFICATIONS.TITLE' | translate }}</h3>
-          <button class="close-btn" (click)="close.emit()">&times;</button>
+          <button class="close-btn" (click)="closed.emit()">&times;</button>
         </div>
 
         @if (prefs$ | async; as prefs) {
           <div class="notif-prefs-list">
             <label class="notif-toggle">
               <span class="notif-label">{{ 'NOTIFICATIONS.WORKOUT_ASSIGNED' | translate }}</span>
-              <input type="checkbox" [(ngModel)]="prefs.workoutAssigned" (ngModelChange)="save(prefs)" />
+              <input
+                type="checkbox"
+                [(ngModel)]="prefs.workoutAssigned"
+                (ngModelChange)="save(prefs)"
+              />
               <span class="toggle-track"></span>
             </label>
             <label class="notif-toggle">
               <span class="notif-label">{{ 'NOTIFICATIONS.WORKOUT_REMINDER' | translate }}</span>
-              <input type="checkbox" [(ngModel)]="prefs.workoutReminder" (ngModelChange)="save(prefs)" />
+              <input
+                type="checkbox"
+                [(ngModel)]="prefs.workoutReminder"
+                (ngModelChange)="save(prefs)"
+              />
               <span class="toggle-track"></span>
             </label>
             <label class="notif-toggle">
-              <span class="notif-label">{{ 'NOTIFICATIONS.WORKOUT_COMPLETED_COACH' | translate }}</span>
-              <input type="checkbox" [(ngModel)]="prefs.workoutCompletedCoach" (ngModelChange)="save(prefs)" />
+              <span class="notif-label">{{
+                'NOTIFICATIONS.WORKOUT_COMPLETED_COACH' | translate
+              }}</span>
+              <input
+                type="checkbox"
+                [(ngModel)]="prefs.workoutCompletedCoach"
+                (ngModelChange)="save(prefs)"
+              />
               <span class="toggle-track"></span>
             </label>
             <label class="notif-toggle">
-              <span class="notif-label">{{ 'NOTIFICATIONS.CLUB_SESSION_CREATED' | translate }}</span>
-              <input type="checkbox" [(ngModel)]="prefs.clubSessionCreated" (ngModelChange)="save(prefs)" />
+              <span class="notif-label">{{
+                'NOTIFICATIONS.CLUB_SESSION_CREATED' | translate
+              }}</span>
+              <input
+                type="checkbox"
+                [(ngModel)]="prefs.clubSessionCreated"
+                (ngModelChange)="save(prefs)"
+              />
               <span class="toggle-track"></span>
             </label>
             <label class="notif-toggle">
-              <span class="notif-label">{{ 'NOTIFICATIONS.CLUB_SESSION_CANCELLED' | translate }}</span>
-              <input type="checkbox" [(ngModel)]="prefs.clubSessionCancelled" (ngModelChange)="save(prefs)" />
+              <span class="notif-label">{{
+                'NOTIFICATIONS.CLUB_SESSION_CANCELLED' | translate
+              }}</span>
+              <input
+                type="checkbox"
+                [(ngModel)]="prefs.clubSessionCancelled"
+                (ngModelChange)="save(prefs)"
+              />
               <span class="toggle-track"></span>
             </label>
             <label class="notif-toggle">
-              <span class="notif-label">{{ 'NOTIFICATIONS.WAITING_LIST_PROMOTED' | translate }}</span>
-              <input type="checkbox" [(ngModel)]="prefs.waitingListPromoted" (ngModelChange)="save(prefs)" />
+              <span class="notif-label">{{
+                'NOTIFICATIONS.WAITING_LIST_PROMOTED' | translate
+              }}</span>
+              <input
+                type="checkbox"
+                [(ngModel)]="prefs.waitingListPromoted"
+                (ngModelChange)="save(prefs)"
+              />
               <span class="toggle-track"></span>
             </label>
             <label class="notif-toggle">
               <span class="notif-label">{{ 'NOTIFICATIONS.PLAN_ACTIVATED' | translate }}</span>
-              <input type="checkbox" [(ngModel)]="prefs.planActivated" (ngModelChange)="save(prefs)" />
+              <input
+                type="checkbox"
+                [(ngModel)]="prefs.planActivated"
+                (ngModelChange)="save(prefs)"
+              />
               <span class="toggle-track"></span>
             </label>
           </div>
@@ -165,7 +210,9 @@ export interface NotificationPreferences {
         height: 18px;
         border-radius: 50%;
         background: var(--text-muted);
-        transition: transform 0.2s, background 0.2s;
+        transition:
+          transform 0.2s,
+          background 0.2s;
       }
       input:checked + .toggle-track {
         background: var(--accent-color);
@@ -195,7 +242,9 @@ export interface NotificationPreferences {
         font-size: 0.85rem;
         font-weight: 600;
         cursor: pointer;
-        transition: background 0.15s, color 0.15s;
+        transition:
+          background 0.15s,
+          color 0.15s;
       }
       .test-btn:hover:not(:disabled) {
         background: var(--accent-color);
@@ -209,7 +258,7 @@ export interface NotificationPreferences {
   ],
 })
 export class NotificationPreferencesComponent implements OnInit {
-  @Output() close = new EventEmitter<void>();
+  @Output() closed = new EventEmitter<void>();
 
   private readonly http = inject(HttpClient);
   private readonly ngZone = inject(NgZone);

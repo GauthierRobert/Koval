@@ -199,7 +199,7 @@
 
     <!-- Session Summary Overlay -->
     @if (state.finalSummary) {
-      <app-session-summary [summary]="state.finalSummary" (close)="closeSummary()" />
+      <app-session-summary [summary]="state.finalSummary" (closed)="closeSummary()" />
     }
   </div>
 }

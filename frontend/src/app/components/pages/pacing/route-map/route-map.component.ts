@@ -13,16 +13,16 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {CommonModule} from '@angular/common';
-import {PacingSegment, RouteCoordinate, SegmentRange} from '../../../../services/pacing.service';
-import {ThemeService} from '../../../../services/theme.service';
-import {CARTO_TILE_OPTIONS, tileUrlForTheme} from '../../../shared/leaflet/tile-themes';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CommonModule } from '@angular/common';
+import { PacingSegment, RouteCoordinate, SegmentRange } from '../../../../services/pacing.service';
+import { ThemeService } from '../../../../services/theme.service';
+import { CARTO_TILE_OPTIONS, tileUrlForTheme } from '../../../shared/leaflet/tile-themes';
 import * as L from 'leaflet';
 
 // Fix Leaflet default icon paths for bundled assets
 // Reset imagePath to prevent Angular's esbuild builder from prepending /media/
-(L.Icon.Default as any).imagePath = '';
+L.Icon.Default.imagePath = '';
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'assets/leaflet/marker-icon-2x.png',
   iconUrl: 'assets/leaflet/marker-icon.png',
@@ -84,7 +84,9 @@ export class RouteMapComponent implements AfterViewInit, OnChanges, OnDestroy {
       if (this.map) {
         this.map.invalidateSize();
         if (this.routeCoordinates?.length) {
-          const bounds = L.latLngBounds(this.routeCoordinates.map(c => [c.lat, c.lon] as L.LatLngTuple));
+          const bounds = L.latLngBounds(
+            this.routeCoordinates.map((c) => [c.lat, c.lon] as L.LatLngTuple),
+          );
           this.map.fitBounds(bounds, { padding: [30, 30] });
         }
       }
@@ -116,13 +118,11 @@ export class RouteMapComponent implements AfterViewInit, OnChanges, OnDestroy {
       attributionControl: true,
     });
 
-    this.themeService.theme$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((theme) => {
-        if (!this.map) return;
-        if (this.tileLayer) this.map.removeLayer(this.tileLayer);
-        this.tileLayer = L.tileLayer(tileUrlForTheme(theme), CARTO_TILE_OPTIONS).addTo(this.map);
-      });
+    this.themeService.theme$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((theme) => {
+      if (!this.map) return;
+      if (this.tileLayer) this.map.removeLayer(this.tileLayer);
+      this.tileLayer = L.tileLayer(tileUrlForTheme(theme), CARTO_TILE_OPTIONS).addTo(this.map);
+    });
   }
 
   private renderRoute(): void {
@@ -158,9 +158,10 @@ export class RouteMapComponent implements AfterViewInit, OnChanges, OnDestroy {
         if (segCoords.length < 2) continue;
 
         const latLngs: L.LatLngExpression[] = segCoords.map((c) => [c.lat, c.lon] as L.LatLngTuple);
-        const color = this.showSpeed && seg.estimatedSpeedKmh
-          ? this.speedColor(seg.estimatedSpeedKmh)
-          : this.gradientColor(seg.gradient);
+        const color =
+          this.showSpeed && seg.estimatedSpeedKmh
+            ? this.speedColor(seg.estimatedSpeedKmh)
+            : this.gradientColor(seg.gradient);
 
         const polyline = L.polyline(latLngs, {
           color,
@@ -269,29 +270,29 @@ export class RouteMapComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.highlightPolyline.bringToBack();
   }
 
- private gradientColor(gradient: number): string {
+  private gradientColor(gradient: number): string {
     const g = gradient;
-    if (g > 12) return '#7c3aed';       // extreme climb — deep purple
-    if (g > 8) return '#c026d3';        // very steep climb — red-purple
-    if (g > 6) return '#dc2626';        // steep climb — red
-    if (g > 3) return '#ea580c';        // moderate climb — red-orange
-    if (g > 1) return '#f97316';        // slight climb — orange
-    if (g >= -1) return '#a0a0a0';      // flat — grey
-    if (g >= -3) return '#22c55e';      // slight descent — green
-    if (g >= -6) return '#0d9488';      // moderate descent — teal
-    if (g >= -10) return '#2563eb';     // steep descent — blue
-    return '#1e3a5f';                   // very steep descent — dark blue
+    if (g > 12) return '#7c3aed'; // extreme climb — deep purple
+    if (g > 8) return '#c026d3'; // very steep climb — red-purple
+    if (g > 6) return '#dc2626'; // steep climb — red
+    if (g > 3) return '#ea580c'; // moderate climb — red-orange
+    if (g > 1) return '#f97316'; // slight climb — orange
+    if (g >= -1) return '#a0a0a0'; // flat — grey
+    if (g >= -3) return '#22c55e'; // slight descent — green
+    if (g >= -6) return '#0d9488'; // moderate descent — teal
+    if (g >= -10) return '#2563eb'; // steep descent — blue
+    return '#1e3a5f'; // very steep descent — dark blue
   }
 
   private speedColor(speedKmh: number): string {
-    if (speedKmh > 45) return '#7c3aed';    // very fast — purple
-    if (speedKmh > 38) return '#2563eb';    // fast — blue
-    if (speedKmh > 32) return '#0d9488';    // brisk — teal
-    if (speedKmh > 26) return '#34d399';    // moderate-fast — green
-    if (speedKmh > 20) return '#a0a0a0';    // moderate — grey
-    if (speedKmh > 15) return '#f97316';    // moderate-slow — orange
-    if (speedKmh > 10) return '#ea580c';    // slow — red-orange
-    return '#dc2626';                        // very slow — red
+    if (speedKmh > 45) return '#7c3aed'; // very fast — purple
+    if (speedKmh > 38) return '#2563eb'; // fast — blue
+    if (speedKmh > 32) return '#0d9488'; // brisk — teal
+    if (speedKmh > 26) return '#34d399'; // moderate-fast — green
+    if (speedKmh > 20) return '#a0a0a0'; // moderate — grey
+    if (speedKmh > 15) return '#f97316'; // moderate-slow — orange
+    if (speedKmh > 10) return '#ea580c'; // slow — red-orange
+    return '#dc2626'; // very slow — red
   }
 
   private clearLayers(): void {

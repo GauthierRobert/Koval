@@ -724,12 +724,12 @@
 }
 
 @if (showNotifPrefs) {
-  <app-notification-preferences (close)="showNotifPrefs = false" />
+  <app-notification-preferences (closed)="showNotifPrefs = false" />
 }
 
 @if (showNotifCenter) {
   <app-notification-center
-    (close)="showNotifCenter = false"
+    (closed)="showNotifCenter = false"
     (openPrefs)="showNotifCenter = false; showNotifPrefs = true"
   />
 }

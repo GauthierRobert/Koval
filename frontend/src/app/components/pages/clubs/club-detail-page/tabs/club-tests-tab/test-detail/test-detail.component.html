@@ -286,7 +286,7 @@
       <app-test-form-modal
         [club]="club"
         [test]="test"
-        (cancel)="showEditModal = false"
+        (cancelled)="showEditModal = false"
         (save)="saveEdited($event)"
       />
     }
@@ -297,7 +297,7 @@
         [existing]="resultModalResult"
         [recordingForAthleteId]="resultModalRecordingFor"
         [coachMode]="isCoach"
-        (cancel)="showResultModal = false"
+        (cancelled)="showResultModal = false"
         (save)="saveResult($event, activeIter.id)"
       />
     }
@@ -306,7 +306,7 @@
       <app-apply-references-confirm-modal
         [iteration]="activeIter"
         [result]="applyModalResult"
-        (cancel)="showApplyModal = false; applyModalResult = null"
+        (cancelled)="showApplyModal = false; applyModalResult = null"
         (confirm)="applyReferences($event, activeIter.id)"
       />
     }

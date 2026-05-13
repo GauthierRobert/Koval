@@ -39,16 +39,20 @@
           @for (block of summary.blockSummaries; track block) {
             <tr>
               <td>
-              <span class="block-type" [class]="block.type.toLowerCase()">{{ block.label }}</span>
-            </td>
-            <td>{{ formatTime(block.durationSeconds) }}</td>
-            <td>{{ block.targetPower }}{{ getSportUnit() }}</td>
-            <td>{{ block.actualPower }}{{ getSportUnit() }}</td>
-            <td>
-              <span class="delta" [class.positive]="getDelta(block) >= 0" [class.negative]="getDelta(block) < 0">
-                {{ getDelta(block) > 0 ? '+' : '' }}{{ getDelta(block) }}%
-              </span>
-            </td>
+                <span class="block-type" [class]="block.type.toLowerCase()">{{ block.label }}</span>
+              </td>
+              <td>{{ formatTime(block.durationSeconds) }}</td>
+              <td>{{ block.targetPower }}{{ getSportUnit() }}</td>
+              <td>{{ block.actualPower }}{{ getSportUnit() }}</td>
+              <td>
+                <span
+                  class="delta"
+                  [class.positive]="getDelta(block) >= 0"
+                  [class.negative]="getDelta(block) < 0"
+                >
+                  {{ getDelta(block) > 0 ? '+' : '' }}{{ getDelta(block) }}%
+                </span>
+              </td>
             </tr>
           }
         </tbody>
@@ -57,14 +61,25 @@
 
     <footer class="summary-footer">
       <button class="fit-btn" (click)="downloadFit()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
         </svg>
         {{ 'SESSION_SUMMARY.BTN_DOWNLOAD_FIT' | translate }}
       </button>
-      <button class="done-btn" (click)="close.emit()">{{ 'SESSION_SUMMARY.BTN_DONE' | translate }}</button>
+      <button class="done-btn" (click)="closed.emit()">
+        {{ 'SESSION_SUMMARY.BTN_DONE' | translate }}
+      </button>
     </footer>
   </div>
 </div>

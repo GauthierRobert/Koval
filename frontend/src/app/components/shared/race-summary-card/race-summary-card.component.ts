@@ -1,10 +1,10 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, Input, Output} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {TranslateModule} from '@ngx-translate/core';
-import {Race} from '../../../services/race.service';
-import {SportIconComponent} from '../sport-icon/sport-icon.component';
-import {sportMeta} from '../../../models/sport.registry';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { Race } from '../../../services/race.service';
+import { SportIconComponent } from '../sport-icon/sport-icon.component';
+import { sportMeta } from '../../../models/sport.registry';
 
 @Component({
   selector: 'app-race-summary-card',
@@ -15,7 +15,7 @@ import {sportMeta} from '../../../models/sport.registry';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RaceSummaryCardComponent {
-  @Input({required: true}) race!: Race;
+  @Input({ required: true }) race!: Race;
   @Input() isExpanded = false;
   @Input() isAdded = false;
   @Input() isOwnRace = false;
@@ -33,8 +33,8 @@ export class RaceSummaryCardComponent {
   @Output() saveEdit = new EventEmitter<Race>();
   @Output() cancelEdit = new EventEmitter<void>();
   @Output() editFormChange = new EventEmitter<Partial<Race>>();
-  @Output() gpxFileSelected = new EventEmitter<{race: Race; discipline: string; event: Event}>();
-  @Output() loopsChanged = new EventEmitter<{race: Race; discipline: string; event: Event}>();
+  @Output() gpxFileSelected = new EventEmitter<{ race: Race; discipline: string; event: Event }>();
+  @Output() loopsChanged = new EventEmitter<{ race: Race; discipline: string; event: Event }>();
 
   getSportColor(): string {
     return sportMeta(this.race.sport).color;
@@ -51,10 +51,14 @@ export class RaceSummaryCardComponent {
 
   hasGpx(discipline: string): boolean {
     switch (discipline) {
-      case 'swim': return !!this.race.hasSwimGpx;
-      case 'bike': return !!this.race.hasBikeGpx;
-      case 'run': return !!this.race.hasRunGpx;
-      default: return false;
+      case 'swim':
+        return !!this.race.hasSwimGpx;
+      case 'bike':
+        return !!this.race.hasBikeGpx;
+      case 'run':
+        return !!this.race.hasRunGpx;
+      default:
+        return false;
     }
   }
 
@@ -74,18 +78,25 @@ export class RaceSummaryCardComponent {
 
   getLoopCount(discipline: string): number {
     switch (discipline) {
-      case 'swim': return this.race.swimGpxLoops ?? 1;
-      case 'bike': return this.race.bikeGpxLoops ?? 1;
-      case 'run': return this.race.runGpxLoops ?? 1;
-      default: return 1;
+      case 'swim':
+        return this.race.swimGpxLoops ?? 1;
+      case 'bike':
+        return this.race.bikeGpxLoops ?? 1;
+      case 'run':
+        return this.race.runGpxLoops ?? 1;
+      default:
+        return 1;
     }
   }
 
-  onEditFormFieldChange(field: string, value: any): void {
-    this.editFormChange.emit({...this.editForm, [field]: value});
+  onEditFormFieldChange(field: string, value: unknown): void {
+    this.editFormChange.emit({ ...this.editForm, [field]: value });
   }
 
   descriptionParagraphs(desc: string): string[] {
-    return desc.split(/\n\n+/).map(p => p.trim()).filter(p => p.length > 0);
+    return desc
+      .split(/\n\n+/)
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0);
   }
 }

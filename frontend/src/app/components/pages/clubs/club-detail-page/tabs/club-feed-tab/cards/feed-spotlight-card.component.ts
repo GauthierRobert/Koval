@@ -121,7 +121,7 @@ const BADGE_GLYPH: Record<SpotlightBadge, string> = {
       <app-feed-reaction-bar
         [reactions]="event.reactions"
         [currentUserId]="currentUserId"
-        (toggle)="reacted.emit({ eventId: event.id, emoji: $event })"
+        (toggled)="reacted.emit({ eventId: event.id, emoji: $event })"
       />
 
       <app-feed-comments-section

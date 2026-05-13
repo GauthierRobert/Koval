@@ -2,7 +2,7 @@
   class="workout-card clickable"
   [class.workout-card--completed]="scheduled.status === 'COMPLETED'"
   [class.workout-card--skipped]="scheduled.status === 'SKIPPED'"
-  (click)="select.emit(scheduled)"
+  (click)="workoutSelect.emit(scheduled)"
 >
   <div class="card-top">
     <div class="card-top-left">
@@ -98,7 +98,7 @@
         }
         <button
           class="delete-btn"
-          (click)="delete.emit(scheduled); $event.stopPropagation()"
+          (click)="workoutDelete.emit(scheduled); $event.stopPropagation()"
           [title]="'CALENDAR_WEEK.BTN_REMOVE_TITLE' | translate"
           data-testid="btn-delete"
         >

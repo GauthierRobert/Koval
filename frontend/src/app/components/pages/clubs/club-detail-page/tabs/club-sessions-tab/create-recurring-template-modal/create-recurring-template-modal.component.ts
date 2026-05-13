@@ -7,17 +7,18 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {TranslateModule} from '@ngx-translate/core';
-import {ClubGroup, ClubMember} from '../../../../../../../services/club.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { ClubGroup, ClubMember } from '../../../../../../../services/club.service';
 import {
   MeetingPoint,
   MeetingPointPickerComponent,
 } from '../../../../../../shared/meeting-point-picker/meeting-point-picker.component';
+import { SessionFormPayload } from '../session-form-mapper';
 
 export interface RecurringTemplateCreateEvent {
-  form: Record<string, any>;
+  form: SessionFormPayload;
   gpxFile: File | null;
 }
 
@@ -40,7 +41,7 @@ export class CreateRecurringTemplateModalComponent implements OnChanges {
   @Output() closed = new EventEmitter<void>();
   @Output() saved = new EventEmitter<RecurringTemplateCreateEvent>();
 
-  form: Record<string, any> = {};
+  form: SessionFormPayload = {};
   gpxFile: File | null = null;
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -83,10 +84,10 @@ export class CreateRecurringTemplateModalComponent implements OnChanges {
 
   get isFormValid(): boolean {
     return (
-      !!this.form['title']
-      && !!this.form['sport']
-      && !!this.form['dayOfWeek']
-      && !!this.form['timeOfDay']
+      !!this.form['title'] &&
+      !!this.form['sport'] &&
+      !!this.form['dayOfWeek'] &&
+      !!this.form['timeOfDay']
     );
   }
 
@@ -96,6 +97,6 @@ export class CreateRecurringTemplateModalComponent implements OnChanges {
 
   save(): void {
     if (!this.isFormValid) return;
-    this.saved.emit({form: {...this.form}, gpxFile: this.gpxFile});
+    this.saved.emit({ form: { ...this.form }, gpxFile: this.gpxFile });
   }
 }

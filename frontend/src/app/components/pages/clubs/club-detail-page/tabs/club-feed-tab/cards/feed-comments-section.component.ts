@@ -190,7 +190,7 @@ interface CommentReactionEvent {
             <app-feed-reaction-bar
               [reactions]="c.reactions"
               [currentUserId]="currentUserId"
-              (toggle)="onCommentReact(c, $event)"
+              (toggled)="onCommentReact(c, $event)"
             />
             <div class="comment-actions">
               @if (!isReply) {

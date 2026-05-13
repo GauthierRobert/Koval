@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -20,7 +27,7 @@ import { targetLabelKey } from '../test-display.utils';
 export class ApplyReferencesConfirmModalComponent implements OnInit {
   @Input() iteration!: ClubTestIteration;
   @Input() result!: ClubTestResult;
-  @Output() cancel = new EventEmitter<void>();
+  @Output() cancelled = new EventEmitter<void>();
   @Output() confirm = new EventEmitter<string[]>();
 
   selected = new Set<string>();

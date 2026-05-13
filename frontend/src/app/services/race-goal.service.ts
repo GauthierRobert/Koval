@@ -1,16 +1,18 @@
-import {inject, Injectable, NgZone} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, Observable} from 'rxjs';
-import {filter, map} from 'rxjs/operators';
-import {AuthService} from './auth.service';
-import {environment} from '../../environments/environment';
-import {Race} from './race.service';
+import { inject, Injectable, NgZone } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
+import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
+import { Race } from './race.service';
+
+export type RaceGoalSport = 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'TRIATHLON' | 'OTHER';
 
 export interface RaceGoal {
   id: string;
   athleteId: string;
   title: string;
-  sport: 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'TRIATHLON' | 'OTHER';
+  sport: RaceGoalSport;
   priority: 'A' | 'B' | 'C';
   distance?: string;
   location?: string;
@@ -62,10 +64,11 @@ export class RaceGoalService {
   loadGoals(): void {
     this.loadingSubject.next(true);
     this.http.get<RaceGoal[]>(this.apiUrl).subscribe({
-      next: (goals) => this.ngZone.run(() => {
-        this.goalsSubject.next(goals);
-        this.loadingSubject.next(false);
-      }),
+      next: (goals) =>
+        this.ngZone.run(() => {
+          this.goalsSubject.next(goals);
+          this.loadingSubject.next(false);
+        }),
       error: () => this.ngZone.run(() => this.loadingSubject.next(false)),
     });
   }
@@ -75,7 +78,11 @@ export class RaceGoalService {
       this.http.post<RaceGoal>(this.apiUrl, goal).subscribe({
         next: (created) => {
           this.ngZone.run(() => {
-            this.goalsSubject.next([...this.goalsSubject.value, created].sort((a, b) => (goalDate(a) ?? '').localeCompare(goalDate(b) ?? '')));
+            this.goalsSubject.next(
+              [...this.goalsSubject.value, created].sort((a, b) =>
+                (goalDate(a) ?? '').localeCompare(goalDate(b) ?? ''),
+              ),
+            );
             observer.next(created);
             observer.complete();
           });
@@ -90,7 +97,9 @@ export class RaceGoalService {
       this.http.put<RaceGoal>(`${this.apiUrl}/${id}`, goal).subscribe({
         next: (updated) => {
           this.ngZone.run(() => {
-            const list = this.goalsSubject.value.map((g) => (g.id === id ? updated : g)).sort((a, b) => (goalDate(a) ?? '').localeCompare(goalDate(b) ?? ''));
+            const list = this.goalsSubject.value
+              .map((g) => (g.id === id ? updated : g))
+              .sort((a, b) => (goalDate(a) ?? '').localeCompare(goalDate(b) ?? ''));
             this.goalsSubject.next(list);
             observer.next(updated);
             observer.complete();
@@ -103,7 +112,10 @@ export class RaceGoalService {
 
   deleteGoal(id: string): void {
     this.http.delete(`${this.apiUrl}/${id}`).subscribe({
-      next: () => this.ngZone.run(() => this.goalsSubject.next(this.goalsSubject.value.filter((g) => g.id !== id))),
+      next: () =>
+        this.ngZone.run(() =>
+          this.goalsSubject.next(this.goalsSubject.value.filter((g) => g.id !== id)),
+        ),
       error: () => {},
     });
   }

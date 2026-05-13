@@ -4,7 +4,11 @@ import { TranslateModule } from '@ngx-translate/core';
 import { RouterModule } from '@angular/router';
 
 import { ScheduledWorkout } from '../../../../../services/coach.service';
-import { TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS, TrainingType } from '../../../../../models/training.model';
+import {
+  TRAINING_TYPE_COLORS,
+  TRAINING_TYPE_LABELS,
+  TrainingType,
+} from '../../../../../models/training.model';
 import { SportIconComponent } from '../../../../shared/sport-icon/sport-icon.component';
 import { CalendarEntry } from '../../calendar.component';
 import { formatTimeHMS } from '../../../../shared/format/format.utils';
@@ -21,15 +25,18 @@ export class CalendarWorkoutCardComponent {
   @Input() entry!: CalendarEntry;
   @Input() isFuture = false;
 
-  @Output() select = new EventEmitter<ScheduledWorkout>();
+  @Output() workoutSelect = new EventEmitter<ScheduledWorkout>();
   @Output() complete = new EventEmitter<ScheduledWorkout>();
   @Output() skip = new EventEmitter<ScheduledWorkout>();
-  @Output() delete = new EventEmitter<ScheduledWorkout>();
+  @Output() workoutDelete = new EventEmitter<ScheduledWorkout>();
   @Output() reschedule = new EventEmitter<{ workout: ScheduledWorkout; event: Event }>();
   @Output() openAnalysis = new EventEmitter<string>();
 
   get scheduled(): ScheduledWorkout {
-    return (this.entry as any).scheduled;
+    if (this.entry.kind !== 'scheduled' && this.entry.kind !== 'fused') {
+      throw new Error(`Expected scheduled or fused entry, got ${this.entry.kind}`);
+    }
+    return this.entry.scheduled;
   }
 
   formatDuration(workout: ScheduledWorkout): string {

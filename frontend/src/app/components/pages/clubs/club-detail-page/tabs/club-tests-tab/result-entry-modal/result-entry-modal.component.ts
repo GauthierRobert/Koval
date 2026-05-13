@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -32,7 +39,7 @@ export class ResultEntryModalComponent implements OnInit {
   @Input() existing: ClubTestResult | null = null;
   @Input() recordingForAthleteId: string | null = null;
   @Input() coachMode = false;
-  @Output() cancel = new EventEmitter<void>();
+  @Output() cancelled = new EventEmitter<void>();
   @Output() save = new EventEmitter<RecordResultRequest>();
 
   entries: SegmentEntry[] = [];

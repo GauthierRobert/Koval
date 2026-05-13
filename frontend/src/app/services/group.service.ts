@@ -28,10 +28,10 @@ export class GroupService {
     return this.http.post<Group>(this.apiUrl, { name, maxAthletes });
   }
 
-  renameGroup(id: string, name: string): Observable<Group> {
+  renameGroup(id: string, name: string): Observable<Group | null> {
     return this.http
       .put<Group>(`${this.apiUrl}/${id}`, { name })
-      .pipe(catchError(() => of(null as any)));
+      .pipe(catchError(() => of<Group | null>(null)));
   }
 
   deleteGroup(id: string): Observable<void> {

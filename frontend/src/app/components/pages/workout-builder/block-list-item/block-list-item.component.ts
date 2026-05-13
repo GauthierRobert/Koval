@@ -20,7 +20,7 @@ export class BlockListItemComponent {
   @Input() isSelectedForSet = false;
   @Input() blockColor = '#6b7280';
 
-  @Output() select = new EventEmitter<number>();
+  @Output() blockSelect = new EventEmitter<number>();
   @Output() selectForSet = new EventEmitter<number>();
   @Output() duplicate = new EventEmitter<number>();
   @Output() remove = new EventEmitter<number>();

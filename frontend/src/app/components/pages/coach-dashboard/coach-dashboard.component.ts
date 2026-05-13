@@ -1,33 +1,40 @@
-import {ChangeDetectionStrategy, Component, DestroyRef, inject, NgZone, OnInit} from '@angular/core';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {TranslateModule} from '@ngx-translate/core';
-import {BehaviorSubject, combineLatest, map, Observable, of, take} from 'rxjs';
-import {CoachService, ScheduledWorkout} from '../../../services/coach.service';
-import {AuthService, User} from '../../../services/auth.service';
-import {ClubService, MyClubRoleEntry} from '../../../services/club.service';
-import {RaceGoal, RaceGoalService} from '../../../services/race-goal.service';
-import {Group} from '../../../services/group.service';
-import {MetricsService, PmcDataPoint} from '../../../services/metrics.service';
-import {VolumeEntry} from '../../../services/analytics.service';
-import {TrainingActionModalComponent} from '../../shared/training-action-modal/training-action-modal.component';
-import {InviteCodeModalComponent} from '../../shared/invite-code-modal/invite-code-modal.component';
-import {ShareTrainingModalComponent} from '../../shared/share-training-modal/share-training-modal.component';
-import {TrainingService} from '../../../services/training.service';
-import {Training} from '../../../models/training.model';
-import {PmcChartComponent} from '../../shared/pmc-chart/pmc-chart.component';
-import {SavedSession} from '../../../services/history.service';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  NgZone,
+  OnInit,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { BehaviorSubject, combineLatest, map, Observable, of, take } from 'rxjs';
+import { CoachService, ScheduledWorkout } from '../../../services/coach.service';
+import { AuthService, User } from '../../../services/auth.service';
+import { ClubService, MyClubRoleEntry } from '../../../services/club.service';
+import { RaceGoal, RaceGoalService } from '../../../services/race-goal.service';
+import { Group } from '../../../services/group.service';
+import { MetricsService, PmcDataPoint } from '../../../services/metrics.service';
+import { VolumeEntry } from '../../../services/analytics.service';
+import { TrainingActionModalComponent } from '../../shared/training-action-modal/training-action-modal.component';
+import { InviteCodeModalComponent } from '../../shared/invite-code-modal/invite-code-modal.component';
+import { ShareTrainingModalComponent } from '../../shared/share-training-modal/share-training-modal.component';
+import { TrainingService } from '../../../services/training.service';
+import { Training } from '../../../models/training.model';
+import { PmcChartComponent } from '../../shared/pmc-chart/pmc-chart.component';
+import { SavedSession } from '../../../services/history.service';
 
-import {ActivatedRoute, Router, RouterModule} from '@angular/router';
-import {SessionData} from '../../../models/session-types.model';
-import {PhysiologyPageComponent} from '../physiology-page/physiology-page.component';
-import {AthleteListSidebarComponent} from './athlete-list-sidebar/athlete-list-sidebar.component';
-import {CoachPerformanceTabComponent} from './coach-performance-tab/coach-performance-tab.component';
-import {CoachGoalsTabComponent} from './coach-goals-tab/coach-goals-tab.component';
-import {CoachHistoryTabComponent} from './coach-history-tab/coach-history-tab.component';
-import {CoachPlansTabComponent} from './coach-plans-tab/coach-plans-tab.component';
-import {ChartPanelSkeletonComponent} from '../../shared/skeleton/chart-panel-skeleton/chart-panel-skeleton.component';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { SessionData } from '../../../models/session-types.model';
+import { PhysiologyPageComponent } from '../physiology-page/physiology-page.component';
+import { AthleteListSidebarComponent } from './athlete-list-sidebar/athlete-list-sidebar.component';
+import { CoachPerformanceTabComponent } from './coach-performance-tab/coach-performance-tab.component';
+import { CoachGoalsTabComponent } from './coach-goals-tab/coach-goals-tab.component';
+import { CoachHistoryTabComponent } from './coach-history-tab/coach-history-tab.component';
+import { CoachPlansTabComponent } from './coach-plans-tab/coach-plans-tab.component';
+import { ChartPanelSkeletonComponent } from '../../shared/skeleton/chart-panel-skeleton/chart-panel-skeleton.component';
 import {
   PMC_WINDOW_DAYS,
   PROJECTION_DAYS,
@@ -46,7 +53,23 @@ import {
 @Component({
   selector: 'app-coach-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, TranslateModule, TrainingActionModalComponent, InviteCodeModalComponent, ShareTrainingModalComponent, PmcChartComponent, PhysiologyPageComponent, AthleteListSidebarComponent, CoachPerformanceTabComponent, CoachGoalsTabComponent, CoachHistoryTabComponent, CoachPlansTabComponent, ChartPanelSkeletonComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    TranslateModule,
+    TrainingActionModalComponent,
+    InviteCodeModalComponent,
+    ShareTrainingModalComponent,
+    PmcChartComponent,
+    PhysiologyPageComponent,
+    AthleteListSidebarComponent,
+    CoachPerformanceTabComponent,
+    CoachGoalsTabComponent,
+    CoachHistoryTabComponent,
+    CoachPlansTabComponent,
+    ChartPanelSkeletonComponent,
+  ],
   templateUrl: './coach-dashboard.component.html',
   styleUrl: './coach-dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -138,15 +161,17 @@ export class CoachDashboardComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
-    this.authService.user$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(u => {
+    this.authService.user$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((u) => {
       if (u) {
         this.userId = u.id;
         this.loadAthletes();
         this.loadTags();
         this.clubService.loadMyClubRoles();
-        this.clubService.myClubRoles$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-          roles => this.clubRolesSubject.next(roles.filter(r => r.role !== 'MEMBER'))
-        );
+        this.clubService.myClubRoles$
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe((roles) =>
+            this.clubRolesSubject.next(roles.filter((r) => r.role !== 'MEMBER')),
+          );
       }
     });
     this.coachTrainings$ = this.trainingService.trainings$;
@@ -167,26 +192,27 @@ export class CoachDashboardComponent implements OnInit {
 
   loadAthletes() {
     this.coachService.getAthletes().subscribe({
-      next: (data) => this.ngZone.run(() => {
-        this.athletesSubject.next(data);
-        this.athletesLoadingSubject.next(false);
-        const athleteId = this.route.snapshot.queryParamMap.get('athleteId');
-        if (athleteId) {
-          const athlete = data.find(a => a.id === athleteId);
-          if (athlete) this.selectAthlete(athlete);
-        }
-      }),
+      next: (data) =>
+        this.ngZone.run(() => {
+          this.athletesSubject.next(data);
+          this.athletesLoadingSubject.next(false);
+          const athleteId = this.route.snapshot.queryParamMap.get('athleteId');
+          if (athleteId) {
+            const athlete = data.find((a) => a.id === athleteId);
+            if (athlete) this.selectAthlete(athlete);
+          }
+        }),
       error: (err) => {
         this.ngZone.run(() => this.athletesLoadingSubject.next(false));
         console.error('Error loading athletes', err);
-      }
+      },
     });
   }
 
   loadTags() {
     this.coachService.getAllGroups().subscribe({
       next: (groups) => this.ngZone.run(() => this.groupsSubject.next(groups)),
-      error: (err) => console.error('Error loading groups', err)
+      error: (err) => console.error('Error loading groups', err),
     });
   }
 
@@ -236,14 +262,14 @@ export class CoachDashboardComponent implements OnInit {
         'week',
       ),
       this.athleteVolumeSubject,
-      []
+      [],
     );
   }
 
   private loadAthleteData<T>(
     loader: Observable<T>,
     subject: BehaviorSubject<T>,
-    defaultValue: T
+    defaultValue: T,
   ): void {
     loader.subscribe({
       next: (data) => this.ngZone.run(() => subject.next(data)),
@@ -255,43 +281,44 @@ export class CoachDashboardComponent implements OnInit {
     this.loadAthleteData(
       this.raceGoalService.getAthleteGoals(athleteId),
       this.athleteGoalsSubject,
-      []
+      [],
     );
   }
 
   loadAthleteSessions(athleteId: string): void {
     this.athleteSessionsErrorSubject.next(false);
     this.coachService.getAthleteSessions(athleteId).subscribe({
-      next: (sessions: SessionData[]) => this.ngZone.run(() => {
-        this.athleteSessionsSubject.next(sessions);
-        this.athleteSessionsErrorSubject.next(false);
-      }),
-      error: () => this.ngZone.run(() => {
-        this.athleteSessionsSubject.next([]);
-        this.athleteSessionsErrorSubject.next(true);
-      }),
+      next: (sessions: SessionData[]) =>
+        this.ngZone.run(() => {
+          this.athleteSessionsSubject.next(sessions);
+          this.athleteSessionsErrorSubject.next(false);
+        }),
+      error: () =>
+        this.ngZone.run(() => {
+          this.athleteSessionsSubject.next([]);
+          this.athleteSessionsErrorSubject.next(true);
+        }),
     });
   }
 
   loadAthletePmc(athleteId: string): void {
     this.loadAthleteData(
-      this.coachService.getAthletePmc(
-        athleteId,
-        dateOffsetKey(-PMC_WINDOW_DAYS),
-        dateOffsetKey(0),
-      ),
+      this.coachService.getAthletePmc(athleteId, dateOffsetKey(-PMC_WINDOW_DAYS), dateOffsetKey(0)),
       this.athletePmcSubject,
-      []
+      [],
     );
   }
 
   private loadAthleteProjectionSchedule(athleteId: string): void {
-    this.coachService.getAthleteSchedule(athleteId, dateOffsetKey(0), dateOffsetKey(PROJECTION_DAYS)).subscribe({
-      next: (workouts) => this.ngZone.run(
-        () => this.athleteScheduleTssSubject.next(buildProjectionTssMap(workouts)),
-      ),
-      error: () => this.ngZone.run(() => this.athleteScheduleTssSubject.next(new Map())),
-    });
+    this.coachService
+      .getAthleteSchedule(athleteId, dateOffsetKey(0), dateOffsetKey(PROJECTION_DAYS))
+      .subscribe({
+        next: (workouts) =>
+          this.ngZone.run(() =>
+            this.athleteScheduleTssSubject.next(buildProjectionTssMap(workouts)),
+          ),
+        error: () => this.ngZone.run(() => this.athleteScheduleTssSubject.next(new Map())),
+      });
   }
 
   viewAthletePmc(athleteId: string): void {
@@ -304,7 +331,7 @@ export class CoachDashboardComponent implements OnInit {
 
     this.coachService.getAthleteSchedule(athleteId, start, end).subscribe({
       next: (data) => this.ngZone.run(() => this.scheduleSubject.next(data)),
-      error: (err) => console.error('Error loading schedule', err)
+      error: (err) => console.error('Error loading schedule', err),
     });
   }
 
@@ -317,9 +344,9 @@ export class CoachDashboardComponent implements OnInit {
       },
       error: () => {
         if (athlete.groups) {
-          athlete.groups = athlete.groups.filter(t => t !== tag);
+          athlete.groups = athlete.groups.filter((t) => t !== tag);
         }
-      }
+      },
     });
   }
 
@@ -332,7 +359,7 @@ export class CoachDashboardComponent implements OnInit {
   }
 
   openShareModal() {
-    this.coachTrainings$.pipe(take(1)).subscribe(trainings => {
+    this.coachTrainings$.pipe(take(1)).subscribe((trainings) => {
       if (trainings.length > 0) {
         this.trainingToShare = trainings[0];
         this.isShareModalOpen = true;
@@ -369,7 +396,7 @@ export class CoachDashboardComponent implements OnInit {
 
   bulkAssign(): void {
     if (this.multiSelectedIds.size === 0) return;
-    const athletes = this.athletesSubject.value.filter(a => this.multiSelectedIds.has(a.id));
+    const athletes = this.athletesSubject.value.filter((a) => this.multiSelectedIds.has(a.id));
     if (athletes.length === 0) return;
     this.bulkAssignAthletes = athletes;
     this.isScheduleModalOpen = true;
@@ -389,9 +416,18 @@ export class CoachDashboardComponent implements OnInit {
 
   openSessionAnalysis(session: SessionData): void {
     this.coachService.getSessionById(session.id).subscribe({
-      next: (s: any) => this.ngZone.run(
-        () => this.selectedAthleteSessionSubject.next(mapSessionToSavedSession(s)),
-      ),
+      next: (s) =>
+        this.ngZone.run(
+          // The backend returns the richer RawSessionDetail shape; the typed
+          // SessionData is the lean read-model. Routing through `unknown` is the
+          // honest way to acknowledge the runtime widening.
+          () =>
+            this.selectedAthleteSessionSubject.next(
+              mapSessionToSavedSession(
+                s as unknown as Parameters<typeof mapSessionToSavedSession>[0],
+              ),
+            ),
+        ),
       error: () => {},
     });
   }
@@ -400,5 +436,7 @@ export class CoachDashboardComponent implements OnInit {
     this.selectedAthleteSessionSubject.next(null);
   }
 
-  trackByValue(value: string): string { return value; }
+  trackByValue(value: string): string {
+    return value;
+  }
 }

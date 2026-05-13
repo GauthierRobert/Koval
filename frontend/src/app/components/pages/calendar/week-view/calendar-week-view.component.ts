@@ -1,25 +1,51 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, inject, Input, Output} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {TranslateModule} from '@ngx-translate/core';
-import {Observable, of} from 'rxjs';
-import {map} from 'rxjs/operators';
-import {RouterModule} from '@angular/router';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  inject,
+  Input,
+  Output,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+import { Observable, of } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { RouterModule } from '@angular/router';
 
-import {CalendarClubSession, CalendarService} from '../../../../services/calendar.service';
-import {ScheduledWorkout} from '../../../../services/coach.service';
-import {SavedSession} from '../../../../services/history.service';
-import {TRAINING_TYPE_COLORS, TRAINING_TYPE_LABELS, TrainingType} from '../../../../models/training.model';
-import {SportIconComponent} from '../../../shared/sport-icon/sport-icon.component';
-import {TrainingLoadChartComponent} from '../../../layout/training-load-chart/training-load-chart.component';
-import {CalendarDay, CalendarEntry, EntriesByDay, GoalsByDay, toDateKey, VisiblePlan, WorkoutsByDay} from '../calendar.component';
-import {RaceGoalService} from '../../../../services/race-goal.service';
-import {formatTimeHMS} from '../../../shared/format/format.utils';
-import {SPORT_BANNER_COLORS} from '../../../../models/plan.model';
+import { CalendarClubSession, CalendarService } from '../../../../services/calendar.service';
+import { ScheduledWorkout } from '../../../../services/coach.service';
+import { SavedSession } from '../../../../services/history.service';
+import {
+  TRAINING_TYPE_COLORS,
+  TRAINING_TYPE_LABELS,
+  TrainingType,
+} from '../../../../models/training.model';
+import { SportIconComponent } from '../../../shared/sport-icon/sport-icon.component';
+import { TrainingLoadChartComponent } from '../../../layout/training-load-chart/training-load-chart.component';
+import {
+  CalendarDay,
+  CalendarEntry,
+  EntriesByDay,
+  GoalsByDay,
+  toDateKey,
+  VisiblePlan,
+  WorkoutsByDay,
+} from '../calendar.component';
+import { ClubSessionEntry } from '../calendar.utils';
+import { RaceGoalService } from '../../../../services/race-goal.service';
+import { formatTimeHMS } from '../../../shared/format/format.utils';
+import { SPORT_BANNER_COLORS } from '../../../../models/plan.model';
 
 @Component({
   selector: 'app-calendar-week-view',
   standalone: true,
-  imports: [CommonModule, RouterModule, SportIconComponent, TrainingLoadChartComponent, TranslateModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    SportIconComponent,
+    TrainingLoadChartComponent,
+    TranslateModule,
+  ],
   templateUrl: './calendar-week-view.component.html',
   styleUrl: './calendar-week-view.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -75,35 +101,42 @@ export class CalendarWeekViewComponent {
     this.linkPickerState = { sessionId: session.id };
     this.linkSession = session;
     const d = new Date(session.date);
-    const from = new Date(d); from.setDate(d.getDate() - 3);
-    const to = new Date(d); to.setDate(d.getDate() + 3);
+    const from = new Date(d);
+    from.setDate(d.getDate() - 3);
+    const to = new Date(d);
+    to.setDate(d.getDate() + 3);
     this.nearbyScheduled$ = this.calendarService
-      .getMySchedule(toDateKey(from), toDateKey(to)).pipe(
-        map(ws => ws.filter(w => w.status === 'PENDING' && !w.sessionId))
-      );
+      .getMySchedule(toDateKey(from), toDateKey(to))
+      .pipe(map((ws) => ws.filter((w) => w.status === 'PENDING' && !w.sessionId)));
   }
 
   confirmLink(scheduledWorkoutId: string): void {
     if (!this.linkPickerState) return;
-    this.calendarService.linkSessionToSchedule(this.linkPickerState.sessionId, scheduledWorkoutId)
-      .subscribe(() => { this.linkPickerState = null; this.linked.emit(); });
+    this.calendarService
+      .linkSessionToSchedule(this.linkPickerState.sessionId, scheduledWorkoutId)
+      .subscribe(() => {
+        this.linkPickerState = null;
+        this.linked.emit();
+      });
   }
 
   openClubSessionLinkPicker(session: SavedSession): void {
     this.clubSessionLinkPickerState = { sessionId: session.id };
     this.clubSessionLinkSession = session;
     const d = new Date(session.date);
-    const from = new Date(d); from.setDate(d.getDate() - 3);
-    const to = new Date(d); to.setDate(d.getDate() + 3);
+    const from = new Date(d);
+    from.setDate(d.getDate() - 3);
+    const to = new Date(d);
+    to.setDate(d.getDate() + 3);
     this.nearbyClubSessions$ = this.calendarService
-      .getClubSessionsForCalendar(toDateKey(from), toDateKey(to)).pipe(
-        map(sessions => sessions.filter(s => s.joined && !s.cancelled))
-      );
+      .getClubSessionsForCalendar(toDateKey(from), toDateKey(to))
+      .pipe(map((sessions) => sessions.filter((s) => s.joined && !s.cancelled)));
   }
 
   confirmClubSessionLink(clubSessionId: string): void {
     if (!this.clubSessionLinkPickerState) return;
-    this.calendarService.linkSessionToClubSession(this.clubSessionLinkPickerState.sessionId, clubSessionId)
+    this.calendarService
+      .linkSessionToClubSession(this.clubSessionLinkPickerState.sessionId, clubSessionId)
       .subscribe(() => {
         this.clubSessionLinkPickerState = null;
         this.clubSessionLinkSession = null;
@@ -112,7 +145,13 @@ export class CalendarWeekViewComponent {
   }
 
   sportColor(sportType: string): { bg: string; border: string; text: string } {
-    return SPORT_BANNER_COLORS[sportType] ?? { bg: 'rgba(255,157,0,0.15)', border: '#ff9d00', text: '#ff9d00' };
+    return (
+      SPORT_BANNER_COLORS[sportType] ?? {
+        bg: 'rgba(255,157,0,0.15)',
+        border: '#ff9d00',
+        text: '#ff9d00',
+      }
+    );
   }
 
   formatDuration(workout: ScheduledWorkout): string {
@@ -138,7 +177,9 @@ export class CalendarWeekViewComponent {
     return TRAINING_TYPE_LABELS[type as TrainingType] || type;
   }
 
-  trackByDay(day: CalendarDay): string { return day.key; }
+  trackByDay(day: CalendarDay): string {
+    return day.key;
+  }
 
   trackByEntry(e: CalendarEntry): string {
     if (e.kind === 'fused') return 'fused-' + e.scheduled.id;
@@ -197,8 +238,14 @@ export class CalendarWeekViewComponent {
     return Math.max(0, groups.length - this.MAX_VISIBLE_PER_DAY);
   }
 
-  groupEntries(entries: CalendarEntry[]): Array<{ type: 'single'; entry: CalendarEntry } | { type: 'club-row'; entries: CalendarEntry[] }> {
-    const result: Array<{ type: 'single'; entry: CalendarEntry } | { type: 'club-row'; entries: CalendarEntry[] }> = [];
+  groupEntries(
+    entries: CalendarEntry[],
+  ): Array<
+    { type: 'single'; entry: CalendarEntry } | { type: 'club-row'; entries: CalendarEntry[] }
+  > {
+    const result: Array<
+      { type: 'single'; entry: CalendarEntry } | { type: 'club-row'; entries: CalendarEntry[] }
+    > = [];
     let i = 0;
     while (i < entries.length) {
       const entry = entries[i];
@@ -207,7 +254,7 @@ export class CalendarWeekViewComponent {
         const group: CalendarEntry[] = [entry];
         let j = i + 1;
         while (j < entries.length && entries[j].kind === 'club-session') {
-          const next = entries[j] as CalendarEntry & { kind: 'club-session'; clubSession: any };
+          const next = entries[j] as ClubSessionEntry;
           const nextKey = next.clubSession.scheduledAt?.substring(0, 13) ?? '';
           if (nextKey === timeKey) {
             group.push(entries[j]);

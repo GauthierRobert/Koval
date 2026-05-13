@@ -1,10 +1,20 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, EventEmitter, inject, Input, OnInit, Output} from '@angular/core';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {BehaviorSubject} from 'rxjs';
-import {Router} from '@angular/router';
-import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  EventEmitter,
+  inject,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { BehaviorSubject } from 'rxjs';
+import { Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   canManageClub,
   ClubDetail,
@@ -16,17 +26,24 @@ import {
   GroupLinkedTraining,
   isClubCoach,
 } from '../../../../../../services/club.service';
-import {ClubSessionService} from '../../../../../../services/club-session.service';
-import {AuthService} from '../../../../../../services/auth.service';
-import {TrainingService} from '../../../../../../services/training.service';
-import {SPORT_BANNER_COLORS} from '../../../../../../models/plan.model';
-import {MeetingPointPickerComponent} from '../../../../../shared/meeting-point-picker/meeting-point-picker.component';
-import {SessionCardComponent} from '../../../../../shared/session-card/session-card.component';
+import { ClubSessionService } from '../../../../../../services/club-session.service';
+import { AuthService } from '../../../../../../services/auth.service';
+import { TrainingService } from '../../../../../../services/training.service';
+import { SPORT_BANNER_COLORS } from '../../../../../../models/plan.model';
+import { MeetingPointPickerComponent } from '../../../../../shared/meeting-point-picker/meeting-point-picker.component';
+import { SessionCardComponent } from '../../../../../shared/session-card/session-card.component';
+import { SessionFormPayload } from '../club-sessions-tab/session-form-mapper';
 
 @Component({
   selector: 'app-club-open-sessions-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, MeetingPointPickerComponent, SessionCardComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TranslateModule,
+    MeetingPointPickerComponent,
+    SessionCardComponent,
+  ],
   templateUrl: './club-open-sessions-tab.component.html',
   styleUrl: './club-open-sessions-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -57,7 +74,7 @@ export class ClubOpenSessionsTabComponent implements OnInit {
 
   isFormOpen = false;
   editingSession: ClubTrainingSession | null = null;
-  form: Record<string, any> = {};
+  form: SessionFormPayload = {};
   gpxFile: File | null = null;
 
   expandedSessionId: string | null = null;
@@ -147,7 +164,11 @@ export class ClubOpenSessionsTabComponent implements OnInit {
       .filter((s) => {
         if (!s.scheduledAt) return false;
         const d = new Date(s.scheduledAt);
-        return d.getFullYear() === day.getFullYear() && d.getMonth() === day.getMonth() && d.getDate() === day.getDate();
+        return (
+          d.getFullYear() === day.getFullYear() &&
+          d.getMonth() === day.getMonth() &&
+          d.getDate() === day.getDate()
+        );
       })
       .sort((a, b) => (a.scheduledAt ?? '').localeCompare(b.scheduledAt ?? ''));
   }
@@ -158,9 +179,11 @@ export class ClubOpenSessionsTabComponent implements OnInit {
   }
 
   isSelectedDay(day: Date): boolean {
-    return this.selectedDay.getFullYear() === day.getFullYear()
-      && this.selectedDay.getMonth() === day.getMonth()
-      && this.selectedDay.getDate() === day.getDate();
+    return (
+      this.selectedDay.getFullYear() === day.getFullYear() &&
+      this.selectedDay.getMonth() === day.getMonth() &&
+      this.selectedDay.getDate() === day.getDate()
+    );
   }
 
   dotColor(session: ClubTrainingSession): string {
@@ -169,7 +192,11 @@ export class ClubOpenSessionsTabComponent implements OnInit {
 
   isToday(date: Date): boolean {
     const now = new Date();
-    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
+    return (
+      date.getFullYear() === now.getFullYear() &&
+      date.getMonth() === now.getMonth() &&
+      date.getDate() === now.getDate()
+    );
   }
 
   // --- Form ---
@@ -242,10 +269,12 @@ export class ClubOpenSessionsTabComponent implements OnInit {
     save$.subscribe({
       next: (session) => {
         if (this.gpxFile) {
-          this.clubSessionService.uploadSessionGpx(this.club.id, session.id, this.gpxFile).subscribe({
-            next: () => this.afterSave(),
-            error: () => this.afterSave(),
-          });
+          this.clubSessionService
+            .uploadSessionGpx(this.club.id, session.id, this.gpxFile)
+            .subscribe({
+              next: () => this.afterSave(),
+              error: () => this.afterSave(),
+            });
         } else {
           this.afterSave();
         }
@@ -283,13 +312,15 @@ export class ClubOpenSessionsTabComponent implements OnInit {
   }
 
   unlinkTraining(event: { session: ClubTrainingSession; glt: GroupLinkedTraining }): void {
-    this.clubSessionService.unlinkTrainingFromSession(this.club.id, event.session.id, event.glt.clubGroupId || undefined).subscribe({
-      next: () => {
-        this.loadActivities();
-        this.cdr.markForCheck();
-      },
-      error: () => {},
-    });
+    this.clubSessionService
+      .unlinkTrainingFromSession(this.club.id, event.session.id, event.glt.clubGroupId || undefined)
+      .subscribe({
+        next: () => {
+          this.loadActivities();
+          this.cdr.markForCheck();
+        },
+        error: () => {},
+      });
   }
 
   navigateToTraining(trainingId: string): void {
@@ -315,14 +346,20 @@ export class ClubOpenSessionsTabComponent implements OnInit {
 
   confirmCancelSession(): void {
     if (!this.cancelTargetSession) return;
-    this.clubSessionService.cancelEntireSession(this.club.id, this.cancelTargetSession.id, this.cancelReason || undefined).subscribe({
-      next: () => {
-        this.closeCancelSessionModal();
-        this.loadActivities();
-        this.cdr.markForCheck();
-      },
-      error: () => {},
-    });
+    this.clubSessionService
+      .cancelEntireSession(
+        this.club.id,
+        this.cancelTargetSession.id,
+        this.cancelReason || undefined,
+      )
+      .subscribe({
+        next: () => {
+          this.closeCancelSessionModal();
+          this.loadActivities();
+          this.cdr.markForCheck();
+        },
+        error: () => {},
+      });
   }
 
   removeGpx(): void {
@@ -355,7 +392,9 @@ export class ClubOpenSessionsTabComponent implements OnInit {
     }
     this.clubSessionService.downloadSessionGpx(this.club.id, session.id).subscribe({
       next: async (blob) => {
-        const file = new File([blob], session.gpxFileName ?? 'route.gpx', { type: 'application/gpx+xml' });
+        const file = new File([blob], session.gpxFileName ?? 'route.gpx', {
+          type: 'application/gpx+xml',
+        });
         try {
           await navigator.share({ title: session.title, files: [file] });
         } catch {

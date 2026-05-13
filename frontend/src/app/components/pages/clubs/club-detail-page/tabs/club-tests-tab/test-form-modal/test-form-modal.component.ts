@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -19,7 +27,13 @@ import {
 import { metricLabelKey, sportLabelKey, targetLabelKey, unitLabelKey } from '../test-display.utils';
 
 const SPORTS: SportType[] = ['CYCLING', 'RUNNING', 'SWIMMING', 'BRICK'];
-const UNITS: SegmentResultUnit[] = ['SECONDS', 'WATTS', 'PACE_S_PER_KM', 'PACE_S_PER_100M', 'METERS'];
+const UNITS: SegmentResultUnit[] = [
+  'SECONDS',
+  'WATTS',
+  'PACE_S_PER_KM',
+  'PACE_S_PER_100M',
+  'METERS',
+];
 const TARGETS: ReferenceTarget[] = [
   'FTP',
   'CRITICAL_SWIM_SPEED',
@@ -49,7 +63,7 @@ export class TestFormModalComponent implements OnInit {
   @Input() club!: ClubDetail;
   /** When null, the form creates a new test; otherwise it edits the given one. */
   @Input() test: ClubTestDetail | null = null;
-  @Output() cancel = new EventEmitter<void>();
+  @Output() cancelled = new EventEmitter<void>();
   @Output() save = new EventEmitter<CreateClubTestRequest>();
 
   private readonly testService = inject(ClubTestService);
@@ -113,7 +127,10 @@ export class TestFormModalComponent implements OnInit {
     this.segments = [
       ...this.segments,
       {
-        id: TestFormModalComponent.newId('s', this.segments.map((x) => x.id)),
+        id: TestFormModalComponent.newId(
+          's',
+          this.segments.map((x) => x.id),
+        ),
         order: this.segments.length,
         label: '',
         sportType: 'CYCLING',
@@ -134,7 +151,10 @@ export class TestFormModalComponent implements OnInit {
     this.rules = [
       ...this.rules,
       {
-        id: TestFormModalComponent.newId('r', this.rules.map((x) => x.id)),
+        id: TestFormModalComponent.newId(
+          'r',
+          this.rules.map((x) => x.id),
+        ),
         target: 'FTP',
         customKey: null,
         label: '',
