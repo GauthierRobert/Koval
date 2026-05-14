@@ -39,22 +39,34 @@ public class SkillService {
      *  directory and NativeImageHints. Optional resources/ files for a skill must also
      *  be listed in KNOWN_SKILL_ASSETS. */
     private static final String[] KNOWN_SKILLS = {
-            "koval-analyze-last-ride",
-            "koval-athlete-onboarding",
-            "koval-coach-onboarding",
-            "koval-coach-weekly-review",
-            "koval-create-workout",
-            "koval-find-workout",
-            "koval-form-check",
-            "koval-plan-my-week",
-            "koval-power-curve-report",
-            "koval-prep-race",
-            "koval-zone-setup"
+            "koval-athlete",
+            "koval-coach"
     };
 
     private static final Map<String, String[]> KNOWN_SKILL_ASSETS = Map.of(
-            "koval-athlete-onboarding", new String[]{"resources/athlete-profile.template.md"},
-            "koval-coach-onboarding", new String[]{"resources/coach-profile.template.md"}
+            "koval-athlete", new String[]{
+                    "resources/athlete-profile.template.md",
+                    "resources/onboarding.md",
+                    "resources/zone-setup.md",
+                    "resources/analyze-last-ride.md",
+                    "resources/form-check.md",
+                    "resources/power-curve-report.md",
+                    "resources/find-workout.md",
+                    "resources/create-workout.md",
+                    "resources/plan-my-week.md",
+                    "resources/prep-race.md"
+            },
+            "koval-coach", new String[]{
+                    "resources/coach-profile.template.md",
+                    "resources/onboarding.md",
+                    "resources/weekly-review.md",
+                    "resources/athlete-deepdive.md",
+                    "resources/create-workout.md",
+                    "resources/assign-workout.md",
+                    "resources/build-plan.md",
+                    "resources/club-sessions.md",
+                    "resources/publish-club-gazette.md"
+            }
     );
 
     private final ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();

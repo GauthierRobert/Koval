@@ -1,6 +1,6 @@
 ---
 name: koval-athlete-profile
-description: Personalised training preferences for <Athlete Name>. Loaded automatically by every Koval athlete skill (koval-plan-my-week, koval-find-workout, koval-prep-race, koval-analyze-last-ride, koval-form-check) so generated plans match this athlete's real-world availability, goals, recovery rules and voice. Re-run koval-athlete-onboarding to update.
+description: Personalised training preferences for <Athlete Name>. Loaded automatically by every workflow under the koval-athlete skill (onboarding, zone-setup, analyze-last-ride, form-check, power-curve-report, find-workout, create-workout, plan-my-week, prep-race) so generated plans match this athlete's real-world availability, goals, recovery rules and voice. Re-run onboarding to update.
 ---
 
 # Athlete Profile — <Athlete Name>
@@ -49,8 +49,8 @@ _Last updated: <YYYY-MM-DD>_
 - **Coaching tone:** <firm / encouraging / data-driven / playful>
 - **Never include:** <list>
 
-## How other skills should use this
-Any Koval athlete skill that creates a `Training`, `ScheduledWorkout` or `Plan`, or that proposes a week / taper / workout selection, MUST:
+## How other workflows should use this
+Any koval-athlete workflow that creates a `Training`, `ScheduledWorkout` or `Plan`, or that proposes a week / taper / workout selection, MUST:
 1. Read this file first.
 2. Only schedule sessions on **available days**; respect **rest days** and **long session day**.
 3. Never exceed **max session length** for the weekday/weekend in question.

@@ -145,19 +145,27 @@ public class NativeImageHints {
             // Koval skill folders served by SkillController. Each skill has a SKILL.md
             // at the root and optional resources/ assets — register all of them.
             String[] skillResources = {
-                    "skills/koval-analyze-last-ride/SKILL.md",
-                    "skills/koval-athlete-onboarding/SKILL.md",
-                    "skills/koval-athlete-onboarding/resources/athlete-profile.template.md",
-                    "skills/koval-coach-onboarding/SKILL.md",
-                    "skills/koval-coach-onboarding/resources/coach-profile.template.md",
-                    "skills/koval-coach-weekly-review/SKILL.md",
-                    "skills/koval-create-workout/SKILL.md",
-                    "skills/koval-find-workout/SKILL.md",
-                    "skills/koval-form-check/SKILL.md",
-                    "skills/koval-plan-my-week/SKILL.md",
-                    "skills/koval-power-curve-report/SKILL.md",
-                    "skills/koval-prep-race/SKILL.md",
-                    "skills/koval-zone-setup/SKILL.md"
+                    "skills/koval-athlete/SKILL.md",
+                    "skills/koval-athlete/resources/athlete-profile.template.md",
+                    "skills/koval-athlete/resources/onboarding.md",
+                    "skills/koval-athlete/resources/zone-setup.md",
+                    "skills/koval-athlete/resources/analyze-last-ride.md",
+                    "skills/koval-athlete/resources/form-check.md",
+                    "skills/koval-athlete/resources/power-curve-report.md",
+                    "skills/koval-athlete/resources/find-workout.md",
+                    "skills/koval-athlete/resources/create-workout.md",
+                    "skills/koval-athlete/resources/plan-my-week.md",
+                    "skills/koval-athlete/resources/prep-race.md",
+                    "skills/koval-coach/SKILL.md",
+                    "skills/koval-coach/resources/coach-profile.template.md",
+                    "skills/koval-coach/resources/onboarding.md",
+                    "skills/koval-coach/resources/weekly-review.md",
+                    "skills/koval-coach/resources/athlete-deepdive.md",
+                    "skills/koval-coach/resources/create-workout.md",
+                    "skills/koval-coach/resources/assign-workout.md",
+                    "skills/koval-coach/resources/build-plan.md",
+                    "skills/koval-coach/resources/club-sessions.md",
+                    "skills/koval-coach/resources/publish-club-gazette.md"
             };
             for (String skill : skillResources) {
                 hints.resources().registerPattern(skill);

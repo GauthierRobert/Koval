@@ -134,7 +134,7 @@ Simulation mode is built in for testing without devices. `workout-execution.serv
 Two separate "skills" concepts, do not confuse them:
 
 - `.claude/skills/*/SKILL.md` — **developer skills** for Claude Code editing this repo. Required reading before touching the matching code area.
-- `skills/koval-*/SKILL.md` — **end-user skills** distributed to Claude Desktop/Claude.ai users alongside the MCP connector. Each is a markdown playbook telling Claude which MCP tools to chain for a workflow ("analyze my last ride", "plan my training week", "publish club gazette"). Build artifacts via `node skills/package-skills.mjs` → `skills/dist/*.zip`. The MCP connector itself is the Spring server at `/mcp/sse`.
+- `skills/koval-athlete/` and `skills/koval-coach/` — **end-user skills** distributed to Claude Desktop/Claude.ai users alongside the MCP connector. Two role-scoped bundles. Each has a `SKILL.md` router and a `resources/` folder containing per-workflow playbooks (analyze ride, form check, plan week, prep race, create/find workout, zone setup, onboarding profile for athletes; weekly review, athlete deep-dive, create/assign workout, build plan, club sessions, publish gazette for coaches). Build artifacts via `node skills/package-skills.mjs` → `skills/dist/koval-athlete.zip` and `skills/dist/koval-coach.zip`. The MCP connector itself is the Spring server at `/mcp/sse`.
 
 ### Data model conventions
 
