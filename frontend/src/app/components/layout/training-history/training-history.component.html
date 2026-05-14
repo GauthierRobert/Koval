@@ -24,6 +24,11 @@
               {{ getDuration(training) }}
             </span>
 
+            @if (training.createdAt) {
+              <span class="meta-dot" aria-hidden="true">·</span>
+              <span class="item-date">{{ training.createdAt | date: 'shortDate' }}</span>
+            }
+
             @if (training.trainingType) {
               <span class="meta-dot" aria-hidden="true">·</span>
               <span
