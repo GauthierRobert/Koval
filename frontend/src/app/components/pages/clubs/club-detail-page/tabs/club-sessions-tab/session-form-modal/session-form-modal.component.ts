@@ -7,17 +7,22 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {TranslateModule} from '@ngx-translate/core';
-import {ClubGroup, ClubMember, ClubTrainingSession} from '../../../../../../../services/club.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import {
+  ClubGroup,
+  ClubMember,
+  ClubTrainingSession,
+} from '../../../../../../../services/club.service';
 import {
   MeetingPoint,
   MeetingPointPickerComponent,
 } from '../../../../../../shared/meeting-point-picker/meeting-point-picker.component';
+import { SessionFormPayload } from '../session-form-mapper';
 
 export interface SessionFormSaveEvent {
-  form: Record<string, any>;
+  form: SessionFormPayload;
   editingSession: ClubTrainingSession | null;
   editAllFutureMode: boolean;
   gpxFile: File | null;
@@ -43,7 +48,7 @@ export class SessionFormModalComponent implements OnChanges {
   @Output() closed = new EventEmitter<void>();
   @Output() saved = new EventEmitter<SessionFormSaveEvent>();
 
-  form: Record<string, any> = {};
+  form: SessionFormPayload = {};
   gpxFile: File | null = null;
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -96,7 +101,7 @@ export class SessionFormModalComponent implements OnChanges {
 
   removeGpx(): void {
     this.saved.emit({
-      form: {__action: 'removeGpx'},
+      form: { __action: 'removeGpx' },
       editingSession: this.editingSession,
       editAllFutureMode: this.editAllFutureMode,
       gpxFile: null,
@@ -114,7 +119,7 @@ export class SessionFormModalComponent implements OnChanges {
   save(): void {
     if (!this.isFormValid) return;
     this.saved.emit({
-      form: {...this.form},
+      form: { ...this.form },
       editingSession: this.editingSession,
       editAllFutureMode: this.editAllFutureMode,
       gpxFile: this.gpxFile,

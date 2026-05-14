@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -180,7 +181,16 @@ public class TrainingMetricsService {
 
     // ── Block-level metrics ─────────────────────────────────────────────────
 
-    private record MetricsResult(double totalTss, int totalDurationSeconds, int totalDistance) {}
+    private record MetricsResult(double totalTss, int totalDurationSeconds, int totalDistance) {
+        static final MetricsResult ZERO = new MetricsResult(0, 0, 0);
+
+        MetricsResult plus(MetricsResult other) {
+            return new MetricsResult(
+                    totalTss + other.totalTss,
+                    totalDurationSeconds + other.totalDurationSeconds,
+                    totalDistance + other.totalDistance);
+        }
+    }
 
     private record BlockMeasure(int duration, int distance) {}
 
@@ -188,26 +198,19 @@ public class TrainingMetricsService {
         int ftpPaceSecPerKm = Optional.ofNullable(user.getFunctionalThresholdPace()).orElse(DEFAULT_FTP_PACE_SEC_PER_KM);
         int cssSecPer100m = Optional.ofNullable(user.getCriticalSwimSpeed()).orElse(DEFAULT_CSS_SEC_PER_100M);
 
-        int totalDurationSeconds = 0;
-        int totalDistance = 0;
-        double totalTss = 0;
+        return WorkoutElementFlattener.flatten(training.getBlocks()).stream()
+                .map(block -> measureBlock(block, sport, ftpPaceSecPerKm, cssSecPer100m))
+                .filter(Objects::nonNull)
+                .reduce(MetricsResult.ZERO, MetricsResult::plus);
+    }
 
-        List<WorkoutElement> flatBlocks = WorkoutElementFlattener.flatten(training.getBlocks());
-        for (WorkoutElement block : flatBlocks) {
-            double intensity = getBlockIntensity(block);
-            BlockMeasure measure = computeBlockMeasure(block, intensity, sport, ftpPaceSecPerKm, cssSecPer100m);
-            if (measure == null) {
-                continue;
-            }
-
-            totalDurationSeconds += measure.duration();
-            totalDistance += measure.distance();
-            if (intensity > 0) {
-                totalTss += TssCalculator.computeTss(measure.duration(), intensity / 100.0);
-            }
-        }
-
-        return new MetricsResult(totalTss, totalDurationSeconds, totalDistance);
+    private MetricsResult measureBlock(WorkoutElement block, SportType sport,
+                                       int ftpPaceSecPerKm, int cssSecPer100m) {
+        double intensity = getBlockIntensity(block);
+        BlockMeasure measure = computeBlockMeasure(block, intensity, sport, ftpPaceSecPerKm, cssSecPer100m);
+        if (measure == null) return null;
+        double tss = intensity > 0 ? TssCalculator.computeTss(measure.duration(), intensity / 100.0) : 0;
+        return new MetricsResult(tss, measure.duration(), measure.distance());
     }
 
     private BlockMeasure computeBlockMeasure(WorkoutElement block, double intensity, SportType sport,

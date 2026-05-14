@@ -26,7 +26,7 @@ export class BlockBreakdownTableComponent {
   @Input() availableZoneChips: { label: string; color: string }[] = [];
   @Input() zoneFilters: Set<string> = new Set();
   @Input() ftp: number | null = null;
-  @Input() sportType: string = 'CYCLING';
+  @Input() sportType = 'CYCLING';
 
   @Output() blockViewChange = new EventEmitter<'planned' | 'interpolated'>();
   @Output() toggleZoneFilter = new EventEmitter<string>();

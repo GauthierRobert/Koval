@@ -23,8 +23,8 @@ import { swimMetaTooltip } from '../../swim-meta/swim-meta.utils';
 export class BlockStepsListComponent {
   @Input() blocks: WorkoutBlock[] = [];
   @Input() displayUnit: 'PERCENT' | 'ABSOLUTE' = 'PERCENT';
-  @Input() ftp: number = 0;
-  @Input() sportType: string = '';
+  @Input() ftp = 0;
+  @Input() sportType = '';
   @Input() training: Training | null = null;
   @Input() currentZoneSystem: ZoneSystem | null = null;
 
@@ -45,8 +45,10 @@ export class BlockStepsListComponent {
   }
 
   getDisplayIntensity(block: WorkoutBlock): string {
-    if (block.type === 'PAUSE') return this.translate.instant('WORKOUT_VIZ.INTENSITY_PAUSE').toUpperCase();
-    if (block.type === 'FREE') return this.translate.instant('WORKOUT_VIZ.INTENSITY_FREE').toUpperCase();
+    if (block.type === 'PAUSE')
+      return this.translate.instant('WORKOUT_VIZ.INTENSITY_PAUSE').toUpperCase();
+    if (block.type === 'FREE')
+      return this.translate.instant('WORKOUT_VIZ.INTENSITY_FREE').toUpperCase();
     if (block.type === 'TRANSITION') return block.transitionType ?? 'T';
 
     const start = this.getEffectiveIntensity(block, 'START');
@@ -126,7 +128,12 @@ export class BlockStepsListComponent {
     return sharedFormatPace(totalSeconds);
   }
 
-  formatBlockEstimates(block: WorkoutBlock): { duration: string; durationEstimated: boolean; distance: string; distanceEstimated: boolean } {
+  formatBlockEstimates(block: WorkoutBlock): {
+    duration: string;
+    durationEstimated: boolean;
+    distance: string;
+    distanceEstimated: boolean;
+  } {
     const hasDuration = (block.durationSeconds ?? 0) > 0;
     const hasDistance = (block.distanceMeters ?? 0) > 0;
 

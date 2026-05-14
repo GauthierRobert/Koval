@@ -19,7 +19,7 @@ export interface SessionData {
   timestamp: string;
 }
 
-export interface AthleteSessions extends Array<SessionData> {}
+export type AthleteSessions = SessionData[];
 
 export interface SessionSummary {
   sport: string;

@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SwimmingTraining extends Training {
+public final class SwimmingTraining extends Training {
 
     /** Pool length in meters (25 or 50). Null for open-water sessions. */
     private Integer poolLengthMeters;

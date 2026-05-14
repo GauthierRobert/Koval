@@ -22,17 +22,19 @@
             class="modal-shell-close"
             (click)="closed.emit()"
             [attr.aria-label]="'COMMON.CLOSE' | translate"
-          >&times;</button>
+          >
+            &times;
+          </button>
         }
       </header>
     }
 
     <div class="modal-shell-body">
-      <ng-content></ng-content>
+      <ng-content />
     </div>
 
     <div class="modal-shell-footer">
-      <ng-content select="[modal-footer]"></ng-content>
+      <ng-content select="[modal-footer]" />
     </div>
   </div>
 </div>

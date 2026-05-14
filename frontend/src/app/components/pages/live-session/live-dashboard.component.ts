@@ -1,18 +1,31 @@
-import {AfterViewInit, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, OnDestroy, ViewChild} from '@angular/core';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {CommonModule} from '@angular/common';
-import {ActivatedRoute} from '@angular/router';
-import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {WorkoutExecutionService} from '../../../services/workout-execution.service';
-import {BluetoothService} from '../../../services/bluetooth.service';
-import {TrainingService} from '../../../services/training.service';
-import {ZombieGameComponent} from './zombie-game/zombie-game.component';
-import {SessionSummaryComponent} from './session-summary/session-summary.component';
-import {PipService} from '../../../services/pip.service';
-import {HistoryService} from '../../../services/history.service';
-import {AuthService} from '../../../services/auth.service';
-import {formatPace, formatTimeMS} from '../../shared/format/format.utils';
-import {filter, take} from 'rxjs/operators';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  inject,
+  OnDestroy,
+  ViewChild,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import {
+  ActiveSessionState,
+  WorkoutExecutionService,
+} from '../../../services/workout-execution.service';
+import { BluetoothService } from '../../../services/bluetooth.service';
+import { TrainingService } from '../../../services/training.service';
+import { Training } from '../../../models/training.model';
+import { ZombieGameComponent } from './zombie-game/zombie-game.component';
+import { SessionSummaryComponent } from './session-summary/session-summary.component';
+import { PipService } from '../../../services/pip.service';
+import { HistoryService } from '../../../services/history.service';
+import { AuthService } from '../../../services/auth.service';
+import { formatPace, formatTimeMS } from '../../shared/format/format.utils';
+import { filter, take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-live-dashboard',
@@ -40,14 +53,16 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
   private pipService = inject(PipService);
   private destroyRef = inject(DestroyRef);
 
-  async togglePip(state: any) {
+  async togglePip(state: ActiveSessionState) {
     const metrics = this.bluetoothService.currentMetrics;
     const training = state.training;
     const blockLabel = training?.blocks?.[state.currentBlockIndex]?.label || 'WORKOUT';
     const nextStepBlock = training?.blocks?.[state.currentBlockIndex + 1];
     const nextStep = nextStepBlock?.label || (nextStepBlock ? 'RECOVERY' : 'FINISH');
     const ftp = this.trainingService.currentFtp ?? 250;
-    const nextStepPower = nextStepBlock ? Math.round((ftp * (nextStepBlock.intensityTarget || 0)) / 100) : 0;
+    const nextStepPower = nextStepBlock
+      ? Math.round((ftp * (nextStepBlock.intensityTarget || 0)) / 100)
+      : 0;
 
     const data = {
       power: metrics.power,
@@ -59,7 +74,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
       nextStepLabel: nextStep,
       nextStepPower: nextStepPower,
       totalTime: this.formatTime(state.elapsedTotalSeconds),
-      isPaused: state.isPaused
+      isPaused: state.isPaused,
     };
     await this.pipService.togglePip(data);
     this.isPipActive = this.pipService.isPipActive;
@@ -191,7 +206,9 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
       const nextStepBlock = training?.blocks?.[pipState.currentBlockIndex + 1];
       const nextStep = nextStepBlock?.label || (nextStepBlock ? 'RECOVERY' : 'FINISH');
       const ftp = this.trainingService.currentFtp ?? 250;
-      const nextStepPower = nextStepBlock ? Math.round((ftp * (nextStepBlock.intensityTarget || 0)) / 100) : 0;
+      const nextStepPower = nextStepBlock
+        ? Math.round((ftp * (nextStepBlock.intensityTarget || 0)) / 100)
+        : 0;
 
       this.pipService.updateCanvas({
         power: metrics.power,
@@ -203,7 +220,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
         nextStepLabel: nextStep,
         nextStepPower: nextStepPower,
         totalTime: this.formatTime(pipState.elapsedTotalSeconds),
-        isPaused: pipState.isPaused
+        isPaused: pipState.isPaused,
       });
     }
   }
@@ -217,7 +234,11 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     if (this.executionService.currentState.training) return;
     this.trainingService.loadTrainings();
     this.trainingService.trainings$
-      .pipe(filter((list) => list.length > 0), take(1), takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        filter((list) => list.length > 0),
+        take(1),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe((list) => {
         const cycling = list.find((t) => t.sportType === 'CYCLING') ?? list[0];
         this.executionService.startWorkout(cycling);
@@ -228,7 +249,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     return formatTimeMS(seconds);
   }
 
-  getBlockProgress(state: any): number {
+  getBlockProgress(state: ActiveSessionState): number {
     if (!state.training) return 0;
     const block = state.flatBlocks[state.currentBlockIndex];
     const duration = block.durationSeconds || 0;
@@ -236,7 +257,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     return ((duration - state.remainingBlockSeconds) / duration) * 100;
   }
 
-  getTargetPower(state: any): number {
+  getTargetPower(state: ActiveSessionState): number {
     if (!state.training) return 0;
     const block = state.flatBlocks[state.currentBlockIndex];
     if (state.training.sportType !== 'CYCLING') return this.getCurrentTargetIntensity(state);
@@ -253,7 +274,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     return Math.round(((block.intensityTarget || 0) * ftp) / 100);
   }
 
-  getCurrentTargetIntensity(state: any): number {
+  getCurrentTargetIntensity(state: ActiveSessionState): number {
     if (!state.training) return 0;
     const block = state.flatBlocks[state.currentBlockIndex];
     if (block.type === 'RAMP') {
@@ -266,7 +287,10 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     return block.intensityTarget || 0;
   }
 
-  calculateIntensityValue(percent: number | undefined, training: any): string {
+  calculateIntensityValue(
+    percent: number | undefined,
+    training: Training | null | undefined,
+  ): string {
     if (percent === undefined || !training) return '0';
     const user = this.authService.currentUser;
 
@@ -290,7 +314,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     return percent.toString();
   }
 
-  getSportUnit(training: any): string {
+  getSportUnit(training: Training | null | undefined): string {
     if (!training) return '';
     if (training.sportType === 'CYCLING') return 'W';
     if (training.sportType === 'RUNNING') return '/km';
@@ -298,10 +322,12 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     return '%';
   }
 
-  getSportLabel(training: any): string {
+  getSportLabel(training: Training | null | undefined): string {
     if (!training) return this.translate.instant('LIVE_SESSION.SPORT_LABEL_POWER');
-    if (training.sportType === 'CYCLING') return this.translate.instant('LIVE_SESSION.SPORT_LABEL_WATTS');
-    if (training.sportType === 'RUNNING' || training.sportType === 'SWIMMING') return this.translate.instant('LIVE_SESSION.SPORT_LABEL_PACE');
+    if (training.sportType === 'CYCLING')
+      return this.translate.instant('LIVE_SESSION.SPORT_LABEL_WATTS');
+    if (training.sportType === 'RUNNING' || training.sportType === 'SWIMMING')
+      return this.translate.instant('LIVE_SESSION.SPORT_LABEL_PACE');
     return this.translate.instant('LIVE_SESSION.SPORT_LABEL_INTENSITY');
   }
 
@@ -309,7 +335,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     return formatPace(totalSeconds);
   }
 
-  getPowerColor(state: any): string {
+  getPowerColor(state: ActiveSessionState): string {
     const target = this.getTargetPower(state);
     const current = this.bluetoothService.currentMetrics.power;
     const diff = Math.abs(target - current);
@@ -319,7 +345,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     return '#f87171'; // Off
   }
 
-  async togglePause(state: any) {
+  async togglePause(state: ActiveSessionState) {
     this.executionService.togglePause();
     // Sync PiP state immediately if active
     if (this.isPipActive) {
@@ -349,7 +375,7 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     this.showExitConfirm = false;
     this.executionService.stopWorkout();
     if (this.isPipActive) {
-      this.pipService.togglePip(null as any);
+      this.pipService.exitPip();
       this.isPipActive = false;
     }
     // Save to history when summary is generated
@@ -365,17 +391,17 @@ export class LiveDashboardComponent implements AfterViewInit, OnDestroy {
     this.executionService.updateState({
       isActive: false,
       isPaused: false,
-      finalSummary: null
+      finalSummary: null,
     });
     if (this.isPipActive) {
-      this.pipService.togglePip(null as any);
+      this.pipService.exitPip();
       this.isPipActive = false;
     }
   }
 
   closeSummary() {
     this.executionService.updateState({
-      finalSummary: null
+      finalSummary: null,
     });
   }
 }

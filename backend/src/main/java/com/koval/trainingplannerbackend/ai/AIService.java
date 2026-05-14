@@ -141,6 +141,9 @@ public class AIService {
     }
 
     private static boolean requiresCoachRole(AgentType type) {
-        return type == AgentType.COACH_MANAGEMENT || type == AgentType.CLUB_MANAGEMENT;
+        return switch (type) {
+            case COACH_MANAGEMENT, CLUB_MANAGEMENT -> true;
+            case TRAINING_CREATION, SCHEDULING, ANALYSIS, GENERAL -> false;
+        };
     }
 }

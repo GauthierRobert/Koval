@@ -4,7 +4,7 @@
 
   <div class="rail-body">
     <div class="rail-date mono">
-      {{ todayDate | date:'EEEE d MMMM' }} <span class="rail-date-dot">·</span>
+      {{ todayDate | date: 'EEEE d MMMM' }} <span class="rail-date-dot">·</span>
       <span>WK {{ weekMeta() }}</span>
     </div>
     <div class="rail-greet">
@@ -18,7 +18,7 @@
 
     @if (w) {
       <div class="rail-sport-tag mono" [style.color]="sportAccent()">
-        <app-sport-icon [sport]="w.sportType" [size]="14" [color]="sportAccent()"></app-sport-icon>
+        <app-sport-icon [sport]="w.sportType" [size]="14" [color]="sportAccent()" />
         <span>{{ sportLabel(w.sportType) }}</span>
       </div>
 
@@ -42,11 +42,15 @@
         </div>
         <div class="rail-meta-cell">
           <span class="rail-meta-label">{{ 'DASHBOARD.RAIL_TSS' | translate }}</span>
-          <span class="rail-meta-value mono">{{ workoutTss() != null ? (workoutTss() | number:'1.0-0') : '—' }}</span>
+          <span class="rail-meta-value mono">{{
+            workoutTss() !== null ? (workoutTss() | number: '1.0-0') : '—'
+          }}</span>
         </div>
         <div class="rail-meta-cell">
           <span class="rail-meta-label">{{ 'DASHBOARD.RAIL_IF' | translate }}</span>
-          <span class="rail-meta-value mono">{{ intensityFactor() != null ? (intensityFactor() | number:'1.2-2') : '—' }}</span>
+          <span class="rail-meta-value mono">{{
+            intensityFactor() !== null ? (intensityFactor() | number: '1.2-2') : '—'
+          }}</span>
         </div>
       </div>
 
@@ -56,11 +60,12 @@
           <div class="rail-zone-bar">
             @for (z of zoneDistribution(); track z.label) {
               @if (z.pct > 0) {
-                <div class="rail-zone-chunk"
-                     [style.background]="z.color"
-                     [style.flexBasis.%]="z.pct"
-                     [attr.title]="z.label + ' ' + z.pct + '%'">
-                </div>
+                <div
+                  class="rail-zone-chunk"
+                  [style.background]="z.color"
+                  [style.flexBasis.%]="z.pct"
+                  [attr.title]="z.label + ' ' + z.pct + '%'"
+                ></div>
               }
             }
           </div>
@@ -100,8 +105,15 @@
       <div class="rail-actions">
         <button class="rail-btn rail-btn--primary" (click)="openDetail.emit(w)">
           {{ 'DASHBOARD.BTN_VIEW_WORKOUT' | translate }}
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M5 12h14M13 5l7 7-7 7"/>
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path d="M5 12h14M13 5l7 7-7 7" />
           </svg>
         </button>
       </div>
@@ -110,9 +122,18 @@
       <p class="rail-rest-copy">{{ 'DASHBOARD.RAIL_REST_TIP' | translate }}</p>
 
       <div class="rail-meta-grid rail-meta-grid--rest">
-        <div class="rail-meta-cell"><span class="rail-meta-label">{{ 'DASHBOARD.RAIL_DURATION' | translate }}</span><span class="rail-meta-value mono">—</span></div>
-        <div class="rail-meta-cell"><span class="rail-meta-label">{{ 'DASHBOARD.RAIL_TSS' | translate }}</span><span class="rail-meta-value mono">0</span></div>
-        <div class="rail-meta-cell"><span class="rail-meta-label">{{ 'DASHBOARD.RAIL_IF' | translate }}</span><span class="rail-meta-value mono">—</span></div>
+        <div class="rail-meta-cell">
+          <span class="rail-meta-label">{{ 'DASHBOARD.RAIL_DURATION' | translate }}</span
+          ><span class="rail-meta-value mono">—</span>
+        </div>
+        <div class="rail-meta-cell">
+          <span class="rail-meta-label">{{ 'DASHBOARD.RAIL_TSS' | translate }}</span
+          ><span class="rail-meta-value mono">0</span>
+        </div>
+        <div class="rail-meta-cell">
+          <span class="rail-meta-label">{{ 'DASHBOARD.RAIL_IF' | translate }}</span
+          ><span class="rail-meta-value mono">—</span>
+        </div>
       </div>
     }
   </div>

@@ -1,6 +1,7 @@
-import {PmcDataPoint} from '../../../services/metrics.service';
-import {SavedSession} from '../../../services/history.service';
-import {SessionData} from '../../../models/session-types.model';
+import { PmcDataPoint } from '../../../services/metrics.service';
+import { SavedSession } from '../../../services/history.service';
+import { SessionData } from '../../../models/session-types.model';
+import { formatWeekRangeDash, getMonday, getSunday } from '../../../utils/date.utils';
 
 export const PMC_WINDOW_DAYS = 90;
 export const VOLUME_WINDOW_DAYS = 70;
@@ -14,39 +15,14 @@ export interface AthleteMetrics {
   atlTrend: number;
 }
 
-export function getMondayOfWeek(d: Date): Date {
-  const day = d.getDay();
-  const offset = day === 0 ? -6 : 1 - day;
-  const m = new Date(d);
-  m.setDate(d.getDate() + offset);
-  m.setHours(0, 0, 0, 0);
-  return m;
-}
+export { toDateKey, dateOffsetKey } from '../../../utils/date.utils';
 
-export function getSundayOfWeek(d: Date): Date {
-  const mon = getMondayOfWeek(d);
-  const sun = new Date(mon);
-  sun.setDate(mon.getDate() + 6);
-  return sun;
-}
-
-export function toDateKey(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-export function dateOffsetKey(daysOffset: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() + daysOffset);
-  return toDateKey(d);
-}
-
-export function formatScheduleWeekLabel(start: Date, end: Date): string {
-  const opts: Intl.DateTimeFormatOptions = {month: 'short', day: 'numeric'};
-  return `${start.toLocaleDateString('en-US', opts)} – ${end.toLocaleDateString('en-US', opts)}`;
-}
+/** @deprecated Use {@link getMonday} from `utils/date.utils`. */
+export const getMondayOfWeek = getMonday;
+/** @deprecated Use {@link getSunday} from `utils/date.utils`. */
+export const getSundayOfWeek = getSunday;
+/** @deprecated Use {@link formatWeekRangeDash} from `utils/date.utils`. */
+export const formatScheduleWeekLabel = formatWeekRangeDash;
 
 export function deriveAthleteMetrics(data: PmcDataPoint[]): AthleteMetrics | null {
   if (!data.length) return null;
@@ -64,7 +40,7 @@ export function deriveAthleteMetrics(data: PmcDataPoint[]): AthleteMetrics | nul
 }
 
 export function buildProjectionTssMap(
-  workouts: ReadonlyArray<{status?: string; tss?: number; scheduledDate: string}>,
+  workouts: ReadonlyArray<{ status?: string; tss?: number; scheduledDate: string }>,
 ): Map<string, number> {
   const m = new Map<string, number>();
   for (const w of workouts) {
@@ -115,7 +91,7 @@ export function mapSessionToSavedSession(s: RawSessionDetail): SavedSession {
 }
 
 /** Filters athletes by tag and club selections (null = no filter). */
-export function filterAthletes<T extends {groups?: string[]; clubs?: string[]}>(
+export function filterAthletes<T extends { groups?: string[]; clubs?: string[] }>(
   athletes: T[],
   tagFilter: string | null,
   clubFilter: string | null,
@@ -126,4 +102,4 @@ export function filterAthletes<T extends {groups?: string[]; clubs?: string[]}>(
   return result;
 }
 
-export type {SessionData};
+export type { SessionData };

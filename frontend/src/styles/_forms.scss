@@ -1,0 +1,89 @@
+// ═══════════════════════════════════════════════════════════════
+// KOVAL DESIGN SYSTEM — FORMS
+// Base styles for input/select/textarea so every form control
+// inherits consistent spacing, focus, disabled, and theming.
+// Component CSS can still override; this is the floor.
+// ═══════════════════════════════════════════════════════════════
+
+%form-control-base {
+  font-family: inherit;
+  font-size: var(--text-base);
+  line-height: 1.4;
+  color: var(--text-color);
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  min-height: var(--touch-target-min);
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    box-shadow var(--transition-fast);
+
+  &::placeholder {
+    color: var(--text-dim);
+  }
+
+  &:hover:not(:disabled):not(:focus) {
+    border-color: var(--overlay-15);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+input[type='text'],
+input[type='email'],
+input[type='password'],
+input[type='search'],
+input[type='url'],
+input[type='tel'],
+input[type='number'],
+input[type='date'],
+input[type='time'],
+input[type='datetime-local'],
+input[type='month'],
+input[type='week'],
+select,
+textarea {
+  @extend %form-control-base;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+select {
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238e8ea0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 32px;
+}
+
+// Native checkbox/radio: keep system control but tint to brand
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--accent-color);
+  min-width: 16px;
+  min-height: 16px;
+  cursor: pointer;
+}
+
+// Range input: brand-tinted thumb cross-browser
+input[type='range'] {
+  accent-color: var(--accent-color);
+  cursor: pointer;
+}
+
+// Labels
+label {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-weight: 600;
+}

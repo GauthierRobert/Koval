@@ -1,7 +1,9 @@
 @if (rows.length > 0) {
   <div class="clubs-section">
     <div class="clubs-header">
-      <span class="clubs-title mono">{{ 'DASHBOARD.MY_CLUBS_TITLE' | translate }} · {{ rows.length }}</span>
+      <span class="clubs-title mono"
+        >{{ 'DASHBOARD.MY_CLUBS_TITLE' | translate }} · {{ rows.length }}</span
+      >
       <button type="button" class="clubs-view-all mono" (click)="navigateToClubsList()">
         {{ 'DASHBOARD.CLUBS_VIEW_ALL' | translate }} →
       </button>
@@ -12,20 +14,21 @@
           type="button"
           class="club-row"
           [class.club-row--last]="last"
-          (click)="navigateToClub(item.club.id)">
+          (click)="navigateToClub(item.club.id)"
+        >
           <span class="club-avatar">{{ getClubInitials(item.club.name) }}</span>
           <span class="club-info">
             <span class="club-name">{{ item.club.name }}</span>
             <span class="club-meta mono">
-              @if (item.memberCount != null) {
+              @if (item.memberCount !== null) {
                 {{ 'DASHBOARD.CLUBS_MEMBERS' | translate: { count: item.memberCount } }}
               }
-              @if (item.memberCount != null && item.nextSession?.scheduledAt) {
+              @if (item.memberCount !== null && item.nextSession?.scheduledAt) {
                 <span class="meta-sep">·</span>
               }
               @if (item.nextSession?.scheduledAt; as next) {
                 <span>{{ 'DASHBOARD.CLUBS_NEXT' | translate }} {{ formatNextSession(next) }}</span>
-              } @else if (item.memberCount != null) {
+              } @else if (item.memberCount !== null) {
                 <span class="meta-quiet">{{ 'DASHBOARD.CLUBS_NO_UPCOMING' | translate }}</span>
               }
             </span>

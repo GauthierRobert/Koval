@@ -1,4 +1,15 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, NgZone, OnDestroy, ViewChild, inject, Input, signal } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  NgZone,
+  OnDestroy,
+  ViewChild,
+  inject,
+  Input,
+  signal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -22,9 +33,9 @@ import { SwimMetaChipsComponent } from '../../swim-meta/swim-meta-chips.componen
 export class WorkoutChartBarComponent implements AfterViewInit, OnDestroy {
   @Input() blocks: WorkoutBlock[] = [];
   @Input() displayUnit: 'PERCENT' | 'ABSOLUTE' = 'PERCENT';
-  @Input() ftp: number = 0;
-  @Input() sportType: string = '';
-  @Input() compact: boolean = false;
+  @Input() ftp = 0;
+  @Input() sportType = '';
+  @Input() compact = false;
   @Input() training: Training | null = null;
   @Input() currentZoneSystem: ZoneSystem | null = null;
 
@@ -122,7 +133,7 @@ export class WorkoutChartBarComponent implements AfterViewInit, OnDestroy {
     if (!this.training) return 0;
     const totalDuration = this.getNumericalTotalDuration();
     if (totalDuration === 0) return 0;
-    return ((this.getEstimatedBlockDuration(block)) / totalDuration) * 100;
+    return (this.getEstimatedBlockDuration(block) / totalDuration) * 100;
   }
 
   getBlockHeight(block: WorkoutBlock): number {
@@ -175,10 +186,10 @@ export class WorkoutChartBarComponent implements AfterViewInit, OnDestroy {
   getMaxIntensity(): number {
     if (!this.training) return 150;
 
-    const intensities = this.displayFlatBlocks.flatMap(b => [
+    const intensities = this.displayFlatBlocks.flatMap((b) => [
       this.getEffectiveIntensity(b, 'TARGET'),
       this.getEffectiveIntensity(b, 'START'),
-      this.getEffectiveIntensity(b, 'END')
+      this.getEffectiveIntensity(b, 'END'),
     ]);
 
     const maxBlockIntensity = intensities.length > 0 ? Math.max(...intensities) : 0;
@@ -219,8 +230,10 @@ export class WorkoutChartBarComponent implements AfterViewInit, OnDestroy {
   }
 
   getDisplayIntensity(block: WorkoutBlock): string {
-    if (block.type === 'PAUSE') return this.translate.instant('WORKOUT_VIZ.INTENSITY_PAUSE').toUpperCase();
-    if (block.type === 'FREE') return this.translate.instant('WORKOUT_VIZ.INTENSITY_FREE').toUpperCase();
+    if (block.type === 'PAUSE')
+      return this.translate.instant('WORKOUT_VIZ.INTENSITY_PAUSE').toUpperCase();
+    if (block.type === 'FREE')
+      return this.translate.instant('WORKOUT_VIZ.INTENSITY_FREE').toUpperCase();
     if (block.type === 'TRANSITION') return block.transitionType ?? 'T';
 
     const start = this.getEffectiveIntensity(block, 'START');
@@ -300,5 +313,4 @@ export class WorkoutChartBarComponent implements AfterViewInit, OnDestroy {
     if (m === 0) return `${s}sec`;
     return `${m}m ${s}sec`;
   }
-
 }

@@ -7,9 +7,19 @@
     </div>
     <div class="session-header__actions">
       <div class="session-header__nav">
-        <button class="nav-btn" (click)="prevWeek()" data-testid="open-sessions-nav-prev">&lsaquo;</button>
-        <button class="nav-btn nav-btn--today" (click)="goToday()" data-testid="open-sessions-nav-today">{{ 'CLUB_SESSIONS.NAV_TODAY' | translate }}</button>
-        <button class="nav-btn" (click)="nextWeek()" data-testid="open-sessions-nav-next">&rsaquo;</button>
+        <button class="nav-btn" (click)="prevWeek()" data-testid="open-sessions-nav-prev">
+          &lsaquo;
+        </button>
+        <button
+          class="nav-btn nav-btn--today"
+          (click)="goToday()"
+          data-testid="open-sessions-nav-today"
+        >
+          {{ 'CLUB_SESSIONS.NAV_TODAY' | translate }}
+        </button>
+        <button class="nav-btn" (click)="nextWeek()" data-testid="open-sessions-nav-next">
+          &rsaquo;
+        </button>
       </div>
       @if (canCreate) {
         <button class="btn-primary btn-sm" (click)="openForm()" data-testid="btn-propose-session">
@@ -23,7 +33,13 @@
   @if (isFormOpen) {
     <div class="form-overlay" (click)="closeForm()">
       <div class="form-modal glass" (click)="$event.stopPropagation()">
-        <h4>{{ editingSession ? ('CLUB_OPEN_SESSIONS.FORM_EDIT_TITLE' | translate) : ('CLUB_OPEN_SESSIONS.FORM_CREATE_TITLE' | translate) }}</h4>
+        <h4>
+          {{
+            editingSession
+              ? ('CLUB_OPEN_SESSIONS.FORM_EDIT_TITLE' | translate)
+              : ('CLUB_OPEN_SESSIONS.FORM_CREATE_TITLE' | translate)
+          }}
+        </h4>
 
         <div class="form-grid">
           <div class="form-group">
@@ -47,7 +63,12 @@
 
           <div class="form-group">
             <label>{{ 'CLUB_SESSIONS.FORM_LABEL_DURATION' | translate }}</label>
-            <input type="number" [(ngModel)]="form['durationMinutes']" class="input" placeholder="min" />
+            <input
+              type="number"
+              [(ngModel)]="form['durationMinutes']"
+              class="input"
+              placeholder="min"
+            />
           </div>
 
           <div class="form-group">
@@ -69,8 +90,8 @@
             <app-meeting-point-picker
               [lat]="form['meetingPointLat']"
               [lon]="form['meetingPointLon']"
-              (pointChanged)="onMeetingPointSelected($event)">
-            </app-meeting-point-picker>
+              (pointChanged)="onMeetingPointSelected($event)"
+            />
           </div>
 
           <div class="form-group full-width">
@@ -78,18 +99,31 @@
             @if (editingSession?.gpxFileName; as gpxName) {
               <div class="gpx-existing">
                 <span class="gpx-badge">{{ gpxName }}</span>
-                <button class="btn-danger" (click)="removeGpx()">{{ 'COMMON.DELETE' | translate }}</button>
+                <button class="btn-danger" (click)="removeGpx()">
+                  {{ 'COMMON.DELETE' | translate }}
+                </button>
               </div>
             }
-            <input type="file" accept=".gpx" (change)="onGpxFileSelected($event)" class="file-input" />
+            <input
+              type="file"
+              accept=".gpx"
+              (change)="onGpxFileSelected($event)"
+              class="file-input"
+            />
           </div>
         </div>
 
         @let isSaving = isSavingSession$ | async;
         <div class="form-actions">
           <button class="btn-ghost" (click)="closeForm()">{{ 'COMMON.CANCEL' | translate }}</button>
-          <button class="btn-primary" (click)="save()" [disabled]="!form['title'] || !form['scheduledAt'] || isSaving">
-            @if (isSaving) { <span class="btn-spinner"></span> }
+          <button
+            class="btn-primary"
+            (click)="save()"
+            [disabled]="!form['title'] || !form['scheduledAt'] || isSaving"
+          >
+            @if (isSaving) {
+              <span class="btn-spinner"></span>
+            }
             {{ (editingSession ? 'COMMON.SAVE' : 'COMMON.CREATE') | translate }}
           </button>
         </div>
@@ -108,8 +142,9 @@
           class="day-cell"
           [class.day-cell--selected]="isSelectedDay(day)"
           [class.day-cell--today]="isToday(day)"
-          (click)="selectDay(day)">
-          <span class="day-cell__weekday">{{ day | date:'EEE' | uppercase }}</span>
+          (click)="selectDay(day)"
+        >
+          <span class="day-cell__weekday">{{ day | date: 'EEE' | uppercase }}</span>
           <span class="day-cell__num">{{ day.getDate() }}</span>
           <div class="day-cell__dots">
             @for (s of getSessionsForDay(filtered, day); track s.id) {
@@ -141,8 +176,8 @@
             (toggleDetail)="toggleDetail($event)"
             (navigateToTraining)="navigateToTraining($event)"
             (downloadGpx)="downloadGpx($event)"
-            (shareGpx)="shareGpx($event)">
-          </app-session-card>
+            (shareGpx)="shareGpx($event)"
+          />
         }
       </div>
     } @else {
@@ -167,8 +202,12 @@
         <textarea [(ngModel)]="cancelReason" class="input" rows="2"></textarea>
       </div>
       <div class="form-actions">
-        <button class="btn-ghost" (click)="closeCancelSessionModal()">{{ 'CLUB_SESSIONS.BTN_GO_BACK' | translate }}</button>
-        <button class="btn-danger" (click)="confirmCancelSession()">{{ 'CLUB_SESSIONS.BTN_CANCEL_SESSION_CONFIRM' | translate }}</button>
+        <button class="btn-ghost" (click)="closeCancelSessionModal()">
+          {{ 'CLUB_SESSIONS.BTN_GO_BACK' | translate }}
+        </button>
+        <button class="btn-danger" (click)="confirmCancelSession()">
+          {{ 'CLUB_SESSIONS.BTN_CANCEL_SESSION_CONFIRM' | translate }}
+        </button>
       </div>
     </div>
   </div>

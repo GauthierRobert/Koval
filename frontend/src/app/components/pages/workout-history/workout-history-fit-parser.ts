@@ -1,6 +1,9 @@
-import {BlockSummary, SessionSummary} from '../../../services/workout-execution.service';
-// @ts-ignore — fit-file-parser has no type declarations
+import { BlockSummary, SessionSummary } from '../../../services/workout-execution.service';
 import FitParser from 'fit-file-parser';
+
+/** Local shim for `fit-file-parser`'s output (ParsedFit isn't re-exported). */
+type ParsedFitData = Parameters<Parameters<FitParser['parse']>[1]>[1];
+type RawFitLap = NonNullable<NonNullable<ParsedFitData>['laps']>[number];
 
 const SPORT_MAP: Record<string, SessionSummary['sportType']> = {
   cycling: 'CYCLING',
@@ -10,11 +13,11 @@ const SPORT_MAP: Record<string, SessionSummary['sportType']> = {
 
 export function parseFitToSession(fileName: string, buffer: ArrayBuffer): Promise<SessionSummary> {
   return new Promise((resolve, reject) => {
-    const parser = new FitParser({force: true, mode: 'list'});
+    const parser = new FitParser({ force: true, mode: 'list' });
 
-    parser.parse(buffer, (error: any, data: any) => {
-      if (error) {
-        reject(new Error(error));
+    parser.parse(buffer, (error, data) => {
+      if (error || !data) {
+        reject(new Error(error || 'Empty FIT parse result'));
         return;
       }
 
@@ -24,7 +27,7 @@ export function parseFitToSession(fileName: string, buffer: ArrayBuffer): Promis
         return;
       }
 
-      const blockSummaries: BlockSummary[] = (data.laps || []).map((lap: any, i: number) => ({
+      const blockSummaries: BlockSummary[] = (data.laps || []).map((lap: RawFitLap, i: number) => ({
         label: `Lap ${i + 1}`,
         durationSeconds: Math.round(lap.total_elapsed_time || 0),
         targetPower: 0,
@@ -34,7 +37,10 @@ export function parseFitToSession(fileName: string, buffer: ArrayBuffer): Promis
         type: 'STEADY',
       }));
 
-      const name = fileName.replace(/\.fit$/i, '').replace(/[_-]+/g, ' ').trim();
+      const name = fileName
+        .replace(/\.fit$/i, '')
+        .replace(/[_-]+/g, ' ')
+        .trim();
 
       resolve({
         title: name || 'Uploaded Session',
@@ -43,7 +49,7 @@ export function parseFitToSession(fileName: string, buffer: ArrayBuffer): Promis
         avgHR: Math.round(session.avg_heart_rate || 0),
         avgCadence: Math.round(session.avg_cadence || 0),
         avgSpeed: session.avg_speed || 0,
-        sportType: SPORT_MAP[session.sport?.toLowerCase()] ?? 'CYCLING',
+        sportType: SPORT_MAP[session.sport?.toLowerCase() ?? ''] ?? 'CYCLING',
         blockSummaries,
         history: [],
       });

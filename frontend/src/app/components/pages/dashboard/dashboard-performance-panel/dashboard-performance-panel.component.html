@@ -1,16 +1,24 @@
-@if (formStats && (formStats.ctl != null || formStats.atl != null || formStats.tsb != null)) {
+@if (formStats && (formStats.ctl !== null || formStats.atl !== null || formStats.tsb !== null)) {
   <div class="metrics-panel glass">
     <span class="card-label">{{ 'DASHBOARD.CARD_PERFORMANCE' | translate }}</span>
     <div class="mp-row">
-      <span class="mp-big-val fitness">{{ formStats.ctl != null ? (formStats.ctl | number:'1.0-0') : '–' }}</span>
-      <span class="mp-big-val fatigue">{{ formStats.atl != null ? (formStats.atl | number:'1.0-0') : '–' }}</span>
-      <span class="mp-big-val"
+      <span class="mp-big-val fitness">{{
+        formStats.ctl !== null ? (formStats.ctl | number: '1.0-0') : '–'
+      }}</span>
+      <span class="mp-big-val fatigue">{{
+        formStats.atl !== null ? (formStats.atl | number: '1.0-0') : '–'
+      }}</span>
+      <span
+        class="mp-big-val"
         [class.form-positive]="formStats.tsb! > 5"
         [class.form-negative]="formStats.tsb! < -10"
-        [class.form-neutral]="formStats.tsb! >= -10 && formStats.tsb! <= 5">
-        @if (formStats.tsb != null) {
-          {{ formStats.tsb > 0 ? '+' : '' }}{{ formStats.tsb | number:'1.0-0' }}
-        } @else { – }
+        [class.form-neutral]="formStats.tsb! >= -10 && formStats.tsb! <= 5"
+      >
+        @if (formStats.tsb !== null) {
+          {{ formStats.tsb > 0 ? '+' : '' }}{{ formStats.tsb | number: '1.0-0' }}
+        } @else {
+          –
+        }
       </span>
     </div>
     <div class="mp-row">

@@ -1,101 +1,119 @@
-import {inject, Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
-import {Observable, of} from 'rxjs';
-import {catchError, map} from 'rxjs/operators';
-import {ScheduledWorkout} from './coach.service';
-import {SavedSession} from './history.service';
-import {environment} from '../../environments/environment';
+import { inject, Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { ScheduledWorkout } from './coach.service';
+import { SavedSession } from './history.service';
+import { environment } from '../../environments/environment';
+
+/** Wire shape returned by `GET /api/sessions/calendar` before normalisation. */
+interface RawCalendarSession {
+  id: string;
+  title: string;
+  totalDurationSeconds: number;
+  avgPower: number;
+  avgHR: number;
+  avgCadence: number;
+  avgSpeed?: number;
+  blockSummaries?: SavedSession['blockSummaries'];
+  sportType: SavedSession['sportType'];
+  completedAt: string | number | Date;
+  tss?: number | null;
+  intensityFactor?: number | null;
+  fitFileId?: string | null;
+  scheduledWorkoutId?: string | null;
+  clubSessionId?: string | null;
+}
 
 export interface CalendarClubSession {
-    id: string;
-    clubId: string;
-    clubName: string;
-    title: string;
-    sport?: string;
-    scheduledAt: string;
-    location?: string;
-    description?: string;
-    durationMinutes?: number;
-    participantIds: string[];
-    maxParticipants?: number;
-    clubGroupId?: string;
-    clubGroupName?: string;
-    joined: boolean;
-    onWaitingList: boolean;
-    waitingListPosition: number;
-    openToAllFrom?: string;
-    cancelled?: boolean;
-    cancellationReason?: string;
-    linkedTrainingId?: string;
-    linkedTrainingTitle?: string;
-    linkedTrainingDescription?: string;
-    linkedTrainings?: CalendarLinkedTraining[];
+  id: string;
+  clubId: string;
+  clubName: string;
+  title: string;
+  sport?: string;
+  scheduledAt: string;
+  location?: string;
+  description?: string;
+  durationMinutes?: number;
+  participantIds: string[];
+  maxParticipants?: number;
+  clubGroupId?: string;
+  clubGroupName?: string;
+  joined: boolean;
+  onWaitingList: boolean;
+  waitingListPosition: number;
+  openToAllFrom?: string;
+  cancelled?: boolean;
+  cancellationReason?: string;
+  linkedTrainingId?: string;
+  linkedTrainingTitle?: string;
+  linkedTrainingDescription?: string;
+  linkedTrainings?: CalendarLinkedTraining[];
 }
 
 export interface CalendarLinkedTraining {
-    trainingId: string;
-    title: string;
-    clubGroupId?: string;
-    clubGroupName?: string;
-    relevant: boolean;
+  trainingId: string;
+  title: string;
+  clubGroupId?: string;
+  clubGroupName?: string;
+  relevant: boolean;
 }
 
 const BASE = environment.apiUrl;
 
 @Injectable({
-    providedIn: 'root',
+  providedIn: 'root',
 })
 export class CalendarService {
-    private readonly http = inject(HttpClient);
-    private readonly apiUrl = `${BASE}/api/schedule`;
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = `${BASE}/api/schedule`;
 
-    getMySchedule(start: string, end: string, includeClubSessions = false): Observable<ScheduledWorkout[]> {
-        const params: Record<string, string> = { start, end };
-        if (includeClubSessions) params['includeClubSessions'] = 'true';
-        return this.http
-            .get<ScheduledWorkout[]>(this.apiUrl, { params })
-            .pipe(catchError(() => of([] as ScheduledWorkout[])));
-    }
+  getMySchedule(
+    start: string,
+    end: string,
+    includeClubSessions = false,
+  ): Observable<ScheduledWorkout[]> {
+    const params: Record<string, string> = { start, end };
+    if (includeClubSessions) params['includeClubSessions'] = 'true';
+    return this.http
+      .get<ScheduledWorkout[]>(this.apiUrl, { params })
+      .pipe(catchError(() => of([] as ScheduledWorkout[])));
+  }
 
-    scheduleWorkout(
-        trainingId: string,
-        scheduledDate: string,
-        notes?: string
-    ): Observable<ScheduledWorkout> {
-        return this.http.post<ScheduledWorkout>(
-            this.apiUrl,
-            { trainingId, scheduledDate, notes }
-        );
-    }
+  scheduleWorkout(
+    trainingId: string,
+    scheduledDate: string,
+    notes?: string,
+  ): Observable<ScheduledWorkout> {
+    return this.http.post<ScheduledWorkout>(this.apiUrl, { trainingId, scheduledDate, notes });
+  }
 
-    deleteScheduledWorkout(id: string): Observable<void> {
-        return this.http.delete<void>(`${this.apiUrl}/${id}`);
-    }
+  deleteScheduledWorkout(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 
-    markCompleted(scheduledWorkoutId: string): Observable<ScheduledWorkout> {
-        return this.http.post<ScheduledWorkout>(
-            `${this.apiUrl}/${scheduledWorkoutId}/complete`,
-            {}
-        );
-    }
+  markCompleted(scheduledWorkoutId: string): Observable<ScheduledWorkout> {
+    return this.http.post<ScheduledWorkout>(`${this.apiUrl}/${scheduledWorkoutId}/complete`, {});
+  }
 
-    markSkipped(scheduledWorkoutId: string): Observable<ScheduledWorkout> {
-        return this.http.post<ScheduledWorkout>(
-            `${this.apiUrl}/${scheduledWorkoutId}/skip`,
-            {}
-        );
-    }
+  markSkipped(scheduledWorkoutId: string): Observable<ScheduledWorkout> {
+    return this.http.post<ScheduledWorkout>(`${this.apiUrl}/${scheduledWorkoutId}/skip`, {});
+  }
 
-    rescheduleWorkout(id: string, newDate: string): Observable<ScheduledWorkout> {
-        return this.http.patch<ScheduledWorkout>(
-            `${this.apiUrl}/${id}/reschedule`,
-            { scheduledDate: newDate }
-        );
-    }
+  rescheduleWorkout(id: string, newDate: string): Observable<ScheduledWorkout> {
+    return this.http.patch<ScheduledWorkout>(`${this.apiUrl}/${id}/reschedule`, {
+      scheduledDate: newDate,
+    });
+  }
 
-    getSessionsForCalendar(start: string, end: string): Observable<SavedSession[]> {
-        return this.http.get<any[]>(`${BASE}/api/sessions/calendar`, { params: { start, end } }).pipe(
-            map(ss => ss.map(s => ({
+  getSessionsForCalendar(start: string, end: string): Observable<SavedSession[]> {
+    return this.http
+      .get<RawCalendarSession[]>(`${BASE}/api/sessions/calendar`, { params: { start, end } })
+      .pipe(
+        map((ss) =>
+          ss.map(
+            (s) =>
+              ({
                 id: s.id,
                 title: s.title,
                 totalDuration: s.totalDurationSeconds,
@@ -114,24 +132,29 @@ export class CalendarService {
                 fitFileId: s.fitFileId ?? undefined,
                 scheduledWorkoutId: s.scheduledWorkoutId ?? undefined,
                 clubSessionId: s.clubSessionId ?? undefined,
-            } as SavedSession))),
-            catchError(() => of([] as SavedSession[]))
-        );
-    }
+              }) as SavedSession,
+          ),
+        ),
+        catchError(() => of([] as SavedSession[])),
+      );
+  }
 
-    linkSessionToSchedule(sessionId: string, scheduledWorkoutId: string): Observable<any> {
-        return this.http.post(`${BASE}/api/sessions/${sessionId}/link/${scheduledWorkoutId}`, {});
-    }
+  linkSessionToSchedule(sessionId: string, scheduledWorkoutId: string): Observable<void> {
+    return this.http.post<void>(`${BASE}/api/sessions/${sessionId}/link/${scheduledWorkoutId}`, {});
+  }
 
-    linkSessionToClubSession(sessionId: string, clubSessionId: string): Observable<any> {
-        return this.http.post(`${BASE}/api/sessions/${sessionId}/link-club-session/${clubSessionId}`, {});
-    }
+  linkSessionToClubSession(sessionId: string, clubSessionId: string): Observable<void> {
+    return this.http.post<void>(
+      `${BASE}/api/sessions/${sessionId}/link-club-session/${clubSessionId}`,
+      {},
+    );
+  }
 
-    getClubSessionsForCalendar(start: string, end: string): Observable<CalendarClubSession[]> {
-        return this.http
-            .get<CalendarClubSession[]>(`${this.apiUrl}/club-sessions`, {
-                params: { start, end },
-            })
-            .pipe(catchError(() => of([] as CalendarClubSession[])));
-    }
+  getClubSessionsForCalendar(start: string, end: string): Observable<CalendarClubSession[]> {
+    return this.http
+      .get<CalendarClubSession[]>(`${this.apiUrl}/club-sessions`, {
+        params: { start, end },
+      })
+      .pipe(catchError(() => of([] as CalendarClubSession[])));
+  }
 }

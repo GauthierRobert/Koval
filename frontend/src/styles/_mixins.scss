@@ -1,0 +1,29 @@
+// ═══════════════════════════════════════════════════════════════
+// KOVAL DESIGN SYSTEM — MIXINS
+// Reusable building blocks for the glassmorphism surface language.
+// Component CSS should @use 'styles/mixins' to access these.
+// ═══════════════════════════════════════════════════════════════
+
+// Standard glass surface (used by .glass, dropdowns, modal panels).
+// Match the look of `.glass` in styles.scss without the box-shadow,
+// so callers can layer their own elevation.
+@mixin glass-surface($blur: 24px, $saturate: 1.4) {
+  background: var(--glass-bg);
+  backdrop-filter: blur(#{$blur}) saturate(#{$saturate});
+  -webkit-backdrop-filter: blur(#{$blur}) saturate(#{$saturate});
+  border: 1px solid var(--glass-border);
+}
+
+// Dropdown / popover surface — heavier blur, raised shadow.
+@mixin glass-popover {
+  @include glass-surface(32px, 1.5);
+  box-shadow: var(--shadow-elevated);
+  border-radius: var(--radius-lg);
+}
+
+// Modal panel — heavier still, stronger shadow.
+@mixin glass-modal {
+  @include glass-surface(40px, 1.6);
+  box-shadow: var(--shadow-elevated);
+  border-radius: var(--radius-xl);
+}

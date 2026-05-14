@@ -30,7 +30,15 @@
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type BlockType = 'WARMUP' | 'STEADY' | 'INTERVAL' | 'COOLDOWN' | 'RAMP' | 'FREE' | 'PAUSE' | 'TRANSITION';
+export type BlockType =
+  | 'WARMUP'
+  | 'STEADY'
+  | 'INTERVAL'
+  | 'COOLDOWN'
+  | 'RAMP'
+  | 'FREE'
+  | 'PAUSE'
+  | 'TRANSITION';
 
 export interface WorkoutBlock {
   type: BlockType;
@@ -98,13 +106,18 @@ class NotationParser {
     const c = this.input[this.pos];
 
     if (/\d/.test(c)) {
-      let s = this.pos;
+      const s = this.pos;
       let dot = false;
       while (this.pos < this.input.length) {
         const ch = this.input[this.pos];
         if (/\d/.test(ch)) {
           this.pos++;
-        } else if (ch === '.' && !dot && this.pos + 1 < this.input.length && /\d/.test(this.input[this.pos + 1])) {
+        } else if (
+          ch === '.' &&
+          !dot &&
+          this.pos + 1 < this.input.length &&
+          /\d/.test(this.input[this.pos + 1])
+        ) {
           dot = true;
           this.pos++;
         } else {
@@ -116,7 +129,7 @@ class NotationParser {
     }
 
     if (/[a-zA-Z]/.test(c)) {
-      let s = this.pos;
+      const s = this.pos;
       const startsLower = /[a-z]/.test(c);
       this.pos++;
       while (this.pos < this.input.length && /[a-zA-Z]/.test(this.input[this.pos])) {
@@ -130,8 +143,13 @@ class NotationParser {
 
     this.pos++;
     const single: Record<string, TT> = {
-      '*': 'STAR', '(': 'LPAREN', ')': 'RPAREN',
-      '-': 'DASH', '%': 'PCT', '>': 'GT', '@': 'AT',
+      '*': 'STAR',
+      '(': 'LPAREN',
+      ')': 'RPAREN',
+      '-': 'DASH',
+      '%': 'PCT',
+      '>': 'GT',
+      '@': 'AT',
     };
     if (c in single) {
       this.current = { type: single[c], value: c };
@@ -140,12 +158,14 @@ class NotationParser {
     throw new WorkoutNotationError(`Unexpected character '${c}' at position ${this.pos - 1}`);
   }
 
-  private peek(): Token { return this.current; }
+  private peek(): Token {
+    return this.current;
+  }
 
   private consume(expected: TT): Token {
     if (this.current.type !== expected) {
       throw new WorkoutNotationError(
-        `Expected ${expected} but found '${this.current.value}' near "${this.tail()}"`
+        `Expected ${expected} but found '${this.current.value}' near "${this.tail()}"`,
       );
     }
     const t = this.current;
@@ -193,8 +213,8 @@ class NotationParser {
 
   private parseBlockBody(dur: number, insideInterval: boolean): WorkoutBlock {
     const unit = this.consume('IDENT').value.toLowerCase();
-    const durationSeconds   = this.isTimeUnit(unit)     ? this.toSeconds(dur, unit)       : undefined;
-    const distanceMeters    = this.isDistanceUnit(unit) ? this.toDistanceMeters(dur, unit) : undefined;
+    const durationSeconds = this.isTimeUnit(unit) ? this.toSeconds(dur, unit) : undefined;
+    const distanceMeters = this.isDistanceUnit(unit) ? this.toDistanceMeters(dur, unit) : undefined;
 
     if (durationSeconds == null && distanceMeters == null) {
       throw new WorkoutNotationError(`Unknown unit: '${unit}'`);
@@ -213,19 +233,55 @@ class NotationParser {
       this.nextToken();
       switch (id) {
         case 'P':
-          return this.block('PAUSE', durationSeconds, distanceMeters, undefined, undefined, undefined, undefined, 'Recovery');
+          return this.block(
+            'PAUSE',
+            durationSeconds,
+            distanceMeters,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            'Recovery',
+          );
         case 'F':
         case 'FREE':
-          return this.block('FREE', durationSeconds, distanceMeters, undefined, undefined, undefined, undefined, 'Free');
+          return this.block(
+            'FREE',
+            durationSeconds,
+            distanceMeters,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            'Free',
+          );
         case 'W': {
-          const pct     = this.consumeOptionalPct();
+          const pct = this.consumeOptionalPct();
           const cadence = this.consumeOptionalCadence();
-          return this.block('WARMUP', durationSeconds, distanceMeters, pct, undefined, undefined, cadence, 'Warm-Up' + this.pctSuffix(pct));
+          return this.block(
+            'WARMUP',
+            durationSeconds,
+            distanceMeters,
+            pct,
+            undefined,
+            undefined,
+            cadence,
+            'Warm-Up' + this.pctSuffix(pct),
+          );
         }
         case 'C': {
-          const pct     = this.consumeOptionalPct();
+          const pct = this.consumeOptionalPct();
           const cadence = this.consumeOptionalCadence();
-          return this.block('COOLDOWN', durationSeconds, distanceMeters, pct, undefined, undefined, cadence, 'Cool-Down' + this.pctSuffix(pct));
+          return this.block(
+            'COOLDOWN',
+            durationSeconds,
+            distanceMeters,
+            pct,
+            undefined,
+            undefined,
+            cadence,
+            'Cool-Down' + this.pctSuffix(pct),
+          );
         }
         default:
           throw new WorkoutNotationError(`Unknown modifier: '${id}'. Expected P, W, C, F, or Free`);
@@ -242,21 +298,47 @@ class NotationParser {
         this.consume('PCT');
         const cadence = this.consumeOptionalCadence();
         const start = Math.round(n1);
-        return this.block('RAMP', durationSeconds, distanceMeters, undefined, start, end, cadence,
-          `Ramp ${start}→${end}%`);
+        return this.block(
+          'RAMP',
+          durationSeconds,
+          distanceMeters,
+          undefined,
+          start,
+          end,
+          cadence,
+          `Ramp ${start}→${end}%`,
+        );
       }
 
       // STEADY or INTERVAL
       this.consume('PCT');
-      const cadence   = this.consumeOptionalCadence();
+      const cadence = this.consumeOptionalCadence();
       const intensity = Math.round(n1);
       const type: BlockType = insideInterval ? 'INTERVAL' : 'STEADY';
       const label = `${insideInterval ? 'Interval' : 'Steady'} ${intensity}%`;
-      return this.block(type, durationSeconds, distanceMeters, intensity, undefined, undefined, cadence, label);
+      return this.block(
+        type,
+        durationSeconds,
+        distanceMeters,
+        intensity,
+        undefined,
+        undefined,
+        cadence,
+        label,
+      );
     }
 
     // No modifier → FREE
-    return this.block('FREE', durationSeconds, distanceMeters, undefined, undefined, undefined, undefined, 'Free');
+    return this.block(
+      'FREE',
+      durationSeconds,
+      distanceMeters,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      'Free',
+    );
   }
 
   // ── Optional clause helpers ────────────────────────────────────────────────
@@ -290,19 +372,26 @@ class NotationParser {
 
   private toSeconds(dur: number, unit: string): number {
     switch (unit) {
-      case 'h':   return Math.round(dur * 3600);
-      case 'min': return Math.round(dur * 60);
+      case 'h':
+        return Math.round(dur * 3600);
+      case 'min':
+        return Math.round(dur * 60);
       case 's':
-      case 'sec': return Math.round(dur);
-      default:    return 0;
+      case 'sec':
+        return Math.round(dur);
+      default:
+        return 0;
     }
   }
 
   private toDistanceMeters(dur: number, unit: string): number {
     switch (unit) {
-      case 'km': return Math.round(dur * 1000);
-      case 'm':  return Math.round(dur);
-      default:   return 0;
+      case 'km':
+        return Math.round(dur * 1000);
+      case 'm':
+        return Math.round(dur);
+      default:
+        return 0;
     }
   }
 
@@ -319,12 +408,12 @@ class NotationParser {
     label: string,
   ): WorkoutBlock {
     const b: WorkoutBlock = { type, label };
-    if (durationSeconds  != null) b.durationSeconds  = durationSeconds;
-    if (distanceMeters   != null) b.distanceMeters   = distanceMeters;
-    if (intensityTarget  != null) b.intensityTarget  = intensityTarget;
-    if (intensityStart   != null) b.intensityStart   = intensityStart;
-    if (intensityEnd     != null) b.intensityEnd     = intensityEnd;
-    if (cadenceTarget    != null) b.cadenceTarget    = cadenceTarget;
+    if (durationSeconds != null) b.durationSeconds = durationSeconds;
+    if (distanceMeters != null) b.distanceMeters = distanceMeters;
+    if (intensityTarget != null) b.intensityTarget = intensityTarget;
+    if (intensityStart != null) b.intensityStart = intensityStart;
+    if (intensityEnd != null) b.intensityEnd = intensityEnd;
+    if (cadenceTarget != null) b.cadenceTarget = cadenceTarget;
     return b;
   }
 
@@ -349,7 +438,7 @@ class NotationParser {
 export function parseNotation(notation: string): NotationParseResult {
   const blocks = NotationParser.parse(notation);
   const totalDurationSeconds = blocks.reduce((s, b) => s + (b.durationSeconds ?? 0), 0);
-  const estimatedIf  = computeIF(blocks, totalDurationSeconds);
+  const estimatedIf = computeIF(blocks, totalDurationSeconds);
   const estimatedTss = computeTSS(totalDurationSeconds, estimatedIf);
   return { blocks, totalDurationSeconds, estimatedIf, estimatedTss };
 }
@@ -379,9 +468,13 @@ function effectivePct(b: WorkoutBlock): number {
   }
   switch (b.type) {
     case 'WARMUP':
-    case 'COOLDOWN': return 65;
-    case 'FREE':     return 55;
-    case 'PAUSE':    return 0;
-    default:         return 70;
+    case 'COOLDOWN':
+      return 65;
+    case 'FREE':
+      return 55;
+    case 'PAUSE':
+      return 0;
+    default:
+      return 70;
   }
 }

@@ -4,7 +4,10 @@
     <p class="tests-header__subtitle">{{ 'CLUB_TESTS.SUBTITLE' | translate }}</p>
     @if (tests.length > 0) {
       <p class="tests-header__count">
-        {{ (tests.length === 1 ? 'CLUB_TESTS.COUNT_ONE' : 'CLUB_TESTS.COUNT_OTHER') | translate: { count: tests.length } }}
+        {{
+          (tests.length === 1 ? 'CLUB_TESTS.COUNT_ONE' : 'CLUB_TESTS.COUNT_OTHER')
+            | translate: { count: tests.length }
+        }}
       </p>
     }
   </div>
@@ -22,18 +25,31 @@
   </div>
 } @else if (tests.length === 0) {
   <div class="empty-tab empty-tab--rich">
-    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-      <path d="M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/>
-      <path d="m9 14 2 2 4-4"/>
+    <svg
+      width="44"
+      height="44"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+      <path d="M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" />
+      <path d="m9 14 2 2 4-4" />
     </svg>
     <p class="empty-tab__title">{{ 'CLUB_TESTS.EMPTY' | translate }}</p>
     <p class="empty-tab__hint">
       {{ (isCoach ? 'CLUB_TESTS.EMPTY_HINT_COACH' : 'CLUB_TESTS.EMPTY_HINT_ATHLETE') | translate }}
     </p>
     @if (isCoach) {
-      <button class="btn-primary empty-tab__cta" data-testid="btn-create-test-empty" (click)="startCreate()">
+      <button
+        class="btn-primary empty-tab__cta"
+        data-testid="btn-create-test-empty"
+        (click)="startCreate()"
+      >
         + {{ 'CLUB_TESTS.NEW_TEST' | translate }}
       </button>
     }
@@ -41,13 +57,16 @@
 } @else {
   <ul class="test-grid">
     @for (t of tests; track trackById($index, t)) {
-      <li class="test-card glass" data-testid="test-card"
-          (click)="open.emit(t.id)"
-          (keydown.enter)="open.emit(t.id)"
-          (keydown.space)="open.emit(t.id)"
-          tabindex="0"
-          role="button"
-          [attr.aria-label]="t.name">
+      <li
+        class="test-card glass"
+        data-testid="test-card"
+        (click)="open.emit(t.id)"
+        (keydown.enter)="open.emit(t.id)"
+        (keydown.space)="open.emit(t.id)"
+        tabindex="0"
+        role="button"
+        [attr.aria-label]="t.name"
+      >
         <div class="test-card__head">
           <span class="test-card__name">{{ t.name }}</span>
           <div class="test-card__badges">
@@ -98,7 +117,7 @@
   <app-test-form-modal
     [club]="club"
     [test]="null"
-    (cancel)="cancelCreate()"
-    (save)="saveCreated($event)">
-  </app-test-form-modal>
+    (cancelled)="cancelCreate()"
+    (save)="saveCreated($event)"
+  />
 }

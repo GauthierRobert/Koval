@@ -6,24 +6,33 @@
         @for (plan of plans; track trackByPlanId(plan)) {
           <div class="plan-row" (click)="openPlan(plan)">
             <div class="plan-left">
-              <app-sport-icon [sport]="$any(plan.sportType)" [size]="18"></app-sport-icon>
+              <app-sport-icon [sport]="$any(plan.sportType)" [size]="18" />
               <div class="plan-info">
                 <span class="plan-title">{{ plan.planTitle }}</span>
                 <span class="plan-week-label">
-                  {{ 'COACH_DASHBOARD.PLANS_WEEK_OF' | translate: { current: plan.currentWeek, total: plan.durationWeeks } }}
+                  {{
+                    'COACH_DASHBOARD.PLANS_WEEK_OF'
+                      | translate: { current: plan.currentWeek, total: plan.durationWeeks }
+                  }}
                 </span>
               </div>
             </div>
             <div class="plan-right">
               @if (adherencePercent(plan) !== null) {
-                <span class="adherence-chip">{{ adherencePercent(plan) | number:'1.0-0' }}% {{ 'COACH_DASHBOARD.PLANS_ADHERENCE' | translate }}</span>
+                <span class="adherence-chip"
+                  >{{ adherencePercent(plan) | number: '1.0-0' }}%
+                  {{ 'COACH_DASHBOARD.PLANS_ADHERENCE' | translate }}</span
+                >
               }
               <span class="status-badge" [style.background]="statusColor(plan.status)">
                 {{ plan.status }}
               </span>
             </div>
             <div class="plan-progress-bar">
-              <div class="plan-progress-fill" [style.width.%]="plan.progress.completionPercent"></div>
+              <div
+                class="plan-progress-fill"
+                [style.width.%]="plan.progress.completionPercent"
+              ></div>
             </div>
           </div>
         }
@@ -34,7 +43,7 @@
   }
 } @else {
   <div class="skeleton-stack skeleton-stack--tight" aria-busy="true" aria-hidden="true">
-    @for (r of [0,1,2]; track r) {
+    @for (r of [0, 1, 2]; track r) {
       <div class="skeleton skeleton-block skeleton-plan-card"></div>
     }
   </div>

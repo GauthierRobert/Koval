@@ -12,7 +12,7 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
@@ -55,14 +55,26 @@ import { ChatMessageListComponent } from '../chat-message-list/chat-message-list
         (joinRoom)="api.joinRoom(roomDetail!.id).subscribe()"
         (leaveRoom)="api.leaveRoom(roomDetail!.id).subscribe()"
         (toggleMute)="api.setMuted(roomDetail!.id, !roomDetail!.currentUserMuted).subscribe()"
-        (backClick)="backClick.emit()">
-      </app-chat-message-list>
+        (backClick)="backClick.emit()"
+      />
     }
   `,
-  styles: [`
-    :host { display: block; height: 100%; min-height: 480px; }
-    .embedded-loading { padding: 24px; color: var(--text-muted, rgba(255, 255, 255, 0.5)); text-align: center; font-size: 0.9rem; margin: auto; }
-  `],
+  styles: [
+    `
+      :host {
+        display: block;
+        height: 100%;
+        min-height: 480px;
+      }
+      .embedded-loading {
+        padding: 24px;
+        color: var(--text-muted, rgba(255, 255, 255, 0.5));
+        text-align: center;
+        font-size: 0.9rem;
+        margin: auto;
+      }
+    `,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EmbeddedChatComponent implements OnInit, OnChanges {
@@ -103,7 +115,11 @@ export class EmbeddedChatComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if ((changes['scope'] || changes['clubId'] || changes['refId'] || changes['title']) && this.scope && this.clubId) {
+    if (
+      (changes['scope'] || changes['clubId'] || changes['refId'] || changes['title']) &&
+      this.scope &&
+      this.clubId
+    ) {
       this.resolveRoom();
     }
   }
@@ -122,7 +138,10 @@ export class EmbeddedChatComponent implements OnInit, OnChanges {
         this.sending = false;
         this.cdr.markForCheck();
       },
-      error: () => { this.sending = false; this.cdr.markForCheck(); },
+      error: () => {
+        this.sending = false;
+        this.cdr.markForCheck();
+      },
     });
   }
 
@@ -130,7 +149,9 @@ export class EmbeddedChatComponent implements OnInit, OnChanges {
     const key = this.cacheKey;
     this.api.deleteMessage(messageId).subscribe({
       next: () => {
-        this.messages = this.messages.map((m) => m.id === messageId ? { ...m, deleted: true, content: '' } : m);
+        this.messages = this.messages.map((m) =>
+          m.id === messageId ? { ...m, deleted: true, content: '' } : m,
+        );
         if (key) this.cache.updateMessage(key, messageId, { deleted: true, content: '' });
         this.cdr.markForCheck();
       },
@@ -138,7 +159,8 @@ export class EmbeddedChatComponent implements OnInit, OnChanges {
   }
 
   onLoadOlder(): void {
-    if (this.loadingOlder || !this.hasMoreOlder || !this.roomId || this.messages.length === 0) return;
+    if (this.loadingOlder || !this.hasMoreOlder || !this.roomId || this.messages.length === 0)
+      return;
     this.loadingOlder = true;
     this.cdr.markForCheck();
     const prevDistFromBottom = this.messageList?.distanceFromBottom ?? 0;
@@ -159,7 +181,10 @@ export class EmbeddedChatComponent implements OnInit, OnChanges {
           this.cdr.markForCheck();
         });
       },
-      error: () => { this.loadingOlder = false; this.cdr.markForCheck(); },
+      error: () => {
+        this.loadingOlder = false;
+        this.cdr.markForCheck();
+      },
     });
   }
 

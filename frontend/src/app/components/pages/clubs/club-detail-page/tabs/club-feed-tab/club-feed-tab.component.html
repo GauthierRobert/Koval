@@ -1,12 +1,14 @@
 <div class="feed-layout">
   <!-- Main feed column -->
   <div class="feed-main">
-
     <!-- Announcement composer (coach/admin only) -->
     @if (isCoachOrAdmin) {
-      <div data-testid="feed-composer" class="composer"
-           [class.composer--expanded]="composerExpanded"
-           (focusin)="composerExpanded = true">
+      <div
+        data-testid="feed-composer"
+        class="composer"
+        [class.composer--expanded]="composerExpanded"
+        (focusin)="composerExpanded = true"
+      >
         <app-koval-mention-input
           [clubId]="club.id"
           [multiline]="true"
@@ -15,9 +17,12 @@
           [value]="announcementText"
           [resetSignal]="announcementResetTick"
           testId="feed-composer-input"
-          (textChange)="announcementText = $event; composerExpanded = composerExpanded || announcementText.length > 0"
-          (mentionsChange)="announcementMentionIds = $event">
-        </app-koval-mention-input>
+          (textChange)="
+            announcementText = $event;
+            composerExpanded = composerExpanded || announcementText.length > 0
+          "
+          (mentionsChange)="announcementMentionIds = $event"
+        />
 
         @if (composerExpanded) {
           <div class="composer-attachments">
@@ -26,20 +31,26 @@
               [clubId]="club.id"
               [maxFiles]="5"
               [label]="'CLUB_FEED.ATTACH' | translate"
-              (attached)="onAnnouncementAttached($event)">
-            </koval-attachment-uploader>
+              (attached)="onAnnouncementAttached($event)"
+            />
           </div>
           <div class="composer-actions">
             <button class="composer-cancel" (click)="cancelAnnouncement()">
               {{ 'CLUB_FEED.CANCEL' | translate }}
             </button>
-            <button data-testid="spotlight-open-btn" class="composer-spotlight-btn"
-                    (click)="openSpotlightComposer()">
+            <button
+              data-testid="spotlight-open-btn"
+              class="composer-spotlight-btn"
+              (click)="openSpotlightComposer()"
+            >
               {{ 'CLUB_FEED.SPOTLIGHT_OPEN' | translate }}
             </button>
-            <button data-testid="feed-post-btn" class="btn-primary"
-                    [disabled]="!announcementText.trim()"
-                    (click)="submitAnnouncement()">
+            <button
+              data-testid="feed-post-btn"
+              class="btn-primary"
+              [disabled]="!announcementText.trim()"
+              (click)="submitAnnouncement()"
+            >
               {{ 'CLUB_FEED.POST' | translate }}
             </button>
           </div>
@@ -50,8 +61,8 @@
         <app-spotlight-composer
           [clubId]="club.id"
           (submitted)="submitSpotlight($event)"
-          (cancel)="cancelSpotlightComposer()">
-        </app-spotlight-composer>
+          (cancelled)="cancelSpotlightComposer()"
+        />
       }
     }
 
@@ -72,8 +83,8 @@
                   (commentEdited)="onCommentEdited($event)"
                   (commentDeleted)="onCommentDeleted($event)"
                   (commentReacted)="onCommentReacted($event)"
-                  (reacted)="onEventReacted($event)">
-                </app-feed-session-completion-card>
+                  (reacted)="onEventReacted($event)"
+                />
               }
               @case ('RACE_COMPLETION') {
                 <app-feed-race-completion-card
@@ -86,15 +97,15 @@
                   (commentEdited)="onCommentEdited($event)"
                   (commentDeleted)="onCommentDeleted($event)"
                   (commentReacted)="onCommentReacted($event)"
-                  (reacted)="onEventReacted($event)">
-                </app-feed-race-completion-card>
+                  (reacted)="onEventReacted($event)"
+                />
               }
               @case ('NEXT_GOAL') {
                 <app-feed-next-goal-card
                   [event]="event"
                   [currentUserId]="currentUserId"
-                  (reacted)="onEventReacted($event)">
-                </app-feed-next-goal-card>
+                  (reacted)="onEventReacted($event)"
+                />
               }
               @case ('MEMBER_SPOTLIGHT') {
                 <app-feed-spotlight-card
@@ -108,8 +119,8 @@
                   (commentDeleted)="onCommentDeleted($event)"
                   (commentReacted)="onCommentReacted($event)"
                   (reacted)="onEventReacted($event)"
-                  (spotlightDeleted)="onSpotlightDeleted($event)">
-                </app-feed-spotlight-card>
+                  (spotlightDeleted)="onSpotlightDeleted($event)"
+                />
               }
             }
           }
@@ -133,8 +144,8 @@
                   (commentReacted)="onCommentReacted($event)"
                   (reacted)="onEventReacted($event)"
                   (announcementEdited)="onAnnouncementEdited($event)"
-                  (announcementDeleted)="onAnnouncementDeleted($event)">
-                </app-feed-announcement-card>
+                  (announcementDeleted)="onAnnouncementDeleted($event)"
+                />
               }
               @case ('SESSION_COMPLETION') {
                 <app-feed-session-completion-card
@@ -147,8 +158,8 @@
                   (commentEdited)="onCommentEdited($event)"
                   (commentDeleted)="onCommentDeleted($event)"
                   (commentReacted)="onCommentReacted($event)"
-                  (reacted)="onEventReacted($event)">
-                </app-feed-session-completion-card>
+                  (reacted)="onEventReacted($event)"
+                />
               }
               @case ('RACE_COMPLETION') {
                 <app-feed-race-completion-card
@@ -161,15 +172,15 @@
                   (commentEdited)="onCommentEdited($event)"
                   (commentDeleted)="onCommentDeleted($event)"
                   (commentReacted)="onCommentReacted($event)"
-                  (reacted)="onEventReacted($event)">
-                </app-feed-race-completion-card>
+                  (reacted)="onEventReacted($event)"
+                />
               }
               @case ('NEXT_GOAL') {
                 <app-feed-next-goal-card
                   [event]="event"
                   [currentUserId]="currentUserId"
-                  (reacted)="onEventReacted($event)">
-                </app-feed-next-goal-card>
+                  (reacted)="onEventReacted($event)"
+                />
               }
               @case ('MEMBER_SPOTLIGHT') {
                 <app-feed-spotlight-card
@@ -183,8 +194,8 @@
                   (commentDeleted)="onCommentDeleted($event)"
                   (commentReacted)="onCommentReacted($event)"
                   (reacted)="onEventReacted($event)"
-                  (spotlightDeleted)="onSpotlightDeleted($event)">
-                </app-feed-spotlight-card>
+                  (spotlightDeleted)="onSpotlightDeleted($event)"
+                />
               }
             }
           }
@@ -200,11 +211,22 @@
       @if (feed.pinned.length === 0 && feed.items.length === 0) {
         <div class="empty-feed">
           <div class="empty-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
-              <path d="M18 14h-8"/>
-              <path d="M15 18h-5"/>
-              <path d="M10 6h8v4h-8V6Z"/>
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"
+              />
+              <path d="M18 14h-8" />
+              <path d="M15 18h-5" />
+              <path d="M10 6h8v4h-8V6Z" />
             </svg>
           </div>
           <p class="empty-text">{{ 'CLUB_FEED.EMPTY' | translate }}</p>
@@ -229,8 +251,8 @@
         [raceGoals]="(raceGoals$ | async) ?? []"
         (joinClicked)="onJoinSession($event)"
         (cancelClicked)="onCancelSession($event)"
-        (weekChange)="onWeekChange($event)">
-      </app-feed-sessions-upcoming>
+        (weekChange)="onWeekChange($event)"
+      />
     }
   </div>
 </div>

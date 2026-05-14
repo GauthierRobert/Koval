@@ -140,6 +140,6 @@ public class SessionTrainingLinkService {
             }
         }
         // Last resort: first entry
-        return effective.get(0);
+        return effective.getFirst();
     }
 }

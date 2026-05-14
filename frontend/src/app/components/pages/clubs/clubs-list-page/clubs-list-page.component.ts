@@ -1,11 +1,16 @@
-import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {Router} from '@angular/router';
-import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {BehaviorSubject} from 'rxjs';
-import {ClubService, ClubSummary, ClubVisibility, CreateClubData,} from '../../../../services/club.service';
-import {SkeletonComponent} from '../../../shared/skeleton/skeleton.component';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { BehaviorSubject } from 'rxjs';
+import {
+  ClubService,
+  ClubSummary,
+  ClubVisibility,
+  CreateClubData,
+} from '../../../../services/club.service';
+import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 
 @Component({
   selector: 'app-clubs-list-page',
@@ -60,7 +65,7 @@ export class ClubsListPageComponent implements OnInit {
     if (!this.form.name || this.isSavingClub$.value) return;
     this.isSavingClub$.next(true);
     this.clubService.createClub(this.form as CreateClubData).subscribe({
-      next: (club: any) => {
+      next: (club) => {
         this.isSavingClub$.next(false);
         this.isFormOpen = false;
         this.loadPublicClubs();
@@ -100,10 +105,13 @@ export class ClubsListPageComponent implements OnInit {
 
   getMembershipLabel(status: string | undefined): string {
     if (!status) return '';
-    if (status.startsWith('ACTIVE_OWNER')) return this.translate.instant('CLUBS_LIST.MEMBERSHIP_OWNER');
-    if (status.startsWith('ACTIVE_ADMIN')) return this.translate.instant('CLUBS_LIST.MEMBERSHIP_ADMIN');
+    if (status.startsWith('ACTIVE_OWNER'))
+      return this.translate.instant('CLUBS_LIST.MEMBERSHIP_OWNER');
+    if (status.startsWith('ACTIVE_ADMIN'))
+      return this.translate.instant('CLUBS_LIST.MEMBERSHIP_ADMIN');
     if (status.startsWith('ACTIVE')) return this.translate.instant('CLUBS_LIST.MEMBERSHIP_MEMBER');
-    if (status.startsWith('PENDING')) return this.translate.instant('CLUBS_LIST.MEMBERSHIP_PENDING');
+    if (status.startsWith('PENDING'))
+      return this.translate.instant('CLUBS_LIST.MEMBERSHIP_PENDING');
     return status;
   }
 

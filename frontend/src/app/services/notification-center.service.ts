@@ -1,8 +1,8 @@
-import {inject, Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, tap} from 'rxjs';
-import {environment} from '../../environments/environment';
-import {NotificationService} from './notification.service';
+import { inject, Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { NotificationService } from './notification.service';
 
 export interface PersistedNotification {
   id: string;
@@ -23,7 +23,7 @@ interface NotificationListResponse {
   size: number;
 }
 
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class NotificationCenterService {
   private readonly http = inject(HttpClient);
   private readonly fcm = inject(NotificationService);
@@ -47,7 +47,7 @@ export class NotificationCenterService {
     });
   }
 
-  loadPage(page: number = 0, size: number = 20): void {
+  loadPage(page = 0, size = 20): void {
     this.http.get<NotificationListResponse>(`${this.apiUrl}?page=${page}&size=${size}`).subscribe({
       next: (resp) => {
         this.notificationsSubject.next(resp.notifications);
@@ -58,46 +58,57 @@ export class NotificationCenterService {
   }
 
   refreshUnreadCount(): void {
-    this.http.get<{count: number}>(`${this.apiUrl}/unread-count`).subscribe({
+    this.http.get<{ count: number }>(`${this.apiUrl}/unread-count`).subscribe({
       next: (resp) => this.unreadCountSubject.next(resp.count),
       error: () => this.unreadCountSubject.next(0),
     });
   }
 
   markRead(id: string): void {
-    this.http.post(`${this.apiUrl}/${id}/read`, {}).pipe(
-      tap(() => {
-        const updated = this.notificationsSubject.value.map(n =>
-          n.id === id ? {...n, read: true, readAt: new Date().toISOString()} : n
-        );
-        this.notificationsSubject.next(updated);
-        this.unreadCountSubject.next(Math.max(0, this.unreadCountSubject.value - 1));
-      })
-    ).subscribe({error: (err) => console.warn('Failed to mark read:', err)});
+    this.http
+      .post(`${this.apiUrl}/${id}/read`, {})
+      .pipe(
+        tap(() => {
+          const updated = this.notificationsSubject.value.map((n) =>
+            n.id === id ? { ...n, read: true, readAt: new Date().toISOString() } : n,
+          );
+          this.notificationsSubject.next(updated);
+          this.unreadCountSubject.next(Math.max(0, this.unreadCountSubject.value - 1));
+        }),
+      )
+      .subscribe({ error: (err) => console.warn('Failed to mark read:', err) });
   }
 
   markAllRead(): void {
-    this.http.post<{marked: number}>(`${this.apiUrl}/read-all`, {}).pipe(
-      tap(() => {
-        const now = new Date().toISOString();
-        const updated = this.notificationsSubject.value.map(n =>
-          n.read ? n : {...n, read: true, readAt: now}
-        );
-        this.notificationsSubject.next(updated);
-        this.unreadCountSubject.next(0);
-      })
-    ).subscribe({error: (err) => console.warn('Failed to mark all read:', err)});
+    this.http
+      .post<{ marked: number }>(`${this.apiUrl}/read-all`, {})
+      .pipe(
+        tap(() => {
+          const now = new Date().toISOString();
+          const updated = this.notificationsSubject.value.map((n) =>
+            n.read ? n : { ...n, read: true, readAt: now },
+          );
+          this.notificationsSubject.next(updated);
+          this.unreadCountSubject.next(0);
+        }),
+      )
+      .subscribe({ error: (err) => console.warn('Failed to mark all read:', err) });
   }
 
   delete(id: string): void {
-    this.http.delete(`${this.apiUrl}/${id}`).pipe(
-      tap(() => {
-        const wasUnread = this.notificationsSubject.value.find(n => n.id === id && !n.read);
-        this.notificationsSubject.next(this.notificationsSubject.value.filter(n => n.id !== id));
-        if (wasUnread) {
-          this.unreadCountSubject.next(Math.max(0, this.unreadCountSubject.value - 1));
-        }
-      })
-    ).subscribe({error: (err) => console.warn('Failed to delete notification:', err)});
+    this.http
+      .delete(`${this.apiUrl}/${id}`)
+      .pipe(
+        tap(() => {
+          const wasUnread = this.notificationsSubject.value.find((n) => n.id === id && !n.read);
+          this.notificationsSubject.next(
+            this.notificationsSubject.value.filter((n) => n.id !== id),
+          );
+          if (wasUnread) {
+            this.unreadCountSubject.next(Math.max(0, this.unreadCountSubject.value - 1));
+          }
+        }),
+      )
+      .subscribe({ error: (err) => console.warn('Failed to delete notification:', err) });
   }
 }

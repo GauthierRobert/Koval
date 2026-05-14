@@ -1,13 +1,29 @@
-import {ChangeDetectionStrategy, Component, DestroyRef, computed, inject, OnInit, signal, Signal} from '@angular/core';
-import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {Router, RouterLink} from '@angular/router';
-import {map} from 'rxjs/operators';
-import {CountryFacet, DistanceCategory, PageResponse, Race, RaceService, SportFacet} from '../../../services/race.service';
-import {RaceGoalService} from '../../../services/race-goal.service';
-import {AuthService} from '../../../services/auth.service';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  Signal,
+} from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Router, RouterLink } from '@angular/router';
+import { map } from 'rxjs/operators';
+import {
+  CountryFacet,
+  DistanceCategory,
+  PageResponse,
+  Race,
+  RaceService,
+  SportFacet,
+} from '../../../services/race.service';
+import { RaceGoalService, RaceGoalSport } from '../../../services/race-goal.service';
+import { AuthService } from '../../../services/auth.service';
 import {
   applyRaceFilters,
   buildEditFormFromRace,
@@ -87,9 +103,12 @@ export class RacesPageComponent implements OnInit {
   // Goals — observable bridged to signal
   readonly addedRaceIds: Signal<ReadonlySet<string>> = toSignal(
     this.raceGoalService.goals$.pipe(
-      map(goals => new Set(goals.filter(g => g.raceId).map(g => g.raceId!)) as ReadonlySet<string>),
+      map(
+        (goals) =>
+          new Set(goals.filter((g) => g.raceId).map((g) => g.raceId!)) as ReadonlySet<string>,
+      ),
     ),
-    {initialValue: new Set<string>() as ReadonlySet<string>},
+    { initialValue: new Set<string>() as ReadonlySet<string> },
   );
 
   readonly distancePresetsBySport = DISTANCE_PRESETS_BY_SPORT;
@@ -100,7 +119,7 @@ export class RacesPageComponent implements OnInit {
   );
 
   readonly sportFacetsView = computed<SportOption[]>(() =>
-    this.sportFacets().map(f => ({
+    this.sportFacets().map((f) => ({
       id: f.sport,
       label: this.translate.instant('RACES.SPORT_' + f.sport.toUpperCase()),
       count: f.raceCount,
@@ -117,7 +136,9 @@ export class RacesPageComponent implements OnInit {
       verified: this.verifiedFilter(),
       datePreset: this.datePreset(),
     });
-    return filtered.map(r => cache[r.id] ?? r).sort((a, b) => a.scheduledDate!.localeCompare(b.scheduledDate!));
+    return filtered
+      .map((r) => cache[r.id] ?? r)
+      .sort((a, b) => a.scheduledDate!.localeCompare(b.scheduledDate!));
   });
 
   readonly selectedRace = computed<Race | null>(() => {
@@ -127,7 +148,7 @@ export class RacesPageComponent implements OnInit {
     if (cache[id]) return cache[id];
     const results = this.browseResults();
     if (!results) return null;
-    return results.content.find(r => r.id === id) ?? null;
+    return results.content.find((r) => r.id === id) ?? null;
   });
 
   ngOnInit(): void {
@@ -137,14 +158,17 @@ export class RacesPageComponent implements OnInit {
   // ───── Loading ─────
 
   loadSportFacets(): void {
-    this.raceService.getSportFacets().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (facets) => {
-        this.sportFacets.set(facets);
-        if (!this.selectedSport() && facets.length > 0) {
-          this.selectSport(facets[0].sport);
-        }
-      },
-    });
+    this.raceService
+      .getSportFacets()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (facets) => {
+          this.sportFacets.set(facets);
+          if (!this.selectedSport() && facets.length > 0) {
+            this.selectSport(facets[0].sport);
+          }
+        },
+      });
   }
 
   selectSport(sport: string): void {
@@ -157,17 +181,20 @@ export class RacesPageComponent implements OnInit {
     this.browsePage.set(0);
     this.browseLoading.set(true);
 
-    this.raceService.getCountryFacets(sport).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (facets) => {
-        this.countryFacets.set(facets);
-        if (facets.length > 0) {
-          this.selectCountry(facets[0].country);
-        } else {
-          this.browseLoading.set(false);
-        }
-      },
-      error: () => this.browseLoading.set(false),
-    });
+    this.raceService
+      .getCountryFacets(sport)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (facets) => {
+          this.countryFacets.set(facets);
+          if (facets.length > 0) {
+            this.selectCountry(facets[0].country);
+          } else {
+            this.browseLoading.set(false);
+          }
+        },
+        error: () => this.browseLoading.set(false),
+      });
   }
 
   selectCountry(country: string): void {
@@ -192,7 +219,7 @@ export class RacesPageComponent implements OnInit {
           // Auto-select first race if current selection no longer in list
           const list = this.filteredRaces();
           const currentId = this.selectedRaceId();
-          if (list.length > 0 && (!currentId || !list.some(r => r.id === currentId))) {
+          if (list.length > 0 && (!currentId || !list.some((r) => r.id === currentId))) {
             this.selectedRaceId.set(list[0].id);
           }
         },
@@ -203,14 +230,14 @@ export class RacesPageComponent implements OnInit {
   loadMore(): void {
     const r = this.browseResults();
     if (!r || this.browsePage() >= r.totalPages - 1) return;
-    this.browsePage.update(p => p + 1);
+    this.browsePage.update((p) => p + 1);
     this.loadBrowsePage();
   }
 
   // ───── Filtering ─────
 
   toggleDistance(category: DistanceCategory): void {
-    this.distanceFilters.update(s => {
+    this.distanceFilters.update((s) => {
       const next = new Set(s);
       if (next.has(category)) next.delete(category);
       else next.add(category);
@@ -225,11 +252,17 @@ export class RacesPageComponent implements OnInit {
     this.verifiedFilter.set('all');
   }
 
-  setDatePreset(preset: DatePreset): void { this.datePreset.set(preset); }
+  setDatePreset(preset: DatePreset): void {
+    this.datePreset.set(preset);
+  }
 
-  setVerifiedFilter(value: VerifiedFilter): void { this.verifiedFilter.set(value); }
+  setVerifiedFilter(value: VerifiedFilter): void {
+    this.verifiedFilter.set(value);
+  }
 
-  onSearchChange(value: string): void { this.searchQuery.set(value); }
+  onSearchChange(value: string): void {
+    this.searchQuery.set(value);
+  }
 
   selectRace(race: Race): void {
     this.selectedRaceId.set(race.id);
@@ -267,27 +300,27 @@ export class RacesPageComponent implements OnInit {
       .createGoal({
         raceId: race.id,
         title: race.title,
-        sport: race.sport as any,
+        sport: race.sport as RaceGoalSport,
         location: race.location,
         distance: race.distance,
         priority: 'A',
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({error: () => {}});
+      .subscribe({ error: () => {} });
   }
 
   canSimulate = canSimulate;
 
   simulateRace(race: Race): void {
     if (!canSimulate(race)) return;
-    this.router.navigate(['/pacing'], {queryParams: {raceId: race.id}});
+    this.router.navigate(['/pacing'], { queryParams: { raceId: race.id } });
   }
 
   getSimulateDisabledReason(race: Race): string {
     const missing = missingGpxDisciplines(race);
     return missing.length === 0
       ? ''
-      : this.translate.instant('RACES.SIMULATE_MISSING_GPX', {missing: missing.join(' / ')});
+      : this.translate.instant('RACES.SIMULATE_MISSING_GPX', { missing: missing.join(' / ') });
   }
 
   isOwnRace(race: Race): boolean {
@@ -297,26 +330,34 @@ export class RacesPageComponent implements OnInit {
   // ───── Create ─────
 
   toggleCreateRace(): void {
-    this.isCreatingRace.update(v => !v);
+    this.isCreatingRace.update((v) => !v);
     if (!this.isCreatingRace()) this.newRaceTitle.set('');
   }
 
-  setNewRaceTitle(value: string): void { this.newRaceTitle.set(value); }
+  setNewRaceTitle(value: string): void {
+    this.newRaceTitle.set(value);
+  }
 
   createAndCompleteRace(): void {
     const title = this.newRaceTitle().trim();
     if (!title) return;
     this.isAiCompleting.set(true);
 
-    this.raceService.createRace(title).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (race) => {
-        this.raceService.aiComplete(race.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-          next: () => this.finishCreate(),
-          error: () => this.finishCreate(),
-        });
-      },
-      error: () => this.isAiCompleting.set(false),
-    });
+    this.raceService
+      .createRace(title)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (race) => {
+          this.raceService
+            .aiComplete(race.id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: () => this.finishCreate(),
+              error: () => this.finishCreate(),
+            });
+        },
+        error: () => this.isAiCompleting.set(false),
+      });
   }
 
   private finishCreate(): void {
@@ -343,20 +384,25 @@ export class RacesPageComponent implements OnInit {
   saveEdit(race: Race): void {
     if (!this.editingRaceId()) return;
     this.isSavingEdit.set(true);
-    this.raceService.updateRace(race.id, this.editForm()).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (updated) => {
-        this.raceCache.update(c => ({...c, [race.id]: updated}));
-        this.browseResults.update(results => results ? replaceRaceInPage(results, updated) : results);
-        this.editingRaceId.set(null);
-        this.editForm.set({});
-        this.isSavingEdit.set(false);
-      },
-      error: () => this.isSavingEdit.set(false),
-    });
+    this.raceService
+      .updateRace(race.id, this.editForm())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updated) => {
+          this.raceCache.update((c) => ({ ...c, [race.id]: updated }));
+          this.browseResults.update((results) =>
+            results ? replaceRaceInPage(results, updated) : results,
+          );
+          this.editingRaceId.set(null);
+          this.editForm.set({});
+          this.isSavingEdit.set(false);
+        },
+        error: () => this.isSavingEdit.set(false),
+      });
   }
 
-  onEditFieldChange(field: keyof Race, value: any): void {
-    this.editForm.update(f => ({...f, [field]: value}));
+  onEditFieldChange<K extends keyof Race>(field: K, value: Race[K]): void {
+    this.editForm.update((f) => ({ ...f, [field]: value }));
   }
 
   // ───── GPX ─────
@@ -369,17 +415,18 @@ export class RacesPageComponent implements OnInit {
     if (!file.name.toLowerCase().endsWith('.gpx')) return;
 
     const key = race.id + '_' + discipline;
-    const setUploading = (v: boolean) => this.gpxUploading.update(g => ({...g, [key]: v}));
+    const setUploading = (v: boolean) => this.gpxUploading.update((g) => ({ ...g, [key]: v }));
     setUploading(true);
 
     this.raceService.uploadGpx(race.id, discipline, file).subscribe({
-      next: () => this.raceService.getRace(race.id).subscribe({
-        next: (updated) => {
-          this.raceCache.update(c => ({...c, [race.id]: updated}));
-          setUploading(false);
-        },
-        error: () => setUploading(false),
-      }),
+      next: () =>
+        this.raceService.getRace(race.id).subscribe({
+          next: (updated) => {
+            this.raceCache.update((c) => ({ ...c, [race.id]: updated }));
+            setUploading(false);
+          },
+          error: () => setUploading(false),
+        }),
       error: () => setUploading(false),
     });
   }
@@ -388,8 +435,11 @@ export class RacesPageComponent implements OnInit {
     const value = +(event.target as HTMLInputElement).value;
     const loops = Math.max(1, Math.min(99, value || 1));
     const key = (discipline + 'GpxLoops') as 'swimGpxLoops' | 'bikeGpxLoops' | 'runGpxLoops';
-    this.raceService.updateRace(race.id, {[key]: loops}).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (updated) => this.raceCache.update(c => ({...c, [race.id]: updated})),
-    });
+    this.raceService
+      .updateRace(race.id, { [key]: loops })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updated) => this.raceCache.update((c) => ({ ...c, [race.id]: updated })),
+      });
   }
 }

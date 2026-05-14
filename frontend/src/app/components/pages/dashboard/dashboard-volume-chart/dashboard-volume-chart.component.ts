@@ -8,7 +8,7 @@ import {
   OnDestroy,
   ViewChild,
 } from '@angular/core';
-import {VolumeEntry} from '../../../../services/analytics.service';
+import { VolumeEntry } from '../../../../services/analytics.service';
 import {
   SPORT_COLORS,
   SPORT_LABELS,
@@ -34,20 +34,43 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="volume-chart-wrap">
-      <canvas #canvas class="volume-canvas"
+      <canvas
+        #canvas
+        class="volume-canvas"
         (mousemove)="onMouseMove($event)"
         (mouseleave)="onMouseLeave()"
         (touchstart)="onTouchStart($event)"
         (touchmove)="onTouchMove($event)"
-        (touchend)="onTouchEnd()">
+        (touchend)="onTouchEnd()"
+      >
       </canvas>
     </div>
   `,
-  styles: [`
-    :host { display: block; width: 100%; height: 100%; overflow: hidden; }
-    .volume-chart-wrap { display: flex; flex-direction: column; width: 100%; height: 100%; overflow: hidden; flex: 1; }
-    .volume-canvas { width: 100%; flex: 1; min-height: 0; display: block; cursor: crosshair; }
-  `],
+  styles: [
+    `
+      :host {
+        display: block;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      .volume-chart-wrap {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        flex: 1;
+      }
+      .volume-canvas {
+        width: 100%;
+        flex: 1;
+        min-height: 0;
+        display: block;
+        cursor: crosshair;
+      }
+    `,
+  ],
 })
 export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, OnDestroy {
   @Input() data: VolumeEntry[] = [];
@@ -72,7 +95,10 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
     this.ro = new ResizeObserver(() => this.draw());
     this.ro.observe(this.canvasRef.nativeElement);
     this.themeObserver = new MutationObserver(() => this.draw());
-    this.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    this.themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
     this.draw();
   }
 
@@ -129,7 +155,10 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
     let bestDist = Infinity;
     for (let i = 0; i < n; i++) {
       const dist = Math.abs(mouseX - (this.ML + i * step));
-      if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = i;
+      }
     }
     return bestDist < step * 0.7 ? bestIdx : null;
   }
@@ -167,7 +196,7 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
     }
 
     const entries = getLast10Weeks(this.data);
-    const {ML, MR, MT, MB} = this;
+    const { ML, MR, MT, MB } = this;
     const cW = cssW - ML - MR;
     const cH = cssH - MT - MB;
     const n = entries.length;
@@ -229,7 +258,8 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
       for (let i = 0; i < n; i++) {
         const x = toX(i);
         const y = toY(stacks[i][si].top);
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
       }
       for (let i = n - 1; i >= 0; i--) {
         ctx.lineTo(toX(i), toY(stacks[i][si].bottom));
@@ -242,7 +272,8 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
       for (let i = 0; i < n; i++) {
         const x = toX(i);
         const y = toY(stacks[i][si].top);
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
       }
       ctx.strokeStyle = hexToRgba(color, 0.7);
       ctx.lineWidth = 1;
@@ -302,7 +333,10 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
   }
 
   private drawTooltip(
-    ctx: CanvasRenderingContext2D, cssW: number, cssH: number, anchorX: number,
+    ctx: CanvasRenderingContext2D,
+    cssW: number,
+    cssH: number,
+    anchorX: number,
     stack: StackSegment[],
     entry: VolumeEntry,
   ): void {
@@ -313,12 +347,15 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
     const totalVal = getTotalValue(entry, this.metric);
 
     const lines = [
-      {label: weekLabel, value: formatTooltipValue(totalVal, this.metric), color: ''},
-      ...stack.filter((s) => s.val > 0).reverse().map((s) => ({
-        label: SPORT_LABELS[s.sport] || s.sport,
-        value: formatTooltipValue(s.val, this.metric),
-        color: SPORT_COLORS[s.sport],
-      })),
+      { label: weekLabel, value: formatTooltipValue(totalVal, this.metric), color: '' },
+      ...stack
+        .filter((s) => s.val > 0)
+        .reverse()
+        .map((s) => ({
+          label: SPORT_LABELS[s.sport] || s.sport,
+          value: formatTooltipValue(s.val, this.metric),
+          color: SPORT_COLORS[s.sport],
+        })),
     ];
 
     ctx.font = 'bold 11px monospace';

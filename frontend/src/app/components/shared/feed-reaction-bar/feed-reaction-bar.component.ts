@@ -1,5 +1,5 @@
-import {ChangeDetectionStrategy, Component, computed, input, output, signal} from '@angular/core';
-import {ALLOWED_REACTION_EMOJI, ReactionEmoji} from '../../../models/club.model';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { ALLOWED_REACTION_EMOJI, ReactionEmoji } from '../../../models/club.model';
 
 const EMOJI_GLYPH: Record<ReactionEmoji, string> = {
   fire: '\u{1F525}',
@@ -32,7 +32,8 @@ interface ReactionRow {
             [class.active]="r.active"
             (click)="onToggle(r.emoji)"
             [attr.aria-pressed]="r.active"
-            [attr.aria-label]="'react with ' + r.emoji">
+            [attr.aria-label]="'react with ' + r.emoji"
+          >
             <span class="emoji">{{ r.glyph }}</span>
             @if (r.count > 0) {
               <span data-testid="reaction-chip-count" class="count">{{ r.count }}</span>
@@ -45,16 +46,25 @@ interface ReactionRow {
         class="reaction-add"
         data-testid="reaction-add"
         (click)="togglePicker()"
-        [attr.aria-label]="'add reaction'">
+        [attr.aria-label]="'add reaction'"
+      >
         @if (!pickerOpen()) {
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-            <line x1="9" y1="9" x2="9.01" y2="9"/>
-            <line x1="15" y1="9" x2="15.01" y2="9"/>
-            <line x1="19" y1="3" x2="19" y2="7"/>
-            <line x1="17" y1="5" x2="21" y2="5"/>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+            <line x1="9" y1="9" x2="9.01" y2="9" />
+            <line x1="15" y1="9" x2="15.01" y2="9" />
+            <line x1="19" y1="3" x2="19" y2="7" />
+            <line x1="17" y1="5" x2="21" y2="5" />
           </svg>
         } @else {
           ×
@@ -84,13 +94,21 @@ interface ReactionRow {
       line-height: 1;
       min-height: 22px;
     }
-    .reaction-chip:hover { background: var(--glass-bg); }
+    .reaction-chip:hover {
+      background: var(--glass-bg);
+    }
     .reaction-chip.active {
       background: var(--accent-subtle);
       color: var(--accent-color);
     }
-    .reaction-chip .emoji { font-size: 13px; }
-    .reaction-chip .count { font-size: 10px; font-variant-numeric: tabular-nums; opacity: 0.8; }
+    .reaction-chip .emoji {
+      font-size: 13px;
+    }
+    .reaction-chip .count {
+      font-size: 10px;
+      font-variant-numeric: tabular-nums;
+      opacity: 0.8;
+    }
     .reaction-add {
       display: inline-flex;
       align-items: center;
@@ -103,13 +121,16 @@ interface ReactionRow {
       color: var(--text-muted);
       cursor: pointer;
     }
-    .reaction-add:hover { color: var(--accent-color); border-color: var(--accent-color); }
+    .reaction-add:hover {
+      color: var(--accent-color);
+      border-color: var(--accent-color);
+    }
   `,
 })
 export class FeedReactionBarComponent {
   readonly reactions = input<{ [emoji: string]: string[] } | undefined>(undefined);
   readonly currentUserId = input<string | null>(null);
-  readonly toggle = output<ReactionEmoji>();
+  readonly toggled = output<ReactionEmoji>();
 
   readonly pickerOpen = signal(false);
 
@@ -132,7 +153,7 @@ export class FeedReactionBarComponent {
   }
 
   onToggle(emoji: ReactionEmoji): void {
-    this.toggle.emit(emoji);
+    this.toggled.emit(emoji);
     this.pickerOpen.set(false);
   }
 }

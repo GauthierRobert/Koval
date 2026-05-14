@@ -1,13 +1,21 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, inject} from '@angular/core';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {BehaviorSubject} from 'rxjs';
-import {TranslateModule} from '@ngx-translate/core';
-import {AuthService, User} from '../../../../services/auth.service';
-import {ZoneService} from '../../../../services/zone.service';
-import {ZoneSystem} from '../../../../services/zone';
-import {SportIconComponent} from '../../../shared/sport-icon/sport-icon.component';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  NgZone,
+  OnInit,
+  inject,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { BehaviorSubject } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
+import { AuthService, User } from '../../../../services/auth.service';
+import { ZoneService } from '../../../../services/zone.service';
+import { ZoneSystem } from '../../../../services/zone';
+import { SportIconComponent } from '../../../shared/sport-icon/sport-icon.component';
 
 interface PaceField {
   key: string;
@@ -51,19 +59,75 @@ export class ReferenceValuesPageComponent implements OnInit {
   customRefValues: Record<string, number | null> = {};
 
   primaryRunFields: PaceField[] = [
-    {key: 'functionalThresholdPace', label: 'Threshold Pace', labelKey: 'SETTINGS.FIELD_THRESHOLD_PACE_LABEL', hint: 'Lactate threshold pace', hintKey: 'SETTINGS.FIELD_THRESHOLD_PACE_HINT', minutes: null, seconds: null},
-    {key: 'vo2maxPace', label: 'VO2max Pace', labelKey: 'SETTINGS.FIELD_VO2MAX_PACE_LABEL', hint: 'VO2max intensity pace', hintKey: 'SETTINGS.FIELD_VO2MAX_PACE_HINT', minutes: null, seconds: null},
+    {
+      key: 'functionalThresholdPace',
+      label: 'Threshold Pace',
+      labelKey: 'SETTINGS.FIELD_THRESHOLD_PACE_LABEL',
+      hint: 'Lactate threshold pace',
+      hintKey: 'SETTINGS.FIELD_THRESHOLD_PACE_HINT',
+      minutes: null,
+      seconds: null,
+    },
+    {
+      key: 'vo2maxPace',
+      label: 'VO2max Pace',
+      labelKey: 'SETTINGS.FIELD_VO2MAX_PACE_LABEL',
+      hint: 'VO2max intensity pace',
+      hintKey: 'SETTINGS.FIELD_VO2MAX_PACE_HINT',
+      minutes: null,
+      seconds: null,
+    },
   ];
 
   secondaryRunFields: PaceField[] = [
-    {key: 'pace5k', label: '5K Pace', labelKey: 'SETTINGS.FIELD_5K_PACE_LABEL', hint: 'Current 5K race pace', hintKey: 'SETTINGS.FIELD_5K_PACE_HINT', minutes: null, seconds: null},
-    {key: 'pace10k', label: '10K Pace', labelKey: 'SETTINGS.FIELD_10K_PACE_LABEL', hint: 'Current 10K race pace', hintKey: 'SETTINGS.FIELD_10K_PACE_HINT', minutes: null, seconds: null},
-    {key: 'paceHalfMarathon', label: 'Half Marathon Pace', labelKey: 'SETTINGS.FIELD_HALF_MARATHON_PACE_LABEL', hint: 'Current half marathon race pace', hintKey: 'SETTINGS.FIELD_HALF_MARATHON_PACE_HINT', minutes: null, seconds: null},
-    {key: 'paceMarathon', label: 'Marathon Pace', labelKey: 'SETTINGS.FIELD_MARATHON_PACE_LABEL', hint: 'Current marathon race pace', hintKey: 'SETTINGS.FIELD_MARATHON_PACE_HINT', minutes: null, seconds: null},
+    {
+      key: 'pace5k',
+      label: '5K Pace',
+      labelKey: 'SETTINGS.FIELD_5K_PACE_LABEL',
+      hint: 'Current 5K race pace',
+      hintKey: 'SETTINGS.FIELD_5K_PACE_HINT',
+      minutes: null,
+      seconds: null,
+    },
+    {
+      key: 'pace10k',
+      label: '10K Pace',
+      labelKey: 'SETTINGS.FIELD_10K_PACE_LABEL',
+      hint: 'Current 10K race pace',
+      hintKey: 'SETTINGS.FIELD_10K_PACE_HINT',
+      minutes: null,
+      seconds: null,
+    },
+    {
+      key: 'paceHalfMarathon',
+      label: 'Half Marathon Pace',
+      labelKey: 'SETTINGS.FIELD_HALF_MARATHON_PACE_LABEL',
+      hint: 'Current half marathon race pace',
+      hintKey: 'SETTINGS.FIELD_HALF_MARATHON_PACE_HINT',
+      minutes: null,
+      seconds: null,
+    },
+    {
+      key: 'paceMarathon',
+      label: 'Marathon Pace',
+      labelKey: 'SETTINGS.FIELD_MARATHON_PACE_LABEL',
+      hint: 'Current marathon race pace',
+      hintKey: 'SETTINGS.FIELD_MARATHON_PACE_HINT',
+      minutes: null,
+      seconds: null,
+    },
   ];
 
   swimFields: PaceField[] = [
-    {key: 'criticalSwimSpeed', label: 'Critical Swim Speed', labelKey: 'SETTINGS.FIELD_CRITICAL_SWIM_SPEED_LABEL', hint: 'Threshold pace per 100m', hintKey: 'SETTINGS.FIELD_CRITICAL_SWIM_SPEED_HINT', minutes: null, seconds: null},
+    {
+      key: 'criticalSwimSpeed',
+      label: 'Critical Swim Speed',
+      labelKey: 'SETTINGS.FIELD_CRITICAL_SWIM_SPEED_LABEL',
+      hint: 'Threshold pace per 100m',
+      hintKey: 'SETTINGS.FIELD_CRITICAL_SWIM_SPEED_HINT',
+      minutes: null,
+      seconds: null,
+    },
   ];
 
   get allRunFields(): PaceField[] {
@@ -95,24 +159,29 @@ export class ReferenceValuesPageComponent implements OnInit {
   }
 
   get cpTestInvalidOrder(): boolean {
-    return this.power3MinW != null
-      && this.power12MinW != null
-      && this.power3MinW > 0
-      && this.power12MinW > 0
-      && this.power3MinW <= this.power12MinW;
+    return (
+      this.power3MinW != null &&
+      this.power12MinW != null &&
+      this.power3MinW > 0 &&
+      this.power12MinW > 0 &&
+      this.power3MinW <= this.power12MinW
+    );
   }
 
   ngOnInit() {
-    this.authService.user$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
+    this.authService.user$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((user) => {
       if (user) this.loadFromUser(user);
     });
 
-    this.zoneService.getMyZoneSystems().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (systems) => {
-        this.customZoneSystemsSubject.next(systems.filter(s => s.referenceType === 'CUSTOM'));
-      },
-      error: () => this.customZoneSystemsSubject.next([]),
-    });
+    this.zoneService
+      .getMyZoneSystems()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (systems) => {
+          this.customZoneSystemsSubject.next(systems.filter((s) => s.referenceType === 'CUSTOM'));
+        },
+        error: () => this.customZoneSystemsSubject.next([]),
+      });
   }
 
   private loadFromUser(user: User) {
@@ -123,7 +192,7 @@ export class ReferenceValuesPageComponent implements OnInit {
     this.power12MinW = user.power12MinW ?? null;
 
     for (const field of [...this.allRunFields, ...this.swimFields]) {
-      const val = (user as any)[field.key] as number | undefined;
+      const val = (user as unknown as Record<string, number | undefined>)[field.key];
       if (val) {
         field.minutes = Math.floor(val / 60);
         field.seconds = val % 60;
@@ -163,12 +232,12 @@ export class ReferenceValuesPageComponent implements OnInit {
     this.saving = true;
     this.saved = false;
 
-    const settings: any = {
-      ftp: this.ftp ?? null,
-      weightKg: this.weightKg ?? null,
-      vo2maxPower: this.vo2maxPower ?? null,
-      power3MinW: this.power3MinW ?? null,
-      power12MinW: this.power12MinW ?? null,
+    const settings: Partial<User> & Record<string, unknown> = {
+      ftp: this.ftp ?? undefined,
+      weightKg: this.weightKg ?? undefined,
+      vo2maxPower: this.vo2maxPower ?? undefined,
+      power3MinW: this.power3MinW ?? undefined,
+      power12MinW: this.power12MinW ?? undefined,
     };
     for (const field of [...this.allRunFields, ...this.swimFields]) {
       const val = this.paceToSeconds(field);
@@ -185,26 +254,27 @@ export class ReferenceValuesPageComponent implements OnInit {
       settings.customZoneReferenceValues = customZoneReferenceValues;
     }
 
-    this.authService.updateSettings(settings)
+    this.authService
+      .updateSettings(settings)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-      next: () => {
-        this.saving = false;
-        this.saved = true;
-        this.cdr.markForCheck();
-        this.ngZone.runOutsideAngular(() => {
-          setTimeout(() => {
-            this.ngZone.run(() => {
-              this.saved = false;
-              this.cdr.markForCheck();
-            });
-          }, 2000);
-        });
-      },
-      error: () => {
-        this.saving = false;
-        this.cdr.markForCheck();
-      },
-    });
+        next: () => {
+          this.saving = false;
+          this.saved = true;
+          this.cdr.markForCheck();
+          this.ngZone.runOutsideAngular(() => {
+            setTimeout(() => {
+              this.ngZone.run(() => {
+                this.saved = false;
+                this.cdr.markForCheck();
+              });
+            }, 2000);
+          });
+        },
+        error: () => {
+          this.saving = false;
+          this.cdr.markForCheck();
+        },
+      });
   }
 }

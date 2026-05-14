@@ -1,15 +1,22 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, inject, Input, Output} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  inject,
+  Input,
+  Output,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   ClubFeedEventResponse,
   ReactionEmoji,
   SpotlightBadge,
 } from '../../../../../../../services/club.service';
-import {KovalImageComponent} from '../../../../../../shared/koval-image/koval-image.component';
-import {KovalMentionTextComponent} from '../../../../../../shared/koval-mention-text/koval-mention-text.component';
-import {FeedReactionBarComponent} from '../../../../../../shared/feed-reaction-bar/feed-reaction-bar.component';
-import {FeedCommentsSectionComponent} from './feed-comments-section.component';
+import { KovalImageComponent } from '../../../../../../shared/koval-image/koval-image.component';
+import { KovalMentionTextComponent } from '../../../../../../shared/koval-mention-text/koval-mention-text.component';
+import { FeedReactionBarComponent } from '../../../../../../shared/feed-reaction-bar/feed-reaction-bar.component';
+import { FeedCommentsSectionComponent } from './feed-comments-section.component';
 
 const BADGE_LABEL_KEY: Record<SpotlightBadge, string> = {
   MILESTONE: 'CLUB_FEED.SPOTLIGHT_BADGE_MILESTONE',
@@ -42,15 +49,18 @@ const BADGE_GLYPH: Record<SpotlightBadge, string> = {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div data-testid="feed-event" class="spotlight-card" [class.spotlight-card--pinned]="event.pinned">
+    <div
+      data-testid="feed-event"
+      class="spotlight-card"
+      [class.spotlight-card--pinned]="event.pinned"
+    >
       <div class="spotlight-pin-row">
         <span class="spotlight-badge" [attr.data-badge]="event.spotlightBadge">
           <span class="spotlight-badge-glyph">{{ badgeGlyph }}</span>
           {{ badgeLabel | translate }}
         </span>
         @if (canManage) {
-          <button class="spotlight-action-link spotlight-action-link--danger"
-                  (click)="onDelete()">
+          <button class="spotlight-action-link spotlight-action-link--danger" (click)="onDelete()">
             {{ 'COMMON.DELETE' | translate }}
           </button>
         }
@@ -74,16 +84,24 @@ const BADGE_GLYPH: Record<SpotlightBadge, string> = {
         <div class="spotlight-message">
           <app-koval-mention-text
             [text]="event.spotlightMessage"
-            [mentions]="event.mentionRefs ?? []">
-          </app-koval-mention-text>
+            [mentions]="event.mentionRefs ?? []"
+          />
         </div>
       }
 
       @if (imageAttachments.length > 0) {
-        <div class="spotlight-images" [class.spotlight-images--single]="imageAttachments.length === 1">
+        <div
+          class="spotlight-images"
+          [class.spotlight-images--single]="imageAttachments.length === 1"
+        >
           @for (a of imageAttachments; track a.id) {
-            <a class="spotlight-image-link" [href]="a.file?.originalUrl" target="_blank" rel="noopener">
-              <koval-image [media]="a.file" size="medium" [alt]="a.file?.originalFileName || ''"></koval-image>
+            <a
+              class="spotlight-image-link"
+              [href]="a.file?.originalUrl"
+              target="_blank"
+              rel="noopener"
+            >
+              <koval-image [media]="a.file" size="medium" [alt]="a.file?.originalFileName || ''" />
             </a>
           }
         </div>
@@ -103,8 +121,8 @@ const BADGE_GLYPH: Record<SpotlightBadge, string> = {
       <app-feed-reaction-bar
         [reactions]="event.reactions"
         [currentUserId]="currentUserId"
-        (toggle)="reacted.emit({eventId: event.id, emoji: $event})">
-      </app-feed-reaction-bar>
+        (toggled)="reacted.emit({ eventId: event.id, emoji: $event })"
+      />
 
       <app-feed-comments-section
         [clubId]="clubId"
@@ -115,8 +133,8 @@ const BADGE_GLYPH: Record<SpotlightBadge, string> = {
         (replySubmitted)="replySubmitted.emit($event)"
         (commentEdited)="commentEdited.emit($event)"
         (commentDeleted)="commentDeleted.emit($event)"
-        (commentReacted)="commentReacted.emit($event)">
-      </app-feed-comments-section>
+        (commentReacted)="commentReacted.emit($event)"
+      />
     </div>
   `,
   styles: `
@@ -128,8 +146,15 @@ const BADGE_GLYPH: Record<SpotlightBadge, string> = {
       padding: var(--space-md);
       overflow: hidden;
     }
-    .spotlight-card--pinned { border-left: 3px solid var(--dev-accent-color); }
-    .spotlight-pin-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); }
+    .spotlight-card--pinned {
+      border-left: 3px solid var(--dev-accent-color);
+    }
+    .spotlight-pin-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+    }
     .spotlight-badge {
       display: inline-flex;
       align-items: center;
@@ -144,51 +169,141 @@ const BADGE_GLYPH: Record<SpotlightBadge, string> = {
       text-transform: uppercase;
       color: var(--dev-accent-color);
     }
-    .spotlight-badge[data-badge="PR"] { color: var(--accent-color); }
-    .spotlight-badge[data-badge="GRIT"] { color: var(--danger-color); }
-    .spotlight-badge[data-badge="NEW_MEMBER"] { color: var(--success-color); }
-    .spotlight-badge-glyph { font-size: 13px; line-height: 1; }
-    .spotlight-action-link { background: none; border: none; padding: 0; font-size: 10px; color: var(--text-muted); cursor: pointer; font-weight: 500; }
-    .spotlight-action-link:hover { color: var(--accent-color); }
-    .spotlight-action-link--danger:hover { color: var(--danger-color); }
-    .spotlight-hero { display: flex; align-items: center; gap: var(--space-sm); margin-top: var(--space-sm); }
+    .spotlight-badge[data-badge='PR'] {
+      color: var(--accent-color);
+    }
+    .spotlight-badge[data-badge='GRIT'] {
+      color: var(--danger-color);
+    }
+    .spotlight-badge[data-badge='NEW_MEMBER'] {
+      color: var(--success-color);
+    }
+    .spotlight-badge-glyph {
+      font-size: 13px;
+      line-height: 1;
+    }
+    .spotlight-action-link {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 10px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .spotlight-action-link:hover {
+      color: var(--accent-color);
+    }
+    .spotlight-action-link--danger:hover {
+      color: var(--danger-color);
+    }
+    .spotlight-hero {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      margin-top: var(--space-sm);
+    }
     .spotlight-avatar {
-      width: 56px; height: 56px; border-radius: 50%;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
       background: var(--surface-elevated);
-      display: flex; align-items: center; justify-content: center;
-      overflow: hidden; flex-shrink: 0;
-      font-size: 20px; font-weight: 700; color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-muted);
       border: 2px solid var(--dev-accent-color);
     }
-    .spotlight-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .spotlight-headline { display: flex; flex-direction: column; flex: 1; min-width: 0; }
-    .spotlight-name { font-size: var(--text-sm); font-weight: 600; color: var(--text-color); }
-    .spotlight-title { font-size: var(--text-lg); font-weight: 700; color: var(--text-color); line-height: 1.2; }
+    .spotlight-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .spotlight-headline {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 0;
+    }
+    .spotlight-name {
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--text-color);
+    }
+    .spotlight-title {
+      font-size: var(--text-lg);
+      font-weight: 700;
+      color: var(--text-color);
+      line-height: 1.2;
+    }
     .spotlight-message {
       margin-top: var(--space-sm);
       font-size: var(--text-sm);
       line-height: 1.5;
       color: var(--text-color);
     }
-    .spotlight-images { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: var(--space-sm); border-radius: var(--radius-sm); overflow: hidden; }
-    .spotlight-images--single { grid-template-columns: 1fr; max-width: 480px; }
-    .spotlight-image-link { display: block; border-radius: var(--radius-sm); overflow: hidden; line-height: 0; }
-    .spotlight-meta { margin-top: var(--space-sm); font-size: 10px; color: var(--text-muted); }
-    .spotlight-author, .spotlight-expires { font-style: normal; }
+    .spotlight-images {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: var(--space-sm);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .spotlight-images--single {
+      grid-template-columns: 1fr;
+      max-width: 480px;
+    }
+    .spotlight-image-link {
+      display: block;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      line-height: 0;
+    }
+    .spotlight-meta {
+      margin-top: var(--space-sm);
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    .spotlight-author,
+    .spotlight-expires {
+      font-style: normal;
+    }
   `,
 })
 export class FeedSpotlightCardComponent {
-  @Input({required: true}) clubId!: string;
+  @Input({ required: true }) clubId!: string;
   @Input() event!: ClubFeedEventResponse;
   @Input() currentUserId: string | null = null;
   @Input() canManage = false;
 
-  @Output() reacted = new EventEmitter<{eventId: string; emoji: ReactionEmoji}>();
-  @Output() commentSubmitted = new EventEmitter<{eventId: string; content: string; mentionUserIds: string[]}>();
-  @Output() replySubmitted = new EventEmitter<{eventId: string; parentCommentId: string; content: string; mentionUserIds: string[]}>();
-  @Output() commentEdited = new EventEmitter<{eventId: string; commentId: string; content: string}>();
-  @Output() commentDeleted = new EventEmitter<{eventId: string; commentId: string}>();
-  @Output() commentReacted = new EventEmitter<{eventId: string; commentId: string; emoji: ReactionEmoji}>();
+  @Output() reacted = new EventEmitter<{ eventId: string; emoji: ReactionEmoji }>();
+  @Output() commentSubmitted = new EventEmitter<{
+    eventId: string;
+    content: string;
+    mentionUserIds: string[];
+  }>();
+  @Output() replySubmitted = new EventEmitter<{
+    eventId: string;
+    parentCommentId: string;
+    content: string;
+    mentionUserIds: string[];
+  }>();
+  @Output() commentEdited = new EventEmitter<{
+    eventId: string;
+    commentId: string;
+    content: string;
+  }>();
+  @Output() commentDeleted = new EventEmitter<{ eventId: string; commentId: string }>();
+  @Output() commentReacted = new EventEmitter<{
+    eventId: string;
+    commentId: string;
+    emoji: ReactionEmoji;
+  }>();
   @Output() spotlightDeleted = new EventEmitter<string>();
 
   private translate = inject(TranslateService);

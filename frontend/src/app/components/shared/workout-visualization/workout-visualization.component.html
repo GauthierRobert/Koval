@@ -1,143 +1,244 @@
 @if (training) {
   <div class="viz-container" [class.compact]="compact">
     @if (!compact) {
-      <app-training-action-modal [isOpen]="isScheduleModalOpen" mode="self-schedule"
+      <app-training-action-modal
+        [isOpen]="isScheduleModalOpen"
+        mode="self-schedule"
         [preselectedTrainingId]="training!.id"
-        (closed)="isScheduleModalOpen = false" (completed)="isScheduleModalOpen = false"></app-training-action-modal>
+        (closed)="isScheduleModalOpen = false"
+        (completed)="isScheduleModalOpen = false"
+      />
     }
 
-  <div class="dashboard-panels" [class.compact-panels]="compact">
-    <!-- LEFT COLUMN: Hero card + blocks list -->
-    @if (!compact) {
-    <div class="left-panel">
-      <!-- Hero card: sport pills, title, description, stat row -->
-      <div class="detail-hero glass">
-        <div class="eyebrow-row">
-          @if (training.trainingType) {
-            <span class="sport-pill"
-              [style.color]="getTrainingTypeColor()"
-              [style.background]="'color-mix(in oklch, ' + getTrainingTypeColor() + ' 12%, transparent)'"
-              [style.border]="'1px solid color-mix(in oklch, ' + getTrainingTypeColor() + ' 28%, transparent)'">
-              {{ getTrainingTypeLabel() }}
-            </span>
-          }
-          <span class="sport-pill sport-pill--ghost"
-            [style.color]="getSportColor()">
-            <span class="sport-pill-bullet">&#9670;</span> {{ getSportLabel() }}
-          </span>
-          @if (training.nolioSyncStatus && training.nolioSyncStatus !== 'NONE') {
-            <span class="nolio-sync-pill" [class.synced]="training.nolioSyncStatus === 'SYNCED'"
-              [class.pending]="training.nolioSyncStatus === 'PENDING'"
-              [class.failed]="training.nolioSyncStatus === 'FAILED'"
-              [title]="training.nolioSyncError || ''">
-              @switch (training.nolioSyncStatus) {
-                @case ('SYNCED') { Nolio &#x2713; }
-                @case ('PENDING') { Nolio &hellip; }
-                @case ('FAILED') { Nolio &#x26A0; }
-              }
-            </span>
-          }
-        </div>
-        <div class="hero-title-row">
-          <h1 class="hero-title">{{ training.title }}</h1>
-          @if (isOwner()) {
-            <app-favorite-star
-              size="lg"
-              [active]="!!training.favorite"
-              [label]="(training.favorite ? 'TRAINING_TAGS.STAR_REMOVE' : 'TRAINING_TAGS.STAR_ADD') | translate"
-              (toggle)="onToggleFavorite()">
-            </app-favorite-star>
-          }
-        </div>
-        @if (training.description) {
-          <p class="hero-subtitle">{{ training.description }}</p>
-        }
-        <div class="hero-tags-row">
-          <app-training-tag-editor
-            [tags]="training.tags ?? []"
-            [readonly]="!isOwner()"
-            (tagsChange)="onTagsChange($event)">
-          </app-training-tag-editor>
-        </div>
-        <div class="stat-row">
-          <div class="s">
-            <small>{{ 'WORKOUT_VIZ.STAT_DURATION' | translate }}</small>
-            <b [style.font-style]="isDurationEstimated() ? 'italic' : ''">{{ getTotalDuration() }}</b>
-          </div>
-          <div class="s">
-            <small>{{ 'WORKOUT_VIZ.STAT_TSS' | translate }}</small>
-            <b>{{ training.estimatedTss || '-' }}</b>
-          </div>
-          <div class="s">
-            <small>{{ 'WORKOUT_VIZ.STAT_IF' | translate }}</small>
-            <b>{{ training.estimatedIf | number:'1.2-2' }}</b>
-          </div>
-          <div class="s">
-            <small>{{ 'WORKOUT_VIZ.STAT_BLOCKS' | translate }}</small>
-            <b>{{ displayFlatBlocks.length }}</b>
-          </div>
-        </div>
-      </div>
-
-      <!-- Blocks list panel -->
-      <div class="panel blocks-list-panel glass">
-        <div class="panel-hd">
-          <span class="eyebrow eyebrow-orange">{{ 'WORKOUT_VIZ.BLOCKS_STRUCTURE_HEADING' | translate }}</span>
-          <div class="panel-hd-actions">
-            <button class="btn-ghost-mini" (click)="toggleUnits()" [disabled]="!hasReferenceValue()" [title]="'%/' + getSportUnit()">
-              {{ displayUnit === 'PERCENT' ? '%' : getSportUnit() }}
-            </button>
-            @if (isOwner()) {
-              <button class="btn-ghost-mini desktop-only" (click)="enterEditMode()">{{ 'WORKOUT_VIZ.BTN_EDIT_BLOCKS_SHORT' | translate }}</button>
-            }
-          </div>
-        </div>
-        <app-block-steps-list
-          [blocks]="displayBlocks"
-          [displayUnit]="displayUnit"
-          [ftp]="(user$ | async)?.ftp ?? 0"
-          [sportType]="training.sportType"
-          [training]="training"
-          [currentZoneSystem]="currentZoneSystem">
-        </app-block-steps-list>
-      </div>
-    </div>
-    }
-
-    <!-- RIGHT COLUMN: Profile chart card -->
-    <div class="right-panel">
+    <div class="dashboard-panels" [class.compact-panels]="compact">
+      <!-- LEFT COLUMN: Hero card + blocks list -->
       @if (!compact) {
-        <div class="panel profile-chart-card glass">
-          <div class="profile-chart-hd">
-            <div class="chart-title">
-              {{ 'WORKOUT_VIZ.CHART_TITLE' | translate }}
-              <small>· {{ 'WORKOUT_VIZ.CHART_SUBTITLE' | translate }}</small>
+        <div class="left-panel">
+          <!-- Hero card: sport pills, title, description, stat row -->
+          <div class="detail-hero glass">
+            <div class="eyebrow-row">
+              @if (training.trainingType) {
+                <span
+                  class="sport-pill"
+                  [style.color]="getTrainingTypeColor()"
+                  [style.background]="
+                    'color-mix(in oklch, ' + getTrainingTypeColor() + ' 12%, transparent)'
+                  "
+                  [style.border]="
+                    '1px solid color-mix(in oklch, ' + getTrainingTypeColor() + ' 28%, transparent)'
+                  "
+                >
+                  {{ getTrainingTypeLabel() }}
+                </span>
+              }
+              <span class="sport-pill sport-pill--ghost" [style.color]="getSportColor()">
+                <span class="sport-pill-bullet">&#9670;</span> {{ getSportLabel() }}
+              </span>
+              @if (training.nolioSyncStatus && training.nolioSyncStatus !== 'NONE') {
+                <span
+                  class="nolio-sync-pill"
+                  [class.synced]="training.nolioSyncStatus === 'SYNCED'"
+                  [class.pending]="training.nolioSyncStatus === 'PENDING'"
+                  [class.failed]="training.nolioSyncStatus === 'FAILED'"
+                  [title]="training.nolioSyncError || ''"
+                >
+                  @switch (training.nolioSyncStatus) {
+                    @case ('SYNCED') {
+                      Nolio &#x2713;
+                    }
+                    @case ('PENDING') {
+                      Nolio &hellip;
+                    }
+                    @case ('FAILED') {
+                      Nolio &#x26A0;
+                    }
+                  }
+                </span>
+              }
             </div>
-            <div class="profile-chart-actions">
-              <div class="export-dropdown desktop-only">
-                @if (isExportDropdownOpen) {
-                  <div class="dropdown-menu glass">
-                    @if (training.sportType === 'CYCLING') {
-                      <button class="dropdown-item" (click)="exportToZwift()">{{ 'WORKOUT_VIZ.EXPORT_ZWIFT' | translate }}</button>
-                      <button class="dropdown-item" (click)="sendToZwift()">{{ 'WORKOUT_VIZ.SEND_TO_ZWIFT' | translate }}</button>
-                    }
-                    @if (canPushToNolio()) {
-                      <button class="dropdown-item" (click)="pushToNolio()"
-                        [disabled]="(nolioSync.pushing$ | async) === training.id">
-                        {{ 'WORKOUT_VIZ.PUSH_TO_NOLIO' | translate }}
-                      </button>
-                    }
-                    <button class="dropdown-item" (click)="exportToJSON()">{{ 'WORKOUT_VIZ.EXPORT_JSON' | translate }}</button>
-                  </div>
+            <div class="hero-title-row">
+              <h1 class="hero-title">{{ training.title }}</h1>
+              @if (isOwner()) {
+                <app-favorite-star
+                  size="lg"
+                  [active]="!!training.favorite"
+                  [label]="
+                    (training.favorite ? 'TRAINING_TAGS.STAR_REMOVE' : 'TRAINING_TAGS.STAR_ADD')
+                      | translate
+                  "
+                  (toggled)="onToggleFavorite()"
+                />
+              }
+            </div>
+            @if (training.description) {
+              <p class="hero-subtitle">{{ training.description }}</p>
+            }
+            <div class="hero-tags-row">
+              <app-training-tag-editor
+                [tags]="training.tags ?? []"
+                [readonly]="!isOwner()"
+                (tagsChange)="onTagsChange($event)"
+              />
+            </div>
+            <div class="stat-row">
+              <div class="s">
+                <small>{{ 'WORKOUT_VIZ.STAT_DURATION' | translate }}</small>
+                <b [style.font-style]="isDurationEstimated() ? 'italic' : ''">{{
+                  getTotalDuration()
+                }}</b>
+              </div>
+              <div class="s">
+                <small>{{ 'WORKOUT_VIZ.STAT_TSS' | translate }}</small>
+                <b>{{ training.estimatedTss || '-' }}</b>
+              </div>
+              <div class="s">
+                <small>{{ 'WORKOUT_VIZ.STAT_IF' | translate }}</small>
+                <b>{{ training.estimatedIf | number: '1.2-2' }}</b>
+              </div>
+              <div class="s">
+                <small>{{ 'WORKOUT_VIZ.STAT_BLOCKS' | translate }}</small>
+                <b>{{ displayFlatBlocks.length }}</b>
+              </div>
+            </div>
+          </div>
+
+          <!-- Blocks list panel -->
+          <div class="panel blocks-list-panel glass">
+            <div class="panel-hd">
+              <span class="eyebrow eyebrow-orange">{{
+                'WORKOUT_VIZ.BLOCKS_STRUCTURE_HEADING' | translate
+              }}</span>
+              <div class="panel-hd-actions">
+                <button
+                  class="btn-ghost-mini"
+                  (click)="toggleUnits()"
+                  [disabled]="!hasReferenceValue()"
+                  [title]="'%/' + getSportUnit()"
+                >
+                  {{ displayUnit === 'PERCENT' ? '%' : getSportUnit() }}
+                </button>
+                @if (isOwner()) {
+                  <button class="btn-ghost-mini desktop-only" (click)="enterEditMode()">
+                    {{ 'WORKOUT_VIZ.BTN_EDIT_BLOCKS_SHORT' | translate }}
+                  </button>
                 }
               </div>
-              @if (isOwner()) {
-                <button class="btn btn-ghost desktop-only" (click)="enterEditMode()">{{ 'WORKOUT_VIZ.BTN_EDIT_BLOCKS' | translate }}</button>
-              }
-              <button class="btn btn-primary" (click)="openScheduleModal()">{{ 'WORKOUT_VIZ.BTN_SCHEDULE' | translate }} →</button>
             </div>
+            <app-block-steps-list
+              [blocks]="displayBlocks"
+              [displayUnit]="displayUnit"
+              [ftp]="(user$ | async)?.ftp ?? 0"
+              [sportType]="training.sportType"
+              [training]="training"
+              [currentZoneSystem]="currentZoneSystem"
+            />
           </div>
+        </div>
+      }
 
+      <!-- RIGHT COLUMN: Profile chart card -->
+      <div class="right-panel">
+        @if (!compact) {
+          <div class="panel profile-chart-card glass">
+            <div class="profile-chart-hd">
+              <div class="chart-title">
+                {{ 'WORKOUT_VIZ.CHART_TITLE' | translate }}
+                <small>· {{ 'WORKOUT_VIZ.CHART_SUBTITLE' | translate }}</small>
+              </div>
+              <div class="profile-chart-actions">
+                <div class="export-dropdown desktop-only">
+                  @if (isExportDropdownOpen) {
+                    <div class="dropdown-menu glass">
+                      @if (training.sportType === 'CYCLING') {
+                        <button class="dropdown-item" (click)="exportToZwift()">
+                          {{ 'WORKOUT_VIZ.EXPORT_ZWIFT' | translate }}
+                        </button>
+                        <button class="dropdown-item" (click)="sendToZwift()">
+                          {{ 'WORKOUT_VIZ.SEND_TO_ZWIFT' | translate }}
+                        </button>
+                      }
+                      @if (canPushToNolio()) {
+                        <button
+                          class="dropdown-item"
+                          (click)="pushToNolio()"
+                          [disabled]="(nolioSync.pushing$ | async) === training.id"
+                        >
+                          {{ 'WORKOUT_VIZ.PUSH_TO_NOLIO' | translate }}
+                        </button>
+                      }
+                      <button class="dropdown-item" (click)="exportToJSON()">
+                        {{ 'WORKOUT_VIZ.EXPORT_JSON' | translate }}
+                      </button>
+                    </div>
+                  }
+                </div>
+                @if (isOwner()) {
+                  <button class="btn btn-ghost desktop-only" (click)="enterEditMode()">
+                    {{ 'WORKOUT_VIZ.BTN_EDIT_BLOCKS' | translate }}
+                  </button>
+                }
+                <button class="btn btn-primary" (click)="openScheduleModal()">
+                  {{ 'WORKOUT_VIZ.BTN_SCHEDULE' | translate }} →
+                </button>
+              </div>
+            </div>
+
+            <app-workout-chart-bar
+              [blocks]="displayBlocks"
+              [displayUnit]="displayUnit"
+              [ftp]="(user$ | async)?.ftp ?? 0"
+              [sportType]="training.sportType"
+              [compact]="compact"
+              [training]="training"
+              [currentZoneSystem]="currentZoneSystem"
+            />
+
+            <div class="summary-row">
+              <div class="s">
+                <small>{{ 'WORKOUT_VIZ.STAT_DURATION' | translate }}</small>
+                <b [style.font-style]="isDurationEstimated() ? 'italic' : ''">{{
+                  getTotalDuration()
+                }}</b>
+              </div>
+              <div class="s">
+                <small>{{ 'WORKOUT_VIZ.STAT_TSS' | translate }}</small>
+                <b>{{ training.estimatedTss || '-' }}</b>
+              </div>
+              <div class="s">
+                <small>{{ 'WORKOUT_VIZ.STAT_IF' | translate }}</small>
+                <b>{{ training.estimatedIf | number: '1.2-2' }}</b>
+              </div>
+              <div class="s">
+                <small>{{ 'WORKOUT_VIZ.STAT_BLOCKS' | translate }}</small>
+                <b>{{ displayFlatBlocks.length }}</b>
+              </div>
+            </div>
+
+            @if (getZoneRepartition().length > 0) {
+              <div class="zone-dist">
+                <h6>{{ 'WORKOUT_VIZ.ZONE_DISTRIBUTION_HEADING' | translate }}</h6>
+                <div class="zone-bars">
+                  @for (zone of getZoneRepartition(); track zone.label) {
+                    <div class="zd-row">
+                      <div class="lbl" [style.color]="zone.color">{{ zone.label }}</div>
+                      <div class="trk">
+                        <div
+                          class="fil"
+                          [style.width.%]="zone.percentage"
+                          [style.background]="zone.color"
+                        ></div>
+                      </div>
+                      <div class="tm">{{ formatDuration(zone.seconds) }}</div>
+                      <div class="pc">{{ zone.percentage }}%</div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        @if (compact) {
           <app-workout-chart-bar
             [blocks]="displayBlocks"
             [displayUnit]="displayUnit"
@@ -145,97 +246,55 @@
             [sportType]="training.sportType"
             [compact]="compact"
             [training]="training"
-            [currentZoneSystem]="currentZoneSystem">
-          </app-workout-chart-bar>
+            [currentZoneSystem]="currentZoneSystem"
+          />
 
-          <div class="summary-row">
-            <div class="s">
-              <small>{{ 'WORKOUT_VIZ.STAT_DURATION' | translate }}</small>
-              <b [style.font-style]="isDurationEstimated() ? 'italic' : ''">{{ getTotalDuration() }}</b>
+          <div class="metrics-bar glass">
+            <div class="stat">
+              <span class="label">{{ 'WORKOUT_VIZ.STAT_DURATION' | translate }}</span>
+              <span class="value" [style.font-style]="isDurationEstimated() ? 'italic' : ''">{{
+                getTotalDuration()
+              }}</span>
             </div>
-            <div class="s">
-              <small>{{ 'WORKOUT_VIZ.STAT_TSS' | translate }}</small>
-              <b>{{ training.estimatedTss || '-' }}</b>
+            <div class="stat">
+              <span class="label">{{ 'WORKOUT_VIZ.STAT_TSS' | translate }}</span>
+              <span class="value">{{ training.estimatedTss || '-' }}</span>
             </div>
-            <div class="s">
-              <small>{{ 'WORKOUT_VIZ.STAT_IF' | translate }}</small>
-              <b>{{ training.estimatedIf | number:'1.2-2' }}</b>
+            <div class="stat">
+              <span class="label">{{ 'WORKOUT_VIZ.STAT_IF' | translate }}</span>
+              <span class="value">{{ training.estimatedIf | number: '1.2-2' }}</span>
             </div>
-            <div class="s">
-              <small>{{ 'WORKOUT_VIZ.STAT_BLOCKS' | translate }}</small>
-              <b>{{ displayFlatBlocks.length }}</b>
+            <div class="stat">
+              <span class="label">{{ 'WORKOUT_VIZ.STAT_BLOCKS' | translate }}</span>
+              <span class="value">{{ displayFlatBlocks.length }}</span>
             </div>
           </div>
 
           @if (getZoneRepartition().length > 0) {
-            <div class="zone-dist">
-              <h6>{{ 'WORKOUT_VIZ.ZONE_DISTRIBUTION_HEADING' | translate }}</h6>
+            <div class="zone-repartition glass">
+              <div class="panel-header">
+                {{ 'WORKOUT_VIZ.ZONE_DISTRIBUTION_HEADING' | translate }}
+              </div>
               <div class="zone-bars">
                 @for (zone of getZoneRepartition(); track zone.label) {
-                  <div class="zd-row">
-                    <div class="lbl" [style.color]="zone.color">{{ zone.label }}</div>
-                    <div class="trk">
-                      <div class="fil" [style.width.%]="zone.percentage" [style.background]="zone.color"></div>
+                  <div class="zone-row">
+                    <span class="zone-label">{{ zone.label }}</span>
+                    <div class="bar-track">
+                      <div
+                        class="bar-fill"
+                        [style.width.%]="zone.percentage"
+                        [style.background]="zone.color"
+                      ></div>
                     </div>
-                    <div class="tm">{{ formatDuration(zone.seconds) }}</div>
-                    <div class="pc">{{ zone.percentage }}%</div>
+                    <span class="zone-time">{{ formatDuration(zone.seconds) }}</span>
+                    <span class="zone-pct">{{ zone.percentage }}%</span>
                   </div>
                 }
               </div>
             </div>
           }
-        </div>
-      }
-
-      @if (compact) {
-        <app-workout-chart-bar
-          [blocks]="displayBlocks"
-          [displayUnit]="displayUnit"
-          [ftp]="(user$ | async)?.ftp ?? 0"
-          [sportType]="training.sportType"
-          [compact]="compact"
-          [training]="training"
-          [currentZoneSystem]="currentZoneSystem">
-        </app-workout-chart-bar>
-
-        <div class="metrics-bar glass">
-          <div class="stat">
-            <span class="label">{{ 'WORKOUT_VIZ.STAT_DURATION' | translate }}</span>
-            <span class="value" [style.font-style]="isDurationEstimated() ? 'italic' : ''">{{ getTotalDuration() }}</span>
-          </div>
-          <div class="stat">
-            <span class="label">{{ 'WORKOUT_VIZ.STAT_TSS' | translate }}</span>
-            <span class="value">{{ training.estimatedTss || '-' }}</span>
-          </div>
-          <div class="stat">
-            <span class="label">{{ 'WORKOUT_VIZ.STAT_IF' | translate }}</span>
-            <span class="value">{{ training.estimatedIf | number:'1.2-2' }}</span>
-          </div>
-          <div class="stat">
-            <span class="label">{{ 'WORKOUT_VIZ.STAT_BLOCKS' | translate }}</span>
-            <span class="value">{{ displayFlatBlocks.length }}</span>
-          </div>
-        </div>
-
-        @if (getZoneRepartition().length > 0) {
-          <div class="zone-repartition glass">
-            <div class="panel-header">{{ 'WORKOUT_VIZ.ZONE_DISTRIBUTION_HEADING' | translate }}</div>
-            <div class="zone-bars">
-              @for (zone of getZoneRepartition(); track zone.label) {
-                <div class="zone-row">
-                  <span class="zone-label">{{ zone.label }}</span>
-                  <div class="bar-track">
-                    <div class="bar-fill" [style.width.%]="zone.percentage" [style.background]="zone.color"></div>
-                  </div>
-                  <span class="zone-time">{{ formatDuration(zone.seconds) }}</span>
-                  <span class="zone-pct">{{ zone.percentage }}%</span>
-                </div>
-              }
-            </div>
-          </div>
         }
-      }
+      </div>
     </div>
   </div>
-</div>
 }

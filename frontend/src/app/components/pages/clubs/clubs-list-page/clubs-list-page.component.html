@@ -3,7 +3,6 @@
 @let isSaving = isSavingClub$ | async;
 
 <div class="page-layout">
-
   <!-- Header bar -->
   <div class="header glass">
     <div class="header-left">
@@ -14,15 +13,16 @@
       </div>
     </div>
     <div class="header-right">
-      <button class="create-btn" data-testid="create-club-btn" (click)="openCreate()">{{ 'CLUBS_LIST.BTN_CREATE_CLUB' | translate }}</button>
+      <button class="create-btn" data-testid="create-club-btn" (click)="openCreate()">
+        {{ 'CLUBS_LIST.BTN_CREATE_CLUB' | translate }}
+      </button>
     </div>
   </div>
 
   <!-- Body -->
   <div class="page-body">
-
     @if (userClubsLoading$ | async) {
-      <app-skeleton variant="card" [rows]="4" rowHeight="120px"></app-skeleton>
+      <app-skeleton variant="card" [rows]="4" rowHeight="120px" />
     } @else if (userClubs$ | async; as userClubs) {
       @if (userClubs.length > 0) {
         <section data-testid="your-clubs-section">
@@ -33,7 +33,8 @@
                 class="club-card glass"
                 data-testid="club-card"
                 (click)="openDetail(club.id)"
-                [class.club-card--private]="club.visibility === 'PRIVATE'">
+                [class.club-card--private]="club.visibility === 'PRIVATE'"
+              >
                 <div class="card-top">
                   @if (club.logoUrl) {
                     <div class="club-logo">
@@ -49,17 +50,29 @@
                     }
                   </div>
                   @if (!club.membershipStatus?.startsWith('ACTIVE_OWNER')) {
-                    <button class="leave-btn" data-testid="leave-btn" (click)="leave(club.id, $event)" [disabled]="leavingId === club.id">
-                      @if (leavingId === club.id) { <span class="btn-spinner"></span> }
+                    <button
+                      class="leave-btn"
+                      data-testid="leave-btn"
+                      (click)="leave(club.id, $event)"
+                      [disabled]="leavingId === club.id"
+                    >
+                      @if (leavingId === club.id) {
+                        <span class="btn-spinner"></span>
+                      }
                       {{ 'CLUBS_LIST.BTN_LEAVE' | translate }}
                     </button>
                   }
                 </div>
                 <div class="card-meta">
-                  <span class="meta-chip" [class.meta-chip--private]="club.visibility === 'PRIVATE'">
+                  <span
+                    class="meta-chip"
+                    [class.meta-chip--private]="club.visibility === 'PRIVATE'"
+                  >
                     {{ club.visibility }}
                   </span>
-                  <span class="meta-chip meta-chip--role">{{ getMembershipLabel(club.membershipStatus) }}</span>
+                  <span class="meta-chip meta-chip--role">{{
+                    getMembershipLabel(club.membershipStatus)
+                  }}</span>
                 </div>
               </div>
             }
@@ -71,18 +84,29 @@
         <div class="empty-state-flex">
           <div class="empty-card glass">
             <div class="empty-icon-wrap">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
             </div>
             <div class="empty-text">
               <strong>{{ 'CLUBS_LIST.EMPTY_TITLE' | translate }}</strong>
               <span>{{ 'CLUBS_LIST.EMPTY_SUBTITLE' | translate }}</span>
             </div>
-            <button class="create-btn" data-testid="create-club-btn" (click)="openCreate()">{{ 'CLUBS_LIST.BTN_CREATE_FIRST_CLUB' | translate }}</button>
+            <button class="create-btn" data-testid="create-club-btn" (click)="openCreate()">
+              {{ 'CLUBS_LIST.BTN_CREATE_FIRST_CLUB' | translate }}
+            </button>
           </div>
         </div>
       }
@@ -94,10 +118,7 @@
           <span class="section-label">{{ 'CLUBS_LIST.SECTION_BROWSE_PUBLIC' | translate }}</span>
           <div class="clubs-grid">
             @for (club of publicClubs; track club.id) {
-              <div
-                class="club-card glass"
-                data-testid="club-card"
-                (click)="openDetail(club.id)">
+              <div class="club-card glass" data-testid="club-card" (click)="openDetail(club.id)">
                 <div class="card-top">
                   <div class="club-initials">{{ club.name.charAt(0).toUpperCase() }}</div>
                   <div class="club-info">
@@ -111,8 +132,11 @@
                       class="join-btn"
                       data-testid="join-btn"
                       (click)="join(club.id, $event)"
-                      [disabled]="joiningId === club.id">
-                      @if (joiningId === club.id) { <span class="btn-spinner"></span> }
+                      [disabled]="joiningId === club.id"
+                    >
+                      @if (joiningId === club.id) {
+                        <span class="btn-spinner"></span>
+                      }
                       {{ 'CLUBS_LIST.BTN_JOIN' | translate }}
                     </button>
                   }
@@ -122,31 +146,49 @@
                     </span>
                   }
                 </div>
-                <div class="card-meta">
-                </div>
+                <div class="card-meta"></div>
               </div>
             }
           </div>
         </section>
       }
     }
-
   </div>
 </div>
 
 @if (isFormOpen) {
   <div class="modal-backdrop" (click)="closeForm()">
-    <div class="modal-card glass" data-testid="create-club-modal" (click)="$event.stopPropagation()">
+    <div
+      class="modal-card glass"
+      data-testid="create-club-modal"
+      (click)="$event.stopPropagation()"
+    >
       <div class="modal-header">
         <h3>{{ 'CLUBS_LIST.MODAL_CREATE_TITLE' | translate }}</h3>
         <button class="modal-close" (click)="closeForm()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
         </button>
       </div>
       <div class="modal-body">
         <div class="form-group">
           <label>{{ 'CLUBS_LIST.FORM_LABEL_CLUB_NAME' | translate }}</label>
-          <input [(ngModel)]="form.name" [placeholder]="'CLUBS_LIST.FORM_PLACEHOLDER_CLUB_NAME' | translate" class="form-input" data-testid="form-club-name" />
+          <input
+            [(ngModel)]="form.name"
+            [placeholder]="'CLUBS_LIST.FORM_PLACEHOLDER_CLUB_NAME' | translate"
+            class="form-input"
+            data-testid="form-club-name"
+          />
         </div>
         <div class="form-group">
           <label>{{ 'CLUBS_LIST.FORM_LABEL_DESCRIPTION' | translate }}</label>
@@ -155,15 +197,25 @@
             [placeholder]="'CLUBS_LIST.FORM_PLACEHOLDER_DESCRIPTION' | translate"
             class="form-input"
             data-testid="form-club-description"
-            rows="3"></textarea>
+            rows="3"
+          ></textarea>
         </div>
         <div class="form-group">
           <label>{{ 'CLUBS_LIST.FORM_LABEL_LOCATION' | translate }}</label>
-          <input [(ngModel)]="form.location" [placeholder]="'CLUBS_LIST.FORM_PLACEHOLDER_LOCATION' | translate" class="form-input" data-testid="form-club-location" />
+          <input
+            [(ngModel)]="form.location"
+            [placeholder]="'CLUBS_LIST.FORM_PLACEHOLDER_LOCATION' | translate"
+            class="form-input"
+            data-testid="form-club-location"
+          />
         </div>
         <div class="form-group">
           <label>{{ 'CLUBS_LIST.FORM_LABEL_VISIBILITY' | translate }}</label>
-          <select [(ngModel)]="form.visibility" class="form-input" data-testid="form-club-visibility">
+          <select
+            [(ngModel)]="form.visibility"
+            class="form-input"
+            data-testid="form-club-visibility"
+          >
             @for (v of visibilityOptions; track v.value) {
               <option [value]="v.value">{{ v.label | translate }}</option>
             }
@@ -171,9 +223,13 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn-secondary" (click)="closeForm()">{{ 'CLUBS_LIST.BTN_CANCEL' | translate }}</button>
+        <button class="btn-secondary" (click)="closeForm()">
+          {{ 'CLUBS_LIST.BTN_CANCEL' | translate }}
+        </button>
         <button class="btn-primary" (click)="save()" [disabled]="!form.name || isSaving">
-          @if (isSaving) { <span class="btn-spinner"></span> }
+          @if (isSaving) {
+            <span class="btn-spinner"></span>
+          }
           {{ 'CLUBS_LIST.BTN_CREATE' | translate }}
         </button>
       </div>

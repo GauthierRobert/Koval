@@ -1,11 +1,11 @@
-import {inject, Injectable, NgZone} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, firstValueFrom} from 'rxjs';
-import {skip, take} from 'rxjs/operators';
-import {TranslateService} from '@ngx-translate/core';
-import {TrainingService} from './training.service';
-import {environment} from '../../environments/environment';
-import {parseRemainingBuffer, parseSseBuffer} from './sse-parser.util';
+import { inject, Injectable, NgZone } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
+import { skip, take } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
+import { TrainingService } from './training.service';
+import { environment } from '../../environments/environment';
+import { parseRemainingBuffer, parseSseBuffer } from './sse-parser.util';
 
 export type AgentType =
   | 'TRAINING_CREATION'
@@ -31,7 +31,12 @@ export interface ChatMessage {
   content: string;
   timestamp: Date;
   agentType?: string;
-  createdTraining?: { id: string; title: string; sportType: string; estimatedDurationSeconds?: number };
+  createdTraining?: {
+    id: string;
+    title: string;
+    sportType: string;
+    estimatedDurationSeconds?: number;
+  };
   actions?: ActionStep[];
   isPlan?: boolean;
   planTasks?: PlanTask[];
@@ -149,7 +154,7 @@ export class ChatService {
 
     this.addMessage({ role: 'user', content: message, timestamp: new Date() });
 
-    let plan: PlanTask[] = [];
+    let plan: PlanTask[];
     try {
       plan = await this.fetchPlan(message);
     } catch {
@@ -201,7 +206,12 @@ export class ChatService {
     convId: string | null,
     knownIds: Set<string> | null,
   ): Promise<void> {
-    const aiMessage: ChatMessage = { role: 'assistant', content: '', timestamp: new Date(), actions: [] };
+    const aiMessage: ChatMessage = {
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+      actions: [],
+    };
     this.addMessage(aiMessage);
     this.setStreaming(1);
 
@@ -305,29 +315,31 @@ export class ChatService {
         if (!aiMessage.actions) aiMessage.actions = [];
         aiMessage.actions.push({ name, label, status: 'pending' });
         this.emit();
-      } catch { /* ignore malformed */ }
+      } catch {
+        /* ignore malformed */
+      }
     } else if (eventType === 'tool_result') {
       try {
         const { name, label, success } = JSON.parse(data);
-        const step = [...(aiMessage.actions ?? [])].reverse().find(
-          (a) => a.name === name && a.status === 'pending',
-        );
+        const step = [...(aiMessage.actions ?? [])]
+          .reverse()
+          .find((a) => a.name === name && a.status === 'pending');
         if (step) {
           step.label = label;
           step.status = success ? 'done' : 'error';
         }
         this.emit();
-      } catch { /* ignore malformed */ }
+      } catch {
+        /* ignore malformed */
+      }
     }
   }
 
   loadHistories(): void {
-    this.http
-      .get<ChatHistoryItem[]>(`${this.apiUrl}/history`)
-      .subscribe({
-        next: (histories) => this.chatHistoriesSubject.next(histories),
-        error: () => this.chatHistoriesSubject.next([]),
-      });
+    this.http.get<ChatHistoryItem[]>(`${this.apiUrl}/history`).subscribe({
+      next: (histories) => this.chatHistoriesSubject.next(histories),
+      error: () => this.chatHistoriesSubject.next([]),
+    });
   }
 
   loadConversation(chatHistoryId: string): void {

@@ -9,7 +9,9 @@
   <div class="chat-sidebar glass" [class.sidebar-open]="chatSidebarOpen">
     <div class="sidebar-header">
       <h3 class="sidebar-title">{{ 'AI_CHAT.SIDEBAR_SESSIONS_TITLE' | translate }}</h3>
-      <button class="new-chat-btn" (click)="newChat()">{{ 'AI_CHAT.BTN_NEW_CHAT' | translate }}</button>
+      <button class="new-chat-btn" (click)="newChat()">
+        {{ 'AI_CHAT.BTN_NEW_CHAT' | translate }}
+      </button>
     </div>
     <div class="history-list">
       @for (h of chatService.chatHistories$ | async; track h.id) {
@@ -18,8 +20,16 @@
           [class.active]="h.id === (chatService.activeChatId$ | async)"
           (click)="loadConversation(h.id); chatSidebarOpen = false"
         >
-          <span class="history-title">{{ h.title || ('AI_CHAT.HISTORY_ITEM_UNTITLED' | translate) }}</span>
-          <button class="delete-btn" (click)="deleteConversation(h.id, $event)" [attr.aria-label]="'AI_CHAT.BTN_DELETE_CONVERSATION' | translate">&times;</button>
+          <span class="history-title">{{
+            h.title || ('AI_CHAT.HISTORY_ITEM_UNTITLED' | translate)
+          }}</span>
+          <button
+            class="delete-btn"
+            (click)="deleteConversation(h.id, $event)"
+            [attr.aria-label]="'AI_CHAT.BTN_DELETE_CONVERSATION' | translate"
+          >
+            &times;
+          </button>
         </div>
       }
     </div>
@@ -41,12 +51,22 @@
       <div class="header-left">
         <div class="header-avatar">K</div>
         <div class="header-info">
-          <span class="header-title">{{ 'AI_CHAT.HEADER_TITLE' | translate }} <span class="dim">{{ 'AI_CHAT.HEADER_TITLE_DIM' | translate }}</span></span>
+          <span class="header-title"
+            >{{ 'AI_CHAT.HEADER_TITLE' | translate }}
+            <span class="dim">{{ 'AI_CHAT.HEADER_TITLE_DIM' | translate }}</span></span
+          >
           <span class="header-subtitle">{{ 'AI_CHAT.HEADER_SUBTITLE' | translate }}</span>
         </div>
       </div>
       <div class="header-right">
-        <button class="mobile-sidebar-toggle mobile-only" (click)="chatSidebarOpen = !chatSidebarOpen" [attr.aria-label]="'AI_CHAT.BTN_TOGGLE_SIDEBAR' | translate" [attr.aria-expanded]="chatSidebarOpen">&#9776;</button>
+        <button
+          class="mobile-sidebar-toggle mobile-only"
+          (click)="chatSidebarOpen = !chatSidebarOpen"
+          [attr.aria-label]="'AI_CHAT.BTN_TOGGLE_SIDEBAR' | translate"
+          [attr.aria-expanded]="chatSidebarOpen"
+        >
+          &#9776;
+        </button>
       </div>
     </div>
 
@@ -61,26 +81,42 @@
           <h1>{{ 'AI_CHAT.WELCOME_HEADING' | translate }}</h1>
           <p>{{ 'AI_CHAT.WELCOME_SUBHEADING' | translate }}</p>
           <div class="suggestion-grid stagger-children">
-            <button (click)="quickSendKey('AI_CHAT.SUGGESTION_SWEET_SPOT_PROMPT')">{{ 'AI_CHAT.SUGGESTION_SWEET_SPOT' | translate }}</button>
-            <button (click)="quickSendKey('AI_CHAT.SUGGESTION_FITNESS_CHECK_PROMPT')">{{ 'AI_CHAT.SUGGESTION_FITNESS_CHECK' | translate }}</button>
-            <button (click)="quickSendKey('AI_CHAT.SUGGESTION_GROUP_VO2MAX_PROMPT')">{{ 'AI_CHAT.SUGGESTION_GROUP_VO2MAX' | translate }}</button>
-            <button (click)="quickSendKey('AI_CHAT.SUGGESTION_ENDURANCE_RIDE_PROMPT')">{{ 'AI_CHAT.SUGGESTION_ENDURANCE_RIDE' | translate }}</button>
+            <button (click)="quickSendKey('AI_CHAT.SUGGESTION_SWEET_SPOT_PROMPT')">
+              {{ 'AI_CHAT.SUGGESTION_SWEET_SPOT' | translate }}
+            </button>
+            <button (click)="quickSendKey('AI_CHAT.SUGGESTION_FITNESS_CHECK_PROMPT')">
+              {{ 'AI_CHAT.SUGGESTION_FITNESS_CHECK' | translate }}
+            </button>
+            <button (click)="quickSendKey('AI_CHAT.SUGGESTION_GROUP_VO2MAX_PROMPT')">
+              {{ 'AI_CHAT.SUGGESTION_GROUP_VO2MAX' | translate }}
+            </button>
+            <button (click)="quickSendKey('AI_CHAT.SUGGESTION_ENDURANCE_RIDE_PROMPT')">
+              {{ 'AI_CHAT.SUGGESTION_ENDURANCE_RIDE' | translate }}
+            </button>
           </div>
         </div>
       }
 
       @for (msg of messages; track $index) {
-        <div class="message-wrapper" [class.ai]="msg.role === 'assistant'" [class.user]="msg.role === 'user'">
+        <div
+          class="message-wrapper"
+          [class.ai]="msg.role === 'assistant'"
+          [class.user]="msg.role === 'user'"
+        >
           @if (msg.content || msg.role === 'user') {
             <div class="message-bubble glass" [class.accent]="msg.role === 'user'">
               <div class="msg-header">
-                {{ msg.role === 'assistant' ? ('AI_CHAT.MSG_SENDER_AI' | translate) : ('AI_CHAT.MSG_SENDER_USER' | translate) }}
+                {{
+                  msg.role === 'assistant'
+                    ? ('AI_CHAT.MSG_SENDER_AI' | translate)
+                    : ('AI_CHAT.MSG_SENDER_USER' | translate)
+                }}
                 @if (msg.role === 'assistant' && msg.agentType) {
                   <span class="agent-badge">{{ getAgentLabel(msg.agentType) }}</span>
                 }
               </div>
               <span class="msg-content" [style.white-space]="'pre-wrap'">{{ msg.content }}</span>
-              <span class="timestamp">{{ msg.timestamp | date:'HH:mm:ss' }}</span>
+              <span class="timestamp">{{ msg.timestamp | date: 'HH:mm:ss' }}</span>
             </div>
           }
         </div>
@@ -89,11 +125,21 @@
           <div class="message-wrapper ai">
             <div class="action-feed">
               @for (step of msg.actions; track $index) {
-                <div class="action-step" [class.done]="step.status === 'done'" [class.error]="step.status === 'error'">
+                <div
+                  class="action-step"
+                  [class.done]="step.status === 'done'"
+                  [class.error]="step.status === 'error'"
+                >
                   <span class="step-icon">
-                    @if (step.status === 'pending') { <span class="spinner"></span> }
-                    @if (step.status === 'done') { ✓ }
-                    @if (step.status === 'error') { ✗ }
+                    @if (step.status === 'pending') {
+                      <span class="spinner"></span>
+                    }
+                    @if (step.status === 'done') {
+                      ✓
+                    }
+                    @if (step.status === 'error') {
+                      ✗
+                    }
                   </span>
                   <span class="step-label">{{ step.label }}</span>
                 </div>
@@ -105,10 +151,12 @@
         @if (msg.role === 'assistant' && msg.isPlan) {
           <div class="message-wrapper ai">
             <div class="plan-card glass">
-              <div class="plan-header">{{ 'AI_CHAT.PLAN_HEADER' | translate: { count: msg.planTasks!.length } }}</div>
+              <div class="plan-header">
+                {{ 'AI_CHAT.PLAN_HEADER' | translate: { count: msg.planTasks!.length } }}
+              </div>
               @for (t of msg.planTasks!; track $index) {
                 <div class="plan-task-row">
-                  <span class="plan-agent-tag">{{ t.agentType | slice:0:3 }}</span>
+                  <span class="plan-agent-tag">{{ t.agentType | slice: 0 : 3 }}</span>
                   {{ t.task }}
                 </div>
               }
@@ -124,12 +172,18 @@
             <div class="created-training-viz glass">
               <div class="ct-header">
                 <span class="ct-sport-icon">
-                  {{ msg.createdTraining.sportType === 'RUNNING' ? '🏃' : msg.createdTraining.sportType === 'SWIMMING' ? '🏊' : '🚴' }}
+                  {{
+                    msg.createdTraining.sportType === 'RUNNING'
+                      ? '🏃'
+                      : msg.createdTraining.sportType === 'SWIMMING'
+                        ? '🏊'
+                        : '🚴'
+                  }}
                 </span>
                 <span class="ct-title">{{ msg.createdTraining.title }}</span>
               </div>
               @if (fetchedTrainings[msg.createdTraining.id]; as fullTraining) {
-                <app-workout-visualization [training]="fullTraining" [compact]="true"></app-workout-visualization>
+                <app-workout-visualization [training]="fullTraining" [compact]="true" />
               } @else {
                 <div class="ct-loading">{{ 'AI_CHAT.TRAINING_LOADING' | translate }}</div>
               }
@@ -141,7 +195,11 @@
       @if (streaming) {
         <div class="message-wrapper ai">
           <div class="message-bubble glass typing ai-glow">
-            <span class="analyzing">{{ activityStatus === 'in_progress' ? ('AI_CHAT.STATUS_PROCESSING' | translate) : ('AI_CHAT.STATUS_GENERATING' | translate) }}</span>
+            <span class="analyzing">{{
+              activityStatus === 'in_progress'
+                ? ('AI_CHAT.STATUS_PROCESSING' | translate)
+                : ('AI_CHAT.STATUS_GENERATING' | translate)
+            }}</span>
             <div class="dots"><span>.</span><span>.</span><span>.</span></div>
           </div>
         </div>
@@ -155,7 +213,9 @@
             class="agent-tab"
             [class.active]="selectedAgentIndex === i"
             (click)="selectAgent(i)"
-          >{{ opt.label | translate }}</button>
+          >
+            {{ opt.label | translate }}
+          </button>
         }
       </div>
       <div class="input-wrapper-technical">

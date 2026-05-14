@@ -38,9 +38,12 @@ public class RouterService {
                     .call()
                     .content();
 
-            AgentType classified = AgentType.valueOf(result.trim().toUpperCase());
-            log.debug("Router classified message as {}", classified);
-            return classified;
+            return AgentType.parse(result)
+                    .map(t -> { log.debug("Router classified message as {}", t); return t; })
+                    .orElseGet(() -> {
+                        log.warn("Router returned unknown agent '{}', falling back to GENERAL", result);
+                        return AgentType.GENERAL;
+                    });
         } catch (Exception e) {
             log.warn("Router classification failed, falling back to GENERAL: {}", e.getMessage());
             return AgentType.GENERAL;

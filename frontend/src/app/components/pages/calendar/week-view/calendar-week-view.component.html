@@ -1,10 +1,18 @@
 @for (vp of visiblePlans; track vp.id) {
-  <a class="week-plan-banner" [routerLink]="['/plans', vp.id]"
-     [style.--sport-bg]="sportColor(vp.sportType).bg"
-     [style.--sport-border]="sportColor(vp.sportType).border"
-     [style.--sport-text]="sportColor(vp.sportType).text">
+  <a
+    class="week-plan-banner"
+    [routerLink]="['/plans', vp.id]"
+    [style.--sport-bg]="sportColor(vp.sportType).bg"
+    [style.--sport-border]="sportColor(vp.sportType).border"
+    [style.--sport-text]="sportColor(vp.sportType).text"
+  >
     <span class="week-banner-title">{{ vp.title }}</span>
-    <span class="week-banner-meta">W{{ vp.currentWeek }}/{{ vp.totalWeeks }}@if (vp.weekLabel) { &middot; {{ vp.weekLabel }} }</span>
+    <span class="week-banner-meta"
+      >W{{ vp.currentWeek }}/{{ vp.totalWeeks }}
+      @if (vp.weekLabel) {
+        &middot; {{ vp.weekLabel }}
+      }
+    </span>
   </a>
 }
 
@@ -12,352 +20,688 @@
   @for (day of days; track trackByDay(day)) {
     <div class="day-column glass" [class.today]="day.isToday">
       <div class="day-header">
-        <span class="weekday">{{ day.date | date : 'EEE' }}</span>
-        <span class="day-number">{{ day.date | date : 'd' }}</span>
+        <span class="weekday">{{ day.date | date: 'EEE' }}</span>
+        <span class="day-number">{{ day.date | date: 'd' }}</span>
       </div>
 
       <div class="workout-slot">
-
         @let dayGroups = groupEntries(entriesByDay.get(day.key) || []);
         @for (group of visibleGroups(day.key, dayGroups); track $index) {
-
           @if (group.type === 'single') {
             @switch (group.entry.kind) {
-
               @case ('scheduled') {
-                <div class="workout-card clickable"
-                  [class.workout-card--completed]="$any(group.entry).scheduled.status === 'COMPLETED'"
+                <div
+                  class="workout-card clickable"
+                  [class.workout-card--completed]="
+                    $any(group.entry).scheduled.status === 'COMPLETED'
+                  "
                   [class.workout-card--skipped]="$any(group.entry).scheduled.status === 'SKIPPED'"
                   [style.--sport-bg]="sportColor($any(group.entry).scheduled.sportType).bg"
                   [style.--sport-text]="sportColor($any(group.entry).scheduled.sportType).text"
-                  (click)="workoutSelected.emit($any(group.entry).scheduled)">
-                <div class="card-top">
-                  <div class="card-top-left">
-                    @if ($any(group.entry).scheduled.trainingType) {
-                      <span class="type-indicator"
-                            [style.--type-color]="getTypeColor($any(group.entry).scheduled.trainingType)">
-                        {{ getTypeLabel($any(group.entry).scheduled.trainingType) }}
-                      </span>
-                    }
-                    @if ($any(group.entry).scheduled.status !== 'PENDING') {
-                      <span class="status-badge">{{ $any(group.entry).scheduled.status }}</span>
-                    }
-                  </div>
-                  <div class="card-top-right">
-                    @if ($any(group.entry).scheduled.status === 'COMPLETED' && $any(group.entry).scheduled.sessionId) {
-                      <a class="analysis-link" [routerLink]="['/history', $any(group.entry).scheduled.sessionId]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                        </svg>
-                      </a>
-                    }
-                    <div class="card-actions">
-                      @if ($any(group.entry).scheduled.status === 'PENDING') {
-                        <button class="btn-complete" [disabled]="isFutureDate($any(group.entry).scheduled.scheduledDate)"
-                          (click)="complete.emit($any(group.entry).scheduled); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_MARK_COMPLETE_TITLE' | translate" data-testid="btn-complete">
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                        </button>
-                        <button class="btn-skip" (click)="skip.emit($any(group.entry).scheduled); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_SKIP_TITLE' | translate" data-testid="btn-skip">
-                          <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
-                            <polygon points="5 4 15 12 5 20"/>
-                            <rect x="17" y="4" width="3" height="16"/>
-                          </svg>
-                        </button>
-                        <button class="btn-reschedule" (click)="openReschedule($any(group.entry).scheduled, $event)" [title]="'CALENDAR_WEEK.BTN_RESCHEDULE_TITLE' | translate" data-testid="btn-reschedule">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                          </svg>
-                        </button>
+                  (click)="workoutSelected.emit($any(group.entry).scheduled)"
+                >
+                  <div class="card-top">
+                    <div class="card-top-left">
+                      @if ($any(group.entry).scheduled.trainingType) {
+                        <span
+                          class="type-indicator"
+                          [style.--type-color]="
+                            getTypeColor($any(group.entry).scheduled.trainingType)
+                          "
+                        >
+                          {{ getTypeLabel($any(group.entry).scheduled.trainingType) }}
+                        </span>
                       }
-                      <button class="delete-btn" (click)="workoutDeleted.emit($any(group.entry).scheduled); $event.stopPropagation()" [title]="'CALENDAR_WEEK.BTN_REMOVE_TITLE' | translate" data-testid="btn-delete">&times;</button>
+                      @if ($any(group.entry).scheduled.status !== 'PENDING') {
+                        <span class="status-badge">{{ $any(group.entry).scheduled.status }}</span>
+                      }
+                    </div>
+                    <div class="card-top-right">
+                      @if (
+                        $any(group.entry).scheduled.status === 'COMPLETED' &&
+                        $any(group.entry).scheduled.sessionId
+                      ) {
+                        <a
+                          class="analysis-link"
+                          [routerLink]="['/history', $any(group.entry).scheduled.sessionId]"
+                          (click)="$event.stopPropagation()"
+                          [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate"
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                          </svg>
+                        </a>
+                      }
+                      <div class="card-actions">
+                        @if ($any(group.entry).scheduled.status === 'PENDING') {
+                          <button
+                            class="btn-complete"
+                            [disabled]="isFutureDate($any(group.entry).scheduled.scheduledDate)"
+                            (click)="
+                              complete.emit($any(group.entry).scheduled); $event.stopPropagation()
+                            "
+                            [title]="'CALENDAR_WEEK.BTN_MARK_COMPLETE_TITLE' | translate"
+                            data-testid="btn-complete"
+                          >
+                            <svg
+                              width="10"
+                              height="10"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="3"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            >
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          </button>
+                          <button
+                            class="btn-skip"
+                            (click)="
+                              skip.emit($any(group.entry).scheduled); $event.stopPropagation()
+                            "
+                            [title]="'CALENDAR_WEEK.BTN_SKIP_TITLE' | translate"
+                            data-testid="btn-skip"
+                          >
+                            <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
+                              <polygon points="5 4 15 12 5 20" />
+                              <rect x="17" y="4" width="3" height="16" />
+                            </svg>
+                          </button>
+                          <button
+                            class="btn-reschedule"
+                            (click)="openReschedule($any(group.entry).scheduled, $event)"
+                            [title]="'CALENDAR_WEEK.BTN_RESCHEDULE_TITLE' | translate"
+                            data-testid="btn-reschedule"
+                          >
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2.5"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            >
+                              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                              <line x1="16" y1="2" x2="16" y2="6" />
+                              <line x1="8" y1="2" x2="8" y2="6" />
+                              <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                          </button>
+                        }
+                        <button
+                          class="delete-btn"
+                          (click)="
+                            workoutDeleted.emit($any(group.entry).scheduled);
+                            $event.stopPropagation()
+                          "
+                          [title]="'CALENDAR_WEEK.BTN_REMOVE_TITLE' | translate"
+                          data-testid="btn-delete"
+                        >
+                          &times;
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              <div class="workout-info">
-                <div class="title-row">
-                  <app-sport-icon [sport]="$any(group.entry).scheduled.sportType" [size]="14"></app-sport-icon>
-                  <span class="workout-title">
-                    {{ $any(group.entry).scheduled.trainingTitle || $any(group.entry).scheduled.title || ('CALENDAR_WEEK.SESSION_FALLBACK_TITLE' | translate) + $any(group.entry).scheduled.trainingId.substring(0, 6) }}
-                  </span>
-                </div>
-                <div class="metrics-row">
-                  <div class="metric">
-                    <span class="metric-val">{{ formatDuration($any(group.entry).scheduled) }}</span>
-                    <span class="metric-unit">{{ 'CALENDAR_WEEK.METRIC_DUR' | translate }}</span>
-                  </div>
-                  <span class="metric-sep"></span>
-                  <div class="metric">
-                    <span class="metric-val">{{ ($any(group.entry).scheduled.tss | number:'1.0-0') || '-' }}</span>
-                    <span class="metric-unit">TSS</span>
-                  </div>
-                  <span class="metric-sep"></span>
-                  <div class="metric">
-                    <span class="metric-val">{{ (($any(group.entry).scheduled.intensityFactor || $any(group.entry).scheduled.if) | number:'1.2-2') || '-' }}</span>
-                    <span class="metric-unit">{{ 'CALENDAR_WEEK.METRIC_IF' | translate }}</span>
-                  </div>
-                </div>
-              </div>
-              </div>
-              }
-
-            @case ('fused') {
-              <div class="workout-card workout-card--fused clickable"
-              [style.--sport-bg]="sportColor($any(group.entry).scheduled.sportType).bg"
-              [style.--sport-text]="sportColor($any(group.entry).scheduled.sportType).text"
-              (click)="workoutSelected.emit($any(group.entry).scheduled)">
-              <div class="card-top">
-                <div class="card-top-left">
-                  @if ($any(group.entry).scheduled.trainingType) {
-                    <span class="type-indicator"
-                          [style.--type-color]="getTypeColor($any(group.entry).scheduled.trainingType)">
-                      {{ getTypeLabel($any(group.entry).scheduled.trainingType) }}
-                    </span>
-                  }
-                  <span class="fused-badge">✓ {{ 'CALENDAR_WEEK.FUSED_BADGE' | translate }}</span>
-                </div>
-                <div class="card-top-right">
-                  @if ($any(group.entry).session.fitFileId) {
-                    <a class="analysis-link" [routerLink]="['/history', $any(group.entry).session.id]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                      </svg>
-                    </a>
-                  }
-                  <div class="card-actions">
-                    <button class="delete-btn" (click)="$event.stopPropagation(); workoutDeleted.emit($any(group.entry).scheduled)" [title]="'CALENDAR_WEEK.BTN_REMOVE_TITLE' | translate">&times;</button>
-                  </div>
-                </div>
-              </div>
-              <div class="workout-info">
-                <div class="title-row">
-                  <app-sport-icon [sport]="$any(group.entry).scheduled.sportType" [size]="14"></app-sport-icon>
-                  <span class="workout-title">{{ $any(group.entry).scheduled.trainingTitle }}</span>
-                </div>
-                <div class="fused-metrics">
-                  <div class="fused-col">
-                    <span class="fused-label">{{ 'CALENDAR_WEEK.FUSED_LABEL_PLANNED' | translate }}</span>
+                  <div class="workout-info">
+                    <div class="title-row">
+                      <app-sport-icon [sport]="$any(group.entry).scheduled.sportType" [size]="14" />
+                      <span class="workout-title">
+                        {{
+                          $any(group.entry).scheduled.trainingTitle ||
+                            $any(group.entry).scheduled.title ||
+                            ('CALENDAR_WEEK.SESSION_FALLBACK_TITLE' | translate) +
+                              $any(group.entry).scheduled.trainingId.substring(0, 6)
+                        }}
+                      </span>
+                    </div>
                     <div class="metrics-row">
                       <div class="metric">
-                        <span class="metric-val">{{ formatDuration($any(group.entry).scheduled) }}</span>
-                        <span class="metric-unit">{{ 'CALENDAR_WEEK.METRIC_DUR' | translate }}</span>
+                        <span class="metric-val">{{
+                          formatDuration($any(group.entry).scheduled)
+                        }}</span>
+                        <span class="metric-unit">{{
+                          'CALENDAR_WEEK.METRIC_DUR' | translate
+                        }}</span>
                       </div>
                       <span class="metric-sep"></span>
                       <div class="metric">
-                        <span class="metric-val">{{ ($any(group.entry).scheduled.tss | number:'1.0-0') || '—' }}</span>
+                        <span class="metric-val">{{
+                          ($any(group.entry).scheduled.tss | number: '1.0-0') || '-'
+                        }}</span>
                         <span class="metric-unit">TSS</span>
                       </div>
-                    </div>
-                  </div>
-                  @if ($any(group.entry).session.fitFileId) {
-                    <div class="fused-divider"></div>
-                    <div class="fused-col fused-col--actual">
-                      <span class="fused-label">{{ 'CALENDAR_WEEK.FUSED_LABEL_ACTUAL' | translate }}</span>
-                      <div class="metrics-row">
-                        <div class="metric">
-                          <span class="metric-val">{{ formatSessionDuration($any(group.entry).session) }}</span>
-                          <span class="metric-unit">{{ 'CALENDAR_WEEK.METRIC_DUR' | translate }}</span>
-                        </div>
-                        <span class="metric-sep"></span>
-                        <div class="metric">
-                          <span class="metric-val">{{ ($any(group.entry).session.tss | number:'1.0-0') || '—' }}</span>
-                          <span class="metric-unit">TSS</span>
-                        </div>
+                      <span class="metric-sep"></span>
+                      <div class="metric">
+                        <span class="metric-val">{{
+                          ($any(group.entry).scheduled.intensityFactor ||
+                            $any(group.entry).scheduled.if | number: '1.2-2') || '-'
+                        }}</span>
+                        <span class="metric-unit">{{ 'CALENDAR_WEEK.METRIC_IF' | translate }}</span>
                       </div>
                     </div>
-                  }
+                  </div>
                 </div>
-              </div>
-              </div>
               }
 
-            @case ('standalone') {
-              <div class="workout-card workout-card--session clickable" (click)="sessionSelected.emit($any(group.entry).session)">
-              <div class="card-top">
-                <span class="session-badge">{{ 'CALENDAR_WEEK.SESSION_BADGE' | translate }}</span>
-                <div class="card-top-right">
-                  @if ($any(group.entry).session.fitFileId) {
-                    <a class="analysis-link" [routerLink]="['/history', $any(group.entry).session.id]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                      </svg>
-                    </a>
-                  }
-                  <div class="link-dropdown-wrapper">
-                    <button class="btn-link-icon" (click)="toggleLinkDropdown($any(group.entry).session, $event)" [title]="'CALENDAR_WEEK.BTN_LINK' | translate">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                      </svg>
-                    </button>
-                    @if (linkDropdownSessionId === $any(group.entry).session.id) {
-                      <div class="link-dropdown">
-                        <button class="link-dropdown-item" (click)="$event.stopPropagation(); closeLinkDropdown(); openLinkPicker($any(group.entry).session)">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              @case ('fused') {
+                <div
+                  class="workout-card workout-card--fused clickable"
+                  [style.--sport-bg]="sportColor($any(group.entry).scheduled.sportType).bg"
+                  [style.--sport-text]="sportColor($any(group.entry).scheduled.sportType).text"
+                  (click)="workoutSelected.emit($any(group.entry).scheduled)"
+                >
+                  <div class="card-top">
+                    <div class="card-top-left">
+                      @if ($any(group.entry).scheduled.trainingType) {
+                        <span
+                          class="type-indicator"
+                          [style.--type-color]="
+                            getTypeColor($any(group.entry).scheduled.trainingType)
+                          "
+                        >
+                          {{ getTypeLabel($any(group.entry).scheduled.trainingType) }}
+                        </span>
+                      }
+                      <span class="fused-badge"
+                        >✓ {{ 'CALENDAR_WEEK.FUSED_BADGE' | translate }}</span
+                      >
+                    </div>
+                    <div class="card-top-right">
+                      @if ($any(group.entry).session.fitFileId) {
+                        <a
+                          class="analysis-link"
+                          [routerLink]="['/history', $any(group.entry).session.id]"
+                          (click)="$event.stopPropagation()"
+                          [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate"
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                           </svg>
-                          {{ 'CALENDAR_WEEK.BTN_LINK_TO_PLAN' | translate }}
-                        </button>
-                        <button class="link-dropdown-item" (click)="$event.stopPropagation(); closeLinkDropdown(); openClubSessionLinkPicker($any(group.entry).session)">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                          </svg>
-                          {{ 'CALENDAR_WEEK.BTN_LINK_TO_CLUB' | translate }}
+                        </a>
+                      }
+                      <div class="card-actions">
+                        <button
+                          class="delete-btn"
+                          (click)="
+                            $event.stopPropagation();
+                            workoutDeleted.emit($any(group.entry).scheduled)
+                          "
+                          [title]="'CALENDAR_WEEK.BTN_REMOVE_TITLE' | translate"
+                        >
+                          &times;
                         </button>
                       </div>
-                    }
+                    </div>
                   </div>
-                </div>
-              </div>
-              <div class="workout-info">
-                <div class="title-row">
-                  <app-sport-icon [sport]="$any(group.entry).session.sportType" [size]="14"></app-sport-icon>
-                  <span class="workout-title">{{ $any(group.entry).session.title }}</span>
-                </div>
-                <div class="metrics-row">
-                  <div class="metric">
-                    <span class="metric-val">{{ formatSessionDuration($any(group.entry).session) }}</span>
-                    <span class="metric-unit">{{ 'CALENDAR_WEEK.METRIC_DUR' | translate }}</span>
-                  </div>
-                  <span class="metric-sep"></span>
-                  <div class="metric">
-                    <span class="metric-val">{{ ($any(group.entry).session.tss | number:'1.0-0') || '—' }}</span>
-                    <span class="metric-unit">TSS</span>
-                  </div>
-                  <span class="metric-sep"></span>
-                  <div class="metric">
-                    <span class="metric-val">{{ $any(group.entry).session.avgPower | number:'1.0-0' }}W</span>
-                    <span class="metric-unit">PWR</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            }
-
-            @case ('club-session') {
-              <div class="workout-card workout-card--club-session"
-              [class.workout-card--cs-attending]="$any(group.entry).clubSession.joined"
-              [class.workout-card--cs-waiting]="$any(group.entry).clubSession.onWaitingList"
-              [class.not-joined]="!$any(group.entry).clubSession.joined && !$any(group.entry).clubSession.onWaitingList"
-              [class.cancelled]="$any(group.entry).clubSession.cancelled">
-              <div class="card-top">
-                <div class="card-top-left">
-                  <span class="club-session-badge">{{ $any(group.entry).clubSession.clubName }}</span>
-                  <span class="club-session-time">{{ formatClubSessionTime($any(group.entry).clubSession.scheduledAt) }}</span>
-                </div>
-                <div class="card-top-right">
-                  @if ($any(group.entry).clubSession.cancelled) {
-                    <span class="cancelled-badge">{{ 'CALENDAR_WEEK.CLUB_SESSION_BADGE_CANCELLED' | translate }}</span>
-                  }
-                  @if ($any(group.entry).linkedSession) {
-                    <a class="analysis-link" [routerLink]="['/history', $any(group.entry).linkedSession.id]" (click)="$event.stopPropagation()" [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                      </svg>
-                    </a>
-                  }
-                </div>
-              </div>
-              <div class="workout-info">
-                <div class="title-row">
-                  <app-sport-icon [sport]="$any(group.entry).clubSession.sport" [size]="14"></app-sport-icon>
-                  <span class="workout-title" [class.title-cancelled]="$any(group.entry).clubSession.cancelled">{{ $any(group.entry).clubSession.title }}</span>
-                </div>
-                @if ($any(group.entry).clubSession.location) {
-                  <span class="club-session-location">{{ $any(group.entry).clubSession.location }}</span>
-                }
-                @if ($any(group.entry).clubSession.linkedTrainingTitle) {
-                  <div class="linked-training-row">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                    </svg>
-                    <span class="linked-training-title">{{ $any(group.entry).clubSession.linkedTrainingTitle }}</span>
-                  </div>
-                }
-                @if ($any(group.entry).clubSession.cancelled && $any(group.entry).clubSession.cancellationReason) {
-                  <div class="cancellation-reason">{{ $any(group.entry).clubSession.cancellationReason }}</div>
-                }
-                <div class="club-session-footer">
-                  <div class="club-session-status">
-                    <span class="club-session-count">
-                      <svg class="icon-inline" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                      {{ $any(group.entry).clubSession.participantIds.length }}{{ $any(group.entry).clubSession.maxParticipants ? '/' + $any(group.entry).clubSession.maxParticipants : '' }}
-                    </span>
-                    @if ($any(group.entry).clubSession.joined) {
-                      <span class="cs-status-dot cs-status-dot--attending"></span>
-                    }
-                    @if ($any(group.entry).clubSession.onWaitingList) {
-                      <span class="cs-status-dot cs-status-dot--waiting"></span>
-                    }
-                  </div>
-                  @if (!$any(group.entry).clubSession.cancelled) {
-                    <div class="club-session-actions">
-                      @if (!$any(group.entry).clubSession.joined && !$any(group.entry).clubSession.onWaitingList) {
-                        <button class="btn-primary small" (click)="joinClubSession.emit($any(group.entry).clubSession)" data-testid="btn-join-club-session">{{ 'CALENDAR_WEEK.CLUB_SESSION_BTN_JOIN' | translate }}</button>
-                      }
-                      @if ($any(group.entry).clubSession.joined || $any(group.entry).clubSession.onWaitingList) {
-                        <button class="btn-ghost small" (click)="cancelClubSession.emit($any(group.entry).clubSession)" data-testid="btn-cancel-club-session">
-                          {{ $any(group.entry).clubSession.onWaitingList ? ('CALENDAR_WEEK.CLUB_SESSION_BTN_LEAVE_WAITLIST' | translate) : ('CALENDAR_WEEK.CLUB_SESSION_BTN_CANCEL' | translate) }}
-                        </button>
+                  <div class="workout-info">
+                    <div class="title-row">
+                      <app-sport-icon [sport]="$any(group.entry).scheduled.sportType" [size]="14" />
+                      <span class="workout-title">{{
+                        $any(group.entry).scheduled.trainingTitle
+                      }}</span>
+                    </div>
+                    <div class="fused-metrics">
+                      <div class="fused-col">
+                        <span class="fused-label">{{
+                          'CALENDAR_WEEK.FUSED_LABEL_PLANNED' | translate
+                        }}</span>
+                        <div class="metrics-row">
+                          <div class="metric">
+                            <span class="metric-val">{{
+                              formatDuration($any(group.entry).scheduled)
+                            }}</span>
+                            <span class="metric-unit">{{
+                              'CALENDAR_WEEK.METRIC_DUR' | translate
+                            }}</span>
+                          </div>
+                          <span class="metric-sep"></span>
+                          <div class="metric">
+                            <span class="metric-val">{{
+                              ($any(group.entry).scheduled.tss | number: '1.0-0') || '—'
+                            }}</span>
+                            <span class="metric-unit">TSS</span>
+                          </div>
+                        </div>
+                      </div>
+                      @if ($any(group.entry).session.fitFileId) {
+                        <div class="fused-divider"></div>
+                        <div class="fused-col fused-col--actual">
+                          <span class="fused-label">{{
+                            'CALENDAR_WEEK.FUSED_LABEL_ACTUAL' | translate
+                          }}</span>
+                          <div class="metrics-row">
+                            <div class="metric">
+                              <span class="metric-val">{{
+                                formatSessionDuration($any(group.entry).session)
+                              }}</span>
+                              <span class="metric-unit">{{
+                                'CALENDAR_WEEK.METRIC_DUR' | translate
+                              }}</span>
+                            </div>
+                            <span class="metric-sep"></span>
+                            <div class="metric">
+                              <span class="metric-val">{{
+                                ($any(group.entry).session.tss | number: '1.0-0') || '—'
+                              }}</span>
+                              <span class="metric-unit">TSS</span>
+                            </div>
+                          </div>
+                        </div>
                       }
                     </div>
-                  }
+                  </div>
                 </div>
-              </div>
-            </div>
-            }
+              }
 
-          }
+              @case ('standalone') {
+                <div
+                  class="workout-card workout-card--session clickable"
+                  (click)="sessionSelected.emit($any(group.entry).session)"
+                >
+                  <div class="card-top">
+                    <span class="session-badge">{{
+                      'CALENDAR_WEEK.SESSION_BADGE' | translate
+                    }}</span>
+                    <div class="card-top-right">
+                      @if ($any(group.entry).session.fitFileId) {
+                        <a
+                          class="analysis-link"
+                          [routerLink]="['/history', $any(group.entry).session.id]"
+                          (click)="$event.stopPropagation()"
+                          [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate"
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                          </svg>
+                        </a>
+                      }
+                      <div class="link-dropdown-wrapper">
+                        <button
+                          class="btn-link-icon"
+                          (click)="toggleLinkDropdown($any(group.entry).session, $event)"
+                          [title]="'CALENDAR_WEEK.BTN_LINK' | translate"
+                        >
+                          <svg
+                            width="13"
+                            height="13"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                            <path
+                              d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+                            />
+                          </svg>
+                        </button>
+                        @if (linkDropdownSessionId === $any(group.entry).session.id) {
+                          <div class="link-dropdown">
+                            <button
+                              class="link-dropdown-item"
+                              (click)="
+                                $event.stopPropagation();
+                                closeLinkDropdown();
+                                openLinkPicker($any(group.entry).session)
+                              "
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              >
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                                <path
+                                  d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+                                />
+                              </svg>
+                              {{ 'CALENDAR_WEEK.BTN_LINK_TO_PLAN' | translate }}
+                            </button>
+                            <button
+                              class="link-dropdown-item"
+                              (click)="
+                                $event.stopPropagation();
+                                closeLinkDropdown();
+                                openClubSessionLinkPicker($any(group.entry).session)
+                              "
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              >
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                              </svg>
+                              {{ 'CALENDAR_WEEK.BTN_LINK_TO_CLUB' | translate }}
+                            </button>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                  <div class="workout-info">
+                    <div class="title-row">
+                      <app-sport-icon [sport]="$any(group.entry).session.sportType" [size]="14" />
+                      <span class="workout-title">{{ $any(group.entry).session.title }}</span>
+                    </div>
+                    <div class="metrics-row">
+                      <div class="metric">
+                        <span class="metric-val">{{
+                          formatSessionDuration($any(group.entry).session)
+                        }}</span>
+                        <span class="metric-unit">{{
+                          'CALENDAR_WEEK.METRIC_DUR' | translate
+                        }}</span>
+                      </div>
+                      <span class="metric-sep"></span>
+                      <div class="metric">
+                        <span class="metric-val">{{
+                          ($any(group.entry).session.tss | number: '1.0-0') || '—'
+                        }}</span>
+                        <span class="metric-unit">TSS</span>
+                      </div>
+                      <span class="metric-sep"></span>
+                      <div class="metric">
+                        <span class="metric-val"
+                          >{{ $any(group.entry).session.avgPower | number: '1.0-0' }}W</span
+                        >
+                        <span class="metric-unit">PWR</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              @case ('club-session') {
+                <div
+                  class="workout-card workout-card--club-session"
+                  [class.workout-card--cs-attending]="$any(group.entry).clubSession.joined"
+                  [class.workout-card--cs-waiting]="$any(group.entry).clubSession.onWaitingList"
+                  [class.not-joined]="
+                    !$any(group.entry).clubSession.joined &&
+                    !$any(group.entry).clubSession.onWaitingList
+                  "
+                  [class.cancelled]="$any(group.entry).clubSession.cancelled"
+                >
+                  <div class="card-top">
+                    <div class="card-top-left">
+                      <span class="club-session-badge">{{
+                        $any(group.entry).clubSession.clubName
+                      }}</span>
+                      <span class="club-session-time">{{
+                        formatClubSessionTime($any(group.entry).clubSession.scheduledAt)
+                      }}</span>
+                    </div>
+                    <div class="card-top-right">
+                      @if ($any(group.entry).clubSession.cancelled) {
+                        <span class="cancelled-badge">{{
+                          'CALENDAR_WEEK.CLUB_SESSION_BADGE_CANCELLED' | translate
+                        }}</span>
+                      }
+                      @if ($any(group.entry).linkedSession) {
+                        <a
+                          class="analysis-link"
+                          [routerLink]="['/history', $any(group.entry).linkedSession.id]"
+                          (click)="$event.stopPropagation()"
+                          [title]="'CALENDAR_WEEK.ANALYSIS_LINK_TITLE' | translate"
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                          </svg>
+                        </a>
+                      }
+                    </div>
+                  </div>
+                  <div class="workout-info">
+                    <div class="title-row">
+                      <app-sport-icon [sport]="$any(group.entry).clubSession.sport" [size]="14" />
+                      <span
+                        class="workout-title"
+                        [class.title-cancelled]="$any(group.entry).clubSession.cancelled"
+                        >{{ $any(group.entry).clubSession.title }}</span
+                      >
+                    </div>
+                    @if ($any(group.entry).clubSession.location) {
+                      <span class="club-session-location">{{
+                        $any(group.entry).clubSession.location
+                      }}</span>
+                    }
+                    @if ($any(group.entry).clubSession.linkedTrainingTitle) {
+                      <div class="linked-training-row">
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                        </svg>
+                        <span class="linked-training-title">{{
+                          $any(group.entry).clubSession.linkedTrainingTitle
+                        }}</span>
+                      </div>
+                    }
+                    @if (
+                      $any(group.entry).clubSession.cancelled &&
+                      $any(group.entry).clubSession.cancellationReason
+                    ) {
+                      <div class="cancellation-reason">
+                        {{ $any(group.entry).clubSession.cancellationReason }}
+                      </div>
+                    }
+                    <div class="club-session-footer">
+                      <div class="club-session-status">
+                        <span class="club-session-count">
+                          <svg
+                            class="icon-inline"
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                          </svg>
+                          {{ $any(group.entry).clubSession.participantIds.length
+                          }}{{
+                            $any(group.entry).clubSession.maxParticipants
+                              ? '/' + $any(group.entry).clubSession.maxParticipants
+                              : ''
+                          }}
+                        </span>
+                        @if ($any(group.entry).clubSession.joined) {
+                          <span class="cs-status-dot cs-status-dot--attending"></span>
+                        }
+                        @if ($any(group.entry).clubSession.onWaitingList) {
+                          <span class="cs-status-dot cs-status-dot--waiting"></span>
+                        }
+                      </div>
+                      @if (!$any(group.entry).clubSession.cancelled) {
+                        <div class="club-session-actions">
+                          @if (
+                            !$any(group.entry).clubSession.joined &&
+                            !$any(group.entry).clubSession.onWaitingList
+                          ) {
+                            <button
+                              class="btn-primary small"
+                              (click)="joinClubSession.emit($any(group.entry).clubSession)"
+                              data-testid="btn-join-club-session"
+                            >
+                              {{ 'CALENDAR_WEEK.CLUB_SESSION_BTN_JOIN' | translate }}
+                            </button>
+                          }
+                          @if (
+                            $any(group.entry).clubSession.joined ||
+                            $any(group.entry).clubSession.onWaitingList
+                          ) {
+                            <button
+                              class="btn-ghost small"
+                              (click)="cancelClubSession.emit($any(group.entry).clubSession)"
+                              data-testid="btn-cancel-club-session"
+                            >
+                              {{
+                                $any(group.entry).clubSession.onWaitingList
+                                  ? ('CALENDAR_WEEK.CLUB_SESSION_BTN_LEAVE_WAITLIST' | translate)
+                                  : ('CALENDAR_WEEK.CLUB_SESSION_BTN_CANCEL' | translate)
+                              }}
+                            </button>
+                          }
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+            }
           }
 
           @if (group.type === 'club-row') {
             <div class="club-session-row">
               @for (entry of group.entries; track trackByEntry(entry)) {
-                <div class="workout-card workout-card--club-session workout-card--compact"
-            [class.workout-card--cs-attending]="$any(entry).clubSession.joined"
-            [class.workout-card--cs-waiting]="$any(entry).clubSession.onWaitingList"
-            [class.not-joined]="!$any(entry).clubSession.joined && !$any(entry).clubSession.onWaitingList"
-            [class.cancelled]="$any(entry).clubSession.cancelled">
-            <div class="card-top">
-                <span class="club-session-badge">{{ $any(entry).clubSession.clubName }}</span>
-                @if ($any(entry).clubSession.cancelled) {
-                  <span class="cancelled-badge">{{ 'CALENDAR_WEEK.CLUB_SESSION_BADGE_CANCELLED' | translate }}</span>
-                } @else {
-                  <span class="club-session-time">{{ formatClubSessionTime($any(entry).clubSession.scheduledAt) }}</span>
-                }
-            </div>
-            <div class="workout-info">
-              <div class="title-row">
-                <app-sport-icon [sport]="$any(entry).clubSession.sport" [size]="14"></app-sport-icon>
-                <span class="workout-title" [class.title-cancelled]="$any(entry).clubSession.cancelled">{{ $any(entry).clubSession.title }}</span>
-              </div>
-              @if ($any(entry).clubSession.linkedTrainingTitle) {
-                <span class="linked-training-compact">{{ $any(entry).clubSession.linkedTrainingTitle }}</span>
-              }
-              @if (!$any(entry).clubSession.cancelled) {
-                <div class="club-session-actions">
-                  @if (!$any(entry).clubSession.joined && !$any(entry).clubSession.onWaitingList) {
-                    <button class="btn-primary small" (click)="joinClubSession.emit($any(entry).clubSession)" data-testid="btn-join-club-session">{{ 'CALENDAR_WEEK.CLUB_SESSION_BTN_JOIN' | translate }}</button>
-                  }
-                  @if ($any(entry).clubSession.joined || $any(entry).clubSession.onWaitingList) {
-                    <button class="btn-ghost small" (click)="cancelClubSession.emit($any(entry).clubSession)" data-testid="btn-cancel-club-session">
-                      {{ $any(entry).clubSession.onWaitingList ? ('CALENDAR_WEEK.CLUB_SESSION_BTN_LEAVE_WAITLIST' | translate) : ('CALENDAR_WEEK.CLUB_SESSION_BTN_CANCEL' | translate) }}
-                    </button>
-                  }
+                <div
+                  class="workout-card workout-card--club-session workout-card--compact"
+                  [class.workout-card--cs-attending]="$any(entry).clubSession.joined"
+                  [class.workout-card--cs-waiting]="$any(entry).clubSession.onWaitingList"
+                  [class.not-joined]="
+                    !$any(entry).clubSession.joined && !$any(entry).clubSession.onWaitingList
+                  "
+                  [class.cancelled]="$any(entry).clubSession.cancelled"
+                >
+                  <div class="card-top">
+                    <span class="club-session-badge">{{ $any(entry).clubSession.clubName }}</span>
+                    @if ($any(entry).clubSession.cancelled) {
+                      <span class="cancelled-badge">{{
+                        'CALENDAR_WEEK.CLUB_SESSION_BADGE_CANCELLED' | translate
+                      }}</span>
+                    } @else {
+                      <span class="club-session-time">{{
+                        formatClubSessionTime($any(entry).clubSession.scheduledAt)
+                      }}</span>
+                    }
+                  </div>
+                  <div class="workout-info">
+                    <div class="title-row">
+                      <app-sport-icon [sport]="$any(entry).clubSession.sport" [size]="14" />
+                      <span
+                        class="workout-title"
+                        [class.title-cancelled]="$any(entry).clubSession.cancelled"
+                        >{{ $any(entry).clubSession.title }}</span
+                      >
+                    </div>
+                    @if ($any(entry).clubSession.linkedTrainingTitle) {
+                      <span class="linked-training-compact">{{
+                        $any(entry).clubSession.linkedTrainingTitle
+                      }}</span>
+                    }
+                    @if (!$any(entry).clubSession.cancelled) {
+                      <div class="club-session-actions">
+                        @if (
+                          !$any(entry).clubSession.joined && !$any(entry).clubSession.onWaitingList
+                        ) {
+                          <button
+                            class="btn-primary small"
+                            (click)="joinClubSession.emit($any(entry).clubSession)"
+                            data-testid="btn-join-club-session"
+                          >
+                            {{ 'CALENDAR_WEEK.CLUB_SESSION_BTN_JOIN' | translate }}
+                          </button>
+                        }
+                        @if (
+                          $any(entry).clubSession.joined || $any(entry).clubSession.onWaitingList
+                        ) {
+                          <button
+                            class="btn-ghost small"
+                            (click)="cancelClubSession.emit($any(entry).clubSession)"
+                            data-testid="btn-cancel-club-session"
+                          >
+                            {{
+                              $any(entry).clubSession.onWaitingList
+                                ? ('CALENDAR_WEEK.CLUB_SESSION_BTN_LEAVE_WAITLIST' | translate)
+                                : ('CALENDAR_WEEK.CLUB_SESSION_BTN_CANCEL' | translate)
+                            }}
+                          </button>
+                        }
+                      </div>
+                    }
+                  </div>
                 </div>
               }
             </div>
-            </div>
-              }
-            </div>
           }
-
         }
 
         @if (hiddenCount(day.key, dayGroups) > 0) {
-          <button class="more-chip" data-testid="calendar-more-chip" (click)="toggleExpand(day.key)">
+          <button
+            class="more-chip"
+            data-testid="calendar-more-chip"
+            (click)="toggleExpand(day.key)"
+          >
             +{{ hiddenCount(day.key, dayGroups) }} {{ 'CALENDAR_WEEK.MORE' | translate }}
           </button>
         }
@@ -368,18 +712,38 @@
         }
 
         @for (goal of goalsByDay.get(day.key) || []; track goal.id) {
-          <div class="goal-pill" [style.background-color]="getPriorityColor(goal.priority) + '22'"
+          <div
+            class="goal-pill"
+            [style.background-color]="getPriorityColor(goal.priority) + '22'"
             [style.border-color]="getPriorityColor(goal.priority) + '66'"
-            [title]="goal.title">
-            <app-sport-icon [sport]="$any(goal.sport)" [size]="14"></app-sport-icon>
+            [title]="goal.title"
+          >
+            <app-sport-icon [sport]="$any(goal.sport)" [size]="14" />
             <span class="goal-pill-title">{{ goal.title }}</span>
-            <span class="goal-pill-priority" [style.color]="getPriorityColor(goal.priority)">{{ goal.priority }}</span>
+            <span class="goal-pill-priority" [style.color]="getPriorityColor(goal.priority)">{{
+              goal.priority
+            }}</span>
           </div>
         }
 
-        <button class="add-btn" (click)="addDay.emit(day)" [title]="'CALENDAR_WEEK.BTN_ADD_TRAINING_TITLE' | translate" data-testid="add-training-btn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        <button
+          class="add-btn"
+          (click)="addDay.emit(day)"
+          [title]="'CALENDAR_WEEK.BTN_ADD_TRAINING_TITLE' | translate"
+          data-testid="add-training-btn"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
         </button>
         @if (!(entriesByDay.get(day.key) || []).length && !(goalsByDay.get(day.key) || []).length) {
@@ -390,15 +754,26 @@
   }
 </div>
 
-<app-training-load-chart [workoutsByDay]="workoutsByDay" [days]="days"></app-training-load-chart>
+<app-training-load-chart [workoutsByDay]="workoutsByDay" [days]="days" />
 
 @if (rescheduleTarget) {
   <div class="reschedule-overlay" (click)="cancelReschedule()">
     <div class="reschedule-modal" (click)="$event.stopPropagation()">
       <span class="reschedule-title">{{ 'CALENDAR_WEEK.RESCHEDULE_MODAL_TITLE' | translate }}</span>
-      <span class="reschedule-workout-name">{{ rescheduleTarget.trainingTitle || rescheduleTarget.title || ('CALENDAR_WEEK.RESCHEDULE_WORKOUT_FALLBACK' | translate) }}</span>
-      <input type="date" class="reschedule-date-input" [value]="rescheduleTarget.scheduledDate" (change)="confirmReschedule($any($event.target).value)" />
-      <button class="link-picker-cancel" (click)="cancelReschedule()">{{ 'CALENDAR_WEEK.RESCHEDULE_BTN_CANCEL' | translate }}</button>
+      <span class="reschedule-workout-name">{{
+        rescheduleTarget.trainingTitle ||
+          rescheduleTarget.title ||
+          ('CALENDAR_WEEK.RESCHEDULE_WORKOUT_FALLBACK' | translate)
+      }}</span>
+      <input
+        type="date"
+        class="reschedule-date-input"
+        [value]="rescheduleTarget.scheduledDate"
+        (change)="confirmReschedule($any($event.target).value)"
+      />
+      <button class="link-picker-cancel" (click)="cancelReschedule()">
+        {{ 'CALENDAR_WEEK.RESCHEDULE_BTN_CANCEL' | translate }}
+      </button>
     </div>
   </div>
 }
@@ -410,7 +785,8 @@
         <span class="link-modal-title">{{ 'CALENDAR_WEEK.LINK_MODAL_TITLE' | translate }}</span>
         @if (linkSession) {
           <span class="link-modal-session">
-            <strong>{{ linkSession.title }}</strong> &mdash; {{ linkSession.date | date:'MMM d, yyyy' }}
+            <strong>{{ linkSession.title }}</strong> &mdash;
+            {{ linkSession.date | date: 'MMM d, yyyy' }}
           </span>
         }
       </div>
@@ -421,45 +797,62 @@
           }
           @for (sw of nearby; track sw.id) {
             <div class="link-picker-item" (click)="confirmLink(sw.id)">
-              <span>{{ sw.trainingTitle || ('CALENDAR_WEEK.WORKOUT_FALLBACK_TITLE' | translate) }}</span>
-              <span class="link-picker-meta">{{ sw.scheduledDate | date:'MMM d' }}</span>
+              <span>{{
+                sw.trainingTitle || ('CALENDAR_WEEK.WORKOUT_FALLBACK_TITLE' | translate)
+              }}</span>
+              <span class="link-picker-meta">{{ sw.scheduledDate | date: 'MMM d' }}</span>
             </div>
           }
         }
       </div>
       <div class="link-modal-footer">
-        <button class="link-picker-cancel" (click)="linkPickerState = null; linkSession = null">{{ 'CALENDAR_WEEK.LINK_PICKER_BTN_CANCEL' | translate }}</button>
+        <button class="link-picker-cancel" (click)="linkPickerState = null; linkSession = null">
+          {{ 'CALENDAR_WEEK.LINK_PICKER_BTN_CANCEL' | translate }}
+        </button>
       </div>
     </div>
   </div>
 }
 
 @if (clubSessionLinkPickerState !== null) {
-  <div class="link-modal-overlay" (click)="clubSessionLinkPickerState = null; clubSessionLinkSession = null">
+  <div
+    class="link-modal-overlay"
+    (click)="clubSessionLinkPickerState = null; clubSessionLinkSession = null"
+  >
     <div class="link-modal" (click)="$event.stopPropagation()">
       <div class="link-modal-header">
-        <span class="link-modal-title">{{ 'CALENDAR_WEEK.CLUB_SESSION_LINK_MODAL_TITLE' | translate }}</span>
+        <span class="link-modal-title">{{
+          'CALENDAR_WEEK.CLUB_SESSION_LINK_MODAL_TITLE' | translate
+        }}</span>
         @if (clubSessionLinkSession) {
           <span class="link-modal-session">
-            <strong>{{ clubSessionLinkSession.title }}</strong> &mdash; {{ clubSessionLinkSession.date | date:'MMM d, yyyy' }}
+            <strong>{{ clubSessionLinkSession.title }}</strong> &mdash;
+            {{ clubSessionLinkSession.date | date: 'MMM d, yyyy' }}
           </span>
         }
       </div>
       <div class="link-modal-list">
         @if (nearbyClubSessions$ | async; as nearby) {
           @if (!nearby.length) {
-            <div class="link-picker-empty">{{ 'CALENDAR_WEEK.CLUB_SESSION_LINK_PICKER_EMPTY' | translate }}</div>
+            <div class="link-picker-empty">
+              {{ 'CALENDAR_WEEK.CLUB_SESSION_LINK_PICKER_EMPTY' | translate }}
+            </div>
           }
           @for (cs of nearby; track cs.id) {
             <div class="link-picker-item" (click)="confirmClubSessionLink(cs.id)">
               <span>{{ cs.clubName }} &mdash; {{ cs.title }}</span>
-              <span class="link-picker-meta">{{ cs.scheduledAt | date:'MMM d, HH:mm' }}</span>
+              <span class="link-picker-meta">{{ cs.scheduledAt | date: 'MMM d, HH:mm' }}</span>
             </div>
           }
         }
       </div>
       <div class="link-modal-footer">
-        <button class="link-picker-cancel" (click)="clubSessionLinkPickerState = null; clubSessionLinkSession = null">{{ 'CALENDAR_WEEK.LINK_PICKER_BTN_CANCEL' | translate }}</button>
+        <button
+          class="link-picker-cancel"
+          (click)="clubSessionLinkPickerState = null; clubSessionLinkSession = null"
+        >
+          {{ 'CALENDAR_WEEK.LINK_PICKER_BTN_CANCEL' | translate }}
+        </button>
       </div>
     </div>
   </div>

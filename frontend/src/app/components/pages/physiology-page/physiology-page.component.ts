@@ -1,13 +1,16 @@
-import {ChangeDetectionStrategy, Component, inject, Input, OnInit} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {TranslateModule, TranslateService} from '@ngx-translate/core';
-import {BehaviorSubject, combineLatest, map, Observable, of, switchMap} from 'rxjs';
-import {AuthService, User} from '../../../services/auth.service';
-import {Zone, ZoneSystem} from '../../../services/zone';
-import {ZoneService} from '../../../services/zone.service';
-import {ZoneClassificationService} from '../../../services/zone-classification.service';
-import {formatPace as sharedFormatPace, formatPaceCompact} from '../../shared/format/format.utils';
+import { ChangeDetectionStrategy, Component, inject, Input, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { BehaviorSubject, combineLatest, map, Observable, of, switchMap } from 'rxjs';
+import { AuthService, User } from '../../../services/auth.service';
+import { Zone, ZoneSystem } from '../../../services/zone';
+import { ZoneService } from '../../../services/zone.service';
+import { ZoneClassificationService } from '../../../services/zone-classification.service';
+import {
+  formatPace as sharedFormatPace,
+  formatPaceCompact,
+} from '../../shared/format/format.utils';
 
 type Sport = 'CYCLING' | 'RUNNING' | 'SWIMMING';
 
@@ -38,9 +41,7 @@ export class PhysiologyPageComponent implements OnInit {
   coachZonesForSport$: Observable<ZoneSystem[]> = combineLatest([
     this.zoneSystems$,
     this.activeSport$,
-  ]).pipe(
-    map(([systems, sport]) => systems.filter((s) => s.sportType === sport)),
-  );
+  ]).pipe(map(([systems, sport]) => systems.filter((s) => s.sportType === sport)));
 
   get activeSport(): Sport {
     return this.activeSport$.value;
@@ -83,7 +84,7 @@ export class PhysiologyPageComponent implements OnInit {
     private zoneService: ZoneService,
   ) {
     this.user$ = this.overrideUser$.pipe(
-      switchMap(override => override ? of(override) : this.authService.user$),
+      switchMap((override) => (override ? of(override) : this.authService.user$)),
     );
   }
 
@@ -111,8 +112,8 @@ export class PhysiologyPageComponent implements OnInit {
     if (sport === 'CYCLING') {
       const ftp = user.ftp;
       if (!ftp) return null;
-      const lowW = Math.round(ftp * zone.low / 100);
-      const highW = Math.round(ftp * zone.high / 100);
+      const lowW = Math.round((ftp * zone.low) / 100);
+      const highW = Math.round((ftp * zone.high) / 100);
       const isLast = zone.high >= 200;
       if (isLast) return `${lowW}W+`;
       if (zone.low === 0) return `0–${highW}W`;
@@ -136,14 +137,22 @@ export class PhysiologyPageComponent implements OnInit {
 
   getActualRangeForSystem(zone: Zone, user: User, sys: ZoneSystem): string | null {
     switch (sys.referenceType) {
-      case 'FTP':               return this.computeWatts(zone, user.ftp);
-      case 'VO2MAX_POWER':      return this.computeWatts(zone, user.vo2maxPower);
-      case 'THRESHOLD_PACE':    return this.computePace(zone, user.functionalThresholdPace);
-      case 'CSS':               return this.computePace(zone, user.criticalSwimSpeed);
-      case 'PACE_5K':           return this.computePace(zone, user.pace5k);
-      case 'PACE_10K':          return this.computePace(zone, user.pace10k);
-      case 'PACE_HALF_MARATHON':return this.computePace(zone, user.paceHalfMarathon);
-      case 'PACE_MARATHON':     return this.computePace(zone, user.paceMarathon);
+      case 'FTP':
+        return this.computeWatts(zone, user.ftp);
+      case 'VO2MAX_POWER':
+        return this.computeWatts(zone, user.vo2maxPower);
+      case 'THRESHOLD_PACE':
+        return this.computePace(zone, user.functionalThresholdPace);
+      case 'CSS':
+        return this.computePace(zone, user.criticalSwimSpeed);
+      case 'PACE_5K':
+        return this.computePace(zone, user.pace5k);
+      case 'PACE_10K':
+        return this.computePace(zone, user.pace10k);
+      case 'PACE_HALF_MARATHON':
+        return this.computePace(zone, user.paceHalfMarathon);
+      case 'PACE_MARATHON':
+        return this.computePace(zone, user.paceMarathon);
       case 'CUSTOM': {
         const val = user.customZoneReferenceValues?.[sys.id!];
         if (!val) return null;
@@ -153,20 +162,21 @@ export class PhysiologyPageComponent implements OnInit {
         }
         return this.computeCustom(zone, val, unit);
       }
-      default: return null;
+      default:
+        return null;
     }
   }
 
   private computeWatts(zone: Zone, ref: number | undefined): string | null {
     if (!ref) return null;
-    const lo = Math.round(ref * zone.low / 100);
-    const hi = Math.round(ref * zone.high / 100);
+    const lo = Math.round((ref * zone.low) / 100);
+    const hi = Math.round((ref * zone.high) / 100);
     return zone.high >= 200 ? `${lo}W+` : zone.low === 0 ? `0–${hi}W` : `${lo}–${hi}W`;
   }
 
   private computeCustom(zone: Zone, ref: number, unit: string): string {
-    const lo = Math.round(ref * zone.low / 100);
-    const hi = Math.round(ref * zone.high / 100);
+    const lo = Math.round((ref * zone.low) / 100);
+    const hi = Math.round((ref * zone.high) / 100);
     const u = unit ? ` ${unit}` : '';
     if (zone.high >= 200) return `${lo}${u}+`;
     if (zone.low === 0) return `0–${hi}${u}`;
@@ -175,8 +185,15 @@ export class PhysiologyPageComponent implements OnInit {
 
   private isPaceUnit(unit: string): boolean {
     const lower = unit.toLowerCase();
-    return lower.includes('/km') || lower.includes('/100m') || lower.includes('/mi')
-      || lower === 'sec/km' || lower === 'sec/100m' || lower === 'min/km' || lower === 'min/100m';
+    return (
+      lower.includes('/km') ||
+      lower.includes('/100m') ||
+      lower.includes('/mi') ||
+      lower === 'sec/km' ||
+      lower === 'sec/100m' ||
+      lower === 'min/km' ||
+      lower === 'min/100m'
+    );
   }
 
   private getPaceSuffix(unit: string): string {
@@ -199,11 +216,17 @@ export class PhysiologyPageComponent implements OnInit {
     if (!ref) return null;
     const slow = zone.low === 0 ? null : ref / (zone.low / 100);
     const fast = ref / (zone.high / 100);
-    return slow === null ? `< ${this.formatPace(fast)}` : `${this.formatPace(slow)}–${this.formatPace(fast)}`;
+    return slow === null
+      ? `< ${this.formatPace(fast)}`
+      : `${this.formatPace(slow)}–${this.formatPace(fast)}`;
   }
 
   /** Compute pace range scaled to a given distance (in meters), using compact format */
-  private computePaceForDistance(zone: Zone, refPerKm: number | undefined, distanceM: number): string | null {
+  private computePaceForDistance(
+    zone: Zone,
+    refPerKm: number | undefined,
+    distanceM: number,
+  ): string | null {
     if (!refPerKm) return null;
     const scale = distanceM / 1000;
     const slow = zone.low === 0 ? null : (refPerKm / (zone.low / 100)) * scale;
@@ -216,14 +239,25 @@ export class PhysiologyPageComponent implements OnInit {
     return this.computePaceForDistance(zone, user.functionalThresholdPace, distanceM);
   }
 
-  getRunningPaceForDistanceFromSystem(zone: Zone, user: User, sys: ZoneSystem, distanceM: number): string | null {
+  getRunningPaceForDistanceFromSystem(
+    zone: Zone,
+    user: User,
+    sys: ZoneSystem,
+    distanceM: number,
+  ): string | null {
     switch (sys.referenceType) {
-      case 'THRESHOLD_PACE':    return this.computePaceForDistance(zone, user.functionalThresholdPace, distanceM);
-      case 'VO2MAX_PACE':       return this.computePaceForDistance(zone, user.vo2maxPace, distanceM);
-      case 'PACE_5K':           return this.computePaceForDistance(zone, user.pace5k, distanceM);
-      case 'PACE_10K':          return this.computePaceForDistance(zone, user.pace10k, distanceM);
-      case 'PACE_HALF_MARATHON':return this.computePaceForDistance(zone, user.paceHalfMarathon, distanceM);
-      case 'PACE_MARATHON':     return this.computePaceForDistance(zone, user.paceMarathon, distanceM);
+      case 'THRESHOLD_PACE':
+        return this.computePaceForDistance(zone, user.functionalThresholdPace, distanceM);
+      case 'VO2MAX_PACE':
+        return this.computePaceForDistance(zone, user.vo2maxPace, distanceM);
+      case 'PACE_5K':
+        return this.computePaceForDistance(zone, user.pace5k, distanceM);
+      case 'PACE_10K':
+        return this.computePaceForDistance(zone, user.pace10k, distanceM);
+      case 'PACE_HALF_MARATHON':
+        return this.computePaceForDistance(zone, user.paceHalfMarathon, distanceM);
+      case 'PACE_MARATHON':
+        return this.computePaceForDistance(zone, user.paceMarathon, distanceM);
       case 'CUSTOM': {
         const unit = sys.referenceUnit || '';
         if (!this.isPaceUnit(unit)) return null;
@@ -233,7 +267,8 @@ export class PhysiologyPageComponent implements OnInit {
         const refPerKm = val * (1000 / baseDistM);
         return this.computePaceForDistance(zone, refPerKm, distanceM);
       }
-      default: return null;
+      default:
+        return null;
     }
   }
 
@@ -246,35 +281,49 @@ export class PhysiologyPageComponent implements OnInit {
 
   getSectionTitle(): string {
     switch (this.activeSport) {
-      case 'CYCLING': return this.translate.instant('PHYSIOLOGY.ZONE_SECTION_CYCLING');
-      case 'RUNNING': return this.translate.instant('PHYSIOLOGY.ZONE_SECTION_RUNNING');
-      case 'SWIMMING': return this.translate.instant('PHYSIOLOGY.ZONE_SECTION_SWIMMING');
+      case 'CYCLING':
+        return this.translate.instant('PHYSIOLOGY.ZONE_SECTION_CYCLING');
+      case 'RUNNING':
+        return this.translate.instant('PHYSIOLOGY.ZONE_SECTION_RUNNING');
+      case 'SWIMMING':
+        return this.translate.instant('PHYSIOLOGY.ZONE_SECTION_SWIMMING');
     }
   }
 
   getRefBadge(user: User): string | null {
     switch (this.activeSport) {
-      case 'CYCLING': return user.ftp ? `FTP: ${user.ftp}W` : null;
-      case 'RUNNING': return user.functionalThresholdPace
-        ? `Threshold: ${this.formatPace(user.functionalThresholdPace)}/km` : null;
-      case 'SWIMMING': return user.criticalSwimSpeed
-        ? `CSS: ${this.formatPace(user.criticalSwimSpeed)}/100m` : null;
+      case 'CYCLING':
+        return user.ftp ? `FTP: ${user.ftp}W` : null;
+      case 'RUNNING':
+        return user.functionalThresholdPace
+          ? `Threshold: ${this.formatPace(user.functionalThresholdPace)}/km`
+          : null;
+      case 'SWIMMING':
+        return user.criticalSwimSpeed
+          ? `CSS: ${this.formatPace(user.criticalSwimSpeed)}/100m`
+          : null;
     }
   }
 
   hasRef(user: User): boolean {
     switch (this.activeSport) {
-      case 'CYCLING': return !!user.ftp;
-      case 'RUNNING': return !!user.functionalThresholdPace;
-      case 'SWIMMING': return !!user.criticalSwimSpeed;
+      case 'CYCLING':
+        return !!user.ftp;
+      case 'RUNNING':
+        return !!user.functionalThresholdPace;
+      case 'SWIMMING':
+        return !!user.criticalSwimSpeed;
     }
   }
 
   getEmptyNote(): string {
     switch (this.activeSport) {
-      case 'CYCLING': return this.translate.instant('PHYSIOLOGY.EMPTY_FTP');
-      case 'RUNNING': return this.translate.instant('PHYSIOLOGY.EMPTY_THRESHOLD_PACE');
-      case 'SWIMMING': return this.translate.instant('PHYSIOLOGY.EMPTY_CSS');
+      case 'CYCLING':
+        return this.translate.instant('PHYSIOLOGY.EMPTY_FTP');
+      case 'RUNNING':
+        return this.translate.instant('PHYSIOLOGY.EMPTY_THRESHOLD_PACE');
+      case 'SWIMMING':
+        return this.translate.instant('PHYSIOLOGY.EMPTY_CSS');
     }
   }
 
@@ -291,7 +340,9 @@ export class PhysiologyPageComponent implements OnInit {
     return ((user.ftp / 0.757) * (10.8 / weight)).toFixed(1);
   }
 
-  getSportDistribution(sessions: any[]): { sport: string; count: number; pct: number }[] {
+  getSportDistribution(
+    sessions: { sportType: string }[],
+  ): { sport: string; count: number; pct: number }[] {
     const map = new Map<string, number>();
     for (const s of sessions) map.set(s.sportType, (map.get(s.sportType) ?? 0) + 1);
     return Array.from(map.entries())

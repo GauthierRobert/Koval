@@ -10,8 +10,18 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import {PacingSegment, SegmentRange} from '../../../../services/pacing.service';
-import {renderElevationChart} from './elevation-chart-renderer';
+import { PacingSegment, SegmentRange } from '../../../../services/pacing.service';
+import { renderElevationChart } from './elevation-chart-renderer';
+
+interface ElevationTooltipData {
+  distance?: string;
+  elevation?: string;
+  gradient?: string;
+  power?: string | null;
+  speed?: string | null;
+  pace?: string | null;
+  fatigue?: string;
+}
 
 @Component({
   selector: 'app-elevation-chart',
@@ -31,7 +41,7 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
   tooltipVisible = false;
   tooltipX = 0;
   tooltipY = 0;
-  tooltipData: any = {};
+  tooltipData: ElevationTooltipData = {};
 
   private ctx!: CanvasRenderingContext2D;
   private padding = { top: 30, right: 60, bottom: 40, left: 60 };
@@ -87,7 +97,9 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
     const maxDist = Math.max(...this.segments.map((s) => s.endDistance));
     const dist = ((x - p.left) / plotW) * maxDist;
 
-    const segIndex = this.segments.findIndex((s) => dist >= s.startDistance && dist <= s.endDistance);
+    const segIndex = this.segments.findIndex(
+      (s) => dist >= s.startDistance && dist <= s.endDistance,
+    );
     const seg = segIndex >= 0 ? this.segments[segIndex] : null;
     if (!seg) {
       this.tooltipVisible = false;
@@ -101,7 +113,8 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
     this.tooltipX = Math.min(x + 15, rect.width - 180);
     this.tooltipY = Math.max(event.clientY - rect.top - 80, 10);
     this.tooltipData = {
-      distance: (seg.startDistance / 1000).toFixed(1) + ' - ' + (seg.endDistance / 1000).toFixed(1) + ' km',
+      distance:
+        (seg.startDistance / 1000).toFixed(1) + ' - ' + (seg.endDistance / 1000).toFixed(1) + ' km',
       elevation: Math.round(seg.elevation) + ' m',
       gradient: seg.gradient.toFixed(1) + '%',
       power: seg.targetPower ? seg.targetPower + ' W' : null,
@@ -115,5 +128,4 @@ export class ElevationChartComponent implements OnChanges, AfterViewInit {
     this.tooltipVisible = false;
     this.segmentHovered.emit(null);
   }
-
 }

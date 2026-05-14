@@ -1,6 +1,5 @@
 @if (vm$ | async; as vm) {
   <div class="dashboard-layout" role="main">
-
     <!-- Ambient floating glow orbs -->
     <div class="ambient-orbs">
       <div class="orb orb--accent"></div>
@@ -16,19 +15,22 @@
             <span class="reminder-icon">&#9888;</span>
             <div class="reminder-info">
               <span class="reminder-title">{{ r.title }}</span>
-              <span class="reminder-meta">{{ r.scheduledAt | date:'EEE, MMM d · HH:mm' }} — {{ 'DASHBOARD.REMINDER_NO_TRAINING_LINKED' | translate }}</span>
+              <span class="reminder-meta"
+                >{{ r.scheduledAt | date: 'EEE, MMM d · HH:mm' }} —
+                {{ 'DASHBOARD.REMINDER_NO_TRAINING_LINKED' | translate }}</span
+              >
             </div>
-            <button class="reminder-action" (click)="navigateToLinkTraining(r)">{{ 'DASHBOARD.BTN_LINK_TRAINING' | translate }}</button>
+            <button class="reminder-action" (click)="navigateToLinkTraining(r)">
+              {{ 'DASHBOARD.BTN_LINK_TRAINING' | translate }}
+            </button>
           </div>
         }
       </div>
     }
 
     <div class="dashboard-body">
-
       <!-- ═══ SPLIT RAIL ═══ -->
       <div class="dash-split">
-
         <!-- Left rail: today's focus + last activity -->
         <aside class="dash-rail">
           <app-dashboard-focus-card
@@ -38,24 +40,30 @@
             [todayDate]="todayDate"
             [ftp]="vm.form.ftp ?? null"
             (openDetail)="openDetail($event)"
-            (startNow)="onStartNow($event)">
-          </app-dashboard-focus-card>
+            (startNow)="onStartNow($event)"
+          />
           @if (vm.latestFit; as latest) {
-            <app-last-activity-card [session]="latest"></app-last-activity-card>
+            <app-last-activity-card [session]="latest" />
           }
         </aside>
 
         <!-- Right main column -->
         <section class="dash-main">
-
           <!-- KPI strip -->
           <div class="kpi-strip">
             <div class="kpi-tile">
               <span class="kpi-label mono">{{ 'DASHBOARD.KPI_FITNESS' | translate }}</span>
-              <span class="kpi-value mono">{{ vm.form.ctl != null ? (vm.form.ctl | number:'1.0-0') : '—' }}</span>
+              <span class="kpi-value mono">{{
+                vm.form.ctl !== null ? (vm.form.ctl | number: '1.0-0') : '—'
+              }}</span>
               @if (hasDelta(ctlDelta(vm.pmc))) {
-                <span class="kpi-delta mono" [class.kpi-delta--up]="(ctlDelta(vm.pmc) ?? 0) > 0" [class.kpi-delta--down]="(ctlDelta(vm.pmc) ?? 0) < 0">
-                  {{ (ctlDelta(vm.pmc) ?? 0) >= 0 ? '▲' : '▼' }} {{ deltaAbs(ctlDelta(vm.pmc)) | number:'1.0-1' }} · 7d
+                <span
+                  class="kpi-delta mono"
+                  [class.kpi-delta--up]="(ctlDelta(vm.pmc) ?? 0) > 0"
+                  [class.kpi-delta--down]="(ctlDelta(vm.pmc) ?? 0) < 0"
+                >
+                  {{ (ctlDelta(vm.pmc) ?? 0) >= 0 ? '▲' : '▼' }}
+                  {{ deltaAbs(ctlDelta(vm.pmc)) | number: '1.0-1' }} · 7d
                 </span>
               } @else {
                 <span class="kpi-delta mono">— · 7d</span>
@@ -63,10 +71,17 @@
             </div>
             <div class="kpi-tile">
               <span class="kpi-label mono">{{ 'DASHBOARD.KPI_FATIGUE' | translate }}</span>
-              <span class="kpi-value mono">{{ vm.form.atl != null ? (vm.form.atl | number:'1.0-0') : '—' }}</span>
+              <span class="kpi-value mono">{{
+                vm.form.atl !== null ? (vm.form.atl | number: '1.0-0') : '—'
+              }}</span>
               @if (hasDelta(atlDelta(vm.pmc))) {
-                <span class="kpi-delta mono" [class.kpi-delta--up]="(atlDelta(vm.pmc) ?? 0) < 0" [class.kpi-delta--down]="(atlDelta(vm.pmc) ?? 0) > 0">
-                  {{ (atlDelta(vm.pmc) ?? 0) >= 0 ? '▲' : '▼' }} {{ deltaAbs(atlDelta(vm.pmc)) | number:'1.0-1' }} · 7d
+                <span
+                  class="kpi-delta mono"
+                  [class.kpi-delta--up]="(atlDelta(vm.pmc) ?? 0) < 0"
+                  [class.kpi-delta--down]="(atlDelta(vm.pmc) ?? 0) > 0"
+                >
+                  {{ (atlDelta(vm.pmc) ?? 0) >= 0 ? '▲' : '▼' }}
+                  {{ deltaAbs(atlDelta(vm.pmc)) | number: '1.0-1' }} · 7d
                 </span>
               } @else {
                 <span class="kpi-delta mono">— · 7d</span>
@@ -75,31 +90,42 @@
             <div class="kpi-tile">
               <span class="kpi-label mono">{{ 'DASHBOARD.KPI_FORM' | translate }}</span>
               <span class="kpi-value kpi-value--tsb mono" [ngClass]="tsbClass(vm.form.tsb)">
-                @if (vm.form.tsb != null) {
-                  {{ (vm.form.tsb > 0 ? '+' : '') }}{{ vm.form.tsb | number:'1.0-0' }}
-                } @else { — }
+                @if (vm.form.tsb !== null) {
+                  {{ vm.form.tsb > 0 ? '+' : '' }}{{ vm.form.tsb | number: '1.0-0' }}
+                } @else {
+                  —
+                }
               </span>
-              <span class="kpi-delta kpi-delta--form mono">{{ tsbLabel(vm.form.tsb) | translate }}</span>
+              <span class="kpi-delta kpi-delta--form mono">{{
+                tsbLabel(vm.form.tsb) | translate
+              }}</span>
             </div>
             <div class="kpi-tile">
               <span class="kpi-label mono">{{ 'DASHBOARD.KPI_RAMP' | translate }}</span>
               <span class="kpi-value mono">
-                @if (rampRate(vm.pmc) != null) {
-                  {{ (rampRate(vm.pmc) ?? 0) >= 0 ? '+' : '' }}{{ rampRate(vm.pmc) | number:'1.0-0' }}<small>%</small>
-                } @else { — }
+                @if (rampRate(vm.pmc) !== null) {
+                  {{ (rampRate(vm.pmc) ?? 0) >= 0 ? '+' : ''
+                  }}{{ rampRate(vm.pmc) | number: '1.0-0' }}<small>%</small>
+                } @else {
+                  —
+                }
               </span>
               <span class="kpi-delta mono">vs 28d avg</span>
             </div>
             <div class="kpi-tile">
               <span class="kpi-label mono">{{ 'DASHBOARD.KPI_COMPLIANCE' | translate }}</span>
-              <span class="kpi-value mono">{{ compliancePct(vm) | number:'1.0-0' }}<small>%</small></span>
-              <span class="kpi-delta kpi-delta--up mono">{{ 'DASHBOARD.KPI_COMPLIANCE_META' | translate: { done: complianceStats(vm).done, total: complianceStats(vm).total } }}</span>
+              <span class="kpi-value mono"
+                >{{ compliancePct(vm) | number: '1.0-0' }}<small>%</small></span
+              >
+              <span class="kpi-delta kpi-delta--up mono">{{
+                'DASHBOARD.KPI_COMPLIANCE_META'
+                  | translate: { done: complianceStats(vm).done, total: complianceStats(vm).total }
+              }}</span>
             </div>
           </div>
 
           <!-- Volume chart + 7-day sport mix (side-by-side on desktop, 3/5 · 2/5) -->
           <div class="volume-mix-row">
-
             <!-- Volume chart -->
             <div class="chart-card glass">
               <div class="chart-hd">
@@ -114,14 +140,32 @@
                     <span><span class="legend-dot legend-dot--swim"></span>Swim</span>
                   </div>
                   <div class="chart-tabs mono">
-                    <button class="chart-tab" [class.active]="volumeMetric === 'time'" (click)="volumeMetric = 'time'">Time</button>
-                    <button class="chart-tab" [class.active]="volumeMetric === 'tss'" (click)="volumeMetric = 'tss'">TSS</button>
-                    <button class="chart-tab" [class.active]="volumeMetric === 'distance'" (click)="volumeMetric = 'distance'">Dist</button>
+                    <button
+                      class="chart-tab"
+                      [class.active]="volumeMetric === 'time'"
+                      (click)="volumeMetric = 'time'"
+                    >
+                      Time
+                    </button>
+                    <button
+                      class="chart-tab"
+                      [class.active]="volumeMetric === 'tss'"
+                      (click)="volumeMetric = 'tss'"
+                    >
+                      TSS
+                    </button>
+                    <button
+                      class="chart-tab"
+                      [class.active]="volumeMetric === 'distance'"
+                      (click)="volumeMetric = 'distance'"
+                    >
+                      Dist
+                    </button>
                   </div>
                 </div>
               </div>
               <div class="chart-body">
-                <app-dashboard-volume-chart [data]="vm.volume" [metric]="volumeMetric"></app-dashboard-volume-chart>
+                <app-dashboard-volume-chart [data]="vm.volume" [metric]="volumeMetric" />
               </div>
             </div>
 
@@ -129,11 +173,15 @@
             <div class="mix-tile glass">
               <div class="mix-head">
                 <span class="eyebrow mono">{{ 'DASHBOARD.MIX_LABEL' | translate }}</span>
-                @if (weekTrendDelta(vm.weekMetrics) != null) {
-                  <span class="mix-delta mono"
-                        [class.mix-delta--up]="(weekTrendDelta(vm.weekMetrics) ?? 0) >= 0"
-                        [class.mix-delta--down]="(weekTrendDelta(vm.weekMetrics) ?? 0) < 0">
-                    {{ (weekTrendDelta(vm.weekMetrics) ?? 0) >= 0 ? '↑' : '↓' }}{{ deltaAbs(weekTrendDelta(vm.weekMetrics)) | number:'1.0-0' }}% {{ 'DASHBOARD.MIX_VS_AVG' | translate }}
+                @if (weekTrendDelta(vm.weekMetrics) !== null) {
+                  <span
+                    class="mix-delta mono"
+                    [class.mix-delta--up]="(weekTrendDelta(vm.weekMetrics) ?? 0) >= 0"
+                    [class.mix-delta--down]="(weekTrendDelta(vm.weekMetrics) ?? 0) < 0"
+                  >
+                    {{ (weekTrendDelta(vm.weekMetrics) ?? 0) >= 0 ? '↑' : '↓'
+                    }}{{ deltaAbs(weekTrendDelta(vm.weekMetrics)) | number: '1.0-0' }}%
+                    {{ 'DASHBOARD.MIX_VS_AVG' | translate }}
                   </span>
                 }
               </div>
@@ -142,18 +190,23 @@
                 <div class="mix-body">
                   <div class="mix-donut" [attr.aria-label]="'7-day sport distribution'">
                     <svg viewBox="0 0 42 42" class="donut-svg">
-                      <circle class="donut-track" cx="21" cy="21" r="15.915"></circle>
+                      <circle class="donut-track" cx="21" cy="21" r="15.915" />
                       @for (seg of donutSegments(vm.weekMetrics); track seg.sport) {
                         <circle
                           class="donut-segment"
                           [class]="'donut-segment--' + seg.sport.toLowerCase()"
-                          cx="21" cy="21" r="15.915"
+                          cx="21"
+                          cy="21"
+                          r="15.915"
                           [attr.stroke-dasharray]="seg.dashArray"
-                          [attr.stroke-dashoffset]="seg.dashOffset"></circle>
+                          [attr.stroke-dashoffset]="seg.dashOffset"
+                        />
                       }
                     </svg>
                     <div class="donut-center">
-                      <span class="donut-total mono">{{ formatDuration(totalWeekSeconds(vm.weekMetrics)) }}</span>
+                      <span class="donut-total mono">{{
+                        formatDuration(totalWeekSeconds(vm.weekMetrics))
+                      }}</span>
                       <span class="donut-label mono">{{ 'DASHBOARD.MIX_TOTAL' | translate }}</span>
                     </div>
                   </div>
@@ -163,8 +216,12 @@
                       <div class="mix-row" [class.dim-row]="s.sessionCount === 0">
                         <span class="mix-dot" [class]="'mix-dot--' + s.sport.toLowerCase()"></span>
                         <span class="mix-name mono">{{ sportLabel(s.sport) | translate }}</span>
-                        <span class="mix-val mono">{{ s.sessionCount > 0 ? formatDuration(s.durationSeconds) : '—' }}</span>
-                        <span class="mix-pct mono">{{ mixPercent(s, vm.weekMetrics) | number:'1.0-0' }}%</span>
+                        <span class="mix-val mono">{{
+                          s.sessionCount > 0 ? formatDuration(s.durationSeconds) : '—'
+                        }}</span>
+                        <span class="mix-pct mono"
+                          >{{ mixPercent(s, vm.weekMetrics) | number: '1.0-0' }}%</span
+                        >
                       </div>
                     }
                   </div>
@@ -176,11 +233,9 @@
           </div>
 
           <!-- Clubs -->
-          <app-dashboard-club-cards></app-dashboard-club-cards>
-
+          <app-dashboard-club-cards />
         </section>
       </div>
-
     </div>
   </div>
 } @else {
@@ -205,10 +260,19 @@
             <div class="skeleton skeleton-block skeleton-kpi" aria-hidden="true"></div>
           </div>
           <div class="volume-mix-row">
-            <div class="skeleton skeleton-block skeleton-block--xl skeleton-chart-lg" aria-hidden="true"></div>
-            <div class="skeleton skeleton-block skeleton-block--xl skeleton-mix" aria-hidden="true"></div>
+            <div
+              class="skeleton skeleton-block skeleton-block--xl skeleton-chart-lg"
+              aria-hidden="true"
+            ></div>
+            <div
+              class="skeleton skeleton-block skeleton-block--xl skeleton-mix"
+              aria-hidden="true"
+            ></div>
           </div>
-          <div class="skeleton skeleton-block skeleton-block--xl skeleton-chart-sm" aria-hidden="true"></div>
+          <div
+            class="skeleton skeleton-block skeleton-block--xl skeleton-chart-sm"
+            aria-hidden="true"
+          ></div>
         </section>
       </div>
     </div>
@@ -219,5 +283,5 @@
   [workout]="selectedScheduledWorkout"
   (closed)="onDetailClosed()"
   (started)="onDetailStarted()"
-  (statusChanged)="onDetailStatusChanged()">
-</app-workout-detail-modal>
+  (statusChanged)="onDetailStatusChanged()"
+/>

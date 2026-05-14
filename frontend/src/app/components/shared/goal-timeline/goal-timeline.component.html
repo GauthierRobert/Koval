@@ -23,7 +23,8 @@
     (pointerdown)="onPointerDown($event)"
     (pointermove)="onPointerMove($event)"
     (pointerup)="onPointerUp($event)"
-    (pointercancel)="onPointerCancel($event)">
+    (pointercancel)="onPointerCancel($event)"
+  >
     <div class="rm-axis">
       <div class="rm-axis-spacer"></div>
       <div class="rm-axis-track" #trackRef>
@@ -45,7 +46,7 @@
       @for (lane of lanes; track lane.key) {
         <div class="rm-row">
           <div class="rm-lane-lbl">
-            <app-sport-icon [sport]="lane.icon" [size]="14"></app-sport-icon>
+            <app-sport-icon [sport]="lane.icon" [size]="14" />
             <span>{{ lane.label }}</span>
           </div>
           <div class="rm-lane">
@@ -60,7 +61,8 @@
                 [attr.data-status]="m._statusKey"
                 [style.left.%]="m._x"
                 (click)="onMarkerClick(m)"
-                [title]="m.title">
+                [title]="m.title"
+              >
                 <div class="rm-dot">
                   <span>{{ m._statusLabel }}</span>
                 </div>
@@ -69,7 +71,7 @@
                   <div class="rm-card-name">{{ m.title }}</div>
                   <div class="rm-card-date">{{ m._dateShort }}</div>
                   @if (cardFooterTpl(); as tpl) {
-                    <ng-container *ngTemplateOutlet="tpl; context: {$implicit: m}"></ng-container>
+                    <ng-container *ngTemplateOutlet="tpl; context: { $implicit: m }" />
                   }
                 </div>
               </button>

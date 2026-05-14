@@ -2,21 +2,46 @@
   <div class="page-header">
     <h1>{{ 'ANALYTICS.PAGE_TITLE' | translate }}</h1>
     <div class="date-filters">
-      <input data-testid="analytics-date-from" type="date" [(ngModel)]="dateFrom" (change)="loadData()" />
+      <input
+        data-testid="analytics-date-from"
+        type="date"
+        [(ngModel)]="dateFrom"
+        (change)="loadData()"
+      />
       <span class="date-sep">—</span>
-      <input data-testid="analytics-date-to" type="date" [(ngModel)]="dateTo" (change)="loadData()" />
+      <input
+        data-testid="analytics-date-to"
+        type="date"
+        [(ngModel)]="dateTo"
+        (change)="loadData()"
+      />
     </div>
   </div>
 
   <!-- Tabs -->
   <div class="tabs">
-    <button data-testid="tab-power-curve" class="tab" [class.active]="activeTab === 'power-curve'" (click)="setTab('power-curve')">
+    <button
+      data-testid="tab-power-curve"
+      class="tab"
+      [class.active]="activeTab === 'power-curve'"
+      (click)="setTab('power-curve')"
+    >
       {{ 'ANALYTICS.TAB_POWER_CURVE' | translate }}
     </button>
-    <button data-testid="tab-volume" class="tab" [class.active]="activeTab === 'volume'" (click)="setTab('volume')">
+    <button
+      data-testid="tab-volume"
+      class="tab"
+      [class.active]="activeTab === 'volume'"
+      (click)="setTab('volume')"
+    >
       {{ 'ANALYTICS.TAB_VOLUME' | translate }}
     </button>
-    <button data-testid="tab-records" class="tab" [class.active]="activeTab === 'records'" (click)="setTab('records')">
+    <button
+      data-testid="tab-records"
+      class="tab"
+      [class.active]="activeTab === 'records'"
+      (click)="setTab('records')"
+    >
       {{ 'ANALYTICS.TAB_RECORDS' | translate }}
     </button>
   </div>
@@ -26,12 +51,12 @@
     <div class="tab-content">
       @if (powerCurve$ | async; as data) {
         @if (powerCurveEntries(data).length === 0) {
-          <div class="empty-state">
-            <h3>{{ 'ANALYTICS.NO_POWER_DATA' | translate }}</h3>
-            <p>{{ 'ANALYTICS.NO_POWER_DATA_DESC' | translate }}</p>
-          </div>
+          <app-empty-state
+            [title]="'ANALYTICS.NO_POWER_DATA' | translate"
+            [caption]="'ANALYTICS.NO_POWER_DATA_DESC' | translate"
+          />
         } @else {
-          <app-power-curve-chart [data]="data"></app-power-curve-chart>
+          <app-power-curve-chart [data]="data" />
           <!-- Fatigue Resistance Index card -->
           @if (computeFri(data); as fri) {
             <div class="fri-card glass">
@@ -39,10 +64,18 @@
                 <span class="fri-label">{{ 'ANALYTICS.FRI_TITLE' | translate }}</span>
                 <span class="fri-badge" [style.background]="fri.color">
                   @switch (fri.level) {
-                    @case ('excellent') { {{ 'ANALYTICS.FRI_EXCELLENT_LABEL' | translate }} }
-                    @case ('good') { {{ 'ANALYTICS.FRI_GOOD_LABEL' | translate }} }
-                    @case ('moderate') { {{ 'ANALYTICS.FRI_MODERATE_LABEL' | translate }} }
-                    @case ('developing') { {{ 'ANALYTICS.FRI_DEVELOPING_LABEL' | translate }} }
+                    @case ('excellent') {
+                      {{ 'ANALYTICS.FRI_EXCELLENT_LABEL' | translate }}
+                    }
+                    @case ('good') {
+                      {{ 'ANALYTICS.FRI_GOOD_LABEL' | translate }}
+                    }
+                    @case ('moderate') {
+                      {{ 'ANALYTICS.FRI_MODERATE_LABEL' | translate }}
+                    }
+                    @case ('developing') {
+                      {{ 'ANALYTICS.FRI_DEVELOPING_LABEL' | translate }}
+                    }
                   }
                 </span>
               </div>
@@ -54,10 +87,18 @@
               </div>
               <div class="fri-interpretation">
                 @switch (fri.level) {
-                  @case ('excellent') { {{ 'ANALYTICS.FRI_EXCELLENT' | translate }} }
-                  @case ('good') { {{ 'ANALYTICS.FRI_GOOD' | translate }} }
-                  @case ('moderate') { {{ 'ANALYTICS.FRI_MODERATE' | translate }} }
-                  @case ('developing') { {{ 'ANALYTICS.FRI_DEVELOPING' | translate }} }
+                  @case ('excellent') {
+                    {{ 'ANALYTICS.FRI_EXCELLENT' | translate }}
+                  }
+                  @case ('good') {
+                    {{ 'ANALYTICS.FRI_GOOD' | translate }}
+                  }
+                  @case ('moderate') {
+                    {{ 'ANALYTICS.FRI_MODERATE' | translate }}
+                  }
+                  @case ('developing') {
+                    {{ 'ANALYTICS.FRI_DEVELOPING' | translate }}
+                  }
                 }
               </div>
             </div>
@@ -76,25 +117,45 @@
   @if (activeTab === 'volume') {
     <div class="tab-content">
       <div class="volume-controls">
-        <select data-testid="volume-group-by" [(ngModel)]="volumeGroupBy" (ngModelChange)="loadData()">
+        <select
+          data-testid="volume-group-by"
+          [(ngModel)]="volumeGroupBy"
+          (ngModelChange)="loadData()"
+        >
           <option value="week">{{ 'ANALYTICS.BY_WEEK' | translate }}</option>
           <option value="month">{{ 'ANALYTICS.BY_MONTH' | translate }}</option>
         </select>
         <div class="metric-toggle">
-          <button class="toggle-btn" [class.active]="volumeMetric === 'time'" (click)="volumeMetric = 'time'">Time</button>
-          <button class="toggle-btn" [class.active]="volumeMetric === 'tss'" (click)="volumeMetric = 'tss'">TSS</button>
-          <button class="toggle-btn" [class.active]="volumeMetric === 'distance'" (click)="volumeMetric = 'distance'">Distance</button>
+          <button
+            class="toggle-btn"
+            [class.active]="volumeMetric === 'time'"
+            (click)="volumeMetric = 'time'"
+          >
+            Time
+          </button>
+          <button
+            class="toggle-btn"
+            [class.active]="volumeMetric === 'tss'"
+            (click)="volumeMetric = 'tss'"
+          >
+            TSS
+          </button>
+          <button
+            class="toggle-btn"
+            [class.active]="volumeMetric === 'distance'"
+            (click)="volumeMetric = 'distance'"
+          >
+            Distance
+          </button>
         </div>
       </div>
       @if (volume$ | async; as entries) {
         @if (entries.length === 0) {
-          <div class="empty-state">
-            <h3>{{ 'ANALYTICS.NO_VOLUME_DATA' | translate }}</h3>
-          </div>
+          <app-empty-state [title]="'ANALYTICS.NO_VOLUME_DATA' | translate" />
         } @else {
           <div class="chart-container glass">
             <h3>{{ 'ANALYTICS.VOLUME_TITLE' | translate }}</h3>
-            <app-dashboard-volume-chart [data]="entries" [metric]="volumeMetric"></app-dashboard-volume-chart>
+            <app-dashboard-volume-chart [data]="entries" [metric]="volumeMetric" />
           </div>
 
           <!-- Volume stats table -->
@@ -112,7 +173,7 @@
                 @for (entry of entries; track entry.period) {
                   <tr>
                     <td>{{ entry.period }}</td>
-                    <td>{{ entry.totalTss | number:'1.0-0' }}</td>
+                    <td>{{ entry.totalTss | number: '1.0-0' }}</td>
                     <td>{{ formatDuration(entry.totalDurationSeconds) }}</td>
                     <td>{{ formatDistance(entry.totalDistanceMeters) }}</td>
                   </tr>
@@ -125,7 +186,7 @@
         <div class="skeleton-stack" aria-busy="true" aria-hidden="true">
           <div class="skeleton skeleton-block skeleton-block--xl skeleton-chart"></div>
           <div class="skeleton-panel">
-            @for (r of [0,1,2,3,4,5,6,7]; track r) {
+            @for (r of [0, 1, 2, 3, 4, 5, 6, 7]; track r) {
               <div class="skeleton-row">
                 <div class="skeleton skeleton-cell"></div>
                 <div class="skeleton skeleton-cell"></div>
@@ -144,10 +205,10 @@
     <div class="tab-content">
       @if (personalRecords$ | async; as records) {
         @if (recordEntries(records).length === 0) {
-          <div class="empty-state">
-            <h3>{{ 'ANALYTICS.NO_RECORDS' | translate }}</h3>
-            <p>{{ 'ANALYTICS.NO_RECORDS_DESC' | translate }}</p>
-          </div>
+          <app-empty-state
+            [title]="'ANALYTICS.NO_RECORDS' | translate"
+            [caption]="'ANALYTICS.NO_RECORDS_DESC' | translate"
+          />
         } @else {
           <div class="records-grid">
             @for (entry of recordEntries(records); track entry.duration) {
@@ -160,7 +221,7 @@
         }
       } @else {
         <div class="records-grid" aria-busy="true" aria-hidden="true">
-          @for (r of [0,1,2,3,4,5,6,7]; track r) {
+          @for (r of [0, 1, 2, 3, 4, 5, 6, 7]; track r) {
             <div class="skeleton skeleton-block skeleton-record-card"></div>
           }
         </div>

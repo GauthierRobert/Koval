@@ -10,8 +10,8 @@ import {
   OnInit,
   Output,
 } from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {TranslateModule} from '@ngx-translate/core';
+import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-zombie-game',
@@ -22,8 +22,8 @@ import {TranslateModule} from '@ngx-translate/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ZombieGameComponent implements OnInit, OnDestroy {
-  @Input() targetPower: number = 200;
-  @Input() currentPower: number = 0;
+  @Input() targetPower = 200;
+  @Input() currentPower = 0;
   @Output() gameEnded = new EventEmitter<void>();
 
   private readonly ngZone = inject(NgZone);
@@ -57,7 +57,7 @@ export class ZombieGameComponent implements OnInit, OnDestroy {
     this.updateSystem(dt);
     this.cdr.markForCheck();
     this.animationId = requestAnimationFrame(this.gameLoop);
-  }
+  };
 
   private updateSystem(dt: number) {
     if (this.lives <= 0) return;
@@ -70,7 +70,7 @@ export class ZombieGameComponent implements OnInit, OnDestroy {
     const powerRatio = this.currentPower / this.targetPower;
     this.isTooFast = powerRatio > 1.15;
 
-    let zombieSpeed = 0;
+    let zombieSpeed: number;
     if (powerRatio < 0.85) {
       zombieSpeed = 150; // Zombie sprints
     } else if (powerRatio < 0.95) {

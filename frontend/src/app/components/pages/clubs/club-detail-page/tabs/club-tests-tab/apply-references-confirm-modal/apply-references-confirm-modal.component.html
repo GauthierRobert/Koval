@@ -1,8 +1,8 @@
-<div class="modal-backdrop" (click)="cancel.emit()">
+<div class="modal-backdrop" (click)="cancelled.emit()">
   <div class="modal glass" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
     <header class="modal-header">
       <h3>{{ 'CLUB_TESTS.APPLY_REFS_TITLE' | translate }}</h3>
-      <button class="close-btn" (click)="cancel.emit()" aria-label="close">×</button>
+      <button class="close-btn" (click)="cancelled.emit()" aria-label="close">×</button>
     </header>
 
     <div class="modal-body">
@@ -13,18 +13,27 @@
           @let isComputable = computedFor(r.id) !== undefined;
           <li class="rule-item" [class.is-disabled]="!isComputable">
             <label class="rule-label">
-              <input type="checkbox"
-                     class="rule-checkbox"
-                     [checked]="isSelected(r.id)"
-                     [disabled]="!isComputable"
-                     (change)="toggle(r.id)" />
+              <input
+                type="checkbox"
+                class="rule-checkbox"
+                [checked]="isSelected(r.id)"
+                [disabled]="!isComputable"
+                (change)="toggle(r.id)"
+              />
               <div class="rule-text">
-                <span class="rule-name">{{ r.label || (targetLabelKey(r.target) | translate) }}</span>
-                <span class="rule-target">→ {{ targetLabelKey(r.target) | translate }}{{ r.customKey ? ' (' + r.customKey + ')' : '' }}</span>
+                <span class="rule-name">{{
+                  r.label || (targetLabelKey(r.target) | translate)
+                }}</span>
+                <span class="rule-target"
+                  >→ {{ targetLabelKey(r.target) | translate
+                  }}{{ r.customKey ? ' (' + r.customKey + ')' : '' }}</span
+                >
               </div>
               <span class="rule-value" [class.rule-value--missing]="!isComputable">
                 @if (isComputable) {
-                  <span class="rule-value__num mono">{{ computedFor(r.id) | number:'1.0-1' }}</span>
+                  <span class="rule-value__num mono">{{
+                    computedFor(r.id) | number: '1.0-1'
+                  }}</span>
                   <span class="rule-value__unit">{{ r.unit }}</span>
                 } @else {
                   {{ 'CLUB_TESTS.NOT_COMPUTABLE' | translate }}
@@ -37,11 +46,15 @@
     </div>
 
     <footer class="modal-footer">
-      <button class="btn-secondary" (click)="cancel.emit()">
+      <button class="btn-secondary" (click)="cancelled.emit()">
         {{ 'CLUB_TESTS.CANCEL' | translate }}
       </button>
-      <button class="btn-primary" (click)="apply()" [disabled]="selected.size === 0"
-              data-testid="btn-confirm-apply">
+      <button
+        class="btn-primary"
+        (click)="apply()"
+        [disabled]="selected.size === 0"
+        data-testid="btn-confirm-apply"
+      >
         {{ 'CLUB_TESTS.APPLY' | translate }}
       </button>
     </footer>

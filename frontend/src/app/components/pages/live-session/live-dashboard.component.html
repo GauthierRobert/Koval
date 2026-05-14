@@ -1,19 +1,23 @@
 @if (state$ | async; as state) {
   <div class="live-container">
-  <div class="top-bar">
-    <div class="workout-title">{{ state.training?.title }}</div>
-    <div class="top-controls">
-      <button class="stop-btn" (click)="stopWorkout()">{{ 'LIVE_SESSION.STOP_WORKOUT_BTN' | translate }}</button>
+    <div class="top-bar">
+      <div class="workout-title">{{ state.training?.title }}</div>
+      <div class="top-controls">
+        <button class="stop-btn" (click)="stopWorkout()">
+          {{ 'LIVE_SESSION.STOP_WORKOUT_BTN' | translate }}
+        </button>
+      </div>
     </div>
-  </div>
 
-  <div class="metrics-grid">
+    <div class="metrics-grid">
       <!-- Power Block -->
       <div class="metric-card power-block main-block">
         <div class="header">
           <span class="label">{{ 'LIVE_SESSION.METRIC_TARGET' | translate }}</span>
-          <span class="target-value">{{ calculateIntensityValue(getCurrentTargetIntensity(state), state.training) }}{{
-            getSportUnit(state.training) }}</span>
+          <span class="target-value"
+            >{{ calculateIntensityValue(getCurrentTargetIntensity(state), state.training)
+            }}{{ getSportUnit(state.training) }}</span
+          >
         </div>
         <div class="main-display">
           <div class="live-value" [style.color]="getPowerColor(state)">
@@ -24,20 +28,27 @@
         <div class="footer-stats">
           <div class="stat">
             <span class="stat-label">{{ 'LIVE_SESSION.STAT_SESS_AVG' | translate }}</span>
-            <span class="stat-value">{{ state.training?.sportType === 'CYCLING' ? state.averages.power : '---' }}{{
-              getSportUnit(state.training) }}</span>
+            <span class="stat-value"
+              >{{ state.training?.sportType === 'CYCLING' ? state.averages.power : '---'
+              }}{{ getSportUnit(state.training) }}</span
+            >
           </div>
           <div class="stat">
             <span class="stat-label">{{ 'LIVE_SESSION.STAT_BLOCK_AVG' | translate }}</span>
-            <span class="stat-value highlight">{{ state.training?.sportType === 'CYCLING' ?
-              state.currentBlockAverages.power : '---' }}{{ getSportUnit(state.training) }}</span>
+            <span class="stat-value highlight"
+              >{{
+                state.training?.sportType === 'CYCLING' ? state.currentBlockAverages.power : '---'
+              }}{{ getSportUnit(state.training) }}</span
+            >
           </div>
         </div>
       </div>
 
       <!-- Cadence Block -->
       <div class="metric-card secondary-block">
-        <div class="header"><span class="label">{{ 'LIVE_SESSION.METRIC_CADENCE' | translate }}</span></div>
+        <div class="header">
+          <span class="label">{{ 'LIVE_SESSION.METRIC_CADENCE' | translate }}</span>
+        </div>
         <div class="main-display">
           <div class="value">{{ (metrics$ | async)?.cadence }}</div>
           <div class="unit">RPM</div>
@@ -56,7 +67,9 @@
 
       <!-- Heart Rate Block -->
       <div class="metric-card secondary-block">
-        <div class="header"><span class="label">{{ 'LIVE_SESSION.METRIC_HEART_RATE' | translate }}</span></div>
+        <div class="header">
+          <span class="label">{{ 'LIVE_SESSION.METRIC_HEART_RATE' | translate }}</span>
+        </div>
         <div class="main-display">
           <div class="value hr">{{ (metrics$ | async)?.heartRate || '--' }}</div>
           <div class="unit">BPM</div>
@@ -75,19 +88,23 @@
 
       <!-- Speed Block -->
       <div class="metric-card secondary-block">
-        <div class="header"><span class="label">{{ 'LIVE_SESSION.METRIC_SPEED' | translate }}</span></div>
+        <div class="header">
+          <span class="label">{{ 'LIVE_SESSION.METRIC_SPEED' | translate }}</span>
+        </div>
         <div class="main-display">
-          <div class="value">{{ (metrics$ | async)?.speed | number:'1.1-1' }}</div>
+          <div class="value">{{ (metrics$ | async)?.speed | number: '1.1-1' }}</div>
           <div class="unit">{{ 'LIVE_SESSION.METRIC_SPEED_UNIT' | translate }}</div>
         </div>
         <div class="footer-stats">
           <div class="stat">
             <span class="stat-label">{{ 'LIVE_SESSION.STAT_SESS' | translate }}</span>
-            <span class="stat-value">{{ state.averages.speed | number:'1.1-1' }}</span>
+            <span class="stat-value">{{ state.averages.speed | number: '1.1-1' }}</span>
           </div>
           <div class="stat">
             <span class="stat-label">{{ 'LIVE_SESSION.STAT_BLOCK' | translate }}</span>
-            <span class="stat-value highlight">{{ state.currentBlockAverages.speed | number:'1.1-1' }}</span>
+            <span class="stat-value highlight">{{
+              state.currentBlockAverages.speed | number: '1.1-1'
+            }}</span>
           </div>
         </div>
       </div>
@@ -98,15 +115,17 @@
       <div class="block-info">
         <div class="current-block">
           <div class="block-tag">{{ 'LIVE_SESSION.BLOCK_TAG_CURRENT' | translate }}</div>
-          <div class="block-label">{{ state.training?.blocks?.[state.currentBlockIndex]?.label }}</div>
+          <div class="block-label">
+            {{ state.training?.blocks?.[state.currentBlockIndex]?.label }}
+          </div>
         </div>
         <div class="timer">{{ formatTime(state.remainingBlockSeconds) }}</div>
         @if (state.training?.blocks?.[state.currentBlockIndex + 1]; as next) {
-        <div class="next-block">
-          <div class="block-tag">{{ 'LIVE_SESSION.BLOCK_TAG_UP_NEXT' | translate }}</div>
-          <div class="block-label">{{ next.label }} ({{ formatTime(next.durationSeconds) }})</div>
-        </div>
-      }
+          <div class="next-block">
+            <div class="block-tag">{{ 'LIVE_SESSION.BLOCK_TAG_UP_NEXT' | translate }}</div>
+            <div class="block-label">{{ next.label }} ({{ formatTime(next.durationSeconds) }})</div>
+          </div>
+        }
       </div>
       <div class="progress-bar-container">
         <div class="progress-bar" [style.width.%]="getBlockProgress(state)"></div>
@@ -120,44 +139,67 @@
     <div class="graph-area">
       <canvas #canvas [hidden]="showGame"></canvas>
       @if (showGame && (metrics$ | async); as metrics) {
-        <app-zombie-game [targetPower]="getTargetPower(state)"
-          [currentPower]="metrics.power" (gameEnded)="showGame = false">
-        </app-zombie-game>
+        <app-zombie-game
+          [targetPower]="getTargetPower(state)"
+          [currentPower]="metrics.power"
+          (gameEnded)="showGame = false"
+        />
       }
     </div>
 
     <!-- Controls -->
     <div class="controls">
       <button class="control-btn secondary" (click)="togglePip(state)">
-        {{ isPipActive ? ('LIVE_SESSION.BTN_CLOSE_POP_OUT' | translate) : ('LIVE_SESSION.BTN_POP_OUT_METRICS' | translate) }}
+        {{
+          isPipActive
+            ? ('LIVE_SESSION.BTN_CLOSE_POP_OUT' | translate)
+            : ('LIVE_SESSION.BTN_POP_OUT_METRICS' | translate)
+        }}
       </button>
       <button class="control-btn secondary" (click)="toggleGame()">
-        {{ showGame ? ('LIVE_SESSION.BTN_HIDE_GAME' | translate) : ('LIVE_SESSION.BTN_START_MINI_GAME' | translate) }}
+        {{
+          showGame
+            ? ('LIVE_SESSION.BTN_HIDE_GAME' | translate)
+            : ('LIVE_SESSION.BTN_START_MINI_GAME' | translate)
+        }}
       </button>
-      <button class="control-btn secondary" (click)="skipBlock()">{{ 'LIVE_SESSION.BTN_SKIP_STEP' | translate }}</button>
+      <button class="control-btn secondary" (click)="skipBlock()">
+        {{ 'LIVE_SESSION.BTN_SKIP_STEP' | translate }}
+      </button>
       <button class="control-btn primary" (click)="togglePause(state)">
-        {{ state.isPaused ? (state.elapsedTotalSeconds === 0 ? ('LIVE_SESSION.BTN_START_WORKOUT' | translate) : ('LIVE_SESSION.BTN_RESUME' | translate)) : ('LIVE_SESSION.BTN_PAUSE' | translate) }}
+        {{
+          state.isPaused
+            ? state.elapsedTotalSeconds === 0
+              ? ('LIVE_SESSION.BTN_START_WORKOUT' | translate)
+              : ('LIVE_SESSION.BTN_RESUME' | translate)
+            : ('LIVE_SESSION.BTN_PAUSE' | translate)
+        }}
       </button>
     </div>
-  <!-- Exit Confirmation Overlay -->
-  @if (showExitConfirm) {
-    <div class="summary-overlay top-center">
-      <div class="summary-card confirmation-card">
-        <h2>{{ 'LIVE_SESSION.STOP_CONFIRM_TITLE' | translate }}</h2>
-        <p>{{ 'LIVE_SESSION.STOP_CONFIRM_DESC' | translate }}</p>
-        <div class="confirm-actions">
-          <button class="control-btn secondary" (click)="cancelExit()">{{ 'LIVE_SESSION.BTN_RESUME_CONFIRM' | translate }}</button>
-          <button class="control-btn primary" (click)="saveAndSync()">{{ 'LIVE_SESSION.BTN_SAVE_SYNC' | translate }}</button>
-          <button class="control-btn danger" (click)="discardSession()">{{ 'LIVE_SESSION.BTN_DISCARD' | translate }}</button>
+    <!-- Exit Confirmation Overlay -->
+    @if (showExitConfirm) {
+      <div class="summary-overlay top-center">
+        <div class="summary-card confirmation-card">
+          <h2>{{ 'LIVE_SESSION.STOP_CONFIRM_TITLE' | translate }}</h2>
+          <p>{{ 'LIVE_SESSION.STOP_CONFIRM_DESC' | translate }}</p>
+          <div class="confirm-actions">
+            <button class="control-btn secondary" (click)="cancelExit()">
+              {{ 'LIVE_SESSION.BTN_RESUME_CONFIRM' | translate }}
+            </button>
+            <button class="control-btn primary" (click)="saveAndSync()">
+              {{ 'LIVE_SESSION.BTN_SAVE_SYNC' | translate }}
+            </button>
+            <button class="control-btn danger" (click)="discardSession()">
+              {{ 'LIVE_SESSION.BTN_DISCARD' | translate }}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  }
+    }
 
-  <!-- Session Summary Overlay -->
-  @if (state.finalSummary) {
-    <app-session-summary [summary]="state.finalSummary" (close)="closeSummary()">
-    </app-session-summary>
-  }
+    <!-- Session Summary Overlay -->
+    @if (state.finalSummary) {
+      <app-session-summary [summary]="state.finalSummary" (closed)="closeSummary()" />
+    }
   </div>
 }

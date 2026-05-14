@@ -159,8 +159,11 @@ public abstract class BaseAgentService implements TrainingAgent {
     }
 
     private void appendCoachLists(StringBuilder sb, UserContext ctx) {
-        AgentType agent = getAgentType();
-        if (agent != AgentType.COACH_MANAGEMENT && agent != AgentType.SCHEDULING) return;
+        boolean exposesCoachLists = switch (getAgentType()) {
+            case COACH_MANAGEMENT, SCHEDULING -> true;
+            case TRAINING_CREATION, ANALYSIS, CLUB_MANAGEMENT, GENERAL -> false;
+        };
+        if (!exposesCoachLists) return;
         appendNamedList(sb, "Athletes", ctx.athletes(), a -> a.id() + ":" + a.displayName());
         appendNamedList(sb, "Groups", ctx.athleteGroups(), g -> g.id() + ":" + g.name());
     }

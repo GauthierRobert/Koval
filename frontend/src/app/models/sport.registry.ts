@@ -1,4 +1,4 @@
-import {User} from './user.model';
+import { User } from './user.model';
 
 export type SportKey = 'CYCLING' | 'RUNNING' | 'SWIMMING' | 'TRIATHLON' | 'BRICK' | 'GYM';
 
@@ -20,7 +20,7 @@ export interface SportMeta {
 }
 
 const CYCLING: SportMeta = {
-  color: 'var(--success-color)',
+  color: 'var(--sport-cycling)',
   labelKey: 'SPORT.CYCLING',
   gpxDisciplines: ['bike'],
   distanceUnit: 'kilometers',
@@ -28,7 +28,7 @@ const CYCLING: SportMeta = {
 };
 
 const RUNNING: SportMeta = {
-  color: '#fb923c',
+  color: 'var(--sport-running)',
   labelKey: 'SPORT.RUNNING',
   gpxDisciplines: ['run'],
   distanceUnit: 'kilometers',
@@ -39,7 +39,7 @@ const RUNNING: SportMeta = {
 };
 
 const SWIMMING: SportMeta = {
-  color: 'var(--info-text)',
+  color: 'var(--sport-swimming)',
   labelKey: 'SPORT.SWIMMING',
   gpxDisciplines: ['swim'],
   distanceUnit: 'meters',
@@ -50,7 +50,7 @@ const SWIMMING: SportMeta = {
 };
 
 const TRIATHLON: SportMeta = {
-  color: 'var(--accent-color)',
+  color: 'var(--sport-triathlon)',
   labelKey: 'SPORT.TRIATHLON',
   gpxDisciplines: ['swim', 'bike', 'run'],
   distanceUnit: 'kilometers',

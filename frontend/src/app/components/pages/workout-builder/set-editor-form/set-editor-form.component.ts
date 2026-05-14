@@ -3,7 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { WorkoutBlock } from '../../../../models/training.model';
-import { getBlockColor as sharedGetBlockColor, formatBlockSize } from '../../../shared/block-helpers/block-helpers';
+import {
+  getBlockColor as sharedGetBlockColor,
+  formatBlockSize,
+} from '../../../shared/block-helpers/block-helpers';
 
 @Component({
   selector: 'app-set-editor-form',
@@ -21,7 +24,7 @@ export class SetEditorFormComponent {
   @Input() editSetPassiveRest = false;
   @Input() editLabel = '';
   @Input() setElements: WorkoutBlock[] = [];
-  @Input() sportType: string = 'CYCLING';
+  @Input() sportType = 'CYCLING';
 
   @Output() editSetRepsChange = new EventEmitter<number>();
   @Output() editSetNoRestChange = new EventEmitter<boolean>();

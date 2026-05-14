@@ -1,8 +1,8 @@
-<div class="modal-backdrop" (click)="cancel.emit()">
+<div class="modal-backdrop" (click)="cancelled.emit()">
   <div class="modal glass" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
     <header class="modal-header">
       <h3>{{ (isEdit ? 'CLUB_TESTS.EDIT_TEST' : 'CLUB_TESTS.NEW_TEST') | translate }}</h3>
-      <button class="close-btn" (click)="cancel.emit()" aria-label="close">×</button>
+      <button class="close-btn" (click)="cancelled.emit()" aria-label="close">×</button>
     </header>
 
     <div class="modal-body">
@@ -13,8 +13,12 @@
         @if (!isEdit) {
           <div class="form-row">
             <label>{{ 'CLUB_TESTS.PRESET_LABEL' | translate }}</label>
-            <select class="form-input" [value]="selectedPresetId"
-                    (change)="selectPresetByEvent($event)" data-testid="preset-select">
+            <select
+              class="form-input"
+              [value]="selectedPresetId"
+              (change)="selectPresetByEvent($event)"
+              data-testid="preset-select"
+            >
               <option value="">— {{ 'CLUB_TESTS.PRESET_NONE' | translate }} —</option>
               @for (p of presets$ | async; track p.id) {
                 <option [value]="p.id">{{ p.labelKey | translate }}</option>
@@ -26,18 +30,24 @@
 
         <div class="form-row">
           <label>{{ 'CLUB_TESTS.NAME' | translate }}</label>
-          <input type="text" class="form-input"
-                 [(ngModel)]="name"
-                 [placeholder]="'CLUB_TESTS.NAME_PLACEHOLDER' | translate"
-                 data-testid="input-test-name" />
+          <input
+            type="text"
+            class="form-input"
+            [(ngModel)]="name"
+            [placeholder]="'CLUB_TESTS.NAME_PLACEHOLDER' | translate"
+            data-testid="input-test-name"
+          />
         </div>
 
         <div class="form-row">
           <label>{{ 'CLUB_TESTS.DESCRIPTION' | translate }}</label>
-          <textarea class="form-input" rows="2"
-                    [(ngModel)]="description"
-                    [placeholder]="'CLUB_TESTS.DESCRIPTION_PLACEHOLDER' | translate"
-                    data-testid="input-test-desc"></textarea>
+          <textarea
+            class="form-input"
+            rows="2"
+            [(ngModel)]="description"
+            [placeholder]="'CLUB_TESTS.DESCRIPTION_PLACEHOLDER' | translate"
+            data-testid="input-test-desc"
+          ></textarea>
         </div>
       </section>
 
@@ -45,11 +55,17 @@
       <section class="form-section">
         <header class="form-section__head">
           <div>
-            <h4 class="form-section__title">{{ 'CLUB_TESTS.FORM_SECTION_SEGMENTS' | translate }}</h4>
+            <h4 class="form-section__title">
+              {{ 'CLUB_TESTS.FORM_SECTION_SEGMENTS' | translate }}
+            </h4>
             <p class="form-section__subtitle">{{ 'CLUB_TESTS.SEGMENTS_SUBTITLE' | translate }}</p>
           </div>
-          <button class="btn-secondary" (click)="addSegment()"
-                  [disabled]="hasResults" data-testid="btn-add-segment">
+          <button
+            class="btn-secondary"
+            (click)="addSegment()"
+            [disabled]="hasResults"
+            data-testid="btn-add-segment"
+          >
             + {{ 'CLUB_TESTS.ADD_SEGMENT' | translate }}
           </button>
         </header>
@@ -80,17 +96,23 @@
               </label>
               <label class="field">
                 <span class="field__label">{{ 'CLUB_TESTS.SEGMENT_DISTANCE' | translate }}</span>
-                <input type="number" class="form-input"
-                       [(ngModel)]="s.distanceMeters"
-                       [placeholder]="'CLUB_TESTS.DISTANCE_M' | translate"
-                       [disabled]="hasResults" />
+                <input
+                  type="number"
+                  class="form-input"
+                  [(ngModel)]="s.distanceMeters"
+                  [placeholder]="'CLUB_TESTS.DISTANCE_M' | translate"
+                  [disabled]="hasResults"
+                />
               </label>
               <label class="field">
                 <span class="field__label">{{ 'CLUB_TESTS.SEGMENT_DURATION' | translate }}</span>
-                <input type="number" class="form-input"
-                       [(ngModel)]="s.durationSeconds"
-                       [placeholder]="'CLUB_TESTS.DURATION_S' | translate"
-                       [disabled]="hasResults" />
+                <input
+                  type="number"
+                  class="form-input"
+                  [(ngModel)]="s.durationSeconds"
+                  [placeholder]="'CLUB_TESTS.DURATION_S' | translate"
+                  [disabled]="hasResults"
+                />
               </label>
               <label class="field">
                 <span class="field__label">{{ 'CLUB_TESTS.SEGMENT_UNIT' | translate }}</span>
@@ -101,13 +123,22 @@
                 </select>
               </label>
               @if (showAdvanced && s.id) {
-                <code class="builder-row__hint" [title]="'CLUB_TESTS.SEGMENT_VARIABLE_HINT' | translate">
+                <code
+                  class="builder-row__hint"
+                  [title]="'CLUB_TESTS.SEGMENT_VARIABLE_HINT' | translate"
+                >
                   {{ variableHint(s) }}
                 </code>
               }
             </div>
-            <button class="btn-remove" (click)="removeSegment($index)"
-                    [disabled]="hasResults" aria-label="remove">×</button>
+            <button
+              class="btn-remove"
+              (click)="removeSegment($index)"
+              [disabled]="hasResults"
+              aria-label="remove"
+            >
+              ×
+            </button>
           </div>
         }
       </section>
@@ -117,12 +148,18 @@
         <h4 class="form-section__title">{{ 'CLUB_TESTS.FORM_SECTION_RANKING' | translate }}</h4>
 
         <label class="toggle-row">
-          <input type="checkbox" class="toggle-input"
-                 [(ngModel)]="competitionMode" data-testid="input-competition" />
+          <input
+            type="checkbox"
+            class="toggle-input"
+            [(ngModel)]="competitionMode"
+            data-testid="input-competition"
+          />
           <span class="toggle-switch"></span>
           <span class="toggle-text">{{ 'CLUB_TESTS.COMPETITION_MODE' | translate }}</span>
         </label>
-        <p class="form-row__hint form-row__hint--toggle">{{ 'CLUB_TESTS.COMPETITION_MODE_HINT' | translate }}</p>
+        <p class="form-row__hint form-row__hint--toggle">
+          {{ 'CLUB_TESTS.COMPETITION_MODE_HINT' | translate }}
+        </p>
 
         @if (competitionMode) {
           <p class="form-row__hint">{{ 'CLUB_TESTS.RANKING_METRIC_HINT' | translate }}</p>
@@ -142,11 +179,15 @@
                 <option [ngValue]="null">—</option>
                 @if (rankingMetric === 'TIME_OF_SEGMENT') {
                   @for (s of segments; track s.id) {
-                    <option [ngValue]="s.id">{{ s.label || ('CLUB_TESTS.SEGMENTS' | translate) }}</option>
+                    <option [ngValue]="s.id">
+                      {{ s.label || ('CLUB_TESTS.SEGMENTS' | translate) }}
+                    </option>
                   }
                 } @else if (rankingMetric === 'COMPUTED_REFERENCE') {
                   @for (r of rules; track r.id) {
-                    <option [ngValue]="r.id">{{ r.label || (targetLabelKey(r.target) | translate) }}</option>
+                    <option [ngValue]="r.id">
+                      {{ r.label || (targetLabelKey(r.target) | translate) }}
+                    </option>
                   }
                 }
               </select>
@@ -164,13 +205,15 @@
 
       <!-- ── Reference updates (advanced) ──────────────────────── -->
       <section class="form-section form-section--advanced">
-        <header class="form-section__head form-section__head--clickable"
-                (click)="showAdvanced = !showAdvanced"
-                (keydown.enter)="showAdvanced = !showAdvanced"
-                (keydown.space)="showAdvanced = !showAdvanced; $event.preventDefault()"
-                tabindex="0"
-                role="button"
-                [attr.aria-expanded]="showAdvanced">
+        <header
+          class="form-section__head form-section__head--clickable"
+          (click)="showAdvanced = !showAdvanced"
+          (keydown.enter)="showAdvanced = !showAdvanced"
+          (keydown.space)="showAdvanced = !showAdvanced; $event.preventDefault()"
+          tabindex="0"
+          role="button"
+          [attr.aria-expanded]="showAdvanced"
+        >
           <div>
             <h4 class="form-section__title">
               <span class="chevron" [class.chevron--open]="showAdvanced" aria-hidden="true">›</span>
@@ -190,16 +233,24 @@
                 <h5 class="form-section__title form-section__title--inner">
                   {{ 'CLUB_TESTS.FORM_SECTION_UPDATES' | translate }}
                 </h5>
-                <p class="form-section__subtitle">{{ 'CLUB_TESTS.REFERENCE_RULES_SUBTITLE' | translate }}</p>
+                <p class="form-section__subtitle">
+                  {{ 'CLUB_TESTS.REFERENCE_RULES_SUBTITLE' | translate }}
+                </p>
               </div>
-              <button class="btn-secondary" (click)="addRule()"
-                      [disabled]="hasResults" data-testid="btn-add-rule">
+              <button
+                class="btn-secondary"
+                (click)="addRule()"
+                [disabled]="hasResults"
+                data-testid="btn-add-rule"
+              >
                 + {{ 'CLUB_TESTS.ADD_RULE' | translate }}
               </button>
             </header>
 
             @if (rules.length === 0) {
-              <p class="form-section__empty">{{ 'CLUB_TESTS.REFERENCE_RULES_EMPTY' | translate }}</p>
+              <p class="form-section__empty">
+                {{ 'CLUB_TESTS.REFERENCE_RULES_EMPTY' | translate }}
+              </p>
             }
 
             @for (r of rules; track r) {
@@ -216,41 +267,66 @@
                   @if (r.target === 'CUSTOM') {
                     <label class="field">
                       <span class="field__label">{{ 'CLUB_TESTS.CUSTOM_KEY' | translate }}</span>
-                      <input type="text" class="form-input"
-                             [(ngModel)]="r.customKey"
-                             [placeholder]="'CLUB_TESTS.CUSTOM_KEY' | translate" />
+                      <input
+                        type="text"
+                        class="form-input"
+                        [(ngModel)]="r.customKey"
+                        [placeholder]="'CLUB_TESTS.CUSTOM_KEY' | translate"
+                      />
                     </label>
                   }
                   <label class="field">
                     <span class="field__label">{{ 'CLUB_TESTS.RULE_LABEL' | translate }}</span>
-                    <input type="text" class="form-input"
-                           [(ngModel)]="r.label"
-                           [placeholder]="'CLUB_TESTS.RULE_LABEL_PLACEHOLDER' | translate" />
+                    <input
+                      type="text"
+                      class="form-input"
+                      [(ngModel)]="r.label"
+                      [placeholder]="'CLUB_TESTS.RULE_LABEL_PLACEHOLDER' | translate"
+                    />
                   </label>
                   <label class="field">
                     <span class="field__label">{{ 'CLUB_TESTS.RULE_UNIT' | translate }}</span>
-                    <input type="text" class="form-input"
-                           [(ngModel)]="r.unit"
-                           [placeholder]="'CLUB_TESTS.RULE_UNIT_PLACEHOLDER' | translate" />
+                    <input
+                      type="text"
+                      class="form-input"
+                      [(ngModel)]="r.unit"
+                      [placeholder]="'CLUB_TESTS.RULE_UNIT_PLACEHOLDER' | translate"
+                    />
                   </label>
-                  <button class="btn-remove" (click)="removeRule($index)"
-                          [disabled]="hasResults" aria-label="remove">×</button>
+                  <button
+                    class="btn-remove"
+                    (click)="removeRule($index)"
+                    [disabled]="hasResults"
+                    aria-label="remove"
+                  >
+                    ×
+                  </button>
                 </div>
                 <label class="field field--full">
                   <span class="field__label">{{ 'CLUB_TESTS.RULE_FORMULA' | translate }}</span>
-                  <input type="text" class="form-input rule-row__formula"
-                         [(ngModel)]="r.formulaExpression"
-                         [placeholder]="'CLUB_TESTS.RULE_FORMULA_PLACEHOLDER' | translate"
-                         data-testid="rule-formula-input" />
+                  <input
+                    type="text"
+                    class="form-input rule-row__formula"
+                    [(ngModel)]="r.formulaExpression"
+                    [placeholder]="'CLUB_TESTS.RULE_FORMULA_PLACEHOLDER' | translate"
+                    data-testid="rule-formula-input"
+                  />
                   @if (segments.length > 0) {
                     <div class="rule-row__vars">
-                      <span class="rule-row__vars-label">{{ 'CLUB_TESTS.AVAILABLE_VARS' | translate }}:</span>
+                      <span class="rule-row__vars-label"
+                        >{{ 'CLUB_TESTS.AVAILABLE_VARS' | translate }}:</span
+                      >
                       @for (s of segments; track s.id) {
-                        <button type="button" class="var-chip"
-                                (click)="insertVariable(r, s)"
-                                [title]="'CLUB_TESTS.INSERT_VAR_HINT' | translate">
+                        <button
+                          type="button"
+                          class="var-chip"
+                          (click)="insertVariable(r, s)"
+                          [title]="'CLUB_TESTS.INSERT_VAR_HINT' | translate"
+                        >
                           <code>{{ variableHint(s) }}</code>
-                          @if (s.label) { <span class="var-chip__label">{{ s.label }}</span> }
+                          @if (s.label) {
+                            <span class="var-chip__label">{{ s.label }}</span>
+                          }
                         </button>
                       }
                     </div>
@@ -269,11 +345,15 @@
     </div>
 
     <footer class="modal-footer">
-      <button class="btn-secondary" (click)="cancel.emit()">
+      <button class="btn-secondary" (click)="cancelled.emit()">
         {{ 'CLUB_TESTS.CANCEL' | translate }}
       </button>
-      <button class="btn-primary" (click)="submit()"
-              [disabled]="!name.trim()" data-testid="btn-save-test">
+      <button
+        class="btn-primary"
+        (click)="submit()"
+        [disabled]="!name.trim()"
+        data-testid="btn-save-test"
+      >
         {{ (isEdit ? 'CLUB_TESTS.SAVE_TEST' : 'CLUB_TESTS.CREATE_TEST') | translate }}
       </button>
     </footer>
