@@ -2,6 +2,27 @@
   padding: 4px 0;
 }
 
+/* ── Results header ("RÉSULTATS · 16") ────────────────────── */
+.results-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px var(--space-sm) 8px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.results-sep {
+  opacity: 0.5;
+}
+
+.results-count {
+  color: var(--text-muted);
+}
+
 .section-title {
   font-size: 9px;
   font-weight: 800;
@@ -15,14 +36,14 @@
 .history-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: 6px;
 }
 
 .history-item {
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-sm);
-  padding: var(--space-sm) 10px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px;
   border-radius: var(--radius-md);
   cursor: pointer;
   border: 1px solid transparent;
@@ -42,49 +63,53 @@
   box-shadow: 0 0 12px color-mix(in oklch, var(--accent-color) 10%, transparent);
 }
 
-/* Subtle left rail on favorited items — a quiet, persistent cue that survives
-   any filter/sort context. */
+/* Subtle left rail on favorited items */
 .history-item.is-favorite::before {
   content: '';
   position: absolute;
   left: 0;
-  top: 8px;
-  bottom: 8px;
+  top: 10px;
+  bottom: 10px;
   width: 2px;
   border-radius: 0 2px 2px 0;
   background: var(--accent-color);
   opacity: 0.55;
 }
 
-/* Single action row: edit / duplicate / delete (hover-only) + favorite star
-   (always visible). Sharing one flex container guarantees every control sits
-   on the same vertical baseline. */
+/* ── Sport icon (rounded glass square, mirrors image 4) ──── */
+.item-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  background: var(--overlay-5);
+  border: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+/* ── Action row: edit / duplicate / delete (hover) + favorite star (sticky) ── */
 .item-actions {
-  position: absolute;
-  right: 6px;
-  top: 4px;
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 2px;
-  border-radius: var(--radius-md);
-  z-index: 2;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .item-actions .hover-action {
   opacity: 0;
-  transition: opacity var(--transition-fast);
-}
-
-.history-item:hover .item-actions {
-  background: color-mix(in oklch, var(--bg-color) 78%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  width: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast), width 0.2s var(--ease-spring-gentle);
+  overflow: hidden;
 }
 
 .history-item:hover .item-actions .hover-action {
   opacity: 1;
+  width: 22px;
+  pointer-events: auto;
 }
 
 .edit-btn,
@@ -95,13 +120,12 @@
   color: var(--text-dim);
   cursor: pointer;
   padding: 0;
-  width: 22px;
   height: 22px;
   border-radius: var(--radius-sm);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--transition-fast);
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
   flex-shrink: 0;
 }
 
@@ -118,85 +142,102 @@
   color: var(--danger-color);
 }
 
-.item-icon {
-  font-size: 20px;
-  margin-top: 2px;
-}
-
 .item-details {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  gap: 2px;
+  gap: 4px;
   flex: 1;
   min-width: 0;
 }
 
-.item-title-row {
-  display: flex;
-  max-width: calc(100% - 28px);
-  padding: 2px 0 0 0;
-  align-items: center;
-  gap: 6px;
-}
-
 .item-title {
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--text-color);
+  line-height: 1.25;
+}
+
+.item-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  flex-wrap: nowrap;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.item-duration {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.meta-dot {
+  color: var(--text-dim);
+  opacity: 0.55;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
 .type-indicator {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 9px;
+  gap: 5px;
+  font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-muted);
   white-space: nowrap;
   flex-shrink: 0;
-  padding: 1px 6px;
-  border-radius: var(--radius-sm);
-  background: var(--overlay-5);
 }
 
 .type-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-.item-meta {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  display: flex;
-  justify-content: space-between;
+.user-tags-inline {
+  display: inline-flex;
   align-items: center;
-  padding: 0;
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  min-width: 0;
 }
 
-.item-date {
-  opacity: 0.65;
+.user-tag-chip {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
-.item-tags {
+.extra-tags {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.item-groups {
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
-  margin-top: 3px;
+  margin-top: 2px;
 }
 
 .received-meta {
   font-size: var(--text-xs);
   color: var(--text-dim);
   font-style: italic;
-  margin-top: 2px;
   display: block;
 }
 
@@ -208,17 +249,6 @@
   background: var(--overlay-5);
   color: var(--text-muted);
   border: 1px solid var(--glass-border);
-  letter-spacing: 0.03em;
-}
-
-/* User-defined tag — distinct from coach groups: accent fill, hash prefix. */
-.user-tag-chip {
-  font-size: 9px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: var(--radius-pill);
-  background: var(--accent-subtle);
-  color: var(--accent-color);
   letter-spacing: 0.03em;
 }
 
@@ -277,34 +307,35 @@
     padding: 2px 0;
   }
 
+  .results-header {
+    padding: 4px var(--space-xs) 6px;
+    font-size: 9px;
+  }
+
   .history-list {
     gap: 4px;
   }
 
   .history-item {
-    padding: 5px 6px;
-    gap: 6px;
+    padding: 8px 8px;
+    gap: 10px;
   }
 
-  .item-icon {
-    font-size: 16px;
+  .item-icon-wrap {
+    width: 30px;
+    height: 30px;
   }
 
   .item-title {
-    font-size: 11px;
-  }
-
-  .item-title-row {
-    max-width: 100%;
+    font-size: 12px;
   }
 
   .item-meta {
-    font-size: 9px;
+    font-size: 10px;
   }
 
   .type-indicator {
-    font-size: 8px;
-    padding: 1px 4px;
+    font-size: 9px;
   }
 
   .type-dot {
@@ -312,17 +343,20 @@
     height: 5px;
   }
 
+  .user-tag-chip {
+    font-size: 9px;
+  }
+
   .tag-chip {
-    font-size: 7px;
-    padding: 1px 4px;
-  }
-
-  .section-title {
-    padding-left: var(--space-xs);
     font-size: 8px;
+    padding: 1px 5px;
   }
 
+  /* On touch, hover-only actions don't make sense — always show them so
+     edit/delete are tappable. */
   .item-actions .hover-action {
     opacity: 1;
+    width: 22px;
+    pointer-events: auto;
   }
 }

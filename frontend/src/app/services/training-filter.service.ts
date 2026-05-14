@@ -120,6 +120,9 @@ export class TrainingFilterService {
         }),
     );
 
+    /** Count of trainings after all filters are applied — drives the "Résultats · N" header. */
+    filteredCount$ = this.filteredTrainings$.pipe(map((list) => list.length));
+
     /**
      * Default sort: favorites first, then most-recently-created.
      * Favorites are always pinned to the top — even when the favorites-only

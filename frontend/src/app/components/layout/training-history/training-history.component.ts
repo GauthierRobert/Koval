@@ -40,7 +40,20 @@ export class TrainingHistoryComponent {
     /** Highlight the row whose id is in the URL — the route is the source of truth. */
     activeTrainingId$ = this.route.paramMap.pipe(map((p) => p.get('id')));
     filteredTrainings$ = this.filterService.filteredTrainings$;
+    filteredCount$ = this.filterService.filteredCount$;
     activeContext$ = this.filterService.activeContext$;
+
+    /** Cap inline tag chips; surplus is shown as "+N" to keep cards single-row clean. */
+    readonly maxInlineTags = 3;
+
+    visibleTags(training: Training): string[] {
+        return (training.tags ?? []).slice(0, this.maxInlineTags);
+    }
+
+    extraTagCount(training: Training): number {
+        const total = (training.tags?.length ?? 0);
+        return total > this.maxInlineTags ? total - this.maxInlineTags : 0;
+    }
 
     onSelect(training: Training): void {
         this.historyService.selectSession(null);

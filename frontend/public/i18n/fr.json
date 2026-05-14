@@ -1008,6 +1008,7 @@
     "BTN_CREATE_MANUALLY": "CRÉER MANUELLEMENT",
     "SOURCE_MY_TRAININGS": "Mes entraînements",
     "TAG_MY_WORKOUTS": "Mes séances",
+    "RESULTS_LABEL": "Résultats",
     "EMPTY_STATE_HEADING": "Bibliothèque d'entraînements",
     "EMPTY_STATE_DESC": "Sélectionne une séance dans la barre latérale pour voir ses détails, ou discute avec l'assistant pour générer un nouveau plan d'entraînement adapté à ton profil.",
     "BTN_CHAT_ASSISTANT": "Discuter avec l'assistant"

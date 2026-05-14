@@ -1,4 +1,10 @@
 <div class="history-container">
+  <div class="results-header">
+    <span class="results-label">{{ 'WORKOUT_SELECTION.RESULTS_LABEL' | translate }}</span>
+    <span class="results-sep">·</span>
+    <span class="results-count">{{ filteredCount$ | async }}</span>
+  </div>
+
   <div class="history-list stagger-children">
     @for (training of filteredTrainings$ | async; track training.id) {
       <div
@@ -7,32 +13,41 @@
         [class.is-favorite]="training.favorite"
         (click)="onSelect(training)"
       >
-        <div class="item-icon">
-          <app-sport-icon [sport]="training.sportType" [size]="20" />
+        <div class="item-icon-wrap">
+          <app-sport-icon [sport]="training.sportType" [size]="18" />
         </div>
         <div class="item-details">
-          <div class="item-title-row">
-            <span class="item-title">{{ training.title }}</span>
-          </div>
-          <span class="item-meta">
-            <span [style.font-style]="isDurationEstimated(training) ? 'italic' : ''">{{
-              getDuration(training)
-            }}</span>
-            @if (training.createdAt) {
-              &bull; <span class="item-date">{{ training.createdAt | date: 'shortDate' }}</span>
+          <div class="item-title">{{ training.title }}</div>
+
+          <div class="item-meta">
+            <span class="item-duration" [style.font-style]="isDurationEstimated(training) ? 'italic' : ''">
+              {{ getDuration(training) }}
+            </span>
+
+            @if (training.trainingType) {
+              <span class="meta-dot" aria-hidden="true">·</span>
+              <span
+                class="type-indicator"
+                [style.color]="getTypeColor(training.trainingType)"
+              >
+                <span class="type-dot" [style.background]="getTypeColor(training.trainingType)"></span>
+                {{ getTypeLabel(training.trainingType) }}
+              </span>
             }
-            <div>
-              @if (training.trainingType) {
-                <span class="type-indicator">
-                  <span
-                    class="type-dot"
-                    [style.background]="getTypeColor(training.trainingType)"
-                  ></span>
-                  {{ getTypeLabel(training.trainingType) }}
-                </span>
-              }
-            </div>
-          </span>
+
+            @if (visibleTags(training).length) {
+              <span class="meta-dot" aria-hidden="true">·</span>
+              <span class="user-tags-inline">
+                @for (tag of visibleTags(training); track tag) {
+                  <span class="user-tag-chip">#{{ tag }}</span>
+                }
+                @if (extraTagCount(training); as extra) {
+                  <span class="extra-tags">+{{ extra }}</span>
+                }
+              </span>
+            }
+          </div>
+
           @if (training._receivedMeta) {
             <span class="received-meta">
               {{ 'TRAINING_HISTORY.META_RECEIVED_FROM' | translate }}
@@ -44,16 +59,8 @@
             </span>
           }
 
-          @if (training.tags?.length) {
-            <div class="item-tags">
-              @for (tag of training.tags; track tag) {
-                <span class="user-tag-chip">#{{ tag }}</span>
-              }
-            </div>
-          }
-
           @if (training.groupIds?.length && !training._receivedMeta) {
-            <div class="item-tags">
+            <div class="item-groups">
               @for (tag of training.groupIds; track tag) {
                 <span class="tag-chip">{{ tag }}</span>
               }

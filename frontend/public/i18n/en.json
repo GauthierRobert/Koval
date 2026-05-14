@@ -1008,6 +1008,7 @@
     "BTN_CREATE_MANUALLY": "CREATE MANUALLY",
     "SOURCE_MY_TRAININGS": "My Trainings",
     "TAG_MY_WORKOUTS": "My Workouts",
+    "RESULTS_LABEL": "Results",
     "EMPTY_STATE_HEADING": "Training Library",
     "EMPTY_STATE_DESC": "Select a workout from the sidebar to view its details, or chat with the Assistant to generate a new training plan tailored to your profile.",
     "BTN_CHAT_ASSISTANT": "Chat with Assistant"
