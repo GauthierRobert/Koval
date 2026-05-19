@@ -386,6 +386,12 @@
     "allDeclaredMethods": true
   },
   {
+    "name": "com.koval.trainingplannerbackend.ai.action.AiActionUsage",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
     "name": "com.koval.trainingplannerbackend.auth.AuthProvider",
     "allDeclaredFields": true,
     "allDeclaredMethods": true

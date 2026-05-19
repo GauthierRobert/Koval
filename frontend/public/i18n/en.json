@@ -44,6 +44,7 @@
   "TOP_BAR": {
     "NAV_DASHBOARD": "DASHBOARD",
     "NAV_ASSISTANT": "ASSISTANT",
+    "NAV_ASSISTANT_DISABLED": "The assistant is temporarily unavailable",
     "NAV_CLUBS": "CLUBS",
     "NAV_TRAINING": "TRAINING",
     "NAV_ANALYTICS": "ANALYTICS",

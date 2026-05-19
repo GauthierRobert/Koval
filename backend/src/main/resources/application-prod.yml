@@ -51,6 +51,9 @@ cors:
 app:
   ai:
     debug-calls: false
+    monthly-quota:
+      enabled: true
+      training-creation-per-month: 5
 
 logging:
   level:

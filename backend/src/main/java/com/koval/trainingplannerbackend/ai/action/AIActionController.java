@@ -14,9 +14,11 @@ import java.util.Map;
 public class AIActionController {
 
     private final AIActionService aiActionService;
+    private final AiActionQuotaService quotaService;
 
-    public AIActionController(AIActionService aiActionService) {
+    public AIActionController(AIActionService aiActionService, AiActionQuotaService quotaService) {
         this.aiActionService = aiActionService;
+        this.quotaService = quotaService;
     }
 
     public record ActionRequest(String message, AIActionType actionType, AIActionService.ActionContext context) {}
@@ -31,11 +33,18 @@ public class AIActionController {
         }
 
         String userId = SecurityUtils.getCurrentUserId();
+
+        // Monthly AI workout quota (prod only — gated by config). Throws 429 if exhausted.
+        quotaService.checkQuota(userId, request.actionType());
+
         AIActionService.ActionContext ctx = request.context() != null
                 ? request.context()
                 : new AIActionService.ActionContext(null, null, null, null, null, null);
 
         AIActionService.ActionResult result = aiActionService.execute(request.message(), request.actionType(), ctx, userId);
+        if (result.success()) {
+            quotaService.recordUsage(userId, request.actionType());
+        }
         return ResponseEntity.ok(result);
     }
 }

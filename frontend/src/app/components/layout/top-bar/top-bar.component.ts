@@ -1,26 +1,42 @@
-import {ChangeDetectionStrategy, Component, DestroyRef, HostListener, inject} from '@angular/core';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {CommonModule} from '@angular/common';
-import {Router, RouterModule} from '@angular/router';
-import {BluetoothService} from '../../../services/bluetooth.service';
-import {AuthService} from '../../../services/auth.service';
-import {ClubService, ClubSummary} from '../../../services/club.service';
-import {TrainingFilterService} from '../../../services/training-filter.service';
-import {combineLatest, filter, map} from 'rxjs';
-import {MembershipsModalComponent} from '../../shared/memberships-modal/memberships-modal.component';
-import {NotificationPreferencesComponent} from '../../shared/notification-preferences/notification-preferences.component';
-import {NotificationCenterComponent} from '../../shared/notification-center/notification-center.component';
-import {InstallBannerComponent} from '../../shared/install-banner/install-banner.component';
-import {NotificationCenterService} from '../../../services/notification-center.service';
-import {ConnectedAppsModalComponent} from '../../shared/connected-apps-modal/connected-apps-modal.component';
-import {TranslateService, TranslateModule} from '@ngx-translate/core';
-import {ThemeService} from '../../../services/theme.service';
-import {ResponsiveService} from '../../../services/responsive.service';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  HostListener,
+  inject,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
+import { BluetoothService } from '../../../services/bluetooth.service';
+import { AuthService } from '../../../services/auth.service';
+import { ClubService, ClubSummary } from '../../../services/club.service';
+import { TrainingFilterService } from '../../../services/training-filter.service';
+import { combineLatest, filter, map } from 'rxjs';
+import { MembershipsModalComponent } from '../../shared/memberships-modal/memberships-modal.component';
+import { NotificationPreferencesComponent } from '../../shared/notification-preferences/notification-preferences.component';
+import { NotificationCenterComponent } from '../../shared/notification-center/notification-center.component';
+import { InstallBannerComponent } from '../../shared/install-banner/install-banner.component';
+import { NotificationCenterService } from '../../../services/notification-center.service';
+import { ConnectedAppsModalComponent } from '../../shared/connected-apps-modal/connected-apps-modal.component';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { ThemeService } from '../../../services/theme.service';
+import { ResponsiveService } from '../../../services/responsive.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-top-bar',
   standalone: true,
-  imports: [CommonModule, RouterModule, MembershipsModalComponent, NotificationPreferencesComponent, NotificationCenterComponent, InstallBannerComponent, ConnectedAppsModalComponent, TranslateModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    MembershipsModalComponent,
+    NotificationPreferencesComponent,
+    NotificationCenterComponent,
+    InstallBannerComponent,
+    ConnectedAppsModalComponent,
+    TranslateModule,
+  ],
   templateUrl: './top-bar.component.html',
   styleUrl: './top-bar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,19 +54,21 @@ export class TopBarComponent {
   private destroyRef = inject(DestroyRef);
   unreadNotifications$ = this.notificationCenter.unreadCount$;
   currentLang = this.translateService.currentLang || 'en';
+  readonly assistantDisabled = environment.production;
 
   constructor() {
     // Auto-close mobile menu when leaving the mobile breakpoint
-    this.responsive.isMobile$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((isMobile) => {
-        if (!isMobile && this.mobileMenuOpen) {
-          this.mobileMenuOpen = false;
-        }
-      });
+    this.responsive.isMobile$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isMobile) => {
+      if (!isMobile && this.mobileMenuOpen) {
+        this.mobileMenuOpen = false;
+      }
+    });
     // Initial unread badge value once the user is authenticated.
     this.authService.user$
-      .pipe(filter(u => !!u), takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        filter((u) => !!u),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe(() => this.notificationCenter.refreshUnreadCount());
   }
 
@@ -108,9 +126,7 @@ export class TopBarComponent {
     this.bluetoothService.hrStatus$,
     this.bluetoothService.pmStatus$,
     this.bluetoothService.cadenceStatus$,
-  ]).pipe(
-    map(statuses => statuses.filter(s => s === 'Connected').length)
-  );
+  ]).pipe(map((statuses) => statuses.filter((s) => s === 'Connected').length));
 
   logout(): void {
     this.authService.logout();
@@ -177,7 +193,11 @@ export class TopBarComponent {
   toggleTraining(event: Event) {
     event.stopPropagation();
     this.isTrainingOpen = !this.isTrainingOpen;
-    if (this.isTrainingOpen) { this.isAnalyticsOpen = false; this.isClubsOpen = false; this.isCoachingOpen = false; }
+    if (this.isTrainingOpen) {
+      this.isAnalyticsOpen = false;
+      this.isClubsOpen = false;
+      this.isCoachingOpen = false;
+    }
   }
 
   closeTraining() {
@@ -187,7 +207,11 @@ export class TopBarComponent {
   toggleAnalytics(event: Event) {
     event.stopPropagation();
     this.isAnalyticsOpen = !this.isAnalyticsOpen;
-    if (this.isAnalyticsOpen) { this.isTrainingOpen = false; this.isClubsOpen = false; this.isCoachingOpen = false; }
+    if (this.isAnalyticsOpen) {
+      this.isTrainingOpen = false;
+      this.isClubsOpen = false;
+      this.isCoachingOpen = false;
+    }
   }
 
   closeAnalytics() {
@@ -203,5 +227,4 @@ export class TopBarComponent {
       this.isCoachingOpen = false;
     }
   }
-
 }

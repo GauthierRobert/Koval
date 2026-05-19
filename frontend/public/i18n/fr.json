@@ -44,6 +44,7 @@
   "TOP_BAR": {
     "NAV_DASHBOARD": "TABLEAU DE BORD",
     "NAV_ASSISTANT": "ASSISTANT",
+    "NAV_ASSISTANT_DISABLED": "L'assistant est temporairement indisponible",
     "NAV_CLUBS": "CLUBS",
     "NAV_TRAINING": "ENTRAÎNEMENT",
     "NAV_ANALYTICS": "ANALYTIQUE",

@@ -436,15 +436,28 @@
             >
               <span class="dropdown-label">{{ 'TOP_BAR.NAV_ZONES' | translate }}</span>
             </a>
-            <a
-              routerLink="/chat"
-              routerLinkActive="active"
-              class="dropdown-item"
-              role="menuitem"
-              (click)="closeCoaching(); closeMobileMenu()"
-            >
-              <span class="dropdown-label">{{ 'TOP_BAR.NAV_ASSISTANT' | translate }}</span>
-            </a>
+            @if (assistantDisabled) {
+              <button
+                type="button"
+                class="dropdown-item dropdown-item--disabled"
+                role="menuitem"
+                disabled
+                [attr.aria-disabled]="true"
+                [title]="'TOP_BAR.NAV_ASSISTANT_DISABLED' | translate"
+              >
+                <span class="dropdown-label">{{ 'TOP_BAR.NAV_ASSISTANT' | translate }}</span>
+              </button>
+            } @else {
+              <a
+                routerLink="/chat"
+                routerLinkActive="active"
+                class="dropdown-item"
+                role="menuitem"
+                (click)="closeCoaching(); closeMobileMenu()"
+              >
+                <span class="dropdown-label">{{ 'TOP_BAR.NAV_ASSISTANT' | translate }}</span>
+              </a>
+            }
           </div>
         }
       </div>
