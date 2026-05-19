@@ -13,6 +13,14 @@ spring:
           temperature: 0.7
           max-tokens: 4096
 
+# Mongo pool sized to match Cloud Run per-instance concurrency (see deploy.yml --concurrency).
+# Each in-flight request can borrow a connection; idle ones stay warm so cold instances
+# don't pay full handshake cost on the first request after scale-up.
+mongo:
+  pool:
+    max-size: ${MONGO_POOL_MAX:150}
+    min-size: ${MONGO_POOL_MIN:20}
+
 strava:
   client-id: ${STRAVA_CLIENT_ID:}
   client-secret: ${STRAVA_CLIENT_SECRET:}

@@ -67,6 +67,11 @@ jobs:
             --allow-unauthenticated
             --port=8080
             --service-account=${{ secrets.CLOUD_RUN_RUNTIME_SA }}
+            --concurrency=150
+            --min-instances=1
+            --max-instances=500
+            --cpu-boost
+            --execution-environment=gen2
 
   frontend:
     name: Deploy Frontend to Firebase Hosting
