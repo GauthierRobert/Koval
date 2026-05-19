@@ -1,0 +1,353 @@
+// ═══════════════════════════════════════════════════════════════
+// KOVAL DESIGN TOKENS — canonical surface for theming
+// ───────────────────────────────────────────────────────────────
+// Every visual decision in the app should reference a token here.
+// Theme packs in `themes/` override these to produce distinct looks
+// (retro, futuristic, modern, …). See THEMING.md.
+//
+// Token groups:
+//   1.  Color (hues + sentiment palette + on-color)
+//   2.  Surface (bg, glass, cards, overlays)
+//   3.  Border (width, color, style, radius)
+//   4.  Typography (family, size, weight, tracking)
+//   5.  Spacing (8px grid + page layout)
+//   6.  Shadow / Elevation
+//   7.  Glass / Blur / Saturation
+//   8.  Atmosphere (orbs, noise, mesh gradient)
+//   9.  Motion (easings + durations)
+//  10.  Component-level (card, button, skeleton)
+// ═══════════════════════════════════════════════════════════════
+
+:root {
+  // ── 1. Color hues ────────────────────────────────────────────
+  --primary-color: oklch(0.75 0.18 65);
+  --secondary-color: oklch(0.65 0.15 230);
+  --success-color: oklch(0.75 0.17 160);
+  --danger-color: oklch(0.65 0.2 25);
+  --info-color: oklch(0.65 0.22 295);
+  --info-text: oklch(0.72 0.18 295);
+
+  --accent-color: var(--primary-color);
+  --accent-color-2: oklch(0.6 0.18 45); // second stop in gradient
+  --accent-glow: oklch(0.75 0.18 65 / 0.3); // for glow shadows
+  --accent-glow-soft: oklch(0.75 0.18 65 / 0.08);
+
+  --on-primary-color: black;
+  --on-secondary-color: white;
+  --on-accent-color: black;
+
+  // Sentiment tints (derived)
+  --accent-subtle: color-mix(in oklch, var(--accent-color) 8%, transparent);
+  --accent-border: color-mix(in oklch, var(--accent-color) 25%, transparent);
+  --accent-hover: color-mix(in oklch, var(--accent-color) 15%, transparent);
+
+  --success-subtle: color-mix(in oklch, var(--success-color) 8%, transparent);
+  --success-border: color-mix(in oklch, var(--success-color) 22%, transparent);
+  --success-hover: color-mix(in oklch, var(--success-color) 15%, transparent);
+
+  --danger-subtle: color-mix(in oklch, var(--danger-color) 8%, transparent);
+  --danger-border: color-mix(in oklch, var(--danger-color) 25%, transparent);
+  --danger-hover: color-mix(in oklch, var(--danger-color) 15%, transparent);
+
+  --info-subtle: color-mix(in oklch, var(--info-color) 8%, transparent);
+  --info-border: color-mix(in oklch, var(--info-color) 25%, transparent);
+  --info-hover: color-mix(in oklch, var(--info-color) 15%, transparent);
+
+  // ── 2. Surfaces (dark by default) ────────────────────────────
+  --bg-color: #0a0a0f;
+  --surface-color: #14141b;
+  --surface-card: rgba(16, 16, 22, 0.92);
+  --surface-hover: rgba(255, 255, 255, 0.06);
+  --surface-elevated: rgba(255, 255, 255, 0.04);
+  --surface-raised: rgba(255, 255, 255, 0.03);
+  --sidebar-color: rgba(16, 16, 22, 0.88);
+  --glass-bg: rgba(24, 24, 33, 0.89);
+
+  --text-color: #ececf1;
+  --text-muted: #8e8ea0;
+  --text-dim: #6e6e80;
+
+  // Generic monochrome stops (kept for legacy refs)
+  --color-black: #000;
+  --color-light-gray: #e0e0e0;
+  --color-medium-gray: #ccc;
+  --color-dark-gray: #333;
+  --color-very-dark: #1e272e;
+
+  // Overlay scale (themes pick the channel polarity)
+  --overlay-channel: 255, 255, 255;
+  --overlay-3: rgba(var(--overlay-channel), 0.03);
+  --overlay-5: rgba(var(--overlay-channel), 0.05);
+  --overlay-8: rgba(var(--overlay-channel), 0.08);
+  --overlay-10: rgba(var(--overlay-channel), 0.1);
+  --overlay-12: rgba(var(--overlay-channel), 0.12);
+  --overlay-15: rgba(var(--overlay-channel), 0.15);
+  --overlay-20: rgba(var(--overlay-channel), 0.2);
+  --overlay-25: rgba(var(--overlay-channel), 0.25);
+  --overlay-30: rgba(var(--overlay-channel), 0.3);
+  --overlay-backdrop: rgba(0, 0, 0, 0.85);
+
+  --text-channel: 255, 255, 255;
+  --text-30: rgba(var(--text-channel), 0.3);
+  --text-35: rgba(var(--text-channel), 0.35);
+  --text-40: rgba(var(--text-channel), 0.4);
+  --text-45: rgba(var(--text-channel), 0.45);
+  --text-50: rgba(var(--text-channel), 0.5);
+  --text-55: rgba(var(--text-channel), 0.55);
+  --text-60: rgba(var(--text-channel), 0.6);
+  --text-70: rgba(var(--text-channel), 0.7);
+  --text-75: rgba(var(--text-channel), 0.75);
+  --text-80: rgba(var(--text-channel), 0.8);
+  --text-85: rgba(var(--text-channel), 0.85);
+  --text-90: rgba(var(--text-channel), 0.9);
+  --text-95: rgba(var(--text-channel), 0.95);
+
+  // ── 3. Borders ───────────────────────────────────────────────
+  --border-width: 1px;
+  --border-width-strong: 2px;
+  --border-style: solid;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-color-strong: rgba(255, 255, 255, 0.2);
+  --glass-border: var(--border-color);
+
+  // Radius scale
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-pill: 100px;
+  --radius-circle: 50%;
+
+  // ── 4. Typography ────────────────────────────────────────────
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+  --text-xs: 0.625rem;
+  --text-sm: 0.75rem;
+  --text-base: 0.875rem;
+  --text-lg: 1rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.75rem;
+  --text-5xl: 3.5rem;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-extrabold: 800;
+  --weight-display: 700;
+
+  --tracking-tight: -0.02em;
+  --tracking-snug: -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.06em;
+  --tracking-wider: 0.08em;
+  --tracking-widest: 0.1em;
+
+  --leading-tight: 1.1;
+  --leading-snug: 1.25;
+  --leading-normal: 1.4;
+  --leading-relaxed: 1.6;
+
+  // Display heading style
+  --display-transform: none; // themes can set 'uppercase'
+
+  // ── 5. Spacing & layout ──────────────────────────────────────
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+
+  --page-padding: 24px;
+  --page-max-width: 70vw;
+  --sidebar-width: 260px;
+  --topbar-height: 64px;
+  --touch-target-min: 44px;
+
+  // ── 6. Shadow / Elevation ────────────────────────────────────
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.5);
+  --shadow-glass:
+    0 0 0 1px rgba(255, 255, 255, 0.08), 0 1px 4px rgba(0, 0, 0, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.25);
+  --shadow-elevated:
+    0 0 0 1px rgba(255, 255, 255, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --shadow-accent-glow: 0 4px 20px var(--accent-glow);
+
+  // ── 7. Glass / Blur ──────────────────────────────────────────
+  --glass-blur: 24px;
+  --glass-saturation: 1.4;
+  --glass-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+
+  // ── 8. Atmosphere ────────────────────────────────────────────
+  --noise-opacity: 0.035;
+  --noise-blend-mode: overlay;
+  --noise-enabled: 1; // 0 disables grain via opacity
+
+  --orb-opacity: 0.12;
+  --orb-blur: 80px;
+  --orb-1-color: var(--accent-color);
+  --orb-2-color: var(--secondary-color);
+  --orb-3-color: oklch(0.5 0.1 300);
+
+  --mesh-stop-1: oklch(0.2 0.06 65 / 0.5);
+  --mesh-stop-2: oklch(0.18 0.05 230 / 0.35);
+  --mesh-stop-3: oklch(0.15 0.02 300 / 0.15);
+
+  --gradient-angle: 135deg;
+  --accent-gradient: linear-gradient(
+    var(--gradient-angle),
+    var(--accent-color),
+    var(--accent-color-2)
+  );
+
+  // ── 9. Motion ────────────────────────────────────────────────
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-spring-gentle: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: 0.15s var(--ease-spring-gentle);
+  --transition-base: 0.25s var(--ease-spring-gentle);
+  --transition-slow: 0.4s var(--ease-out-expo);
+
+  // ── 10. Component tokens ─────────────────────────────────────
+  // Card
+  --card-padding: 16px;
+  --card-radius: var(--radius-md);
+  --card-border: var(--border-width) var(--border-style) var(--glass-border);
+  --card-bg: var(--glass-bg);
+  --card-backdrop-filter: var(--glass-filter);
+
+  // Button
+  --btn-radius: var(--radius-pill);
+  --btn-radius-square: var(--radius-md);
+  --btn-padding-y: 7px;
+  --btn-padding-x: 18px;
+  --btn-font-size: 10px;
+  --btn-font-weight: var(--weight-bold);
+  --btn-letter-spacing: var(--tracking-wide);
+  --btn-text-transform: none;
+
+  // Focus ring
+  --focus-ring-color: var(--accent-color);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+
+  // Scrollbar
+  --scrollbar-size: 6px;
+  --scrollbar-thumb: rgba(255, 255, 255, 0.1);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+
+  // Skeleton
+  --skeleton-base: var(--overlay-8);
+  --skeleton-shine: var(--overlay-15);
+
+  // External brand colors (rarely themed)
+  --strava-color: #fc4c02;
+  --dev-accent-color: #f59e0b;
+  --google-white: #fff;
+  --google-text: #333;
+  --google-border: transparent;
+
+  // Positive / negative sentiment (legacy aliases)
+  --positive-color: #2ecc71;
+  --positive-alt: var(--success-color);
+  --negative-color: #e74c3c;
+
+  // Chart / metric semantic
+  --metric-fitness: var(--secondary-color);
+  --metric-fatigue: var(--danger-color);
+  --metric-form-positive: var(--success-color);
+  --metric-form-negative: var(--danger-color);
+  --metric-power: var(--accent-color);
+  --metric-heartrate: #e74c3c;
+  --metric-cadence: var(--secondary-color);
+
+  // AI indigo accent
+  --ai-color: #818cf8;
+  --ai-color-strong: #a5b4fc;
+  --ai-color-hover: #c7d2fe;
+  --ai-subtle: rgba(99, 102, 241, 0.08);
+  --ai-subtle-strong: rgba(99, 102, 241, 0.15);
+  --ai-border: rgba(99, 102, 241, 0.25);
+  --ai-border-strong: rgba(99, 102, 241, 0.45);
+
+  // Sport identity
+  --sport-cycling: var(--success-color);
+  --sport-swimming: var(--info-text);
+  --sport-running: #fb923c;
+  --sport-triathlon: var(--accent-color);
+  --sport-running-subtle: rgba(251, 146, 60, 0.15);
+  --sport-cycling-subtle: rgba(52, 211, 153, 0.15);
+  --sport-swimming-subtle: rgba(56, 189, 248, 0.15);
+
+  // Workout block type colors
+  --block-warmup: var(--secondary-color);
+  --block-cooldown: #6c5ce7;
+  --block-interval: #e74c3c;
+  --block-steady: #9b59b6;
+  --block-ramp: #f1c40f;
+  --block-free: #95a5a6;
+
+  // Chart colors
+  --chart-tsb-positive: #3b82f6;
+  --chart-tsb-negative: #e74c3c;
+  --chart-warmup: var(--secondary-color);
+  --chart-cooldown: #6c5ce7;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LIGHT MODE — overrides applied to the default theme.
+// Named theme packs may declare their own light variant inside
+// their pack file using `&[data-theme='light']`.
+// ═══════════════════════════════════════════════════════════════
+[data-theme='light'] {
+  --bg-color: #f8f8fc;
+  --surface-color: #ffffff;
+  --surface-card: rgba(255, 255, 255, 0.95);
+  --surface-hover: rgba(0, 0, 0, 0.04);
+  --surface-elevated: rgba(0, 0, 0, 0.02);
+  --surface-raised: rgba(0, 0, 0, 0.015);
+  --sidebar-color: rgba(255, 255, 255, 0.92);
+  --glass-bg: rgba(255, 255, 255, 0.88);
+
+  --text-color: #1a1a2e;
+  --text-muted: #6b6b80;
+  --text-dim: #9e9eb0;
+
+  --border-color: rgba(0, 0, 0, 0.07);
+  --border-color-strong: rgba(0, 0, 0, 0.15);
+
+  --overlay-channel: 0, 0, 0;
+  --text-channel: 0, 0, 0;
+  --overlay-backdrop: rgba(0, 0, 0, 0.5);
+
+  --google-border: #dadce0;
+
+  --noise-opacity: 0.02;
+  --orb-opacity: 0.06;
+  --orb-blur: 100px;
+
+  --mesh-stop-1: oklch(0.92 0.03 65 / 0.5);
+  --mesh-stop-2: oklch(0.9 0.03 230 / 0.3);
+  --mesh-stop-3: transparent;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 10px rgba(0, 0, 0, 0.1);
+  --shadow-glass:
+    0 0 0 1px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
+  --shadow-elevated:
+    0 0 0 1px rgba(0, 0, 0, 0.07), 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --shadow-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+
+  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+}

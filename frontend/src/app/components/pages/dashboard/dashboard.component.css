@@ -128,43 +128,13 @@
 .kpi-tile {
   position: relative;
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  border: none;
   border-radius: var(--radius-md);
   padding: 13px 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   overflow: hidden;
-  transition:
-    transform 0.2s var(--ease-spring-gentle),
-    border-color 0.2s;
-}
-
-.kpi-tile::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in oklch, var(--accent-color) 30%, transparent),
-    transparent
-  );
-  opacity: 0;
-  transition: opacity 0.25s;
-}
-
-@media (hover: hover) {
-  .kpi-tile:hover {
-    transform: translateY(-1px);
-    border-color: color-mix(in oklch, var(--accent-color) 22%, var(--glass-border));
-  }
-  .kpi-tile:hover::before {
-    opacity: 1;
-  }
 }
 
 .kpi-label {

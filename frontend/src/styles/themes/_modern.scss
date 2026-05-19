@@ -1,0 +1,107 @@
+// ═══════════════════════════════════════════════════════════════
+// MODERN — minimalist Swiss design: cool neutrals, generous
+// whitespace, thin hairlines, near-flat shadows, no atmosphere.
+// ═══════════════════════════════════════════════════════════════
+
+[data-theme-pack='modern'] {
+  --primary-color: oklch(0.55 0.04 250); // slate
+  --secondary-color: oklch(0.5 0.06 250);
+  --success-color: oklch(0.6 0.13 150);
+  --danger-color: oklch(0.55 0.18 25);
+  --info-color: oklch(0.55 0.1 230);
+  --info-text: oklch(0.55 0.1 230);
+
+  --accent-color: oklch(0.55 0.04 250);
+  --accent-color-2: oklch(0.5 0.05 250);
+  --accent-glow: oklch(0.55 0.04 250 / 0.15);
+
+  --on-primary-color: #ffffff;
+  --on-accent-color: #ffffff;
+
+  // Surfaces — cool neutral grey
+  --bg-color: #0e0f12;
+  --surface-color: #16181d;
+  --surface-card: rgba(22, 24, 29, 0.96);
+  --sidebar-color: rgba(18, 20, 25, 0.94);
+  --glass-bg: rgba(22, 24, 29, 0.92);
+  --surface-hover: rgba(255, 255, 255, 0.03);
+  --surface-elevated: rgba(255, 255, 255, 0.02);
+  --surface-raised: rgba(255, 255, 255, 0.015);
+
+  --text-color: #f0f1f4;
+  --text-muted: #9098a8;
+  --text-dim: #5e6577;
+
+  // Thin hairlines
+  --border-width: 1px;
+  --border-color: rgba(255, 255, 255, 0.06);
+  --border-color-strong: rgba(255, 255, 255, 0.12);
+
+  // Modest radii
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 100px;
+
+  // Typography — clean sans
+  --font-display: 'Inter', 'Helvetica Neue', sans-serif;
+  --font-body: 'Inter', 'Helvetica Neue', sans-serif;
+  --tracking-display: -0.02em;
+  --weight-display: 600;
+
+  // Subtle glass
+  --glass-blur: 16px;
+  --glass-saturation: 1.1;
+
+  // No atmosphere
+  --noise-opacity: 0;
+  --orb-opacity: 0;
+
+  --mesh-stop-1: transparent;
+  --mesh-stop-2: transparent;
+  --mesh-stop-3: transparent;
+
+  // Near-flat shadows
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-glass: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-elevated: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-inner-light: none;
+
+  // Generous spacing
+  --space-md: 18px;
+  --space-lg: 28px;
+  --space-xl: 40px;
+  --space-2xl: 56px;
+  --page-padding: 32px;
+  --card-padding: 20px;
+
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.22s ease;
+  --transition-slow: 0.35s ease;
+
+  // Light variant
+  &[data-theme='light'] {
+    --bg-color: #fafbfc;
+    --surface-color: #ffffff;
+    --surface-card: #ffffff;
+    --sidebar-color: rgba(255, 255, 255, 0.96);
+    --glass-bg: rgba(255, 255, 255, 0.94);
+
+    --text-color: #1a1c20;
+    --text-muted: #6b7280;
+    --text-dim: #9ca3af;
+
+    --border-color: rgba(0, 0, 0, 0.06);
+    --border-color-strong: rgba(0, 0, 0, 0.12);
+
+    --overlay-channel: 0, 0, 0;
+    --text-channel: 0, 0, 0;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+}

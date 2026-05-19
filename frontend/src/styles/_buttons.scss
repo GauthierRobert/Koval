@@ -4,30 +4,31 @@
 // Import this partial in styles.scss.
 // ═══════════════════════════════════════════════════════════════
 
-// ── Design Tokens ──────────────────────────────────────────────
-$btn-radius:      var(--radius-pill);
-$btn-radius-sm:   var(--radius-sm);
-$btn-padding:     7px 18px;
-$btn-padding-sm:  4px 12px;
-$btn-padding-lg:  10px 28px;
-$btn-font-size:   10px;
-$btn-font-sm:     9px;
-$btn-font-lg:     12px;
-$btn-weight:      700;
-$btn-weight-bold: 800;
-$btn-spacing:     0.06em;
-$btn-transition:  all var(--transition-base);
-$btn-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+// ── Local SCSS aliases for the button tokens (read from CSS vars) ──
+$btn-radius: var(--btn-radius);
+$btn-radius-sm: var(--radius-sm);
+$btn-padding: var(--btn-padding-y) var(--btn-padding-x);
+$btn-padding-sm: 4px 12px;
+$btn-padding-lg: 10px 28px;
+$btn-font-size: var(--btn-font-size);
+$btn-font-sm: 9px;
+$btn-font-lg: 12px;
+$btn-weight: var(--btn-font-weight);
+$btn-weight-bold: var(--weight-extrabold);
+$btn-spacing: var(--btn-letter-spacing);
+$btn-transition: all var(--transition-base);
+$btn-inner-light: var(--shadow-inner-light);
 
 // ── Base ───────────────────────────────────────────────────────
 %btn-base {
   background: none;
-  border: 1px solid transparent;
+  border: var(--border-width) var(--border-style) transparent;
   border-radius: $btn-radius;
   padding: $btn-padding;
   font-size: $btn-font-size;
   font-weight: $btn-weight;
   letter-spacing: $btn-spacing;
+  text-transform: var(--btn-text-transform);
   cursor: pointer;
   transition: $btn-transition;
   box-shadow: $btn-inner-light;
@@ -35,10 +36,10 @@ $btn-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--space-xs);
   white-space: nowrap;
   text-decoration: none;
-  line-height: 1.4;
+  line-height: var(--leading-normal);
 
   &.small {
     padding: $btn-padding-sm;
@@ -104,7 +105,7 @@ $btn-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
   &:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 4px 20px oklch(0.75 0.18 65 / 0.3);
+    box-shadow: var(--shadow-accent-glow);
   }
 }
 
@@ -188,7 +189,7 @@ $btn-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 .btn-icon {
   background: transparent;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--btn-radius-square);
   width: 34px;
   height: 34px;
   padding: 0;
@@ -213,7 +214,7 @@ $btn-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   &--sm {
     width: 28px;
     height: 28px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
   }
 }
 
@@ -227,8 +228,8 @@ $btn-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   color: var(--text-dim);
   font-size: 20px;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 8px;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-md);
   line-height: 1;
   transition: $btn-transition;
 
@@ -247,8 +248,8 @@ $btn-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 8px;
-  border-radius: 10px;
+  padding: var(--space-sm);
+  border-radius: var(--btn-radius-square);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -267,7 +268,7 @@ $btn-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
 .btn-copy {
   background: none;
-  border: 1px solid var(--glass-border);
+  border: var(--border-width) var(--border-style) var(--glass-border);
   border-radius: $btn-radius;
   padding: $btn-padding-sm;
   font-size: $btn-font-sm;
@@ -314,7 +315,9 @@ $btn-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   &.active {
     color: var(--on-primary-color);
     background: var(--accent-color);
-    box-shadow: 0 2px 12px oklch(0.75 0.18 65 / 0.25), $btn-inner-light;
+    box-shadow:
+      0 2px 12px var(--accent-glow),
+      $btn-inner-light;
   }
 }
 
@@ -324,18 +327,18 @@ $btn-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
 .premium-button {
   background: var(--accent-gradient);
-  color: white;
+  color: var(--on-accent-color);
   border: none;
   padding: 12px 28px;
   border-radius: $btn-radius;
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   cursor: pointer;
   transition: all 0.3s var(--ease-spring-gentle);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  gap: var(--space-sm);
+  box-shadow: $btn-inner-light;
 
   &:active {
     transform: scale(0.97);
@@ -345,7 +348,7 @@ $btn-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 @media (hover: hover) {
   .premium-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 20px oklch(0.75 0.18 65 / 0.35);
+    box-shadow: var(--shadow-accent-glow);
   }
 }
 
@@ -361,7 +364,9 @@ $btn-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 // ═══════════════════════════════════════════════════════════════
 
 @keyframes btn-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .btn-spinner {

@@ -1,0 +1,97 @@
+// ═══════════════════════════════════════════════════════════════
+// FUTURISTIC — cyan/magenta neon, deep navy void, thin neon
+// hairlines, heavy glass + saturation, glowing shadows, mono UI.
+// ═══════════════════════════════════════════════════════════════
+
+[data-theme-pack='futuristic'] {
+  --primary-color: oklch(0.78 0.18 200); // cyan
+  --secondary-color: oklch(0.7 0.25 320); // magenta
+  --success-color: oklch(0.82 0.2 150); // mint
+  --danger-color: oklch(0.7 0.27 15); // hot red
+  --info-color: oklch(0.78 0.18 200);
+  --info-text: oklch(0.78 0.18 200);
+
+  --accent-color: var(--primary-color);
+  --accent-color-2: oklch(0.7 0.25 320);
+  --accent-glow: oklch(0.78 0.18 200 / 0.55);
+  --accent-glow-soft: oklch(0.78 0.18 200 / 0.15);
+
+  --on-primary-color: #001318;
+  --on-accent-color: #001318;
+
+  // Surfaces — deep navy void
+  --bg-color: #04060d;
+  --surface-color: #070b18;
+  --surface-card: rgba(8, 12, 24, 0.85);
+  --sidebar-color: rgba(6, 10, 22, 0.8);
+  --glass-bg: rgba(10, 16, 30, 0.65);
+  --surface-hover: rgba(120, 220, 255, 0.06);
+  --surface-elevated: rgba(120, 220, 255, 0.04);
+  --surface-raised: rgba(120, 220, 255, 0.03);
+
+  --text-color: #e0f4ff;
+  --text-muted: #7da5c0;
+  --text-dim: #4d6a85;
+
+  // Thin neon hairlines
+  --border-width: 1px;
+  --border-color: rgba(120, 220, 255, 0.18);
+  --border-color-strong: rgba(120, 220, 255, 0.4);
+
+  // Sharp radii
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+  --radius-pill: 100px;
+
+  // Typography — mono everywhere
+  --font-display: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  --font-body: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  --tracking-display: 0.06em;
+  --tracking-wide: 0.1em;
+  --tracking-widest: 0.18em;
+  --display-transform: uppercase;
+  --btn-text-transform: uppercase;
+  --btn-letter-spacing: 0.15em;
+
+  // Maximal glass
+  --glass-blur: 32px;
+  --glass-saturation: 2;
+
+  // Atmospheric
+  --noise-opacity: 0.025;
+  --noise-blend-mode: screen;
+
+  --orb-opacity: 0.22;
+  --orb-blur: 120px;
+  --orb-1-color: oklch(0.78 0.18 200);
+  --orb-2-color: oklch(0.7 0.25 320);
+  --orb-3-color: oklch(0.6 0.2 260);
+
+  --mesh-stop-1: oklch(0.18 0.12 200 / 0.6);
+  --mesh-stop-2: oklch(0.15 0.18 320 / 0.45);
+  --mesh-stop-3: oklch(0.12 0.1 260 / 0.3);
+
+  // Neon-glow shadows
+  --shadow-sm: 0 0 8px oklch(0.78 0.18 200 / 0.25);
+  --shadow-md: 0 0 16px oklch(0.78 0.18 200 / 0.3);
+  --shadow-lg: 0 0 32px oklch(0.78 0.18 200 / 0.35);
+  --shadow-glass:
+    0 0 0 1px rgba(120, 220, 255, 0.18), 0 0 24px oklch(0.78 0.18 200 / 0.12),
+    0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-elevated:
+    0 0 0 1px rgba(120, 220, 255, 0.25), 0 0 32px oklch(0.78 0.18 200 / 0.2),
+    0 12px 40px rgba(0, 0, 0, 0.7);
+  --shadow-inner-light: inset 0 1px 0 rgba(120, 220, 255, 0.15);
+  --shadow-accent-glow: 0 0 24px var(--accent-glow);
+
+  --gradient-angle: 110deg;
+
+  // Motion — fast & precise
+  --transition-fast: 0.12s cubic-bezier(0.2, 0, 0, 1);
+  --transition-base: 0.2s cubic-bezier(0.2, 0, 0, 1);
+  --transition-slow: 0.35s cubic-bezier(0.2, 0, 0, 1);
+
+  // No light variant — futuristic is dark-only.
+}
