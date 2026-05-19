@@ -123,34 +123,8 @@ export class DashboardComponent {
     shareReplay(1),
   );
 
-  overdueWorkouts$ = this.schedule$.pipe(
-    map((ws) =>
-      ws.filter(
-        (w) =>
-          w.status === 'PENDING' &&
-          w.scheduledDate >= this.sevenDaysAgoKey &&
-          w.scheduledDate < this.todayKey,
-      ),
-    ),
-    startWith([] as ScheduledWorkout[]),
-  );
-
   upcomingWorkouts$ = this.schedule$.pipe(
     map((ws) => ws.filter((w) => w.status === 'PENDING' && w.scheduledDate >= this.todayKey)),
-    startWith([] as ScheduledWorkout[]),
-  );
-
-  completedLastWeek$ = this.schedule$.pipe(
-    map((ws) =>
-      ws.filter((w) => w.status === 'COMPLETED' && w.scheduledDate >= this.sevenDaysAgoKey),
-    ),
-    startWith([] as ScheduledWorkout[]),
-  );
-
-  plannedLastWeek$ = this.schedule$.pipe(
-    map((ws) =>
-      ws.filter((w) => w.scheduledDate >= this.sevenDaysAgoKey && w.scheduledDate <= this.todayKey),
-    ),
     startWith([] as ScheduledWorkout[]),
   );
 
@@ -208,10 +182,7 @@ export class DashboardComponent {
   );
 
   vm$ = combineLatest({
-    overdue: this.overdueWorkouts$,
     upcoming: this.upcomingWorkouts$,
-    completedLastWeek: this.completedLastWeek$,
-    plannedLastWeek: this.plannedLastWeek$,
     weekMetrics: this.weekMetrics$,
     latestFit: this.latestFit$,
     form: this.formStats$,
@@ -358,25 +329,6 @@ export class DashboardComponent {
     if (tsb < -10) return 'DASHBOARD.KPI_FORM_STRESSED';
     if (tsb < 0) return 'DASHBOARD.KPI_FORM_PRODUCTIVE';
     return 'DASHBOARD.KPI_FORM_NEUTRAL';
-  }
-
-  /* Compliance = completed / (completed + overdue) */
-  complianceStats(vm: { completedLastWeek: ScheduledWorkout[]; overdue: ScheduledWorkout[] }): {
-    done: number;
-    total: number;
-  } {
-    const done = vm.completedLastWeek.length;
-    const total = done + vm.overdue.length;
-    return { done, total: total || done };
-  }
-
-  compliancePct(vm: {
-    completedLastWeek: ScheduledWorkout[];
-    overdue: ScheduledWorkout[];
-  }): number {
-    const { done, total } = this.complianceStats(vm);
-    if (total <= 0) return 100;
-    return (done / total) * 100;
   }
 
   daysUntilGoal(goal: RaceGoal): number | null {

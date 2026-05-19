@@ -112,16 +112,6 @@
               </span>
               <span class="kpi-delta mono">vs 28d avg</span>
             </div>
-            <div class="kpi-tile">
-              <span class="kpi-label mono">{{ 'DASHBOARD.KPI_COMPLIANCE' | translate }}</span>
-              <span class="kpi-value mono"
-                >{{ compliancePct(vm) | number: '1.0-0' }}<small>%</small></span
-              >
-              <span class="kpi-delta kpi-delta--up mono">{{
-                'DASHBOARD.KPI_COMPLIANCE_META'
-                  | translate: { done: complianceStats(vm).done, total: complianceStats(vm).total }
-              }}</span>
-            </div>
           </div>
 
           <!-- Volume chart + 7-day sport mix (side-by-side on desktop, 3/5 · 2/5) -->
@@ -253,7 +243,6 @@
         </aside>
         <section class="dash-main" aria-busy="true">
           <div class="kpi-strip">
-            <div class="skeleton skeleton-block skeleton-kpi" aria-hidden="true"></div>
             <div class="skeleton skeleton-block skeleton-kpi" aria-hidden="true"></div>
             <div class="skeleton skeleton-block skeleton-kpi" aria-hidden="true"></div>
             <div class="skeleton skeleton-block skeleton-kpi" aria-hidden="true"></div>

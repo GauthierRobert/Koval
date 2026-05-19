@@ -36,10 +36,27 @@
   padding: 10px 14px;
   border-radius: var(--radius-lg);
 }
-.reminder-icon { font-size: 16px; color: var(--accent-color); flex-shrink: 0; }
-.reminder-info { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.reminder-title { font-size: 12px; font-weight: 700; color: var(--text-color); }
-.reminder-meta { font-size: 10px; color: var(--text-muted); }
+.reminder-icon {
+  font-size: 16px;
+  color: var(--accent-color);
+  flex-shrink: 0;
+}
+.reminder-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.reminder-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+.reminder-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+}
 .reminder-action {
   background: var(--accent-subtle);
   border: 1px solid transparent;
@@ -66,7 +83,9 @@
   text-transform: uppercase;
   color: var(--text-dim);
 }
-.eyebrow--accent { color: var(--accent-color); }
+.eyebrow--accent {
+  color: var(--accent-color);
+}
 
 /* ═══════════════════════════════════════════════════════════════
    SPLIT RAIL LAYOUT
@@ -102,7 +121,7 @@
    ═══════════════════════════════════════════════════════════════ */
 .kpi-strip {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
 }
 
@@ -116,7 +135,9 @@
   flex-direction: column;
   gap: 4px;
   overflow: hidden;
-  transition: transform 0.2s var(--ease-spring-gentle), border-color 0.2s;
+  transition:
+    transform 0.2s var(--ease-spring-gentle),
+    border-color 0.2s;
 }
 
 .kpi-tile::before {
@@ -126,7 +147,12 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, color-mix(in oklch, var(--accent-color) 30%, transparent), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklch, var(--accent-color) 30%, transparent),
+    transparent
+  );
   opacity: 0;
   transition: opacity 0.25s;
 }
@@ -136,7 +162,9 @@
     transform: translateY(-1px);
     border-color: color-mix(in oklch, var(--accent-color) 22%, var(--glass-border));
   }
-  .kpi-tile:hover::before { opacity: 1; }
+  .kpi-tile:hover::before {
+    opacity: 1;
+  }
 }
 
 .kpi-label {
@@ -161,19 +189,34 @@
   font-weight: 400;
 }
 
-.kpi-value--tsb.tsb-fresh { color: var(--success-color); }
-.kpi-value--tsb.tsb-productive { color: var(--accent-color); }
-.kpi-value--tsb.tsb-neutral { color: var(--text-color); }
-.kpi-value--tsb.tsb-stressed { color: var(--danger-color); }
+.kpi-value--tsb.tsb-fresh {
+  color: var(--success-color);
+}
+.kpi-value--tsb.tsb-productive {
+  color: var(--accent-color);
+}
+.kpi-value--tsb.tsb-neutral {
+  color: var(--text-color);
+}
+.kpi-value--tsb.tsb-stressed {
+  color: var(--danger-color);
+}
 
 .kpi-delta {
   font-size: 10px;
   color: var(--text-dim);
   margin-top: 2px;
 }
-.kpi-delta--up { color: var(--success-color); }
-.kpi-delta--down { color: var(--danger-color); }
-.kpi-delta--form { color: var(--accent-color); font-weight: 600; }
+.kpi-delta--up {
+  color: var(--success-color);
+}
+.kpi-delta--down {
+  color: var(--danger-color);
+}
+.kpi-delta--form {
+  color: var(--accent-color);
+  font-weight: 600;
+}
 
 /* ═══════════════════════════════════════════════════════════════
    VOLUME + SPORT MIX ROW (3/5 · 2/5 on desktop)
@@ -255,9 +298,15 @@
   vertical-align: middle;
 }
 
-.legend-dot--bike { background: #34d399; }
-.legend-dot--run  { background: #f87171; }
-.legend-dot--swim { background: #00a0e9; }
+.legend-dot--bike {
+  background: #34d399;
+}
+.legend-dot--run {
+  background: #f87171;
+}
+.legend-dot--swim {
+  background: #00a0e9;
+}
 
 .chart-tabs {
   display: flex;
@@ -282,7 +331,9 @@
   transition: all 0.18s;
 }
 
-.chart-tab:hover { color: var(--text-color); }
+.chart-tab:hover {
+  color: var(--text-color);
+}
 
 .chart-tab.active {
   background: #fff;
@@ -290,7 +341,7 @@
   font-weight: 700;
 }
 
-:host-context([data-theme="light"]) .chart-tab.active {
+:host-context([data-theme='light']) .chart-tab.active {
   background: #000;
   color: #fff;
 }
@@ -330,8 +381,12 @@
   letter-spacing: 0.04em;
   color: var(--accent-color);
 }
-.mix-delta--up { color: var(--success-color); }
-.mix-delta--down { color: var(--accent-color); }
+.mix-delta--up {
+  color: var(--success-color);
+}
+.mix-delta--down {
+  color: var(--accent-color);
+}
 
 .mix-body {
   display: grid;
@@ -363,12 +418,20 @@
   fill: transparent;
   stroke-width: 4.2;
   stroke-linecap: butt;
-  transition: stroke-dasharray 0.45s var(--ease-out-expo), stroke-dashoffset 0.45s var(--ease-out-expo);
+  transition:
+    stroke-dasharray 0.45s var(--ease-out-expo),
+    stroke-dashoffset 0.45s var(--ease-out-expo);
 }
 
-.donut-segment--cycling { stroke: #34d399; }
-.donut-segment--running { stroke: #f87171; }
-.donut-segment--swimming { stroke: #00a0e9; }
+.donut-segment--cycling {
+  stroke: #34d399;
+}
+.donut-segment--running {
+  stroke: #f87171;
+}
+.donut-segment--swimming {
+  stroke: #00a0e9;
+}
 
 .donut-center {
   position: absolute;
@@ -413,16 +476,24 @@
   font-size: 12px;
 }
 
-.mix-row.dim-row { opacity: 0.4; }
+.mix-row.dim-row {
+  opacity: 0.4;
+}
 
 .mix-dot {
   width: 8px;
   height: 8px;
   border-radius: 2px;
 }
-.mix-dot--cycling { background: #34d399; }
-.mix-dot--running { background: #f87171; }
-.mix-dot--swimming { background: #00a0e9; }
+.mix-dot--cycling {
+  background: #34d399;
+}
+.mix-dot--running {
+  background: #f87171;
+}
+.mix-dot--swimming {
+  background: #00a0e9;
+}
 
 .mix-name {
   font-size: 11px;
@@ -456,12 +527,24 @@
 /* ═══════════════════════════════════════════════════════════════
    SKELETON HEIGHTS (scaffolding in global styles.scss)
    ═══════════════════════════════════════════════════════════════ */
-.skeleton-rail-tall { height: 520px; }
-.skeleton-rail-short { height: 220px; }
-.skeleton-kpi { height: 88px; }
-.skeleton-chart-lg { height: 280px; }
-.skeleton-chart-sm { height: 200px; }
-.skeleton-mix { height: 360px; }
+.skeleton-rail-tall {
+  height: 520px;
+}
+.skeleton-rail-short {
+  height: 220px;
+}
+.skeleton-kpi {
+  height: 88px;
+}
+.skeleton-chart-lg {
+  height: 280px;
+}
+.skeleton-chart-sm {
+  height: 200px;
+}
+.skeleton-mix {
+  height: 360px;
+}
 
 /* ═══════════════════════════════════════════════════════════════
    RESPONSIVE
@@ -485,12 +568,25 @@
 }
 
 @media (max-width: 768px) {
-  .chart-body { height: 220px; padding: 12px; }
-  .dashboard-body { padding: var(--space-md); }
+  .chart-body {
+    height: 220px;
+    padding: 12px;
+  }
+  .dashboard-body {
+    padding: var(--space-md);
+  }
 }
 
 @media (max-width: 600px) {
-  .kpi-strip { grid-template-columns: repeat(2, 1fr); }
-  .mix-body { grid-template-columns: 1fr; justify-items: center; gap: 14px; }
-  .mix-rows { width: 100%; }
+  .kpi-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .mix-body {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 14px;
+  }
+  .mix-rows {
+    width: 100%;
+  }
 }

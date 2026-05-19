@@ -22,6 +22,10 @@ export interface SavedSession extends SessionSummary {
   clubSessionId?: string;
   stravaActivityId?: string;
   nolioActivityId?: string;
+  /** Athlete-set bundle id — sessions sharing this id render as a manual group (brick / race / warmup chain). */
+  groupId?: string | null;
+  manuallyCreated?: boolean;
+  totalDistance?: number | null;
 }
 
 export interface SessionFilters {
@@ -62,6 +66,9 @@ interface RawSavedSession {
   clubSessionId?: string | null;
   stravaActivityId?: string | null;
   nolioActivityId?: string | null;
+  groupId?: string | null;
+  manuallyCreated?: boolean | null;
+  totalDistance?: number | null;
 }
 
 interface SessionWindowResponse {
@@ -289,6 +296,52 @@ export class HistoryService {
     });
   }
 
+  /**
+   * Create a session by hand (no FIT, no live recording) from a form payload.
+   * Backend computes TSS/IF from FTP if not supplied. The returned session is
+   * prepended to both the dashboard and history views.
+   */
+  createManualSession(payload: {
+    title: string;
+    sportType: SavedSession['sportType'];
+    completedAt: string;
+    totalDurationSeconds: number;
+    totalDistance: number | null;
+    avgPower: number | null;
+    avgHR: number | null;
+    avgCadence: number | null;
+    rpe: number | null;
+  }): Observable<SavedSession> {
+    const body = {
+      title: payload.title,
+      sportType: payload.sportType,
+      completedAt: payload.completedAt,
+      totalDurationSeconds: payload.totalDurationSeconds,
+      totalDistance: payload.totalDistance,
+      avgPower: payload.avgPower ?? 0,
+      avgHR: payload.avgHR ?? 0,
+      avgCadence: payload.avgCadence ?? 0,
+      rpe: payload.rpe,
+      manuallyCreated: true,
+    };
+    return this.http.post<RawSavedSession>(this.apiUrl, body).pipe(
+      map((saved) => this.parseSession(saved)),
+      tap((session) => {
+        this.sessionsSubject.next([session, ...this.sessionsSubject.value]);
+        const state = this.historyStateSubject.value;
+        if (this.matchesFilters(session, state.filters)) {
+          this.patchHistory({ sessions: [session, ...state.sessions] });
+        }
+        this.selectedSessionSubject.next(session);
+      }),
+    );
+  }
+
+  /** Set or clear the manual group bundle for a session (brick / race chain). */
+  setSessionGroup(id: string, groupId: string | null): Observable<SavedSession> {
+    return this.updateSession(id, { groupId } as Partial<SavedSession>);
+  }
+
   deleteSession(id: string): void {
     this.http.delete(`${this.apiUrl}/${id}`).subscribe({
       next: () => this.removeLocally(id),
@@ -341,6 +394,9 @@ export class HistoryService {
     clubSessionId: s.clubSessionId ?? undefined,
     stravaActivityId: s.stravaActivityId ?? undefined,
     nolioActivityId: s.nolioActivityId ?? undefined,
+    groupId: s.groupId ?? undefined,
+    manuallyCreated: s.manuallyCreated ?? undefined,
+    totalDistance: s.totalDistance ?? undefined,
   });
 
   private buildParams(filters: SessionFilters, before: string | null, weeks: number): HttpParams {

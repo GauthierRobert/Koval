@@ -115,6 +115,7 @@ public class SessionService {
         if (session == null) return null;
 
         applyRpePatch(session, body);
+        applyGroupIdPatch(session, body, userId);
 
         CompletedSession saved = repository.save(session);
         analyticsService.recomputeAndSaveUserLoad(userId);
@@ -214,6 +215,34 @@ public class SessionService {
                 session.setIntensityFactor(intensityFactor);
             }
         }
+    }
+
+    /**
+     * Set or clear the manual {@code groupId}. When setting, the target group must contain only
+     * sessions completed on the same calendar day as the patched session — bricks/races are a
+     * same-day concept by design.
+     */
+    private void applyGroupIdPatch(CompletedSession session, Map<String, Object> body, String userId) {
+        if (!body.containsKey("groupId")) return;
+        Object raw = body.get("groupId");
+        if (raw == null || (raw instanceof String s && s.isBlank())) {
+            session.setGroupId(null);
+            return;
+        }
+        if (!(raw instanceof String newGroupId)) {
+            throw new IllegalArgumentException("groupId must be a string");
+        }
+        LocalDate day = session.getCompletedAt() != null
+                ? session.getCompletedAt().toLocalDate()
+                : LocalDate.now();
+        List<CompletedSession> existing = repository.findByUserIdAndGroupId(userId, newGroupId);
+        for (CompletedSession other : existing) {
+            if (other.getId().equals(session.getId())) continue;
+            if (other.getCompletedAt() == null || !other.getCompletedAt().toLocalDate().equals(day)) {
+                throw new IllegalArgumentException("Cannot group sessions across different days");
+            }
+        }
+        session.setGroupId(newGroupId);
     }
 
     private CompletedSession findOwnedSession(String sessionId, String userId) {

@@ -46,6 +46,15 @@ public class CompletedSession {
     private String fitFileId; // GridFS ObjectId; null when no FIT stored
     private Integer rpe;
     private Boolean syntheticCompletion; // true when created from planned data via COMPLETE button
+    private Boolean manuallyCreated; // true when added by the athlete via the manual-add UI (no FIT/Strava source)
+
+    /**
+     * Identifier of a same-day session bundle ("Brick" / "Race" / warmup chain). Sessions sharing
+     * a {@code groupId} are rendered together; the field is opt-in and athlete-controlled —
+     * proximity grouping in the UI is purely visual and does not write here.
+     */
+    @Indexed
+    private String groupId;
 
     private Integer movingTimeSeconds; // excludes pauses; null if unknown
     private Double totalDistance; // meters

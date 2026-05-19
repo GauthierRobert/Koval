@@ -1,0 +1,70 @@
+@if (open && anchor) {
+  <app-modal-shell
+    [title]="'WORKOUT_HISTORY.LINK_DIALOG_TITLE' | translate"
+    size="md"
+    (closed)="finish()"
+  >
+    <p class="desc">{{ 'WORKOUT_HISTORY.LINK_DIALOG_DESC' | translate }}</p>
+
+    <div class="anchor">
+      <div class="anchor-badge">
+        <app-sport-icon [sport]="anchor.sportType" [size]="16" />
+      </div>
+      <div class="anchor-info">
+        <span class="anchor-title">{{ anchor.title }}</span>
+        <span class="anchor-time">
+          {{ formatHourMinute(anchor.date) }} · {{ formatTime(anchor.totalDuration) }}
+        </span>
+      </div>
+      <span class="anchor-pin">{{ 'WORKOUT_HISTORY.LINK_DIALOG_GROUP_HEADER' | translate }}</span>
+    </div>
+
+    @if (candidates.length === 0) {
+      <p class="empty">{{ 'WORKOUT_HISTORY.LINK_DIALOG_NO_CANDIDATES' | translate }}</p>
+    } @else {
+      <h4 class="section-label">{{ 'WORKOUT_HISTORY.LINK_DIALOG_AVAILABLE' | translate }}</h4>
+      <ul class="candidate-list">
+        @for (c of candidates; track c.id) {
+          <li class="candidate" [class.selected]="selected.has(c.id)" (click)="toggle(c.id)">
+            <span class="check" [class.checked]="selected.has(c.id)">
+              @if (selected.has(c.id)) {
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              }
+            </span>
+            <app-sport-icon [sport]="c.sportType" [size]="14" />
+            <div class="candidate-info">
+              <span class="candidate-title">{{ c.title }}</span>
+              <span class="candidate-meta">
+                {{ formatHourMinute(c.date) }} · {{ formatTime(c.totalDuration) }}
+              </span>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+
+    <div modal-footer class="footer">
+      <button type="button" class="btn ghost" (click)="finish()" [disabled]="submitting">
+        {{ 'COMMON.CANCEL' | translate }}
+      </button>
+      <button type="button" class="btn primary" (click)="onSubmit()" [disabled]="submitting">
+        @if (submitting) {
+          {{ 'COMMON.SAVING' | translate }}
+        } @else {
+          {{ 'COMMON.SAVE' | translate }}
+        }
+      </button>
+    </div>
+  </app-modal-shell>
+}

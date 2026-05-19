@@ -38,4 +38,6 @@ public interface CompletedSessionRepository extends MongoRepository<CompletedSes
     List<CompletedSession> findByClubSessionId(String clubSessionId);
     List<CompletedSession> findByUserIdInAndCompletedAtBetween(
             List<String> userIds, LocalDateTime from, LocalDateTime to);
+
+    List<CompletedSession> findByUserIdAndGroupId(String userId, String groupId);
 }

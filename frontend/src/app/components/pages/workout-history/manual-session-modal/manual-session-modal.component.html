@@ -1,0 +1,153 @@
+@if (open) {
+  <app-modal-shell
+    [title]="'WORKOUT_HISTORY.MANUAL_TITLE' | translate"
+    size="md"
+    (closed)="closed.emit()"
+  >
+    <form class="manual-form" (ngSubmit)="onSubmit()">
+      <div class="row two">
+        <label class="field">
+          <span>{{ 'WORKOUT_HISTORY.MANUAL_FIELD_TITLE' | translate }}</span>
+          <input
+            type="text"
+            class="input"
+            [(ngModel)]="title"
+            name="title"
+            placeholder="{{ 'WORKOUT_HISTORY.MANUAL_TITLE_PLACEHOLDER' | translate }}"
+            maxlength="120"
+          />
+        </label>
+        <label class="field">
+          <span>{{ 'WORKOUT_HISTORY.MANUAL_FIELD_SPORT' | translate }}</span>
+          <select class="input" [(ngModel)]="sportType" name="sport">
+            <option value="CYCLING">{{ 'WORKOUT_HISTORY.SPORT_FILTER_BIKE' | translate }}</option>
+            <option value="RUNNING">{{ 'WORKOUT_HISTORY.SPORT_FILTER_RUN' | translate }}</option>
+            <option value="SWIMMING">{{ 'WORKOUT_HISTORY.SPORT_FILTER_SWIM' | translate }}</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="field">
+        <span>{{ 'WORKOUT_HISTORY.MANUAL_FIELD_DATE' | translate }}</span>
+        <input
+          type="datetime-local"
+          class="input"
+          [(ngModel)]="completedAt"
+          name="completedAt"
+          required
+        />
+      </label>
+
+      <div class="row">
+        <span class="group-label">{{ 'WORKOUT_HISTORY.MANUAL_FIELD_DURATION' | translate }}</span>
+        <div class="duration-row">
+          <label class="field tiny">
+            <span>h</span>
+            <input type="number" min="0" max="24" class="input" [(ngModel)]="hours" name="hours" />
+          </label>
+          <label class="field tiny">
+            <span>min</span>
+            <input
+              type="number"
+              min="0"
+              max="59"
+              class="input"
+              [(ngModel)]="minutes"
+              name="minutes"
+            />
+          </label>
+          <label class="field tiny">
+            <span>s</span>
+            <input
+              type="number"
+              min="0"
+              max="59"
+              class="input"
+              [(ngModel)]="seconds"
+              name="seconds"
+            />
+          </label>
+        </div>
+      </div>
+
+      <label class="field">
+        <span>{{ 'WORKOUT_HISTORY.MANUAL_FIELD_DISTANCE_KM' | translate }}</span>
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          class="input"
+          [(ngModel)]="distanceKm"
+          name="distance"
+          placeholder="{{ 'WORKOUT_HISTORY.MANUAL_OPTIONAL' | translate }}"
+        />
+      </label>
+
+      <div class="row three">
+        <label class="field">
+          <span>{{ 'WORKOUT_HISTORY.MANUAL_FIELD_AVG_POWER' | translate }}</span>
+          <input
+            type="number"
+            min="0"
+            class="input"
+            [(ngModel)]="avgPower"
+            name="avgPower"
+            placeholder="W"
+          />
+        </label>
+        <label class="field">
+          <span>{{ 'WORKOUT_HISTORY.MANUAL_FIELD_AVG_HR' | translate }}</span>
+          <input
+            type="number"
+            min="0"
+            class="input"
+            [(ngModel)]="avgHR"
+            name="avgHR"
+            placeholder="bpm"
+          />
+        </label>
+        <label class="field">
+          <span>{{ 'WORKOUT_HISTORY.MANUAL_FIELD_AVG_CADENCE' | translate }}</span>
+          <input
+            type="number"
+            min="0"
+            class="input"
+            [(ngModel)]="avgCadence"
+            name="avgCadence"
+            placeholder="rpm"
+          />
+        </label>
+      </div>
+
+      <label class="field">
+        <span>{{ 'WORKOUT_HISTORY.MANUAL_FIELD_RPE' | translate }}</span>
+        <input
+          type="number"
+          min="1"
+          max="10"
+          class="input"
+          [(ngModel)]="rpe"
+          name="rpe"
+          placeholder="1–10"
+        />
+      </label>
+
+      @if (formError) {
+        <p class="form-error">{{ formError }}</p>
+      }
+
+      <div class="modal-footer">
+        <button type="button" class="btn ghost" (click)="closed.emit()" [disabled]="submitting">
+          {{ 'COMMON.CANCEL' | translate }}
+        </button>
+        <button type="submit" class="btn primary" [disabled]="!canSubmit">
+          @if (submitting) {
+            {{ 'COMMON.SAVING' | translate }}
+          } @else {
+            {{ 'WORKOUT_HISTORY.MANUAL_SAVE' | translate }}
+          }
+        </button>
+      </div>
+    </form>
+  </app-modal-shell>
+}

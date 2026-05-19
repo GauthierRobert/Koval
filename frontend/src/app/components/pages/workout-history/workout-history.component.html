@@ -72,6 +72,26 @@
         </button>
         <button
           class="icon-btn"
+          (click)="openManualModal()"
+          [title]="'WORKOUT_HISTORY.BTN_MANUAL_ADD' | translate"
+          [attr.aria-label]="'WORKOUT_HISTORY.BTN_MANUAL_ADD' | translate"
+        >
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+        <button
+          class="icon-btn"
           (click)="triggerUpload()"
           [disabled]="importing"
           [title]="
@@ -221,11 +241,118 @@
                   </span>
                 </div>
               }
+              @case ('group') {
+                <div
+                  class="group-card"
+                  [class.race]="row.group.kind === 'race'"
+                  [class.brick]="row.group.kind === 'brick'"
+                  [class.expanded]="isGroupExpanded(row.groupKey)"
+                  (click)="toggleGroup(row.groupKey, $event)"
+                >
+                  <div class="group-spine" aria-hidden="true"></div>
+                  <div class="group-head">
+                    <div class="group-badge">
+                      @if (row.group.kind === 'race') {
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.4"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path d="M5 21V3" />
+                          <path
+                            d="M5 4c4-2 7 2 11 0v9c-4 2-7-2-11 0"
+                            fill="currentColor"
+                            fill-opacity="0.25"
+                          />
+                        </svg>
+                      } @else {
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.4"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path d="M9 7H6a3 3 0 0 0 0 6h2" />
+                          <path d="M15 17h3a3 3 0 0 0 0-6h-2" />
+                          <line x1="8" y1="12" x2="16" y2="12" />
+                        </svg>
+                      }
+                    </div>
+                    <div class="group-info">
+                      <div class="group-title-row">
+                        <span class="group-kind-tag">{{
+                          (row.group.kind === 'race'
+                            ? 'WORKOUT_HISTORY.GROUP_TAG_RACE'
+                            : 'WORKOUT_HISTORY.GROUP_TAG_BRICK'
+                          ) | translate
+                        }}</span>
+                        <span class="group-title">{{ groupTitle(row.group) }}</span>
+                      </div>
+                      <div class="group-sport-chain">
+                        @for (sport of row.group.sportSequence; track sport; let last = $last) {
+                          <app-sport-icon [sport]="sport" [size]="14" />
+                          @if (!last) {
+                            <span class="chain-arrow">→</span>
+                          }
+                        }
+                        <span class="group-session-count">
+                          ·
+                          {{
+                            (row.group.sessions.length === 1
+                              ? 'WORKOUT_HISTORY.WEEK_SESSION_COUNT_SINGULAR'
+                              : 'WORKOUT_HISTORY.WEEK_SESSION_COUNT_PLURAL'
+                            ) | translate: { count: row.group.sessions.length }
+                          }}
+                        </span>
+                      </div>
+                      <div class="group-metrics">
+                        <span class="metric-chip tss"
+                          >{{ groupSummaryTss(row.group, ftp$ | async) }} TSS</span
+                        >
+                        <span class="metric-chip dur">{{
+                          formatTime(row.group.movingSeconds)
+                        }}</span>
+                        @if (row.group.spanSeconds > row.group.movingSeconds + 60) {
+                          <span
+                            class="metric-chip span"
+                            [title]="'Total elapsed (incl. transitions)'"
+                          >
+                            ⌚ {{ formatTime(row.group.spanSeconds) }}
+                          </span>
+                        }
+                      </div>
+                    </div>
+                    <svg
+                      class="group-chevron"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </div>
+                </div>
+              }
               @case ('session') {
                 <div
                   data-testid="session-item"
                   class="session-item"
                   [class.active]="(historyService.selectedSession$ | async)?.id === row.session.id"
+                  [class.grouped-child]="!!row.groupedUnder"
                   (click)="onSelect(row.session)"
                 >
                   <div class="item-sport">
@@ -246,6 +373,26 @@
                       >
                     </div>
                   </div>
+                  <button
+                    class="dl-btn link-btn"
+                    (click)="openLinkModal(row.session, $event)"
+                    [title]="'WORKOUT_HISTORY.LINK_BTN_OPEN' | translate"
+                    [attr.aria-label]="'WORKOUT_HISTORY.LINK_BTN_OPEN' | translate"
+                  >
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1 1" />
+                      <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1-1" />
+                    </svg>
+                  </button>
                   <button
                     class="dl-btn"
                     (click)="downloadFit($event, row.session)"
@@ -463,3 +610,17 @@
     </div>
   </app-modal-shell>
 }
+
+<app-manual-session-modal
+  [open]="manualModalOpen"
+  (closed)="closeManualModal()"
+  (create)="onManualCreate($event)"
+/>
+
+<app-link-sessions-modal
+  [open]="linkModalOpen"
+  [anchor]="linkAnchor"
+  [candidates]="linkCandidates"
+  (closed)="closeLinkModal()"
+  (apply)="onLinkApply($event)"
+/>
