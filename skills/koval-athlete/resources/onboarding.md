@@ -54,6 +54,17 @@ Ask in **grouped batches**, not one-by-one. Wait for the answer before the next 
 - Structured intervals or free?
 - Favourite session type? (sweet spot / VO2 / endurance / sprints / hills / LSD)
 - Type to actively avoid?
+- **Training method?** Read out the menu below (one-line each) and ask the athlete to pick one — or **None** for adaptive. See `training-methods.md` for the full menu and `training-methods/<slug>.md` for the per-method playbook.
+    1. **Norwegian** — double-threshold days, lactate-guided.
+    2. **Polarized 80/20** — strictly easy + truly hard, nothing in between.
+    3. **Pyramidal** — lots of easy + tempo-rich + a touch of VO2.
+    4. **Sweet Spot / FasCat** — high-density 88–94% FTP, time-crunched cyclists.
+    5. **Maffetone (MAF)** — heart-rate-capped aerobic, build the engine.
+    6. **Lydiard** — phased base → hills → anaerobic → race.
+    7. **Daniels' VDOT** — pace-based E/M/T/I/R from a race time.
+    8. **Block Periodization** — concentrated HIIT blocks + maintenance.
+    9. **None — adaptive** (default if unsure).
+  Persist the chosen slug (or `none`) under `Training method` in the profile.
 
 ### Group 5 — Body & recovery
 - Injuries / limitations?

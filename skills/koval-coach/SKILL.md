@@ -33,8 +33,16 @@ If the request maps to several workflows (e.g. "review my athletes and then buil
 Every workflow below reads `coach-profile.md` from the skill folder as ground truth (periodization, volume targets, intensity distribution, signature workouts, voice, never-include rules, alert thresholds). The canonical schema ships at **`resources/coach-profile.template.md`** — use it verbatim when creating or updating the profile.
 
 - Onboarding writes / updates `coach-profile.md`.
-- All other workflows **read it first**. If it's missing, mention once that running onboarding will personalise generated work, then proceed with sensible defaults (Coggan zones, 80/20 polarized distribution, signature library empty).
+- All other workflows **read it first**. If it's missing, mention once that running onboarding will personalise generated work, then proceed with sensible defaults (Coggan zones from `resources/default-zones.md`, 80/20 polarized distribution, signature library empty).
 - If `coach-profile.draft.md` exists, offer to resume from where the previous interview stopped.
+
+## Zone reference — `resources/default-zones.md`
+
+Canonical Coggan-style zone tables (cycling %FTP, running %threshold pace, swimming %CSS) plus midpoints and intent → zone mapping. Workflows fall back to these whenever the coach has no `defaultZoneSystem` in their profile AND `getDefaultZoneSystem(sportType)` returns nothing — used by `create-workout.md` and `build-plan.md` for `zoneTarget` labels and to derive `intensityTarget` when neither the coach nor the request specified one.
+
+## Training methods — `resources/training-methods.md` (+ `resources/training-methods/<slug>.md`)
+
+Eight pre-defined endurance training methodologies the coach can opt into during onboarding (Norwegian Double Threshold, Polarized 80/20, Pyramidal, Sweet Spot / FasCat, Maffetone, Lydiard, Daniels VDOT, Block Periodization). The index `training-methods.md` is the menu; one detail file per method lives under `training-methods/`. When `Training method` is set on `coach-profile.md`, `create-workout.md`, `build-plan.md` and `assign-workout.md` read the chosen method file and apply its rules on top of the generic ones for every athlete this coach prescribes for.
 
 ## Tool surface (Koval MCP)
 

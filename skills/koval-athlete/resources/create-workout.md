@@ -12,7 +12,9 @@ Expert workout designer for cycling / running / swimming / triathlon. Designs th
 If they only want to *find* an existing one, use `find-workout.md`.
 
 ## Step 0 — Profile
-Read `athlete-profile.md`. Use `favouriteSessionTypes`, `avoid`, `forbiddenEfforts`, `maxSessionMinutes`, `structurePreference`, `environment` plus FTP / threshold pace / CSS to bias the design. Defaults: Coggan zones, FTP from `getMyProfile` if present.
+Read `athlete-profile.md`. Use `favouriteSessionTypes`, `avoid`, `forbiddenEfforts`, `maxSessionMinutes`, `structurePreference`, `environment` plus FTP / threshold pace / CSS to bias the design. Defaults: zones from `default-zones.md` (Coggan-style fallback) when no custom Default Zone System exists; FTP from `getMyProfile` if present.
+
+If `Training method` on the profile is set to anything other than `none`, **also read `training-methods/<slug>.md`** before designing. That file's "How this skill applies it" section adds method-specific rules (intensity caps, hallmark session shapes, periodization context) that override the generic guidance below when they conflict. If a method explicitly does not suit the requested sport (e.g. `daniels` is run-specific and the request is cycling), fall back to generic rules for this turn and note the mismatch on the Done line.
 
 ## Workflow
 1. **Parse**: sport, target duration, intensity focus, constraints (pool length, equipment, terrain, indoor/outdoor).
@@ -64,17 +66,26 @@ On a set, two fields control rest between reps:
 - Example: `{"type":"TRANSITION","durationSeconds":120,"label":"T2 Bike-to-Run","transitionType":"T2","description":"Quick change, start easy"}`
 
 ## Intensity
-- **Cycling**: `intensityTarget` = %FTP (Coggan).
+- **Cycling**: `intensityTarget` = %FTP.
 - **Running**: `intensityTarget` = %Threshold Pace, `cadenceTarget` ≈ 170+.
 - **Swimming**: `intensityTarget` = %CSS, `cadenceTarget` = SPM (50-80).
 
 ## Zone system
-If a **Default Zone System** exists for the sport:
+Call `getDefaultZoneSystem(sportType)` (or rely on the value already in context if known) and branch:
+
+**A. Custom Default Zone System exists for the sport**
 - Set `zoneSystemId`, use zone labels in block labels, set `zoneTarget` to the label (e.g. `"Z2"`).
-- ONLY IF intensity is missing from the request: set `intensityTarget` to the zone midpoint.
+- ONLY IF intensity is missing from the request: set `intensityTarget` to the **custom zone midpoint**.
 - Respect zone **annotations** (coach conventions).
-- When the user references zones by name, map to the **custom zone** boundaries, not generic Coggan.
-If none exists, fall back to Coggan / pace / CSS conventions.
+- When the user references zones by name, map to the **custom zone** boundaries — not the project defaults.
+
+**B. No custom zone system → read `default-zones.md`**
+- Do NOT set `zoneSystemId`.
+- Use the labels and zone names from `default-zones.md` for `zoneTarget` and block `label`.
+- ONLY IF intensity is missing from the request: set `intensityTarget` to the **midpoint column** from `default-zones.md` for the chosen zone (use the Intent → zone mapping table when the user only gives a session "type" like "endurance" / "tempo" / "VO2").
+- If the user explicitly gave an intensity (e.g. "at 85%", "4×8 @ threshold"), keep their value and only use `default-zones.md` to pick the matching zone label.
+
+In either case, `default-zones.md` is the source of truth for the **Coggan-style fallback** referenced throughout this skill — never inline numbers from memory.
 
 ## TSS — compute BEFORE `createTraining`
 **Formula:** `TSS = Σ (durationSeconds × (intensityTarget/100)²) / 36`

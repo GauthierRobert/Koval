@@ -1,6 +1,6 @@
 ---
 name: koval-athlete
-description: Use whenever the user (athlete role) asks Claude for anything training-related on the Koval Training Planner — onboarding, setting zones / FTP / threshold pace / CSS, analysing a session or ride, checking form / fitness / fatigue / TSB, viewing the power curve or PRs, planning the week, building a race taper, finding a workout in their library, or designing and persisting a new structured workout (cycling, running, swimming, brick / triathlon). Triggers include "set up my profile", "onboard me", "set my FTP", "analyse my last ride", "how was my workout", "what's my form", "am I fresh", "show my power curve", "what are my PRs", "plan my week", "build a taper", "I have a race", "find me a sweet spot workout", "create a 5x5 VO2", "design a 90min Z2 ride", "make a brick workout". Reads sub-playbooks from resources/ to pick the right workflow and the canonical athlete-profile.md schema from resources/athlete-profile.template.md.
+description: Use whenever the user (athlete role) asks Claude for anything training-related on the Koval Training Planner — onboarding, setting zones / FTP / threshold pace / CSS, analysing a session or ride, checking form / fitness / fatigue / TSB, viewing the power curve or PRs, planning the week, building a multi-week training plan, building a race taper, finding a workout in their library, or designing and persisting a new structured workout (cycling, running, swimming, brick / triathlon). Triggers include "set up my profile", "onboard me", "set my FTP", "analyse my last ride", "how was my workout", "what's my form", "am I fresh", "show my power curve", "what are my PRs", "plan my week", "build me a 6-week base block", "make me a training plan", "build a taper", "I have a race", "find me a sweet spot workout", "create a 5x5 VO2", "design a 90min Z2 ride", "make a brick workout". Reads sub-playbooks from resources/ to pick the right workflow and the canonical athlete-profile.md schema from resources/athlete-profile.template.md.
 ---
 
 # Koval — Athlete
@@ -25,9 +25,15 @@ Pick **one** workflow from the user's request, then **read the matching file in 
 | Search the workout library | "find me a sweet spot workout", "do I have a 90min Z2 ride", "what threshold workouts do I have" | `resources/find-workout.md` |
 | Design a new workout | "create a 5x5 VO2", "build me a 4x20 threshold", "design a 3000m swim", "make a brick" | `resources/create-workout.md` |
 | Plan the week | "plan my week", "what should I do this week", "schedule my training" | `resources/plan-my-week.md` |
+| Build a multi-week plan | "build me a 6-week base block", "make me a sweet-spot plan", "design a 12-week marathon build" | `resources/build-plan.md` |
 | Race prep / taper | "build me a taper", "I have a race in N weeks", "prep me for my A-race" | `resources/prep-race.md` |
 
 If the request maps to several workflows (e.g. "set me up, then plan my week") run them sequentially: onboarding → zone-setup → plan-my-week.
+
+**Disambiguation between plan-style workflows:**
+- *One week only* → `plan-my-week.md`.
+- *Multi-week, race-driven and within ~6 weeks* → `prep-race.md`.
+- *Multi-week, no race or race > 6 weeks out* → `build-plan.md`.
 
 ## Profile file — `athlete-profile.md`
 
@@ -36,6 +42,14 @@ Every workflow below the router reads `athlete-profile.md` from the skill folder
 - Onboarding writes / updates `athlete-profile.md`.
 - All other workflows **read it first**. If it's missing, mention once that running onboarding will personalise future plans, then proceed with sensible Coggan / polarized defaults.
 - If `athlete-profile.draft.md` exists, offer to resume from where the previous interview stopped.
+
+## Zone reference — `resources/default-zones.md`
+
+Canonical Coggan-style zone tables (cycling %FTP, running %threshold pace, swimming %CSS) plus midpoints and intent → zone mapping. Workflows fall back to these whenever `getDefaultZoneSystem(sportType)` returns nothing — used by `create-workout.md` (for `zoneTarget` labels and to derive `intensityTarget` when the user did not specify one) and by `zone-setup.md` (as the starting bounds when calling `createZoneSystem`).
+
+## Training methods — `resources/training-methods.md` (+ `resources/training-methods/<slug>.md`)
+
+Eight pre-defined endurance training methodologies the athlete can opt into during onboarding (Norwegian Double Threshold, Polarized 80/20, Pyramidal, Sweet Spot / FasCat, Maffetone, Lydiard, Daniels VDOT, Block Periodization). The index `training-methods.md` is the menu; one detail file per method lives under `training-methods/`. When `Training method` is set on `athlete-profile.md`, `create-workout.md` and `plan-my-week.md` read the chosen method file and apply its rules on top of the generic ones.
 
 ## Tool surface (Koval MCP)
 

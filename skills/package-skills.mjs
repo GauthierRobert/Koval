@@ -5,6 +5,13 @@
 //
 // Run:  node skills/package-skills.mjs
 //
+// Files under skills/_shared/ are merged into every skill's archive at the same
+// relative path — e.g. skills/_shared/resources/training-methods/norwegian.md
+// is bundled into each ZIP as <skill>/resources/training-methods/norwegian.md.
+// This keeps a single source of truth for content that all skills need to ship.
+// If a skill has a local file at the same relative path as a shared file, the
+// local copy wins and a warning is printed.
+//
 // The output ZIPs match the layout Claude Desktop and Claude.ai expect:
 //   koval-analyze-last-ride.zip
 //     └── koval-analyze-last-ride/
@@ -19,6 +26,7 @@ import { Buffer } from 'node:buffer';
 
 const SKILLS_DIR = dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = join(SKILLS_DIR, 'dist');
+const SHARED_DIR = join(SKILLS_DIR, '_shared');
 
 let crcTable = null;
 function crc32(buf) {
@@ -122,11 +130,22 @@ function buildZip(files) {
   return Buffer.concat([localPart, centralPart, eocd]);
 }
 
-function packSkill(skillDir) {
+function packSkill(skillDir, sharedFiles) {
   const skillName = basename(skillDir);
-  const files = walk(skillDir)
-    .sort((a, b) => a.relPath.localeCompare(b.relPath))
-    .map(({ relPath, absPath }) => ({
+  // relPath -> { absPath, source }, indexed so locals can override shared.
+  const merged = new Map();
+  for (const f of sharedFiles) {
+    merged.set(f.relPath, { absPath: f.absPath, source: 'shared' });
+  }
+  for (const f of walk(skillDir)) {
+    if (merged.has(f.relPath) && merged.get(f.relPath).source === 'shared') {
+      console.warn(`  ! ${skillName}/${f.relPath} overrides _shared copy`);
+    }
+    merged.set(f.relPath, { absPath: f.absPath, source: 'local' });
+  }
+  const files = [...merged.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([relPath, { absPath }]) => ({
       name: skillName + '/' + relPath,
       data: readFileSync(absPath),
     }));
@@ -140,7 +159,7 @@ function main() {
   if (!existsSync(DIST_DIR)) mkdirSync(DIST_DIR, { recursive: true });
 
   const skillDirs = readdirSync(SKILLS_DIR, { withFileTypes: true })
-    .filter((e) => e.isDirectory() && e.name !== 'dist' && e.name !== 'node_modules')
+    .filter((e) => e.isDirectory() && e.name !== 'dist' && e.name !== 'node_modules' && !e.name.startsWith('_'))
     .map((e) => join(SKILLS_DIR, e.name))
     .filter((d) => existsSync(join(d, 'SKILL.md')))
     .sort();
@@ -150,10 +169,15 @@ function main() {
     process.exit(1);
   }
 
+  const sharedFiles = existsSync(SHARED_DIR) ? walk(SHARED_DIR) : [];
+  if (sharedFiles.length > 0) {
+    console.log(`merging ${sharedFiles.length} shared file(s) from _shared/ into every bundle.`);
+  }
+
   let totalBytes = 0;
   for (const dir of skillDirs) {
     const skillName = basename(dir);
-    const zip = packSkill(dir);
+    const zip = packSkill(dir, sharedFiles);
     writeFileSync(join(DIST_DIR, skillName + '.zip'), zip);
     totalBytes += zip.length;
     console.log(`packed ${skillName}.zip (${(zip.length / 1024).toFixed(1)} KB)`);

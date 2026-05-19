@@ -14,7 +14,8 @@ _Last updated: <YYYY-MM-DD>_
 - **Coaching mode:** <1:1 / club / both>
 
 ## Philosophy
-- **Periodization:** <linear / block / polarized 80-20 / pyramidal / sweet-spot / reverse / undulating>
+- **Training method:** <one of: norwegian / polarized / pyramidal / sweet-spot / maffetone / lydiard / daniels / block-periodization / none> — see `training-methods.md` for the canonical menu and per-method playbooks. If set, workflows read `training-methods/<slug>.md` and apply its prescription rules on top of every workout / plan generated for this coach's athletes.
+- **Periodization:** <linear / block / polarized 80-20 / pyramidal / sweet-spot / reverse / undulating> (derived from the method above when one is chosen)
 - **Intensity distribution:** <%Z1-2 / %Z3 / %Z4+>
 - **Deload cadence:** every <N> weeks at <X>% volume
 - **Prescription unit:** <time | TSS>

@@ -11,6 +11,16 @@ Build a taper plan from a goal / race, schedule it, render the preview.
 ## Step 0 — Profile
 Read `athlete-profile.md`. Honour `availableDays`, `restDays`, `maxSessionMinutes`, `forbiddenEfforts`, `neverInclude` when laying out the taper. Apply `voice`, `language`, `prescriptionUnit` to every created session. If missing, suggest onboarding once and proceed with defaults.
 
+If `Training method` on the profile is set to anything other than `none`, **also read `training-methods/<slug>.md`** before Step 3 — the method dictates how the taper is shaped:
+- `polarized` / `pyramidal` / `daniels`: keep short VO2 / I-pace sharpening efforts in the taper, drop volume.
+- `norwegian`: sharpening shifts from sub-threshold doubles to single short race-pace efforts in the final 10 days.
+- `sweet-spot` / `block-periodization`: replace block-weeks with single race-pace openers in the taper window; never start a new HIT block inside the taper.
+- `maffetone`: keep the HR cap; add short race-pace efforts only in the final 7 days as openers, otherwise stay aerobic.
+- `lydiard`: the taper IS the "coordination / sharpening" phase — short fast reps, time trials, no more base mileage growth.
+- If `method = none`, apply the generic structure in Step 2 below.
+
+Method choice never overrides `forbiddenEfforts`. If a method's signature sharpening session is on the forbidden list, substitute the closest legal alternative and flag it once.
+
 ## Workflow
 
 ### Step 1 — Find the goal

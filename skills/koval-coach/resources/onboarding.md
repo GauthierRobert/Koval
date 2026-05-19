@@ -34,7 +34,18 @@ Ask in **grouped batches**, not one-by-one. Wait for the answer before the next 
 - Do you coach 1:1, in groups (clubs), or both?
 
 ### Group 2 — Coaching philosophy
-- Which periodization model do you favour? (linear / block / polarized 80-20 / pyramidal / sweet-spot focused / reverse / undulating)
+- **Training method?** Read out the menu below and ask the coach to pick one — or **None** for eclectic. See `training-methods.md` for the full menu and `training-methods/<slug>.md` for the per-method playbook that workflows will apply for every athlete you coach.
+    1. **Norwegian** — double-threshold days, lactate-guided.
+    2. **Polarized 80/20** — strictly easy + truly hard, nothing in between.
+    3. **Pyramidal** — lots of easy + tempo-rich + a touch of VO2.
+    4. **Sweet Spot / FasCat** — high-density 88–94% FTP, time-crunched cyclists.
+    5. **Maffetone (MAF)** — heart-rate-capped aerobic, build the engine.
+    6. **Lydiard** — phased base → hills → anaerobic → race.
+    7. **Daniels' VDOT** — pace-based E/M/T/I/R from a race time.
+    8. **Block Periodization** — concentrated HIIT blocks + maintenance.
+    9. **None — eclectic** (default if the coach mixes methods per athlete).
+  Persist the chosen slug (or `none`) under `Training method` in the profile. If a method is chosen, **pre-fill the rest of Group 2** from the method's playbook (`training-methods/<slug>.md`) and only ask for overrides.
+- Which periodization model do you favour? (linear / block / polarized 80-20 / pyramidal / sweet-spot focused / reverse / undulating) — auto-suggested from the method above when one is chosen.
 - Default intensity distribution across a normal week? (e.g. "80% Z1-Z2, 10% Z3, 10% Z4+")
 - Do you build in deload weeks? Every how many weeks and at what % of normal volume?
 - Do you prefer **time-based** or **TSS-based** prescription?

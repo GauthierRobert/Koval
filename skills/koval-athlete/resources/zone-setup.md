@@ -34,38 +34,7 @@ Capture the athlete's threshold value and create a personalised zone system for 
 
 ### Default zone bounds (Coggan-style)
 
-**Cycling (% FTP):**
-
-| Zone | Range  | Label              |
-|------|--------|--------------------|
-| Z1   | 0-55   | Active recovery    |
-| Z2   | 56-75  | Endurance          |
-| Z3   | 76-90  | Tempo              |
-| Z4   | 91-105 | Threshold          |
-| Z5   | 106-120| VO2max             |
-| Z6   | 121-150| Anaerobic capacity |
-| Z7   | 151-300| Neuromuscular      |
-
-**Running (% threshold pace, slower → smaller %):**
-
-| Zone | Range   | Label       |
-|------|---------|-------------|
-| Z1   | 0-75    | Recovery    |
-| Z2   | 76-87   | Endurance   |
-| Z3   | 88-94   | Tempo       |
-| Z4   | 95-102  | Threshold   |
-| Z5   | 103-110 | VO2max      |
-| Z6   | 111-130 | Anaerobic   |
-
-**Swimming (% CSS speed):**
-
-| Zone | Range   | Label       |
-|------|---------|-------------|
-| Z1   | 80-87   | Recovery    |
-| Z2   | 88-93   | Endurance   |
-| Z3   | 94-100  | Tempo       |
-| Z4   | 101-105 | Threshold   |
-| Z5   | 106-145 | VO2 / Sprint|
+Use the canonical tables in **`default-zones.md`** as the starting point for `createZoneSystem` — pass each row's range and label straight through unless the user requested custom bounds. The same tables are the project-wide fallback when no Default Zone System exists, so editing them in one place keeps zone-setup and workout creation aligned.
 
 7. **Confirm** with `listZoneSystems` and render a one-line summary.
 8. **Suggest follow-up** — *"Want me to capture the rest of your training preferences now (available days, goals, voice)?"* → `onboarding.md`.

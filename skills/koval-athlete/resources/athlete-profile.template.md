@@ -27,6 +27,7 @@ _Last updated: <YYYY-MM-DD>_
 - **Time of day:** <morning / lunch / evening>
 
 ## Workout style
+- **Training method:** <one of: norwegian / polarized / pyramidal / sweet-spot / maffetone / lydiard / daniels / block-periodization / none> — see `training-methods.md` for the canonical menu and per-method playbooks. If set, workflows read `training-methods/<slug>.md` and apply its prescription rules on top of every workout / plan generated for this athlete.
 - **Environment:** <indoor / outdoor / mix per sport>
 - **Structure preference:** <structured intervals / free / mix>
 - **Favourite session types:** <…>
@@ -56,5 +57,6 @@ Any koval-athlete workflow that creates a `Training`, `ScheduledWorkout` or `Pla
 3. Never exceed **max session length** for the weekday/weekend in question.
 4. Honour the **never include** list and **forbidden efforts** absolutely.
 5. Use the **prescription unit**, **load metric** and **default zone system** specified here.
-6. Write descriptions in the configured **style**, **language** and **tone**.
-7. Bias intensity decisions on the **sleep baseline** (poor sleep → push hard sessions back).
+6. If a **training method** is set, also read `training-methods/<slug>.md` and apply its rules (intensity caps, hallmark sessions, distribution, anti-fit sessions).
+7. Write descriptions in the configured **style**, **language** and **tone**.
+8. Bias intensity decisions on the **sleep baseline** (poor sleep → push hard sessions back).
