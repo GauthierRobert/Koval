@@ -9,7 +9,11 @@
       [intensityFactor]="getIF(session, ftp)"
       [ftp]="ftp"
       [movingTime]="(movingTime$ | async) ?? null"
+      [linkedSessions]="linkedSessions"
       (rpeChanged)="selectRpe(session, $event)"
+      (navTo)="navTo.emit($event)"
+      (linkClicked)="linkClicked.emit(session)"
+      (downloadClicked)="downloadClicked.emit(session)"
     />
 
     <!-- FIT timeseries chart -->

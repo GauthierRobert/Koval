@@ -67,6 +67,11 @@ export class BlockBreakdownTableComponent {
     return Math.round(m) + ' m';
   }
 
+  formatPace(speedKmh: number, sportType: string): string {
+    if (!speedKmh || speedKmh <= 0) return '—';
+    return this.formatSpeed(speedKmh / 3.6, sportType);
+  }
+
   formatSpeed(speedMs: number, sportType: string): string {
     if (!speedMs || speedMs <= 0) return '\u2014';
     if (sportType === 'SWIMMING') {

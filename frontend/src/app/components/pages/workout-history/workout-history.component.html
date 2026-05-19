@@ -243,177 +243,162 @@
               }
               @case ('group') {
                 <div
-                  class="group-card"
+                  data-testid="group-card"
+                  class="group-card session-item"
                   [class.race]="row.group.kind === 'race'"
                   [class.brick]="row.group.kind === 'brick'"
-                  [class.expanded]="isGroupExpanded(row.groupKey)"
-                  (click)="toggleGroup(row.groupKey, $event)"
+                  [class.active]="
+                    isCurrentGroup((historyService.selectedSession$ | async)?.id, row.group)
+                  "
+                  (click)="onSelectGroup(row.group)"
                 >
-                  <div class="group-spine" aria-hidden="true"></div>
-                  <div class="group-head">
-                    <div class="group-badge">
-                      @if (row.group.kind === 'race') {
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2.4"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        >
-                          <path d="M5 21V3" />
-                          <path
-                            d="M5 4c4-2 7 2 11 0v9c-4 2-7-2-11 0"
-                            fill="currentColor"
-                            fill-opacity="0.25"
-                          />
-                        </svg>
-                      } @else {
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2.4"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        >
-                          <path d="M9 7H6a3 3 0 0 0 0 6h2" />
-                          <path d="M15 17h3a3 3 0 0 0 0-6h-2" />
-                          <line x1="8" y1="12" x2="16" y2="12" />
-                        </svg>
-                      }
+                  <span class="sport-rail" aria-hidden="true"></span>
+                  <div class="item-sport">
+                    @if (row.group.kind === 'race') {
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.4"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M5 21V3" />
+                        <path
+                          d="M5 4c4-2 7 2 11 0v9c-4 2-7-2-11 0"
+                          fill="currentColor"
+                          fill-opacity="0.25"
+                        />
+                      </svg>
+                    } @else {
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.4"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M9 7H6a3 3 0 0 0 0 6h2" />
+                        <path d="M15 17h3a3 3 0 0 0 0-6h-2" />
+                        <line x1="8" y1="12" x2="16" y2="12" />
+                      </svg>
+                    }
+                  </div>
+                  <div class="item-info">
+                    <div class="group-title-row">
+                      <span class="group-kind-tag">{{
+                        (row.group.kind === 'race'
+                          ? 'WORKOUT_HISTORY.GROUP_TAG_RACE'
+                          : 'WORKOUT_HISTORY.GROUP_TAG_BRICK'
+                        ) | translate
+                      }}</span>
+                      <span class="item-title">{{ groupTitle(row.group) }}</span>
                     </div>
-                    <div class="group-info">
-                      <div class="group-title-row">
-                        <span class="group-kind-tag">{{
-                          (row.group.kind === 'race'
-                            ? 'WORKOUT_HISTORY.GROUP_TAG_RACE'
-                            : 'WORKOUT_HISTORY.GROUP_TAG_BRICK'
-                          ) | translate
-                        }}</span>
-                        <span class="group-title">{{ groupTitle(row.group) }}</span>
-                      </div>
-                      <div class="group-sport-chain">
+                    <div class="item-meta">
+                      <span class="group-sport-chain">
                         @for (sport of row.group.sportSequence; track sport; let last = $last) {
-                          <app-sport-icon [sport]="sport" [size]="14" />
+                          <app-sport-icon [sport]="sport" [size]="12" />
                           @if (!last) {
                             <span class="chain-arrow">→</span>
                           }
                         }
-                        <span class="group-session-count">
-                          ·
-                          {{
-                            (row.group.sessions.length === 1
-                              ? 'WORKOUT_HISTORY.WEEK_SESSION_COUNT_SINGULAR'
-                              : 'WORKOUT_HISTORY.WEEK_SESSION_COUNT_PLURAL'
-                            ) | translate: { count: row.group.sessions.length }
-                          }}
-                        </span>
-                      </div>
-                      <div class="group-metrics">
-                        <span class="metric-chip tss"
-                          >{{ groupSummaryTss(row.group, ftp$ | async) }} TSS</span
-                        >
-                        <span class="metric-chip dur">{{
-                          formatTime(row.group.movingSeconds)
-                        }}</span>
-                        @if (row.group.spanSeconds > row.group.movingSeconds + 60) {
-                          <span
-                            class="metric-chip span"
-                            [title]="'Total elapsed (incl. transitions)'"
-                          >
-                            ⌚ {{ formatTime(row.group.spanSeconds) }}
-                          </span>
-                        }
-                      </div>
+                      </span>
+                      <span class="meta-dot" aria-hidden="true">·</span>
+                      <span class="meta-dur">{{
+                        formatShortDuration(row.group.movingSeconds)
+                      }}</span>
+                      @if (groupSummaryTss(row.group, ftp$ | async); as tss) {
+                        <span class="meta-dot" aria-hidden="true">·</span>
+                        <span class="meta-tss">{{ tss }} TSS</span>
+                      }
                     </div>
-                    <svg
-                      class="group-chevron"
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
                   </div>
                 </div>
               }
               @case ('session') {
-                <div
-                  data-testid="session-item"
-                  class="session-item"
-                  [class.active]="(historyService.selectedSession$ | async)?.id === row.session.id"
-                  [class.grouped-child]="!!row.groupedUnder"
-                  (click)="onSelect(row.session)"
-                >
-                  <div class="item-sport">
-                    <app-sport-icon [sport]="row.session.sportType" [size]="18" />
-                  </div>
-                  <div class="item-info">
-                    <span class="item-title">{{ row.session.title }}</span>
-                    <span class="item-date">{{ formatDate(row.session.date) }}</span>
-                    <div class="item-metrics">
-                      <span class="metric-chip tss"
-                        >{{ getTss(row.session, ftp$ | async) }} TSS</span
+                <!-- Children of a manually-linked group are hidden from the list — the
+                     group card represents them and the analysis panel exposes a pill
+                     switcher to navigate between linked sessions. -->
+                @if (!row.groupedUnder) {
+                  <div
+                    data-testid="session-item"
+                    class="session-item"
+                    [style.--sport-color]="sportColor(row.session.sportType)"
+                    [class.active]="
+                      (historyService.selectedSession$ | async)?.id === row.session.id
+                    "
+                    (click)="onSelect(row.session)"
+                  >
+                    <span class="sport-rail" aria-hidden="true"></span>
+                    <div class="item-sport">
+                      <app-sport-icon [sport]="row.session.sportType" [size]="16" />
+                    </div>
+                    <div class="item-info">
+                      <span class="item-title">{{ row.session.title }}</span>
+                      <div class="item-meta">
+                        <span class="meta-date">{{ formatShortDate(row.session.date) }}</span>
+                        <span class="meta-dot" aria-hidden="true">·</span>
+                        <span class="meta-dur">{{
+                          formatShortDuration(row.session.totalDuration)
+                        }}</span>
+                        @if (getTss(row.session, ftp$ | async); as tss) {
+                          <span class="meta-dot" aria-hidden="true">·</span>
+                          <span class="meta-tss">{{ tss }} TSS</span>
+                        }
+                      </div>
+                    </div>
+                    <div class="item-actions">
+                      <button
+                        type="button"
+                        class="row-action-btn"
+                        (click)="openLinkModal(row.session, $event)"
+                        [title]="'WORKOUT_HISTORY.BTN_LINK_SESSIONS' | translate"
+                        [attr.aria-label]="'WORKOUT_HISTORY.BTN_LINK_SESSIONS' | translate"
                       >
-                      <span class="metric-chip dur">{{
-                        formatTime(row.session.totalDuration)
-                      }}</span>
-                      <span class="metric-chip if"
-                        >{{ getIF(row.session, ftp$ | async) | number: '1.2-2' }} IF</span
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1 1" />
+                          <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1-1" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        class="row-action-btn"
+                        (click)="downloadFit($event, row.session)"
+                        [title]="'WORKOUT_HISTORY.BTN_DOWNLOAD_FIT' | translate"
+                        [attr.aria-label]="'WORKOUT_HISTORY.BTN_DOWNLOAD_FIT' | translate"
                       >
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="7 10 12 15 17 10" />
+                          <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
-                  <button
-                    class="dl-btn link-btn"
-                    (click)="openLinkModal(row.session, $event)"
-                    [title]="'WORKOUT_HISTORY.LINK_BTN_OPEN' | translate"
-                    [attr.aria-label]="'WORKOUT_HISTORY.LINK_BTN_OPEN' | translate"
-                  >
-                    <svg
-                      width="11"
-                      height="11"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1 1" />
-                      <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1-1" />
-                    </svg>
-                  </button>
-                  <button
-                    class="dl-btn"
-                    (click)="downloadFit($event, row.session)"
-                    [title]="'WORKOUT_HISTORY.DOWNLOAD_FIT_TITLE' | translate"
-                  >
-                    <svg
-                      width="11"
-                      height="11"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                      <polyline points="7 10 12 15 17 10" />
-                      <line x1="12" y1="15" x2="12" y2="3" />
-                    </svg>
-                  </button>
-                </div>
+                }
               }
             }
           }
@@ -461,20 +446,14 @@
 
   <!-- Right panel: analysis or empty state -->
   <main class="history-main" [class.mobile-list-active]="isListView$ | async">
-    <div class="header glass desktop-only">
-      <div class="header-left">
-        <div class="header-avatar">A</div>
-        <div class="header-info">
-          <span class="header-title"
-            >{{ 'WORKOUT_HISTORY.HEADER_TITLE' | translate }}
-            <span class="dim">{{ 'WORKOUT_HISTORY.HEADER_TITLE_DIM' | translate }}</span></span
-          >
-          <span class="header-subtitle">{{ 'WORKOUT_HISTORY.HEADER_SUBTITLE' | translate }}</span>
-        </div>
-      </div>
-    </div>
     @if (historyService.selectedSession$ | async; as session) {
-      <app-session-analysis [session]="session" />
+      <app-session-analysis
+        [session]="session"
+        [linkedSessions]="(linkedSessions$ | async) ?? []"
+        (navTo)="onSelectById($event)"
+        (linkClicked)="onAnalysisLinkClicked($event)"
+        (downloadClicked)="onAnalysisDownloadClicked($event)"
+      />
     } @else {
       <div class="empty-main">
         <div class="empty-card glass">

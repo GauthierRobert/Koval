@@ -89,6 +89,18 @@ export class WorkoutHistoryComponent implements OnInit {
   historyState$ = this.historyService.historyState$;
   sidebarCollapsed = false;
 
+  /** Sessions sharing a groupId with the selected one (chronological). Empty
+   * when the selected session isn't linked. Drives the switcher pill row in
+   * the analysis top bar. */
+  linkedSessions$ = combineLatest([this.historyService.selectedSession$, this.sessions$]).pipe(
+    map(([sel, all]) => {
+      if (!sel?.groupId) return [];
+      const members = all.filter((s) => s.groupId === sel.groupId);
+      if (members.length < 2) return [];
+      return [...members].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    }),
+  );
+
   /**
    * Detail mode is driven entirely by the URL:
    *   /history             → list, no detail
@@ -482,10 +494,44 @@ export class WorkoutHistoryComponent implements OnInit {
     this.router.navigate(['/history', session.id]);
   }
 
+  onSelectById(sessionId: string): void {
+    this.router.navigate(['/history', sessionId]);
+  }
+
+  onSelectGroup(group: SessionGroup): void {
+    if (group.sessions.length === 0) return;
+    this.onSelect(group.sessions[0]);
+  }
+
+  isCurrentGroup(selectedId: string | null | undefined, group: SessionGroup): boolean {
+    if (!selectedId) return false;
+    return group.sessions.some((s) => s.id === selectedId);
+  }
+
   downloadFit(event: Event, session: SavedSession) {
     event.stopPropagation();
     if (session.stravaActivityId && !session.fitFileId) {
       // Strava session without FIT — build it from streams first, then download
+      this.stravaSyncService.buildFit(session.id).subscribe({
+        next: () => this.fitExport.exportSession(session, session.date),
+      });
+    } else {
+      this.fitExport.exportSession(session, session.date);
+    }
+  }
+
+  /** Header toolbar triggers — currently the analysis top bar is the only
+   *  surface that exposes link/download for the focused session. */
+  onAnalysisLinkClicked(session: SavedSession): void {
+    this.sessions$.pipe(take(1)).subscribe((all) => {
+      this.linkAnchor = session;
+      this.linkCandidates = this.sameDayCandidates(session, all);
+      this.linkModalOpen = true;
+    });
+  }
+
+  onAnalysisDownloadClicked(session: SavedSession): void {
+    if (session.stravaActivityId && !session.fitFileId) {
       this.stravaSyncService.buildFit(session.id).subscribe({
         next: () => this.fitExport.exportSession(session, session.date),
       });
@@ -524,6 +570,14 @@ export class WorkoutHistoryComponent implements OnInit {
     return formatTimeText(seconds);
   }
 
+  /** Compact "40m" / "1h 10m" matching the session card design. */
+  formatShortDuration(seconds: number): string {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    if (h > 0) return m ? `${h}h ${m}m` : `${h}h`;
+    return `${m}m`;
+  }
+
   formatDate(date: Date): string {
     return new Date(date).toLocaleDateString('en-US', {
       month: 'short',
@@ -532,6 +586,25 @@ export class WorkoutHistoryComponent implements OnInit {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  /** Short "May 12" date for the inline session-card meta row. */
+  formatShortDate(date: Date): string {
+    return new Date(date).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    });
+  }
+
+  private static readonly SPORT_COLORS: Record<string, string> = {
+    CYCLING: 'var(--success-color)',
+    RUNNING: 'var(--danger-color)',
+    SWIMMING: 'var(--secondary-color)',
+    BRICK: 'var(--accent-color)',
+  };
+
+  sportColor(sport: string | null | undefined): string {
+    return WorkoutHistoryComponent.SPORT_COLORS[sport ?? ''] ?? 'var(--text-muted)';
   }
 
   getSportUnit(session: SavedSession): string {

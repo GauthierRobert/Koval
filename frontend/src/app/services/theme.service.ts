@@ -10,7 +10,14 @@ export type ColorSchemeMode = 'dark' | 'light' | 'system';
  * and add its slug here. Custom AI-generated packs use the
  * 'custom' slug and inject tokens at runtime — see applyCustomTokens().
  */
-export type ThemePack = 'default' | 'retro' | 'futuristic' | 'modern' | 'synthwave' | 'custom';
+export type ThemePack =
+  | 'default'
+  | 'retro'
+  | 'futuristic'
+  | 'modern'
+  | 'synthwave'
+  | 'almanac'
+  | 'custom';
 
 export interface ThemePackMeta {
   slug: ThemePack;
@@ -55,6 +62,13 @@ export const THEME_PACKS: readonly ThemePackMeta[] = [
     fallbackLabel: 'Synthwave',
     supportsLight: false,
     preview: { bg: '#110821', accent: 'oklch(0.72 0.28 340)', surface: '#1a0c2e', text: '#ffe6ff' },
+  },
+  {
+    slug: 'almanac',
+    labelKey: 'SETTINGS.THEME_PACK_ALMANAC',
+    fallbackLabel: 'Almanac',
+    supportsLight: true,
+    preview: { bg: '#ece3cf', accent: '#2f7a72', surface: '#f5ecd9', text: '#1c1408' },
   },
 ];
 
@@ -186,6 +200,7 @@ export class ThemeService {
       stored === 'futuristic' ||
       stored === 'modern' ||
       stored === 'synthwave' ||
+      stored === 'almanac' ||
       stored === 'custom'
     ) {
       return stored;

@@ -40,6 +40,14 @@ export class DecouplingGaugeComponent {
     return this.computeDecoupling();
   }
 
+  formatMetric(kmh: number): string {
+    if (!kmh || kmh <= 0.5) return '—';
+    const secPerKm = 3600 / kmh;
+    const m = Math.floor(secPerKm / 60);
+    const s = Math.round(secPerKm % 60);
+    return `${m}:${String(s).padStart(2, '0')} /km`;
+  }
+
   /** SVG arc path for a segment of the semi-circle gauge. */
   arcPath(startPct: number, endPct: number, radius: number, cx: number, cy: number): string {
     // Map percentage (0-1) to angle (PI to 0, left-to-right semi-circle)

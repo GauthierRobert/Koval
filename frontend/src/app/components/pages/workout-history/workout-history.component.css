@@ -63,7 +63,7 @@
   width: 28px;
   height: 28px;
   background: var(--accent-subtle);
-  border: 1px solid var(--accent-border);
+  border: 1px solid transparent;
   color: var(--accent-color);
   border-radius: 8px;
   cursor: pointer;
@@ -72,6 +72,7 @@
 
 .icon-btn:hover:not(:disabled) {
   background: var(--accent-hover);
+  border-color: var(--accent-border);
 }
 
 .icon-btn:disabled {
@@ -81,12 +82,13 @@
 
 .icon-btn.strava-btn {
   background: color-mix(in oklch, var(--strava-color) 8%, transparent);
-  border-color: color-mix(in oklch, var(--strava-color) 25%, transparent);
+  border-color: transparent;
   color: var(--strava-color);
 }
 
 .icon-btn.strava-btn:hover:not(:disabled) {
   background: color-mix(in oklch, var(--strava-color) 15%, transparent);
+  border-color: color-mix(in oklch, var(--strava-color) 25%, transparent);
 }
 
 @keyframes spin {
@@ -420,95 +422,21 @@
   text-transform: none;
 }
 
-/* ─── Session group card (brick / race) ──────────────────────────── */
-.group-card {
-  position: relative;
-  display: flex;
-  align-items: stretch;
-  gap: 0;
-  padding: 0;
-  margin-top: 4px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--glass-border);
-  background: linear-gradient(
-    135deg,
-    color-mix(in oklch, var(--accent-color) 6%, transparent),
-    color-mix(in oklch, var(--accent-color) 2%, transparent) 60%,
-    var(--overlay-5)
-  );
-  overflow: hidden;
-  cursor: pointer;
-  transition:
-    transform 0.2s var(--ease-spring-gentle),
-    box-shadow 0.25s var(--ease-spring-gentle),
-    border-color 0.2s;
-}
-
-.group-card:hover {
-  border-color: color-mix(in oklch, var(--accent-color) 35%, var(--glass-border));
-  box-shadow: 0 4px 18px color-mix(in oklch, var(--accent-color) 10%, transparent);
-  transform: translateY(-1px);
+/* ─── Session group card (brick / race) ──────────────────────────
+ * Inherits the session-item layout (rail + tinted icon + inline
+ * meta). Only the sport color and the kind-tag swatch differ. */
+.group-card.brick {
+  --sport-color: var(--accent-color);
 }
 
 .group-card.race {
-  background: linear-gradient(
-    135deg,
-    color-mix(in oklch, #f59e0b 14%, transparent),
-    color-mix(in oklch, #ef4444 8%, transparent) 55%,
-    var(--overlay-5)
-  );
-  border-color: color-mix(in oklch, #f59e0b 30%, var(--glass-border));
+  --sport-color: #f59e0b;
 }
 
-.group-card.race:hover {
-  border-color: color-mix(in oklch, #f59e0b 55%, var(--glass-border));
-  box-shadow: 0 4px 22px color-mix(in oklch, #f59e0b 18%, transparent);
-}
-
-.group-spine {
-  flex-shrink: 0;
-  width: 3px;
-  background: var(--accent-color);
-}
-
-.group-card.race .group-spine {
-  background: linear-gradient(180deg, #f59e0b, #ef4444);
-}
-
-.group-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  flex: 1;
-  padding: 10px 12px;
-  min-width: 0;
-}
-
-.group-badge {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: var(--accent-subtle);
-  border: 1px solid var(--accent-border);
-  color: var(--accent-color);
-}
-
-.group-card.race .group-badge {
-  background: color-mix(in oklch, #f59e0b 18%, transparent);
-  border-color: color-mix(in oklch, #f59e0b 45%, transparent);
-  color: #f59e0b;
-}
-
-.group-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
+/* Group-card icon uses inline SVG (not <app-sport-icon>) so
+ * inherit the sport color through currentColor. */
+.group-card .item-sport {
+  color: var(--sport-color, var(--accent-color));
 }
 
 .group-title-row {
@@ -525,71 +453,25 @@
   text-transform: uppercase;
   padding: 2px 7px;
   border-radius: var(--radius-pill);
-  background: var(--accent-subtle);
-  color: var(--accent-color);
-  border: 1px solid var(--accent-border);
+  background: color-mix(in oklch, var(--sport-color, var(--accent-color)) 18%, transparent);
+  color: var(--sport-color, var(--accent-color));
+  border: 1px solid color-mix(in oklch, var(--sport-color, var(--accent-color)) 38%, transparent);
   line-height: 1;
-}
-
-.group-card.race .group-kind-tag {
-  background: color-mix(in oklch, #f59e0b 20%, transparent);
-  color: #f59e0b;
-  border-color: color-mix(in oklch, #f59e0b 45%, transparent);
-}
-
-.group-title {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--text-color);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex-shrink: 0;
 }
 
 .group-sport-chain {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: var(--text-xs);
-  color: var(--text-muted);
+  gap: 3px;
+  flex-shrink: 0;
 }
 
 .chain-arrow {
-  opacity: 0.5;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.group-session-count {
-  margin-left: 4px;
-  opacity: 0.7;
-}
-
-.group-metrics {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  margin-top: 2px;
-}
-
-.metric-chip.span {
-  background: var(--overlay-5);
-  border: 1px solid var(--glass-border);
-  color: var(--text-dim);
-}
-
-.group-chevron {
-  flex-shrink: 0;
   opacity: 0.55;
-  margin-top: 6px;
-  transition:
-    transform 0.2s var(--ease-spring-gentle),
-    opacity 0.2s;
-}
-
-.group-card.expanded .group-chevron {
-  transform: rotate(90deg);
-  opacity: 0.9;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
 }
 
 /* Children of an expanded group: indented with a vertical connector line. */
@@ -620,14 +502,21 @@
   border-radius: 1px;
 }
 
+/* ─── Session card (sport-tinted, training-panel style) ─────────
+ * Each card carries its sport color via the inline --sport-color
+ * custom property, set on the host element. The left rail, icon
+ * tint, and TSS accent all derive from it. */
 .session-item {
+  position: relative;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
-  padding: 10px 12px;
+  padding: 10px 12px 10px 14px;
   border-radius: var(--radius-md);
   cursor: pointer;
   border: 1px solid transparent;
+  background: transparent;
+  overflow: hidden;
   transition: all 0.25s var(--ease-spring-gentle);
 }
 
@@ -638,43 +527,130 @@
 }
 
 .session-item.active {
-  background: var(--accent-subtle);
-  border-color: var(--accent-border);
-  box-shadow: 0 0 12px color-mix(in oklch, var(--accent-color) 10%, transparent);
+  background: color-mix(in oklch, var(--sport-color, var(--accent-color)) 10%, transparent);
+  border-color: color-mix(in oklch, var(--sport-color, var(--accent-color)) 35%, transparent);
+  box-shadow: 0 0 12px color-mix(in oklch, var(--sport-color, var(--accent-color)) 12%, transparent);
+}
+
+.sport-rail {
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--sport-color, var(--accent-color));
+  opacity: 0.85;
+}
+
+.session-item.active .sport-rail {
+  opacity: 1;
+  box-shadow: 0 0 6px color-mix(in oklch, var(--sport-color, var(--accent-color)) 55%, transparent);
 }
 
 .item-sport {
   flex-shrink: 0;
-  padding-top: 1px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklch, var(--sport-color, var(--text-muted)) 14%, transparent);
+  border: 1px solid color-mix(in oklch, var(--sport-color, var(--text-muted)) 28%, transparent);
 }
 
 .item-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
 }
 
 .item-title {
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--text-color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.25;
 }
 
-.item-date {
+.item-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: var(--text-xs);
   color: var(--text-muted);
-  opacity: 0.65;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  min-width: 0;
 }
 
-.item-metrics {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  margin-top: 3px;
+.item-meta .meta-date,
+.item-meta .meta-dur {
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+.item-meta .meta-dot {
+  color: var(--text-dim);
+  opacity: 0.55;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.item-meta .meta-tss {
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--sport-color, var(--accent-color));
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Row hover actions (link / download FIT) ─────────────────── */
+.item-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.row-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.18s,
+    background 0.18s,
+    border-color 0.18s,
+    color 0.18s;
+}
+
+.session-item:hover .row-action-btn,
+.session-item.active .row-action-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.row-action-btn:hover {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+  color: var(--accent-color);
 }
 
 .metric-chip {
@@ -984,8 +960,13 @@
   }
 
   .session-item {
-    padding: 6px 8px;
+    padding: 8px 8px 8px 12px;
     gap: 8px;
+  }
+
+  .item-sport {
+    width: 26px;
+    height: 26px;
   }
 
   .metric-chip {

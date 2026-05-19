@@ -20,9 +20,27 @@ export class SessionStatsHeaderComponent {
   @Input() ftp: number | null = null;
   @Input() movingTime: number | null = null;
 
+  /** Sessions linked to the current one (same group). Includes the current session.
+   * When length > 1, the title row shows a pill switcher. */
+  @Input() linkedSessions: SavedSession[] = [];
+
   @Output() rpeChanged = new EventEmitter<number>();
+  @Output() navTo = new EventEmitter<string>();
+  @Output() linkClicked = new EventEmitter<void>();
+  @Output() downloadClicked = new EventEmitter<void>();
 
   rpeValues = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+  private static readonly SPORT_COLORS: Record<string, string> = {
+    CYCLING: 'var(--success-color)',
+    RUNNING: 'var(--danger-color)',
+    SWIMMING: 'var(--secondary-color)',
+    BRICK: 'var(--accent-color)',
+  };
+
+  sportColor(sport: string | null | undefined): string {
+    return SessionStatsHeaderComponent.SPORT_COLORS[sport ?? ''] ?? 'var(--accent-color)';
+  }
 
   selectRpe(val: number): void {
     this.rpeChanged.emit(val);
@@ -33,7 +51,7 @@ export class SessionStatsHeaderComponent {
   }
 
   formatSpeed(speedMs: number, sportType: string): string {
-    if (!speedMs || speedMs <= 0) return '\u2014';
+    if (!speedMs || speedMs <= 0) return '—';
     if (sportType === 'SWIMMING') {
       const secPer100 = 100 / speedMs;
       const m = Math.floor(secPer100 / 60);
@@ -47,7 +65,7 @@ export class SessionStatsHeaderComponent {
   }
 
   formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString('en-US', {
+    return new Date(date).toLocaleDateString(undefined, {
       weekday: 'long',
       month: 'long',
       day: 'numeric',

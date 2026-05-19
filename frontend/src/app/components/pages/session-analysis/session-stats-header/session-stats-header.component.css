@@ -1,27 +1,149 @@
-.header-stats-row {
-  display: flex;
-  gap: 10px;
-  align-items: stretch;
-}
-
-.header-col {
-  flex: 1;
-  min-width: 0;
+/* ─── Top bar (breadcrumb + tabs + nav) ────────────────────────── */
+.analysis-top-bar {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: var(--space-sm);
-  padding: var(--card-padding);
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: 10px;
 }
 
-.header-info {
+.top-bar-row {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.breadcrumb-row {
+  justify-content: space-between;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: var(--space-sm);
+}
+
+.breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.crumb {
+  color: var(--text-dim);
+}
+
+.crumb.current {
+  color: var(--text-color);
+}
+
+.crumb-sep {
+  color: var(--text-dim);
+  opacity: 0.5;
+}
+
+.top-bar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* View tabs ─ Résumé / Analyse / Carte / Comparer */
+.view-tabs {
+  display: inline-flex;
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-pill);
+  padding: 3px;
+  gap: 2px;
+}
+
+.view-tab {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring-gentle);
+}
+
+.view-tab:hover:not(.active) {
+  color: var(--text-color);
+  background: var(--overlay-5);
+}
+
+.view-tab.active {
+  background: var(--accent-subtle);
+  color: var(--accent-color);
+  box-shadow: 0 0 0 1px var(--accent-border);
+}
+
+/* Prev / next navigation */
+.nav-arrows {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-arrow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring-gentle);
+}
+
+.nav-arrow-btn:hover:not(:disabled) {
+  background: var(--accent-subtle);
+  color: var(--accent-color);
+  border-color: var(--accent-border);
+}
+
+.nav-arrow-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.nav-pos {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 40px;
+  text-align: center;
+}
+
+/* ─── Title row ───────────────────────────────────────────────── */
+.title-row {
+  align-items: center;
+  gap: 12px;
 }
 
 .header-sport {
   color: var(--positive-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
 }
 
 .session-title {
@@ -30,6 +152,9 @@
   font-weight: 700;
   margin: 0;
   color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .session-date {
@@ -37,34 +162,179 @@
   color: var(--text-muted);
 }
 
-.strava-attribution {
+.source-badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  margin-top: 4px;
-  padding: 3px 8px;
-  border-radius: 4px;
-  background: rgba(252, 76, 2, 0.1);
-  border: 1px solid rgba(252, 76, 2, 0.2);
-  color: #FC4C02;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
+  padding: 4px 9px;
+  border-radius: var(--radius-pill);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-decoration: none;
-  transition: background 0.15s;
-  width: fit-content;
+  transition: background 0.2s var(--ease-spring-gentle);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.strava-attribution:hover {
-  background: rgba(252, 76, 2, 0.18);
+.source-badge.strava {
+  background: rgba(252, 76, 2, 0.12);
+  color: #fc4c02;
+  border: 1px solid rgba(252, 76, 2, 0.25);
 }
 
-.header-title-block {
+.source-badge.strava:hover {
+  background: rgba(252, 76, 2, 0.2);
+}
+
+.source-badge.nolio {
+  background: var(--overlay-5);
+  color: var(--text-muted);
+  border: 1px solid var(--glass-border);
+}
+
+/* ─── Inline "· Group · 2 activities" tag in the date row ──────── */
+.group-label-inline {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+/* ─── Toolbar buttons (link / download FIT) ───────────────────── */
+.tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-elevated);
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring-gentle);
+  flex-shrink: 0;
+}
+
+.tool-btn:hover:not(:disabled) {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+  color: var(--accent-color);
+}
+
+.tool-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── Linked-sessions toggle panel (sits between top bar & stats)
+ * Segmented control: each tab is a full activity summary with its
+ * own POWERED BY STRAVA badge. Replaces the old inline pill row. */
+.linked-panel {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: stretch;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 10px;
+  border-radius: var(--radius-md);
+  flex-wrap: wrap;
 }
 
+.linked-toggle {
+  flex: 1 1 220px;
+  min-width: 180px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring-gentle);
+  text-align: left;
+  min-width: 0;
+}
+
+.linked-toggle:hover:not(.active) {
+  background: var(--overlay-5);
+  color: var(--text-color);
+}
+
+.linked-toggle.active {
+  background: color-mix(in oklch, var(--sport-color, var(--accent-color)) 12%, transparent);
+  border-color: color-mix(in oklch, var(--sport-color, var(--accent-color)) 35%, transparent);
+  color: var(--text-color);
+  box-shadow: 0 0 12px color-mix(in oklch, var(--sport-color, var(--accent-color)) 12%, transparent);
+}
+
+.toggle-idx {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  background: var(--overlay-8);
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.linked-toggle.active .toggle-idx {
+  background: var(--sport-color, var(--accent-color));
+  color: var(--color-black);
+}
+
+.toggle-sport {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  background: var(--overlay-5);
+  border: 1px solid var(--glass-border);
+}
+
+.toggle-title {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.toggle-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  border-radius: var(--radius-pill);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.toggle-source.strava {
+  background: rgba(252, 76, 2, 0.12);
+  color: #fc4c02;
+  border: 1px solid rgba(252, 76, 2, 0.25);
+}
+
+/* ─── RPE block ───────────────────────────────────────────────── */
 .rpe-block {
   display: flex;
   align-items: center;
@@ -110,7 +380,7 @@
   border-radius: 50%;
   background: var(--accent-color);
   cursor: pointer;
-  border: 2px solid #000;
+  border: 2px solid var(--bg-color);
   box-shadow: 0 0 4px rgba(255, 157, 0, 0.5);
 }
 
@@ -120,7 +390,7 @@
   border-radius: 50%;
   background: var(--accent-color);
   cursor: pointer;
-  border: 2px solid #000;
+  border: 2px solid var(--bg-color);
   box-shadow: 0 0 4px rgba(255, 157, 0, 0.5);
 }
 
@@ -134,7 +404,9 @@
   font-weight: 700;
   color: var(--text-dim);
   opacity: 0.5;
-  transition: color 0.15s, opacity 0.15s;
+  transition:
+    color 0.15s,
+    opacity 0.15s;
 }
 
 .rpe-tick.active {
@@ -154,23 +426,38 @@
   color: var(--accent-color);
 }
 
-.stats-grid {
-  flex: 3;
+/* ─── Stats panel (single glass row with compartmented cells) ────
+ * One shared container instead of individual cards, with hairline
+ * dividers between cells so the readout reads as one instrument
+ * cluster (matches the design reference). */
+.stats-panel {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  padding: 0;
+  overflow: hidden;
 }
 
-.stat-card {
+.stat-cell {
   padding: var(--card-padding);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  border-right: 1px solid var(--glass-border);
+  position: relative;
 }
 
-.stat-card.accent {
-  border-color: rgba(255, 157, 0, 0.25);
-  background: rgba(255, 157, 0, 0.06);
+.stat-cell:last-child {
+  border-right: none;
+}
+
+.stat-cell.accent::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--accent-color);
 }
 
 .stat-label {
@@ -181,19 +468,20 @@
   text-transform: uppercase;
 }
 
-.stat-card.accent .stat-label {
+.stat-cell.accent .stat-label {
   color: var(--accent-color);
 }
 
+/* All stat values share the same font family, size, and weight so the
+ * row reads as a single instrument cluster. */
 .stat-value {
-  font-size: 26px;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
   color: var(--text-color);
   line-height: 1.1;
-}
-
-.stat-value.compact {
-  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .stat-unit {
@@ -203,34 +491,48 @@
   margin-left: 2px;
 }
 
-@media (max-width: 768px) {
-  .header-stats-row {
+/* ─── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .breadcrumb-row {
     flex-direction: column;
+    align-items: flex-start;
   }
 
-  .stats-grid {
-    grid-template-columns: repeat(3, 1fr);
+  .top-bar-actions {
+    width: 100%;
+    justify-content: space-between;
   }
 }
 
-@media (max-width: 1200px) and (min-width: 769px) {
-  .stats-grid {
-    grid-template-columns: repeat(4, 1fr);
+@media (max-width: 600px) {
+  .view-tabs {
+    flex-wrap: wrap;
+  }
+
+  .stats-panel {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stat-cell:nth-child(odd) {
+    border-right: 1px solid var(--glass-border);
+  }
+
+  .stat-cell:nth-child(even) {
+    border-right: none;
+  }
+
+  .stat-cell {
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .stat-cell:nth-last-child(-n + 2) {
+    border-bottom: none;
   }
 }
 
 @media (max-width: 480px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
-  }
-
   .stat-value {
     font-size: 20px;
-  }
-
-  .stat-value.compact {
-    font-size: 16px;
   }
 
   .rpe-block {

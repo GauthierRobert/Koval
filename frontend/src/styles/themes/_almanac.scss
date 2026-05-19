@@ -1,0 +1,147 @@
+// ═══════════════════════════════════════════════════════════════
+// ALMANAC — vintage paper / terminal-window publication.
+// Cream paper surfaces, monospace UI, classic serif display,
+// thin double borders with striped title-bar chrome, flat shadows,
+// muted teal accent. Inspired by 70s technical manuals and
+// brutalist personal-site terminals.
+// ═══════════════════════════════════════════════════════════════
+
+[data-theme-pack='almanac'] {
+  // Default polarity is LIGHT (paper). Dark variant defined below.
+  --bg-color: #ece3cf;
+  --surface-color: #f3ead6;
+  --surface-card: #f5ecd9;
+  --sidebar-color: #e6dcc4;
+  --glass-bg: #f5ecd9;
+  --surface-hover: rgba(60, 40, 20, 0.05);
+  --surface-elevated: rgba(60, 40, 20, 0.03);
+  --surface-raised: #faf3e0;
+
+  --text-color: #1c1408;
+  --text-muted: #6b5a3a;
+  --text-dim: #9c8a64;
+
+  --overlay-channel: 60, 40, 20;
+  --text-channel: 28, 20, 8;
+
+  // Muted ink-on-paper hues
+  --primary-color: #2f7a72; // muted teal (the "GET STARTED" button)
+  --secondary-color: #8a5a2b; // sepia ink
+  --success-color: #4a7a3e;
+  --danger-color: #a23a26;
+  --info-color: #2f7a72;
+  --info-text: #2f7a72;
+
+  --accent-color: #2f7a72;
+  --accent-color-2: #a23a26;
+  --accent-glow: rgba(47, 122, 114, 0.18);
+  --accent-glow-soft: rgba(47, 122, 114, 0.08);
+
+  --on-primary-color: #f5ecd9;
+  --on-accent-color: #f5ecd9;
+
+  // Thin "double-rule" borders
+  --border-width: 1px;
+  --border-width-strong: 1px;
+  --border-style: solid;
+  --border-color: rgba(28, 20, 8, 0.28);
+  --border-color-strong: rgba(28, 20, 8, 0.55);
+
+  // Boxy, almost-square radii
+  --radius-sm: 0px;
+  --radius-md: 1px;
+  --radius-lg: 2px;
+  --radius-xl: 2px;
+  --radius-pill: 2px;
+
+  // Typography — serif display, mono everywhere else
+  --font-display: 'Cormorant Garamond', 'Playfair Display', 'Didot', 'Times New Roman', serif;
+  --font-body: 'JetBrains Mono', 'IBM Plex Mono', 'Courier New', ui-monospace, monospace;
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'Courier New', ui-monospace, monospace;
+
+  --weight-display: 500;
+  --tracking-display: -0.01em;
+  --display-transform: none;
+
+  --btn-text-transform: uppercase;
+  --btn-letter-spacing: 0.14em;
+
+  // Flat — paper has no blur
+  --glass-blur: 0px;
+  --glass-saturation: 1;
+
+  // Subtle paper grain
+  --noise-opacity: 0.06;
+  --noise-blend-mode: multiply;
+
+  // No glowy orbs on paper
+  --orb-opacity: 0;
+  --orb-blur: 0px;
+  --orb-1-color: transparent;
+  --orb-2-color: transparent;
+  --orb-3-color: transparent;
+
+  --mesh-stop-1: transparent;
+  --mesh-stop-2: transparent;
+  --mesh-stop-3: transparent;
+
+  // Flat offset shadows like printed drop shadows
+  --shadow-sm: 2px 2px 0 rgba(28, 20, 8, 0.12);
+  --shadow-md: 3px 3px 0 rgba(28, 20, 8, 0.14);
+  --shadow-lg: 6px 6px 0 rgba(28, 20, 8, 0.16);
+  --shadow-glass:
+    inset 0 0 0 1px var(--border-color), inset 0 0 0 3px var(--surface-card),
+    inset 0 0 0 4px var(--border-color), 4px 4px 0 rgba(28, 20, 8, 0.14);
+  --shadow-elevated:
+    inset 0 0 0 1px var(--border-color), inset 0 0 0 3px var(--surface-card),
+    inset 0 0 0 4px var(--border-color), 6px 6px 0 rgba(28, 20, 8, 0.16);
+  --shadow-inner-light: inset 0 0 0 1px rgba(255, 248, 230, 0.4);
+  --shadow-accent-glow: none;
+
+  // Motion — instant, mechanical
+  --transition-fast: 0.08s linear;
+  --transition-base: 0.12s linear;
+  --transition-slow: 0.2s linear;
+
+  --focus-ring-color: rgba(47, 122, 114, 0.6);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 1px;
+
+  // Dark variant — "carbon copy": deep brown paper, amber ink
+  &[data-theme='dark'] {
+    --bg-color: #1a140d;
+    --surface-color: #221a11;
+    --surface-card: #281f14;
+    --sidebar-color: #1f1810;
+    --glass-bg: #281f14;
+    --surface-hover: rgba(244, 228, 200, 0.06);
+    --surface-elevated: rgba(244, 228, 200, 0.04);
+    --surface-raised: #2e2418;
+
+    --text-color: #ede1c4;
+    --text-muted: #b8a474;
+    --text-dim: #7a6a48;
+
+    --overlay-channel: 244, 228, 200;
+    --text-channel: 237, 225, 196;
+
+    --primary-color: #6fb8ad;
+    --accent-color: #6fb8ad;
+    --accent-glow: rgba(111, 184, 173, 0.25);
+    --on-primary-color: #1a140d;
+    --on-accent-color: #1a140d;
+
+    --border-color: rgba(237, 225, 196, 0.22);
+    --border-color-strong: rgba(237, 225, 196, 0.5);
+
+    --shadow-sm: 2px 2px 0 rgba(0, 0, 0, 0.5);
+    --shadow-md: 3px 3px 0 rgba(0, 0, 0, 0.55);
+    --shadow-lg: 6px 6px 0 rgba(0, 0, 0, 0.6);
+    --shadow-glass:
+      inset 0 0 0 1px var(--border-color), inset 0 0 0 3px var(--surface-card),
+      inset 0 0 0 4px var(--border-color), 4px 4px 0 rgba(0, 0, 0, 0.5);
+    --shadow-elevated:
+      inset 0 0 0 1px var(--border-color), inset 0 0 0 3px var(--surface-card),
+      inset 0 0 0 4px var(--border-color), 6px 6px 0 rgba(0, 0, 0, 0.55);
+  }
+}

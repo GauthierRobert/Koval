@@ -17,12 +17,14 @@
             [attr.cy]="needlePos(r.decouplingPct, 80, 100, 95).y"
             r="6"
             [style.fill]="r.color"
-            class="needle-dot" />
+            class="needle-dot"
+          />
           <circle
             [attr.cx]="needlePos(r.decouplingPct, 80, 100, 95).x"
             [attr.cy]="needlePos(r.decouplingPct, 80, 100, 95).y"
             r="3"
-            class="needle-inner" />
+            class="needle-inner"
+          />
 
           <!-- Scale labels -->
           <text x="16" y="110" class="scale-label">0%</text>
@@ -37,9 +39,15 @@
           </span>
           <span class="gauge-label">
             @switch (r.level) {
-              @case ('good') { {{ 'SESSION_ANALYSIS.DECOUPLING_GOOD' | translate }} }
-              @case ('moderate') { {{ 'SESSION_ANALYSIS.DECOUPLING_MODERATE' | translate }} }
-              @case ('high') { {{ 'SESSION_ANALYSIS.DECOUPLING_HIGH' | translate }} }
+              @case ('good') {
+                {{ 'SESSION_ANALYSIS.DECOUPLING_GOOD' | translate }}
+              }
+              @case ('moderate') {
+                {{ 'SESSION_ANALYSIS.DECOUPLING_MODERATE' | translate }}
+              }
+              @case ('high') {
+                {{ 'SESSION_ANALYSIS.DECOUPLING_HIGH' | translate }}
+              }
             }
           </span>
         </div>
@@ -48,15 +56,26 @@
       <!-- Segment breakdown -->
       <div class="segments-table">
         <div class="seg-header">
-          <span class="seg-col seg-name">{{ 'SESSION_ANALYSIS.DECOUPLING_SEGMENT' | translate }}</span>
-          <span class="seg-col seg-metric">{{ (r.usePower ? 'SESSION_ANALYSIS.DECOUPLING_AVG_POWER' : 'SESSION_ANALYSIS.DECOUPLING_AVG_SPEED') | translate }}</span>
+          <span class="seg-col seg-name">{{
+            'SESSION_ANALYSIS.DECOUPLING_SEGMENT' | translate
+          }}</span>
+          <span class="seg-col seg-metric">{{
+            (r.usePower
+              ? 'SESSION_ANALYSIS.DECOUPLING_AVG_POWER'
+              : 'SESSION_ANALYSIS.DECOUPLING_AVG_PACE'
+            ) | translate
+          }}</span>
           <span class="seg-col seg-hr">{{ 'SESSION_ANALYSIS.DECOUPLING_AVG_HR' | translate }}</span>
-          <span class="seg-col seg-eff">{{ 'SESSION_ANALYSIS.DECOUPLING_EFFICIENCY' | translate }}</span>
+          <span class="seg-col seg-eff">{{
+            'SESSION_ANALYSIS.DECOUPLING_EFFICIENCY' | translate
+          }}</span>
         </div>
         @for (seg of r.segments; track seg.label) {
           <div class="seg-row">
             <span class="seg-col seg-name">{{ seg.label }}</span>
-            <span class="seg-col seg-metric mono">{{ r.usePower ? seg.avgMetric + ' W' : seg.avgMetric + ' km/h' }}</span>
+            <span class="seg-col seg-metric mono">{{
+              r.usePower ? seg.avgMetric + ' W' : formatMetric(seg.avgMetric)
+            }}</span>
             <span class="seg-col seg-hr mono">{{ seg.avgHR }} bpm</span>
             <span class="seg-col seg-eff mono">{{ seg.efficiency }}</span>
           </div>
