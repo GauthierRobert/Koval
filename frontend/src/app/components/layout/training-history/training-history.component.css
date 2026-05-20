@@ -43,7 +43,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 10px;
+  padding: 10px 5px;
   border-radius: var(--radius-md);
   cursor: pointer;
   border: 1px solid transparent;
@@ -83,13 +83,13 @@
   justify-content: center;
   width: 34px;
   height: 34px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
   background: var(--overlay-5);
-  border: 1px solid var(--glass-border);
+  border: none,;
   flex-shrink: 0;
 }
 
-/* ── Action row: edit / duplicate / delete (hover) + favorite star (sticky) ── */
+/* ── Action row: edit / duplicate / delete + favorite star (all hover-only) ── */
 .item-actions {
   display: flex;
   align-items: center;
@@ -98,18 +98,30 @@
   margin-left: auto;
 }
 
-.item-actions .hover-action {
+.item-actions .hover-action,
+.item-actions app-favorite-star {
   opacity: 0;
-  width: 0;
   pointer-events: none;
-  transition: opacity var(--transition-fast), width 0.2s var(--ease-spring-gentle);
-  overflow: hidden;
+  transition: opacity var(--transition-fast);
 }
 
-.history-item:hover .item-actions .hover-action {
+.history-item:hover .item-actions .hover-action,
+.history-item:hover .item-actions app-favorite-star,
+.history-item:focus-within .item-actions .hover-action,
+.history-item:focus-within .item-actions app-favorite-star {
   opacity: 1;
-  width: 22px;
   pointer-events: auto;
+}
+
+.item-actions .hover-action {
+  width: 0;
+  overflow: hidden;
+  transition: opacity var(--transition-fast), width 0.2s var(--ease-spring-gentle);
+}
+
+.history-item:hover .item-actions .hover-action,
+.history-item:focus-within .item-actions .hover-action {
+  width: 22px;
 }
 
 .edit-btn,
@@ -359,10 +371,13 @@
   }
 
   /* On touch, hover-only actions don't make sense — always show them so
-     edit/delete are tappable. */
-  .item-actions .hover-action {
+     edit/delete/favorite are tappable. */
+  .item-actions .hover-action,
+  .item-actions app-favorite-star {
     opacity: 1;
-    width: 22px;
     pointer-events: auto;
+  }
+  .item-actions .hover-action {
+    width: 22px;
   }
 }
