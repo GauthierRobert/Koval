@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend;
 import com.koval.trainingplannerbackend.club.ClubProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.metrics.buffering.BufferingApplicationStartup;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -16,7 +17,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class TrainingPlannerBackendApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(TrainingPlannerBackendApplication.class, args);
+        SpringApplication app = new SpringApplication(TrainingPlannerBackendApplication.class);
+        app.setApplicationStartup(new BufferingApplicationStartup(4096));
+        app.run(args);
     }
 
 }

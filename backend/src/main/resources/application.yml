@@ -172,10 +172,12 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus,metrics
+        include: health,info,prometheus,metrics,startup
   endpoint:
     health:
       show-details: when-authorized
+    startup:
+      access: read_only
   health:
     # Rabbit is optional in dev (broker.type defaults to "none"); enabled in prod via the
     # RabbitAutoConfiguration exclusion in application-prod.yml making the indicator absent.

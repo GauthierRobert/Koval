@@ -1,4 +1,6 @@
 spring:
+  main:
+    log-startup-info: true
   mongodb:
     uri: ${MONGODB_URI}
 
