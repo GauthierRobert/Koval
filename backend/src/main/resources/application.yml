@@ -1,4 +1,7 @@
 spring:
+  threads:
+    virtual:
+      enabled: true
   servlet:
     multipart:
       max-file-size: 25MB
@@ -106,6 +109,12 @@ garmin:
   consumer-secret: ${GARMIN_CONSUMER_SECRET:}
   redirect-uri: http://localhost:4200/auth/garmin/callback
 
+# Polar AccessLink (OAuth 2.0). Register at https://admin.polaraccesslink.com/
+polar:
+  client-id: ${POLAR_CLIENT_ID:}
+  client-secret: ${POLAR_CLIENT_SECRET:}
+  redirect-uri: ${POLAR_REDIRECT_URI:http://localhost:4200/auth/polar/callback}
+
 zwift:
   enabled: ${ZWIFT_ENABLED:false}
 
@@ -172,10 +181,12 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus,metrics
+        include: health,info,prometheus,metrics,startup
   endpoint:
     health:
       show-details: when-authorized
+    startup:
+      access: read_only
   health:
     # Rabbit is optional in dev (broker.type defaults to "none"); enabled in prod via the
     # RabbitAutoConfiguration exclusion in application-prod.yml making the indicator absent.

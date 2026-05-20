@@ -258,6 +258,8 @@
                             <buildArgs>
                                 <buildArg>--no-fallback</buildArg>
                                 <buildArg>-H:+ReportExceptionStackTraces</buildArg>
+                                <buildArg>-Ob</buildArg>
+                                <buildArg>-J-Xmx6g</buildArg>
                             </buildArgs>
                         </configuration>
                     </plugin>

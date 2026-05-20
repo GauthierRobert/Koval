@@ -19,6 +19,16 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Free disk space and add swap
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          sudo fallocate -l 12G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
+
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
@@ -62,6 +72,9 @@ jobs:
             GOOGLE_CLIENT_SECRET=GOOGLE_CLIENT_SECRET:latest
             GOOGLE_REDIRECT_URI=GOOGLE_REDIRECT_URI:latest
             GOOGLE_MOBILE_CALLBACK_URI=GOOGLE_MOBILE_CALLBACK_URI:latest
+            POLAR_CLIENT_ID=POLAR_CLIENT_ID:latest
+            POLAR_CLIENT_SECRET=POLAR_CLIENT_SECRET:latest
+            POLAR_REDIRECT_URI=POLAR_REDIRECT_URI:latest
             ADMIN_SECRET=ADMIN_SECRET:latest
             FIREBASE_SERVICE_ACCOUNT_JSON=FIREBASE_SERVICE_ACCOUNT_JSON:latest
             FIREBASE_PROJECT_ID=FIREBASE_PROJECT_ID:latest

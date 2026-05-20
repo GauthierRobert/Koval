@@ -154,6 +154,32 @@ public class AccountLinkingService {
         return userRepository.save(user);
     }
 
+    public User linkPolar(String userId, String polarUserId, String accessToken,
+                          String refreshToken, Long expiresAt) {
+        userRepository.findByPolarUserId(polarUserId).ifPresent(other -> {
+            if (!other.getId().equals(userId)) {
+                throw new IllegalStateException("This Polar account is already linked to another user");
+            }
+        });
+        User user = userService.getUserById(userId);
+        user.setPolarUserId(polarUserId);
+        user.setPolarAccessToken(accessToken);
+        user.setPolarRefreshToken(refreshToken);
+        user.setPolarTokenExpiresAt(expiresAt);
+        return userRepository.save(user);
+    }
+
+    public User unlinkPolar(String userId) {
+        User user = userService.getUserById(userId);
+        user.setPolarUserId(null);
+        user.setPolarAccessToken(null);
+        user.setPolarRefreshToken(null);
+        user.setPolarTokenExpiresAt(null);
+        user.setPolarLastSyncAt(null);
+        user.setPolarAutoPushWorkouts(false);
+        return userRepository.save(user);
+    }
+
     public User linkZwift(String userId, String zwiftUserId, String accessToken, String refreshToken) {
         userRepository.findByZwiftUserId(zwiftUserId).ifPresent(other -> {
             if (!other.getId().equals(userId)) {

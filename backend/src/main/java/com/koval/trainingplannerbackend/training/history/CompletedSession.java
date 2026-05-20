@@ -72,6 +72,9 @@ public class CompletedSession {
     @Indexed(unique = true, sparse = true)
     private String nolioActivityId;
 
+    @Indexed(unique = true, sparse = true)
+    private String polarActivityId;
+
     public record BlockSummary(
             String label,
             String type,

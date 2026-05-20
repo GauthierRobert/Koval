@@ -1,4 +1,0 @@
-[submodule "plugin"]
-	path = plugin
-	url = https://github.com/GauthierRobert/Koval-plugin.git
-	branch = .

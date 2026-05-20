@@ -21,6 +21,8 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     Optional<User> findByGarminUserId(String garminUserId);
 
+    Optional<User> findByPolarUserId(String polarUserId);
+
     Optional<User> findByZwiftUserId(String zwiftUserId);
 
     Optional<User> findByTerraUserId(String terraUserId);
