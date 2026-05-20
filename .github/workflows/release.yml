@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   release:
@@ -89,7 +90,7 @@ jobs:
           name: Backend ${{ steps.bump.outputs.tag }}
           generate_release_notes: true
 
-      - name: Open PR to sync main → dev
+      - name: Open auto-merging PR to sync main → dev
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.bump.outputs.tag }}
