@@ -281,6 +281,13 @@ public class AuthController {
         return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 
+    @DeleteMapping("/link/polar")
+    public ResponseEntity<Map<String, Object>> unlinkPolar() {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = accountLinkingService.unlinkPolar(userId);
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
+    }
+
     @DeleteMapping("/link/zwift")
     public ResponseEntity<Map<String, Object>> unlinkZwift() {
         String userId = SecurityUtils.getCurrentUserId();

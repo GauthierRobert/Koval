@@ -62,6 +62,15 @@ public class User {
     private String garminAccessTokenSecret;
     private LocalDateTime garminLastSyncAt;
 
+    // Polar AccessLink (OAuth 2.0). polarUserId is the numeric id returned by Polar.
+    @Indexed(unique = true, sparse = true)
+    private String polarUserId;
+    private String polarAccessToken;
+    private String polarRefreshToken;
+    private Long polarTokenExpiresAt;
+    private LocalDateTime polarLastSyncAt;
+    private Boolean polarAutoPushWorkouts = false;
+
     // Zwift tokens (unofficial API)
     @Indexed(unique = true, sparse = true)
     private String zwiftUserId;
