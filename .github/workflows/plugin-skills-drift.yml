@@ -1,0 +1,42 @@
+name: Plugin skills drift check
+
+on:
+  pull_request:
+    paths:
+      - 'skills/**'
+      - 'plugin/build-plugin.mjs'
+      - '.gitmodules'
+      - '.github/workflows/plugin-skills-drift.yml'
+  push:
+    branches: [main, dev]
+    paths:
+      - 'skills/**'
+      - 'plugin/build-plugin.mjs'
+
+jobs:
+  drift:
+    name: Verify plugin/skills/ matches source
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.SUBMODULE_PAT }}
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Rebuild plugin/skills/ from source
+        run: node plugin/build-plugin.mjs
+
+      - name: Fail if plugin/skills/ is out of date
+        run: |
+          cd plugin
+          if ! git diff --quiet skills; then
+            echo "::error::plugin/skills/ is out of sync with the monorepo skills/. Run 'node plugin/build-plugin.mjs' inside the plugin submodule, commit, and update the submodule pin."
+            git diff --stat skills
+            exit 1
+          fi
+          echo "plugin/skills/ is up to date."

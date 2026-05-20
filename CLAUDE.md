@@ -136,6 +136,16 @@ Two separate "skills" concepts, do not confuse them:
 - `.claude/skills/*/SKILL.md` — **developer skills** for Claude Code editing this repo. Required reading before touching the matching code area.
 - `skills/koval-athlete/` and `skills/koval-coach/` — **end-user skills** distributed to Claude Desktop/Claude.ai users alongside the MCP connector. Two role-scoped bundles. Each has a `SKILL.md` router and a `resources/` folder containing per-workflow playbooks (analyze ride, form check, plan week, prep race, create/find workout, zone setup, onboarding profile for athletes; weekly review, athlete deep-dive, create/assign workout, build plan, club sessions, publish gazette for coaches). Build artifacts via `node skills/package-skills.mjs` → `skills/dist/koval-athlete.zip` and `skills/dist/koval-coach.zip`. The MCP connector itself is the Spring server at `/mcp/sse`.
 
+### Claude Code plugin (`plugin/` submodule)
+
+`plugin/` is a git submodule pointing at [`GauthierRobert/Koval-plugin`](https://github.com/GauthierRobert/Koval-plugin) — the Claude Code plugin distribution of the same skills + MCP connector config. Users install it via `/plugin install koval-training@koval-plugin`.
+
+**Source of truth:** root `skills/` is canonical. `plugin/skills/` is **generated** by `node plugin/build-plugin.mjs` (merges `skills/_shared/` + each skill). Never hand-edit `plugin/skills/` — edit under `skills/`, then rebuild inside the submodule and commit the result to the plugin repo, then bump the submodule pin here.
+
+The `plugin-skills-drift` GitHub workflow rebuilds `plugin/skills/` on every PR touching `skills/**` and fails if the committed copy is stale.
+
+Cloning: `git clone --recurse-submodules` (or `git submodule update --init` after a plain clone). CI checkouts pass `submodules: recursive` and a `SUBMODULE_PAT` repo secret (PAT with read access to `Koval-plugin`).
+
 ### Data model conventions
 
 - Power targets are `% of FTP` (athlete-stored). RAMP blocks use `powerStartPercent` + `powerEndPercent`; all other block types use `powerTargetPercent`.
