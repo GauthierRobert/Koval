@@ -123,6 +123,16 @@ export function drawPowerCurve({canvas, points, theme, hoverIdx}: CurveDrawConte
     ctx.fillText(`${Math.round(v)}W`, mL - 6, y);
   }
 
+  // Axis spine (left + bottom) — same subtle stroke as W' and quadrant so
+  // every analysis chart's axis reads consistently.
+  ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(mL, mT);
+  ctx.lineTo(mL, mT + cH);
+  ctx.lineTo(mL + cW, mT + cH);
+  ctx.stroke();
+
   // X labels (skip overlapping ones)
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';

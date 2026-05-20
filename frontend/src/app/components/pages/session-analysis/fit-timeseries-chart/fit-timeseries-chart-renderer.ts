@@ -88,6 +88,25 @@ function initCanvas(
   return { ctx, W, H, cW, xOf, xOfT, mT, mB, mL, mR };
 }
 
+/** Draws just the left vertical (Y) axis spine on each sub-canvas. We don't
+ * draw the bottom horizontal here: time ticks live in their own xAxis canvas
+ * below the stack, so a per-chart bottom line would duplicate it. */
+function drawAxisSpine(
+  ctx: CanvasRenderingContext2D,
+  s: { H: number; mT: number; mB: number; mL: number },
+): void {
+  const top = s.mT;
+  const bottom = s.H - s.mB;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(s.mL, top);
+  ctx.lineTo(s.mL, bottom);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawCrosshair(
   ctx: CanvasRenderingContext2D,
   theme: ThemeColors,
@@ -471,6 +490,7 @@ function drawPrimary(
     });
   }
 
+  drawAxisSpine(ctx, s);
   drawBlockBounds(ctx, input, xOfT, top, bottom);
 
   if (input.hoverIdx !== null) {
@@ -554,6 +574,7 @@ function drawHR(
   const mid = Math.round((minHR + maxHR) / 2);
   [Math.round(maxHR), mid, minHR].forEach((v) => ctx.fillText(String(v), mL - 4, yOf(v) + 4));
 
+  drawAxisSpine(ctx, s);
   drawBlockBounds(ctx, input, xOfT, top, bottom);
 
   if (input.hoverIdx !== null && hoverCtx) {
@@ -634,6 +655,7 @@ function drawCadence(
   const mid = Math.round((minCad + maxCad) / 2);
   [Math.round(maxCad), mid, minCad].forEach((v) => ctx.fillText(String(v), mL - 4, yOf(v) + 4));
 
+  drawAxisSpine(ctx, s);
   drawBlockBounds(ctx, input, xOfT, top, bottom);
 
   if (input.hoverIdx !== null && hoverCtx) {
@@ -703,6 +725,8 @@ function drawElevation(canvas: HTMLCanvasElement | null | undefined, input: Rend
   [Math.round(maxE), mid, Math.round(minE)].forEach((v) =>
     ctx.fillText(v + 'm', mL - 4, yOf(v) + 4),
   );
+
+  drawAxisSpine(ctx, s);
 
   if (input.hoverIdx !== null) {
     const hx = xOf(input.hoverIdx);

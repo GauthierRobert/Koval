@@ -214,7 +214,9 @@ export class WPrimeBalanceChartComponent implements AfterViewInit, OnChanges, On
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, cssW, cssH);
 
-        const padL = 64, padR = 12, padT = 12, padB = 22;
+        // Shared chart geometry — matches power-curve & fit-timeseries (mL=48,
+        // mR=16) so every analysis chart's data area starts at the same X.
+        const padL = 48, padR = 16, padT = 12, padB = 22;
         const w = cssW - padL - padR;
         const h = cssH - padT - padB;
         if (w <= 0 || h <= 0) return;
@@ -289,6 +291,15 @@ export class WPrimeBalanceChartComponent implements AfterViewInit, OnChanges, On
         drawYLabel(yOf(wp), fullKj, this.axisFull);
         drawYLabel(yOf(wp * 0.5), halfKj, this.axisHalf);
         drawYLabel(yOf(0), emptyKj, this.axisEmpty);
+
+        // Axis spines — drawn after the curve so they sit on top.
+        ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(padL, padT);
+        ctx.lineTo(padL, padT + h);
+        ctx.lineTo(padL + w, padT + h);
+        ctx.stroke();
 
         // X axis (time labels)
         const totalSec = this.records[n - 1].timestamp - this.records[0].timestamp;

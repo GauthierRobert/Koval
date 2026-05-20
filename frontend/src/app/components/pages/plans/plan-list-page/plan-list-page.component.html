@@ -1,11 +1,13 @@
 <div class="plans-page">
   <div class="page-header">
     <div class="header-left">
+      <span class="eyebrow">{{ 'PLANS.EYEBROW' | translate }}</span>
       <h1>{{ 'PLANS.PAGE_TITLE' | translate }}</h1>
       <p class="subtitle">{{ 'PLANS.PAGE_SUBTITLE' | translate }}</p>
     </div>
     <button class="btn-create" (click)="toggleCreateForm()">
-      + {{ 'PLANS.BTN_NEW_PLAN' | translate }}
+      <span class="plus">+</span>
+      {{ 'PLANS.BTN_NEW_PLAN' | translate }}
     </button>
   </div>
 
@@ -66,15 +68,15 @@
             ></div>
           }
         } @else {
-          <div class="empty-state empty-state-grid">
+          <div class="empty-state glass">
             <div class="empty-icon">
               <svg
-                width="48"
-                height="48"
+                width="32"
+                height="32"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="1.5"
+                stroke-width="1.6"
               >
                 <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
                 <rect x="9" y="3" width="6" height="4" rx="1" />
@@ -84,14 +86,26 @@
             </div>
             <h3>{{ 'PLANS.EMPTY_TITLE' | translate }}</h3>
             <p>{{ 'PLANS.EMPTY_MESSAGE' | translate }}</p>
+            <button class="empty-cta" (click)="toggleCreateForm()">
+              <span class="plus">+</span>
+              {{ 'PLANS.BTN_NEW_PLAN' | translate }}
+            </button>
           </div>
         }
       }
-      @for (plan of plans; track plan.id) {
-        <div class="plan-card glass" (click)="openPlan(plan)">
+      @for (plan of plans; track plan.id; let i = $index) {
+        <div
+          class="plan-card glass"
+          [attr.data-sport]="plan.sportType"
+          [class.no-description]="!plan.description"
+          [style.--stagger-delay.ms]="i * 50"
+          (click)="openPlan(plan)"
+        >
           <div class="plan-card-header">
             <div class="plan-title-row">
-              <app-sport-icon [sport]="plan.sportType" [size]="20" />
+              <div class="sport-bubble">
+                <app-sport-icon [sport]="plan.sportType" [size]="18" />
+              </div>
               <h3 class="plan-title">{{ plan.title }}</h3>
             </div>
             <span class="status-badge" [class]="'status-badge ' + statusClass(plan.status)">
@@ -106,9 +120,21 @@
             <p class="plan-description">{{ plan.description }}</p>
           }
           <div class="plan-meta">
-            <span class="meta-item">{{ plan.durationWeeks }}w</span>
-            <span class="meta-sep">·</span>
-            <span class="meta-item">{{ workoutCount(plan) }} workouts</span>
+            <span class="meta-pill">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              {{ plan.durationWeeks }}w
+            </span>
+            <span class="meta-pill">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              {{ workoutCount(plan) }} workouts
+            </span>
           </div>
           <button
             class="btn-delete"

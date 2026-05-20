@@ -1,0 +1,141 @@
+@if (result; as r) {
+  <div class="quadrant-panel glass">
+    <div class="qa-header">
+      <div class="qa-title-block">
+        <div class="section-label-row">
+          <div class="section-label">{{ 'SESSION_ANALYSIS.QUADRANT_TITLE' | translate }}</div>
+          <button
+            type="button"
+            class="info-btn"
+            [class.active]="helpOpen"
+            [attr.aria-label]="'SESSION_ANALYSIS.QUADRANT_HELP_TITLE' | translate"
+            [attr.aria-expanded]="helpOpen"
+            (click)="toggleHelp()"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+          </button>
+        </div>
+        <div class="qa-subtitle">{{ 'SESSION_ANALYSIS.QUADRANT_SUBTITLE' | translate }}</div>
+      </div>
+      <span class="qa-profile" [attr.data-profile]="r.profile">
+        @switch (r.profile) {
+          @case ('punchy') { {{ 'SESSION_ANALYSIS.QUADRANT_PROFILE_PUNCHY' | translate }} }
+          @case ('muscular') { {{ 'SESSION_ANALYSIS.QUADRANT_PROFILE_MUSCULAR' | translate }} }
+          @case ('spinner') { {{ 'SESSION_ANALYSIS.QUADRANT_PROFILE_SPINNER' | translate }} }
+          @case ('balanced') { {{ 'SESSION_ANALYSIS.QUADRANT_PROFILE_BALANCED' | translate }} }
+          @case ('easy') { {{ 'SESSION_ANALYSIS.QUADRANT_PROFILE_EASY' | translate }} }
+        }
+      </span>
+    </div>
+
+    @if (helpOpen) {
+      <div
+        class="qa-help"
+        role="region"
+        [attr.aria-label]="'SESSION_ANALYSIS.QUADRANT_HELP_TITLE' | translate"
+      >
+        <button type="button" class="help-close" (click)="closeHelp()" aria-label="Close">×</button>
+        <div class="help-section">
+          <h4>{{ 'SESSION_ANALYSIS.QUADRANT_HELP_WHAT_TITLE' | translate }}</h4>
+          <p>{{ 'SESSION_ANALYSIS.QUADRANT_HELP_WHAT_BODY' | translate }}</p>
+        </div>
+        <div class="help-section">
+          <h4>{{ 'SESSION_ANALYSIS.QUADRANT_HELP_AXES_TITLE' | translate }}</h4>
+          <p>
+            <strong>{{ 'SESSION_ANALYSIS.QUADRANT_AXIS_Y' | translate }}</strong> —
+            {{ 'SESSION_ANALYSIS.QUADRANT_HELP_AXIS_Y_BODY' | translate }}
+          </p>
+          <p>
+            <strong>{{ 'SESSION_ANALYSIS.QUADRANT_AXIS_X' | translate }}</strong> —
+            {{ 'SESSION_ANALYSIS.QUADRANT_HELP_AXIS_X_BODY' | translate }}
+          </p>
+          <p>{{ 'SESSION_ANALYSIS.QUADRANT_HELP_CROSSHAIR_BODY' | translate }}</p>
+        </div>
+        <div class="help-section">
+          <h4>{{ 'SESSION_ANALYSIS.QUADRANT_HELP_ZONES_TITLE' | translate }}</h4>
+          <ul class="help-zones">
+            <li>
+              <span class="help-zone-dot" [style.background]="qColors[2]"></span>
+              <span>
+                <strong>Q2 · {{ 'SESSION_ANALYSIS.QUADRANT_Q2_NAME' | translate }}</strong>
+                — {{ 'SESSION_ANALYSIS.QUADRANT_HELP_Q2_BODY' | translate }}
+              </span>
+            </li>
+            <li>
+              <span class="help-zone-dot" [style.background]="qColors[1]"></span>
+              <span>
+                <strong>Q1 · {{ 'SESSION_ANALYSIS.QUADRANT_Q1_NAME' | translate }}</strong>
+                — {{ 'SESSION_ANALYSIS.QUADRANT_HELP_Q1_BODY' | translate }}
+              </span>
+            </li>
+            <li>
+              <span class="help-zone-dot" [style.background]="qColors[3]"></span>
+              <span>
+                <strong>Q3 · {{ 'SESSION_ANALYSIS.QUADRANT_Q3_NAME' | translate }}</strong>
+                — {{ 'SESSION_ANALYSIS.QUADRANT_HELP_Q3_BODY' | translate }}
+              </span>
+            </li>
+            <li>
+              <span class="help-zone-dot" [style.background]="qColors[4]"></span>
+              <span>
+                <strong>Q4 · {{ 'SESSION_ANALYSIS.QUADRANT_Q4_NAME' | translate }}</strong>
+                — {{ 'SESSION_ANALYSIS.QUADRANT_HELP_Q4_BODY' | translate }}
+              </span>
+            </li>
+          </ul>
+        </div>
+        <div class="help-section">
+          <h4>{{ 'SESSION_ANALYSIS.QUADRANT_HELP_TRAIL_TITLE' | translate }}</h4>
+          <p>{{ 'SESSION_ANALYSIS.QUADRANT_HELP_TRAIL_BODY' | translate }}</p>
+        </div>
+      </div>
+    }
+
+    <!-- Plot grid: y-title | y-ticks | canvas, then x-ticks, then x-title.
+         Canvas has zero internal padding — tick labels live in this HTML grid. -->
+    <div class="qa-plot-grid">
+      <div class="qa-axis-y-title">{{ 'SESSION_ANALYSIS.QUADRANT_AXIS_Y' | translate }}</div>
+      <div class="qa-y-ticks">
+        @for (t of r.yTicks; track t.value) {
+          <span class="qa-tick" [style.top.%]="t.topPct">{{ t.value }}</span>
+        }
+        <span class="qa-tick qa-tick-ref" [style.top.%]="r.ftpPct">FTP</span>
+      </div>
+      <div class="qa-canvas-wrap">
+        <canvas #cv class="qa-canvas"></canvas>
+      </div>
+
+      <div class="qa-grid-corner"></div>
+      <div class="qa-grid-corner"></div>
+      <div class="qa-x-ticks">
+        @for (t of xAxisTicks; track t.value) {
+          <span class="qa-tick" [style.left.%]="t.leftPct">{{ t.value | number: '1.1-1' }}</span>
+        }
+        <span class="qa-tick qa-tick-ref" [style.left.%]="rpmPct">90 rpm</span>
+      </div>
+
+      <div class="qa-grid-corner"></div>
+      <div class="qa-grid-corner"></div>
+      <div class="qa-axis-x-title">{{ 'SESSION_ANALYSIS.QUADRANT_AXIS_X' | translate }}</div>
+    </div>
+
+    <div class="qa-legend">
+      <span class="qa-legend-dot qa-legend-trail-end"></span>
+      <span>{{ 'SESSION_ANALYSIS.QUADRANT_TRAIL_HINT' | translate }}</span>
+    </div>
+  </div>
+}

@@ -8,7 +8,9 @@
         <div class="header-row">
           <div class="header-left">
             <div class="title-row">
-              <app-sport-icon [sport]="plan.sportType" [size]="24" />
+              <div class="sport-bubble-lg">
+                <app-sport-icon [sport]="plan.sportType" [size]="22" />
+              </div>
               <h1>{{ plan.title }}</h1>
               <span class="status-badge" [class]="'status-' + plan.status.toLowerCase()">{{
                 plan.status

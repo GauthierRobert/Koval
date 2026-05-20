@@ -147,6 +147,17 @@
         <!-- Cadence distribution (cycling only, hidden when no cadence data) -->
         <app-cadence-distribution-panel [records]="fit.records" [sportType]="session.sportType" />
 
+        <!-- Quadrant analysis (cycling w/ FTP — force × velocity scatter) -->
+        @defer (on viewport) {
+          <app-quadrant-analysis-panel
+            [records]="fit.records"
+            [sportType]="session.sportType"
+            [ftp]="ftp"
+          />
+        } @placeholder {
+          <div class="skeleton skeleton-block" style="height: 460px"></div>
+        }
+
         <!-- W' balance trace (cycling w/ FTP and power data) -->
         @defer (on viewport) {
           <app-wprime-balance-chart

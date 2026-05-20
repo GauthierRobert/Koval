@@ -43,6 +43,7 @@ import { BlockBreakdownTableComponent } from './block-breakdown-table/block-brea
 import { PowerCurveChartComponent } from './power-curve-chart/power-curve-chart.component';
 import { DecouplingGaugeComponent } from './decoupling-gauge/decoupling-gauge.component';
 import { CadenceDistributionPanelComponent } from './cadence-distribution-panel/cadence-distribution-panel.component';
+import { QuadrantAnalysisPanelComponent } from './quadrant-analysis-panel/quadrant-analysis-panel.component';
 import { ClimbsPanelComponent } from './climbs-panel/climbs-panel.component';
 import { WPrimeBalanceChartComponent } from './wprime-balance-chart/wprime-balance-chart.component';
 import { ChartPanelSkeletonComponent } from '../../shared/skeleton/chart-panel-skeleton/chart-panel-skeleton.component';
@@ -82,6 +83,7 @@ interface FitState {
     PowerCurveChartComponent,
     DecouplingGaugeComponent,
     CadenceDistributionPanelComponent,
+    QuadrantAnalysisPanelComponent,
     ClimbsPanelComponent,
     WPrimeBalanceChartComponent,
     ChartPanelSkeletonComponent,
