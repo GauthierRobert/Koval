@@ -16,6 +16,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService, User } from '../../../services/auth.service';
 import { NolioSyncService } from '../../../services/nolio-sync.service';
+import { PolarSyncService } from '../../../services/polar-sync.service';
 import { ErrorToastService } from '../../../services/error-toast.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { environment } from '../../../../environments/environment';
@@ -32,12 +33,14 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
   private nolioSync = inject(NolioSyncService);
+  private polarSync = inject(PolarSyncService);
   private destroyRef = inject(DestroyRef);
   private toast = inject(ErrorToastService);
 
   @Output() closed = new EventEmitter<void>();
 
   user$ = this.authService.user$;
+  polarImporting$ = this.polarSync.importing$;
   unlinking = false;
   readonly isProd = environment.production;
 
@@ -63,6 +66,7 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
       user.linkedAccounts.strava,
       user.linkedAccounts.google,
       user.linkedAccounts.garmin,
+      user.linkedAccounts.polar,
       user.linkedAccounts.zwift,
       user.linkedAccounts.nolioRead,
       user.linkedAccounts.nolioWrite,
@@ -75,7 +79,7 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
     return user.linkedAccounts[other] === true;
   }
 
-  unlinkApp(provider: 'strava' | 'google' | 'garmin' | 'zwift' | 'nolioRead' | 'nolioWrite') {
+  unlinkApp(provider: 'strava' | 'google' | 'garmin' | 'polar' | 'zwift' | 'nolioRead' | 'nolioWrite') {
     this.unlinking = true;
     let obs: Observable<unknown>;
     switch (provider) {
@@ -87,6 +91,9 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
         break;
       case 'garmin':
         obs = this.authService.unlinkGarmin();
+        break;
+      case 'polar':
+        obs = this.polarSync.disconnect();
         break;
       case 'zwift':
         obs = this.authService.unlinkZwift();
@@ -133,6 +140,38 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
       .subscribe({
         next: ({ authUrl }) => window.open(authUrl, '_blank', 'width=600,height=700'),
         error: () => {},
+      });
+  }
+
+  connectPolar(): void {
+    this.polarSync
+      .getAuthUrl()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ authUrl }) => window.open(authUrl, '_blank', 'width=600,height=700'),
+        error: (err) => this.reportConnectError(err, 'Polar'),
+      });
+  }
+
+  togglePolarAutoPush(enabled: boolean): void {
+    this.polarSync
+      .setAutoPush(enabled)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        error: (err) => this.reportConnectError(err, 'Polar auto-push'),
+      });
+  }
+
+  importPolarHistory(): void {
+    this.polarSync
+      .importHistory()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => {
+          const msg = `Polar: ${result.newlyImported} new, ${result.skippedDuplicates} duplicate, ${result.skippedErrors} error${result.skippedErrors === 1 ? '' : 's'}`;
+          this.toast.show(msg, 'success');
+        },
+        error: (err) => this.reportConnectError(err, 'Polar import'),
       });
   }
 

@@ -262,5 +262,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/pages/auth/auth-callback.component').then((m) => m.AuthCallbackComponent),
   },
+  {
+    path: 'auth/polar/callback',
+    loadComponent: () =>
+      import('./components/pages/auth/polar-callback.component').then((m) => m.PolarCallbackComponent),
+    canActivate: [authGuard],
+  },
   { path: '**', redirectTo: '/dashboard' },
 ];

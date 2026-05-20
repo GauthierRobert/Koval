@@ -65,12 +65,14 @@ public class UserResponseMapper {
         linkedAccounts.put("strava", user.getStravaId() != null);
         linkedAccounts.put("google", user.getGoogleId() != null);
         linkedAccounts.put("garmin", user.getGarminUserId() != null);
+        linkedAccounts.put("polar", user.getPolarUserId() != null);
         linkedAccounts.put("zwift", user.getZwiftUserId() != null);
         linkedAccounts.put("nolioRead", Boolean.TRUE.equals(user.getTerraProviderNolioConnected()));
         linkedAccounts.put("nolioWrite", user.getNolioAccessToken() != null);
         map.put("linkedAccounts", linkedAccounts);
         map.put("authProvider", Optional.ofNullable(user.getAuthProvider()).map(Enum::name).orElse(null));
         map.put("zwiftAutoSyncWorkouts", user.getZwiftAutoSyncWorkouts());
+        map.put("polarAutoPushWorkouts", Boolean.TRUE.equals(user.getPolarAutoPushWorkouts()));
         map.put("nolioAutoSyncWorkouts", Boolean.TRUE.equals(user.getNolioAutoSyncWorkouts()));
 
         if (user.isCoach()) {

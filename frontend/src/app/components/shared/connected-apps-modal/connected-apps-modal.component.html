@@ -87,6 +87,48 @@
           }
         </div>
 
+        <!-- Polar -->
+        <div class="linked-app-row">
+          <div class="app-info">
+            <svg class="app-icon polar" viewBox="0 0 24 24" width="20" height="20">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 16c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" fill="#E1001E"/>
+            </svg>
+            <div class="app-details">
+              <span class="app-name">Polar</span>
+              <span class="app-status" [class.connected]="user.linkedAccounts?.polar">
+                {{ (user.linkedAccounts?.polar ? 'SETTINGS.APP_CONNECTED' : 'SETTINGS.APP_NOT_CONNECTED') | translate }}
+              </span>
+            </div>
+          </div>
+          @if (user.linkedAccounts?.polar) {
+            <div class="app-actions">
+              <button class="connect-btn" [disabled]="(polarImporting$ | async) ?? false" (click)="importPolarHistory()">
+                {{ (polarImporting$ | async) ? ('SETTINGS.POLAR_IMPORTING' | translate) : ('SETTINGS.POLAR_IMPORT_HISTORY' | translate) }}
+              </button>
+              <button class="unlink-btn" [disabled]="unlinking" (click)="unlinkApp('polar')">
+                {{ 'SETTINGS.BTN_UNLINK' | translate }}
+              </button>
+            </div>
+          } @else {
+            <button class="connect-btn" (click)="connectPolar()">
+              {{ 'SETTINGS.BTN_CONNECT' | translate }}
+            </button>
+          }
+        </div>
+
+        <!-- Polar auto-push toggle -->
+        @if (user.linkedAccounts?.polar) {
+          <div class="auto-sync-row">
+            <label class="toggle-label">
+              <input type="checkbox" class="toggle-input"
+                [checked]="user.polarAutoPushWorkouts"
+                (change)="togglePolarAutoPush($any($event.target).checked)"/>
+              <span class="toggle-switch"></span>
+              <span>{{ 'SETTINGS.POLAR_AUTO_PUSH_WORKOUTS' | translate }}</span>
+            </label>
+          </div>
+        }
+
         <!-- Zwift -->
         <div class="linked-app-row">
           <div class="app-info">

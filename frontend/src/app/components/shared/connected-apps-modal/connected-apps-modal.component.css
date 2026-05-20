@@ -79,6 +79,12 @@
   gap: 10px;
 }
 
+.app-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .app-icon {
   flex-shrink: 0;
 }

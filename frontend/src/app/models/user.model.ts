@@ -36,11 +36,13 @@ export interface User {
         strava: boolean;
         google: boolean;
         garmin: boolean;
+        polar: boolean;
         zwift: boolean;
         nolioRead: boolean;
         nolioWrite: boolean;
     };
     authProvider?: string;
     zwiftAutoSyncWorkouts?: boolean;
+    polarAutoPushWorkouts?: boolean;
     nolioAutoSyncWorkouts?: boolean;
 }
